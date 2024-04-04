@@ -1,0 +1,14 @@
+.DS_Store
+*.env.local
+*.env.*.local
+*.ntvs*
+*.njsproj
+*.sln
+*.suo
+*.sw*
+*.tsbuildinfo
+local.*
+
+lib/
+dist/
+local/
