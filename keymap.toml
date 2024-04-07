@@ -11,84 +11,86 @@
 [keyboard]
 bindings = [
   # ----- Alacritty keys ----
-  { key = "N",          mods = "Command|Control|Shift", action = "CreateNewWindow" },
-  { key = "Q",          mods = "Command",               action = "None" },
-  { key = "W",          mods = "Command",               action = "None" },
-  { key = "Up",         mods = "Command",               action = "ToggleSimpleFullscreen" },
-  { key = "Down",       mods = "Command",               action = "ToggleSimpleFullscreen" },
-  { key = "Key0",       mods = "Control",               action = "ResetFontSize" },
-  { key = "Equals",     mods = "Control",               action = "IncreaseFontSize" },
-  { key = "Minus",      mods = "Control",               action = "DecreaseFontSize" },
+  { key = "N",                          mods = "Command|Control|Shift", action = "CreateNewWindow" },
+  { key = "Q",                          mods = "Command",               action = "None" },
+  { key = "W",                          mods = "Command",               action = "None" },
+  { key = "Up",                         mods = "Command",               action = "ToggleSimpleFullscreen" },
+  { key = "Down",                       mods = "Command",               action = "ToggleSimpleFullscreen" },
+  { key = "Key0",                       mods = "Control",               action = "ResetFontSize" },
+  { key = "Equals",                     mods = "Control",               action = "IncreaseFontSize" },
+  { key = "Minus",                      mods = "Control",               action = "DecreaseFontSize" },
 
   # ----- vim ------
-  { key = "S",          mods = "Command",               chars = "\u001b:w\u000a"},      # Type <escape>:w<enter> to save in vim or helix
-  { key = "S",          mods = "Command|Shift",         chars = "\u001b:wa\u000a"},     # Type <escape>:wa<enter> to save in vim or helix
+  # { key = "S",          mode = "Vi",    mods = "Command",               chars = "\u001b:w\u000a" },     # Type <escape>:w<enter> to save in vim or helix
+  # { key = "S",          mode = "Vi",    mods = "Command|Shift",         chars = "\u001b:wa\u000a" },    # Type <escape>:wa<enter> to save in vim or helix
 
   # ----- tmux session -----
-  { key = "S",          mods = "Command|Control",       chars = "\u001b:wa\u000a"},     # Type <escape>:wa<enter> to save in vim or helix
+  { key = "D",                          mods = "Command|Control",       chars = "\u0002\u0004" },       # <Ctrl-b><Ctrl-d>
+  { key = "S",                          mods = "Command|Control",       chars = "\u0002\u0013" },       # <Ctrl-b><Ctrl-s>
 
   # ----- tmux window -----
-  { key = "N",          mods = "Command|Control",       chars = "\u0002\u000e" },       # <Ctrl-b><Ctrl-n>
-  { key = "B",          mods = "Command|Control",       chars = "\u0002\u0002" },       # <Ctrl-b><Ctrl-b>
-  { key = "K",          mods = "Command|Control",       chars = "\u0002\u000b" },       # <Ctrl-b><Ctrl-k>
-  { key = "O",          mods = "Command|Control",       chars = "\u0002\u000f" },       # <Ctrl-b><Ctrl-o>
+  { key = "N",                          mods = "Command|Control",       chars = "\u0002\u000e" },       # <Ctrl-b><Ctrl-n>
+  { key = "B",                          mods = "Command|Control",       chars = "\u0002\u0002" },       # <Ctrl-b><Ctrl-b>
+  { key = "K",                          mods = "Command|Control",       chars = "\u0002\u000b" },       # <Ctrl-b><Ctrl-k>
+  { key = "O",                          mods = "Command|Control",       chars = "\u0002\u000f" },       # <Ctrl-b><Ctrl-o>
 
   ## select window
-  { key = "Key1",       mods = "Command",               chars = "\u0002\u0031" },       # <Ctrl-b>1
-  { key = "Key2",       mods = "Command",               chars = "\u0002\u0032" },       # <Ctrl-b>2
-  { key = "Key3",       mods = "Command",               chars = "\u0002\u0033" },       # <Ctrl-b>3
-  { key = "Key4",       mods = "Command",               chars = "\u0002\u0034" },       # <Ctrl-b>4
-  { key = "Key5",       mods = "Command",               chars = "\u0002\u0035" },       # <Ctrl-b>5
-  { key = "Key6",       mods = "Command",               chars = "\u0002\u0036" },       # <Ctrl-b>6
-  { key = "Key7",       mods = "Command",               chars = "\u0002\u0037" },       # <Ctrl-b>7
-  { key = "Key8",       mods = "Command",               chars = "\u0002\u0038" },       # <Ctrl-b>8
-  { key = "Key9",       mods = "Command",               chars = "\u0002\u0039" },       # <Ctrl-b>9
-  { key = "Key0",       mods = "Command",               chars = "\u0002\u0030" },       # <Ctrl-b>0
-  { key = ",",          mods = "Command",               chars = "\u0002\u002c" },       # <Ctrl-b>,
-  { key = ".",          mods = "Command",               chars = "\u0002\u002e" },       # <Ctrl-b>.
+  { key = "Key1",                       mods = "Command",               chars = "\u0002\u0031" },       # <Ctrl-b>1
+  { key = "Key2",                       mods = "Command",               chars = "\u0002\u0032" },       # <Ctrl-b>2
+  { key = "Key3",                       mods = "Command",               chars = "\u0002\u0033" },       # <Ctrl-b>3
+  { key = "Key4",                       mods = "Command",               chars = "\u0002\u0034" },       # <Ctrl-b>4
+  { key = "Key5",                       mods = "Command",               chars = "\u0002\u0035" },       # <Ctrl-b>5
+  { key = "Key6",                       mods = "Command",               chars = "\u0002\u0036" },       # <Ctrl-b>6
+  { key = "Key7",                       mods = "Command",               chars = "\u0002\u0037" },       # <Ctrl-b>7
+  { key = "Key8",                       mods = "Command",               chars = "\u0002\u0038" },       # <Ctrl-b>8
+  { key = "Key9",                       mods = "Command",               chars = "\u0002\u0039" },       # <Ctrl-b>9
+  { key = "Key0",                       mods = "Command",               chars = "\u0002\u0030" },       # <Ctrl-b>0
+  { key = ",",                          mods = "Command",               chars = "\u0002\u002c" },       # <Ctrl-b>,
+  { key = ".",                          mods = "Command",               chars = "\u0002\u002e" },       # <Ctrl-b>.
 
   ## swap window
-  { key = "<",          mods = "Command|Shift",         chars = "\u0002\u003c" },       # <Ctrl-b><
-  { key = ">",          mods = "Command|Shift",         chars = "\u0002\u003e" },       # <Ctrl-b>>
+  { key = "<",                          mods = "Command|Shift",         chars = "\u0002\u003c" },       # <Ctrl-b><
+  { key = ">",                          mods = "Command|Shift",         chars = "\u0002\u003e" },       # <Ctrl-b>>
 
   # ----- tmux pane -----
 
   ## Create new pane
-  { key = "L",          mods = "Command|Shift",         chars = "\u0002\u004c" },       # <Ctrl-b>L
-  { key = "J",          mods = "Command|Shift",         chars = "\u0002\u004a" },       # <Ctrl-b>J 
+  { key = "L",                          mods = "Command|Shift",         chars = "\u0002\u004c" },       # <Ctrl-b>L
+  { key = "J",                          mods = "Command|Shift",         chars = "\u0002\u004a" },       # <Ctrl-b>J 
 
   ## Move pane
-  { key = "Key1",       mods = "Command|Control",       chars = "\u0002\u001b[49;5u" }, # <Ctrl-b><Ctrl-1>
-  { key = "Key2",       mods = "Command|Control",       chars = "\u0002\u001b[50;5u" }, # <Ctrl-b><Ctrl-2>
-  { key = "Key3",       mods = "Command|Control",       chars = "\u0002\u001b[51;5u" }, # <Ctrl-b><Ctrl-3>
-  { key = "Key4",       mods = "Command|Control",       chars = "\u0002\u001b[52;5u" }, # <Ctrl-b><Ctrl-4>
-  { key = "Key5",       mods = "Command|Control",       chars = "\u0002\u001b[53;5u" }, # <Ctrl-b><Ctrl-5>
-  { key = "Key6",       mods = "Command|Control",       chars = "\u0002\u001b[54;5u" }, # <Ctrl-b><Ctrl-6>
-  { key = "Key7",       mods = "Command|Control",       chars = "\u0002\u001b[55;5u" }, # <Ctrl-b><Ctrl-7>
-  { key = "Key8",       mods = "Command|Control",       chars = "\u0002\u001b[56;5u" }, # <Ctrl-b><Ctrl-8>
-  { key = "Key9",       mods = "Command|Control",       chars = "\u0002\u001b[57;5u" }, # <Ctrl-b><Ctrl-9>
-  { key = "Key0",       mods = "Command|Control",       chars = "\u0002\u001b[48;5u" }, # <Ctrl-b><Ctrl-0>
+  { key = "Key1",                       mods = "Command|Control",       chars = "\u0002\u001b[49;5u" }, # <Ctrl-b><Ctrl-1>
+  { key = "Key2",                       mods = "Command|Control",       chars = "\u0002\u001b[50;5u" }, # <Ctrl-b><Ctrl-2>
+  { key = "Key3",                       mods = "Command|Control",       chars = "\u0002\u001b[51;5u" }, # <Ctrl-b><Ctrl-3>
+  { key = "Key4",                       mods = "Command|Control",       chars = "\u0002\u001b[52;5u" }, # <Ctrl-b><Ctrl-4>
+  { key = "Key5",                       mods = "Command|Control",       chars = "\u0002\u001b[53;5u" }, # <Ctrl-b><Ctrl-5>
+  { key = "Key6",                       mods = "Command|Control",       chars = "\u0002\u001b[54;5u" }, # <Ctrl-b><Ctrl-6>
+  { key = "Key7",                       mods = "Command|Control",       chars = "\u0002\u001b[55;5u" }, # <Ctrl-b><Ctrl-7>
+  { key = "Key8",                       mods = "Command|Control",       chars = "\u0002\u001b[56;5u" }, # <Ctrl-b><Ctrl-8>
+  { key = "Key9",                       mods = "Command|Control",       chars = "\u0002\u001b[57;5u" }, # <Ctrl-b><Ctrl-9>
+  { key = "Key0",                       mods = "Command|Control",       chars = "\u0002\u001b[48;5u" }, # <Ctrl-b><Ctrl-0>
 
   ## Resize pane
-  { key = "Up",         mods = "Command|Control",       chars = "\u0002\u001b[1;5A" },  # <Ctrl-b><Ctrl-Up>
-  { key = "Right",      mods = "Command|Control",       chars = "\u0002\u001b[1;5C" },  # <Ctrl-b><Ctrl-Right>
-  { key = "Down",       mods = "Command|Control",       chars = "\u0002\u001b[1;5B" },  # <Ctrl-b><Ctrl-Down> 
-  { key = "Left",       mods = "Command|Control",       chars = "\u0002\u001b[1;5D" },  # <Ctrl-b><Ctrl-Left>
-  { key = "Z",          mods = "Command",               chars = "\u0002\u007a" },       # <Ctrl-b>z
+  { key = "Up",                         mods = "Command|Control",       chars = "\u0002\u001b[1;5A" },  # <Ctrl-b><Ctrl-Up>
+  { key = "Right",                      mods = "Command|Control",       chars = "\u0002\u001b[1;5C" },  # <Ctrl-b><Ctrl-Right>
+  { key = "Down",                       mods = "Command|Control",       chars = "\u0002\u001b[1;5B" },  # <Ctrl-b><Ctrl-Down> 
+  { key = "Left",                       mods = "Command|Control",       chars = "\u0002\u001b[1;5D" },  # <Ctrl-b><Ctrl-Left>
+  { key = "Z",                          mods = "Command",               chars = "\u0002\u007a" },       # <Ctrl-b>z
 
   ## Select pane
-  { key = "K",          mods = "Command",               chars = "\u0002\u006b" },       # <Ctrl-b>k
-  { key = "L",          mods = "Command",               chars = "\u0002\u006c" },       # <Ctrl-b>l
-  { key = "J",          mods = "Command",               chars = "\u0002\u006a" },       # <Ctrl-b>j
-  { key = "H",          mods = "Command",               chars = "\u0002\u0068" },       # <Ctrl-b>h
+  { key = "K",                          mods = "Command",               chars = "\u0002\u006b" },       # <Ctrl-b>k
+  { key = "L",                          mods = "Command",               chars = "\u0002\u006c" },       # <Ctrl-b>l
+  { key = "J",                          mods = "Command",               chars = "\u0002\u006a" },       # <Ctrl-b>j
+  { key = "H",                          mods = "Command",               chars = "\u0002\u0068" },       # <Ctrl-b>h
 
   ## Switch pane
-  { key = "Left",       mods = "Command",               chars = "\u0002\u001b[D" },     # <Ctrl-b>Left
-  { key = "Right",      mods = "Command",               chars = "\u0002\u001b[C" },     # <Ctrl-b>Right
+  { key = "Left",                       mods = "Command",               chars = "\u0002\u001b[D" },     # <Ctrl-b>Left
+  { key = "Right",                      mods = "Command",               chars = "\u0002\u001b[C" },     # <Ctrl-b>Right
 
   # Misc
-  { key = "C",          mods = "Command",               chars = "\u0002\u0063" },       # <Ctrl-b>c
-  { key = "G",          mods = "Command",               chars = "\u0002\u0067" },       # <Ctrl-b>g
-  { key = "O",          mods = "Command",               chars = "\u0002\u006f" },       # <Ctrl-b>o
-  { key = ":",          mods = "Command|Shift",         chars = "\u0002\u003a" },       # <Ctrl-b>:
+  { key = "C",                          mods = "Command",               chars = "\u0002\u0063" },       # <Ctrl-b>c
+  { key = "G",                          mods = "Command",               chars = "\u0002\u0067" },       # <Ctrl-b>g
+  { key = "O",                          mods = "Command",               chars = "\u0002\u006f" },       # <Ctrl-b>o
+  { key = ":",                          mods = "Command|Shift",         chars = "\u0002\u003a" },       # <Ctrl-b>:
 ]
+
