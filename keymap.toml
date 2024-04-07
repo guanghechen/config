@@ -12,11 +12,12 @@
 bindings = [
   # ----- Alacritty keys ----
   { key = "D",                          mods = "Command",               action = "None" },
+  { key = "N",                          mods = "Command",               action = "None" },
   { key = "N",                          mods = "Command|Control|Shift", action = "CreateNewWindow" },
   { key = "Q",                          mods = "Command",               action = "None" },
   { key = "W",                          mods = "Command",               action = "None" },
-  { key = "Up",                         mods = "Command",               action = "ToggleSimpleFullscreen" },
-  { key = "Down",                       mods = "Command",               action = "ToggleSimpleFullscreen" },
+  { key = "W",                          mods = "Command|Control|Shift", action = "Quit" },
+  { key = "Z",                          mods = "Command|Control|Shift", action = "ToggleSimpleFullscreen" },
   { key = "Key0",                       mods = "Control",               action = "ResetFontSize" },
   { key = "Equals",                     mods = "Control",               action = "IncreaseFontSize" },
   { key = "Minus",                      mods = "Control",               action = "DecreaseFontSize" },
