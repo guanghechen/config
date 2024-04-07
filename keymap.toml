@@ -11,6 +11,7 @@
 [keyboard]
 bindings = [
   # ----- Alacritty keys ----
+  { key = "D",                          mods = "Command",               action = "None" },
   { key = "N",                          mods = "Command|Control|Shift", action = "CreateNewWindow" },
   { key = "Q",                          mods = "Command",               action = "None" },
   { key = "W",                          mods = "Command",               action = "None" },
@@ -21,12 +22,12 @@ bindings = [
   { key = "Minus",                      mods = "Control",               action = "DecreaseFontSize" },
 
   # ----- vim ------
-  # { key = "S",          mode = "Vi",    mods = "Command",               chars = "\u001b:w\u000a" },     # Type <escape>:w<enter> to save in vim or helix
+  { key = "S",          mode = "Vi",    mods = "Command",               chars = "\u001b:w\u000a" },     # Type <escape>:w<enter> to save in vim or helix
   # { key = "S",          mode = "Vi",    mods = "Command|Shift",         chars = "\u001b:wa\u000a" },    # Type <escape>:wa<enter> to save in vim or helix
 
   # ----- tmux session -----
-  { key = "D",                          mods = "Command|Control",       chars = "\u0002\u0004" },       # <Ctrl-b><Ctrl-d>
-  { key = "S",                          mods = "Command|Control",       chars = "\u0002\u0013" },       # <Ctrl-b><Ctrl-s>
+  { key = "D",                          mods = "Command|Shift",         chars = "\u0002\u0004" },       # <Ctrl-b>D
+  { key = "S",                          mods = "Command|Shift",         chars = "\u0002\u0013" },       # <Ctrl-b>S
 
   # ----- tmux window -----
   { key = "N",                          mods = "Command|Control",       chars = "\u0002\u000e" },       # <Ctrl-b><Ctrl-n>
