@@ -10,14 +10,13 @@
 
 [keyboard]
 bindings = [
-  # ----- Resize window ----
-  { key = "Z",          mods = "Command|Control",       action = "ToggleSimpleFullscreen" },
-  { key = "Z",          mods = "Alt|Control",           action = "ToggleSimpleFullscreen" },
-
-  # ----- change font size ----
-  { key = "Key0",       mods = "Command",               action = "ResetFontSize" },
-  { key = "Equals",     mods = "Command",               action = "IncreaseFontSize" },
-  { key = "Minus",      mods = "Command",               action = "DecreaseFontSize" },
+  # ----- Alacritty keys ----
+  { key = "Q",          mods = "Command",               action = "None" },
+  { key = "W",          mods = "Command",               action = "None" },
+  { key = "Z",          mods = "Control|Shift",         action = "ToggleSimpleFullscreen" },
+  { key = "Key0",       mods = "Control",               action = "ResetFontSize" },
+  { key = "Equals",     mods = "Control",               action = "IncreaseFontSize" },
+  { key = "Minus",      mods = "Control",               action = "DecreaseFontSize" },
 
   # ----- tmux window -----
   { key = "n",          mods = "Command|Control",       chars = "\u0002\u000e" },       # <Ctrl-b><Ctrl-n>
@@ -26,16 +25,16 @@ bindings = [
   { key = "o",          mods = "Command|Control",       chars = "\u0002\u000f" },       # <Ctrl-b><Ctrl-o>
 
   ## select window
-  { key = "1",          mods = "Command",               chars = "\u0002\u0031" },       # <Ctrl-b>1
-  { key = "2",          mods = "Command",               chars = "\u0002\u0032" },       # <Ctrl-b>2
-  { key = "3",          mods = "Command",               chars = "\u0002\u0033" },       # <Ctrl-b>3
-  { key = "4",          mods = "Command",               chars = "\u0002\u0034" },       # <Ctrl-b>4
-  { key = "5",          mods = "Command",               chars = "\u0002\u0035" },       # <Ctrl-b>5
-  { key = "6",          mods = "Command",               chars = "\u0002\u0036" },       # <Ctrl-b>6
-  { key = "7",          mods = "Command",               chars = "\u0002\u0037" },       # <Ctrl-b>7
-  { key = "8",          mods = "Command",               chars = "\u0002\u0038" },       # <Ctrl-b>8
-  { key = "9",          mods = "Command",               chars = "\u0002\u0039" },       # <Ctrl-b>9
-  { key = "0",          mods = "Command",               chars = "\u0002\u0030" },       # <Ctrl-b>0
+  { key = "Key1",       mods = "Command",               chars = "\u0002\u0031" },       # <Ctrl-b>1
+  { key = "Key2",       mods = "Command",               chars = "\u0002\u0032" },       # <Ctrl-b>2
+  { key = "Key3",       mods = "Command",               chars = "\u0002\u0033" },       # <Ctrl-b>3
+  { key = "Key4",       mods = "Command",               chars = "\u0002\u0034" },       # <Ctrl-b>4
+  { key = "Key5",       mods = "Command",               chars = "\u0002\u0035" },       # <Ctrl-b>5
+  { key = "Key6",       mods = "Command",               chars = "\u0002\u0036" },       # <Ctrl-b>6
+  { key = "Key7",       mods = "Command",               chars = "\u0002\u0037" },       # <Ctrl-b>7
+  { key = "Key8",       mods = "Command",               chars = "\u0002\u0038" },       # <Ctrl-b>8
+  { key = "Key9",       mods = "Command",               chars = "\u0002\u0039" },       # <Ctrl-b>9
+  { key = "Key0",       mods = "Command",               chars = "\u0002\u0030" },       # <Ctrl-b>0
   { key = ",",          mods = "Command",               chars = "\u0002\u002c" },       # <Ctrl-b>,
   { key = ".",          mods = "Command",               chars = "\u0002\u002e" },       # <Ctrl-b>.
 
@@ -83,35 +82,4 @@ bindings = [
   { key = "g",          mods = "Command",               chars = "\u0002\u0067" },       # <Ctrl-b>g
   { key = "o",          mods = "Command",               chars = "\u0002\u006f" },       # <Ctrl-b>o
   { key = ":",          mods = "Command|Shift",         chars = "\u0002\u003a" },       # <Ctrl-b>:
-
-  # # ----- new pane/tab/window -----
-  # { key = "D",        mods = "Command",               chars = "\u0002\""   }, # new vertical pane with default shell
-  # { key = "D",        mods = "Command|Shift",         chars = "\u0002-"    }, # new vertical pane with commands menu
-  # { key = "Return",   mods = "Command",               chars = "\u0002%"    }, # new horizontal pane with default shell
-  # { key = "Return",   mods = "Command|Shift",         chars = "\u0002|"    }, # new horizontal pane with commands menu
-  # { key = "T",        mods = "Command",               chars = "\u0002c"    }, # new tab with default shell
-  # { key = "T",        mods = "Command|Shift",         chars = "\u0002C"    }, # new tab with commands menu
-  # { key = "N",        mods = "Command",               chars = "\u0002S"    }, # switch session in current window with local sessions menu
-  # { key = "N",        mods = "Command|Shift",         command = { program = "/usr/local/bin/alacritty", args = ["msg", "create-window", "-e", "/usr/local/bin/fish", "--login", "--command", "tmux-sessions --all"] } }, # open session in new window with all sessions menu across servers
-
-  # # ----- close pane/tab/window -----
-  # { key = "W",        mods = "Command",               chars = "\u0002x"    }, # close the pane
-  # { key = "W",        mods = "Command|Shift",         chars = "\u0002&"    }, # close the tab
-  # { key = "Q",        mods = "Command",               chars = "\u0002d"    }, # close the window
-
-  # # ----- copy mode -----
-  # { key = "F",        mods = "Command",               chars = "\u0002[/"   }, # enter vi copy mode, and search from up to down
-  # { key = "F",        mods = "Command|Shift",         chars = "\u0002[?"   }, # enter vi copy mode, search from down to up
-  # { key = "G",        mods = "Command",               chars = "\u0002G"    }, # go to selected file and line
-
-  # # ----- misc shortcuts -----
-  # { key = "A",        mods = "Command",               chars = "\u0002A"    }, # Useful commands menux for tmux
-  # { key = "R",        mods = "Command",               chars = "\u0002R"    }, # run command with commands menu in right vertical
-  # { key = "R",        mods = "Command|Shift",         chars = "\u0002E"    }, # run command with commands selector in right vertical
-  # { key = "P",        mods = "Command",               chars = "\u0002O"    }, # toggle popup window
-  # { key = "P",        mods = "Command|Shift",         chars = "\u0002P"    }, # go to the selected pane
-  # { key = "Z",        mods = "Command",               chars = "\u0002z"    }, # zoom toggle of the current pane
-  # { key = "Z",        mods = "Command|Shift",         chars = "\u0002X"    }, # kill other panes
-  # { key = "S",        mods = "Command",               chars = "\u001b:w\u000a"}, # Type <escape>:w<enter> to save in vim or helix
-  # { key = "S",        mods = "Command|Shift",         chars = "\u001b:wa\u000a"}, # Type <escape>:wa<enter> to save in vim or helix
 ]
