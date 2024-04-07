@@ -58,16 +58,16 @@ bindings = [
   { key = "J",          mods = "Command|Shift",         chars = "\u0002\u004a" },       # <Ctrl-b>J 
 
   ## Move pane
-  # { key = "!",        mods = "Command|Shift",         chars = "\u0002\u0021" },       # <Ctrl-b>!
-  # { key = "@",        mods = "Command|Shift",         chars = "\u0002\u0040" },       # <Ctrl-b>@
-  # { key = "#",        mods = "Command|Shift",         chars = "\u0002\u0023" },       # <Ctrl-b>#
-  # { key = "$",        mods = "Command|Shift",         chars = "\u0002\u0024" },       # <Ctrl-b>$
-  # { key = "%",        mods = "Command|Shift",         chars = "\u0002\u0025" },       # <Ctrl-b>%
-  # { key = "^",        mods = "Command|Shift",         chars = "\u0002\u005e" },       # <Ctrl-b>^
-  # { key = "&",        mods = "Command|Shift",         chars = "\u0002\u0026" },       # <Ctrl-b>&
-  # { key = "*",        mods = "Command|Shift",         chars = "\u0002\u002a" },       # <Ctrl-b>*
-  # { key = "(",        mods = "Command|Shift",         chars = "\u0002\u0028" },       # <Ctrl-b>(
-  # { key = ")",        mods = "Command|Shift",         chars = "\u0002\u0029" },       # <Ctrl-b>)
+  { key = "Key1",       mods = "Command|Control",       chars = "\u0002\u001b[49;5u" }, # <Ctrl-b><Ctrl-1>
+  { key = "Key2",       mods = "Command|Control",       chars = "\u0002\u001b[50;5u" }, # <Ctrl-b><Ctrl-2>
+  { key = "Key3",       mods = "Command|Control",       chars = "\u0002\u001b[51;5u" }, # <Ctrl-b><Ctrl-3>
+  { key = "Key4",       mods = "Command|Control",       chars = "\u0002\u001b[52;5u" }, # <Ctrl-b><Ctrl-4>
+  { key = "Key5",       mods = "Command|Control",       chars = "\u0002\u001b[53;5u" }, # <Ctrl-b><Ctrl-5>
+  { key = "Key6",       mods = "Command|Control",       chars = "\u0002\u001b[54;5u" }, # <Ctrl-b><Ctrl-6>
+  { key = "Key7",       mods = "Command|Control",       chars = "\u0002\u001b[55;5u" }, # <Ctrl-b><Ctrl-7>
+  { key = "Key8",       mods = "Command|Control",       chars = "\u0002\u001b[56;5u" }, # <Ctrl-b><Ctrl-8>
+  { key = "Key9",       mods = "Command|Control",       chars = "\u0002\u001b[57;5u" }, # <Ctrl-b><Ctrl-9>
+  { key = "Key0",       mods = "Command|Control",       chars = "\u0002\u001b[48;5u" }, # <Ctrl-b><Ctrl-0>
 
   ## Resize pane
   { key = "Up",         mods = "Command|Control",       chars = "\u0002\u001b[1;5A" },  # <Ctrl-b><Ctrl-Up>
