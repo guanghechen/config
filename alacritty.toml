@@ -12,7 +12,7 @@ live_config_reload = true
 # Bell
 [bell]
 animation = "EaseOutExpo"
-color = "#ffffff"
+color = "#EEEEF3"
 duration = 100
 
 [cursor]
