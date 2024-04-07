@@ -11,12 +11,17 @@
 [keyboard]
 bindings = [
   # ----- Alacritty keys ----
+  { key = "N",          mods = "Command|Control|Shift", action = "CreateNewWindow" },
   { key = "Q",          mods = "Command",               action = "None" },
   { key = "W",          mods = "Command",               action = "None" },
   { key = "Z",          mods = "Control|Shift",         action = "ToggleSimpleFullscreen" },
   { key = "Key0",       mods = "Control",               action = "ResetFontSize" },
   { key = "Equals",     mods = "Control",               action = "IncreaseFontSize" },
   { key = "Minus",      mods = "Control",               action = "DecreaseFontSize" },
+
+  # ----- vim ------
+  { key = "S",          mods = "Command",               chars = "\u001b:w\u000a"},      # Type <escape>:w<enter> to save in vim or helix
+  { key = "S",          mods = "Command|Shift",         chars = "\u001b:wa\u000a"},     # Type <escape>:wa<enter> to save in vim or helix
 
   # ----- tmux window -----
   { key = "n",          mods = "Command|Control",       chars = "\u0002\u000e" },       # <Ctrl-b><Ctrl-n>
