@@ -1,6 +1,3 @@
-
-
-
 ## Clipboard
 
 https://github.com/tmux-plugins/tmux-yank
