@@ -13,14 +13,14 @@ bindings = [
   # ----- Alacritty keys ----
   { key = "D",                          mods = "Command",               action = "None" },
   { key = "N",                          mods = "Command",               action = "None" },
-  { key = "N",                          mods = "Command|Control|Shift", action = "CreateNewWindow" },
   { key = "Q",                          mods = "Command",               action = "None" },
   { key = "W",                          mods = "Command",               action = "None" },
+  { key = "N",                          mods = "Command|Control|Shift", action = "CreateNewWindow" },
   { key = "W",                          mods = "Command|Control|Shift", action = "Quit" },
   { key = "Z",                          mods = "Command|Control|Shift", action = "ToggleSimpleFullscreen" },
-  { key = "Key0",                       mods = "Control",               action = "ResetFontSize" },
-  { key = "Equals",                     mods = "Control",               action = "IncreaseFontSize" },
-  { key = "Minus",                      mods = "Control",               action = "DecreaseFontSize" },
+  { key = ")",                          mods = "Command|Control|Shift", action = "ResetFontSize" },
+  { key = "Plus",                       mods = "Command|Control|Shift", action = "IncreaseFontSize" },
+  { key = "_",                          mods = "Command|Control|Shift", action = "DecreaseFontSize" },
 
   # ----- vim ------
   { key = "S",                          mods = "Command",               chars = "\u001b:w\u000a" },     # Type <escape>:w<enter> to save in vim or helix
@@ -33,8 +33,9 @@ bindings = [
   # ----- tmux window -----
   { key = "N",                          mods = "Command|Control",       chars = "\u0002\u000e" },       # <Ctrl-b><Ctrl-n>
   { key = "B",                          mods = "Command|Control",       chars = "\u0002\u0002" },       # <Ctrl-b><Ctrl-b>
-  { key = "K",                          mods = "Command|Control",       chars = "\u0002\u000b" },       # <Ctrl-b><Ctrl-k>
+  { key = "W",                          mods = "Command|Control",       chars = "\u0002\u0017" },       # <Ctrl-b><Ctrl-w>
   { key = "O",                          mods = "Command|Control",       chars = "\u0002\u000f" },       # <Ctrl-b><Ctrl-o>
+  { key = "P",                          mods = "Command|Control",       chars = "\u0002\u0010" },       # <Ctrl-b><Ctrl-p>
 
   ## select window
   { key = "Key1",                       mods = "Command",               chars = "\u0002\u0031" },       # <Ctrl-b>1
