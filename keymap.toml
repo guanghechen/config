@@ -55,18 +55,18 @@ bindings = [
   { key = "Key9",                       mods = "Command|Control",       chars = "\u0002\u001b[57;5u" }, # <Ctrl-b><Ctrl-9>
   { key = "Key0",                       mods = "Command|Control",       chars = "\u0002\u001b[48;5u" }, # <Ctrl-b><Ctrl-0>
 
-  ## ---- Swap ----
-  { key = "[",                          mods = "Command|Control",       chars = "\u0002\u001b[" },      # <Ctrl-b><Ctrl-[>
-  { key = "]",                          mods = "Command|Control",       chars = "\u0002\u001b]" },      # <Ctrl-b><Ctrl-]>
-  { key = ",",                          mods = "Command|Control",       chars = "\u0002\u001b," },      # <Ctrl-b><Ctrl-,>
-  { key = ".",                          mods = "Command|Control",       chars = "\u0002\u001b." },      # <Ctrl-b><Ctrl-.>
-
   ## ---- Resize ----
   { key = "Up",                         mods = "Command|Control",       chars = "\u0002\u001b[1;5A" },  # <Ctrl-b><Ctrl-Up>
   { key = "Right",                      mods = "Command|Control",       chars = "\u0002\u001b[1;5C" },  # <Ctrl-b><Ctrl-Right>
   { key = "Down",                       mods = "Command|Control",       chars = "\u0002\u001b[1;5B" },  # <Ctrl-b><Ctrl-Down> 
   { key = "Left",                       mods = "Command|Control",       chars = "\u0002\u001b[1;5D" },  # <Ctrl-b><Ctrl-Left>
   { key = "Z",                          mods = "Command|Control",       chars = "\u0002\u001a" },       # <Ctrl-b><Ctrl-z>
+
+  ## ---- Swap ----
+  { key = "{",                          mods = "Command|Shift",         chars = "\u0002\u007b" },       # <Ctrl-b>{
+  { key = "}",                          mods = "Command|Shift",         chars = "\u0002\u007d" },       # <Ctrl-b>}
+  { key = "<",                          mods = "Command|Shift",         chars = "\u0002\u003c," },      # <Ctrl-b><
+  { key = ">",                          mods = "Command|Shift",         chars = "\u0002\u003e." },      # <Ctrl-b>>
 
   ## ---- Focus ----
   { key = "Key1",                       mods = "Command",               chars = "\u0002\u0031" },       # <Ctrl-b>1
