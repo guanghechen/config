@@ -1,67 +1,8 @@
 # See https://github.com/alacritty/alacritty/blob/master/extra/man/alacritty.5.scd
 
 import = [
+  "~/.config/alacritty/basic.toml",
   "~/.config/alacritty/font.toml",
   "~/.config/alacritty/keymap.toml",
   "~/.config/alacritty/theme/tokyo-night.toml"
 ]
-
-# Live config reload (changes require restart)
-live_config_reload = true
-
-# Bell
-[bell]
-animation = "EaseOutExpo"
-color = "#EEEEF3"
-duration = 100
-
-[cursor]
-blink_interval = 700
-blink_timeout = 3
-unfocused_hollow = true
-
-[cursor.style]
-blinking = "On"
-shape = "Block"
-
-[cursor.vi_mode_style]
-blinking = "Always"
-shape = "Block"
-
-# Env
-[env]
-TERM = "xterm-256color"
-
-[mouse]
-hide_when_typing = true
-
-[scrolling]
-history = 10000 # Maximum number of lines in the scrollback buffer. Specifying '0' will disable scrolling.
-multiplier = 3 # Number of lines the viewport will move for every line scrolled when scrollback is enabled (history > 0).
-
-[selection]
-save_to_clipboard = true # When set to true, selected text will be copied to the primary clipboard.
-semantic_escape_chars = ",│`|:\\\"' ()[]{}<>\\t"
-
-[shell]
-program = "/bin/zsh"
-args = ["-l"]
-
-[window]
-blur = true
-decorations = "Buttonless"
-dynamic_padding = false
-dynamic_title = true
-opacity = 0.9
-option_as_alt = "Both"
-resize_increments = true
-startup_mode = "Windowed"
-
-# Window dimensions in character columns and lines (changes require restart)
-[window.dimensions]
-columns = 120
-lines = 35
-
-[window.padding]
-x = 5 
-y = 5
