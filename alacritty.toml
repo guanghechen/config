@@ -1,8 +1,11 @@
 # See https://github.com/alacritty/alacritty/blob/master/extra/man/alacritty.5.scd
 
-import = [
-  "~/.config/alacritty/basic.toml",
-  "~/.config/alacritty/font.toml",
-  "~/.config/alacritty/keymap.toml",
-  "~/.config/alacritty/theme/tokyo-night.toml"
-]
+## imports the absolute filepath of below config files.
+## The config file located at `C:\Users\<your user name>\AppData\Roaming`
+
+# import = [
+#   "~/.config/alacritty/basic.toml",
+#   "~/.config/alacritty/font.toml",
+#   "~/.config/alacritty/keymap.toml",
+#   "~/.config/alacritty/theme/tokyo-night.toml"
+# ]

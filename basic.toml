@@ -36,12 +36,11 @@ save_to_clipboard = true # When set to true, selected text will be copied to the
 semantic_escape_chars = ",│`|:\\\"' ()[]{}<>\\t"
 
 [shell]
-program = "/bin/zsh"
-args = ["-l"]
+program = "C:\\Windows\\System32\\wsl.exe ~"
 
 [window]
 blur = true
-decorations = "Buttonless"
+decorations = "None"
 dynamic_padding = false
 dynamic_title = true
 opacity = 0.9
