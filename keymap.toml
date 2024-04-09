@@ -89,6 +89,7 @@ bindings = [
   { key = "C",                          mods = "Command",               chars = "\u0002\u0063" },       # <Ctrl-b>c
   { key = "G",                          mods = "Command",               chars = "\u0002\u0067" },       # <Ctrl-b>g
   { key = "O",                          mods = "Command",               chars = "\u0002\u006f" },       # <Ctrl-b>o
+  { key = "R",                          mods = "Command",               chars = "\u0002\u0072" },       # <Ctrl-b>r
   { key = ":",                          mods = "Command|Shift",         chars = "\u0002\u003a" },       # <Ctrl-b>:
 
   ## ---- preserved ----
