@@ -226,18 +226,7 @@ local opts = {
       left = symbols.section_separator_left,
       right = symbols.section_separator_right,
     },
-    disabled_filetypes = {
-      statusline = { "alpha" },
-      winbar = {},
-    },
-    ignore_focus = {},
-    always_divide_middle = true,
     globalstatus = true,
-    refresh = {
-      statusline = 1000,
-      tabline = 1000,
-      winbar = 1000,
-    },
   },
   sections = {
     lualine_a = {
