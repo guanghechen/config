@@ -41,14 +41,6 @@ local function opts()
     end
   end
 
-  local function abbreviate_path(path)
-    local home = settings.globals.home
-    if path:find(home, 1, true) == 1 then
-      path = "~" .. path:sub(#home + 1)
-    end
-    return path
-  end
-
   local components = {
     separator = { -- use as section separators
       function()
@@ -160,7 +152,7 @@ local function opts()
           separator = "",
           padding = { left = 1, right = 0 },
         },
-        LazyVim.lualine.pretty_path(),
+        "filename",
         components.filename_status,
       },
       lualine_x = {
@@ -228,7 +220,7 @@ local function opts()
             dos = "CRLF",
             mac = "CR", -- Legacy macOS
           },
-          padding = { left = 1 },
+          padding = { left = 1, right = 1 },
         },
         "filetype",
       },
