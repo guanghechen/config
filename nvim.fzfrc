@@ -7,4 +7,4 @@
 --info=inline-right
 --layout=reverse
 --multi
---preview='bat --color=always {} || cat -ggn {}'
+--preview='bat --theme=OneHalfDark --style=snip --number --color=always {} || cat -ggn {}'
