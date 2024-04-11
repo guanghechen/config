@@ -1,4 +1,13 @@
-# 💤 LazyVim
+## Requirements
 
-A starter template for [LazyVim](https://github.com/LazyVim/LazyVim).
-Refer to the [documentation](https://lazyvim.github.io/installation) to get started.
+1. Install lazygit, see https://github.com/jesseduffield/lazygit
+
+   ```zsh
+   brew install lazygit
+   ```
+
+2. Install fd (for lazygit), see https://github.com/sharkdp/fd
+
+   ```zsh
+   brew install fd
+   ```

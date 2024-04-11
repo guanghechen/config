@@ -23,7 +23,7 @@ require("lazy").setup({
     colorscheme = { "tokyonight", "habamax" },
   },
   checker = {
-    enabled = true, -- automatically check for plugin updates
+    enabled = false, -- automatically check for plugin updates
   },
   performance = {
     rtp = {

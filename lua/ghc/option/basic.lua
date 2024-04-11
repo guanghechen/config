@@ -12,7 +12,7 @@ vim.opt.splitkeep = "screen"
 
 -- apperance
 vim.opt.autoindent = true
-vim.opt.conceallevel = 2 -- Hide * markup for bold and italic, but not markers with substitutions
+vim.opt.conceallevel = 0 -- Disable conceal.
 vim.opt.cursorline = true
 vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.foldenable = false
@@ -32,7 +32,6 @@ vim.opt.sidescrolloff = 8 -- Columns of context
 vim.opt.signcolumn = "yes"
 vim.opt.smartindent = true -- Insert indents automatically
 vim.opt.smarttab = true
-vim.opt.spelllang = { "en", "zh-CN" }
 vim.opt.tabstop = 2 -- set the tab width
 vim.opt.termguicolors = true
 vim.opt.winminwidth = 5 -- Minimum window width
