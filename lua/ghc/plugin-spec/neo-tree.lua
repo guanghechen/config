@@ -7,7 +7,18 @@ return {
       name = "window-picker",
       event = "VeryLazy",
       version = "2.*",
-      opt = require("ghc.plugin.nvim-window-picker.opts"),
+      opt = {
+        hint = "floating-big-letter",
+        show_prompt = true,
+        filter_rules = {
+          autoselect_one = true,
+          include_current_win = false,
+          bo = {
+            filetype = { "neo-tree", "neo-tree-popup", "notify" },
+            buftype = { "terminal", "quickfix" },
+          },
+        },
+      },
     },
   },
 }
