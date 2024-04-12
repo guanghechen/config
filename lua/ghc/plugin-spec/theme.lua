@@ -16,6 +16,7 @@ return {
   {
     "catppuccin/nvim",
     name = "catppuccin",
+    enable = false,
     background = {
       light = "latte",
       dark = "mocha",
