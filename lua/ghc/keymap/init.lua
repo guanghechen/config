@@ -1,3 +1,5 @@
 require("ghc.keymap.basic")
 require("ghc.keymap.lazygit")
-require("ghc.keymap.bufferline")
+
+-- Load plugin keymap.
+require("ghc.plugin.bufferline.keymap")
