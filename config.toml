@@ -1,0 +1,41 @@
+theme = "tokyonight_moon"
+
+[editor]
+mouse = true
+auto-save = true
+rulers = [80, 120]
+cursorline = true
+cursorcolumn = true
+bufferline = "always"
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.statusline]
+left = [ "mode", "spinner", "diagnostics" ]
+center = [ "file-name", "separator", "version-control", "separator" ]
+right = [ "position", "position-percentage", "total-line-numbers" ]
+separator = "│"
+mode.normal = "NORMAL"
+mode.insert = "INSERT"
+mode.select = "SELECT"
+
+[editor.lsp]
+display-inlay-hints = true
+
+[editor.indent-guides]
+render = true
+character = "╎" # Some characters that work well: "▏", "┆", "┊", "⸽"
+skip-levels = 1
+
+[keys.normal]
+# Personal preference
+o = ["open_below", "normal_mode"]
+O = ["open_above", "normal_mode"]
+
+# Muscle memory
+G = "goto_file_end"
+0 = "goto_line_start"
+"$" = "goto_line_end"
