@@ -11,4 +11,14 @@ return {
       },
     },
   },
+
+  -- Configure catppuccin
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    background = {
+      light = "latte",
+      dark = "mocha",
+    },
+  },
 }
