@@ -1,9 +1,15 @@
-vim.opt.clipboard = "" -- Don't bind the default register to the system clipboard
+-- LazyVim root dir detection
+-- Each entry can be:
+-- * the name of a detector function like `lsp` or `cwd`
+-- * a pattern or array of patterns like `.git` or `lua`.
+-- * a function with signature `function(buf) -> string|string[]`
+vim.g.root_spec = { ".git", "cwd" }
 
 -- general
 vim.opt.fileencoding = "utf-8"
 vim.opt_global.fileencodings = "utf-8"
 vim.opt.mouse:append("a")
+vim.opt.clipboard = "" -- Don't bind the default register to the system clipboard
 
 -- panel split
 vim.opt.splitbelow = true
