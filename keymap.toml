@@ -27,8 +27,8 @@ bindings = [
   # { key = "S",                          mods = "Command|Shift",         chars = "\u001b:wa\u000a" },    # Type <escape>:wa<enter> to save in vim or helix
 
   # ----- tmux session / window /pane -----
-  { key = "D",                          mods = "Command|Shift",         chars = "\u0002\u0004" },       # <Ctrl-b>D
-  { key = "S",                          mods = "Command|Shift",         chars = "\u0002\u0013" },       # <Ctrl-b>S
+  { key = "D",                          mods = "Command|Shift",         chars = "\u0002\u0044" },       # <Ctrl-b>D
+  { key = "S",                          mods = "Command|Shift",         chars = "\u0002\u0053" },       # <Ctrl-b>S
 
   ## ---- Rename ----
 
