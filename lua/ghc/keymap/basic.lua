@@ -13,8 +13,8 @@ vim.keymap.set("n", "<leader>k", "<C-w>k", { noremap = true, silent = true, desc
 vim.keymap.set("n", "<leader>l", "<C-w>l", { noremap = true, silent = true, desc = "Window: Focus on the right window" })
 
 ----- Split window -----
-vim.keymap.set("n", "<leader>C-l", "<C-w>v", { noremap = true, silent = true, desc = "g: Split window horizontally" })
-vim.keymap.set("n", "<leader>C-j", "<C-w>s", { noremap = true, silent = true, desc = "Window: Split window vertically" })
+vim.keymap.set("n", "<leader><C-l>", "<C-w>v", { noremap = true, silent = true, desc = "g: Split window horizontally" })
+vim.keymap.set("n", "<leader><C-j>", "<C-w>s", { noremap = true, silent = true, desc = "Window: Split window vertically" })
 
 ----- Move window -----
 vim.keymap.set("n", "<leader>wh", "<C-w>H", { noremap = true, silent = true, desc = "Window: Move the window to left-most" })

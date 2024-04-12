@@ -4,6 +4,7 @@ return {
       ["<2-LeftMouse>"] = "open",
       ["<cr>"] = "open",
       ["<esc>"] = "cancel", -- close preview or floating neo-tree window
+      ["<space>"] = "none",
       ["P"] = {
         "toggle_preview",
         config = {
@@ -11,10 +12,6 @@ return {
           use_image_nvim = true,
         },
       },
-      ["l"] = "focus_preview",
-      ["S"] = "split_with_window_picker",
-      ["s"] = "vsplit_with_window_picker",
-      ["t"] = "open_tabnew",
       ["w"] = "open_with_window_picker",
       ["C"] = "close_all_subnodes",
       ["a"] = {
@@ -23,12 +20,6 @@ return {
           show_path = "relative", -- "none", "relative", "absolute"
         },
       },
-      ["A"] = "add_directory", -- also accepts the optional config.show_path option like "add". this also supports BASH style brace expansion.
-      ["d"] = "delete",
-      ["r"] = "rename",
-      ["y"] = "copy_to_clipboard",
-      ["x"] = "cut_to_clipboard",
-      ["p"] = "paste_from_clipboard",
       ["c"] = {
         "copy",
         config = {
@@ -41,12 +32,8 @@ return {
           show_path = "relative", -- "none", "relative", "absolute"
         },
       },
-      ["q"] = "close_window",
+      ["q"] = "none",
       ["R"] = "refresh",
-      ["?"] = "show_help",
-      ["<"] = "prev_source",
-      [">"] = "next_source",
-      ["i"] = "show_file_details",
     },
   },
 }
