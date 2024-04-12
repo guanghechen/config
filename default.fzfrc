@@ -5,4 +5,4 @@
 --color="marker:#9ece6a,spinner:#9ece6a,header:#9ece6a"
 --info=inline-right
 --layout=reverse
---preview='bat --theme=OneHalfDark --style=snip --number --color=always {} || cat -n {}'
+--preview='bat --line-range=:500 --theme=OneHalfDark --style=snip --number --color=always {} || cat -n {}'
