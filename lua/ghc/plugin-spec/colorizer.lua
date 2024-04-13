@@ -1,12 +1,14 @@
 return {
-  "norcalli/nvim-colorizer.lua",
+  "NvChad/nvim-colorizer.lua",
   lazy = false,
   config = function()
     require("colorizer").setup({
-      "css",
-      "html",
-      "javascript",
-      "tmux",
+      filetypes = {
+        "css",
+        "html",
+        "javascript",
+        "tmux",
+      },
     })
   end,
 }
