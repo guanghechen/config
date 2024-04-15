@@ -1,5 +1,6 @@
 return {
   "nvim-neo-tree/neo-tree.nvim",
+  keys = require("ghc.plugin.neo-tree.keymap"),
   opts = require("ghc.plugin.neo-tree.opts"),
   dependencies = {
     {

@@ -77,6 +77,18 @@ local components = {
       bg = colors.user_bg,
     },
   },
+  filename = {
+    function()
+      local Path = require("plenary.path")
+      local cwd = vim.fn.getcwd()
+      local full_filepath = vim.fn.expand("%:p")
+      local relative_path = Path:new(full_filepath):make_relative(cwd)
+      return relative_path
+    end,
+    colored = true,
+    icon_only = false,
+    padding = { left = 1, right = 1 },
+  },
   filename_status = {
     function()
       local function is_new_file()
@@ -152,7 +164,7 @@ function opts()
           separator = "",
           padding = { left = 1, right = 0 },
         },
-        "filename",
+        components.filename,
         components.filename_status,
       },
       lualine_x = {
