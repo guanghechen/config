@@ -23,6 +23,7 @@ vim.opt.cursorline = true
 vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.foldenable = false
 vim.opt.foldlevel = 99
+vim.opt.guifont = "RobotoMono Nerd Font"
 vim.opt.list = true -- Show some invisible characters (tabs...
 vim.opt.laststatus = 3 -- Keep only the global status bar.
 vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim` experience issues.
