@@ -1,10 +1,16 @@
 gui:
+  showFileTree: true
   showIcons: true
+  timeFormat: "2006-01-02 15:04:05"
+
 git:
+  autoFetch: false
   paging:
     colorArg: always
-    useConfig: false
-
     # cargo install git-delta
     pager: delta --dark --paging=never --syntax-theme base16-256 -s
     # pager: delta --dark --paging=never --syntax-theme base16-256 --diff-so-fancy
+
+os:
+  editCommand: "nvim"
+  editCommandTemplate: "{{editor}} {{filename}}"
