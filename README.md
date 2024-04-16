@@ -16,7 +16,20 @@
      brew install fd
      ```
 
-3. Install rustc/cargo
+3. Install fzf, see https://github.com/junegunn/fzf?tab=readme-ov-file
+
+   - windows
+
+     ```powershell
+     winget install fzf
+     ```
+
+   - wsl / ubuntu
+     ```zsh
+     sudo apt install fzf
+     ```
+
+4. Install rustc/cargo
 
    - wsl
 
