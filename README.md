@@ -2,12 +2,25 @@
 
 1. Install lazygit, see https://github.com/jesseduffield/lazygit
 
-   ```zsh
-   brew install lazygit
-   ```
+   - macos
+
+     ```zsh
+     brew install lazygit
+     ```
 
 2. Install fd (for lazygit), see https://github.com/sharkdp/fd
 
-   ```zsh
-   brew install fd
-   ```
+   - macos
+
+     ```zsh
+     brew install fd
+     ```
+
+3. Install rustc/cargo
+
+   - wsl
+
+     ```zsh
+     # cargo is distributed by default with Rust.
+     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+     ```
