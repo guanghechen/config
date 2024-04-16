@@ -19,7 +19,7 @@ local opts = {
       preview_cutoff = 120,
     },
     layout_strategy = "horizontal",
-    path_display = { "absolute" },
+    -- path_display = { "absolute" },
     results_title = false,
     scroll_strategy = "cycle",
     selection_strategy = "reset",
