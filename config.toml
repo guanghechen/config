@@ -1,4 +1,5 @@
-theme = "tokyonight_moon"
+# theme = "tokyonight_moon"
+theme = "github_dark"
 
 [editor]
 mouse = true
@@ -14,9 +15,9 @@ normal = "block"
 select = "underline"
 
 [editor.statusline]
-left = [ "mode", "spinner", "diagnostics" ]
-center = [ "file-name", "separator", "version-control", "separator" ]
-right = [ "position", "position-percentage", "total-line-numbers" ]
+# left = [ "mode", "spinner", "diagnostics" ]
+# center = [ "file-name", "separator", "version-control", "separator" ]
+# right = [ "position", "total-line-numbers" ]
 separator = "│"
 mode.normal = "NORMAL"
 mode.insert = "INSERT"
