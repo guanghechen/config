@@ -17,19 +17,10 @@ return {
   {
     "catppuccin/nvim",
     name = "catppuccin",
-    enabled = false,
+    flavor = "auto",
     background = {
       light = "latte",
       dark = "mocha",
-    },
-  },
-
-  -- Configure papercolor
-  {
-    "yorik1984/newpaper.nvim",
-    priority = 1000,
-    opts = {
-      style = "light",
     },
   },
 }
