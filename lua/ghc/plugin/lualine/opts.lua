@@ -5,7 +5,7 @@ local symbols = settings.symbols.status_line
 local colors = {
   user_bg = "#BD7BB8",
   user_fg = "#FFFFFF",
-  main_bg = "#1C1D2A",
+  main_bg = vim.fn.synIDattr(vim.fn.hlID("StatusLine"), "bg"),
 }
 
 local conditionals = {
