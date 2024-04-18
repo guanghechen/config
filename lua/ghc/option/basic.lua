@@ -20,6 +20,7 @@ vim.opt.splitkeep = "screen"
 vim.opt.autoindent = true
 vim.opt.conceallevel = 0 -- Disable conceal.
 vim.opt.cursorline = true
+vim.opt.cursorcolumn = true
 vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.foldenable = false
 vim.opt.foldlevel = 99
