@@ -168,9 +168,11 @@ vim.keymap.set("n", "<leader>ft2", finder.terminal.cwd, { noremap = true, desc =
 vim.keymap.set("n", "<leader>ft3", finder.terminal.current, { noremap = true, desc = "Open terminal (directory)" })
 
 -- searchers
-vim.keymap.set("n", "<leader>sg1", searcher.live_grep_with_args.workspace, { noremap = true, desc = "Grep (workspace)" })
-vim.keymap.set("n", "<leader>sg2", searcher.live_grep_with_args.cwd, { noremap = false, desc = "Grep (cwd)" })
-vim.keymap.set("n", "<leader>sg3", searcher.live_grep_with_args.current, { noremap = false, desc = "Grep (directory)" })
+-- vim.keymap.set("n", "<leader>sg1", searcher.live_grep_with_args.workspace, { noremap = true, desc = "Grep (workspace)" })
+-- vim.keymap.set("n", "<leader>sg2", searcher.live_grep_with_args.cwd, { noremap = false, desc = "Grep (cwd)" })
+-- vim.keymap.set("n", "<leader>sg3", searcher.live_grep_with_args.current, { noremap = false, desc = "Grep (directory)" })
+vim.keymap.set("n", "<leader>sG", searcher.live_grep_with_args.workspace, { noremap = true, desc = "Grep (workspace)" })
+vim.keymap.set("n", "<leader>sg", searcher.live_grep_with_args.cwd, { noremap = false, desc = "Grep (cwd)" })
 
 local function keys()
   return {
