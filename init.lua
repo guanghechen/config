@@ -13,7 +13,8 @@ require("lazy").setup({
       "LazyVim/LazyVim",
       import = "lazyvim.plugins",
       opts = {
-        colorscheme = "catppuccin", -- Set default theme
+        -- colorscheme = "catppuccin", -- Set default theme
+        colorscheme = "tokyonight", -- Set default theme
       },
     },
     { import = "ghc.plugin-spec" },
