@@ -9,7 +9,7 @@ local opts = {
         require("ghc.option")
       end,
     },
-    { import = "ghc.plugin.spec" },
+    { import = "ghc.plugin-spec" },
   },
   defaults = {
     lazy = true,
