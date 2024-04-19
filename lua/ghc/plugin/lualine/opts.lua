@@ -5,10 +5,8 @@ local symbols = settings.symbols.status_line
 local colors = {
   user_bg = "#BD7BB8",
   user_fg = "#FFFFFF",
-  main_bg = vim.fn.synIDattr(vim.fn.hlID("StatusLineMiddle"), "bg"),
+  main_bg = vim.fn.synIDattr(vim.fn.hlID("StatusLine"), "bg"),
 }
-
-print("main_bg" .. colors.main_bg)
 
 local conditionals = {
   has_enough_room = function()
@@ -47,9 +45,8 @@ local components = {
     function()
       return "│"
     end,
-    padding = { left = 0, right = 1 },
+    padding = 0,
     color = {
-      fg = colors.main_bg,
       bg = colors.main_bg,
     },
   },
@@ -65,11 +62,12 @@ local components = {
   },
   separator_blank = { -- use as section separators
     function()
+      -- return symbols.section_separator_left
       return " "
     end,
     padding = 0,
     color = {
-      fg = colors.main_bg,
+      fg = "#ff0000",
       bg = colors.main_bg,
     },
   },
