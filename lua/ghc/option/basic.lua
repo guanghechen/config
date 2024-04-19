@@ -19,12 +19,12 @@ vim.opt.splitkeep = "screen"
 -- apperance
 vim.opt.autoindent = true
 vim.opt.conceallevel = 0 -- Disable conceal.
-vim.opt.cursorline = true
-vim.opt.cursorcolumn = true
+vim.opt.cursorline = true -- true to highlight the row of the cursor.
+vim.opt.cursorcolumn = false -- true to highlight the column of the cursor.
 vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.foldenable = false
 vim.opt.foldlevel = 99
-vim.opt.guifont = "RobotoMono Nerd Font"
+vim.opt.guifont = { "RobotoMono Nerd Font" }
 vim.opt.list = true -- Show some invisible characters (tabs...
 vim.opt.laststatus = 3 -- Keep only the global status bar.
 vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim` experience issues.

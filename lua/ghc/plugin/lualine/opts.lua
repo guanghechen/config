@@ -5,8 +5,10 @@ local symbols = settings.symbols.status_line
 local colors = {
   user_bg = "#BD7BB8",
   user_fg = "#FFFFFF",
-  main_bg = vim.fn.synIDattr(vim.fn.hlID("StatusLine"), "bg"),
+  main_bg = vim.fn.synIDattr(vim.fn.hlID("StatusLineMiddle"), "bg"),
 }
+
+print("main_bg" .. colors.main_bg)
 
 local conditionals = {
   has_enough_room = function()
@@ -41,7 +43,17 @@ local function diff_source()
 end
 
 local components = {
-  separator = { -- use as section separators
+  separator_left = { -- use as section separators
+    function()
+      return "│"
+    end,
+    padding = { left = 0, right = 1 },
+    color = {
+      fg = colors.main_bg,
+      bg = colors.main_bg,
+    },
+  },
+  separator_right = { -- use as section separators
     function()
       return "│"
     end,
@@ -51,11 +63,15 @@ local components = {
       bg = colors.main_bg,
     },
   },
-  separator_split = { -- use as section separators
+  separator_blank = { -- use as section separators
     function()
-      return "│"
+      return " "
     end,
     padding = 0,
+    color = {
+      fg = colors.main_bg,
+      bg = colors.main_bg,
+    },
   },
   separator_user = {
     function()
@@ -111,9 +127,10 @@ local components = {
   cwd = {
     function()
       local name = vim.loop.cwd() or ""
-      name = " " .. (name:match("([^/\\]+)[/\\]*$") or name) .. " "
-      return (vim.o.columns > 85 and (symbols.cwd .. name)) or ""
+      name = (name:match("([^/\\]+)[/\\]*$") or name) .. " "
+      return (vim.o.columns > 85 and (" " .. symbols.cwd .. name)) or ""
     end,
+    padding = { left = 0, right = 0 },
   },
   tabwidth = {
     function()
@@ -123,7 +140,7 @@ local components = {
   },
 }
 
-function opts()
+local function opts()
   return {
     options = {
       theme = "auto",
@@ -145,7 +162,7 @@ function opts()
       },
       lualine_b = {
         "branch",
-        components.separator,
+        components.separator_left,
       },
       lualine_c = {
         LazyVim.lualine.root_dir(),
@@ -215,12 +232,13 @@ function opts()
           padding = { right = 1 },
         },
         "filesize",
+        components.separator_blank,
       },
       lualine_y = {
-        components.separator,
+        components.separator_right,
         {
-          "encoding",
           fmt = string.upper,
+          "encoding",
           padding = { left = 1 },
           cond = conditionals.has_enough_room,
         },
