@@ -1,2 +1,5 @@
+require("ghc.keymap.buffer")
 require("ghc.keymap.find")
 require("ghc.keymap.search")
+require("ghc.keymap.terminal")
+require("ghc.keymap.window")

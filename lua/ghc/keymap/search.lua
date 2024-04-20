@@ -1,4 +1,4 @@
-local path = require("ghc.util.path")
+local path = require("ghc.util.path").paths
 
 local searcher = {
   live_grep_with_args = {

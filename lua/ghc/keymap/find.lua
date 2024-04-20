@@ -1,10 +1,10 @@
-local path = require("ghc.util.path")
+local paths = require("ghc.util.path").paths
 
 local finder = {
   explorer = {
     workspace = function()
       require("telescope").extensions.file_browser.file_browser({
-        cwd = path.workspace(),
+        cwd = paths.workspace(),
         workspace = "CWD",
         show_untracked = true,
         grouped = true,
@@ -14,7 +14,7 @@ local finder = {
     end,
     current = function()
       require("telescope").extensions.file_browser.file_browser({
-        cwd = path.current(),
+        cwd = paths.current(),
         workspace = "CWD",
         select_buffer = true,
         show_untracked = true,
@@ -27,7 +27,7 @@ local finder = {
   files = {
     workspace = function()
       require("telescope.builtin").find_files({
-        cwd = path.workspace(),
+        cwd = paths.workspace(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find files (workspace)",
@@ -35,7 +35,7 @@ local finder = {
     end,
     cwd = function()
       require("telescope.builtin").find_files({
-        cwd = path.cwd(),
+        cwd = paths.cwd(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find files (cwd)",
@@ -43,7 +43,7 @@ local finder = {
     end,
     git = function()
       require("telescope.builtin").git_files({
-        cwd = path.workspace(),
+        cwd = paths.workspace(),
         workspace = "CWD",
         prompt_title = "Find files (git)",
       })
@@ -52,7 +52,7 @@ local finder = {
   frecency = {
     workspace = function()
       require("telescope").extensions.frecency.frecency({
-        cwd = path.workspace(),
+        cwd = paths.workspace(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find recent (workspace)",
@@ -60,7 +60,7 @@ local finder = {
     end,
     cwd = function()
       require("telescope").extensions.frecency.frecency({
-        cwd = path.cwd(),
+        cwd = paths.cwd(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find recent (cwd)",
@@ -68,33 +68,10 @@ local finder = {
     end,
     current = function()
       require("telescope").extensions.frecency.frecency({
-        cwd = path.current(),
+        cwd = paths.current(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find recent (current directory)",
-      })
-    end,
-  },
-  terminal = {
-    workspace = function()
-      require("nvchad.term").toggle({
-        pos = "float",
-        id = "workspace-terminal",
-        cmd = "cd " .. '"' .. path.workspace() .. '"',
-      })
-    end,
-    cwd = function()
-      require("nvchad.term").toggle({
-        pos = "float",
-        id = "cwd-terminal",
-        cmd = "cd " .. '"' .. path.cwd() .. '"',
-      })
-    end,
-    current = function()
-      require("nvchad.term").create({
-        pos = "float",
-        id = "current-terminal",
-        cmd = "cd " .. '"' .. path.current() .. '"',
       })
     end,
   },
@@ -112,6 +89,3 @@ vim.keymap.set("n", "<leader><leader>", finder.files.cwd, { noremap = true, desc
 -- vim.keymap.set("n", "<leader>fr3", finder.frecency.current, { noremap = true, desc = "Recent (directory)" })
 vim.keymap.set("n", "<leader>fR", finder.frecency.workspace, { noremap = true, desc = "Recent (repo)" })
 vim.keymap.set("n", "<leader>fr", finder.frecency.cwd, { noremap = true, desc = "Recent (cwd)" })
-vim.keymap.set("n", "<leader>ft1", finder.terminal.workspace, { noremap = true, desc = "Toggle terminal (workspace)" })
-vim.keymap.set("n", "<leader>ft2", finder.terminal.cwd, { noremap = true, desc = "Toggle terminal (cwd)" })
-vim.keymap.set("n", "<leader>ft3", finder.terminal.current, { noremap = true, desc = "Create terminal (directory)" })

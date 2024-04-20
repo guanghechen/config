@@ -13,7 +13,7 @@ local function findWorkspace()
   return cwd
 end
 
-return {
+local paths = {
   workspace = function()
     return findWorkspace()
   end,
@@ -23,4 +23,8 @@ return {
   current = function()
     return vim.fn.expand("%:p:h")
   end,
+}
+
+return {
+  paths = paths,
 }
