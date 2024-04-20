@@ -33,7 +33,7 @@ local opts = {
       use_sqlite = false,
       show_scores = true,
       show_unindexed = true,
-      ignore_patterns = { "*.git/*", "*/tmp/*", "*node_modules/*" },
+      ignore_patterns = { "*.git/*", "*/tmp/*", "*node_modules/*", ".yarn/*" },
     },
     fzf = {
       fuzzy = false,

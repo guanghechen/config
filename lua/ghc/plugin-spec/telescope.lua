@@ -7,8 +7,10 @@ end
 return {
   {
     "telescope.nvim",
-    keys = require("ghc.plugin.telescope.keys"),
-    opts = require("ghc.plugin.telescope.opts"),
+    opts = require("ghc.plugin.telescope"),
+    keys = function()
+      return {}
+    end,
   },
   {
     "nvim-telescope/telescope-frecency.nvim",

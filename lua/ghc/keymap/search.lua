@@ -4,8 +4,8 @@ local searcher = {
   live_grep_with_args = {
     workspace = function()
       require("telescope").extensions.live_grep_args.live_grep_args({
-        workspace = "CWD",
         cwd = path.workspace(),
+        workspace = "CWD",
         show_untracked = true,
         prompt_title = "Search grep with args (workspace)",
       })

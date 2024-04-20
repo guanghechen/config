@@ -43,8 +43,8 @@ local finder = {
     end,
     git = function()
       require("telescope.builtin").git_files({
-        workspace = "CWD",
         cwd = path.workspace(),
+        workspace = "CWD",
         prompt_title = "Find files (git)",
       })
     end,
@@ -77,23 +77,24 @@ local finder = {
   },
   terminal = {
     workspace = function()
-      LazyVim.terminal(nil, {
-        cwd = path.workspace(),
-        border = "rounded",
-        persistent = true,
+      require("nvchad.term").toggle({
+        pos = "float",
+        id = "workspace-terminal",
+        cmd = "cd " .. '"' .. path.workspace() .. '"',
       })
     end,
     cwd = function()
-      LazyVim.terminal(nil, {
-        cwd = path.cwd(),
-        border = "rounded",
-        persistent = true,
+      require("nvchad.term").toggle({
+        pos = "float",
+        id = "cwd-terminal",
+        cmd = "cd " .. '"' .. path.cwd() .. '"',
       })
     end,
     current = function()
-      LazyVim.terminal(nil, {
-        cwd = path.current(),
-        border = "rounded",
+      require("nvchad.term").create({
+        pos = "float",
+        id = "current-terminal",
+        cmd = "cd " .. '"' .. path.current() .. '"',
       })
     end,
   },
@@ -111,6 +112,6 @@ vim.keymap.set("n", "<leader><leader>", finder.files.cwd, { noremap = true, desc
 -- vim.keymap.set("n", "<leader>fr3", finder.frecency.current, { noremap = true, desc = "Recent (directory)" })
 vim.keymap.set("n", "<leader>fR", finder.frecency.workspace, { noremap = true, desc = "Recent (repo)" })
 vim.keymap.set("n", "<leader>fr", finder.frecency.cwd, { noremap = true, desc = "Recent (cwd)" })
-vim.keymap.set("n", "<leader>ft1", finder.terminal.workspace, { noremap = true, desc = "Find files (workspace)" })
-vim.keymap.set("n", "<leader>ft2", finder.terminal.cwd, { noremap = true, desc = "Find files (cwd)" })
-vim.keymap.set("n", "<leader>ft3", finder.terminal.current, { noremap = true, desc = "Open terminal (directory)" })
+vim.keymap.set("n", "<leader>ft1", finder.terminal.workspace, { noremap = true, desc = "Toggle terminal (workspace)" })
+vim.keymap.set("n", "<leader>ft2", finder.terminal.cwd, { noremap = true, desc = "Toggle terminal (cwd)" })
+vim.keymap.set("n", "<leader>ft3", finder.terminal.current, { noremap = true, desc = "Create terminal (directory)" })

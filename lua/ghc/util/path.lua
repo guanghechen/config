@@ -2,14 +2,14 @@ local Path = require("plenary.path")
 
 local function findWorkspace()
   local cwd = vim.uv.cwd()
-  local currentDir = Path:new(cwd):absolute()
-  repeat
-    local gitDir = currentDir:join(".git")
+  local currentDir = Path:new(cwd)
+  while currentDir ~= nil do
+    local gitDir = currentDir:joinpath(".git")
     if gitDir:exists() and gitDir:is_dir() then
       return currentDir
     end
     currentDir = currentDir:parent()
-  until currentDir == nil
+  end
   return cwd
 end
 
