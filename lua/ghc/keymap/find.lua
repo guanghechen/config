@@ -1,10 +1,10 @@
-local paths = require("ghc.util.path")
+local path = require("ghc.util.path")
 
 local finder = {
   explorer = {
     workspace = function()
       require("telescope").extensions.file_browser.file_browser({
-        cwd = paths.workspace(),
+        cwd = path.workspace(),
         workspace = "CWD",
         show_untracked = true,
         grouped = true,
@@ -14,7 +14,7 @@ local finder = {
     end,
     current = function()
       require("telescope").extensions.file_browser.file_browser({
-        cwd = paths.current(),
+        cwd = path.current(),
         workspace = "CWD",
         select_buffer = true,
         show_untracked = true,
@@ -27,7 +27,7 @@ local finder = {
   files = {
     workspace = function()
       require("telescope.builtin").find_files({
-        cwd = paths.workspace(),
+        cwd = path.workspace(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find files (workspace)",
@@ -35,7 +35,7 @@ local finder = {
     end,
     cwd = function()
       require("telescope.builtin").find_files({
-        cwd = paths.cwd(),
+        cwd = path.cwd(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find files (cwd)",
@@ -43,7 +43,7 @@ local finder = {
     end,
     git = function()
       require("telescope.builtin").git_files({
-        cwd = paths.workspace(),
+        cwd = path.workspace(),
         workspace = "CWD",
         prompt_title = "Find files (git)",
       })
@@ -52,7 +52,7 @@ local finder = {
   frecency = {
     workspace = function()
       require("telescope").extensions.frecency.frecency({
-        cwd = paths.workspace(),
+        cwd = path.workspace(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find recent (workspace)",
@@ -60,7 +60,7 @@ local finder = {
     end,
     cwd = function()
       require("telescope").extensions.frecency.frecency({
-        cwd = paths.cwd(),
+        cwd = path.cwd(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find recent (cwd)",
@@ -68,7 +68,7 @@ local finder = {
     end,
     current = function()
       require("telescope").extensions.frecency.frecency({
-        cwd = paths.current(),
+        cwd = path.current(),
         workspace = "CWD",
         show_untracked = true,
         prompt_title = "Find recent (current directory)",

@@ -45,5 +45,5 @@ local terminal = {
 }
 
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { noremap = true, silent = true, desc = "terminal: Exit terminal mode" })
-vim.keymap.set("n", "<leader>T", terminal.workspace, { noremap = true, silent = true, desc = "terminal: toggle terminal (workspace)" })
-vim.keymap.set("n", "<leader>t", terminal.cwd, { noremap = true, silent = true, desc = "terminal: toggle terminal (cwd)" })
+vim.keymap.set("n", "<leader>tT", terminal.workspace, { noremap = true, silent = true, desc = "terminal: toggle terminal (workspace)" })
+vim.keymap.set("n", "<leader>tt", terminal.cwd, { noremap = true, silent = true, desc = "terminal: toggle terminal (cwd)" })
