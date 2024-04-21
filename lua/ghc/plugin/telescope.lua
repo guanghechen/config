@@ -21,22 +21,24 @@ local opts = {
   defaults = {
     prompt_prefix = " ",
     selection_caret = " ",
-    border = true,
+    border = {},
+    borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
     color_devicons = true,
+    set_env = { ["COLORTERM"] = "truecolor" }, -- default = nil,
     dynamic_preview_title = true,
     file_ignore_patterns = { ".git/", ".cache", "build/", "%.class", "%.pdf", "%.mkv", "%.mp4", "%.zip" },
     initial_mode = "insert",
     layout_config = {
       horizontal = {
-        width = 0.85,
-        height = 0.92,
         prompt_position = "top",
+        preview_width = 0.55,
+        results_width = 0.8,
       },
       vertical = {
-        width = 0.85,
-        height = 0.92,
         mirror = false,
       },
+      width = 0.87,
+      height = 0.80,
       preview_cutoff = 120,
     },
     layout_strategy = "horizontal",
@@ -50,7 +52,7 @@ local opts = {
     mapping = {
       n = { s = flash },
       i = { ["<c-s>"] = flash },
-    }
+    },
   },
   extensions = {
     file_browser = {},

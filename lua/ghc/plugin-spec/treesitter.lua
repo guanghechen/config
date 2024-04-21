@@ -54,6 +54,7 @@ return {
       auto_install = true,
       highlight = {
         enable = true,
+        use_languagetree = true,
         additional_vim_regex_highlighting = false,
         disable = function(lang, buf)
           local max_filesize = 100 * 1024 * 1024 -- 100 MB
@@ -118,6 +119,11 @@ return {
         },
       },
     },
+    config = function(_, opts)
+      dofile(vim.g.base46_cache .. "syntax")
+      dofile(vim.g.base46_cache .. "treesitter")
+      require("nvim-treesitter.configs").setup(opts)
+    end,
   },
 
   -- Show context of the current function
