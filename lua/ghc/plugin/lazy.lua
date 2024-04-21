@@ -4,7 +4,7 @@ local opts = {
       "NvChad/NvChad",
       lazy = false,
       branch = "v2.5",
-      import = "nvchad.plugins",
+      -- import = "nvchad.plugins",
       config = function()
         require("ghc.option")
       end,

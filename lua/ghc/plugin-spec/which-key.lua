@@ -1,6 +1,16 @@
 return {
   {
     "folke/which-key.nvim",
+    init = function()
+      vim.o.timeout = true
+      vim.o.timeoutlen = 300
+    end,
+    config = function(_, opts)
+      dofile(vim.g.base46_cache .. "whichkey")
+      require("which-key").setup(opts)
+      require("which-key").register(opts.defaults)
+    end,
+    cmd = "WhichKey",
     opts = {
       plugins = { spelling = true },
       defaults = {
