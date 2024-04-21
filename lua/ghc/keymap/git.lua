@@ -16,7 +16,12 @@ local git = {
   file = {
     history = function()
       local git_path = vim.api.nvim_buf_get_name(0)
-      LazyVim.lazygit({ args = { "-f", vim.trim(git_path) } })
+      LazyVim.lazygit({
+        args = {
+          "-f",
+          vim.trim(git_path)
+        }
+      })
     end,
   },
 }
