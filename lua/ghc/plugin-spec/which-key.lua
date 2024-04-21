@@ -11,6 +11,7 @@ return {
       require("which-key").register(opts.defaults)
     end,
     cmd = "WhichKey",
+    keys = { "<leader>", '"', "'", "`", "c", "v", "g" },
     opts = {
       plugins = { spelling = true },
       defaults = {

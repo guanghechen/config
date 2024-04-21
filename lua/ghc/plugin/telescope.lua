@@ -1,5 +1,7 @@
 local opts = {
   defaults = {
+    prompt_prefix = " ",
+    selection_caret = " ",
     border = true,
     color_devicons = true,
     dynamic_preview_title = true,

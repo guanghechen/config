@@ -10,7 +10,7 @@ local function set_term_ft(id)
   end
 
   if term ~= nil then
-    vim.bo[term.buf].filetype = "nvchad-term"
+    vim.bo[term.buf].filetype = "term"
   end
 end
 
