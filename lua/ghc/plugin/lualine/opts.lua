@@ -1,6 +1,5 @@
 local icons = require("lazyvim.config").icons
-local settings = require("ghc.core")
-local symbols = settings.symbols.status_line
+local symbols = require("ghc.core.settings.symbols").status_line
 
 local colors = {
   user_bg = "#BD7BB8",

@@ -7,5 +7,7 @@ vim.keymap.del("n", "<leader>|")
 vim.keymap.del("n", "<leader>fT")
 vim.keymap.del("n", "<leader>ft")
 vim.keymap.del("n", "<leader>L")
+vim.keymap.del("n", "<leader>w-")
+vim.keymap.del("n", "<leader>w|")
 
 require("ghc.keymap")
