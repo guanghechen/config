@@ -6,32 +6,6 @@
 
 vim.keymap.set("n", "<Esc>", "<cmd>nohl<CR>", { noremap = true, silent = true, desc = "Remove search highlights" })
 
------ Focus window -----
-vim.keymap.set("n", "<leader>h", "<C-w>h", { noremap = true, silent = true, desc = "Window: Focus on the left window" })
-vim.keymap.set("n", "<leader>j", "<C-w>j", { noremap = true, silent = true, desc = "Window: Focus on the bottom window" })
-vim.keymap.set("n", "<leader>k", "<C-w>k", { noremap = true, silent = true, desc = "Window: Focus on the top window" })
-vim.keymap.set("n", "<leader>l", "<C-w>l", { noremap = true, silent = true, desc = "Window: Focus on the right window" })
-
------ Split window -----
-vim.keymap.set("n", "<leader>wl", "<C-w>v", { noremap = true, silent = true, desc = "g: Split window horizontally" })
-vim.keymap.set("n", "<leader>wj", "<C-w>s", { noremap = true, silent = true, desc = "Window: Split window vertically" })
-
------ Kill window -----
-vim.keymap.set("n", "<leader>wd", "<cmd>close<CR>", { noremap = true, silent = true, desc = "Window: close current window" })
-vim.keymap.set("n", "<leader>wo", "<cmd>only<CR>", { noremap = true, silent = true, desc = "Window: close others" })
-
------ Move window -----
--- vim.keymap.set("n", "<leader>wh", "<C-w>H", { noremap = true, silent = true, desc = "Window: Move the window to left-most" })
--- vim.keymap.set("n", "<leader>wj", "<C-w>J", { noremap = true, silent = true, desc = "Window: Move the window to bottom-most" })
--- vim.keymap.set("n", "<leader>wk", "<C-w>K", { noremap = true, silent = true, desc = "Window: Move the window to top-most" })
--- vim.keymap.set("n", "<leader>wl", "<C-w>L", { noremap = true, silent = true, desc = "Window: Move the window to bottom-most" })
-
------ Resize window -----
-vim.keymap.set("n", "<leader>wH", "<cmd>vertical resize -3<CR>", { noremap = true, silent = true, desc = "Window: Resize -3 vertically." })
-vim.keymap.set("n", "<leader>wJ", "<cmd>resize -3<CR>", { noremap = true, silent = true, desc = "Window: Resize -3 horizontally." })
-vim.keymap.set("n", "<leader>wK", "<cmd>resize +3<CR>", { noremap = true, silent = true, desc = "Window: Resize +3 horizontally." })
-vim.keymap.set("n", "<leader>wL", "<cmd>vertical resize +3<CR>", { noremap = true, silent = true, desc = "Window: Resize +3 vertically." })
-
 ------------------------------------------------------------------------------------- Normal mode --
 
 -- Visual mode -------------------------------------------------------------------------------------
@@ -39,7 +13,5 @@ vim.keymap.set("n", "<leader>wL", "<cmd>vertical resize +3<CR>", { noremap = tru
 ------------------------------------------------------------------------------------- Visual mode --
 
 -- Terminal mode -----------------------------------------------------------------------------------
-
-vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { noremap = true, silent = true, desc = "Exit terminal mode" })
 
 ----------------------------------------------------------------------------------- Terminal mode --
