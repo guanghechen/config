@@ -8,6 +8,10 @@ return {
   {
     "telescope.nvim",
     opts = require("ghc.plugin.telescope"),
+    config = function(_, opts)
+      dofile(vim.g.base46_cache .. "telescope")
+      require("telescope").setup(opts)
+    end,
   },
   {
     "nvim-telescope/telescope-frecency.nvim",
@@ -37,7 +41,6 @@ return {
     config = loadTelescopeExtension("file_browser"),
     dependencies = {
       "nvim-telescope/telescope.nvim",
-      "nvim-lua/plenary.nvim",
     },
   },
 }

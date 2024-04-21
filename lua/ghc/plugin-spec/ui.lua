@@ -185,20 +185,4 @@ return {
       { "<c-b>", function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true, expr = true, desc = "Scroll Backward", mode = {"i", "n", "s"}},
     },
   },
-
-
-  -- icons
-  {
-    "nvim-tree/nvim-web-devicons",
-    lazy = true,
-    config = function() 
-      dofile(vim.g.base46_cache .. "devicons")
-      require("nvim-web-devicons").setup({
-        override = require("nvchad.icons.devicons")
-      })
-    end
-  },
-
-  -- ui components
-  { "MunifTanjim/nui.nvim", lazy = true },
 }

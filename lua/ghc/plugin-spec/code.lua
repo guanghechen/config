@@ -18,7 +18,15 @@ return {
     -- Change surround mappings
     -- https://www.lazyvim.org/configuration/recipes#change-surround-mappings
     "echasnovski/mini.surround",
-    keys = { "gsa", "gsd", "gsf", "gsF", "gsh", "gsr", "gsn" },
+    keys = {
+      { "gsa", mode = { "n", "v" } },
+      "gsd",
+      "gsf",
+      "gsF",
+      "gsh",
+      "gsr",
+      "gsn",
+    },
     opts = {
       mappings = {
         add = "gsa",
