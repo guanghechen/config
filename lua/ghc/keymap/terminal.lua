@@ -1,26 +1,46 @@
-local paths = require("ghc.util.path").paths
+local path = require("ghc.util.path")
+
+local function set_term_ft(id)
+  local term = nil
+  for _, item in pairs(vim.g.nvchad_terms) do
+    if item.id == id then
+      term = item
+      break
+    end
+  end
+
+  if term ~= nil then
+    vim.bo[term.buf].filetype = "nvchad-term"
+  end
+end
 
 local terminal = {
   workspace = function()
+    local id = "windows-terminal"
     require("nvchad.term").toggle({
+      id = id,
+      cmd = "cd " .. '"' .. path.workspace() .. '"',
       pos = "float",
-      id = "workspace-terminal",
-      cmd = "cd " .. '"' .. paths.workspace() .. '"',
     })
+    set_term_ft(id)
   end,
   cwd = function()
+    local id = "cwd-terminal"
     require("nvchad.term").toggle({
+      id = id,
+      cmd = "cd " .. '"' .. path.cwd() .. '"',
       pos = "float",
-      id = "cwd-terminal",
-      cmd = "cd " .. '"' .. paths.cwd() .. '"',
     })
+    set_term_ft(id)
   end,
   current = function()
+    local id = "current-terminal"
     require("nvchad.term").create({
+      id = id,
+      cmd = "cd " .. '"' .. path.current() .. '"',
       pos = "float",
-      id = "current-terminal",
-      cmd = "cd " .. '"' .. paths.current() .. '"',
     })
+    set_term_ft(id)
   end,
 }
 

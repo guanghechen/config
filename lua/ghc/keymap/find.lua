@@ -1,4 +1,4 @@
-local paths = require("ghc.util.path").paths
+local paths = require("ghc.util.path")
 
 local finder = {
   explorer = {
