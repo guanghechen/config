@@ -5,10 +5,9 @@ return {
   {
     "folke/flash.nvim",
     event = "VeryLazy",
-    vscode = true,
     opts = {
       jump = {
-        autojump = false,
+        autojump = true,
       },
     },
     keys = {

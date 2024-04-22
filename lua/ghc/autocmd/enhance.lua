@@ -108,12 +108,12 @@ vim.api.nvim_create_autocmd("FileType", {
     "neotest-output-panel",
     "neotest-summary",
     "notify",
-    "nvchad-term",
     "PlenaryTestPopup",
     "qf",
     "query",
     "spectre_panel",
     "startuptime",
+    "term",
     "tsplayground",
   },
   callback = function(event)
