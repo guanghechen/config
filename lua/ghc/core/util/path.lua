@@ -7,7 +7,7 @@ M.findGitRepoFromPath = function(p)
   while current_dir ~= nil do
     local gitDir = current_dir:joinpath(".git")
     if gitDir:exists() and gitDir:is_dir() then
-      return current_dir
+      return current_dir:absolute()
     end
 
     local parent_dir = current_dir:parent()
@@ -17,6 +17,10 @@ M.findGitRepoFromPath = function(p)
     current_dir = parent_dir
   end
   return nil
+end
+
+M.relative = function(from, to)
+  return Path:new(to):make_relative(from)
 end
 
 M.workspace = function()
@@ -33,4 +37,3 @@ M.current = function()
 end
 
 return M
-
