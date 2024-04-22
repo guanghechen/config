@@ -33,13 +33,8 @@ return {
   open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "Outline" },
   popup_border_style = "rounded",
   sort_case_insensitive = true, -- used when sorting files and directories in the tree
-  sort_function = sort_function,
+  sort_function = utils.sort_function,
   sources = { "filesystem", "buffers", "git_status", "document_symbols" },
-  filesystem = {
-    bind_to_cwd = false,
-    follow_current_file = { enabled = true },
-    use_libuv_file_watcher = true,
-  },
   default_component_configs = {
     container = {
       enable_character_fade = true
@@ -196,6 +191,8 @@ return {
     },
   },
   filesystem = {
+    bind_to_cwd = false,
+    use_libuv_file_watcher = true,
     filtered_items = {
       visible = false, -- when true, they will just be displayed differently than normal items
       hide_dotfiles = false,
@@ -225,7 +222,7 @@ return {
     },
     follow_current_file = {
       enabled = true,
-      leave_dirs_open = false, -- `false` closes auto expanded dirs, such as with `:Neotree reveal`
+      leave_dirs_open = true,
     },
     group_empty_dirs = true, -- when true, empty folders will be grouped together
     window = {
@@ -253,7 +250,7 @@ return {
   buffers = {
     follow_current_file = {
       enabled = true,
-      leave_dirs_open = false, -- `false` closes auto expanded dirs, such as with `:Neotree reveal`
+      leave_dirs_open = true,
     },
     group_empty_dirs = true, -- when true, empty folders will be grouped together
     show_unloaded = true,
