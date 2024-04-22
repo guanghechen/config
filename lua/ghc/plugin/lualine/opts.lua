@@ -1,5 +1,13 @@
 local icons = require("lazyvim.config").icons
-local symbols = require("ghc.core.settings.symbols").status_line
+local symbols = {
+  section_separator_left = "",
+  section_separator_right = "",
+  component_separator_left = "",
+  component_separator_right = "",
+  tab = " ",
+  cwd = "󱃪 ",
+  pyEnv = "󰢩 ",
+}
 
 local colors = {
   user_bg = "#BD7BB8",
