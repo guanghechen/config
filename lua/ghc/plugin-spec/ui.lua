@@ -1,3 +1,8 @@
+local icons = {
+  diagnostics = require("ghc.core.icons").get("diagnostics"),
+  ui = require("ghc.core.icons").get("ui"),
+}
+
 return {
   -- nvchad
   {
@@ -37,7 +42,9 @@ return {
     "rcarriga/nvim-notify",
     opts = {
       stages = "static",
-      timeout = 3000,
+      timeout = 5000,
+      fps = 20,
+      level = "INFO",
       max_height = function()
         return math.floor(vim.o.lines * 0.75)
       end,
@@ -45,9 +52,21 @@ return {
         return math.floor(vim.o.columns * 0.75)
       end,
       on_open = function(win)
+        vim.api.nvim_set_option_value("winblend", 0, { scope = "local", win = win })
         vim.api.nvim_win_set_config(win, { zindex = 100 })
       end,
+      icons = {
+        ERROR = icons.diagnostics.Error,
+        WARN = icons.diagnostics.Warning,
+        INFO = icons.diagnostics.Information,
+        DEBUG = icons.ui.Bug,
+        TRACE = icons.ui.Pencil,
+      },
     },
+    config = function(_, opts)
+      require("notify").setup(opts)
+      vim.notify = notify
+    end
   },
 
   -- better vim.ui
