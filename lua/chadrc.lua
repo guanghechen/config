@@ -29,6 +29,25 @@ M.ui = {
       end,
     },
   },
+  tabufline = {
+    enabled = true,
+    lazyload = true,
+    order = { "neo_tree", "buffers", "tabs", "btns" },
+    modules = {
+      neo_tree = function()
+        local function getNeoTreeWidth()
+          for _, win in pairs(vim.api.nvim_tabpage_list_wins(0)) do
+            if vim.bo[vim.api.nvim_win_get_buf(win)].ft == "neo-tree" then
+              return vim.api.nvim_win_get_width(win) + 1
+            end
+          end
+          return 0
+        end
+        vim.notify("neo-tree-width: " .. getNeoTreeWidth())
+        return "%#NvimTreeNormal#" .. string.rep(" ", getNeoTreeWidth())
+      end,
+    },
+  },
   telescope = {
     style = "borderless"
   },
