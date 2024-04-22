@@ -1,3 +1,5 @@
+vim.g.toggle_theme_icon = "   "
+
 -- encoding
 vim.opt.fileencoding = "utf-8"
 vim.opt_global.fileencodings = "utf-8"
@@ -17,6 +19,7 @@ vim.opt.splitkeep = "screen"
 vim.opt.autoindent = true
 vim.opt.conceallevel = 0 -- Disable conceal.
 vim.opt.cursorline = true -- ggtrue to highlight the row of the cursor.
+vim.opt.cursorlineopt = "number"
 vim.opt.cursorcolumn = false -- true to highlight the column of the cursor.
 vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.foldenable = false
@@ -55,3 +58,9 @@ vim.opt.undofile = true
 vim.opt.undolevels = 10000
 vim.opt.virtualedit = "block" -- Allow cursor to move where there is no text in visual block mode
 vim.opt.wildmode = "longest:full,full" -- Command-line completion mode
+
+-- disable some default providers
+vim.g["loaded_node_provider"] = 0
+vim.g["loaded_python3_provider"] = 0
+vim.g["loaded_perl_provider"] = 0
+vim.g["loaded_ruby_provider"] = 0

@@ -113,6 +113,8 @@ vim.keymap.set("n", "<leader>fF", finder.files.workspace, { noremap = true, desc
 vim.keymap.set("n", "<leader><leader>", finder.files.cwd, { noremap = true, desc = "Find files (cwd)" })
 vim.keymap.set("n", "<leader>ff", finder.files.current, { noremap = true, desc = "Find files (current directory)" })
 vim.keymap.set("n", "<leader>fg", finder.files.git, { noremap = true, desc = "Find files (git)" })
+vim.keymap.set("n", "<leader>fn", "<cmd>enew<cr>", { noremap = true, desc = "New File" })
+
 -- vim.keymap.set("n", "<leader>fr1", finder.frecency.workspace, { noremap = true, desc = "Recent (repo)" })
 -- vim.keymap.set("n", "<leader>fr2", finder.frecency.cwd, { noremap = true, desc = "Recent (cwd)" })
 -- vim.keymap.set("n", "<leader>fr3", finder.frecency.current, { noremap = true, desc = "Recent (directory)" })

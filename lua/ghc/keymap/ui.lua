@@ -7,5 +7,9 @@ local fn = {
   end
 }
 
+-- highlights under cursor
+vim.keymap.set("n", "<leader>ui", vim.show_pos, { desc = "Inspect Pos" })
+
 -- notify
 vim.keymap.set("n", "<leader>un", fn.dismiss_notifications, { noremap = true, desc = "Dismiss All Notifications" })
+
