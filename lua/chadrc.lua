@@ -29,7 +29,9 @@ M.ui = {
       end,
     },
   },
-  telescope = { style = "bordered" },
+  telescope = {
+    style = "borderless"
+  },
   term = {
     hl = "Normal:term,WinSeparator:WinSeparator",
     sizes = { sp = 0.3, vsp = 0.2 },

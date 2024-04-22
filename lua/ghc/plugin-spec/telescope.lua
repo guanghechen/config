@@ -7,11 +7,8 @@ end
 return {
   {
     "telescope.nvim",
-    opts = require("ghc.plugin.telescope"),
-    config = function(_, opts)
-      dofile(vim.g.base46_cache .. "telescope")
-      require("telescope").setup(opts)
-    end,
+    opts = require("ghc.plugin.telescope.opts"),
+    config = require("ghc.plugin.telescope.config"),
   },
   {
     "nvim-telescope/telescope-frecency.nvim",
