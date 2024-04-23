@@ -43,7 +43,6 @@ M.ui = {
           end
           return 0
         end
-        vim.notify("neo-tree-width: " .. getNeoTreeWidth())
         return "%#NvimTreeNormal#" .. string.rep(" ", getNeoTreeWidth())
       end,
     },
