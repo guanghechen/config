@@ -23,6 +23,10 @@ M.relative = function(from, to)
   return Path:new(to):make_relative(from)
 end
 
+M.is_absolute = function(p)
+  return Path:new(p):is_absolute()
+end
+
 M.workspace = function()
   local cwd = vim.uv.cwd()
   return M.findGitRepoFromPath(cwd) or cwd

@@ -4,14 +4,19 @@
 ---@type ChadrcConfig
 local M = {}
 
+local utils = {
+  filetype = require("ghc.core.util.filetype"),
+  path = require("ghc.core.util.path"), 
+}
+
 M.ui = {
   hl_add = {
-    GHC_USERNAME = {
+    GHC_STATUSLINE_USERNAME = {
       fg = "#FFFFFF",
-      bg = "#AC719B",
+      bg = "#B57CA5",
     },
   },
-  theme = "onedark",
+  theme = "one_light",
   theme_toggle = { "onedark", "one_light" },
   transparency = true,
   cmp = {
@@ -27,17 +32,26 @@ M.ui = {
   },
   statusline = {
     theme = "default", -- default / minimal / vscode / vscode_colored
-    order = { "username", "mode", "git", "file", "%=", "diagnostics", "lsp", "filetype", "cwd", "cursor" },
+    order = { "username", "mode", "filepath", "git", "%=", "diagnostics", "lsp", "filetype", "cwd", "cursor" },
     modules = {
       username = function()
         local username = os.getenv("USER")
-        return "%#GHC_USERNAME# " .. username .. " "
+        return "%#GHC_STATUSLINE_USERNAME# " .. username .. " "
       end,
       cursor = function()
         return "%#St_pos_sep#%#St_pos_icon# %l·%c"
       end,
       filetype = function()
-        return vim.bo.filetype
+        local filepath = vim.fn.expand('%:p')
+        local icon = utils.filetype.fileicon(filepath)
+        local filetype = vim.bo.filetype
+        return "%#St_file# " .. icon .. " " .. filetype
+      end,
+      filepath = function()
+        local filepath = vim.fn.expand('%:p')
+        local icon = utils.filetype.fileicon(filepath)
+        local display_path = utils.path.relative(utils.path.cwd(), filepath)
+        return "%#St_file# " .. icon .. " " .. display_path .. "%#St_file_sep#" .. ""
       end,
     },
   },

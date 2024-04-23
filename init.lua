@@ -13,10 +13,8 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup(require("ghc.plugin.lazy"))
 
 -- load theme
-dofile(vim.g.base46_cache .. "cmp")
 dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
-dofile(vim.g.base46_cache .. "telescope")
 
 require("ghc.autocmd")
 
