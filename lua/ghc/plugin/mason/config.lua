@@ -1,32 +1,16 @@
 local config = function(_, opts)
   dofile(vim.g.base46_cache .. "mason")
   require("mason").setup(opts)
+  require("mason-lspconfig").setup(require("ghc.plugin.mason-lspconfig.opts"))
 
-  local mr = require("mason-registry")
-  mr:on("package:install:success", function()
-    vim.defer_fn(function()
-      -- trigger FileType event to possibly load this newly installed LSP server
-      require("lazy.core.handler.event").trigger({
-        event = "FileType",
-        buf = vim.api.nvim_get_current_buf(),
-      })
-    end, 100)
-  end)
-
-  local function ensure_installed()
-    for _, tool in ipairs(opts.ensure_installed) do
-      local p = mr.get_package(tool)
-      if not p:is_installed() then
-        p:install()
-      end
+  -- custom nvchad cmd to install all mason binaries listed
+  vim.api.nvim_create_user_command("MasonInstallAll", function()
+    if opts.ensure_installed and #opts.ensure_installed > 0 then
+      vim.cmd("MasonInstall " .. table.concat(opts.ensure_installed, " "))
     end
-  end
+  end, {})
 
-  if mr.refresh then
-    mr.refresh(ensure_installed)
-  else
-    ensure_installed()
-  end
+  vim.g.mason_binaries_list = opts.ensure_installed
 end
 
 return config

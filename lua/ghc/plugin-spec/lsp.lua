@@ -6,17 +6,16 @@ return {
     opts = require("ghc.plugin.mason.opts"),
     config = require("ghc.plugin.mason.config"),
     dependencies = {
-      "neovim/nvim-lspconfig",
-      {
-        "williamboman/mason-lspconfig.nvim",
-        opts = require("ghc.plugin.mason-lspconfig.opts"),
-      }
+      "williamboman/mason-lspconfig.nvim",
     },
   },
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufWritePost", "VeryLazy" },
-    opts = require("ghc.plugin.nvim-lspconfig.opts"),
+    dependencies = {
+      "williamboman/mason.nvim",
+      "williamboman/mason-lspconfig.nvim",
+    },
     config = require("ghc.plugin.nvim-lspconfig.config"),
   },
 }

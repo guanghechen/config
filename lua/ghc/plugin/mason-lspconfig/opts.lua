@@ -14,14 +14,24 @@ local opts = {
     "lua_ls", -- lua
     "pyright", -- python -- by microsoft
     "rust_analyzer", -- rust -- by rust official
-    "sqls", -- sql
+    -- "sqls", -- sql
     "taplo", -- toml
     "tsserver", -- javascript/typescript
     "vuels", -- vue -- by vuejs official
     "yamlls", -- yaml -- by redhat
   },
   automatic_installation = false,
-  handlers = nil,
+  handlers = {
+    function (server_name)
+      require("lspconfig")[server_name].setup({})
+    end,
+    clangd = function()
+      require("lspconfig").clangd.setup(require("ghc.lsp.lang.cpp"))
+    end,
+    lua_ls = function()
+      require("lspconfig").lua_ls.setup(require("ghc.lsp.lang.lua"))
+    end,
+  },
 }
 
 return opts

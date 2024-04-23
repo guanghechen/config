@@ -18,7 +18,7 @@ return {
   end,
   config = function(_, opts)
     local function on_move(data)
-      require("ghc.core.util.lsp").on_rename(data.source, data.destination)
+      require("ghc.lsp.common").on_rename(data.source, data.destination)
     end
 
     local events = require("neo-tree.events")

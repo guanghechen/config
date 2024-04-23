@@ -12,18 +12,18 @@ local opts = {
     "lua-language-server", -- lua_ls
     "pyright", -- pyright
     "rust-analyzer", -- rust_analyzer
-    "sqls", -- sqls
+    -- "sqls", -- sqls
     "taplo", -- taplo
     "typescript-language-server", -- tsserver
     "vetur-vls", -- vuels
-    'yaml-language-server', -- yamlls
+    "yaml-language-server", -- yamlls
 
     -- formatter
     "prettier",
     "shfmt",
     "stylua",
   },
-  PATH = "skip", -- don't modify PATH
+  PATH = "prepend",
   log_level = vim.log.levels.INFO,
   max_concurrent_installers = 10,
   ui = {
