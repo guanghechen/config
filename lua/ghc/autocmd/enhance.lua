@@ -113,6 +113,7 @@ vim.api.nvim_create_autocmd("FileType", {
     "query",
     "spectre_panel",
     "startuptime",
+    "TelescopePrompt",
     "term",
     "tsplayground",
   },

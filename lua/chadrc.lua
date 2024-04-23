@@ -5,17 +5,29 @@
 local M = {}
 
 M.ui = {
+  hl_add = {
+    GHC_USERNAME = {
+      fg = "#FFFFFF",
+      bg = "#AC719B",
+    },
+  },
   theme = "onedark",
   theme_toggle = { "onedark", "one_light" },
   transparency = true,
+  cmp = {
+    icons = true,
+    lspkind_text = true,
+    style = "default", -- default/flat_light/flat_dark/atom/atom_colored
+  },
   integration = {
     "blankline",
     "cmp",
     "git",
+    "trouble",
   },
   statusline = {
     theme = "default", -- default / minimal / vscode / vscode_colored
-    order = { "username", "mode", "file", "git", "%=", "diagnostics", "lsp", "filetype", "cwd", "cursor" },
+    order = { "username", "mode", "git", "file", "%=", "diagnostics", "lsp", "filetype", "cwd", "cursor" },
     modules = {
       username = function()
         local username = os.getenv("USER")
