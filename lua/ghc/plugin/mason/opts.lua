@@ -8,7 +8,6 @@ local opts = {
     "docker-compose-language-service", -- docker_compose_language_service
     "eslint-lsp", -- eslint
     "html-lsp", -- html
-    "java-language-server", -- java
     "json-lsp", -- jsonls
     "lua-language-server", -- lua_ls
     "pyright", -- pyright

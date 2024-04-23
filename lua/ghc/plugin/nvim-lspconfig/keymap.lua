@@ -86,6 +86,11 @@ function M.on_attach(_, buffer)
       vim.keymap.set(keys.mode or "n", keys.lhs, keys.rhs, opts)
     end
   end
+
+  -- setup signature popup
+  if conf.signature and client.server_capabilities.signatureHelpProvider then
+    require("nvchad.lsp.signature").setup(client, bufnr)
+  end
 end
 
 return M

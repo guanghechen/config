@@ -10,8 +10,8 @@ local config = function (_, opts)
     on_attach = require("ghc.core.util.lsp").on_attach,
     keymap_on_attach = function(client, buffer)
       require("ghc.plugin.nvim-lspconfig.keymap").on_attach(client, buffer)
-    end
-  },
+    end,
+  }
 
   -- setup keymaps
   utils.on_attach(utils.keymap_on_attach)
@@ -23,11 +23,6 @@ local config = function (_, opts)
     local client = vim.lsp.get_client_by_id(ctx.client_id)
     local buffer = vim.api.nvim_get_current_buf()
     utils.keymap_on_attach(client, buffer)
-
-    -- setup signature popup
-    if conf.signature and client.server_capabilities.signatureHelpProvider then
-      require("nvchad.lsp.signature").setup(client, bufnr)
-    end
     return ret
   end
 
@@ -89,6 +84,11 @@ local config = function (_, opts)
   local function setup(server)
     local server_opts = vim.tbl_deep_extend("force", {
       capabilities = vim.deepcopy(capabilities),
+      on_init = function(client, _) 
+        if client.supports_method "textDocument/semanticTokens" then
+          client.server_capabilities.semanticTokensProvider = nil
+        end
+      end
     }, servers[server] or {})
 
     if opts.setup[server] then

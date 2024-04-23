@@ -10,7 +10,6 @@ local opts = {
     "docker_compose_language_service", --docker compose -- by microsoft
     "eslint", -- eslint -- by microsoft
     "html",   -- html -- by microsoft
-    "java_language_server", -- java
     "jsonls", -- json
     "lua_ls", -- lua
     "pyright", -- python -- by microsoft

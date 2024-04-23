@@ -27,8 +27,6 @@ local config = function(_, opts)
   else
     ensure_installed()
   end
-
-  vim.g.mason_binaries_list = opts.ensure_installed
 end
 
 return config
