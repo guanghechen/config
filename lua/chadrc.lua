@@ -34,12 +34,20 @@ M.ui = {
   hl_add = {
     GHC_STATUSLINE_USERNAME = {
       fg = "#FFFFFF",
-      bg = "pink",
+      bg = "baby_pink",
     },
     GHC_TABUFLINE_NEOTREE = {
       fg = "white",
       bg = "black2",
     }
+  },
+  hl_override = {
+    CursorLine = {
+      bg = "#353B45",
+    },
+    Comment = {
+      italic = true,
+    },
   },
   theme = "onedark",
   theme_toggle = { "onedark", "one_light" },
@@ -152,6 +160,6 @@ M.ui = {
 }
 
 -- gen colors with mode
-utils.gen_with_modes_bg("GHC_STATUS_USERNAME_SEPARATOR", "pink") -- gen separator colors.
+utils.gen_with_modes_bg("GHC_STATUS_USERNAME_SEPARATOR", "baby_pink") -- gen separator colors.
 
 return M

@@ -9,10 +9,14 @@ return {
     "telescope.nvim",
     opts = require("ghc.plugin.telescope.opts"),
     config = require("ghc.plugin.telescope.config"),
+    dependences = {
+      "nvim-tree/nvim-web-devicons",
+      "nvim-lua/plenary.nvim",
+    }
   },
   {
     "nvim-telescope/telescope-frecency.nvim",
-    config = loadTelescopeExtension("frecenry"),
+    config = loadTelescopeExtension("frecency"),
     dependencies = {
       "nvim-telescope/telescope.nvim",
     },

@@ -110,8 +110,7 @@ vim.keymap.set("n", "<leader>fb", "<cmd>Telescope buffers sort_mru=true sort_las
 vim.keymap.set("n", "<leader>fE", finder.explorer.workspace, { noremap = true, desc = "File explorer (from workspace)" })
 vim.keymap.set("n", "<leader>fe", finder.explorer.current, { noremap = true, desc = "File explorer (from current directory)" })
 vim.keymap.set("n", "<leader>fF", finder.files.workspace, { noremap = true, desc = "Find files (workspace)" })
-vim.keymap.set("n", "<leader><leader>", finder.files.cwd, { noremap = true, desc = "Find files (cwd)" })
-vim.keymap.set("n", "<leader>ff", finder.files.current, { noremap = true, desc = "Find files (current directory)" })
+vim.keymap.set("n", "<leader>ff", finder.files.cwd, { noremap = true, desc = "Find files (cwd)" })
 vim.keymap.set("n", "<leader>fg", finder.files.git, { noremap = true, desc = "Find files (git)" })
 vim.keymap.set("n", "<leader>fn", "<cmd>enew<cr>", { noremap = true, desc = "New File" })
 
@@ -120,3 +119,4 @@ vim.keymap.set("n", "<leader>fn", "<cmd>enew<cr>", { noremap = true, desc = "New
 -- vim.keymap.set("n", "<leader>fr3", finder.frecency.current, { noremap = true, desc = "Recent (directory)" })
 vim.keymap.set("n", "<leader>fR", finder.frecency.workspace, { noremap = true, desc = "Recent (repo)" })
 vim.keymap.set("n", "<leader>fr", finder.frecency.cwd, { noremap = true, desc = "Recent (cwd)" })
+vim.keymap.set("n", "<leader><leader>", finder.frecency.cwd, { noremap = true, desc = "Recent (cwd)" })

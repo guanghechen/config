@@ -1,3 +1,7 @@
+local icons = {
+  ui = require("ghc.core.icons").get("ui", true),
+}
+
 local function flash(prompt_bufnr)
   require("flash").jump({
     pattern = "^",
@@ -19,8 +23,8 @@ end
 
 local opts = {
   defaults = {
-    prompt_prefix = " ",
-    selection_caret = " ",
+    prompt_prefix = icons.ui.Telescope .. " ",
+    selection_caret = icons.ui.ChevronRight, --" ",
     border = {},
     borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
     color_devicons = true,
@@ -58,9 +62,20 @@ local opts = {
     file_browser = {},
     frecency = {
       use_sqlite = false,
-      show_scores = true,
+      show_scores = false,
       show_unindexed = true,
-      ignore_patterns = { "*.git/*", "*/tmp/*", "*node_modules/*", ".yarn/*" },
+      ignore_patterns = {
+        "*.git/*",
+        "*/tmp/*",
+        "*/node_modules/*",
+        ".yarn/*",
+
+        -- for windows
+        [[*.git\*]],
+        [[*\tmp\*]],
+        [[*\node_modules\*]],
+        [[.yarn\*]],
+      },
     },
     fzf = {
       fuzzy = false,
