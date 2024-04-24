@@ -12,31 +12,30 @@ return {
     config = function()
       require("nvchad")
     end,
-    dependencies = {
-      {
-        "NvChad/base46",
-        branch = "v2.5",
-        build = function()
-          require("base46").load_all_highlights()
-        end,
-      },
-      {
-        "NvChad/nvim-colorizer.lua",
-        opts = {
-          user_default_options = {
-            names = false,
-          },
-        },
-        config = function(_, opts)
-          require("colorizer").setup(opts)
-
-          -- execute colorizer as soon as possible
-          vim.defer_fn(function()
-            require("colorizer").attach_to_buffer(0)
-          end, 0)
-        end,
+  },
+  {
+    "NvChad/base46",
+    branch = "v2.5",
+    build = function()
+      require("base46").load_all_highlights()
+    end,
+  },
+  {
+    "NvChad/nvim-colorizer.lua",
+    event = { "BufReadPre", "BufWritePost", "VeryLazy" },
+    opts = {
+      user_default_options = {
+        names = false,
       },
     },
+    config = function(_, opts)
+      require("colorizer").setup(opts)
+
+      -- execute colorizer as soon as possible
+      vim.defer_fn(function()
+        require("colorizer").attach_to_buffer(0)
+      end, 0)
+    end,
   },
 
   -- Better `vim.notify()`

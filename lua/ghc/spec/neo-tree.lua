@@ -6,12 +6,13 @@ return {
     vim.cmd([[Neotree close]])
   end,
   init = function()
-    if vim.fn.argc(-1) == 1 then
-      local stat = vim.uv.fs_stat(vim.fn.argv(0))
-      if stat and stat.type == "directory" then
-        require("neo-tree")
-      end
-    end
+    -- Initial open the neo-tree if nvim enter with a directory.
+    -- if vim.fn.argc(-1) == 1 then
+    --   local stat = vim.uv.fs_stat(vim.fn.argv(0))
+    --   if stat and stat.type == "directory" then
+    --     require("neo-tree")
+    --   end
+    -- end
   end,
   keys = function()
     return {}
