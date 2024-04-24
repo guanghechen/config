@@ -6,35 +6,37 @@ local icons = {
 return {
   -- nvchad
   {
-    "NvChad/base46",
-    branch = "v2.5",
-    build = function()
-      require("base46").load_all_highlights()
-    end,
-  },
-  {
     "NvChad/ui",
     branch = "v2.5",
     lazy = false,
     config = function()
       require("nvchad")
     end,
-  },
-  {
-    "NvChad/nvim-colorizer.lua",
-    opts = {
-      user_default_options = {
-        names = false,
+    dependencies = {
+      {
+        "NvChad/base46",
+        branch = "v2.5",
+        build = function()
+          require("base46").load_all_highlights()
+        end,
+      },
+      {
+        "NvChad/nvim-colorizer.lua",
+        opts = {
+          user_default_options = {
+            names = false,
+          },
+        },
+        config = function(_, opts)
+          require("colorizer").setup(opts)
+
+          -- execute colorizer as soon as possible
+          vim.defer_fn(function()
+            require("colorizer").attach_to_buffer(0)
+          end, 0)
+        end,
       },
     },
-    config = function(_, opts)
-      require("colorizer").setup(opts)
-
-      -- execute colorizer as soon as possible
-      vim.defer_fn(function()
-        require("colorizer").attach_to_buffer(0)
-      end, 0)
-    end,
   },
 
   -- Better `vim.notify()`
@@ -66,7 +68,7 @@ return {
     config = function(_, opts)
       require("notify").setup(opts)
       vim.notify = require("notify")
-    end
+    end,
   },
 
   -- better vim.ui
@@ -118,7 +120,7 @@ return {
     config = function(_, opts)
       dofile(vim.g.base46_cache .. "blankline")
 
-      local hooks = require "ibl.hooks"
+      local hooks = require("ibl.hooks")
       hooks.register(hooks.type.WHITESPACE, hooks.builtin.hide_first_space_indent_level)
       require("ibl").setup(opts)
     end,
