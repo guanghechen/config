@@ -3,7 +3,10 @@ return {
   -- https://www.lazyvim.org/configuration/recipes#change-comment-mappings
   {
     "echasnovski/mini.comment",
-    keys = { "gc", "gcc" },
+    keys = {
+      { "gc", mode = { "n", "v" } },
+      { "gcc", mode = { "n", "v" } },
+    },
     opts = {
       mappings = {
         comment = "gc",
@@ -78,5 +81,5 @@ return {
         desc = "Next Trouble/Quickfix Item",
       },
     },
-  }
+  },
 }

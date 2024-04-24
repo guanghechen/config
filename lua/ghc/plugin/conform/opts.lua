@@ -6,14 +6,14 @@ local opts = {
     javascript = { "prettier" },
     typescript = { "prettier" },
     javascriptreact = { "prettier" },
-    typescriptreact =  { "prettier" },
-    svelte =  { "prettier" },
-    css =  { "prettier" },
-    html =  { "prettier" },
-    json =  { "prettier" },
-    yaml =  { "prettier" },
-    markdown =  { "prettier" },
-    graphql =  { "prettier" },
+    typescriptreact = { "prettier" },
+    svelte = { "prettier" },
+    css = { "prettier" },
+    html = { "prettier" },
+    json = { "prettier" },
+    yaml = { "prettier" },
+    markdown = { "prettier" },
+    graphql = { "prettier" },
 
     -- shell --
     bash = { "shfmt" },
@@ -38,4 +38,3 @@ local opts = {
 }
 
 return opts
-
