@@ -83,7 +83,7 @@ local actions = {
     })
   end,
   show_references = function()
-    vim.lsp.buf.references()
+    require("telescope.builtin").lsp_references({ reuse_win = true })
   end,
   show_signature_help = function()
     vim.lsp.buf.signature_help()
