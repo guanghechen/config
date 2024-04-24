@@ -1,8 +1,3 @@
-local icons = {
-  diagnostics = require("ghc.core.icons").get("diagnostics"),
-  ui = require("ghc.core.icons").get("ui"),
-}
-
 return {
   -- nvchad
   {
@@ -35,56 +30,6 @@ return {
       vim.defer_fn(function()
         require("colorizer").attach_to_buffer(0)
       end, 0)
-    end,
-  },
-
-  -- Better `vim.notify()`
-  {
-    "rcarriga/nvim-notify",
-    opts = {
-      stages = "static",
-      timeout = 5000,
-      fps = 20,
-      level = "INFO",
-      max_height = function()
-        return math.floor(vim.o.lines * 0.75)
-      end,
-      max_width = function()
-        return math.floor(vim.o.columns * 0.75)
-      end,
-      on_open = function(win)
-        vim.api.nvim_set_option_value("winblend", 0, { scope = "local", win = win })
-        vim.api.nvim_win_set_config(win, { zindex = 100 })
-      end,
-      icons = {
-        ERROR = icons.diagnostics.Error,
-        WARN = icons.diagnostics.Warning,
-        INFO = icons.diagnostics.Information,
-        DEBUG = icons.ui.Bug,
-        TRACE = icons.ui.Pencil,
-      },
-    },
-    config = function(_, opts)
-      require("notify").setup(opts)
-      vim.notify = require("notify")
-    end,
-  },
-
-  -- better vim.ui
-  {
-    "stevearc/dressing.nvim",
-    lazy = true,
-    init = function()
-      ---@diagnostic disable-next-line: duplicate-set-field
-      vim.ui.select = function(...)
-        require("lazy").load({ plugins = { "dressing.nvim" } })
-        return vim.ui.select(...)
-      end
-      ---@diagnostic disable-next-line: duplicate-set-field
-      vim.ui.input = function(...)
-        require("lazy").load({ plugins = { "dressing.nvim" } })
-        return vim.ui.input(...)
-      end
     end,
   },
 
@@ -201,6 +146,43 @@ return {
       { "<leader>snd", function() require("noice").cmd("dismiss") end, desc = "Dismiss All" },
       { "<c-f>", function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end, silent = true, expr = true, desc = "Scroll Forward", mode = {"i", "n", "s"} },
       { "<c-b>", function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true, expr = true, desc = "Scroll Backward", mode = {"i", "n", "s"}},
+    },
+  },
+
+  {
+    "folke/which-key.nvim",
+    init = function()
+      vim.o.timeout = true
+      vim.o.timeoutlen = 300
+    end,
+    config = function(_, opts)
+      dofile(vim.g.base46_cache .. "whichkey")
+      require("which-key").setup(opts)
+      require("which-key").register(opts.defaults)
+    end,
+    cmd = "WhichKey",
+    keys = { "<leader>", '"', "'", "`", "c", "v", "g" },
+    opts = {
+      plugins = { spelling = true },
+      defaults = {
+        mode = { "n", "v" },
+        ["g"] = { name = "+goto" },
+        ["gs"] = { name = "+surround" },
+        ["z"] = { name = "+fold" },
+        ["]"] = { name = "+next" },
+        ["["] = { name = "+prev" },
+        ["<leader>b"] = { name = "+buffer" },
+        ["<leader>c"] = { name = "+code" },
+        ["<leader>f"] = { name = "+find/file" },
+        ["<leader>g"] = { name = "+find/git" },
+        ["<leader>q"] = { name = "+quit/session" },
+        ["<leader>s"] = { name = "+search" },
+        ["<leader>sn"] = { name = "+noice" },
+        ["<leader>t"] = { name = "+terminal" },
+        ["<leader>u"] = { name = "+ui" },
+        ["<leader>w"] = { name = "+window" },
+        ["<leader>x"] = { name = "+diagnostics/quickfix" },
+      },
     },
   },
 }
