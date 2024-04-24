@@ -14,9 +14,8 @@ return {
     --   end
     -- end
   end,
-  keys = function()
-    return {}
-  end,
+  keys = {},
+  opts = require("ghc.plugin.neo-tree.opts"),
   config = function(_, opts)
     local function on_move(data)
       require("ghc.lsp.common").on_rename(data.source, data.destination)
@@ -38,7 +37,6 @@ return {
       end,
     })
   end,
-  opts = require("ghc.plugin.neo-tree.opts"),
   dependencies = {
     "nvim-lua/plenary.nvim",
     "nvim-tree/nvim-web-devicons",

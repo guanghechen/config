@@ -11,14 +11,14 @@ vim.fn.sign_define("DiagnosticSignInfo", { text = icons.diagnostics.Information,
 vim.fn.sign_define("DiagnosticSignHint", { text = icons.diagnostics.Hint, texthl = "DiagnosticSignHint" })
 
 local utils = {
-  recursively_toggle = function (state, toggle_directory)
+  recursively_toggle = function(state, toggle_directory)
     require("ghc.plugin.neo-tree.util").neotree_recursive_toggle(state, toggle_directory, false)
   end,
   recursively_toggle_all = function(state, toggle_directory)
     require("ghc.plugin.neo-tree.util").neotree_recursive_toggle(state, toggle_directory, true)
   end,
   -- Sorts files and directories descendantly.
-  sort_function = function (a,b)
+  sort_function = function(a, b)
     if a.type == b.type then
       return a.path < b.path
     end
@@ -37,7 +37,7 @@ return {
   sources = { "filesystem", "buffers", "git_status", "document_symbols" },
   default_component_configs = {
     container = {
-      enable_character_fade = true
+      enable_character_fade = true,
     },
     indent = {
       indent_size = 2,
@@ -56,7 +56,7 @@ return {
       folder_open = icons.ui.FolderOpen,
       folder_empty = icons.ui.EmptyFolder,
       default = icons.ui.File,
-      highlight = "NeoTreeFileIcon"
+      highlight = "NeoTreeFileIcon",
     },
     modified = {
       symbol = icons.ui.Modified,
@@ -70,17 +70,17 @@ return {
     git_status = {
       symbols = {
         -- Change type
-        added     = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
-        modified  = "", -- or "", but this is redundant info if you use git_status_colors on the name
-        deleted   = icons.git.Remove,-- this can only be used in the git_status source
-        renamed   = icons.git.Rename,-- this can only be used in the git_status source
+        added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
+        modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
+        deleted = icons.git.Remove, -- this can only be used in the git_status source
+        renamed = icons.git.Rename, -- this can only be used in the git_status source
         -- Status type
         untracked = icons.git.Untracked,
-        ignored   = icons.git.Ignore,
-        unstaged  = icons.git.Unstaged,
-        staged    = icons.git.Staged,
-        conflict  = icons.git.Conflict,
-      }
+        ignored = icons.git.Ignore,
+        unstaged = icons.git.Unstaged,
+        staged = icons.git.Staged,
+        conflict = icons.git.Conflict,
+      },
     },
     -- If you don't want to use these columns, you can set `enabled = false` for each of them individually
     file_size = {
@@ -110,7 +110,7 @@ return {
         vim.cmd("stopinsert")
         vim.keymap.set("i", "<esc>", vim.cmd.stopinsert, { noremap = true, buffer = args.bufnr })
       end,
-    }
+    },
   },
   window = {
     position = "left",
@@ -232,7 +232,7 @@ return {
         ["H"] = "toggle_hidden",
         ["/"] = "fuzzy_finder",
         ["D"] = "fuzzy_finder_directory",
-        ["o"] = { "show_help", nowait=false, config = { title = "Order by", prefix_key = "o" }},
+        ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
         ["oc"] = { "order_by_created", nowait = false },
         ["od"] = { "order_by_diagnostics", nowait = false },
         ["og"] = { "order_by_git_status", nowait = false },
@@ -259,35 +259,35 @@ return {
         ["bd"] = "buffer_delete",
         ["<bs>"] = "navigate_up",
         ["."] = "set_root",
-        ["o"] = { "show_help", nowait=false, config = { title = "Order by", prefix_key = "o" }},
+        ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
         ["oc"] = { "order_by_created", nowait = false },
         ["od"] = { "order_by_diagnostics", nowait = false },
         ["om"] = { "order_by_modified", nowait = false },
         ["on"] = { "order_by_name", nowait = false },
         ["os"] = { "order_by_size", nowait = false },
         ["ot"] = { "order_by_type", nowait = false },
-      }
+      },
     },
   },
   git_status = {
     window = {
       position = "float",
       mappings = {
-        ["A"]  = "git_add_all",
+        ["A"] = "git_add_all",
         ["gu"] = "git_unstage_file",
         ["ga"] = "git_add_file",
         ["gr"] = "git_revert_file",
         ["gc"] = "git_commit",
         ["gp"] = "git_push",
         ["gg"] = "git_commit_and_push",
-        ["o"] = { "show_help", nowait=false, config = { title = "Order by", prefix_key = "o" }},
+        ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
         ["oc"] = { "order_by_created", nowait = false },
         ["od"] = { "order_by_diagnostics", nowait = false },
         ["om"] = { "order_by_modified", nowait = false },
         ["on"] = { "order_by_name", nowait = false },
         ["os"] = { "order_by_size", nowait = false },
         ["ot"] = { "order_by_type", nowait = false },
-      }
-    }
-  }
+      },
+    },
+  },
 }

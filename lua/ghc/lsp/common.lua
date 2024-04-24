@@ -66,7 +66,8 @@ local actions = {
     vim.lsp.buf.hover()
   end,
   rename = function()
-    vim.lsp.buf.rename()
+    -- vim.lsp.buf.rename()
+    require("ghc.lsp.action.rename")()
   end,
   show_code_action = function()
     vim.lsp.buf.code_action()

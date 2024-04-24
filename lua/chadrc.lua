@@ -39,7 +39,7 @@ M.ui = {
     GHC_TABUFLINE_NEOTREE = {
       fg = "white",
       bg = "black2",
-    }
+    },
   },
   hl_override = {
     CursorLine = {
@@ -121,16 +121,20 @@ M.ui = {
         local function getNeoTreeWidth()
           for _, win in pairs(vim.api.nvim_tabpage_list_wins(0)) do
             if vim.bo[vim.api.nvim_win_get_buf(win)].ft == "neo-tree" then
-              return vim.api.nvim_win_get_width(win)
+              return vim.api.nvim_win_get_width(win) + 1
             end
           end
           return 0
         end
         local width = getNeoTreeWidth()
-        local word = "neo-tree"
-        local left_width = math.floor((width - #word) / 2)
-        local right_width = width - left_width - #word
-        return "%#GHC_TABUFLINE_NEOTREE#" .. string.rep(" ", left_width) .. word  .. string.rep(" ", right_width)
+        if width > 0 then
+          local word = "neo-tree"
+          local left_width = math.floor((width - #word) / 2)
+          local right_width = width - left_width - #word
+          return "%#GHC_TABUFLINE_NEOTREE#" .. string.rep(" ", left_width) .. word .. string.rep(" ", right_width)
+        else
+          return ""
+        end
       end,
     },
   },
