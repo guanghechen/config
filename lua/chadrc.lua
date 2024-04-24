@@ -43,7 +43,7 @@ M.ui = {
   },
   hl_override = {
     CursorLine = {
-      bg = "#353B45",
+      bg = "one_bg2", -- "line"
     },
     Comment = {
       italic = true,
