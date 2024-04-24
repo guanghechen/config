@@ -14,10 +14,10 @@ local get_clients = function(opts)
 end
 
 local has_support_feature = function(bufnr, feature)
-  method = method:find("/") and method or "textDocument/" .. method
+  feature = feature:find("/") and feature or "textDocument/" .. feature
   local clients = get_clients({ bufnr = bufnr })
   for _, client in ipairs(clients) do
-    if client.supports_method(method) then
+    if client.supports_method(feature) then
       return true
     end
   end

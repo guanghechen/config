@@ -65,7 +65,7 @@ return {
     },
     config = function(_, opts)
       require("notify").setup(opts)
-      vim.notify = notify
+      vim.notify = require("notify")
     end
   },
 
