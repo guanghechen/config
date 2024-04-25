@@ -1,31 +1,8 @@
-local get_clients = function(opts)
-  local ret = {}
-  if vim.lsp.get_clients then
-    ret = vim.lsp.get_clients(opts)
-  else
-    ret = vim.lsp.get_active_clients(opts)
-    if opts and opts.method then
-      ret = vim.tbl_filter(function(client)
-        return client.supports_method(opts.method, { bufnr = opts.bufnr })
-      end, ret)
-    end
-  end
-  return opts and opts.filter and vim.tbl_filter(opts.filter, ret) or ret
-end
-
-local has_support_method = function(bufnr, method)
-  method = method:find("/") and method or "textDocument/" .. method
-  local clients = get_clients({ bufnr = bufnr })
-  for _, client in ipairs(clients) do
-    if client.supports_method(method) then
-      return true
-    end
-  end
-  return false
-end
+local actions = require("ghc.lsp.action")
+local utils = require("ghc.lsp.util")
 
 local on_rename = function(from, to)
-  local clients = get_clients()
+  local clients = utils.get_clients()
   for _, client in ipairs(clients) do
     if client.supports_method("workspace/willRenameFiles") then
       local resp = client.request_sync("workspace/willRenameFiles", {
@@ -43,53 +20,6 @@ local on_rename = function(from, to)
   end
 end
 
-local actions = {
-  codelens_run = function()
-    vim.lsp.codelens.run()
-  end,
-  codelens_refresh = function()
-    vim.lsp.codelens.refresh()
-  end,
-  goto_definitions = function()
-    require("telescope.builtin").lsp_definitions({ reuse_win = true })
-  end,
-  goto_declarations = function()
-    vim.lsp.buf.declaration()
-  end,
-  goto_type_definitions = function()
-    require("telescope.builtin").lsp_type_definitions({ reuse_win = true })
-  end,
-  goto_implementations = function()
-    require("telescope.builtin").lsp_implementations({ reuse_win = true })
-  end,
-  hover = function()
-    vim.lsp.buf.hover()
-  end,
-  rename = function()
-    -- vim.lsp.buf.rename()
-    require("ghc.lsp.action.rename")()
-  end,
-  show_code_action = function()
-    vim.lsp.buf.code_action()
-  end,
-  show_code_action_source = function()
-    vim.lsp.buf.code_action({
-      context = {
-        only = {
-          "source",
-        },
-        diagnostics = {},
-      },
-    })
-  end,
-  show_references = function()
-    require("telescope.builtin").lsp_references({ reuse_win = true })
-  end,
-  show_signature_help = function()
-    vim.lsp.buf.signature_help()
-  end,
-}
-
 local on_attach = function(client, bufnr)
   local function opts(desc)
     return { buffer = bufnr, desc = "LSP " .. desc }
@@ -105,15 +35,15 @@ local on_attach = function(client, bufnr)
   vim.keymap.set("n", "gt", actions.goto_type_definitions, opts("lsp: Goto type definition"))
 
   -- code actions
-  if has_support_method(bufnr, "codeLens") then
+  if utils.has_support_method(bufnr, "codeLens") then
     vim.keymap.set({ "n", "v" }, "<leader>cc", actions.codelens_run, opts("lsp: CodeLens"))
     vim.keymap.set("n", "<leader>cC", actions.codelens_refresh, opts("lsp: Refresh & Display Codelens"))
   end
-  if has_support_method(bufnr, "codeAction") then
+  if utils.has_support_method(bufnr, "codeAction") then
     vim.keymap.set({ "n", "v" }, "<leader>ca", actions.show_code_action, opts("lsp: Code action"))
     vim.keymap.set("n", "<leader>cA", actions.show_code_action_source, opts("lsp: Source action"))
   end
-  if has_support_method(bufnr, "rename") then
+  if utils.has_support_method(bufnr, "rename") then
     vim.keymap.set("n", "<leader>cr", actions.rename, opts("lsp: Rename"))
   end
 end
