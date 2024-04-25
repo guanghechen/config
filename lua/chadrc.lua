@@ -128,7 +128,7 @@ M.ui = {
         end
         local width = getNeoTreeWidth()
         if width > 0 then
-          local word = "neo-tree"
+          local word = "Explorer"
           local left_width = math.floor((width - #word) / 2)
           local right_width = width - left_width - #word
           return "%#GHC_TABUFLINE_NEOTREE#" .. string.rep(" ", left_width) .. word .. string.rep(" ", right_width)

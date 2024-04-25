@@ -4,54 +4,88 @@ local neo_tree = {
   file = {
     workspace = function()
       require("neo-tree.command").execute({
+        action = "focus",
+        source = "filesystem",
         dir = path.workspace(),
-        toggle = true,
       })
     end,
     cwd = function()
       require("neo-tree.command").execute({
+        action = "focus",
+        source = "filesystem",
         dir = path.cwd(),
-        toggle = true,
       })
     end,
   },
   buffer = {
     workspace = function()
       require("neo-tree.command").execute({
+        action = "focus",
         source = "buffers",
         dir = path.workspace(),
-        toggle = true,
       })
     end,
     cwd = function()
       require("neo-tree.command").execute({
+        action = "focus",
         source = "buffers",
         dir = path.cwd(),
-        toggle = true,
       })
     end,
   },
   git = {
     workspace = function()
       require("neo-tree.command").execute({
+        action = "focus",
         source = "git_status",
         dir = path.workspace(),
-        toggle = true,
       })
     end,
     cwd = function()
       require("neo-tree.command").execute({
+        action = "focus",
         source = "git_status",
         dir = path.cwd(),
-        toggle = true,
       })
     end,
   },
+  reveal = function()
+    local ft_current = vim.api.nvim_buf_get_option(0, "filetype")
+    if ft_current == "neo-tree" then
+      require("neo-tree.command").execute({
+        action = "close",
+      })
+    else
+      require("neo-tree.command").execute({
+        action = "focus",
+        source = "filesystem",
+        reveal = true,
+      })
+    end
+  end,
+  focus = function()
+    local ft_current = vim.api.nvim_buf_get_option(0, "filetype")
+    if ft_current == "neo-tree" then
+      require("neo-tree.command").execute({
+        action = "close",
+      })
+    else
+      require("neo-tree.command").execute({
+        action = "focus",
+        source = "last",
+      })
+    end
+  end,
 }
 
-vim.keymap.set("n", "<leader>eE", neo_tree.file.workspace, { noremap = true, desc = "NeoTree files (workspace)" })
-vim.keymap.set("n", "<leader>ee", neo_tree.file.cwd, { noremap = true, desc = "NeoTree files (cwd)" })
-vim.keymap.set("n", "<leader>eB", neo_tree.buffer.workspace, { noremap = true, desc = "NeoTree buffers (workspace)" })
-vim.keymap.set("n", "<leader>eb", neo_tree.buffer.cwd, { noremap = true, desc = "NeoTree buffers (cwd)" })
-vim.keymap.set("n", "<leader>eG", neo_tree.git.workspace, { noremap = true, desc = "NeoTree git (workspace)" })
-vim.keymap.set("n", "<leader>eg", neo_tree.git.cwd, { noremap = true, desc = "NeoTree git (cwd)" })
+-- focus
+vim.keymap.set("n", "<leader>eF", neo_tree.file.workspace, { noremap = true, desc = "Explorer files (workspace)" })
+vim.keymap.set("n", "<leader>ef", neo_tree.file.cwd, { noremap = true, desc = "Explorer files (cwd)" })
+vim.keymap.set("n", "<leader>eB", neo_tree.buffer.workspace, { noremap = true, desc = "Explorer buffers (workspace)" })
+vim.keymap.set("n", "<leader>eb", neo_tree.buffer.cwd, { noremap = true, desc = "Explorer buffers (cwd)" })
+vim.keymap.set("n", "<leader>eG", neo_tree.git.workspace, { noremap = true, desc = "Explorer git (workspace)" })
+vim.keymap.set("n", "<leader>eg", neo_tree.git.cwd, { noremap = true, desc = "Explorer git (cwd)" })
+
+-- reveal
+vim.keymap.set("n", "<leader>ee", neo_tree.focus, { noremap = true, desc = "Explorer focus" })
+vim.keymap.set("n", "<leader>er", neo_tree.reveal, { noremap = true, desc = "Explorer reveal" })
