@@ -94,6 +94,7 @@ local data = {
     Emoji = "󰱫",
     EmptyFolder = "",
     EmptyFolderOpen = "",
+    Explorer = "",
     File = "󰈤",
     Fire = "",
     Folder = "",

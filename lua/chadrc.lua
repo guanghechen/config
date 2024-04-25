@@ -4,11 +4,79 @@
 ---@type ChadrcConfig
 local M = {}
 
+local base_30 = {
+  white = "#abb2bf",
+  darker_black = "#1b1f27",
+  black = "#1e222a", --  nvim bg
+  black2 = "#252931",
+  one_bg = "#282c34", -- real bg of onedark
+  one_bg2 = "#353b45",
+  one_bg3 = "#373b43",
+  grey = "#42464e",
+  grey_fg = "#565c64",
+  grey_fg2 = "#6f737b",
+  light_grey = "#6f737b",
+  red = "#e06c75",
+  baby_pink = "#DE8C92",
+  pink = "#ff75a0",
+  line = "#31353d", -- for lines like vertsplit
+  green = "#98c379",
+  vibrant_green = "#7eca9c",
+  nord_blue = "#81A1C1",
+  blue = "#61afef",
+  yellow = "#e7c787",
+  sun = "#EBCB8B",
+  purple = "#de98fd",
+  dark_purple = "#c882e7",
+  teal = "#519ABA",
+  orange = "#fca2aa",
+  cyan = "#a3b8ef",
+  statusline_bg = "#22262e",
+  lightbg = "#2d3139",
+  pmenu_bg = "#61afef",
+  folder_bg = "#61afef",
+}
+
+local settings = {
+  modes = require("nvchad.stl.utils").modes,
+  symbols = {
+    ui = require("ghc.core.icons").get("ui"),
+    separator = {
+      left = "",
+      right = "",
+    },
+  },
+  transparency = true,
+}
+settings.flags = {
+  has_cwd = function()
+    return vim.o.columns > 85
+  end,
+  has_filepath = function()
+    local filepath = vim.fn.expand("%:p")
+    return filepath and #filepath > 0
+  end,
+  has_filetype = function()
+    local filetype = vim.bo.filetype
+    return filetype and #filetype > 0
+  end,
+  has_mode = function()
+    return require("nvchad.stl.utils").is_activewin()
+  end,
+  is_cwd_leftest = function()
+    return not settings.flags.has_filetype()
+  end,
+  is_filetype_leftest = function()
+    return true
+  end,
+  is_pos_leftest = function()
+    return not settings.flags.has_filetype() and not settings.flags.has_cwd()
+  end,
+}
+
 local utils = {
   filetype = require("ghc.core.util.filetype"),
   path = require("ghc.core.util.path"),
-  is_activewin = require("nvchad.stl.utils").is_activewin,
-  modes = require("nvchad.stl.utils").modes,
   gen_with_modes_bg = function(prefix, fg)
     local function gen(modename, color)
       M.ui.hl_add[prefix .. "_" .. modename] = { fg = fg, bg = color }
@@ -26,12 +94,56 @@ local utils = {
   end,
 }
 
-local symbols = {
-  separator = { left = "", right = "" },
-}
-
 M.ui = {
   hl_add = {
+    GHC_STATUSLINE_CWD_ICON = {
+      fg = "black",
+      bg = "vibrant_green",
+    },
+    GHC_STATUSLINE_CWD_TEXT = {
+      fg = "white",
+      bg = settings.transparency and "none" or "statusline_bg",
+    },
+    GHC_STATUSLINE_CWD_SEPARATOR = {
+      fg = "vibrant_green",
+      bg = "lightbg",
+    },
+    GHC_STATUSLINE_CWD_SEPARATOR_LEFTEST = {
+      fg = "vibrant_green",
+      bg = settings.transparency and "none" or "statusline_bg",
+    },
+    GHC_STATUSLINE_FILETYPE_ICON = {
+      fg = "black",
+      bg = "red",
+    },
+    GHC_STATUSLINE_FILETYPE_TEXT = {
+      fg = "white",
+      bg = settings.transparency and "none" or "statusline_bg",
+    },
+    GHC_STATUSLINE_FILETYPE_SEPARATOR = {
+      fg = "red",
+      bg = "lightbg",
+    },
+    GHC_STATUSLINE_FILETYPE_SEPARATOR_LEFTEST = {
+      fg = "red",
+      bg = settings.transparency and "none" or "statusline_bg",
+    },
+    GHC_STATUSLINE_POS_ICON = {
+      fg = "black",
+      bg = "green",
+    },
+    GHC_STATUSLINE_POS_TEXT = {
+      fg = "black",
+      bg = "green",
+    },
+    GHC_STATUSLINE_POS_SEPARATOR = {
+      fg = "green",
+      bg = "lightbg",
+    },
+    GHC_STATUSLINE_POS_SEPARATOR_LEFTEST = {
+      fg = "green",
+      bg = settings.transparency and "none" or "statusline_bg",
+    },
     GHC_STATUSLINE_USERNAME = {
       fg = "#FFFFFF",
       bg = "baby_pink",
@@ -51,7 +163,7 @@ M.ui = {
   },
   theme = "onedark",
   theme_toggle = { "onedark", "one_light" },
-  transparency = true,
+  transparency = settings.transparency,
   cmp = {
     icons = true,
     lspkind_text = true,
@@ -74,37 +186,85 @@ M.ui = {
       "diagnostics",
       "lsp",
       "customized_filetype",
-      "cwd",
-      "customized_cursor",
+      "customized_cwd",
+      "customized_pos",
     },
     modules = {
-      customized_cursor = function()
-        return "%#St_pos_sep#%#St_pos_icon# %l·%c"
-      end,
-      customized_filetype = function()
-        local filepath = vim.fn.expand("%:p")
-        local icon = utils.filetype.fileicon(filepath)
-        local filetype = vim.bo.filetype
-        return "%#St_file# " .. icon .. " " .. filetype .. " "
-      end,
-      customized_filepath = function()
-        local filepath = vim.fn.expand("%:p")
-        local icon = utils.filetype.fileicon(filepath)
-        local display_path = utils.path.relative(utils.path.cwd(), filepath)
-        return "%#St_file# " .. icon .. " " .. display_path .. "%#St_file_sep#" .. symbols.separator.right
-      end,
-      customized_mode = function()
-        if not utils.is_activewin() then
+      customized_cwd = function()
+        if not settings.flags.has_cwd() then
           return ""
         end
 
-        local modes = utils.modes
+        local name = vim.loop.cwd()
+
+        local separator = "%#GHC_STATUSLINE_CWD_SEPARATOR"
+          .. (settings.flags.is_cwd_leftest() and "_LEFTEST" or "")
+          .. "#"
+          .. settings.symbols.separator.left
+        local icon = "%#GHC_STATUSLINE_CWD_ICON#" .. "󰉋 "
+        local text = "%#GHC_STATUSLINE_CWD_TEXT# "
+          .. (name:match("([^/\\]+)[/\\]*$") or name)
+          .. " "
+        return separator .. icon .. text
+      end,
+      customized_filetype = function()
+        if not settings.flags.has_filetype() then
+          return ""
+        end
+
+        local filetype = vim.bo.filetype
+        local filepath = vim.fn.expand("%:p")
+
+        local separator = "%#GHC_STATUSLINE_FILETYPE_SEPARATOR"
+          .. (settings.flags.is_filetype_leftest() and "_LEFTEST" or "")
+          .. "#"
+          .. settings.symbols.separator.left
+        local icon = "%#GHC_STATUSLINE_FILETYPE_ICON#" .. utils.filetype.fileicon(filepath)
+        local text = " %#GHC_STATUSLINE_FILETYPE_TEXT# " .. filetype .. " "
+        return separator .. icon .. text
+      end,
+      customized_filepath = function()
+        if not settings.flags.has_filepath() then
+          return ""
+        end
+
+        local filepath = vim.fn.expand("%:p")
+        local relative_path = utils.path.relative(utils.path.cwd(), filepath)
+
+        local icon = "%#St_file# " .. utils.filetype.fileicon(filepath)
+        local text = " " .. relative_path .. " "
+        local separator = "%#St_file_sep#" .. settings.symbols.separator.right
+        return icon .. text .. separator
+      end,
+      customized_mode = function()
+        if not settings.flags.has_mode() then
+          return ""
+        end
+
+        local modes = settings.modes
         local m = vim.api.nvim_get_mode().mode
         local color_mode = "%#St_" .. modes[m][2] .. "Mode#"
-        local color_ghc_statusline_username_separator = "%#GHC_STATUS_USERNAME_SEPARATOR" .. "_" .. modes[m][2] .. "#"
-        local current_mode = color_ghc_statusline_username_separator .. symbols.separator.right .. color_mode .. " " .. modes[m][1] .. " "
-        local mode_sep1 = "%#St_" .. modes[m][2] .. "ModeSep#" .. symbols.separator.right
-        return current_mode .. mode_sep1 .. "%#ST_EmptySpace#" .. symbols.separator.right
+        local color_ghc_statusline_username_separator = "%#GHC_STATUS_USERNAME_SEPARATOR"
+          .. "_"
+          .. modes[m][2]
+          .. "#"
+        local current_mode = color_ghc_statusline_username_separator
+          .. settings.symbols.separator.right
+          .. color_mode
+          .. " "
+          .. modes[m][1]
+          .. " "
+        local mode_sep1 = "%#St_" .. modes[m][2] .. "ModeSep#" .. settings.symbols.separator.right
+        return current_mode .. mode_sep1 .. "%#ST_EmptySpace#" .. settings.symbols.separator.right
+      end,
+      customized_pos = function()
+        local separator = "%#GHC_STATUSLINE_POS_SEPARATOR"
+          .. (settings.flags.is_pos_leftest() and "_LEFTEST" or "")
+          .. "#"
+          .. settings.symbols.separator.left
+        local icon = "%#GHC_STATUSLINE_POS_ICON#" .. " "
+        local text = "%#GHC_STATUSLINE_POS_TEXT#" .. "%l·%c "
+        return separator .. icon .. text
       end,
       customized_username = function()
         local username = os.getenv("USER")
@@ -128,10 +288,13 @@ M.ui = {
         end
         local width = getNeoTreeWidth()
         if width > 0 then
-          local word = "Explorer"
+          local word = settings.symbols.ui.Explorer .. " Explorer"
           local left_width = math.floor((width - #word) / 2)
           local right_width = width - left_width - #word
-          return "%#GHC_TABUFLINE_NEOTREE#" .. string.rep(" ", left_width) .. word .. string.rep(" ", right_width)
+          return "%#GHC_TABUFLINE_NEOTREE#"
+            .. string.rep(" ", left_width)
+            .. word
+            .. string.rep(" ", right_width)
         else
           return ""
         end

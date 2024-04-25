@@ -2,6 +2,7 @@ return {
   {
     "stevearc/conform.nvim",
     cmd = "ConformInfo",
+    event = { "VeryLazy" },
     keys = {
       { "=", mode = { "n", "v" } },
     },
