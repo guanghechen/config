@@ -6,6 +6,7 @@ local actions = {
     vim.lsp.codelens.refresh()
   end,
   goto_definitions = function()
+    -- vim.lsp.buf.definition()
     require("telescope.builtin").lsp_definitions({ reuse_win = true })
   end,
   goto_declarations = function()

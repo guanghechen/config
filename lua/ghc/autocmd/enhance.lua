@@ -131,13 +131,11 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- wrap and check for spell in text filetypes
+-- check for spell in text filetypes
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("wrap_spell"),
-  pattern = { "gitcommit", "markdown" },
+  pattern = { "gitcommit", "html", "lua", "text", "typescript" },
   callback = function()
-    vim.opt_local.wrap = true
     vim.opt_local.spell = true
   end,
 })
-

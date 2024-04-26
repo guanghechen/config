@@ -21,3 +21,8 @@ vim.keymap.set("n", "<Esc>", "<cmd>noh<cr><esc>", { noremap = true, silent = tru
 
 -- keywordprg
 vim.keymap.set("n", "<leader>K", "<cmd>norm! K<cr>", { desc = "Keywordprg" })
+
+-- better format
+-- https://github.com/stevearc/conform.nvim/issues/372#issuecomment-2066778074
+vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
+vim.keymap.set({ "n", "v" }, "=", "gq", { noremap = true, desc = "Format selected range" })

@@ -37,43 +37,6 @@ local base_30 = {
   folder_bg = "#61afef",
 }
 
-local settings = {
-  modes = require("nvchad.stl.utils").modes,
-  symbols = {
-    ui = require("ghc.core.icons").get("ui"),
-    separator = {
-      left = "",
-      right = "",
-    },
-  },
-  transparency = true,
-}
-settings.flags = {
-  has_cwd = function()
-    return vim.o.columns > 85
-  end,
-  has_filepath = function()
-    local filepath = vim.fn.expand("%:p")
-    return filepath and #filepath > 0
-  end,
-  has_filetype = function()
-    local filetype = vim.bo.filetype
-    return filetype and #filetype > 0
-  end,
-  has_mode = function()
-    return require("nvchad.stl.utils").is_activewin()
-  end,
-  is_cwd_leftest = function()
-    return not settings.flags.has_filetype()
-  end,
-  is_filetype_leftest = function()
-    return true
-  end,
-  is_pos_leftest = function()
-    return not settings.flags.has_filetype() and not settings.flags.has_cwd()
-  end,
-}
-
 local utils = {
   filetype = require("ghc.core.util.filetype"),
   path = require("ghc.core.util.path"),
@@ -91,6 +54,47 @@ local utils = {
     gen("Confirm", "teal")
     gen("Command", "green")
     gen("Select", "blue")
+  end,
+}
+local settings = {
+  modes = require("nvchad.stl.utils").modes,
+  symbols = {
+    ui = require("ghc.core.icons").get("ui"),
+    separator = {
+      left = "",
+      right = "",
+    },
+  },
+  transparency = true,
+}
+settings.flags = {
+  has_cwd = function()
+    return vim.o.columns > 85
+  end,
+  has_filepath = function()
+    local filepath = vim.fn.expand("%:p")
+    if not filepath or #filepath == 0 then
+      return false
+    end
+
+    local relative_path = utils.path.relative(utils.path.cwd(), filepath)
+    return relative_path ~= "."
+  end,
+  has_filetype = function()
+    local filetype = vim.bo.filetype
+    return filetype and #filetype > 0
+  end,
+  has_mode = function()
+    return require("nvchad.stl.utils").is_activewin()
+  end,
+  is_cwd_leftest = function()
+    return not settings.flags.has_filetype()
+  end,
+  is_filetype_leftest = function()
+    return true
+  end,
+  is_pos_leftest = function()
+    return not settings.flags.has_filetype() and not settings.flags.has_cwd()
   end,
 }
 
@@ -202,9 +206,7 @@ M.ui = {
           .. "#"
           .. settings.symbols.separator.left
         local icon = "%#GHC_STATUSLINE_CWD_ICON#" .. "󰉋 "
-        local text = "%#GHC_STATUSLINE_CWD_TEXT# "
-          .. (name:match("([^/\\]+)[/\\]*$") or name)
-          .. " "
+        local text = "%#GHC_STATUSLINE_CWD_TEXT# " .. (name:match("([^/\\]+)[/\\]*$") or name) .. " "
         return separator .. icon .. text
       end,
       customized_filetype = function()
@@ -244,10 +246,7 @@ M.ui = {
         local modes = settings.modes
         local m = vim.api.nvim_get_mode().mode
         local color_mode = "%#St_" .. modes[m][2] .. "Mode#"
-        local color_ghc_statusline_username_separator = "%#GHC_STATUS_USERNAME_SEPARATOR"
-          .. "_"
-          .. modes[m][2]
-          .. "#"
+        local color_ghc_statusline_username_separator = "%#GHC_STATUS_USERNAME_SEPARATOR" .. "_" .. modes[m][2] .. "#"
         local current_mode = color_ghc_statusline_username_separator
           .. settings.symbols.separator.right
           .. color_mode
@@ -291,10 +290,7 @@ M.ui = {
           local word = settings.symbols.ui.Explorer .. " Explorer"
           local left_width = math.floor((width - #word) / 2)
           local right_width = width - left_width - #word
-          return "%#GHC_TABUFLINE_NEOTREE#"
-            .. string.rep(" ", left_width)
-            .. word
-            .. string.rep(" ", right_width)
+          return "%#GHC_TABUFLINE_NEOTREE#" .. string.rep(" ", left_width) .. word .. string.rep(" ", right_width)
         else
           return ""
         end
