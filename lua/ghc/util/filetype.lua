@@ -1,8 +1,8 @@
 local M = {}
 
-M.fileicon = function(p)
+function M.calc_fileicon(p)
   local icon = "󰈚"
-  local name = (p == "" and "Empty ") or p:match "([^/\\]+)[/\\]*$"
+  local name = (p == "" and "Empty ") or p:match("([^/\\]+)[/\\]*$")
 
   if name ~= "Empty " then
     local devicons_present, devicons = pcall(require, "nvim-web-devicons")
@@ -17,4 +17,3 @@ M.fileicon = function(p)
 end
 
 return M
-

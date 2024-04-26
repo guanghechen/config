@@ -1,4 +1,4 @@
-local path = require("ghc.core.util.path")
+local path = require("ghc.util.path")
 local augroup = require("ghc.core.util.autocmd").augroup
 
 -- Clear jumplist
