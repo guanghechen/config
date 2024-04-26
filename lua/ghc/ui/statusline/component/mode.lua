@@ -8,13 +8,15 @@ local M = {
 ---@param name? string
 ---@param fg? string|nil
 ---@param bg? string|nil
-function M.gen_color_withmodes(name, fg, bg)
+---@param bold? boolean|nil
+function M.gen_color_withmodes(name, fg, bg, bold)
   local result = {}
 
   local function gen_color_withmode(mode, color)
     result[name .. "_" .. mode] = {
       fg = fg or color,
       bg = bg or color,
+      bold = bold,
     }
   end
 
@@ -33,10 +35,20 @@ end
 
 M.color = vim.tbl_deep_extend(
   "force",
-  M.gen_color_withmodes("icon", "babypink", nil),
-  M.gen_color_withmodes("separator", nil, "black"),
-  M.gen_color_withmodes("separator_rightest", nil, "black"),
-  M.gen_color_withmodes("text", "black", nil)
+  M.gen_color_withmodes("icon", "baby_pink", nil, false),
+  M.gen_color_withmodes("separator", nil, "grey", false),
+  M.gen_color_withmodes("separator_rightest", nil, "lightbg", false),
+  M.gen_color_withmodes("text", "black", nil, true),
+  {
+    separator_extend = {
+      fg = "grey",
+      bg = "lightbg",
+    },
+    separator_extend_rightest = {
+      fg = "grey",
+      bg = "grey",
+    },
+  }
 )
 
 function M.condition()
@@ -49,15 +61,18 @@ function M.renderer_left(opts)
   local m = vim.api.nvim_get_mode().mode
   local modes = require("nvchad.stl.utils").modes
   local mode_name = modes[m][2]
+  local mode_display_name = modes[m][1]
 
-  local color_separator = "%#" .. M.name .. (is_rightest and "_separator_rightest" or "_separator") .. "_" .. mode_name .. "#"
   local color_icon = "%#" .. M.name .. "_icon" .. "_" .. mode_name .. "#"
   local color_text = "%#" .. M.name .. "_text" .. "_" .. mode_name .. "#"
+  local color_separator = "%#" .. M.name .. (is_rightest and "_separator_rightest" or "_separator") .. "_" .. mode_name .. "#"
+  local color_separator_extend = "%#" .. M.name .. (is_rightest and "_separator_extend_rightest" or "_separator_extend") .. "#"
 
-  local separator = ui.statusline.symbol.separator.right
   local icon = ui.statusline.symbol.separator.right .. " "
-  local text = " " .. mode_name .. " "
-  return color_icon .. icon .. color_text .. text .. color_separator .. separator
+  local text = mode_display_name .. " "
+  local separator = is_rightest and "" or ui.statusline.symbol.separator.right
+  local separator_extend = is_rightest and " " or ui.statusline.symbol.separator.right
+  return color_icon .. icon .. color_text .. text .. color_separator .. separator .. color_separator_extend .. separator_extend
 end
 
 return M

@@ -13,7 +13,7 @@ M.color = {
   },
   separator = {
     fg = "vibrant_green",
-    bg = "lightbg",
+    bg = "statusline_bg",
   },
   separator_leftest = {
     fg = "vibrant_green",

@@ -9,20 +9,20 @@ local M = {
 
 M.color = {
   icon = {
-    fg = "black",
-    bg = "red",
+    fg = "white",
+    bg = "lightbg",
   },
   separator = {
-    fg = "red",
+    fg = "lightbg",
     bg = "lightbg",
   },
   separator_rightest = {
-    fg = "red",
+    fg = "lightbg",
     bg = ui.transparency and "none" or "statusline_bg",
   },
   text = {
     fg = "white",
-    bg = ui.transparency and "none" or "statusline_bg",
+    bg = "lightbg",
   },
 }
 
@@ -46,7 +46,7 @@ function M.renderer_left(opts)
   local color_icon = "%#" .. M.name .. "_icon#"
   local color_text = "%#" .. M.name .. "_text#"
 
-  local separator = ui.statusline.symbol.separator.right
+  local separator = is_rightest and "" or ui.statusline.symbol.separator.right
   local icon = " " .. calc_fileicon(filepath) .. " "
   local text = " " .. relative_path .. " "
   return color_icon .. icon .. color_text .. text .. color_separator .. separator
