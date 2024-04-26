@@ -22,6 +22,9 @@ bindings = [
   { key = "Plus",                       mods = "Command|Control|Shift", action = "IncreaseFontSize" },
   { key = "_",                          mods = "Command|Control|Shift", action = "DecreaseFontSize" },
 
+  # ----- status bar -----
+  { KEY = "F11",                        MODS = "Command",               chars = "\u0002\u001b[23~" },     # tYPE <ESCAPE>:W<ENTER> TO SAVE IN VIM OR HELIx
+
   # ----- vim ------
   { key = "S",                          mods = "Command",               chars = "\u001b:w\u000a" },     # Type <escape>:w<enter> to save in vim or helix
   # { key = "S",                          mods = "Command|Shift",         chars = "\u001b:wa\u000a" },    # Type <escape>:wa<enter> to save in vim or helix
