@@ -1,16 +1,18 @@
 local augroup = require("ghc.core.util.autocmd").augroup
 
+-- https://github.com/stevearc/conform.nvim/blob/master/doc/recipes.md#command-to-toggle-format-on-save
 -- Disable autoformat for lua files
 vim.api.nvim_create_autocmd({ "FileType" }, {
-  pattern = { "text", "toml", "json", "markdown" },
+  group = augroup("disable_format"),
+  pattern = { "text", "tmux", "toml", "json", "markdown" },
   callback = function()
-    vim.b.autoformat = false
+    vim.b.disable_autoformat = true
   end,
 })
 
 -- enable wrap in text filetypes
 vim.api.nvim_create_autocmd("FileType", {
-  group = augroup("wrap_spell"),
+  group = augroup("spell"),
   pattern = { "markdown", "text" },
   callback = function()
     vim.opt_local.wrap = true

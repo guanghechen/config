@@ -33,7 +33,7 @@ return {
     "rcarriga/nvim-notify",
     opts = {
       stages = "static",
-      timeout = 5000,
+      timeout = 3000,
       fps = 20,
       level = "INFO",
       max_height = function()
