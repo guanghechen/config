@@ -1,3 +1,4 @@
+---@class ghc.core.action.find.util
 local util = {
   path = require("ghc.core.util.path"),
 }

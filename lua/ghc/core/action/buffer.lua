@@ -120,4 +120,8 @@ function M.open_buffer_10()
   M.open_buffer(10)
 end
 
+function M.new_buffer()
+  vim.cmd("enew")
+end
+
 return M
