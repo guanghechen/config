@@ -1,10 +1,13 @@
-local path = require("ghc.util.path")
-local augroup = require("ghc.core.util.autocmd").augroup
+---@class ghc.autocmd.enhance.util
+local util = {
+  path = require("ghc.util.path"),
+  autocmd = require("ghc.util.autocmd"),
+}
 
 -- Clear jumplist
 -- See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
 vim.api.nvim_create_autocmd({ "VimEnter" }, {
-  group = augroup("clearjumps"),
+  group = util.autocmd.augroup("clearjumps"),
   pattern = "*",
   callback = function()
     vim.cmd("clearjumps")
@@ -19,15 +22,15 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
 --    b) If A is the same as B, then no action needed.
 -- 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
 vim.api.nvim_create_autocmd({ "VimEnter" }, {
-  group = augroup("auto_cd"),
+  group = util.autocmd.augroup("auto_cd"),
   pattern = "*",
   callback = function()
     if vim.fn.expand("%") ~= "" then
       local cwd = vim.uv.cwd()
       local p = vim.fn.expand("%:p:h")
 
-      local A = path.findGitRepoFromPath(p)
-      local B = path.findGitRepoFromPath(cwd)
+      local A = util.path.findGitRepoFromPath(p)
+      local B = util.path.findGitRepoFromPath(cwd)
 
       if A == nil then
         vim.cmd("cd " .. p .. "")
@@ -40,7 +43,7 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
 
 -- Auto create dir when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
-  group = augroup("auto_create_dir"),
+  group = util.autocmd.augroup("auto_create_dir"),
   callback = function(event)
     if event.match:match("^%w%w+:[\\/][\\/]") then
       return
@@ -52,7 +55,7 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 
 -- Check if we need to reload the file when it changed
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
-  group = augroup("checktime"),
+  group = util.autocmd.augroup("checktime"),
   callback = function()
     if vim.o.buftype ~= "nofile" then
       vim.cmd("checktime")
@@ -62,7 +65,7 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
 
 -- Highlight on yank
 vim.api.nvim_create_autocmd({ "TextYankPost" }, {
-  group = augroup("highlight_yank"),
+  group = util.autocmd.augroup("highlight_yank"),
   callback = function()
     vim.highlight.on_yank()
   end,
@@ -70,7 +73,7 @@ vim.api.nvim_create_autocmd({ "TextYankPost" }, {
 
 -- resize splits if window got resized
 vim.api.nvim_create_autocmd({ "VimResized" }, {
-  group = augroup("resize_splits"),
+  group = util.autocmd.augroup("resize_splits"),
   callback = function()
     local current_tab = vim.fn.tabpagenr()
     vim.cmd("tabdo wincmd =")
@@ -80,7 +83,7 @@ vim.api.nvim_create_autocmd({ "VimResized" }, {
 
 -- go to last loc when opening a buffer
 vim.api.nvim_create_autocmd({ "BufReadPost" }, {
-  group = augroup("last_loc"),
+  group = util.autocmd.augroup("last_loc"),
   callback = function(event)
     local exclude = { "gitcommit" }
     local buf = event.buf
@@ -98,7 +101,7 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
 
 -- close some filetypes with <q>
 vim.api.nvim_create_autocmd("FileType", {
-  group = augroup("close_with_q"),
+  group = util.autocmd.augroup("close_with_q"),
   pattern = {
     "checkhealth",
     "help",
@@ -124,7 +127,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- make it easier to close man-files when opened inline
 vim.api.nvim_create_autocmd("FileType", {
-  group = augroup("man_unlisted"),
+  group = util.autocmd.augroup("man_unlisted"),
   pattern = { "man" },
   callback = function(event)
     vim.bo[event.buf].buflisted = false
@@ -133,7 +136,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- check for spell in text filetypes
 vim.api.nvim_create_autocmd("FileType", {
-  group = augroup("wrap_spell"),
+  group = util.autocmd.augroup("wrap_spell"),
   pattern = { "gitcommit", "html", "lua", "text", "typescript" },
   callback = function()
     vim.opt_local.spell = true

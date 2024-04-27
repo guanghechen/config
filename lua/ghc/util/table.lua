@@ -1,3 +1,4 @@
+---@class ghc.util.table
 local M = {}
 
 function M.merge_multiple_array(...)

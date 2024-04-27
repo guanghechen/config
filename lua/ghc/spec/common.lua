@@ -1,6 +1,8 @@
-local icons = {
-  diagnostics = require("ghc.core.icons").get("diagnostics"),
-  ui = require("ghc.core.icons").get("ui"),
+local setting = {
+  icons = {
+    diagnostics = require("ghc.setting.ui").icons.get("diagnostics"),
+    ui = require("ghc.setting.ui").icons.get("ui"),
+  },
 }
 
 return {
@@ -47,11 +49,11 @@ return {
         vim.api.nvim_win_set_config(win, { zindex = 100 })
       end,
       icons = {
-        ERROR = icons.diagnostics.Error,
-        WARN = icons.diagnostics.Warning,
-        INFO = icons.diagnostics.Information,
-        DEBUG = icons.ui.Bug,
-        TRACE = icons.ui.Pencil,
+        ERROR = setting.icons.diagnostics.Error,
+        WARN = setting.icons.diagnostics.Warning,
+        INFO = setting.icons.diagnostics.Information,
+        DEBUG = setting.icons.ui.Bug,
+        TRACE = setting.icons.ui.Pencil,
       },
     },
     config = function(_, opts)

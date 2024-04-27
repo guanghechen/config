@@ -1,3 +1,4 @@
+---@class ghc.util.filetype
 local M = {}
 
 function M.calc_fileicon(p)

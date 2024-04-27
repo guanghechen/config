@@ -1,3 +1,4 @@
+---@class ghc.util.autocmd
 local M = {}
 
 M.augroup = function(name)

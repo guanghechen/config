@@ -1,5 +1,8 @@
-local icons = {
-  ui = require("ghc.core.icons").get("ui", true),
+---@class ghc.plugin.telescope.setting
+local setting = {
+  icons = {
+    ui = require("ghc.setting.ui").icons.get("ui", true),
+  },
 }
 
 local function flash(prompt_bufnr)
@@ -23,8 +26,8 @@ end
 
 local opts = {
   defaults = {
-    prompt_prefix = icons.ui.Telescope .. " ",
-    selection_caret = icons.ui.ChevronRight, --" ",
+    prompt_prefix = setting.icons.ui.Telescope .. " ",
+    selection_caret = setting.icons.ui.ChevronRight, --" ",
     border = {},
     borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
     color_devicons = true,
