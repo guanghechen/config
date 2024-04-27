@@ -1,3 +1,30 @@
+local actions = {
+  buffer = require("ghc.action.buffer"),
+  window = require("ghc.action.window"),
+}
+
+-- fast navigation
+
+-- window
+vim.keymap.set("n", "<leader>h", actions.window.focus_window_left, { noremap = true, silent = true, desc = "window: Focus on the left window" })
+vim.keymap.set("n", "<leader>j", actions.window.focus_window_bottom, { noremap = true, silent = true, desc = "window: Focus on the bottom window" })
+vim.keymap.set("n", "<leader>k", actions.window.focus_window_top, { noremap = true, silent = true, desc = "window: Focus on the top window" })
+vim.keymap.set("n", "<leader>l", actions.window.focus_window_right, { noremap = true, silent = true, desc = "window: Focus on the right window" })
+
+-- buffer
+vim.keymap.set("n", "<leader>1", actions.buffer.open_buffer_1, { noremap = true, silent = true, desc = "buffer: Open buffer 1" })
+vim.keymap.set("n", "<leader>2", actions.buffer.open_buffer_2, { noremap = true, silent = true, desc = "buffer: Open buffer 2" })
+vim.keymap.set("n", "<leader>3", actions.buffer.open_buffer_3, { noremap = true, silent = true, desc = "buffer: Open buffer 3" })
+vim.keymap.set("n", "<leader>4", actions.buffer.open_buffer_4, { noremap = true, silent = true, desc = "buffer: Open buffer 4" })
+vim.keymap.set("n", "<leader>5", actions.buffer.open_buffer_5, { noremap = true, silent = true, desc = "buffer: Open buffer 5" })
+vim.keymap.set("n", "<leader>6", actions.buffer.open_buffer_6, { noremap = true, silent = true, desc = "buffer: Open buffer 6" })
+vim.keymap.set("n", "<leader>7", actions.buffer.open_buffer_7, { noremap = true, silent = true, desc = "buffer: Open buffer 7" })
+vim.keymap.set("n", "<leader>8", actions.buffer.open_buffer_8, { noremap = true, silent = true, desc = "buffer: Open buffer 8" })
+vim.keymap.set("n", "<leader>9", actions.buffer.open_buffer_9, { noremap = true, silent = true, desc = "buffer: Open buffer 9" })
+vim.keymap.set("n", "<leader>0", actions.buffer.open_buffer_10, { noremap = true, silent = true, desc = "buffer: Open buffer 10" })
+
+-------------------------------------------------
+
 -- better indenting
 vim.keymap.set("v", "<", "<gv")
 vim.keymap.set("v", ">", ">gv")

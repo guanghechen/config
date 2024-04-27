@@ -49,15 +49,14 @@ function M.is_current_rightest()
   return bufnr_current == vim.t.bufs[#vim.t.bufs]
 end
 
-function M.goto_buffer(n)
-  local bufs = vim.t.bufs
-  if n > 0 and n <= #bufs then
-    vim.api.nvim_set_current_buf(vim.t.bufs[n])
-    return
+---@param bufid number
+function M.open_buffer(bufid)
+  if bufid > 0 and bufid <= #vim.t.bufs then
+    vim.api.nvim_set_current_buf(vim.t.bufs[bufid])
   end
 end
 
-function M.goto_buffer_left()
+function M.open_buffer_left()
   if M.is_current_leftest() then
     return
   end
@@ -69,7 +68,7 @@ function M.goto_buffer_left()
   vim.api.nvim_set_current_buf(vim.t.bufs[bufid_valid])
 end
 
-function M.goto_buffer_right()
+function M.open_buffer_right()
   if M.is_current_rightest() then
     return
   end
@@ -81,44 +80,44 @@ function M.goto_buffer_right()
   vim.api.nvim_set_current_buf(vim.t.bufs[bufid_valid])
 end
 
-function M.goto_buffer_1()
-  M.goto_buffer(1)
+function M.open_buffer_1()
+  M.open_buffer(1)
 end
 
-function M.goto_buffer_2()
-  M.goto_buffer(2)
+function M.open_buffer_2()
+  M.open_buffer(2)
 end
 
-function M.goto_buffer_3()
-  M.goto_buffer(3)
+function M.open_buffer_3()
+  M.open_buffer(3)
 end
 
-function M.goto_buffer_4()
-  M.goto_buffer(4)
+function M.open_buffer_4()
+  M.open_buffer(4)
 end
 
-function M.goto_buffer_5()
-  M.goto_buffer(5)
+function M.open_buffer_5()
+  M.open_buffer(5)
 end
 
-function M.goto_buffer_6()
-  M.goto_buffer(6)
+function M.open_buffer_6()
+  M.open_buffer(6)
 end
 
-function M.goto_buffer_7()
-  M.goto_buffer(7)
+function M.open_buffer_7()
+  M.open_buffer(7)
 end
 
-function M.goto_buffer_8()
-  M.goto_buffer(8)
+function M.open_buffer_8()
+  M.open_buffer(8)
 end
 
-function M.goto_buffer_9()
-  M.goto_buffer(9)
+function M.open_buffer_9()
+  M.open_buffer(9)
 end
 
-function M.goto_buffer_10()
-  M.goto_buffer(10)
+function M.open_buffer_10()
+  M.open_buffer(10)
 end
 
 return M
