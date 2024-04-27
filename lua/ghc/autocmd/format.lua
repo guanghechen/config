@@ -1,6 +1,6 @@
 ---@class ghc.autocmd.format.util
 local util = {
-  autocmd = require("ghc.util.autocmd"),
+  autocmd = require("ghc.core.util.autocmd"),
 }
 
 -- https://github.com/stevearc/conform.nvim/blob/master/doc/recipes.md#command-to-toggle-format-on-save

@@ -1,7 +1,7 @@
 local setting = {
   icons = {
-    diagnostics = require("ghc.setting.ui").icons.get("diagnostics"),
-    ui = require("ghc.setting.ui").icons.get("ui"),
+    diagnostics = require("ghc.core.setting.ui").icons.get("diagnostics"),
+    ui = require("ghc.core.setting.ui").icons.get("ui"),
   },
 }
 

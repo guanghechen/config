@@ -1,4 +1,4 @@
----@class ghc.action.window
+---@class ghc.core.action.window
 local M = {}
 
 M.focus_window_top = "<C-w>k"

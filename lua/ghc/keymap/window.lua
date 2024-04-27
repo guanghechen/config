@@ -1,4 +1,4 @@
-local action = require("ghc.action.window")
+local action = require("ghc.core.action.window")
 
 ----- Focus window -----
 vim.keymap.set("n", "<leader>wh", action.focus_window_left, { noremap = true, silent = true, desc = "window: Focus on the left window" })

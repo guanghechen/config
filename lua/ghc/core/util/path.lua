@@ -1,6 +1,6 @@
 local Path = require("plenary.path")
 
----@class ghc.util.path
+---@class ghc.core.util.path
 local M = {}
 
 function M.findGitRepoFromPath(p)

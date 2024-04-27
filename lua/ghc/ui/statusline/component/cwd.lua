@@ -1,5 +1,5 @@
-local ui = require("ghc.setting.ui")
-local path = require("ghc.util.path")
+local ui = require("ghc.core.setting.ui")
+local path = require("ghc.core.util.path")
 
 --- @class ghc.ui.statusline.component.cwd
 local M = {

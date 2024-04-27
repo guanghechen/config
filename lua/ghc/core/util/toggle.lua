@@ -1,6 +1,6 @@
 -- https://github.com/LazyVim/LazyVim/blob/9b4675ddde38fdae09978bd7dbdba83ec91f4d80/lua/lazyvim/util/toggle.lua#L1C1-L80C9
 
----@class ghc.util.toggle
+---@class ghc.core.util.toggle
 local M = {}
 
 ---@param silent boolean?

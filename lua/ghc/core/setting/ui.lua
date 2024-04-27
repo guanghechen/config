@@ -209,7 +209,7 @@ local icons = {
   },
 }
 
----@class ghc.setting.ui
+---@class ghc.core.setting.ui
 local M = {
   icons = {},
   statusline = {

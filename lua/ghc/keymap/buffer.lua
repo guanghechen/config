@@ -16,7 +16,7 @@
 
 -- nvchad tabufline
 
-local action = require("ghc.action.buffer")
+local action = require("ghc.core.action.buffer")
 
 ----- Focus buffer -----
 vim.keymap.set("n", "<leader>b1", action.open_buffer_1, { noremap = true, silent = true, desc = "buffer: Open buffer 1" })

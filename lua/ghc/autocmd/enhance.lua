@@ -1,7 +1,7 @@
 ---@class ghc.autocmd.enhance.util
 local util = {
-  path = require("ghc.util.path"),
-  autocmd = require("ghc.util.autocmd"),
+  path = require("ghc.core.util.path"),
+  autocmd = require("ghc.core.util.autocmd"),
 }
 
 -- Clear jumplist

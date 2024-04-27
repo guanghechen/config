@@ -1,5 +1,5 @@
-local ui = require("ghc.setting.ui")
-local calc_fileicon = require("ghc.util.filetype").calc_fileicon
+local ui = require("ghc.core.setting.ui")
+local calc_fileicon = require("ghc.core.util.filetype").calc_fileicon
 
 --- @class ghc.ui.statusline.component.filetype
 local M = {

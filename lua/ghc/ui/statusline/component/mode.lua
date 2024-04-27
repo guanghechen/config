@@ -1,4 +1,4 @@
-local ui = require("ghc.setting.ui")
+local ui = require("ghc.core.setting.ui")
 
 ---@class ghc.ui.statusline.component.mode
 local M = {

@@ -1,4 +1,4 @@
-local ui = require("ghc.setting.ui")
+local ui = require("ghc.core.setting.ui")
 
 local function get_neotree_width()
   for _, win in pairs(vim.api.nvim_tabpage_list_wins(0)) do

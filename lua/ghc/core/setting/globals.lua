@@ -8,7 +8,7 @@ local data_path = vim.fn.stdpath("data")
 local path_sep = is_windows and "\\" or "/"
 local home = is_windows and os.getenv("USERPROFILE") or os.getenv("HOME")
 
----@class ghc.setting.globals
+---@class ghc.core.setting.globals
 local globals = {
   is_mac = is_mac,
   is_linux = is_linux,

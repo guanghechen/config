@@ -1,7 +1,7 @@
 ---@class ghc.plugin.telescope.setting
 local setting = {
   icons = {
-    ui = require("ghc.setting.ui").icons.get("ui", true),
+    ui = require("ghc.core.setting.ui").icons.get("ui", true),
   },
 }
 

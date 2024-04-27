@@ -1,6 +1,6 @@
-local ui = require("ghc.setting.ui")
-local path = require("ghc.util.path")
-local calc_fileicon = require("ghc.util.filetype").calc_fileicon
+local ui = require("ghc.core.setting.ui")
+local path = require("ghc.core.util.path")
+local calc_fileicon = require("ghc.core.util.filetype").calc_fileicon
 
 --- @class ghc.ui.statusline.component.filepath
 local M = {

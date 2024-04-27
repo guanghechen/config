@@ -1,6 +1,6 @@
 local actions = {
-  buffer = require("ghc.action.buffer"),
-  window = require("ghc.action.window"),
+  buffer = require("ghc.core.action.buffer"),
+  window = require("ghc.core.action.window"),
 }
 
 -- fast navigation

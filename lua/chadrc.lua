@@ -8,10 +8,10 @@ local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
 
 local setting = {
-  ui = require("ghc.setting.ui"),
+  ui = require("ghc.core.setting.ui"),
 }
 local utils = {
-  table = require("ghc.util.table"),
+  table = require("ghc.core.util.table"),
 }
 
 M.ui = {

@@ -1,4 +1,4 @@
----@class ghc.action.buffer
+---@class ghc.core.action.buffer
 local M = {}
 
 function M.close_buffer()

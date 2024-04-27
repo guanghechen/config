@@ -1,4 +1,4 @@
-local path = require("ghc.util.path")
+local path = require("ghc.core.util.path")
 
 local lazygit = {
   open = function()
