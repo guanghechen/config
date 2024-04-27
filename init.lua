@@ -9,6 +9,8 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+require("ghc.option")
+
 -- load plugins
 require("lazy").setup(require("ghc.plugin.lazy"))
 

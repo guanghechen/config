@@ -220,7 +220,7 @@ local M = {
       },
     },
   },
-  tranparency = true,
+  transparency = false,
 }
 
 ---Get a specific icon set.

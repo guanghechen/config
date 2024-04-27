@@ -6,11 +6,10 @@ local M = {}
 
 local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
-
 local setting = {
   ui = require("ghc.core.setting.ui"),
 }
-local utils = {
+local util = {
   table = require("ghc.core.util.table"),
 }
 
@@ -27,26 +26,24 @@ M.ui = {
   theme = "onedark",
   theme_toggle = { "onedark", "one_light" },
   transparency = setting.ui.transparency,
-  cmp = {
-    icons = true,
-    lspkind_text = true,
-    style = "default", -- default/flat_light/flat_dark/atom/atom_colored
-  },
-  integration = {
-    "blankline",
-    "cmp",
-    "git",
-    "trouble",
+  base46 = {
+    integration = {
+      "blankline",
+      "cmp",
+      "git",
+      "trouble",
+    },
   },
   statusline = {
     theme = "default", -- default / minimal / vscode / vscode_colored
-    order = utils.table.merge_multiple_array(statusline.order_left, { "git", "%=", "diagnostics", "lsp" }, statusline.order_right),
+    separator_style = "default",
+    order = util.table.merge_multiple_array(statusline.order_left, { "git", "%=", "diagnostics", "lsp" }, statusline.order_right),
     modules = vim.tbl_deep_extend("force", statusline.modules_left, statusline.modules_right),
   },
   tabufline = {
     enabled = true,
     lazyload = true,
-    order = utils.table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs", "btns" }, bufferline.order_right),
+    order = util.table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs", "btns" }, bufferline.order_right),
     modules = vim.tbl_deep_extend("force", bufferline.modules_left, bufferline.modules_right),
   },
   telescope = {
@@ -72,6 +69,13 @@ M.ui = {
     header = {},
     buttons = {},
   },
+  lsp = { signature = true },
+  cmp = {
+    icons = true,
+    lspkind_text = true,
+    style = "default", -- default/flat_light/flat_dark/atom/atom_colored
+  },
+  cheatsheet = { theme = "grid" }, -- simple/grid
 }
 
 -- print(vim.inspect(M.ui))
