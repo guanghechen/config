@@ -141,7 +141,6 @@ mapkey("n", "<leader><leader>", actions.find.find_frecency_cwd, "find: Recent (c
 --#[g]it--------------------------------------------------------------------------------------------
 mapkey("n", "<leader>gG", actions.git.open_lazygit_workspace, "git: Open lazygit (workspace)")
 mapkey("n", "<leader>gg", actions.git.open_lazygit_cwd, "git: Open lazygit (cwd)")
-mapkey("n", "<leader>gb", actions.git.git_blame_line, "git: Blame line")
 -------------------------------------------------------------------------------------------#[g]it---
 
 --#[q]uit-------------------------------------------------------------------------------------------
