@@ -1,5 +1,9 @@
 -- https://github.com/LazyVim/LazyVim/blob/9b4675ddde38fdae09978bd7dbdba83ec91f4d80/lua/lazyvim/util/toggle.lua#L1C1-L80C9
 
+local util = {
+  reporter = require("ghc.core.util.reporter"),
+}
+
 ---@class ghc.core.util.toggle
 local M = {}
 
@@ -14,15 +18,15 @@ function M.option(option, silent, values)
       ---@diagnostic disable-next-line: no-unknown
       vim.opt_local[option] = values[1]
     end
-    return require("lazy.core.util").info("Set " .. option .. " to " .. vim.opt_local[option]:get(), { title = "Option" })
+    return util.reporter.info("Set " .. option .. " to " .. vim.opt_local[option]:get(), { title = "Option" })
   end
   ---@diagnostic disable-next-line: no-unknown
   vim.opt_local[option] = not vim.opt_local[option]:get()
   if not silent then
     if vim.opt_local[option]:get() then
-      require("lazy.core.util").info("Enabled " .. option, { title = "Option" })
+      util.reporter.info("Enabled " .. option, { title = "Option" })
     else
-      require("lazy.core.util").warn("Disabled " .. option, { title = "Option" })
+      util.reporter.warn("Disabled " .. option, { title = "Option" })
     end
   end
 end
@@ -33,11 +37,11 @@ function M.number()
     nu = { number = vim.opt_local.number:get(), relativenumber = vim.opt_local.relativenumber:get() }
     vim.opt_local.number = false
     vim.opt_local.relativenumber = false
-    require("lazy.core.util").warn("Disabled line numbers", { title = "Option" })
+    util.reporter.warn("Disabled line numbers", { title = "Option" })
   else
     vim.opt_local.number = nu.number
     vim.opt_local.relativenumber = nu.relativenumber
-    require("lazy.core.util").info("Enabled line numbers", { title = "Option" })
+    util.reporter.info("Enabled line numbers", { title = "Option" })
   end
 end
 
@@ -52,10 +56,10 @@ function M.diagnostics()
 
   if enabled then
     vim.diagnostic.enable()
-    require("lazy.core.util").info("Enabled diagnostics", { title = "Diagnostics" })
+    util.reporter.info("Enabled diagnostics", { title = "Diagnostics" })
   else
     vim.diagnostic.disable()
-    require("lazy.core.util").warn("Disabled diagnostics", { title = "Diagnostics" })
+    util.reporter.warn("Disabled diagnostics", { title = "Diagnostics" })
   end
 end
 
@@ -80,4 +84,3 @@ setmetatable(M, {
 })
 
 return M
-

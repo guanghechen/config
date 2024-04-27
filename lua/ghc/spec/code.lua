@@ -1,3 +1,7 @@
+local util = {
+  reporter = require("ghc.core.util.reporter"),
+}
+
 return {
   -- Change comment mappings
   -- https://www.lazyvim.org/configuration/recipes#change-comment-mappings
@@ -58,9 +62,9 @@ return {
         function()
           vim.g.minipairs_disable = not vim.g.minipairs_disable
           if vim.g.minipairs_disable then
-            require("lazy.core.util").warn("Disabled auto pairs", { title = "Option" })
+            util.reporter.warn("Disabled auto pairs", { title = "Option" })
           else
-            require("lazy.core.util").info("Enabled auto pairs", { title = "Option" })
+            util.reporter.info("Enabled auto pairs", { title = "Option" })
           end
         end,
         desc = "Toggle Auto Pairs",
