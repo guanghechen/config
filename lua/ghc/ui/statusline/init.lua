@@ -4,6 +4,10 @@ local components = {
     require("ghc.ui.statusline.component.mode"),
     require("ghc.ui.statusline.component.filepath"),
   },
+  left_c = {},
+  right_x = {
+    require("ghc.ui.statusline.component.noice"),
+  },
   right = {
     require("ghc.ui.statusline.component.filetype"),
     require("ghc.ui.statusline.component.cwd"),
@@ -57,6 +61,32 @@ for _, component in ipairs(components.left) do
     local rightest_name = get_rightest_name()
     local is_rightest = rightest_name == component.name
     return component.renderer_left({ is_rightest = is_rightest })
+  end
+end
+for _, component in ipairs(components.left_c) do
+  for name, color in pairs(component.color) do
+    M.colors[component.name .. "_" .. name] = color
+  end
+
+  table.insert(M.order_left, component.name)
+  M.modules_left[component.name] = function()
+    if not component.condition() then
+      return ""
+    end
+    return component.renderer()
+  end
+end
+for _, component in ipairs(components.right_x) do
+  for name, color in pairs(component.color) do
+    M.colors[component.name .. "_" .. name] = color
+  end
+
+  table.insert(M.order_right, component.name)
+  M.modules_right[component.name] = function()
+    if not component.condition() then
+      return ""
+    end
+    return component.renderer()
   end
 end
 for _, component in ipairs(components.right) do
