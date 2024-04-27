@@ -9,8 +9,33 @@ M.focus_window_left = "<C-w>h"
 M.split_window_horizontal = "<C-w>s"
 M.split_window_vertical = "<C-w>v"
 
-M.close_window_current = "<cmd>close<cr>"
-M.close_window_others = "<cmd>only<cr>"
+function M.resize_window_horizontal_minus()
+  local step = vim.v.count1 or 1
+  vim.cmd("resize -" .. step)
+end
+
+function M.resize_window_horizontal_plus()
+  local step = vim.v.count1 or 1
+  vim.cmd("resize +" .. step)
+end
+
+function M.resize_window_vertical_minus()
+  local step = vim.v.count1 or 1
+  vim.cmd("vertical resize -" .. step)
+end
+
+function M.resize_window_vertical_plus()
+  local step = vim.v.count1 or 1
+  vim.cmd("vertical resize +" .. step)
+end
+
+function M.close_window_current()
+  vim.cmd("close")
+end
+
+function M.close_window_others()
+  vim.cmd("only")
+end
 
 ---@param opts { motivation: "focus" | "swap" | "project" }
 M.pick_window = function(opts)

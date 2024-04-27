@@ -23,6 +23,32 @@ vim.keymap.set("n", "<leader>8", actions.buffer.open_buffer_8, { noremap = true,
 vim.keymap.set("n", "<leader>9", actions.buffer.open_buffer_9, { noremap = true, silent = true, desc = "buffer: Open buffer 9" })
 vim.keymap.set("n", "<leader>0", actions.buffer.open_buffer_10, { noremap = true, silent = true, desc = "buffer: Open buffer 10" })
 
+-- fast resize
+vim.keymap.set(
+  "n",
+  "<leader><C-Left>",
+  actions.window.resize_window_vertical_minus,
+  { noremap = true, silent = true, desc = "window: Resize -(v:count) vertically." }
+)
+vim.keymap.set(
+  "n",
+  "<leader><C-Down>",
+  actions.window.resize_window_horizontal_minus,
+  { noremap = true, silent = true, desc = "window: Resize -(v:count) horizontally." }
+)
+vim.keymap.set(
+  "n",
+  "<leader><C-Up>",
+  actions.window.resize_window_horizontal_plus,
+  { noremap = true, silent = true, desc = "window: Resize +(v:count) horizontally." }
+)
+vim.keymap.set(
+  "n",
+  "<leader><C-Right>",
+  actions.window.resize_window_vertical_plus,
+  { noremap = true, silent = true, desc = "window: Resize +(v:count) vertically." }
+)
+
 -------------------------------------------------
 
 -- better indenting
