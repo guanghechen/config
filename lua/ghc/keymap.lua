@@ -111,7 +111,6 @@ mapkey("n", "<leader>cd", actions.diagnostic.open_line_diagnostics, "code: Open 
 -------------------------------------------------------------------------------------------#[c]ode--
 
 --#[e]xplorer---------------------------------------------------------------------------------------
-mapkey("n", "<leader>ec", actions.explorer.close_explorer, "explorer: Close")
 mapkey("n", "<leader>eB", actions.explorer.show_buffer_explorer_workspace, "explorer: Buffers (workspace)")
 mapkey("n", "<leader>eb", actions.explorer.show_buffer_explorer_cwd, "explorer: Buffers (cwd)")
 mapkey("n", "<leader>ee", actions.explorer.focus_or_toggle_explorer, "explorer: Focus or toggle")
@@ -120,6 +119,7 @@ mapkey("n", "<leader>ef", actions.explorer.show_file_explorer_cwd, "explorer: Fi
 mapkey("n", "<leader>eG", actions.explorer.show_git_explorer_workspace, "explorer: Git changed files (workspace)")
 mapkey("n", "<leader>eg", actions.explorer.show_git_explorer_cwd, "explorer: Git changed files (cwd)")
 mapkey("n", "<leader>er", actions.explorer.reveal_file_explorer, "explorer: Reveal file explorer")
+mapkey("n", "<leader>et", actions.explorer.toggle_explorer, "explorer: Toggle")
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ile-------------------------------------------------------------------------------------------

@@ -83,9 +83,9 @@ function M.focus_or_toggle_explorer()
   end
 end
 
-function M.close_explorer()
+function M.toggle_explorer()
   require("neo-tree.command").execute({
-    action = "close",
+    toggle = true,
   })
 end
 
