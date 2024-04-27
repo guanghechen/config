@@ -1,21 +1,17 @@
 ---@class ghc.action.git.util
 local util = {
   path = require("ghc.core.util.path"),
+  terminal = require("ghc.core.util.terminal"),
 }
 
 ---@class ghc.action.git
 local M = {}
 
 function M.open_lazygit_workspace()
-  local cmds = {
-    "cd " .. '"' .. util.path.workspace() .. '"',
-    "lazygit",
-  }
-
-  require("nvchad.term").toggle({
+  util.terminal.toggle_terminal({
     id = "lazygit",
-    pos = "float",
-    cmd = table.concat(cmds, " && "),
+    cwd = util.path.workspace(),
+    cmd = { "lazygit" },
   })
 end
 
