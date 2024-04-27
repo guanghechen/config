@@ -4,7 +4,9 @@
 ---@type ChadrcConfig
 local M = {}
 
+local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
+
 local setting = {
   ui = require("ghc.setting.ui"),
 }
@@ -13,7 +15,7 @@ local utils = {
 }
 
 M.ui = {
-  hl_add = vim.tbl_deep_extend("force", statusline.colors, {}),
+  hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, {}),
   hl_override = {
     CursorLine = {
       bg = "one_bg2", -- "line"
@@ -44,28 +46,8 @@ M.ui = {
   tabufline = {
     enabled = true,
     lazyload = true,
-    order = { "neotree", "buffers", "tabs", "btns" },
-    modules = {
-      neotree = function()
-        local function getNeoTreeWidth()
-          for _, win in pairs(vim.api.nvim_tabpage_list_wins(0)) do
-            if vim.bo[vim.api.nvim_win_get_buf(win)].ft == "neo-tree" then
-              return vim.api.nvim_win_get_width(win) + 1
-            end
-          end
-          return 0
-        end
-        local width = getNeoTreeWidth()
-        if width > 0 then
-          local word = "  Explorer"
-          local left_width = math.floor((width - #word) / 2)
-          local right_width = width - left_width - #word
-          return "%#GHC_TABUFLINE_NEOTREE#" .. string.rep(" ", left_width) .. word .. string.rep(" ", right_width)
-        else
-          return ""
-        end
-      end,
-    },
+    order = utils.table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs", "btns" }, bufferline.order_right),
+    modules = vim.tbl_deep_extend("force", bufferline.modules_left, bufferline.modules_right),
   },
   telescope = {
     style = "borderless",
