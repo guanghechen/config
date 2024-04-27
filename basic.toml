@@ -29,10 +29,10 @@ hide_when_typing = true
 
 [scrolling]
 history = 10000 # Maximum number of lines in the scrollback buffer. Specifying '0' will disable scrolling.
-multiplier = 3 # Number of lines the viewport will move for every line scrolled when scrollback is enabled (history > 0).
+multiplier = 3  # Number of lines the viewport will move for every line scrolled when scrollback is enabled (history > 0).
 
 [selection]
-save_to_clipboard = true # When set to true, selected text will be copied to the primary clipboard.
+save_to_clipboard = true                         # When set to true, selected text will be copied to the primary clipboard.
 semantic_escape_chars = ",│`|:\\\"' ()[]{}<>\\t"
 
 [shell]
@@ -55,5 +55,5 @@ columns = 120
 lines = 35
 
 [window.padding]
-x = 5 
+x = 0
 y = 5
