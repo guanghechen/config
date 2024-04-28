@@ -57,6 +57,10 @@ vim.keymap.set({ "n", "v" }, "=", "gq", { noremap = true, desc = "Format selecte
 ---------------------------------------------------------------------------------------#enhance-----
 
 --#navigation---------------------------------------------------------------------------------------
+----- session -----
+mapkey("n", "[t", actions.buffer.goto_tab_left, "tab: Goto left tab", true)
+mapkey("n", "]t", actions.buffer.goto_tab_right, "tab: Goto right tab", true)
+
 ----- buffer -----
 mapkey("n", "<leader>1", actions.buffer.open_buffer_1, "buffer: Open buffer 1", true)
 mapkey("n", "<leader>2", actions.buffer.open_buffer_2, "buffer: Open buffer 2", true)
@@ -68,8 +72,8 @@ mapkey("n", "<leader>7", actions.buffer.open_buffer_7, "buffer: Open buffer 7", 
 mapkey("n", "<leader>8", actions.buffer.open_buffer_8, "buffer: Open buffer 8", true)
 mapkey("n", "<leader>9", actions.buffer.open_buffer_9, "buffer: Open buffer 9", true)
 mapkey("n", "<leader>0", actions.buffer.open_buffer_10, "buffer: Open buffer 10", true)
-mapkey("n", "[b", actions.buffer.open_buffer_left, "buffer: Open buffer left", true)
-mapkey("n", "]b", actions.buffer.open_buffer_right, "buffer: Open buffer right", true)
+mapkey("n", "[b", actions.buffer.open_buffer_left, "buffer: Open left buffer", true)
+mapkey("n", "]b", actions.buffer.open_buffer_right, "buffer: Open right buffer", true)
 
 ----- diagnostic -----
 mapkey("n", "[d", actions.diagnostic.goto_prev_diagnostic, "Prev Diagnostic")
@@ -97,8 +101,8 @@ mapkey("n", "<leader>b7", actions.buffer.open_buffer_7, "buffer: Open buffer 7",
 mapkey("n", "<leader>b8", actions.buffer.open_buffer_8, "buffer: Open buffer 8", true)
 mapkey("n", "<leader>b9", actions.buffer.open_buffer_9, "buffer: Open buffer 9", true)
 mapkey("n", "<leader>b0", actions.buffer.open_buffer_10, "buffer: Open buffer 10", true)
-mapkey("n", "<leader>b[", actions.buffer.open_buffer_left, "buffer: Open buffer left", true)
-mapkey("n", "<leader>b]", actions.buffer.open_buffer_right, "buffer: Open buffer right", true)
+mapkey("n", "<leader>b[", actions.buffer.open_buffer_left, "buffer: Open left buffer", true)
+mapkey("n", "<leader>b]", actions.buffer.open_buffer_right, "buffer: Open right buffer", true)
 mapkey("n", "<leader>bn", actions.buffer.new_buffer, "buffer: New buffer", true)
 mapkey("n", "<leader>bd", actions.buffer.close_buffer, "buffer: Close current buffer", true)
 mapkey("n", "<leader>bh", actions.buffer.close_buffer_to_leftest, "buffer: Close buffers to the leftest", true)
