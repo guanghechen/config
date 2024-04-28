@@ -48,7 +48,7 @@ function M.renderer_left(opts)
 
   local separator = is_rightest and "" or ui.statusline.symbol.separator.right
   local icon = " " .. calc_fileicon(filepath) .. " "
-  local text = " " .. relative_path .. " "
+  local text = relative_path .. " "
   return color_icon .. icon .. color_text .. text .. color_separator .. separator
 end
 
