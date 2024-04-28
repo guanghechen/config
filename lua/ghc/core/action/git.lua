@@ -27,4 +27,15 @@ function M.open_lazygit_cwd()
   })
 end
 
+function M.open_lazygit_file_history()
+  local filepath = vim.api.nvim_buf_get_name(0)
+  local cmd = { "lazygit", "-f", filepath }
+  util.terminal.open_terminal(cmd, {
+    cwd = util.path.cwd(),
+    esc_esc = false,
+    ctrl_hjkl = false,
+    border = "none",
+  })
+end
+
 return M
