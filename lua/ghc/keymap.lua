@@ -8,6 +8,7 @@ local actions = {
   git = require("ghc.core.action.git"),
   quit = require("ghc.core.action.quit"),
   search = require("ghc.core.action.search"),
+  tab = require("ghc.core.action.tab"),
   terminal = require("ghc.core.action.terminal"),
   ui = require("ghc.core.action.ui"),
   window = require("ghc.core.action.window"),
@@ -100,8 +101,8 @@ mapkey("n", "<leader>b[", actions.buffer.open_buffer_left, "buffer: Open buffer 
 mapkey("n", "<leader>b]", actions.buffer.open_buffer_right, "buffer: Open buffer right", true)
 mapkey("n", "<leader>bn", actions.buffer.new_buffer, "buffer: New buffer", true)
 mapkey("n", "<leader>bd", actions.buffer.close_buffer, "buffer: Close current buffer", true)
-mapkey("n", "<leader>bl", actions.buffer.close_buffer_lefts, "buffer: Close buffers to the left", true)
-mapkey("n", "<leader>bh", actions.buffer.close_buffer_rights, "buffer: Close buffers to the right", true)
+mapkey("n", "<leader>bh", actions.buffer.close_buffer_to_leftest, "buffer: Close buffers to the leftest", true)
+mapkey("n", "<leader>bl", actions.buffer.close_buffer_to_rightest, "buffer: Close buffers to the rightest", true)
 mapkey("n", "<leader>bo", actions.buffer.close_buffer_others, "buffer: Close other buffers", true)
 mapkey("n", "<leader>ba", actions.buffer.close_buffer_others, "buffer: Close all buffers", true)
 -----------------------------------------------------------------------------------------#[b]uffer--
@@ -151,6 +152,27 @@ mapkey("n", "<leader>qq", actions.quit.quit_all, "quit: Quit all")
 mapkey("n", "<leader>sG", actions.search.live_grep_with_args_workspace, "search: Grep (workspace)", false)
 mapkey("n", "<leader>sg", actions.search.live_grep_with_args_cwd, "search: Grep (cwd)", false)
 -----------------------------------------------------------------------------------------#[s]earch--
+
+--#[t]ab--------------------------------------------------------------------------------------------
+mapkey("n", "<leader>t1", actions.tab.goto_tab_1, "tab: Goto tab 1")
+mapkey("n", "<leader>t2", actions.tab.goto_tab_2, "tab: Goto tab 2")
+mapkey("n", "<leader>t3", actions.tab.goto_tab_3, "tab: Goto tab 3")
+mapkey("n", "<leader>t4", actions.tab.goto_tab_4, "tab: Goto tab 4")
+mapkey("n", "<leader>t5", actions.tab.goto_tab_5, "tab: Goto tab 5")
+mapkey("n", "<leader>t6", actions.tab.goto_tab_6, "tab: Goto tab 6")
+mapkey("n", "<leader>t7", actions.tab.goto_tab_7, "tab: Goto tab 7")
+mapkey("n", "<leader>t8", actions.tab.goto_tab_8, "tab: Goto tab 8")
+mapkey("n", "<leader>t9", actions.tab.goto_tab_9, "tab: Goto tab 9")
+mapkey("n", "<leader>t0", actions.tab.goto_tab_10, "tab: Goto tab 10")
+mapkey("n", "<leader>t[", actions.tab.goto_tab_left, "tab: Goto left tab")
+mapkey("n", "<leader>t]", actions.tab.goto_tab_right, "tab: Goto right tab")
+mapkey("n", "<leader>tN", actions.tab.open_tab_new, "tab: New tab")
+mapkey("n", "<leader>tn", actions.tab.open_tab_new_with_current_buf, "tab: New tab with current buf")
+mapkey("n", "<leader>td", actions.tab.close_tab_current, "tab: Close current")
+mapkey("n", "<leader>th", actions.tab.close_tab_to_leftest, "tab: Close tabs to the leftest")
+mapkey("n", "<leader>tl", actions.tab.close_tab_to_rightest, "tab: Close tabs to the rightest")
+mapkey("n", "<leader>to", actions.tab.close_tab_others, "tab: Close other tabs")
+--------------------------------------------------------------------------------------------#[t]ab--
 
 --#[t]merinal---------------------------------------------------------------------------------------
 mapkey("n", "<leader>tT", actions.terminal.open_terminal_workspace, "terminal: Toggle terminal (workspace)")

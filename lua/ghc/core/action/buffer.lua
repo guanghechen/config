@@ -5,11 +5,11 @@ function M.close_buffer()
   require("nvchad.tabufline").close_buffer()
 end
 
-function M.close_buffer_lefts()
+function M.close_buffer_to_leftest()
   require("nvchad.tabufline").closeBufs_at_direction("left")
 end
 
-function M.close_buffer_rights()
+function M.close_buffer_to_rightest()
   require("nvchad.tabufline").closeBufs_at_direction("right")
 end
 
@@ -51,33 +51,42 @@ end
 
 ---@param bufid number
 function M.open_buffer(bufid)
-  if bufid > 0 and bufid <= #vim.t.bufs then
-    vim.api.nvim_set_current_buf(vim.t.bufs[bufid])
+  if bufid < 1 or bufid > #vim.t.bufs then
+    return
   end
+
+  local bufid_current = M.get_current_bufid()
+  if bufid_current == bufid then
+    return
+  end
+
+  vim.api.nvim_set_current_buf(vim.t.bufs[bufid])
 end
 
 function M.open_buffer_left()
-  if M.is_current_leftest() then
+  local step = vim.v.count1 or 1
+  local bufid_current = M.get_current_bufid()
+  local bufid_candidate = bufid_current - step
+  local bufid_next = bufid_candidate > 0 and bufid_candidate or 1
+
+  if bufid_next == bufid_current then
     return
   end
 
-  local step = vim.v.count1 or 1
-  local bufid_current = M.get_current_bufid()
-  local bufid_new = bufid_current - step
-  local bufid_valid = bufid_new > 0 and bufid_new or 1
-  vim.api.nvim_set_current_buf(vim.t.bufs[bufid_valid])
+  vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
 end
 
 function M.open_buffer_right()
-  if M.is_current_rightest() then
+  local step = vim.v.count1 or 1
+  local bufid_current = M.get_current_bufid()
+  local bufid_candidate = bufid_current + step
+  local bufid_next = bufid_candidate < #vim.t.bufs and bufid_candidate or #vim.t.bufs
+
+  if bufid_next == bufid_current then
     return
   end
 
-  local step = vim.v.count1 or 1
-  local bufid_current = M.get_current_bufid()
-  local bufid_new = bufid_current + step
-  local bufid_valid = bufid_new < #vim.t.bufs and bufid_new or #vim.t.bufs
-  vim.api.nvim_set_current_buf(vim.t.bufs[bufid_valid])
+  vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
 end
 
 function M.open_buffer_1()
