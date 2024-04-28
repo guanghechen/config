@@ -1,8 +1,15 @@
-local actions = require("ghc.lsp.action")
-local utils = require("ghc.lsp.util")
+---@class ghc.core.lsp.common.action
+local action = {
+  lsp = require("ghc.core.action.lsp"),
+}
+
+---@class ghc.core.lsp.common.util
+local util = {
+  lsp = require("ghc.core.util.lsp"),
+}
 
 local on_rename = function(from, to)
-  local clients = utils.get_clients()
+  local clients = util.lsp.get_clients()
   for _, client in ipairs(clients) do
     if client.supports_method("workspace/willRenameFiles") then
       local resp = client.request_sync("workspace/willRenameFiles", {
@@ -26,25 +33,25 @@ local on_attach = function(client, bufnr)
   end
 
   -- keymap
-  vim.keymap.set("n", "K", actions.hover, opts("lsp: Hover"))
-  vim.keymap.set("n", "gd", actions.goto_definitions, opts("lsp: Goto definition"))
-  vim.keymap.set("n", "gD", actions.goto_declarations, opts("lsp: Goto declaration"))
-  vim.keymap.set("n", "gi", actions.goto_implementations, opts("lsp: Goto implementation"))
-  vim.keymap.set("n", "gK", actions.show_signature_help, opts("lsp: Show signature help"))
-  vim.keymap.set("n", "gr", actions.show_references, opts("lsp: Show references"))
-  vim.keymap.set("n", "gt", actions.goto_type_definitions, opts("lsp: Goto type definition"))
+  vim.keymap.set("n", "K", action.lsp.hover, opts("lsp: Hover"))
+  vim.keymap.set("n", "gd", action.lsp.goto_definitions, opts("lsp: Goto definition"))
+  vim.keymap.set("n", "gD", action.lsp.goto_declarations, opts("lsp: Goto declaration"))
+  vim.keymap.set("n", "gi", action.lsp.goto_implementations, opts("lsp: Goto implementation"))
+  vim.keymap.set("n", "gK", action.lsp.show_signature_help, opts("lsp: Show signature help"))
+  vim.keymap.set("n", "gr", action.lsp.show_references, opts("lsp: Show references"))
+  vim.keymap.set("n", "gt", action.lsp.goto_type_definitions, opts("lsp: Goto type definition"))
 
   -- code actions
-  if utils.has_support_method(bufnr, "codeLens") then
-    vim.keymap.set({ "n", "v" }, "<leader>cc", actions.codelens_run, opts("lsp: CodeLens"))
-    vim.keymap.set("n", "<leader>cC", actions.codelens_refresh, opts("lsp: Refresh & Display Codelens"))
+  if util.lsp.has_support_method(bufnr, "codeLens") then
+    vim.keymap.set({ "n", "v" }, "<leader>cc", action.lsp.codelens_run, opts("lsp: CodeLens"))
+    vim.keymap.set("n", "<leader>cC", action.lsp.codelens_refresh, opts("lsp: Refresh & Display Codelens"))
   end
-  if utils.has_support_method(bufnr, "codeAction") then
-    vim.keymap.set({ "n", "v" }, "<leader>ca", actions.show_code_action, opts("lsp: Code action"))
-    vim.keymap.set("n", "<leader>cA", actions.show_code_action_source, opts("lsp: Source action"))
+  if util.lsp.has_support_method(bufnr, "codeAction") then
+    vim.keymap.set({ "n", "v" }, "<leader>ca", action.lsp.show_code_action, opts("lsp: Code action"))
+    vim.keymap.set("n", "<leader>cA", action.lsp.show_code_action_source, opts("lsp: Source action"))
   end
-  if utils.has_support_method(bufnr, "rename") then
-    vim.keymap.set("n", "<leader>cr", actions.rename, opts("lsp: Rename"))
+  if util.lsp.has_support_method(bufnr, "rename") then
+    vim.keymap.set("n", "<leader>cr", action.lsp.rename, opts("lsp: Rename"))
   end
 end
 

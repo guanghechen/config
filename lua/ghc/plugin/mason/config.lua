@@ -21,7 +21,7 @@ local config = function(_, opts)
       "yamlls", -- yaml -- by redhat
     },
     automatic_installation = false,
-    handlers = require("ghc.lsp.setup"),
+    handlers = require("ghc.core.lsp.setup"),
   })
 
   -- custom nvchad cmd to install all mason binaries listed
