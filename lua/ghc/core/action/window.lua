@@ -69,49 +69,48 @@ M.pick_window = function(opts)
 end
 
 M.focus_window_with_picker = function()
-  local win_id_current = vim.api.nvim_get_current_win()
-  local win_id_target = M.pick_window({ motivation = "focus" })
-  if win_id_target == nil or win_id_current == win_id_target then
+  local winnr_current = vim.api.nvim_get_current_win()
+  local winnr_target = M.pick_window({ motivation = "focus" })
+  if winnr_target == nil or winnr_current == winnr_target then
     return
   end
-  vim.api.nvim_set_current_win(win_id_target)
+  vim.api.nvim_set_current_win(winnr_target)
 end
 
 M.swap_window_with_picker = function()
-  local win_id_current = vim.api.nvim_get_current_win()
-  local win_id_target = M.pick_window({ motivation = "swap" })
-  if win_id_target == nil or win_id_current == win_id_target then
+  local winnr_current = vim.api.nvim_get_current_win()
+  local winnr_target = M.pick_window({ motivation = "swap" })
+  if winnr_target == nil or winnr_current == winnr_target then
     return
   end
 
-  local buf_id_current = vim.api.nvim_win_get_buf(win_id_current)
-  local buf_id_target = vim.api.nvim_win_get_buf(win_id_target)
+  local bufnr_current = vim.api.nvim_win_get_buf(winnr_current)
+  local cursor_current = vim.api.nvim_win_get_cursor(winnr_current)
 
-  local cursor_current = vim.api.nvim_win_get_cursor(win_id_current)
-  local cursor_target = vim.api.nvim_win_get_cursor(win_id_target)
+  local bufnr_target = vim.api.nvim_win_get_buf(winnr_target)
+  local cursor_target = vim.api.nvim_win_get_cursor(winnr_target)
 
-  vim.api.nvim_win_set_buf(win_id_current, buf_id_target)
-  vim.api.nvim_win_set_buf(win_id_target, buf_id_current)
-  vim.api.nvim_win_set_cursor(win_id_target, cursor_current)
-  vim.api.nvim_win_set_cursor(win_id_current, cursor_target)
-  vim.api.nvim_set_current_win(win_id_target)
+  vim.api.nvim_win_set_buf(winnr_current, bufnr_target)
+  vim.api.nvim_win_set_buf(winnr_target, bufnr_current)
+  vim.api.nvim_win_set_cursor(winnr_target, cursor_current)
+  vim.api.nvim_win_set_cursor(winnr_current, cursor_target)
+  vim.api.nvim_set_current_win(winnr_target)
 end
 
 -- Project the buffer on the current window to the selected window
 M.project_window_with_picker = function()
-  local win_id_current = vim.api.nvim_get_current_win()
-  local win_id_target = M.pick_window({ motivation = "project" })
-  if win_id_target == nil or win_id_current == win_id_target then
+  local winnr_current = vim.api.nvim_get_current_win()
+  local winnr_target = M.pick_window({ motivation = "project" })
+  if winnr_target == nil or winnr_current == winnr_target then
     return
   end
 
-  local buf_id_current = vim.api.nvim_win_get_buf(win_id_current)
+  local bufnr_current = vim.api.nvim_win_get_buf(winnr_current)
+  local cursor_current = vim.api.nvim_win_get_cursor(winnr_current)
 
-  local cursor_current = vim.api.nvim_win_get_cursor(win_id_current)
-
-  vim.api.nvim_win_set_buf(win_id_target, buf_id_current)
-  vim.api.nvim_win_set_cursor(win_id_target, cursor_current)
-  vim.api.nvim_set_current_win(win_id_target)
+  vim.api.nvim_win_set_buf(winnr_target, bufnr_current)
+  vim.api.nvim_win_set_cursor(winnr_target, cursor_current)
+  vim.api.nvim_set_current_win(winnr_target)
 end
 
 return M

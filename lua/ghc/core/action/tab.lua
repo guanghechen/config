@@ -1,3 +1,8 @@
+---@class ghc.core.action.tab.action
+local action = {
+  buffer = require("ghc.core.action.buffer"),
+}
+
 ---@class ghc.core.action.tab
 local M = {}
 
@@ -165,8 +170,15 @@ function M.open_tab_new()
 end
 
 function M.open_tab_new_with_current_buf()
+  local winnr_current = vim.api.nvim_get_current_win()
+  local bufnr_current = vim.api.nvim_win_get_buf(winnr_current)
+  local cursor_current = vim.api.nvim_win_get_cursor(winnr_current)
+
   -- Opens tabpage after the last one and open current buffer
-  vim.cmd("$tab split")
+  vim.cmd("$tabnew")
+  vim.api.nvim_win_set_buf(0, bufnr_current)
+  vim.api.nvim_win_set_cursor(0, cursor_current)
+  action.buffer.close_buffer_others()
 end
 
 return M
