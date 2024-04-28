@@ -95,4 +95,82 @@ return {
       vim.notify = require("notify")
     end,
   },
+
+  -- Highly experimental plugin that completely replaces the UI for messages, cmdline and the popupmenu.
+  {
+    "folke/noice.nvim",
+    event = { "VeryLazy" },
+    opts = {
+      lsp = {
+        override = {
+          ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+          ["vim.lsp.util.stylize_markdown"] = true,
+          ["cmp.entry.get_documentation"] = true,
+        },
+      },
+      routes = {
+        {
+          filter = {
+            event = "msg_show",
+            any = {
+              { find = "%d+L, %d+B" },
+              { find = "; after #%d+" },
+              { find = "; before #%d+" },
+            },
+          },
+          view = "mini",
+        },
+      },
+      presets = {
+        bottom_search = true,
+        command_palette = true,
+        long_message_to_split = true,
+        inc_rename = true,
+      },
+    },
+    -- stylua: ignore
+    keys = {
+      { "<c-f>", function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end, silent = true, expr = true, desc = "Scroll Forward", mode = {"i", "n", "s"} },
+      { "<c-b>", function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true, expr = true, desc = "Scroll Backward", mode = {"i", "n", "s"}},
+    },
+  },
+
+  {
+    "folke/which-key.nvim",
+    init = function()
+      vim.o.timeout = true
+      vim.o.timeoutlen = 300
+    end,
+    config = function(_, opts)
+      dofile(vim.g.base46_cache .. "whichkey")
+      require("which-key").setup(opts)
+      require("which-key").register(opts.defaults)
+    end,
+    cmd = "WhichKey",
+    keys = { "<leader>", '"', "'", "`", "c", "v", "g" },
+    opts = {
+      plugins = { spelling = true },
+      defaults = {
+        mode = { "n", "v" },
+        ["g"] = { name = "+goto" },
+        ["gs"] = { name = "+surround" },
+        ["z"] = { name = "+fold" },
+        ["]"] = { name = "+next" },
+        ["["] = { name = "+prev" },
+        ["<leader>b"] = { name = "+buffer" },
+        ["<leader>c"] = { name = "+code" },
+        ["<leader>e"] = { name = "+explorer" },
+        ["<leader>f"] = { name = "+find/file" },
+        ["<leader>g"] = { name = "+find/git" },
+        ["<leader>gh"] = { name = "git action" },
+        ["<leader>q"] = { name = "+quit/session" },
+        ["<leader>s"] = { name = "+search" },
+        ["<leader>sn"] = { name = "+noice" },
+        ["<leader>t"] = { name = "+tab/terminal" },
+        ["<leader>u"] = { name = "+ui" },
+        ["<leader>w"] = { name = "+window" },
+        ["<leader>x"] = { name = "+diagnostics/quickfix" },
+      },
+    },
+  },
 }
