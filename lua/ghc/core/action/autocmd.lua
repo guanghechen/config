@@ -179,6 +179,19 @@ function M.autocmd_resize_splits()
   })
 end
 
+---@param opts {pattern: table, format?: "unix" | "dos"}
+function M.autocmd_set_fileformat(opts)
+  local pattern = opts.pattern
+  local format = opts.format or "unix"
+  vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+    group = M.augroup("set_fileformat"),
+    pattern = pattern,
+    callback = function()
+      vim.api.nvim_buf_set_option(0, "fileformat", format)
+    end,
+  })
+end
+
 -- unlist some buffers with specified filetypes for easier close.
 ---@param opts {pattern: table}
 function M.autocmd_unlist_buffer(opts)

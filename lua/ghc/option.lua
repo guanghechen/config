@@ -1,5 +1,13 @@
 vim.g.toggle_theme_icon = "   "
 
+-- disable some default providers
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_ruby_provider = 0
+
+----------------------------------------------------------------------------------------------------
+
 -- encoding
 vim.opt.fileencoding = "utf-8"
 vim.opt_global.fileencodings = "utf-8"
@@ -58,9 +66,3 @@ vim.opt.undofile = true
 vim.opt.undolevels = 10000
 vim.opt.virtualedit = "block" -- Allow cursor to move where there is no text in visual block mode
 vim.opt.wildmode = "longest:full,full" -- Command-line completion mode
-
--- disable some default providers
-vim.g.loaded_node_provider = 0
-vim.g.loaded_perl_provider = 0
-vim.g.loaded_python3_provider = 0
-vim.g.loaded_ruby_provider = 0
