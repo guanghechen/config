@@ -74,12 +74,14 @@ mapkey("n", "[b", actions.buffer.open_buffer_left, "buffer: Open left buffer", t
 mapkey("n", "]b", actions.buffer.open_buffer_right, "buffer: Open right buffer", true)
 
 ----- diagnostic -----
-mapkey("n", "[d", actions.diagnostic.goto_prev_diagnostic, "Prev Diagnostic", true)
-mapkey("n", "]d", actions.diagnostic.goto_next_diagnostic, "Next Diagnostic", true)
-mapkey("n", "[e", actions.diagnostic.goto_prev_error, "Prev Error", true)
-mapkey("n", "]e", actions.diagnostic.goto_next_error, "Next Error", true)
-mapkey("n", "[w", actions.diagnostic.goto_prev_warn, "Prev Warning", true)
-mapkey("n", "]w", actions.diagnostic.goto_next_warn, "Next Warning", true)
+mapkey("n", "[d", actions.diagnostic.goto_prev_diagnostic, "diagnostic: Goto prev diagnostic", true)
+mapkey("n", "]d", actions.diagnostic.goto_next_diagnostic, "diagnostic: Goto next Diagnostic", true)
+mapkey("n", "[e", actions.diagnostic.goto_prev_error, "diagnostic: Goto prev error", true)
+mapkey("n", "]e", actions.diagnostic.goto_next_error, "diagnostic: Goto next error", true)
+mapkey("n", "[q", actions.diagnostic.toggle_previous_quickfix_item, "diagnostic: Goto previous quickfix", true)
+mapkey("n", "]q", actions.diagnostic.toggle_next_quickfix_item, "diagnostic: Goto next quickfix", true)
+mapkey("n", "[w", actions.diagnostic.goto_prev_warn, "diagnostic: Goto prev warning", true)
+mapkey("n", "]w", actions.diagnostic.goto_next_warn, "diagnostic: Goto next warning", true)
 
 ----- window -----
 mapkey("n", "<leader>h", actions.window.focus_window_left, "window: Focus on the left window", true)
@@ -110,7 +112,6 @@ mapkey("n", "<leader>ba", actions.buffer.close_buffer_others, "buffer: Close all
 -----------------------------------------------------------------------------------------#[b]uffer--
 
 --#[c]ode-------------------------------------------------------------------------------------------
-mapkey("n", "<leader>cd", actions.diagnostic.open_line_diagnostics, "code: Open line diagnostics")
 -------------------------------------------------------------------------------------------#[c]ode--
 
 --#[e]xplorer---------------------------------------------------------------------------------------
@@ -206,3 +207,11 @@ mapkey("n", "<leader>w<Right>", actions.window.resize_window_vertical_plus, "win
 mapkey("n", "<leader>wd", actions.window.close_window_current, "window: close current window", true)
 mapkey("n", "<leader>wo", actions.window.close_window_others, "window: close others", true)
 -----------------------------------------------------------------------------------------#[w]indow--
+
+--#[x] diagnostic-----------------------------------------------------------------------------------
+mapkey("n", "<leader>xd", actions.diagnostic.toggle_document_diagnositics, "diagnostic: Open diagnostics (document)")
+mapkey("n", "<leader>xD", actions.diagnostic.toggle_workspace_diagnostics, "diagnostic: Open diagnostics (workspace)")
+mapkey("n", "<leader>xL", actions.diagnostic.toggle_loclist, "diagnostic: Open location list (Trouble)")
+mapkey("n", "<leader>xl", actions.diagnostic.open_line_diagnostics, "diagnostic: Open diagnostics(line)")
+mapkey("n", "<leader>xq", actions.diagnostic.toggle_quickfix, "diagnostic: Open quickfix list (Trouble)")
+-----------------------------------------------------------------------------------#[x] diagnostic--

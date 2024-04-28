@@ -40,4 +40,42 @@ function M.goto_next_warn()
   goto_diagnostic(true, "WARN")
 end
 
+function M.toggle_document_diagnositics()
+  vim.cmd("TroubleToggle document_diagnostics")
+end
+
+function M.toggle_workspace_diagnostics()
+  vim.cmd("TroubleToggle workspace_diagnostics")
+end
+
+function M.toggle_loclist()
+  vim.cmd("TroubleToggle loclist")
+end
+
+function M.toggle_quickfix()
+  vim.cmd("TroubleToggle quickfix")
+end
+
+function M.toggle_previous_quickfix_item()
+  if require("trouble").is_open() then
+    require("trouble").previous({ skip_groups = true, jump = true })
+  else
+    local ok, err = pcall(vim.cmd.cprev)
+    if not ok then
+      vim.notify(err, vim.log.levels.ERROR)
+    end
+  end
+end
+
+function M.toggle_next_quickfix_item()
+  if require("trouble").is_open() then
+    require("trouble").next({ skip_groups = true, jump = true })
+  else
+    local ok, err = pcall(vim.cmd.cnext)
+    if not ok then
+      vim.notify(err, vim.log.levels.ERROR)
+    end
+  end
+end
+
 return M

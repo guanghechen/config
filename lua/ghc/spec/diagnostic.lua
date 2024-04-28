@@ -1,41 +1,26 @@
+local icons = require("ghc.core.setting.icons")
+
 return {
   {
     "folke/trouble.nvim",
     cmd = { "TroubleToggle", "Trouble" },
-    opts = { use_diagnostic_signs = true },
-    keys = {
-      { "<leader>xx", "<cmd>TroubleToggle document_diagnostics<cr>", desc = "Document Diagnostics (Trouble)" },
-      { "<leader>xX", "<cmd>TroubleToggle workspace_diagnostics<cr>", desc = "Workspace Diagnostics (Trouble)" },
-      { "<leader>xL", "<cmd>TroubleToggle loclist<cr>", desc = "Location List (Trouble)" },
-      { "<leader>xQ", "<cmd>TroubleToggle quickfix<cr>", desc = "Quickfix List (Trouble)" },
-      {
-        "[q",
-        function()
-          if require("trouble").is_open() then
-            require("trouble").previous({ skip_groups = true, jump = true })
-          else
-            local ok, err = pcall(vim.cmd.cprev)
-            if not ok then
-              vim.notify(err, vim.log.levels.ERROR)
-            end
-          end
-        end,
-        desc = "Previous Trouble/Quickfix Item",
-      },
-      {
-        "]q",
-        function()
-          if require("trouble").is_open() then
-            require("trouble").next({ skip_groups = true, jump = true })
-          else
-            local ok, err = pcall(vim.cmd.cnext)
-            if not ok then
-              vim.notify(err, vim.log.levels.ERROR)
-            end
-          end
-        end,
-        desc = "Next Trouble/Quickfix Item",
+    opts = {
+      position = "bottom", -- position of the list can be: bottom, top, left, right
+      height = 10, -- height of the trouble list when position is top or bottom
+      width = 50, -- width of the list when position is left or right
+      icons = true, -- use devicons for filenames
+      mode = "lsp_references", -- "workspace_diagnostics", "document_diagnostics", "quickfix", "lsp_references", "loclist"
+      fold_open = icons.ui.ArrowOpen, -- icon used for open folds
+      fold_closed = icons.ui.ArrowClosed, -- icon used for closed folds
+      use_diagnostic_signs = true,
+      signs = {
+        error = icons.diagnostics.Error_alt,
+        warning = icons.diagnostics.Warning_alt,
+        hint = icons.diagnostics.Hint_alt,
+        information = icons.diagnostics.Information_alt,
+        other = icons.diagnostics.Question_alt,
       },
     },
+    keys = {},
   },
 }
