@@ -1,22 +1,34 @@
+local icons = require("ghc.core.setting.icons")
 local ui = require("ghc.core.setting.ui")
-local calc_fileicon = require("ghc.core.util.filetype").calc_fileicon
 
---- @class ghc.ui.statusline.component.filetype
+local fileformat_icon_map = {
+  dos = icons.os.dos,
+  mac = icons.os.mac,
+  unix = icons.os.unix,
+}
+
+local fileformat_text_map = {
+  dos = "CRLF",
+  mac = "CR",
+  unix = "LF",
+}
+
+--- @class ghc.ui.statusline.component.os
 local M = {
-  name = "ghc_statusline_filetype",
+  name = "ghc_statusline_os",
 }
 
 M.color = {
   icon = {
     fg = "black",
-    bg = "blue",
+    bg = "cyan",
   },
   separator = {
-    fg = "blue",
+    fg = "cyan",
     bg = "statusline_bg",
   },
   separator_leftest = {
-    fg = "blue",
+    fg = "cyan",
     bg = ui.transparency and "none" or "statusline_bg",
   },
   text = {
@@ -26,23 +38,26 @@ M.color = {
 }
 
 function M.condition()
-  local filetype = vim.bo.filetype
-  return filetype and #filetype > 0
+  return vim.o.columns > 100
 end
 
 ---@param opts { is_leftest: boolean }
 function M.renderer_right(opts)
   local is_leftest = opts.is_leftest
-  local filetype = vim.bo.filetype
-  local filepath = vim.fn.expand("%:p")
 
   local color_separator = "%#" .. M.name .. (is_leftest and "_separator_leftest#" or "_separator#")
   local color_icon = "%#" .. M.name .. "_icon#"
   local color_text = "%#" .. M.name .. "_text#"
 
+  local icon_fileformat = fileformat_icon_map[vim.bo.fileformat] or icons.os.unknown
+  local text_fileformat = fileformat_text_map[vim.bo.fileformat] or "UNKNOWN"
+
+  local icon_tab = icons.ui.Tab .. " "
+  local text_tab = vim.api.nvim_get_option_value("shiftwidth", { scope = "local" })
+
   local separator = ui.statusline.symbol.separator.left
-  local icon = calc_fileicon(filepath) .. " "
-  local text = " " .. filetype .. " "
+  local icon = icon_fileformat .. " "
+  local text = " " .. text_fileformat .. " " .. icon_tab .. text_tab .. " "
   return color_separator .. separator .. color_icon .. icon .. color_text .. text
 end
 

@@ -1,8 +1,6 @@
+---@class ghc.spec.common.setting
 local setting = {
-  icons = {
-    diagnostics = require("ghc.core.setting.ui").icons.get("diagnostics"),
-    ui = require("ghc.core.setting.ui").icons.get("ui"),
-  },
+  icons = require("ghc.core.setting.icons"),
 }
 
 return {

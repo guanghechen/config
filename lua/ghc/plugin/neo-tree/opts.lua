@@ -1,16 +1,13 @@
+---@class ghc.plugin.neotree.opts.setting
 local setting = {
-  icons = {
-    diagnostics = require("ghc.core.setting.ui").icons.get("diagnostics", true),
-    git = require("ghc.core.setting.ui").icons.get("git", false),
-    ui = require("ghc.core.setting.ui").icons.get("ui", false),
-  },
+  icons = require("ghc.core.setting.icons"),
 }
 
 -- Set icons for diagnostic errors, you'll need to define them somewhere:
-vim.fn.sign_define("DiagnosticSignError", { text = setting.icons.diagnostics.Error, texthl = "DiagnosticSignError" })
-vim.fn.sign_define("DiagnosticSignWarn", { text = setting.icons.diagnostics.Warning, texthl = "DiagnosticSignWarn" })
-vim.fn.sign_define("DiagnosticSignInfo", { text = setting.icons.diagnostics.Information, texthl = "DiagnosticSignInfo" })
-vim.fn.sign_define("DiagnosticSignHint", { text = setting.icons.diagnostics.Hint, texthl = "DiagnosticSignHint" })
+vim.fn.sign_define("DiagnosticSignError", { text = setting.icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" })
+vim.fn.sign_define("DiagnosticSignWarn", { text = setting.icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" })
+vim.fn.sign_define("DiagnosticSignInfo", { text = setting.icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" })
+vim.fn.sign_define("DiagnosticSignHint", { text = setting.icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" })
 
 local utils = {
   recursively_toggle = function(state, toggle_directory)

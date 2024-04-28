@@ -6,9 +6,11 @@ local components = {
   },
   left_c = {},
   right_x = {
+    ---@diagnostic disable-next-line: different-requires
     require("ghc.ui.statusline.component.noice"),
   },
   right = {
+    require("ghc.ui.statusline.component.os"),
     require("ghc.ui.statusline.component.filetype"),
     require("ghc.ui.statusline.component.cwd"),
     require("ghc.ui.statusline.component.pos"),
