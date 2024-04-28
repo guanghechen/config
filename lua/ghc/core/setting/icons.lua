@@ -126,6 +126,7 @@ M.ui = {
   Keyboard = "",
   Left = "",
   List = "",
+  Location = "",
   Square = "",
   SymlinkFolder = "",
   Lock = "󰍁",

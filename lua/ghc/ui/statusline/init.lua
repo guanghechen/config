@@ -10,10 +10,10 @@ local components = {
     require("ghc.ui.statusline.component.noice"),
   },
   right = {
-    require("ghc.ui.statusline.component.os"),
+    require("ghc.ui.statusline.component.pos"),
     require("ghc.ui.statusline.component.filetype"),
     require("ghc.ui.statusline.component.cwd"),
-    require("ghc.ui.statusline.component.pos"),
+    require("ghc.ui.statusline.component.os"),
   },
 }
 

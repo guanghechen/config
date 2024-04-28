@@ -39,8 +39,8 @@ M.color = {
     bg = ui.transparency and "none" or "statusline_bg",
   },
   text = {
-    fg = "white",
-    bg = ui.transparency and "none" or "statusline_bg",
+    fg = "black",
+    bg = "cyan",
   },
 }
 
@@ -67,7 +67,7 @@ function M.renderer_right(opts)
 
   local separator = ui.statusline.symbol.separator.left
   local icon = icon_fileformat .. " "
-  local text = " " .. text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab .. " "
+  local text = text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab .. " "
   return color_separator .. separator .. color_icon .. icon .. color_text .. text
 end
 

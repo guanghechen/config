@@ -9,14 +9,14 @@ local M = {
 M.color = {
   icon = {
     fg = "black",
-    bg = "blue",
+    bg = "vibrant_green",
   },
   separator = {
-    fg = "blue",
+    fg = "vibrant_green",
     bg = "statusline_bg",
   },
   separator_leftest = {
-    fg = "blue",
+    fg = "vibrant_green",
     bg = ui.transparency and "none" or "statusline_bg",
   },
   text = {

@@ -1,3 +1,4 @@
+local icons = require("ghc.core.setting.icons")
 local ui = require("ghc.core.setting.ui")
 
 --- @class ghc.ui.statusline.component.pos
@@ -19,8 +20,8 @@ M.color = {
     bg = ui.transparency and "none" or "statusline_bg",
   },
   text = {
-    fg = "black",
-    bg = "green",
+    fg = "white",
+    bg = ui.transparency and "none" or "statusline_bg",
   },
 }
 
@@ -37,7 +38,7 @@ function M.renderer_right(opts)
   local color_text = "%#" .. M.name .. "_text#"
 
   local separator = ui.statusline.symbol.separator.left
-  local icon = " "
+  local icon = icons.ui.Location .. " "
   local text = " %l·%c "
   return color_separator .. separator .. color_icon .. icon .. color_text .. text
 end
