@@ -49,12 +49,12 @@ M.pick_window = function(opts)
     }
   elseif motivation == "swap" then
     bo = {
-      filetype = { "neo-tree", "neo-tree-popup", "notify" },
+      filetype = { "neo-tree", "neo-tree-popup", "noice", "notify" },
       buftype = { "terminal", "quickfix" },
     }
   elseif motivation == "project" then
     bo = {
-      filetype = { "neo-tree", "neo-tree-popup", "notify" },
+      filetype = { "neo-tree", "neo-tree-popup", "noice", "notify" },
       buftype = { "terminal", "quickfix" },
     }
   end
