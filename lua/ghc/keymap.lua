@@ -58,8 +58,8 @@ vim.keymap.set({ "n", "v" }, "=", "gq", { noremap = true, desc = "Format selecte
 
 --#navigation---------------------------------------------------------------------------------------
 ----- session -----
-mapkey("n", "[t", actions.buffer.goto_tab_left, "tab: Goto left tab", true)
-mapkey("n", "]t", actions.buffer.goto_tab_right, "tab: Goto right tab", true)
+mapkey("n", "[t", actions.tab.goto_tab_left, "tab: Goto left tab", true)
+mapkey("n", "]t", actions.tab.goto_tab_right, "tab: Goto right tab", true)
 
 ----- buffer -----
 mapkey("n", "<leader>1", actions.buffer.open_buffer_1, "buffer: Open buffer 1", true)
