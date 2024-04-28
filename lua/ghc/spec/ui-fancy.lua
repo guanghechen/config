@@ -80,6 +80,12 @@ return {
   {
     "stevearc/dressing.nvim",
     lazy = true,
+    opts = {
+      input = {
+        insert_only = false,
+        start_in_insert = false,
+      },
+    },
     init = function()
       ---@diagnostic disable-next-line: duplicate-set-field
       vim.ui.select = function(...)

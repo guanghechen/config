@@ -1,10 +1,11 @@
 ---@param next boolean
 ---@param severity? string
 local goto_diagnostic = function(next, severity)
-  local go = next and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
   severity = severity and vim.diagnostic.severity[severity] or nil
-  return function()
-    go({ severity = severity })
+  if next then
+    vim.diagnostic.goto_next({ severity = severity })
+  else
+    vim.diagnostic.goto_prev({ severity = severity })
   end
 end
 
@@ -40,4 +41,3 @@ function M.goto_next_warn()
 end
 
 return M
-
