@@ -1,14 +1,13 @@
-local icons = {
-  diagnostics = require("ghc.core.icons").get("diagnostics", true),
-  git = require("ghc.core.icons").get("git", false),
-  ui = require("ghc.core.icons").get("ui", false),
+---@class ghc.plugin.neotree.opts.setting
+local setting = {
+  icons = require("ghc.core.setting.icons"),
 }
 
 -- Set icons for diagnostic errors, you'll need to define them somewhere:
-vim.fn.sign_define("DiagnosticSignError", { text = icons.diagnostics.Error, texthl = "DiagnosticSignError" })
-vim.fn.sign_define("DiagnosticSignWarn", { text = icons.diagnostics.Warning, texthl = "DiagnosticSignWarn" })
-vim.fn.sign_define("DiagnosticSignInfo", { text = icons.diagnostics.Information, texthl = "DiagnosticSignInfo" })
-vim.fn.sign_define("DiagnosticSignHint", { text = icons.diagnostics.Hint, texthl = "DiagnosticSignHint" })
+vim.fn.sign_define("DiagnosticSignError", { text = setting.icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" })
+vim.fn.sign_define("DiagnosticSignWarn", { text = setting.icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" })
+vim.fn.sign_define("DiagnosticSignInfo", { text = setting.icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" })
+vim.fn.sign_define("DiagnosticSignHint", { text = setting.icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" })
 
 local utils = {
   recursively_toggle = function(state, toggle_directory)
@@ -52,14 +51,14 @@ return {
       expander_highlight = "NeoTreeExpander",
     },
     icon = {
-      folder_closed = icons.ui.Folder,
-      folder_open = icons.ui.FolderOpen,
-      folder_empty = icons.ui.EmptyFolder,
-      default = icons.ui.File,
+      folder_closed = setting.icons.ui.Folder,
+      folder_open = setting.icons.ui.FolderOpen,
+      folder_empty = setting.icons.ui.EmptyFolder,
+      default = setting.icons.ui.File,
       highlight = "NeoTreeFileIcon",
     },
     modified = {
-      symbol = icons.ui.Modified,
+      symbol = setting.icons.ui.Modified,
       highlight = "NeoTreeModified",
     },
     name = {
@@ -72,14 +71,14 @@ return {
         -- Change type
         added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
         modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
-        deleted = icons.git.Remove, -- this can only be used in the git_status source
-        renamed = icons.git.Rename, -- this can only be used in the git_status source
+        deleted = setting.icons.git.Remove, -- this can only be used in the git_status source
+        renamed = setting.icons.git.Rename, -- this can only be used in the git_status source
         -- Status type
-        untracked = icons.git.Untracked,
-        ignored = icons.git.Ignore,
-        unstaged = icons.git.Unstaged,
-        staged = icons.git.Staged,
-        conflict = icons.git.Conflict,
+        untracked = setting.icons.git.Untracked,
+        ignored = setting.icons.git.Ignore,
+        unstaged = setting.icons.git.Unstaged,
+        staged = setting.icons.git.Staged,
+        conflict = setting.icons.git.Conflict,
       },
     },
     -- If you don't want to use these columns, you can set `enabled = false` for each of them individually

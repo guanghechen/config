@@ -5,10 +5,22 @@
 -- * a function with signature `function(buf) -> string|string[]`
 vim.g.root_spec = { ".git", "cwd" }
 
--- general
+-- disable some default providers
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_ruby_provider = 0
+
+----------------------------------------------------------------------------------------------------
+
+-- encoding
 vim.opt.fileencoding = "utf-8"
 vim.opt_global.fileencodings = "utf-8"
+
+-- mouse
 vim.opt.mouse:append("a")
+
+-- clipboard
 vim.opt.clipboard = "" -- Don't bind the default register to the system clipboard
 
 -- panel split
@@ -16,10 +28,11 @@ vim.opt.splitbelow = true
 vim.opt.splitright = true
 vim.opt.splitkeep = "screen"
 
--- apperance
+-- appearance
 vim.opt.autoindent = true
 vim.opt.conceallevel = 0 -- Disable conceal.
-vim.opt.cursorline = true -- true to highlight the row of the cursor.
+vim.opt.cursorline = true -- ggtrue to highlight the row of the cursor.
+vim.opt.cursorlineopt = "number,screenline"
 vim.opt.cursorcolumn = false -- true to highlight the column of the cursor.
 vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.foldenable = false
@@ -45,12 +58,14 @@ vim.opt.termguicolors = true
 vim.opt.winminwidth = 5 -- Minimum window width
 vim.opt.wrap = false
 
--- misc
-vim.opt.confirm = true -- Confirm to save changes before exiting modified buffer
+-- search
 vim.opt.grepformat = "%f:%l:%c:%m"
 vim.opt.grepprg = "rg --vimgrep"
 vim.opt.ignorecase = true
 vim.opt.smartcase = true -- Don't ignore case with capitals
+
+-- misc
+vim.opt.confirm = true -- Confirm to save changes before exiting modified buffer
 vim.opt.updatetime = 200 -- Save swap file and trigger CursorHold
 vim.opt.undofile = true
 vim.opt.undolevels = 10000

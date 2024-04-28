@@ -1,30 +1,13 @@
--- See https://github.com/nvim-neo-tree/neo-tree.nvim/wiki/Recipes#emulating-vims-fold-commands
+-- https://github.com/nvim-neo-tree/neo-tree.nvim/wiki/Recipes#emulating-vims-fold-commands
+-- https://github.com/nvim-neo-tree/neo-tree.nvim/blob/25bfdbe802eb913276bb83874b043be57bd70347/lua/neo-tree/sources/filesystem/init.lua#L389
 
-local fs_scan = require("neo-tree.sources.filesystem.lib.fs_scan")
+local fs = require("neo-tree.sources.filesystem")
 local commands = require("neo-tree.sources.common.commands")
 local renderer = require("neo-tree.ui.renderer")
 
----Expands or collapses the current node.
-local function expand_directory(state, node)
-  if not node or node.type ~= "directory" then
-    return
-  end
-
-  state.explicitly_opened_directories = state.explicitly_opened_directories or {}
-  if node.loaded == false then
-    local id = node:get_id()
-    state.explicitly_opened_directories[id] = true
-    renderer.position.set(state, nil)
-    fs_scan.get_items(state, id, nil, nil, false, false)
-  elseif node:has_children() then
-    if not node:is_expanded() then
-      node:expand()
-      state.explicitly_opened_directories[node:get_id()] = true
-    end
-  elseif require("neo-tree").config.filesystem.scan_mode == "deep" then
-    node.empty_expanded = not node.empty_expanded
-    renderer.redraw(state)
-  end
+-- Expand a node and load filesystem info if needed.
+local function open_dir(state, dir_node)
+  fs.toggle_directory(state, dir_node, nil, true, false)
 end
 
 -- Expand a node and all its children, optionally stopping at max_depth.
@@ -33,18 +16,13 @@ local function recursive_open(state, node, depth, max_depth)
     return
   end
 
-  if not node then
-    local tree = state.tree
-    node = tree.get_node()
+  if node.type == "directory" and not node:is_expanded() then
+    open_dir(state, node)
   end
 
-  expand_directory(state, node)
-
-  if node and node:has_children() then
-    local children = state.tree:get_nodes(node:get_id())
-    for _, child in ipairs(children) do
-      recursive_open(state, child, depth + 1, max_depth)
-    end
+  local children = state.tree:get_nodes(node:get_id())
+  for _, child in ipairs(children) do
+    recursive_open(state, child, depth + 1, max_depth)
   end
 end
 
@@ -69,6 +47,9 @@ end
 --- Open the fold under the cursor, recursing if count is given.
 local function neotree_zo(state, toggle_directory, open_all)
   local node = state.tree:get_node()
+  if not node then
+    return
+  end
 
   if node and node.type == "file" then
     commands.open(state, toggle_directory)
@@ -86,6 +67,9 @@ end
 --- Close a folder, or a number of folders equal to count.
 local function neotree_zc(state, close_all)
   local node = state.tree:get_node()
+  if not node then
+    return
+  end
 
   if close_all then
     recursive_close(state, node, 0, nil)
