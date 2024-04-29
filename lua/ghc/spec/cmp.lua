@@ -3,6 +3,8 @@ return {
   {
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",
+    main = "cmp",
+    opts = require("ghc.plugin.nvim-cmp.opts"),
     dependencies = {
       {
         -- snippet plugin
@@ -21,9 +23,5 @@ return {
         "hrsh7th/cmp-path",
       },
     },
-    opts = require("ghc.plugin.nvim-cmp.opts"),
-    config = function(_, opts)
-      require("cmp").setup(opts)
-    end,
   },
 }

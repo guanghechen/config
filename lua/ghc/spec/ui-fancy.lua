@@ -1,8 +1,3 @@
----@class ghc.spec.common.setting
-local setting = {
-  icons = require("ghc.core.setting.icons"),
-}
-
 return {
   -- Active indent guide and indent text objects. When you're browsing
   -- code, this highlights the current level of indentation, and animates
@@ -67,67 +62,15 @@ return {
   -- Better `vim.notify()`
   {
     "rcarriga/nvim-notify",
-    opts = {
-      stages = "static",
-      timeout = 3000,
-      fps = 20,
-      level = "INFO",
-      max_height = function()
-        return math.floor(vim.o.lines * 0.75)
-      end,
-      max_width = function()
-        return math.floor(vim.o.columns * 0.75)
-      end,
-      on_open = function(win)
-        vim.api.nvim_set_option_value("winblend", 0, { scope = "local", win = win })
-        vim.api.nvim_win_set_config(win, { zindex = 100 })
-      end,
-      icons = {
-        ERROR = setting.icons.diagnostics.Error,
-        WARN = setting.icons.diagnostics.Warning,
-        INFO = setting.icons.diagnostics.Information,
-        DEBUG = setting.icons.ui.Bug,
-        TRACE = setting.icons.ui.Pencil,
-      },
-    },
-    config = function(_, opts)
-      require("notify").setup(opts)
-      vim.notify = require("notify")
-    end,
+    opts = require("ghc.plugin.nvim-notify.opts"),
+    config = require("ghc.plugin.nvim-notify.config"),
   },
 
   -- Highly experimental plugin that completely replaces the UI for messages, cmdline and the popupmenu.
   {
     "folke/noice.nvim",
     event = { "VeryLazy" },
-    opts = {
-      lsp = {
-        override = {
-          ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
-          ["vim.lsp.util.stylize_markdown"] = true,
-          ["cmp.entry.get_documentation"] = true,
-        },
-      },
-      routes = {
-        {
-          filter = {
-            event = "msg_show",
-            any = {
-              { find = "%d+L, %d+B" },
-              { find = "; after #%d+" },
-              { find = "; before #%d+" },
-            },
-          },
-          view = "mini",
-        },
-      },
-      presets = {
-        bottom_search = true,
-        command_palette = true,
-        long_message_to_split = true,
-        inc_rename = true,
-      },
-    },
+    opts = require("ghc.plugin.noice.opts"),
     -- stylua: ignore
     keys = {
       { "<c-f>", function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end, silent = true, expr = true, desc = "Scroll Forward", mode = {"i", "n", "s"} },

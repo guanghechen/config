@@ -1,4 +1,4 @@
-local config = function(_, opts)
+local function config(_, opts)
   require("luasnip").config.set_config(opts)
 
   -- vscode format

@@ -1,4 +1,4 @@
-local config = function(_, opts)
+local function config(_, opts)
   dofile(vim.g.base46_cache .. "mason")
   require("mason").setup(opts)
   require("mason-lspconfig").setup({
