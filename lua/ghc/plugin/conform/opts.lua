@@ -24,7 +24,8 @@ local opts = {
     -- python --
     python = { "isort", "black" },
 
-    -- other --
+    ["*"] = { "codespell" },
+    ["_"] = { "trim_whitespace" },
   },
   format_on_save = {
     lsp_fallback = true,
