@@ -1,5 +1,6 @@
 ---@class ghc.keymap.actions
 local actions = {
+  bookmark = require("ghc.core.action.bookmark"),
   buffer = require("ghc.core.action.buffer"),
   diagnostic = require("ghc.core.action.diagnostic"),
   explorer = require("ghc.core.action.explorer"),
@@ -137,6 +138,7 @@ mapkey("n", "<leader>fe", actions.find.find_explorer_current, "find: File explor
 mapkey("n", "<leader>fF", actions.find.find_files_workspace, "find: files (workspace)")
 mapkey("n", "<leader>ff", actions.find.find_files_cwd, "find: Files (cwd)")
 mapkey("n", "<leader>fg", actions.find.find_files_git, "find: Files (git)")
+mapkey("n", "<leader>fm", actions.find.find_bookmark_workspace, "find: bookmarks")
 mapkey("n", "<leader>fR", actions.find.find_frecency_workspace, "find: Recent (repo)")
 mapkey("n", "<leader>fr", actions.find.find_frecency_cwd, "find: Recent (cwd)")
 mapkey("n", "<leader><leader>", actions.find.find_frecency_cwd, "find: Recent (cwd)")
@@ -147,6 +149,15 @@ mapkey("n", "<leader>gG", actions.git.open_lazygit_workspace, "git: Open lazygit
 mapkey("n", "<leader>gg", actions.git.open_lazygit_cwd, "git: Open lazygit (cwd)", true)
 mapkey("n", "<leader>gf", actions.git.open_lazygit_file_history, "git: Open lazygit file history", true)
 -------------------------------------------------------------------------------------------#[g]it---
+
+--#book[m]ark---------------------------------------------------------------------------------------
+mapkey("n", "<leader>mm", actions.bookmark.toggle_bookmark_on_current_line, "bookmark: toggle bookmark (current line)")
+mapkey("n", "<leader>me", actions.bookmark.edit_bookmark_annotation_on_current_line, "bookmark: edit bookmark (current line)")
+mapkey("n", "<leader>mc", actions.bookmark.clear_bookmark_on_current_buffer, "bookmark: clear bookmark (current buffer)")
+mapkey("n", "<leader>m[", actions.bookmark.goto_prev_bookmark_on_current_buffer, "bookmark: goto prev bookmark (current buffer)")
+mapkey("n", "<leader>m]", actions.bookmark.goto_next_bookmark_on_current_buffer, "bookmark: goto next bookmark (current buffer)")
+mapkey("n", "<leader>ml", actions.bookmark.open_bookmarks_into_quickfix, "bookmark: open bookmark list (quickfix)")
+---------------------------------------------------------------------------------------#book[m]ark--
 
 --#[q]uit/session-------------------------------------------------------------------------------------------
 mapkey("n", "<leader>qq", actions.session.quit_all, "quit: Quit all", true)

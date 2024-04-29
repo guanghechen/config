@@ -6,6 +6,17 @@ local util = {
 ---@class ghc.core.action.find
 local M = {}
 
+function M.find_bookmark_workspace()
+  local absolute_path = util.path.workspace()
+  local relative_path = util.path.relative(util.path.workspace(), absolute_path)
+  require("telescope").extensions.bookmarks.bookmarks({
+    cwd = absolute_path,
+    workspace = "CWD",
+    show_untracked = true,
+    prompt_title = "Find bookmarks (" .. relative_path .. ")",
+  })
+end
+
 function M.find_buffers()
   vim.cmd("Telescope buffers sort_mru=true sort_lastused=true")
 end
