@@ -30,10 +30,26 @@ vim.opt.cursorline = true -- ggtrue to highlight the row of the cursor.
 vim.opt.cursorlineopt = "number,screenline"
 vim.opt.cursorcolumn = false -- true to highlight the column of the cursor.
 vim.opt.expandtab = true -- use spaces instead of tabs
+vim.opt.fillchars = {
+  foldopen = "",
+  foldclose = "",
+  fold = " ",
+  foldsep = " ",
+  diff = "╱",
+  eob = " ",
+}
 vim.opt.foldenable = false
 vim.opt.foldlevel = 99
 vim.opt.guifont = { "RobotoMono Nerd Font" }
 vim.opt.list = true -- Show some invisible characters (tabs...
+vim.opt.listchars:append({
+  eol = "↲",
+  extends = ">",
+  precedes = "<",
+  nbsp = "·",
+  space = "·",
+  tab = " ",
+})
 vim.opt.laststatus = 3 -- Keep only the global status bar.
 vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim` experience issues.
 vim.opt.number = true -- Print line number
@@ -48,9 +64,10 @@ vim.opt.sidescrolloff = 8 -- Columns of context
 vim.opt.signcolumn = "yes"
 vim.opt.smartindent = true -- Insert indents automatically
 vim.opt.smarttab = true
+vim.opt.softtabstop = 2 -- set the tab width
 vim.opt.tabstop = 2 -- set the tab width
 vim.opt.termguicolors = true
-vim.opt.winminwidth = 5 -- Minimum window width
+vim.opt.winminwidth = 10 -- Minimum window width
 vim.opt.wrap = false
 
 -- search
@@ -61,6 +78,7 @@ vim.opt.smartcase = true -- Don't ignore case with capitals
 
 -- misc
 vim.opt.confirm = true -- Confirm to save changes before exiting modified buffer
+vim.opt.spelllang = { "en" }
 vim.opt.updatetime = 200 -- Save swap file and trigger CursorHold
 vim.opt.undofile = true
 vim.opt.undolevels = 10000
