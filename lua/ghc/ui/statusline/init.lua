@@ -6,7 +6,6 @@ local components = {
   },
   left_c = {},
   right_x = {
-    ---@diagnostic disable-next-line: different-requires
     require("ghc.ui.statusline.component.noice"),
   },
   right = {

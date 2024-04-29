@@ -28,6 +28,7 @@ return {
         html = {},
         lua = {},
         tmux = {},
+        yaml = {},
       },
       user_default_options = {
         RGB = true, -- #RGB hex codes

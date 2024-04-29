@@ -15,8 +15,9 @@ function M.condition()
 end
 
 ---@param opts { is_rightest: boolean }
+---@diagnostic disable-next-line: unused-local
 function M.renderer_left(opts)
-  local username = os.getenv("USER")
+  local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
 
   local color_text = "%#" .. M.name .. "_text#"
 
