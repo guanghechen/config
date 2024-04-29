@@ -1,3 +1,8 @@
+---@class ghc.core.action.autocmd.action
+local action = {
+  session = require("ghc.core.action.session"),
+}
+
 ---@class ghc.core.action.autocmd.util
 local util = {
   path = require("ghc.core.util.path"),
@@ -175,6 +180,15 @@ function M.autocmd_resize_splits()
       local current_tab = vim.fn.tabpagenr()
       vim.cmd("tabdo wincmd =")
       vim.cmd("tabnext " .. current_tab)
+    end,
+  })
+end
+
+function M.autocmd_session_autosave()
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = M.augroup("session_autosave"),
+    callback = function()
+      action.session.session_autosave()
     end,
   })
 end
