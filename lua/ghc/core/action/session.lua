@@ -54,7 +54,7 @@ function M.session_autosave()
   vim.fn.mkdir(vim.fn.fnamemodify(session_filepath, ":p:h"), "p")
 
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = table.concat({ "buffers", "curdir", "folds", "tabpages", "winsize", "skiprtp" }, ",")
+  vim.o.sessionoptions = table.concat({ "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 end
@@ -64,7 +64,7 @@ function M.session_save()
   vim.fn.mkdir(vim.fn.fnamemodify(session_filepath, ":p:h"), "p")
 
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = table.concat({ "buffers", "curdir", "folds", "tabpages", "winsize", "skiprtp" }, ",")
+  vim.o.sessionoptions = table.concat({ "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 end
