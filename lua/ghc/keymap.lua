@@ -6,8 +6,8 @@ local actions = {
   find = require("ghc.core.action.find"),
   file = require("ghc.core.action.file"),
   git = require("ghc.core.action.git"),
-  quit = require("ghc.core.action.quit"),
   search = require("ghc.core.action.search"),
+  session = require("ghc.core.action.session"),
   tab = require("ghc.core.action.tab"),
   terminal = require("ghc.core.action.terminal"),
   ui = require("ghc.core.action.ui"),
@@ -55,7 +55,7 @@ vim.keymap.set({ "n", "v" }, "=", "gq", { noremap = true, desc = "Format selecte
 ---------------------------------------------------------------------------------------#enhance-----
 
 --#navigation---------------------------------------------------------------------------------------
------ session -----
+----- tab -----
 mapkey("n", "[t", actions.tab.goto_tab_left, "tab: Goto left tab", true)
 mapkey("n", "]t", actions.tab.goto_tab_right, "tab: Goto right tab", true)
 
@@ -148,8 +148,11 @@ mapkey("n", "<leader>gg", actions.git.open_lazygit_cwd, "git: Open lazygit (cwd)
 mapkey("n", "<leader>gf", actions.git.open_lazygit_file_history, "git: Open lazygit file history", true)
 -------------------------------------------------------------------------------------------#[g]it---
 
---#[q]uit-------------------------------------------------------------------------------------------
-mapkey("n", "<leader>qq", actions.quit.quit_all, "quit: Quit all", true)
+--#[q]uit/session-------------------------------------------------------------------------------------------
+mapkey("n", "<leader>qq", actions.session.quit_all, "quit: Quit all", true)
+mapkey("n", "<leader>ql", actions.session.session_load, "session: Restore session", true)
+mapkey("n", "<leader>qs", actions.session.session_save, "session: Save session", true)
+mapkey("n", "<leader>qC", actions.session.session_clear_all, "session: Clear all sessions", true)
 -------------------------------------------------------------------------------------------#[q]uit--
 
 --#[s]earch-----------------------------------------------------------------------------------------
