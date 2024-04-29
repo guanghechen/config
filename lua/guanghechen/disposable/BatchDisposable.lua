@@ -1,6 +1,10 @@
-local disposeAll = require("guanghechen.disposable.util").disposeAll
+---@class guanghechen.disposable.BatchDisposable.util
+local util = {
+  debug = require("guanghechen.util.debug"),
+  disposable = require("guanghechen.util.disposable"),
+}
 
----@class guanghechen.disposable.BatchDisposable : IDisposable
+---@class guanghechen.disposable.BatchDisposable : guanghechen.types.IBatchDisposable
 local BatchDisposable = {}
 
 ---@param o table|nil
@@ -12,7 +16,7 @@ function BatchDisposable:new(o)
   ---@type boolean
   self._disposed = false
 
-  ---@type IDisposable[]
+  ---@type guanghechen.types.IDisposable[]
   self._disposables = {}
   return o
 end
@@ -34,15 +38,15 @@ function BatchDisposable:dispose()
   end
 
   local ok, result = pcall(function()
-    disposeAll(self._disposables)
+    util.disposable.disposeAll(self._disposables)
   end)
   self._disposables = {}
   if not ok then
-    error(vim.fn.json_encode(result))
+    error(util.debug(result))
   end
 end
 
----@param disposable IDisposable
+---@param disposable guanghechen.types.IDisposable
 ---@return nil
 function BatchDisposable:registerDisposable(disposable)
   if disposable:isDisposed() then

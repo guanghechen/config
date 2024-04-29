@@ -1,3 +1,0 @@
----@class IDisposable
----@field isDisposed fun():boolean  Check if the disposable disposed.
----@field dispose fun():boolean     Dispose the disposable.

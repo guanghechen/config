@@ -1,3 +1,8 @@
+---@class guanghechen.disposable.SafeBatchHandler.util
+local util = {
+  debug = require("guanghechen.util.debug"),
+}
+
 ---@class guanghechen.disposable.SafeBatchHandler
 local SafeBatchHandler = {}
 
@@ -36,7 +41,7 @@ end
 ---@return nil
 function SafeBatchHandler:summary(title)
   if self._summary == nil then
-    self._summary = vim.fn.json_encode({
+    self._summary = util.debug({
       title = title,
       details = self._errors,
     })

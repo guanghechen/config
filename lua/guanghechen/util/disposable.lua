@@ -1,7 +1,7 @@
----@class guanghechen.disposable.util
+---@class guanghechen.util.disposable
 local M = {}
 
----@param disposables IDisposable[]
+---@param disposables guanghechen.types.IDisposable[]
 ---@return nil
 function M.disposeAll(disposables)
   local handler = require("guanghechen.disposable.SafeBatchHandler"):new()

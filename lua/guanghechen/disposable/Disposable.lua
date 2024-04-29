@@ -1,4 +1,4 @@
----@class guanghechen.disposable.Disposable : IDisposable
+---@class guanghechen.disposable.Disposable : guanghechen.types.IDisposable
 local Disposable = {}
 
 ---@param o table|nil
