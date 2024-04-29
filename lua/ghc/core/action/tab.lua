@@ -17,7 +17,16 @@ function M.find_tabid(tabnr)
 end
 
 function M.close_tab_current()
+  local tabnr_last = vim.g.ghc_last_tabnr
   vim.cmd("tabclose")
+  if tabnr_last ~= nil then
+    local ok, err = pcall(function()
+      vim.api.nvim_set_current_tabpage(tabnr_last)
+    end)
+    if not ok then
+      vim.api.ghc_last_tabnr = nil
+    end
+  end
 end
 
 ---@param count number

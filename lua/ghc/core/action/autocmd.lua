@@ -172,6 +172,16 @@ function M.autocmd_highlight_yank()
   })
 end
 
+function M.autocmd_remember_last_tabnr()
+  vim.api.nvim_create_autocmd({ "TabLeave" }, {
+    group = M.augroup("remember_last_tabnr"),
+    callback = function()
+      local tabnr_current = vim.api.nvim_get_current_tabpage()
+      vim.g.ghc_last_tabnr = tabnr_current
+    end,
+  })
+end
+
 -- resize splits if window got resized
 function M.autocmd_resize_splits()
   vim.api.nvim_create_autocmd({ "VimResized" }, {
