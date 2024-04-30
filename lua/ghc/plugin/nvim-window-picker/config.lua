@@ -1,7 +1,7 @@
 local function config()
   require("window-picker").setup({
     hint = "floating-big-letter",
-    show_prompt = true,
+    show_prompt = false,
     filter_rules = {
       autoselect_one = true,
       include_current_win = false,

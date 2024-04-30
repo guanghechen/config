@@ -38,13 +38,14 @@ function M.close_window_others()
 end
 
 ---@param opts { motivation: "focus" | "swap" | "project" }
-M.pick_window = function(opts)
+---@return number | nil
+function M.pick_window(opts)
   local motivation = opts.motivation
   local bo = {}
 
   if motivation == "focus" then
     bo = {
-      filetype = { "notify" },
+      filetype = { "notify", "noice", "notify" },
       buftype = {},
     }
   elseif motivation == "swap" then
@@ -60,6 +61,7 @@ M.pick_window = function(opts)
   end
 
   return require("window-picker").pick_window({
+    show_prompt = false,
     filter_rules = {
       autoselect_one = true,
       include_current_win = false,
