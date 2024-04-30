@@ -8,11 +8,6 @@ local util = {
 ---@class guanghechen.subscriber.Subscribers : guanghechen.types.ISubscribers
 local Subscribers = {}
 
----@type guanghechen.types.IUnsubscribable
-local noop_unsubscribable = {
-  unsubscribe = util.misc.noop,
-}
-
 ---@class guanghechen.subscriber.Subscribers.IOptions
 ---@field ARRANGE_THRESHOLD? number
 
@@ -90,9 +85,9 @@ function Subscribers:dispose()
 end
 
 ---@param value any
----@param prev_value any
+---@param value_prev any
 ---@return nil
-function Subscribers:notify(value, prev_value)
+function Subscribers:notify(value, value_prev)
   if self._disposed then
     return
   end
@@ -106,7 +101,7 @@ function Subscribers:notify(value, prev_value)
     local item = items[i]
     if not item.unsubscribed and not item.subscriber:isDisposed() then
       batcher:run(function()
-        item.subscriber:next(value, prev_value)
+        item.subscriber:next(value, value_prev)
       end)
     end
     i = i + 1
@@ -120,12 +115,12 @@ end
 ---@return guanghechen.types.IUnsubscribable
 function Subscribers:subscribe(subscriber)
   if subscriber:isDisposed() then
-    return noop_unsubscribable
+    return util.misc.noop_unsubscribable
   end
 
   if self._disposed then
     subscriber:dispose()
-    return noop_unsubscribable
+    return util.misc.noop_unsubscribable
   end
 
   ---@type guanghechen.subscriber.Subscribers.ISubscriberItem

@@ -7,7 +7,7 @@ local util = {
 local Subscriber = {}
 
 ---@class guanghechen.subscriber.Subscriber.IOptions
----@field onNext fun(value: any, prev_value: any|nil):nil
+---@field onNext fun(value: any, value_prev: any|nil):nil
 ---@field onDispose? fun():nil
 
 ---@param o table|nil
@@ -17,7 +17,7 @@ function Subscriber:new(o, options)
   o = o or {}
   setmetatable(o, self)
 
-  ---@type fun(value: any, prev_value: any|nil):nil
+  ---@type fun(value: any, value_prev: any|nil):nil
   self._onNext = options.onNext
 
   ---@type fun():nil
@@ -43,11 +43,11 @@ function Subscriber:dispose()
 end
 
 ---@param value any
----@param prev_value any
+---@param value_prev any
 ---@return nil
-function Subscriber:next(value, prev_value)
+function Subscriber:next(value, value_prev)
   if not self._disposed then
-    self._onNext(value, prev_value)
+    self._onNext(value, value_prev)
   end
 end
 
