@@ -1,6 +1,6 @@
 local Path = require("plenary.path")
 local globals = require("ghc.core.setting.globals")
-local md5 = require("ghc.core.util.md5")
+local md5 = require("guanghechen.util.md5")
 
 ---@class ghc.core.util.path
 local M = {}
