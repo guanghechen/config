@@ -1,0 +1,2 @@
+---@class guanghechen.types.Timer
+---@field public start fun(self: guanghechen.types.Timer):nil
