@@ -33,7 +33,6 @@ actions.autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
 })
 
 --#format
-actions.autocmd.autocmd_disable_format({ pattern = { "text", "tmux", "toml", "json", "markdown" } })
 actions.autocmd.autocmd_enable_wrap({ pattern = { "markdown", "text" } })
 actions.autocmd.autocmd_enable_spell({ pattern = { "gitcommit", "html", "lua", "text", "typescript" } })
 actions.autocmd.autocmd_set_fileformat({

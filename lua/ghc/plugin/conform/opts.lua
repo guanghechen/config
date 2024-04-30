@@ -27,12 +27,35 @@ local opts = {
     ["*"] = { "codespell" },
     ["_"] = { "trim_whitespace" },
   },
-  format_on_save = {
-    lsp_fallback = true,
-    async = false,
-    quiet = false,
-    timeout_ms = 500,
-  },
+  format_on_save = function(bufnr)
+    -- Disable autoformat on certain filetypes
+    local ignore_filetypes = { "text", "tmux", "toml", "json", "markdown", "sql" }
+    if vim.tbl_contains(ignore_filetypes, vim.bo[bufnr].filetype) then
+      return
+    end
+
+    -- Disable with a global or buffer-local variable
+    if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+      return
+    end
+
+    -- Disable autoformat for files in a certain path
+    local ignore_filepaths = { "/node_modules", "/.git/", "/.yarn/" }
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    for _, ignore_filepath in ipairs(ignore_filepaths) do
+      if bufname:match(ignore_filepath) then
+        return
+      end
+    end
+
+    -- ...additional logic...
+    return {
+      async = false,
+      lsp_fallback = true,
+      quiet = false,
+      timeout_ms = 500,
+    }
+  end,
   format_after_save = {
     lsp_fallback = true,
   },

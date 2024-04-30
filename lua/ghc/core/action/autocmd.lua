@@ -101,20 +101,6 @@ function M.autocmd_create_dirs()
   })
 end
 
--- https://github.com/stevearc/conform.nvim/blob/master/doc/recipes.md#command-to-toggle-format-on-save
--- Disable autoformat for lua files
----@param opts {pattern: table}
-function M.autocmd_disable_format(opts)
-  local pattern = opts.pattern
-  vim.api.nvim_create_autocmd({ "FileType" }, {
-    group = M.augroup("disable_format"),
-    pattern = pattern,
-    callback = function()
-      vim.b.disable_autoformat = true
-    end,
-  })
-end
-
 -- enable spell in text filetypes
 ---@param opts {pattern: table}
 function M.autocmd_enable_spell(opts)
