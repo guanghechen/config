@@ -59,6 +59,19 @@ return {
     end,
   },
 
+  -- Automatically highlights other instances of the word under your cursor.
+  -- This works with LSP, Treesitter, and regexp matching to find the other instances.
+  {
+    "RRethy/vim-illuminate",
+    event = { "VeryLazy" },
+    keys = {
+      { "]]", desc = "Next Reference" },
+      { "[[", desc = "Prev Reference" },
+    },
+    opts = require("ghc.plugin.vim-illuminate.opts"),
+    config = require("ghc.plugin.vim-illuminate.config"),
+  },
+
   -- Better `vim.notify()`
   {
     "rcarriga/nvim-notify",

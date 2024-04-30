@@ -3,6 +3,7 @@ local icons = require("ghc.core.setting.icons")
 return {
   {
     "folke/trouble.nvim",
+    branch = "dev",
     cmd = { "TroubleToggle", "Trouble" },
     opts = {
       position = "bottom", -- position of the list can be: bottom, top, left, right
