@@ -109,7 +109,7 @@ mapkey("n", "<leader>bd", actions.buffer.close_buffer, "buffer: Close current bu
 mapkey("n", "<leader>bh", actions.buffer.close_buffer_to_leftest, "buffer: Close buffers to the leftest", true)
 mapkey("n", "<leader>bl", actions.buffer.close_buffer_to_rightest, "buffer: Close buffers to the rightest", true)
 mapkey("n", "<leader>bo", actions.buffer.close_buffer_others, "buffer: Close other buffers", true)
-mapkey("n", "<leader>ba", actions.buffer.close_buffer_others, "buffer: Close all buffers", true)
+mapkey("n", "<leader>ba", actions.buffer.close_buffer_all, "buffer: Close all buffers", true)
 -----------------------------------------------------------------------------------------#[b]uffer--
 
 --#[c]ode-------------------------------------------------------------------------------------------
