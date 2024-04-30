@@ -1,6 +1,6 @@
 ---@class ghc.core.action.buffer.util
 local util = {
-  math = require("guanghechen.util.math"),
+  navigator = require("guanghechen.util.navigator"),
 }
 
 ---@class ghc.core.action.buffer
@@ -58,7 +58,7 @@ function M.open_buffer_left()
   local step = vim.v.count1 or 1
   local totalid = #vim.t.bufs
   local bufid_current = M.get_current_bufid()
-  local bufid_next = util.math.move_index_circular(bufid_current, -step, totalid)
+  local bufid_next = util.navigator.navigate_circular(bufid_current, -step, totalid)
 
   if bufid_next ~= bufid_current then
     vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
@@ -69,7 +69,7 @@ function M.open_buffer_right()
   local step = vim.v.count1 or 1
   local totalid = #vim.t.bufs
   local bufid_current = M.get_current_bufid()
-  local bufid_next = util.math.move_index_circular(bufid_current, step, totalid)
+  local bufid_next = util.navigator.navigate_circular(bufid_current, step, totalid)
 
   if bufid_next ~= bufid_current then
     vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
@@ -80,7 +80,7 @@ end
 function M.open_buffer(bufid)
   local totalid = #vim.t.bufs
   local bufid_current = M.get_current_bufid()
-  local bufid_next = util.math.move_index_limit(0, bufid, totalid)
+  local bufid_next = util.navigator.navigate_limit(0, bufid, totalid)
 
   if bufid_current ~= bufid_next then
     vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])

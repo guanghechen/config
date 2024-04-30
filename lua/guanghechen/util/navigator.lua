@@ -1,10 +1,11 @@
----@class guanghechen.util.math
+---@class guanghechen.util.navigatorgator
 local M = {}
 
 ---@param current number  current index
 ---@param step    number  moving step
 ---@param total   number  total index.
-function M.move_index_circular(current, step, total)
+---@return number
+function M.navigate_circular(current, step, total)
   local candiate = (current + step - 1) % total
 
   while candiate < 0 do
@@ -21,7 +22,8 @@ end
 ---@param current number  current index
 ---@param step    number  moving step
 ---@param total   number  total index.
-function M.move_index_limit(current, step, total)
+---@return number
+function M.navigate_limit(current, step, total)
   local candiate = current + step
 
   if candiate < 1 then
