@@ -1,0 +1,1 @@
+---@class guanghechen.types.IViewmodel : guanghechen.types.IBatchDisposable
