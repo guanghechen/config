@@ -37,7 +37,7 @@ M.ui = {
   statusline = {
     theme = "default", -- default / minimal / vscode / vscode_colored
     separator_style = "default",
-    order = util.table.merge_multiple_array(statusline.order_left, { "git", "%=", "diagnostics", "lsp" }, statusline.order_right),
+    order = util.table.merge_multiple_array(statusline.order_left, { "%=", "diagnostics", "lsp" }, statusline.order_right),
     modules = vim.tbl_deep_extend("force", statusline.modules_left, statusline.modules_right),
   },
   tabufline = {

@@ -2,6 +2,7 @@ local components = {
   left = {
     require("ghc.ui.statusline.component.username"),
     require("ghc.ui.statusline.component.mode"),
+    require("ghc.ui.statusline.component.git"),
     require("ghc.ui.statusline.component.filepath"),
   },
   left_c = {},

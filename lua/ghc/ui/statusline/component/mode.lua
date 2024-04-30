@@ -96,7 +96,7 @@ M.color = vim.tbl_deep_extend(
 )
 
 function M.condition()
-  return require("nvchad.stl.utils").is_activewin()
+  return vim.api.nvim_get_current_win() == vim.g.statusline_winid
 end
 
 ---@param opts { is_rightest: boolean }

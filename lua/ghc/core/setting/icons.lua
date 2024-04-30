@@ -64,12 +64,12 @@ M.documents = {
 ---@class ghc.core.setting.icons.git
 M.git = {
   Add = "",
-  Branch = "",
+  Branch = "",
   Diff = "",
   Git = "󰊢",
   Ignore = "",
   Mod = "M",
-  Mod_alt = "", -- "",
+  Mod_alt = "",
   Remove = "",
   Rename = "",
   Repo = "",
