@@ -1,3 +1,8 @@
+---@class ghc.core.action.buffer.util
+local util = {
+  math = require("guanghechen.util.math"),
+}
+
 ---@class ghc.core.action.buffer
 local M = {}
 
@@ -49,44 +54,37 @@ function M.is_current_rightest()
   return bufnr_current == vim.t.bufs[#vim.t.bufs]
 end
 
----@param bufid number
-function M.open_buffer(bufid)
-  if bufid < 1 or bufid > #vim.t.bufs then
-    return
-  end
-
-  local bufid_current = M.get_current_bufid()
-  if bufid_current == bufid then
-    return
-  end
-
-  vim.api.nvim_set_current_buf(vim.t.bufs[bufid])
-end
-
 function M.open_buffer_left()
   local step = vim.v.count1 or 1
+  local totalid = #vim.t.bufs
   local bufid_current = M.get_current_bufid()
-  local bufid_candidate = bufid_current - step
-  local bufid_next = bufid_candidate > 0 and bufid_candidate or 1
+  local bufid_next = util.math.move_index_circular(bufid_current, -step, totalid)
 
-  if bufid_next == bufid_current then
-    return
+  if bufid_next ~= bufid_current then
+    vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
   end
-
-  vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
 end
 
 function M.open_buffer_right()
   local step = vim.v.count1 or 1
+  local totalid = #vim.t.bufs
   local bufid_current = M.get_current_bufid()
-  local bufid_candidate = bufid_current + step
-  local bufid_next = bufid_candidate < #vim.t.bufs and bufid_candidate or #vim.t.bufs
+  local bufid_next = util.math.move_index_circular(bufid_current, step, totalid)
 
-  if bufid_next == bufid_current then
-    return
+  if bufid_next ~= bufid_current then
+    vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
   end
+end
 
-  vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
+---@param bufid number
+function M.open_buffer(bufid)
+  local totalid = #vim.t.bufs
+  local bufid_current = M.get_current_bufid()
+  local bufid_next = util.math.move_index_limit(0, bufid, totalid)
+
+  if bufid_current ~= bufid_next then
+    vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
+  end
 end
 
 function M.open_buffer_1()

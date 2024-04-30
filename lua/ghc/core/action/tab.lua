@@ -1,3 +1,8 @@
+---@class ghc.core.action.tab.util
+local util = {
+  math = require("guanghechen.util.math"),
+}
+
 ---@class ghc.core.action.tab.action
 local action = {
   buffer = require("ghc.core.action.buffer"),
@@ -79,58 +84,54 @@ end
 
 function M.goto_tab_left()
   local tabpages = vim.api.nvim_list_tabpages()
-  if #tabpages <= 1 then
+  local totalid = #tabpages
+  if totalid <= 1 then
     return
   end
 
   local step = vim.v.count1 or 1
   local tabnr_current = vim.api.nvim_get_current_tabpage()
   local tabid_current = M.find_tabid(tabnr_current)
-  local tabid_candidate = tabid_current - step
-  local tabid_next = tabid_candidate > 0 and tabid_candidate or 1
+  local tabid_next = util.math.move_index_circular(tabid_current, -step, totalid)
 
-  if tabid_next == tabid_current then
-    return
+  if tabid_next ~= tabid_current then
+    local tabnr_next = tabpages[tabid_next]
+    vim.api.nvim_set_current_tabpage(tabnr_next)
   end
-
-  local tabnr_next = tabpages[tabid_next]
-  vim.api.nvim_set_current_tabpage(tabnr_next)
 end
 
 function M.goto_tab_right()
   local tabpages = vim.api.nvim_list_tabpages()
-  if #tabpages <= 1 then
+  local totalid = #tabpages
+  if totalid <= 1 then
     return
   end
 
   local step = vim.v.count1 or 1
   local tabnr_current = vim.api.nvim_get_current_tabpage()
   local tabid_current = M.find_tabid(tabnr_current)
-  local tabid_candidate = tabid_current + step
-  local tabid_next = tabid_candidate <= #tabpages and tabid_candidate or #tabpages
+  local tabid_next = util.math.move_index_circular(tabid_current, step, totalid)
 
-  if tabid_next == tabid_current then
-    return
+  if tabid_next ~= tabid_current then
+    local tabnr_next = tabpages[tabid_next]
+    vim.api.nvim_set_current_tabpage(tabnr_next)
   end
-
-  local tabnr_next = tabpages[tabid_next]
-  vim.api.nvim_set_current_tabpage(tabnr_next)
 end
 
 function M.goto_tab(tabid)
   local tabpages = vim.api.nvim_list_tabpages()
-  if tabid < 1 or tabid > #tabpages then
+  local totalid = #tabpages
+  if totalid <= 1 then
     return
   end
 
   local tabnr_current = vim.api.nvim_get_current_tabpage()
-  local tabnr_next = tabpages[tabid]
+  local tabid_next = util.math.move_index_limit(0, tabid, totalid)
+  local tabnr_next = tabpages[tabid_next]
 
-  if tabnr_next == tabnr_current then
-    return
+  if tabnr_current ~= tabnr_next then
+    vim.api.nvim_set_current_tabpage(tabnr_next)
   end
-
-  vim.api.nvim_set_current_tabpage(tabnr_next)
 end
 
 function M.goto_tab_1()

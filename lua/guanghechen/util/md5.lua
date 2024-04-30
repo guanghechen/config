@@ -1,5 +1,6 @@
 -- https://github.com/kikito/md5.lua/blob/4b5ce0cc277a5972aa3f5161d950f809c2c62bab/md5.lua#L1C1-L427C11
 
+---@class guanghechen.util.md5
 local md5 = {
   _VERSION = "md5.lua 1.1.0",
   _DESCRIPTION = "MD5 computation in Lua (5.1-3, LuaJIT)",

@@ -67,6 +67,8 @@ function M.session_save()
   vim.o.sessionoptions = table.concat({ "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
+
+  vim.notify("Session saved successfully!", vim.log.levels.INFO)
 end
 
 function M.session_load()
