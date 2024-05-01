@@ -2,6 +2,7 @@ local opts = {
   delay = 200,
   filetypes_denylist = {
     "lazyterm",
+    "neo-tree",
     "noice",
     "notify",
     "quickfix",

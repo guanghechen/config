@@ -50,8 +50,12 @@ actions.autocmd.autocmd_set_fileformat({
 })
 
 --#filetype
-vim.cmd("autocmd BufRead,BufNewFile *.tmux.conf set filetype=tmux")
-vim.cmd("autocmd BufRead,BufNewFile *.fzfrc set filetype=bash")
+actions.autocmd.autocmd_set_filetype({
+  filetype_map = {
+    tmux = { "*.tmux.conf" },
+    bash = { "*.fzfrc", "*.ripgreprc" },
+  },
+})
 
 --#plugin
 vim.cmd("autocmd User TelescopePreviewerLoaded setlocal number") -- enable numbers in telescope preview.

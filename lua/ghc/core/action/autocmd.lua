@@ -197,9 +197,23 @@ function M.autocmd_set_fileformat(opts)
     group = M.augroup("set_fileformat"),
     pattern = pattern,
     callback = function()
-      vim.api.nvim_buf_set_option(0, "fileformat", format)
+      vim.bo.fileformat = format
     end,
   })
+end
+
+---@param opts {filetype_map: table<string, string[]>}
+function M.autocmd_set_filetype(opts)
+  local filetype_map = opts.filetype_map
+  for filetype, file_patterns in pairs(filetype_map) do
+    vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+      group = M.augroup("set_filetype"),
+      pattern = file_patterns,
+      callback = function()
+        vim.bo.filetype = filetype
+      end,
+    })
+  end
 end
 
 -- unlist some buffers with specified filetypes for easier close.
