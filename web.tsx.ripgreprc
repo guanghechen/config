@@ -1,0 +1,12 @@
+# Search hidden files / directories by default
+--hidden
+
+# Ignore files for web-tsx projects
+--iglob
+!/node_modules/
+
+--iglob
+!/.yarn/
+
+--iglob
+!*.snap

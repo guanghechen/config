@@ -1,0 +1,7 @@
+# For web
+--type-add
+web:*{html,css,scss,sass,styl,vue,yaml,xml,json,js,jsx,ts,tsx,cjs,cjsx,cts,ctsx,mjs,mjsx,mts,mtsx}
+
+# For node
+--type-add
+node:*{styl,yaml,json,js,jsx,ts,tsx,mjs,mts,cjs,cts}
