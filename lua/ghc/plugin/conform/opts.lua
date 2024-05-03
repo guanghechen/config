@@ -17,12 +17,17 @@ local opts = {
 
     -- shell --
     bash = { "shfmt" },
+    sh = { "shfmt" },
+    zsh = { "shfmt" },
 
     -- lua --
     lua = { "stylua" },
 
     -- python --
     python = { "isort", "black" },
+
+    -- app --
+    tmux = { "shfmt" },
 
     ["*"] = { "codespell" },
     ["_"] = { "trim_whitespace" },
@@ -56,9 +61,6 @@ local opts = {
       timeout_ms = 500,
     }
   end,
-  format_after_save = {
-    lsp_fallback = true,
-  },
 }
 
 return opts
