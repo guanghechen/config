@@ -3,6 +3,10 @@ local setting = {
   icons = require("ghc.core.setting.icons"),
 }
 
+local function open_with_trouble(...)
+  require("trouble.providers.telescope").open_with_trouble(...)
+end
+
 local function flash(prompt_bufnr)
   require("flash").jump({
     pattern = "^",
@@ -54,9 +58,15 @@ local opts = {
     sorting_strategy = "ascending",
     use_less = false,
     wrap_results = false,
-    mapping = {
-      n = { s = flash },
-      i = { ["<c-s>"] = flash },
+    mappings = {
+      i = {
+        ["<c-s>"] = flash,
+        ["<c-t>"] = open_with_trouble,
+      },
+      n = {
+        s = flash,
+        ["<c-t>"] = open_with_trouble,
+      },
     },
   },
   extensions = {
