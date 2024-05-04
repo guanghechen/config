@@ -1,4 +1,4 @@
----@class ghc.core.action.search.util
+---@class ghc.core.action.search.live_grep
 local util = {
   path = require("ghc.core.util.path"),
 }

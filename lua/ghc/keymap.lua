@@ -170,6 +170,7 @@ mapkey("n", "<leader>qC", actions.session.session_clear_all, "session: Clear all
 --#[s]earch-----------------------------------------------------------------------------------------
 mapkey("n", "<leader>sG", actions.search.live_grep_with_args_workspace, "search: Grep (workspace)")
 mapkey("n", "<leader>sg", actions.search.live_grep_with_args_cwd, "search: Grep (cwd)")
+mapkey("v", "<leader>sw", actions.search.grep_string, "search: Grep word")
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[t]ab--------------------------------------------------------------------------------------------
@@ -201,6 +202,7 @@ mapkey("n", "<leader>tt", actions.terminal.open_terminal_cwd, "terminal: Toggle 
 --#[u]i---------------------------------------------------------------------------------------------
 mapkey("n", "<leader>ui", actions.ui.show_inspect_pos, "ui: Show inspect pos")
 mapkey("n", "<leader>un", actions.ui.dismiss_notifications, "ui: Dismiss all notifications")
+mapkey("n", "<leader>ut", actions.ui.toggle_theme, "ui: Toggle theme")
 ---------------------------------------------------------------------------------------------#[u]i--
 
 --#[w]indow-----------------------------------------------------------------------------------------

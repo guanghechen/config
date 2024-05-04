@@ -6,6 +6,7 @@ local M = {}
 
 local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
+local theme_integrations = require("ghc.ui.theme.integration")
 local setting = {
   ui = require("ghc.core.setting.ui"),
 }
@@ -14,13 +15,16 @@ local util = {
 }
 
 M.ui = {
-  hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, {}),
+  hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, theme_integrations, {}),
   hl_override = {
     CursorLine = {
       bg = "one_bg2", -- "line"
     },
     Comment = {
       italic = true,
+    },
+    Visual = {
+      bg = "light_grey",
     },
   },
   theme = "onedark",
@@ -31,6 +35,7 @@ M.ui = {
       "blankline",
       "cmp",
       "git",
+      "notify",
       "trouble",
     },
   },

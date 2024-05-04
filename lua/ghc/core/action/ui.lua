@@ -12,4 +12,8 @@ function M.dismiss_notifications()
   })
 end
 
+function M.toggle_theme()
+  require("base46").toggle_theme()
+end
+
 return M
