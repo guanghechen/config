@@ -3,6 +3,7 @@
 function _ghc_tmux_popup_ {
   local popup_session_name="_popup"
   local popup_window_name=$(tmux display-message -p -F "#{window_name}")
+  local popup_pane_path=$(tmux display-message -p -F "#{pane_current_path}")
 
   if [ "$(tmux display-message -p -F "#{session_name}")" = "${popup_session_name}" ];then
     tmux detach-client
@@ -11,14 +12,14 @@ function _ghc_tmux_popup_ {
 
     if [ $? != 0 ]; then
       tmux new-session -d -s "${popup_session_name}"
-      tmux new-window -t "${popup_session_name}" -n "${popup_window_name}"
+      tmux new-window -t "${popup_session_name}" -n "${popup_window_name}" -c "${popup_pane_path}"
     else
 
       tmux select-window -t "${popup_session_name}:${popup_window_name}" 2> /dev/null
 
       if [ $? != 0 ]; then
-        tmux new-window -t "${popup_session_name}" -n "${popup_window_name}"
-      tmux select-window -t "${popup_session_name}:${popup_window_name}"
+        tmux new-window -t "${popup_session_name}" -n "${popup_window_name}" -c "${popup_pane_path}"
+        tmux select-window -t "${popup_session_name}:${popup_window_name}"
       fi
     fi
     tmux popup -d '#{pane_current_path}' -xC -yC -w80% -h80% -E "tmux new-session -A -s ${popup_session_name}"
