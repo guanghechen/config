@@ -24,6 +24,7 @@ local function grep_text(opts)
   local actions = {
     show_last_grep_cmd = function()
       vim.notify("searching:" .. vim.inspect(last_grep_cmd))
+      vim.notify("flags:" .. vim.inspect(flags))
     end,
     toggle_enable_regex = function()
       flags.enable_regex = not flags.enable_regex
@@ -57,6 +58,7 @@ local function grep_text(opts)
     if flags.case_sensitive then
       table.insert(additional_args, "--case-sensitive")
     else
+      table.insert(additional_args, "--ignore-case")
       table.insert(flag_marks, "i")
     end
 
