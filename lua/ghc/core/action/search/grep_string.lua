@@ -6,7 +6,7 @@ local util = {
 }
 
 ---https://github.com/nvim-telescope/telescope.nvim/blob/fac83a556e7b710dc31433dec727361ca062dbe9/lua/telescope/builtin/__files.lua#L187
-local function grep_literal_text(opts)
+local function grep_text(opts)
   ---@diagnostic disable-next-line: undefined-field
   local conf = require("telescope.config").values
   local finders = require("telescope.finders")
@@ -15,25 +15,56 @@ local function grep_literal_text(opts)
   local sorters = require("telescope.sorters")
   local scope = opts.ghc_scope
 
-  opts.use_regex = false
-  opts.show_untracked = true
-  opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
-  opts.entry_maker = opts.entry_maker or make_entry.gen_from_vimgrep(opts)
-  opts.cwd = opts.cwd and vim.fn.expand(opts.cwd)
-
   local last_grep_cmd = {}
+  local last_prompt = nil
   local flags = {
+    enable_regex = false,
     case_sensitive = true,
   }
+  local actions = {
+    show_last_grep_cmd = function()
+      vim.notify("searching:" .. vim.inspect(last_grep_cmd))
+    end,
+    toggle_enable_regex = function()
+      flags.enable_regex = not flags.enable_regex
+    end,
+    toggle_case_sensitive = function()
+      flags.case_sensitive = not flags.case_sensitive
+    end,
+  }
+
   local live_grepper = function(prompt)
+    last_prompt = prompt
     if not prompt or prompt == "" then
-      return nil
+      return {
+        "fd",
+        "--type",
+        "file",
+        "--color=never",
+        "--follow",
+      }
     end
 
     local additional_args = {}
+    local flag_marks = {}
+
+    if flags.enable_regex then
+      table.insert(flag_marks, "r")
+    else
+      table.insert(additional_args, "--fixed-strings")
+    end
+
     if flags.case_sensitive then
       table.insert(additional_args, "--case-sensitive")
+    else
+      table.insert(flag_marks, "i")
     end
+
+    local prompt_title = "Search word (" .. scope .. ")"
+    if #flag_marks > 0 then
+      prompt_title = prompt_title .. " [" .. table.concat(flag_marks, "|") .. "]"
+    end
+    vim.api.nvim_buf_set_var(0, "telescope_prompt_title", prompt_title)
 
     local grep_cmd = vim.tbl_flatten({
       "rg",
@@ -42,7 +73,6 @@ local function grep_literal_text(opts)
       "--with-filename",
       "--line-number",
       "--column",
-      "--fixed-strings",
       "--follow",
       additional_args,
       "--",
@@ -53,18 +83,24 @@ local function grep_literal_text(opts)
     return grep_cmd
   end
 
-  local actions = {
-    show_last_grep_cmd = function()
-      vim.notify("searching:" .. vim.inspect(last_grep_cmd))
-    end,
-    toggle_case_sensitive = function()
-      flags.case_sensitive = not flags.case_sensitive
-    end,
-  }
+  opts.use_regex = false
+  opts.show_untracked = true
+  opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
+  opts.cwd = opts.cwd and vim.fn.expand(opts.cwd)
+  local make_entry_from_vimgrep = make_entry.gen_from_vimgrep(opts)
+  local make_entry_from_file = make_entry.gen_from_file(opts)
+
+  opts.entry_maker = function(...)
+    if not last_prompt or last_prompt == "" then
+      return make_entry_from_file(...)
+    else
+      return make_entry_from_vimgrep(...)
+    end
+  end
 
   pickers
     .new(opts, {
-      prompt_title = "Search literal word (" .. scope .. ")",
+      prompt_title = "Search word (" .. scope .. ")",
       finder = finders.new_job(live_grepper, opts.entry_maker, opts.max_results, opts.cwd),
       previewer = conf.grep_previewer(opts),
       sorter = sorters.highlighter_only(opts),
@@ -78,9 +114,12 @@ local function grep_literal_text(opts)
           end
         end
 
-        map("i", "<c-n>", actions.show_last_grep_cmd)
-        map("n", "<c-n>", actions.show_last_grep_cmd)
-        map("n", "<leader>ti", actions.toggle_case_sensitive)
+        map("i", "<c-d>", actions.show_last_grep_cmd)
+        map("n", "<c-d>", actions.show_last_grep_cmd)
+        map("i", "<c-i>", actions.toggle_case_sensitive)
+        map("n", "<c-i>", actions.toggle_case_sensitive)
+        map("i", "<c-r>", actions.toggle_enable_regex)
+        map("n", "<c-r>", actions.toggle_enable_regex)
         return true
       end,
     })
@@ -91,7 +130,7 @@ end
 local M = {}
 
 function M.grep_selected_text_workspace()
-  grep_literal_text({
+  grep_text({
     cwd = util.path.workspace(),
     workspace = "CWD",
     ghc_scope = "workspace",
@@ -99,7 +138,7 @@ function M.grep_selected_text_workspace()
 end
 
 function M.grep_selected_text_cwd()
-  grep_literal_text({
+  grep_text({
     cwd = util.path.cwd(),
     workspace = "CWD",
     ghc_scope = "cwd",
@@ -107,7 +146,7 @@ function M.grep_selected_text_cwd()
 end
 
 function M.grep_selected_text_current()
-  grep_literal_text({
+  grep_text({
     cwd = util.path.current(),
     workspace = "CWD",
     ghc_scope = "current directory",
