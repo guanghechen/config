@@ -104,12 +104,13 @@ mapkey("n", "<leader>b9", actions.buffer.open_buffer_9, "buffer: Open buffer 9",
 mapkey("n", "<leader>b0", actions.buffer.open_buffer_10, "buffer: Open buffer 10", true)
 mapkey("n", "<leader>b[", actions.buffer.open_buffer_left, "buffer: Open left buffer", true)
 mapkey("n", "<leader>b]", actions.buffer.open_buffer_right, "buffer: Open right buffer", true)
-mapkey("n", "<leader>bn", actions.buffer.new_buffer, "buffer: New buffer", true)
+mapkey("n", "<leader>ba", actions.buffer.close_buffer_all, "buffer: Close all buffers", true)
+mapkey("n", "<leader>bb", actions.buffer.open_buffer_last, "buffer: Open last buffer", true)
 mapkey("n", "<leader>bd", actions.buffer.close_buffer, "buffer: Close current buffer", true)
 mapkey("n", "<leader>bh", actions.buffer.close_buffer_to_leftest, "buffer: Close buffers to the leftest", true)
 mapkey("n", "<leader>bl", actions.buffer.close_buffer_to_rightest, "buffer: Close buffers to the rightest", true)
+mapkey("n", "<leader>bn", actions.buffer.new_buffer, "buffer: New buffer", true)
 mapkey("n", "<leader>bo", actions.buffer.close_buffer_others, "buffer: Close other buffers", true)
-mapkey("n", "<leader>ba", actions.buffer.close_buffer_all, "buffer: Close all buffers", true)
 -----------------------------------------------------------------------------------------#[b]uffer--
 
 --#[c]ode-------------------------------------------------------------------------------------------
@@ -170,7 +171,10 @@ mapkey("n", "<leader>qC", actions.session.session_clear_all, "session: Clear all
 --#[s]earch-----------------------------------------------------------------------------------------
 mapkey("n", "<leader>sG", actions.search.live_grep_with_args_workspace, "search: Grep (workspace)")
 mapkey("n", "<leader>sg", actions.search.live_grep_with_args_cwd, "search: Grep (cwd)")
-mapkey("v", "<leader>sw", actions.search.grep_string, "search: Grep word")
+mapkey("n", "<leader>sS", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
+mapkey("n", "<leader>ss", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
+mapkey("v", "<leader>sS", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
+mapkey("v", "<leader>ss", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[t]ab--------------------------------------------------------------------------------------------

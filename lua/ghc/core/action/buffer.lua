@@ -76,6 +76,13 @@ function M.open_buffer_right()
   end
 end
 
+function M.open_buffer_last()
+  local bufnr_last = vim.fn.bufnr("#")
+  if bufnr_last > 0 then
+    vim.api.nvim_set_current_buf(bufnr_last)
+  end
+end
+
 ---@param bufid number
 function M.open_buffer(bufid)
   local totalid = #vim.t.bufs
