@@ -9,7 +9,7 @@ local M = {}
 function M.find_bookmark_workspace()
   local absolute_path = util.path.workspace()
   local relative_path = util.path.relative(util.path.workspace(), absolute_path)
-  require("telescope").extensions.bookmarks.bookmarks({
+  require("telescope").extensions.bookmarks.list({
     cwd = absolute_path,
     workspace = "CWD",
     show_untracked = true,

@@ -9,6 +9,7 @@ local function config()
       ["@f"] = "⛏ ", -- mark annotation startswith @f ,signs this icon as `Fix`
       ["@n"] = "󰠮 ", -- mark annotation startswith @n ,signs this icon as `Note`
     },
+    on_attach = function() end,
   })
   require("telescope").load_extension("bookmarks")
 end
