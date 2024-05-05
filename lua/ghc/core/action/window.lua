@@ -1,10 +1,10 @@
 ---@class ghc.core.action.window
 local M = {}
 
-M.focus_window_top = "<C-w>k"
-M.focus_window_right = "<C-w>l"
-M.focus_window_bottom = "<C-w>j"
-M.focus_window_left = "<C-w>h"
+M.focus_window_top = "<cmd>NvimTmuxNavigateTop<cr>"
+M.focus_window_right = "<cmd>NvimTmuxNavigateRight<cr>"
+M.focus_window_bottom = "<cmd>NvimTmuxNavigateBottom<cr>"
+M.focus_window_left = "<cmd>NvimTmuxNavigateLeft<cr>"
 
 M.split_window_horizontal = "<C-w>s"
 M.split_window_vertical = "<C-w>v"
