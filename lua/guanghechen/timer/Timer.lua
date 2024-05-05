@@ -6,6 +6,7 @@ local Timer = {}
 function Timer:new(o, name)
   o = o or {}
   setmetatable(o, self)
+  self._index = self
 
   self._name = name
   self._timer = vim.loop.new_timer()

@@ -16,6 +16,7 @@ local Subscriber = {}
 function Subscriber:new(o, options)
   o = o or {}
   setmetatable(o, self)
+  self._index = self
 
   ---@type fun(value: any, value_prev: any|nil):nil
   self._onNext = options.onNext

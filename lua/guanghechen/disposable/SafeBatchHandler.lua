@@ -11,6 +11,7 @@ local SafeBatchHandler = {}
 function SafeBatchHandler:new(o)
   o = o or {}
   setmetatable(o, self)
+  self._index = self
 
   ---@type any[]
   self._errors = {}

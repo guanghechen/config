@@ -7,6 +7,7 @@ local Disposable = {}
 function Disposable:new(o, onDispose)
   o = o or {}
   setmetatable(o, self)
+  self._index = self
 
   ---@type function
   self._onDisponse = onDispose

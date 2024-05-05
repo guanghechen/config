@@ -4,5 +4,5 @@
 
 ---@class guanghechen.types.IObservable: guanghechen.types.IBatchDisposable, guanghechen.types.ISubscribable
 ---@field public  equals guanghechen.types.IEquals
----@field public  gentSnapshot fun():guanghechen.types.T
+---@field public  get_snapshot fun():guanghechen.types.T
 ---@field public  next fun(value: guanghechen.types.T, options?: guanghechen.types.IObservableNextOptions):nil

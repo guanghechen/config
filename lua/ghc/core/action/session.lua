@@ -7,14 +7,14 @@ local M = {}
 
 ---@param opts {autosave: boolean}
 function M.get_session_filepath(opts)
-  local group = opts.autosave and "session#autosave" or "session"
-  return path.gen_session_related_filepath({ group = group })
+  local filename = opts.autosave and "session.autosave.vim" or "session.vim"
+  return path.gen_session_related_filepath({ filename = filename })
 end
 
 function M.session_clear_all()
-  local groups = { "session", "session#autosave" }
-  for _, group in ipairs(groups) do
-    path.clear_session_related_filepath({ group = group })
+  local filenames = { "session.autosave.vim", "session.vim" }
+  for _, filename in ipairs(filenames) do
+    path.clear_session_related_filepath({ filename = filename })
   end
 end
 

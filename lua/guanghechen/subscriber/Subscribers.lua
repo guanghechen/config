@@ -21,6 +21,7 @@ local Subscribers = {}
 function Subscribers:new(o, options)
   o = o or {}
   setmetatable(o, self)
+  self._index = self
 
   ---@type number
   self.ARRANGE_THRESHOLD = (options and options.ARRANGE_THRESHOLD) and options.ARRANGE_THRESHOLD or 16

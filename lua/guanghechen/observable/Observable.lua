@@ -14,17 +14,17 @@ local Observable = setmetatable({}, BatchDisposable)
 ---@class guanghechen.observable.Observable.IOptions
 ---@field public equals? guanghechen.types.IEquals  Determine whether the two values are equal.
 
----@param o guanghechen.types.IBatchDisposable
+---@param o guanghechen.types.IBatchDisposable | nil
 ---@param default_value guanghechen.types.T
 ---@param options? guanghechen.observable.Observable.IOptions
 ---@return guanghechen.observable.Observable
 function Observable:new(o, default_value, options)
   o = o or BatchDisposable:new()
-
-  options = options or options
-  ---@cast options guanghechen.observable.Observable.IOptions
-
   setmetatable(o, self)
+  self._index = self
+
+  options = options or {}
+  ---@cast options guanghechen.observable.Observable.IOptions
 
   ---@type guanghechen.types.IEquals
   local equals = options.equals and options.equals or util.comparator.shallow_equals
@@ -46,6 +46,10 @@ function Observable:new(o, default_value, options)
 
   ---@cast o guanghechen.observable.Observable
   return o
+end
+
+function Observable:get_snapshot()
+  return self._value
 end
 
 ---@return nil

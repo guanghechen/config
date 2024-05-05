@@ -2,7 +2,7 @@ local path = require("ghc.core.util.path")
 
 local function config()
   require("bookmarks").setup({
-    save_file = path.gen_session_related_filepath({ group = "bookmark" }), -- bookmarks save file path
+    save_file = path.gen_session_related_filepath({ filename = "bookmark.vim" }), -- bookmarks save file path
     keywords = {
       ["@t"] = "  ", -- mark annotation startswith @t ,signs this icon as `Todo`
       ["@w"] = "⚠️ ", -- mark annotation startswith @w ,signs this icon as `Warn`
