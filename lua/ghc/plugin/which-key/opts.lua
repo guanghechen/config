@@ -1,5 +1,4 @@
 local opts = {
-  plugins = { spelling = true },
   defaults = {
     mode = { "n", "v" },
     ["g"] = { name = "+goto" },
@@ -12,10 +11,9 @@ local opts = {
     ["<leader>e"] = { name = "+explorer" },
     ["<leader>f"] = { name = "+find/file" },
     ["<leader>g"] = { name = "+find/git" },
-    ["<leader>gh"] = { name = "git action" },
+    ["<leader>m"] = { name = "+marks/bookmarks" },
     ["<leader>q"] = { name = "+quit/session" },
     ["<leader>s"] = { name = "+search" },
-    ["<leader>sn"] = { name = "+noice" },
     ["<leader>t"] = { name = "+tab/terminal" },
     ["<leader>u"] = { name = "+ui" },
     ["<leader>w"] = { name = "+window" },
