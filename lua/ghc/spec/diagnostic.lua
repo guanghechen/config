@@ -1,5 +1,3 @@
-local icons = require("ghc.core.setting.icons")
-
 return {
   {
     "folke/trouble.nvim",
