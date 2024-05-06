@@ -101,10 +101,6 @@ mapkey("n", "<M-b>h", actions.window.focus_window_left, "window: Focus on the le
 mapkey("n", "<M-b>j", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
 mapkey("n", "<M-b>k", actions.window.focus_window_top, "window: Focus on the top window", true)
 mapkey("n", "<M-b>l", actions.window.focus_window_right, "window: Focus on the right window", true)
-mapkey("n", "<leader>h", actions.window.focus_window_left, "window: Focus on the left window", true)
-mapkey("n", "<leader>j", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
-mapkey("n", "<leader>k", actions.window.focus_window_top, "window: Focus on the top window", true)
-mapkey("n", "<leader>l", actions.window.focus_window_right, "window: Focus on the right window", true)
 ---------------------------------------------------------------------------------------#navigation--
 
 --[#]buffer-----------------------------------------------------------------------------------------
@@ -226,21 +222,15 @@ mapkey("n", "<leader>ut", actions.ui.toggle_theme, "ui: Toggle theme")
 ---------------------------------------------------------------------------------------------#[u]i--
 
 --#[w]indow-----------------------------------------------------------------------------------------
-mapkey("n", "<leader>wh", actions.window.focus_window_left, "window: Focus on the left window", true)
-mapkey("n", "<leader>wj", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
-mapkey("n", "<leader>wk", actions.window.focus_window_top, "window: Focus on the top window", true)
-mapkey("n", "<leader>wl", actions.window.focus_window_right, "window: Focus on the right window", true)
 mapkey("n", "<leader>ww", actions.window.focus_window_with_picker, "window: Focus window (with picker)", true)
 mapkey("n", "<leader>ws", actions.window.swap_window_with_picker, "window: Swap window (with picker)", true)
 mapkey("n", "<leader>wp", actions.window.project_window_with_picker, "window: Project window (with picker)", true)
-mapkey("n", "<leader>w-", actions.window.split_window_horizontal, "window: Split window horizontally", true)
-mapkey("n", "<leader>w|", actions.window.split_window_vertical, "window: Split window vertically", true)
-mapkey("n", "<leader>wJ", actions.window.split_window_horizontal, "window: Split window horizontally", true)
-mapkey("n", "<leader>wL", actions.window.split_window_vertical, "window: Split window vertically", true)
-mapkey("n", "<leader>w<Left>", actions.window.resize_window_vertical_minus, "window: Resize -(v:count) vertically.", true)
-mapkey("n", "<leader>w<Down>", actions.window.resize_window_horizontal_minus, "window: Resize -(v:count) horizontally.", true)
-mapkey("n", "<leader>w<Up>", actions.window.resize_window_horizontal_plus, "window: Resize +(v:count) horizontally.", true)
-mapkey("n", "<leader>w<Right>", actions.window.resize_window_vertical_plus, "window: Resize +(v:count) vertically.", true)
+mapkey("n", "<leader>wj", actions.window.split_window_horizontal, "window: Split window horizontally", true)
+mapkey("n", "<leader>wl", actions.window.split_window_vertical, "window: Split window vertically", true)
+mapkey("n", "<leader>wH", actions.window.resize_window_vertical_minus, "window: Resize -(v:count) vertically.", true)
+mapkey("n", "<leader>wJ", actions.window.resize_window_horizontal_minus, "window: Resize -(v:count) horizontally.", true)
+mapkey("n", "<leader>wK", actions.window.resize_window_horizontal_plus, "window: Resize +(v:count) horizontally.", true)
+mapkey("n", "<leader>wL", actions.window.resize_window_vertical_plus, "window: Resize +(v:count) vertically.", true)
 mapkey("n", "<leader>wd", actions.window.close_window_current, "window: close current window", true)
 mapkey("n", "<leader>wo", actions.window.close_window_others, "window: close others", true)
 -----------------------------------------------------------------------------------------#[w]indow--
