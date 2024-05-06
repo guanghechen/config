@@ -5,6 +5,9 @@ local setup = {
   clangd = function()
     require("lspconfig").clangd.setup(require("ghc.core.lsp.lang.cpp"))
   end,
+  eslint = function()
+    require("lspconfig").clangd.setup(require("ghc.core.lsp.lang.eslint"))
+  end,
   html = function()
     require("lspconfig").html.setup(require("ghc.core.lsp.lang.html"))
   end,

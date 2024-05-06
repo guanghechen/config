@@ -10,6 +10,7 @@ vim.g.loaded_ruby_provider = 0
 
 -- encoding
 vim.opt.fileencoding = "utf-8"
+vim.opt.fileformat = "unix"
 vim.opt_global.fileencodings = "utf-8"
 
 -- mouse
