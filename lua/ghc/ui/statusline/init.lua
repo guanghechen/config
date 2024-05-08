@@ -5,8 +5,11 @@ local components = {
     require("ghc.ui.statusline.component.git"),
     require("ghc.ui.statusline.component.filepath"),
   },
-  left_c = {},
+  left_c = {
+    require("ghc.ui.statusline.component.bg"),
+  },
   right_x = {
+    require("ghc.ui.statusline.component.bg"),
     require("ghc.ui.statusline.component.noice"),
   },
   right = {
