@@ -101,6 +101,14 @@ mapkey("n", "<M-b>h", actions.window.focus_window_left, "window: Focus on the le
 mapkey("n", "<M-b>j", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
 mapkey("n", "<M-b>k", actions.window.focus_window_top, "window: Focus on the top window", true)
 mapkey("n", "<M-b>l", actions.window.focus_window_right, "window: Focus on the right window", true)
+mapkey("i", "<M-h>", actions.window.focus_window_left, "window: Focus on the left window", true)
+mapkey("i", "<M-j>", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
+mapkey("i", "<M-k>", actions.window.focus_window_top, "window: Focus on the top window", true)
+mapkey("i", "<M-l>", actions.window.focus_window_right, "window: Focus on the right window", true)
+mapkey("n", "<M-h>", actions.window.focus_window_left, "window: Focus on the left window", true)
+mapkey("n", "<M-j>", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
+mapkey("n", "<M-k>", actions.window.focus_window_top, "window: Focus on the top window", true)
+mapkey("n", "<M-l>", actions.window.focus_window_right, "window: Focus on the right window", true)
 ---------------------------------------------------------------------------------------#navigation--
 
 --[#]buffer-----------------------------------------------------------------------------------------

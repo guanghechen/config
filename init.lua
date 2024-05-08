@@ -23,3 +23,7 @@ require("ghc.autocmd")
 vim.schedule(function()
   require("ghc.keymap")
 end)
+
+if vim.g.neovide then
+  require("neovide")
+end
