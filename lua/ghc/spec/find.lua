@@ -45,12 +45,4 @@ return {
       "nvim-telescope/telescope.nvim",
     },
   },
-
-  {
-    "tomasky/bookmarks.nvim",
-    config = require("ghc.plugin.bookmarks.config"),
-    dependencies = {
-      "nvim-telescope/telescope.nvim",
-    },
-  },
 }
