@@ -9,9 +9,11 @@ return {
       {
         -- snippet plugin
         "L3MON4D3/LuaSnip",
-        dependencies = "rafamadriz/friendly-snippets",
         opts = require("ghc.plugin.luasnip.opts"),
         config = require("ghc.plugin.luasnip.config"),
+        dependencies = {
+          "rafamadriz/friendly-snippets",
+        },
       },
 
       -- cmp sources plugins
