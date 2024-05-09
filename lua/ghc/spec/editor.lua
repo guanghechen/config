@@ -2,59 +2,59 @@ return {
   --common
   "nvim-lua/plenary.nvim",
   "MunifTanjim/nui.nvim",
-  require("ghc.plugin.nvim-web-devicons.spec"),
+  require("ghc.plugin.nvim-web-devicons"),
 
   --cmp
-  require("ghc.plugin.nvim-cmp.spec"),
-  require("ghc.plugin.luasnip.spec"),
+  require("ghc.plugin.nvim-cmp"),
+  require("ghc.plugin.luasnip"),
 
   --code
-  require("ghc.plugin.mini-comment.spec"),
-  require("ghc.plugin.mini-surround.spec"),
-  require("ghc.plugin.mini-pairs.spec"),
+  require("ghc.plugin.mini-comment"),
+  require("ghc.plugin.mini-surround"),
+  require("ghc.plugin.mini-pairs"),
 
   --diagnostic
-  require("ghc.plugin.trouble.spec"),
+  require("ghc.plugin.trouble"),
 
   --editor
-  require("ghc.plugin.indent-blankline.spec"),
-  require("ghc.plugin.mini-indentscope.spec"),
+  require("ghc.plugin.indent-blankline"),
+  require("ghc.plugin.mini-indentscope"),
 
   --enhance
-  require("ghc.plugin.flash.spec"),
-  require("ghc.plugin.nvim-tmux-navigation.spec"),
+  require("ghc.plugin.flash"),
+  require("ghc.plugin.nvim-tmux-navigation"),
 
   --explorer
   require("ghc.plugin.neo-tree.spec"),
-  require("ghc.plugin.nvim-window-picker.spec"),
+  require("ghc.plugin.nvim-window-picker"),
 
   --fancy
-  require("ghc.plugin.dressing.spec"),
-  require("ghc.plugin.noice.spec"),
-  require("ghc.plugin.nvim-notify.spec"),
-  require("ghc.plugin.vim-illuminate.spec"),
-  require("ghc.plugin.which-key.spec"),
+  require("ghc.plugin.dressing"),
+  require("ghc.plugin.noice"),
+  require("ghc.plugin.nvim-notify"),
+  require("ghc.plugin.vim-illuminate"),
+  require("ghc.plugin.which-key"),
 
   --find
-  require("ghc.plugin.bookmarks.spec"),
+  require("ghc.plugin.bookmarks"),
 
   --format
-  require("ghc.plugin.conform.spec"),
+  require("ghc.plugin.conform"),
 
   --git
-  require("ghc.plugin.gitsigns.spec"),
+  require("ghc.plugin.gitsigns"),
 
   --highlight
-  require("ghc.plugin.nvim-treesitter.spec"),
-  require("ghc.plugin.nvim-treesitter-context.spec"),
-  require("ghc.plugin.nvim-treesitter-textobjects.spec"),
+  require("ghc.plugin.nvim-treesitter"),
+  require("ghc.plugin.nvim-treesitter-context"),
+  require("ghc.plugin.nvim-treesitter-textobjects"),
 
   --lsp
-  require("ghc.plugin.mason.spec"),
-  require("ghc.plugin.nvim-lspconfig.spec"),
+  require("ghc.plugin.mason"),
+  require("ghc.plugin.nvim-lspconfig"),
 
   --search
 
   --ui
-  require("ghc.plugin.nvim-colorizer.spec"),
+  require("ghc.plugin.nvim-colorizer"),
 }
