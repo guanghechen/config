@@ -77,45 +77,20 @@ function M.gen_color_withmodes(name, fg, bg, bold)
   return result
 end
 
-M.color = vim.tbl_deep_extend(
-  "force",
-  M.gen_color_withmodes("icon", "baby_pink", nil, false),
-  M.gen_color_withmodes("separator", nil, "grey", false),
-  M.gen_color_withmodes("separator_rightest", nil, "lightbg", false),
-  M.gen_color_withmodes("text", "black", nil, true),
-  {
-    separator_extend = {
-      fg = "grey",
-      bg = "lightbg",
-    },
-    separator_extend_rightest = {
-      fg = "grey",
-      bg = "grey",
-    },
-  }
-)
+M.color = vim.tbl_deep_extend("force", M.gen_color_withmodes("text", nil, ui.transparency and "none" or "statusline_bg", true), {})
 
 function M.condition()
   return vim.api.nvim_get_current_win() == vim.g.statusline_winid
 end
 
----@param opts { is_rightest: boolean }
-function M.renderer_left(opts)
-  local is_rightest = opts.is_rightest
+function M.renderer_left()
   local m = vim.api.nvim_get_mode().mode
   local mode_name = M.modes_map[m][2]
   local mode_display_name = M.modes_map[m][1]
 
-  local color_icon = "%#" .. M.name .. "_icon" .. "_" .. mode_name .. "#"
   local color_text = "%#" .. M.name .. "_text" .. "_" .. mode_name .. "#"
-  local color_separator = "%#" .. M.name .. (is_rightest and "_separator_rightest" or "_separator") .. "_" .. mode_name .. "#"
-  local color_separator_extend = "%#" .. M.name .. (is_rightest and "_separator_extend_rightest" or "_separator_extend") .. "#"
-
-  local icon = ui.statusline.symbol.separator.right .. " "
-  local text = mode_display_name .. " "
-  local separator = is_rightest and "" or ui.statusline.symbol.separator.right
-  local separator_extend = is_rightest and " " or ui.statusline.symbol.separator.right
-  return color_icon .. icon .. color_text .. text .. color_separator .. separator .. color_separator_extend .. separator_extend
+  local text = "  " .. mode_display_name .. " "
+  return color_text .. text
 end
 
 return M
