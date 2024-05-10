@@ -129,10 +129,10 @@ function Viewmodel:load()
     vim.notify("[Viewmodel:(" .. self._name .. ")] Bad json, not a table:" .. vim.inspect(json_text))
   end
 
-  for key, item in pairs(data) do
+  for key, value in pairs(data) do
     local observable = self[key]
-    if item ~= nil and util.observable.isObservable(observable) then
-      observable.next(item)
+    if value ~= nil and util.observable.isObservable(observable) then
+      observable:next(value)
     end
   end
 end

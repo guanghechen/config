@@ -68,6 +68,9 @@ function M.session_save()
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 
+  -- save context
+  require("ghc.core.context.repo"):save()
+
   vim.notify("Session saved successfully!", vim.log.levels.INFO)
 end
 
