@@ -6,24 +6,11 @@ local calc_fileicon = require("ghc.core.util.filetype").calc_fileicon
 --- @class ghc.ui.statusline.component.filepath
 local M = {
   name = "ghc_statusline_filepath",
-}
-
-M.color = {
-  icon = {
-    fg = "white",
-    bg = ui.transparency and "none" or "statusline_bg",
-  },
-  separator = {
-    fg = "lightbg",
-    bg = "lightbg",
-  },
-  separator_rightest = {
-    fg = "lightbg",
-    bg = ui.transparency and "none" or "statusline_bg",
-  },
-  text = {
-    fg = "white",
-    bg = ui.transparency and "none" or "statusline_bg",
+  color = {
+    text = {
+      fg = "white",
+      bg = ui.transparency and "none" or "statusline_bg",
+    },
   },
 }
 
@@ -37,9 +24,7 @@ function M.condition()
   return relative_path ~= "."
 end
 
----@param opts { is_rightest: boolean }
-function M.renderer_left(opts)
-  local is_rightest = opts.is_rightest
+function M.renderer()
   local filepath = vim.fn.expand("%:p")
   local relative_path = path.relative(path.cwd(), filepath)
 
@@ -71,14 +56,11 @@ function M.renderer_left(opts)
     end
   end
 
-  local color_separator = "%#" .. M.name .. (is_rightest and "_separator_rightest#" or "_separator#")
-  local color_icon = "%#" .. M.name .. "_icon#"
   local color_text = "%#" .. M.name .. "_text#"
 
-  local separator = is_rightest and "" or ui.statusline.symbol.separator.right
   local icon = " " .. calc_fileicon(filepath) .. " "
-  local text = relative_path .. added .. removed .. changed .. " "
-  return color_icon .. icon .. color_text .. text .. color_separator .. separator
+  local text = icon .. relative_path .. added .. removed .. changed .. " "
+  return color_text .. text
 end
 
 return M

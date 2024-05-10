@@ -3,21 +3,20 @@ local components = {
     require("ghc.ui.statusline.component.username"),
     require("ghc.ui.statusline.component.mode"),
     require("ghc.ui.statusline.component.git"),
-    require("ghc.ui.statusline.component.filepath"),
   },
   left_c = {
+    require("ghc.ui.statusline.component.filepath"),
     require("ghc.ui.statusline.component.bg"),
   },
   right_x = {
     require("ghc.ui.statusline.component.bg"),
     require("ghc.ui.statusline.component.noice"),
-  },
-  right = {
     require("ghc.ui.statusline.component.pos"),
+    require("ghc.ui.statusline.component.fileformat"),
     require("ghc.ui.statusline.component.filetype"),
     require("ghc.ui.statusline.component.cwd"),
-    require("ghc.ui.statusline.component.os"),
   },
+  right = {},
 }
 
 local function get_leftest_name()
