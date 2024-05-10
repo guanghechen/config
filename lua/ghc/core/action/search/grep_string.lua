@@ -109,7 +109,7 @@ local function grep_text(opts)
   end
 
   local selected_text = util.selection.get_selected_text()
-  if not selected_text or #selected_text < 1 then
+  if selected_text and #selected_text > 1 then
     context.repo.searching_keyword:next(selected_text)
   end
   local default_text = context.repo.searching_keyword:get_snapshot()
