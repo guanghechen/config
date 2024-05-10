@@ -1,8 +1,10 @@
 local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
+local Subscriber = require("guanghechen.subscriber.Subscriber")
 
 ---@class guanghechen.viewmodel.Viewmodel.util
 local util = {
   disposable = require("guanghechen.util.disposable"),
+  observable = require("guanghechen.util.observable"),
   fs = require("guanghechen.util.fs"),
 }
 
@@ -44,8 +46,8 @@ function Viewmodel:dispose()
 
   ---@type guanghechen.types.IDisposable[]
   local disposables = {}
-  for key, disposable in pairs(self) do
-    if type(key) == "string" and key[#key] == "$" then
+  for _, disposable in pairs(self) do
+    if util.disposable(disposable) then
       ---@cast disposable guanghechen.types.IDisposable
       table.insert(disposables, disposable)
     end
@@ -58,15 +60,39 @@ function Viewmodel:get_name()
   return self._name
 end
 
+---@return table<string, any>
 function Viewmodel:get_snapshot()
   local data = {}
   for key, observable in pairs(self) do
-    if type(key) == "string" and key[1] == "_" and key[#key] == "_" then
+    if util.observable.isObservable(observable) then
       ---@cast observable guanghechen.types.IObservable
-      table.insert(data, observable.get_snapshot())
+      data[key] = observable:get_snapshot()
     end
   end
   return data
+end
+
+---@param name string
+---@param observable guanghechen.types.IObservable
+---@param autosave boolean
+function Viewmodel:register(name, observable, autosave)
+  if autosave then
+    local first = true
+    local current = self
+    local subscriber = Subscriber.new({
+      onNext = function()
+        if first then
+          first = false
+        else
+          current:save()
+        end
+      end,
+    })
+    observable:subscribe(subscriber)
+  end
+
+  self[name] = observable
+  return self
 end
 
 function Viewmodel:save()
@@ -77,10 +103,10 @@ function Viewmodel:save()
     return
   end
 
-  ---@diagnostic disable-next-line: unused-local
-  local ok_to_save_json, result = pcall(vim.fn.writefile, json_text, self._filepath)
+  vim.fn.mkdir(vim.fn.fnamemodify(self._filepath, ":p:h"), "p")
+  local ok_to_save_json, result = pcall(vim.fn.writefile, { json_text }, self._filepath)
   if not ok_to_save_json then
-    vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to save json:" .. vim.inspect(data))
+    vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to save json:" .. vim.inspect(data) .. "\n\n" .. result)
   end
 end
 
@@ -99,10 +125,14 @@ function Viewmodel:load()
     vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to decode json:" .. vim.inspect(json_text))
   end
 
-  for key, observable in pairs(self) do
-    if type(key) == "string" and key[1] == "_" and key[#key] == "_" then
-      ---@cast observable guanghechen.types.IObservable
-      table.insert(data, observable.get_snapshot())
+  if type(data) ~= "table" then
+    vim.notify("[Viewmodel:(" .. self._name .. ")] Bad json, not a table:" .. vim.inspect(json_text))
+  end
+
+  for key, item in pairs(data) do
+    local observable = self[key]
+    if item ~= nil and util.observable.isObservable(observable) then
+      observable.next(item)
     end
   end
 end

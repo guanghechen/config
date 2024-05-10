@@ -5,7 +5,7 @@
 ---@field public  unsubscribe fun(self: guanghechen.types.IUnsubscribable):nil
 
 ---@class guanghechen.types.ISubscribable
----@field public  subscirbe fun(self: guanghechen.types.ISubscribable, subscriber: guanghechen.types.ISubscriber): guanghechen.types.IUnsubscribable
+---@field public  subscribe fun(self: guanghechen.types.ISubscribable, subscriber: guanghechen.types.ISubscriber): guanghechen.types.IUnsubscribable
 
 ---@class guanghechen.types.ISubscribers : guanghechen.types.ISubscribable, guanghechen.types.IDisposable
 ---@field public  getSize fun(self: guanghechen.types.ISubscribers):nil

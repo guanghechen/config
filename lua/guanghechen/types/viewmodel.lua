@@ -1,5 +1,6 @@
 ---@class guanghechen.types.IViewmodel : guanghechen.types.IBatchDisposable
 ---@field get_name fun():string
 ---@field get_snapshot fun():table
+---@field register fun(name:string, observable:guanghechen.types.IObservable):nil
 ---@field save fun():nil
 ---@field load fun():nil

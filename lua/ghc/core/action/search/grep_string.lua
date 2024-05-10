@@ -1,4 +1,9 @@
----@class ghc.core.action.search.grep_string
+---@class ghc.core.action.search.grep_string.context
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
+
+---@class ghc.core.action.search.grep_string.util
 local util = {
   path = require("ghc.core.util.path"),
   regex = require("guanghechen.util.regex"),
@@ -16,7 +21,6 @@ local function grep_text(opts)
   local scope = opts.ghc_scope
 
   local last_grep_cmd = {}
-  local last_prompt = nil
   local flags = {
     enable_regex = false,
     case_sensitive = true,
@@ -35,7 +39,10 @@ local function grep_text(opts)
   }
 
   local live_grepper = function(prompt)
-    last_prompt = prompt
+    if prompt then
+      context.repo.searching_keyword:next(prompt)
+    end
+
     if not prompt or prompt == "" then
       return {
         "fd",
@@ -93,6 +100,7 @@ local function grep_text(opts)
   local make_entry_from_file = make_entry.gen_from_file(opts)
 
   opts.entry_maker = function(...)
+    local last_prompt = context.repo.searching_keyword:get_snapshot()
     if not last_prompt or last_prompt == "" then
       return make_entry_from_file(...)
     else
@@ -100,13 +108,19 @@ local function grep_text(opts)
     end
   end
 
+  local selected_text = util.selection.get_selected_text()
+  if not selected_text or #selected_text < 1 then
+    context.repo.searching_keyword:next(selected_text)
+  end
+  local default_text = context.repo.searching_keyword:get_snapshot()
+
   pickers
     .new(opts, {
       prompt_title = "Search word (" .. scope .. ")",
       finder = finders.new_job(live_grepper, opts.entry_maker, opts.max_results, opts.cwd),
       previewer = conf.grep_previewer(opts),
       sorter = sorters.highlighter_only(opts),
-      default_text = util.selection.get_selected_text(),
+      default_text = default_text,
       attach_mappings = function(_, map)
         if opts.mappings then
           for mode, mappings in pairs(opts.mappings) do

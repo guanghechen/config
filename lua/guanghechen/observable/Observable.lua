@@ -89,7 +89,7 @@ end
 
 ---@param subscriber guanghechen.types.ISubscriber
 ---@return nil
-function Observable:subscirbe(subscriber)
+function Observable:subscribe(subscriber)
   if subscriber:isDisposed() then
     return util.misc.noop_unsubscribable
   end
@@ -107,7 +107,7 @@ function Observable:subscirbe(subscriber)
   end
 
   subscriber:next(value, value_prev)
-  return self._subscribers:subscirbe(subscriber)
+  return self._subscribers:subscribe(subscriber)
 end
 
 ---@return nil

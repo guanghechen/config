@@ -17,4 +17,10 @@ function M.disposeAll(disposables)
   batcher:summary("[disposeAll] Encountered error(s) while disposing.")
 end
 
+---@param disposable any
+---@return boolean
+function M.isDisposable(disposable)
+  return type(disposable) == "table" and type(disposable.isDisposable) == "function" and type(disposable.dispose) == "function"
+end
+
 return M
