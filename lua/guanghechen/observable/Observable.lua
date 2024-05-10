@@ -9,28 +9,31 @@ local util = {
 }
 
 ---@class guanghechen.observable.Observable : guanghechen.types.IObservable
-local Observable = setmetatable({}, BatchDisposable)
+---@field private _subscribers guanghechen.types.ISubscribers
+local Observable = {}
+Observable.__index = Observable
+setmetatable(Observable, { __index = BatchDisposable })
 
 ---@class guanghechen.observable.Observable.IOptions
 ---@field public equals? guanghechen.types.IEquals  Determine whether the two values are equal.
 
----@param o guanghechen.types.IBatchDisposable | nil
 ---@param default_value guanghechen.types.T
 ---@param options? guanghechen.observable.Observable.IOptions
 ---@return guanghechen.observable.Observable
-function Observable:new(o, default_value, options)
-  o = o or BatchDisposable:new()
-  setmetatable(o, self)
-  self._index = self
-
+function Observable.new(default_value, options)
   options = options or {}
   ---@cast options guanghechen.observable.Observable.IOptions
 
   ---@type guanghechen.types.IEquals
   local equals = options.equals and options.equals or util.comparator.shallow_equals
 
+  local self = setmetatable(BatchDisposable.new(), Observable)
+
+  ---@diagnostic disable-next-line: cast-type-mismatch
+  ---@cast self guanghechen.observable.Observable
+
   ---@type guanghechen.types.ISubscribers
-  self._subscribers = Subscribers:new()
+  self._subscribers = Subscribers.new()
 
   ---@type guanghechen.types.T
   self._value = default_value
@@ -41,11 +44,7 @@ function Observable:new(o, default_value, options)
   ---@type guanghechen.types.IEquals
   self.equals = equals
 
-  ---@type guanghechen.types.IBatchDisposable
-  self._super = o
-
-  ---@cast o guanghechen.observable.Observable
-  return o
+  return self
 end
 
 function Observable:get_snapshot()
@@ -58,7 +57,7 @@ function Observable:dispose()
     return
   end
 
-  self._super:dispose()
+  BatchDisposable.dispose(self)
 
   -- Dispose subscribers
   self._subscribers:dispose()

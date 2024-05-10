@@ -5,13 +5,11 @@ local util = {
 
 ---@class guanghechen.disposable.SafeBatchHandler
 local SafeBatchHandler = {}
+SafeBatchHandler.__index = SafeBatchHandler
 
----@param o? table|nil
 ---@return guanghechen.disposable.SafeBatchHandler
-function SafeBatchHandler:new(o)
-  o = o or {}
-  setmetatable(o, self)
-  self._index = self
+function SafeBatchHandler.new()
+  local self = setmetatable({}, SafeBatchHandler)
 
   ---@type any[]
   self._errors = {}
@@ -19,7 +17,7 @@ function SafeBatchHandler:new(o)
   ---@type string|nil
   self._summary = nil
 
-  return o
+  return self
 end
 
 ---@return nil
@@ -42,10 +40,12 @@ end
 ---@return nil
 function SafeBatchHandler:summary(title)
   if self._summary == nil then
-    self._summary = util.debug({
-      title = title,
-      details = self._errors,
-    })
+    if #self._errors > 0 then
+      self._summary = util.debug.inspect({
+        title = title,
+        details = self._errors,
+      })
+    end
   end
   if self._summary ~= nil then
     error(self._summary)

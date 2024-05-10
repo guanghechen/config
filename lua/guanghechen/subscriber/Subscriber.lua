@@ -4,30 +4,30 @@ local util = {
 }
 
 ---@class guanghechen.subscriber.Subscriber : guanghechen.types.ISubscriber
+---@field private _onNext fun(value: any, value_prev: any|nil):nil
+---@field private _onDispose fun():nil
 local Subscriber = {}
+Subscriber.__index = Subscriber
 
 ---@class guanghechen.subscriber.Subscriber.IOptions
 ---@field onNext fun(value: any, value_prev: any|nil):nil
 ---@field onDispose? fun():nil
 
----@param o table|nil
 ---@param options guanghechen.subscriber.Subscriber.IOptions
 ---@return guanghechen.subscriber.Subscriber
-function Subscriber:new(o, options)
-  o = o or {}
-  setmetatable(o, self)
-  self._index = self
+function Subscriber.new(options)
+  local self = setmetatable({}, Subscriber)
 
   ---@type fun(value: any, value_prev: any|nil):nil
   self._onNext = options.onNext
 
   ---@type fun():nil
-  self._onDisponse = options.onDispose or util.misc.noop
+  self._onDispose = options.onDispose or util.misc.noop
 
   ---@type boolean
   self._disposed = false
 
-  return o
+  return self
 end
 
 ---@return boolean
@@ -39,7 +39,7 @@ end
 function Subscriber:dispose()
   if not self._disposed then
     self._disposed = true
-    self._onDisponse()
+    self._onDispose()
   end
 end
 

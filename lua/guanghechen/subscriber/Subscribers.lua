@@ -6,7 +6,9 @@ local util = {
 }
 
 ---@class guanghechen.subscriber.Subscribers : guanghechen.types.ISubscribers
+---@field private ARRANGE_THRESHOLD  number
 local Subscribers = {}
+Subscribers.__index = Subscribers
 
 ---@class guanghechen.subscriber.Subscribers.IOptions
 ---@field ARRANGE_THRESHOLD? number
@@ -15,13 +17,10 @@ local Subscribers = {}
 ---@field subscriber guanghechen.types.ISubscriber
 ---@field unsubscribed boolean
 
----@param o table|nil
 ---@param options? guanghechen.subscriber.Subscribers.IOptions
 ---@return guanghechen.subscriber.Subscribers
-function Subscribers:new(o, options)
-  o = o or {}
-  setmetatable(o, self)
-  self._index = self
+function Subscribers.new(options)
+  local self = setmetatable({}, Subscribers)
 
   ---@type number
   self.ARRANGE_THRESHOLD = (options and options.ARRANGE_THRESHOLD) and options.ARRANGE_THRESHOLD or 16
@@ -35,7 +34,7 @@ function Subscribers:new(o, options)
   ---@type number
   self._subscribingCount = 0
 
-  return o
+  return self
 end
 
 ---@return number

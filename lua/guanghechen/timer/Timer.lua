@@ -1,17 +1,16 @@
 ---@class guanghechen.timer.Timer
+---@field _name string
 local Timer = {}
+Timer.__index = Timer
 
----@param o table|nil
 ---@param name string
-function Timer:new(o, name)
-  o = o or {}
-  setmetatable(o, self)
-  self._index = self
+function Timer.new(name)
+  local self = setmetatable({}, Timer)
 
   self._name = name
   self._timer = vim.loop.new_timer()
 
-  return o
+  return self
 end
 
 ---@param timeout   number millionsecondsggj

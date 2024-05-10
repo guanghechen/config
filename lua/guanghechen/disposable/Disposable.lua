@@ -1,20 +1,19 @@
 ---@class guanghechen.disposable.Disposable : guanghechen.types.IDisposable
+---@field private _onDispose fun():nil
 local Disposable = {}
+Disposable.__index = Disposable
 
----@param o table|nil
 ---@param onDispose fun():nil
 ---@return guanghechen.disposable.Disposable
-function Disposable:new(o, onDispose)
-  o = o or {}
-  setmetatable(o, self)
-  self._index = self
+function Disposable.new(onDispose)
+  local self = setmetatable({}, Disposable)
 
   ---@type function
-  self._onDisponse = onDispose
+  self._onDispose = onDispose
 
   ---@type boolean
   self._disposed = false
-  return o
+  return self
 end
 
 ---@return boolean
@@ -29,7 +28,7 @@ function Disposable:dispose()
   end
 
   self._disposed = true
-  self._onDisponse()
+  self._onDispose()
 end
 
 return Disposable

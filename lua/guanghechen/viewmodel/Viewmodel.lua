@@ -11,18 +11,19 @@ local util = {
 ---@field public filepath string
 
 ---@class guanghechen.viewmodel.Viewmodel : guanghechen.types.IViewmodel
-local Viewmodel = setmetatable({}, BatchDisposable)
+---@field private _name string
+---@field private _filepath string
+local Viewmodel = {}
+Viewmodel.__index = Viewmodel
+setmetatable(Viewmodel, { __index = BatchDisposable })
 
----@param o guanghechen.types.IBatchDisposable | nil
 ---@param opts guanghechen.viewmodel.Viewmodel.IOptions
 ---@return guanghechen.viewmodel.Viewmodel
-function Viewmodel:new(o, opts)
-  o = o or BatchDisposable:new()
-  setmetatable(o, self)
-  self._index = self
+function Viewmodel.new(opts)
+  local self = setmetatable(BatchDisposable.new(), Viewmodel)
 
-  ---@type guanghechen.types.IBatchDisposable
-  self._super = o
+  ---@diagnostic disable-next-line: cast-type-mismatch
+  ---@cast self guanghechen.viewmodel.Viewmodel
 
   ---@type string
   self._name = opts.name
@@ -30,8 +31,7 @@ function Viewmodel:new(o, opts)
   ---@type string
   self._filepath = opts.filepath
 
-  ---@cast o guanghechen.viewmodel.Viewmodel
-  return o
+  return self
 end
 
 ---@return nil
@@ -40,7 +40,7 @@ function Viewmodel:dispose()
     return
   end
 
-  self._super:dispose()
+  BatchDisposable.dispose(self)
 
   ---@type guanghechen.types.IDisposable[]
   local disposables = {}

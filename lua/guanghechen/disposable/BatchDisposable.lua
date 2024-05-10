@@ -6,20 +6,18 @@ local util = {
 
 ---@class guanghechen.disposable.BatchDisposable : guanghechen.types.IBatchDisposable
 local BatchDisposable = {}
+BatchDisposable.__index = BatchDisposable
 
----@param o table|nil
 ---@return guanghechen.disposable.BatchDisposable
-function BatchDisposable:new(o)
-  o = o or {}
-  setmetatable(o, self)
-  self._index = self
+function BatchDisposable.new()
+  local self = setmetatable({}, BatchDisposable)
 
   ---@type boolean
   self._disposed = false
 
   ---@type guanghechen.types.IDisposable[]
   self._disposables = {}
-  return o
+  return self
 end
 
 ---@return boolean
@@ -43,7 +41,7 @@ function BatchDisposable:dispose()
   end)
   self._disposables = {}
   if not ok then
-    error(util.debug(result))
+    error(util.debug.inspect(result))
   end
 end
 

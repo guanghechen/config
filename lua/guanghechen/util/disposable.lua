@@ -8,13 +8,13 @@ function M.disposeAll(disposables)
     return
   end
 
-  local handler = require("guanghechen.disposable.SafeBatchHandler"):new()
+  local batcher = require("guanghechen.disposable.SafeBatchHandler"):new()
   for _, disposable in ipairs(disposables) do
-    handler:run(function()
+    batcher:run(function()
       disposable:dispose()
     end)
   end
-  handler:summary("[disposeAll] Encountered error(s) while disposing.")
+  batcher:summary("[disposeAll] Encountered error(s) while disposing.")
 end
 
 return M
