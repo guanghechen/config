@@ -14,8 +14,7 @@ local util = {
 }
 
 ---https://github.com/nvim-telescope/telescope.nvim/blob/fac83a556e7b710dc31433dec727361ca062dbe9/lua/telescope/builtin/__files.lua#L187
----@param scope "W"|"C"|"D"
-local function search(scope)
+local function search()
   ---@diagnostic disable-next-line: undefined-field
   local conf = require("telescope.config").values
   local finders = require("telescope.finders")
@@ -24,6 +23,8 @@ local function search(scope)
   local sorters = require("telescope.sorters")
   local last_grep_cmd = {}
 
+  ---@type "W"|"C"|"D"
+  local scope = context.repo.search_scope:get_snapshot()
   local opts = {
     cwd = util.path.scope(scope),
   }
@@ -32,6 +33,17 @@ local function search(scope)
     local picker = action_state.get_current_picker(prompt_bufnr)
     if picker then
       picker:reset_prompt(context.repo.search_keyword:get_snapshot())
+    end
+  end
+
+  ---@param prompt_bufnr number
+  ---@param scope_next "W"|"C"|"D"
+  local function change_scope(prompt_bufnr, scope_next)
+    local scope_current = context.repo.search_scope:get_snapshot()
+    if scope_next ~= scope_current then
+      context.repo.search_scope:next(scope_next)
+      search()
+      refresh(prompt_bufnr)
     end
   end
 
@@ -48,16 +60,13 @@ local function search(scope)
       refresh(prompt_bufnr)
     end,
     change_scope_workspace = function(prompt_bufnr)
-      context.repo.search_scope:next("W")
-      refresh(prompt_bufnr)
+      change_scope(prompt_bufnr, "W")
     end,
     change_scope_cwd = function(prompt_bufnr)
-      context.repo.search_scope:next("C")
-      refresh(prompt_bufnr)
+      change_scope(prompt_bufnr, "C")
     end,
     change_scope_directory = function(prompt_bufnr)
-      context.repo.search_scope:next("D")
-      refresh(prompt_bufnr)
+      change_scope(prompt_bufnr, "D")
     end,
   }
 
@@ -161,19 +170,22 @@ end
 local M = {}
 
 function M.grep_selected_text_workspace()
-  search("W")
+  context.repo.search_scope:next("W")
+  search()
 end
 
 function M.grep_selected_text_cwd()
-  search("C")
+  context.repo.search_scope:next("C")
+  search()
 end
 
 function M.grep_selected_text_directory()
-  search("D")
+  context.repo.search_scope:next("D")
+  search()
 end
 
 function M.grep_selected_text()
-  search(context.repo.search_scope:get_snapshot())
+  search()
 end
 
 return M
