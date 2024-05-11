@@ -1,3 +1,5 @@
+local action_state = require("telescope.actions.state")
+
 ---@class ghc.core.action.search.grep_string.context
 local context = {
   repo = require("ghc.core.context.repo"),
@@ -21,22 +23,23 @@ local function grep_text(opts)
   local sorters = require("telescope.sorters")
   local scope = opts.ghc_scope
 
-  local picker = nil
   local last_grep_cmd = {}
   local actions = {
     show_last_grep_cmd = function()
       vim.notify("searching:" .. vim.inspect(last_grep_cmd))
     end,
-    toggle_enable_regex = function()
+    toggle_enable_regex = function(prompt_bufnr)
       context.repo.flag_enable_regex:next(not context.repo.flag_enable_regex:get_snapshot())
+      local picker = action_state.get_current_picker(prompt_bufnr)
       if picker then
-        picker:refresh()
+        picker:reset_prompt(context.repo.searching_keyword:get_snapshot())
       end
     end,
-    toggle_case_sensitive = function()
+    toggle_case_sensitive = function(prompt_bufnr)
       context.repo.flag_case_sensitive:next(not context.repo.flag_case_sensitive:get_snapshot())
+      local picker = action_state.get_current_picker(prompt_bufnr)
       if picker then
-        picker:refresh()
+        picker:reset_prompt(context.repo.searching_keyword:get_snapshot())
       end
     end,
   }
@@ -99,7 +102,7 @@ local function grep_text(opts)
   end
   local default_text = context.repo.searching_keyword:get_snapshot()
 
-  picker = pickers
+  pickers
     .new(opts, {
       prompt_title = "Search word (" .. scope .. ")",
       default_text = default_text,
