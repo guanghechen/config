@@ -15,6 +15,7 @@ local util = {
 ---@class guanghechen.viewmodel.Viewmodel : guanghechen.types.IViewmodel
 ---@field private _name string
 ---@field private _filepath string
+---@field private _persistable_observables table<string, guanghechen.types.IObservable>
 local Viewmodel = {}
 Viewmodel.__index = Viewmodel
 setmetatable(Viewmodel, { __index = BatchDisposable })
@@ -32,6 +33,9 @@ function Viewmodel.new(opts)
 
   ---@type string
   self._filepath = opts.filepath
+
+  ---@type table<string, guanghechen.types.IObservable>
+  self._persistable_observables = {}
 
   return self
 end
@@ -63,7 +67,7 @@ end
 ---@return table<string, any>
 function Viewmodel:get_snapshot()
   local data = {}
-  for key, observable in pairs(self) do
+  for key, observable in pairs(self._persistable_observables) do
     if util.observable.isObservable(observable) then
       ---@cast observable guanghechen.types.IObservable
       data[key] = observable:get_snapshot()
@@ -74,21 +78,10 @@ end
 
 ---@param name string
 ---@param observable guanghechen.types.IObservable
----@param autosave boolean
-function Viewmodel:register(name, observable, autosave)
-  if autosave then
-    local first = true
-    local current = self
-    local subscriber = Subscriber.new({
-      onNext = function()
-        if first then
-          first = false
-        else
-          current:save()
-        end
-      end,
-    })
-    observable:subscribe(subscriber)
+---@param persistable boolean
+function Viewmodel:register(name, observable, persistable)
+  if persistable then
+    self._persistable_observables[name] = observable
   end
 
   self[name] = observable

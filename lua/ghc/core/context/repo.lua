@@ -14,7 +14,7 @@ local context = Viewmodel.new({
 })
   :register("flag_case_sensitive", Observable.new(false), true)
   :register("flag_enable_regex", Observable.new(false), true)
-  :register("searching_keyword", Observable.new(""), false)
+  :register("searching_keyword", Observable.new(""), true)
   :register("transparency", Observable.new(false), true)
 
 context:load()

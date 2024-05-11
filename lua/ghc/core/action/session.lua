@@ -46,7 +46,7 @@ function M.session_autosave()
   end, vim.api.nvim_list_bufs())
 
   -- no buffers to save
-  if #bufs == 0 then
+  if #bufs < 1 then
     return
   end
 
@@ -57,6 +57,9 @@ function M.session_autosave()
   vim.o.sessionoptions = table.concat({ "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
+
+  -- save context
+  require("ghc.core.context.repo"):save()
 end
 
 function M.session_save()
@@ -67,9 +70,6 @@ function M.session_save()
   vim.o.sessionoptions = table.concat({ "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
-
-  -- save context
-  require("ghc.core.context.repo"):save()
 
   vim.notify("Session saved successfully!", vim.log.levels.INFO)
 end

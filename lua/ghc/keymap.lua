@@ -182,7 +182,7 @@ mapkey("n", "<leader>ml", actions.bookmark.open_bookmarks_into_quickfix, "bookma
 
 --#[q]uit/session-------------------------------------------------------------------------------------------
 mapkey("n", "<leader>qq", actions.session.quit_all, "quit: Quit all", true)
-mapkey("n", "<leader>qL", actions.session.session_load, "session: Restore autosaved session", true)
+mapkey("n", "<leader>qL", actions.session.session_load_autosaved, "session: Restore autosaved session", true)
 mapkey("n", "<leader>ql", actions.session.session_load, "session: Restore session", true)
 mapkey("n", "<leader>qs", actions.session.session_save, "session: Save session", true)
 mapkey("n", "<leader>qC", actions.session.session_clear_all, "session: Clear all sessions", true)
