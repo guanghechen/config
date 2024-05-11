@@ -13,7 +13,7 @@ local M = {
 M.color = {
   flag = {
     fg = "white",
-    bg = transparency and "none" or "statusline_bg",
+    bg = transparency and "none" or "grey",
   },
   flag_enabled = {
     fg = "black",
