@@ -14,7 +14,7 @@ local util = {
 }
 
 ---https://github.com/nvim-telescope/telescope.nvim/blob/fac83a556e7b710dc31433dec727361ca062dbe9/lua/telescope/builtin/__files.lua#L187
-local function search()
+local function search(opts)
   ---@diagnostic disable-next-line: undefined-field
   local conf = require("telescope.config").values
   local finders = require("telescope.finders")
@@ -25,9 +25,7 @@ local function search()
 
   ---@type "W"|"C"|"D"
   local scope = context.repo.search_scope:get_snapshot()
-  local opts = {
-    cwd = util.path.scope(scope),
-  }
+  opts = vim.tbl_deep_extend("force", { cwd = util.path.scope(scope) }, opts or {})
 
   local function refresh(prompt_bufnr)
     local picker = action_state.get_current_picker(prompt_bufnr)
@@ -42,7 +40,7 @@ local function search()
     local scope_current = context.repo.search_scope:get_snapshot()
     if scope_next ~= scope_current then
       context.repo.search_scope:next(scope_next)
-      search()
+      search({ initial_mode = "normal" })
       refresh(prompt_bufnr)
     end
   end
