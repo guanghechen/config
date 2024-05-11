@@ -21,6 +21,7 @@ local function grep_text(opts)
   local sorters = require("telescope.sorters")
   local scope = opts.ghc_scope
 
+  local picker = nil
   local last_grep_cmd = {}
   local actions = {
     show_last_grep_cmd = function()
@@ -28,9 +29,15 @@ local function grep_text(opts)
     end,
     toggle_enable_regex = function()
       context.repo.flag_enable_regex:next(not context.repo.flag_enable_regex:get_snapshot())
+      if picker then
+        picker:refresh()
+      end
     end,
     toggle_case_sensitive = function()
       context.repo.flag_case_sensitive:next(not context.repo.flag_case_sensitive:get_snapshot())
+      if picker then
+        picker:refresh()
+      end
     end,
   }
 
@@ -92,13 +99,13 @@ local function grep_text(opts)
   end
   local default_text = context.repo.searching_keyword:get_snapshot()
 
-  pickers
+  picker = pickers
     .new(opts, {
       prompt_title = "Search word (" .. scope .. ")",
+      default_text = default_text,
       finder = finders.new_job(live_grepper, opts.entry_maker, opts.max_results, opts.cwd),
       previewer = conf.grep_previewer(opts),
       sorter = sorters.highlighter_only(opts),
-      default_text = default_text,
       attach_mappings = function(_, map)
         if opts.mappings then
           for mode, mappings in pairs(opts.mappings) do

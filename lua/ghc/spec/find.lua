@@ -32,13 +32,6 @@ return {
     },
   },
   {
-    "nvim-telescope/telescope-live-grep-args.nvim",
-    config = loadTelescopeExtension("live_grep_args"),
-    dependencies = {
-      "nvim-telescope/telescope.nvim",
-    },
-  },
-  {
     "nvim-telescope/telescope-file-browser.nvim",
     config = loadTelescopeExtension("file_browser"),
     dependencies = {

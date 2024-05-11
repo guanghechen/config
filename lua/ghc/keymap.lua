@@ -189,8 +189,6 @@ mapkey("n", "<leader>qC", actions.session.session_clear_all, "session: Clear all
 -------------------------------------------------------------------------------------------#[q]uit--
 
 --#[s]earch-----------------------------------------------------------------------------------------
-mapkey("n", "<leader>sG", actions.search.live_grep_with_args_workspace, "search: Grep (workspace)")
-mapkey("n", "<leader>sg", actions.search.live_grep_with_args_cwd, "search: Grep (cwd)")
 mapkey("n", "<leader>sS", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
 mapkey("n", "<leader>ss", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
 mapkey("v", "<leader>sS", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
