@@ -26,6 +26,10 @@ local function open_with_trouble(...)
   require("trouble.providers.telescope").open_with_trouble(...)
 end
 
+local function close_telescope(...)
+  require("telescope.actions").close(...)
+end
+
 local opts = {
   defaults = {
     prompt_prefix = setting.icons.ui.Telescope .. "  ",
@@ -64,7 +68,9 @@ local opts = {
         ["<c-t>"] = open_with_trouble,
       },
       n = {
+        q = close_telescope,
         s = flash,
+        ["<esc>"] = false,
         ["<c-t>"] = open_with_trouble,
       },
     },

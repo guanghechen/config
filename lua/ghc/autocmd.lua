@@ -26,7 +26,6 @@ actions.autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
     "query",
     "spectre_panel",
     "startuptime",
-    "TelescopePrompt",
     "term",
     "tsplayground",
   },

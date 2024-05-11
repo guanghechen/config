@@ -106,7 +106,6 @@ end
 function Viewmodel:load()
   local ok_to_load_json, json_text = pcall(util.fs.read_file, self._filepath)
   if not ok_to_load_json then
-    vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to read file:" .. self._filepath)
     return
   end
 
