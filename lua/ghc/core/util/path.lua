@@ -43,6 +43,19 @@ function M.current()
   return vim.fn.expand("%:p:h")
 end
 
+---@param scope "W"|"C"|"D"
+function M.scope(scope)
+  if scope == "W" then
+    return M.workspace()
+  elseif scope == "C" then
+    return M.cwd()
+  elseif scope == "D" then
+    return M.current()
+  else
+    return M.cwd()
+  end
+end
+
 M.session_related_files_dir = vim.fn.expand(vim.fn.stdpath("state") .. globals.path_sep .. "sessions" .. globals.path_sep)
 
 ---@param opts {filename: string}

@@ -189,10 +189,14 @@ mapkey("n", "<leader>qC", actions.session.session_clear_all, "session: Clear all
 -------------------------------------------------------------------------------------------#[q]uit--
 
 --#[s]earch-----------------------------------------------------------------------------------------
-mapkey("n", "<leader>sS", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
-mapkey("n", "<leader>ss", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
-mapkey("v", "<leader>sS", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
-mapkey("v", "<leader>ss", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
+mapkey("n", "<leader>sw", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
+mapkey("v", "<leader>sw", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
+mapkey("n", "<leader>sc", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
+mapkey("v", "<leader>sc", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
+mapkey("n", "<leader>sd", actions.search.grep_selected_text_directory, "search: Grep word (directory)")
+mapkey("v", "<leader>sd", actions.search.grep_selected_text_directory, "search: Grep word (directory)")
+mapkey("n", "<leader>ss", actions.search.grep_selected_text, "search: Grep word")
+mapkey("v", "<leader>ss", actions.search.grep_selected_text, "search: Grep word")
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[t]ab--------------------------------------------------------------------------------------------

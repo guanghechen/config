@@ -14,33 +14,50 @@ local util = {
 }
 
 ---https://github.com/nvim-telescope/telescope.nvim/blob/fac83a556e7b710dc31433dec727361ca062dbe9/lua/telescope/builtin/__files.lua#L187
-local function search(opts)
+---@param scope "W"|"C"|"D"
+local function search(scope)
   ---@diagnostic disable-next-line: undefined-field
   local conf = require("telescope.config").values
   local finders = require("telescope.finders")
   local make_entry = require("telescope.make_entry")
   local pickers = require("telescope.pickers")
   local sorters = require("telescope.sorters")
-  local scope = opts.ghc_scope
-
   local last_grep_cmd = {}
+
+  local opts = {
+    cwd = util.path.scope(scope),
+  }
+
+  local function refresh(prompt_bufnr)
+    local picker = action_state.get_current_picker(prompt_bufnr)
+    if picker then
+      picker:reset_prompt(context.repo.search_keyword:get_snapshot())
+    end
+  end
+
   local actions = {
     show_last_grep_cmd = function()
       vim.notify("searching:" .. vim.inspect(last_grep_cmd))
     end,
     toggle_enable_regex = function(prompt_bufnr)
       context.repo.search_enable_regex:next(not context.repo.search_enable_regex:get_snapshot())
-      local picker = action_state.get_current_picker(prompt_bufnr)
-      if picker then
-        picker:reset_prompt(context.repo.search_keyword:get_snapshot())
-      end
+      refresh(prompt_bufnr)
     end,
     toggle_case_sensitive = function(prompt_bufnr)
       context.repo.search_enable_case_sensitive:next(not context.repo.search_enable_case_sensitive:get_snapshot())
-      local picker = action_state.get_current_picker(prompt_bufnr)
-      if picker then
-        picker:reset_prompt(context.repo.search_keyword:get_snapshot())
-      end
+      refresh(prompt_bufnr)
+    end,
+    change_scope_workspace = function(prompt_bufnr)
+      context.repo.search_scope:next("W")
+      refresh(prompt_bufnr)
+    end,
+    change_scope_cwd = function(prompt_bufnr)
+      context.repo.search_scope:next("C")
+      refresh(prompt_bufnr)
+    end,
+    change_scope_directory = function(prompt_bufnr)
+      context.repo.search_scope:next("D")
+      refresh(prompt_bufnr)
     end,
   }
 
@@ -83,7 +100,6 @@ local function search(opts)
   opts.use_regex = false
   opts.show_untracked = true
   opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
-  opts.cwd = opts.cwd and vim.fn.expand(opts.cwd)
   local make_entry_from_vimgrep = make_entry.gen_from_vimgrep(opts)
   local make_entry_from_file = make_entry.gen_from_file(opts)
 
@@ -121,6 +137,9 @@ local function search(opts)
         map("n", "<leader>n", actions.show_last_grep_cmd)
         map("n", "<leader>i", actions.toggle_case_sensitive)
         map("n", "<leader>r", actions.toggle_enable_regex)
+        map("n", "<leader>w", actions.change_scope_workspace)
+        map("n", "<leader>c", actions.change_scope_cwd)
+        map("n", "<leader>d", actions.change_scope_directory)
 
         context.repo.searching:next(true)
         vim.api.nvim_create_autocmd("BufLeave", {
@@ -142,27 +161,19 @@ end
 local M = {}
 
 function M.grep_selected_text_workspace()
-  search({
-    cwd = util.path.workspace(),
-    workspace = "CWD",
-    ghc_scope = "workspace",
-  })
+  search("W")
 end
 
 function M.grep_selected_text_cwd()
-  search({
-    cwd = util.path.cwd(),
-    workspace = "CWD",
-    ghc_scope = "cwd",
-  })
+  search("C")
 end
 
-function M.grep_selected_text_current()
-  search({
-    cwd = util.path.current(),
-    workspace = "CWD",
-    ghc_scope = "current directory",
-  })
+function M.grep_selected_text_directory()
+  search("D")
+end
+
+function M.grep_selected_text()
+  search(context.repo.search_scope:get_snapshot())
 end
 
 return M
