@@ -107,6 +107,7 @@ function Viewmodel:save()
   local ok_to_save_json, result = pcall(vim.fn.writefile, { json_text }, self._filepath)
   if not ok_to_save_json then
     vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to save json:" .. vim.inspect(data) .. "\n\n" .. result)
+    return
   end
 end
 
@@ -114,6 +115,7 @@ function Viewmodel:load()
   local ok_to_load_json, json_text = pcall(util.fs.read_file, self._filepath)
   if not ok_to_load_json then
     vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to read file:" .. self._filepath)
+    return
   end
 
   if json_text == nil then
@@ -123,10 +125,12 @@ function Viewmodel:load()
   local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
   if not ok_to_decode_json then
     vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to decode json:" .. vim.inspect(json_text))
+    return
   end
 
   if type(data) ~= "table" then
     vim.notify("[Viewmodel:(" .. self._name .. ")] Bad json, not a table:" .. vim.inspect(json_text))
+    return
   end
 
   for key, value in pairs(data) do
