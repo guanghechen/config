@@ -3,10 +3,6 @@ local setting = {
   icons = require("ghc.core.setting.icons"),
 }
 
-local function open_with_trouble(...)
-  require("trouble.providers.telescope").open_with_trouble(...)
-end
-
 local function flash(prompt_bufnr)
   require("flash").jump({
     pattern = "^",
@@ -24,6 +20,10 @@ local function flash(prompt_bufnr)
       picker:set_selection(match.pos[1] - 1)
     end,
   })
+end
+
+local function open_with_trouble(...)
+  require("trouble.providers.telescope").open_with_trouble(...)
 end
 
 local opts = {

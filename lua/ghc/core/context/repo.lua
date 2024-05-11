@@ -4,26 +4,30 @@ local path = require("ghc.core.util.path")
 local util_observable = require("guanghechen.util.observable")
 
 ---@class ghc.core.context.repo : guanghechen.viewmodel.Viewmodel
----@field public flag_case_sensitive guanghechen.observable.Observable
----@field public flag_enable_regex guanghechen.observable.Observable
+---@field public search_enable_case_sensitive guanghechen.observable.Observable
+---@field public search_enable_regex guanghechen.observable.Observable
+---@field public searching guanghechen.observable.Observable
+---@field public search_keyword guanghechen.observable.Observable
 ---@field public transparency guanghechen.observable.Observable
----@field public searching_keyword guanghechen.observable.Observable
 --
 local context = Viewmodel.new({
   name = "repo",
   filepath = path.gen_session_related_filepath({ filename = "repo.json" }),
 })
-  :register("flag_case_sensitive", Observable.new(false), true)
-  :register("flag_enable_regex", Observable.new(false), true)
-  :register("searching_keyword", Observable.new(""), true)
+  :register("search_enable_case_sensitive", Observable.new(false), true)
+  :register("search_enable_regex", Observable.new(false), true)
+  :register("searching", Observable.new(false), false)
+  :register("search_keyword", Observable.new(""), true)
   :register("transparency", Observable.new(false), true)
 
 context:load()
 
 --Auto refresh statusline
 util_observable.watch_observables({
-  context.flag_enable_regex,
-  context.flag_case_sensitive,
+  context.search_enable_case_sensitive,
+  context.search_enable_regex,
+  context.searching,
+  context.transparency,
 }, function()
   vim.cmd("redrawstatus")
 end)
