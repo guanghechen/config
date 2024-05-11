@@ -14,7 +14,9 @@ local util = {
 }
 
 ---https://github.com/nvim-telescope/telescope.nvim/blob/fac83a556e7b710dc31433dec727361ca062dbe9/lua/telescope/builtin/__files.lua#L187
-local function search(opts)
+---@param path_opts { workspace: string, cwd: string, directory: string, filepath: string }
+---@param opts? table
+local function search(path_opts, opts)
   ---@diagnostic disable-next-line: undefined-field
   local conf = require("telescope.config").values
   local finders = require("telescope.finders")
@@ -23,9 +25,21 @@ local function search(opts)
   local sorters = require("telescope.sorters")
   local last_grep_cmd = {}
 
-  ---@type "W"|"C"|"D"
+  ---@type ghc.core.constant.enum.CWD_SCOPE
   local scope = context.repo.search_scope:get_snapshot()
-  opts = vim.tbl_deep_extend("force", { cwd = util.path.scope(scope) }, opts or {})
+  local function get_path_by_scope()
+    if scope == "W" then
+      return path_opts.workspace
+    elseif scope == "C" then
+      return path_opts.cwd
+    elseif scope == "D" then
+      return path_opts.directory
+    else
+      return path_opts.cwd
+    end
+  end
+  opts = opts or {}
+  opts.cwd = get_path_by_scope()
 
   local function refresh(prompt_bufnr)
     local picker = action_state.get_current_picker(prompt_bufnr)
@@ -35,19 +49,19 @@ local function search(opts)
   end
 
   ---@param prompt_bufnr number
-  ---@param scope_next "W"|"C"|"D"
+  ---@param scope_next ghc.core.constant.enum.CWD_SCOPE
   local function change_scope(prompt_bufnr, scope_next)
     local scope_current = context.repo.search_scope:get_snapshot()
     if scope_next ~= scope_current then
       context.repo.search_scope:next(scope_next)
-      search({ initial_mode = "normal" })
+      search(path_opts, { initial_mode = "normal" })
       refresh(prompt_bufnr)
     end
   end
 
   local actions = {
     show_last_grep_cmd = function()
-      vim.notify("searching:" .. vim.inspect(last_grep_cmd))
+      vim.notify("searching:" .. "[" .. vim.inspect(path_opts) .. "]" .. vim.inspect(last_grep_cmd))
     end,
     toggle_enable_regex = function(prompt_bufnr)
       context.repo.search_enable_regex:next(not context.repo.search_enable_regex:get_snapshot())
@@ -169,21 +183,41 @@ local M = {}
 
 function M.grep_selected_text_workspace()
   context.repo.search_scope:next("W")
-  search()
+  search({
+    workspace = util.path.workspace(),
+    cwd = util.path.cwd(),
+    directory = util.path.current_directory(),
+    filepath = util.path.current_filepath(),
+  })
 end
 
 function M.grep_selected_text_cwd()
   context.repo.search_scope:next("C")
-  search()
+  search({
+    workspace = util.path.workspace(),
+    cwd = util.path.cwd(),
+    directory = util.path.current_directory(),
+    filepath = util.path.current_filepath(),
+  })
 end
 
 function M.grep_selected_text_directory()
   context.repo.search_scope:next("D")
-  search()
+  search({
+    workspace = util.path.workspace(),
+    cwd = util.path.cwd(),
+    directory = util.path.current_directory(),
+    filepath = util.path.current_filepath(),
+  })
 end
 
 function M.grep_selected_text()
-  search()
+  search({
+    workspace = util.path.workspace(),
+    cwd = util.path.cwd(),
+    directory = util.path.current_directory(),
+    filepath = util.path.current_filepath(),
+  })
 end
 
 return M

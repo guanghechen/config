@@ -2,7 +2,6 @@ local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 local path = require("ghc.core.util.path")
 local util_observable = require("guanghechen.util.observable")
-local enums = require("ghc.core.constant.enum")
 
 ---@class ghc.core.context.repo : guanghechen.viewmodel.Viewmodel
 ---@field public search_enable_case_sensitive guanghechen.observable.Observable
@@ -18,7 +17,7 @@ local context = Viewmodel.new({
 })
   :register("search_enable_case_sensitive", Observable.new(false), true)
   :register("search_enable_regex", Observable.new(false), true)
-  :register("search_scope", Observable.new(enums.CWD_SCOPE.CWD), true)
+  :register("search_scope", Observable.new("C"), true)
   :register("searching", Observable.new(false), false)
   :register("search_keyword", Observable.new(""), true)
   :register("transparency", Observable.new(false), true)

@@ -39,21 +39,12 @@ function M.cwd()
   return vim.uv.cwd()
 end
 
-function M.current()
+function M.current_directory()
   return vim.fn.expand("%:p:h")
 end
 
----@param scope "W"|"C"|"D"
-function M.scope(scope)
-  if scope == "W" then
-    return M.workspace()
-  elseif scope == "C" then
-    return M.cwd()
-  elseif scope == "D" then
-    return M.current()
-  else
-    return M.cwd()
-  end
+function M.current_filepath()
+  return vim.fn.expand("%:p")
 end
 
 M.session_related_files_dir = vim.fn.expand(vim.fn.stdpath("state") .. globals.path_sep .. "sessions" .. globals.path_sep)

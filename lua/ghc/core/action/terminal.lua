@@ -23,8 +23,8 @@ end
 
 function M.open_terminal_current()
   util.terminal.toggle_terminal({
-    id = util.path.current(),
-    cwd = util.path.current(),
+    id = util.path.current_directory(),
+    cwd = util.path.current_directory(),
   })
 end
 

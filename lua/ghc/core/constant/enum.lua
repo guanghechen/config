@@ -1,10 +1,4 @@
----@class ghc.core.constant.enum
-local M = {}
-
-M.CWD_SCOPE = {
-  WORKSPACE = "W",
-  CWD = "C",
-  DIRECTORY = "D",
-}
-
-return M
+---@alias ghc.core.constant.enum.CWD_SCOPE
+---|"W"
+---|"C"
+---|"D"

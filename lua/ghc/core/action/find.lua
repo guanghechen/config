@@ -45,7 +45,7 @@ function M.find_explorer_cwd()
 end
 
 function M.find_explorer_current()
-  local absolute_path = util.path.current()
+  local absolute_path = util.path.current_directory()
   local relative_path = util.path.relative(util.path.cwd(), absolute_path)
   require("telescope").extensions.file_browser.file_browser({
     cwd = absolute_path,
@@ -79,7 +79,7 @@ function M.find_files_cwd()
 end
 
 function M.find_files_current()
-  local absolute_path = util.path.current()
+  local absolute_path = util.path.current_directory()
   local relative_path = util.path.relative(util.path.cwd(), absolute_path)
   require("telescope.builtin").find_files({
     cwd = absolute_path,
@@ -118,7 +118,7 @@ function M.find_frecency_cwd()
 end
 
 function M.find_frecency_current()
-  local absolute_path = util.path.current()
+  local absolute_path = util.path.current_directory()
   local relative_path = util.path.relative(util.path.cwd(), absolute_path)
   require("telescope").extensions.frecency.frecency({
     cwd = absolute_path,

@@ -32,7 +32,7 @@ function M.condition()
 end
 
 function M.renderer()
-  ---@type "W"|"C"|"D"
+  ---@type ghc.core.constant.enum.CWD_SCOPE
   local scope = context.repo.search_scope:get_snapshot()
 
   ---@type boolean
