@@ -27,4 +27,12 @@ function M.filter_array(arr, filter)
   return result
 end
 
+---@param arr string[]
+---@return string[]
+function M.filter_non_blank_string(arr)
+  return M.filter_array(arr, function(x)
+    return type(x) == "string" and #x < 1
+  end)
+end
+
 return M

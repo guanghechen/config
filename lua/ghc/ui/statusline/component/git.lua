@@ -1,5 +1,11 @@
 local icons = require("ghc.core.setting.icons")
-local ui = require("ghc.core.setting.ui")
+
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
+
+---@type boolean
+local transparency = context.repo.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.git
 local M = {
@@ -9,7 +15,7 @@ local M = {
 M.color = {
   text = {
     fg = "white",
-    bg = ui.transparency and "none" or "statusline_bg",
+    bg = transparency and "none" or "statusline_bg",
   },
 }
 
@@ -20,7 +26,7 @@ function M.condition()
   return buffer_status_line and buffer_status_line.gitsigns_status_dict
 end
 
-function M.renderer_left()
+function M.renderer()
   local bufnr_status_line = vim.api.nvim_win_get_buf(vim.g.statusline_winid or 0)
   local buffer_status_line = vim.b[bufnr_status_line]
   local git_status = buffer_status_line.gitsigns_status_dict

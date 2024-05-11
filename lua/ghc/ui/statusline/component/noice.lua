@@ -1,4 +1,9 @@
-local ui = require("ghc.core.setting.ui")
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
+
+---@type boolean
+local transparency = context.repo.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.noice
 local M = {
@@ -8,11 +13,11 @@ local M = {
 M.color = {
   text_command = {
     fg = "white",
-    bg = ui.transparency and "none" or "statusline_bg",
+    bg = transparency and "none" or "statusline_bg",
   },
   text_mode = {
     fg = "yellow",
-    bg = ui.transparency and "none" or "statusline_bg",
+    bg = transparency and "none" or "statusline_bg",
   },
 }
 

@@ -1,5 +1,11 @@
-local ui = require("ghc.core.setting.ui")
 local path = require("ghc.core.util.path")
+
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
+
+---@type boolean
+local transparency = context.repo.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.cwd
 local M = {
@@ -7,7 +13,7 @@ local M = {
   color = {
     text = {
       fg = "white",
-      bg = ui.transparency and "none" or "statusline_bg",
+      bg = transparency and "none" or "statusline_bg",
     },
   },
 }

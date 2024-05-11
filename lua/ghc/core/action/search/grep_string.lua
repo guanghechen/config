@@ -8,6 +8,7 @@ local util = {
   path = require("ghc.core.util.path"),
   regex = require("guanghechen.util.regex"),
   selection = require("guanghechen.util.selection"),
+  table = require("guanghechen.util.table"),
 }
 
 ---https://github.com/nvim-telescope/telescope.nvim/blob/fac83a556e7b710dc31433dec727361ca062dbe9/lua/telescope/builtin/__files.lua#L187
@@ -21,20 +22,15 @@ local function grep_text(opts)
   local scope = opts.ghc_scope
 
   local last_grep_cmd = {}
-  local flags = {
-    enable_regex = false,
-    case_sensitive = true,
-  }
   local actions = {
     show_last_grep_cmd = function()
       vim.notify("searching:" .. vim.inspect(last_grep_cmd))
-      vim.notify("flags:" .. vim.inspect(flags))
     end,
     toggle_enable_regex = function()
-      flags.enable_regex = not flags.enable_regex
+      context.repo.flag_enable_regex:next(not context.repo.flag_enable_regex:get_snapshot())
     end,
     toggle_case_sensitive = function()
-      flags.case_sensitive = not flags.case_sensitive
+      context.repo.flag_case_sensitive:next(not context.repo.flag_case_sensitive:get_snapshot())
     end,
   }
 
@@ -53,28 +49,10 @@ local function grep_text(opts)
       }
     end
 
-    local additional_args = {}
-    local flag_marks = {}
-
-    if flags.enable_regex then
-      table.insert(flag_marks, "r")
-    else
-      table.insert(additional_args, "--fixed-strings")
-    end
-
-    if flags.case_sensitive then
-      table.insert(additional_args, "--case-sensitive")
-    else
-      table.insert(additional_args, "--ignore-case")
-      table.insert(flag_marks, "i")
-    end
-
-    local prompt_title = "Search word (" .. scope .. ")"
-    if #flag_marks > 0 then
-      prompt_title = prompt_title .. " [" .. table.concat(flag_marks, "|") .. "]"
-    end
-    vim.api.nvim_buf_set_var(0, "telescope_prompt_title", prompt_title)
-
+    local additional_args = util.table.filter_non_blank_string({
+      context.repo.flag_enable_regex:get_snapshot() and "" or "--fixed-strings",
+      context.repo.flag_case_sensitive:get_snapshot() and "--case-sensitive" or "--ignore-case",
+    })
     local grep_cmd = vim.tbl_flatten({
       "rg",
       "--color=never",
@@ -130,8 +108,8 @@ local function grep_text(opts)
           end
         end
 
-        map("i", "<c-d>", actions.show_last_grep_cmd)
-        map("n", "<c-d>", actions.show_last_grep_cmd)
+        map("i", "<c-n>", actions.show_last_grep_cmd)
+        map("n", "<c-n>", actions.show_last_grep_cmd)
         map("i", "<c-i>", actions.toggle_case_sensitive)
         map("n", "<c-i>", actions.toggle_case_sensitive)
         map("i", "<c-r>", actions.toggle_enable_regex)

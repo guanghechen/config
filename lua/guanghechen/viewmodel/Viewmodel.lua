@@ -1,5 +1,4 @@
 local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
-local Subscriber = require("guanghechen.subscriber.Subscriber")
 
 ---@class guanghechen.viewmodel.Viewmodel.util
 local util = {

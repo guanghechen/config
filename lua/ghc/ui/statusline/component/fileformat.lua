@@ -1,5 +1,11 @@
 local icons = require("ghc.core.setting.icons")
-local ui = require("ghc.core.setting.ui")
+
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
+
+---@type boolean
+local transparency = context.repo.transparency:get_snapshot()
 
 local fileformat_text_map = {
   dos = "CRLF",
@@ -13,7 +19,7 @@ local M = {
   color = {
     text = {
       fg = "white",
-      bg = ui.transparency and "none" or "statusline_bg",
+      bg = transparency and "none" or "statusline_bg",
     },
   },
 }

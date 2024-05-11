@@ -1,4 +1,9 @@
-local ui = require("ghc.core.setting.ui")
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
+
+---@type boolean
+local transparency = context.repo.transparency:get_snapshot()
 
 ---@class ghc.ui.statusline.component.mode
 local M = {
@@ -77,13 +82,13 @@ function M.gen_color_withmodes(name, fg, bg, bold)
   return result
 end
 
-M.color = vim.tbl_deep_extend("force", M.gen_color_withmodes("text", nil, ui.transparency and "none" or "statusline_bg", true), {})
+M.color = vim.tbl_deep_extend("force", M.gen_color_withmodes("text", nil, transparency and "none" or "statusline_bg", true), {})
 
 function M.condition()
   return vim.api.nvim_get_current_win() == vim.g.statusline_winid
 end
 
-function M.renderer_left()
+function M.renderer()
   local m = vim.api.nvim_get_mode().mode
   local mode_name = M.modes_map[m][2]
   local mode_display_name = M.modes_map[m][1]

@@ -1,6 +1,7 @@
 local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 local path = require("ghc.core.util.path")
+local util_observable = require("guanghechen.util.observable")
 
 ---@class ghc.core.context.repo : guanghechen.viewmodel.Viewmodel
 ---@field public flag_case_sensitive guanghechen.observable.Observable
@@ -18,5 +19,13 @@ local context = Viewmodel.new({
   :register("transparency", Observable.new(false), true)
 
 context:load()
+
+--Auto refresh statusline
+util_observable.watch_observables({
+  context.flag_enable_regex,
+  context.flag_case_sensitive,
+}, function()
+  vim.cmd("redrawstatus")
+end)
 
 return context
