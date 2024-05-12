@@ -40,7 +40,7 @@ local opts = {
     set_env = { ["COLORTERM"] = "truecolor" }, -- default = nil,
     dynamic_preview_title = true,
     file_ignore_patterns = { ".git/", ".cache", "build/", "%.class", "%.pdf", "%.mkv", "%.mp4", "%.zip" },
-    initial_mode = "insert",
+    initial_mode = "normal",
     layout_config = {
       horizontal = {
         prompt_position = "top",

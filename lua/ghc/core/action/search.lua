@@ -15,16 +15,6 @@ local util = {
 
 ---@alias ISearchContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
----@return ISearchContext
-local function get_search_context()
-  return {
-    workspace = util.path.workspace(),
-    cwd = util.path.cwd(),
-    directory = util.path.current_directory(),
-    bufnr = vim.api.nvim_get_current_buf(),
-  }
-end
-
 ---@param scope_paths ISearchContext
 ---@param scope ghc.core.constant.enum.CWD_SCOPE
 local function get_cwd_by_scope(scope_paths, scope)
@@ -214,15 +204,24 @@ local function search_current_buffer(opts)
 end
 
 ---https://github.com/nvim-telescope/telescope.nvim/blob/fac83a556e7b710dc31433dec727361ca062dbe9/lua/telescope/builtin/__files.lua#L187
----@param search_context ISearchContext
 ---@param opts? table
-local function search(search_context, opts)
+local function search(opts)
   ---@diagnostic disable-next-line: undefined-field
   local conf = require("telescope.config").values
   local finders = require("telescope.finders")
   local make_entry = require("telescope.make_entry")
   local pickers = require("telescope.pickers")
   local sorters = require("telescope.sorters")
+
+  ---@return ISearchContext
+  local search_context = {
+    workspace = util.path.workspace(),
+    cwd = util.path.cwd(),
+    directory = util.path.current_directory(),
+    bufnr = vim.api.nvim_get_current_buf(),
+  }
+  context.repo.caller_winnr:next(vim.api.nvim_get_current_win())
+  context.repo.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
   opts = opts or {}
   opts.bufnr = search_context.bufnr
@@ -370,36 +369,26 @@ local M = {}
 
 function M.grep_selected_text_workspace()
   context.repo.search_scope:next("W")
-  ---@type ISearchContext
-  local search_context = get_search_context()
-  search(search_context)
+  search()
 end
 
 function M.grep_selected_text_cwd()
   context.repo.search_scope:next("C")
-  ---@type ISearchContext
-  local search_context = get_search_context()
-  search(search_context)
+  search()
 end
 
 function M.grep_selected_text_directory()
   context.repo.search_scope:next("D")
-  ---@type ISearchContext
-  local search_context = get_search_context()
-  search(search_context)
+  search()
 end
 
 function M.grep_selected_text_filepath()
   context.repo.search_scope:next("B")
-  ---@type ISearchContext
-  local search_context = get_search_context()
-  search(search_context)
+  search()
 end
 
 function M.grep_selected_text()
-  ---@type ISearchContext
-  local search_context = get_search_context()
-  search(search_context)
+  search()
 end
 
 return M
