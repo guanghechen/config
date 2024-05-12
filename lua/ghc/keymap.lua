@@ -195,6 +195,8 @@ mapkey("n", "<leader>sc", actions.search.grep_selected_text_cwd, "search: Grep w
 mapkey("v", "<leader>sc", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
 mapkey("n", "<leader>sd", actions.search.grep_selected_text_directory, "search: Grep word (directory)")
 mapkey("v", "<leader>sd", actions.search.grep_selected_text_directory, "search: Grep word (directory)")
+mapkey("n", "<leader>sf", actions.search.grep_selected_text_filepath, "search: Grep word (file)")
+mapkey("v", "<leader>sf", actions.search.grep_selected_text_filepath, "search: Grep word (file)")
 mapkey("n", "<leader>ss", actions.search.grep_selected_text, "search: Grep word")
 mapkey("v", "<leader>ss", actions.search.grep_selected_text, "search: Grep word")
 -----------------------------------------------------------------------------------------#[s]earch--

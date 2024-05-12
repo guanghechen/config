@@ -123,7 +123,7 @@ return {
       ["A"] = "none",
       ["C"] = "none",
       ["D"] = "none",
-      ["f"] = "none",
+      ["B"] = "none",
       ["q"] = "none",
       ["S"] = "none",
       ["s"] = "none",

@@ -44,7 +44,7 @@ function M.current_directory()
 end
 
 function M.current_filepath()
-  return vim.fn.expand("%:p")
+  return vim.api.nvim_buf_get_name(0)
 end
 
 M.session_related_files_dir = vim.fn.expand(vim.fn.stdpath("state") .. globals.path_sep .. "sessions" .. globals.path_sep)
