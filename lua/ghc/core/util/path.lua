@@ -26,6 +26,10 @@ function M.relative(from, to)
   return Path:new(to):make_relative(from)
 end
 
+function M.join(from, to)
+  return Path:new(from):joinpath(to):absolute()
+end
+
 function M.is_absolute(p)
   return Path:new(p):is_absolute()
 end
