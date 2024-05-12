@@ -23,26 +23,8 @@ function M.quit_all()
 end
 
 function M.session_autosave()
-  -- remove buffers whose files are located outside of workspace
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    local workspace = path.workspace()
-    local bufpath = vim.api.nvim_buf_get_name(buf) .. "/"
-    if not bufpath:match("^" .. vim.pesc(workspace)) then
-      vim.api.nvim_buf_delete(buf, {})
-    end
-  end
-
   local bufs = vim.tbl_filter(function(b)
-    if vim.bo[b].buftype ~= "" then
-      return false
-    end
-    if vim.bo[b].filetype == "gitcommit" then
-      return false
-    end
-    if vim.bo[b].filetype == "gitrebase" then
-      return false
-    end
-    return vim.api.nvim_buf_get_name(b) ~= ""
+    return vim.bo[b].buftype ~= "" and vim.api.nvim_buf_get_name(b) ~= ""
   end, vim.api.nvim_list_bufs())
 
   -- no buffers to save
@@ -54,7 +36,7 @@ function M.session_autosave()
   vim.fn.mkdir(vim.fn.fnamemodify(session_filepath, ":p:h"), "p")
 
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = table.concat({ "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
+  vim.o.sessionoptions = table.concat({ "blank", "buffers", "curdir", "folds", "localoptions", "help", "resize", "tabpages", "unix", "winpos", "winsize" }, ",")
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 
@@ -67,7 +49,7 @@ function M.session_save()
   vim.fn.mkdir(vim.fn.fnamemodify(session_filepath, ":p:h"), "p")
 
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = table.concat({ "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
+  vim.o.sessionoptions = table.concat({ "blank", "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 
