@@ -325,23 +325,27 @@ local function search(search_context, opts)
         finder = finder,
         previewer = previewer,
         sorter = sorter,
-        attach_mappings = function(prompt_bufnr, map)
+        attach_mappings = function(prompt_bufnr)
+          local function mapkey(mode, key, action, desc)
+            vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })
+          end
+
           if resolved_opts.mappings then
             for mode, mappings in pairs(resolved_opts.mappings) do
               for key, action in pairs(mappings) do
-                map(mode, key, action)
+                mapkey(mode, key, action)
               end
             end
           end
 
-          map("n", "<leader>N", actions.show_last_grep_cmd)
-          map("n", "<leader>I", actions.toggle_case_sensitive)
-          map("n", "<leader>R", actions.toggle_enable_regex)
-          map("n", "<leader>W", actions.change_scope_workspace)
-          map("n", "<leader>C", actions.change_scope_cwd)
-          map("n", "<leader>D", actions.change_scope_directory)
-          map("n", "<leader>B", actions.change_scope_buffer)
-          map("n", "<leader>S", actions.change_scope_carousel)
+          mapkey("n", "<leader>n", actions.show_last_grep_cmd)
+          mapkey("n", "<leader>i", actions.toggle_case_sensitive)
+          mapkey("n", "<leader>r", actions.toggle_enable_regex)
+          mapkey("n", "<leader>w", actions.change_scope_workspace)
+          mapkey("n", "<leader>c", actions.change_scope_cwd)
+          mapkey("n", "<leader>d", actions.change_scope_directory)
+          mapkey("n", "<leader>b", actions.change_scope_buffer)
+          mapkey("n", "<leader>s", actions.change_scope_carousel)
 
           context.repo.searching:next(true)
           vim.api.nvim_create_autocmd("BufLeave", {
