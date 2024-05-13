@@ -6,6 +6,7 @@ local context = {
 ---@class ghc.core.action.find_file.util
 local util = {
   path = require("ghc.core.util.path"),
+  table = require("ghc.core.util.table"),
 }
 
 ---@alias IFindFileContext { workspace: string, cwd: string, directory: string, bufnr: number }
@@ -23,10 +24,6 @@ local function get_cwd_by_scope(find_file_context, scope)
 
   if scope == "D" then
     return find_file_context.directory
-  end
-
-  if scope == "G" then
-    return find_file_context.workspace
   end
 
   return find_file_context.cwd
@@ -47,10 +44,6 @@ local function get_display_name_of_scope(scope)
     return "directory"
   end
 
-  if scope == "G" then
-    return "git"
-  end
-
   return "cwd"
 end
 
@@ -66,10 +59,6 @@ local function toggle_scope_carousel(scope)
   end
 
   if scope == "D" then
-    return "G"
-  end
-
-  if scope == "G" then
     return "W"
   end
 
@@ -77,7 +66,8 @@ local function toggle_scope_carousel(scope)
 end
 
 ---@param opts? table
-local function find_file(opts)
+---@param force boolean
+local function find_file(opts, force)
   ---@diagnostic disable-next-line: undefined-field
   local conf = require("telescope.config").values
   local finders = require("telescope.finders")
@@ -104,6 +94,18 @@ local function find_file(opts)
 
   ---@type fun():nil
   local open_picker
+
+  local filemap_filepath = util.path.gen_session_related_filepath({ filename = "filemap.json" })
+  local function gen_filemap()
+    if not force and util.path.exist(filemap_filepath) then
+      return
+    end
+
+    local gen_filemap_process = io.popen("fd --hidden --type=file --color=never --follow > \"" .. filemap_filepath .. "\"")
+    if gen_filemap_process then
+      gen_filemap_process:close()
+    end
+  end
 
   ---@param scope_next ghc.core.types.enum.FIND_FILE_SCOPE
   local function change_scope(scope_next)
@@ -137,9 +139,6 @@ local function find_file(opts)
     change_scope_directory = function()
       change_scope("D")
     end,
-    change_scope_git = function()
-      change_scope("G")
-    end,
     change_scope_carousel = function()
       ---@type ghc.core.types.enum.FIND_FILE_SCOPE
       local scope = context.repo.find_file_scope:get_snapshot()
@@ -154,12 +153,14 @@ local function find_file(opts)
     end
 
     local cmd = {
-      "fd",
+      "rg",
       "--hidden",
-      "--type",
-      "file",
       "--color=never",
-      "--follow",
+      "--no-heading",
+      "--no-filename",
+      "--no-line-number",
+      "--no-column",
+      "--no-follow",
     }
     if not context.repo.find_file_enable_regex:get_snapshot() then
       table.insert(cmd, "--fixed-strings")
@@ -171,36 +172,9 @@ local function find_file(opts)
     end
     table.insert(cmd, "--")
     table.insert(cmd, prompt)
+    table.insert(cmd, filemap_filepath)
 
-    context.repo.find_file_last_command:next(cmd)
-    return cmd
-  end
-
-  local function build_find_git_command()
-    local cmd = {
-      "git",
-    }
-
-    if opts.gitdir then
-      table.insert(cmd, "--git-dir")
-      table.insert(cmd, opts.gitdir)
-    end
-
-    if opts.toplevel then
-      table.insert(cmd, "--work-tree")
-      table.insert(cmd, opts.toplevel)
-    end
-
-    vim.list_extend(cmd, {
-      "-c",
-      "core.quotepath=false",
-      "ls-files",
-      "--exclude-standard",
-      "--cached",
-      "--others",
-    })
-
-    context.repo.find_file_last_command:next(cmd)
+    context.repo.find_file_last_command:next(util.table.clone_array(cmd))
     return cmd
   end
 
@@ -232,7 +206,6 @@ local function find_file(opts)
         mapkey("n", "<leader>w", actions.change_scope_workspace)
         mapkey("n", "<leader>c", actions.change_scope_cwd)
         mapkey("n", "<leader>d", actions.change_scope_directory)
-        mapkey("n", "<leader>g", actions.change_scope_git)
         mapkey("n", "<leader>s", actions.change_scope_carousel)
 
         ---@type ghc.core.types.enum.BUFTYPE_EXTRA
@@ -242,50 +215,32 @@ local function find_file(opts)
       end,
     }
 
-    if scope == "G" then
-      picker_params.__locations_input = true
-      picker_params.finder = finders.new_oneshot_job(build_find_git_command(), opts)
-      picker_params.previewer = conf.grep_previewer(opts)
-      picker_params.sorter = conf.file_sorter(opts)
-    else
-      opts.entry_maker = make_entry.gen_from_file(opts)
-      picker_params.__locations_input = true
-      picker_params.finder = finders.new_job(build_find_file_command, opts.entry_maker, opts.max_results, opts.cwd)
-      picker_params.previewer = conf.grep_previewer(opts)
-      picker_params.sorter = sorters.highlighter_only(opts)
+    local original_entry_marker = make_entry.gen_from_file(opts)
+    local entry_marker = function(line)
+      vim.notify("line:" .. vim.inspect(line))
+      return original_entry_marker(line)
     end
 
+    opts.entry_maker = entry_maker
+    picker_params.finder = finders.new_job(build_find_file_command, opts.entry_maker, opts.max_results, opts.cwd)
+    picker_params.previewer = conf.grep_previewer(opts)
+    picker_params.sorter = sorters.highlighter_only(opts)
     pickers.new(opts, picker_params):find()
   end
 
+  gen_filemap()
   open_picker()
 end
 
 ---@class ghc.core.action.find_file
 local M = {}
 
-function M.find_file_workspace()
-  context.repo.find_file_scope:next("W")
-  find_file()
-end
-
-function M.find_file_cwd()
-  context.repo.find_file_scope:next("C")
-  find_file()
-end
-
-function M.find_file_current()
-  context.repo.find_file_scope:next("D")
-  find_file()
-end
-
-function M.find_file_git()
-  context.repo.find_file_scope:next("G")
-  find_file()
-end
-
 function M.find_file()
   find_file()
+end
+
+function M.find_file_force()
+  find_file(nil, true)
 end
 
 return M

@@ -8,7 +8,6 @@
 ---|"W"
 ---|"C"
 ---|"D"
----|"G"
 
 ---@alias ghc.core.types.enum.FIND_RECENT_SCOPE
 ---|"W"

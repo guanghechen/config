@@ -58,4 +58,14 @@ function M.find_explorer_current()
   })
 end
 
+function M.find_file_git()
+  require("telescope.builtin").git_files({
+    cwd = util.path.workspace(),
+    workspace = "CWD",
+    prompt_title = "Find files (git)",
+    show_untracked = true,
+    initial_mode = "insert",
+  })
+end
+
 return M
