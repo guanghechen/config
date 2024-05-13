@@ -1,5 +1,0 @@
----@alias ghc.core.constant.enum.CWD_SCOPE
----|"W"
----|"C"
----|"D"
----|"B"

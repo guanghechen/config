@@ -16,7 +16,7 @@ local util = {
 ---@alias ISearchContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
 ---@param scope_paths ISearchContext
----@param scope ghc.core.constant.enum.CWD_SCOPE
+---@param scope ghc.core.types.enum.SEARCH_SCOPE
 local function get_cwd_by_scope(scope_paths, scope)
   if scope == "W" then
     return scope_paths.workspace
@@ -37,7 +37,7 @@ local function get_cwd_by_scope(scope_paths, scope)
   return scope_paths.cwd
 end
 
----@param scope ghc.core.constant.enum.CWD_SCOPE
+---@param scope ghc.core.types.enum.SEARCH_SCOPE
 ---@return string
 local function get_display_name_of_scope(scope)
   if scope == "W" then
@@ -59,8 +59,8 @@ local function get_display_name_of_scope(scope)
   return "cwd"
 end
 
----@param scope ghc.core.constant.enum.CWD_SCOPE
----@return ghc.core.constant.enum.CWD_SCOPE
+---@param scope ghc.core.types.enum.SEARCH_SCOPE
+---@return ghc.core.types.enum.SEARCH_SCOPE
 local function toggle_scope_carousel(scope)
   if scope == "W" then
     return "C"
@@ -236,7 +236,7 @@ local function search(opts)
   ---@type fun():nil
   local open_picker
 
-  ---@param scope_next ghc.core.constant.enum.CWD_SCOPE
+  ---@param scope_next ghc.core.types.enum.SEARCH_SCOPE
   local function change_scope(scope_next)
     local scope_current = context.repo.search_scope:get_snapshot()
     if scope_next ~= scope_current then
@@ -273,7 +273,7 @@ local function search(opts)
       change_scope("B")
     end,
     change_scope_carousel = function()
-      ---@type ghc.core.constant.enum.CWD_SCOPE
+      ---@type ghc.core.types.enum.SEARCH_SCOPE
       local scope = context.repo.search_scope:get_snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
@@ -281,7 +281,7 @@ local function search(opts)
   }
 
   open_picker = function()
-    ---@type ghc.core.constant.enum.CWD_SCOPE
+    ---@type ghc.core.types.enum.SEARCH_SCOPE
     local scope = context.repo.search_scope:get_snapshot()
     opts.cwd = get_cwd_by_scope(search_context, scope)
 
@@ -346,13 +346,15 @@ local function search(opts)
           mapkey("n", "<leader>b", actions.change_scope_buffer)
           mapkey("n", "<leader>s", actions.change_scope_carousel)
 
-          context.repo.searching:next(true)
+          ---@type ghc.core.types.enum.BUFTYPE_EXTRA
+          local buftype_extra = "search"
+          context.repo.buftype_extra:next(buftype_extra)
           vim.api.nvim_create_autocmd("BufLeave", {
             buffer = prompt_bufnr,
             nested = true,
             once = true,
             callback = function()
-              context.repo.searching:next(false)
+              context.repo.buftype_extra:next(nil)
             end,
           })
           return true

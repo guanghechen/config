@@ -28,11 +28,13 @@ M.color = {
 ---@return boolean
 function M.condition()
   local filetype = vim.bo.filetype
-  return filetype == "TelescopePrompt" and context.repo.searching:get_snapshot()
+  ---@type ghc.core.types.enum.BUFTYPE_EXTRA
+  local buftype_extra = context.repo.buftype_extra:get_snapshot()
+  return filetype == "TelescopePrompt" and buftype_extra == "search"
 end
 
 function M.renderer()
-  ---@type ghc.core.constant.enum.CWD_SCOPE
+  ---@type ghc.core.types.enum.SEARCH_SCOPE
   local scope = context.repo.search_scope:get_snapshot()
 
   ---@type boolean
