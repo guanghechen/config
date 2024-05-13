@@ -1,5 +1,3 @@
-local action_state = require("telescope.actions.state")
-
 ---@class ghc.core.action.search.grep_string.context
 local context = {
   repo = require("ghc.core.context.repo"),
