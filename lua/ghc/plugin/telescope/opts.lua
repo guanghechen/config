@@ -3,6 +3,11 @@ local setting = {
   icons = require("ghc.core.setting.icons"),
 }
 
+---@class ghc.plugin.telescope.util
+local util = {
+  path = require("ghc.core.util.path"),
+}
+
 local function flash(prompt_bufnr)
   require("flash").jump({
     pattern = "^",
@@ -74,6 +79,10 @@ local opts = {
         ["<c-t>"] = open_with_trouble,
       },
     },
+    path_display = function(opts, filepath)
+      local relative_path = util.path.relative(opts.cwd, filepath)
+      return relative_path
+    end,
   },
   extensions = {
     file_browser = {},
@@ -81,9 +90,12 @@ local opts = {
       auto_validate = true,
       db_safe_mode = true,
       db_validate_threshold = 5,
+      default_workspace = "CWD",
       use_sqlite = false,
+      show_filter_column = false,
       show_scores = false,
       show_unindexed = true,
+      workspace_scan_cmd = "fd -Htf",
       ignore_patterns = {
         "*.git/*",
         "*/tmp/*",

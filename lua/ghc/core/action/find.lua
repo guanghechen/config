@@ -59,21 +59,21 @@ function M.find_explorer_current()
 end
 
 function M.find_frecency_workspace()
+  local cwd = util.path.workspace()
   require("telescope").extensions.frecency.frecency({
-    cwd = util.path.workspace(),
+    cwd = cwd,
     workspace = "CWD",
     show_untracked = true,
-    -- prompt_title = "Find recent (" .. util.path.workspace() .. ")",
     prompt_title = "Find recent (workspace)",
   })
 end
 
 function M.find_frecency_cwd()
+  local cwd = util.path.cwd()
   require("telescope").extensions.frecency.frecency({
-    cwd = util.path.cwd(),
+    cwd = cwd,
     workspace = "CWD",
     show_untracked = true,
-    -- prompt_title = "Find recent (" .. util.path.cwd() .. ")",
     prompt_title = "Find recent (cwd)",
   })
 end
@@ -81,8 +81,9 @@ end
 function M.find_frecency_current()
   local absolute_path = util.path.current_directory()
   local relative_path = util.path.relative(util.path.cwd(), absolute_path)
+  local cwd = absolute_path
   require("telescope").extensions.frecency.frecency({
-    cwd = absolute_path,
+    cwd = cwd,
     workspace = "CWD",
     show_untracked = true,
     prompt_title = "Find recent (" .. relative_path .. ")",
