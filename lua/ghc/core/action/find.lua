@@ -58,45 +58,6 @@ function M.find_explorer_current()
   })
 end
 
-function M.find_files_workspace()
-  require("telescope.builtin").find_files({
-    cwd = util.path.workspace(),
-    workspace = "CWD",
-    show_untracked = true,
-    -- prompt_title = "Find files (" .. util.path.workspace() .. ")",
-    prompt_title = "Find files (workspace)",
-  })
-end
-
-function M.find_files_cwd()
-  require("telescope.builtin").find_files({
-    cwd = util.path.cwd(),
-    workspace = "CWD",
-    show_untracked = true,
-    -- prompt_title = "Find files (" .. util.path.cwd() .. ")",
-    prompt_title = "Find files (cwd)",
-  })
-end
-
-function M.find_files_current()
-  local absolute_path = util.path.current_directory()
-  local relative_path = util.path.relative(util.path.cwd(), absolute_path)
-  require("telescope.builtin").find_files({
-    cwd = absolute_path,
-    workspace = "CWD",
-    show_untracked = true,
-    prompt_title = "Find files (" .. relative_path .. ")",
-  })
-end
-
-function M.find_files_git()
-  require("telescope.builtin").git_files({
-    cwd = util.path.workspace(),
-    workspace = "CWD",
-    prompt_title = "Find files (git)",
-  })
-end
-
 function M.find_frecency_workspace()
   require("telescope").extensions.frecency.frecency({
     cwd = util.path.workspace(),

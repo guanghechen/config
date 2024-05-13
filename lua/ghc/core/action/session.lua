@@ -23,6 +23,9 @@ function M.quit_all()
 end
 
 function M.session_autosave()
+  -- save context
+  require("ghc.core.context.repo"):save()
+
   local bufs = vim.tbl_filter(function(b)
     return vim.bo[b].buftype ~= "" and vim.api.nvim_buf_get_name(b) ~= ""
   end, vim.api.nvim_list_bufs())
@@ -39,9 +42,6 @@ function M.session_autosave()
   vim.o.sessionoptions = table.concat({ "blank", "buffers", "curdir", "folds", "localoptions", "help", "resize", "tabpages", "unix", "winpos", "winsize" }, ",")
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
-
-  -- save context
-  require("ghc.core.context.repo"):save()
 end
 
 function M.session_save()

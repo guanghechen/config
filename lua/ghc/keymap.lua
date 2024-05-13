@@ -2,9 +2,11 @@
 local actions = {
   bookmark = require("ghc.core.action.bookmark"),
   buffer = require("ghc.core.action.buffer"),
+  debug = require("ghc.core.action.debug"),
   diagnostic = require("ghc.core.action.diagnostic"),
   explorer = require("ghc.core.action.explorer"),
   find = require("ghc.core.action.find"),
+  find_files = require("ghc.core.action.find_files"),
   file = require("ghc.core.action.file"),
   git = require("ghc.core.action.git"),
   search = require("ghc.core.action.search"),
@@ -136,6 +138,10 @@ mapkey("n", "<leader>bo", actions.buffer.close_buffer_others, "buffer: Close oth
 --#[c]ode-------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------#[c]ode--
 
+----#[d]ebug-----------------------------------------------------------------------------------------
+mapkey("n", "<leader>dc", actions.debug.show_context, "debug: Show context", true)
+-------------------------------------------------------------------------------------------#[d]ebug--
+
 --#[e]xplorer---------------------------------------------------------------------------------------
 mapkey("n", "<leader>eB", actions.explorer.show_buffer_explorer_workspace, "explorer: Buffers (workspace)")
 mapkey("n", "<leader>eb", actions.explorer.show_buffer_explorer_cwd, "explorer: Buffers (cwd)")
@@ -156,9 +162,7 @@ mapkey("n", "<leader>fn", actions.file.new_file, "File: New File")
 mapkey("n", "<leader>fb", actions.find.find_buffers, "find: Buffers")
 mapkey("n", "<leader>fE", actions.find.find_explorer_workspace, "find: File explorer (from workspace)")
 mapkey("n", "<leader>fe", actions.find.find_explorer_current, "find: File explorer (from current directory)")
-mapkey("n", "<leader>fF", actions.find.find_files_workspace, "find: files (workspace)")
-mapkey("n", "<leader>ff", actions.find.find_files_cwd, "find: Files (cwd)")
-mapkey("n", "<leader>fg", actions.find.find_files_git, "find: Files (git)")
+mapkey("n", "<leader>ff", actions.find_files.find_files, "find: Files")
 mapkey("n", "<leader>fm", actions.find.find_bookmark_workspace, "find: bookmarks")
 mapkey("n", "<leader>fR", actions.find.find_frecency_workspace, "find: Recent (repo)")
 mapkey("n", "<leader>fr", actions.find.find_frecency_cwd, "find: Recent (cwd)")
@@ -189,14 +193,14 @@ mapkey("n", "<leader>qC", actions.session.session_clear_all, "session: Clear all
 -------------------------------------------------------------------------------------------#[q]uit--
 
 --#[s]earch-----------------------------------------------------------------------------------------
-mapkey("n", "<leader>sw", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
-mapkey("v", "<leader>sw", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
-mapkey("n", "<leader>sc", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
-mapkey("v", "<leader>sc", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
-mapkey("n", "<leader>sd", actions.search.grep_selected_text_directory, "search: Grep word (directory)")
-mapkey("v", "<leader>sd", actions.search.grep_selected_text_directory, "search: Grep word (directory)")
-mapkey("n", "<leader>sf", actions.search.grep_selected_text_filepath, "search: Grep word (file)")
-mapkey("v", "<leader>sf", actions.search.grep_selected_text_filepath, "search: Grep word (file)")
+-- mapkey("n", "<leader>sw", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
+-- mapkey("v", "<leader>sw", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")
+-- mapkey("n", "<leader>sc", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
+-- mapkey("v", "<leader>sc", actions.search.grep_selected_text_cwd, "search: Grep word (cwd)")
+-- mapkey("n", "<leader>sd", actions.search.grep_selected_text_directory, "search: Grep word (directory)")
+-- mapkey("v", "<leader>sd", actions.search.grep_selected_text_directory, "search: Grep word (directory)")
+-- mapkey("n", "<leader>sb", actions.search.grep_selected_text_buffer, "search: Grep word (file)")
+-- mapkey("v", "<leader>sb", actions.search.grep_selected_text_buffer, "search: Grep word (file)")
 mapkey("n", "<leader>ss", actions.search.grep_selected_text, "search: Grep word")
 mapkey("v", "<leader>ss", actions.search.grep_selected_text, "search: Grep word")
 -----------------------------------------------------------------------------------------#[s]earch--

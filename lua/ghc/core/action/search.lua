@@ -89,15 +89,6 @@ local function has_ts_parser(lang)
   return ok
 end
 
----@param prompt_bufnr number
----@return nil
-local function refresh_picker(prompt_bufnr)
-  local picker = action_state.get_current_picker(prompt_bufnr)
-  if picker then
-    picker:reset_prompt(context.repo.search_keyword:get_snapshot())
-  end
-end
-
 local function build_search_text_command(prompt)
   if prompt then
     context.repo.search_keyword:next(prompt)
@@ -227,6 +218,7 @@ local function search(opts)
   opts.bufnr = search_context.bufnr
   opts.show_untracked = true
   opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
+  opts.use_regex = context.repo.search_enable_regex:get_snapshot()
 
   local selected_text = util.selection.get_selected_text()
   if selected_text and #selected_text > 1 then
@@ -247,18 +239,18 @@ local function search(opts)
   end
 
   local actions = {
-    show_last_grep_cmd = function()
+    show_last_search_cmd = function()
       local last_cmd = context.repo.search_last_command:get_snapshot() or {}
       vim.notify("searching:" .. "[" .. vim.inspect(search_context) .. "]" .. vim.inspect(last_cmd))
     end,
-    toggle_enable_regex = function(prompt_bufnr)
+    toggle_enable_regex = function()
       context.repo.search_enable_regex:next(not context.repo.search_enable_regex:get_snapshot())
       opts.use_regex = context.repo.search_enable_regex:get_snapshot()
-      refresh_picker(prompt_bufnr)
+      open_picker()
     end,
-    toggle_case_sensitive = function(prompt_bufnr)
+    toggle_case_sensitive = function()
       context.repo.search_enable_case_sensitive:next(not context.repo.search_enable_case_sensitive:get_snapshot())
-      refresh_picker(prompt_bufnr)
+      open_picker()
     end,
     change_scope_workspace = function()
       change_scope("W")
@@ -286,19 +278,54 @@ local function search(opts)
     opts.cwd = get_cwd_by_scope(search_context, scope)
 
     local resolved_opts
-    local finder
-    local sorter
-    local previewer
-    local prompt_title = "Search word (" .. get_display_name_of_scope(scope) .. ")"
-    local default_text = context.repo.search_keyword:get_snapshot()
+    local picker_params = {
+      prompt_title = "Search word (" .. get_display_name_of_scope(scope) .. ")",
+      default_text = context.repo.search_keyword:get_snapshot(),
+      attach_mappings = function(prompt_bufnr)
+        local function mapkey(mode, key, action, desc)
+          vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })
+        end
+
+        if resolved_opts.mappings then
+          for mode, mappings in pairs(resolved_opts.mappings) do
+            for key, action in pairs(mappings) do
+              mapkey(mode, key, action)
+            end
+          end
+        end
+
+        mapkey("n", "<leader>n", actions.show_last_search_cmd)
+        mapkey("n", "<leader>i", actions.toggle_case_sensitive)
+        mapkey("n", "<leader>r", actions.toggle_enable_regex)
+        mapkey("n", "<leader>w", actions.change_scope_workspace)
+        mapkey("n", "<leader>c", actions.change_scope_cwd)
+        mapkey("n", "<leader>d", actions.change_scope_directory)
+        mapkey("n", "<leader>b", actions.change_scope_buffer)
+        mapkey("n", "<leader>s", actions.change_scope_carousel)
+
+        ---@type ghc.core.types.enum.BUFTYPE_EXTRA
+        local buftype_extra = "search"
+        context.repo.buftype_extra:next(buftype_extra)
+        vim.api.nvim_create_autocmd("BufLeave", {
+          buffer = prompt_bufnr,
+          nested = true,
+          once = true,
+          callback = function()
+            context.repo.buftype_extra:next(nil)
+          end,
+        })
+        return true
+      end,
+    }
+
     if scope == "B" then
       resolved_opts = vim.tbl_deep_extend("force", {}, opts)
       local results = search_current_buffer(resolved_opts)
       local entry_maker = make_entry.gen_from_buffer_lines(resolved_opts)
 
-      finder = finders.new_table({ results = results, entry_maker = entry_maker })
-      sorter = conf.generic_sorter(resolved_opts)
-      previewer = conf.grep_previewer(resolved_opts)
+      picker_params.finder = finders.new_table({ results = results, entry_maker = entry_maker })
+      picker_params.previewer = conf.grep_previewer(resolved_opts)
+      picker_params.sorter = conf.generic_sorter(resolved_opts)
     else
       local make_entry_from_vimgrep = make_entry.gen_from_vimgrep(opts)
       local make_entry_from_file = make_entry.gen_from_file(opts)
@@ -312,55 +339,12 @@ local function search(opts)
       end
 
       resolved_opts = opts
-      finder = finders.new_job(build_search_text_command, entry_maker, resolved_opts.max_results, resolved_opts.cwd)
-      sorter = sorters.highlighter_only(resolved_opts)
-      previewer = conf.grep_previewer(resolved_opts)
+      picker_params.finder = finders.new_job(build_search_text_command, entry_maker, resolved_opts.max_results, resolved_opts.cwd)
+      picker_params.previewer = conf.grep_previewer(resolved_opts)
+      picker_params.sorter = sorters.highlighter_only(resolved_opts)
     end
 
-    pickers
-      .new(resolved_opts, {
-        prompt_title = prompt_title,
-        default_text = default_text,
-        finder = finder,
-        previewer = previewer,
-        sorter = sorter,
-        attach_mappings = function(prompt_bufnr)
-          local function mapkey(mode, key, action, desc)
-            vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })
-          end
-
-          if resolved_opts.mappings then
-            for mode, mappings in pairs(resolved_opts.mappings) do
-              for key, action in pairs(mappings) do
-                mapkey(mode, key, action)
-              end
-            end
-          end
-
-          mapkey("n", "<leader>n", actions.show_last_grep_cmd)
-          mapkey("n", "<leader>i", actions.toggle_case_sensitive)
-          mapkey("n", "<leader>r", actions.toggle_enable_regex)
-          mapkey("n", "<leader>w", actions.change_scope_workspace)
-          mapkey("n", "<leader>c", actions.change_scope_cwd)
-          mapkey("n", "<leader>d", actions.change_scope_directory)
-          mapkey("n", "<leader>b", actions.change_scope_buffer)
-          mapkey("n", "<leader>s", actions.change_scope_carousel)
-
-          ---@type ghc.core.types.enum.BUFTYPE_EXTRA
-          local buftype_extra = "search"
-          context.repo.buftype_extra:next(buftype_extra)
-          vim.api.nvim_create_autocmd("BufLeave", {
-            buffer = prompt_bufnr,
-            nested = true,
-            once = true,
-            callback = function()
-              context.repo.buftype_extra:next(nil)
-            end,
-          })
-          return true
-        end,
-      })
-      :find()
+    pickers.new(resolved_opts, picker_params):find()
   end
 
   open_picker()
@@ -384,7 +368,7 @@ function M.grep_selected_text_directory()
   search()
 end
 
-function M.grep_selected_text_filepath()
+function M.grep_selected_text_buffer()
   context.repo.search_scope:next("B")
   search()
 end

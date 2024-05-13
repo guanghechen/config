@@ -4,12 +4,13 @@
 ---|"D"
 ---|"B"
 
----@alias ghc.core.types.enum.FIND_SCOPE
+---@alias ghc.core.types.enum.FIND_FILES_SCOPE
 ---|"W"
 ---|"C"
 ---|"D"
+---|"G"
 
 ---@alias ghc.core.types.enum.BUFTYPE_EXTRA
----|"find"
+---|"find_files"
 ---|"search"
 ---|nil
