@@ -8,4 +8,11 @@ function M.show_context()
   vim.notify("context:" .. vim.inspect(context))
 end
 
+function M.show_context_all()
+  local context = {
+    repo = require("ghc.core.context.repo"):get_snapshot_all(),
+  }
+  vim.notify("context:" .. vim.inspect(context))
+end
+
 return M

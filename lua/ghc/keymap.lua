@@ -139,7 +139,8 @@ mapkey("n", "<leader>bo", actions.buffer.close_buffer_others, "buffer: Close oth
 -------------------------------------------------------------------------------------------#[c]ode--
 
 ----#[d]ebug-----------------------------------------------------------------------------------------
-mapkey("n", "<leader>dc", actions.debug.show_context, "debug: Show context", true)
+mapkey("n", "<leader>dC", actions.debug.show_context_all, "debug: Show context (all)", true)
+mapkey("n", "<leader>dc", actions.debug.show_context, "debug: Show context (persistentable)", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[e]xplorer---------------------------------------------------------------------------------------
