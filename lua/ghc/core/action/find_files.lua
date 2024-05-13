@@ -157,6 +157,7 @@ local function find_files(opts)
 
     local cmd = {
       "fd",
+      "--hidden",
       "--type",
       "file",
       "--color=never",

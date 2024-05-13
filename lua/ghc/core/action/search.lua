@@ -97,6 +97,7 @@ local function build_search_text_command(prompt)
   if not prompt or prompt == "" then
     local fd_cmd = {
       "fd",
+      "--hidden",
       "--type",
       "file",
       "--color=never",
@@ -108,6 +109,7 @@ local function build_search_text_command(prompt)
 
   local grep_cmd = {
     "rg",
+    "--hidden",
     "--color=never",
     "--no-heading",
     "--with-filename",
