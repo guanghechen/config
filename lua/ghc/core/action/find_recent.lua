@@ -114,10 +114,6 @@ local function find_recent(opts)
   end
 
   local actions = {
-    toggle_case_sensitive = function()
-      context.repo.find_recent_enable_case_sensitive:next(not context.repo.find_recent_enable_case_sensitive:get_snapshot())
-      refresh(last_prompt_bufnr)
-    end,
     change_scope_workspace = function()
       change_scope(last_prompt_bufnr, "W")
     end,
@@ -146,7 +142,6 @@ local function find_recent(opts)
       default_text = context.repo.find_recent_keyword:get_snapshot(),
       show_untracked = true,
       workspace = "CWD",
-      case_mode = context.repo.find_recent_enable_case_sensitive:get_snapshot() and "respect_case" or "ignore_case",
       attach_mappings = function(prompt_bufnr)
         local function mapkey(mode, key, action, desc)
           vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })
@@ -162,7 +157,6 @@ local function find_recent(opts)
 
         last_prompt_bufnr = prompt_bufnr
 
-        mapkey("n", "<leader>i", actions.toggle_case_sensitive)
         mapkey("n", "<leader>w", actions.change_scope_workspace)
         mapkey("n", "<leader>c", actions.change_scope_cwd)
         mapkey("n", "<leader>d", actions.change_scope_directory)
