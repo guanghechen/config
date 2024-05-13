@@ -51,6 +51,12 @@ function M.current_filepath()
   return vim.api.nvim_buf_get_name(0)
 end
 
+---@param filepath string
+---@return boolean
+function M.exist(filepath)
+  return Path:new(filepath):exists()
+end
+
 M.session_related_files_dir = vim.fn.expand(vim.fn.stdpath("state") .. globals.path_sep .. "sessions" .. globals.path_sep)
 
 ---@param opts {filename: string}

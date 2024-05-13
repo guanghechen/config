@@ -11,4 +11,13 @@ function M.merge_multiple_array(...)
   return result
 end
 
+---@param arr table
+function M.clone_array(arr)
+  local result = {}
+  for i = 1, #arr do
+    result[i] = arr[i]
+  end
+  return result
+end
+
 return M

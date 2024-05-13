@@ -114,6 +114,7 @@ local function build_search_text_command(prompt)
     "--line-number",
     "--column",
     "--follow",
+    "--vimgrep",
   }
   if not context.repo.search_enable_regex:get_snapshot() then
     table.insert(grep_cmd, "--fixed-strings")
