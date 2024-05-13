@@ -97,6 +97,13 @@ local function find_files(opts)
   context.repo.caller_winnr:next(vim.api.nvim_get_current_win())
   context.repo.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
+  opts = opts or {}
+  opts.initial_mode = "normal"
+  opts.bufnr = find_file_context.bufnr
+  opts.show_untracked = true
+  opts.workspace = "CWD"
+  opts.use_regex = context.repo.find_file_enable_regex:get_snapshot()
+
   ---@type fun():nil
   local open_picker
 
@@ -105,7 +112,6 @@ local function find_files(opts)
     local scope_current = context.repo.find_file_scope:get_snapshot()
     if scope_next ~= scope_current then
       context.repo.find_file_scope:next(scope_next)
-      opts.initial_mode = "normal"
       open_picker()
     end
   end
@@ -143,12 +149,6 @@ local function find_files(opts)
       change_scope(scope_next)
     end,
   }
-
-  opts = opts or {}
-  opts.bufnr = find_file_context.bufnr
-  opts.show_untracked = true
-  opts.workspace = "CWD"
-  opts.use_regex = context.repo.find_file_enable_regex:get_snapshot()
 
   local function build_find_file_command(prompt)
     if prompt then

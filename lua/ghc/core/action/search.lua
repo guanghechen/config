@@ -215,6 +215,7 @@ local function search(opts)
   context.repo.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
   opts = opts or {}
+  opts.initial_mode = "normal"
   opts.bufnr = search_context.bufnr
   opts.show_untracked = true
   opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
@@ -233,7 +234,6 @@ local function search(opts)
     local scope_current = context.repo.search_scope:get_snapshot()
     if scope_next ~= scope_current then
       context.repo.search_scope:next(scope_next)
-      opts.initial_mode = "normal"
       open_picker()
     end
   end
