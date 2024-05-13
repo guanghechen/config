@@ -1,4 +1,9 @@
-local ui = require("ghc.core.setting.ui")
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
+
+---@type boolean
+local transparency = context.repo.transparency:get_snapshot()
 
 local function get_neotree_width()
   for _, win in pairs(vim.api.nvim_tabpage_list_wins(0)) do
@@ -17,7 +22,7 @@ local M = {
 M.color = {
   blank = {
     fg = "white",
-    bg = ui.transparency and "none" or "black2",
+    bg = transparency and "none" or "black2",
   },
   icon = {
     fg = "white",
@@ -25,7 +30,7 @@ M.color = {
   },
   text = {
     fg = "white",
-    bg = ui.transparency and "none" or "black2",
+    bg = transparency and "none" or "black2",
   },
 }
 

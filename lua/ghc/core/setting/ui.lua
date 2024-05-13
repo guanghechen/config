@@ -8,7 +8,6 @@ local M = {
       },
     },
   },
-  transparency = false,
 }
 
 return M

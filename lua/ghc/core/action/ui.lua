@@ -1,3 +1,8 @@
+---@class ghc.core.action.ui.context
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
+
 ---@class ghc.core.action.ui
 local M = {}
 
@@ -13,6 +18,7 @@ function M.dismiss_notifications()
 end
 
 function M.toggle_transparency()
+  context.repo.transparency:next(not context.repo.transparency:get_snapshot())
   require("base46").toggle_transparency()
 end
 

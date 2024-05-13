@@ -11,6 +11,7 @@ local context = {
 
 -- Function to check clipboard with retries
 local function get_filepath_from_lazygit()
+  ---@diagnostic disable-next-line: unused-local
   for i = 1, 5 do
     local relative_filepath = vim.fn.getreg("+")
     if relative_filepath ~= "" then

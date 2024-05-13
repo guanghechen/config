@@ -1,18 +1,19 @@
 -- This file  needs to have same structure as nvconfig.lua
 -- https://github.com/NvChad/NvChad/blob/v2.5/lua/nvconfig.lua
 
----@type ChadrcConfig
-local M = {}
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
 
 local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
 local theme_integrations = require("ghc.ui.theme.integration")
-local setting = {
-  ui = require("ghc.core.setting.ui"),
-}
 local util = {
   table = require("ghc.core.util.table"),
 }
+
+---@type ChadrcConfig
+local M = {}
 
 M.ui = {
   hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, theme_integrations, {}),
@@ -29,7 +30,7 @@ M.ui = {
   },
   theme = "onedark",
   theme_toggle = { "onedark", "one_light" },
-  transparency = setting.ui.transparency,
+  transparency = context.repo.transparency:get_snapshot(),
   base46 = {
     integration = {
       "blankline",
