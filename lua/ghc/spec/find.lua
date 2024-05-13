@@ -9,9 +9,10 @@ return {
     "telescope.nvim",
     opts = require("ghc.plugin.telescope.opts"),
     config = require("ghc.plugin.telescope.config"),
-    dependences = {
-      "nvim-tree/nvim-web-devicons",
+    dependencies = {
       "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons",
+      "nvim-telescope/telescope-fzf-native.nvim",
     },
   },
   {

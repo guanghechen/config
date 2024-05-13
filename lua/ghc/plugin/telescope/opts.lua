@@ -79,10 +79,6 @@ local opts = {
         ["<c-t>"] = open_with_trouble,
       },
     },
-    path_display = function(opts, filepath)
-      local relative_path = util.path.relative(opts.cwd, filepath)
-      return relative_path
-    end,
   },
   extensions = {
     file_browser = {},
@@ -95,7 +91,14 @@ local opts = {
       show_filter_column = false,
       show_scores = false,
       show_unindexed = true,
-      workspace_scan_cmd = "fd -Htf",
+      workspace_scan_cmd = {
+        "fd",
+        "--hidden",
+        "--type",
+        "file",
+        "--color=never",
+        "--follow",
+      },
       ignore_patterns = {
         "*.git/*",
         "*/tmp/*",

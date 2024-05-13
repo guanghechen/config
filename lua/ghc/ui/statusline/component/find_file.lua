@@ -5,9 +5,9 @@ local context = {
 ---@type boolean
 local transparency = context.repo.transparency:get_snapshot()
 
---- @class ghc.ui.statusline.component.find_files
+--- @class ghc.ui.statusline.component.find_file
 local M = {
-  name = "ghc_statusline_find_files",
+  name = "ghc_statusline_find_file",
 }
 
 M.color = {
@@ -30,7 +30,7 @@ function M.condition()
   local filetype = vim.bo.filetype
   ---@type ghc.core.types.enum.BUFTYPE_EXTRA
   local buftype_extra = context.repo.buftype_extra:get_snapshot()
-  return filetype == "TelescopePrompt" and buftype_extra == "find_files"
+  return filetype == "TelescopePrompt" and buftype_extra == "find_file"
 end
 
 function M.renderer()

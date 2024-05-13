@@ -1,11 +1,9 @@
-local action_state = require("telescope.actions.state")
-
----@class ghc.core.action.find_files.context
+---@class ghc.core.action.find_file.context
 local context = {
   repo = require("ghc.core.context.repo"),
 }
 
----@class ghc.core.action.find_files.util
+---@class ghc.core.action.find_file.util
 local util = {
   path = require("ghc.core.util.path"),
 }
@@ -13,7 +11,7 @@ local util = {
 ---@alias IFindFileContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
 ---@param find_file_context IFindFileContext
----@param scope ghc.core.types.enum.FIND_FILES_SCOPE
+---@param scope ghc.core.types.enum.FIND_FILE_SCOPE
 local function get_cwd_by_scope(find_file_context, scope)
   if scope == "W" then
     return find_file_context.workspace
@@ -34,7 +32,7 @@ local function get_cwd_by_scope(find_file_context, scope)
   return find_file_context.cwd
 end
 
----@param scope ghc.core.types.enum.FIND_FILES_SCOPE
+---@param scope ghc.core.types.enum.FIND_FILE_SCOPE
 ---@return string
 local function get_display_name_of_scope(scope)
   if scope == "W" then
@@ -56,8 +54,8 @@ local function get_display_name_of_scope(scope)
   return "cwd"
 end
 
----@param scope ghc.core.types.enum.FIND_FILES_SCOPE
----@return ghc.core.types.enum.FIND_FILES_SCOPE
+---@param scope ghc.core.types.enum.FIND_FILE_SCOPE
+---@return ghc.core.types.enum.FIND_FILE_SCOPE
 local function toggle_scope_carousel(scope)
   if scope == "W" then
     return "C"
@@ -79,7 +77,7 @@ local function toggle_scope_carousel(scope)
 end
 
 ---@param opts? table
-local function find_files(opts)
+local function find_file(opts)
   ---@diagnostic disable-next-line: undefined-field
   local conf = require("telescope.config").values
   local finders = require("telescope.finders")
@@ -107,7 +105,7 @@ local function find_files(opts)
   ---@type fun():nil
   local open_picker
 
-  ---@param scope_next ghc.core.types.enum.FIND_FILES_SCOPE
+  ---@param scope_next ghc.core.types.enum.FIND_FILE_SCOPE
   local function change_scope(scope_next)
     local scope_current = context.repo.find_file_scope:get_snapshot()
     if scope_next ~= scope_current then
@@ -143,7 +141,7 @@ local function find_files(opts)
       change_scope("G")
     end,
     change_scope_carousel = function()
-      ---@type ghc.core.types.enum.FIND_FILES_SCOPE
+      ---@type ghc.core.types.enum.FIND_FILE_SCOPE
       local scope = context.repo.find_file_scope:get_snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
@@ -207,7 +205,7 @@ local function find_files(opts)
   end
 
   open_picker = function()
-    ---@type ghc.core.types.enum.FIND_FILES_SCOPE
+    ---@type ghc.core.types.enum.FIND_FILE_SCOPE
     local scope = context.repo.find_file_scope:get_snapshot()
     opts.cwd = get_cwd_by_scope(find_file_context, scope)
     opts.entry_maker = vim.F.if_nil(opts.entry_maker, make_entry.gen_from_file(opts))
@@ -238,16 +236,8 @@ local function find_files(opts)
         mapkey("n", "<leader>s", actions.change_scope_carousel)
 
         ---@type ghc.core.types.enum.BUFTYPE_EXTRA
-        local buftype_extra = "find_files"
+        local buftype_extra = "find_file"
         context.repo.buftype_extra:next(buftype_extra)
-        vim.api.nvim_create_autocmd("BufLeave", {
-          buffer = prompt_bufnr,
-          nested = true,
-          once = true,
-          callback = function()
-            context.repo.buftype_extra:next(nil)
-          end,
-        })
         return true
       end,
     }
@@ -271,31 +261,31 @@ local function find_files(opts)
   open_picker()
 end
 
----@class ghc.core.action.find_files
+---@class ghc.core.action.find_file
 local M = {}
 
-function M.find_files_workspace()
+function M.find_file_workspace()
   context.repo.find_file_scope:next("W")
-  find_files()
+  find_file()
 end
 
-function M.find_files_cwd()
+function M.find_file_cwd()
   context.repo.find_file_scope:next("C")
-  find_files()
+  find_file()
 end
 
-function M.find_files_current()
+function M.find_file_current()
   context.repo.find_file_scope:next("D")
-  find_files()
+  find_file()
 end
 
-function M.find_files_git()
+function M.find_file_git()
   context.repo.find_file_scope:next("G")
-  find_files()
+  find_file()
 end
 
-function M.find_files()
-  find_files()
+function M.find_file()
+  find_file()
 end
 
 return M

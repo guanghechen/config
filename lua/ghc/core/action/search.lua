@@ -308,14 +308,6 @@ local function search(opts)
         ---@type ghc.core.types.enum.BUFTYPE_EXTRA
         local buftype_extra = "search"
         context.repo.buftype_extra:next(buftype_extra)
-        vim.api.nvim_create_autocmd("BufLeave", {
-          buffer = prompt_bufnr,
-          nested = true,
-          once = true,
-          callback = function()
-            context.repo.buftype_extra:next(nil)
-          end,
-        })
         return true
       end,
     }

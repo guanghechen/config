@@ -6,7 +6,8 @@ local actions = {
   diagnostic = require("ghc.core.action.diagnostic"),
   explorer = require("ghc.core.action.explorer"),
   find = require("ghc.core.action.find"),
-  find_files = require("ghc.core.action.find_files"),
+  find_file = require("ghc.core.action.find_file"),
+  find_recent = require("ghc.core.action.find_recent"),
   file = require("ghc.core.action.file"),
   git = require("ghc.core.action.git"),
   search = require("ghc.core.action.search"),
@@ -163,11 +164,10 @@ mapkey("n", "<leader>fn", actions.file.new_file, "File: New File")
 mapkey("n", "<leader>fb", actions.find.find_buffers, "find: Buffers")
 mapkey("n", "<leader>fE", actions.find.find_explorer_workspace, "find: File explorer (from workspace)")
 mapkey("n", "<leader>fe", actions.find.find_explorer_current, "find: File explorer (from current directory)")
-mapkey("n", "<leader>ff", actions.find_files.find_files, "find: Files")
+mapkey("n", "<leader>ff", actions.find_file.find_file, "find: Files")
 mapkey("n", "<leader>fm", actions.find.find_bookmark_workspace, "find: bookmarks")
-mapkey("n", "<leader>fR", actions.find.find_frecency_workspace, "find: Recent (repo)")
-mapkey("n", "<leader>fr", actions.find.find_frecency_cwd, "find: Recent (cwd)")
-mapkey("n", "<leader><leader>", actions.find.find_frecency_cwd, "find: Recent (cwd)")
+mapkey("n", "<leader>fr", actions.find_recent.find_recent, "find: Recent")
+mapkey("n", "<leader><leader>", actions.find_recent.find_recent, "find: Recent")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------

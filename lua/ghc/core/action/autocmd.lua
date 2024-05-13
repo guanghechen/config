@@ -3,6 +3,11 @@ local action = {
   session = require("ghc.core.action.session"),
 }
 
+---@class ghc.core.action.autocmd.context
+local context = {
+  repo = require("ghc.core.context.repo"),
+}
+
 ---@class ghc.core.action.autocmd.util
 local util = {
   path = require("ghc.core.util.path"),
@@ -73,6 +78,7 @@ end
 ---@param opts {pattern: table}
 function M.autocmd_close_with_q(opts)
   local function close()
+    context.repo.buftype_extra:next(nil)
     vim.cmd("close")
   end
 

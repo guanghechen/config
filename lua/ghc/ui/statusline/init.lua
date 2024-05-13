@@ -8,7 +8,8 @@ local components = {
   middle = {
     require("ghc.ui.statusline.component.bg"),
     require("ghc.ui.statusline.component.search"),
-    require("ghc.ui.statusline.component.find_files"),
+    require("ghc.ui.statusline.component.find_file"),
+    require("ghc.ui.statusline.component.find_recent"),
     require("ghc.ui.statusline.component.bg"),
   },
   right = {
