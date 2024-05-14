@@ -9,6 +9,8 @@ local util = {
   table = require("ghc.core.util.table"),
 }
 
+local autocmd = require("ghc.core.action.autocmd")
+
 ---@alias IFindFileContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
 ---@param find_file_context IFindFileContext
@@ -256,6 +258,8 @@ local function find_file(opts, force)
         ---@type ghc.core.types.enum.BUFTYPE_EXTRA
         local buftype_extra = "find_file"
         context.repo.buftype_extra:next(buftype_extra)
+
+        autocmd.autocmd_clear_buftype_extra()
         return true
       end,
     }

@@ -62,6 +62,16 @@ function M.autocmd_checktime()
   })
 end
 
+function M.autocmd_clear_buftype_extra()
+  vim.api.nvim_create_autocmd({ "BufLeave", "BufUnload" }, {
+    buffer = 0,
+    group = M.augroup("clear_buftype_extra"),
+    callback = function()
+      context.repo.buftype_extra:next(nil)
+    end,
+  })
+end
+
 -- Clear jumplist
 -- See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
 function M.autocmd_clear_jumps()

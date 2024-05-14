@@ -8,6 +8,8 @@ local util = {
   path = require("ghc.core.util.path"),
 }
 
+local autocmd = require("ghc.core.action.autocmd")
+
 ---@alias IFindRecentContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
 ---@param find_recent_context IFindRecentContext
@@ -165,6 +167,8 @@ local function find_recent(opts)
         ---@type ghc.core.types.enum.BUFTYPE_EXTRA
         local buftype_extra = "find_recent"
         context.repo.buftype_extra:next(buftype_extra)
+
+        autocmd.autocmd_clear_buftype_extra()
         return true
       end,
     }, opts))

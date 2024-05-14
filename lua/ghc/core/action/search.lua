@@ -11,6 +11,8 @@ local util = {
   table = require("guanghechen.util.table"),
 }
 
+local autocmd = require("ghc.core.action.autocmd")
+
 ---@alias ISearchContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
 ---@param scope_paths ISearchContext
@@ -307,6 +309,8 @@ local function search(opts)
         ---@type ghc.core.types.enum.BUFTYPE_EXTRA
         local buftype_extra = "search"
         context.repo.buftype_extra:next(buftype_extra)
+
+        autocmd.autocmd_clear_buftype_extra()
         return true
       end,
     }
