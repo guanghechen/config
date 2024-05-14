@@ -27,3 +27,6 @@ end)
 if vim.g.neovide then
   require("neovide")
 end
+
+--Try to load local config
+pcall(require, "local")
