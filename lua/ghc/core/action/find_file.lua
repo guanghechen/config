@@ -65,6 +65,52 @@ local function toggle_scope_carousel(scope)
   return "C"
 end
 
+---@param force boolean
+---@param cwd string
+---@return string
+local function gen_filemap(force, cwd)
+  local filemap_filepath = util.path.gen_session_related_filepath({ filename = "filemap.json" })
+  if force or not util.path.exist(filemap_filepath) or context.repo.filemap_dirty:get_snapshot() then
+    local stdout = vim.loop.new_pipe(false)
+    local stderr = vim.loop.new_pipe(false)
+    local subprocess
+    local function on_exit(code, signal)
+      stdout:read_stop()
+      stderr:read_stop()
+      stdout:close()
+      stderr:close()
+      subprocess:close()
+      if code ~= 0 then
+        vim.notify("[gen_filemap] failed with code " .. code .. " and signal " .. signal)
+      end
+    end
+
+    -- clear filemap content
+    os.remove(filemap_filepath)
+
+    subprocess = vim.loop.spawn("fd", {
+      cwd = cwd,
+      args = { "--hidden", "--type=file", "--color=never" },
+      stdio = { nil, stdout, stderr },
+    }, on_exit)
+
+    vim.loop.read_start(stdout, function(err, data)
+      assert(not err, err)
+      if data then
+        local file = io.open(filemap_filepath, "a")
+        if file then
+          file:write(data)
+          file:close()
+        end
+      else
+        stdout:read_stop()
+      end
+    end)
+    context.repo.filemap_dirty:next(false)
+  end
+  return filemap_filepath
+end
+
 ---@param opts? table
 ---@param force boolean
 local function find_file(opts, force)
@@ -92,26 +138,22 @@ local function find_file(opts, force)
   opts.workspace = "CWD"
   opts.use_regex = context.repo.find_file_enable_regex:get_snapshot()
 
+  ---@type ghc.core.types.enum.FIND_FILE_SCOPE
+  local scope0 = context.repo.find_file_scope:get_snapshot()
+  opts.cwd = get_cwd_by_scope(find_file_context, scope0)
+
+  ---@type string
+  local filemap_filepath = gen_filemap(force, opts.cwd)
+
   ---@type fun():nil
   local open_picker
-
-  local filemap_filepath = util.path.gen_session_related_filepath({ filename = "filemap.json" })
-  local function gen_filemap()
-    if not force and util.path.exist(filemap_filepath) then
-      return
-    end
-
-    local gen_filemap_process = io.popen("fd --hidden --type=file --color=never --follow > \"" .. filemap_filepath .. "\"")
-    if gen_filemap_process then
-      gen_filemap_process:close()
-    end
-  end
 
   ---@param scope_next ghc.core.types.enum.FIND_FILE_SCOPE
   local function change_scope(scope_next)
     local scope_current = context.repo.find_file_scope:get_snapshot()
     if scope_next ~= scope_current then
       context.repo.find_file_scope:next(scope_next)
+      context.repo.filemap_dirty:next(true)
       open_picker()
     end
   end
@@ -150,6 +192,8 @@ local function find_file(opts, force)
   local function build_find_file_command(prompt)
     if prompt then
       context.repo.find_file_keyword:next(prompt)
+    else
+      prompt = ""
     end
 
     local cmd = {
@@ -183,10 +227,11 @@ local function find_file(opts, force)
     local scope = context.repo.find_file_scope:get_snapshot()
     opts.cwd = get_cwd_by_scope(find_file_context, scope)
     opts.entry_maker = vim.F.if_nil(opts.entry_maker, make_entry.gen_from_file(opts))
+    gen_filemap(false, opts.cwd)
 
     local picker_params = {
       prompt_title = "Find files (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = context.repo.find_file_keyword:get_snapshot(),
+      default_text = context.repo.find_file_keyword:get_snapshot() or "",
       attach_mappings = function(prompt_bufnr)
         local function mapkey(mode, key, action, desc)
           vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })
@@ -215,20 +260,13 @@ local function find_file(opts, force)
       end,
     }
 
-    local original_entry_marker = make_entry.gen_from_file(opts)
-    local entry_marker = function(line)
-      vim.notify("line:" .. vim.inspect(line))
-      return original_entry_marker(line)
-    end
-
-    opts.entry_maker = entry_maker
+    opts.entry_maker = make_entry.gen_from_file(opts)
     picker_params.finder = finders.new_job(build_find_file_command, opts.entry_maker, opts.max_results, opts.cwd)
     picker_params.previewer = conf.grep_previewer(opts)
     picker_params.sorter = sorters.highlighter_only(opts)
     pickers.new(opts, picker_params):find()
   end
 
-  gen_filemap()
   open_picker()
 end
 
@@ -236,7 +274,7 @@ end
 local M = {}
 
 function M.find_file()
-  find_file()
+  find_file(nil, false)
 end
 
 function M.find_file_force()
