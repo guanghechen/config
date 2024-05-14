@@ -62,12 +62,17 @@ function M.autocmd_checktime()
   })
 end
 
-function M.autocmd_clear_buftype_extra()
+---@param bufnr number
+---@param callback? fun(bufnr:number):nil
+function M.autocmd_clear_buftype_extra(bufnr, callback)
   vim.api.nvim_create_autocmd({ "BufLeave", "BufUnload" }, {
-    buffer = 0,
+    buffer = bufnr,
     group = M.augroup("clear_buftype_extra"),
     callback = function()
       context.repo.buftype_extra:next(nil)
+      if callback then
+        callback(bufnr)
+      end
     end,
   })
 end
@@ -180,6 +185,26 @@ function M.autocmd_remember_last_tabnr()
     callback = function()
       local tabnr_current = vim.api.nvim_get_current_tabpage()
       vim.g.ghc_last_tabnr = tabnr_current
+    end,
+  })
+end
+
+---@param prompt_bufnr number
+---@param callback fun(prompt:string):nil
+function M.autocmd_remember_telescope_prompt(prompt_bufnr, callback)
+  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+    buffer = prompt_bufnr,
+    group = M.augroup("remember_telescope_prompt"),
+    callback = function()
+      local action_state = require("telescope.actions.state")
+      local picker = action_state.get_current_picker(prompt_bufnr or 0)
+
+      if picker then
+        local prompt = picker:_get_prompt()
+        if prompt then
+          callback(prompt)
+        end
+      end
     end,
   })
 end

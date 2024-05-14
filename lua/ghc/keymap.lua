@@ -169,7 +169,7 @@ mapkey("n", "<leader>ff", actions.find_file.find_file, "find: Files")
 mapkey("n", "<leader>fg", actions.find.find_file_git, "find: Files (git)")
 mapkey("n", "<leader>fm", actions.find.find_bookmark_workspace, "find: bookmarks")
 mapkey("n", "<leader>fr", actions.find_recent.find_recent, "find: Recent")
-mapkey("n", "<leader><leader>", actions.find_file.find_file, "find: Files")
+mapkey("n", "<leader><leader>", actions.find_recent.find_recent, "find: Recent")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------

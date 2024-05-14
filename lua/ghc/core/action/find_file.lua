@@ -259,7 +259,7 @@ local function find_file(opts, force)
         local buftype_extra = "find_file"
         context.repo.buftype_extra:next(buftype_extra)
 
-        autocmd.autocmd_clear_buftype_extra()
+        autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
         return true
       end,
     }

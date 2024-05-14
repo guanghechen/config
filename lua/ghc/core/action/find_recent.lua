@@ -87,49 +87,30 @@ local function find_recent(opts)
   ---@type fun():nil
   local open_picker
 
-  ---@type number|nil
-  local last_prompt_bufnr
-
-  ---@param prompt_bufnr number|nil
-  local function refresh(prompt_bufnr)
-    local action_state = require("telescope.actions.state")
-    local picker = action_state.get_current_picker(prompt_bufnr or 0)
-
-    if picker then
-      local prompt = picker:_get_prompt()
-      if prompt then
-        context.repo.find_recent_keyword:next(prompt)
-      end
-    end
-
-    open_picker()
-  end
-
-  ---@param prompt_bufnr number|nil
   ---@param scope_next ghc.core.types.enum.FIND_RECENT_SCOPE
-  local function change_scope(prompt_bufnr, scope_next)
+  local function change_scope(scope_next)
     local scope_current = context.repo.find_recent_scope:get_snapshot()
     if scope_next ~= scope_current then
       context.repo.find_recent_scope:next(scope_next)
-      refresh(prompt_bufnr)
+      open_picker()
     end
   end
 
   local actions = {
     change_scope_workspace = function()
-      change_scope(last_prompt_bufnr, "W")
+      change_scope("W")
     end,
     change_scope_cwd = function()
-      change_scope(last_prompt_bufnr, "C")
+      change_scope("C")
     end,
     change_scope_directory = function()
-      change_scope(last_prompt_bufnr, "D")
+      change_scope("D")
     end,
     change_scope_carousel = function()
       ---@type ghc.core.types.enum.FIND_RECENT_SCOPE
       local scope = context.repo.find_recent_scope:get_snapshot()
       local scope_next = toggle_scope_carousel(scope)
-      change_scope(last_prompt_bufnr, scope_next)
+      change_scope(scope_next)
     end,
   }
 
@@ -157,8 +138,6 @@ local function find_recent(opts)
           end
         end
 
-        last_prompt_bufnr = prompt_bufnr
-
         mapkey("n", "<leader>w", actions.change_scope_workspace)
         mapkey("n", "<leader>c", actions.change_scope_cwd)
         mapkey("n", "<leader>d", actions.change_scope_directory)
@@ -168,7 +147,11 @@ local function find_recent(opts)
         local buftype_extra = "find_recent"
         context.repo.buftype_extra:next(buftype_extra)
 
-        autocmd.autocmd_clear_buftype_extra()
+        autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
+        autocmd.autocmd_remember_telescope_prompt(prompt_bufnr, function(prompt)
+          context.repo.find_recent_keyword:next(prompt)
+        end)
+
         return true
       end,
     }, opts))

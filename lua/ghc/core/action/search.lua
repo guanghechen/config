@@ -310,7 +310,7 @@ local function search(opts)
         local buftype_extra = "search"
         context.repo.buftype_extra:next(buftype_extra)
 
-        autocmd.autocmd_clear_buftype_extra()
+        autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
         return true
       end,
     }
