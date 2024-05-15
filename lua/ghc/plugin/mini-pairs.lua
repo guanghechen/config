@@ -1,4 +1,4 @@
-local reporter = require("ghc.core.util.reporter")
+local reporter = require("guanghechen.util.reporter")
 
 -- auto pairs
 return {

@@ -3,7 +3,7 @@
 ---@class ghc.core.util.terminal.util
 local util = {
   table = require("guanghechen.util.table"),
-  reporter = require("ghc.core.util.reporter"),
+  reporter = require("guanghechen.util.reporter"),
 }
 
 ---@class ghc.core.util.terminal.context
