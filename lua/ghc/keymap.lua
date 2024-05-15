@@ -167,9 +167,11 @@ mapkey("n", "<leader>fe", actions.find.find_explorer_current, "find: file explor
 mapkey("n", "<leader>fF", actions.find_file.find_file_force, "find: files (force)")
 mapkey("n", "<leader>ff", actions.find_file.find_file, "find: files")
 mapkey("n", "<leader>fg", actions.find.find_file_git, "find: files (git)")
+mapkey("n", "<leader>fh", actions.find.find_highlights, "find: highlights")
 mapkey("n", "<leader>fm", actions.find.find_bookmark_workspace, "find: bookmarks")
 mapkey("n", "<leader>fq", actions.find.find_quickfix_history, "find: quickfix history")
 mapkey("n", "<leader>fr", actions.find_recent.find_recent, "find: recent")
+mapkey("n", "<leader>fv", actions.find.find_vim_options, "find: vim options")
 mapkey("n", "<leader><leader>", actions.find_recent.find_recent, "find recent")
 -------------------------------------------------------------------------------------------#[f]ind--
 

@@ -78,4 +78,24 @@ function M.find_quickfix_history()
   })
 end
 
+function M.find_vim_options()
+  require("telescope.builtin").vim_options({
+    cwd = util.path.workspace(),
+    workspace = "CWD",
+    prompt_title = "Find vim options",
+    show_untracked = true,
+    initial_mode = "normal",
+  })
+end
+
+function M.find_highlights()
+  require("telescope.builtin").highlights({
+    cwd = util.path.workspace(),
+    workspace = "CWD",
+    prompt_title = "Find vim options",
+    show_untracked = true,
+    initial_mode = "normal",
+  })
+end
+
 return M
