@@ -5,8 +5,8 @@ local context = {
 
 ---@class ghc.core.action.find_file.util
 local util = {
+  table = require("guanghechen.util.table"),
   path = require("ghc.core.util.path"),
-  table = require("ghc.core.util.table"),
 }
 
 local autocmd = require("ghc.core.action.autocmd")

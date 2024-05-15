@@ -9,7 +9,7 @@ local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
 local theme_integrations = require("ghc.ui.theme.integration")
 local util = {
-  table = require("ghc.core.util.table"),
+  table = require("guanghechen.util.table"),
 }
 
 ---@type ChadrcConfig
