@@ -14,6 +14,7 @@ local components = {
   },
   right = {
     require("ghc.ui.statusline.component.bg"),
+    require("ghc.ui.statusline.component.diagnostics"),
     require("ghc.ui.statusline.component.noice"),
     require("ghc.ui.statusline.component.pos"),
     require("ghc.ui.statusline.component.fileformat"),
