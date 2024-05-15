@@ -28,7 +28,7 @@ M.ui = {
       bg = "light_grey",
     },
   },
-  theme = "onedark",
+  theme = "one_light",
   theme_toggle = { "onedark", "one_light" },
   transparency = context.repo.transparency:get_snapshot(),
   base46 = {
