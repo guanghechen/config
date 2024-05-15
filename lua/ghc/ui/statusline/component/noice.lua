@@ -28,7 +28,7 @@ end
 
 function M.renderer()
   local status = require("noice").api.status
-  local color_text_command = "%#" .. M.name .. "_text_comand#"
+  local color_text_command = "%#" .. M.name .. "_text_command#"
   local color_text_mode = "%#" .. M.name .. "_text_mode#"
 
   local pieces = {}
