@@ -70,14 +70,12 @@ local opts = {
     mappings = {
       i = {
         ["<c-s>"] = flash,
-        ["<c-q>"] = open_with_trouble,
         ["<c-t>"] = open_with_trouble,
       },
       n = {
         q = close_telescope,
         s = flash,
         ["<esc>"] = false,
-        ["<c-q>"] = open_with_trouble,
         ["<c-t>"] = open_with_trouble,
       },
     },

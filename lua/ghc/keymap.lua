@@ -161,21 +161,22 @@ mapkey("n", "<leader>fn", actions.file.new_file, "File: New File")
 -------------------------------------------------------------------------------------------#[f]ile--
 
 --#[f]ind-------------------------------------------------------------------------------------------
-mapkey("n", "<leader>fb", actions.find.find_buffers, "find: Buffers")
-mapkey("n", "<leader>fE", actions.find.find_explorer_workspace, "find: File explorer (from workspace)")
-mapkey("n", "<leader>fe", actions.find.find_explorer_current, "find: File explorer (from current directory)")
-mapkey("n", "<leader>fF", actions.find_file.find_file_force, "find: Files (force)")
-mapkey("n", "<leader>ff", actions.find_file.find_file, "find: Files")
-mapkey("n", "<leader>fg", actions.find.find_file_git, "find: Files (git)")
+mapkey("n", "<leader>fb", actions.find.find_buffers, "find: buffers")
+mapkey("n", "<leader>fE", actions.find.find_explorer_workspace, "find: file explorer (from workspace)")
+mapkey("n", "<leader>fe", actions.find.find_explorer_current, "find: file explorer (from current directory)")
+mapkey("n", "<leader>fF", actions.find_file.find_file_force, "find: files (force)")
+mapkey("n", "<leader>ff", actions.find_file.find_file, "find: files")
+mapkey("n", "<leader>fg", actions.find.find_file_git, "find: files (git)")
 mapkey("n", "<leader>fm", actions.find.find_bookmark_workspace, "find: bookmarks")
-mapkey("n", "<leader>fr", actions.find_recent.find_recent, "find: Recent")
-mapkey("n", "<leader><leader>", actions.find_recent.find_recent, "find: Recent")
+mapkey("n", "<leader>fq", actions.find.find_quickfix_history, "find: quickfix history")
+mapkey("n", "<leader>fr", actions.find_recent.find_recent, "find: recent")
+mapkey("n", "<leader><leader>", actions.find_recent.find_recent, "find recent")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
-mapkey("n", "<leader>gG", actions.git.open_lazygit_workspace, "git: Open lazygit (workspace)", true)
-mapkey("n", "<leader>gg", actions.git.open_lazygit_cwd, "git: Open lazygit (cwd)", true)
-mapkey("n", "<leader>gf", actions.git.open_lazygit_file_history, "git: Open lazygit file history", true)
+mapkey("n", "<leader>gG", actions.git.open_lazygit_workspace, "git: open lazygit (workspace)", true)
+mapkey("n", "<leader>gg", actions.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
+mapkey("n", "<leader>gf", actions.git.open_lazygit_file_history, "git: open lazygit file history", true)
 -------------------------------------------------------------------------------------------#[g]it---
 
 --#book[m]ark---------------------------------------------------------------------------------------

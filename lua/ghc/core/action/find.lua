@@ -68,4 +68,14 @@ function M.find_file_git()
   })
 end
 
+function M.find_quickfix_history()
+  require("telescope.builtin").quickfixhistory({
+    cwd = util.path.workspace(),
+    workspace = "CWD",
+    prompt_title = "Find quickfix history",
+    show_untracked = true,
+    initial_mode = "normal",
+  })
+end
+
 return M
