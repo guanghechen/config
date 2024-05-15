@@ -163,7 +163,7 @@ M.diagnostics = {
   Warning = "",
   Information = "",
   Question = "",
-  Hint = "󰌵",
+  Hint = "󰌵", -- 󰛩
   -- Holo version
   Error_alt = "󰅚",
   Warning_alt = "󰀪",
