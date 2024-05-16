@@ -90,7 +90,6 @@ end
 function M.open_lazygit_cwd()
   local lazygit_theme_config_filepath = get_lazygit_config_filepath()
   local cmd = { "lazygit", "--use-config-file", lazygit_theme_config_filepath }
-  vim.notify("cmd:" .. vim.inspect(cmd))
   local cwd = util.path.cwd()
   open_lazygit(cmd, cwd)
 end
