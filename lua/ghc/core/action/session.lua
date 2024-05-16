@@ -24,6 +24,7 @@ end
 
 function M.session_autosave()
   -- save context
+  require("ghc.core.context.global"):save()
   require("ghc.core.context.repo"):save()
 
   local bufs = vim.tbl_filter(function(b)

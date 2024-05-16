@@ -6,6 +6,7 @@ local util = {
 
 ---@class ghc.action.git.context
 local context = {
+  global = require("ghc.core.context.global"),
   repo = require("ghc.core.context.repo"),
 }
 
@@ -70,7 +71,7 @@ local function get_lazygit_config_filepath()
   local lazygit_config_dir = util.path.join(nvim_config_dir, "config/lazygit")
   local config_filepaths = {
     util.path.join(lazygit_config_dir, "config.yaml"),
-    util.path.join(lazygit_config_dir, context.repo.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"),
+    util.path.join(lazygit_config_dir, context.global.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"),
   }
   local lazygit_theme_config_filepath = table.concat(config_filepaths, ",")
   return lazygit_theme_config_filepath

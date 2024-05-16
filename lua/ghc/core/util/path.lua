@@ -57,6 +57,13 @@ function M.exist(filepath)
   return Path:new(filepath):exists()
 end
 
+---@param opts {filename: string}
+function M.gen_local_config_filepath(opts)
+  local filename = opts.filename
+  local config_dir = vim.fn.stdpath("config")
+  return M.join(config_dir, "config/local/" .. filename)
+end
+
 M.session_related_files_dir = vim.fn.expand(vim.fn.stdpath("state") .. globals.path_sep .. "sessions" .. globals.path_sep)
 
 ---@param opts {filename: string}

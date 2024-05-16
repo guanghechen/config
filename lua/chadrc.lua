@@ -2,6 +2,7 @@
 -- https://github.com/NvChad/NvChad/blob/v2.5/lua/nvconfig.lua
 
 local context = {
+  global = require("ghc.core.context.global"),
   repo = require("ghc.core.context.repo"),
 }
 
@@ -11,6 +12,12 @@ local theme_integrations = require("ghc.ui.theme.integration")
 local util = {
   table = require("guanghechen.util.table"),
 }
+
+---@type string
+local theme_lighten = context.global.theme_lighten:get_snapshot()
+
+---@type string
+local theme_darken = context.global.theme_darken:get_snapshot()
 
 ---@type ChadrcConfig
 local M = {}
@@ -28,8 +35,8 @@ M.ui = {
       bg = "light_grey",
     },
   },
-  theme = "one_light",
-  theme_toggle = { "onedark", "one_light" },
+  theme = context.global.darken:get_snapshot() and theme_darken or theme_lighten,
+  theme_toggle = { theme_lighten, theme_darken },
   transparency = context.repo.transparency:get_snapshot(),
   base46 = {
     integration = {
