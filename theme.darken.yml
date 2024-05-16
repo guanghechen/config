@@ -1,12 +1,8 @@
 gui:
   authorColors:
-    guanghechen: "#61AFEF"
+    guanghechen: "#61AFEF" # blue
   branchColors:
     main: "#FCA2AA" # orange
-  border: "rounded"
-  nerdFontsVersion: "3"
-  showFileTree: true
-  showIcons: true
   theme:
     activeBorderColor:
       - bold
@@ -42,14 +38,3 @@ gui:
       - default
       - "#ABB2BF" # white
 
-git:
-  autoFetch: false
-  paging:
-    # cargo install git-delta
-    colorArg: always
-    pager: delta
-    useConfig: false
-
-os:
-  editCommand: "nvim"
-  editCommandTemplate: "{{editor}} {{filename}}"
