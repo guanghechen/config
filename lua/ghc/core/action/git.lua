@@ -65,17 +65,31 @@ local function open_lazygit(cmd, cwd)
   vim.keymap.set("t", "<c-e>", edit_lazygit_file_in_buffer, { buffer = float_term.buf, noremap = true, silent = true })
 end
 
+local function get_lazygit_config_filepath()
+  local nvim_config_dir = vim.fn.stdpath("config")
+  local lazygit_config_dir = util.path.join(nvim_config_dir, "config/lazygit")
+  local config_filepaths = {
+    util.path.join(lazygit_config_dir, "config.yaml"),
+    util.path.join(lazygit_config_dir, context.repo.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"),
+  }
+  local lazygit_theme_config_filepath = table.concat(config_filepaths, ",")
+  return lazygit_theme_config_filepath
+end
+
 ---@class ghc.action.git
 local M = {}
 
 function M.open_lazygit_workspace()
-  local cmd = { "lazygit" }
+  local lazygit_theme_config_filepath = get_lazygit_config_filepath()
+  local cmd = { "lazygit", "--use-config-file", lazygit_theme_config_filepath }
   local cwd = util.path.workspace()
   open_lazygit(cmd, cwd)
 end
 
 function M.open_lazygit_cwd()
-  local cmd = { "lazygit" }
+  local lazygit_theme_config_filepath = get_lazygit_config_filepath()
+  local cmd = { "lazygit", "--use-config-file", lazygit_theme_config_filepath }
+  vim.notify("cmd:" .. vim.inspect(cmd))
   local cwd = util.path.cwd()
   open_lazygit(cmd, cwd)
 end

@@ -240,8 +240,8 @@ mapkey("n", "<leader>tt", actions.terminal.open_terminal_cwd, "terminal: Toggle 
 --#[u]i---------------------------------------------------------------------------------------------
 mapkey("n", "<leader>ui", actions.ui.show_inspect_pos, "ui: Show inspect pos")
 mapkey("n", "<leader>un", actions.ui.dismiss_notifications, "ui: Dismiss all notifications")
-mapkey("n", "<leader>uT", actions.ui.toggle_transparency, "ui: Toggle transparency")
-mapkey("n", "<leader>ut", actions.ui.toggle_theme, "ui: Toggle theme")
+mapkey("n", "<leader>utT", actions.ui.toggle_transparency, "ui: Toggle transparency")
+mapkey("n", "<leader>utt", actions.ui.toggle_theme, "ui: Toggle theme")
 ---------------------------------------------------------------------------------------------#[u]i--
 
 --#[w]indow-----------------------------------------------------------------------------------------

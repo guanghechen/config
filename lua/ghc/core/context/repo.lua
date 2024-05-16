@@ -7,6 +7,7 @@ local util_observable = require("guanghechen.util.observable")
 ---@field public buftype_extra guanghechen.observable.Observable
 ---@field public caller_winnr guanghechen.observable.Observable
 ---@field public caller_bufnr guanghechen.observable.Observable
+---@field public darken guanghechen.observable.Observable
 ---@field public filemap_dirty guanghechen.observable.Observable
 ---@field public find_file_enable_case_sensitive guanghechen.observable.Observable
 ---@field public find_file_enable_regex guanghechen.observable.Observable
@@ -29,6 +30,7 @@ local context = Viewmodel.new({
   :register("buftype_extra", Observable.new(nil), false)
   :register("caller_winnr", Observable.new(nil), false)
   :register("caller_bufnr", Observable.new(nil), false)
+  :register("darken", Observable.new(true), true)
   :register("filemap_dirty", Observable.new(true), true)
   :register("find_file_enable_case_sensitive", Observable.new(false), true)
   :register("find_file_enable_regex", Observable.new(false), true)
@@ -49,6 +51,7 @@ context:load()
 --Auto refresh statusline
 util_observable.watch_observables({
   context.buftype_extra,
+  context.darken,
   context.find_file_enable_case_sensitive,
   context.find_file_enable_regex,
   context.find_file_scope,

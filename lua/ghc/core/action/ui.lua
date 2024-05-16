@@ -23,6 +23,9 @@ function M.toggle_transparency()
 end
 
 function M.toggle_theme()
+  ---@type boolean
+  local darken = context.repo.darken:get_snapshot()
+  context.repo.darken:next(not darken)
   require("base46").toggle_theme()
 end
 
