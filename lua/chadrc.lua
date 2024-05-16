@@ -13,9 +13,10 @@ local util = {
   table = require("guanghechen.util.table"),
 }
 
+---@type boolean
+local is_darken = context.global.darken:get_snapshot()
 ---@type string
 local theme_lighten = context.global.theme_lighten:get_snapshot()
-
 ---@type string
 local theme_darken = context.global.theme_darken:get_snapshot()
 
@@ -35,7 +36,7 @@ M.ui = {
       bg = "light_grey",
     },
   },
-  theme = context.global.darken:get_snapshot() and theme_darken or theme_lighten,
+  theme = is_darken and theme_darken or theme_lighten,
   theme_toggle = { theme_lighten, theme_darken },
   transparency = context.repo.transparency:get_snapshot(),
   base46 = {
@@ -56,7 +57,7 @@ M.ui = {
   tabufline = {
     enabled = true,
     lazyload = true,
-    order = util.table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs", "btns" }, bufferline.order_right),
+    order = util.table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs" }, bufferline.order_right),
     modules = vim.tbl_deep_extend("force", bufferline.modules_left, bufferline.modules_right),
   },
   telescope = {
@@ -91,6 +92,6 @@ M.ui = {
   cheatsheet = { theme = "grid" }, -- simple/grid
 }
 
--- print(vim.inspect(M.ui))
+--print(vim.inspect(M.ui))
 
 return M
