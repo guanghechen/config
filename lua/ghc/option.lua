@@ -79,6 +79,7 @@ vim.opt.smartindent = true -- Insert indents automatically
 vim.opt.smarttab = true
 vim.opt.smoothscroll = true
 vim.opt.softtabstop = 2 -- set the tab width
+vim.opt.statuscolumn = [[%!v:lua.require'ghc.core.action.ui_statuscolumn'.statuscolumn()]]
 vim.opt.tabstop = 2 -- set the tab width
 vim.opt.termguicolors = true
 vim.opt.winminwidth = 10 -- Minimum window width
