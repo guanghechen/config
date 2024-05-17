@@ -37,7 +37,16 @@ function M.toggle_relative_line_number()
   ---@type boolean
   local next_relativenumber = not context.config.relativenumber:get_snapshot()
   context.config.relativenumber:next(next_relativenumber)
+
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  if next_relativenumber then
+    vim.cmd("bufdo set relativenumber")
+  else
+    vim.cmd("bufdo set norelativenumber")
+  end
   vim.opt.relativenumber = next_relativenumber
+  vim.api.nvim_set_current_buf(bufnr)
 end
 
 return M
