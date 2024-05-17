@@ -38,8 +38,9 @@ return {
     })
   end,
   dependencies = {
+    "MunifTanjim/nui.nvim",
     "nvim-lua/plenary.nvim",
     "nvim-tree/nvim-web-devicons",
-    "MunifTanjim/nui.nvim",
+    "nvim-window-picker",
   },
 }
