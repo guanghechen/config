@@ -3,6 +3,11 @@ local context = {
   config = require("ghc.core.context.config"),
 }
 
+---@class ghc.option.fold
+local action = {
+  fold = require("ghc.core.action.fold"),
+}
+
 -- disable some default providers
 vim.g.loaded_node_provider = 0
 vim.g.loaded_perl_provider = 0
@@ -42,8 +47,11 @@ vim.opt.fillchars = {
   diff = "╱",
   eob = " ",
 }
-vim.opt.foldenable = false
+vim.opt.foldenable = true
+vim.opt.foldexpr = "v:lua.require'ghc.core.action.fold'.foldexpr()"
 vim.opt.foldlevel = 99
+vim.opt.foldmethod = "expr"
+vim.opt.foldtext = ""
 vim.opt.guifont = { "RobotoMono Nerd Font" }
 vim.opt.list = true -- Show some invisible characters (tabs...
 vim.opt.listchars:append({
@@ -68,6 +76,7 @@ vim.opt.sidescrolloff = 8 -- Columns of context
 vim.opt.signcolumn = "yes"
 vim.opt.smartindent = true -- Insert indents automatically
 vim.opt.smarttab = true
+vim.opt.smoothscroll = true
 vim.opt.softtabstop = 2 -- set the tab width
 vim.opt.tabstop = 2 -- set the tab width
 vim.opt.termguicolors = true
