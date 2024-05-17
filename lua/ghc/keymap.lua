@@ -38,6 +38,12 @@ vim.keymap.set({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { expr = tru
 vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 
+-- better copy/paste
+vim.keymap.set("v", "<C-b>c", '"+y', { noremap = true, silent = true, desc = "copy to system clipboard" })
+vim.keymap.set("v", "<M-c>", '"+y', { noremap = true, silent = true, desc = "copy to system clipboard" })
+vim.keymap.set({ "i", "n" }, "<C-b>v", '<esc>"+p', { noremap = true, silent = true, desc = "paste from system clipboard" })
+vim.keymap.set({ "i", "n" }, "<M-v>", '<esc>"+p', { noremap = true, silent = true, desc = "paste from system clipboard" })
+
 -- https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
 vim.keymap.set("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "Next Search Result" })
 vim.keymap.set("x", "n", "'Nn'[v:searchforward]", { expr = true, desc = "Next Search Result" })
@@ -96,14 +102,6 @@ mapkey("n", "<C-b>h", actions.window.focus_window_left, "window: Focus on the le
 mapkey("n", "<C-b>j", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
 mapkey("n", "<C-b>k", actions.window.focus_window_top, "window: Focus on the top window", true)
 mapkey("n", "<C-b>l", actions.window.focus_window_right, "window: Focus on the right window", true)
-mapkey("i", "<M-b>h", actions.window.focus_window_left, "window: Focus on the left window", true)
-mapkey("i", "<M-b>j", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
-mapkey("i", "<M-b>k", actions.window.focus_window_top, "window: Focus on the top window", true)
-mapkey("i", "<M-b>l", actions.window.focus_window_right, "window: Focus on the right window", true)
-mapkey("n", "<M-b>h", actions.window.focus_window_left, "window: Focus on the left window", true)
-mapkey("n", "<M-b>j", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
-mapkey("n", "<M-b>k", actions.window.focus_window_top, "window: Focus on the top window", true)
-mapkey("n", "<M-b>l", actions.window.focus_window_right, "window: Focus on the right window", true)
 mapkey("i", "<M-h>", actions.window.focus_window_left, "window: Focus on the left window", true)
 mapkey("i", "<M-j>", actions.window.focus_window_bottom, "window: Focus on the bottom window", true)
 mapkey("i", "<M-k>", actions.window.focus_window_top, "window: Focus on the top window", true)
