@@ -50,7 +50,11 @@ function M.toggle_relative_line_number()
 end
 
 function M.toggle_wrap()
-  vim.opt_local.wrap = not vim.opt_local.wrap
+  ---@type boolean
+  local wrap_current = vim.opt_local.wrap:get()
+  ---@type boolean
+  local wrap_next = not wrap_current
+  vim.opt_local.wrap = wrap_next
 end
 
 return M

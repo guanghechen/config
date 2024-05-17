@@ -243,6 +243,7 @@ mapkey("n", "<leader>un", actions.ui.dismiss_notifications, "ui: Dismiss all not
 mapkey("n", "<leader>utl", actions.ui.toggle_relative_line_number, "ui: Toggle relative line number")
 mapkey("n", "<leader>utT", actions.ui.toggle_transparency, "ui: Toggle transparency")
 mapkey("n", "<leader>utt", actions.ui.toggle_theme, "ui: Toggle theme")
+mapkey("n", "<leader>utw", actions.ui.toggle_wrap, "ui: Toggle wrap")
 ---------------------------------------------------------------------------------------------#[u]i--
 
 --#[w]indow-----------------------------------------------------------------------------------------
