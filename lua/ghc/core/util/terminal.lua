@@ -8,7 +8,7 @@ local util = {
 
 ---@class ghc.core.util.terminal.context
 local context = {
-  repo = require("ghc.core.context.repo"),
+  session = require("ghc.core.context.session"),
 }
 
 ---@class ghc.core.util.terminal
@@ -57,8 +57,8 @@ end
 ---@param cmd? string[]|string
 ---@param opts? LazyTermOpts
 function M.open_terminal(cmd, opts)
-  context.repo.caller_bufnr:next(vim.api.nvim_get_current_buf())
-  context.repo.caller_winnr:next(vim.api.nvim_get_current_win())
+  context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
+  context.session.caller_winnr:next(vim.api.nvim_get_current_win())
 
   opts = vim.tbl_deep_extend("force", {
     ft = "term",

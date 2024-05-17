@@ -1,9 +1,9 @@
 local context = {
-  repo = require("ghc.core.context.repo"),
+  config = require("ghc.core.context.config"),
 }
 
 ---@type boolean
-local transparency = context.repo.transparency:get_snapshot()
+local transparency = context.config.transparency:get_snapshot()
 
 local function get_neotree_width()
   for _, win in pairs(vim.api.nvim_tabpage_list_wins(0)) do

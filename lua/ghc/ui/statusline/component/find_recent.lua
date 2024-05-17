@@ -1,9 +1,10 @@
 local context = {
-  repo = require("ghc.core.context.repo"),
+  config = require("ghc.core.context.config"),
+  session = require("ghc.core.context.session"),
 }
 
 ---@type boolean
-local transparency = context.repo.transparency:get_snapshot()
+local transparency = context.config.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.find_recent
 local M = {
@@ -29,13 +30,13 @@ M.color = {
 function M.condition()
   local filetype = vim.bo.filetype
   ---@type ghc.core.types.enum.BUFTYPE_EXTRA
-  local buftype_extra = context.repo.buftype_extra:get_snapshot()
+  local buftype_extra = context.session.buftype_extra:get_snapshot()
   return filetype == "TelescopePrompt" and buftype_extra == "find_recent"
 end
 
 function M.renderer()
   ---@type ghc.core.types.enum.SEARCH_SCOPE
-  local scope = context.repo.find_recent_scope:get_snapshot()
+  local scope = context.session.find_recent_scope:get_snapshot()
   local color_scope = "%#" .. M.name .. "_flag_scope#"
   local text_scope = " " .. scope .. " "
   return color_scope .. text_scope

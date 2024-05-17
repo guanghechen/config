@@ -1,9 +1,10 @@
 local context = {
-  repo = require("ghc.core.context.repo"),
+  config = require("ghc.core.context.config"),
+  session = require("ghc.core.context.session"),
 }
 
 ---@type boolean
-local transparency = context.repo.transparency:get_snapshot()
+local transparency = context.config.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.search
 local M = {
@@ -29,19 +30,19 @@ M.color = {
 function M.condition()
   local filetype = vim.bo.filetype
   ---@type ghc.core.types.enum.BUFTYPE_EXTRA
-  local buftype_extra = context.repo.buftype_extra:get_snapshot()
+  local buftype_extra = context.session.buftype_extra:get_snapshot()
   return filetype == "TelescopePrompt" and buftype_extra == "search"
 end
 
 function M.renderer()
   ---@type ghc.core.types.enum.SEARCH_SCOPE
-  local scope = context.repo.search_scope:get_snapshot()
+  local scope = context.session.search_scope:get_snapshot()
 
   ---@type boolean
-  local enable_regex = context.repo.search_enable_regex:get_snapshot()
+  local enable_regex = context.session.search_enable_regex:get_snapshot()
 
   ---@type boolean
-  local enable_case_sensitive = context.repo.search_enable_case_sensitive:get_snapshot()
+  local enable_case_sensitive = context.session.search_enable_case_sensitive:get_snapshot()
 
   local color_scope = "%#" .. M.name .. "_flag_scope#"
   local color_enable_regex = enable_regex and "%#" .. M.name .. "_flag_enabled#" or "%#" .. M.name .. "_flag#"

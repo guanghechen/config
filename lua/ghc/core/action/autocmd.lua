@@ -5,7 +5,7 @@ local action = {
 
 ---@class ghc.core.action.autocmd.context
 local context = {
-  repo = require("ghc.core.context.repo"),
+  session = require("ghc.core.context.session"),
 }
 
 ---@class ghc.core.action.autocmd.util
@@ -69,7 +69,7 @@ function M.autocmd_clear_buftype_extra(bufnr, callback)
     buffer = bufnr,
     group = M.augroup("clear_buftype_extra"),
     callback = function()
-      context.repo.buftype_extra:next(nil)
+      context.session.buftype_extra:next(nil)
       if callback then
         callback(bufnr)
       end
@@ -93,7 +93,7 @@ end
 ---@param opts {pattern: table}
 function M.autocmd_close_with_q(opts)
   local function close()
-    context.repo.buftype_extra:next(nil)
+    context.session.buftype_extra:next(nil)
     vim.cmd("close")
   end
 

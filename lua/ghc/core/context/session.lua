@@ -3,7 +3,7 @@ local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 local path = require("ghc.core.util.path")
 local util_observable = require("guanghechen.util.observable")
 
----@class ghc.core.context.repo : guanghechen.viewmodel.Viewmodel
+---@class ghc.core.context.session : guanghechen.viewmodel.Viewmodel
 ---@field public buftype_extra guanghechen.observable.Observable
 ---@field public caller_winnr guanghechen.observable.Observable
 ---@field public caller_bufnr guanghechen.observable.Observable
@@ -20,11 +20,9 @@ local util_observable = require("guanghechen.util.observable")
 ---@field public search_enable_regex guanghechen.observable.Observable
 ---@field public search_scope guanghechen.observable.Observable
 ---@field public search_keyword guanghechen.observable.Observable
----@field public transparency guanghechen.observable.Observable
---
 local context = Viewmodel.new({
-  name = "repo",
-  filepath = path.gen_session_related_filepath({ filename = "repo.json" }),
+  name = "config",
+  filepath = path.gen_session_related_filepath({ filename = "config.json" }),
 })
   :register("buftype_extra", Observable.new(nil), false)
   :register("caller_winnr", Observable.new(nil), false)
@@ -42,7 +40,6 @@ local context = Viewmodel.new({
   :register("search_enable_regex", Observable.new(false), true)
   :register("search_scope", Observable.new("C"), true)
   :register("search_keyword", Observable.new(""), true)
-  :register("transparency", Observable.new(false), true)
 
 context:load()
 
@@ -56,7 +53,6 @@ util_observable.watch_observables({
   context.search_enable_case_sensitive,
   context.search_enable_regex,
   context.search_scope,
-  context.transparency,
 }, function()
   vim.cmd("redrawstatus")
 end)

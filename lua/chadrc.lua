@@ -2,8 +2,7 @@
 -- https://github.com/NvChad/NvChad/blob/v2.5/lua/nvconfig.lua
 
 local context = {
-  global = require("ghc.core.context.global"),
-  repo = require("ghc.core.context.repo"),
+  config = require("ghc.core.context.config"),
 }
 
 local bufferline = require("ghc.ui.bufferline")
@@ -14,11 +13,11 @@ local util = {
 }
 
 ---@type boolean
-local is_darken = context.global.darken:get_snapshot()
+local is_darken = context.config.darken:get_snapshot()
 ---@type string
-local theme_lighten = context.global.theme_lighten:get_snapshot()
+local theme_lighten = context.config.theme_lighten:get_snapshot()
 ---@type string
-local theme_darken = context.global.theme_darken:get_snapshot()
+local theme_darken = context.config.theme_darken:get_snapshot()
 
 ---@type ChadrcConfig
 local M = {}
@@ -38,7 +37,7 @@ M.ui = {
   },
   theme = is_darken and theme_darken or theme_lighten,
   theme_toggle = { theme_lighten, theme_darken },
-  transparency = context.repo.transparency:get_snapshot(),
+  transparency = context.config.transparency:get_snapshot(),
   base46 = {
     integration = {
       "blankline",

@@ -6,8 +6,8 @@ local util = {
 
 ---@class ghc.action.git.context
 local context = {
-  global = require("ghc.core.context.global"),
-  repo = require("ghc.core.context.repo"),
+  config = require("ghc.core.context.config"),
+  session = require("ghc.core.context.session"),
 }
 
 -- Function to check clipboard with retries
@@ -43,7 +43,7 @@ local function edit_lazygit_file_in_buffer()
     return
   end
 
-  local winid = context.repo.caller_winnr:get_snapshot()
+  local winid = context.session.caller_winnr:get_snapshot()
 
   if winid == nil then
     vim.notify("Could not find the original window.", vim.log.levels.ERROR)
@@ -71,7 +71,7 @@ local function get_lazygit_config_filepath()
   local lazygit_config_dir = util.path.join(nvim_config_dir, "config/lazygit")
   local config_filepaths = {
     util.path.join(lazygit_config_dir, "config.yaml"),
-    util.path.join(lazygit_config_dir, context.global.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"),
+    util.path.join(lazygit_config_dir, context.config.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"),
   }
   local lazygit_theme_config_filepath = table.concat(config_filepaths, ",")
   return lazygit_theme_config_filepath
