@@ -5,6 +5,7 @@ local action = {
 
 ---@class ghc.core.action.autocmd.context
 local context = {
+  config = require("ghc.core.context.config"),
   session = require("ghc.core.context.session"),
 }
 
@@ -255,6 +256,33 @@ function M.autocmd_set_filetype(opts)
       end,
     })
   end
+end
+
+function M.autocmd_toggle_linenumber()
+  local augroup = M.augroup("toggle_linenumber")
+
+  vim.api.nvim_create_autocmd({ "InsertLeave" }, {
+    pattern = "*",
+    group = augroup,
+    callback = function()
+      if vim.o.nu and vim.api.nvim_get_mode().mode == "n" then
+        if context.config.relativenumber:get_snapshot() then
+          vim.opt.relativenumber = true
+        end
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ "InsertEnter" }, {
+    pattern = "*",
+    group = augroup,
+    callback = function()
+      if vim.o.nu then
+        vim.opt.relativenumber = false
+        vim.cmd("redraw")
+      end
+    end,
+  })
 end
 
 -- unlist some buffers with specified filetypes for easier close.
