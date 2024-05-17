@@ -34,6 +34,7 @@ vim.opt.splitkeep = "screen"
 
 -- appearance
 vim.opt.autoindent = true
+vim.opt.colorcolumn = { 100, 120 }
 vim.opt.conceallevel = 0 -- Disable conceal.
 vim.opt.cursorline = true -- ggtrue to highlight the row of the cursor.
 vim.opt.cursorlineopt = "number,screenline"
