@@ -12,13 +12,6 @@ local util = {
   table = require("guanghechen.util.table"),
 }
 
----@type boolean
-local is_darken = context.config.darken:get_snapshot()
----@type string
-local theme_lighten = context.config.theme_lighten:get_snapshot()
----@type string
-local theme_darken = context.config.theme_darken:get_snapshot()
-
 ---@type ChadrcConfig
 local M = {}
 
@@ -35,8 +28,8 @@ M.ui = {
       bg = "light_grey",
     },
   },
-  theme = is_darken and theme_darken or theme_lighten,
-  theme_toggle = { theme_lighten, theme_darken },
+  theme = context.config.get_current_theme(),
+  theme_toggle = {},
   transparency = context.config.transparency:get_snapshot(),
   base46 = {
     integration = {

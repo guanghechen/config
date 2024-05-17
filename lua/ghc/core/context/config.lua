@@ -20,6 +20,7 @@ local context_config_filepath = config_dir
 ---@field public theme_lighten guanghechen.observable.Observable
 ---@field public theme_darken guanghechen.observable.Observable
 ---@field public transparency guanghechen.observable.Observable
+---@field public get_current_theme fun():string
 local context = Viewmodel.new({ name = "config", filepath = context_config_filepath })
   :register("context_config_filepath", Observable.new(context_config_filepath), true)
   :register("darken", Observable.new(true), true)
@@ -28,8 +29,21 @@ local context = Viewmodel.new({ name = "config", filepath = context_config_filep
   :register("theme_darken", Observable.new("onedark"), true)
   :register("transparency", Observable.new(false), true)
 
+---@return string
+function context.get_current_theme()
+  ---@type boolean
+  local is_darken = context.darken:get_snapshot()
+
+  ---@type string
+  local theme_lighten = context.theme_lighten:get_snapshot()
+
+  ---@type string
+  local theme_darken = context.theme_darken:get_snapshot()
+
+  return is_darken and theme_darken or theme_lighten
+end
+
 context:load()
-vim.opt.relativenumber = context.relativenumber:get_snapshot()
 
 --Auto refresh statusline
 util_observable.watch_observables({

@@ -19,6 +19,8 @@ end
 
 function M.toggle_transparency()
   context.config.transparency:next(not context.config.transparency:get_snapshot())
+
+  require("nvconfig").ui.transparency = context.config.transparency:get_snapshot()
   require("base46").load_all_highlights()
 end
 
@@ -27,18 +29,7 @@ function M.toggle_theme()
   local darken = context.config.darken:get_snapshot()
   context.config.darken:next(not darken)
 
-  vim.g.icon_toggled = not vim.g.icon_toggled
-  vim.g.toggle_theme_icon = vim.g.icon_toggled and "   " or "   "
-
-  ---@type boolean
-  local is_darken = context.config.darken:get_snapshot()
-  ---@type string
-  local theme_lighten = context.config.theme_lighten:get_snapshot()
-  ---@type string
-  local theme_darken = context.config.theme_darken:get_snapshot()
-
-  require("nvconfig").ui.theme = is_darken and theme_darken or theme_lighten
-
+  require("nvconfig").ui.theme = context.config.get_current_theme()
   require("base46").load_all_highlights()
 end
 
