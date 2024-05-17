@@ -34,6 +34,7 @@ vim.opt.splitkeep = "screen"
 
 -- appearance
 vim.opt.autoindent = true
+vim.opt.autowrite = true
 vim.opt.colorcolumn = { 100, 120 }
 vim.opt.conceallevel = 0 -- Disable conceal.
 vim.opt.cursorline = true -- ggtrue to highlight the row of the cursor.
@@ -82,6 +83,7 @@ vim.opt.softtabstop = 2 -- set the tab width
 vim.opt.statuscolumn = [[%!v:lua.require'ghc.core.action.ui_statuscolumn'.statuscolumn()]]
 vim.opt.tabstop = 2 -- set the tab width
 vim.opt.termguicolors = true
+vim.opt.timeoutlen = vim.g.vscode and 1000 and 300 -- Lower than default (1000) to quickly trigger which-key
 vim.opt.winminwidth = 10 -- Minimum window width
 vim.opt.wrap = false
 
