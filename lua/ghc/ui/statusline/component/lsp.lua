@@ -25,7 +25,7 @@ function M.renderer()
   local text = ""
 
   local bufnr = vim.api.nvim_win_get_buf(vim.g.statusline_winid or 0)
-  for _, client in ipairs(vim.lsp.get_active_clients()) do
+  for _, client in ipairs(vim.lsp.get_clients()) do
     if client.attached_buffers[bufnr] and client.name ~= "null-ls" then
       text = "   " .. client.name .. " "
       break

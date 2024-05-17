@@ -136,7 +136,7 @@ end
 ---@param opts table
 local function search_current_buffer(opts)
   local filename = vim.api.nvim_buf_get_name(opts.bufnr)
-  local filetype = vim.api.nvim_buf_get_option(opts.bufnr, "filetype")
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = opts.bufnr })
   local lines = vim.api.nvim_buf_get_lines(opts.bufnr, 0, -1, false)
   local lines_with_numbers = {}
 
@@ -165,28 +165,30 @@ local function search_current_buffer(opts)
 
     opts.line_highlights = line_highlights
 
-    for id, node in query:iter_captures(root, opts.bufnr, 0, -1) do
-      local hl = "@" .. query.captures[id]
-      if hl and type(hl) ~= "number" then
-        local row1, col1, row2, col2 = node:range()
+    if query then
+      for id, node in query:iter_captures(root, opts.bufnr, 0, -1) do
+        local hl = "@" .. query.captures[id]
+        if hl and type(hl) ~= "number" then
+          local row1, col1, row2, col2 = node:range()
 
-        if row1 == row2 then
-          local row = row1 + 1
+          if row1 == row2 then
+            local row = row1 + 1
 
-          for index = col1, col2 do
-            line_highlights[row][index] = hl
-          end
-        else
-          local row = row1 + 1
-          for index = col1, #lines[row] do
-            line_highlights[row][index] = hl
-          end
-
-          while row < row2 + 1 do
-            row = row + 1
-
-            for index = 0, #(lines[row] or {}) do
+            for index = col1, col2 do
               line_highlights[row][index] = hl
+            end
+          else
+            local row = row1 + 1
+            for index = col1, #lines[row] do
+              line_highlights[row][index] = hl
+            end
+
+            while row < row2 + 1 do
+              row = row + 1
+
+              for index = 0, #(lines[row] or {}) do
+                line_highlights[row][index] = hl
+              end
             end
           end
         end

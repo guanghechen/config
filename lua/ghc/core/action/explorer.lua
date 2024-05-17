@@ -55,7 +55,7 @@ function M.show_git_explorer_cwd()
 end
 
 function M.reveal_file_explorer()
-  local ft_current = vim.api.nvim_buf_get_option(0, "filetype")
+  local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
   if ft_current == "neo-tree" then
     require("neo-tree.command").execute({
       action = "close",
@@ -70,7 +70,7 @@ function M.reveal_file_explorer()
 end
 
 function M.focus_or_toggle_explorer()
-  local ft_current = vim.api.nvim_buf_get_option(0, "filetype")
+  local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
   if ft_current == "neo-tree" then
     require("neo-tree.command").execute({
       action = "close",

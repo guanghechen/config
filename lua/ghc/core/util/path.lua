@@ -35,12 +35,12 @@ function M.is_absolute(p)
 end
 
 function M.workspace()
-  local cwd = vim.uv.cwd()
+  local cwd = vim.fn.getcwd()
   return M.findGitRepoFromPath(cwd) or cwd
 end
 
 function M.cwd()
-  return vim.uv.cwd()
+  return vim.fn.getcwd()
 end
 
 function M.current_directory()

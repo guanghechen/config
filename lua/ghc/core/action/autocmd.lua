@@ -34,7 +34,7 @@ function M.autocmd_change_dir()
     pattern = "*",
     callback = function()
       if vim.fn.expand("%") ~= "" then
-        local cwd = vim.uv.cwd()
+        local cwd = vim.fn.getcwd()
         local p = vim.fn.expand("%:p:h")
 
         local A = util.path.findGitRepoFromPath(p)

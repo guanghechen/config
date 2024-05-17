@@ -49,4 +49,8 @@ function M.toggle_relative_line_number()
   vim.api.nvim_set_current_buf(bufnr)
 end
 
+function M.toggle_wrap()
+  vim.opt_local.wrap = not vim.opt_local.wrap
+end
+
 return M

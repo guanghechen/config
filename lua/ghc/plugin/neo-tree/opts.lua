@@ -266,6 +266,7 @@ return {
     },
   },
   git_status = {
+    group_empty_dirs = true, -- when true, empty folders will be grouped together
     window = {
       position = "float",
       mappings = {

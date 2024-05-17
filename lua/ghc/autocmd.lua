@@ -20,6 +20,7 @@ actions.autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
     "neotest-output",
     "neotest-output-panel",
     "neotest-summary",
+    "neo-tree",
     "notify",
     "PlenaryTestPopup",
     "qf",
