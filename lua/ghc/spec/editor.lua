@@ -38,6 +38,9 @@ return {
   --find
   require("ghc.plugin.bookmarks"),
   require("ghc.plugin.telescope"),
+  require("ghc.plugin.telescope-file-browser"),
+  require("ghc.plugin.telescope-frecency"),
+  require("ghc.plugin.telescope-fzf-native"),
 
   --format
   require("ghc.plugin.conform"),

@@ -8,6 +8,7 @@ function M.toggle_explorer_file_workspace()
     action = "focus",
     source = "filesystem",
     dir = path.workspace(),
+    position = "left",
     reveal = true,
     toggle = true,
   })
@@ -18,6 +19,7 @@ function M.toggle_explorer_file_cwd()
     action = "focus",
     source = "filesystem",
     dir = path.cwd(),
+    position = "left",
     reveal = true,
     toggle = true,
   })
@@ -28,6 +30,7 @@ function M.toggle_explorer_buffer_workspace()
     action = "focus",
     source = "buffers",
     dir = path.workspace(),
+    position = "float",
     reveal = true,
     toggle = true,
   })
@@ -38,6 +41,7 @@ function M.toggle_explorer_buffer_cwd()
     action = "focus",
     source = "buffers",
     dir = path.cwd(),
+    position = "float",
     reveal = true,
     toggle = true,
   })
@@ -48,6 +52,7 @@ function M.toggle_explorer_git_workspace()
     action = "focus",
     source = "git_status",
     dir = path.workspace(),
+    position = "float",
     reveal = true,
     toggle = true,
   })
@@ -58,6 +63,7 @@ function M.toggle_explorer_git_cwd()
     action = "focus",
     source = "git_status",
     dir = path.cwd(),
+    position = "float",
     reveal = true,
     toggle = true,
   })
@@ -82,6 +88,7 @@ function M.reveal_file_explorer()
     require("neo-tree.command").execute({
       action = "focus",
       source = "filesystem",
+      position = "left",
       reveal = true,
     })
   end
