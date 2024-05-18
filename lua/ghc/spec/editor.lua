@@ -25,7 +25,7 @@ return {
   require("ghc.plugin.nvim-tmux-navigation"),
 
   --explorer
-  require("ghc.plugin.neo-tree.spec"),
+  require("ghc.plugin.neo-tree"),
   require("ghc.plugin.nvim-window-picker"),
 
   --fancy

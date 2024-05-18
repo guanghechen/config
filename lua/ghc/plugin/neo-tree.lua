@@ -1,11 +1,11 @@
 local icons = require("ghc.core.setting.icons")
 
 local function recursively_toggle(state, toggle_directory)
-  require("ghc.plugin.neo-tree.util").neotree_recursive_toggle(state, toggle_directory, false)
+  require("ghc.core.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, false)
 end
 
 local function recursively_toggle_all(state, toggle_directory)
-  require("ghc.plugin.neo-tree.util").neotree_recursive_toggle(state, toggle_directory, true)
+  require("ghc.core.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, true)
 end
 
 -- Sorts files and directories descendantly.
