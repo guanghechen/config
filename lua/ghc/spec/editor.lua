@@ -21,7 +21,6 @@ return {
   require("ghc.plugin.mini-indentscope"),
 
   --enhance
-  require("ghc.plugin.flash"),
   require("ghc.plugin.nvim-tmux-navigation"),
 
   --explorer
@@ -58,6 +57,7 @@ return {
   require("ghc.plugin.nvim-lspconfig"),
 
   --search
+  require("ghc.plugin.flash"),
 
   --ui
   require("ghc.plugin.nvim-colorizer"),
