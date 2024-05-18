@@ -4,7 +4,7 @@ import = [
   "~/.config/alacritty/basic.toml",
   "~/.config/alacritty/font.toml",
   "~/.config/alacritty/keymap.toml",
-  # "~/.config/alacritty/theme/one-half-dark.toml",
+  "~/.config/alacritty/theme/one-half-dark.toml",
   # "~/.config/alacritty/theme/one-half-light.toml",
-  "~/.config/alacritty/theme/tokyo-night.toml",
+  # "~/.config/alacritty/theme/tokyo-night.toml",
 ]
