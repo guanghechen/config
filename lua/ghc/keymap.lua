@@ -10,6 +10,7 @@ local actions = {
   find_recent = require("ghc.core.action.find_recent"),
   file = require("ghc.core.action.file"),
   git = require("ghc.core.action.git"),
+  replace = require("ghc.core.action.replace"),
   search = require("ghc.core.action.search"),
   session = require("ghc.core.action.session"),
   tab = require("ghc.core.action.tab"),
@@ -192,6 +193,15 @@ mapkey("n", "<leader>ql", actions.session.session_load, "session: restore sessio
 mapkey("n", "<leader>qs", actions.session.session_save, "session: save session", true)
 mapkey("n", "<leader>qC", actions.session.session_clear_all, "session: clear all sessions", true)
 -------------------------------------------------------------------------------------------#[q]uit--
+
+--#[r]eplace----------------------------------------------------------------------------------------
+mapkey("n", "<leader>rR", actions.replace.replace_word_workspace, "replace: word (workspace)")
+mapkey("n", "<leader>rr", actions.replace.replace_word_current_file, "replace: word (current file)")
+mapkey("n", "<leader>rti", actions.replace.toggle_case_sensitive, "replace: toggle case sensitive")
+mapkey("v", "<leader>rR", actions.replace.replace_word_workspace, "replace: word (workspace)")
+mapkey("v", "<leader>rr", actions.replace.replace_word_current_file, "replace: word (current file)")
+mapkey("v", "<leader>rti", actions.replace.toggle_case_sensitive, "replace: toggle case sensitive")
+----------------------------------------------------------------------------------------#[r]eplace--
 
 --#[s]earch-----------------------------------------------------------------------------------------
 -- mapkey("n", "<leader>sw", actions.search.grep_selected_text_workspace, "search: Grep word (workspace)")

@@ -190,6 +190,35 @@ function M.autocmd_remember_last_tabnr()
   })
 end
 
+---@param opts { prompt_bufnr:number, sync_path:boolean, callback?: fun():nil}
+function M.autocmd_remember_spectre_prompt(opts)
+  local prompt_bufnr = opts.prompt_bufnr ---@type number
+  local sync_path = opts.sync_path ---@type boolean
+  local callback = opts.callback ---@type (fun():nil)|nil
+
+  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+    buffer = prompt_bufnr,
+    group = M.augroup("remember_telescope_prompt"),
+    callback = function()
+      local state = require("spectre.actions").get_state()
+      local replace_keyword = state.query.replace_query ---@type string
+      local search_keyword = state.query.search_query ---@type string
+
+      context.session.replace_replace_keyword:next(replace_keyword)
+      context.session.replace_search_keyword:next(search_keyword)
+
+      if sync_path then
+        local query_path = state.query.path ---@type string
+        context.session.replace_path:next(query_path)
+      end
+
+      if type(callback) == "function" then
+        callback()
+      end
+    end,
+  })
+end
+
 ---@param prompt_bufnr number
 ---@param callback fun(prompt:string):nil
 function M.autocmd_remember_telescope_prompt(prompt_bufnr, callback)
@@ -299,3 +328,4 @@ function M.autocmd_unlist_buffer(opts)
 end
 
 return M
+

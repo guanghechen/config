@@ -349,7 +349,7 @@ local function search(opts)
   open_picker()
 end
 
----@class ghc.core.search.grep_string
+---@class ghc.core.action.search
 local M = {}
 
 function M.grep_selected_text_workspace()

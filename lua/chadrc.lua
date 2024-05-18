@@ -43,7 +43,7 @@ M.ui = {
       bg = "one_bg2", -- "line"
     },
     Comment = {
-      italic = true,
+      -- italic = true,
     },
     Visual = {
       bg = "light_grey",

@@ -1,7 +1,7 @@
 local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
-local path = require("ghc.core.util.path")
 local util_observable = require("guanghechen.util.observable")
+local path = require("ghc.core.util.path")
 
 ---@class ghc.core.context.session : guanghechen.viewmodel.Viewmodel
 ---@field public buftype_extra guanghechen.observable.Observable
@@ -15,6 +15,10 @@ local util_observable = require("guanghechen.util.observable")
 ---@field public find_file_scope guanghechen.observable.Observable
 ---@field public find_recent_keyword guanghechen.observable.Observable
 ---@field public find_recent_scope guanghechen.observable.Observable
+---@field public replace_enable_case_sensitive guanghechen.observable.Observable
+---@field public replace_replace_keyword guanghechen.observable.Observable
+---@field public replace_search_keyword guanghechen.observable.Observable
+---@field public replace_path guanghechen.observable.Observable
 ---@field public search_last_command guanghechen.observable.Observable
 ---@field public search_enable_case_sensitive guanghechen.observable.Observable
 ---@field public search_enable_regex guanghechen.observable.Observable
@@ -35,6 +39,10 @@ local context = Viewmodel.new({
   :register("find_file_keyword", Observable.new(""), true)
   :register("find_recent_keyword", Observable.new(""), true)
   :register("find_recent_scope", Observable.new("C"), true)
+  :register("replace_enable_case_sensitive", Observable.new(false), true)
+  :register("replace_replace_keyword", Observable.new(""), true)
+  :register("replace_search_keyword", Observable.new(""), true)
+  :register("replace_path", Observable.new(""), true)
   :register("search_last_command", Observable.new(nil), false)
   :register("search_enable_case_sensitive", Observable.new(false), true)
   :register("search_enable_regex", Observable.new(false), true)

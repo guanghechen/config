@@ -59,6 +59,9 @@ return {
   --search
   require("ghc.plugin.flash"),
 
+  --replace
+  require("ghc.plugin.nvim-spectre"),
+
   --ui
   require("ghc.plugin.nvim-colorizer"),
 }
