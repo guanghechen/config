@@ -5,6 +5,9 @@ local context = {
   config = require("ghc.core.context.config"),
 }
 
+---@type boolean
+local transparency = context.config.transparency:get_snapshot()
+
 local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
 local theme_integrations = require("ghc.ui.theme.integration")
@@ -16,7 +19,25 @@ local util = {
 local M = {}
 
 M.ui = {
-  hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, theme_integrations, {}),
+  hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, theme_integrations, {
+    FlashBackdrop = {
+      fg = "grey_fg",
+      bg = "none",
+      italic = true,
+    },
+    FlashCursor = {
+      fg = "red",
+      bg = transparency and "none" or "grey",
+    },
+    FlashLabel = {
+      fg = "white",
+      bg = transparency and "none" or "grey",
+    },
+    FlashMatch = {
+      fg = "cyan",
+      bg = transparency and "none" or "grey",
+    },
+  }),
   hl_override = {
     CursorLine = {
       bg = "one_bg2", -- "line"

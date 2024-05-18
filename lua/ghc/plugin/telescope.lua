@@ -28,101 +28,99 @@ local function close_telescope(...)
 end
 
 return {
-  {
-    "nvim-telescope/telescope.nvim",
-    opts = {
-      defaults = {
-        prompt_prefix = icons.ui.Telescope .. "  ",
-        selection_caret = icons.ui.ChevronRight .. " ", --" ",
-        border = {},
-        borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
-        color_devicons = true,
-        set_env = { ["COLORTERM"] = "truecolor" }, -- default = nil,
-        dynamic_preview_title = true,
-        file_ignore_patterns = { ".git/", ".cache", "build/", "%.class", "%.pdf", "%.mkv", "%.mp4", "%.zip" },
-        initial_mode = "insert",
-        layout_config = {
-          horizontal = {
-            prompt_position = "top",
-            preview_width = 0.55,
-            results_width = 0.8,
-          },
-          vertical = {
-            mirror = false,
-          },
-          width = 0.87,
-          height = 0.80,
-          preview_cutoff = 120,
+  "nvim-telescope/telescope.nvim",
+  opts = {
+    defaults = {
+      prompt_prefix = icons.ui.Telescope .. "  ",
+      selection_caret = icons.ui.ChevronRight .. " ", --" ",
+      border = {},
+      borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+      color_devicons = true,
+      set_env = { ["COLORTERM"] = "truecolor" }, -- default = nil,
+      dynamic_preview_title = true,
+      file_ignore_patterns = { ".git/", ".cache", "build/", "%.class", "%.pdf", "%.mkv", "%.mp4", "%.zip" },
+      initial_mode = "insert",
+      layout_config = {
+        horizontal = {
+          prompt_position = "top",
+          preview_width = 0.55,
+          results_width = 0.8,
         },
-        layout_strategy = "horizontal",
-        -- path_display = { "absolute" },
-        results_title = false,
-        scroll_strategy = "cycle",
-        selection_strategy = "reset",
-        sorting_strategy = "ascending",
-        use_less = false,
-        wrap_results = false,
-        mappings = {
-          i = {
-            ["<c-s>"] = flash,
-            ["<c-t>"] = open_with_trouble,
-          },
-          n = {
-            q = close_telescope,
-            s = flash,
-            ["<esc>"] = false,
-            ["<c-t>"] = open_with_trouble,
-          },
+        vertical = {
+          mirror = false,
+        },
+        width = 0.87,
+        height = 0.80,
+        preview_cutoff = 120,
+      },
+      layout_strategy = "horizontal",
+      -- path_display = { "absolute" },
+      results_title = false,
+      scroll_strategy = "cycle",
+      selection_strategy = "reset",
+      sorting_strategy = "ascending",
+      use_less = false,
+      wrap_results = false,
+      mappings = {
+        i = {
+          ["<c-s>"] = flash,
+          ["<c-t>"] = open_with_trouble,
+        },
+        n = {
+          q = close_telescope,
+          s = flash,
+          ["<esc>"] = false,
+          ["<c-t>"] = open_with_trouble,
         },
       },
-      extensions = {
-        file_browser = {},
-        frecency = {
-          auto_validate = true,
-          db_safe_mode = true,
-          db_validate_threshold = 5,
-          default_workspace = "CWD",
-          use_sqlite = false,
-          show_filter_column = false,
-          show_scores = false,
-          show_unindexed = true,
-          workspace_scan_cmd = {
-            "fd",
-            "--hidden",
-            "--type",
-            "file",
-            "--color=never",
-            "--follow",
-          },
-          ignore_patterns = {
-            "*.git/*",
-            "*/tmp/*",
-            "*/node_modules/*",
-            ".yarn/*",
+    },
+    extensions = {
+      file_browser = {},
+      frecency = {
+        auto_validate = true,
+        db_safe_mode = true,
+        db_validate_threshold = 5,
+        default_workspace = "CWD",
+        use_sqlite = false,
+        show_filter_column = false,
+        show_scores = false,
+        show_unindexed = true,
+        workspace_scan_cmd = {
+          "fd",
+          "--hidden",
+          "--type",
+          "file",
+          "--color=never",
+          "--follow",
+        },
+        ignore_patterns = {
+          "*.git/*",
+          "*/tmp/*",
+          "*/node_modules/*",
+          ".yarn/*",
 
-            -- for windows
-            [[*.git\*]],
-            [[*\tmp\*]],
-            [[*\node_modules\*]],
-            [[.yarn\*]],
-          },
-        },
-        fzf = {
-          fuzzy = false,
-          override_generic_sorter = true,
-          override_file_sorter = true,
-          case_mode = "respect_case",
+          -- for windows
+          [[*.git\*]],
+          [[*\tmp\*]],
+          [[*\node_modules\*]],
+          [[.yarn\*]],
         },
       },
+      fzf = {
+        fuzzy = false,
+        override_generic_sorter = true,
+        override_file_sorter = true,
+        case_mode = "respect_case",
+      },
     },
-    config = function(_, opts)
-      dofile(vim.g.base46_cache .. "telescope")
-      require("telescope").setup(opts)
-    end,
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-tree/nvim-web-devicons",
-      "nvim-telescope/telescope-fzf-native.nvim",
-    },
+  },
+  config = function(_, opts)
+    dofile(vim.g.base46_cache .. "telescope")
+    require("telescope").setup(opts)
+  end,
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "nvim-tree/nvim-web-devicons",
+    "nvim-telescope/telescope-fzf-native.nvim",
   },
 }
