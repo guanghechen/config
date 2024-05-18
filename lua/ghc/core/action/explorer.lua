@@ -1,5 +1,16 @@
 local path = require("ghc.core.util.path")
 
+---@return boolean
+local function has_explorer_window_opened()
+  for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type number
+    if vim.bo[bufnr].ft == "neo-tree" then
+      return true
+    end
+  end
+  return false
+end
+
 ---@class ghc.core.action.explorer
 local M = {}
 
@@ -94,21 +105,25 @@ function M.reveal_file_explorer()
   end
 end
 
-function M.close_all_explorers()
-  require("neo-tree.command").execute({
-    action = "close",
-    source = "filesystem",
-  })
+function M.toggle_explorers()
+  if has_explorer_window_opened() then
+    require("neo-tree.command").execute({
+      action = "close",
+      source = "filesystem",
+    })
 
-  require("neo-tree.command").execute({
-    action = "close",
-    source = "buffers",
-  })
+    require("neo-tree.command").execute({
+      action = "close",
+      source = "buffers",
+    })
 
-  require("neo-tree.command").execute({
-    action = "close",
-    source = "git_status",
-  })
+    require("neo-tree.command").execute({
+      action = "close",
+      source = "git_status",
+    })
+  else
+    M.toggle_explorer_last()
+  end
 end
 
 return M

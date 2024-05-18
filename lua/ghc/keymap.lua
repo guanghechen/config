@@ -142,13 +142,13 @@ mapkey("n", "<leader>dc", actions.debug.show_context, "debug: show context (pers
 --#[e]xplorer---------------------------------------------------------------------------------------
 mapkey("n", "<leader>eB", actions.explorer.toggle_explorer_buffer_workspace, "explorer: buffers (workspace)")
 mapkey("n", "<leader>eb", actions.explorer.toggle_explorer_buffer_cwd, "explorer: buffers (cwd)")
-mapkey("n", "<leader>ec", actions.explorer.close_all_explorers, "explorer: close all")
 mapkey("n", "<leader>ee", actions.explorer.toggle_explorer_last, "explorer: last")
 mapkey("n", "<leader>eF", actions.explorer.toggle_explorer_file_workspace, "explorer: files (workspace)")
 mapkey("n", "<leader>ef", actions.explorer.toggle_explorer_file_cwd, "explorer: files (cwd)")
 mapkey("n", "<leader>eG", actions.explorer.toggle_explorer_git_workspace, "explorer: git (workspace)")
 mapkey("n", "<leader>eg", actions.explorer.toggle_explorer_git_cwd, "explorer: git (cwd)")
 mapkey("n", "<leader>er", actions.explorer.reveal_file_explorer, "explorer: reveal file")
+mapkey("n", "<leader>et", actions.explorer.toggle_explorers, "explorer: toggle")
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ile-------------------------------------------------------------------------------------------
