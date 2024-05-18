@@ -143,15 +143,15 @@ mapkey("n", "<leader>dc", actions.debug.show_context, "debug: Show context (pers
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[e]xplorer---------------------------------------------------------------------------------------
-mapkey("n", "<leader>eB", actions.explorer.show_buffer_explorer_workspace, "explorer: Buffers (workspace)")
-mapkey("n", "<leader>eb", actions.explorer.show_buffer_explorer_cwd, "explorer: Buffers (cwd)")
-mapkey("n", "<leader>ee", actions.explorer.focus_or_toggle_explorer, "explorer: Focus or toggle")
-mapkey("n", "<leader>eF", actions.explorer.show_file_explorer_workspace, "explorer: Files (workspace)")
-mapkey("n", "<leader>ef", actions.explorer.show_file_explorer_cwd, "explorer: Files (cwd)")
-mapkey("n", "<leader>eG", actions.explorer.show_git_explorer_workspace, "explorer: Git changed files (workspace)")
-mapkey("n", "<leader>eg", actions.explorer.show_git_explorer_cwd, "explorer: Git changed files (cwd)")
-mapkey("n", "<leader>er", actions.explorer.reveal_file_explorer, "explorer: Reveal file explorer")
-mapkey("n", "<leader>et", actions.explorer.toggle_explorer, "explorer: Toggle")
+mapkey("n", "<leader>eB", actions.explorer.toggle_explorer_buffer_workspace, "explorer: buffers (workspace)")
+mapkey("n", "<leader>eb", actions.explorer.toggle_explorer_buffer_cwd, "explorer: buffers (cwd)")
+mapkey("n", "<leader>ec", actions.explorer.close_all_explorers, "explorer: close all")
+mapkey("n", "<leader>ee", actions.explorer.toggle_explorer_last, "explorer: last")
+mapkey("n", "<leader>eF", actions.explorer.toggle_explorer_file_workspace, "explorer: Files (workspace)")
+mapkey("n", "<leader>ef", actions.explorer.toggle_explorer_file_cwd, "explorer: Files (cwd)")
+mapkey("n", "<leader>eG", actions.explorer.toggle_explorer_git_workspace, "explorer: git (workspace)")
+mapkey("n", "<leader>eg", actions.explorer.toggle_explorer_git_cwd, "explorer: git (cwd)")
+mapkey("n", "<leader>er", actions.explorer.reveal_file_explorer, "explorer: reveal file")
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ile-------------------------------------------------------------------------------------------

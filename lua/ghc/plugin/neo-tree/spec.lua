@@ -1,11 +1,5 @@
 local icons = require("ghc.core.setting.icons")
 
--- Set icons for diagnostic errors, you'll need to define them somewhere:
-vim.fn.sign_define("DiagnosticSignError", { text = icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" })
-vim.fn.sign_define("DiagnosticSignWarn", { text = icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" })
-vim.fn.sign_define("DiagnosticSignInfo", { text = icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" })
-vim.fn.sign_define("DiagnosticSignHint", { text = icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" })
-
 local function recursively_toggle(state, toggle_directory)
   require("ghc.plugin.neo-tree.util").neotree_recursive_toggle(state, toggle_directory, false)
 end
@@ -265,6 +259,7 @@ return {
       group_empty_dirs = true, -- when true, empty folders will be grouped together
       show_unloaded = true,
       window = {
+        position = "float",
         mappings = {
           ["bd"] = "buffer_delete",
           ["<bs>"] = "navigate_up",
@@ -280,6 +275,10 @@ return {
       },
     },
     git_status = {
+      follow_current_file = {
+        enabled = true,
+        leave_dirs_open = true,
+      },
       group_empty_dirs = true, -- when true, empty folders will be grouped together
       window = {
         position = "float",
@@ -308,6 +307,13 @@ return {
     end
 
     local events = require("neo-tree.events")
+
+    -- Set icons for diagnostic errors, you'll need to define them somewhere:
+    vim.fn.sign_define("DiagnosticSignError", { text = icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" })
+    vim.fn.sign_define("DiagnosticSignWarn", { text = icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" })
+    vim.fn.sign_define("DiagnosticSignInfo", { text = icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" })
+    vim.fn.sign_define("DiagnosticSignHint", { text = icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" })
+
     opts.event_handlers = opts.event_handlers or {}
     vim.list_extend(opts.event_handlers, {
       { event = events.FILE_MOVED, handler = on_move },

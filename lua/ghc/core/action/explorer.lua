@@ -1,56 +1,74 @@
----@class ghc.core.action.explorer.util
-local util = {
-  path = require("ghc.core.util.path"),
-}
+local path = require("ghc.core.util.path")
 
 ---@class ghc.core.action.explorer
 local M = {}
 
-function M.show_file_explorer_workspace()
+function M.toggle_explorer_file_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = util.path.workspace(),
+    dir = path.workspace(),
+    reveal = true,
+    toggle = true,
   })
 end
 
-function M.show_file_explorer_cwd()
+function M.toggle_explorer_file_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = util.path.cwd(),
+    dir = path.cwd(),
+    reveal = true,
+    toggle = true,
   })
 end
 
-function M.show_buffer_explorer_workspace()
+function M.toggle_explorer_buffer_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
-    dir = util.path.workspace(),
+    dir = path.workspace(),
+    reveal = true,
+    toggle = true,
   })
 end
 
-function M.show_buffer_explorer_cwd()
+function M.toggle_explorer_buffer_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
-    dir = util.path.cwd(),
+    dir = path.cwd(),
+    reveal = true,
+    toggle = true,
   })
 end
 
-function M.show_git_explorer_workspace()
+function M.toggle_explorer_git_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
-    dir = util.path.workspace(),
+    dir = path.workspace(),
+    reveal = true,
+    toggle = true,
   })
 end
 
-function M.show_git_explorer_cwd()
+function M.toggle_explorer_git_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
-    dir = util.path.cwd(),
+    dir = path.cwd(),
+    reveal = true,
+    toggle = true,
+  })
+end
+
+function M.toggle_explorer_last()
+  require("neo-tree.command").execute({
+    action = "focus",
+    source = "last",
+    reveal = true,
+    toggle = true,
   })
 end
 
@@ -69,23 +87,20 @@ function M.reveal_file_explorer()
   end
 end
 
-function M.focus_or_toggle_explorer()
-  local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
-  if ft_current == "neo-tree" then
-    require("neo-tree.command").execute({
-      action = "close",
-    })
-  else
-    require("neo-tree.command").execute({
-      action = "focus",
-      source = "last",
-    })
-  end
-end
-
-function M.toggle_explorer()
+function M.close_all_explorers()
   require("neo-tree.command").execute({
-    toggle = true,
+    action = "close",
+    source = "filesystem",
+  })
+
+  require("neo-tree.command").execute({
+    action = "close",
+    source = "buffers",
+  })
+
+  require("neo-tree.command").execute({
+    action = "close",
+    source = "git_status",
   })
 end
 
