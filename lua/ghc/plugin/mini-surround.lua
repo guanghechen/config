@@ -21,5 +21,6 @@ return {
       replace = "gsr", -- Replace surrounding
       update_n_lines = "gsn", -- Update `n_lines`
     },
+    n_lines = 300,
   },
 }

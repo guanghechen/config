@@ -37,6 +37,7 @@ return {
 
   --find
   require("ghc.plugin.bookmarks"),
+  require("ghc.plugin.telescope"),
 
   --format
   require("ghc.plugin.conform"),
