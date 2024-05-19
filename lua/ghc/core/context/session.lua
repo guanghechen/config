@@ -16,14 +16,14 @@ local util_path = require("guanghechen.util.path")
 ---@field public find_recent_keyword guanghechen.observable.Observable
 ---@field public find_recent_scope guanghechen.observable.Observable
 ---@field public replace_enable_case_sensitive guanghechen.observable.Observable
----@field public replace_replace_keyword guanghechen.observable.Observable
----@field public replace_search_keyword guanghechen.observable.Observable
+---@field public replace_keyword guanghechen.observable.Observable
 ---@field public replace_path guanghechen.observable.Observable
 ---@field public search_last_command guanghechen.observable.Observable
 ---@field public search_enable_case_sensitive guanghechen.observable.Observable
 ---@field public search_enable_regex guanghechen.observable.Observable
----@field public search_scope guanghechen.observable.Observable
+---@field public search_include_paths guanghechen.observable.Observable
 ---@field public search_keyword guanghechen.observable.Observable
+---@field public search_scope guanghechen.observable.Observable
 local context = Viewmodel.new({
   name = "context:session",
   filepath = util_path.locate_session_filepath({ filename = "config.json" }),
@@ -40,14 +40,14 @@ local context = Viewmodel.new({
   :register("find_recent_keyword", Observable.new(""), true)
   :register("find_recent_scope", Observable.new("C"), true)
   :register("replace_enable_case_sensitive", Observable.new(false), true)
-  :register("replace_replace_keyword", Observable.new(""), true)
-  :register("replace_search_keyword", Observable.new(""), true)
+  :register("replace_keyword", Observable.new(""), true)
   :register("replace_path", Observable.new(""), true)
   :register("search_last_command", Observable.new(nil), false)
   :register("search_enable_case_sensitive", Observable.new(false), true)
   :register("search_enable_regex", Observable.new(false), true)
-  :register("search_scope", Observable.new("C"), true)
+  :register("search_include_paths", Observable.new({ "" }), true)
   :register("search_keyword", Observable.new(""), true)
+  :register("search_scope", Observable.new("C"), true)
 
 context:load()
 context:auto_reload()

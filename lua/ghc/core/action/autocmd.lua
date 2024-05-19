@@ -193,8 +193,8 @@ function M.autocmd_remember_spectre_prompt(opts)
       local replace_keyword = state.query.replace_query ---@type string
       local search_keyword = state.query.search_query ---@type string
 
-      context_session.replace_replace_keyword:next(replace_keyword)
-      context_session.replace_search_keyword:next(search_keyword)
+      context_session.search_keyword:next(search_keyword)
+      context_session.replace_keyword:next(replace_keyword)
 
       if sync_path then
         local query_path = state.query.path ---@type string

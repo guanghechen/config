@@ -1,5 +1,7 @@
 local util_path = require("guanghechen.util.path")
 
+local have_set_cwd = false ---@type boolean
+
 ---@return boolean
 local function has_explorer_window_opened()
   for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
@@ -15,6 +17,7 @@ end
 local M = {}
 
 function M.toggle_explorer_file_workspace()
+  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
@@ -26,6 +29,7 @@ function M.toggle_explorer_file_workspace()
 end
 
 function M.toggle_explorer_file_cwd()
+  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
@@ -37,6 +41,7 @@ function M.toggle_explorer_file_cwd()
 end
 
 function M.toggle_explorer_buffer_workspace()
+  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
@@ -48,6 +53,7 @@ function M.toggle_explorer_buffer_workspace()
 end
 
 function M.toggle_explorer_buffer_cwd()
+  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
@@ -59,6 +65,7 @@ function M.toggle_explorer_buffer_cwd()
 end
 
 function M.toggle_explorer_git_workspace()
+  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
@@ -70,6 +77,7 @@ function M.toggle_explorer_git_workspace()
 end
 
 function M.toggle_explorer_git_cwd()
+  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
@@ -81,12 +89,16 @@ function M.toggle_explorer_git_cwd()
 end
 
 function M.toggle_explorer_last()
-  require("neo-tree.command").execute({
+  local opts = {
     action = "focus",
     source = "last",
     reveal = true,
     toggle = true,
-  })
+  }
+  if not have_set_cwd then
+    opts.dir = util_path.cwd()
+  end
+  require("neo-tree.command").execute(opts)
 end
 
 function M.reveal_file_explorer()
@@ -96,12 +108,16 @@ function M.reveal_file_explorer()
       action = "close",
     })
   else
-    require("neo-tree.command").execute({
+    local opts = {
       action = "focus",
       source = "filesystem",
       position = "left",
       reveal = true,
-    })
+    }
+    if not have_set_cwd then
+      opts.dir = util_path.cwd()
+    end
+    require("neo-tree.command").execute(opts)
   end
 end
 

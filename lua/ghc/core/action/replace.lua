@@ -2,6 +2,7 @@ local action_autocmd = require("ghc.core.action.autocmd")
 local context_session = require("ghc.core.context.session")
 local util_path = require("guanghechen.util.path")
 local util_selection = require("guanghechen.util.selection")
+local util_table = require("guanghechen.util.table")
 
 ---@param opts { cwd: string, replace_path?: string }
 local function replace_word(opts)
@@ -15,15 +16,16 @@ local function replace_word(opts)
 
   local selected_text = util_selection.get_selected_text() ---@type string
   if selected_text and #selected_text > 1 then
-    context_session.replace_search_keyword:next(selected_text)
+    context_session.search_keyword:next(selected_text)
   end
 
-  local search_text = context_session.replace_search_keyword:get_snapshot() ---@type string
-  local replace_text = context_session.replace_replace_keyword:get_snapshot() or search_text ---@type string
+  local search_paths = util_table.filter_non_blank_string(context_session.search_include_paths:get_snapshot()) ---@type string[]
+  local search_text = context_session.search_keyword:get_snapshot() ---@type string
+  local replace_text = context_session.replace_keyword:get_snapshot() or search_text ---@type string
 
   require("spectre").open({
     cwd = cwd,
-    --search_paths = {},
+    search_paths = #search_paths > 0 and search_paths or nil,
     path = replace_path,
     search_text = search_text,
     replace_text = replace_text,
