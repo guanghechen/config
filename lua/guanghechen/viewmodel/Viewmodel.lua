@@ -173,7 +173,7 @@ function Viewmodel:auto_reload()
     on_event = function(_, event)
       if type(event) == "table" and event.change == true then
         self:load()
-        vim.notify("auto reloaded " .. self._name)
+        vim.notify("auto reloaded '" .. self._name .. "'")
       end
     end,
     on_error = function(filepath, err)

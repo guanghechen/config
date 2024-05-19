@@ -46,6 +46,7 @@ function M.watch_file(opts)
   end
 
   local callback = function(err, filename, events)
+    -- vim.notify("callback:" .. vim.inspect({ err = err, event = events, filename = filename }))
     if err then
       on_error(filepath, err, unwatch)
     else
