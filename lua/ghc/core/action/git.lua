@@ -19,7 +19,7 @@ local function get_filepath_from_lazygit()
       local workspace = util.path.workspace()
       return util.path.join(workspace, relative_filepath)
     end
-    vim.loop.sleep(50)
+    vim.uv.sleep(50)
   end
   return nil
 end

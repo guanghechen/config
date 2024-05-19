@@ -73,8 +73,8 @@ end
 local function gen_filemap(force, cwd)
   local filemap_filepath = util.path.gen_session_related_filepath({ filename = "filemap.json" })
   if force or not util.path.exist(filemap_filepath) or context.session.filemap_dirty:get_snapshot() then
-    local stdout = vim.loop.new_pipe(false)
-    local stderr = vim.loop.new_pipe(false)
+    local stdout = vim.uv.new_pipe(false)
+    local stderr = vim.uv.new_pipe(false)
     local subprocess
     local function on_exit(code, signal)
       stdout:read_stop()
@@ -90,13 +90,13 @@ local function gen_filemap(force, cwd)
     -- clear filemap content
     os.remove(filemap_filepath)
 
-    subprocess = vim.loop.spawn("fd", {
+    subprocess = vim.uv.spawn("fd", {
       cwd = cwd,
       args = { "--hidden", "--type=file", "--color=never" },
       stdio = { nil, stdout, stderr },
     }, on_exit)
 
-    vim.loop.read_start(stdout, function(err, data)
+    vim.uv.read_start(stdout, function(err, data)
       assert(not err, err)
       if data then
         local file = io.open(filemap_filepath, "a")

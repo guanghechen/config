@@ -8,7 +8,7 @@ function Timer.new(name)
   local self = setmetatable({}, Timer)
 
   self._name = name
-  self._timer = vim.loop.new_timer()
+  self._timer = vim.uv.new_timer()
 
   return self
 end

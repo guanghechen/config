@@ -1,4 +1,4 @@
-local os_name = vim.loop.os_uname().sysname
+local os_name = vim.uv.os_uname().sysname
 local is_mac = os_name == "Darwin"
 local is_linux = os_name == "Linux"
 local is_windows = os_name == "Windows_NT"
@@ -21,4 +21,3 @@ local globals = {
 }
 
 return globals
-
