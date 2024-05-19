@@ -4,6 +4,7 @@ local components = {
     require("ghc.ui.statusline.component.mode"),
     require("ghc.ui.statusline.component.git"),
     require("ghc.ui.statusline.component.filepath"),
+    require("ghc.ui.statusline.component.readonly"),
   },
   middle = {
     require("ghc.ui.statusline.component.bg"),
