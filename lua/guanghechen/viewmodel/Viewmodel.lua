@@ -2,6 +2,7 @@ local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
 local util_disposable = require("guanghechen.util.disposable")
 local util_observable = require("guanghechen.util.observable")
 local util_fs = require("guanghechen.util.fs")
+local util_json = require("guanghechen.util.json")
 
 ---@class guanghechen.viewmodel.Viewmodel.IOptions
 ---@field public name string
@@ -106,18 +107,22 @@ end
 
 function Viewmodel:save()
   local data = self:get_snapshot()
-  local ok_to_encode_json, json_text = pcall(vim.json.encode, data)
+  local ok_to_encode_json, json_text = pcall(util_json.stringify_prettier, data)
   if not ok_to_encode_json then
     vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to encode json data:" .. vim.inspect(data))
     return
   end
 
   vim.fn.mkdir(vim.fn.fnamemodify(self._filepath, ":p:h"), "p")
-  local ok_to_save_json, result = pcall(vim.fn.writefile, { json_text }, self._filepath)
-  if not ok_to_save_json then
-    vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to save json:" .. vim.inspect(data) .. "\n\n" .. result)
+
+  local file = io.open(self._filepath, "w")
+  if not file then
+    vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to save json:" .. vim.inspect(data))
     return
   end
+
+  file:write(json_text)
+  file:close()
 end
 
 function Viewmodel:load()
