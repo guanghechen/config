@@ -170,9 +170,14 @@ function Viewmodel:auto_reload()
 
   local unwatch = util_fs.watch_file({
     filepath = self._filepath,
-    on_event = function()
-      self:load()
-      vim.notify("auto reloaded " .. self._name)
+    on_event = function(_, event)
+      if type(event) == "table" and event.change == true then
+        self:load()
+        vim.notify("auto reloaded " .. self._name)
+      end
+    end,
+    on_error = function(filepath, err)
+      vim.notify("error on " .. filepath .. ", error:" .. vim.inspect(err), vim.log.levels.ERROR)
     end,
   })
   self._unwatch = unwatch

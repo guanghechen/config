@@ -9,9 +9,17 @@ end
 ---@class guanghechen.util.fs
 local M = {}
 
+---@return string|nil
 function M.read_file(filepath)
-  local lines = vim.fn.readfile(filepath)
-  return table.concat(lines, "\n")
+  local file = io.open(filepath, "rb") -- rb: read in binary mode
+  if not file then
+    error("File not found. filepath: " .. filepath)
+    return nil
+  end
+
+  local content = file:read("*a") -- Read the entire content of the file
+  file:close()
+  return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
 ---@class IWatchFileOptions
@@ -37,9 +45,9 @@ function M.watch_file(opts)
     vim.uv.fs_event_stop(handle)
   end
 
-  local callback = function(error, filename, events)
-    if error then
-      on_error(filepath, error, unwatch)
+  local callback = function(err, filename, events)
+    if err then
+      on_error(filepath, err, unwatch)
     else
       on_event(filepath, events, unwatch)
     end

@@ -5,6 +5,7 @@ local action = {
   context = require("ghc.core.action.context"),
   debug = require("ghc.core.action.debug"),
   diagnostic = require("ghc.core.action.diagnostic"),
+  enhance = require("ghc.core.action.enhance"),
   explorer = require("ghc.core.action.explorer"),
   find = require("ghc.core.action.find"),
   find_file = require("ghc.core.action.find_file"),
@@ -20,7 +21,7 @@ local action = {
   window = require("ghc.core.action.window"),
 }
 
----@param mode string
+---@param mode string | string[]
 ---@param key string
 ---@param action any
 ---@param desc string
@@ -41,10 +42,11 @@ vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, si
 vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 
 -- better copy/paste
-vim.keymap.set("v", "<C-b>c", '"+y', { noremap = true, silent = true, desc = "copy to system clipboard" })
-vim.keymap.set("v", "<M-c>", '"+y', { noremap = true, silent = true, desc = "copy to system clipboard" })
-vim.keymap.set({ "i", "n" }, "<C-b>v", '<esc>"+p', { noremap = true, silent = true, desc = "paste from system clipboard" })
-vim.keymap.set({ "i", "n" }, "<M-v>", '<esc>"+p', { noremap = true, silent = true, desc = "paste from system clipboard" })
+mapkey("v", "<C-b>c", '"+y', "copy to system clipboard")
+mapkey("v", "<M-c>", '"+y', "copy to system clipboard")
+mapkey({ "i", "n", "v" }, "<C-C>", action.enhance.copy_current_buffer_filepath, "copy: current buffer filepath")
+mapkey({ "i", "n" }, "<C-b>v", '<esc>"+p', "paste from system clipboard")
+mapkey({ "i", "n" }, "<M-v>", '<esc>"+p', "paste from system clipboard")
 
 -- https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
 vim.keymap.set("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "next Search Result" })

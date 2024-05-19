@@ -5,7 +5,7 @@ local M = {}
 
 function M.edit_session()
   local filepath = context_session:get_filepath() ---@type string
-  vim.cmd("tabnew " .. filepath)
+  vim.cmd("noswapfile tabnew " .. filepath)
 end
 
 return M
