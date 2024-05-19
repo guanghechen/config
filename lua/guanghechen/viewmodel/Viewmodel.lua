@@ -11,6 +11,7 @@ local util_json = require("guanghechen.util.json")
 ---@class guanghechen.viewmodel.Viewmodel : guanghechen.types.IViewmodel
 ---@field private _name string
 ---@field private _filepath string
+---@field private _unwatch (fun():nil)|nil
 ---@field private _persistable_observables table<string, guanghechen.types.IObservable>
 ---@field private _all_observables table<string, guanghechen.types.IObservable>
 local Viewmodel = {}
@@ -30,6 +31,9 @@ function Viewmodel.new(opts)
 
   ---@type string
   self._filepath = opts.filepath
+
+  ---@type (fun():nil)|nil
+  self._unwatch = nil
 
   ---@type table<string, guanghechen.types.IObservable>
   self._persistable_observables = {}
@@ -55,6 +59,11 @@ function Viewmodel:dispose()
       ---@cast disposable guanghechen.types.IDisposable
       table.insert(disposables, disposable)
     end
+  end
+
+  if self._unwatch then
+    self._unwatch()
+    self._unwatch = nil
   end
 
   util_disposable.disposeAll(disposables)
@@ -152,6 +161,21 @@ function Viewmodel:load()
       observable:next(value)
     end
   end
+end
+
+function Viewmodel:auto_reload()
+  if self._unwatch ~= nil then
+    return
+  end
+
+  local unwatch = util_fs.watch_file({
+    filepath = self._filepath,
+    on_event = function()
+      self:load()
+      vim.notify("auto reloaded " .. self._name)
+    end,
+  })
+  self._unwatch = unwatch
 end
 
 return Viewmodel

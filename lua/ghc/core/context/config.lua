@@ -12,7 +12,10 @@ local context_config_filepath = util_path.locate_config_filepath("config/local/c
 ---@field public theme_darken guanghechen.observable.Observable
 ---@field public transparency guanghechen.observable.Observable
 ---@field public get_current_theme fun():string
-local context = Viewmodel.new({ name = "config", filepath = context_config_filepath })
+local context = Viewmodel.new({
+  name = "context:config",
+  filepath = context_config_filepath,
+})
   :register("darken", Observable.new(true), true)
   :register("relativenumber", Observable.new(true), true)
   :register("theme_lighten", Observable.new("one_light"), true)
@@ -34,6 +37,7 @@ function context.get_current_theme()
 end
 
 context:load()
+context:auto_reload()
 
 --Auto refresh statusline
 util_observable.watch_observables({

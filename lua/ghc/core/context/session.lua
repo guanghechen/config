@@ -25,7 +25,7 @@ local util_path = require("guanghechen.util.path")
 ---@field public search_scope guanghechen.observable.Observable
 ---@field public search_keyword guanghechen.observable.Observable
 local context = Viewmodel.new({
-  name = "config",
+  name = "context:session",
   filepath = util_path.locate_session_filepath({ filename = "config.json" }),
 })
   :register("buftype_extra", Observable.new(nil), false)
@@ -50,6 +50,7 @@ local context = Viewmodel.new({
   :register("search_keyword", Observable.new(""), true)
 
 context:load()
+context:auto_reload()
 
 --Auto refresh statusline
 util_observable.watch_observables({

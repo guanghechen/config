@@ -5,3 +5,4 @@
 ---@field register fun(name:string, observable:guanghechen.types.IObservable):nil
 ---@field save fun():nil
 ---@field load fun():nil
+---@field reload fun():nil
