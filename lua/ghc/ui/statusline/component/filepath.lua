@@ -29,7 +29,17 @@ end
 
 function M.renderer()
   local filepath = vim.fn.expand("%:p")
-  local relative_path = util_path.relative(util_path.cwd(), filepath)
+  local cwd = util_path.cwd()
+  local relative_to_cwd = util_path.relative(cwd, filepath)
+  if string.sub(relative_to_cwd, 1, 1) == "." and util_path.is_absolute(filepath) then
+    local workspace = util_path.workspace()
+    if cwd ~= workspace then
+      local relative_to_workspace = util_path.relative(workspace, filepath)
+      if string.sub(relative_to_workspace, 1, 1) == "." then
+        relative_to_cwd = util_path.normalize(filepath)
+      end
+    end
+  end
 
   ---@type string
   local added = ""
@@ -62,7 +72,7 @@ function M.renderer()
   local color_text = "%#" .. M.name .. "_text#"
 
   local icon = " " .. util_filetype.calc_fileicon(filepath) .. " "
-  local text = icon .. relative_path .. added .. removed .. changed .. " "
+  local text = icon .. relative_to_cwd .. added .. removed .. changed .. " "
   return color_text .. text
 end
 

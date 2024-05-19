@@ -2,7 +2,7 @@
 
 local util_path = require("guanghechen.util.path")
 
----@class ghc.core.action.quit
+---@class ghc.core.action.session
 local M = {}
 
 ---@param opts {autosave: boolean}

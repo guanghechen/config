@@ -27,7 +27,7 @@ local function replace_word(opts)
     path = replace_path,
     search_text = search_text,
     replace_text = replace_text,
-    is_close = true, -- close an exists instance of spectre and open new
+    is_close = false, -- close an exists instance of spectre and open new
     is_insert_mode = false,
   })
 

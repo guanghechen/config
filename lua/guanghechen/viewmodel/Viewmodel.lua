@@ -63,6 +63,10 @@ function Viewmodel:get_name()
   return self._name
 end
 
+function Viewmodel:get_filepath()
+  return self._filepath
+end
+
 ---@return table<string, any>
 function Viewmodel:get_snapshot()
   local data = {}

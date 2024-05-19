@@ -3,7 +3,7 @@ local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 local util_observable = require("guanghechen.util.observable")
 local util_path = require("guanghechen.util.path")
 
-local context_config_filepath = util_path.locate_config_filepath("config", "local", "context", "config.json")
+local context_config_filepath = util_path.locate_config_filepath("config/local/context/config.json")
 
 ---@class ghc.core.context.config: guanghechen.viewmodel.Viewmodel
 ---@field public darken guanghechen.observable.Observable
@@ -13,7 +13,6 @@ local context_config_filepath = util_path.locate_config_filepath("config", "loca
 ---@field public transparency guanghechen.observable.Observable
 ---@field public get_current_theme fun():string
 local context = Viewmodel.new({ name = "config", filepath = context_config_filepath })
-  :register("context_config_filepath", Observable.new(context_config_filepath), true)
   :register("darken", Observable.new(true), true)
   :register("relativenumber", Observable.new(true), true)
   :register("theme_lighten", Observable.new("one_light"), true)
