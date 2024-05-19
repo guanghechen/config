@@ -12,4 +12,33 @@ local function b()
   end
 end
 
-b()
+local function c()
+  ---@param ... string
+  ---@return string
+  local function xxx(...)
+    local args = { ... }
+    return table.concat(args, "#")
+  end
+  print(xxx("a", "b", "c"))
+  print(("aa")[1])
+
+  for i = 1, 3 do
+    print(i)
+  end
+end
+
+local function d()
+  local path = require("guanghechen.util.path")
+  print(path.is_absolute("/a/b/c"))
+  print(vim.inspect(path.split("/a/b/c")))
+  print(path.relative("/a/b/c", "/a/b/c/d/e.txt"))
+  print(path.relative("/a/b/c", "/a/b/c/e.txt"))
+  print(path.relative("/a/b/c", "/a/b/e.txt"))
+  print(path.relative("/a/b/c", "e.txt"))
+  print(path.relative("a/b/c", "/a/b/c/e.txt"))
+  print(path.normalize("a/b/c"))
+  print(path.normalize("a/b/..//c"))
+  print(path.normalize("/../a/../../../b/d/e/..//c"))
+end
+
+d()

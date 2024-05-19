@@ -1,14 +1,11 @@
+local context_session = require("ghc.core.context.session")
+
 return {
   "nvim-pack/nvim-spectre",
   build = vim.fn.executable("cargo") == 1 and "./build.sh" or "",
   enabled = vim.fn.executable("cargo") == 1,
   opts = function()
-    ---@class ghc.core.action.search.grep_string.context
-    local context = {
-      session = require("ghc.core.context.session"),
-    }
-
-    local flag_case_sensitive = context.session.replace_enable_case_sensitive:get_snapshot() ---@type boolean
+    local flag_case_sensitive = context_session.replace_enable_case_sensitive:get_snapshot() ---@type boolean
     local rg_options = { "hidden" }
     local oxi_options = {}
 

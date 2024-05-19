@@ -1,18 +1,9 @@
 local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 local util_observable = require("guanghechen.util.observable")
-local globals = require("ghc.core.setting.globals")
+local util_path = require("guanghechen.util.path")
 
-local config_dir = vim.fn.stdpath("config")
-local context_config_filepath = config_dir
-  .. globals.path_sep
-  .. "config"
-  .. globals.path_sep
-  .. "local"
-  .. globals.path_sep
-  .. "context"
-  .. globals.path_sep
-  .. "config.json"
+local context_config_filepath = util_path.locate_config_filepath("config", "local", "context", "config.json")
 
 ---@class ghc.core.context.config: guanghechen.viewmodel.Viewmodel
 ---@field public darken guanghechen.observable.Observable

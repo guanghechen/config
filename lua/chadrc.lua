@@ -1,19 +1,15 @@
 -- This file  needs to have same structure as nvconfig.lua
 -- https://github.com/NvChad/NvChad/blob/v2.5/lua/nvconfig.lua
 
-local context = {
-  config = require("ghc.core.context.config"),
-}
+local context_config = require("ghc.core.context.config")
+local util_table = require("guanghechen.util.table")
 
 ---@type boolean
-local transparency = context.config.transparency:get_snapshot()
+local transparency = context_config.transparency:get_snapshot()
 
 local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
 local theme_integrations = require("ghc.ui.theme.integration")
-local util = {
-  table = require("guanghechen.util.table"),
-}
 
 ---@type ChadrcConfig
 local M = {}
@@ -49,9 +45,9 @@ M.ui = {
       bg = "light_grey",
     },
   },
-  theme = context.config.get_current_theme(),
+  theme = context_config.get_current_theme(),
   theme_toggle = {},
-  transparency = context.config.transparency:get_snapshot(),
+  transparency = context_config.transparency:get_snapshot(),
   base46 = {
     integration = {
       "blankline",
@@ -64,13 +60,13 @@ M.ui = {
   statusline = {
     theme = "default", -- default / minimal / vscode / vscode_colored
     separator_style = "default",
-    order = util.table.merge_multiple_array(statusline.order_left, { "%=" }, statusline.order_middle, { "%=" }, statusline.order_right),
+    order = util_table.merge_multiple_array(statusline.order_left, { "%=" }, statusline.order_middle, { "%=" }, statusline.order_right),
     modules = vim.tbl_deep_extend("force", statusline.modules_left, statusline.modules_middle, statusline.modules_right),
   },
   tabufline = {
     enabled = true,
     lazyload = true,
-    order = util.table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs" }, bufferline.order_right),
+    order = util_table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs" }, bufferline.order_right),
     modules = vim.tbl_deep_extend("force", bufferline.modules_left, bufferline.modules_right),
   },
   telescope = {

@@ -1,7 +1,4 @@
----@class guanghechen.disposable.SafeBatchHandler.util
-local util = {
-  debug = require("guanghechen.util.debug"),
-}
+local util_debug = require("guanghechen.util.debug")
 
 ---@class guanghechen.disposable.SafeBatchHandler
 local SafeBatchHandler = {}
@@ -41,7 +38,7 @@ end
 function SafeBatchHandler:summary(title)
   if self._summary == nil then
     if #self._errors > 0 then
-      self._summary = util.debug.inspect({
+      self._summary = util_debug.inspect({
         title = title,
         details = self._errors,
       })

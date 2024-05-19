@@ -1,3 +1,34 @@
+local function goto_prev_hunk()
+  if vim.wo.diff then
+    vim.cmd.normal({ "[c", bang = true })
+  else
+    require("gitsigns").nav_hunk("prev")
+  end
+end
+local function goto_next_hunk()
+  if vim.wo.diff then
+    vim.cmd.normal({ "]c", bang = true })
+  else
+    require("gitsigns").nav_hunk("next")
+  end
+end
+
+local function blame_line()
+  require("gitsigns").blame_line({ full = true })
+end
+
+local function diff_current_file()
+  require("gitsigns").diffthis("~")
+end
+
+local function preview_hunk_inline()
+  require("gitsigns").preview_hunk_inline()
+end
+
+local function undo_stage_hunk()
+  require("gitsigns").undo_stage_hunk()
+end
+
 -- git signs highlights text that has changed since the list
 -- git commit, and also lets you interactively stage & unstage
 -- hunks in a commit.
@@ -40,43 +71,11 @@ return {
         vim.keymap.set(mode, key, action, { buffer = buffer, noremap = true, silent = silent ~= nil and silent or false, desc = desc })
       end
 
-      local gitsigns = require("gitsigns")
-
-      ---@class ghc.plugin.gitsigns.opts.action
-      local action = {
-        goto_prev_hunk = function()
-          if vim.wo.diff then
-            vim.cmd.normal({ "[c", bang = true })
-          else
-            gitsigns.nav_hunk("prev")
-          end
-        end,
-        goto_next_hunk = function()
-          if vim.wo.diff then
-            vim.cmd.normal({ "]c", bang = true })
-          else
-            gitsigns.nav_hunk("next")
-          end
-        end,
-        blame_line = function()
-          gitsigns.blame_line({ full = true })
-        end,
-        diff_current_file = function()
-          gitsigns.diffthis("~")
-        end,
-        preview_hunk_inline = function()
-          gitsigns.preview_hunk_inline()
-        end,
-        undo_stage_hunk = function()
-          gitsigns.undo_stage_hunk()
-        end,
-      }
-
-      mapkey("n", "[h", action.goto_prev_hunk, "git: Prev hunk", true)
-      mapkey("n", "]h", action.goto_next_hunk, "git: Next hunk", true)
-      mapkey("n", "<leader>gb", action.blame_line, "git: Preview hunk inline", true)
-      mapkey("n", "<leader>gd", action.diff_current_file, "git: Diff current file", true)
-      mapkey("n", "<leader>gp", action.preview_hunk_inline, "git: Preview hunk inline", true)
+      mapkey("n", "[h", goto_prev_hunk, "git: Prev hunk", true)
+      mapkey("n", "]h", goto_next_hunk, "git: Next hunk", true)
+      mapkey("n", "<leader>gb", blame_line, "git: Preview hunk inline", true)
+      mapkey("n", "<leader>gd", diff_current_file, "git: Diff current file", true)
+      mapkey("n", "<leader>gp", preview_hunk_inline, "git: Preview hunk inline", true)
     end,
   },
   config = function(_, opts)

@@ -1,11 +1,8 @@
+local context_config = require("ghc.core.context.config")
 local calc_fileicon = require("ghc.core.util.filetype").calc_fileicon
 
-local context = {
-  config = require("ghc.core.context.config"),
-}
-
 ---@type boolean
-local transparency = context.config.transparency:get_snapshot()
+local transparency = context_config.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.filetype
 local M = {

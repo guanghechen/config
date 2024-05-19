@@ -1,19 +1,17 @@
-local actions = {
-  autocmd = require("ghc.core.action.autocmd"),
-}
+local action_autocmd = require("ghc.core.action.autocmd")
 
-actions.autocmd.autocmd_clear_jumps()
-actions.autocmd.autocmd_checktime() -- Check if we need to reload the file when it changed
-actions.autocmd.autocmd_change_dir()
-actions.autocmd.autocmd_create_dirs()
-actions.autocmd.autocmd_highlight_yank()
-actions.autocmd.autocmd_remember_last_tabnr()
-actions.autocmd.autocmd_resize_splits() -- resize splits if window got resized
-actions.autocmd.autocmd_session_autosave() -- auto save session
-actions.autocmd.autocmd_toggle_linenumber()
-actions.autocmd.autocmd_goto_last_location({ exclude = { "gitcommit" } })
-actions.autocmd.autocmd_unlist_buffer({ pattern = { "man" } }) -- make it easier to close man-files when opened inline
-actions.autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
+action_autocmd.autocmd_clear_jumps()
+action_autocmd.autocmd_checktime() -- Check if we need to reload the file when it changed
+action_autocmd.autocmd_change_dir()
+action_autocmd.autocmd_create_dirs()
+action_autocmd.autocmd_highlight_yank()
+action_autocmd.autocmd_remember_last_tabnr()
+action_autocmd.autocmd_resize_splits() -- resize splits if window got resized
+action_autocmd.autocmd_session_autosave() -- auto save session
+action_autocmd.autocmd_toggle_linenumber()
+action_autocmd.autocmd_goto_last_location({ exclude = { "gitcommit" } })
+action_autocmd.autocmd_unlist_buffer({ pattern = { "man" } }) -- make it easier to close man-files when opened inline
+action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
   pattern = {
     "checkhealth",
     "help",
@@ -34,9 +32,9 @@ actions.autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
 })
 
 --#format
-actions.autocmd.autocmd_enable_wrap({ pattern = { "markdown", "text" } })
-actions.autocmd.autocmd_enable_spell({ pattern = { "gitcommit", "html", "lua", "text", "typescript" } })
-actions.autocmd.autocmd_set_fileformat({
+action_autocmd.autocmd_enable_wrap({ pattern = { "markdown", "text" } })
+action_autocmd.autocmd_enable_spell({ pattern = { "gitcommit", "html", "lua", "text", "typescript" } })
+action_autocmd.autocmd_set_fileformat({
   pattern = {
     "css",
     "html",
@@ -51,7 +49,7 @@ actions.autocmd.autocmd_set_fileformat({
 })
 
 --#filetype
-actions.autocmd.autocmd_set_filetype({
+action_autocmd.autocmd_set_filetype({
   filetype_map = {
     tmux = { "*.tmux.conf" },
     bash = { "*.fzfrc", "*.ripgreprc" },

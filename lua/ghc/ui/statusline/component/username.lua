@@ -1,12 +1,12 @@
+local util_os = require("guanghechen.util.os")
 local icons = require("ghc.core.setting.icons")
-local globals = require("ghc.core.setting.globals")
 
 local function get_os_icon()
-  if globals.is_mac then
+  if util_os.is_mac() then
     return icons.os.mac
-  elseif globals.is_windows then
+  elseif util_os.is_windows() then
     return icons.os.dos
-  elseif globals.is_linux or globals.is_wsl then
+  elseif util_os.is_linux() or util_os.is_wsl() then
     return icons.os.unix
   else
     return icons.os.unknown

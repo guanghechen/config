@@ -1,19 +1,14 @@
-local context = {
-  config = require("ghc.core.context.config"),
-}
-
-local util = {
-  window = require("ghc.core.util.window"),
-}
+local context_config = require("ghc.core.context.config")
+local util_window = require("ghc.core.util.window")
 
 ---@type boolean
-local transparency = context.config.transparency:get_snapshot()
+local transparency = context_config.transparency:get_snapshot()
 
 local function get_neotree_width()
   for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type number
     if vim.bo[bufnr].ft == "neo-tree" then
-      if not util.window.is_floating(winnr) then
+      if not util_window.is_floating(winnr) then
         return vim.api.nvim_win_get_width(winnr) + 1
       end
     end

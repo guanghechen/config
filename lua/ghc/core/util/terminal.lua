@@ -1,15 +1,8 @@
 -- https://github.com/LazyVim/LazyVim/blob/f086bcde253c29be9a2b9c90b413a516f5d5a3b2/lua/lazyvim/util/terminal.lua#L1
 
----@class ghc.core.util.terminal.util
-local util = {
-  table = require("guanghechen.util.table"),
-  reporter = require("guanghechen.util.reporter"),
-}
-
----@class ghc.core.util.terminal.context
-local context = {
-  session = require("ghc.core.context.session"),
-}
+local context_session = require("ghc.core.context.session")
+local util_table = require("guanghechen.util.table")
+local util_reporter = require("guanghechen.util.reporter")
 
 ---@class ghc.core.util.terminal
 local M = {}
@@ -29,7 +22,7 @@ function M.setup_terminal(shell)
     elseif vim.fn.executable("powershell") == 1 then
       vim.o.shell = "powershell"
     else
-      return util.reporter.error("No powershell executable found")
+      return util_reporter.error("No powershell executable found")
     end
 
     -- Setting shell command flags
@@ -57,8 +50,8 @@ end
 ---@param cmd? string[]|string
 ---@param opts? LazyTermOpts
 function M.open_terminal(cmd, opts)
-  context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
-  context.session.caller_winnr:next(vim.api.nvim_get_current_win())
+  context_session.caller_bufnr:next(vim.api.nvim_get_current_buf())
+  context_session.caller_winnr:next(vim.api.nvim_get_current_win())
 
   opts = vim.tbl_deep_extend("force", {
     ft = "term",
@@ -97,7 +90,7 @@ end
 
 ---@param opts { id: string, cwd: string, cmd?: table }
 function M.toggle_terminal(opts)
-  local operations = util.table.merge_multiple_array({ "cd " .. '"' .. opts.cwd .. '"' }, opts.cmd or {})
+  local operations = util_table.merge_multiple_array({ "cd " .. '"' .. opts.cwd .. '"' }, opts.cmd or {})
 
   local id = opts.id
   local cmd = table.concat(operations, " && ")

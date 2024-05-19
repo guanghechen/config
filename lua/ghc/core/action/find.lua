@@ -1,14 +1,11 @@
----@class ghc.core.action.find.util
-local util = {
-  path = require("ghc.core.util.path"),
-}
+local util_path = require("guanghechen.util.path")
 
 ---@class ghc.core.action.find
 local M = {}
 
 function M.find_bookmark_workspace()
-  local absolute_path = util.path.workspace()
-  local relative_path = util.path.relative(util.path.workspace(), absolute_path)
+  local absolute_path = util_path.workspace()
+  local relative_path = util_path.relative(util_path.workspace(), absolute_path)
   require("telescope").extensions.bookmarks.list({
     cwd = absolute_path,
     workspace = "CWD",
@@ -23,7 +20,7 @@ end
 
 function M.find_explorer_workspace()
   require("telescope").extensions.file_browser.file_browser({
-    cwd = util.path.workspace(),
+    cwd = util_path.workspace(),
     workspace = "CWD",
     show_untracked = true,
     grouped = true,
@@ -34,7 +31,7 @@ end
 
 function M.find_explorer_cwd()
   require("telescope").extensions.file_browser.file_browser({
-    cwd = util.path.cwd(),
+    cwd = util_path.cwd(),
     workspace = "CWD",
     select_buffer = true,
     show_untracked = true,
@@ -45,8 +42,8 @@ function M.find_explorer_cwd()
 end
 
 function M.find_explorer_current()
-  local absolute_path = util.path.current_directory()
-  local relative_path = util.path.relative(util.path.cwd(), absolute_path)
+  local absolute_path = util_path.current_directory()
+  local relative_path = util_path.relative(util_path.cwd(), absolute_path)
   require("telescope").extensions.file_browser.file_browser({
     cwd = absolute_path,
     workspace = "CWD",
@@ -60,7 +57,7 @@ end
 
 function M.find_file_git()
   require("telescope.builtin").git_files({
-    cwd = util.path.workspace(),
+    cwd = util_path.workspace(),
     workspace = "CWD",
     prompt_title = "Find files (git)",
     show_untracked = true,
@@ -70,7 +67,7 @@ end
 
 function M.find_quickfix_history()
   require("telescope.builtin").quickfixhistory({
-    cwd = util.path.workspace(),
+    cwd = util_path.workspace(),
     workspace = "CWD",
     prompt_title = "Find quickfix history",
     show_untracked = true,
@@ -80,7 +77,7 @@ end
 
 function M.find_vim_options()
   require("telescope.builtin").vim_options({
-    cwd = util.path.workspace(),
+    cwd = util_path.workspace(),
     workspace = "CWD",
     prompt_title = "Find vim options",
     show_untracked = true,
@@ -90,7 +87,7 @@ end
 
 function M.find_highlights()
   require("telescope.builtin").highlights({
-    cwd = util.path.workspace(),
+    cwd = util_path.workspace(),
     workspace = "CWD",
     prompt_title = "Find vim options",
     show_untracked = true,

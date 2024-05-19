@@ -1,12 +1,5 @@
----@class ghc.core.action.find_recent.context
-local context = {
-  session = require("ghc.core.context.session"),
-}
-
----@class ghc.core.action.find_recent.util
-local util = {
-  path = require("ghc.core.util.path"),
-}
+local context_session = require("ghc.core.context.session")
+local util_path = require("guanghechen.util.path")
 
 local autocmd = require("ghc.core.action.autocmd")
 
@@ -70,13 +63,13 @@ end
 local function find_recent(opts)
   ---@type IFindRecentContext
   local find_recent_context = {
-    workspace = util.path.workspace(),
-    cwd = util.path.cwd(),
-    directory = util.path.current_directory(),
+    workspace = util_path.workspace(),
+    cwd = util_path.cwd(),
+    directory = util_path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
-  context.session.caller_winnr:next(vim.api.nvim_get_current_win())
-  context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
+  context_session.caller_winnr:next(vim.api.nvim_get_current_win())
+  context_session.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
   opts = opts or {}
   opts.initial_mode = "normal"
@@ -89,9 +82,9 @@ local function find_recent(opts)
 
   ---@param scope_next ghc.core.types.enum.FIND_RECENT_SCOPE
   local function change_scope(scope_next)
-    local scope_current = context.session.find_recent_scope:get_snapshot()
+    local scope_current = context_session.find_recent_scope:get_snapshot()
     if scope_next ~= scope_current then
-      context.session.find_recent_scope:next(scope_next)
+      context_session.find_recent_scope:next(scope_next)
       open_picker()
     end
   end
@@ -108,7 +101,7 @@ local function find_recent(opts)
     end,
     change_scope_carousel = function()
       ---@type ghc.core.types.enum.FIND_RECENT_SCOPE
-      local scope = context.session.find_recent_scope:get_snapshot()
+      local scope = context_session.find_recent_scope:get_snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
     end,
@@ -116,13 +109,13 @@ local function find_recent(opts)
 
   open_picker = function()
     ---@type ghc.core.types.enum.FIND_RECENT_SCOPE
-    local scope = context.session.find_recent_scope:get_snapshot()
+    local scope = context_session.find_recent_scope:get_snapshot()
     opts.cwd = get_cwd_by_scope(find_recent_context, scope)
     opts.initial_mode = "normal"
 
     require("telescope").extensions.frecency.frecency(vim.tbl_deep_extend("force", {
       prompt_title = "Find recent (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = context.session.find_recent_keyword:get_snapshot(),
+      default_text = context_session.find_recent_keyword:get_snapshot(),
       show_untracked = true,
       workspace = "CWD",
       attach_mappings = function(prompt_bufnr)
@@ -145,11 +138,11 @@ local function find_recent(opts)
 
         ---@type ghc.core.types.enum.BUFTYPE_EXTRA
         local buftype_extra = "find_recent"
-        context.session.buftype_extra:next(buftype_extra)
+        context_session.buftype_extra:next(buftype_extra)
 
         autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
         autocmd.autocmd_remember_telescope_prompt(prompt_bufnr, function(prompt)
-          context.session.find_recent_keyword:next(prompt)
+          context_session.find_recent_keyword:next(prompt)
         end)
 
         return true
@@ -164,17 +157,17 @@ end
 local M = {}
 
 function M.find_recent_workspace()
-  context.session.find_recent_scope:next("W")
+  context_session.find_recent_scope:next("W")
   find_recent()
 end
 
 function M.find_recent_cwd()
-  context.session.find_recent_scope:next("C")
+  context_session.find_recent_scope:next("C")
   find_recent()
 end
 
 function M.find_recent_current()
-  context.session.find_recent_scope:next("D")
+  context_session.find_recent_scope:next("D")
   find_recent()
 end
 

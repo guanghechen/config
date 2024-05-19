@@ -1,12 +1,8 @@
 local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
 local Subscribers = require("guanghechen.subscriber.Subscribers")
-
----@class guanghechen.observable.Observable.util
-local util = {
-  comparator = require("guanghechen.util.comparator"),
-  debug = require("guanghechen.util.debug"),
-  misc = require("guanghechen.util.misc"),
-}
+local util_comparator = require("guanghechen.util.comparator")
+local util_debug = require("guanghechen.util.debug")
+local util_misc = require("guanghechen.util.misc")
 
 ---@class guanghechen.observable.Observable : guanghechen.types.IObservable
 ---@field private _subscribers guanghechen.types.ISubscribers
@@ -25,7 +21,7 @@ function Observable.new(default_value, options)
   ---@cast options guanghechen.observable.Observable.IOptions
 
   ---@type guanghechen.types.IEquals
-  local equals = options.equals and options.equals or util.comparator.shallow_equals
+  local equals = options.equals and options.equals or util_comparator.shallow_equals
 
   local self = setmetatable(BatchDisposable.new(), Observable)
 
@@ -74,7 +70,7 @@ function Observable:next(value, options)
     ---@type boolean
     local strict = options.strict ~= nil and options.strict or true
     if strict then
-      error("Don't update a disposed observable. value: " .. util.debug.inspect(value))
+      error("Don't update a disposed observable. value: " .. util_debug.inspect(value))
     end
     return
   end
@@ -91,7 +87,7 @@ end
 ---@return nil
 function Observable:subscribe(subscriber)
   if subscriber:isDisposed() then
-    return util.misc.noop_unsubscribable
+    return util_misc.noop_unsubscribable
   end
 
   ---@type guanghechen.types.T | nil
@@ -103,7 +99,7 @@ function Observable:subscribe(subscriber)
   if self:isDisposed() then
     subscriber:next(value, value_prev)
     subscriber:dispose()
-    return util.misc.noop_unsubscribable
+    return util_misc.noop_unsubscribable
   end
 
   subscriber:next(value, value_prev)

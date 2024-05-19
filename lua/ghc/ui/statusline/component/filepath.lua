@@ -1,13 +1,10 @@
+local context_config = require("ghc.core.context.config")
 local icons = require("ghc.core.setting.icons")
-local path = require("ghc.core.util.path")
-local calc_fileicon = require("ghc.core.util.filetype").calc_fileicon
-
-local context = {
-  config = require("ghc.core.context.config"),
-}
+local util_filetype = require("ghc.core.util.filetype")
+local util_path = require("guanghechen.util.path")
 
 ---@type boolean
-local transparency = context.config.transparency:get_snapshot()
+local transparency = context_config.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.filepath
 local M = {
@@ -26,13 +23,13 @@ function M.condition()
     return false
   end
 
-  local relative_path = path.relative(path.cwd(), filepath)
+  local relative_path = util_path.relative(util_path.cwd(), filepath)
   return relative_path ~= "."
 end
 
 function M.renderer()
   local filepath = vim.fn.expand("%:p")
-  local relative_path = path.relative(path.cwd(), filepath)
+  local relative_path = util_path.relative(util_path.cwd(), filepath)
 
   ---@type string
   local added = ""
@@ -64,7 +61,7 @@ function M.renderer()
 
   local color_text = "%#" .. M.name .. "_text#"
 
-  local icon = " " .. calc_fileicon(filepath) .. " "
+  local icon = " " .. util_filetype.calc_fileicon(filepath) .. " "
   local text = icon .. relative_path .. added .. removed .. changed .. " "
   return color_text .. text
 end

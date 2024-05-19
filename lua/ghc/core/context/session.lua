@@ -1,7 +1,7 @@
 local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 local util_observable = require("guanghechen.util.observable")
-local path = require("ghc.core.util.path")
+local util_path = require("guanghechen.util.path")
 
 ---@class ghc.core.context.session : guanghechen.viewmodel.Viewmodel
 ---@field public buftype_extra guanghechen.observable.Observable
@@ -26,7 +26,7 @@ local path = require("ghc.core.util.path")
 ---@field public search_keyword guanghechen.observable.Observable
 local context = Viewmodel.new({
   name = "config",
-  filepath = path.gen_session_related_filepath({ filename = "config.json" }),
+  filepath = util_path.locate_session_filepath({ filename = "config.json" }),
 })
   :register("buftype_extra", Observable.new(nil), false)
   :register("caller_winnr", Observable.new(nil), false)

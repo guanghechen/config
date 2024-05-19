@@ -1,4 +1,4 @@
-local path = require("ghc.core.util.path")
+local util_path = require("guanghechen.util.path")
 
 ---@return boolean
 local function has_explorer_window_opened()
@@ -18,7 +18,7 @@ function M.toggle_explorer_file_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = path.workspace(),
+    dir = util_path.workspace(),
     position = "left",
     reveal = true,
     toggle = true,
@@ -29,7 +29,7 @@ function M.toggle_explorer_file_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = path.cwd(),
+    dir = util_path.cwd(),
     position = "left",
     reveal = true,
     toggle = true,
@@ -40,7 +40,7 @@ function M.toggle_explorer_buffer_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
-    dir = path.workspace(),
+    dir = util_path.workspace(),
     position = "float",
     reveal = true,
     toggle = true,
@@ -51,7 +51,7 @@ function M.toggle_explorer_buffer_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
-    dir = path.cwd(),
+    dir = util_path.cwd(),
     position = "float",
     reveal = true,
     toggle = true,
@@ -62,7 +62,7 @@ function M.toggle_explorer_git_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
-    dir = path.workspace(),
+    dir = util_path.workspace(),
     position = "float",
     reveal = true,
     toggle = true,
@@ -73,7 +73,7 @@ function M.toggle_explorer_git_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
-    dir = path.cwd(),
+    dir = util_path.cwd(),
     position = "float",
     reveal = true,
     toggle = true,

@@ -1,9 +1,5 @@
 local SafeBatchHandler = require("guanghechen.disposable.SafeBatchHandler")
-
----@class guanghechen.subscriber.Subscribers.util
-local util = {
-  misc = require("guanghechen.util.misc"),
-}
+local util_misc = require("guanghechen.util.misc")
 
 ---@class guanghechen.subscriber.Subscribers : guanghechen.types.ISubscribers
 ---@field private ARRANGE_THRESHOLD  number
@@ -115,12 +111,12 @@ end
 ---@return guanghechen.types.IUnsubscribable
 function Subscribers:subscribe(subscriber)
   if subscriber:isDisposed() then
-    return util.misc.noop_unsubscribable
+    return util_misc.noop_unsubscribable
   end
 
   if self._disposed then
     subscriber:dispose()
-    return util.misc.noop_unsubscribable
+    return util_misc.noop_unsubscribable
   end
 
   ---@type guanghechen.subscriber.Subscribers.ISubscriberItem

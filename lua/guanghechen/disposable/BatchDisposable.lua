@@ -1,8 +1,6 @@
----@class guanghechen.disposable.BatchDisposable.util
-local util = {
-  debug = require("guanghechen.util.debug"),
-  disposable = require("guanghechen.util.disposable"),
-}
+local util_debug = require("guanghechen.util.debug")
+local util_disposable
+require("guanghechen.util.disposable")
 
 ---@class guanghechen.disposable.BatchDisposable : guanghechen.types.IBatchDisposable
 local BatchDisposable = {}
@@ -37,11 +35,11 @@ function BatchDisposable:dispose()
   end
 
   local ok, result = pcall(function()
-    util.disposable.disposeAll(self._disposables)
+    util_disposable.disposeAll(self._disposables)
   end)
   self._disposables = {}
   if not ok then
-    error(util.debug.inspect(result))
+    error(util_debug.inspect(result))
   end
 end
 

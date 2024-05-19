@@ -1,9 +1,7 @@
-local context = {
-  config = require("ghc.core.context.config"),
-}
+local context_config = require("ghc.core.context.config")
 
 ---@type boolean
-local transparency = context.config.transparency:get_snapshot()
+local transparency = context_config.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.lsp
 local M = {

@@ -1,18 +1,7 @@
----@class ghc.core.action.autocmd.action
-local action = {
-  session = require("ghc.core.action.session"),
-}
-
----@class ghc.core.action.autocmd.context
-local context = {
-  config = require("ghc.core.context.config"),
-  session = require("ghc.core.context.session"),
-}
-
----@class ghc.core.action.autocmd.util
-local util = {
-  path = require("ghc.core.util.path"),
-}
+local action_session = require("ghc.core.action.session")
+local context_config = require("ghc.core.context.config")
+local context_session = require("ghc.core.context.session")
+local util_path = require("guanghechen.util.path")
 
 ---@class ghc.core.action.autocmd
 local M = {}
@@ -38,8 +27,8 @@ function M.autocmd_change_dir()
         local cwd = vim.fn.getcwd()
         local p = vim.fn.expand("%:p:h")
 
-        local A = util.path.findGitRepoFromPath(p)
-        local B = util.path.findGitRepoFromPath(cwd)
+        local A = util_path.locate_git_repo(p)
+        local B = util_path.locate_git_repo(cwd)
 
         if A == nil then
           vim.cmd("cd " .. p .. "")
@@ -70,7 +59,7 @@ function M.autocmd_clear_buftype_extra(bufnr, callback)
     buffer = bufnr,
     group = M.augroup("clear_buftype_extra"),
     callback = function()
-      context.session.buftype_extra:next(nil)
+      context_session.buftype_extra:next(nil)
       if callback then
         callback(bufnr)
       end
@@ -94,7 +83,7 @@ end
 ---@param opts {pattern: table}
 function M.autocmd_close_with_q(opts)
   local function close()
-    context.session.buftype_extra:next(nil)
+    context_session.buftype_extra:next(nil)
     vim.cmd("close")
   end
 
@@ -204,12 +193,12 @@ function M.autocmd_remember_spectre_prompt(opts)
       local replace_keyword = state.query.replace_query ---@type string
       local search_keyword = state.query.search_query ---@type string
 
-      context.session.replace_replace_keyword:next(replace_keyword)
-      context.session.replace_search_keyword:next(search_keyword)
+      context_session.replace_replace_keyword:next(replace_keyword)
+      context_session.replace_search_keyword:next(search_keyword)
 
       if sync_path then
         local query_path = state.query.path ---@type string
-        context.session.replace_path:next(query_path)
+        context_session.replace_path:next(query_path)
       end
 
       if type(callback) == "function" then
@@ -255,7 +244,7 @@ function M.autocmd_session_autosave()
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = M.augroup("session_autosave"),
     callback = function()
-      action.session.session_autosave()
+      action_session.session_autosave()
     end,
   })
 end
@@ -295,7 +284,7 @@ function M.autocmd_toggle_linenumber()
     group = augroup,
     callback = function()
       if vim.o.nu and vim.api.nvim_get_mode().mode == "n" then
-        if context.config.relativenumber:get_snapshot() then
+        if context_config.relativenumber:get_snapshot() then
           vim.opt.relativenumber = true
         end
       end
@@ -328,4 +317,3 @@ function M.autocmd_unlist_buffer(opts)
 end
 
 return M
-

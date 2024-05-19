@@ -1,17 +1,7 @@
----@class ghc.core.action.search.grep_string.context
-local context = {
-  session = require("ghc.core.context.session"),
-}
-
----@class ghc.core.action.search.grep_string.util
-local util = {
-  path = require("ghc.core.util.path"),
-  regex = require("guanghechen.util.regex"),
-  selection = require("guanghechen.util.selection"),
-  table = require("guanghechen.util.table"),
-}
-
-local autocmd = require("ghc.core.action.autocmd")
+local action_autocmd = require("ghc.core.action.autocmd")
+local context_session = require("ghc.core.context.session")
+local util_path = require("guanghechen.util.path")
+local util_selection = require("guanghechen.util.selection")
 
 ---@alias ISearchContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
@@ -91,7 +81,7 @@ end
 
 local function build_search_text_command(prompt)
   if prompt then
-    context.session.search_keyword:next(prompt)
+    context_session.search_keyword:next(prompt)
   end
 
   if not prompt or prompt == "" then
@@ -103,7 +93,7 @@ local function build_search_text_command(prompt)
       "--color=never",
       "--follow",
     }
-    context.session.search_last_command:next(fd_cmd)
+    context_session.search_last_command:next(fd_cmd)
     return fd_cmd
   end
 
@@ -118,10 +108,10 @@ local function build_search_text_command(prompt)
     "--follow",
     "--vimgrep",
   }
-  if not context.session.search_enable_regex:get_snapshot() then
+  if not context_session.search_enable_regex:get_snapshot() then
     table.insert(grep_cmd, "--fixed-strings")
   end
-  if context.session.search_enable_case_sensitive:get_snapshot() then
+  if context_session.search_enable_case_sensitive:get_snapshot() then
     table.insert(grep_cmd, "--case-sensitive")
   else
     table.insert(grep_cmd, "--ignore-case")
@@ -129,7 +119,7 @@ local function build_search_text_command(prompt)
   table.insert(grep_cmd, "--")
   table.insert(grep_cmd, prompt)
 
-  context.session.search_last_command:next(grep_cmd)
+  context_session.search_last_command:next(grep_cmd)
   return grep_cmd
 end
 
@@ -211,24 +201,24 @@ local function search(opts)
 
   ---@return ISearchContext
   local search_context = {
-    workspace = util.path.workspace(),
-    cwd = util.path.cwd(),
-    directory = util.path.current_directory(),
+    workspace = util_path.workspace(),
+    cwd = util_path.cwd(),
+    directory = util_path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
-  context.session.caller_winnr:next(vim.api.nvim_get_current_win())
-  context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
+  context_session.caller_winnr:next(vim.api.nvim_get_current_win())
+  context_session.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
   opts = opts or {}
   opts.initial_mode = "normal"
   opts.bufnr = search_context.bufnr
   opts.show_untracked = true
   opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
-  opts.use_regex = context.session.search_enable_regex:get_snapshot()
+  opts.use_regex = context_session.search_enable_regex:get_snapshot()
 
-  local selected_text = util.selection.get_selected_text()
+  local selected_text = util_selection.get_selected_text()
   if selected_text and #selected_text > 1 then
-    context.session.search_keyword:next(selected_text)
+    context_session.search_keyword:next(selected_text)
   end
 
   ---@type fun():nil
@@ -236,25 +226,25 @@ local function search(opts)
 
   ---@param scope_next ghc.core.types.enum.SEARCH_SCOPE
   local function change_scope(scope_next)
-    local scope_current = context.session.search_scope:get_snapshot()
+    local scope_current = context_session.search_scope:get_snapshot()
     if scope_next ~= scope_current then
-      context.session.search_scope:next(scope_next)
+      context_session.search_scope:next(scope_next)
       open_picker()
     end
   end
 
   local actions = {
     show_last_search_cmd = function()
-      local last_cmd = context.session.search_last_command:get_snapshot() or {}
+      local last_cmd = context_session.search_last_command:get_snapshot() or {}
       vim.notify("searching:" .. "[" .. vim.inspect(search_context) .. "]" .. vim.inspect(last_cmd))
     end,
     toggle_enable_regex = function()
-      context.session.search_enable_regex:next(not context.session.search_enable_regex:get_snapshot())
-      opts.use_regex = context.session.search_enable_regex:get_snapshot()
+      context_session.search_enable_regex:next(not context_session.search_enable_regex:get_snapshot())
+      opts.use_regex = context_session.search_enable_regex:get_snapshot()
       open_picker()
     end,
     toggle_case_sensitive = function()
-      context.session.search_enable_case_sensitive:next(not context.session.search_enable_case_sensitive:get_snapshot())
+      context_session.search_enable_case_sensitive:next(not context_session.search_enable_case_sensitive:get_snapshot())
       open_picker()
     end,
     change_scope_workspace = function()
@@ -271,7 +261,7 @@ local function search(opts)
     end,
     change_scope_carousel = function()
       ---@type ghc.core.types.enum.SEARCH_SCOPE
-      local scope = context.session.search_scope:get_snapshot()
+      local scope = context_session.search_scope:get_snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
     end,
@@ -279,13 +269,13 @@ local function search(opts)
 
   open_picker = function()
     ---@type ghc.core.types.enum.SEARCH_SCOPE
-    local scope = context.session.search_scope:get_snapshot()
+    local scope = context_session.search_scope:get_snapshot()
     opts.cwd = get_cwd_by_scope(search_context, scope)
 
     local resolved_opts
     local picker_params = {
       prompt_title = "Search word (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = context.session.search_keyword:get_snapshot(),
+      default_text = context_session.search_keyword:get_snapshot(),
       attach_mappings = function(prompt_bufnr)
         local function mapkey(mode, key, action, desc)
           vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })
@@ -310,9 +300,9 @@ local function search(opts)
 
         ---@type ghc.core.types.enum.BUFTYPE_EXTRA
         local buftype_extra = "search"
-        context.session.buftype_extra:next(buftype_extra)
+        context_session.buftype_extra:next(buftype_extra)
 
-        autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
+        action_autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
         return true
       end,
     }
@@ -329,7 +319,7 @@ local function search(opts)
       local make_entry_from_vimgrep = make_entry.gen_from_vimgrep(opts)
       local make_entry_from_file = make_entry.gen_from_file(opts)
       local entry_maker = function(...)
-        local last_prompt = context.session.search_keyword:get_snapshot()
+        local last_prompt = context_session.search_keyword:get_snapshot()
         if not last_prompt or last_prompt == "" then
           return make_entry_from_file(...)
         else
@@ -353,22 +343,22 @@ end
 local M = {}
 
 function M.grep_selected_text_workspace()
-  context.session.search_scope:next("W")
+  context_session.search_scope:next("W")
   search()
 end
 
 function M.grep_selected_text_cwd()
-  context.session.search_scope:next("C")
+  context_session.search_scope:next("C")
   search()
 end
 
 function M.grep_selected_text_directory()
-  context.session.search_scope:next("D")
+  context_session.search_scope:next("D")
   search()
 end
 
 function M.grep_selected_text_buffer()
-  context.session.search_scope:next("B")
+  context_session.search_scope:next("B")
   search()
 end
 

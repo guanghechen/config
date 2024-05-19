@@ -1,30 +1,27 @@
----@class ghc.core.action.terminal.util
-local util = {
-  path = require("ghc.core.util.path"),
-  terminal = require("ghc.core.util.terminal"),
-}
+local util_path = require("guanghechen.util.path")
+local util_terminal = require("ghc.core.util.terminal")
 
 ---@class ghc.core.action.terminal
 local M = {}
 
 function M.open_terminal_workspace()
-  util.terminal.toggle_terminal({
+  util_terminal.toggle_terminal({
     id = "workspace-terminal",
-    cwd = util.path.workspace(),
+    cwd = util_path.workspace(),
   })
 end
 
 function M.open_terminal_cwd()
-  util.terminal.toggle_terminal({
+  util_terminal.toggle_terminal({
     id = "cwd-terminal",
-    cwd = util.path.cwd(),
+    cwd = util_path.cwd(),
   })
 end
 
 function M.open_terminal_current()
-  util.terminal.toggle_terminal({
-    id = util.path.current_directory(),
-    cwd = util.path.current_directory(),
+  util_terminal.toggle_terminal({
+    id = util_path.current_directory(),
+    cwd = util_path.current_directory(),
   })
 end
 

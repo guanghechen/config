@@ -1,7 +1,4 @@
----@class guanghechen.subscriber.Subscriber.util
-local util = {
-  misc = require("guanghechen.util.misc"),
-}
+local util_misc = require("guanghechen.util.misc")
 
 ---@class guanghechen.subscriber.Subscriber : guanghechen.types.ISubscriber
 ---@field private _onNext fun(value: any, value_prev: any|nil):nil
@@ -22,7 +19,7 @@ function Subscriber.new(options)
   self._onNext = options.onNext
 
   ---@type fun():nil
-  self._onDispose = options.onDispose or util.misc.noop
+  self._onDispose = options.onDispose or util_misc.noop
 
   ---@type boolean
   self._disposed = false

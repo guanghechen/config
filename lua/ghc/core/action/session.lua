@@ -1,6 +1,6 @@
 -- https://github.com/folke/persistence.nvim/blob/4982499c1636eac254b72923ab826ee7827b3084/lua/persistence/init.lua#L1
 
-local path = require("ghc.core.util.path")
+local util_path = require("guanghechen.util.path")
 
 ---@class ghc.core.action.quit
 local M = {}
@@ -8,13 +8,13 @@ local M = {}
 ---@param opts {autosave: boolean}
 function M.get_session_filepath(opts)
   local filename = opts.autosave and "session.autosave.vim" or "session.vim"
-  return path.gen_session_related_filepath({ filename = filename })
+  return util_path.locate_session_filepath({ filename = filename })
 end
 
 function M.session_clear_all()
   local filenames = { "session.autosave.vim", "session.vim" }
   for _, filename in ipairs(filenames) do
-    path.clear_session_related_filepath({ filename = filename })
+    util_path.locate_session_filepath({ filename = filename })
   end
 end
 

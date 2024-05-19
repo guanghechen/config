@@ -1,11 +1,7 @@
 local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
-
----@class guanghechen.viewmodel.Viewmodel.util
-local util = {
-  disposable = require("guanghechen.util.disposable"),
-  observable = require("guanghechen.util.observable"),
-  fs = require("guanghechen.util.fs"),
-}
+local util_disposable = require("guanghechen.util.disposable")
+local util_observable = require("guanghechen.util.observable")
+local util_fs = require("guanghechen.util.fs")
 
 ---@class guanghechen.viewmodel.Viewmodel.IOptions
 ---@field public name string
@@ -54,13 +50,13 @@ function Viewmodel:dispose()
   ---@type guanghechen.types.IDisposable[]
   local disposables = {}
   for _, disposable in pairs(self) do
-    if util.disposable(disposable) then
+    if util_disposable(disposable) then
       ---@cast disposable guanghechen.types.IDisposable
       table.insert(disposables, disposable)
     end
   end
 
-  util.disposable.disposeAll(disposables)
+  util_disposable.disposeAll(disposables)
 end
 
 function Viewmodel:get_name()
@@ -71,7 +67,7 @@ end
 function Viewmodel:get_snapshot()
   local data = {}
   for key, observable in pairs(self._persistable_observables) do
-    if util.observable.isObservable(observable) then
+    if util_observable.isObservable(observable) then
       ---@cast observable guanghechen.types.IObservable
       data[key] = observable:get_snapshot()
     end
@@ -83,7 +79,7 @@ end
 function Viewmodel:get_snapshot_all()
   local data = {}
   for key, observable in pairs(self._all_observables) do
-    if util.observable.isObservable(observable) then
+    if util_observable.isObservable(observable) then
       ---@cast observable guanghechen.types.IObservable
       data[key] = observable:get_snapshot()
     end
@@ -121,7 +117,7 @@ function Viewmodel:save()
 end
 
 function Viewmodel:load()
-  local ok_to_load_json, json_text = pcall(util.fs.read_file, self._filepath)
+  local ok_to_load_json, json_text = pcall(util_fs.read_file, self._filepath)
   if not ok_to_load_json then
     return
   end
@@ -143,7 +139,7 @@ function Viewmodel:load()
 
   for key, value in pairs(data) do
     local observable = self[key]
-    if value ~= nil and util.observable.isObservable(observable) then
+    if value ~= nil and util_observable.isObservable(observable) then
       observable:next(value)
     end
   end
