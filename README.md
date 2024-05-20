@@ -59,6 +59,12 @@
 
     If failed, try:
 
+    - rustup
+      ```powershell
+      rustup update # https://stackoverflow.com/a/74132269/15760674
+      rustup default stable-x86_64-pc-windows-gnu # see https://stackoverflow.com/a/68596301/15760674
+      ```
+
     - Upgrade the `nvim-oxi` to latest by edit the `<nvim-data>/lazy/nvim-spectre/spectre_oxi/cargo.toml`
     - install clang / llvm
       a) open cmd.exe with admin
