@@ -7,14 +7,17 @@ local function get_build_cmd()
   end
 
   if util_os.is_windows() then
-    return ""
+    return "./build.ps1"
   end
 
   return "./build.sh"
 end
 
 return {
-  "nvim-pack/nvim-spectre",
+  "guanghechen/mirror",
+  branch = "nvim@nvim-spectre", -- "alexghergh/nvim-tmux-navigation",
+  name = "nvim-spectre",
+  main = "spectre",
   build = get_build_cmd(),
   enabled = vim.fn.executable("cargo") == 1,
   opts = function()
