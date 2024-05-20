@@ -139,7 +139,7 @@ function M.autocmd_enable_wrap(opts)
 end
 
 -- go to last loc when opening a buffer
----@param opts {exclude: table}
+---@param opts {exclude: string[]}
 function M.autocmd_goto_last_location(opts)
   local exclude = opts.exclude
   vim.api.nvim_create_autocmd({ "BufReadPost" }, {
@@ -249,7 +249,7 @@ function M.autocmd_session_autosave()
   })
 end
 
----@param opts {pattern: table, format?: "unix" | "dos"}
+---@param opts {pattern:string[], format?: "unix" | "dos"}
 function M.autocmd_set_fileformat(opts)
   local pattern = opts.pattern
   local format = opts.format or "unix"
@@ -274,6 +274,21 @@ function M.autocmd_set_filetype(opts)
       end,
     })
   end
+end
+
+---@param opts {pattern: string[], width: number}
+function M.autocmd_set_tabstop(opts)
+  local pattern = opts.pattern ---@type string[]
+  local width = opts.width ---@type number
+  vim.api.nvim_create_autocmd("FileType", {
+    group = M.augroup("set_tabstop"),
+    pattern = pattern,
+    callback = function()
+      vim.opt.shiftwidth = width
+      vim.opt.softtabstop = width -- set the tab width
+      vim.opt.tabstop = width -- set the tab width
+    end,
+  })
 end
 
 function M.autocmd_toggle_linenumber()

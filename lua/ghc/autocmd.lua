@@ -56,5 +56,13 @@ action_autocmd.autocmd_set_filetype({
   },
 })
 
+--#tabstop
+action_autocmd.autocmd_set_tabstop({
+  pattern = {
+    "markdown",
+  },
+  width = 2,
+})
+
 --#plugin
 vim.cmd("autocmd User TelescopePreviewerLoaded setlocal number") -- enable numbers in telescope preview.

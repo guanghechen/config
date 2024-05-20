@@ -24,7 +24,7 @@
     ./build.sh
     ```
 
-    If encounter the `error: linking with cc failed`, try put below content into the `~/.cargo/config` (see https://stackoverflow.com/a/65698711/15760674):
+    If encounter the `error: linking with cc failed`, try put below content into the `~/.cargo/config.toml` (see https://stackoverflow.com/a/65698711/15760674):
 
     ```conf
     [target.x86_64-apple-darwin]
@@ -38,7 +38,32 @@
     "-C", "link-arg=-undefined",
     "-C", "link-arg=dynamic_lookup",
     ]
+
+    [target.x86_64-pc-windows-msvc]
+    rustflags = [
+      "-C", "link-arg=/FORCE:UNRESOLVED",
+    ]
+
+    [target.aarch64-pc-windows-msvc]
+    rustflags = [
+      "-C", "link-arg=/FORCE:UNRESOLVED",
+    ]
     ```
+
+  - windows
+    ```zsh
+    cd <nvim-data>/lazy/nvim-spectre/spectre_oxi
+    cargo build --release
+    cp ./target/release/spectre_oxi.dll ../lua/
+    ```
+
+    If failed, try:
+
+    - Upgrade the `nvim-oxi` to latest by edit the `<nvim-data>/lazy/nvim-spectre/spectre_oxi/cargo.toml`
+    - install clang / llvm
+      a) open cmd.exe with admin
+      b) run `choco install llvm`
+
 
 
 ### FAQ

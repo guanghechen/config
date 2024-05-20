@@ -1,8 +1,21 @@
 local context_session = require("ghc.core.context.session")
+local util_os = require("guanghechen.util.os")
+
+local function get_build_cmd()
+  if not vim.fn.executable("cargo") then
+    return ""
+  end
+
+  if util_os.is_windows() then
+    return ""
+  end
+
+  return "./build.sh"
+end
 
 return {
   "nvim-pack/nvim-spectre",
-  build = vim.fn.executable("cargo") == 1 and "./build.sh" or "",
+  build = get_build_cmd(),
   enabled = vim.fn.executable("cargo") == 1,
   opts = function()
     local flag_case_sensitive = context_session.replace_enable_case_sensitive:get_snapshot() ---@type boolean
