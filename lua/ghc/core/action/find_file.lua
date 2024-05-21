@@ -1,5 +1,4 @@
-local util_path = require("guanghechen.util.path")
-local util_table = require("guanghechen.util.table")
+local guanghechen = require("guanghechen")
 local action_autocmd = require("ghc.core.action.autocmd")
 local context_session = require("ghc.core.context.session")
 
@@ -63,8 +62,8 @@ end
 ---@param cwd string
 ---@return string
 local function gen_filemap(force, cwd)
-  local filemap_filepath = util_path.locate_session_filepath({ filename = "filemap.json" })
-  if force or not util_path.is_exist(filemap_filepath) or context_session.filemap_dirty:get_snapshot() then
+  local filemap_filepath = guanghechen.util.path.locate_session_filepath({ filename = "filemap.json" })
+  if force or not guanghechen.util.is_exist(filemap_filepath) or context_session.filemap_dirty:get_snapshot() then
     local stdout = vim.uv.new_pipe(false)
     local stderr = vim.uv.new_pipe(false)
     local subprocess
@@ -75,7 +74,12 @@ local function gen_filemap(force, cwd)
       stderr:close()
       subprocess:close()
       if code ~= 0 then
-        vim.notify("[gen_filemap] failed with code " .. code .. " and signal " .. signal)
+        guanghechen.util.reporter.warn({
+          from = "find_file",
+          subject = "gen_filemap",
+          message = "failed!",
+          details = { code = code, signal = signal },
+        })
       end
     end
 
@@ -117,9 +121,9 @@ local function find_file(opts, force)
 
   ---@type IFindFileContext
   local find_file_context = {
-    workspace = util_path.workspace(),
-    cwd = util_path.cwd(),
-    directory = util_path.current_directory(),
+    workspace = guanghechen.util.path.workspace(),
+    cwd = guanghechen.util.path.cwd(),
+    directory = guanghechen.util.path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
   context_session.caller_winnr:next(vim.api.nvim_get_current_win())
@@ -155,7 +159,14 @@ local function find_file(opts, force)
   local actions = {
     show_last_find_file_cmd = function()
       local last_cmd = context_session.find_file_last_command:get_snapshot() or {}
-      vim.notify("finding files:" .. "[" .. vim.inspect(find_file_context) .. "]" .. vim.inspect(last_cmd))
+      guanghechen.util.reporter.info({
+        from = "find_file",
+        subject = "show_last_find_file_cmd",
+        details = {
+          context = find_file_context,
+          last_cmd = last_cmd,
+        },
+      })
     end,
     toggle_enable_regex = function()
       context_session.find_file_enable_regex:next(not context_session.find_file_enable_regex:get_snapshot())
@@ -212,7 +223,7 @@ local function find_file(opts, force)
     table.insert(cmd, prompt)
     table.insert(cmd, filemap_filepath)
 
-    context_session.find_file_last_command:next(util_table.clone_array(cmd))
+    context_session.find_file_last_command:next(guanghechen.util.table.clone_array(cmd))
     return cmd
   end
 

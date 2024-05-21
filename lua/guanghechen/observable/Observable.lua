@@ -1,7 +1,6 @@
 local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
 local Subscribers = require("guanghechen.subscriber.Subscribers")
 local util_comparator = require("guanghechen.util.comparator")
-local util_debug = require("guanghechen.util.debug")
 local util_misc = require("guanghechen.util.misc")
 
 ---@class guanghechen.observable.Observable : guanghechen.types.IObservable
@@ -70,7 +69,7 @@ function Observable:next(value, options)
     ---@type boolean
     local strict = options.strict ~= nil and options.strict or true
     if strict then
-      error("Don't update a disposed observable. value: " .. util_debug.inspect(value))
+      error("Don't update a disposed observable. value: " .. vim.inspect(value))
     end
     return
   end

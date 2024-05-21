@@ -1,7 +1,6 @@
+local guanghechen = require("guanghechen")
 local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
-local util_observable = require("guanghechen.util.observable")
-local util_path = require("guanghechen.util.path")
 
 ---@class ghc.core.context.session : guanghechen.viewmodel.Viewmodel
 ---@field public buftype_extra guanghechen.observable.Observable
@@ -26,7 +25,7 @@ local util_path = require("guanghechen.util.path")
 ---@field public search_scope guanghechen.observable.Observable
 local context = Viewmodel.new({
   name = "context:session",
-  filepath = util_path.locate_session_filepath({ filename = "config.json" }),
+  filepath = guanghechen.util.path.locate_session_filepath({ filename = "config.json" }),
 })
   :register("buftype_extra", Observable.new(nil), false)
   :register("caller_winnr", Observable.new(nil), false)
@@ -53,7 +52,7 @@ context:load()
 context:auto_reload()
 
 --Auto refresh statusline
-util_observable.watch_observables({
+guanghechen.util.observable.watch_observables({
   context.buftype_extra,
   context.find_file_enable_case_sensitive,
   context.find_file_enable_regex,

@@ -1,4 +1,4 @@
-local util_path = require("guanghechen.util.path")
+local guanghechen = require("guanghechen")
 
 local have_set_cwd = false ---@type boolean
 
@@ -21,7 +21,7 @@ function M.toggle_explorer_file_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = util_path.workspace(),
+    dir = guanghechen.util.path.workspace(),
     position = "left",
     reveal = true,
     toggle = true,
@@ -33,7 +33,7 @@ function M.toggle_explorer_file_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = util_path.cwd(),
+    dir = guanghechen.util.path.cwd(),
     position = "left",
     reveal = true,
     toggle = true,
@@ -45,7 +45,7 @@ function M.toggle_explorer_buffer_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
-    dir = util_path.workspace(),
+    dir = guanghechen.util.path.workspace(),
     position = "float",
     reveal = true,
     toggle = true,
@@ -57,7 +57,7 @@ function M.toggle_explorer_buffer_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
-    dir = util_path.cwd(),
+    dir = guanghechen.util.path.cwd(),
     position = "float",
     reveal = true,
     toggle = true,
@@ -69,7 +69,7 @@ function M.toggle_explorer_git_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
-    dir = util_path.workspace(),
+    dir = guanghechen.util.path.workspace(),
     position = "float",
     reveal = true,
     toggle = true,
@@ -81,7 +81,7 @@ function M.toggle_explorer_git_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
-    dir = util_path.cwd(),
+    dir = guanghechen.util.path.cwd(),
     position = "float",
     reveal = true,
     toggle = true,
@@ -96,7 +96,7 @@ function M.toggle_explorer_last()
     toggle = true,
   }
   if not have_set_cwd then
-    opts.dir = util_path.cwd()
+    opts.dir = guanghechen.util.path.cwd()
   end
   require("neo-tree.command").execute(opts)
 end
@@ -115,7 +115,7 @@ function M.reveal_file_explorer()
       reveal = true,
     }
     if not have_set_cwd then
-      opts.dir = util_path.cwd()
+      opts.dir = guanghechen.util.path.cwd()
     end
     require("neo-tree.command").execute(opts)
   end

@@ -1,6 +1,6 @@
+local guanghechen = require("guanghechen")
 local context_config = require("ghc.core.context.config")
 local context_session = require("ghc.core.context.session")
-local util_path = require("guanghechen.util.path")
 local util_terminal = require("ghc.core.util.terminal")
 
 -- Function to check clipboard with retries
@@ -9,8 +9,8 @@ local function get_filepath_from_lazygit()
   for i = 1, 5 do
     local relative_filepath = vim.fn.getreg("+")
     if relative_filepath ~= "" then
-      local workspace = util_path.workspace()
-      return util_path.join(workspace, relative_filepath)
+      local workspace = guanghechen.util.path.workspace()
+      return guanghechen.util.path.join(workspace, relative_filepath)
     end
     vim.uv.sleep(50)
   end
@@ -23,7 +23,11 @@ local function edit_lazygit_file_in_buffer()
   local channel_id = vim.fn.getbufvar(current_bufnr, "terminal_job_id")
 
   if not channel_id then
-    vim.notify("No terminal job ID found.", vim.log.levels.ERROR)
+    guanghechen.util.reporter.error({
+      from = "git.lua",
+      subject = "edit_lazygit_file_in_buffer",
+      message = "No terminal job ID found.",
+    })
     return
   end
 
@@ -32,14 +36,22 @@ local function edit_lazygit_file_in_buffer()
 
   local relative_filepath = get_filepath_from_lazygit()
   if not relative_filepath then
-    vim.notify("Clipboard is empty or invalid.", vim.log.levels.ERROR)
+    guanghechen.util.reporter.error({
+      from = "git.lua",
+      subject = "edit_lazygit_file_in_buffer",
+      message = "Clipboard is empty or invalid.",
+    })
     return
   end
 
   local winid = context_session.caller_winnr:get_snapshot()
 
   if winid == nil then
-    vim.notify("Could not find the original window.", vim.log.levels.ERROR)
+    guanghechen.util.reporter.error({
+      from = "git.lua",
+      subject = "edit_lazygit_file_in_buffer",
+      message = "Could not find the original window.",
+    })
     return
   end
 
@@ -60,10 +72,10 @@ local function open_lazygit(cmd, cwd)
 end
 
 local function get_lazygit_config_filepath()
-  local lazygit_config_dir = util_path.locate_config_filepath("config/lazygit")
+  local lazygit_config_dir = guanghechen.util.path.locate_config_filepath("config/lazygit")
   local config_filepaths = {
-    util_path.join(lazygit_config_dir, "config.yaml"),
-    util_path.join(lazygit_config_dir, context_config.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"),
+    guanghechen.util.path.join(lazygit_config_dir, "config.yaml"),
+    guanghechen.util.path.join(lazygit_config_dir, context_config.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"),
   }
   local lazygit_theme_config_filepath = table.concat(config_filepaths, ",")
   return lazygit_theme_config_filepath
@@ -75,22 +87,23 @@ local M = {}
 function M.open_lazygit_workspace()
   local lazygit_theme_config_filepath = get_lazygit_config_filepath()
   local cmd = { "lazygit", "--use-config-file", lazygit_theme_config_filepath }
-  local cwd = util_path.workspace()
+  local cwd = guanghechen.util.path.workspace()
   open_lazygit(cmd, cwd)
 end
 
 function M.open_lazygit_cwd()
   local lazygit_theme_config_filepath = get_lazygit_config_filepath()
   local cmd = { "lazygit", "--use-config-file", lazygit_theme_config_filepath }
-  local cwd = util_path.cwd()
+  local cwd = guanghechen.util.path.cwd()
   open_lazygit(cmd, cwd)
 end
 
 function M.open_lazygit_file_history()
   local filepath = vim.api.nvim_buf_get_name(0)
   local cmd = { "lazygit", "-f", filepath }
-  local cwd = util_path.cwd()
+  local cwd = guanghechen.util.path.cwd()
   open_lazygit(cmd, cwd)
 end
 
 return M
+

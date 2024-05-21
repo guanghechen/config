@@ -13,7 +13,7 @@ function Timer.new(name)
   return self
 end
 
----@param timeout   number millionsecondsggj
+---@param timeout   number millionseconds
 ---@param interval  number if 0 then only called once.
 ---@param callback  fun():nil a callback which will executed when the tiemout.
 ---@return nil

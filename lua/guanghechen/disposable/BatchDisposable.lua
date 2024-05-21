@@ -1,6 +1,4 @@
-local util_debug = require("guanghechen.util.debug")
-local util_disposable
-require("guanghechen.util.disposable")
+local util_disposable = require("guanghechen.util.disposable")
 
 ---@class guanghechen.disposable.BatchDisposable : guanghechen.types.IBatchDisposable
 local BatchDisposable = {}
@@ -39,7 +37,7 @@ function BatchDisposable:dispose()
   end)
   self._disposables = {}
   if not ok then
-    error(util_debug.inspect(result))
+    error(vim.inspect(result))
   end
 end
 

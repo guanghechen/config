@@ -1,9 +1,8 @@
+local guanghechen = require("guanghechen")
 local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
-local util_observable = require("guanghechen.util.observable")
-local util_path = require("guanghechen.util.path")
 
-local context_config_filepath = util_path.locate_config_filepath("config/local/context/config.json")
+local context_config_filepath = guanghechen.util.path.locate_config_filepath("config/local/context/config.json")
 
 ---@class ghc.core.context.config: guanghechen.viewmodel.Viewmodel
 ---@field public darken guanghechen.observable.Observable
@@ -40,7 +39,7 @@ context:load()
 context:auto_reload()
 
 --Auto refresh statusline
-util_observable.watch_observables({
+guanghechen.util.observable.watch_observables({
   context.darken,
   context.theme_lighten,
   context.theme_darken,

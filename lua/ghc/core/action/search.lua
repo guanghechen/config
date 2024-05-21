@@ -1,7 +1,6 @@
+local guanghechen = require("guanghechen")
 local action_autocmd = require("ghc.core.action.autocmd")
 local context_session = require("ghc.core.context.session")
-local util_path = require("guanghechen.util.path")
-local util_selection = require("guanghechen.util.selection")
 
 ---@alias ISearchContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
@@ -201,9 +200,9 @@ local function search(opts)
 
   ---@return ISearchContext
   local search_context = {
-    workspace = util_path.workspace(),
-    cwd = util_path.cwd(),
-    directory = util_path.current_directory(),
+    workspace = guanghechen.util.path.workspace(),
+    cwd = guanghechen.util.path.cwd(),
+    directory = guanghechen.util.path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
   context_session.caller_winnr:next(vim.api.nvim_get_current_win())
@@ -216,7 +215,7 @@ local function search(opts)
   opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
   opts.use_regex = context_session.search_enable_regex:get_snapshot()
 
-  local selected_text = util_selection.get_selected_text()
+  local selected_text = guanghechen.util.selection.get_selected_text()
   if selected_text and #selected_text > 1 then
     context_session.search_keyword:next(selected_text)
   end
@@ -236,7 +235,14 @@ local function search(opts)
   local actions = {
     show_last_search_cmd = function()
       local last_cmd = context_session.search_last_command:get_snapshot() or {}
-      vim.notify("searching:" .. "[" .. vim.inspect(search_context) .. "]" .. vim.inspect(last_cmd))
+      guanghechen.util.reporter.info({
+        from = "search.lua",
+        subject = "show_last_search_cmd",
+        details = {
+          context = search_context,
+          last_cmd = last_cmd,
+        },
+      })
     end,
     toggle_enable_regex = function()
       context_session.search_enable_regex:next(not context_session.search_enable_regex:get_snapshot())
@@ -367,3 +373,4 @@ function M.grep_selected_text()
 end
 
 return M
+

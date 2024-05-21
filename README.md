@@ -38,16 +38,6 @@
     "-C", "link-arg=-undefined",
     "-C", "link-arg=dynamic_lookup",
     ]
-
-    [target.x86_64-pc-windows-msvc]
-    rustflags = [
-      "-C", "link-arg=/FORCE:UNRESOLVED",
-    ]
-
-    [target.aarch64-pc-windows-msvc]
-    rustflags = [
-      "-C", "link-arg=/FORCE:UNRESOLVED",
-    ]
     ```
 
   - windows

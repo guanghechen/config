@@ -1,5 +1,3 @@
-local util_debug = require("guanghechen.util.debug")
-
 ---@class guanghechen.disposable.SafeBatchHandler
 local SafeBatchHandler = {}
 SafeBatchHandler.__index = SafeBatchHandler
@@ -38,7 +36,7 @@ end
 function SafeBatchHandler:summary(title)
   if self._summary == nil then
     if #self._errors > 0 then
-      self._summary = util_debug.inspect({
+      self._summary = vim.inspect({
         title = title,
         details = self._errors,
       })

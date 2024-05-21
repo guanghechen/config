@@ -1,5 +1,6 @@
 local util_os = require("guanghechen.util.os")
 local util_md5 = require("guanghechen.util.md5")
+local util_reporter = require("guanghechen.util.reporter")
 local path_sep = util_os.get_path_sep() ---@type string
 
 ---@class guanghechen.util.path
@@ -189,7 +190,11 @@ function M.remove_session_filepaths(opts)
         local session_filepath = session_root_dir .. path_sep .. dirname .. path_sep .. filename
         if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
           os.remove(session_filepath)
-          vim.notify("Removed " .. session_filepath)
+          util_reporter.info({
+            from = "path.lua",
+            subject = "remove_session_filepaths",
+            message = "Removed " .. session_filepath,
+          })
         end
       end
     end

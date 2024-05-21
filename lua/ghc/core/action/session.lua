@@ -1,6 +1,6 @@
 -- https://github.com/folke/persistence.nvim/blob/4982499c1636eac254b72923ab826ee7827b3084/lua/persistence/init.lua#L1
 
-local util_path = require("guanghechen.util.path")
+local guanghechen = require("guanghechen")
 
 ---@class ghc.core.action.session
 local M = {}
@@ -8,13 +8,13 @@ local M = {}
 ---@param opts {autosave: boolean}
 function M.get_session_filepath(opts)
   local filename = opts.autosave and "session.autosave.vim" or "session.vim"
-  return util_path.locate_session_filepath({ filename = filename })
+  return guanghechen.util.path.locate_session_filepath({ filename = filename })
 end
 
 function M.session_clear_all()
   local filenames = { "session.autosave.vim", "session.vim" }
   for _, filename in ipairs(filenames) do
-    util_path.locate_session_filepath({ filename = filename })
+    guanghechen.util.path.locate_session_filepath({ filename = filename })
   end
 end
 
@@ -54,7 +54,11 @@ function M.session_save()
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 
-  vim.notify("Session saved successfully!", vim.log.levels.INFO)
+  guanghechen.util.reporter.info({
+    from = "session.lua",
+    subject = "session_save",
+    message = "Session saved successfully!",
+  })
 end
 
 function M.session_load()
@@ -67,7 +71,11 @@ function M.session_load()
     if session_filepath_autosaved and vim.fn.filereadable(session_filepath_autosaved) ~= 0 then
       vim.cmd("silent! source " .. vim.fn.fnameescape(session_filepath_autosaved))
     else
-      vim.notify("Cannot find session_filepath at " .. session_filepath)
+      guanghechen.util.reporter.info({
+        from = "session.lua",
+        subject = "session_load",
+        message = "Cannot find session_filepath at " .. session_filepath,
+      })
     end
   end
 end
@@ -80,3 +88,4 @@ function M.session_load_autosaved()
 end
 
 return M
+

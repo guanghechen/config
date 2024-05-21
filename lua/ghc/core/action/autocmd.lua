@@ -1,7 +1,7 @@
+local guanghechen = require("guanghechen")
 local action_session = require("ghc.core.action.session")
 local context_config = require("ghc.core.context.config")
 local context_session = require("ghc.core.context.session")
-local util_path = require("guanghechen.util.path")
 
 ---@class ghc.core.action.autocmd
 local M = {}
@@ -27,8 +27,8 @@ function M.autocmd_change_dir()
         local cwd = vim.fn.getcwd()
         local p = vim.fn.expand("%:p:h")
 
-        local A = util_path.locate_git_repo(p)
-        local B = util_path.locate_git_repo(cwd)
+        local A = guanghechen.util.path.locate_git_repo(p)
+        local B = guanghechen.util.path.locate_git_repo(cwd)
 
         if A == nil then
           vim.cmd("cd " .. p .. "")

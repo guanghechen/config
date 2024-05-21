@@ -1,0 +1,11 @@
+---@alias guanghechen.types.IReporterLevelEnum
+---| "DEBUG"
+---| "INFO"
+---| "WARN"
+---| "ERROR"
+
+---@class guanghechen.types.IReporterOptions
+---@field from string
+---@field subject? string
+---@field message? string
+---@field details? any

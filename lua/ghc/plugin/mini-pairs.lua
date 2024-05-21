@@ -1,4 +1,4 @@
-local reporter = require("guanghechen.util.reporter")
+local guanghechen = require("guanghechen")
 
 -- auto pairs
 return {
@@ -23,9 +23,17 @@ return {
       function()
         vim.g.minipairs_disable = not vim.g.minipairs_disable
         if vim.g.minipairs_disable then
-          reporter.warn("Disabled auto pairs", { title = "Option" })
+          reporter.util.reporter.warn({ 
+            from = "mini-pairs", 
+            subject = "toggle auto pairs", 
+            message = "Disabled auto pairs" 
+          })
         else
-          reporter.info("Enabled auto pairs", { title = "Option" })
+          reporter.util.reporter.info({ 
+            from = "mini-pairs", 
+            subject = "toggle auto pairs", 
+            message = "Enable auto pairs" 
+          })
         end
       end,
       desc = "Toggle Auto Pairs",

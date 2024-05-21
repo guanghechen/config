@@ -1,8 +1,6 @@
+local guanghechen = require("guanghechen")
 local action_autocmd = require("ghc.core.action.autocmd")
 local context_session = require("ghc.core.context.session")
-local util_path = require("guanghechen.util.path")
-local util_selection = require("guanghechen.util.selection")
-local util_table = require("guanghechen.util.table")
 
 ---@param opts { cwd: string, replace_path?: string }
 local function replace_word(opts)
@@ -14,12 +12,12 @@ local function replace_word(opts)
     replace_path = context_session.replace_path:get_snapshot() ---@type string
   end
 
-  local selected_text = util_selection.get_selected_text() ---@type string
+  local selected_text = guanghechen.util.selection.get_selected_text() ---@type string
   if selected_text and #selected_text > 1 then
     context_session.search_keyword:next(selected_text)
   end
 
-  local search_paths = util_table.filter_non_blank_string(context_session.search_include_paths:get_snapshot()) ---@type string[]
+  local search_paths = guanghechen.util.table.filter_non_blank_string(context_session.search_include_paths:get_snapshot()) ---@type string[]
   local search_text = context_session.search_keyword:get_snapshot() ---@type string
   local replace_text = context_session.replace_keyword:get_snapshot() or search_text ---@type string
 
@@ -41,18 +39,18 @@ end
 local M = {}
 
 function M.replace_word_workspace()
-  local cwd = util_path.workspace() ---@type string
+  local cwd = guanghechen.util.path.workspace() ---@type string
   replace_word({ cwd = cwd })
 end
 
 function M.replace_word_cwd()
-  local cwd = util_path.cwd() ---@type string
+  local cwd = guanghechen.util.path.cwd() ---@type string
   replace_word({ cwd = cwd })
 end
 
 function M.replace_word_current_file()
-  local cwd = util_path.cwd() ---@type string
-  local filepath = util_path.relative(cwd, util_path.current_filepath()) ---@type string
+  local cwd = guanghechen.util.path.cwd() ---@type string
+  local filepath = guanghechen.util.path.relative(cwd, guanghechen.util.path.current_filepath()) ---@type string
   replace_word({ cwd = cwd, replace_path = filepath })
 end
 

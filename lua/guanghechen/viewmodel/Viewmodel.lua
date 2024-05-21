@@ -3,6 +3,7 @@ local util_disposable = require("guanghechen.util.disposable")
 local util_observable = require("guanghechen.util.observable")
 local util_fs = require("guanghechen.util.fs")
 local util_json = require("guanghechen.util.json")
+local util_reporter = require("guanghechen.util.reporter")
 
 ---@class guanghechen.viewmodel.Viewmodel.IOptions
 ---@field public name string
@@ -118,7 +119,12 @@ function Viewmodel:save()
   local data = self:get_snapshot()
   local ok_to_encode_json, json_text = pcall(util_json.stringify_prettier, data)
   if not ok_to_encode_json then
-    vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to encode json data:" .. vim.inspect(data))
+    util_reporter.warn({
+      from = self._name,
+      subject = "Viewmodel:save",
+      message = "Failed to encode json data",
+      details = data,
+    })
     return
   end
 
@@ -126,7 +132,12 @@ function Viewmodel:save()
 
   local file = io.open(self._filepath, "w")
   if not file then
-    vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to save json:" .. vim.inspect(data))
+    util_reporter.warn({
+      from = self._name,
+      subject = "Viewmodel:save",
+      message = "Failed to save json",
+      details = data,
+    })
     return
   end
 
@@ -146,12 +157,22 @@ function Viewmodel:load()
 
   local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
   if not ok_to_decode_json then
-    vim.notify("[Viewmodel:(" .. self._name .. ")] Failed to decode json:" .. vim.inspect(json_text))
+    util_reporter.warn({
+      from = self._name,
+      subject = "Viewmodel:load",
+      message = "Failed to decode json",
+      details = json_text,
+    })
     return
   end
 
   if type(data) ~= "table" then
-    vim.notify("[Viewmodel:(" .. self._name .. ")] Bad json, not a table:" .. vim.inspect(json_text))
+    util_reporter.warn({
+      from = self._name,
+      subject = "Viewmodel:load",
+      message = "Bad json, not a table",
+      details = json_text,
+    })
     return
   end
 
@@ -170,14 +191,27 @@ function Viewmodel:auto_reload()
 
   local unwatch = util_fs.watch_file({
     filepath = self._filepath,
-    on_event = function(_, event)
+    on_event = function(filepath, event)
       if type(event) == "table" and event.change == true then
         self:load()
-        vim.notify("auto reloaded '" .. self._name .. "'")
+        util_reporter.info({
+          from = self._name,
+          subject = "Viewmodel:auto_reload",
+          message = "auto reloaded.",
+          -- details = { filepath = filepath, event = event, },
+        })
       end
     end,
     on_error = function(filepath, err)
-      vim.notify("error on " .. filepath .. ", error:" .. vim.inspect(err), vim.log.levels.ERROR)
+      util_reporter.error({
+        from = self._name,
+        subject = "Viewmodel:auto_reload",
+        message = "Failed!",
+        details = {
+          err = err,
+          filepath = filepath,
+        },
+      })
     end,
   })
   self._unwatch = unwatch
