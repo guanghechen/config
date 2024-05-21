@@ -23,16 +23,16 @@ return {
       function()
         vim.g.minipairs_disable = not vim.g.minipairs_disable
         if vim.g.minipairs_disable then
-          reporter.util.reporter.warn({ 
-            from = "mini-pairs", 
-            subject = "toggle auto pairs", 
-            message = "Disabled auto pairs" 
+          guanghechen.util.reporter.warn({
+            from = "mini-pairs",
+            subject = "toggle auto pairs",
+            message = "Disabled auto pairs",
           })
         else
-          reporter.util.reporter.info({ 
-            from = "mini-pairs", 
-            subject = "toggle auto pairs", 
-            message = "Enable auto pairs" 
+          guanghechen.util.reporter.info({
+            from = "mini-pairs",
+            subject = "toggle auto pairs",
+            message = "Enable auto pairs",
           })
         end
       end,

@@ -1,3 +1,33 @@
+local load = {
+  autocmd = function()
+    require("ghc.autocmd")
+
+    if vim.g.neovide then
+      require("neovide.autocmd")
+    end
+
+    pcall(require, "local.autocmd")
+  end,
+  keymap = function()
+    require("ghc.keymap")
+
+    if vim.g.neovide then
+      require("neovide.keymap")
+    end
+
+    pcall(require, "local.keymap")
+  end,
+  option = function()
+    require("ghc.option")
+
+    if vim.g.neovide then
+      require("neovide.option")
+    end
+
+    pcall(require, "local.option")
+  end,
+}
+
 vim.g.base46_cache = vim.fn.stdpath("data") .. "/nvchad/base46/"
 vim.g.mapleader = " "
 
@@ -9,7 +39,7 @@ if not vim.uv.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("ghc.option")
+load.option()
 
 -- load plugins
 require("lazy").setup(require("ghc.plugin.lazy"))
@@ -18,15 +48,8 @@ require("lazy").setup(require("ghc.plugin.lazy"))
 dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
 
-require("ghc.autocmd")
+load.autocmd()
 
 vim.schedule(function()
-  require("ghc.keymap")
+  load.keymap()
 end)
-
-if vim.g.neovide then
-  require("neovide")
-end
-
---Try to load local config
-pcall(require, "local")
