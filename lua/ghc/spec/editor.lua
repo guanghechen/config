@@ -58,11 +58,11 @@ return {
   require("ghc.plugin.mason"),
   require("ghc.plugin.nvim-lspconfig"),
 
-  --search
-  require("ghc.plugin.flash"),
-
   --replace
   require("ghc.plugin.nvim-spectre"),
+
+  --search
+  require("ghc.plugin.flash"),
 
   --ui
   require("ghc.plugin.nvim-colorizer"),

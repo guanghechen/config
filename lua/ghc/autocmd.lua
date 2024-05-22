@@ -27,6 +27,7 @@ action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
     "startuptime",
     "term",
     "tsplayground",
+    "Trouble",
   },
 })
 

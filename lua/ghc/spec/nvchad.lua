@@ -1,5 +1,4 @@
 return {
-  -- nvchad
   {
     "NvChad/ui",
     branch = "v2.5",

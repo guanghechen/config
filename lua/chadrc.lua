@@ -60,8 +60,19 @@ M.ui = {
   statusline = {
     theme = "default", -- default / minimal / vscode / vscode_colored
     separator_style = "default",
-    order = util_table.merge_multiple_array(statusline.order_left, { "%=" }, statusline.order_middle, { "%=" }, statusline.order_right),
-    modules = vim.tbl_deep_extend("force", statusline.modules_left, statusline.modules_middle, statusline.modules_right),
+    order = util_table.merge_multiple_array(
+      statusline.order_left,
+      { "%=" },
+      statusline.order_middle,
+      { "%=" },
+      statusline.order_right
+    ),
+    modules = vim.tbl_deep_extend(
+      "force",
+      statusline.modules_left,
+      statusline.modules_middle,
+      statusline.modules_right
+    ),
   },
   tabufline = {
     enabled = true,
