@@ -3,16 +3,27 @@
 local guanghechen = require("guanghechen.util.table")
 local context_session = require("ghc.core.context.session")
 
----@class ghc.core.util.terminal
-local M = {}
-
 ---@type table<string,LazyFloat>
 local terminals = {}
+
+---@param opts { cmd: string|string[], cwd: string, env: table|nil }
+---@return string
+local function calc_terminal_key(opts)
+  local cmd = opts.cmd ---@type string|string[]
+  local cwd = opts.cwd ---@type string
+  local env = opts.env ---@type table|nil
+  local termkey = vim.inspect({ cmd = cmd, cwd = cwd, env = env, count = vim.v.count1 })
+  return termkey
+end
+
+---@class ghc.core.util.terminal
+local M = {}
 
 ---@class LazyTermOpts: LazyCmdOptions
 ---@field interactive? boolean
 ---@field esc_esc? boolean
 ---@field ctrl_hjkl? boolean
+---@field id? string
 
 -- Opens a floating terminal (interactive by default)
 ---@param cmd? string[]|string
@@ -27,7 +38,11 @@ function M.open_terminal(cmd, opts)
     backdrop = nil,
   }, opts or {}, { persistent = true }) --[[@as LazyTermOpts]]
 
-  local termkey = vim.inspect({ cmd = cmd or "shell", cwd = opts.cwd, env = opts.env, count = vim.v.count1 })
+  local termkey = opts.id or calc_terminal_key({
+    cmd = cmd or "shell",
+    cwd = opts.cwd,
+    env = opts.env,
+  })
 
   if terminals[termkey] and terminals[termkey]:buf_valid() then
     terminals[termkey]:toggle()
@@ -58,28 +73,7 @@ end
 
 ---@param opts { id: string, cwd: string, cmd?: table }
 function M.toggle_terminal(opts)
-  local operations = guanghechen.util.table.merge_multiple_array({ "cd " .. '"' .. opts.cwd .. '"' }, opts.cmd or {})
-
-  local id = opts.id
-  local cmd = table.concat(operations, " && ")
-
-  require("nvchad.term").toggle({
-    id = id,
-    cmd = cmd,
-    pos = "float",
-  })
-
-  -- set term format
-  local term = nil
-  for _, item in pairs(vim.g.nvchad_terms) do
-    if item.id == id then
-      term = item
-      break
-    end
-  end
-  if term ~= nil then
-    vim.bo[term.buf].filetype = "term"
-  end
+  M.open_terminal(opts.cmd, opts)
 end
 
 return M
