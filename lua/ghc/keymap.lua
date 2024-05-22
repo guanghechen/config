@@ -17,6 +17,7 @@ local actions = {
   session = require("ghc.core.action.session"),
   tab = require("ghc.core.action.tab"),
   terminal = require("ghc.core.action.terminal"),
+  toggle = require("ghc.core.action.toggle"),
   ui = require("ghc.core.action.ui"),
   window = require("ghc.core.action.window"),
 }
@@ -266,14 +267,18 @@ mapkey("n", "<leader>tT", actions.terminal.open_terminal_workspace, "terminal: t
 mapkey("n", "<leader>tt", actions.terminal.open_terminal_cwd, "terminal: toggle terminal (cwd)")
 ---------------------------------------------------------------------------------------#[t]merinal--
 
+--#[t]oggle-----------------------------------------------------------------------------------------
+mapkey("n", "<leader>tfc", actions.toggle.flight_copilot, "toggle: copilot")
+mapkey("n", "<leader>tul", actions.toggle.relative_line_number, "toggle: relative line number")
+mapkey("n", "<leader>tuT", actions.toggle.transparency, "toggle: transparency")
+mapkey("n", "<leader>tut", actions.toggle.theme, "toggle: theme")
+mapkey("n", "<leader>tuw", actions.toggle.wrap, "toggle: wrap")
+-----------------------------------------------------------------------------------------#[t]oggle--
+
 --#[u]i---------------------------------------------------------------------------------------------
 mapkey("n", "<leader>uI", actions.ui.show_inspect_tree, "ui: show inspect tree")
 mapkey("n", "<leader>ui", actions.ui.show_inspect_pos, "ui: show inspect pos")
 mapkey("n", "<leader>un", actions.ui.dismiss_notifications, "ui: dismiss all notifications")
-mapkey("n", "<leader>utl", actions.ui.toggle_relative_line_number, "ui: toggle relative line number")
-mapkey("n", "<leader>utT", actions.ui.toggle_transparency, "ui: toggle transparency")
-mapkey("n", "<leader>utt", actions.ui.toggle_theme, "ui: toggle theme")
-mapkey("n", "<leader>utw", actions.ui.toggle_wrap, "ui: toggle wrap")
 ---------------------------------------------------------------------------------------------#[u]i--
 
 --#[w]indow-----------------------------------------------------------------------------------------

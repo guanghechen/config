@@ -8,6 +8,8 @@ return {
   require("ghc.plugin.luasnip"),
   require("ghc.plugin.mini-pairs"),
   require("ghc.plugin.nvim-cmp"),
+  require("ghc.plugin.copilot"),
+  require("ghc.plugin.copilot-cmp"),
 
   --code
   require("ghc.plugin.mini-comment"),

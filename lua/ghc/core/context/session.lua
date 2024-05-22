@@ -14,6 +14,7 @@ local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 ---@field public find_file_scope guanghechen.observable.Observable
 ---@field public find_recent_keyword guanghechen.observable.Observable
 ---@field public find_recent_scope guanghechen.observable.Observable
+---@field public flight_copilot guanghechen.observable.Observable
 ---@field public replace_enable_case_sensitive guanghechen.observable.Observable
 ---@field public replace_keyword guanghechen.observable.Observable
 ---@field public replace_path guanghechen.observable.Observable
@@ -38,6 +39,7 @@ local context = Viewmodel.new({
   :register("find_file_keyword", Observable.new(""), true)
   :register("find_recent_keyword", Observable.new(""), true)
   :register("find_recent_scope", Observable.new("C"), true)
+  :register("flight_copilot", Observable.new(false), true)
   :register("replace_enable_case_sensitive", Observable.new(false), true)
   :register("replace_keyword", Observable.new(""), true)
   :register("replace_path", Observable.new(""), true)
@@ -58,6 +60,7 @@ guanghechen.util.observable.watch_observables({
   context.find_file_enable_regex,
   context.find_file_scope,
   context.find_recent_scope,
+  context.flight_copilot,
   context.search_enable_case_sensitive,
   context.search_enable_regex,
   context.search_scope,
@@ -66,3 +69,4 @@ guanghechen.util.observable.watch_observables({
 end)
 
 return context
+

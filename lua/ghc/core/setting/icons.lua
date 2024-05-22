@@ -197,16 +197,10 @@ M.misc = {
 
 ---@class ghc.core.setting.icons.cmp
 M.cmp = {
-  Codeium = "",
-  TabNine = "",
-  Copilot = "",
-  Copilot_alt = "",
-  -- Add source-specific icons here
   buffer = "",
   cmp_tabnine = "",
   codeium = "",
-  copilot = "",
-  copilot_alt = "",
+  copilot = "",
   latex_symbols = "",
   luasnip = "󰃐",
   nvim_lsp = "",

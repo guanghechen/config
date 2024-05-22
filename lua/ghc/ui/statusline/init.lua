@@ -19,6 +19,7 @@ local components = {
     require("ghc.ui.statusline.component.noice"),
     require("ghc.ui.statusline.component.pos"),
     require("ghc.ui.statusline.component.fileformat"),
+    require("ghc.ui.statusline.component.copilot"),
     require("ghc.ui.statusline.component.lsp"),
     require("ghc.ui.statusline.component.filetype"),
     require("ghc.ui.statusline.component.cwd"),

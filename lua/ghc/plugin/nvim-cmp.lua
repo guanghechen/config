@@ -5,8 +5,8 @@ return {
     vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
 
     local cmp = require("cmp")
+    local compare = require("cmp.config.compare")
     local cmp_ui = require("nvconfig").ui.cmp
-    local cmp_defaults = require("cmp.config.default")()
     local cmp_style = cmp_ui.style
 
     local field_arrangement = {
@@ -36,22 +36,6 @@ return {
         ghost_text = {
           hl_group = "CmpGhostText",
         },
-      },
-      window = {
-        completion = {
-          side_padding = (cmp_style ~= "atom" and cmp_style ~= "atom_colored") and 1 or 0,
-          winhighlight = "Normal:CmpPmenu,CursorLine:CmpSel,Search:None",
-          scrollbar = false,
-        },
-        documentation = {
-          border = border("CmpDocBorder"),
-          winhighlight = "Normal:CmpDoc",
-        },
-      },
-      snippet = {
-        expand = function(args)
-          require("luasnip").lsp_expand(args.body)
-        end,
       },
       formatting = {
         -- default fields order i.e completion word + item.kind + item.kind icons
@@ -107,10 +91,49 @@ return {
           end
         end, { "i", "s" }),
       },
-      sorting = cmp_defaults.sorting,
+      snippet = {
+        expand = function(args)
+          require("luasnip").lsp_expand(args.body)
+        end,
+      },
+      sorting = {
+        comparators = {
+          compare.offset,
+          compare.exact,
+          compare.score,
+          compare.recently_used,
+          function(entry1, entry2)
+            local _, entry1_under = entry1.completion_item.label:find("^_+")
+            local _, entry2_under = entry2.completion_item.label:find("^_+")
+            entry1_under = entry1_under or 0
+            entry2_under = entry2_under or 0
+            if entry1_under > entry2_under then
+              return false
+            elseif entry1_under < entry2_under then
+              return true
+            end
+          end,
+          compare.kind,
+          compare.sort_text,
+          compare.length,
+          compare.order,
+        },
+      },
+      window = {
+        completion = {
+          side_padding = (cmp_style ~= "atom" and cmp_style ~= "atom_colored") and 1 or 0,
+          winhighlight = "Normal:CmpPmenu,CursorLine:CmpSel,Search:None",
+          scrollbar = false,
+        },
+        documentation = {
+          border = border("CmpDocBorder"),
+          winhighlight = "Normal:CmpDoc",
+        },
+      },
       sources = {
         { name = "nvim_lsp" },
         { name = "path" },
+        { name = "copilot" },
         { name = "buffer" },
       },
     }
@@ -146,5 +169,6 @@ return {
     "hrsh7th/cmp-buffer",
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-path",
+    "zbirenbaum/copilot-cmp",
   },
 }
