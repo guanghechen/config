@@ -3,13 +3,13 @@
 return {
   "echasnovski/mini.surround",
   keys = {
-    { "gsa", mode = { "n", "v" } },
-    "gsd",
-    "gsf",
-    "gsF",
-    "gsh",
-    "gsr",
-    "gsn",
+    { "gsa", mode = { "n", "v" }, desc = "surrounding: add" },
+    { "gsd", desc = "surrounding: delete" },
+    { "gsf", desc = "surrounding: find right" },
+    { "gsF", desc = "surrounding: find left" },
+    { "gsh", desc = "surrounding: highlight" },
+    { "gsr", desc = "surrounding: replace" },
+    { "gsn", desc = "surrounding: update n_lines" },
   },
   opts = {
     mappings = {

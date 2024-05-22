@@ -23,8 +23,8 @@ return {
         "lazy",
         "mason",
         "notify",
-        "toggleterm",
         "lazyterm",
+        "spectre_pane",
         "term",
       },
       callback = function()

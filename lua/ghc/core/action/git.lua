@@ -75,7 +75,10 @@ local function get_lazygit_config_filepath()
   local lazygit_config_dir = guanghechen.util.path.locate_config_filepath("config/lazygit")
   local config_filepaths = {
     guanghechen.util.path.join(lazygit_config_dir, "config.yaml"),
-    guanghechen.util.path.join(lazygit_config_dir, context_config.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"),
+    guanghechen.util.path.join(
+      lazygit_config_dir,
+      context_config.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"
+    ),
   }
   local lazygit_theme_config_filepath = table.concat(config_filepaths, ",")
   return lazygit_theme_config_filepath
@@ -106,4 +109,3 @@ function M.open_lazygit_file_history()
 end
 
 return M
-

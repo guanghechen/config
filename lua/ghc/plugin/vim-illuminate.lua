@@ -23,6 +23,7 @@ return {
       "noice",
       "notify",
       "quickfix",
+      "spectre_panel",
       "term",
     },
     large_file_cutoff = 2000,
@@ -36,8 +37,18 @@ return {
     ---@param buffer? number|nil
     ---@return nil
     local function bind_keys(buffer)
-      vim.keymap.set("n", "[[", goto_prev_reference, { buffer = buffer, noremap = true, silent = true, desc = "illuminate: Goto prev reference" })
-      vim.keymap.set("n", "]]", goto_next_reference, { buffer = buffer, noremap = true, silent = true, desc = "illuminate: Goto next reference" })
+      vim.keymap.set(
+        "n",
+        "[[",
+        goto_prev_reference,
+        { buffer = buffer, noremap = true, silent = true, desc = "illuminate: Goto prev reference" }
+      )
+      vim.keymap.set(
+        "n",
+        "]]",
+        goto_next_reference,
+        { buffer = buffer, noremap = true, silent = true, desc = "illuminate: Goto next reference" }
+      )
     end
 
     bind_keys()

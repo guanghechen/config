@@ -42,9 +42,7 @@ end
 function M.show_code_action_source()
   vim.lsp.buf.code_action({
     context = {
-      only = {
-        "source",
-      },
+      only = { "source" },
       diagnostics = {},
     },
   })

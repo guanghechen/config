@@ -10,7 +10,11 @@ return {
   capabilities = capabilities,
   flags = { debounce_text_changes = 500 },
   settings = {
-    json = {
+    jsonls = {
+      format = {
+        enable = true,
+      },
+      validate = { enable = true },
       -- Schemas https://www.schemastore.org
       schemas = {
         {

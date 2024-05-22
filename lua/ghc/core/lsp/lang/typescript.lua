@@ -16,7 +16,8 @@ return {
   },
   root_dir = function(filename)
     local util = require("lspconfig.util")
-    return util.root_pattern(".git")(filename) or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
+    return util.root_pattern(".git")(filename)
+      or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
   end,
   settings = {
     tsserver = {
@@ -25,24 +26,26 @@ return {
       },
       javascript = {
         inlayHints = {
-          includeInlayParameterNameHints = "all",
-          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-          includeInlayFunctionParameterTypeHints = true,
-          includeInlayVariableTypeHints = true,
-          includeInlayPropertyDeclarationTypeHints = true,
-          includeInlayFunctionLikeReturnTypeHints = true,
           includeInlayEnumMemberValueHints = true,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayFunctionParameterTypeHints = true,
+          includeInlayParameterNameHints = "literal",
+          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+          includeInlayPropertyDeclarationTypeHints = true,
+          includeInlayVariableTypeHints = false,
+          includeInlayVariableTypeHintsWhenTypeMatchesName = false,
         },
       },
       typescript = {
         inlayHints = {
+          includeInlayEnumMemberValueHints = true,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayFunctionParameterTypeHints = true,
           includeInlayParameterNameHints = "literal",
           includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-          includeInlayFunctionParameterTypeHints = false,
+          includeInlayPropertyDeclarationTypeHints = true,
           includeInlayVariableTypeHints = false,
-          includeInlayPropertyDeclarationTypeHints = false,
-          includeInlayFunctionLikeReturnTypeHints = true,
-          includeInlayEnumMemberValueHints = true,
+          includeInlayVariableTypeHintsWhenTypeMatchesName = false,
         },
       },
     },
