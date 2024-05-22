@@ -267,12 +267,8 @@ mapkey("n", "<leader>to", actions.tab.close_tab_others, "tab: close other tabs",
 --#[t]merinal---------------------------------------------------------------------------------------
 mapkey("n", "<leader>tT", actions.terminal.open_terminal_workspace, "terminal: toggle terminal (workspace)")
 mapkey("n", "<leader>tt", actions.terminal.open_terminal_cwd, "terminal: toggle terminal (cwd)")
-mapkey(
-  { "n", "v" },
-  "<C-b>t",
-  actions.terminal.open_terminal_workspace_tmux,
-  "terminal: toggle tmux terminal (workspace)"
-)
+mapkey({ "n", "t", "v" }, "<C-b>t", actions.terminal.open_terminal_workspace, "terminal: toggle terminal (workspace)")
+mapkey({ "n", "t", "v" }, "<M-t>", actions.terminal.open_terminal_workspace, "terminal: toggle terminal (workspace)")
 ---------------------------------------------------------------------------------------#[t]merinal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
