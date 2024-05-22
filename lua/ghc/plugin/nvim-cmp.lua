@@ -110,8 +110,8 @@ return {
       sorting = cmp_defaults.sorting,
       sources = {
         { name = "nvim_lsp" },
-        { name = "buffer" },
         { name = "path" },
+        { name = "buffer" },
       },
     }
 
@@ -143,8 +143,8 @@ return {
     end)
   end,
   dependencies = {
-    "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-buffer",
+    "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-path",
   },
 }

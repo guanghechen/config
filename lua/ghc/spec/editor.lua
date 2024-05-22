@@ -5,13 +5,13 @@ return {
   require("ghc.plugin.nvim-web-devicons"),
 
   --cmp
-  require("ghc.plugin.nvim-cmp"),
   require("ghc.plugin.luasnip"),
+  require("ghc.plugin.mini-pairs"),
+  require("ghc.plugin.nvim-cmp"),
 
   --code
   require("ghc.plugin.mini-comment"),
   require("ghc.plugin.mini-surround"),
-  require("ghc.plugin.mini-pairs"),
 
   --diagnostic
   require("ghc.plugin.trouble"),
