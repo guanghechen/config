@@ -1,3 +1,29 @@
+local register_capability = vim.lsp.handlers["client/registerCapability"]
+vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
+  ---@diagnostic disable-next-line: no-unknown
+  local ret = register_capability(err, res, ctx)
+  local client = vim.lsp.get_client_by_id(ctx.client_id)
+  local buffer = vim.api.nvim_get_current_buf()
+  if client then
+    vim.api.nvim_exec_autocmds("User", {
+      pattern = "LspDynamicCapability",
+      data = { client_id = client.id, buffer = buffer },
+    })
+  end
+  return ret
+end
+
+vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+  border = "single",
+})
+
+vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
+  border = "single",
+  focusable = false,
+  relative = "cursor",
+  silent = true,
+})
+
 local setup = {
   function(server_name)
     require("lspconfig")[server_name].setup({})

@@ -8,10 +8,30 @@ return {
   capabilities = capabilities,
   settings = {
     Lua = {
+      codeLens = {
+        enable = true,
+      },
+      completion = {
+        callSnippet = "Replace",
+      },
       diagnostics = {
         globals = { "vim" },
         disable = { "different-requires" },
       },
+      doc = {
+        privateName = { "^_" },
+      },
+      format = { enable = false },
+      hint = {
+        enable = true,
+        setType = false,
+        paramType = true,
+        paramName = "Disable",
+        semicolon = "Disable",
+        arrayIndex = "Disable",
+      },
+      semantic = { enable = false },
+      telemetry = { enable = false },
       workspace = {
         library = {
           [vim.fn.expand("$VIMRUNTIME/lua")] = true,
@@ -23,9 +43,6 @@ return {
         maxPreload = 100000,
         preloadFileSize = 10000,
       },
-      format = { enable = false },
-      telemetry = { enable = false },
-      semantic = { enable = false },
     },
   },
 }
