@@ -179,6 +179,8 @@ mapkey("n", "<leader><leader>", actions.find_recent.find_recent, "find recent")
 mapkey("n", "<leader>gG", actions.git.open_lazygit_workspace, "git: open lazygit (workspace)", true)
 mapkey("n", "<leader>gg", actions.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
 mapkey("n", "<leader>gf", actions.git.open_lazygit_file_history, "git: open lazygit file history", true)
+mapkey({ "n", "v" }, "<C-b>g", actions.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
+mapkey({ "n", "v" }, "<M-g>", actions.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
 -------------------------------------------------------------------------------------------#[g]it---
 
 --#book[m]ark---------------------------------------------------------------------------------------
@@ -265,6 +267,12 @@ mapkey("n", "<leader>to", actions.tab.close_tab_others, "tab: close other tabs",
 --#[t]merinal---------------------------------------------------------------------------------------
 mapkey("n", "<leader>tT", actions.terminal.open_terminal_workspace, "terminal: toggle terminal (workspace)")
 mapkey("n", "<leader>tt", actions.terminal.open_terminal_cwd, "terminal: toggle terminal (cwd)")
+mapkey(
+  { "n", "v" },
+  "<C-b>t",
+  actions.terminal.open_terminal_workspace_tmux,
+  "terminal: toggle tmux terminal (workspace)"
+)
 ---------------------------------------------------------------------------------------#[t]merinal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------

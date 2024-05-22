@@ -152,6 +152,21 @@ end
 
 ---@type ... string[]
 ---@return string
+function M.locate_script_filepath(...)
+  local config_paths = vim.fn.stdpath("config")
+  local config_path = type(config_paths) == "table" and config_paths[1] or config_paths
+
+  if type(config_path) ~= "string" or #config_path < 1 then
+    error("[guanghechen.util.os.get_config_filepath] bad config_path" .. vim.inspect(config_path))
+    return ""
+  end
+
+  ---@cast config_path string
+  return M.normalize(table.concat({ config_path, "script", ... }, path_sep))
+end
+
+---@type ... string[]
+---@return string
 function M.locate_state_filepath(...)
   local state_paths = vim.fn.stdpath("state")
   local state_path = type(state_paths) == "table" and state_paths[1] or state_paths
