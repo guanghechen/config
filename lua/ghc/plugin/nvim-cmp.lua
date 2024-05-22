@@ -1,3 +1,5 @@
+local icons = require("ghc.core.setting.icons")
+
 return {
   "hrsh7th/nvim-cmp",
   event = { "InsertEnter" },
@@ -42,8 +44,7 @@ return {
         fields = field_arrangement[cmp_style] or { "abbr", "kind", "menu" },
 
         format = function(_, item)
-          local icons = require("nvchad.icons.lspkind")
-          local icon = (cmp_ui.icons and icons[item.kind]) or ""
+          local icon = (cmp_ui.icons and icons.kind[item.kind]) or ""
 
           if cmp_style == "atom" or cmp_style == "atom_colored" then
             icon = " " .. icon .. " "
