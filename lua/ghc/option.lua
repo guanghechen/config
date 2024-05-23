@@ -79,6 +79,9 @@ vim.opt.timeoutlen = vim.g.vscode and 1000 and 300 -- Lower than default (1000) 
 vim.opt.winminwidth = 10 -- Minimum window width
 vim.opt.wrap = false
 
+---format
+vim.o.formatexpr = "v:lua.require'conform'.formatexpr()" -- better format: https://github.com/stevearc/conform.nvim/issues/372#issuecomment-2066778074
+
 -- search
 vim.opt.grepformat = "%f:%l:%c:%m"
 vim.opt.grepprg = "rg --vimgrep"
