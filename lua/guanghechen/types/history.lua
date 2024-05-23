@@ -1,0 +1,6 @@
+---@class guanghechen.types.IHistory
+---@field public name string
+---@field public present fun():guanghechen.types.T|nil
+---@field public back fun(step?:number):guanghechen.types.T|nil
+---@field public forward fun(step?:number):guanghechen.types.T|nil
+---@field public push fun(element:guanghechen.types.T|nil):nil
