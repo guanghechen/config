@@ -48,15 +48,17 @@ vim.keymap.set("n", "N", "'nN'[v:searchforward].'zv'", { expr = true, desc = "pr
 vim.keymap.set("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
 vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
 
-mk("n", "<Esc>", "<cmd>noh<cr><esc>", "remove search highlights", true) -- Clear search with <esc>
-mk("t", "<Esc><Esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true) -- Exit terminal
+mk("n", "<esc>", "<cmd>noh<cr><esc>", "remove search highlights", true) -- Clear search with <esc>
+mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true) -- Exit terminal
 
 -- better copy/paste
 mk("v", "<C-b>c", '"+y', "copy to system clipboard")
 mk("v", "<M-c>", '"+y', "copy to system clipboard")
+mk({ "i", "n", "v" }, "<C-b>a", "<esc>gg0vG$", "select all")
+mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "select all")
+mk({ "i", "n", "v" }, "<C-b>v", '<esc>"+p', "paste: from system clipboard")
+mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "paste: from system clipboard")
 mk({ "i", "n", "v" }, "<C-C>", A.enhance.copy_current_buffer_filepath, "copy: current buffer filepath")
-mk({ "i", "n", "v" }, "<C-b>v", '<esc>"+p', "paste from system clipboard")
-mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "paste from system clipboard")
 
 --- better window navigation
 mk({ "i", "n", "v" }, "<C-b>h", A.window.focus_window_left, "window: focus on the left window", true)
@@ -79,6 +81,8 @@ mk({ "i", "n", "t", "v" }, "<M-t>", A.terminal.open_terminal_cwd, "terminal: tog
 
 --#navigation---------------------------------------------------------------------------------------
 ----- tab -----
+mk("n", "<leader><", A.tab.goto_tab_left, "tab: goto left tab", true)
+mk("n", "<leader>>", A.tab.goto_tab_right, "tab: goto right tab", true)
 mk("n", "[t", A.tab.goto_tab_left, "tab: goto left tab", true)
 mk("n", "]t", A.tab.goto_tab_right, "tab: goto right tab", true)
 
@@ -93,6 +97,8 @@ mk("n", "<leader>7", A.buffer.open_buffer_7, "buffer: open buffer 7", true)
 mk("n", "<leader>8", A.buffer.open_buffer_8, "buffer: open buffer 8", true)
 mk("n", "<leader>9", A.buffer.open_buffer_9, "buffer: open buffer 9", true)
 mk("n", "<leader>0", A.buffer.open_buffer_10, "buffer: open buffer 10", true)
+mk("n", "<leader>[", A.buffer.open_buffer_left, "buffer: open left buffer", true)
+mk("n", "<leader>]", A.buffer.open_buffer_right, "buffer: open right buffer", true)
 mk("n", "[b", A.buffer.open_buffer_left, "buffer: open left buffer", true)
 mk("n", "]b", A.buffer.open_buffer_right, "buffer: open right buffer", true)
 
@@ -196,9 +202,6 @@ mk("n", "<leader>qC", A.session.session_clear_all, "session: clear all sessions"
 --#[r]eplace----------------------------------------------------------------------------------------
 mk("n", "<leader>rR", A.replace.replace_word_workspace, "replace: word (workspace)")
 mk("n", "<leader>rr", A.replace.replace_word_current_file, "replace: word (current file)")
-mk("n", "<leader>rti", A.replace.toggle_case_sensitive, "replace: toggle case sensitive")
-mk("v", "<leader>rR", A.replace.replace_word_workspace, "replace: word (workspace)")
-mk("v", "<leader>rr", A.replace.replace_word_current_file, "replace: word (current file)")
 mk("v", "<leader>rti", A.replace.toggle_case_sensitive, "replace: toggle case sensitive")
 ----------------------------------------------------------------------------------------#[r]eplace--
 
