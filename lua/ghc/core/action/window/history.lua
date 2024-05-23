@@ -15,6 +15,7 @@ local IGNORED_FILETYPES = {
   ["PlenaryTestPopup"] = true,
   ["startuptime"] = true,
   ["term"] = true,
+  ["TelescopePrompt"] = true,
   ["Trouble"] = true,
 }
 local histories = {} ---@type table<number, guanghechen.history.History>
@@ -160,19 +161,22 @@ function M.show_window_history()
   end
 end
 
-function M.register_autocmd_window_update_history(group)
+---@param augroup fun(groupname: string): string
+function M.register_autocmd_window_history(augroup)
   vim.api.nvim_create_autocmd("BufEnter", {
-    group = group,
+    group = augroup("window_history_update"),
     callback = function()
       M.push()
     end,
   })
 
-  --  vim.api.nvim_create_autocmd("WinClosed", {
-  --    group = group,
-  --    callback = function()
-  --      local winnr = vim.api.nvim_get_current_win() ---@type number
-  --      histories[winnr] = nil
-  --    end,
-  --  })
+  vim.api.nvim_create_autocmd("WinClosed", {
+    group = augroup("window_history_clear"),
+    callback = function(args)
+      local winnr = args.id ---@type number
+      if type(winnr) == "number" then
+        histories[winnr] = nil
+      end
+    end,
+  })
 end

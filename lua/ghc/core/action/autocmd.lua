@@ -333,8 +333,7 @@ function M.autocmd_unlist_buffer(opts)
 end
 
 function M.autocmd_window_update_history()
-  local group = M.augroup("window_update_history")
-  action_window.register_autocmd_window_update_history(group)
+  action_window.register_autocmd_window_history(M.augroup)
 end
 
 return M
