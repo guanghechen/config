@@ -95,6 +95,7 @@ function M.relative(from, to)
 
   local pieces = {} --
 
+  ---@diagnostic disable-next-line: unused-local
   for j = i, #from_pieces do
     table.insert(pieces, "..")
   end
@@ -132,7 +133,7 @@ function M.locate_config_filepath(...)
   end
 
   ---@cast config_path string
-  return M.normalize(table.concat({ config_path, ... }, path_sep))
+  return M.normalize(table.concat({ config_path, "config", ... }, path_sep))
 end
 
 ---@type ... string[]
@@ -187,29 +188,48 @@ function M.locate_session_filepath(opts)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
   local hash = util_md5.sumhexa(workspace_path)
-  local session_dir = "ghc_" .. hash .. "_" .. workspace_name ---@type string
+  local session_dir = workspace_name .. "_" .. hash ---@type string
   local session_filename = filename ---@type string
-  local session_filepath = M.locate_state_filepath("sessions", session_dir, session_filename)
+  local session_filepath = M.locate_state_filepath("ghc_sessions", session_dir, session_filename)
   return session_filepath
 end
 
----@param opts {filename: string}
+---@param opts {filenames: string[]}
 function M.remove_session_filepaths(opts)
-  local filename = opts.filename
-  local session_root_dir = M.locate_state_filepath("sessions") ---@type string
+  local workspace_path = M.workspace()
+  local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
+  local hash = util_md5.sumhexa(workspace_path)
+  local session_dir = workspace_name .. "_" .. hash ---@type string
+  for _, filename in ipairs(opts.filenames) do
+    local session_filepath = session_dir .. path_sep .. filename
+    if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
+      os.remove(session_filepath)
+      util_reporter.info({
+        from = "path.lua",
+        subject = "remove_session_filepaths",
+        message = "Removed " .. session_filepath,
+      })
+    end
+  end
+end
+
+---@param opts {filenames: string[]}
+function M.remove_session_filepaths_all(opts)
+  local session_root_dir = M.locate_state_filepath("ghc_sessions") ---@type string
   local pfile = io.popen('ls -a "' .. session_root_dir .. '"')
-  local dirname_prefix = "ghc_"
   if pfile then
     for dirname in pfile:lines() do
-      if dirname and string.sub(dirname, 1, #dirname_prefix) == dirname_prefix then
-        local session_filepath = session_root_dir .. path_sep .. dirname .. path_sep .. filename
-        if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
-          os.remove(session_filepath)
-          util_reporter.info({
-            from = "path.lua",
-            subject = "remove_session_filepaths",
-            message = "Removed " .. session_filepath,
-          })
+      if dirname then
+        for _, filename in ipairs(opts.filenames) do
+          local session_filepath = session_root_dir .. path_sep .. dirname .. path_sep .. filename
+          if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
+            os.remove(session_filepath)
+            util_reporter.info({
+              from = "path.lua",
+              subject = "remove_session_filepaths",
+              message = "Removed " .. session_filepath,
+            })
+          end
         end
       end
     end

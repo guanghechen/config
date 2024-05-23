@@ -152,8 +152,8 @@ local function find_recent(opts)
   open_picker()
 end
 
----@class ghc.core.action.find_recent
-local M = {}
+---@class ghc.core.action.find
+local M = require("ghc.core.action.find.module")
 
 function M.find_recent_workspace()
   context_session.find_recent_scope:next("W")
@@ -175,3 +175,4 @@ function M.find_recent()
 end
 
 return M
+

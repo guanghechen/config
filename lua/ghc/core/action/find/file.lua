@@ -63,7 +63,7 @@ end
 ---@return string
 local function gen_filemap(force, cwd)
   local filemap_filepath = guanghechen.util.path.locate_session_filepath({ filename = "filemap.json" })
-  if force or not guanghechen.util.is_exist(filemap_filepath) or context_session.filemap_dirty:get_snapshot() then
+  if force or not guanghechen.util.path.is_exist(filemap_filepath) or context_session.filemap_dirty:get_snapshot() then
     local stdout = vim.uv.new_pipe(false)
     local stderr = vim.uv.new_pipe(false)
     local subprocess
@@ -174,7 +174,9 @@ local function find_file(opts, force)
       open_picker()
     end,
     toggle_case_sensitive = function()
-      context_session.find_file_enable_case_sensitive:next(not context_session.find_file_enable_case_sensitive:get_snapshot())
+      context_session.find_file_enable_case_sensitive:next(
+        not context_session.find_file_enable_case_sensitive:get_snapshot()
+      )
       open_picker()
     end,
     change_scope_workspace = function()
@@ -277,8 +279,8 @@ local function find_file(opts, force)
   open_picker()
 end
 
----@class ghc.core.action.find_file
-local M = {}
+---@class ghc.core.action.find
+local M = require("ghc.core.action.find.module")
 
 function M.find_file()
   find_file(nil, false)
@@ -287,5 +289,3 @@ end
 function M.find_file_force()
   find_file(nil, true)
 end
-
-return M

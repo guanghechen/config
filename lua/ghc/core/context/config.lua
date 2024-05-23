@@ -2,7 +2,7 @@ local guanghechen = require("guanghechen")
 local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 
-local context_config_filepath = guanghechen.util.path.locate_config_filepath("config/local/context/config.json")
+local context_config_filepath = guanghechen.util.path.locate_config_filepath("local/context/config.json")
 
 ---@class ghc.core.context.config: guanghechen.viewmodel.Viewmodel
 ---@field public darken guanghechen.observable.Observable
@@ -49,3 +49,4 @@ guanghechen.util.observable.watch_observables({
 end)
 
 return context
+

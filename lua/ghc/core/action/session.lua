@@ -11,11 +11,14 @@ function M.get_session_filepath(opts)
   return guanghechen.util.path.locate_session_filepath({ filename = filename })
 end
 
+function M.session_clear()
+  local filenames = { "session.autosave.vim", "session.vim" }
+  guanghechen.util.path.remove_session_filepaths({ filenames = filenames })
+end
+
 function M.session_clear_all()
   local filenames = { "session.autosave.vim", "session.vim" }
-  for _, filename in ipairs(filenames) do
-    guanghechen.util.path.locate_session_filepath({ filename = filename })
-  end
+  guanghechen.util.path.remove_session_filepaths_all({ filenames = filenames })
 end
 
 function M.quit_all()
@@ -40,7 +43,10 @@ function M.session_autosave()
   vim.fn.mkdir(vim.fn.fnamemodify(session_filepath, ":p:h"), "p")
 
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = table.concat({ "blank", "buffers", "curdir", "folds", "localoptions", "help", "resize", "tabpages", "unix", "winpos", "winsize" }, ",")
+  vim.o.sessionoptions = table.concat(
+    { "blank", "buffers", "curdir", "folds", "localoptions", "help", "resize", "tabpages", "unix", "winpos", "winsize" },
+    ","
+  )
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 end
@@ -50,7 +56,8 @@ function M.session_save()
   vim.fn.mkdir(vim.fn.fnamemodify(session_filepath, ":p:h"), "p")
 
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = table.concat({ "blank", "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
+  vim.o.sessionoptions =
+    table.concat({ "blank", "buffers", "curdir", "folds", "help", "resize", "tabpages", "winpos", "winsize" }, ",")
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 
@@ -88,4 +95,3 @@ function M.session_load_autosaved()
 end
 
 return M
-

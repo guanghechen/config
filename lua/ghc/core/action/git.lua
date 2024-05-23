@@ -72,7 +72,7 @@ local function open_lazygit(cmd, cwd)
 end
 
 local function get_lazygit_config_filepath()
-  local lazygit_config_dir = guanghechen.util.path.locate_config_filepath("config/lazygit")
+  local lazygit_config_dir = guanghechen.util.path.locate_config_filepath("lazygit")
   local config_filepaths = {
     guanghechen.util.path.join(lazygit_config_dir, "config.yaml"),
     guanghechen.util.path.join(

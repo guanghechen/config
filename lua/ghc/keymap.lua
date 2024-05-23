@@ -8,8 +8,6 @@ local actions = {
   enhance = require("ghc.core.action.enhance"),
   explorer = require("ghc.core.action.explorer"),
   find = require("ghc.core.action.find"),
-  find_file = require("ghc.core.action.find_file"),
-  find_recent = require("ghc.core.action.find_recent"),
   file = require("ghc.core.action.file"),
   git = require("ghc.core.action.git"),
   replace = require("ghc.core.action.replace"),
@@ -59,7 +57,6 @@ vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Se
 
 mapkey("n", "<Esc>", "<cmd>noh<cr><esc>", "remove search highlights", true) -- Clear search with <esc>
 mapkey("t", "<Esc><Esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true) -- Exit terminal
-mapkey("n", "<leader>K", "<cmd>norm! K<cr>", "Keywordprg", true) -- keywordprg
 
 -- better format: https://github.com/stevearc/conform.nvim/issues/372#issuecomment-2066778074
 vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
@@ -164,15 +161,15 @@ mapkey("n", "<leader>fn", actions.file.new_file, "file: new file")
 mapkey("n", "<leader>fb", actions.find.find_buffers, "find: buffers")
 mapkey("n", "<leader>fE", actions.find.find_explorer_workspace, "find: file explorer (from workspace)")
 mapkey("n", "<leader>fe", actions.find.find_explorer_current, "find: file explorer (from current directory)")
-mapkey("n", "<leader>fF", actions.find_file.find_file_force, "find: files (force)")
-mapkey("n", "<leader>ff", actions.find_file.find_file, "find: files")
+mapkey("n", "<leader>fF", actions.find.find_file_force, "find: files (force)")
+mapkey("n", "<leader>ff", actions.find.find_file, "find: files")
 mapkey("n", "<leader>fg", actions.find.find_file_git, "find: files (git)")
 mapkey("n", "<leader>fh", actions.find.find_highlights, "find: highlights")
 mapkey("n", "<leader>fm", actions.find.find_bookmark_workspace, "find: bookmarks")
 mapkey("n", "<leader>fq", actions.find.find_quickfix_history, "find: quickfix history")
-mapkey("n", "<leader>fr", actions.find_recent.find_recent, "find: recent")
+mapkey("n", "<leader>fr", actions.find.find_recent, "find: recent")
 mapkey("n", "<leader>fv", actions.find.find_vim_options, "find: vim options")
-mapkey("n", "<leader><leader>", actions.find_recent.find_recent, "find recent")
+mapkey("n", "<leader><leader>", actions.find.find_recent, "find recent")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
@@ -218,6 +215,7 @@ mapkey("n", "<leader>qL", actions.session.session_load_autosaved, "session: rest
 mapkey("n", "<leader>ql", actions.session.session_load, "session: restore session", true)
 mapkey("n", "<leader>qo", actions.context.edit_session, "context: restore session", true)
 mapkey("n", "<leader>qs", actions.session.session_save, "session: save session", true)
+mapkey("n", "<leader>qc", actions.session.session_clear, "session: clear session", true)
 mapkey("n", "<leader>qC", actions.session.session_clear_all, "session: clear all sessions", true)
 --------------------------------------------------------------------------#[q]uit/session/context--
 
