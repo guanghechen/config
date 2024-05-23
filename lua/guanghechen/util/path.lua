@@ -107,6 +107,16 @@ function M.relative(from, to)
   return table.concat(pieces, path_sep)
 end
 
+---@param filepath string
+---@return string
+function M.basename(filepath)
+  local pieces = M.split(filepath)
+  if #pieces > 0 then
+    return pieces[#pieces]
+  end
+  return ""
+end
+
 ---@return string|nil
 function M.locate_git_repo(filepath)
   local path_pieces = M.split(filepath) ---@type string[]

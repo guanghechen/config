@@ -64,5 +64,8 @@ action_autocmd.autocmd_set_tabstop({
   width = 2,
 })
 
+--#window
+action_autocmd.autocmd_window_update_history()
+
 --#plugin
 vim.cmd("autocmd User TelescopePreviewerLoaded setlocal number") -- enable numbers in telescope preview.

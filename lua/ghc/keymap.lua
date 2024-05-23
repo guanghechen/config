@@ -69,6 +69,10 @@ mk({ "i", "n", "v" }, "<M-h>", A.window.focus_window_left, "window: focus on the
 mk({ "i", "n", "v" }, "<M-j>", A.window.focus_window_bottom, "window: focus on the bottom window", true)
 mk({ "i", "n", "v" }, "<M-k>", A.window.focus_window_top, "window: focus on the top window", true)
 mk({ "i", "n", "v" }, "<M-l>", A.window.focus_window_right, "window: focus on the right window", true)
+mk({ "i", "n", "v" }, "<C-b>i", A.window.back, "window: back", true)
+mk({ "i", "n", "v" }, "<C-b>o", A.window.forward, "window: forward", true)
+mk({ "i", "n", "v" }, "<M-i>", A.window.back, "window: back", true)
+mk({ "i", "n", "v" }, "<M-o>", A.window.forward, "window: forward", true)
 
 --- better access git from nvim
 mk({ "i", "n", "t", "v" }, "<C-b>g", A.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
@@ -127,7 +131,7 @@ mk("n", "<leader>b0", A.buffer.open_buffer_10, "buffer: open buffer 10", true)
 mk("n", "<leader>b[", A.buffer.open_buffer_left, "buffer: open left buffer", true)
 mk("n", "<leader>b]", A.buffer.open_buffer_right, "buffer: open right buffer", true)
 mk("n", "<leader>ba", A.buffer.close_buffer_all, "buffer: close all buffers", true)
-mk("n", "<leader>bb", A.buffer.open_buffer_last, "buffer: open last buffer", true)
+mk("n", "<leader>bb", A.window.toggle_history_popup, "buffer: select buffer by history", true)
 mk("n", "<leader>bd", A.buffer.close_buffer, "buffer: close current buffer", true)
 mk("n", "<leader>bh", A.buffer.close_buffer_to_leftest, "buffer: close buffers to the leftest", true)
 mk("n", "<leader>bl", A.buffer.close_buffer_to_rightest, "buffer: close buffers to the rightest", true)
@@ -141,6 +145,7 @@ mk("n", "<leader>bo", A.buffer.close_buffer_others, "buffer: close other buffers
 ----#[d]ebug-----------------------------------------------------------------------------------------
 mk("n", "<leader>dC", A.debug.show_context_all, "debug: show context (all)", true)
 mk("n", "<leader>dc", A.debug.show_context, "debug: show context (persistentable)", true)
+mk("n", "<leader>dw", A.window.show_window_history, "debug: show window history", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[e]xplorer---------------------------------------------------------------------------------------

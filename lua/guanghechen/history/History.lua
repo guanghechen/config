@@ -1,4 +1,4 @@
----@class guanghechen.disposable.History: guanghechen.types.IHistory
+---@class guanghechen.history.History: guanghechen.types.IHistory
 ---@field private _comparator fun(x:guanghechen.types.T, y:guanghechen.types.T): number
 ---@field private _name string
 ---@field private _present_idx number
@@ -33,32 +33,31 @@ function History:present()
   return nil
 end
 
+---@return number
+function History:present_index()
+  return self._present_idx
+end
+
 ---@param step? number
 ---@return guanghechen.types.T|nil
 function History:back(step)
-  step = 1
-  if step < 1 then
+  if step == nil or step < 1 then
     step = 1
   end
 
   local idx = self._present_idx - step ---@type number
-  local stack = self._stack ---@type guanghechen.types.T[]
-  if idx < 0 then
-    idx = 0
+  if idx < 1 then
+    idx = 1
   end
 
   self._present_idx = idx
-  if idx > 0 and idx <= #stack then
-    return stack[idx]
-  end
-  return nil
+  return self._stack[idx]
 end
 
 ---@param step? number
 ---@return guanghechen.types.T|nil
 function History:forward(step)
-  step = 1
-  if step < 1 then
+  if step == nil or step < 1 then
     step = 1
   end
 
@@ -69,7 +68,16 @@ function History:forward(step)
   end
 
   self._present_idx = idx
+  return stack[idx]
+end
+
+---@param index number
+---@return guanghechen.types.T|nil
+function History:go(index)
+  local idx = index ---@type number
+  local stack = self._stack ---@type guanghechen.types.T[]
   if idx > 0 and idx <= #stack then
+    self._present_idx = idx
     return stack[idx]
   end
   return nil
@@ -78,13 +86,18 @@ end
 ---@param element guanghechen.types.T
 ---@return nil
 function History:push(element)
-  local idx = self._present_idx + 1 ---@type number
+  local idx = self._present_idx ---@type number
   local stack = self._stack ---@type guanghechen.types.T[]
-  local N = #stack ---@type number
-  if idx <= N then
-    local old = stack[idx] ---@type guanghechen.types.T
-    local delta = self._comparator(old, element)
+  local top = stack[idx]
+  if top ~= nil and self._comparator(top, element) == 0 then
+    return
+  end
+
+  idx = idx + 1
+  if idx <= #stack then
+    local delta = self._comparator(stack[idx], element)
     if delta ~= 0 then
+      local N = #stack ---@type number
       ---@diagnostic disable-next-line: unused-local
       for i = idx, N do
         table.remove(stack, idx)
@@ -96,6 +109,21 @@ function History:push(element)
     table.insert(stack, element)
     self._present_idx = #stack
   end
+end
+
+function History:iterator()
+  local index = 0
+  local stack = self._stack
+  return function()
+    index = index + 1
+    if index <= #stack then
+      return stack[index]
+    end
+  end
+end
+
+function History:print()
+  vim.notify(vim.inspect({ stack = self._stack, present_index = self._present_idx }))
 end
 
 return History

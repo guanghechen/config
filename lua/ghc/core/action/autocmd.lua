@@ -1,5 +1,6 @@
 local guanghechen = require("guanghechen")
 local action_session = require("ghc.core.action.session")
+local action_window = require("ghc.core.action.window")
 local context_config = require("ghc.core.context.config")
 local context_session = require("ghc.core.context.session")
 
@@ -331,4 +332,14 @@ function M.autocmd_unlist_buffer(opts)
   })
 end
 
+function M.autocmd_window_update_history()
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = M.augroup("window_update_history"),
+    callback = function()
+      action_window.push()
+    end,
+  })
+end
+
 return M
+
