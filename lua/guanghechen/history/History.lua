@@ -1,17 +1,19 @@
 ---@class guanghechen.history.History: guanghechen.types.IHistory
 ---@field private _comparator fun(x:guanghechen.types.T, y:guanghechen.types.T): number
+---@field private _max_count number
 ---@field private _name string
 ---@field private _present_idx number
 ---@field private _stack guanghechen.types.T[]
 local History = {}
 History.__index = History
 
----@param opts { name: string, comparator: fun(x:guanghechen.types.T, y:guanghechen.types.T): number }
+---@param opts { name: string, max_count: number, comparator: fun(x:guanghechen.types.T, y:guanghechen.types.T): number}
 function History.new(opts)
   local self = setmetatable({}, History)
 
   self._name = opts.name ---@type string
   self._comparator = opts.comparator
+  self._max_count = opts.max_count ---@type number
   self._present_idx = 0 ---@type number
   self._stack = {} ---@type guanghechen.types.T[]
 
