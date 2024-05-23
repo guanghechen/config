@@ -333,13 +333,8 @@ function M.autocmd_unlist_buffer(opts)
 end
 
 function M.autocmd_window_update_history()
-  vim.api.nvim_create_autocmd("BufEnter", {
-    group = M.augroup("window_update_history"),
-    callback = function()
-      action_window.push()
-    end,
-  })
+  local group = M.augroup("window_update_history")
+  action_window.register_autocmd_window_update_history(group)
 end
 
 return M
-

@@ -82,6 +82,7 @@ function M.push()
   if history == nil then
     history = History.new({
       name = tostring(winnr),
+      max_count = 50,
       comparator = comparator,
     })
     histories[winnr] = history
@@ -144,9 +145,7 @@ function M.toggle_history_popup()
   pickers
     .new(opts, {
       prompt_title = "window history",
-      finder = finders.new_table({
-        results = contents,
-      }),
+      finder = finders.new_table({ results = contents }),
       previewer = conf.grep_previewer(opts),
       sorter = conf.generic_sorter(opts),
     })
@@ -159,4 +158,21 @@ function M.show_window_history()
   if history ~= nil then
     history:print()
   end
+end
+
+function M.register_autocmd_window_update_history(group)
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = group,
+    callback = function()
+      M.push()
+    end,
+  })
+
+  --  vim.api.nvim_create_autocmd("WinClosed", {
+  --    group = group,
+  --    callback = function()
+  --      local winnr = vim.api.nvim_get_current_win() ---@type number
+  --      histories[winnr] = nil
+  --    end,
+  --  })
 end
