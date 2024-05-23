@@ -1,6 +1,5 @@
 local History = require("guanghechen.history.History")
 local guanghechen = require("guanghechen")
-local popup = require("plenary.popup")
 
 ---@class ghc.core.action.window.IHistoryItem
 ---@field public bufnr number
@@ -104,18 +103,6 @@ function M.push()
   history:push(item)
 end
 
-function M.select_item_from_history_popup()
-  if POPUP_WINNR == nil then
-    return
-  end
-
-  local cursor = vim.api.nvim_win_get_cursor(POPUP_WINNR)
-  local index = cursor ~= nil and cursor[1] or 1
-
-  M.toggle_history_popup()
-  M.go(index)
-end
-
 function M.toggle_history_popup()
   if POPUP_WINNR and vim.api.nvim_win_is_valid(POPUP_WINNR) then
     vim.api.nvim_win_close(POPUP_WINNR, true)
@@ -133,52 +120,37 @@ function M.toggle_history_popup()
     return
   end
 
-  local contents = {}
-  local longest_length = 0
+  local contents = {} ---@type string[]
   local cwd = guanghechen.util.path.cwd()
-  for item in history:iterator() do
+  local visited = {} ---@type table<string, boolean>
+  for item in history:iterator_reverse() do
     ---@cast item ghc.core.action.window.IHistoryItem
     local display_text = guanghechen.util.path.relative(cwd, item.filepath)
-    table.insert(contents, display_text)
-    longest_length = longest_length < #display_text and #display_text or longest_length
+    if not visited[display_text] then
+      visited[display_text] = true
+      table.insert(contents, display_text)
+    end
   end
 
-  local minwidth = longest_length + 8
-  local maxwidth = vim.api.nvim_win_get_width(winnr) - 10
-  local width = minwidth < maxwidth and minwidth or maxwidth
-  POPUP_WINNR = popup.create(contents, {
-    title = "window history",
-    borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
-    width = width,
-    border = true,
-    enter = true,
-    focusable = true,
-    padding = { 0, 0, 0, 0 },
-    on_cursor_move = function(popup_bnfnr, cursor_line)
-      --- Clear the previous highlights
-      vim.api.nvim_buf_clear_namespace(popup_bnfnr, -1, 0, 1)
-      vim.api.nvim_buf_add_highlight(popup_bnfnr, 0, "Identifier", cursor_line - 1, 0, -1)
-      vim.api.nvim_buf_add_highlight(popup_bnfnr, 0, "Identifier", history:present_index() - 1, 0, -1)
-    end,
-  })
-  local bufnr = vim.api.nvim_win_get_buf(POPUP_WINNR)
-  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-  vim.api.nvim_set_option_value("number", true, { win = POPUP_WINNR })
-  vim.api.nvim_win_set_cursor(POPUP_WINNR, { history:present_index(), 0 })
-  vim.api.nvim_buf_add_highlight(bufnr, 0, "Identifier", history:present_index() - 1, 0, -1)
-  vim.api.nvim_create_autocmd("BufLeave", {
-    buffer = bufnr,
-    nested = true,
-    once = true,
-    callback = M.toggle_history_popup,
-  })
-
-  local function mapkey(mode, key, action, desc)
-    vim.keymap.set(mode, key, action, { buffer = bufnr, silent = true, noremap = true, desc = desc })
-  end
-
-  mapkey("n", "q", M.toggle_history_popup, "window: toggle history popup")
-  mapkey("n", "<cr>", M.select_item_from_history_popup, "window: select item from history popup")
+  local pickers = require("telescope.pickers")
+  local finders = require("telescope.finders")
+  local conf = require("telescope.config").values
+  local make_entry = require("telescope.make_entry")
+  local opts = {
+    cwd = cwd,
+    initial_mode = "normal",
+    entry_maker = make_entry.gen_from_file({ cwd = cwd }),
+  }
+  pickers
+    .new(opts, {
+      prompt_title = "window history",
+      finder = finders.new_table({
+        results = contents,
+      }),
+      previewer = conf.grep_previewer(opts),
+      sorter = conf.generic_sorter(opts),
+    })
+    :find()
 end
 
 function M.show_window_history()

@@ -112,12 +112,29 @@ function History:push(element)
 end
 
 function History:iterator()
-  local index = 0
   local stack = self._stack
+  local index = 0
   return function()
     index = index + 1
     if index <= #stack then
       return stack[index]
+    end
+  end
+end
+
+function History:iterator_reverse()
+  local stack = self._stack
+  local index = #stack
+  return function()
+    if index > #stack then
+      index = #stack
+    end
+
+    local idx = index
+    index = index - 1
+
+    if idx > 0 then
+      return stack[idx]
     end
   end
 end
