@@ -1,4 +1,6 @@
 local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
+local Disposable = require("guanghechen.disposable.Disposable")
+local Subscriber = require("guanghechen.subscriber.Subscriber")
 local util_disposable = require("guanghechen.util.disposable")
 local util_observable = require("guanghechen.util.observable")
 local util_fs = require("guanghechen.util.fs")
@@ -12,6 +14,7 @@ local util_reporter = require("guanghechen.util.reporter")
 ---@class guanghechen.viewmodel.Viewmodel : guanghechen.types.IViewmodel
 ---@field private _name string
 ---@field private _filepath string
+---@field private _initial_values table<string, any>
 ---@field private _unwatch (fun():nil)|nil
 ---@field private _persistable_observables table<string, guanghechen.types.IObservable>
 ---@field private _all_observables table<string, guanghechen.types.IObservable>
@@ -27,20 +30,12 @@ function Viewmodel.new(opts)
   ---@diagnostic disable-next-line: cast-type-mismatch
   ---@cast self guanghechen.viewmodel.Viewmodel
 
-  ---@type string
-  self._name = opts.name
-
-  ---@type string
-  self._filepath = opts.filepath
-
-  ---@type (fun():nil)|nil
-  self._unwatch = nil
-
-  ---@type table<string, guanghechen.types.IObservable>
-  self._persistable_observables = {}
-
-  ---@type table<string, guanghechen.types.IObservable>
-  self._all_observables = {}
+  self._name = opts.name ---@type string
+  self._filepath = opts.filepath ---@type string
+  self._initial_values = {} ---@type table<string, any>
+  self._unwatch = nil ---@type (fun():nil)|nil
+  self._persistable_observables = {} ---@type table<string, guanghechen.types.IObservable>
+  self._all_observables = {} ---@type table<string, guanghechen.types.IObservable>
 
   return self
 end
@@ -105,13 +100,31 @@ end
 ---@param name string
 ---@param observable guanghechen.types.IObservable
 ---@param persistable boolean
-function Viewmodel:register(name, observable, persistable)
+---@param auto_save boolean
+function Viewmodel:register(name, observable, persistable, auto_save)
   if persistable then
     self._persistable_observables[name] = observable
   end
 
   self[name] = observable
   self._all_observables[name] = observable
+
+  if auto_save then
+    self._initial_values[name] = observable:get_snapshot()
+    local subscriber = Subscriber.new({
+      onNext = function(next_value)
+        if not observable.equals(self._initial_values[name], next_value) then
+          self._initial_values[name] = next_value
+          self:save()
+        end
+      end,
+    })
+    local unsubscribable = observable:subscribe(subscriber)
+    self:registerDisposable(Disposable.new(function()
+      unsubscribable:unsubscribe()
+    end))
+  end
+
   return self
 end
 
@@ -179,6 +192,7 @@ function Viewmodel:load()
   for key, value in pairs(data) do
     local observable = self[key]
     if value ~= nil and util_observable.isObservable(observable) then
+      self._initial_values[key] = value
       observable:next(value)
     end
   end

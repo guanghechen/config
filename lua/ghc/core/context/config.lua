@@ -15,11 +15,11 @@ local context = Viewmodel.new({
   name = "context:config",
   filepath = context_config_filepath,
 })
-  :register("darken", Observable.new(true), true)
-  :register("relativenumber", Observable.new(true), true)
-  :register("theme_lighten", Observable.new("one_light"), true)
-  :register("theme_darken", Observable.new("onedark"), true)
-  :register("transparency", Observable.new(false), true)
+  :register("darken", Observable.new(true), true, true)
+  :register("relativenumber", Observable.new(true), true, true)
+  :register("theme_lighten", Observable.new("one_light"), true, true)
+  :register("theme_darken", Observable.new("onedark"), true, true)
+  :register("transparency", Observable.new(false), true, true)
 
 ---@return string
 function context.get_current_theme()
