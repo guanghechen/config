@@ -148,6 +148,12 @@ end
 
 ---@type ... string[]
 ---@return string
+function M.locate_context_filepath(...)
+  return M.locate_state_filepath("ghc/context", ...)
+end
+
+---@type ... string[]
+---@return string
 function M.locate_data_filepath(...)
   local data_paths = vim.fn.stdpath("data")
   local data_path = type(data_paths) == "table" and data_paths[1] or data_paths
@@ -200,7 +206,7 @@ function M.locate_session_filepath(opts)
   local hash = util_md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   local session_filename = filename ---@type string
-  local session_filepath = M.locate_state_filepath("ghc_sessions", session_dir, session_filename)
+  local session_filepath = M.locate_state_filepath("ghc/sessions", session_dir, session_filename)
   return session_filepath
 end
 
@@ -225,7 +231,7 @@ end
 
 ---@param opts {filenames: string[]}
 function M.remove_session_filepaths_all(opts)
-  local session_root_dir = M.locate_state_filepath("ghc_sessions") ---@type string
+  local session_root_dir = M.locate_state_filepath("ghc/sessions") ---@type string
   local pfile = io.popen('ls -a "' .. session_root_dir .. '"')
   if pfile then
     for dirname in pfile:lines() do
