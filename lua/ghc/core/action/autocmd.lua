@@ -16,10 +16,9 @@ function M.autocmd_startup()
 
   -- Customized dashboard page.
   local function auto_open_dashboard()
-    if #vim.v.argv == 1 then
+    if vim.fn.argc() == 0 then
       vim.schedule(function()
         vim.cmd("enew")
-        vim.cmd("stopinsert")
       end)
     end
   end
