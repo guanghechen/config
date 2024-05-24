@@ -148,7 +148,7 @@ function CircularQueue:iterator()
       if id > _capacity then
         id = 1
       end
-      return _elements[id]
+      return _elements[id], i
     end
   end
 end
@@ -158,17 +158,17 @@ function CircularQueue:iterator_reverse()
   local _elements = self._elements
   local _end = self._end
   local _size = self._size
-  local i = 0
+  local i = _size + 1
   local id = _end + 1
 
   return function()
-    i = i + 1
-    if i <= _size then
+    i = i - 1
+    if i > 0 then
       id = id - 1
       if id < 1 then
         id = _capacity
       end
-      return _elements[id]
+      return _elements[id], i
     end
   end
 end
