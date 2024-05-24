@@ -1,8 +1,8 @@
 local action_autocmd = require("ghc.core.action.autocmd")
 
-action_autocmd.autocmd_clear_jumps()
+action_autocmd.autocmd_startup()
+
 action_autocmd.autocmd_checktime() -- Check if we need to reload the file when it changed
-action_autocmd.autocmd_change_dir()
 action_autocmd.autocmd_create_dirs()
 action_autocmd.autocmd_highlight_yank()
 action_autocmd.autocmd_remember_last_tabnr()

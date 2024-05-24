@@ -3,6 +3,11 @@ local icons = require("ghc.core.setting.icons")
 -- Better `vim.notify()`
 return {
   "rcarriga/nvim-notify",
+  init = function()
+    vim.schedule(function()
+      vim.notify = require("notify")
+    end)
+  end,
   opts = {
     stages = "static",
     timeout = 3000,
@@ -26,8 +31,4 @@ return {
       TRACE = icons.ui.Pencil,
     },
   },
-  config = function(_, opts)
-    require("notify").setup(opts)
-    vim.notify = require("notify")
-  end,
 }
