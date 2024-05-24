@@ -263,8 +263,8 @@ mk("n", "<leader>un", A.ui.dismiss_notifications, "ui: dismiss all notifications
 ---------------------------------------------------------------------------------------------#[u]i--
 
 --#[w]indow-----------------------------------------------------------------------------------------
-mk("n", "<leader>wW", A.window.find_history_unique, "window: find history (unique)", true)
-mk("n", "<leader>ww", A.window.find_history_all, "window: find history", true)
+mk("n", "<leader>wW", A.window.find_history_all, "window: find history", true)
+mk("n", "<leader>ww", A.window.find_history_unique, "window: find history (unique)", true)
 mk("n", "<leader>wf", A.window.focus_window_with_picker, "window: focus window (with picker)", true)
 mk("n", "<leader>ws", A.window.swap_window_with_picker, "window: swap window (with picker)", true)
 mk("n", "<leader>wp", A.window.project_window_with_picker, "window: project window (with picker)", true)

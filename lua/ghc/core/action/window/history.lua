@@ -141,10 +141,10 @@ function M.find_history(opts)
 
         local display_text ---@type string
         if present_filepath == item.filepath then
-          display_text = icons.ui.Separator .. " " .. tostring(item_index) .. " " .. relative_filepath
+          display_text = icons.ui.Separator .. " " .. relative_filepath
           default_lineno = #entries + 1
         else
-          display_text = "  " .. tostring(item_index) .. " " .. relative_filepath
+          display_text = "  " .. relative_filepath
         end
         minwidth = minwidth < #display_text and #display_text or minwidth
 
