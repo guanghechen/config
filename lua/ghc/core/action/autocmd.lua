@@ -14,15 +14,6 @@ end
 function M.autocmd_startup()
   local group = M.augroup("startup")
 
-  -- Customized dashboard page.
-  local function auto_open_dashboard()
-    if vim.fn.argc() == 0 then
-      vim.schedule(function()
-        vim.cmd("enew")
-      end)
-    end
-  end
-
   -- Clear jumplist
   -- See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
   local function auto_clear_jumps()
@@ -57,7 +48,6 @@ function M.autocmd_startup()
   vim.api.nvim_create_autocmd({ "VimEnter" }, {
     group = group,
     callback = function()
-      auto_open_dashboard()
       auto_clear_jumps()
       auto_change_dir()
     end,
