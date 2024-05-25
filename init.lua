@@ -50,8 +50,8 @@ local load = {
 
 load.bootstrap()
 load.option()
-load.theme()
 load.autocmd()
+load.theme()
 
 vim.schedule(function()
   load.keymap()
