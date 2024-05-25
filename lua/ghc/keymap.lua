@@ -1,23 +1,15 @@
 ---@class ghc.keymap.actions
 local A = {
   bookmark = require("ghc.core.action.bookmark"),
-  buffer = require("ghc.core.action.buffer"),
-  context = require("ghc.core.action.context"),
-  debug = require("ghc.core.action.debug"),
   diagnostic = require("ghc.core.action.diagnostic"),
-  enhance = require("ghc.core.action.enhance"),
   explorer = require("ghc.core.action.explorer"),
   find = require("ghc.core.action.find"),
   file = require("ghc.core.action.file"),
   git = require("ghc.core.action.git"),
   replace = require("ghc.core.action.replace"),
   search = require("ghc.core.action.search"),
-  session = require("ghc.core.action.session"),
-  tab = require("ghc.core.action.tab"),
   terminal = require("ghc.core.action.terminal"),
-  toggle = require("ghc.core.action.toggle"),
   ui = require("ghc.core.action.ui"),
-  window = require("ghc.core.action.window"),
 }
 
 ---@param mode string | string[]

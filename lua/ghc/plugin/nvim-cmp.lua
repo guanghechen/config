@@ -157,5 +157,6 @@ return {
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-path",
     "zbirenbaum/copilot-cmp",
+    "garymjr/nvim-snippets",
   },
 }
