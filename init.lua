@@ -1,58 +1,43 @@
-local load = {
-  bootstrap = function()
-    vim.g.mapleader = " "
-    vim.g.base46_cache = vim.fn.stdpath("data") .. "/nvchad/base46/"
-    vim.opt.shortmess:append("I") --Don't show the intro message when starting nvim
+---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
+local function load_config(name)
+  pcall(require, "ghc." .. name)
 
-    -- bootstrap lazy and all plugins
-    local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-    if not vim.uv.fs_stat(lazypath) then
-      local repo = "https://github.com/folke/lazy.nvim.git"
-      vim.fn.system({ "git", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath })
-    end
-    vim.opt.rtp:prepend(lazypath)
+  if vim.g.neovide then
+    pcall(require, "neovide." .. name)
+  end
 
-    -- load plugins
-    require("lazy").setup(require("ghc.plugin.lazy"))
-  end,
-  autocmd = function()
-    require("ghc.autocmd")
+  pcall(require, "local." .. name)
+end
 
-    if vim.g.neovide then
-      require("neovide.autocmd")
-    end
+-- bootstrap lazy and all plugins
+local function load_plugins()
+  local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+  if not vim.uv.fs_stat(lazypath) then
+    local repo = "https://github.com/folke/lazy.nvim.git"
+    vim.fn.system({ "git", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath })
+  end
+  vim.opt.rtp:prepend(lazypath)
 
-    pcall(require, "local.autocmd")
-  end,
-  keymap = function()
-    require("ghc.keymap")
+  -- load plugins
+  require("lazy").setup(require("ghc.plugin.lazy"))
+end
 
-    if vim.g.neovide then
-      require("neovide.keymap")
-    end
+local function load_theme()
+  dofile(vim.g.base46_cache .. "defaults")
+  dofile(vim.g.base46_cache .. "statusline")
+end
 
-    pcall(require, "local.keymap")
-  end,
-  option = function()
-    require("ghc.option")
+load_config("option-bootstrap")
+load_config("keymap-bootstrap")
+load_config("autocmd-bootstrap")
 
-    if vim.g.neovide then
-      require("neovide.option")
-    end
+local ok = pcall(load_plugins)
+if ok then
+  load_theme()
 
-    pcall(require, "local.option")
-  end,
-  theme = function()
-    dofile(vim.g.base46_cache .. "defaults")
-    dofile(vim.g.base46_cache .. "statusline")
-  end,
-}
-
-load.bootstrap()
-load.option()
-load.autocmd()
-load.theme()
-
-vim.schedule(function()
-  load.keymap()
-end)
+  load_config("option")
+  load_config("keymap")
+  load_config("autocmd")
+else
+  load_config("option")
+end
