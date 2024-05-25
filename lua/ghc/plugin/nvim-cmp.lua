@@ -1,4 +1,5 @@
 local icons = require("ghc.core.setting.icons")
+local util_cmp = require("ghc.core.util.cmp")
 
 return {
   "hrsh7th/nvim-cmp",
@@ -6,15 +7,8 @@ return {
   opts = function()
     vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
 
-    local cmp = require("cmp")
+    local cmp = require("cmp") ---@type any
     local compare = require("cmp.config.compare")
-    local cmp_ui = require("nvconfig").ui.cmp
-    local cmp_style = cmp_ui.style
-
-    local field_arrangement = {
-      atom = { "kind", "abbr", "menu" },
-      atom_colored = { "kind", "abbr", "menu" },
-    }
 
     local function border(hl_name)
       return {
@@ -41,20 +35,13 @@ return {
       },
       formatting = {
         -- default fields order i.e completion word + item.kind + item.kind icons
-        fields = field_arrangement[cmp_style] or { "abbr", "kind", "menu" },
+        fields = { "abbr", "kind", "menu" },
 
         format = function(_, item)
-          local icon = (cmp_ui.icons and icons.kind[item.kind]) or ""
-
-          if cmp_style == "atom" or cmp_style == "atom_colored" then
-            icon = " " .. icon .. " "
-            item.menu = cmp_ui.lspkind_text and "   (" .. item.kind .. ")" or ""
-            item.kind = icon
-          else
-            icon = cmp_ui.lspkind_text and (" " .. icon .. " ") or icon
-            item.kind = string.format("%s %s", icon, cmp_ui.lspkind_text and item.kind or "")
+          local icon = icons.kind[item.kind]
+          if icon then
+            item.kind = icon .. " " .. item.kind
           end
-
           return item
         end,
       },
@@ -122,9 +109,10 @@ return {
       },
       window = {
         completion = {
-          side_padding = (cmp_style ~= "atom" and cmp_style ~= "atom_colored") and 1 or 0,
-          winhighlight = "Normal:CmpPmenu,CursorLine:CmpSel,Search:None",
+          border = border("CmpBorder"),
           scrollbar = false,
+          side_padding = 1,
+          winhighlight = "Normal:CmpPmenu,CursorLine:CmpSel,Search:None",
         },
         documentation = {
           border = border("CmpDocBorder"),
@@ -132,38 +120,36 @@ return {
         },
       },
       sources = {
-        { name = "nvim_lsp" },
-        { name = "path" },
-        { name = "copilot" },
-        { name = "buffer" },
+        { name = "path", group_index = 1 },
+        { name = "copilot", group_index = 1 },
+        { name = "nvim_lsp", group_index = 2 },
+        { name = "buffer", group_index = 3 },
       },
     }
-
-    if cmp_style ~= "atom" and cmp_style ~= "atom_colored" then
-      options.window.completion.border = border("CmpBorder")
-    end
 
     return options
   end,
   config = function(_, opts)
     dofile(vim.g.base46_cache .. "cmp")
 
-    for _, source in ipairs(opts.sources) do
-      source.group_index = source.group_index or 1
+    local parse = require("cmp.utils.snippet").parse
+    require("cmp.utils.snippet").parse = function(input)
+      local ok, ret = pcall(parse, input)
+      if ok then
+        return ret
+      end
+      return util_cmp.snippet_preview(input)
     end
-    local cmp = require("cmp")
-    local Kind = cmp.lsp.CompletionItemKind
+
+    local cmp = require("cmp") ---@type any
     cmp.setup(opts)
     cmp.event:on("confirm_done", function(event)
-      if not vim.tbl_contains(opts.auto_brackets or {}, vim.bo.filetype) then
-        return
+      if vim.tbl_contains(opts.auto_brackets or {}, vim.bo.filetype) then
+        util_cmp.auto_brackets(event.entry)
       end
-      local entry = event.entry
-      local item = entry:get_completion_item()
-      if vim.tbl_contains({ Kind.Function, Kind.Method }, item.kind) then
-        local keys = vim.api.nvim_replace_termcodes("()<left>", false, false, true)
-        vim.api.nvim_feedkeys(keys, "i", true)
-      end
+    end)
+    cmp.event:on("menu_opened", function(event)
+      util_cmp.add_missing_snippet_docs(event.window)
     end)
   end,
   dependencies = {

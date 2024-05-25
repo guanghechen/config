@@ -27,6 +27,22 @@ local function close_telescope(...)
   require("telescope.actions").close(...)
 end
 
+local function cycle_history_prev(...)
+  require("telescope.actions").cycle_history_prev(...)
+end
+
+local function cycle_history_next(...)
+  require("telescope.actions").cycle_history_next(...)
+end
+
+local function preview_scrolling_up(...)
+  require("telescope.actions").preview_scrolling_up(...)
+end
+
+local function preview_scrolling_down(...)
+  require("telescope.actions").preview_scrolling_down(...)
+end
+
 return {
   "nvim-telescope/telescope.nvim",
   opts = {
@@ -65,6 +81,10 @@ return {
         i = {
           ["<c-s>"] = flash,
           ["<c-t>"] = open_with_trouble,
+          ["<c-Up>"] = cycle_history_prev,
+          ["<c-Down>"] = cycle_history_next,
+          ["<c-b>"] = preview_scrolling_up,
+          ["<c-f>"] = preview_scrolling_down,
         },
         n = {
           q = close_telescope,
@@ -73,6 +93,19 @@ return {
           ["<c-t>"] = open_with_trouble,
         },
       },
+      -- open files in the first window that is an actual file.
+      -- use the current window if no other window is available.
+      get_selection_window = function()
+        local wins = vim.api.nvim_list_wins()
+        table.insert(wins, 1, vim.api.nvim_get_current_win())
+        for _, win in ipairs(wins) do
+          local buf = vim.api.nvim_win_get_buf(win)
+          if vim.bo[buf].buftype == "" then
+            return win
+          end
+        end
+        return 0
+      end,
     },
     extensions = {
       file_browser = {},
