@@ -1,11 +1,6 @@
 ---@class ghc.core.action.window
 local M = require("ghc.core.action.window.module")
 
-M.focus_window_top = "<cmd>NvimTmuxNavigateUp<cr>"
-M.focus_window_right = "<cmd>NvimTmuxNavigateRight<cr>"
-M.focus_window_bottom = "<cmd>NvimTmuxNavigateDown<cr>"
-M.focus_window_left = "<cmd>NvimTmuxNavigateLeft<cr>"
-
 ---@param opts { motivation: "focus" | "swap" | "project" }
 ---@return number | nil
 function M.pick_window(opts)

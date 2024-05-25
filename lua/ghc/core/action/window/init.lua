@@ -4,4 +4,5 @@ require("ghc.core.action.window.close")
 require("ghc.core.action.window.focus")
 require("ghc.core.action.window.history")
 require("ghc.core.action.window.resize")
+require("ghc.core.action.window.tmux")
 return M

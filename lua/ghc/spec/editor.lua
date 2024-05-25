@@ -23,7 +23,6 @@ return {
   require("ghc.plugin.mini-indentscope"),
 
   --enhance
-  require("ghc.plugin.nvim-tmux-navigation"),
 
   --explorer
   require("ghc.plugin.neo-tree"),
