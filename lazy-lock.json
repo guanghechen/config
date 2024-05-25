@@ -1,5 +1,4 @@
 {
-  "LuaSnip": { "branch": "master", "commit": "878ace11983444d865a72e1759dbcc331d1ace4c" },
   "base46": { "branch": "v2.5", "commit": "b48abead2b70aa1671ce604dc781f8fb2036a133" },
   "bookmarks.nvim": { "branch": "main", "commit": "0540d52ba64d0ec7677ec1ef14b3624c95a2aaba" },
   "cmp-buffer": { "branch": "main", "commit": "3022dbc9166796b644a841a02de8dd1cc1d311fa" },
@@ -27,6 +26,7 @@
   "nvim-colorizer.lua": { "branch": "master", "commit": "85855b38011114929f4058efc97af1059ab3e41d" },
   "nvim-lspconfig": { "branch": "master", "commit": "b972e7154bc94ab4ecdbb38c8edbccac36f83996" },
   "nvim-notify": { "branch": "master", "commit": "d333b6f167900f6d9d42a59005d82919830626bf" },
+  "nvim-snippets": { "branch": "main", "commit": "343c687b463ff0c71febd4582076fa5b96214475" },
   "nvim-spectre": { "branch": "nvim@nvim-spectre", "commit": "13fed636bc71cbe54e5ece5feeb484fb324e353a" },
   "nvim-tmux-navigation": { "branch": "nvim@nvim-tmux-navigation", "commit": "b999bcda8a94dbc9a9cead803e8ecfdfcaac325c" },
   "nvim-treesitter": { "branch": "master", "commit": "6d56c5f404d3b116bab167bc03993cfb0a83f8aa" },

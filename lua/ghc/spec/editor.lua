@@ -5,11 +5,11 @@ return {
   require("ghc.plugin.nvim-web-devicons"),
 
   --cmp
-  require("ghc.plugin.luasnip"),
   require("ghc.plugin.mini-pairs"),
   require("ghc.plugin.nvim-cmp"),
   require("ghc.plugin.copilot"),
   require("ghc.plugin.copilot-cmp"),
+  require("ghc.plugin.nvim-snippets"),
 
   --code
   require("ghc.plugin.mini-comment"),

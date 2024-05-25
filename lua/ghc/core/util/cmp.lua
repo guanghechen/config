@@ -1,4 +1,5 @@
 ---  https://github.com/LazyVim/LazyVim/blob/0f6ff53ce336082869314db11e9dfa487cf83292/lua/lazyvim/util/cmp.lua#L1
+local guanghechen = require("guanghechen")
 
 ---@class ghc.core.util.cmp
 local M = {}
@@ -66,6 +67,27 @@ function M.add_missing_snippet_docs(window)
         }
       end
     end
+  end
+end
+
+function M.expand(snippet)
+  local ok = pcall(vim.snippet.expand, snippet)
+  if not ok then
+    local fixed = M.snippet_fix(snippet)
+    ok = pcall(vim.snippet.expand, fixed)
+
+    local msg = ok and "Failed to parse snippet,\nbut was able to fix it automatically." or "Failed to parse snippet."
+    local formatted_msg = ([[%s
+```%s
+%s
+```]]):format(msg, vim.bo.filetype, snippet)
+
+    local log = ok and guanghechen.util.reporter.warn or guanghechen.util.reporter.error
+    log({
+      from = "ghc.core.util.cmp.expand",
+      subject = "vim.snippet",
+      message = formatted_msg,
+    })
   end
 end
 

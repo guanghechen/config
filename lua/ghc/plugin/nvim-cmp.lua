@@ -40,7 +40,7 @@ return {
         format = function(_, item)
           local icon = icons.kind[item.kind]
           if icon then
-            item.kind = icon .. " " .. item.kind
+            item.kind = icon -- .. " " .. item.kind
           end
           return item
         end,
@@ -63,8 +63,8 @@ return {
         ["<Tab>"] = cmp.mapping(function(fallback)
           if cmp.visible() then
             cmp.select_next_item()
-          elseif require("luasnip").expand_or_jumpable() then
-            vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>luasnip-expand-or-jump", true, true, true), "")
+          elseif vim.snippet.active({ direction = 1 }) then
+            vim.snippet.jump(1)
           else
             fallback()
           end
@@ -72,8 +72,8 @@ return {
         ["<S-Tab>"] = cmp.mapping(function(fallback)
           if cmp.visible() then
             cmp.select_prev_item()
-          elseif require("luasnip").jumpable(-1) then
-            vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>luasnip-jump-prev", true, true, true), "")
+          elseif vim.snippet.active({ direction = -1 }) then
+            vim.snippet.jump(-1)
           else
             fallback()
           end
@@ -81,7 +81,7 @@ return {
       },
       snippet = {
         expand = function(args)
-          require("luasnip").lsp_expand(args.body)
+          util_cmp.expand(args.body)
         end,
       },
       sorting = {
@@ -120,10 +120,10 @@ return {
         },
       },
       sources = {
+        { name = "nvim_lsp", group_index = 1 },
         { name = "path", group_index = 1 },
-        { name = "copilot", group_index = 1 },
-        { name = "nvim_lsp", group_index = 2 },
-        { name = "buffer", group_index = 3 },
+        { name = "copilot", group_index = 2 },
+        { name = "buffer", group_index = 2 },
       },
     }
 
