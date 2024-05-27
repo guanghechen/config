@@ -144,7 +144,7 @@ return {
         ["w"] = "open_with_window_picker",
 
         -- Tree node toggle collapse
-        ["<2-LeftMouse>"] = "open",
+        ["<LeftRelease>"] = "open",
         ["<cr>"] = recursively_toggle,
         ["z"] = recursively_toggle_all,
 
@@ -311,7 +311,10 @@ return {
     -- Set icons for diagnostic errors, you'll need to define them somewhere:
     vim.fn.sign_define("DiagnosticSignError", { text = icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" })
     vim.fn.sign_define("DiagnosticSignWarn", { text = icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" })
-    vim.fn.sign_define("DiagnosticSignInfo", { text = icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" })
+    vim.fn.sign_define(
+      "DiagnosticSignInfo",
+      { text = icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" }
+    )
     vim.fn.sign_define("DiagnosticSignHint", { text = icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" })
 
     opts.event_handlers = opts.event_handlers or {}

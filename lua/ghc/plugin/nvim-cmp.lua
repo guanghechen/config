@@ -64,7 +64,9 @@ return {
           if cmp.visible() then
             cmp.select_next_item()
           elseif vim.snippet.active({ direction = 1 }) then
-            vim.snippet.jump(1)
+            vim.schedule(function()
+              vim.snippet.jump(1)
+            end)
           else
             fallback()
           end
@@ -73,7 +75,9 @@ return {
           if cmp.visible() then
             cmp.select_prev_item()
           elseif vim.snippet.active({ direction = -1 }) then
-            vim.snippet.jump(-1)
+            vim.schedule(function()
+              vim.snippet.jump(-1)
+            end)
           else
             fallback()
           end
@@ -120,9 +124,10 @@ return {
         },
       },
       sources = {
+        { name = "snippets", group_index = 1 },
         { name = "nvim_lsp", group_index = 1 },
-        { name = "path", group_index = 1 },
-        { name = "copilot", group_index = 2 },
+        { name = "copilot", group_index = 1 },
+        { name = "path", group_index = 2 },
         { name = "buffer", group_index = 2 },
       },
     }
