@@ -46,6 +46,7 @@ return {
   require("ghc.plugin.conform"),
 
   --git
+  require("ghc.plugin.diffview"),
   require("ghc.plugin.gitsigns"),
 
   --highlight

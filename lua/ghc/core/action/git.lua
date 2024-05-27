@@ -101,6 +101,12 @@ function M.open_lazygit_cwd()
   open_lazygit(cmd, cwd)
 end
 
+function M.open_diffview_filehistory()
+  local diffview = require("diffview")
+  local filepath = guanghechen.util.path.current_filepath()
+  diffview.file_history(nil, filepath)
+end
+
 function M.open_lazygit_file_history()
   local filepath = vim.api.nvim_buf_get_name(0)
   local cmd = { "lazygit", "-f", filepath }
