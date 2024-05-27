@@ -1,31 +1,7 @@
 local util_tmux = require("ghc.core.util.tmux")
+local vim_navigate = require("ghc.core.action.window.navigate-vim")
 
 local DISABLE_WHEN_ZOOMED = true ---@type boolean
-
-local function vim_navigate_window_prev()
-  vim.cmd("wincmd t")
-end
-
-local function vim_navigate_window_next()
-  vim.cmd("wincmd w")
-end
-
-local function vim_navigate_window(direction)
-  vim.cmd("wincmd " .. direction)
-end
-
-local function vim_navigate(direction)
-  if direction == "n" then
-    pcall(vim_navigate_window_next)
-  elseif pcall(vim_navigate_window, direction) then
-    -- success
-  else
-    -- error, cannot wincmd from the command-line window
-    vim.cmd(
-      [[ echohl ErrorMsg | echo 'E11: Invalid in command-line window; <CR> executes, CTRL-C quits' | echohl None ]]
-    )
-  end
-end
 
 -- whether tmux should control the previous pane switching or no
 --
@@ -33,12 +9,17 @@ end
 -- try to switch to a previous pane, tmux should take control
 local tmux_control = true
 
+local function navigate_window_topest()
+  vim.cmd("wincmd t")
+end
+
+---@param direction "p"|"n"|"h"|"j"|"k"|"l"
 local function tmux_navigate(direction)
   if direction == "n" then
     local is_last_win = (vim.fn.winnr() == vim.fn.winnr("$"))
 
     if is_last_win then
-      pcall(vim_navigate_window_prev)
+      pcall(navigate_window_topest)
       util_tmux.tmux_change_pane(direction)
     else
       vim_navigate(direction)
@@ -72,37 +53,4 @@ local function tmux_navigate(direction)
   end
 end
 
--- if in tmux, map to vim-tmux navigation, otherwise just map to vim navigation
-local navigate = nil
-if vim.env.TMUX ~= nil then
-  navigate = tmux_navigate
-else
-  navigate = vim_navigate
-end
-
----@class ghc.core.action.window
-local M = require("ghc.core.action.window.module")
-
-function M.focus_window_top()
-  navigate("k")
-end
-
-function M.focus_window_right()
-  navigate("l")
-end
-
-function M.focus_window_bottom()
-  navigate("j")
-end
--- lua functions
-function M.focus_window_left()
-  navigate("h")
-end
-
-function M.focus_window_prev()
-  navigate("p")
-end
-
-function M.focus_window_next()
-  navigate("n")
-end
+return tmux_navigate

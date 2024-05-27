@@ -4,5 +4,11 @@ require("ghc.core.action.window.close")
 require("ghc.core.action.window.focus")
 require("ghc.core.action.window.history")
 require("ghc.core.action.window.resize")
-require("ghc.core.action.window.tmux")
+
+if vim.env.TMUX ~= nil then
+  require("ghc.core.action.window.navigate-tmux")
+else
+  require("ghc.core.action.window.navigate-vim")
+end
+
 return M

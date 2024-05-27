@@ -1,6 +1,37 @@
 ---@class ghc.core.action.window
 local M = require("ghc.core.action.window.module")
 
+local navigate
+if vim.env.TMUX ~= nil then
+  navigate = require("ghc.core.action.window.navigate-tmux")
+else
+  navigate = require("ghc.core.action.window.navigate-nvim")
+end
+
+function M.focus_window_top()
+  navigate("k")
+end
+
+function M.focus_window_right()
+  navigate("l")
+end
+
+function M.focus_window_bottom()
+  navigate("j")
+end
+-- lua functions
+function M.focus_window_left()
+  navigate("h")
+end
+
+function M.focus_window_prev()
+  navigate("p")
+end
+
+function M.focus_window_next()
+  navigate("n")
+end
+
 ---@param opts { motivation: "focus" | "swap" | "project" }
 ---@return number | nil
 function M.pick_window(opts)
