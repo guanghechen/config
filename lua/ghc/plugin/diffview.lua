@@ -29,6 +29,33 @@ return {
           win_opts = {},
         },
       },
+      ---https://github.com/sindrets/dotfiles/blob/40e20f7f68cf55f175d94a92b31a64d66ed3c059/.config/nvim/lua/user/plugins/diffview.lua#L71
+      ---https://github.com/sindrets/diffview.nvim/pull/258#issuecomment-1408689220
+      hooks = {
+        diff_buf_read = function()
+          vim.opt_local.wrap = false
+        end,
+        ---@diagnostic disable-next-line: unused-local
+        diff_buf_win_enter = function(bufnr, winid, ctx)
+          -- Highlight 'DiffChange' as 'DiffDelete' on the left, and 'DiffAdd' on the right.
+          if ctx.layout_name:match("^diff2") then
+            if ctx.symbol == "a" then
+              vim.opt_local.winhl = table.concat({
+                "DiffAdd:DiffviewDiffAddAsDelete",
+                "DiffDelete:DiffviewDiffDelete",
+                "DiffChange:DiffAddAsDelete",
+                "DiffText:DiffDeleteText",
+              }, ",")
+            elseif ctx.symbol == "b" then
+              vim.opt_local.winhl = table.concat({
+                "DiffDelete:DiffviewDiffDelete",
+                "DiffChange:DiffAdd",
+                "DiffText:DiffAddText",
+              }, ",")
+            end
+          end
+        end,
+      },
       icons = { -- Only applies when use_icons is true.
         folder_closed = icons.ui.Folder,
         folder_open = icons.ui.FolderOpen,
