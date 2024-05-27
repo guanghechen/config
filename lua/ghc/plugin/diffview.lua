@@ -16,18 +16,37 @@ return {
         },
       },
       diff_binaries = false,
-      enhanced_diff_hl = true,
+      enhanced_diff_hl = false, -- Set up hihglights in the hooks instead
+      file_history_panel = {
+        log_options = {
+          git = {
+            single_file = {
+              diff_merges = "first-parent",
+              follow = true,
+            },
+            multi_file = {
+              diff_merges = "first-parent",
+            },
+          },
+        },
+        win_config = {
+          position = "bottom",
+          height = 16,
+        },
+      },
       file_panel = {
         listing_style = "tree", -- One of 'list' or 'tree'
         tree_options = { -- Only applies when listing_style is 'tree'
           flatten_dirs = true, -- Flatten dirs that only contain one single dir
           folder_statuses = "only_folded", -- One of 'never', 'only_folded' or 'always'.
         },
-        win_config = { -- See |diffview-config-win_config|
-          position = "left",
-          width = 35,
-          win_opts = {},
-        },
+        win_config = function()
+          local editor_width = vim.o.columns
+          return {
+            position = "left",
+            width = editor_width >= 247 and 45 or 35,
+          }
+        end,
       },
       ---https://github.com/sindrets/dotfiles/blob/40e20f7f68cf55f175d94a92b31a64d66ed3c059/.config/nvim/lua/user/plugins/diffview.lua#L71
       ---https://github.com/sindrets/diffview.nvim/pull/258#issuecomment-1408689220

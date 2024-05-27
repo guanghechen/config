@@ -20,7 +20,7 @@ M.ui = {
     FlashCursor = { fg = "red", bg = transparency and "none" or "grey" },
     FlashLabel = { fg = "white", bg = transparency and "none" or "grey" },
     FlashMatch = { fg = "cyan", bg = transparency and "none" or "grey" },
-    ghc_DiffAdd_left = { bg = "#D0FFD0", fg = "none" },
+    ghc_DiffAdd_left = { bg = "#FFE0E0", fg = "none" },
     ghc_DiffDelete_left = { bg = "#FFE0E0", fg = "none" },
     ghc_DiffChange_left = { bg = "#FFE0E0", fg = "none" },
     ghc_DiffText_left = { bg = "#FFC0C0", fg = "none" },
