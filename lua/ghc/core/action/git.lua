@@ -101,6 +101,11 @@ function M.open_lazygit_cwd()
   open_lazygit(cmd, cwd)
 end
 
+function M.open_diffview()
+  local diffview = require("diffview")
+  diffview.open()
+end
+
 function M.open_diffview_filehistory()
   local diffview = require("diffview")
   local filepath = guanghechen.util.path.current_filepath()

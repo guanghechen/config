@@ -59,8 +59,7 @@ mk({ "n", "v" }, "<leader><leader>", A.find.find_recent, "find recent")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>gG", A.git.open_lazygit_workspace, "git: open lazygit (workspace)", true)
-mk({ "n", "v" }, "<leader>gg", A.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
+mk({ "n", "v" }, "<leader>gg", A.git.open_diffview, "git: open diff view", true)
 mk({ "n", "v" }, "<leader>gf", A.git.open_diffview_filehistory, "git: open file history", true)
 -------------------------------------------------------------------------------------------#[g]it---
 

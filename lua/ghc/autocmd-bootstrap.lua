@@ -5,6 +5,7 @@ action_autocmd.autocmd_checktime() -- Check if we need to reload the file when i
 action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
   pattern = {
     "checkhealth",
+    "git",
     "help",
     "lspinfo",
     "neotest-output",
