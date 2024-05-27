@@ -16,34 +16,23 @@ local M = {}
 
 M.ui = {
   hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, theme_integrations, {
-    FlashBackdrop = {
-      fg = "grey_fg",
-      bg = "none",
-      italic = true,
-    },
-    FlashCursor = {
-      fg = "red",
-      bg = transparency and "none" or "grey",
-    },
-    FlashLabel = {
-      fg = "white",
-      bg = transparency and "none" or "grey",
-    },
-    FlashMatch = {
-      fg = "cyan",
-      bg = transparency and "none" or "grey",
-    },
+    FlashBackdrop = { fg = "grey_fg", bg = "none", italic = true },
+    FlashCursor = { fg = "red", bg = transparency and "none" or "grey" },
+    FlashLabel = { fg = "white", bg = transparency and "none" or "grey" },
+    FlashMatch = { fg = "cyan", bg = transparency and "none" or "grey" },
   }),
   hl_override = {
-    CursorLine = {
-      bg = "one_bg2", -- "line"
-    },
-    Comment = {
-      -- italic = true,
-    },
-    Visual = {
-      bg = "light_grey",
-    },
+    CursorLine = { bg = "one_bg2" },
+    --    DiffAdd = { bg = "#FF0000", fg = "none" },
+    --    DiffText = { bg = "#00FF00", fg = "none" },
+    --    DiffAdded = { bg = "#0000FF", fg = "none" },
+    --    DiffDelete = { bg = "#880000", fg = "none" },
+    --    DiffChange = { bg = "#008800", fg = "none" },
+    --    DiffRemove = { bg = "#000088", fg = "none" },
+    --    DiffModified = { bg = "#880088", fg = "none" },
+    DiffviewDiffAddAsDelete = { bg = "#FFE0E0", fg = "none" },
+    DiffviewDiffDelete = { bg = "#FFE0E0", fg = "none" },
+    Visual = { bg = "light_grey" },
   },
   theme = context_config.get_current_theme(),
   theme_toggle = {},

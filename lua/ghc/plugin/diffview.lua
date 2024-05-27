@@ -7,6 +7,16 @@ return {
     local actions = require("diffview.actions")
 
     return {
+      default_args = { -- Default args prepended to the arg-list for the listed commands
+        DiffviewOpen = {
+          "--imply-local",
+        },
+        DiffviewFileHistory = {
+          "--right-only",
+        },
+      },
+      diff_binaries = false,
+      enhanced_diff_hl = true,
       file_panel = {
         listing_style = "tree", -- One of 'list' or 'tree'
         tree_options = { -- Only applies when listing_style is 'tree'
