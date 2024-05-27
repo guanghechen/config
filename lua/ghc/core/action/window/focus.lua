@@ -5,7 +5,7 @@ local navigate
 if vim.env.TMUX ~= nil then
   navigate = require("ghc.core.action.window.navigate-tmux")
 else
-  navigate = require("ghc.core.action.window.navigate-nvim")
+  navigate = require("ghc.core.action.window.navigate-vim")
 end
 
 function M.focus_window_top()
