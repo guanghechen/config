@@ -1,4 +1,7 @@
 local context_config = require("ghc.core.context.config")
+local function list(items, sep)
+  return table.concat(items, sep or ",")
+end
 
 ----------------------------------------------------------------------------------------------------
 
@@ -8,6 +11,19 @@ vim.opt.mouse:append("a")
 -- clipboard
 vim.opt.clipboard = "" -- Don't bind the default register to the system clipboard
 
+-- diff
+vim.opt.diffopt = list({
+  "algorithm:histogram",
+  "closeoff",
+  "context:0",
+  "filler",
+  "indent-heuristic",
+  "internal",
+  "iwhite",
+  "linematch:100",
+  "vertical",
+})
+
 -- panel split
 vim.opt.splitbelow = true
 vim.opt.splitright = true
@@ -16,6 +32,8 @@ vim.opt.splitkeep = "screen"
 -- appearance
 vim.opt.autoindent = true
 vim.opt.autowrite = true
+vim.opt.backspace = list({ "indent", "eol", "start" })
+vim.opt.breakindent = true
 vim.opt.colorcolumn = { 100, 120 }
 vim.opt.conceallevel = 0 -- Disable conceal.
 vim.opt.cursorline = true -- ggtrue to highlight the row of the cursor.
@@ -23,12 +41,14 @@ vim.opt.cursorlineopt = "number,screenline"
 vim.opt.cursorcolumn = false -- true to highlight the column of the cursor.
 vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.fillchars = {
+  diff = "╱",
+  eob = " ",
   foldopen = "",
   foldclose = "",
   fold = " ",
   foldsep = " ",
-  diff = "╱",
-  eob = " ",
+  msgsep = "─",
+  vert = "│",
 }
 vim.opt.foldenable = true
 vim.opt.foldexpr = "v:lua.require'ghc.core.action.fold'.foldexpr()"
@@ -39,11 +59,13 @@ vim.opt.guifont = { "RobotoMono Nerd Font" }
 vim.opt.list = true -- Show some invisible characters (tabs...
 vim.opt.listchars:append({
   eol = "↲",
-  extends = ">",
-  precedes = "<",
+  extends = "»",
+  lead = "·",
   nbsp = "·",
+  precedes = "«",
   space = "·",
   tab = " ",
+  trail = "•",
 })
 vim.opt.laststatus = 3 -- Keep only the global status bar.
 vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim` experience issues.
@@ -70,6 +92,15 @@ vim.opt.wrap = false
 
 ---format
 vim.o.formatexpr = "v:lua.require'conform'.formatexpr()" -- better format: https://github.com/stevearc/conform.nvim/issues/372#issuecomment-2066778074
+vim.opt.formatoptions = list({
+  --  "c", -- Auto wrap using 'textwidth'
+  "r", -- Auto insert comment leader
+  "o", -- Auto insert comment leader after "o" or "O"
+  "q", -- Allow formatting of comments with "gq"
+  "2", -- The second line decides the indent for the paragraph
+  "l", -- Long lines are not broken in insert mode
+  "j", -- Remove comment leader when joining lines
+}, "")
 
 -- search
 vim.opt.grepformat = "%f:%l:%c:%m"

@@ -45,6 +45,8 @@ mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true) -- Ex
 -- better copy/paste
 mk("v", "<C-b>c", '"+y', "copy to system clipboard")
 mk("v", "<M-c>", '"+y', "copy to system clipboard")
+mk("v", "<C-b>x", '"+x', "cut to system clipboard")
+mk("v", "<M-x>", '"+x', "cut to system clipboard")
 mk({ "i", "n", "v" }, "<C-b>a", "<esc>gg0vG$", "select all")
 mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "select all")
 mk({ "i", "n", "v" }, "<C-b>v", '<esc>"+p', "paste: from system clipboard")
