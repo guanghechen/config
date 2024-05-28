@@ -1,15 +1,30 @@
+local guanghechen = require("guanghechen")
 local context_config = require("ghc.core.context.config")
+
 local function list(items, sep)
   return table.concat(items, sep or ",")
 end
 
 ----------------------------------------------------------------------------------------------------
 
+-- clipboard
+if guanghechen.util.os.is_wsl() then
+  vim.g.clipboard = {
+    name = "WslClipboard",
+    copy = {
+      ["+"] = "clip.exe",
+      ["*"] = "clip.exe",
+    },
+    paste = {
+      ["+"] = 'pwsh.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+      ["*"] = 'pwsh.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+    },
+    cache_enabled = 0,
+  }
+end
+
 -- mouse
 vim.opt.mouse:append("a")
-
--- clipboard
-vim.opt.clipboard = "" -- Don't bind the default register to the system clipboard
 
 -- diff
 vim.opt.diffopt = list({

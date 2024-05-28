@@ -148,7 +148,10 @@ function M.open_buffer_left()
   local bufid_next = util_navigator.navigate_circular(bufid_current, -step, totalid)
 
   if bufid_next ~= bufid_current then
-    vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
+    local bufid = vim.t.bufs[bufid_next]
+    if type(bufid) == "number" then
+      vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
+    end
   end
 end
 
@@ -159,7 +162,10 @@ function M.open_buffer_right()
   local bufid_next = util_navigator.navigate_circular(bufid_current, step, totalid)
 
   if bufid_next ~= bufid_current then
-    vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
+    local bufid = vim.t.bufs[bufid_next]
+    if type(bufid) == "number" then
+      vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
+    end
   end
 end
 

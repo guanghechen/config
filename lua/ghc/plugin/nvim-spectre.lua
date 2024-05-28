@@ -41,8 +41,8 @@ return {
       line_sep       = "└-----------------------------------------",
       highlight = {
         ui = "String",
-        search = "DiffChange",
-        replace = "DiffDelete",
+        search = "ghc_spectre_search",
+        replace = "ghc_spectre_replace",
       },
       mapping = {
         ["tab"] = {

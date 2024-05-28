@@ -28,6 +28,8 @@ M.ui = {
     ghc_DiffDelete_right = { bg = "#FFE0E0", fg = "none" },
     ghc_DiffChange_right = { bg = "#D0FFD0", fg = "none" },
     ghc_DiffText_right = { bg = "#A0EFA0", fg = "none" },
+    ghc_spectre_search = { bg = "none", fg = "#FFC0C0", strikethrough = true },
+    ghc_spectre_replace = { bg = "none", fg = "#A0EFA0" },
   }),
   hl_override = {
     CursorLine = { bg = "one_bg2" },
