@@ -4,7 +4,7 @@ local guanghechen = require("guanghechen")
 local M = {}
 
 function M.copy_current_buffer_filepath()
-  local content = guanghechen.util.path() ---@type string
+  local content = guanghechen.util.path.current_filepath() ---@type string
   vim.fn.setreg("+", content)
   guanghechen.util.reporter.info({
     from = "enchance",

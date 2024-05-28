@@ -41,8 +41,10 @@ return {
       line_sep       = "└-----------------------------------------",
       highlight = {
         ui = "String",
-        search = "ghc_spectre_search",
         replace = "ghc_spectre_replace",
+        filedirectory = "ghc_spectre_filedirectory",
+        filename = "ghc_spectre_filename",
+        search = "ghc_spectre_search",
       },
       mapping = {
         ["tab"] = {
