@@ -8,20 +8,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 -- clipboard
-if guanghechen.util.os.is_wsl() then
-  vim.g.clipboard = {
-    name = "WslClipboard",
-    copy = {
-      ["+"] = "clip.exe",
-      ["*"] = "clip.exe",
-    },
-    paste = {
-      ["+"] = 'pwsh.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
-      ["*"] = 'pwsh.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
-    },
-    cache_enabled = 0,
-  }
-end
+vim.g.clipboard = guanghechen.util.clipboard.get_clipboard()
 
 -- mouse
 vim.opt.mouse:append("a")

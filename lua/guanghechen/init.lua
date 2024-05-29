@@ -16,6 +16,7 @@ M.clazz = {
 
 ---@class guanghechen.util
 M.util = {
+  clipboard = require("guanghechen.util.clipboard"),
   comparator = require("guanghechen.util.comparator"),
   debounce = require("guanghechen.util.debounce"),
   disposable = require("guanghechen.util.disposable"),
@@ -30,7 +31,9 @@ M.util = {
   regex = require("guanghechen.util.regex"),
   reporter = require("guanghechen.util.reporter"),
   selection = require("guanghechen.util.selection"),
+  string = require("guanghechen.util.string"),
   table = require("guanghechen.util.table"),
+  tmux = require("guanghechen.util.tmux"),
 }
 
 return M

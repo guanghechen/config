@@ -35,17 +35,28 @@ end
 
 -- change the current pane according to direction
 ---@param direction "p"|"h"|"j"|"k"|"l"|"n"
-function M.tmux_change_pane(direction)
+function M.change_pane(direction)
   tmux_command("select-pane -" .. tmux_directions[direction])
 end
 
--- capitalization util, only capitalizes the first character of the whole word
----@param str string
-function M.capitalize(str)
-  local capitalized = str:gsub("(%a)(%a+)", function(a, b)
-    return string.upper(a) .. string.lower(b)
-  end)
-  return capitalized:gsub("_", "")
+---@param tmux_env_name string
+---@return string|nil
+function M.get_tmux_env_value(tmux_env_name)
+  local handle = io.popen("tmux show-environment " .. tmux_env_name)
+  if handle == nil then
+    return nil
+  end
+
+  local result = handle:read("*a")
+  handle:close()
+
+  if type(result) ~= "string" or result == "" then
+    return nil
+  end
+
+  -- Extract the value from the result
+  local var_value = result:match("^[^=]+=(.*)")
+  return var_value
 end
 
 return M
