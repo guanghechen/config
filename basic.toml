@@ -51,8 +51,8 @@ startup_mode = "Windowed"
 
 # Window dimensions in character columns and lines (changes require restart)
 [window.dimensions]
-columns = 120
-lines = 35
+columns = 160
+lines = 40
 
 [window.padding]
 x = 0
