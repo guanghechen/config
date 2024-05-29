@@ -55,8 +55,8 @@ function M.get_tmux_env_value(tmux_env_name)
   end
 
   -- Extract the value from the result
-  local var_value = result:match("^[^=]+=(.*)")
-  return var_value
+  local env_value = result:match("^[^=]+=(.-)%s*$")
+  return env_value
 end
 
 return M

@@ -22,13 +22,10 @@ end
 local function macos_fake_clipborad(fake_clipboard_filepath)
   local clipboard_file = vim.fn.expand(fake_clipboard_filepath)
 
-  ---@param content string
-  local function write_to_fake_clipboard(content)
+  ---@param data string|string[]
+  local function write_to_fake_clipboard(data)
     local file = io.open(clipboard_file, "w")
-    if file then
-      file:write(content)
-      file:close()
-    else
+    if file == nil then
       util_reporter.error({
         from = "write_to_fake_clipboard",
         message = "Unable to open fake clipboard file for writing.",
@@ -36,17 +33,24 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
           filepath = fake_clipboard_filepath,
         },
       })
+      return
     end
+
+    local content = "" ---@type string
+    if type(data) == "string" then
+      content = data
+    elseif type(data) == "table" then
+      content = table.concat(data, "\n")
+    end
+
+    file:write(content)
+    file:close()
   end
 
   ---@return string
   local function read_from_fake_clipboard()
     local file = io.open(clipboard_file, "r")
-    if file then
-      local content = file:read("*a")
-      file:close()
-      return content
-    else
+    if file == nil then
       util_reporter.error({
         from = "read_from_fake_clipboard",
         message = "Unable to open fake clipboard file for reading.",
@@ -56,6 +60,10 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
       })
       return ""
     end
+
+    local content = file:read("*a")
+    file:close()
+    return content
   end
 
   return {

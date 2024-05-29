@@ -146,4 +146,14 @@ local function g()
   history:print()
 end
 
-g()
+local function h()
+  local guanghechen = require("guanghechen")
+  vim.notify(vim.inspect(guanghechen.util.os.is_mac()))
+
+  local fake_clipboard_filepath = guanghechen.util.tmux.get_tmux_env_value("ghc_use_fake_clipboard")
+  vim.notify(vim.inspect(fake_clipboard_filepath))
+
+  vim.notify(vim.inspect(guanghechen.util.clipboard.get_clipboard()))
+end
+
+h()
