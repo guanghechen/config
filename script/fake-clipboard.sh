@@ -11,6 +11,7 @@ function _ghc_watch_fake_clipboard {
 
 	if [ ! -f "$_fake_clipboard_file" ]; then
 		touch "$_fake_clipboard_file"
+		chmod 666 "$_fake_clipboard_file"
 	fi
 
 	echo "Watching fake clipboard: $_fake_clipboard_file"
