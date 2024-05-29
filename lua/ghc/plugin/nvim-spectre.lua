@@ -16,6 +16,7 @@ end
 return {
   "guanghechen/mirror",
   branch = "nvim@nvim-spectre", -- "alexghergh/nvim-tmux-navigation",
+  commit = "13fed636bc71cbe54e5ece5feeb484fb324e353a",
   name = "nvim-spectre",
   main = "spectre",
   build = get_build_cmd(),
