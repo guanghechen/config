@@ -90,6 +90,11 @@ bindings = [
   { key = "J",                          mods = "Command",               chars = "\u0002\u006a" },       # <Ctrl-b>j
   { key = "H",                          mods = "Command",               chars = "\u0002\u0068" },       # <Ctrl-b>h
 
+  ## ---- Copy/Paste ----
+  { key = "V",                          mods = "Command",               action = "Paste"       },
+  { key = "Insert",                     mods = "Control",               action = "Copy"        },
+  { key = "Insert",                     mods = "Shift",                 action = "Paste"       },
+  
   ## ---- Misc ----
   { key = "A",                          mods = "Command",               chars = "\u0002\u0061" },       # <Ctrl-b>a
   { key = "C",                          mods = "Command",               chars = "\u0002\u0063" },       # <Ctrl-b>c
