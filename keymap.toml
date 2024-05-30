@@ -67,6 +67,8 @@ bindings = [
   { key = "L",                          mods = "Command|Shift",         chars = "\u0002\u004C" },       # <Ctrl-b>L
   { key = "J",                          mods = "Command|Shift",         chars = "\u0002\u004a" },       # <Ctrl-b>J
   { key = "H",                          mods = "Command|Shift",         chars = "\u0002\u0048" },       # <Ctrl-b>H
+  { key = "R",                          mods = "Command|Shift",         chars = "\u0002\u0052" },       # <Ctrl-b>R
+  { key = "T",                          mods = "Command|Shift",         chars = "\u0002\u0054" },       # <Ctrl-b>T
   { key = "{",                          mods = "Command|Shift",         chars = "\u0002\u007b" },       # <Ctrl-b>{
   { key = "}",                          mods = "Command|Shift",         chars = "\u0002\u007d" },       # <Ctrl-b>}
   { key = "<",                          mods = "Command|Shift",         chars = "\u0002\u003c" },      # <Ctrl-b><
@@ -101,7 +103,6 @@ bindings = [
   { key = "G",                          mods = "Command",               chars = "\u0002\u0067" },       # <Ctrl-b>g
   { key = "I",                          mods = "Command",               chars = "\u0002\u0069" },       # <Ctrl-b>i
   { key = "O",                          mods = "Command",               chars = "\u0002\u006f" },       # <Ctrl-b>o
-  { key = "R",                          mods = "Command",               chars = "\u0002\u0072" },       # <Ctrl-b>r
   { key = "T",                          mods = "Command",               chars = "\u0002\u0074" },       # <Ctrl-b>t
   # { key = "V",                          mods = "Command",               chars = "\u0002\u0076" },       # <Ctrl-b>v
   { key = ":",                          mods = "Command|Shift",         chars = "\u0002\u003a" },       # <Ctrl-b>:
