@@ -42,7 +42,7 @@ end
 ---@param tmux_env_name string
 ---@return string|nil
 function M.get_tmux_env_value(tmux_env_name)
-  local handle = io.popen("tmux show-environment " .. tmux_env_name)
+  local handle = io.popen("tmux show-environment " .. tmux_env_name .. " 2>&1", "r")
   if handle == nil then
     return nil
   end
