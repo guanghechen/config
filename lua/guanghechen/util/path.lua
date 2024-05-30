@@ -1,11 +1,11 @@
 local util_os = require("guanghechen.util.os")
 local util_md5 = require("guanghechen.util.md5")
 local util_reporter = require("guanghechen.util.reporter")
-local path_sep = util_os.get_path_sep() ---@type string
+local PATH_SEPARATOR = util_os.get_path_sep() ---@type string
 
 ---@class guanghechen.util.path
 local M = {
-  sep = path_sep,
+  PATH_SEPARATOR = PATH_SEPARATOR,
 }
 
 ---@param filepath string
@@ -14,7 +14,7 @@ function M.is_absolute(filepath)
   if util_os.is_windows() then
     return string.match(filepath, "^[%a]:[\\/].*$") ~= nil
   end
-  return string.sub(filepath, 1, 1) == path_sep
+  return string.sub(filepath, 1, 1) == PATH_SEPARATOR
 end
 
 ---@param filepath string
@@ -29,7 +29,7 @@ end
 function M.split(filepath)
   local pieces = {} ---@type string[]
   local pattern = "([^/\\]+)" ---@type string
-  local has_prefix_sep = path_sep == "/" and string.sub(filepath, 1, 1) == path_sep ---@type boolean
+  local has_prefix_sep = PATH_SEPARATOR == "/" and string.sub(filepath, 1, 1) == PATH_SEPARATOR ---@type boolean
 
   for piece in string.gmatch(filepath, pattern) do
     if #piece > 0 and piece ~= "." then
@@ -49,21 +49,21 @@ end
 ---@param filepath string
 ---@return string
 function M.normalize(filepath)
-  return table.concat(M.split(filepath), path_sep)
+  return table.concat(M.split(filepath), PATH_SEPARATOR)
 end
 
 ---@param from string
 ---@param to string
 ---@return string
 function M.join(from, to)
-  return M.normalize(from .. path_sep .. to)
+  return M.normalize(from .. PATH_SEPARATOR .. to)
 end
 
 function M.resolve(from, to)
   if M.is_absolute(to) then
     return M.normalize(to)
   end
-  return M.normalize(from .. path_sep .. to)
+  return M.normalize(from .. PATH_SEPARATOR .. to)
 end
 
 ---@param from string
@@ -104,7 +104,7 @@ function M.relative(from, to)
     table.insert(pieces, to_pieces[j])
   end
 
-  return table.concat(pieces, path_sep)
+  return table.concat(pieces, PATH_SEPARATOR)
 end
 
 ---@param filepath string
@@ -117,12 +117,38 @@ function M.basename(filepath)
   return ""
 end
 
+---@param path_string string
+---@return string[]
+function M.parse_paths(path_string)
+  local paths = {} ---@type string[]
+
+  local i = 1 ---@type number
+  local s = 0
+  local t = 0
+  while i < #path_string do
+    local c = string.sub(path_string, i, i)
+    if i == PATH_SEPARATOR then
+      if s > 0 and t > 0 then
+        local p = string.sub(path_string, s, t)
+        table.insert(paths, M.normalize(p))
+      end
+      s = 0
+      t = 0
+    elseif not c:match("%s") then
+      s = s == 0 and i or s
+      t = i
+    end
+    i = i + 1
+  end
+  return paths
+end
+
 ---@return string|nil
 function M.locate_git_repo(filepath)
   local path_pieces = M.split(filepath) ---@type string[]
   while #path_pieces > 0 do
-    local current_path = table.concat(path_pieces, path_sep) ---@type string
-    local git_dir_path = current_path .. path_sep .. ".git" ---@type string
+    local current_path = table.concat(path_pieces, PATH_SEPARATOR) ---@type string
+    local git_dir_path = current_path .. PATH_SEPARATOR .. ".git" ---@type string
     if vim.fn.isdirectory(git_dir_path) ~= 0 then
       return current_path
     end
@@ -143,7 +169,7 @@ function M.locate_config_filepath(...)
   end
 
   ---@cast config_path string
-  return M.normalize(table.concat({ config_path, "config", ... }, path_sep))
+  return M.normalize(table.concat({ config_path, "config", ... }, PATH_SEPARATOR))
 end
 
 ---@type ... string[]
@@ -164,7 +190,7 @@ function M.locate_data_filepath(...)
   end
 
   ---@cast data_path string
-  return M.normalize(table.concat({ data_path, ... }, path_sep))
+  return M.normalize(table.concat({ data_path, ... }, PATH_SEPARATOR))
 end
 
 ---@type ... string[]
@@ -179,7 +205,7 @@ function M.locate_script_filepath(...)
   end
 
   ---@cast config_path string
-  return M.normalize(table.concat({ config_path, "script", ... }, path_sep))
+  return M.normalize(table.concat({ config_path, "script", ... }, PATH_SEPARATOR))
 end
 
 ---@type ... string[]
@@ -194,7 +220,7 @@ function M.locate_state_filepath(...)
   end
 
   ---@cast state_path string
-  return M.normalize(table.concat({ state_path, ... }, path_sep))
+  return M.normalize(table.concat({ state_path, ... }, PATH_SEPARATOR))
 end
 
 ---@param opts {filename: string}
@@ -217,7 +243,7 @@ function M.remove_session_filepaths(opts)
   local hash = util_md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   for _, filename in ipairs(opts.filenames) do
-    local session_filepath = session_dir .. path_sep .. filename
+    local session_filepath = session_dir .. PATH_SEPARATOR .. filename
     if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
       os.remove(session_filepath)
       util_reporter.info({
@@ -237,7 +263,7 @@ function M.remove_session_filepaths_all(opts)
     for dirname in pfile:lines() do
       if dirname then
         for _, filename in ipairs(opts.filenames) do
-          local session_filepath = session_root_dir .. path_sep .. dirname .. path_sep .. filename
+          local session_filepath = session_root_dir .. PATH_SEPARATOR .. dirname .. PATH_SEPARATOR .. filename
           if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
             os.remove(session_filepath)
             util_reporter.info({
