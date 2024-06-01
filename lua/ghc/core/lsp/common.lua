@@ -41,6 +41,7 @@ local function on_attach(client, bufnr)
   end
   if util_lsp.has_support_method(bufnr, "codeAction") then
     vim.keymap.set({ "n", "v" }, "<leader>ca", action_lsp.show_code_action, opts("lsp: Code action"))
+    vim.keymap.set({ "n", "v" }, "<m-cr>", action_lsp.show_code_action, opts("lsp: Code action"))
     vim.keymap.set("n", "<leader>cA", action_lsp.show_code_action_source, opts("lsp: Source action"))
   end
   if util_lsp.has_support_method(bufnr, "rename") then
