@@ -8,6 +8,11 @@
 #   `\u0002` is `C-b` as tmux prefix
 #   `\u001b` is `Esc`
 
+[mouse]
+bindings = [
+  { mouse = "Left",                     mods = "Control",               action = "Open"        },
+]
+
 [keyboard]
 bindings = [
   # ----- Alacritty keys ----
