@@ -17,6 +17,15 @@
     $ brew install ripgrep
     ```
 
+* rust: **install use rustup instead of homebrew**
+  
+  https://doc.rust-lang.org/book/ch01-01-installation.html#installing-rustup-on-linux-or-macos
+
+  - macos
+    ```zsh
+    curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+    ```
+
 * nvim-oxi: https://github.com/noib3/nvim-oxi, https://github.com/nvim-pack/nvim-spectre?tab=readme-ov-file#replace-method
   - macos
     ```zsh

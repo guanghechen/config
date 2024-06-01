@@ -46,6 +46,9 @@ local setup = {
   pyright = function()
     require("lspconfig").pyright.setup(require("ghc.core.lsp.lang.python"))
   end,
+  rust_analyzer = function()
+    require("lspconfig").rust_analyzer.setup(require("ghc.core.lsp.lang.rust"))
+  end,
   tsserver = function()
     require("lspconfig").tsserver.setup(require("ghc.core.lsp.lang.typescript"))
   end,

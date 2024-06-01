@@ -21,7 +21,13 @@ return {
       doc = {
         privateName = { "^_" },
       },
-      format = { enable = false },
+      format = {
+        enable = true,
+        defaultConfig = {
+          indent_style = "space",
+          indent_size = "2",
+        },
+      },
       hint = {
         enable = true,
         setType = false,
@@ -29,6 +35,9 @@ return {
         paramName = "Disable",
         semicolon = "Disable",
         arrayIndex = "Disable",
+      },
+      runtime = {
+        version = "LuaJIT",
       },
       semantic = { enable = false },
       telemetry = { enable = false },

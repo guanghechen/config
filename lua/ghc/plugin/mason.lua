@@ -7,6 +7,7 @@ return {
       -- lsp
       "bash-language-server", -- bashls
       "clangd", -- clangd
+      "codespell",
       "css-lsp", -- cssls
       "dockerfile-language-server", -- docker
       "docker-compose-language-service", -- docker_compose_language_service

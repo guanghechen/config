@@ -1,7 +1,7 @@
 local action_lsp = require("ghc.core.action.lsp")
 local util_lsp = require("ghc.core.util.lsp")
 
-local on_rename = function(from, to)
+local function on_rename(from, to)
   local clients = util_lsp.get_clients()
   for _, client in ipairs(clients) do
     if client.supports_method("workspace/willRenameFiles") then
@@ -20,7 +20,7 @@ local on_rename = function(from, to)
   end
 end
 
-local on_attach = function(client, bufnr)
+local function on_attach(client, bufnr)
   local function opts(desc)
     return { buffer = bufnr, desc = "LSP " .. desc }
   end
@@ -48,7 +48,7 @@ local on_attach = function(client, bufnr)
   end
 end
 
-local on_init = function(client, _)
+local function on_init(client, _)
   if client.supports_method("textDocument/semanticTokens") then
     client.server_capabilities.semanticTokensProvider = nil
   end
