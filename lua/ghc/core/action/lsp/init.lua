@@ -11,7 +11,7 @@ end
 
 function M.goto_definitions()
   -- vim.lsp.buf.definition()
-  require("telescope.builtin").lsp_definitions({ reuse_win = true })
+  require("telescope.builtin").lsp_definitions({ reuse_win = false })
 end
 
 function M.goto_declarations()
@@ -19,11 +19,11 @@ function M.goto_declarations()
 end
 
 function M.goto_type_definitions()
-  require("telescope.builtin").lsp_type_definitions({ reuse_win = true })
+  require("telescope.builtin").lsp_type_definitions({ reuse_win = false })
 end
 
 function M.goto_implementations()
-  require("telescope.builtin").lsp_implementations({ reuse_win = true })
+  require("telescope.builtin").lsp_implementations({ reuse_win = false })
 end
 
 function M.hover()
@@ -49,7 +49,7 @@ function M.show_code_action_source()
 end
 
 function M.show_references()
-  require("telescope.builtin").lsp_references({ reuse_win = true })
+  require("telescope.builtin").lsp_references({ reuse_win = false })
 end
 
 function M.show_signature_help()
