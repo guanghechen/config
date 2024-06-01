@@ -98,6 +98,7 @@ bindings = [
   { key = "Insert",                     mods = "Shift",                 action = "Paste"       },
   
   ## ---- Misc ----
+  { key = "Enter",                      mods = "Command",               chars = "\u001b\u000d" },       # <alt-cr>
   { key = "A",                          mods = "Command",               chars = "\u0002\u0061" },       # <Ctrl-b>a
   { key = "C",                          mods = "Command",               chars = "\u0002\u0063" },       # <Ctrl-b>c
   { key = "G",                          mods = "Command",               chars = "\u0002\u0067" },       # <Ctrl-b>g
