@@ -1,1 +1,2 @@
-mod lcs;
+pub mod kmp;
+pub mod lcs;
