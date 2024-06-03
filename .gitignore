@@ -1,3 +1,5 @@
 config/local/
-kyokuya/target/
 lua/local/
+
+kyokuya/target/
+rust/**/target/
