@@ -3,4 +3,11 @@ name = "nvim_tools"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
+nvim-oxi = { git = "https://github.com/noib3/nvim-oxi", rev = "8f4b93f3c64c4fafbad3fda72e69d3fcb3d476ac", features=["neovim-nightly"] } # branch = "main"
+fancy-regex = "0.13.0"
+lazy_static = "1.4.0"
+
