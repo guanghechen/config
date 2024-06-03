@@ -20,20 +20,17 @@ local function rename()
 
     -- send the `textDocument/rename` request to LSP server
     vim.lsp.buf_request(0, "textDocument/rename", params, function(_, result, ctx, _)
-      if not result then
-        -- do nothing if server returns empty result
-        return
-      end
-
       -- the `result` contains all the places we need to update the
       -- name of the identifier. so we apply those edits.
       local client = vim.lsp.get_client_by_id(ctx.client_id)
-      vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
+      if result ~= nil and client ~= nil then
+        vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
 
-      -- after the edits are applied, the files are not saved automatically.
-      -- let's remind ourselves to save those...
-      local total_files = vim.tbl_count(result.changes)
-      print(string.format("Changed %s file%s. To save them run ':wa'", total_files, total_files > 1 and "s" or ""))
+        -- after the edits are applied, the files are not saved automatically.
+        -- let's remind ourselves to save those...
+        local total_files = vim.tbl_count(result.changes)
+        print(string.format("Changed %s file%s. To save them run ':wa'", total_files, total_files > 1 and "s" or ""))
+      end
     end)
   end
 
