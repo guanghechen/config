@@ -51,7 +51,7 @@ return {
 
   --highlight
   require("ghc.plugin.nvim-treesitter"),
-  require("ghc.plugin.nvim-treesitter-context"),
+  -- require("ghc.plugin.nvim-treesitter-context"),
   require("ghc.plugin.nvim-treesitter-textobjects"),
 
   --lsp
