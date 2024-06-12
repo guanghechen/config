@@ -1,9 +1,10 @@
 #![allow(non_snake_case)]
 #![allow(clippy::too_many_arguments)]
 
-use std::{cmp::PartialEq, collections::HashMap};
+use std::cmp::PartialEq;
+use std::collections::HashMap;
 
-pub fn lcs_myers<T>(left: &[T], right: &[T]) -> Vec<(usize, usize)>
+pub fn lcs<T>(left: &[T], right: &[T]) -> Vec<(usize, usize)>
 where
     T: PartialEq,
 {
@@ -182,7 +183,7 @@ mod tests {
     fn test_case(left: &str, right: &str, expected: usize) {
         let left_chars: Vec<char> = left.chars().collect();
         let right_chars: Vec<char> = right.chars().collect();
-        let points: Vec<(usize, usize)> = lcs_myers(&left_chars, &right_chars);
+        let points: Vec<(usize, usize)> = lcs(&left_chars, &right_chars);
         let mut x0: usize = 0;
         let mut y0: usize = 0;
         for &(x, y) in &points {

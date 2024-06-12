@@ -11,3 +11,5 @@ nvim-oxi = { git = "https://github.com/noib3/nvim-oxi", rev = "8f4b93f3c64c4fafb
 fancy-regex = "0.13.0"
 lazy_static = "1.4.0"
 
+[dev-dependencies]
+

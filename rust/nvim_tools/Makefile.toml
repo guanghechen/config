@@ -1,0 +1,4 @@
+[tasks.format]
+command = "cargo"
+args = ["fmt"]
+
