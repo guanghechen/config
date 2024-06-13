@@ -3,3 +3,6 @@ lua/local/
 
 kyokuya/target/
 rust/**/target/
+
+lua/nvim_tools.so
+lua/nvim_tools.dll

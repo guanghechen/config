@@ -156,4 +156,10 @@ local function h()
   vim.notify(vim.inspect(guanghechen.util.clipboard.get_clipboard()))
 end
 
-h()
+local function i()
+  local nvim_tools = require("nvim_tools")
+  local result = nvim_tools.search("test", "lua")
+  vim.notify("result:" .. vim.inspect(result))
+end
+
+i()

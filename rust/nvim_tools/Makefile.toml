@@ -2,3 +2,7 @@
 command = "cargo"
 args = ["fmt"]
 
+
+[tasks.test-rg]
+command = "cargo"
+args = ["test", "rg", "--", "--nocapture", "--test-threads=1"]
