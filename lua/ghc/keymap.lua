@@ -29,6 +29,11 @@ mk({ "i", "n", "t", "v" }, "<M-g>", A.git.open_lazygit_cwd, "git: open lazygit (
 --- better access terminal
 mk({ "i", "n", "t", "v" }, "<C-b>t", A.terminal.open_terminal_cwd, "terminal: toggle terminal (cwd)")
 mk({ "i", "n", "t", "v" }, "<M-t>", A.terminal.open_terminal_cwd, "terminal: toggle terminal (cwd)")
+
+--- quick access widgets (diagnostic, explorer, terminal)
+mk({ "n", "v" }, "<leader>1", A.explorer.toggle_explorer_file_cwd, "explorer: files (cwd)")
+mk({ "n", "v" }, "<leader>2", A.explorer.toggle_explorer_buffer_cwd, "explorer: buffers (cwd)")
+mk({ "n", "v" }, "<leader>3", A.explorer.toggle_explorer_git_cwd, "explorer: git (cwd)")
 ---------------------------------------------------------------------------------------#enhance-----
 
 --#[e]xplorer---------------------------------------------------------------------------------------
