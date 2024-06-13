@@ -7,8 +7,9 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+lazy_static = "1.4.0"
+fancy-regex = { version = "0.13.0" }
 nvim-oxi = { version = "0.5.0", features=["neovim-nightly"] }
-fancy-regex = "0.13.0"
 
 [dev-dependencies]
 
