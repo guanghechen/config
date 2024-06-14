@@ -159,6 +159,7 @@ end
 local function i()
   local nvim_tools = require("nvim_tools")
   local result = nvim_tools.search("test", "lua")
+  local object = require("guanghechen").util.json.stringify_prettier(json)
   vim.notify("result:" .. vim.inspect(result))
 end
 

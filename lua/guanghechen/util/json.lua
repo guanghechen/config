@@ -114,4 +114,19 @@ function M.stringify_prettier(json)
   return table.concat(lines, "\n")
 end
 
+---@param json_text string
+function M.parse(json_text)
+  if json_text == nil then
+    return
+  end
+
+  local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
+  if not ok_to_decode_json then
+    vim.notify("[josn.parse] Failed to decode json.\n\n" .. json_text, vim.log.levels.WARN)
+    return
+  end
+
+  return data
+end
+
 return M
