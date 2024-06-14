@@ -43,24 +43,24 @@ function M.goto_next_warn()
 end
 
 function M.toggle_document_diagnositics()
-  vim.cmd("TroubleToggle document_diagnostics")
+  vim.cmd("Trouble diagnostics toggle filter.buf=0")
 end
 
 function M.toggle_workspace_diagnostics()
-  vim.cmd("TroubleToggle workspace_diagnostics")
+  vim.cmd("Trouble diagnostics toggle")
 end
 
 function M.toggle_loclist()
-  vim.cmd("TroubleToggle loclist")
+  vim.cmd("Trouble loclist toggle")
 end
 
 function M.toggle_quickfix()
-  vim.cmd("TroubleToggle quickfix")
+  vim.cmd("Trouble qflist toggle")
 end
 
 function M.toggle_previous_quickfix_item()
   if require("trouble").is_open() then
-    require("trouble").previous({ skip_groups = true, jump = true })
+    require("trouble").prev({ skip_groups = true, jump = true })
   else
     local ok, err = pcall(vim.cmd.cprev)
     if not ok then

@@ -20,7 +20,7 @@ local function flash(prompt_bufnr)
 end
 
 local function open_with_trouble(...)
-  require("trouble.providers.telescope").open_with_trouble(...)
+  require("trouble.sources.telescope").open(...)
 end
 
 local function close_telescope(...)
