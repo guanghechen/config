@@ -114,6 +114,10 @@ function M.stringify_prettier(json)
   return table.concat(lines, "\n")
 end
 
+function M.stringify(json)
+  return vim.json.encode(json)
+end
+
 ---@param json_text string
 function M.parse(json_text)
   if json_text == nil then

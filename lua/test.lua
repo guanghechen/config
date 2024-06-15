@@ -158,9 +158,19 @@ end
 
 local function i()
   local nvim_tools = require("nvim_tools")
-  local result = nvim_tools.search("test", "lua")
-  local object = require("guanghechen").util.json.stringify_prettier(json)
-  vim.notify("result:" .. vim.inspect(result))
+  local JSON = require("guanghechen.util.json")
+
+  local options = JSON.stringify({
+    cwd = "../../lua",
+    search_pattern = 'require\\("(guanghechen[\\s\\S]+?)"\\)',
+    replace_pattern = 'import "$1"',
+    search_paths = { "" },
+    include_patterns = { "" },
+    exclude_patterns = { "" },
+  })
+  local result_str = nvim_tools.replace(options)
+  local result = JSON.parse(result_str)
+  vim.notify("result" .. vim.inspect(result))
 end
 
 i()
