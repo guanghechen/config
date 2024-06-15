@@ -100,8 +100,9 @@ mod tests {
 
     #[derive(Serialize, Deserialize, Debug, Clone)]
     struct InlineMatchedItem {
-        start: usize, // related to the parent.lines
-        end: usize,   // related to the parent.lines
+        start: usize,    // related to the parent.lines
+        end: usize,      // related to the parent.lines
+        replace: String, // replaced string
     }
 
     #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -125,8 +126,10 @@ mod tests {
 
     #[test]
     fn test_rg() {
-        let search_pattern = r"#\[test\]\n\s*fn test_rg";
+        let search_pattern = r"#\[test\]\n\s*fn (\w+)";
+        let replace_pattern = r"fn h!!!_$1_!!!w";
         let search_paths = vec!["src", "tests"];
+        let search_regex = Regex::new(search_pattern).unwrap();
         let line_separator_regex = Regex::new(r"\s*(?:\r|\r\n|\n)\s*").unwrap();
 
         let output = {
@@ -172,9 +175,12 @@ mod tests {
                         } => {
                             let mut inline_matches: Vec<InlineMatchedItem> = vec![];
                             for submatch in submatches {
+                                let replace_text = search_regex
+                                    .replace_all(&submatch.match_text.text, replace_pattern);
                                 let item: InlineMatchedItem = InlineMatchedItem {
                                     start: submatch.start,
                                     end: submatch.end,
+                                    replace: replace_text.to_string(),
                                 };
                                 inline_matches.push(item);
                             }

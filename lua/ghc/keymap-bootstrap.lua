@@ -80,6 +80,10 @@ mk({ "n", "v" }, "<leader>[", A.buffer.open_buffer_left, "buffer: open left buff
 mk({ "n", "v" }, "<leader>]", A.buffer.open_buffer_right, "buffer: open right buffer", true)
 mk({ "n", "v" }, "[b", A.buffer.open_buffer_left, "buffer: open left buffer", true)
 mk({ "n", "v" }, "]b", A.buffer.open_buffer_right, "buffer: open right buffer", true)
+
+----- jump list -----
+mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back", true)
+mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward", true)
 ---------------------------------------------------------------------------------------#navigation--
 
 --[#]buffer-----------------------------------------------------------------------------------------
