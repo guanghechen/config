@@ -17,7 +17,10 @@ fn nvim_tools() -> Dictionary {
             serde_json::from_str::<util::replace::ReplaceOptions>(&options_json_str)
         {
             let result = util::replace::replace(options);
-            serde_json::to_string(&result).unwrap()
+            match result {
+                Ok((data, _)) => serde_json::to_string(&data).unwrap(),
+                Err(err) => serde_json::to_string(&err).unwrap(),
+            }
         } else {
             "null".to_string()
         }

@@ -15,6 +15,8 @@ fn test_rg() {
 
     let replace_options = replace::ReplaceOptions {
         cwd: Some(cwd),
+        flag_regex: true,
+        flag_case_sensitive: false,
         search_pattern: r#"require\("(guanghechen\.util\.(?:os|clipboard))"\)"#.to_string(),
         replace_pattern: r#"import "$1""#.to_string(),
         search_paths: vec!["lua".to_string()],
@@ -24,19 +26,19 @@ fn test_rg() {
     let result = replace::replace(replace_options);
 
     match result {
-        Ok(data) => {
+        Ok((data, stdout)) => {
             let serialized_result = serde_json::to_string_pretty(&data).unwrap();
             println!(
                 "\n-----stdout-----\n{:?}\n----------------\n{:?}\n----------------",
                 serialized_result,
                 line_separator_regex
-                    .split(&data.stdout)
+                    .split(&stdout)
                     .filter(|&x| !x.is_empty())
                     .collect::<Vec<_>>()
             );
         }
         Err(stderr) => {
-            eprintln!("stderr:\n{}", stderr);
+            eprintln!("stderr:\n{}", stderr.error);
         }
     };
 }

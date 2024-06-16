@@ -5,8 +5,8 @@ use std::{collections::HashMap, process::Command, time::SystemTime};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReplaceInlineMatchedItem {
-    pub start: usize,    // related to the parent.lines
-    pub end: usize,      // related to the parent.lines
+    pub front: usize,    // related to the parent.lines
+    pub tail: usize,     // related to the parent.lines
     pub replace: String, // replaced string
 }
 
@@ -24,16 +24,22 @@ pub struct ReplaceFileMatchedItem {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplaceResult {
+pub struct ReplaceSucceedResult {
     pub items: Vec<ReplaceFileMatchedItem>,
     pub elapsed_time: String,
-    #[serde(skip_serializing, skip_deserializing)]
-    pub stdout: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReplaceFailedResult {
+    pub elapsed_time: String,
+    pub error: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReplaceOptions {
     pub cwd: Option<String>,
+    pub flag_case_sensitive: bool,
+    pub flag_regex: bool,
     pub replace_pattern: String,
     pub search_pattern: String,
     pub search_paths: Vec<String>,
@@ -41,7 +47,11 @@ pub struct ReplaceOptions {
     pub exclude_patterns: Vec<String>,
 }
 
-pub fn replace(options: ReplaceOptions) -> Result<ReplaceResult, String> {
+pub fn replace(
+    options: ReplaceOptions,
+) -> Result<(ReplaceSucceedResult, String), ReplaceFailedResult> {
+    let flag_case_sensitive: bool = options.flag_case_sensitive;
+    let flag_regex: bool = options.flag_regex;
     let replace_pattern: &String = &options.replace_pattern;
     let search_pattern: &String = &options.search_pattern;
     let search_paths: Vec<String> = options
@@ -63,7 +73,6 @@ pub fn replace(options: ReplaceOptions) -> Result<ReplaceResult, String> {
         .filter(|x| x != "!")
         .collect();
 
-    let search_regex = Regex::new(search_pattern).unwrap();
     let line_separator_regex = Regex::new(r"\s*(?:\r|\r\n|\n)\s*").unwrap();
     let elapsed_time: String;
 
@@ -78,14 +87,25 @@ pub fn replace(options: ReplaceOptions) -> Result<ReplaceResult, String> {
             .arg("--hidden")
             .arg("--color=never")
             .arg("--line-number")
+            .arg("--column")
             .arg("--no-heading")
             .arg("--no-filename")
             .arg("--json")
-            .args(["--replace", replace_pattern])
-            .args(["--regexp", search_pattern])
             .args(&search_paths)
             // -
         ;
+
+        if flag_case_sensitive {
+            cmd.arg("--case-sensitive");
+        } else {
+            cmd.arg("--ignore-case");
+        }
+
+        if flag_regex {
+            cmd.args(["--regexp", search_pattern]);
+        } else {
+            cmd.args(["--fixed-strings", search_pattern]);
+        }
 
         for pattern in include_patterns {
             cmd.arg("--glob").arg(pattern);
@@ -114,6 +134,11 @@ pub fn replace(options: ReplaceOptions) -> Result<ReplaceResult, String> {
     };
 
     if output.status.success() {
+        let search_regex: Regex = if flag_regex {
+            Regex::new(search_pattern).unwrap()
+        } else {
+            Regex::new("").unwrap()
+        };
         let stdout = String::from_utf8_lossy(&output.stdout);
         let parts = line_separator_regex
             .split(&stdout)
@@ -134,11 +159,16 @@ pub fn replace(options: ReplaceOptions) -> Result<ReplaceResult, String> {
                     } => {
                         let mut inline_matches: Vec<ReplaceInlineMatchedItem> = vec![];
                         for submatch in submatches {
-                            let replace_text = search_regex
-                                .replace_all(&submatch.match_text.text, replace_pattern);
+                            let replace_text: String = if flag_regex {
+                                search_regex
+                                    .replace_all(&submatch.match_text.text, replace_pattern)
+                                    .to_string()
+                            } else {
+                                replace_pattern.to_string()
+                            };
                             let item: ReplaceInlineMatchedItem = ReplaceInlineMatchedItem {
-                                start: submatch.start,
-                                end: submatch.end,
+                                front: submatch.start,
+                                tail: submatch.end,
                                 replace: replace_text.to_string(),
                             };
                             inline_matches.push(item);
@@ -166,22 +196,26 @@ pub fn replace(options: ReplaceOptions) -> Result<ReplaceResult, String> {
         }
 
         let result_items: Vec<ReplaceFileMatchedItem> = file_items_map.values().cloned().collect();
-        let result: ReplaceResult = ReplaceResult {
+        let result: ReplaceSucceedResult = ReplaceSucceedResult {
             elapsed_time: result_elapsed_time,
             items: result_items,
-            stdout: stdout.to_string(),
         };
-        Ok(result)
+        Ok((result, stdout.to_string()))
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.is_empty() {
-            Ok(ReplaceResult {
-                elapsed_time: format!("{}s", elapsed_time),
-                items: vec![],
-                stdout: "".to_string(),
-            })
+            Ok((
+                ReplaceSucceedResult {
+                    elapsed_time: format!("{}s", elapsed_time),
+                    items: vec![],
+                },
+                "".to_string(),
+            ))
         } else {
-            Err(stderr.to_string())
+            Err(ReplaceFailedResult {
+                elapsed_time: format!("{}s", elapsed_time),
+                error: stderr.to_string(),
+            })
         }
     }
 }
