@@ -25,7 +25,7 @@ fn test_rg() {
 
     match result {
         Ok(data) => {
-            let serialized_result = serde_json::to_string(&data).unwrap();
+            let serialized_result = serde_json::to_string_pretty(&data).unwrap();
             println!(
                 "\n-----stdout-----\n{:?}\n----------------\n{:?}\n----------------",
                 serialized_result,
