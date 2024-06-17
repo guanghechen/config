@@ -13,7 +13,7 @@ pub struct ReplaceInlineMatchedItem {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReplaceLineMatchedItem {
     pub lines: String,
-    pub line_start: usize,
+    pub lineno: usize,
     pub matches: Vec<ReplaceInlineMatchedItem>,
 }
 
@@ -175,7 +175,7 @@ pub fn replace(
                         }
                         let line_matches: ReplaceLineMatchedItem = ReplaceLineMatchedItem {
                             lines: lines.text,
-                            line_start: line_number,
+                            lineno: line_number,
                             matches: inline_matches,
                         };
                         let filepath: String = path.text.clone();

@@ -1,5 +1,5 @@
 local context_config = require("ghc.core.context.config")
-local calc_fileicon = require("ghc.core.util.filetype").calc_fileicon
+local guanghechen = require("guanghechen")
 
 ---@type boolean
 local transparency = context_config.transparency:get_snapshot()
@@ -25,7 +25,7 @@ function M.renderer()
   local filetype = vim.bo.filetype
   local filepath = vim.fn.expand("%:p")
   local color_text = "%#" .. M.name .. "_text#"
-  local icon = calc_fileicon(filepath) .. " "
+  local icon = guanghechen.util.filetype.calc_fileicon(filepath) .. " "
   local text = " " .. icon .. filetype .. " "
   return color_text .. text
 end

@@ -1,6 +1,5 @@
 local context_config = require("ghc.core.context.config")
 local icons = require("ghc.core.setting.icons")
-local util_filetype = require("ghc.core.util.filetype")
 local guanghechen = require("guanghechen")
 
 ---@type boolean
@@ -71,9 +70,10 @@ function M.renderer()
 
   local color_text = "%#" .. M.name .. "_text#"
 
-  local icon = " " .. util_filetype.calc_fileicon(filepath) .. " "
+  local icon = " " .. guanghechen.util.filetype.calc_fileicon(filepath) .. " "
   local text = icon .. relative_to_cwd .. added .. removed .. changed .. " "
   return color_text .. text
 end
 
 return M
+

@@ -20,6 +20,7 @@ M.util = {
   comparator = require("guanghechen.util.comparator"),
   debounce = require("guanghechen.util.debounce"),
   disposable = require("guanghechen.util.disposable"),
+  filetype = require("guanghechen.util.filetype"),
   fs = require("guanghechen.util.fs"),
   json = require("guanghechen.util.json"),
   md5 = require("guanghechen.util.md5"),

@@ -225,7 +225,7 @@ local function find_file(opts, force)
     table.insert(cmd, prompt)
     table.insert(cmd, filemap_filepath)
 
-    context_session.find_file_last_command:next(guanghechen.util.table.clone_array(cmd))
+    context_session.find_file_last_command:next(guanghechen.util.table.slice(cmd))
     return cmd
   end
 

@@ -1,4 +1,4 @@
----@class ghc.core.util.filetype
+---@class guanghechen.util.filetype
 local M = {}
 
 function M.calc_fileicon(p)
