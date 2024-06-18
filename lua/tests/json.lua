@@ -9,9 +9,11 @@ local text = json.stringify_prettier({
       age = 13,
     },
   },
+  haha = {},
   music = {
     chinese = { 1, 2, 3 },
     english = { "a", "b", "c" },
   },
 })
-print(text)
+
+vim.notify(text or "")

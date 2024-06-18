@@ -23,6 +23,10 @@ end
 ---@param obj table
 ---@return boolean
 local function check_if_array(obj)
+  if #obj > 0 then
+    return true
+  end
+
   local i = 1
   for _ in pairs(obj) do
     if obj[i] == nil then
@@ -30,7 +34,7 @@ local function check_if_array(obj)
     end
     i = i + 1
   end
-  return i ~= 1
+  return i == 1
 end
 
 ---@param json any
@@ -68,6 +72,11 @@ local function stringify_json_prettier(json, preceding, lines)
   if t == "table" then
     local preceding_next = preceding .. "  "
     if check_if_array(json) then
+      if #json == 0 then
+        lines[#lines] = last_line .. "[]"
+        return
+      end
+
       lines[#lines] = last_line .. "["
       for i = 1, #json do
         table.insert(lines, preceding_next)
@@ -78,13 +87,18 @@ local function stringify_json_prettier(json, preceding, lines)
       end
       table.insert(lines, preceding .. "]")
     else
-      lines[#lines] = last_line .. "{"
       local keys = {}
       for key, _ in pairs(json) do
         table.insert(keys, key)
       end
-      table.sort(keys)
 
+      if #keys == 0 then
+        table.insert(lines, last_line .. "{}")
+        return
+      end
+
+      lines[#lines] = last_line .. "{"
+      table.sort(keys)
       for i = 1, #keys do
         local key = keys[i]
         table.insert(lines, preceding_next .. '"' .. escape_json_string(key) .. '": ')
