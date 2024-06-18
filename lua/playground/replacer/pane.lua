@@ -1,13 +1,15 @@
 local guanghechen = require("guanghechen")
-local Replacer = require("playground.replacer.replacer")
+local Searcher = guanghechen.util.searcher
 
 local current_buf_delete_augroup = vim.api.nvim_create_augroup("current_buf_delete_augroup", { clear = true })
 
 local nsid = vim.api.nvim_create_namespace("REPLACE_PANE") ---@type integer
 
 ---@class guanghechen.replacer.ReplacePane
+---@field private mode "search"|"replace"
 ---@field private bufnr integer|nil
----@field private replacer guanghechen.types.IReplacer
+---@field private searcher guanghechen.types.ISearcher
+---@field private replace_pattern string
 local ReplacerPane = {}
 ReplacerPane.__index = ReplacerPane
 
@@ -15,14 +17,16 @@ ReplacerPane.__index = ReplacerPane
 function ReplacerPane.new()
   local self = setmetatable({}, ReplacerPane)
 
+  self.mode = "search"
   self.bufnr = nil
-  self.replacer = Replacer.new() ---@type guanghechen.types.IReplacer
+  self.searcher = Searcher.new()
+  self.replace_pattern = ""
 
   return self
 end
 
 ---@param winnr integer
----@param state guanghechen.types.IReplaceState|nil
+---@param state guanghechen.types.ISearcherState|nil
 ---@return nil
 function ReplacerPane:open(winnr, state)
   if self.bufnr == nil then
@@ -47,7 +51,7 @@ function ReplacerPane:open(winnr, state)
   self:render(winnr, state)
 end
 
----@param state guanghechen.types.IReplaceState|nil
+---@param state guanghechen.types.ISearcherState|nil
 ---@return nil
 function ReplacerPane:render(winnr, state)
   local bufnr = self.bufnr ---@type integer
@@ -55,7 +59,7 @@ function ReplacerPane:render(winnr, state)
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_win_set_buf(winnr, bufnr)
   pcall(function()
-    self.replacer:set_state(state)
+    self.searcher:set_state(state)
     self:internal_render(winnr)
   end)
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
@@ -73,7 +77,7 @@ function ReplacerPane:internal_render(winnr)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
 
   ---Render the search/replace options
-  local state = self.replacer:get_state() ---@type guanghechen.types.IReplaceState
+  local state = self.searcher:get_state() ---@type guanghechen.types.ISearcherState|nil
 
   local lineno = 0
   ---@param content string
@@ -84,11 +88,14 @@ function ReplacerPane:internal_render(winnr)
   end
 
   if state ~= nil then
-    print_line("[Search/Replace] Press ? for mappings")
+    local mode_indicator = self.mode == "search" and "[Search]" or "[Replace]"
+    print_line(mode_indicator .. " Press ? for mappings")
     print_line("Search:")
     print_line(state.search_pattern)
-    print_line("Replace:")
-    print_line(state.replace_pattern)
+    if self.mode == "replace" then
+      print_line("Replace:")
+      print_line(self.replace_pattern)
+    end
     print_line("Search Paths:" .. "    cwd=" .. state.cwd)
     print_line(table.concat(state.search_paths, ", "))
     print_line("Includes:")
@@ -97,7 +104,7 @@ function ReplacerPane:internal_render(winnr)
     print_line(table.concat(state.include_patterns, ", "))
   end
 
-  local result = self.replacer:replace() ---@type guanghechen.types.IReplaceResult|nil
+  local result = self.searcher:search() ---@type guanghechen.types.ISearchResult|nil
   if state ~= nil and result ~= nil then
     print_line("")
 
@@ -108,7 +115,9 @@ function ReplacerPane:internal_render(winnr)
       local summary = string.format("Files: %s, time: %s", #result.items, result.elapsed_time)
       local maximum_lineno = 0 ---@type integer
 
+      ---@diagnostic disable-next-line: unused-local
       for _1, file_item in ipairs(result.items) do
+        ---@diagnostic disable-next-line: unused-local
         for _2, match_item in ipairs(file_item.matches) do
           if maximum_lineno < match_item.lineno then
             maximum_lineno = match_item.lineno
@@ -124,11 +133,13 @@ function ReplacerPane:internal_render(winnr)
 
       local lineno_width = #tostring(maximum_lineno)
       local continous_line_padding = "¦ " .. string.rep(" ", lineno_width) .. "  "
+      ---@diagnostic disable-next-line: unused-local
       for _1, file_item in ipairs(result.items) do
         local fileicon = guanghechen.util.filetype.calc_fileicon(file_item.filepath)
         local filepath = guanghechen.util.path.relative(state.cwd, file_item.filepath)
         print_line(fileicon .. " " .. filepath)
 
+        ---@diagnostic disable-next-line: unused-local
         for _2, match_item in ipairs(file_item.matches) do
           local text = match_item.lines:gsub("[\r\n]+$", "") ---@type string
           local lines = guanghechen.util.string.split(text, "\r\n|\r|\n")

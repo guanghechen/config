@@ -31,6 +31,7 @@ M.util = {
   path = require("guanghechen.util.path"),
   regex = require("guanghechen.util.regex"),
   reporter = require("guanghechen.util.reporter"),
+  searcher = require("guanghechen.util.searcher"),
   selection = require("guanghechen.util.selection"),
   string = require("guanghechen.util.string"),
   table = require("guanghechen.util.table"),

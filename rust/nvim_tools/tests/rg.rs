@@ -1,5 +1,11 @@
-use nvim_tools::util::replace;
+use nvim_tools::util::search;
 use regex::Regex;
+
+#[test]
+fn test_regex() {
+    let regex: Regex = Regex::new(r"(\d+)-(\d+)").unwrap();
+    let text = "2024-01-07";
+}
 
 #[test]
 fn test_rg() {
@@ -13,17 +19,16 @@ fn test_rg() {
         }
     };
 
-    let replace_options = replace::ReplaceOptions {
+    let replace_options = search::SearchOptions {
         cwd: Some(cwd),
         flag_regex: true,
         flag_case_sensitive: false,
         search_pattern: r#"require\("(guanghechen\.util\.(?:os|clipboard))"\)"#.to_string(),
-        replace_pattern: r#"import "$1""#.to_string(),
         search_paths: vec!["lua".to_string()],
         include_patterns: vec!["*.lua".to_string()],
         exclude_patterns: vec!["".to_string()],
     };
-    let result = replace::replace(replace_options);
+    let result = search::search(&replace_options);
 
     match result {
         Ok((data, stdout)) => {

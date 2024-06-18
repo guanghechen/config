@@ -2,13 +2,12 @@ local guanghechen = require("guanghechen")
 local ReplacePane = require("playground.replacer.pane")
 local pane = ReplacePane.new()
 
----@type guanghechen.types.IReplaceState
+---@type guanghechen.types.ISearcherState
 local options = {
   cwd = guanghechen.util.path.cwd(),
   flag_regex = true,
   flag_case_sensitive = true,
   search_pattern = 'require\\("(guanghechen\\.util\\.(os|clipboard))"\\)',
-  replace_pattern = 'import "$1"',
   search_paths = { "lua/" },
   include_patterns = { "*.lua" },
   exclude_patterns = { "" },

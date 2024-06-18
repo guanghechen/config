@@ -1,221 +1,84 @@
-use crate::types::ripgrep_result;
-use regex::Regex;
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, process::Command, time::SystemTime};
+use fancy_regex::Regex;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Write},
+    sync::Mutex,
+};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplaceInlineMatchedItem {
-    pub front: usize,    // related to the parent.lines
-    pub tail: usize,     // related to the parent.lines
-    pub replace: String, // replaced string
+// https://docs.rs/regex/latest/regex/index.html
+// I follow the example of the docs to reuse regex when running it multiple times
+lazy_static! {
+    static ref CACHE_PATTERN: Mutex<String> = Mutex::new(String::new());
+    static ref CACHE_REGEX: Mutex<Regex> = Mutex::new(Regex::new(r"").unwrap());
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplaceLineMatchedItem {
-    pub lines: String,
-    pub lineno: usize,
-    pub matches: Vec<ReplaceInlineMatchedItem>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplaceFileMatchedItem {
-    pub filepath: String,
-    pub matches: Vec<ReplaceLineMatchedItem>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplaceSucceedResult {
-    pub items: Vec<ReplaceFileMatchedItem>,
-    pub elapsed_time: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplaceFailedResult {
-    pub elapsed_time: String,
-    pub error: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplaceOptions {
-    pub cwd: Option<String>,
-    pub flag_case_sensitive: bool,
-    pub flag_regex: bool,
-    pub replace_pattern: String,
-    pub search_pattern: String,
-    pub search_paths: Vec<String>,
-    pub include_patterns: Vec<String>,
-    pub exclude_patterns: Vec<String>,
-}
-
-pub fn replace(
-    options: ReplaceOptions,
-) -> Result<(ReplaceSucceedResult, String), ReplaceFailedResult> {
-    let flag_case_sensitive: bool = options.flag_case_sensitive;
-    let flag_regex: bool = options.flag_regex;
-    let replace_pattern: &String = &options.replace_pattern;
-    let search_pattern: &String = &options.search_pattern;
-    let search_paths: Vec<String> = options
-        .search_paths
-        .into_iter()
-        .map(|s| s.trim().to_string())
-        .filter(|x| !x.is_empty())
-        .collect();
-    let include_patterns: Vec<String> = options
-        .include_patterns
-        .into_iter()
-        .map(|s| s.trim().to_string())
-        .filter(|x| !x.is_empty())
-        .collect();
-    let exclude_patterns: Vec<String> = options
-        .exclude_patterns
-        .into_iter()
-        .map(|s| format!("!{}", s.trim()))
-        .filter(|x| x != "!")
-        .collect();
-
-    let line_separator_regex = Regex::new(r"\s*(?:\r|\r\n|\n)\s*").unwrap();
-    let elapsed_time: String;
-
-    let output = {
-        let mut cmd = Command::new("rg");
-        if let Some(cwd) = options.cwd {
-            cmd.current_dir(cwd);
+fn get_static_regex(pattern: &String) -> Result<&'static Mutex<Regex>, String> {
+    if *pattern != *CACHE_PATTERN.lock().unwrap() {
+        CACHE_PATTERN.lock().unwrap().clone_from(pattern);
+        let regex = Regex::new(pattern);
+        return if let Ok(r) = regex {
+            *CACHE_REGEX.lock().unwrap() = r;
+            Ok(&CACHE_REGEX)
+        } else {
+            Err("Invalid regex".to_string())
         };
-
-        cmd
-            .arg("--multiline")
-            .arg("--hidden")
-            .arg("--color=never")
-            .arg("--line-number")
-            .arg("--column")
-            .arg("--no-heading")
-            .arg("--no-filename")
-            .arg("--json")
-            .args(&search_paths)
-            // -
-        ;
-
-        if flag_case_sensitive {
-            cmd.arg("--case-sensitive");
-        } else {
-            cmd.arg("--ignore-case");
-        }
-
-        if flag_regex {
-            cmd.args(["--regexp", search_pattern]);
-        } else {
-            cmd.args(["--fixed-strings", search_pattern]);
-        }
-
-        for pattern in include_patterns {
-            cmd.arg("--glob").arg(pattern);
-        }
-
-        for pattern in exclude_patterns {
-            cmd.arg("--glob").arg(pattern);
-        }
-
-        // print the executing command
-        println!("\n{:?}", cmd);
-
-        let start_time = SystemTime::now();
-
-        // return the output of the cmd
-        let output = cmd.output().expect("failed to execute ripgrep");
-
-        let end_time = SystemTime::now();
-        elapsed_time = end_time
-            .duration_since(start_time)
-            .unwrap()
-            .as_secs_f32()
-            .to_string();
-
-        output
-    };
-
-    if output.status.success() {
-        let search_regex: Regex = if flag_regex {
-            Regex::new(search_pattern).unwrap()
-        } else {
-            Regex::new("").unwrap()
-        };
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let parts = line_separator_regex
-            .split(&stdout)
-            .filter(|&x| !x.is_empty());
-
-        let mut result_elapsed_time: String = "0s".to_string();
-        let mut file_items_map: HashMap<String, ReplaceFileMatchedItem> = HashMap::new();
-        for part in parts {
-            if let Ok(event) = serde_json::from_str::<ripgrep_result::ResultItem>(part) {
-                match event.data {
-                    ripgrep_result::ResultItemData::Begin { .. } => {}
-                    ripgrep_result::ResultItemData::Match {
-                        path,
-                        lines,
-                        line_number,
-                        submatches,
-                        ..
-                    } => {
-                        let mut inline_matches: Vec<ReplaceInlineMatchedItem> = vec![];
-                        for submatch in submatches {
-                            let replace_text: String = if flag_regex {
-                                search_regex
-                                    .replace_all(&submatch.match_text.text, replace_pattern)
-                                    .to_string()
-                            } else {
-                                replace_pattern.to_string()
-                            };
-                            let item: ReplaceInlineMatchedItem = ReplaceInlineMatchedItem {
-                                front: submatch.start,
-                                tail: submatch.end,
-                                replace: replace_text.to_string(),
-                            };
-                            inline_matches.push(item);
-                        }
-                        let line_matches: ReplaceLineMatchedItem = ReplaceLineMatchedItem {
-                            lines: lines.text,
-                            lineno: line_number,
-                            matches: inline_matches,
-                        };
-                        let filepath: String = path.text.clone();
-                        let file_item: &mut ReplaceFileMatchedItem = file_items_map
-                            .entry(filepath.clone())
-                            .or_insert(ReplaceFileMatchedItem {
-                                filepath: path.text.clone(),
-                                matches: vec![],
-                            });
-                        file_item.matches.push(line_matches);
-                    }
-                    ripgrep_result::ResultItemData::End { .. } => {}
-                    ripgrep_result::ResultItemData::Summary { elapsed_total, .. } => {
-                        result_elapsed_time = elapsed_total.human;
-                    }
-                }
-            }
-        }
-
-        let result_items: Vec<ReplaceFileMatchedItem> = file_items_map.values().cloned().collect();
-        let result: ReplaceSucceedResult = ReplaceSucceedResult {
-            elapsed_time: result_elapsed_time,
-            items: result_items,
-        };
-        Ok((result, stdout.to_string()))
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        if stderr.is_empty() {
-            Ok((
-                ReplaceSucceedResult {
-                    elapsed_time: format!("{}s", elapsed_time),
-                    items: vec![],
-                },
-                "".to_string(),
-            ))
-        } else {
-            Err(ReplaceFailedResult {
-                elapsed_time: format!("{}s", elapsed_time),
-                error: stderr.to_string(),
-            })
-        }
     }
+    Ok(&CACHE_REGEX)
+}
+
+/// Replaces all non-overlapping matches in `text` with the replacement provided.
+pub fn replace_text(text: &str, search_pattern: &String, replace_pattern: &str) -> String {
+    if let Ok(r) = get_static_regex(search_pattern) {
+        let regex = r.lock().unwrap();
+        return regex.replace_all(text, replace_pattern).to_string();
+    }
+    text.to_string()
+}
+
+/// Replace text on specify line number of file
+pub fn replace_file(filepath: &str, lnum: i32, search_query: &String, replace_query: &str) -> bool {
+    if File::open(filepath).is_err() {
+        return false;
+    }
+    let static_regex = get_static_regex(search_query);
+    if static_regex.is_err() {
+        return false;
+    }
+    let regex = static_regex.unwrap().lock().unwrap();
+    let file = File::open(filepath);
+    if file.is_err() {
+        return false;
+    }
+    let f = BufReader::new(file.unwrap());
+    let mut lines: Vec<String> = Vec::new();
+    let mut is_modified = false;
+
+    // Is this good?
+    // I only want replace 1 line with another line
+    let mut line_number = 1;
+    for line in f.lines() {
+        // it only read a valid utf-8
+        if line.is_err() {
+            return false;
+        }
+        let text = line.unwrap();
+        if line_number == (lnum as usize) {
+            let new_line = regex.replace_all(&text, replace_query).to_string();
+            if new_line != text {
+                is_modified = true;
+                lines.push(new_line);
+            } else {
+                lines.push(text);
+            }
+        } else {
+            lines.push(text);
+        }
+        line_number += 1;
+    }
+    if is_modified {
+        let mut new_file = File::create(filepath).unwrap();
+        new_file.write_all(lines.join("\n").as_bytes()).unwrap();
+        return true;
+    }
+    false
 }
