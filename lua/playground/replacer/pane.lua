@@ -108,21 +108,23 @@ function ReplacerPane:internal_render(winnr)
       local summary = string.format("Files: %s, time: %s", #result.items, result.elapsed_time)
 
       print_line(summary)
-      print_line("┌-----------------------------------------")
+      print_line(
+        "┌─────────────────────────────────────────────────────────────────────────────"
+      )
 
       for _1, file_item in ipairs(result.items) do
         local fileicon = guanghechen.util.filetype.calc_fileicon(file_item.filepath)
         local filepath = guanghechen.util.path.relative(state.cwd, file_item.filepath)
         print_line(fileicon .. " " .. filepath)
 
-        vim.notify("matches:\n" .. vim.inspect(file_item.matches))
-
         for _2, match_item in ipairs(file_item.matches) do
           print_line(padding .. match_item.lineno .. ": " .. match_item.lines:gsub("\n", "\\n"))
         end
       end
 
-      print_line("└-----------------------------------------")
+      print_line(
+        "└─────────────────────────────────────────────────────────────────────────────"
+      )
     end
 
     print_line("")
