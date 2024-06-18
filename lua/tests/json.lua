@@ -1,5 +1,5 @@
 local json = require("guanghechen.util.json")
-local text = json.stringify_prettier({
+local obj = {
   name = "wulala",
   favorites = {
     "apple",
@@ -14,6 +14,7 @@ local text = json.stringify_prettier({
     chinese = { 1, 2, 3 },
     english = { "a", "b", "c" },
   },
-})
+}
 
-vim.notify(text or "")
+vim.notify(vim.json.encode(obj))
+vim.notify(json.stringify_prettier(obj))

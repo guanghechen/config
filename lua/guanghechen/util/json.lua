@@ -1,25 +1,3 @@
-local ESCAPE_CHARMAP = {
-  ["\\"] = [[\]],
-  ['"'] = [[\"]],
-  ["/"] = [[\/]],
-  ["\b"] = [[\b]],
-  ["\f"] = [[\f]],
-  ["\n"] = [[\n]],
-  ["\r"] = [[\r]],
-  ["\t"] = [[\t]],
-  ["\a"] = [[\u0007]],
-  ["\v"] = [[\u000b]],
-}
-
----@param s string
----@return string
-local function escape_json_string(s)
-  for k, v in pairs(ESCAPE_CHARMAP) do
-    s = s:gsub(k, v)
-  end
-  return s
-end
-
 ---@param obj table
 ---@return boolean
 local function check_if_array(obj)
@@ -27,14 +5,13 @@ local function check_if_array(obj)
     return true
   end
 
-  local i = 1
-  for _ in pairs(obj) do
-    if obj[i] == nil then
+  for key, _ in pairs(table) do
+    if type(key) ~= "number" then
       return false
     end
-    i = i + 1
   end
-  return i == 1
+
+  return true
 end
 
 ---@param json any
@@ -52,7 +29,7 @@ local function stringify_json_prettier(json, preceding, lines)
   end
 
   if t == "string" then
-    local text = '"' .. escape_json_string(json) .. '"' ---@type string
+    local text = ("%q"):format(json)
     lines[#lines] = last_line .. text
     return
   end
@@ -86,6 +63,7 @@ local function stringify_json_prettier(json, preceding, lines)
         end
       end
       table.insert(lines, preceding .. "]")
+      return
     else
       local keys = {}
       for key, _ in pairs(json) do
@@ -93,7 +71,7 @@ local function stringify_json_prettier(json, preceding, lines)
       end
 
       if #keys == 0 then
-        table.insert(lines, last_line .. "{}")
+        lines[#lines] = last_line .. "{}"
         return
       end
 
@@ -101,15 +79,15 @@ local function stringify_json_prettier(json, preceding, lines)
       table.sort(keys)
       for i = 1, #keys do
         local key = keys[i]
-        table.insert(lines, preceding_next .. '"' .. escape_json_string(key) .. '": ')
+        table.insert(lines, preceding_next .. vim.json.encode(key) .. ": ")
         stringify_json_prettier(json[key], preceding_next, lines)
         if i < #keys then
           lines[#lines] = lines[#lines] .. ","
         end
       end
       table.insert(lines, preceding .. "}")
+      return
     end
-    return
   end
 
   ---invalid json type

@@ -1,19 +1,24 @@
-local guanghechen = require("guanghechen")
-local ReplacePane = require("playground.replacer.pane")
-local pane = ReplacePane.new()
+local util_path = require("guanghechen.util.path")
+local Replacer = require("kyokuya.replace.replacer")
 
----@type guanghechen.types.ISearcherState
+---@type kyokuya.types.IReplacerState
 local options = {
-  cwd = guanghechen.util.path.cwd(),
+  mode = "replace",
+  cwd = util_path.cwd(),
   flag_regex = true,
   flag_case_sensitive = true,
   search_pattern = 'require\\("(guanghechen\\.util\\.(os|clipboard))"\\)',
+  replace_pattern = 'import "$1"',
   search_paths = { "lua/" },
   include_patterns = { "*.lua" },
   exclude_patterns = { "" },
 }
 
-pane:open(0, options)
+local replacer = Replacer.new()
+replacer:replace({
+  winnr = 0,
+  state = options,
+})
 
 local function check_replace()
   local nvim_tools = require("nvim_tools")
