@@ -103,22 +103,43 @@ function ReplacerPane:internal_render(winnr)
 
     if result.items == nil or result.error then
       print_line(string.format("Time: %s", result.elapsed_time))
+      vim.api.nvim_win_set_cursor(winnr, { lineno - 1, 0 })
     else
-      local padding = "¦  " ---@type string
       local summary = string.format("Files: %s, time: %s", #result.items, result.elapsed_time)
+      local maximum_lineno = 0 ---@type integer
+
+      for _1, file_item in ipairs(result.items) do
+        for _2, match_item in ipairs(file_item.matches) do
+          if maximum_lineno < match_item.lineno then
+            maximum_lineno = match_item.lineno
+          end
+        end
+      end
 
       print_line(summary)
       print_line(
         "┌─────────────────────────────────────────────────────────────────────────────"
       )
+      vim.api.nvim_win_set_cursor(winnr, { lineno, 0 })
 
+      local lineno_width = #tostring(maximum_lineno)
+      local continous_line_padding = "¦ " .. string.rep(" ", lineno_width) .. "  "
       for _1, file_item in ipairs(result.items) do
         local fileicon = guanghechen.util.filetype.calc_fileicon(file_item.filepath)
         local filepath = guanghechen.util.path.relative(state.cwd, file_item.filepath)
         print_line(fileicon .. " " .. filepath)
 
         for _2, match_item in ipairs(file_item.matches) do
-          print_line(padding .. match_item.lineno .. ": " .. match_item.lines:gsub("\n", "\\n"))
+          local text = match_item.lines:gsub("[\r\n]+$", "") ---@type string
+          local lines = guanghechen.util.string.split(text, "\r\n|\r|\n")
+          local padding = "¦ "
+            .. guanghechen.util.string.padStart(tostring(match_item.lineno), lineno_width, " ")
+            .. ": "
+          print_line(padding .. lines[1])
+
+          for i = 2, #lines do
+            print_line(continous_line_padding .. lines[i])
+          end
         end
       end
 
@@ -126,11 +147,7 @@ function ReplacerPane:internal_render(winnr)
         "└─────────────────────────────────────────────────────────────────────────────"
       )
     end
-
-    print_line("")
   end
-
-  vim.api.nvim_win_set_cursor(winnr, { 12, 0 })
 end
 
 return ReplacerPane
