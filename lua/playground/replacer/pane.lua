@@ -1,9 +1,15 @@
-local guanghechen = require("guanghechen")
-local Searcher = guanghechen.util.searcher
+local Searcher = require("guanghechen.util.searcher")
+local util_json = require("guanghechen.util.json")
+local util_filetype = require("guanghechen.util.filetype")
+local util_path = require("guanghechen.util.path")
+local util_string = require("guanghechen.util.string")
 
 local current_buf_delete_augroup = vim.api.nvim_create_augroup("current_buf_delete_augroup", { clear = true })
 
 local nsid = vim.api.nvim_create_namespace("REPLACE_PANE") ---@type integer
+
+---@class guagnhechen.replacer.IReplacePaneConfig : guanghechen.types.ISearcherState
+---@field public replace_pattern string
 
 ---@class guanghechen.replacer.ReplacePane
 ---@field private mode "search"|"replace"
@@ -42,28 +48,113 @@ function ReplacerPane:open(winnr, state)
       end,
     })
 
+    ---@param modes string|string[]
+    ---@param key string
+    ---@param action any
+    ---@param desc string
+    local function mk(modes, key, action, desc)
+      vim.keymap.set(modes, key, action, { noremap = true, silent = true, buffer = bufnr, desc = desc })
+    end
+
+    function on_edit()
+      self:edit(winnr)
+    end
+
+    mk({ "n" }, "i", on_edit, "Edit search config")
+    mk({ "n" }, "I", on_edit, "Edit search config")
+    mk({ "n" }, "a", on_edit, "Edit search config")
+    mk({ "n" }, "A", on_edit, "Edit search config")
+
     self.bufnr = bufnr
 
     vim.api.nvim_set_option_value("modifiable", false, { buf = self.bufnr })
     vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
   end
 
-  self:render(winnr, state)
+  pcall(function()
+    self.searcher:set_state(state)
+  end)
+  self:render(winnr)
 end
 
----@param state guanghechen.types.ISearcherState|nil
 ---@return nil
-function ReplacerPane:render(winnr, state)
+function ReplacerPane:render(winnr)
   local bufnr = self.bufnr ---@type integer
   vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_win_set_buf(winnr, bufnr)
   pcall(function()
-    self.searcher:set_state(state)
     self:internal_render(winnr)
   end)
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
   vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
+end
+
+---@param winnr integer
+---@return nil
+function ReplacerPane:edit(winnr)
+  local state = self.searcher:get_state() ---@type guanghechen.types.ISearcherState|nil
+  if state == nil then
+    return
+  end
+
+  local Popup = require("nui.popup")
+  local event = require("nui.utils.autocmd").event
+
+  local popup = Popup({
+    enter = true,
+    focusable = true,
+    border = {
+      style = "rounded",
+      text = {
+        top = "Search/Replace options",
+        top_align = "center",
+      },
+    },
+    position = "50%",
+    size = {
+      width = "80%",
+      height = "60%",
+    },
+  })
+
+  -- mount/open the component
+  popup:mount()
+
+  -- unmount component when cursor leaves buffer
+  popup:on(event.BufLeave, function()
+    popup:unmount()
+  end)
+
+  local function on_confirm()
+    local content = table.concat(vim.api.nvim_buf_get_lines(popup.bufnr, 0, -1, false), "\n") ---@type string
+    local ok, json = pcall(function()
+      util_json.parse(content)
+    end)
+    if ok then
+      self.searcher:set_state(json)
+      self:render(winnr)
+    end
+    popup:unmount()
+  end
+
+  vim.api.nvim_set_option_value("filetype", "json", { buf = popup.bufnr })
+  popup:map("n", "<cr>", on_confirm, { noremap = true, silent = true, desc = "Confirm" })
+
+  -- set content
+  ---@type guagnhechen.replacer.IReplacePaneConfig
+  local json = {
+    cwd = state.cwd,
+    flag_regex = state.flag_regex,
+    flag_case_sensitive = state.flag_case_sensitive,
+    search_pattern = state.search_pattern,
+    replace_pattern = self.replace_pattern,
+    search_paths = state.search_paths,
+    include_patterns = state.include_patterns,
+    exclude_patterns = state.exclude_patterns,
+  }
+  local lines = util_json.stringify_prettier_lines(json) ---@type string[]
+  vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, lines)
 end
 
 ---@param winnr integer
@@ -135,17 +226,15 @@ function ReplacerPane:internal_render(winnr)
       local continous_line_padding = "¦ " .. string.rep(" ", lineno_width) .. "  "
       ---@diagnostic disable-next-line: unused-local
       for _1, file_item in ipairs(result.items) do
-        local fileicon = guanghechen.util.filetype.calc_fileicon(file_item.filepath)
-        local filepath = guanghechen.util.path.relative(state.cwd, file_item.filepath)
+        local fileicon = util_filetype.calc_fileicon(file_item.filepath)
+        local filepath = util_path.relative(state.cwd, file_item.filepath)
         print_line(fileicon .. " " .. filepath)
 
         ---@diagnostic disable-next-line: unused-local
         for _2, match_item in ipairs(file_item.matches) do
           local text = match_item.lines:gsub("[\r\n]+$", "") ---@type string
-          local lines = guanghechen.util.string.split(text, "\r\n|\r|\n")
-          local padding = "¦ "
-            .. guanghechen.util.string.padStart(tostring(match_item.lineno), lineno_width, " ")
-            .. ": "
+          local lines = util_string.split(text, "\r\n|\r|\n")
+          local padding = "¦ " .. util_string.padStart(tostring(match_item.lineno), lineno_width, " ") .. ": "
           print_line(padding .. lines[1])
 
           for i = 2, #lines do

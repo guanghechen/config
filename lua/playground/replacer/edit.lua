@@ -4,7 +4,6 @@ local util_navigator = require("guanghechen.util.navigator")
 
 ---@alias guanghechen.replacer.IStateKey
 ---|"flag_ignore_case"
----|"flag_multileline"
 ---|"flag_regex"
 ---|"search_excludes"
 ---|"search_includes"
@@ -14,7 +13,6 @@ local util_navigator = require("guanghechen.util.navigator")
 
 ---@class guanghechen.replacer.IState
 ---@field public flag_ignore_case boolean
----@field public flag_multileline boolean
 ---@field public flag_regex boolean
 ---@field public search_excludes string
 ---@field public search_includes string
@@ -128,7 +126,6 @@ function Replacer.new(opts)
   ---@type guanghechen.replacer.IState
   local state = {
     flag_ignore_case = opts.state.flag_ignore_case, ---@type boolean
-    flag_multileline = opts.state.flag_multileline, ---@type boolean
     flag_regex = opts.state.flag_regex, ---@type boolean
     search_excludes = opts.state.search_excludes, ---@type string
     search_includes = opts.state.search_includes, ---@type string
@@ -327,7 +324,6 @@ end
 local replacer = Replacer.new({
   state = {
     flag_ignore_case = false,
-    flag_multileline = false,
     flag_regex = false,
     search_text = "hello",
     search_paths = "",

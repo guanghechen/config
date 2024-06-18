@@ -121,7 +121,15 @@ end
 local M = {}
 
 ---@param json any
----@return nil
+---@return string[]
+function M.stringify_prettier_lines(json)
+  local lines = { "" } ---@type string[]
+  stringify_json_prettier(json, "", lines)
+  return lines
+end
+
+---@param json any
+---@return string
 function M.stringify_prettier(json)
   local lines = { "" } ---@type string[]
   stringify_json_prettier(json, "", lines)
