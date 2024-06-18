@@ -5,6 +5,7 @@ local A = {
   debug = require("ghc.core.action.debug"),
   enhance = require("ghc.core.action.enhance"),
   file = require("ghc.core.action.file"),
+  run = require("ghc.core.action.run"),
   session = require("ghc.core.action.session"),
   tab = require("ghc.core.action.tab"),
   toggle = require("ghc.core.action.toggle"),
@@ -126,6 +127,10 @@ mk({ "n", "v" }, "<leader>qs", A.session.session_save, "session: save session", 
 mk({ "n", "v" }, "<leader>qc", A.session.session_clear, "session: clear session", true)
 mk({ "n", "v" }, "<leader>qC", A.session.session_clear_all, "session: clear all sessions", true)
 --------------------------------------------------------------------------#[q]uit/session/context--
+
+--#[r]un--------------------------------------------------------------------------------------------
+mk({ "i", "n", "v" }, "<F5>", A.run.run, "run: run codes", true)
+--------------------------------------------------------------------------------------------#[r]un--
 
 --#[t]ab--------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>t1", A.tab.goto_tab_1, "tab: goto tab 1", true)

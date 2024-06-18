@@ -117,6 +117,11 @@ function M.basename(filepath)
   return ""
 end
 
+---@param filepath string
+---@return string
+function M.extname(filepath)
+  return filepath:match("^.+(%..+)$") or ""
+end
 ---@param path_string string
 ---@return string[]
 function M.parse_paths(path_string)
