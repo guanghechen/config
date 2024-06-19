@@ -29,7 +29,7 @@ local function stringify_json_prettier(json, preceding, lines)
   end
 
   if t == "string" then
-    local text = ("%q"):format(json)
+    local text = vim.json.encode(json):gsub("\\/", "/")
     lines[#lines] = last_line .. text
     return
   end
