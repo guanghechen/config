@@ -231,28 +231,29 @@ local function internal_render(opts)
   if result ~= nil then
     print_line("", nil)
     print_line("", nil)
-    print_line("################################################################################", nil)
-    print_line("", nil)
-    print_line("", nil)
 
     if result.items == nil or result.error then
       local summary = string.format("Time: %s", result.elapsed_time)
       print_line(summary, nil)
       vim.api.nvim_win_set_cursor(winnr, { lnum - 1, 0 })
     else
-      local summary = string.format("Files: %s, time: %s", #result.items, result.elapsed_time)
-      print_line(summary, nil)
-
+      local count_files = 0
+      local count_matches = 0
       local maximum_lnum = 0 ---@type integer
       ---@diagnostic disable-next-line: unused-local
       for _1, file_item in pairs(result.items) do
+        count_files = count_files + 1
         ---@diagnostic disable-next-line: unused-local
         for _2, match_item in ipairs(file_item.matches) do
+          count_matches = count_matches + 1
           if maximum_lnum < match_item.lnum then
             maximum_lnum = match_item.lnum
           end
         end
       end
+
+      local summary = string.format("Files: %s, matches: %s, time: %s", count_files, count_matches, result.elapsed_time)
+      print_line(summary, nil)
 
       print_line(
         "┌─────────────────────────────────────────────────────────────────────────────",

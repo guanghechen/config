@@ -34,11 +34,13 @@ function M:open(opts)
 
   local relative = opts.position == "center" and "win" or "cursor"
   local position = opts.position == "center" and "50%" or { row = 1, col = 0 }
+  local width_value = vim.api.nvim_strwidth(value) ---@type integer
+  local width_title = vim.api.nvim_strwidth(title) ---@type integer
   local input = Input({
     relative = relative,
     position = position,
     size = {
-      width = (#value < #title and #title or #value) + 5,
+      width = (width_value < width_title and width_title or width_value) + 2,
       height = 1,
     },
     border = {
