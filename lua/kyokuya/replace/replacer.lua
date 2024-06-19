@@ -30,22 +30,14 @@ end
 ---@param next_state kyokuya.types.IReplacerState|nil
 ---@return nil
 function M:set_state(next_state)
-  if next_state ~= nil and not self:equals(next_state) then
-    ---@type kyokuya.types.IReplacerState
-    local state = {
-      cwd = next_state.cwd,
-      mode = next_state.mode,
-      flag_case_sensitive = next_state.flag_case_sensitive,
-      flag_regex = next_state.flag_regex,
-      search_pattern = next_state.search_pattern,
-      replace_pattern = next_state.replace_pattern,
-      search_paths = util_table.slice(next_state.search_paths),
-      include_patterns = util_table.slice(next_state.include_patterns),
-      exclude_patterns = util_table.slice(next_state.exclude_patterns),
-    }
+  if next_state == nil then
+    return
+  end
 
+  local normailized = self:normalize(next_state) ---@type kyokuya.types.IReplacerState
+  if not self:equals(normailized) then
     self.dirty = true
-    self.state = state
+    self.state = normailized
   end
 end
 
@@ -113,6 +105,28 @@ function M:replace(opts)
       self.dirty = false
     end
   end
+end
+
+---@param state kyokuya.types.IReplacerState
+---@return kyokuya.types.IReplacerState
+function M:normalize(state)
+  local search_paths = util_table.trim_and_filter(state.search_paths)
+  local include_patterns = util_table.trim_and_filter(state.include_patterns)
+  local exclude_patterns = util_table.trim_and_filter(state.exclude_patterns)
+
+  ---@type kyokuya.types.IReplacerState
+  local normalized = {
+    cwd = state.cwd,
+    mode = state.mode,
+    flag_case_sensitive = state.flag_case_sensitive,
+    flag_regex = state.flag_regex,
+    search_pattern = state.search_pattern,
+    replace_pattern = state.replace_pattern,
+    search_paths = search_paths,
+    include_patterns = include_patterns,
+    exclude_patterns = exclude_patterns,
+  }
+  return normalized
 end
 
 ---@param next_state kyokuya.types.IReplacerState

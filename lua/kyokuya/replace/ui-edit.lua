@@ -20,6 +20,8 @@ function M.edit_replacer_state(opts)
     icon = " ",
     title = state.mode == "search" and "Search options" or "Replace options",
     value = lines,
+    cursor_row = 1,
+    cursor_col = 1,
     on_confirm = function()
       local bufnr = textarea:get_bufnr() ---@type integer|nil
       if bufnr == nil then

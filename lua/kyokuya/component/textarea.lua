@@ -2,6 +2,8 @@
 ---@field public icon string
 ---@field public title string
 ---@field public value string[]
+---@field public cursor_row integer
+---@field public cursor_col integer
 ---@field public on_confirm fun(next_value: string[]):nil
 
 ---@class kyokuya.component.Textarea

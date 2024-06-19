@@ -69,6 +69,24 @@ function M.filter(arr, filter)
   return result
 end
 
+---@generic T1
+---@generic T2
+---@param arr T1[]
+---@param map fun(v: T1, i: integer): T2
+---@param filter? fun(v: T2): boolean
+---@return T2[]
+function M.map(arr, map, filter)
+  local result = {}
+  for i = 1, #arr do
+    local value = arr[i]
+    local next_value = map(value, i)
+    if filter == nil or filter(next_value) then
+      table.insert(result, next_value)
+    end
+  end
+  return result
+end
+
 ---@param arr string[]
 ---@return string[]
 function M.filter_non_blank_string(arr)
@@ -85,6 +103,16 @@ function M.merge_multiple_array(...)
     end
   end
   return result
+end
+
+---@param strs string[]
+---@return string[]
+function M.trim_and_filter(strs)
+  return M.map(strs, function(v)
+    return v:match("^%s*(.-)%s*$")
+  end, function(v)
+    return #v > 0
+  end)
 end
 
 return M

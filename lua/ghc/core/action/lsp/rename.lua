@@ -49,7 +49,7 @@ local function rename()
       col = 0,
     },
     size = {
-      width = (#curr_name < #title and #title or #curr_name) + 5,
+      width = (#curr_name < #title and #title or #curr_name) + 8,
       height = 1,
     },
     -- border for the window

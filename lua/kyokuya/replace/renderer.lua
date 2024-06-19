@@ -52,8 +52,9 @@ local function internal_render(opts)
 
   local function on_edit()
     local cursor = vim.api.nvim_win_get_cursor(winnr)
-    local line_number = cursor[1]
-    local meta = line_metas[line_number]
+    local cursor_row = cursor[1]
+    local cursor_col = cursor[2]
+    local meta = line_metas[cursor_row]
     if meta ~= nil and meta.key ~= nil then
       local key = meta.key
       if key == "cwd" or key == "search_pattern" or key == "replace_pattern" then
@@ -63,6 +64,7 @@ local function internal_render(opts)
           icon = "",
           title = key,
           value = value,
+          cursor_col = cursor_col,
           on_confirm = function(next_value)
             if value ~= next_value then
               local next_state = vim.tbl_extend("force", state, { [key] = next_value })
@@ -78,6 +80,8 @@ local function internal_render(opts)
           icon = "",
           title = key,
           value = value,
+          cursor_row = meta.row or 1,
+          cursor_col = cursor_col,
           on_confirm = function(next_value)
             if not util_table.equals_array(value, next_value) then
               local next_state = vim.tbl_extend("force", state, { [key] = next_value })
@@ -102,15 +106,28 @@ local function internal_render(opts)
     print_line(state.replace_pattern, { key = "replace_pattern" })
   end
   print_line("Search Paths:" .. "    cwd=" .. state.cwd, { key = "search_paths" })
-  print_line(table.concat(state.search_paths, ", "), { key = "search_paths" })
+  for row, content in ipairs(state.search_paths) do
+    print_line(content, { key = "search_paths", row = row })
+  end
   print_line("Includes:", { key = "include_patterns" })
-  print_line(table.concat(state.include_patterns, ", "), { key = "include_patterns" })
+  for row, content in ipairs(state.include_patterns) do
+    print_line(content, { key = "include_patterns", row = row })
+  end
   print_line("Exclude:", { key = "exclude_patterns" })
-  print_line(table.concat(state.exclude_patterns, ", "), { key = "exclude_patterns" })
+  for row, content in ipairs(state.exclude_patterns) do
+    print_line(content, { key = "exclude_patterns", row = row })
+  end
 
   ---Render the search/replace result
   local result = searcher:search({ state = state, force = force }) ---@type kyokuya.types.ISearchResult|nil
   if result ~= nil then
+    print_line("", nil)
+    print_line("", nil)
+    print_line(
+      "####################################################################################################",
+      nil
+    )
+    print_line("", nil)
     print_line("", nil)
 
     if result.items == nil or result.error then
