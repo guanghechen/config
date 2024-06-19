@@ -24,6 +24,37 @@ function M.is_exist(filepath)
   return stat ~= nil and not vim.tbl_isempty(stat)
 end
 
+---Check if the `to` path is under the `from` path.
+---@param from string
+---@param to string
+---@return boolean
+function M.is_under(from, to)
+  local is_from_absolute = M.is_absolute(from) ---@type boolean
+  local is_to_absolute = M.is_absolute(to) ---@type boolean
+
+  if is_from_absolute and not is_to_absolute then
+    return true
+  end
+
+  if is_to_absolute and not is_from_absolute then
+    from = M.resolve(M.cwd(), from)
+  end
+
+  local from_pieces = M.split(from)
+  local to_pieces = M.normalize(to)
+
+  if #to_pieces > #from_pieces then
+    return false
+  end
+
+  for i = 1, #to_pieces do
+    if to_pieces[i] ~= from_pieces[i] then
+      return false
+    end
+  end
+  return true
+end
+
 ---@param filepath string
 ---@return string[]
 function M.split(filepath)

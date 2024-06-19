@@ -1,6 +1,6 @@
-local guanghechen = require("guanghechen")
+local util_path = require("guanghechen.util.path")
 
-local have_set_cwd = false ---@type boolean
+local cwd = util_path.cwd() ---@type string
 
 ---@param sources ("buffers"|"filesystem"|"git_status")[]
 ---@return nil
@@ -24,110 +24,106 @@ local function has_explorer_window_opened()
   return false
 end
 
+---@return boolean
+local function check_could_reveal()
+  local filepath = util_path.current_filepath() ---@type string
+  return util_path.is_under(cwd, filepath)
+end
+
 ---@class ghc.core.action.explorer
 local M = {}
 
 function M.toggle_explorer_file_workspace()
+  cwd = util_path.workspace()
   close_explorer_sources({ "git_status", "buffers" })
-
-  have_set_cwd = true
-
   local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
   local toggle = ft_current == "neo-tree" ---@type boolean
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = guanghechen.util.path.workspace(),
+    dir = cwd,
     position = "left",
-    reveal = true,
+    reveal = check_could_reveal(),
     toggle = toggle,
   })
 end
 
 function M.toggle_explorer_file_cwd()
+  cwd = util_path.cwd()
+
   close_explorer_sources({ "git_status", "buffers" })
-
-  have_set_cwd = true
-
   local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
   local toggle = ft_current == "neo-tree" ---@type boolean
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = guanghechen.util.path.cwd(),
+    dir = cwd,
     position = "left",
-    reveal = true,
+    reveal = check_could_reveal(),
     toggle = toggle,
   })
 end
 
 function M.toggle_explorer_buffer_workspace()
+  cwd = util_path.workspace()
   close_explorer_sources({ "git_status" })
-
-  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
-    dir = guanghechen.util.path.workspace(),
+    dir = cwd,
     position = "float",
-    reveal = true,
+    reveal = check_could_reveal(),
     toggle = true,
   })
 end
 
 function M.toggle_explorer_buffer_cwd()
+  cwd = util_path.cwd()
   close_explorer_sources({ "git_status" })
-
-  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "buffers",
-    dir = guanghechen.util.path.cwd(),
+    dir = cwd,
     position = "float",
-    reveal = true,
+    reveal = check_could_reveal(),
     toggle = true,
   })
 end
 
 function M.toggle_explorer_git_workspace()
+  cwd = util_path.workspace()
   close_explorer_sources({ "buffers" })
-
-  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
-    dir = guanghechen.util.path.workspace(),
+    dir = cwd,
     position = "float",
-    reveal = true,
+    reveal = check_could_reveal(),
     toggle = true,
   })
 end
 
 function M.toggle_explorer_git_cwd()
+  cwd = util_path.cwd()
   close_explorer_sources({ "buffers" })
-
-  have_set_cwd = true
   require("neo-tree.command").execute({
     action = "focus",
     source = "git_status",
-    dir = guanghechen.util.path.cwd(),
+    dir = cwd,
     position = "float",
-    reveal = true,
+    reveal = check_could_reveal(),
     toggle = true,
   })
 end
 
 function M.toggle_explorer_last()
-  local opts = {
+  require("neo-tree.command").execute({
     action = "focus",
     source = "last",
-    reveal = true,
+    dir = cwd,
+    reveal = check_could_reveal(),
     toggle = true,
-  }
-  if not have_set_cwd then
-    opts.dir = guanghechen.util.path.cwd()
-  end
-  require("neo-tree.command").execute(opts)
+  })
 end
 
 function M.reveal_file_explorer()
@@ -139,16 +135,12 @@ function M.reveal_file_explorer()
       action = "close",
     })
   else
-    local opts = {
+    require("neo-tree.command").execute({
       action = "focus",
       source = "filesystem",
-      position = "left",
-      reveal = true,
-    }
-    if not have_set_cwd then
-      opts.dir = guanghechen.util.path.cwd()
-    end
-    require("neo-tree.command").execute(opts)
+      dir = cwd,
+      reveal = check_could_reveal(),
+    })
   end
 end
 
