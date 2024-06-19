@@ -4,6 +4,7 @@ local util_path = require("guanghechen.util.path")
 local util_reporter = require("guanghechen.util.reporter")
 local util_string = require("guanghechen.util.string")
 local util_table = require("guanghechen.util.table")
+local util_window = require("guanghechen.util.window")
 local Input = require("kyokuya.component.input")
 local Textarea = require("kyokuya.component.textarea")
 
@@ -26,6 +27,10 @@ local function internal_render(opts)
   local state = opts.state ---@type kyokuya.types.IReplacerState
   local force = opts.force ---@type boolean
   local on_change_from_opts = opts.on_change
+
+  if winnr == 0 then
+    winnr = vim.api.nvim_get_current_win()
+  end
 
   ---Clear the buf before render.
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
@@ -173,6 +178,32 @@ local function internal_render(opts)
     end
   end
 
+  local function on_enter_file()
+    local cursor = vim.api.nvim_win_get_cursor(winnr)
+    local cursor_row = cursor[1]
+    local meta = line_metas[cursor_row]
+    if meta ~= nil and meta.filepath ~= nil then
+      local selected_winnr = util_window.pick_window({ motivation = "project" }) ---@type integer|nil
+      if selected_winnr == nil then
+        return
+      end
+
+      if selected_winnr < 0 then
+        local width = vim.api.nvim_win_get_width(winnr)
+        local max_width = 80
+
+        vim.cmd("vsplit")
+        if width / 2 > max_width then
+          vim.api.nvim_win_set_width(winnr, max_width)
+        end
+      else
+        vim.api.nvim_set_current_win(selected_winnr)
+      end
+      local escaped_filepath = vim.fn.fnameescape(meta.filepath)
+      vim.api.nvim_command("edit " .. escaped_filepath)
+    end
+  end
+
   mk({ "n", "v" }, "i", on_edit, "replace: edit config")
   mk({ "n", "v" }, "a", on_edit, "replace: edit config")
   mk({ "n", "v" }, "I", on_edit_full_config, "replace: edit full config")
@@ -183,6 +214,7 @@ local function internal_render(opts)
   mk({ "n", "v" }, "rp", edit_list("search_paths"), "replace: edit search paths")
   mk({ "n", "v" }, "re", edit_list("exclude_patterns"), "replace: edit exclude patterns")
   mk({ "n", "v" }, "ri", edit_list("include_patterns"), "replace: edit include patterns")
+  mk({ "n", "v" }, "<enter>", on_enter_file, "replace: view file")
 
   ---Render the search/replace options
   local mode_indicator = state.mode == "search" and "[Search]" or "[Replace]"
@@ -199,10 +231,7 @@ local function internal_render(opts)
   if result ~= nil then
     print_line("", nil)
     print_line("", nil)
-    print_line(
-      "####################################################################################################",
-      nil
-    )
+    print_line("################################################################################", nil)
     print_line("", nil)
     print_line("", nil)
 

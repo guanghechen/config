@@ -1,3 +1,5 @@
+local util_window = require("guanghechen.util.window")
+
 ---@class ghc.core.action.window
 local M = require("ghc.core.action.window.module")
 
@@ -26,7 +28,7 @@ M.split_window_vertical = "<C-w>v"
 
 M.swap_window_with_picker = function()
   local winnr_current = vim.api.nvim_get_current_win()
-  local winnr_target = M.pick_window({ motivation = "swap" })
+  local winnr_target = util_window.pick_window({ motivation = "swap" })
   if winnr_target == nil or winnr_current == winnr_target then
     return
   end

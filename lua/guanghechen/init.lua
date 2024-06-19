@@ -35,6 +35,7 @@ M.util = {
   string = require("guanghechen.util.string"),
   table = require("guanghechen.util.table"),
   tmux = require("guanghechen.util.tmux"),
+  window = require("guanghechen.util.window"),
 }
 
 return M
