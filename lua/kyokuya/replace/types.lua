@@ -8,12 +8,11 @@
 ---@field public matches kyokuya.types.ISearchMatchedInlineItem[]
 
 ---@class kyokuya.types.ISearchMatchedFileItem
----@field public filepath string
 ---@field public matches kyokuya.types.ISearchMatchedLineItem[]
 
 ---@class kyokuya.types.ISearchResult
 ---@field public elapsed_time string
----@field public items? kyokuya.types.ISearchMatchedFileItem[]
+---@field public items? table<string, kyokuya.types.ISearchMatchedFileItem>
 ---@field public error? string
 
 ---@class kyokuya.types.ISearcherState

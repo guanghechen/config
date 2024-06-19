@@ -80,9 +80,9 @@ local function internal_render(opts)
       local lineno_width = #tostring(maximum_lineno)
       local continous_line_padding = "¦ " .. string.rep(" ", lineno_width) .. "  "
       ---@diagnostic disable-next-line: unused-local
-      for _1, file_item in ipairs(result.items) do
-        local fileicon = util_filetype.calc_fileicon(file_item.filepath)
-        local filepath = util_path.relative(state.cwd, file_item.filepath)
+      for raw_filepath, file_item in pairs(result.items) do
+        local fileicon = util_filetype.calc_fileicon(raw_filepath)
+        local filepath = util_path.relative(state.cwd, raw_filepath)
         print_line(fileicon .. " " .. filepath)
 
         ---@diagnostic disable-next-line: unused-local

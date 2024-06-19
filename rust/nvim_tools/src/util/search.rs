@@ -18,13 +18,12 @@ pub struct SearchMatchedLineItem {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchMatchedFileItem {
-    pub filepath: String,
     pub matches: Vec<SearchMatchedLineItem>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchSucceedResult {
-    pub items: Vec<SearchMatchedFileItem>,
+    pub items: HashMap<String, SearchMatchedFileItem>,
     pub elapsed_time: String,
 }
 
@@ -165,10 +164,7 @@ pub fn search(
                         let filepath: String = path.text.clone();
                         let file_item: &mut SearchMatchedFileItem = file_items_map
                             .entry(filepath.clone())
-                            .or_insert(SearchMatchedFileItem {
-                                filepath: path.text.clone(),
-                                matches: vec![],
-                            });
+                            .or_insert(SearchMatchedFileItem { matches: vec![] });
                         file_item.matches.push(line_matches);
                     }
                     ripgrep_result::ResultItemData::End { .. } => {}
@@ -179,10 +175,9 @@ pub fn search(
             }
         }
 
-        let result_items: Vec<SearchMatchedFileItem> = file_items_map.values().cloned().collect();
         let result: SearchSucceedResult = SearchSucceedResult {
             elapsed_time: result_elapsed_time,
-            items: result_items,
+            items: file_items_map,
         };
         Ok((result, stdout.to_string()))
     } else {
@@ -191,7 +186,7 @@ pub fn search(
             Ok((
                 SearchSucceedResult {
                     elapsed_time: format!("{}s", elapsed_time),
-                    items: vec![],
+                    items: HashMap::new(),
                 },
                 "".to_string(),
             ))
