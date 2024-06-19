@@ -34,35 +34,35 @@ local function rename()
     end)
   end
 
+  local title = "[Rename]"
   local popup_options = {
-    -- border for the window
-    border = {
-      style = "rounded",
-      text = {
-        top = "[Rename]",
-        top_align = "left",
-      },
-    },
-    -- highlight for the window.
-    highlight = "Normal:Normal",
-    -- place the popup window relative to the
-    -- buffer position of the identifier
+    -- place the popup window relative to the buffer position of the identifier
     relative = {
       type = "buf",
       position = {
-        -- this is the same `params` we got earlier
         row = params.position.line,
         col = params.position.character,
       },
     },
-    -- position the popup window on the line below identifier
     position = {
       row = 1,
       col = 0,
     },
     size = {
-      width = 32,
+      width = (#curr_name < #title and #title or #curr_name) + 5,
       height = 1,
+    },
+    -- border for the window
+    border = {
+      style = "rounded",
+      text = {
+        top = title,
+        top_align = "center",
+      },
+    },
+    win_options = {
+      winblend = 10,
+      winhighlight = "Normal:Normal",
     },
   }
 
@@ -74,15 +74,22 @@ local function rename()
 
   input:mount()
 
-  vim.schedule(function()
-    vim.api.nvim_command("stopinsert")
-  end)
+  local actions = {
+    stopinsert = function()
+      vim.api.nvim_command("stopinsert")
+    end,
+    quit = function()
+      input:unmount()
+    end,
+  }
+
+  vim.schedule(actions.stopinsert)
 
   -- close on <esc> in normal mode
-  input:map("n", "<esc>", input.input_props.on_close, { noremap = true })
+  input:map("n", "<esc>", actions.quit, { noremap = true })
 
   -- close when cursor leaves the buffer
-  input:on(event.BufLeave, input.input_props.on_close, { once = true })
+  input:on(event.BufLeave, actions.quit, { once = true })
 end
 
 return rename

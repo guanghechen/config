@@ -4,7 +4,7 @@
 
 ---@class kyokuya.types.ISearchMatchedLineItem
 ---@field public lines string
----@field public lineno integer
+---@field public lnum integer
 ---@field public matches kyokuya.types.ISearchMatchedInlineItem[]
 
 ---@class kyokuya.types.ISearchMatchedFileItem
@@ -53,3 +53,19 @@
 ---@class kyokuya.types.IReplacerState : kyokuya.types.ISearcherState
 ---@field public mode kyokuya.types.IReplaceMode
 ---@field public replace_pattern string
+
+---@alias kyokuya.types.IReplaceStateKey
+---|"cwd"
+---|"mode"
+---|"flag_regex"
+---|"flag_case_sensitive"
+---|"search_pattern"
+---|"replace_pattern"
+---|"search_paths"
+---|"include_patterns"
+---|"exclude_patterns"
+
+---@class kyokuya.types.IReplaceResultLineMeta
+---@field public filepath? string current line indicate the filepath
+---@field public lnum? integer current line indicate the filepath
+---@field public key? kyokuya.types.IReplaceStateKey  current line pointer to a replacer-state field

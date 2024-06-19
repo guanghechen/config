@@ -57,6 +57,14 @@ function M:replace(opts)
   local state = (opts ~= nil and opts.state ~= nil) and opts.state or nil ---@type kyokuya.types.IReplacerState|nil
   self:set_state(state)
 
+  local function on_change(next_state)
+    self:replace({
+      state = next_state,
+      winnr = winnr,
+      force = force,
+    })
+  end
+
   if self.bufnr == nil then
     local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
     vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
@@ -81,17 +89,10 @@ function M:replace(opts)
     local function on_edit()
       ui_edit.edit_replacer_state({
         state = self.state,
-        on_confirm = function(next_state)
-          self:replace({
-            state = next_state,
-            winnr = winnr,
-            force = force,
-          })
-        end,
+        on_confirm = on_change,
       })
     end
 
-    mk({ "n" }, "i", on_edit, "Edit search config")
     mk({ "n" }, "I", on_edit, "Edit search config")
     mk({ "n" }, "a", on_edit, "Edit search config")
     mk({ "n" }, "A", on_edit, "Edit search config")
@@ -107,6 +108,7 @@ function M:replace(opts)
         winnr = winnr,
         nsnr = nsnr,
         force = force,
+        on_change = on_change,
       })
       self.dirty = false
     end

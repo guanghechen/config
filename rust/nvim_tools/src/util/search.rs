@@ -12,7 +12,7 @@ pub struct SearchMatchedInlineItem {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchMatchedLineItem {
     pub lines: String,
-    pub lineno: usize,
+    pub lnum: usize,
     pub matches: Vec<SearchMatchedInlineItem>,
 }
 
@@ -158,7 +158,7 @@ pub fn search(
                         }
                         let line_matches: SearchMatchedLineItem = SearchMatchedLineItem {
                             lines: lines.text,
-                            lineno: line_number,
+                            lnum: line_number,
                             matches: inline_matches,
                         };
                         let filepath: String = path.text.clone();

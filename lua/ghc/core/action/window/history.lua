@@ -128,7 +128,7 @@ function M.find_history(opts)
   local entries = {} ---@type ghc.core.action.window.IHistoryItemEntry[]
   local cwd = guanghechen.util.path.cwd()
   local minwidth = #prompt_title + 16 ---@type number
-  local default_lineno = 1 ---@type number
+  local default_lnum = 1 ---@type number
   if unique then
     local present_item = history:present()
     local present_filepath = present_item and present_item.filepath or "" ---@type string
@@ -142,7 +142,7 @@ function M.find_history(opts)
         local display_text ---@type string
         if present_filepath == item.filepath then
           display_text = icons.ui.Separator .. " " .. relative_filepath
-          default_lineno = #entries + 1
+          default_lnum = #entries + 1
         else
           display_text = "  " .. relative_filepath
         end
@@ -167,7 +167,7 @@ function M.find_history(opts)
       local display_text ---@type string
       if present_index == item_index then
         display_text = icons.ui.Separator .. " " .. tostring(item_index) .. " " .. relative_filepath
-        default_lineno = #entries + 1
+        default_lnum = #entries + 1
       else
         display_text = "  " .. tostring(item_index) .. " " .. relative_filepath
       end
@@ -217,7 +217,7 @@ function M.find_history(opts)
         local function set_selection()
           local picker = action_state.get_current_picker(prompt_bufnr)
           if picker ~= nil then
-            picker:set_selection(default_lineno - 1)
+            picker:set_selection(default_lnum - 1)
           end
         end
 
