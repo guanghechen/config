@@ -1,7 +1,8 @@
 ---@class kyokuya.component.IInputOptions
----@field public icon string
 ---@field public title string
+---@field public prompt string
 ---@field public value string
+---@field public position "center"|"cursor"
 ---@field public cursor_col integer
 ---@field public on_confirm fun(next_value: string):nil
 
@@ -22,20 +23,20 @@ end
 ---@param opts kyokuya.component.IInputOptions
 ---@return nil
 function M:open(opts)
-  local icon = opts.icon ---@type string
-  local title = "[" .. opts.title .. "]" ---@type string
+  local title = opts.title ---@type string
+  local prompt = opts.prompt ---@type string
   local value = opts.value ---@type string
   local cursor_col = opts.cursor_col ---@type integer
   local on_confirm = opts.on_confirm
 
   local Input = require("nui.input")
   local event = require("nui.utils.autocmd").event
+
+  local relative = opts.position == "center" and "win" or "cursor"
+  local position = opts.position == "center" and "50%" or { row = 1, col = 0 }
   local input = Input({
-    relative = "cursor",
-    position = {
-      row = 1,
-      col = 0,
-    },
+    relative = relative,
+    position = position,
     size = {
       width = (#value < #title and #title or #value) + 5,
       height = 1,
@@ -52,7 +53,7 @@ function M:open(opts)
       winhighlight = "Normal:Normal",
     },
   }, {
-    prompt = icon .. " ",
+    prompt = prompt,
     default_value = value,
     on_submit = on_confirm,
   })

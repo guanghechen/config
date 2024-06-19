@@ -1,7 +1,6 @@
 local util_table = require("guanghechen.util.table")
 local Searcher = require("kyokuya.replace.searcher")
 local renderer = require("kyokuya.replace.renderer")
-local ui_edit = require("kyokuya.replace.ui-edit")
 
 local current_buf_delete_augroup = vim.api.nvim_create_augroup("current_buf_delete_augroup", { clear = true })
 
@@ -70,24 +69,6 @@ function M:replace(opts)
       end,
     })
 
-    ---@param modes string|string[]
-    ---@param key string
-    ---@param action any
-    ---@param desc string
-    local function mk(modes, key, action, desc)
-      vim.keymap.set(modes, key, action, { noremap = true, silent = true, buffer = bufnr, desc = desc })
-    end
-
-    local function on_edit()
-      ui_edit.edit_replacer_state({
-        state = self.state,
-        on_confirm = on_change,
-      })
-    end
-
-    mk({ "n" }, "I", on_edit, "Edit search config")
-    mk({ "n" }, "a", on_edit, "Edit search config")
-    mk({ "n" }, "A", on_edit, "Edit search config")
     self.bufnr = bufnr
   end
 

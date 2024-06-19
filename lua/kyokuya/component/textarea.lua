@@ -1,9 +1,12 @@
 ---@class kyokuya.component.ITextareaOptions
----@field public icon string
 ---@field public title string
 ---@field public value string[]
+---@field public position "center"|"cursor"
 ---@field public cursor_row integer
 ---@field public cursor_col integer
+---@field public width? integer
+---@field public height? integer
+---@field public win_options? table<string, any>
 ---@field public on_confirm fun(next_value: string[]):nil
 
 ---@class kyokuya.component.Textarea
@@ -23,25 +26,24 @@ end
 ---@param opts kyokuya.component.ITextareaOptions
 ---@return nil
 function M:open(opts)
-  local icon = opts.icon
-  local title = icon .. " " .. opts.title .. " "
-  local value = opts.value
+  local title = opts.title ---@type string
+  local value = opts.value ---@type string[]
   local cursor_row = opts.cursor_row ---@type integer
   local cursor_col = opts.cursor_col ---@type integer
 
   local Popup = require("nui.popup")
   local event = require("nui.utils.autocmd").event
+
+  local relative = opts.position == "center" and "win" or "cursor"
+  local position = opts.position == "center" and "50%" or { row = 1, col = 0 }
   local popup = Popup({
     enter = true,
     focusable = true,
-    relative = "cursor",
-    position = {
-      row = 1,
-      col = 0,
-    },
+    relative = relative,
+    position = position,
     size = {
-      width = 72,
-      height = #value + 2,
+      width = opts.width or "80%",
+      height = opts.height or #value,
     },
     border = {
       style = "rounded",
@@ -56,10 +58,14 @@ function M:open(opts)
         right = 1,
       },
     },
-    win_options = {
+    win_options = vim.tbl_extend("force", {
+      cursorline = true,
+      number = true,
+      relativenumber = true,
+      wrap = false,
       winblend = 10,
       winhighlight = "Normal:Normal",
-    },
+    }, opts.win_options or {}),
   })
 
   -- mount/open the component

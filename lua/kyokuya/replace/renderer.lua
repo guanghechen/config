@@ -1,5 +1,7 @@
+local util_json = require("guanghechen.util.json")
 local util_filetype = require("guanghechen.util.filetype")
 local util_path = require("guanghechen.util.path")
+local util_reporter = require("guanghechen.util.reporter")
 local util_string = require("guanghechen.util.string")
 local util_table = require("guanghechen.util.table")
 local Input = require("kyokuya.component.input")
@@ -50,52 +52,137 @@ local function internal_render(opts)
     vim.keymap.set(modes, key, action, { noremap = true, silent = true, buffer = bufnr, desc = desc })
   end
 
+  ---@param key kyokuya.types.IReplaceStateKey
+  ---@param position? "center"|"cursor
+  ---@return nil
+  local function edit_string(key, position)
+    position = position or "cursor"
+    return function()
+      local cursor = vim.api.nvim_win_get_cursor(winnr)
+      local cursor_col = cursor[2]
+      local input = Input.new()
+      local value = state[key] ---@type string
+      input:open({
+        title = "[" .. key .. "]",
+        prompt = "",
+        value = value,
+        position = position,
+        cursor_col = cursor_col - 12,
+        on_confirm = function(next_value)
+          if value ~= next_value then
+            local next_state = vim.tbl_extend("force", state, { [key] = next_value })
+            on_change_from_opts(next_state)
+          end
+        end,
+      })
+    end
+  end
+
+  ---@param key kyokuya.types.IReplaceStateKey
+  ---@param position? "center"|"cursor
+  ---@return nil
+  local function edit_list(key, position)
+    position = position or "cursor"
+    return function()
+      local textarea = Textarea.new()
+      local value = state[key] ---@type string[]
+      textarea:open({
+        title = "[" .. key .. "]",
+        value = value,
+        position = position,
+        cursor_row = 1,
+        cursor_col = 1,
+        height = 10,
+        width = 80,
+        on_confirm = function(next_value)
+          local normailized = util_table.parse_comma_list(next_value)
+          if not util_table.equals_array(value, normailized) then
+            local next_state = vim.tbl_extend("force", state, { [key] = normailized })
+            on_change_from_opts(next_state)
+          end
+        end,
+      })
+    end
+  end
+
   local function on_edit()
     local cursor = vim.api.nvim_win_get_cursor(winnr)
     local cursor_row = cursor[1]
-    local cursor_col = cursor[2]
     local meta = line_metas[cursor_row]
     if meta ~= nil and meta.key ~= nil then
       local key = meta.key
       if key == "cwd" or key == "search_pattern" or key == "replace_pattern" then
-        local input = Input.new()
-        local value = state[key] ---@type string
-        input:open({
-          icon = "",
-          title = key,
-          value = value,
-          cursor_col = cursor_col - 12,
-          on_confirm = function(next_value)
-            if value ~= next_value then
-              local next_state = vim.tbl_extend("force", state, { [key] = next_value })
-              on_change_from_opts(next_state)
-            end
-          end,
-        })
+        edit_string(key)()
       end
       if key == "search_paths" or key == "include_patterns" or key == "exclude_patterns" then
-        local textarea = Textarea.new()
-        local value = state[key] ---@type string[]
-        textarea:open({
-          icon = "",
-          title = key,
-          value = value,
-          cursor_row = 1,
-          cursor_col = 1,
-          on_confirm = function(next_value)
-            local normailized = util_table.parse_comma_list(next_value)
-            if not util_table.equals_array(value, normailized) then
-              local next_state = vim.tbl_extend("force", state, { [key] = normailized })
-              on_change_from_opts(next_state)
-            end
-          end,
-        })
+        edit_list(key)()
       end
     end
   end
 
-  mk({ "n" }, "i", on_edit, "Edit search/replace config")
-  mk({ "n" }, "a", on_edit, "Edit search/replace config")
+  local function on_edit_full_config()
+    local textarea = Textarea:new()
+    local lines = util_json.stringify_prettier_lines(state) ---@type string[]
+    textarea:open({
+      title = state.mode == "search" and "[Search options]" or "[Replace options]",
+      value = lines,
+      position = "center",
+      cursor_row = 1,
+      cursor_col = 1,
+      width = 100,
+      on_confirm = function(next_value)
+        local content = table.concat(next_value, "\n") ---@type string
+        local ok, json = pcall(function()
+          return util_json.parse(content)
+        end)
+        if ok then
+          ---@cast json kyokuya.types.IReplacerState
+          ---@type kyokuya.types.IReplacerState
+          local raw = vim.tbl_extend("force", state, json)
+
+          ---@type kyokuya.types.IReplacerState
+          local next_state = {
+            cwd = raw.cwd,
+            mode = raw.mode,
+            flag_regex = raw.flag_regex,
+            flag_case_sensitive = raw.flag_case_sensitive,
+            search_pattern = raw.search_pattern,
+            replace_pattern = raw.replace_pattern,
+            search_paths = raw.search_paths,
+            include_patterns = raw.include_patterns,
+            exclude_patterns = raw.exclude_patterns,
+          }
+          on_change_from_opts(next_state)
+        else
+          util_reporter.error({
+            from = "kyokuya/replace",
+            subject = "ui-edit.edit_replacer_state",
+            message = "failed to parse json",
+            details = {
+              content = content,
+              json = json,
+            },
+          })
+        end
+      end,
+    })
+
+    local textarea_bufnr = textarea:get_bufnr()
+    if textarea_bufnr ~= nil then
+      vim.api.nvim_set_option_value("filetype", "json", { buf = textarea_bufnr })
+    end
+  end
+
+  mk({ "n", "v" }, "i", on_edit, "replace: edit config")
+  mk({ "n", "v" }, "a", on_edit, "replace: edit config")
+  mk({ "n", "v" }, "I", on_edit_full_config, "replace: edit full config")
+  mk({ "n", "v" }, "A", on_edit_full_config, "replace: edit full config")
+  mk({ "n", "v" }, "rr", edit_string("replace_pattern"), "replace: edit replace pattern")
+  mk({ "n", "v" }, "rs", edit_string("search_pattern"), "replace: edit search pattern")
+  mk({ "n", "v" }, "rc", edit_string("cwd"), "replace: edit cwd")
+  mk({ "n", "v" }, "rp", edit_list("search_paths"), "replace: edit search paths")
+  mk({ "n", "v" }, "re", edit_list("exclude_patterns"), "replace: edit exclude patterns")
+  mk({ "n", "v" }, "ri", edit_list("include_patterns"), "replace: edit include patterns")
 
   ---Render the search/replace options
   local mode_indicator = state.mode == "search" and "[Search]" or "[Replace]"
@@ -104,7 +191,7 @@ local function internal_render(opts)
   print_line("     Replace: " .. state.replace_pattern, { key = "replace_pattern" })
   print_line("         CWD: " .. state.cwd, { key = "cwd" })
   print_line("Search Paths: " .. table.concat(state.search_paths, ", "), { key = "search_paths" })
-  print_line("    Includes: " .. table.concat(state.include_patterns, ", "), { key = "include_patterns" })
+  print_line("     Include: " .. table.concat(state.include_patterns, ", "), { key = "include_patterns" })
   print_line("     Exclude: " .. table.concat(state.exclude_patterns, ", "), { key = "exclude_patterns" })
 
   ---Render the search/replace result
