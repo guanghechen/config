@@ -201,6 +201,9 @@ local function internal_render(opts)
       end
       local escaped_filepath = vim.fn.fnameescape(meta.filepath)
       vim.api.nvim_command("edit " .. escaped_filepath)
+      if meta.lnum ~= nil then
+        vim.api.nvim_win_set_cursor(selected_winnr, { meta.lnum, 0 })
+      end
     end
   end
 

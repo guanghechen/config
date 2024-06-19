@@ -26,6 +26,16 @@ function M.new()
   return self
 end
 
+---@return integer
+function M:get_nsnr()
+  return nsnr
+end
+
+---@return integer|nil
+function M:get_bufnr()
+  return self.bufnr
+end
+
 ---@param next_state kyokuya.types.IReplacerState|nil
 ---@return nil
 function M:set_state(next_state)
@@ -59,6 +69,7 @@ function M:replace(opts)
   if self.bufnr == nil then
     local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
     vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", "kyokuya-replace", { buf = bufnr })
     vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
     vim.cmd(string.format("%sbufdo file %s/REPLACE", bufnr, bufnr)) --- Rename the buf
     vim.api.nvim_create_autocmd("BufDelete", {

@@ -11,7 +11,10 @@ end
 
 function M.goto_definitions()
   -- vim.lsp.buf.definition()
-  require("telescope.builtin").lsp_definitions({ reuse_win = false })
+  require("telescope.builtin").lsp_definitions({
+    initial_mode = "normal",
+    reuse_win = false,
+  })
 end
 
 function M.goto_declarations()
