@@ -1,3 +1,5 @@
+local util_string = require("guanghechen.util.string")
+
 ---@class guanghechen.util.table
 local M = {}
 
@@ -113,6 +115,25 @@ function M.trim_and_filter(strs)
   end, function(v)
     return #v > 0
   end)
+end
+
+---@param strs string[]
+---@param separator_pattern? string
+---@return string[]
+function M.parse_comma_list(strs, separator_pattern)
+  separator_pattern = separator_pattern or ","
+  local result = {}
+  for i = 1, #strs do
+    local value = strs[i]
+    local items = util_string.split(value, separator_pattern)
+    for _, item in ipairs(items) do
+      local v = item:match("^%s*(.-)%s*$")
+      if #v > 0 then
+        table.insert(result, v)
+      end
+    end
+  end
+  return result
 end
 
 return M

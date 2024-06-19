@@ -64,7 +64,7 @@ local function internal_render(opts)
           icon = "",
           title = key,
           value = value,
-          cursor_col = cursor_col,
+          cursor_col = cursor_col - 12,
           on_confirm = function(next_value)
             if value ~= next_value then
               local next_state = vim.tbl_extend("force", state, { [key] = next_value })
@@ -80,11 +80,12 @@ local function internal_render(opts)
           icon = "",
           title = key,
           value = value,
-          cursor_row = meta.row or 1,
-          cursor_col = cursor_col,
+          cursor_row = 1,
+          cursor_col = 1,
           on_confirm = function(next_value)
-            if not util_table.equals_array(value, next_value) then
-              local next_state = vim.tbl_extend("force", state, { [key] = next_value })
+            local normailized = util_table.parse_comma_list(next_value)
+            if not util_table.equals_array(value, normailized) then
+              local next_state = vim.tbl_extend("force", state, { [key] = normailized })
               on_change_from_opts(next_state)
             end
           end,
@@ -99,24 +100,12 @@ local function internal_render(opts)
   ---Render the search/replace options
   local mode_indicator = state.mode == "search" and "[Search]" or "[Replace]"
   print_line(mode_indicator .. " Press ? for mappings", nil)
-  print_line("Search:", { key = "search_pattern" })
-  print_line(state.search_pattern, { key = "search_pattern" })
-  if state.mode == "replace" then
-    print_line("Replace:", { key = "replace_pattern" })
-    print_line(state.replace_pattern, { key = "replace_pattern" })
-  end
-  print_line("Search Paths:" .. "    cwd=" .. state.cwd, { key = "search_paths" })
-  for row, content in ipairs(state.search_paths) do
-    print_line(content, { key = "search_paths", row = row })
-  end
-  print_line("Includes:", { key = "include_patterns" })
-  for row, content in ipairs(state.include_patterns) do
-    print_line(content, { key = "include_patterns", row = row })
-  end
-  print_line("Exclude:", { key = "exclude_patterns" })
-  for row, content in ipairs(state.exclude_patterns) do
-    print_line(content, { key = "exclude_patterns", row = row })
-  end
+  print_line("      Search: " .. state.search_pattern, { key = "search_pattern" })
+  print_line("     Replace: " .. state.replace_pattern, { key = "replace_pattern" })
+  print_line("         CWD: " .. state.cwd, { key = "cwd" })
+  print_line("Search Paths: " .. table.concat(state.search_paths, ", "), { key = "search_paths" })
+  print_line("    Includes: " .. table.concat(state.include_patterns, ", "), { key = "include_patterns" })
+  print_line("     Exclude: " .. table.concat(state.exclude_patterns, ", "), { key = "exclude_patterns" })
 
   ---Render the search/replace result
   local result = searcher:search({ state = state, force = force }) ---@type kyokuya.types.ISearchResult|nil
@@ -140,7 +129,7 @@ local function internal_render(opts)
 
       local maximum_lnum = 0 ---@type integer
       ---@diagnostic disable-next-line: unused-local
-      for _1, file_item in ipairs(result.items) do
+      for _1, file_item in pairs(result.items) do
         ---@diagnostic disable-next-line: unused-local
         for _2, match_item in ipairs(file_item.matches) do
           if maximum_lnum < match_item.lnum then
@@ -157,7 +146,6 @@ local function internal_render(opts)
 
       local lnum_width = #tostring(maximum_lnum)
       local continous_line_padding = "¦ " .. string.rep(" ", lnum_width) .. "  "
-      ---@diagnostic disable-next-line: unused-local
       for raw_filepath, file_item in pairs(result.items) do
         local fileicon = util_filetype.calc_fileicon(raw_filepath)
         local filepath = util_path.relative(state.cwd, raw_filepath)

@@ -62,6 +62,7 @@ function M:open(opts)
 
   local function stopinsert()
     vim.cmd("stopinsert")
+    vim.api.nvim_win_set_cursor(0, { 1, cursor_col })
   end
 
   local function on_quit()
@@ -73,11 +74,11 @@ function M:open(opts)
 
   -- close on <esc> in normal mode
   input:map("n", "<esc>", on_quit, { noremap = true, silent = true, desc = "input: discard changes" })
+  input:map("n", "q", on_quit, { noremap = true, silent = true, desc = "input: discard changes" })
 
   -- close when cursor leaves the buffer
   input:on(event.BufLeave, on_quit, { once = true })
 
-  vim.api.nvim_win_set_cursor(0, { 1, cursor_col })
   self.input = input
 end
 

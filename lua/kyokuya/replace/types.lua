@@ -69,4 +69,3 @@
 ---@field public filepath? string current line indicate the filepath
 ---@field public lnum? integer current line indicate the filepath
 ---@field public key? kyokuya.types.IReplaceStateKey  current line pointer to a replacer-state field
----@field public row? integer  the row of the cursor

@@ -26,6 +26,8 @@ function M:open(opts)
   local icon = opts.icon
   local title = icon .. " " .. opts.title .. " "
   local value = opts.value
+  local cursor_row = opts.cursor_row ---@type integer
+  local cursor_col = opts.cursor_col ---@type integer
 
   local Popup = require("nui.popup")
   local event = require("nui.utils.autocmd").event
@@ -65,6 +67,7 @@ function M:open(opts)
 
   local function stopinsert()
     vim.cmd("stopinsert")
+    vim.api.nvim_win_set_cursor(0, { cursor_row, cursor_col })
   end
 
   local function on_quit()
