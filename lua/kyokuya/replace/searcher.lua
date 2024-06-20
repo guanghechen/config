@@ -1,5 +1,5 @@
+local nvim_tools = require("nvim_tools")
 local util_json = require("guanghechen.util.json")
-local util_table = require("guanghechen.util.table")
 
 ---@class kyokuya.replacer.Searcher : kyokuya.types.ISearcher
 ---@field private state kyokuya.types.ISearcherState|nil
@@ -48,12 +48,11 @@ function M:search(opts)
       flag_regex = state.flag_regex,
       flag_case_sensitive = state.flag_case_sensitive,
       search_pattern = state.search_pattern,
-      search_paths = #state.search_paths > 0 and state.search_paths or { "" },
-      include_patterns = #state.include_patterns > 0 and state.include_patterns or { "" },
-      exclude_patterns = #state.exclude_patterns > 0 and state.exclude_patterns or { "" },
+      search_paths = state.search_paths,
+      include_patterns = state.include_patterns,
+      exclude_patterns = state.exclude_patterns,
     }
 
-    local nvim_tools = require("nvim_tools")
     local options_stringified = util_json.stringify(options)
     local result_str = nvim_tools.search(options_stringified)
     local result = util_json.parse(result_str)
@@ -82,17 +81,15 @@ function M:replace_preview(text, replace_pattern)
   if not state.flag_case_sensitive then
     final_search_pattern = "(?i)" .. state.search_pattern
   end
-
-  local nvim_tools = require("nvim_tools")
   return nvim_tools.replace_text(text, final_search_pattern, replace_pattern)
 end
 
 ---@param state kyokuya.types.ISearcherState
 ---@return kyokuya.types.ISearcherState
 function M:normalize(state)
-  local search_paths = util_table.trim_and_filter(state.search_paths)
-  local include_patterns = util_table.trim_and_filter(state.include_patterns)
-  local exclude_patterns = util_table.trim_and_filter(state.exclude_patterns)
+  local search_paths = nvim_tools.normalize_comma_list(state.search_paths) ---@type string
+  local include_patterns = nvim_tools.normalize_comma_list(state.include_patterns) ---@type string
+  local exclude_patterns = nvim_tools.normalize_comma_list(state.exclude_patterns) ---@type string
 
   ---@type kyokuya.types.ISearcherState
   local normalized = {
@@ -125,9 +122,9 @@ function M:equals(next_state)
     and state.flag_regex == next_state.flag_regex
     and state.flag_case_sensitive == next_state.flag_case_sensitive
     and state.search_pattern == next_state.search_pattern
-    and util_table.equals_array(state.search_paths, next_state.search_paths)
-    and util_table.equals_array(state.include_patterns, next_state.include_patterns)
-    and util_table.equals_array(state.exclude_patterns, next_state.exclude_patterns)
+    and state.search_paths == next_state.search_paths
+    and state.include_patterns == next_state.include_patterns
+    and state.exclude_patterns == next_state.exclude_patterns
   )
 end
 

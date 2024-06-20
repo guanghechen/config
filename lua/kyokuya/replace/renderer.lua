@@ -1,3 +1,4 @@
+local nvim_tools = require("nvim_tools")
 local util_json = require("guanghechen.util.json")
 local util_filetype = require("guanghechen.util.filetype")
 local util_path = require("guanghechen.util.path")
@@ -27,6 +28,8 @@ local function internal_render(opts)
   local state = opts.state ---@type kyokuya.types.IReplacerState
   local force = opts.force ---@type boolean
   local on_change_from_opts = opts.on_change
+  local previous_cursor_row = 0 ---@type integer
+  local previous_cursor_col = 0 ---@type integer
 
   if winnr == 0 then
     winnr = vim.api.nvim_get_current_win()
@@ -75,6 +78,10 @@ local function internal_render(opts)
       local cursor_col = cursor[2]
       local input = Input.new()
       local value = state[key] ---@type string
+
+      previous_cursor_row = cursor[1]
+      previous_cursor_col = cursor[2]
+
       input:open({
         title = "[" .. key .. "]",
         prompt = "",
@@ -98,18 +105,28 @@ local function internal_render(opts)
     position = position or "cursor"
     return function()
       local textarea = Textarea.new()
-      local value = state[key] ---@type string[]
+      local value = state[key] ---@type string
+      local lines = util_table.parse_comma_list(value) ---@type string[]
+      local cursor = vim.api.nvim_win_get_cursor(winnr)
+
+      previous_cursor_row = cursor[1]
+      previous_cursor_col = cursor[2]
+
       textarea:open({
         title = "[" .. key .. "]",
-        value = value,
+        value = lines,
         position = position,
         cursor_row = 1,
         cursor_col = 1,
         height = 10,
         width = 80,
         on_confirm = function(next_value)
-          local normailized = util_table.parse_comma_list(next_value)
-          if not util_table.equals_array(value, normailized) then
+          local normalized_list = {}
+          for _, next_line in ipairs(next_value) do
+            table.insert(normalized_list, nvim_tools.normalize_comma_list(next_line))
+          end
+          local normailized = table.concat(normalized_list, ", ")
+          if value ~= normailized then
             local next_state = vim.tbl_extend("force", state, { [key] = normailized })
             on_change_from_opts(next_state)
           end
@@ -245,16 +262,16 @@ local function internal_render(opts)
     { cstart = 09, cend = 14, hlname = "kyokuya_replace_cfg_name" },
     { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
   })
-  print_line("Search Paths: " .. table.concat(state.search_paths, ", "), { key = "search_paths" }, {
+  print_line("Search Paths: " .. state.search_paths, { key = "search_paths" }, {
     { cstart = 00, cend = 14, hlname = "kyokuya_replace_cfg_name" },
     { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
   })
-  print_line("     Include: " .. table.concat(state.include_patterns, ", "), { key = "include_patterns" }, {
+  print_line("     Include: " .. state.include_patterns, { key = "include_patterns" }, {
     { cstart = 00, cend = 05, hlname = "kyokuya_invisible" },
     { cstart = 05, cend = 14, hlname = "kyokuya_replace_cfg_name" },
     { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
   })
-  print_line("     Exclude: " .. table.concat(state.exclude_patterns, ", "), { key = "exclude_patterns" }, {
+  print_line("     Exclude: " .. state.exclude_patterns, { key = "exclude_patterns" }, {
     { cstart = 00, cend = 05, hlname = "kyokuya_invisible" },
     { cstart = 05, cend = 14, hlname = "kyokuya_replace_cfg_name" },
     { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
@@ -269,7 +286,6 @@ local function internal_render(opts)
     if result.items == nil or result.error then
       local summary = string.format("Time: %s", result.elapsed_time)
       print_line(summary, nil)
-      vim.api.nvim_win_set_cursor(winnr, { lnum - 1, 0 })
     else
       local count_files = 0
       local count_matches = 0
@@ -293,7 +309,6 @@ local function internal_render(opts)
         "┌─────────────────────────────────────────────────────────────────────────────",
         nil
       )
-      vim.api.nvim_win_set_cursor(winnr, { lnum, 0 })
 
       local lnum_width = #tostring(maximum_lnum)
       local continous_line_padding = "¦ " .. string.rep(" ", lnum_width) .. "  "
@@ -324,14 +339,19 @@ local function internal_render(opts)
         nil
       )
     end
+
+    if previous_cursor_row > lnum then
+      previous_cursor_row = lnum
+    end
+    local maximum_column_of_line = vim.fn.strwidth(vim.fn.getline(previous_cursor_row))
+    if previous_cursor_col > maximum_column_of_line then
+      previous_cursor_col = maximum_column_of_line
+    end
+    vim.api.nvim_win_set_cursor(winnr, { previous_cursor_row, previous_cursor_col })
   end
 end
 
----@class guanghechen.replacer.renderer
----@field private searcher kyokuya.types.ISearcher
----@field private bufnr integer
----@field private winnr integer
----@field private nsnr integer
+---@class guanghechen.replacer.Renderer
 local M = {}
 
 ---@param opts kyokuya.replacer.IViewRenderOptions

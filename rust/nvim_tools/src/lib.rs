@@ -11,6 +11,9 @@ use nvim_oxi::Object;
 
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
+    let oxi_normalize_comma_list =
+        Function::from_fn(|input: String| util::string::normalize_comma_list(&input));
+
     let oxi_search = Function::from_fn(|options_json_str: String| -> String {
         if let Ok(options) = serde_json::from_str::<util::search::SearchOptions>(&options_json_str)
         {
@@ -37,6 +40,10 @@ fn nvim_tools() -> Dictionary {
     );
 
     Dictionary::from_iter([
+        (
+            "normalize_comma_list",
+            Object::from(oxi_normalize_comma_list),
+        ),
         ("search", Object::from(oxi_search)),
         ("replace_text", Object::from(oxi_replace_text)),
         ("replace_file", Object::from(oxi_replace_file)),

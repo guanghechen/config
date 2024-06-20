@@ -1,4 +1,4 @@
-local util_table = require("guanghechen.util.table")
+local nvim_tools = require("nvim_tools")
 local Searcher = require("kyokuya.replace.searcher")
 local renderer = require("kyokuya.replace.renderer")
 
@@ -127,9 +127,9 @@ end
 ---@param state kyokuya.types.IReplacerState
 ---@return kyokuya.types.IReplacerState
 function M:normalize(state)
-  local search_paths = util_table.trim_and_filter(state.search_paths)
-  local include_patterns = util_table.trim_and_filter(state.include_patterns)
-  local exclude_patterns = util_table.trim_and_filter(state.exclude_patterns)
+  local search_paths = nvim_tools.normalize_comma_list(state.search_paths) ---@type string
+  local include_patterns = nvim_tools.normalize_comma_list(state.include_patterns) ---@type string
+  local exclude_patterns = nvim_tools.normalize_comma_list(state.exclude_patterns) ---@type string
 
   ---@type kyokuya.types.IReplacerState
   local normalized = {
@@ -166,9 +166,9 @@ function M:equals(next_state)
     and state.flag_case_sensitive == next_state.flag_case_sensitive
     and state.search_pattern == next_state.search_pattern
     and state.replace_pattern == next_state.replace_pattern
-    and util_table.equals_array(state.search_paths, next_state.search_paths)
-    and util_table.equals_array(state.include_patterns, next_state.include_patterns)
-    and util_table.equals_array(state.exclude_patterns, next_state.exclude_patterns)
+    and state.search_paths == next_state.search_paths
+    and state.include_patterns == next_state.include_patterns
+    and state.exclude_patterns == next_state.exclude_patterns
   )
 end
 

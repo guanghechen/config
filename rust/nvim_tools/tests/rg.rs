@@ -24,9 +24,9 @@ fn test_rg() {
         flag_regex: true,
         flag_case_sensitive: false,
         search_pattern: r#"require\("(guanghechen\.util\.(?:os|clipboard))"\)"#.to_string(),
-        search_paths: vec!["lua".to_string()],
-        include_patterns: vec!["*.lua".to_string()],
-        exclude_patterns: vec!["".to_string()],
+        search_paths: "lua".to_string(),
+        include_patterns: "*.lua".to_string(),
+        exclude_patterns: ".git".to_string(),
     };
     let result = search::search(&replace_options);
 

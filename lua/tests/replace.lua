@@ -23,9 +23,9 @@ local options = {
   flag_case_sensitive = true,
   search_pattern = 'require\\("(guanghechen\\.util\\.(os|clipboard))"\\)',
   replace_pattern = 'import "$1"',
-  search_paths = { "lua/" },
-  include_patterns = { "*.lua" },
-  exclude_patterns = { ".git/" },
+  search_paths = "lua/",
+  include_patterns = "*.lua",
+  exclude_patterns = ".git/",
 }
 
 local replacer = Replacer.new({ reuse = true })

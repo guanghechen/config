@@ -1,4 +1,5 @@
 use crate::types::ripgrep_result;
+use crate::util::string::parse_comma_list;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, process::Command, time::SystemTime};
@@ -39,9 +40,9 @@ pub struct SearchOptions {
     pub flag_case_sensitive: bool,
     pub flag_regex: bool,
     pub search_pattern: String,
-    pub search_paths: Vec<String>,
-    pub include_patterns: Vec<String>,
-    pub exclude_patterns: Vec<String>,
+    pub search_paths: String,
+    pub include_patterns: String,
+    pub exclude_patterns: String,
 }
 
 pub fn search(
@@ -50,24 +51,9 @@ pub fn search(
     let flag_case_sensitive: bool = options.flag_case_sensitive;
     let flag_regex: bool = options.flag_regex;
     let search_pattern: &String = &options.search_pattern;
-    let search_paths: Vec<String> = options
-        .search_paths
-        .iter()
-        .map(|s| s.trim().to_string())
-        .filter(|x| !x.is_empty())
-        .collect();
-    let include_patterns: Vec<String> = options
-        .include_patterns
-        .iter()
-        .map(|s| s.trim().to_string())
-        .filter(|x| !x.is_empty())
-        .collect();
-    let exclude_patterns: Vec<String> = options
-        .exclude_patterns
-        .iter()
-        .map(|s| format!("!{}", s.trim()))
-        .filter(|x| x != "!")
-        .collect();
+    let search_paths: Vec<String> = parse_comma_list(&options.search_paths);
+    let include_patterns: Vec<String> = parse_comma_list(&options.include_patterns);
+    let exclude_patterns: Vec<String> = parse_comma_list(&options.exclude_patterns);
 
     let line_separator_regex = Regex::new(r"\s*(?:\r|\r\n|\n)\s*").unwrap();
     let elapsed_time: String;
@@ -198,3 +184,4 @@ pub fn search(
         }
     }
 }
+
