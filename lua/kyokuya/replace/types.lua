@@ -25,11 +25,11 @@
 ---@field public exclude_patterns     string
 
 ---@class kyokuya.replace.ISearchMatchedInlineItem
----@field public front                integer
----@field public tail                 integer
+---@field public l                integer
+---@field public r                 integer
 
 ---@class kyokuya.replace.ISearchMatchedLineItem
----@field public lines                string
+---@field public text                string
 ---@field public lnum                 integer
 ---@field public matches              kyokuya.replace.ISearchMatchedInlineItem[]
 

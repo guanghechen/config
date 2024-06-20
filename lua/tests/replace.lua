@@ -25,11 +25,11 @@ local replacer = Replacer.new({
     cwd = util_path.cwd(),
     flag_regex = true,
     flag_case_sensitive = true,
-    search_pattern = 'require\\("(guanghechen\\.util\\.(os|clipboard))"\\)',
-    replace_pattern = 'import "$1"',
-    search_paths = "lua/",
-    include_patterns = "*.lua",
-    exclude_patterns = ".git/",
+    search_pattern = "Hello, (world|世界)!\\n",
+    replace_pattern = 'hello - "$1"',
+    search_paths = "rust/",
+    include_patterns = "*.txt",
+    exclude_patterns = ".git/, c.txt",
   },
 })
 

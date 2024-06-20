@@ -6,13 +6,13 @@ use std::{collections::HashMap, process::Command, time::SystemTime};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchMatchedInlineItem {
-    pub front: usize, // related to the parent.lines
-    pub tail: usize,  // related to the parent.lines
+    pub l: usize, // related to the parent.lines
+    pub r: usize, // related to the parent.lines
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchMatchedLineItem {
-    pub lines: String,
+    pub text: String,
     pub lnum: usize,
     pub matches: Vec<SearchMatchedInlineItem>,
 }
@@ -47,7 +47,7 @@ pub struct SearchOptions {
 
 pub fn search(
     options: &SearchOptions,
-) -> Result<(SearchSucceedResult, String), SearchFailedResult> {
+) -> Result<(SearchSucceedResult, String, String), (SearchFailedResult, String)> {
     let flag_case_sensitive: bool = options.flag_case_sensitive;
     let flag_regex: bool = options.flag_regex;
     let search_pattern: &String = &options.search_pattern;
@@ -58,7 +58,7 @@ pub fn search(
     let line_separator_regex = Regex::new(r"\s*(?:\r|\r\n|\n)\s*").unwrap();
     let elapsed_time: String;
 
-    let output = {
+    let (cmd, output) = {
         let mut cmd = Command::new("rg");
         if let Some(cwd) = &options.cwd {
             cmd.current_dir(cwd);
@@ -73,7 +73,6 @@ pub fn search(
             .arg("--no-heading")
             .arg("--no-filename")
             .arg("--json")
-            .args(&search_paths)
             // -
         ;
 
@@ -83,27 +82,27 @@ pub fn search(
             cmd.arg("--ignore-case");
         }
 
+        for pattern in include_patterns {
+            cmd.arg("--glob").arg(pattern);
+        }
+
+        for pattern in exclude_patterns {
+            cmd.arg("--glob").arg(format!("!{}", pattern));
+        }
+
         if flag_regex {
             cmd.args(["--regexp", search_pattern]);
         } else {
             cmd.args(["--fixed-strings", search_pattern]);
         }
 
-        for pattern in include_patterns {
-            cmd.arg("--glob").arg(pattern);
-        }
-
-        for pattern in exclude_patterns {
-            cmd.arg("--glob").arg(pattern);
-        }
-
-        // print the executing command
-        println!("\n{:?}", cmd);
-
         let start_time = SystemTime::now();
 
         // return the output of the cmd
-        let output = cmd.output().expect("failed to execute ripgrep");
+        let output = cmd
+            .args(&search_paths)
+            .output()
+            .expect("failed to execute ripgrep");
 
         let end_time = SystemTime::now();
         elapsed_time = end_time
@@ -112,7 +111,7 @@ pub fn search(
             .as_secs_f32()
             .to_string();
 
-        output
+        (format!("{:?}", cmd), output)
     };
 
     if output.status.success() {
@@ -137,13 +136,13 @@ pub fn search(
                         let mut inline_matches: Vec<SearchMatchedInlineItem> = vec![];
                         for submatch in submatches {
                             let item: SearchMatchedInlineItem = SearchMatchedInlineItem {
-                                front: submatch.start,
-                                tail: submatch.end,
+                                l: submatch.start,
+                                r: submatch.end,
                             };
                             inline_matches.push(item);
                         }
                         let line_matches: SearchMatchedLineItem = SearchMatchedLineItem {
-                            lines: lines.text,
+                            text: lines.text,
                             lnum: line_number,
                             matches: inline_matches,
                         };
@@ -165,7 +164,7 @@ pub fn search(
             elapsed_time: result_elapsed_time,
             items: file_items_map,
         };
-        Ok((result, stdout.to_string()))
+        Ok((result, stdout.to_string(), cmd))
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.is_empty() {
@@ -175,13 +174,16 @@ pub fn search(
                     items: HashMap::new(),
                 },
                 "".to_string(),
+                cmd,
             ))
         } else {
-            Err(SearchFailedResult {
-                elapsed_time: format!("{}s", elapsed_time),
-                error: stderr.to_string(),
-            })
+            Err((
+                SearchFailedResult {
+                    elapsed_time: format!("{}s", elapsed_time),
+                    error: stderr.to_string(),
+                },
+                cmd,
+            ))
         }
     }
 }
-

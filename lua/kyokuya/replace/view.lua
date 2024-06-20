@@ -373,6 +373,7 @@ function M:internal_render_result(data, result)
     local summary = string.format("Time: %s", result.elapsed_time)
     self:internal_print(summary, nil)
   else
+    local mode = data.mode ---@type kyokuya.replace.IReplaceMode
     local count_files = 0
     local count_matches = 0
     local maximum_lnum = 0 ---@type integer
@@ -409,7 +410,7 @@ function M:internal_render_result(data, result)
 
       ---@diagnostic disable-next-line: unused-local
       for _2, match_item in ipairs(file_item.matches) do
-        local text = match_item.lines:gsub("[\r\n]+$", "") ---@type string
+        local text = match_item.text:gsub("[\r\n]+$", "") ---@type string
         local lines = util_string.split(text, "\r\n|\r|\n")
         local padding = "¦ " .. util_string.padStart(tostring(match_item.lnum), lnum_width, " ") .. ": "
         self:internal_print(padding .. lines[1], { filepath = filepath, lnum = match_item.lnum })
