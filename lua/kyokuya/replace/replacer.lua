@@ -3,32 +3,51 @@ local Searcher = require("kyokuya.replace.searcher")
 local renderer = require("kyokuya.replace.renderer")
 
 local current_buf_delete_augroup = vim.api.nvim_create_augroup("current_buf_delete_augroup", { clear = true })
+local nsnr = 0 -- vim.api.nvim_create_namespace("kyokuya_replace") ---@type integer
+local kyokuya_replace_buftype = "nofile"
+local kyokuya_replace_filetype = "kyokuya-replace"
 
-local nsnr = vim.api.nvim_create_namespace("REPLACE_PANE") ---@type integer
+---@return integer|nil
+local function find_first_replace_buf()
+  for _, bufnr in ipairs(vim.t.bufs) do
+    local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr })
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
+    if buftype == kyokuya_replace_buftype and filetype == kyokuya_replace_filetype then
+      return bufnr
+    end
+  end
+  return nil
+end
+
+---@class kyokuya.replacer.IReplacerOptions
+---@field public reuse? boolean
 
 ---@class kyokuya.replacer.Replacer
 ---@field private state kyokuya.types.IReplacerState|nil
 ---@field private searcher kyokuya.types.ISearcher
 ---@field private bufnr integer|nil
 ---@field private dirty boolean
+---@field private reuse boolean
 local M = {}
 M.__index = M
 
+M.nsnr = nsnr
+
+---@param opts? kyokuya.replacer.IReplacerOptions
 ---@return kyokuya.replacer.Replacer
-function M.new()
+function M.new(opts)
   local self = setmetatable({}, M)
+
+  opts = opts or {}
+  local reuse = not not opts.reuse ---@type boolean
 
   self.searcher = Searcher:new()
   self.state = nil
   self.bufnr = nil
   self.dirty = true
+  self.reuse = reuse
 
   return self
-end
-
----@return integer
-function M:get_nsnr()
-  return nsnr
 end
 
 ---@return integer|nil
@@ -67,20 +86,26 @@ function M:replace(opts)
   end
 
   if self.bufnr == nil then
-    local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
-    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
-    vim.api.nvim_set_option_value("filetype", "kyokuya-replace", { buf = bufnr })
-    vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
-    vim.cmd(string.format("%sbufdo file %s/REPLACE", bufnr, bufnr)) --- Rename the buf
-    vim.api.nvim_create_autocmd("BufDelete", {
-      group = current_buf_delete_augroup,
-      buffer = bufnr,
-      callback = function()
-        self.bufnr = nil
-      end,
-    })
+    if self.reuse then
+      self.bufnr = find_first_replace_buf() ---@type integer|nil
+    end
 
-    self.bufnr = bufnr
+    if self.bufnr == nil then
+      local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
+      vim.api.nvim_set_option_value("buftype", kyokuya_replace_buftype, { buf = bufnr })
+      vim.api.nvim_set_option_value("filetype", kyokuya_replace_filetype, { buf = bufnr })
+      vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
+      vim.cmd(string.format("%sbufdo file %s/REPLACE", bufnr, bufnr)) --- Rename the buf
+      vim.api.nvim_create_autocmd("BufDelete", {
+        group = current_buf_delete_augroup,
+        buffer = bufnr,
+        callback = function()
+          self.bufnr = nil
+        end,
+      })
+
+      self.bufnr = bufnr
+    end
   end
 
   if self.state ~= nil then

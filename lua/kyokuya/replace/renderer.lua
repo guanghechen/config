@@ -8,6 +8,14 @@ local util_window = require("guanghechen.util.window")
 local Input = require("kyokuya.component.input")
 local Textarea = require("kyokuya.component.textarea")
 
+---@param nsnr integer
+---@param bufnr integer
+---@return nil
+local function add_highlights(nsnr, bufnr)
+  vim.api.nvim_buf_add_highlight(bufnr, nsnr, "field_search_pattern_key", 1, 1, 14)
+  vim.api.nvim_buf_add_highlight(bufnr, nsnr, "field_search_pattern_val", 1, 14, -1)
+end
+
 ---@class kyokuya.replacer.IViewRenderOptions
 ---@field public searcher kyokuya.types.ISearcher
 ---@field public state kyokuya.types.IReplacerState
@@ -33,8 +41,6 @@ local function internal_render(opts)
   end
 
   ---Clear the buf before render.
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
 
   local line_metas = {} ---@type (kyokuya.types.IReplaceResultLineMeta|nil)[]
