@@ -65,7 +65,12 @@
 ---|"include_patterns"
 ---|"exclude_patterns"
 
----@class kyokuya.types.IReplaceResultLineMeta
+---@class kyokuya.types.IReplaceViewLineMeta
 ---@field public filepath? string current line indicate the filepath
 ---@field public lnum? integer current line indicate the filepath
 ---@field public key? kyokuya.types.IReplaceStateKey  current line pointer to a replacer-state field
+
+---@class kyokluya.type.IReplaceViewLineHighlights
+---@field public cstart integer
+---@field public cend integer
+---@field public hlname string|nil

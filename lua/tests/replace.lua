@@ -10,6 +10,9 @@ local highlighter = theme
   :register("kyokuya_replace_cfg_value", { fg = "yellow", bg = "none" })
   :register("kyokuya_replace_cfg_search_pattern", { fg = "diff_delete_hl", bg = "none" })
   :register("kyokuya_replace_cfg_replace_pattern", { fg = "diff_add_hl", bg = "none" })
+  :register("kyokuya_replace_filepath", { fg = "blue", bg = "none" })
+  :register("kyokuya_replace_text_deleted", { fg = "diff_delete_hl", bg = "none" })
+  :register("kyokuya_replace_text_added", { fg = "diff_add_hl", bg = "none" })
 highlighter:apply(nsnr)
 
 ---@type kyokuya.types.IReplacerState
@@ -22,7 +25,7 @@ local options = {
   replace_pattern = 'import "$1"',
   search_paths = { "lua/" },
   include_patterns = { "*.lua" },
-  exclude_patterns = { "" },
+  exclude_patterns = { ".git/" },
 }
 
 local replacer = Replacer.new({ reuse = true })
@@ -86,4 +89,4 @@ local function test_highlight()
   end
 end
 
-test_highlight()
+--test_highlight()

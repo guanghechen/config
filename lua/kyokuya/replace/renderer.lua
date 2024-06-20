@@ -8,14 +8,6 @@ local util_window = require("guanghechen.util.window")
 local Input = require("kyokuya.component.input")
 local Textarea = require("kyokuya.component.textarea")
 
----@param nsnr integer
----@param bufnr integer
----@return nil
-local function add_highlights(nsnr, bufnr)
-  vim.api.nvim_buf_add_highlight(bufnr, nsnr, "field_search_pattern_key", 1, 1, 14)
-  vim.api.nvim_buf_add_highlight(bufnr, nsnr, "field_search_pattern_val", 1, 14, -1)
-end
-
 ---@class kyokuya.replacer.IViewRenderOptions
 ---@field public searcher kyokuya.types.ISearcher
 ---@field public state kyokuya.types.IReplacerState
@@ -43,14 +35,24 @@ local function internal_render(opts)
   ---Clear the buf before render.
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
 
-  local line_metas = {} ---@type (kyokuya.types.IReplaceResultLineMeta|nil)[]
+  local line_metas = {} ---@type (kyokuya.types.IReplaceViewLineMeta|nil)[]
 
   local lnum = 0
   ---@param content string
-  ---@param meta kyokuya.types.IReplaceResultLineMeta|nil
+  ---@param meta    kyokuya.types.IReplaceViewLineMeta|nil
+  ---@param hls     ?kyokluya.type.IReplaceViewLineHighlights[]|nil
   ---@return nil
-  local function print_line(content, meta)
+  local function print_line(content, meta, hls)
     vim.api.nvim_buf_set_lines(bufnr, lnum, lnum, false, { content })
+
+    if hls ~= nil then
+      for _, hl in ipairs(hls) do
+        if hl.hlname ~= nil then
+          vim.api.nvim_buf_add_highlight(bufnr, nsnr, hl.hlname, lnum, hl.cstart, hl.cend)
+        end
+      end
+    end
+
     lnum = lnum + 1
     line_metas[lnum] = meta
   end
@@ -228,12 +230,35 @@ local function internal_render(opts)
   ---Render the search/replace options
   local mode_indicator = state.mode == "search" and "[Search]" or "[Replace]"
   print_line(mode_indicator .. " Press ? for mappings", nil)
-  print_line("      Search: " .. state.search_pattern, { key = "search_pattern" })
-  print_line("     Replace: " .. state.replace_pattern, { key = "replace_pattern" })
-  print_line("         CWD: " .. state.cwd, { key = "cwd" })
-  print_line("Search Paths: " .. table.concat(state.search_paths, ", "), { key = "search_paths" })
-  print_line("     Include: " .. table.concat(state.include_patterns, ", "), { key = "include_patterns" })
-  print_line("     Exclude: " .. table.concat(state.exclude_patterns, ", "), { key = "exclude_patterns" })
+  print_line("      Search: " .. state.search_pattern, { key = "search_pattern" }, {
+    { cstart = 00, cend = 06, hlname = "kyokuya_invisible" },
+    { cstart = 06, cend = 14, hlname = "kyokuya_replace_cfg_name" },
+    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_search_pattern" },
+  })
+  print_line("     Replace: " .. state.replace_pattern, { key = "replace_pattern" }, {
+    { cstart = 00, cend = 05, hlname = "kyokuya_invisible" },
+    { cstart = 05, cend = 14, hlname = "kyokuya_replace_cfg_name" },
+    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_replace_pattern" },
+  })
+  print_line("         CWD: " .. state.cwd, { key = "cwd" }, {
+    { cstart = 00, cend = 09, hlname = "kyokuya_invisible" },
+    { cstart = 09, cend = 14, hlname = "kyokuya_replace_cfg_name" },
+    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
+  })
+  print_line("Search Paths: " .. table.concat(state.search_paths, ", "), { key = "search_paths" }, {
+    { cstart = 00, cend = 14, hlname = "kyokuya_replace_cfg_name" },
+    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
+  })
+  print_line("     Include: " .. table.concat(state.include_patterns, ", "), { key = "include_patterns" }, {
+    { cstart = 00, cend = 05, hlname = "kyokuya_invisible" },
+    { cstart = 05, cend = 14, hlname = "kyokuya_replace_cfg_name" },
+    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
+  })
+  print_line("     Exclude: " .. table.concat(state.exclude_patterns, ", "), { key = "exclude_patterns" }, {
+    { cstart = 00, cend = 05, hlname = "kyokuya_invisible" },
+    { cstart = 05, cend = 14, hlname = "kyokuya_replace_cfg_name" },
+    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
+  })
 
   ---Render the search/replace result
   local result = searcher:search({ state = state, force = force }) ---@type kyokuya.types.ISearchResult|nil
@@ -273,9 +298,13 @@ local function internal_render(opts)
       local lnum_width = #tostring(maximum_lnum)
       local continous_line_padding = "¦ " .. string.rep(" ", lnum_width) .. "  "
       for raw_filepath, file_item in pairs(result.items) do
-        local fileicon = util_filetype.calc_fileicon(raw_filepath)
+        local fileicon, fileicon_highlight = util_filetype.calc_fileicon(raw_filepath)
         local filepath = util_path.relative(state.cwd, raw_filepath)
-        print_line(fileicon .. " " .. filepath, { filepath = filepath })
+
+        print_line(fileicon .. " " .. filepath, { filepath = filepath }, {
+          { cstart = 0, cend = 2, hlname = fileicon_highlight },
+          { cstart = 2, cend = -1, hlname = "kyokuya_replace_filepath" },
+        })
 
         ---@diagnostic disable-next-line: unused-local
         for _2, match_item in ipairs(file_item.matches) do
