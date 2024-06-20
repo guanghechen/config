@@ -83,7 +83,7 @@ function Observable:next(value, options)
 end
 
 ---@param subscriber guanghechen.types.ISubscriber
----@return nil
+---@return guanghechen.types.IUnsubscribable
 function Observable:subscribe(subscriber)
   if subscriber:isDisposed() then
     return util_misc.noop_unsubscribable

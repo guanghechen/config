@@ -5,7 +5,7 @@ local M = {}
 
 ---@param observable any
 ---@return boolean
-function M.isObservable(observable)
+function M.is_observable(observable)
   return type(observable) == "table"
     and type(observable.get_snapshot) == "function"
     and type(observable.next) == "function"

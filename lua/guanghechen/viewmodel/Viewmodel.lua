@@ -77,7 +77,7 @@ end
 function Viewmodel:get_snapshot()
   local data = {}
   for key, observable in pairs(self._persistable_observables) do
-    if util_observable.isObservable(observable) then
+    if util_observable.is_observable(observable) then
       ---@cast observable guanghechen.types.IObservable
       data[key] = observable:get_snapshot()
     end
@@ -89,7 +89,7 @@ end
 function Viewmodel:get_snapshot_all()
   local data = {}
   for key, observable in pairs(self._all_observables) do
-    if util_observable.isObservable(observable) then
+    if util_observable.is_observable(observable) then
       ---@cast observable guanghechen.types.IObservable
       data[key] = observable:get_snapshot()
     end
@@ -191,7 +191,7 @@ function Viewmodel:load()
 
   for key, value in pairs(data) do
     local observable = self[key]
-    if value ~= nil and util_observable.isObservable(observable) then
+    if value ~= nil and util_observable.is_observable(observable) then
       self._initial_values[key] = value
       observable:next(value)
     end

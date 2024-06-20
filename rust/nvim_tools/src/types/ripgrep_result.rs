@@ -1,10 +1,5 @@
-// 在您的 Cargo.toml 文件中包含 serde 和 serde_json 依赖
-// serde = { version = "1.0", features = ["derive"] }
-// serde_json = "1.0"
-
 use serde::{Deserialize, Serialize};
 
-// 定义与 JSON 数据匹配的 Rust 结构体
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ResultItem {
     #[serde(rename = "type")]
