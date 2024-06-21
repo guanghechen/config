@@ -140,6 +140,8 @@ return {
           cmd = "rg",
           -- default args
           args = {
+            "--multiline",
+            "--hidden",
             "--color=never",
             "--no-heading",
             "--with-filename",

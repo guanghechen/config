@@ -73,9 +73,11 @@ function M:render(opts)
 
     if self.bufnr == nil then
       local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
+      vim.api.nvim_set_current_buf(bufnr)
       vim.api.nvim_set_option_value("buftype", kyokuya_replace_buftype, { buf = bufnr })
       vim.api.nvim_set_option_value("filetype", kyokuya_replace_filetype, { buf = bufnr })
       vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
+      vim.opt_local.list = false
       vim.cmd(string.format("%sbufdo file %s/REPLACE", bufnr, bufnr)) --- Rename the buf
       vim.api.nvim_create_autocmd("BufDelete", {
         group = kyokuya_buf_delete_augroup,
@@ -293,6 +295,12 @@ function M:internal_bind_keymaps(bufnr)
     self.state:toggle_flag("flag_regex")
   end
 
+  local function on_toggle_mode()
+    local current_mode = self.state:get_value("mode")
+    local next_mode = current_mode == "search" and "replace" or "search"
+    self.state:set_value("mode", next_mode)
+  end
+
   local function on_enter_file()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local cursor = vim.api.nvim_win_get_cursor(winnr)
@@ -325,6 +333,9 @@ function M:internal_bind_keymaps(bufnr)
     end
   end
 
+  mk({ "n", "v" }, "<leader>i", on_toggle_case_sensitive, "replace: toggle case sensitive")
+  mk({ "n", "v" }, "<leader>r", on_toggle_regex, "replace: toggle regex mode")
+  mk({ "n", "v" }, "<leader>m", on_toggle_mode, "replace: toggle ux mode")
   mk({ "n", "v" }, "i", on_edit, "replace: edit config")
   mk({ "n", "v" }, "a", on_edit, "replace: edit config")
   mk({ "n", "v" }, "d", on_edit, "replace: edit config")
@@ -338,8 +349,6 @@ function M:internal_bind_keymaps(bufnr)
   mk({ "n", "v" }, "rp", edit_list("search_paths"), "replace: edit search paths")
   mk({ "n", "v" }, "re", edit_list("exclude_patterns"), "replace: edit exclude patterns")
   mk({ "n", "v" }, "ri", edit_list("include_patterns"), "replace: edit include patterns")
-  mk({ "n", "v" }, "<leader>i", on_toggle_case_sensitive, "replace: toggle case sensitive")
-  mk({ "n", "v" }, "<leader>r", on_toggle_regex, "replace: toggle regex mode")
   mk({ "n", "v" }, "<enter>", on_enter_file, "replace: view file")
 end
 
@@ -386,7 +395,11 @@ function M:internal_render_cfg(data)
   end
 
   local mode_indicator = data.mode == "search" and "[Search]" or "[Replace]"
-  self:internal_print(mode_indicator .. " Press ? for mappings", nil)
+  self:internal_print(
+    mode_indicator .. " Press ? for mappings",
+    nil,
+    { { cstart = 0, cend = -1, hlname = "kyokuya_replace_usage" } }
+  )
   print_cfg_field("cwd", "CWD", "kyokuya_replace_cfg_value")
   print_cfg_field("search_paths", "Paths", "kyokuya_replace_cfg_value")
   print_cfg_field("include_patterns", "Include", "kyokuya_replace_cfg_value")
@@ -429,11 +442,13 @@ function M:internal_render_result(data, result)
 
     self:internal_print(
       "┌─────────────────────────────────────────────────────────────────────────────",
-      nil
+      nil,
+      { { cstart = 0, cend = -1, hlname = "kyokuya_replace_result_fence" } }
     )
 
     local lnum_width = #tostring(maximum_lnum)
-    local continous_line_padding = "¦ " .. string.rep(" ", lnum_width) .. "  "
+    --local continous_line_padding = "¦ " .. string.rep(" ", lnum_width) .. "  "
+    local continous_line_padding = "│ " .. string.rep(" ", lnum_width) .. "  "
     for raw_filepath, file_item in pairs(result.items) do
       local fileicon, fileicon_highlight = util_filetype.calc_fileicon(raw_filepath)
       local filepath = util_path.relative(data.cwd, raw_filepath)
@@ -448,9 +463,37 @@ function M:internal_render_result(data, result)
         for _2, block_match in ipairs(file_item.matches) do
           local text = block_match.text
           for i, line in ipairs(block_match.lines) do
-            local match_highlights = {} ---@type kyokluya.replace.IReplaceViewLineHighlights[]
+            ---@type kyokluya.replace.IReplaceViewLineHighlights[]
+            local match_highlights = {
+              { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
+            }
             local padding = i > 1 and continous_line_padding
-              or "¦ " .. util_string.padStart(tostring(block_match.lnum), lnum_width, " ") .. ": "
+              or "│ " .. util_string.padStart(tostring(block_match.lnum), lnum_width, " ") .. ": "
+            ---@diagnostic disable-next-line: unused-local
+            for _3, piece in ipairs(line.p) do
+              table.insert(
+                match_highlights,
+                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "kyokuya_replace_text_deleted" }
+              )
+            end
+            self:internal_print(
+              padding .. text:sub(line.l + 1, line.r),
+              { filepath = filepath, lnum = block_match.lnum + i - 1 },
+              match_highlights
+            )
+          end
+        end
+      else
+        ---@diagnostic disable-next-line: unused-local
+        for _2, block_match in ipairs(file_item.matches) do
+          local text = block_match.text
+          for i, line in ipairs(block_match.lines) do
+            ---@type kyokluya.replace.IReplaceViewLineHighlights[]
+            local match_highlights = {
+              { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
+            }
+            local padding = i > 1 and continous_line_padding
+              or "│ " .. util_string.padStart(tostring(block_match.lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
               table.insert(
@@ -470,7 +513,8 @@ function M:internal_render_result(data, result)
 
     self:internal_print(
       "└─────────────────────────────────────────────────────────────────────────────",
-      nil
+      nil,
+      { { cstart = 0, cend = -1, hlname = "kyokuya_replace_result_fence" } }
     )
   end
 end
