@@ -21,11 +21,11 @@ local replacer = Replacer.new({
   winnr = 0,
   reuse = true,
   data = {
-    mode = "replace",
+    mode = "search",
     cwd = util_path.cwd(),
     flag_regex = true,
     flag_case_sensitive = true,
-    search_pattern = "Hello, (world|世界)!\\n",
+    search_pattern = "Hello, (world|世界)!(?:\\n|\\r\\n)",
     replace_pattern = 'hello - "$1"',
     search_paths = "rust/",
     include_patterns = "*.txt",
@@ -38,3 +38,12 @@ local cur_bufnr = vim.api.nvim_get_current_buf()
 replacer:replace()
 vim.api.nvim_set_current_win(cur_winnr)
 vim.api.nvim_set_current_buf(cur_bufnr)
+
+---@param str     string
+---@param left    integer
+---@param right   integer
+local function f(str, left, right)
+  local sub = string.sub(str, left, right)
+  vim.notify(vim.inspect({ sub = sub, width = vim.fn.strwidth(sub) }))
+end
+f("Hello, 世界!\nHello, 世界!\nHello, 世界!\nHello, 世界!\n", 0, 16)

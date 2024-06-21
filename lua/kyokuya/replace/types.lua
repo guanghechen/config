@@ -24,21 +24,32 @@
 ---@field public include_patterns     string
 ---@field public exclude_patterns     string
 
----@class kyokuya.replace.ISearchMatchedInlineItem
----@field public l                integer
----@field public r                 integer
+---@class kyokuya.replace.ISearchMatchPoint
+---@field public l                    integer
+---@field public r                    integer
 
----@class kyokuya.replace.ISearchMatchedLineItem
----@field public text                string
+---@class kyokuya.replace.ISearchLineMatchPiece
+---@field public i                    integer
+---@field public l                    integer
+---@field public r                    integer
+
+---@class kyokuya.replace.ISearchLineMatch
+---@field public l                    integer
+---@field public r                    integer
+---@field public p                    kyokuya.replace.ISearchLineMatchPiece[]
+
+---@class kyokuya.replace.ISearchBlockMatch
+---@field public text                 string
 ---@field public lnum                 integer
----@field public matches              kyokuya.replace.ISearchMatchedInlineItem[]
+---@field public matches              kyokuya.replace.ISearchMatchPoint[]
+---@field public lines                kyokuya.replace.ISearchLineMatch[]
 
----@class kyokuya.replace.ISearchMatchedFileItem
----@field public matches              kyokuya.replace.ISearchMatchedLineItem[]
+---@class kyokuya.replace.ISearchFileMatch
+---@field public matches              kyokuya.replace.ISearchBlockMatch[]
 
 ---@class kyokuya.replace.ISearchResult
 ---@field public elapsed_time         string
----@field public items                ?table<string, kyokuya.replace.ISearchMatchedFileItem>
+---@field public items                ?table<string, kyokuya.replace.ISearchFileMatch>
 ---@field public error                ? string
 
 ---@class kyokuya.replace.IOXISearchOptions

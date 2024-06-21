@@ -35,4 +35,17 @@ function M.padStart(text, length, pad)
   return string.rep(pad, delta) .. text
 end
 
+---@param text      string
+---@param start_pos integer
+---@param end_pos   integer
+function M.count_newlines(text, start_pos, end_pos)
+  local count = 0 ---@type integer
+  for i = start_pos, end_pos do
+    if text:sub(i, i) == "\n" then
+      count = count + 1
+    end
+  end
+  return count
+end
+
 return M

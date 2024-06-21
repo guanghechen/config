@@ -50,8 +50,8 @@ function M.new(opts)
   self.bufnr = nil
   self.lnum = 0
   self.line_metas = {}
-  self.cursor_row = 1
-  self.cursor_col = 0
+  self.cursor_row = 6
+  self.cursor_col = 14
 
   return self
 end
@@ -131,7 +131,7 @@ function M:internal_render(opts)
   if self.cursor_row > self.lnum then
     self.cursor_row = self.lnum
   end
-  local maximum_column_of_line = vim.fn.strwidth(vim.fn.getline(self.cursor_row))
+  local maximum_column_of_line = #vim.fn.getline(self.cursor_row)
   if self.cursor_col > maximum_column_of_line then
     self.cursor_col = maximum_column_of_line
   end
@@ -296,17 +296,19 @@ function M:internal_bind_keymaps(bufnr)
         return
       end
 
-      if selected_winnr < 0 then
+      if selected_winnr == 0 then
         local width = vim.api.nvim_win_get_width(winnr)
         local max_width = 80
 
         vim.cmd("vsplit")
+        selected_winnr = vim.api.nvim_get_current_win()
         if width / 2 > max_width then
           vim.api.nvim_win_set_width(winnr, max_width)
         end
       else
         vim.api.nvim_set_current_win(selected_winnr)
       end
+
       local escaped_filepath = vim.fn.fnameescape(meta.filepath)
       vim.api.nvim_command("edit " .. escaped_filepath)
       if meta.lnum ~= nil then
@@ -317,6 +319,9 @@ function M:internal_bind_keymaps(bufnr)
 
   mk({ "n", "v" }, "i", on_edit, "replace: edit config")
   mk({ "n", "v" }, "a", on_edit, "replace: edit config")
+  mk({ "n", "v" }, "d", on_edit, "replace: edit config")
+  mk({ "n", "v" }, "r", on_edit, "replace: edit config")
+  mk({ "v" }, "u", on_edit, "replace: edit config")
   mk({ "n", "v" }, "I", on_edit_full_config, "replace: edit full config")
   mk({ "n", "v" }, "A", on_edit_full_config, "replace: edit full config")
   mk({ "n", "v" }, "rr", edit_string("replace_pattern"), "replace: edit replace pattern")
@@ -332,37 +337,32 @@ end
 ---@param data kyokuya.replace.IReplaceStateData
 ---@return nil
 function M:internal_render_cfg(data)
+  ---@param key     kyokuya.replace.IReplaceStateKey
+  ---@param title   string
+  ---@param hlvalue string
+  local function print_cfg_field(key, title, hlvalue)
+    local title_width = #title
+    local cfg_name_len = 7
+    local invisible_width = cfg_name_len - title_width
+    local left = util_string.padStart(title, cfg_name_len, " ") .. ": " ---@type string
+
+    self:internal_print(left .. data[key], { key = key }, {
+      { cstart = 0, cend = invisible_width, hlname = "kyokuya_invisible" },
+      { cstart = invisible_width, cend = cfg_name_len, hlname = "kyokuya_replace_cfg_name" },
+      { cstart = cfg_name_len + 2, cend = -1, hlname = hlvalue },
+    })
+  end
+
   local mode_indicator = data.mode == "search" and "[Search]" or "[Replace]"
   self:internal_print(mode_indicator .. " Press ? for mappings", nil)
-  self:internal_print("      Search: " .. data.search_pattern, { key = "search_pattern" }, {
-    { cstart = 00, cend = 06, hlname = "kyokuya_invisible" },
-    { cstart = 06, cend = 14, hlname = "kyokuya_replace_cfg_name" },
-    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_search_pattern" },
-  })
-  self:internal_print("     Replace: " .. data.replace_pattern, { key = "replace_pattern" }, {
-    { cstart = 00, cend = 05, hlname = "kyokuya_invisible" },
-    { cstart = 05, cend = 14, hlname = "kyokuya_replace_cfg_name" },
-    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_replace_pattern" },
-  })
-  self:internal_print("         CWD: " .. data.cwd, { key = "cwd" }, {
-    { cstart = 00, cend = 09, hlname = "kyokuya_invisible" },
-    { cstart = 09, cend = 14, hlname = "kyokuya_replace_cfg_name" },
-    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
-  })
-  self:internal_print("Search Paths: " .. data.search_paths, { key = "search_paths" }, {
-    { cstart = 00, cend = 14, hlname = "kyokuya_replace_cfg_name" },
-    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
-  })
-  self:internal_print("     Include: " .. data.include_patterns, { key = "include_patterns" }, {
-    { cstart = 00, cend = 05, hlname = "kyokuya_invisible" },
-    { cstart = 05, cend = 14, hlname = "kyokuya_replace_cfg_name" },
-    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
-  })
-  self:internal_print("     Exclude: " .. data.exclude_patterns, { key = "exclude_patterns" }, {
-    { cstart = 00, cend = 05, hlname = "kyokuya_invisible" },
-    { cstart = 05, cend = 14, hlname = "kyokuya_replace_cfg_name" },
-    { cstart = 14, cend = -1, hlname = "kyokuya_replace_cfg_value" },
-  })
+  print_cfg_field("cwd", "CWD", "kyokuya_replace_cfg_value")
+  print_cfg_field("search_paths", "Paths", "kyokuya_replace_cfg_value")
+  print_cfg_field("include_patterns", "Include", "kyokuya_replace_cfg_value")
+  print_cfg_field("exclude_patterns", "Exclude", "kyokuya_replace_cfg_value")
+  print_cfg_field("search_pattern", "Search", "kyokuya_replace_cfg_search_pattern")
+  if data.mode == "replace" then
+    print_cfg_field("replace_pattern", "Replace", "kyokuya_replace_cfg_replace_pattern")
+  end
 end
 ---Render the search/replace options
 ---@param data kyokuya.replace.IReplaceStateData
@@ -408,15 +408,27 @@ function M:internal_render_result(data, result)
         { cstart = 2, cend = -1, hlname = "kyokuya_replace_filepath" },
       })
 
-      ---@diagnostic disable-next-line: unused-local
-      for _2, match_item in ipairs(file_item.matches) do
-        local text = match_item.text:gsub("[\r\n]+$", "") ---@type string
-        local lines = util_string.split(text, "\r\n|\r|\n")
-        local padding = "¦ " .. util_string.padStart(tostring(match_item.lnum), lnum_width, " ") .. ": "
-        self:internal_print(padding .. lines[1], { filepath = filepath, lnum = match_item.lnum })
-
-        for i = 2, #lines do
-          self:internal_print(continous_line_padding .. lines[i], { filepath = filepath, lnum = match_item.lnum })
+      if mode == "search" then
+        ---@diagnostic disable-next-line: unused-local
+        for _2, block_match in ipairs(file_item.matches) do
+          local text = block_match.text
+          for i, line in ipairs(block_match.lines) do
+            local match_highlights = {} ---@type kyokluya.replace.IReplaceViewLineHighlights[]
+            local padding = i > 1 and continous_line_padding
+              or "¦ " .. util_string.padStart(tostring(block_match.lnum), lnum_width, " ") .. ": "
+            ---@diagnostic disable-next-line: unused-local
+            for _3, piece in ipairs(line.p) do
+              table.insert(
+                match_highlights,
+                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "kyokuya_replace_text_deleted" }
+              )
+            end
+            self:internal_print(
+              padding .. text:sub(line.l + 1, line.r),
+              { filepath = filepath, lnum = block_match.lnum + i - 1 },
+              match_highlights
+            )
+          end
         end
       end
     end
@@ -449,7 +461,7 @@ function M:internal_print(line, meta, highlights)
 
   vim.api.nvim_buf_set_lines(bufnr, lnum, lnum, false, { line })
 
-  if highlights ~= nil then
+  if highlights ~= nil and #highlights > 0 then
     for _, hl in ipairs(highlights) do
       if hl.hlname ~= nil then
         vim.api.nvim_buf_add_highlight(bufnr, nsnr, hl.hlname, lnum, hl.cstart, hl.cend)

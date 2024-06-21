@@ -26,6 +26,7 @@ return {
         "lazyterm",
         "spectre_pane",
         "term",
+        "kyokuya-replace",
       },
       callback = function()
         vim.b.miniindentscope_disable = true

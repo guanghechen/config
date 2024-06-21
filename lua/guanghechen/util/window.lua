@@ -54,7 +54,7 @@ function M.pick_window(opts)
     })
   end
 
-  return -1
+  return 0
 end
 
 return M

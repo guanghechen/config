@@ -10,10 +10,13 @@ cargo build --release
 [ "$CARGO_TARGET_DIR" = "" ] && CARGO_TARGET_DIR=target
 
 if [ "$(uname)" == "Darwin" ]; then
+	rm -f ../../lua/nvim_tools.so
 	cp "${CARGO_TARGET_DIR}/release/libnvim_tools.dylib" ../../lua/nvim_tools.so
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+	rm -f ../../lua/nvim_tools.so
 	cp "${CARGO_TARGET_DIR}/release/libnvim_tools.so" ../../lua/nvim_tools.so
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
+	rm -f ../../lua/nvim_tools.dll
 	cp "${CARGO_TARGET_DIR}/release/libnvim_tools.dll" ../../lua/nvim_tools.dll
 fi
 

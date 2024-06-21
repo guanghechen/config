@@ -37,7 +37,7 @@ end
 M.focus_window_with_picker = function()
   local winnr_current = vim.api.nvim_get_current_win()
   local winnr_target = util_window.pick_window({ motivation = "focus" })
-  if winnr_target == nil or winnr_current == winnr_target then
+  if not winnr_target or winnr_current == winnr_target then
     return
   end
   vim.api.nvim_set_current_win(winnr_target)
@@ -47,7 +47,7 @@ end
 M.project_window_with_picker = function()
   local winnr_current = vim.api.nvim_get_current_win()
   local winnr_target = util_window.pick_window({ motivation = "project" })
-  if winnr_target == nil or winnr_current == winnr_target then
+  if not winnr_target or winnr_current == winnr_target then
     return
   end
 

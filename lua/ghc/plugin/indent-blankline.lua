@@ -26,6 +26,7 @@ return {
         "toggleterm",
         "lazyterm",
         "term",
+        "kyokuya-replace",
       },
     },
   },
