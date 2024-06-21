@@ -12,7 +12,7 @@ use std::{
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReplacePreview {
     pub text: String,
-    pub matches: Vec<LineMatch>,
+    pub lines: Vec<LineMatch>,
 }
 
 // https://docs.rs/regex/latest/regex/index.html
@@ -143,7 +143,7 @@ pub fn replace_text_preview(
     let lines: Vec<LineMatch> = find_matches_per_line(&next_text, &matches);
     ReplacePreview {
         text: next_text,
-        matches: lines,
+        lines,
     }
 }
 

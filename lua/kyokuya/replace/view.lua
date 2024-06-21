@@ -367,7 +367,7 @@ function M:internal_render_cfg(data)
     local left = util_string.padStart(title, cfg_name_len, " ") .. ": " ---@type string
     local value_start_pos = cfg_name_len + 2 ---@type integer
 
-    ---@type kyokluya.replace.IReplaceViewLineHighlights[]
+    ---@type kyokuya.replace.IReplaceViewLineHighlights[]
     local highlights = {
       { cstart = 0, cend = invisible_width, hlname = "kyokuya_invisible" },
       { cstart = invisible_width, cend = cfg_name_len, hlname = "kyokuya_replace_cfg_name" },
@@ -463,7 +463,7 @@ function M:internal_render_result(data, result)
         for _2, block_match in ipairs(file_item.matches) do
           local text = block_match.text
           for i, line in ipairs(block_match.lines) do
-            ---@type kyokluya.replace.IReplaceViewLineHighlights[]
+            ---@type kyokuya.replace.IReplaceViewLineHighlights[]
             local match_highlights = {
               { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
             }
@@ -485,25 +485,38 @@ function M:internal_render_result(data, result)
         end
       else
         ---@diagnostic disable-next-line: unused-local
-        for _2, block_match in ipairs(file_item.matches) do
-          local text = block_match.text
+        for _2, _block_match in ipairs(file_item.matches) do
+          ---@type string
+          local block_match_str = nvim_tools.replace_text_preview(
+            _block_match.text,
+            data.search_pattern,
+            data.replace_pattern,
+            true,
+            data.flag_regex
+          )
+          local block_match = util_json.parse(block_match_str)
+          ---@cast block_match kyokuya.replace.IReplacePreviewBlockItem
+
+          local text = block_match.text ---@type string
+          local start_lnum = _block_match.lnum ---@type integer
           for i, line in ipairs(block_match.lines) do
-            ---@type kyokluya.replace.IReplaceViewLineHighlights[]
+            ---@type kyokuya.replace.IReplaceViewLineHighlights[]
             local match_highlights = {
               { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
             }
             local padding = i > 1 and continous_line_padding
-              or "│ " .. util_string.padStart(tostring(block_match.lnum), lnum_width, " ") .. ": "
+              or "│ " .. util_string.padStart(tostring(start_lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
+              local hlname = piece.i % 2 == 0 and "kyokuya_replace_text_deleted" or "kyokuya_replace_text_added" ---@type string
               table.insert(
                 match_highlights,
-                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "kyokuya_replace_text_deleted" }
+                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = hlname }
               )
             end
             self:internal_print(
               padding .. text:sub(line.l + 1, line.r),
-              { filepath = filepath, lnum = block_match.lnum + i - 1 },
+              { filepath = filepath, lnum = start_lnum + i - 1 },
               match_highlights
             )
           end
@@ -521,7 +534,7 @@ end
 
 ---@param line           string
 ---@param meta           kyokuya.replace.IReplaceViewLineMeta|nil
----@param highlights     ?kyokluya.replace.IReplaceViewLineHighlights[]|nil
+---@param highlights     ?kyokuya.replace.IReplaceViewLineHighlights[]|nil
 ---@return nil
 function M:internal_print(line, meta, highlights)
   local nsnr = self.nsnr ---@type integer

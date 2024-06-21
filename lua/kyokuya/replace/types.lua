@@ -52,6 +52,10 @@
 ---@field public items                ?table<string, kyokuya.replace.ISearchFileMatch>
 ---@field public error                ? string
 
+---@class kyokuya.replace.IReplacePreviewBlockItem
+---@field public text                 string
+---@field public lines                kyokuya.replace.ISearchLineMatch[]
+
 ---@class kyokuya.replace.IOXISearchOptions
 ---@field public cwd                  string
 ---@field public flag_regex           boolean
@@ -66,7 +70,7 @@
 ---@field public lnum                 ?integer current line indicate the filepath
 ---@field public key                  ?kyokuya.replace.IReplaceStateKey
 
----@class kyokluya.replace.IReplaceViewLineHighlights
+---@class kyokuya.replace.IReplaceViewLineHighlights
 ---@field public cstart               integer
 ---@field public cend                 integer
 ---@field public hlname               string|nil
