@@ -6,3 +6,7 @@ args = ["fmt"]
 [tasks.test-rg]
 command = "cargo"
 args = ["test", "rg", "--", "--nocapture", "--test-threads=1"]
+
+[tasks.test-replace]
+command = "cargo"
+args = ["test", "replace", "--", "--nocapture", "--test-threads=1"]

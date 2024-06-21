@@ -39,7 +39,10 @@ impl<'a> Iterator for NewlineIndices<'a> {
                     self.next_index = newline_index + 1;
                     return Some(newline_index);
                 }
-                None => return Some(self.text.len()),
+                None => {
+                    self.next_index = self.text.len();
+                    return Some(self.text.len());
+                }
             }
         }
         None

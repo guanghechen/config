@@ -1,44 +1,16 @@
+use super::r#match::{find_matches_per_line, LineMatch, MatchPoint};
+use super::string::parse_comma_list;
 use crate::types::ripgrep_result;
-use crate::util::string::parse_comma_list;
-use crate::util::string::NewlineIndices;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, process::Command, time::SystemTime};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchMatchPoint {
-    #[serde(rename = "l")]
-    pub start: usize, // related to the parent.lines
-    #[serde(rename = "r")]
-    pub end: usize, // related to the parent.lines
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchLineMatchPiece {
-    #[serde(rename = "i")]
-    pub match_idx: usize, // index of the block match points.
-    #[serde(rename = "l")]
-    pub start: usize, // the character index of the line start
-    #[serde(rename = "r")]
-    pub end: usize, // the character index of the line end
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchLineMatch {
-    #[serde(rename = "l")]
-    pub start: usize, // the character index of the line start
-    #[serde(rename = "r")]
-    pub end: usize, // the character index of the line end
-    #[serde(rename = "p")]
-    pub pieces: Vec<SearchLineMatchPiece>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchBlockMatch {
     pub text: String, // matched content lines
     pub lnum: usize,  // start line number
-    pub matches: Vec<SearchMatchPoint>,
-    pub lines: Vec<SearchLineMatch>,
+    pub matches: Vec<MatchPoint>,
+    pub lines: Vec<LineMatch>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -158,56 +130,16 @@ pub fn search(
                         ..
                     } => {
                         let text: String = matched_lines.text;
-                        let mut matches: Vec<SearchMatchPoint> = vec![];
+                        let mut matches: Vec<MatchPoint> = vec![];
                         for submatch in submatches {
-                            let item: SearchMatchPoint = SearchMatchPoint {
+                            let item: MatchPoint = MatchPoint {
                                 start: submatch.start,
                                 end: submatch.end,
                             };
                             matches.push(item);
                         }
 
-                        let mut lines: Vec<SearchLineMatch> = vec![];
-                        let mut match_idx: usize = 0;
-                        let mut line_start_idx: usize = 0;
-                        for line_end_idx in NewlineIndices::new(&text) {
-                            let mut pieces: Vec<SearchLineMatchPiece> = vec![];
-                            while match_idx < matches.len() {
-                                let m = &matches[match_idx];
-                                if m.end < line_start_idx {
-                                    match_idx += 1;
-                                    continue;
-                                }
-                                if m.start >= line_end_idx {
-                                    break;
-                                }
-
-                                let start: usize = m.start.max(line_start_idx);
-                                let end: usize = m.end.min(line_end_idx);
-                                if start < end {
-                                    pieces.push(SearchLineMatchPiece {
-                                        match_idx,
-                                        start: start - line_start_idx,
-                                        end: end - line_start_idx,
-                                    });
-                                }
-
-                                if m.end > line_end_idx {
-                                    break;
-                                }
-
-                                match_idx += 1;
-                            }
-
-                            let line: SearchLineMatch = SearchLineMatch {
-                                start: line_start_idx,
-                                end: line_end_idx,
-                                pieces,
-                            };
-                            lines.push(line);
-                            line_start_idx = line_end_idx + 1;
-                        }
-
+                        let lines: Vec<LineMatch> = find_matches_per_line(&text, &matches);
                         let block_match: SearchBlockMatch = SearchBlockMatch {
                             text,
                             lnum: line_number,

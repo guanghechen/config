@@ -27,6 +27,26 @@ fn nvim_tools() -> Dictionary {
         }
     });
 
+    let oxi_replace_text_preview = Function::from_fn(
+        |(text, search_pattern, replace_pattern, keep_search_pieces, flag_regex): (
+            String,
+            String,
+            String,
+            bool,
+            bool,
+        )|
+         -> String {
+            let result = util::replace::replace_text_preview(
+                &text,
+                &search_pattern,
+                &replace_pattern,
+                keep_search_pieces,
+                flag_regex,
+            );
+            serde_json::to_string(&result).unwrap()
+        },
+    );
+
     let oxi_replace_text = Function::from_fn(
         |(text, search_query, replace_query): (String, String, String)| {
             util::replace::replace_text(&text, &search_query, &replace_query)
@@ -44,8 +64,12 @@ fn nvim_tools() -> Dictionary {
             "normalize_comma_list",
             Object::from(oxi_normalize_comma_list),
         ),
-        ("search", Object::from(oxi_search)),
-        ("replace_text", Object::from(oxi_replace_text)),
         ("replace_file", Object::from(oxi_replace_file)),
+        (
+            "replace_text_preview",
+            Object::from(oxi_replace_text_preview),
+        ),
+        ("replace_text", Object::from(oxi_replace_text)),
+        ("search", Object::from(oxi_search)),
     ])
 }
