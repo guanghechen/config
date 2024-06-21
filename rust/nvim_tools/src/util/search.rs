@@ -130,26 +130,46 @@ pub fn search(
                         ..
                     } => {
                         let text: String = matched_lines.text;
-                        let mut matches: Vec<MatchPoint> = vec![];
-                        for submatch in submatches {
-                            let item: MatchPoint = MatchPoint {
-                                start: submatch.start,
-                                end: submatch.end,
-                            };
-                            matches.push(item);
-                        }
-
-                        let lines: Vec<LineMatch> = find_matches_per_line(&text, &matches);
-                        let block_match: SearchBlockMatch = SearchBlockMatch {
-                            text,
-                            lnum: line_number,
-                            matches,
-                            lines,
-                        };
                         let file_item: &mut SearchFileMatch = file_matches
                             .entry(path.text.clone())
                             .or_insert(SearchFileMatch { matches: vec![] });
-                        file_item.matches.push(block_match);
+
+                        let mut lnum: usize = line_number;
+                        let mut offset: usize = 0;
+                        let mut submatch_start: usize = 0;
+                        let mut last_submatch_end: usize = 0;
+                        for (i, submatch) in submatches.iter().enumerate() {
+                            if let Some(middle_line_end_index) =
+                                text[last_submatch_end..submatch.start].find('\n')
+                            {
+                                let middle_line_end_index: usize =
+                                    middle_line_end_index + last_submatch_end;
+                                let block_match: SearchBlockMatch = process_block_match(
+                                    text[offset..=middle_line_end_index].to_string(),
+                                    &submatches[submatch_start..i],
+                                    lnum,
+                                    offset,
+                                );
+
+                                lnum += block_match.lines.len();
+                                offset = middle_line_end_index + 1;
+                                submatch_start = i;
+                                last_submatch_end = offset;
+                                file_item.matches.push(block_match);
+                            } else {
+                                last_submatch_end = submatch.end;
+                            }
+                        }
+
+                        if submatch_start < submatches.len() {
+                            let block_match: SearchBlockMatch = process_block_match(
+                                text[offset..].to_string(),
+                                &submatches[submatch_start..],
+                                lnum,
+                                offset,
+                            );
+                            file_item.matches.push(block_match);
+                        }
                     }
                     ripgrep_result::ResultItemData::End { .. } => {}
                     ripgrep_result::ResultItemData::Summary { elapsed_total, .. } => {
@@ -185,4 +205,29 @@ pub fn search(
             ))
         }
     }
+}
+
+fn process_block_match(
+    text: String,
+    submatches: &[ripgrep_result::SubMatch],
+    lnum: usize,
+    offset: usize,
+) -> SearchBlockMatch {
+    let mut matches: Vec<MatchPoint> = vec![];
+    for submatch in submatches.iter() {
+        let item: MatchPoint = MatchPoint {
+            start: submatch.start - offset,
+            end: submatch.end - offset,
+        };
+        matches.push(item);
+    }
+
+    let lines: Vec<LineMatch> = find_matches_per_line(&text, &matches);
+    let block_match: SearchBlockMatch = SearchBlockMatch {
+        text,
+        lnum,
+        matches,
+        lines,
+    };
+    block_match
 }

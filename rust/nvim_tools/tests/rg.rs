@@ -14,7 +14,7 @@ fn test_rg() {
         cwd: Some(cwd),
         flag_regex: true,
         flag_case_sensitive: true,
-        search_pattern: r#"Hello, (world|世界)!\n"#.to_string(),
+        search_pattern: r#"Hello, (world|世界)!\nH"#.to_string(),
         search_paths: "tests/fixtures".to_string(),
         include_patterns: "*.txt".to_string(),
         exclude_patterns: ".git, c.txt".to_string(),
