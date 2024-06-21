@@ -1,4 +1,4 @@
-local nvim_tools = require("nvim_tools")
+local oxi = require("kyokuya.oxi")
 local Input = require("kyokuya.component.input")
 local Textarea = require("kyokuya.component.textarea")
 local util_filetype = require("guanghechen.util.filetype")
@@ -115,7 +115,7 @@ function M:internal_render(opts)
   local bufnr = opts.bufnr ---@type integer
   local force = not not opts.force ---@type boolean
   local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
-  local result = self.state:search(force) ---@type kyokuya.replace.ISearchResult|nil
+  local result = self.state:search(force) ---@type kyokuya.oxi.replace.ISearchResult|nil
 
   ---Clear temporary states.
   self.lnum = 0
@@ -202,7 +202,7 @@ function M:internal_bind_keymaps(bufnr)
         on_confirm = function(next_value)
           local normalized_list = {}
           for _, next_line in ipairs(next_value) do
-            table.insert(normalized_list, nvim_tools.normalize_comma_list(next_line))
+            table.insert(normalized_list, oxi.normalize_comma_list(next_line))
           end
           local normailized = table.concat(normalized_list, ", ")
           self.state:set_value(key, normailized)
@@ -406,7 +406,7 @@ function M:internal_render_cfg(data)
   print_cfg_field("exclude_patterns", "Exclude", "kyokuya_replace_cfg_value")
   print_cfg_field("search_pattern", "Search", "kyokuya_replace_cfg_search_pattern", {
     { icon = "󰑑", enabled = data.flag_regex },
-    { icon = "", enabled = not data.flag_case_sensitive },
+    { icon = "", enabled = data.flag_case_sensitive },
   })
   if data.mode == "replace" then
     print_cfg_field("replace_pattern", "Replace", "kyokuya_replace_cfg_replace_pattern")
@@ -414,7 +414,7 @@ function M:internal_render_cfg(data)
 end
 ---Render the search/replace options
 ---@param data kyokuya.replace.IReplaceStateData
----@param result kyokuya.replace.ISearchResult
+---@param result kyokuya.oxi.replace.ISearchResult
 ---@return nil
 function M:internal_render_result(data, result)
   if result.items == nil or result.error then
@@ -486,16 +486,15 @@ function M:internal_render_result(data, result)
       else
         ---@diagnostic disable-next-line: unused-local
         for _2, _block_match in ipairs(file_item.matches) do
-          ---@type string
-          local block_match_str = nvim_tools.replace_text_preview(
-            _block_match.text,
-            data.search_pattern,
-            data.replace_pattern,
-            true,
-            data.flag_regex
-          )
-          local block_match = util_json.parse(block_match_str)
-          ---@cast block_match kyokuya.replace.IReplacePreviewBlockItem
+          ---@type kyokuya.oxi.replace.IReplacePreviewBlockItem
+          local block_match = oxi.replace_text_preview({
+            text = _block_match.text,
+            search_pattern = data.search_pattern,
+            replace_pattern = data.replace_pattern,
+            keep_search_pieces = true,
+            flag_regex = data.flag_regex,
+            flag_case_sensitive = data.flag_case_sensitive,
+          })
 
           local text = block_match.text ---@type string
           local start_lnum = _block_match.lnum ---@type integer

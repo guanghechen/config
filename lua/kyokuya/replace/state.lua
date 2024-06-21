@@ -1,12 +1,12 @@
-local nvim_tools = require("nvim_tools")
 local util_json = require("guanghechen.util.json")
+local oxi = require("kyokuya.oxi")
 
 ---@param data kyokuya.replace.IReplaceStateData
 ---@return kyokuya.replace.IReplaceStateData
 local function internal_normalize(data)
-  local search_paths = nvim_tools.normalize_comma_list(data.search_paths) ---@type string
-  local include_patterns = nvim_tools.normalize_comma_list(data.include_patterns) ---@type string
-  local exclude_patterns = nvim_tools.normalize_comma_list(data.exclude_patterns) ---@type string
+  local search_paths = oxi.normalize_comma_list(data.search_paths) ---@type string
+  local include_patterns = oxi.normalize_comma_list(data.include_patterns) ---@type string
+  local exclude_patterns = oxi.normalize_comma_list(data.exclude_patterns) ---@type string
 
   ---@type kyokuya.replace.IReplaceStateData
   local normalized = {
@@ -44,7 +44,7 @@ end
 
 ---@class kyokuya.replace.ReplaceState
 ---@field private data          kyokuya.replace.IReplaceStateData
----@field private search_result kyokuya.replace.ISearchResult|nil
+---@field private search_result kyokuya.oxi.replace.ISearchResult|nil
 ---@field private dirty_search  boolean
 ---@field private dirty_replace boolean
 ---@field private on_changed    fun(): nil
@@ -116,12 +116,12 @@ function M:is_dirty_replace()
 end
 
 ---@param force ?boolean
----@return kyokuya.replace.ISearchResult|nil
+---@return kyokuya.oxi.replace.ISearchResult|nil
 function M:search(force)
   if force or self:is_dirty_search() then
     local data = self.data ---@type kyokuya.replace.IReplaceStateData
 
-    ---@type kyokuya.replace.IOXISearchOptions
+    ---@type kyokuya.oxi.replace.ISearchOptions
     local options = {
       cwd = data.cwd,
       flag_regex = data.flag_regex,
@@ -131,29 +131,12 @@ function M:search(force)
       include_patterns = data.include_patterns,
       exclude_patterns = data.exclude_patterns,
     }
-
-    local options_stringified = util_json.stringify(options)
-    local result_str = nvim_tools.search(options_stringified)
-    local result = util_json.parse(result_str)
+    local result = oxi.search(options)
 
     self.dirty = false
     self.search_result = result
   end
   return vim.deepcopy(self.search_result)
-end
-
-function M:replace_preview(text, replace_pattern)
-  local data = self.data ---@type kyokuya.replace.IReplaceStateData
-
-  if not data.flag_regex then
-    return replace_pattern
-  end
-
-  local final_search_pattern = data.search_pattern
-  if not data.flag_case_sensitive then
-    final_search_pattern = "(?i)" .. data.search_pattern
-  end
-  return nvim_tools.replace_text(text, final_search_pattern, replace_pattern)
 end
 
 return M

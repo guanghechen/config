@@ -32,7 +32,7 @@ local replacer = Replacer.new({
     search_pattern = "Hello, (world|世界)!(?:\\n|\\r\\n)H",
     replace_pattern = 'hello - "$1"',
     search_paths = "rust/",
-    include_patterns = "*.txt",
+    include_patterns = "*.txt, *.rs",
     exclude_patterns = ".git/, c.txt",
   },
 })
