@@ -157,7 +157,8 @@ pub fn search(
                                 last_submatch_end = offset;
                                 file_item.matches.push(block_match);
                             } else {
-                                last_submatch_end = submatch.end;
+                                // The last submatch could reach the end of the line.
+                                last_submatch_end = submatch.end - 1;
                             }
                         }
 
