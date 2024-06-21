@@ -100,6 +100,13 @@ function M:set_value(key, val)
   end
 end
 
+---@param flag_name "flag_regex"|"flag_case_sensitive"
+function M:toggle_flag(flag_name)
+  local value = self.data[flag_name] ---@type boolean
+  local next_value = not value ---@type boolean
+  self:set_value(flag_name, next_value)
+end
+
 function M:is_dirty_search()
   return self.dirty_search
 end

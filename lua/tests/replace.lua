@@ -13,6 +13,8 @@ local highlighter = theme
   :register("kyokuya_replace_filepath", { fg = "blue", bg = "none" })
   :register("kyokuya_replace_text_deleted", { fg = "diff_delete_hl", bg = "none" })
   :register("kyokuya_replace_text_added", { fg = "diff_add_hl", bg = "none" })
+  :register("kyokuya_replace_flag", { fg = "white", bg = "grey" })
+  :register("kyokuya_replace_flag_enabled", { fg = "black", bg = "baby_pink" })
 highlighter:apply(nsnr)
 
 ---@type kyokuya.replace.Replacer

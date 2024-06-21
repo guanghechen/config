@@ -51,7 +51,7 @@ function M.new(opts)
   self.lnum = 0
   self.line_metas = {}
   self.cursor_row = 6
-  self.cursor_col = 14
+  self.cursor_col = 21
 
   return self
 end
@@ -285,6 +285,14 @@ function M:internal_bind_keymaps(bufnr)
     end
   end
 
+  local function on_toggle_case_sensitive()
+    self.state:toggle_flag("flag_case_sensitive")
+  end
+
+  local function on_toggle_regex()
+    self.state:toggle_flag("flag_regex")
+  end
+
   local function on_enter_file()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local cursor = vim.api.nvim_win_get_cursor(winnr)
@@ -330,6 +338,8 @@ function M:internal_bind_keymaps(bufnr)
   mk({ "n", "v" }, "rp", edit_list("search_paths"), "replace: edit search paths")
   mk({ "n", "v" }, "re", edit_list("exclude_patterns"), "replace: edit exclude patterns")
   mk({ "n", "v" }, "ri", edit_list("include_patterns"), "replace: edit include patterns")
+  mk({ "n", "v" }, "<leader>i", on_toggle_case_sensitive, "replace: toggle case sensitive")
+  mk({ "n", "v" }, "<leader>r", on_toggle_regex, "replace: toggle regex mode")
   mk({ "n", "v" }, "<enter>", on_enter_file, "replace: view file")
 end
 
@@ -340,17 +350,39 @@ function M:internal_render_cfg(data)
   ---@param key     kyokuya.replace.IReplaceStateKey
   ---@param title   string
   ---@param hlvalue string
-  local function print_cfg_field(key, title, hlvalue)
-    local title_width = #title
-    local cfg_name_len = 7
-    local invisible_width = cfg_name_len - title_width
+  ---@param flags   ?{ icon: string, enabled: boolean }[]
+  local function print_cfg_field(key, title, hlvalue, flags)
+    local title_width = #title ---@type integer
+    local cfg_name_len = 7 ---@type integer
+    local invisible_width = cfg_name_len - title_width ---@type integer
     local left = util_string.padStart(title, cfg_name_len, " ") .. ": " ---@type string
+    local value_start_pos = cfg_name_len + 2 ---@type integer
 
-    self:internal_print(left .. data[key], { key = key }, {
+    ---@type kyokluya.replace.IReplaceViewLineHighlights[]
+    local highlights = {
       { cstart = 0, cend = invisible_width, hlname = "kyokuya_invisible" },
       { cstart = invisible_width, cend = cfg_name_len, hlname = "kyokuya_replace_cfg_name" },
-      { cstart = cfg_name_len + 2, cend = -1, hlname = hlvalue },
-    })
+    }
+
+    if flags ~= nil and #flags > 0 then
+      for _, flag in ipairs(flags) do
+        local extra = " " .. flag.icon .. " " ---@type string
+        local next_value_start_pos = value_start_pos + #extra ---@type integer
+        local hlflag = flag.enabled and "kyokuya_replace_flag_enabled" or "kyokuya_replace_flag"
+
+        left = left .. extra
+        table.insert(highlights, {
+          cstart = value_start_pos,
+          cend = next_value_start_pos,
+          hlname = hlflag,
+        })
+        value_start_pos = next_value_start_pos
+      end
+      left = left .. " "
+    end
+
+    table.insert(highlights, { cstart = value_start_pos, cend = -1, hlname = hlvalue })
+    self:internal_print(left .. data[key], { key = key }, highlights)
   end
 
   local mode_indicator = data.mode == "search" and "[Search]" or "[Replace]"
@@ -359,7 +391,10 @@ function M:internal_render_cfg(data)
   print_cfg_field("search_paths", "Paths", "kyokuya_replace_cfg_value")
   print_cfg_field("include_patterns", "Include", "kyokuya_replace_cfg_value")
   print_cfg_field("exclude_patterns", "Exclude", "kyokuya_replace_cfg_value")
-  print_cfg_field("search_pattern", "Search", "kyokuya_replace_cfg_search_pattern")
+  print_cfg_field("search_pattern", "Search", "kyokuya_replace_cfg_search_pattern", {
+    { icon = "󰑑", enabled = data.flag_regex },
+    { icon = "", enabled = not data.flag_case_sensitive },
+  })
   if data.mode == "replace" then
     print_cfg_field("replace_pattern", "Replace", "kyokuya_replace_cfg_replace_pattern")
   end
