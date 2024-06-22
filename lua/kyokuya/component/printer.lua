@@ -55,7 +55,7 @@ end
 ---@param highlights     ?kyokuya.component.IPrinterLineHighlight
 ---@param meta           ?any
 ---@return nil
-function M:print(line, meta, highlights)
+function M:print(line, highlights, meta)
   local nsnr = self.nsnr ---@type integer
   local bufnr = self.bufnr ---@type integer
   local lnum = self.lnum ---@type integer

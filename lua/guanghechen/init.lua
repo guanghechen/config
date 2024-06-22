@@ -16,6 +16,7 @@ M.clazz = {
 
 ---@class guanghechen.util
 M.util = {
+  buffer = require("guanghechen.util.buffer"),
   clipboard = require("guanghechen.util.clipboard"),
   comparator = require("guanghechen.util.comparator"),
   debounce = require("guanghechen.util.debounce"),

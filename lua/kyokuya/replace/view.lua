@@ -1,16 +1,15 @@
 local oxi = require("kyokuya.oxi")
 local Printer = require("kyokuya.component.printer")
 local Textarea = require("kyokuya.component.textarea")
+local Previewer = require("kyokuya.replace.previewer")
+local constants = require("kyokuya.constant")
 local util_filetype = require("guanghechen.util.filetype")
 local util_json = require("guanghechen.util.json")
 local util_path = require("guanghechen.util.path")
 local util_reporter = require("guanghechen.util.reporter")
 local util_string = require("guanghechen.util.string")
 local util_table = require("guanghechen.util.table")
-local util_window = require("guanghechen.util.window")
 
-local kyokuya_replace_buftype = "nofile"
-local kyokuya_replace_filetype = "kyokuya-replace"
 local kyokuya_buf_delete_augroup = vim.api.nvim_create_augroup("kyokuya_buf_delete", { clear = true })
 
 ---@return integer|nil
@@ -18,7 +17,7 @@ local function find_first_replace_buf()
   for _, bufnr in ipairs(vim.t.bufs) do
     local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr })
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-    if buftype == kyokuya_replace_buftype and filetype == kyokuya_replace_filetype then
+    if buftype == constants.kyokuya_replace_buftype and filetype == constants.kyokuya_replace_filetype then
       return bufnr
     end
   end
@@ -34,6 +33,7 @@ end
 ---@field private nsnr          integer
 ---@field private bufnr         integer|nil
 ---@field private printer       kyokuya.component.Printer
+---@field private previewer     kyokuya.replace.ReplacePreviewer
 ---@field private cfg_name_len  integer
 ---@field private cursor_row    integer
 ---@field private cursor_col    integer
@@ -44,12 +44,14 @@ M.__index = M
 ---@return kyokuya.replace.ReplaceView
 function M.new(opts)
   local self = setmetatable({}, M)
+  local state = opts.state ---@type kyokuya.replace.ReplaceState
   local nsnr = opts.nsnr ---@type integer
 
-  self.state = opts.state
+  self.state = state
   self.nsnr = nsnr
   self.bufnr = nil
   self.printer = Printer.new({ bufnr = 0, nsnr = nsnr })
+  self.previewer = Previewer.new({ state = state, nsnr = nsnr })
   self.cfg_name_len = 7
   self.cursor_row = 6
   self.cursor_col = 21
@@ -75,8 +77,8 @@ function M:render(opts)
     if self.bufnr == nil then
       local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
       vim.api.nvim_set_current_buf(bufnr)
-      vim.api.nvim_set_option_value("buftype", kyokuya_replace_buftype, { buf = bufnr })
-      vim.api.nvim_set_option_value("filetype", kyokuya_replace_filetype, { buf = bufnr })
+      vim.api.nvim_set_option_value("buftype", constants.kyokuya_replace_buftype, { buf = bufnr })
+      vim.api.nvim_set_option_value("filetype", constants.kyokuya_replace_filetype, { buf = bufnr })
       vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
       vim.opt_local.list = false
       vim.cmd(string.format("%sbufdo file %s/REPLACE", bufnr, bufnr)) --- Rename the buf
@@ -121,8 +123,8 @@ function M:internal_render(opts)
   self.printer:clear()
   self:internal_render_cfg(data)
   if result ~= nil then
-    self:internal_print("", nil)
-    self:internal_print("", nil)
+    self:internal_print("")
+    self:internal_print("")
     self:internal_render_result(data, result)
   end
 
@@ -360,22 +362,9 @@ function M:internal_bind_keymaps(bufnr)
     local cursor_row = cursor[1]
     local meta = self.printer:get_meta(cursor_row) ---@type kyokuya.replace.IReplaceViewLineMeta|nil
     if meta ~= nil and meta.filepath ~= nil then
-      local selected_winnr = util_window.pick_window({ motivation = "project" }) ---@type integer|nil
+      local selected_winnr = self.previewer:select_preview_window()
       if selected_winnr == nil then
         return
-      end
-
-      if selected_winnr == 0 then
-        local width = vim.api.nvim_win_get_width(winnr)
-        local max_width = 80
-
-        vim.cmd("vsplit")
-        selected_winnr = vim.api.nvim_get_current_win()
-        if width / 2 > max_width then
-          vim.api.nvim_win_set_width(winnr, max_width)
-        end
-      else
-        vim.api.nvim_set_current_win(selected_winnr)
       end
 
       local escaped_filepath = vim.fn.fnameescape(meta.filepath)
@@ -387,10 +376,17 @@ function M:internal_bind_keymaps(bufnr)
   end
 
   local function on_view_file()
-    if self.state:get_value("mode") == "search" then
-      on_view_original_file()
-    else
-      on_view_original_file()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local cursor = vim.api.nvim_win_get_cursor(winnr)
+    local cursor_row = cursor[1]
+    local meta = self.printer:get_meta(cursor_row) ---@type kyokuya.replace.IReplaceViewLineMeta|nil
+    if meta ~= nil and meta.filepath ~= nil then
+      self.previewer:preview({
+        filepath = meta.filepath,
+        keep_search_pieces = true,
+        cursor_row = meta.lnum or 1,
+        cursor_col = 0,
+      })
     end
   end
 
@@ -455,13 +451,12 @@ function M:internal_render_cfg(data)
 
     local value = string.gsub(data[key], "\n", "↲")
     table.insert(highlights, { cstart = value_start_pos, cend = -1, hlname = hlvalue })
-    self:internal_print(left .. value, { key = key }, highlights)
+    self:internal_print(left .. value, highlights, { key = key })
   end
 
   local mode_indicator = data.mode == "search" and "[Search]" or "[Replace]"
   self:internal_print(
     mode_indicator .. " Press ? for mappings",
-    nil,
     { { cstart = 0, cend = -1, hlname = "kyokuya_replace_usage" } }
   )
   print_cfg_field("cwd", "CWD", "kyokuya_replace_cfg_value")
@@ -483,7 +478,7 @@ end
 function M:internal_render_result(data, result)
   if result.items == nil or result.error then
     local summary = string.format("Time: %s", result.elapsed_time)
-    self:internal_print(summary, nil)
+    self:internal_print(summary)
   else
     local mode = data.mode ---@type kyokuya.replace.IReplaceMode
     local count_files = 0
@@ -502,11 +497,10 @@ function M:internal_render_result(data, result)
     end
 
     local summary = string.format("Files: %s, matches: %s, time: %s", count_files, count_matches, result.elapsed_time)
-    self:internal_print(summary, nil)
+    self:internal_print(summary)
 
     self:internal_print(
       "┌─────────────────────────────────────────────────────────────────────────────",
-      nil,
       { { cstart = 0, cend = -1, hlname = "kyokuya_replace_result_fence" } }
     )
 
@@ -517,10 +511,10 @@ function M:internal_render_result(data, result)
       local fileicon, fileicon_highlight = util_filetype.calc_fileicon(raw_filepath)
       local filepath = util_path.relative(data.cwd, raw_filepath)
 
-      self:internal_print(fileicon .. " " .. filepath, { filepath = filepath }, {
+      self:internal_print(fileicon .. " " .. filepath, {
         { cstart = 0, cend = 2, hlname = fileicon_highlight },
         { cstart = 2, cend = -1, hlname = "kyokuya_replace_filepath" },
-      })
+      }, { filepath = filepath })
 
       if mode == "search" then
         ---@diagnostic disable-next-line: unused-local
@@ -542,8 +536,8 @@ function M:internal_render_result(data, result)
             end
             self:internal_print(
               padding .. text:sub(line.l + 1, line.r),
-              { filepath = filepath, lnum = block_match.lnum + i - 1 },
-              match_highlights
+              match_highlights,
+              { filepath = filepath, lnum = block_match.lnum + i - 1 }
             )
           end
         end
@@ -579,8 +573,8 @@ function M:internal_render_result(data, result)
             end
             self:internal_print(
               padding .. text:sub(line.l + 1, line.r),
-              { filepath = filepath, lnum = start_lnum + i - 1 },
-              match_highlights
+              match_highlights,
+              { filepath = filepath, lnum = start_lnum + i - 1 }
             )
           end
         end
@@ -589,17 +583,16 @@ function M:internal_render_result(data, result)
 
     self:internal_print(
       "└─────────────────────────────────────────────────────────────────────────────",
-      nil,
       { { cstart = 0, cend = -1, hlname = "kyokuya_replace_result_fence" } }
     )
   end
 end
 
 ---@param line           string
----@param meta           kyokuya.replace.IReplaceViewLineMeta|nil
----@param highlights     ?kyokuya.replace.IReplaceViewLineHighlights[]|nil
+---@param highlights     ?kyokuya.replace.IReplaceViewLineHighlights[]
+---@param meta           ?kyokuya.replace.IReplaceViewLineMeta
 ---@return nil
-function M:internal_print(line, meta, highlights)
+function M:internal_print(line, highlights, meta)
   local bufnr = self.bufnr ---@type integer|nil
   if bufnr == nil then
     util_reporter.error({
@@ -611,7 +604,7 @@ function M:internal_print(line, meta, highlights)
     return
   end
 
-  self.printer:print(line, meta, highlights)
+  self.printer:print(line, highlights, meta)
 end
 
 return M
