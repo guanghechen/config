@@ -1,5 +1,5 @@
 local oxi = require("kyokuya.oxi")
-local Input = require("kyokuya.component.input")
+local Printer = require("kyokuya.component.printer")
 local Textarea = require("kyokuya.component.textarea")
 local util_filetype = require("guanghechen.util.filetype")
 local util_json = require("guanghechen.util.json")
@@ -33,8 +33,7 @@ end
 ---@field private state         kyokuya.replace.ReplaceState
 ---@field private nsnr          integer
 ---@field private bufnr         integer|nil
----@field private lnum          integer
----@field private line_metas    table<number, kyokuya.replace.IReplaceViewLineMeta|nil>
+---@field private printer       kyokuya.component.Printer
 ---@field private cfg_name_len  integer
 ---@field private cursor_row    integer
 ---@field private cursor_col    integer
@@ -45,12 +44,12 @@ M.__index = M
 ---@return kyokuya.replace.ReplaceView
 function M.new(opts)
   local self = setmetatable({}, M)
+  local nsnr = opts.nsnr ---@type integer
 
   self.state = opts.state
-  self.nsnr = opts.nsnr
+  self.nsnr = nsnr
   self.bufnr = nil
-  self.lnum = 0
-  self.line_metas = {}
+  self.printer = Printer.new({ bufnr = 0, nsnr = nsnr })
   self.cfg_name_len = 7
   self.cursor_row = 6
   self.cursor_col = 21
@@ -90,6 +89,7 @@ function M:render(opts)
       })
 
       self.bufnr = bufnr
+      self.printer:reset({ bufnr = bufnr, nsnr = self.nsnr })
       self:internal_bind_keymaps(bufnr)
     end
   end
@@ -114,16 +114,11 @@ end
 ---@param opts { winnr: integer, bufnr: integer, force?: boolean }
 function M:internal_render(opts)
   local winnr = opts.winnr ---@type integer
-  local bufnr = opts.bufnr ---@type integer
   local force = not not opts.force ---@type boolean
   local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
   local result = self.state:search(force) ---@type kyokuya.oxi.replace.ISearchResult|nil
 
-  ---Clear temporary states.
-  self.lnum = 0
-  -- self.line_metas = {} --don't clear the line metas to reuse the search/replace result view.
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-
+  self.printer:clear()
   self:internal_render_cfg(data)
   if result ~= nil then
     self:internal_print("", nil)
@@ -132,8 +127,9 @@ function M:internal_render(opts)
   end
 
   ---Set cursor position.
-  if self.cursor_row > self.lnum then
-    self.cursor_row = self.lnum
+  local current_lnum = self.printer:get_current_lnum() ---@type integer
+  if self.cursor_row > current_lnum then
+    self.cursor_row = current_lnum
   end
   local maximum_column_of_line = #vim.fn.getline(self.cursor_row)
   if self.cursor_col > maximum_column_of_line then
@@ -272,7 +268,7 @@ function M:internal_bind_keymaps(bufnr)
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local cursor = vim.api.nvim_win_get_cursor(winnr)
     local cursor_row = cursor[1]
-    local meta = self.line_metas[cursor_row]
+    local meta = self.printer:get_meta(cursor_row) ---@type kyokuya.replace.IReplaceViewLineMeta|nil
     if meta ~= nil and meta.key ~= nil then
       local key = meta.key
       if key == "cwd" or key == "search_pattern" or key == "replace_pattern" then
@@ -362,7 +358,7 @@ function M:internal_bind_keymaps(bufnr)
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local cursor = vim.api.nvim_win_get_cursor(winnr)
     local cursor_row = cursor[1]
-    local meta = self.line_metas[cursor_row]
+    local meta = self.printer:get_meta(cursor_row) ---@type kyokuya.replace.IReplaceViewLineMeta|nil
     if meta ~= nil and meta.filepath ~= nil then
       local selected_winnr = util_window.pick_window({ motivation = "project" }) ---@type integer|nil
       if selected_winnr == nil then
@@ -604,10 +600,7 @@ end
 ---@param highlights     ?kyokuya.replace.IReplaceViewLineHighlights[]|nil
 ---@return nil
 function M:internal_print(line, meta, highlights)
-  local nsnr = self.nsnr ---@type integer
   local bufnr = self.bufnr ---@type integer|nil
-  local lnum = self.lnum ---@type integer
-
   if bufnr == nil then
     util_reporter.error({
       from = "kyokuya.replace.view",
@@ -618,18 +611,7 @@ function M:internal_print(line, meta, highlights)
     return
   end
 
-  vim.api.nvim_buf_set_lines(bufnr, lnum, lnum, false, { line })
-
-  if highlights ~= nil and #highlights > 0 then
-    for _, hl in ipairs(highlights) do
-      if hl.hlname ~= nil then
-        vim.api.nvim_buf_add_highlight(bufnr, nsnr, hl.hlname, lnum, hl.cstart, hl.cend)
-      end
-    end
-  end
-
-  self.lnum = lnum + 1
-  self.line_metas[self.lnum] = meta
+  self.printer:print(line, meta, highlights)
 end
 
 return M
