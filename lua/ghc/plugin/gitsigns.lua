@@ -37,17 +37,7 @@ return {
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   opts = {
     current_line_blame = true,
-    current_line_blame_opts = {
-      virt_text = true,
-      virt_text_pos = "eol", -- 'eol' | 'overlay' | 'right_align'
-      delay = 1000,
-      ignore_whitespace = false,
-      virt_text_priority = 100,
-    },
     current_line_blame_formatter = "    <author>, <author_time:%Y-%m-%d %H:%M:%S> - <summary>",
-    current_line_blame_formatter_opts = {
-      relative_time = false,
-    },
     signcolumn = true,
     numhl = true,
     linehl = false,
@@ -68,7 +58,12 @@ return {
       ---@param desc string
       ---@param silent? boolean
       local function mapkey(mode, key, action, desc, silent)
-        vim.keymap.set(mode, key, action, { buffer = buffer, noremap = true, silent = silent ~= nil and silent or false, desc = desc })
+        vim.keymap.set(
+          mode,
+          key,
+          action,
+          { buffer = buffer, noremap = true, silent = silent ~= nil and silent or false, desc = desc }
+        )
       end
 
       mapkey("n", "[h", goto_prev_hunk, "git: Prev hunk", true)
