@@ -358,7 +358,7 @@ function M:internal_bind_keymaps(bufnr)
     self.state:set_value("mode", next_mode)
   end
 
-  local function on_enter_file()
+  local function on_view_original_file()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local cursor = vim.api.nvim_win_get_cursor(winnr)
     local cursor_row = cursor[1]
@@ -390,6 +390,14 @@ function M:internal_bind_keymaps(bufnr)
     end
   end
 
+  local function on_view_file()
+    if self.state:get_value("mode") == "search" then
+      on_view_original_file()
+    else
+      on_view_original_file()
+    end
+  end
+
   mk({ "n", "v" }, "<leader>i", on_toggle_case_sensitive, "replace: toggle case sensitive")
   mk({ "n", "v" }, "<leader>r", on_toggle_regex, "replace: toggle regex mode")
   mk({ "n", "v" }, "<leader>m", on_toggle_mode, "replace: toggle ux mode")
@@ -406,7 +414,9 @@ function M:internal_bind_keymaps(bufnr)
   mk({ "n", "v" }, "rp", edit_list("search_paths"), "replace: edit search paths")
   mk({ "n", "v" }, "re", edit_list("exclude_patterns"), "replace: edit exclude patterns")
   mk({ "n", "v" }, "ri", edit_list("include_patterns"), "replace: edit include patterns")
-  mk({ "n", "v" }, "<enter>", on_enter_file, "replace: view file")
+  mk({ "n", "v" }, "o", on_view_original_file, "replace: view original file")
+  mk({ "n", "v" }, "<enter>", on_view_file, "replace: view file")
+  mk({ "n", "v" }, "<LeftRelease>", on_view_file, "replace: view file")
 end
 
 ---Render the search/replace options
