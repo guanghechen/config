@@ -159,46 +159,53 @@ function M:internal_bind_keymaps(bufnr)
     position = position or "cursor"
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local cursor = vim.api.nvim_win_get_cursor(winnr)
       local value = self.state:get_value(key) ---@type string
+      local lines = util_string.split(value, "\n") ---@type string[]
 
+      local cursor = vim.api.nvim_win_get_cursor(winnr)
       self.cursor_row = cursor[1]
       self.cursor_col = cursor[2]
 
-      if not string.find(value, "\n") then
-        local input = Input.new()
-        local cursor_col = cursor[2]
-        local input_col = key == "search_pattern" and cursor_col - self.cfg_name_len - 13
-          or cursor_col - self.cfg_name_len - 1
-        input_col = input_col > 0 and input_col or 0
-
-        input:open({
-          title = "[" .. key .. "]",
-          prompt = "",
-          value = value,
-          position = position,
-          cursor_col = input_col,
-          on_confirm = function(next_value)
-            self.state:set_value(key, next_value)
-          end,
-        })
-      else
-        local textarea = Textarea.new()
-        local lines = util_string.split(value, "\n") ---@type string[]
-        textarea:open({
-          title = "[" .. key .. "]",
-          value = lines,
-          position = position,
-          cursor_row = 1,
-          cursor_col = 1,
-          height = 10,
-          width = 80,
-          on_confirm = function(next_lines)
-            local resolved = table.concat(next_lines, "\n") ---@type string
-            self.state:set_value(key, resolved)
-          end,
-        })
+      local input_col = cursor[2] - self.cfg_name_len - 2
+      if key == "search_pattern" then
+        input_col = input_col - 12
       end
+      if input_col < 0 then
+        input_col = 0
+      end
+
+      local cursor_row = 1 ---@type integer
+      local cursor_col = 0 ---@type integer
+      local last_line_end_index = 0 ---@type integer
+      while true do
+        local next_line_end_index = string.find(value, "\n", last_line_end_index + 1)
+        if not next_line_end_index or next_line_end_index >= input_col then
+          cursor_col = input_col - last_line_end_index
+          break
+        end
+
+        cursor_row = cursor_row + 1
+        cursor_col = 0
+        input_col = input_col - 2 ---The width of the newline character is 3.
+        last_line_end_index = next_line_end_index
+      end
+
+      cursor_col = math.max(cursor_col, 0)
+      cursor_col = math.min(cursor_col, #lines[cursor_row])
+      local textarea = Textarea.new()
+      textarea:open({
+        title = "[" .. key .. "]",
+        value = lines,
+        position = position,
+        cursor_row = cursor_row,
+        cursor_col = cursor_col,
+        height = 10,
+        width = 80,
+        on_confirm = function(next_lines)
+          local resolved = table.concat(next_lines, "\n") ---@type string
+          self.state:set_value(key, resolved)
+        end,
+      })
     end
   end
 
@@ -209,19 +216,44 @@ function M:internal_bind_keymaps(bufnr)
     position = position or "cursor"
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local value = self.state:get_value(key) ---@type string
+      local lines = util_table.parse_comma_list(value) ---@type string[]
+
       local cursor = vim.api.nvim_win_get_cursor(winnr)
       self.cursor_row = cursor[1]
       self.cursor_col = cursor[2]
 
+      local input_col = cursor[2] - self.cfg_name_len - 2
+      if input_col < 0 then
+        input_col = 0
+      end
+
+      local cursor_row = 1 ---@type integer
+      local cursor_col = 0 ---@type integer
+      local last_line_end_index = 0 ---@type integer
+      while true do
+        local next_line_end_index = string.find(value, ",", last_line_end_index + 1)
+        if not next_line_end_index or next_line_end_index >= input_col then
+          cursor_col = input_col - last_line_end_index
+          break
+        end
+
+        cursor_row = cursor_row + 1
+        cursor_col = 0
+        input_col = input_col - 1 ---The width of the comma list separator is 2.
+        last_line_end_index = next_line_end_index
+      end
+
+      cursor_col = math.max(cursor_col, 0)
+      cursor_col = math.min(cursor_col, #lines[cursor_row])
+
       local textarea = Textarea.new()
-      local value = self.state:get_value(key) ---@type string
-      local lines = util_table.parse_comma_list(value) ---@type string[]
       textarea:open({
         title = "[" .. key .. "]",
         value = lines,
         position = position,
-        cursor_row = 1,
-        cursor_col = 1,
+        cursor_row = cursor_row,
+        cursor_col = cursor_col,
         height = 10,
         width = 80,
         on_confirm = function(next_value)
