@@ -26,17 +26,18 @@ local function find_first_replace_buf()
 end
 
 ---@class kyokuya.replace.IReplaceViewOptions
----@field public state        kyokuya.replace.ReplaceState
----@field public nsnr         integer
+---@field public state          kyokuya.replace.ReplaceState
+---@field public nsnr           integer
 
 ---@class kyokuya.replace.ReplaceView
----@field private state       kyokuya.replace.ReplaceState
----@field private nsnr        integer
----@field private bufnr       integer|nil
----@field private lnum        integer
----@field private line_metas  table<number, kyokuya.replace.IReplaceViewLineMeta|nil>
----@field private cursor_row  integer
----@field private cursor_col  integer
+---@field private state         kyokuya.replace.ReplaceState
+---@field private nsnr          integer
+---@field private bufnr         integer|nil
+---@field private lnum          integer
+---@field private line_metas    table<number, kyokuya.replace.IReplaceViewLineMeta|nil>
+---@field private cfg_name_len  integer
+---@field private cursor_row    integer
+---@field private cursor_col    integer
 local M = {}
 M.__index = M
 
@@ -50,6 +51,7 @@ function M.new(opts)
   self.bufnr = nil
   self.lnum = 0
   self.line_metas = {}
+  self.cfg_name_len = 7
   self.cursor_row = 6
   self.cursor_col = 21
 
@@ -158,22 +160,45 @@ function M:internal_bind_keymaps(bufnr)
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local cursor = vim.api.nvim_win_get_cursor(winnr)
+      local value = self.state:get_value(key) ---@type string
+
       self.cursor_row = cursor[1]
       self.cursor_col = cursor[2]
 
-      local cursor_col = cursor[2]
-      local input = Input.new()
-      local value = self.state:get_value(key) ---@type string
-      input:open({
-        title = "[" .. key .. "]",
-        prompt = "",
-        value = value,
-        position = position,
-        cursor_col = cursor_col - 12,
-        on_confirm = function(next_value)
-          self.state:set_value(key, next_value)
-        end,
-      })
+      if not string.find(value, "\n") then
+        local input = Input.new()
+        local cursor_col = cursor[2]
+        local input_col = key == "search_pattern" and cursor_col - self.cfg_name_len - 13
+          or cursor_col - self.cfg_name_len - 1
+        input_col = input_col > 0 and input_col or 0
+
+        input:open({
+          title = "[" .. key .. "]",
+          prompt = "",
+          value = value,
+          position = position,
+          cursor_col = input_col,
+          on_confirm = function(next_value)
+            self.state:set_value(key, next_value)
+          end,
+        })
+      else
+        local textarea = Textarea.new()
+        local lines = util_string.split(value, "\n") ---@type string[]
+        textarea:open({
+          title = "[" .. key .. "]",
+          value = lines,
+          position = position,
+          cursor_row = 1,
+          cursor_col = 1,
+          height = 10,
+          width = 80,
+          on_confirm = function(next_lines)
+            local resolved = table.concat(next_lines, "\n") ---@type string
+            self.state:set_value(key, resolved)
+          end,
+        })
+      end
     end
   end
 
@@ -362,7 +387,7 @@ function M:internal_render_cfg(data)
   ---@param flags   ?{ icon: string, enabled: boolean }[]
   local function print_cfg_field(key, title, hlvalue, flags)
     local title_width = #title ---@type integer
-    local cfg_name_len = 7 ---@type integer
+    local cfg_name_len = self.cfg_name_len ---@type integer
     local invisible_width = cfg_name_len - title_width ---@type integer
     local left = util_string.padStart(title, cfg_name_len, " ") .. ": " ---@type string
     local value_start_pos = cfg_name_len + 2 ---@type integer
@@ -390,8 +415,9 @@ function M:internal_render_cfg(data)
       left = left .. " "
     end
 
+    local value = string.gsub(data[key], "\n", "↲")
     table.insert(highlights, { cstart = value_start_pos, cend = -1, hlname = hlvalue })
-    self:internal_print(left .. data[key], { key = key }, highlights)
+    self:internal_print(left .. value, { key = key }, highlights)
   end
 
   local mode_indicator = data.mode == "search" and "[Search]" or "[Replace]"
