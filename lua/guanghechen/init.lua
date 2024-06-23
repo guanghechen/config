@@ -1,11 +1,6 @@
 ---@class guanghechen
 local M = {}
 
----@class guanghechen.clazz
-M.clazz = {
-  Timer = require("guanghechen.timer.Timer"),
-}
-
 ---@class guanghechen.util
 M.util = {
   buffer = require("guanghechen.util.buffer"),
