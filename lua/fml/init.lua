@@ -8,6 +8,7 @@ local collection = {
   Observable = require("fml.collection.observable"),
   Subscriber = require("fml.collection.subscriber"),
   Subscribers = require("fml.collection.subscribers"),
+  Viewmodel = require("fml.collection.viewmodel"),
 }
 
 ---@class fml.core

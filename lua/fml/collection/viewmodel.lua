@@ -4,37 +4,37 @@ local Subscriber = require("fml.collection.subscriber")
 local is_disposable = require("fml.fn.is_disposable")
 local is_observable = require("fml.fn.is_observable")
 local dispose_all = require("fml.fn.dispose_all")
-local util_fs = require("guanghechen.util.fs")
-local util_json = require("fml.core.json")
+local fs = require("guanghechen.util.fs")
+local json = require("fml.core.json")
+local reporter = require("fml.core.reporter")
 
----@class guanghechen.viewmodel.Viewmodel.IOptions
----@field public name string
----@field public filepath string
-
----@class guanghechen.viewmodel.Viewmodel : guanghechen.types.IViewmodel
----@field private _name string
----@field private _filepath string
----@field private _initial_values table<string, any>
----@field private _unwatch (fun():nil)|nil
----@field private _persistable_observables table<string, fml.types.collection.IObservable>
----@field private _all_observables table<string, fml.types.collection.IObservable>
+---@class fml.collection.Viewmodel : fml.types.collection.IViewmodel
+---@field private _name                 string
+---@field private _filepath             string
+---@field private _initial_values       table<string, any>
+---@field private _unwatch              (fun():nil)|nil
+---@field private _persistables         table<string, fml.types.collection.IObservable>
+---@field private _all_observables      table<string, fml.types.collection.IObservable>
 local Viewmodel = {}
 Viewmodel.__index = Viewmodel
 setmetatable(Viewmodel, { __index = BatchDisposable })
 
----@param opts guanghechen.viewmodel.Viewmodel.IOptions
----@return guanghechen.viewmodel.Viewmodel
-function Viewmodel.new(opts)
+---@class fml.collection.IViewmodelProps
+---@field public name                   string
+---@field public filepath               string
+
+---@param props fml.collection.IViewmodelProps
+---@return fml.collection.Viewmodel
+function Viewmodel.new(props)
   local self = setmetatable(BatchDisposable.new(), Viewmodel)
-
   ---@diagnostic disable-next-line: cast-type-mismatch
-  ---@cast self guanghechen.viewmodel.Viewmodel
+  ---@cast self fml.collection.Viewmodel
 
-  self._name = opts.name ---@type string
-  self._filepath = opts.filepath ---@type string
+  self._name = props.name ---@type string
+  self._filepath = props.filepath ---@type string
   self._initial_values = {} ---@type table<string, any>
   self._unwatch = nil ---@type (fun():nil)|nil
-  self._persistable_observables = {} ---@type table<string, fml.types.collection.IObservable>
+  self._persistables = {} ---@type table<string, fml.types.collection.IObservable>
   self._all_observables = {} ---@type table<string, fml.types.collection.IObservable>
 
   return self
@@ -76,7 +76,7 @@ end
 ---@return table<string, any>
 function Viewmodel:get_snapshot()
   local data = {}
-  for key, observable in pairs(self._persistable_observables) do
+  for key, observable in pairs(self._persistables) do
     if is_observable(observable) then
       ---@cast observable fml.types.collection.IObservable
       data[key] = observable:get_snapshot()
@@ -103,7 +103,7 @@ end
 ---@param auto_save boolean
 function Viewmodel:register(name, observable, persistable, auto_save)
   if persistable then
-    self._persistable_observables[name] = observable
+    self._persistables[name] = observable
   end
 
   self[name] = observable
@@ -132,11 +132,11 @@ end
 
 function Viewmodel:save()
   local data = self:get_snapshot()
-  local ok_to_encode_json, json_text = pcall(util_json.stringify_prettier, data)
+  local ok_to_encode_json, json_text = pcall(json.stringify_prettier, data)
   if not ok_to_encode_json then
-    fml.reporter.warn({
-      from = self._name,
-      subject = "Viewmodel:save",
+    reporter.warn({
+      from = "fml.collection.viewmodel",
+      subject = "save",
       message = "Failed to encode json data",
       details = data,
     })
@@ -147,9 +147,9 @@ function Viewmodel:save()
 
   local file = io.open(self._filepath, "w")
   if not file then
-    fml.reporter.warn({
-      from = self._name,
-      subject = "Viewmodel:save",
+    reporter.warn({
+      from = "fml.collection.viewmodel",
+      subject = "save",
       message = "Failed to save json",
       details = data,
     })
@@ -161,7 +161,7 @@ function Viewmodel:save()
 end
 
 function Viewmodel:load()
-  local ok_to_load_json, json_text = pcall(util_fs.read_file, self._filepath)
+  local ok_to_load_json, json_text = pcall(fs.read_file, self._filepath)
   if not ok_to_load_json then
     return
   end
@@ -172,9 +172,9 @@ function Viewmodel:load()
 
   local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
   if not ok_to_decode_json then
-    fml.reporter.warn({
-      from = self._name,
-      subject = "Viewmodel:load",
+    reporter.warn({
+      from = "fml.collection.viewmodel",
+      subject = "load",
       message = "Failed to decode json",
       details = json_text,
     })
@@ -182,9 +182,9 @@ function Viewmodel:load()
   end
 
   if type(data) ~= "table" then
-    fml.reporter.warn({
-      from = self._name,
-      subject = "Viewmodel:load",
+    reporter.warn({
+      from = "fml.collection.viewmodel",
+      subject = "load",
       message = "Bad json, not a table",
       details = json_text,
     })
@@ -205,23 +205,24 @@ function Viewmodel:auto_reload()
     return
   end
 
-  local unwatch = util_fs.watch_file({
+  local unwatch = fs.watch_file({
     filepath = self._filepath,
     on_event = function(filepath, event)
       if type(event) == "table" and event.change == true then
         self:load()
-        fml.reporter.info({
-          from = self._name,
-          subject = "Viewmodel:auto_reload",
+        reporter.info({
+          from = "fml.collection.viewmodel",
+          subject = "auto_reload",
           message = "auto reloaded.",
-          -- details = { filepath = filepath, event = event, },
+          details = { filepath = filepath },
+          --details = { filepath = filepath, event = event },
         })
       end
     end,
     on_error = function(filepath, err)
-      fml.reporter.error({
-        from = self._name,
-        subject = "Viewmodel:auto_reload",
+      reporter.error({
+        from = "fml.collection.viewmodel",
+        subject = "auto_reload",
         message = "Failed!",
         details = {
           err = err,

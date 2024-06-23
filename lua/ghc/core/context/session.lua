@@ -1,7 +1,7 @@
 local Observable = fml.collection.Observable
-local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
+local context_filepath = fml.path.locate_session_filepath({ filename = "config.json" })
 
----@class ghc.core.context.session : guanghechen.viewmodel.Viewmodel
+---@class ghc.core.context.session : fml.collection.Viewmodel
 ---@field public buftype_extra fml.types.collection.IObservable
 ---@field public caller_winnr fml.types.collection.IObservable
 ---@field public caller_bufnr fml.types.collection.IObservable
@@ -23,9 +23,9 @@ local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 ---@field public search_include_paths fml.types.collection.IObservable
 ---@field public search_keyword fml.types.collection.IObservable
 ---@field public search_scope fml.types.collection.IObservable
-local context = Viewmodel.new({
+local context = fml.collection.Viewmodel.new({
   name = "context:session",
-  filepath = fml.path.locate_session_filepath({ filename = "config.json" }),
+  filepath = context_filepath,
 })
   :register("buftype_extra", Observable.from_value(nil), false, false)
   :register("caller_winnr", Observable.from_value(nil), false, false)

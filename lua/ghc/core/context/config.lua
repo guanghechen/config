@@ -1,18 +1,16 @@
 local Observable = fml.collection.Observable
-local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
+local context_filepath = fml.path.locate_context_filepath("config.json")
 
-local context_config_filepath = fml.path.locate_context_filepath("config.json")
-
----@class ghc.core.context.config: guanghechen.viewmodel.Viewmodel
+---@class ghc.core.context.config: fml.collection.Viewmodel
 ---@field public darken fml.types.collection.IObservable
 ---@field public relativenumber fml.types.collection.IObservable
 ---@field public theme_lighten fml.types.collection.IObservable
 ---@field public theme_darken fml.types.collection.IObservable
 ---@field public transparency fml.types.collection.IObservable
 ---@field public get_current_theme fun():string
-local context = Viewmodel.new({
+local context = fml.collection.Viewmodel.new({
   name = "context:config",
-  filepath = context_config_filepath,
+  filepath = context_filepath,
 })
   :register("darken", Observable.from_value(true), true, true)
   :register("relativenumber", Observable.from_value(true), true, true)
