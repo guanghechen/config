@@ -1,2 +1,1 @@
-local os = require("guanghechen.util.os")
-vim.notify(vim.inspect(os.is_mac()))
+vim.notify(vim.inspect(fml.core.os.is_mac()))

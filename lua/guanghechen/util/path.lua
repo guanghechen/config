@@ -1,6 +1,5 @@
-local util_os = require("guanghechen.util.os")
 local util_reporter = require("guanghechen.util.reporter")
-local PATH_SEPARATOR = util_os.get_path_sep() ---@type string
+local PATH_SEPARATOR = fml.core.os.get_path_sep() ---@type string
 
 ---@class guanghechen.util.path
 local M = {
@@ -10,7 +9,7 @@ local M = {
 ---@param filepath string
 ---@return boolean
 function M.is_absolute(filepath)
-  if util_os.is_windows() then
+  if fml.core.os.is_windows() then
     return string.match(filepath, "^[%a]:[\\/].*$") ~= nil
   end
   return string.sub(filepath, 1, 1) == PATH_SEPARATOR
@@ -199,7 +198,7 @@ function M.locate_config_filepath(...)
   local config_path = type(config_paths) == "table" and config_paths[1] or config_paths
 
   if type(config_path) ~= "string" or #config_path < 1 then
-    error("[guanghechen.util.os.get_config_filepath] bad config_path" .. vim.inspect(config_path))
+    error("[fml.core.os.get_config_filepath] bad config_path" .. vim.inspect(config_path))
     return ""
   end
 
@@ -220,7 +219,7 @@ function M.locate_data_filepath(...)
   local data_path = type(data_paths) == "table" and data_paths[1] or data_paths
 
   if type(data_path) ~= "string" or #data_path < 1 then
-    error("[guanghechen.util.os.get_data_filepath] bad data_path" .. vim.inspect(data_path))
+    error("[fml.core.os.get_data_filepath] bad data_path" .. vim.inspect(data_path))
     return ""
   end
 
@@ -235,7 +234,7 @@ function M.locate_script_filepath(...)
   local config_path = type(config_paths) == "table" and config_paths[1] or config_paths
 
   if type(config_path) ~= "string" or #config_path < 1 then
-    error("[guanghechen.util.os.get_config_filepath] bad config_path" .. vim.inspect(config_path))
+    error("[fml.core.os.get_config_filepath] bad config_path" .. vim.inspect(config_path))
     return ""
   end
 
@@ -250,7 +249,7 @@ function M.locate_state_filepath(...)
   local state_path = type(state_paths) == "table" and state_paths[1] or state_paths
 
   if type(state_path) ~= "string" or #state_path < 1 then
-    error("[guanghechen.util.os.get_state_filepath] bad state_path" .. vim.inspect(state_path))
+    error("[fml.core.os.get_state_filepath] bad state_path" .. vim.inspect(state_path))
     return ""
   end
 

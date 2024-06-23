@@ -1,6 +1,6 @@
 local os_name = vim.uv.os_uname().sysname
 
----@class guanghechen.util.os
+---@class fml.core.os
 local M = {}
 
 ---@return boolean

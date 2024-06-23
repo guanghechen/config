@@ -1,12 +1,11 @@
 local context_session = require("ghc.core.context.session")
-local util_os = require("guanghechen.util.os")
 
 local function get_build_cmd()
   if not vim.fn.executable("cargo") then
     return ""
   end
 
-  if util_os.is_windows() then
+  if fml.core.os.is_windows() then
     return "./build.ps1"
   end
 

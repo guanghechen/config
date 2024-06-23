@@ -27,7 +27,6 @@ M.util = {
   misc = require("guanghechen.util.misc"),
   navigator = require("guanghechen.util.navigator"),
   observable = require("guanghechen.util.observable"),
-  os = require("guanghechen.util.os"),
   path = require("guanghechen.util.path"),
   regex = require("guanghechen.util.regex"),
   reporter = require("guanghechen.util.reporter"),
