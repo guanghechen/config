@@ -20,6 +20,7 @@ local collection = {
 ---@class fml.component
 local component = {
   Input = require("fml.component.input"),
+  Textarea = require("fml.component.textarea"),
 }
 
 ---@class fml.core

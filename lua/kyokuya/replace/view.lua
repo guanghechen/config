@@ -1,6 +1,5 @@
 local oxi = require("kyokuya.oxi")
 local Printer = require("kyokuya.component.printer")
-local Textarea = require("kyokuya.component.textarea")
 local Previewer = require("kyokuya.replace.previewer")
 local constants = require("kyokuya.constant")
 
@@ -184,7 +183,7 @@ function M:internal_bind_keymaps(bufnr)
 
       cursor_col = math.max(cursor_col, 0)
       cursor_col = math.min(cursor_col, #lines[cursor_row])
-      local textarea = Textarea.new()
+      local textarea = fml.component.Textarea.new()
       textarea:open({
         title = "[" .. key .. "]",
         value = lines,
@@ -239,7 +238,7 @@ function M:internal_bind_keymaps(bufnr)
       cursor_col = math.max(cursor_col, 0)
       cursor_col = math.min(cursor_col, #lines[cursor_row])
 
-      local textarea = Textarea.new()
+      local textarea = fml.component.Textarea.new()
       textarea:open({
         title = "[" .. key .. "]",
         value = lines,
@@ -282,7 +281,7 @@ function M:internal_bind_keymaps(bufnr)
     self.cursor_row = cursor[1]
     self.cursor_col = cursor[2]
 
-    local textarea = Textarea:new()
+    local textarea = fml.component.Textarea:new()
     local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
     local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
     textarea:open({

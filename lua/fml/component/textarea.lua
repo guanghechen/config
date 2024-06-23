@@ -1,20 +1,20 @@
----@class kyokuya.component.ITextareaOptions
----@field public title string
----@field public value string[]
----@field public position "center"|"cursor"
----@field public cursor_row integer
----@field public cursor_col integer
----@field public width? integer
----@field public height? integer
----@field public win_options? table<string, any>
----@field public on_confirm fun(next_value: string[]):nil
-
----@class kyokuya.component.Textarea
----@field popup any|nil
+---@class fml.component.Textarea
+---@field public popup any|nil
 local M = {}
 M.__index = M
 
----@return kyokuya.component.Textarea
+---@class fml.component.Textarea.IProps
+---@field public title                  string
+---@field public value                  string[]
+---@field public position               "center"|"cursor"
+---@field public cursor_row             integer
+---@field public cursor_col             integer
+---@field public width                  ?integer
+---@field public height                 ?integer
+---@field public win_options            ?table<string, any>
+---@field public on_confirm              fun(next_value: string[]): nil
+
+---@return fml.component.Textarea
 function M.new()
   local self = setmetatable({}, M)
 
@@ -23,27 +23,27 @@ function M.new()
   return self
 end
 
----@param opts kyokuya.component.ITextareaOptions
+---@param props fml.component.Textarea.IProps
 ---@return nil
-function M:open(opts)
-  local title = opts.title ---@type string
-  local value = opts.value ---@type string[]
-  local cursor_row = opts.cursor_row ---@type integer
-  local cursor_col = opts.cursor_col ---@type integer
+function M:open(props)
+  local title = props.title ---@type string
+  local value = props.value ---@type string[]
+  local cursor_row = props.cursor_row ---@type integer
+  local cursor_col = props.cursor_col ---@type integer
 
   local Popup = require("nui.popup")
   local event = require("nui.utils.autocmd").event
 
-  local relative = opts.position == "center" and "win" or "cursor"
-  local position = opts.position == "center" and "50%" or { row = 1, col = 0 }
+  local relative = props.position == "center" and "win" or "cursor"
+  local position = props.position == "center" and "50%" or { row = 1, col = 0 }
   local popup = Popup({
     enter = true,
     focusable = true,
     relative = relative,
     position = position,
     size = {
-      width = opts.width or "80%",
-      height = opts.height or #value,
+      width = props.width or "80%",
+      height = props.height or #value,
     },
     border = {
       style = "rounded",
@@ -65,7 +65,7 @@ function M:open(opts)
       wrap = false,
       winblend = 10,
       winhighlight = "Normal:Normal",
-    }, opts.win_options or {}),
+    }, props.win_options or {}),
   })
 
   -- mount/open the component
@@ -84,7 +84,7 @@ function M:open(opts)
   local function on_confirm()
     local next_value = vim.api.nvim_buf_get_lines(popup.bufnr, 0, -1, false) ---@type string[]
     on_quit()
-    opts.on_confirm(next_value)
+    props.on_confirm(next_value)
   end
 
   vim.schedule(stopinsert)
