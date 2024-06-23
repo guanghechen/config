@@ -6,7 +6,7 @@ local M = {}
 ---@return nil
 function M.noop(...) end
 
----@type guanghechen.types.IUnsubscribable
+---@type fml.types.collection.IUnsubscribable
 M.noop_unsubscribable = {
   unsubscribe = noop,
 }

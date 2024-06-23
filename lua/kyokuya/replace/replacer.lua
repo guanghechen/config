@@ -1,6 +1,5 @@
 local ReplaceState = require("kyokuya.replace.state")
 local ReplaceView = require("kyokuya.replace.view")
-local Subscriber = require("guanghechen.subscriber.Subscriber")
 local util_observable = require("guanghechen.util.observable")
 
 ---@class kyokuya.replace.IReplacerOptions
@@ -42,8 +41,8 @@ function M.new(opts)
       end,
     })
 
-    local subscriber = Subscriber.new({
-      onNext = function(next_data)
+    local subscriber = fml.collection.Subscriber.new({
+      on_next = function(next_data)
         state:set_data(next_data)
       end,
     })

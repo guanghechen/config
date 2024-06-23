@@ -1,5 +1,5 @@
 local BatchDisposable = require("fml.collection.batch_disposable")
-local Subscribers = require("guanghechen.subscriber.Subscribers")
+local Subscribers = require("fml.collection.subscribers")
 local util_misc = require("guanghechen.util.misc")
 
 ---@generic T
@@ -11,7 +11,7 @@ local function shallow_equals(x, y)
 end
 
 ---@class guanghechen.observable.Observable : guanghechen.types.IObservable
----@field private _subscribers guanghechen.types.ISubscribers
+---@field private _subscribers fml.types.collection.ISubscribers
 local Observable = {}
 Observable.__index = Observable
 setmetatable(Observable, { __index = BatchDisposable })
@@ -34,7 +34,7 @@ function Observable.new(default_value, options)
   ---@diagnostic disable-next-line: cast-type-mismatch
   ---@cast self guanghechen.observable.Observable
 
-  ---@type guanghechen.types.ISubscribers
+  ---@type fml.types.collection.ISubscribers
   self._subscribers = Subscribers.new()
 
   ---@type guanghechen.types.T
@@ -89,8 +89,8 @@ function Observable:next(value, options)
   end
 end
 
----@param subscriber guanghechen.types.ISubscriber
----@return guanghechen.types.IUnsubscribable
+---@param subscriber fml.types.collection.ISubscriber
+---@return fml.types.collection.IUnsubscribable
 function Observable:subscribe(subscriber)
   if subscriber:is_disposed() then
     return util_misc.noop_unsubscribable

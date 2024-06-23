@@ -5,6 +5,8 @@ local collection = {
   CircularQueue = require("fml.collection.circular_queue"),
   Disposable = require("fml.collection.disposable"),
   History = require("fml.collection.history"),
+  Subscriber = require("fml.collection.subscriber"),
+  Subscribers = require("fml.collection.subscribers"),
 }
 
 ---@class fml.core

@@ -1,6 +1,6 @@
-local Subscriber = require("guanghechen.subscriber.Subscriber")
 local BatchDisposable = require("fml.collection.batch_disposable")
 local Disposable = require("fml.collection.disposable")
+local Subscriber = require("fml.collection.subscriber")
 local is_disposable = require("fml.fn.is_disposable")
 local dispose_all = require("fml.fn.dispose_all")
 local util_observable = require("guanghechen.util.observable")
@@ -112,7 +112,7 @@ function Viewmodel:register(name, observable, persistable, auto_save)
   if auto_save then
     self._initial_values[name] = observable:get_snapshot()
     local subscriber = Subscriber.new({
-      onNext = function(next_value)
+      on_next = function(next_value)
         if not observable.equals(self._initial_values[name], next_value) then
           self._initial_values[name] = next_value
           self:save()

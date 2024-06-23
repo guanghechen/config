@@ -4,8 +4,6 @@ local M = {}
 ---@class guanghechen.clazz
 M.clazz = {
   Observable = require("guanghechen.observable.Observable"),
-  Subscriber = require("guanghechen.subscriber.Subscriber"),
-  Subscribers = require("guanghechen.subscriber.Subscribers"),
   Timer = require("guanghechen.timer.Timer"),
   Viewmodel = require("guanghechen.viewmodel.Viewmodel"),
 }

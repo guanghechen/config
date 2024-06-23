@@ -1,4 +1,4 @@
-local Subscriber = require("guanghechen.subscriber.Subscriber")
+local Subscriber = require("fml.collection.subscriber")
 
 ---@class guanghechen.util.observable
 local M = {}
@@ -16,7 +16,7 @@ end
 ---@param callback fun():nil
 function M.watch_observables(observables, callback)
   local subscriber = Subscriber.new({
-    onNext = function()
+    on_next = function()
       callback()
     end,
   })
