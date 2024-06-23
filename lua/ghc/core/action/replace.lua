@@ -13,12 +13,13 @@ local function replace_word(opts)
 
   local selected_text = fml.fn.get_selected_text() ---@type string
   if selected_text and #selected_text > 1 then
-    context_session.search_keyword:next(selected_text)
+    fml.context.replace.search_pattern:next(selected_text)
   end
 
-  local search_paths = fml.table.filter_non_blank_string(context_session.search_include_paths:get_snapshot()) ---@type string[]
-  local search_text = context_session.search_keyword:get_snapshot() ---@type string
-  local replace_text = context_session.replace_keyword:get_snapshot() or search_text ---@type string
+  local search_paths_text = fml.context.replace.search_paths:get_snapshot() ---@type string
+  local search_paths = fml.table.parse_comma_list(search_paths_text) ---@type string[]
+  local search_text = fml.context.replace.search_pattern:get_snapshot() ---@type string
+  local replace_text = fml.context.replace.replace_pattern:get_snapshot() or search_text ---@type string
 
   require("spectre").open({
     cwd = cwd,
@@ -54,9 +55,9 @@ function M.replace_word_current_file()
 end
 
 function M.toggle_case_sensitive()
-  local current_case_sensitive = context_session.replace_enable_case_sensitive:get_snapshot() ---@type boolean
+  local current_case_sensitive = fml.context.replace.flag_case_sensitive:get_snapshot() ---@type boolean
   local next_case_sensitive = not current_case_sensitive
-  context_session.replace_enable_case_sensitive:next(next_case_sensitive)
+  fml.context.replace.flag_case_sensitive:next(next_case_sensitive)
   require("spectre").change_options("ignore-case")
 end
 

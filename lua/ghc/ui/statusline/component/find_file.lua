@@ -32,14 +32,9 @@ function M.condition()
 end
 
 function M.renderer()
-  ---@type ghc.core.types.enum.SEARCH_SCOPE
-  local scope = context_session.find_file_scope:get_snapshot()
-
-  ---@type boolean
-  local enable_regex = context_session.find_file_enable_regex:get_snapshot()
-
-  ---@type boolean
-  local enable_case_sensitive = context_session.find_file_enable_case_sensitive:get_snapshot()
+  local scope = context_session.find_file_scope:get_snapshot() ---@type ghc.core.types.enum.SEARCH_SCOPE
+  local enable_regex = fml.context.replace.flag_regex:get_snapshot() ---@type boolean
+  local enable_case_sensitive = fml.context.replace.flag_case_sensitive:get_snapshot() ---@type boolean
 
   local color_scope = "%#" .. M.name .. "_flag_scope#"
   local color_enable_regex = enable_regex and "%#" .. M.name .. "_flag_enabled#" or "%#" .. M.name .. "_flag#"

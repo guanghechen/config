@@ -133,7 +133,7 @@ local function find_file(opts, force)
   opts.bufnr = find_file_context.bufnr
   opts.show_untracked = true
   opts.workspace = "CWD"
-  opts.use_regex = context_session.find_file_enable_regex:get_snapshot()
+  opts.use_regex = fml.context.replace.flag_regex:get_snapshot()
 
   ---@type ghc.core.types.enum.FIND_FILE_SCOPE
   local scope0 = context_session.find_file_scope:get_snapshot()
@@ -168,14 +168,13 @@ local function find_file(opts, force)
       })
     end,
     toggle_enable_regex = function()
-      context_session.find_file_enable_regex:next(not context_session.find_file_enable_regex:get_snapshot())
-      opts.use_regex = context_session.find_file_enable_regex:get_snapshot()
+      local next_flag_regex = fml.context.replace.flag_regex:get_snapshot() ---@type boolean
+      fml.context.replace.flag_regex:next(next_flag_regex)
+      opts.use_regex = next_flag_regex
       open_picker()
     end,
     toggle_case_sensitive = function()
-      context_session.find_file_enable_case_sensitive:next(
-        not context_session.find_file_enable_case_sensitive:get_snapshot()
-      )
+      fml.context.replace.flag_case_sensitive:next(not fml.context.replace.flag_case_sensitive:get_snapshot())
       open_picker()
     end,
     change_scope_workspace = function()
@@ -212,10 +211,10 @@ local function find_file(opts, force)
       "--no-column",
       "--no-follow",
     }
-    if not context_session.find_file_enable_regex:get_snapshot() then
+    if not fml.context.replace.flag_regex:get_snapshot() then
       table.insert(cmd, "--fixed-strings")
     end
-    if context_session.find_file_enable_case_sensitive:get_snapshot() then
+    if fml.context.replace.flag_case_sensitive:get_snapshot() then
       table.insert(cmd, "--case-sensitive")
     else
       table.insert(cmd, "--ignore-case")

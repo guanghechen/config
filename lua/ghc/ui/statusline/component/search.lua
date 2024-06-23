@@ -35,14 +35,13 @@ function M.renderer()
   ---@type ghc.core.types.enum.SEARCH_SCOPE
   local scope = context_session.search_scope:get_snapshot()
 
-  ---@type boolean
-  local enable_regex = context_session.search_enable_regex:get_snapshot()
+  local flag_regex = fml.context.replace.flag_regex:get_snapshot() ---@type boolean
 
   ---@type boolean
-  local enable_case_sensitive = context_session.search_enable_case_sensitive:get_snapshot()
+  local enable_case_sensitive = fml.context.replace.flag_case_sensitive:get_snapshot()
 
   local color_scope = "%#" .. M.name .. "_flag_scope#"
-  local color_enable_regex = enable_regex and "%#" .. M.name .. "_flag_enabled#" or "%#" .. M.name .. "_flag#"
+  local color_enable_regex = flag_regex and "%#" .. M.name .. "_flag_enabled#" or "%#" .. M.name .. "_flag#"
   local color_enable_case_sensitive = enable_case_sensitive and "%#" .. M.name .. "_flag_enabled#" or "%#" .. M.name .. "_flag#"
   local text_scope = " " .. scope .. " "
   local text_enable_regex = " 󰑑 "

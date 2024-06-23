@@ -1,5 +1,3 @@
-local context_session = require("ghc.core.context.session")
-
 local function get_build_cmd()
   if not vim.fn.executable("cargo") then
     return ""
@@ -21,7 +19,7 @@ return {
   build = get_build_cmd(),
   enabled = vim.fn.executable("cargo") == 1,
   opts = function()
-    local flag_case_sensitive = context_session.replace_enable_case_sensitive:get_snapshot() ---@type boolean
+    local flag_case_sensitive = fml.context.replace.flag_case_sensitive:get_snapshot() ---@type boolean
     local rg_options = { "hidden" }
     local oxi_options = {}
 

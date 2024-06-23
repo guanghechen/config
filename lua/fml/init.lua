@@ -19,6 +19,7 @@ local collection = {
 
 ---@class fml.context
 local context = {
+  replace = require("fml.context.replace"),
   shared = require("fml.context.shared"),
 }
 

@@ -1,6 +1,7 @@
 local Observable = require("fml.collection.observable")
 local Viewmodel = require("fml.collection.viewmodel")
 local path = require("fml.core.path")
+local watch_observables = require("fml.fn.watch_observables")
 local context_filepath = path.locate_session_filepath({ filename = "replace.json" })
 
 ---@alias fml.context.replace.IMode
@@ -55,5 +56,13 @@ local context = Viewmodel.new({
 
 context:load()
 context:auto_reload()
+
+--Auto refresh statusline
+watch_observables({
+  context.flag_regex,
+  context.flag_case_sensitive,
+}, function()
+  vim.cmd("redrawstatus")
+end)
 
 return context

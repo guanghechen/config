@@ -190,11 +190,11 @@ function M.autocmd_remember_spectre_prompt(opts)
     group = M.augroup("remember_telescope_prompt"),
     callback = function()
       local state = require("spectre.actions").get_state()
-      local replace_keyword = state.query.replace_query ---@type string
-      local search_keyword = state.query.search_query ---@type string
+      local replace_pattern = state.query.replace_query ---@type string
+      local search_pattern = state.query.search_query ---@type string
 
-      context_session.search_keyword:next(search_keyword)
-      context_session.replace_keyword:next(replace_keyword)
+      fml.context.replace.search_pattern:next(search_pattern)
+      fml.context.replace.replace_pattern:next(replace_pattern)
 
       if sync_path then
         local query_path = state.query.path ---@type string
