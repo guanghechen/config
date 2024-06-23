@@ -1,4 +1,3 @@
-local util_path = require("guanghechen.util.path")
 local Replacer = require("kyokuya.replace.replacer")
 local theme = require("kyokuya.theme")
 
@@ -26,7 +25,7 @@ local replacer = Replacer.new({
   reuse = true,
   data = {
     mode = "replace",
-    cwd = util_path.cwd(),
+    cwd = fml.path.cwd(),
     flag_regex = true,
     flag_case_sensitive = true,
     search_pattern = "Hello, (world|世界)!(?:\\n|\\r\\n)H",

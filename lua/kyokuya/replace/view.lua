@@ -3,7 +3,6 @@ local Printer = require("kyokuya.component.printer")
 local Textarea = require("kyokuya.component.textarea")
 local Previewer = require("kyokuya.replace.previewer")
 local constants = require("kyokuya.constant")
-local util_path = require("guanghechen.util.path")
 
 local kyokuya_buf_delete_augroup = vim.api.nvim_create_augroup("kyokuya_buf_delete", { clear = true })
 
@@ -504,7 +503,7 @@ function M:internal_render_result(data, result)
     local continous_line_padding = "│ " .. string.rep(" ", lnum_width) .. "  "
     for raw_filepath, file_item in pairs(result.items) do
       local fileicon, fileicon_highlight = fml.fn.calc_fileicon(raw_filepath)
-      local filepath = util_path.relative(data.cwd, raw_filepath)
+      local filepath = fml.path.relative(data.cwd, raw_filepath)
 
       self:internal_print(fileicon .. " " .. filepath, {
         { cstart = 0, cend = 2, hlname = fileicon_highlight },

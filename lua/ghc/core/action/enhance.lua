@@ -1,10 +1,8 @@
-local guanghechen = require("guanghechen")
-
 ---@class ghc.core.action.enhance
 local M = {}
 
 function M.copy_current_buffer_filepath()
-  local content = guanghechen.util.path.current_filepath() ---@type string
+  local content = fml.path.current_filepath() ---@type string
   vim.fn.setreg("+", content)
   fml.reporter.info({
     from = "enchance",

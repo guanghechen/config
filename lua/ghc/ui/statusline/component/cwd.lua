@@ -1,5 +1,4 @@
 local context_config = require("ghc.core.context.config")
-local guanghechen = require("guanghechen")
 
 ---@type boolean
 local transparency = context_config.transparency:get_snapshot()
@@ -20,7 +19,7 @@ function M.condition()
 end
 
 function M.renderer()
-  local cwd = guanghechen.util.path.cwd()
+  local cwd = fml.path.cwd()
   local cwd_name = (cwd:match("([^/\\]+)[/\\]*$") or cwd)
   local color_text = "%#" .. M.name .. "_text#"
   local text = " 󰉋 " .. cwd_name .. " "

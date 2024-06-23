@@ -1,4 +1,3 @@
-local guanghechen = require("guanghechen")
 local context_config = require("ghc.core.context.config")
 local context_session = require("ghc.core.context.session")
 local util_terminal = require("ghc.core.util.terminal")
@@ -9,8 +8,8 @@ local function get_filepath_from_lazygit()
   for i = 1, 5 do
     local relative_filepath = vim.fn.getreg("+")
     if relative_filepath ~= "" then
-      local workspace = guanghechen.util.path.workspace()
-      return guanghechen.util.path.join(workspace, relative_filepath)
+      local workspace = fml.path.workspace()
+      return fml.path.join(workspace, relative_filepath)
     end
     vim.uv.sleep(50)
   end
@@ -72,10 +71,10 @@ local function open_lazygit(cmd, cwd)
 end
 
 local function get_lazygit_config_filepath()
-  local lazygit_config_dir = guanghechen.util.path.locate_config_filepath("lazygit")
+  local lazygit_config_dir = fml.path.locate_config_filepath("lazygit")
   local config_filepaths = {
-    guanghechen.util.path.join(lazygit_config_dir, "config.yaml"),
-    guanghechen.util.path.join(
+    fml.path.join(lazygit_config_dir, "config.yaml"),
+    fml.path.join(
       lazygit_config_dir,
       context_config.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"
     ),
@@ -90,14 +89,14 @@ local M = {}
 function M.open_lazygit_workspace()
   local lazygit_theme_config_filepath = get_lazygit_config_filepath()
   local cmd = { "lazygit", "--use-config-file", lazygit_theme_config_filepath }
-  local cwd = guanghechen.util.path.workspace()
+  local cwd = fml.path.workspace()
   open_lazygit(cmd, cwd)
 end
 
 function M.open_lazygit_cwd()
   local lazygit_theme_config_filepath = get_lazygit_config_filepath()
   local cmd = { "lazygit", "--use-config-file", lazygit_theme_config_filepath }
-  local cwd = guanghechen.util.path.cwd()
+  local cwd = fml.path.cwd()
   open_lazygit(cmd, cwd)
 end
 
@@ -108,14 +107,14 @@ end
 
 function M.open_diffview_filehistory()
   local diffview = require("diffview")
-  local filepath = guanghechen.util.path.current_filepath()
+  local filepath = fml.path.current_filepath()
   diffview.file_history(nil, filepath)
 end
 
 function M.open_lazygit_file_history()
   local filepath = vim.api.nvim_buf_get_name(0)
   local cmd = { "lazygit", "-f", filepath }
-  local cwd = guanghechen.util.path.cwd()
+  local cwd = fml.path.cwd()
   open_lazygit(cmd, cwd)
 end
 

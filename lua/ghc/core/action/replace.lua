@@ -1,4 +1,3 @@
-local guanghechen = require("guanghechen")
 local action_autocmd = require("ghc.core.action.autocmd")
 local context_session = require("ghc.core.context.session")
 
@@ -39,18 +38,18 @@ end
 local M = {}
 
 function M.replace_word_workspace()
-  local cwd = guanghechen.util.path.workspace() ---@type string
+  local cwd = fml.path.workspace() ---@type string
   replace_word({ cwd = cwd })
 end
 
 function M.replace_word_cwd()
-  local cwd = guanghechen.util.path.cwd() ---@type string
+  local cwd = fml.path.cwd() ---@type string
   replace_word({ cwd = cwd })
 end
 
 function M.replace_word_current_file()
-  local cwd = guanghechen.util.path.cwd() ---@type string
-  local filepath = guanghechen.util.path.relative(cwd, guanghechen.util.path.current_filepath()) ---@type string
+  local cwd = fml.path.cwd() ---@type string
+  local filepath = fml.path.relative(cwd, fml.path.current_filepath()) ---@type string
   replace_word({ cwd = cwd, replace_path = filepath })
 end
 

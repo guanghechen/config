@@ -2,7 +2,7 @@ local guanghechen = require("guanghechen")
 local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 
-local context_config_filepath = guanghechen.util.path.locate_context_filepath("config.json")
+local context_config_filepath = fml.path.locate_context_filepath("config.json")
 
 ---@class ghc.core.context.config: guanghechen.viewmodel.Viewmodel
 ---@field public darken guanghechen.observable.Observable

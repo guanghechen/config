@@ -1,6 +1,6 @@
-local util_path = require("guanghechen.util.path")
+local util_path = require("fml.core.path")
 local util_tmux = require("guanghechen.util.tmux")
-local util_reporter = require("fml.core.reporter")
+local reporter = require("fml.core.reporter")
 
 local function wsl_clipboard()
   return {
@@ -25,7 +25,7 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   local function write_to_fake_clipboard(data)
     local file = io.open(clipboard_file, "w")
     if file == nil then
-      util_reporter.error({
+      reporter.error({
         from = "write_to_fake_clipboard",
         message = "Unable to open fake clipboard file for writing.",
         details = {
@@ -50,7 +50,7 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   local function read_from_fake_clipboard()
     local file = io.open(clipboard_file, "r")
     if file == nil then
-      util_reporter.error({
+      reporter.error({
         from = "read_from_fake_clipboard",
         message = "Unable to open fake clipboard file for reading.",
         details = {

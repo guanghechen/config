@@ -3,6 +3,7 @@ local core = {
   json = require("fml.core.json"),
   md5 = require("fml.core.md5"),
   os = require("fml.core.os"),
+  path = require("fml.core.path"),
   reporter = require("fml.core.reporter"),
   string = require("fml.core.string"),
   table = require("fml.core.table"),

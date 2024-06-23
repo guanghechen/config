@@ -1,6 +1,5 @@
 local context_config = require("ghc.core.context.config")
 local icons = require("ghc.core.setting.icons")
-local guanghechen = require("guanghechen")
 
 ---@type boolean
 local transparency = context_config.transparency:get_snapshot()
@@ -22,20 +21,20 @@ function M.condition()
     return false
   end
 
-  local relative_path = guanghechen.util.path.relative(guanghechen.util.path.cwd(), filepath)
+  local relative_path = fml.path.relative(fml.path.cwd(), filepath)
   return relative_path ~= "."
 end
 
 function M.renderer()
   local filepath = vim.fn.expand("%:p")
-  local cwd = guanghechen.util.path.cwd()
-  local relative_to_cwd = guanghechen.util.path.relative(cwd, filepath)
-  if string.sub(relative_to_cwd, 1, 1) == "." and guanghechen.util.path.is_absolute(filepath) then
-    local workspace = guanghechen.util.path.workspace()
+  local cwd = fml.path.cwd()
+  local relative_to_cwd = fml.path.relative(cwd, filepath)
+  if string.sub(relative_to_cwd, 1, 1) == "." and fml.path.is_absolute(filepath) then
+    local workspace = fml.path.workspace()
     if cwd ~= workspace then
-      local relative_to_workspace = guanghechen.util.path.relative(workspace, filepath)
+      local relative_to_workspace = fml.path.relative(workspace, filepath)
       if string.sub(relative_to_workspace, 1, 1) == "." then
-        relative_to_cwd = guanghechen.util.path.normalize(filepath)
+        relative_to_cwd = fml.path.normalize(filepath)
       end
     end
   end

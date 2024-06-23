@@ -1,24 +1,22 @@
 -- https://github.com/folke/persistence.nvim/blob/4982499c1636eac254b72923ab826ee7827b3084/lua/persistence/init.lua#L1
 
-local guanghechen = require("guanghechen")
-
 ---@class ghc.core.action.session
 local M = {}
 
 ---@param opts {autosave: boolean}
 function M.get_session_filepath(opts)
   local filename = opts.autosave and "session.autosave.vim" or "session.vim"
-  return guanghechen.util.path.locate_session_filepath({ filename = filename })
+  return fml.path.locate_session_filepath({ filename = filename })
 end
 
 function M.session_clear()
   local filenames = { "session.autosave.vim", "session.vim" }
-  guanghechen.util.path.remove_session_filepaths({ filenames = filenames })
+  fml.path.remove_session_filepaths({ filenames = filenames })
 end
 
 function M.session_clear_all()
   local filenames = { "session.autosave.vim", "session.vim" }
-  guanghechen.util.path.remove_session_filepaths_all({ filenames = filenames })
+  fml.path.remove_session_filepaths_all({ filenames = filenames })
 end
 
 function M.quit_all()

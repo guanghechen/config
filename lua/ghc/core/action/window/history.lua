@@ -1,5 +1,4 @@
 local History = require("guanghechen.history.History")
-local guanghechen = require("guanghechen")
 local icons = require("ghc.core.setting.icons")
 
 ---@class ghc.core.action.window.IHistoryItem
@@ -101,7 +100,7 @@ function M.push()
 
   local bufnr = vim.api.nvim_get_current_buf() ---@type number
   local filepath = vim.api.nvim_buf_get_name(bufnr)
-  local name = guanghechen.util.path.relative(guanghechen.util.path.workspace(), filepath)
+  local name = fml.path.relative(fml.path.workspace(), filepath)
 
   local item = {
     name = name,
@@ -126,7 +125,7 @@ function M.find_history(opts)
 
   local prompt_title = unique and "window history (unique)" or "window history"
   local entries = {} ---@type ghc.core.action.window.IHistoryItemEntry[]
-  local cwd = guanghechen.util.path.cwd()
+  local cwd = fml.path.cwd()
   local minwidth = #prompt_title + 16 ---@type number
   local default_lnum = 1 ---@type number
   if unique then
@@ -135,7 +134,7 @@ function M.find_history(opts)
     local visited = {} ---@type table<string, boolean>
     for item, item_index in history:iterator_reverse() do
       ---@cast item ghc.core.action.window.IHistoryItem
-      local relative_filepath = guanghechen.util.path.relative(cwd, item.filepath)
+      local relative_filepath = fml.path.relative(cwd, item.filepath)
       if not visited[relative_filepath] then
         visited[relative_filepath] = true
 
@@ -162,7 +161,7 @@ function M.find_history(opts)
     local present_index = history:present_index() ---@type number
     for item, item_index in history:iterator_reverse() do
       ---@cast item ghc.core.action.window.IHistoryItem
-      local relative_filepath = guanghechen.util.path.relative(cwd, item.filepath)
+      local relative_filepath = fml.path.relative(cwd, item.filepath)
 
       local display_text ---@type string
       if present_index == item_index then

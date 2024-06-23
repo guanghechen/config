@@ -1,15 +1,15 @@
-local util_reporter = require("fml.core.reporter")
-local PATH_SEPARATOR = fml.os.get_path_sep() ---@type string
+local os = require("fml.core.os")
+local md5 = require("fml.core.md5")
+local reporter = require("fml.core.reporter")
+local PATH_SEPARATOR = os.get_path_sep() ---@type string
 
----@class guanghechen.util.path
-local M = {
-  PATH_SEPARATOR = PATH_SEPARATOR,
-}
+---@class fml.core.path
+local M = {}
 
 ---@param filepath string
 ---@return boolean
 function M.is_absolute(filepath)
-  if fml.os.is_windows() then
+  if os.is_windows() then
     return string.match(filepath, "^[%a]:[\\/].*$") ~= nil
   end
   return string.sub(filepath, 1, 1) == PATH_SEPARATOR
@@ -198,7 +198,12 @@ function M.locate_config_filepath(...)
   local config_path = type(config_paths) == "table" and config_paths[1] or config_paths
 
   if type(config_path) ~= "string" or #config_path < 1 then
-    error("[fml.path.locate_config_filepath] bad config_path" .. vim.inspect(config_path))
+    reporter.error({
+      from = "fml.core.path",
+      subject = "locate_config_filepath",
+      message = "Cannot resolve the data_paths.",
+      details = { config_paths = config_paths }
+    })
     return ""
   end
 
@@ -219,7 +224,12 @@ function M.locate_data_filepath(...)
   local data_path = type(data_paths) == "table" and data_paths[1] or data_paths
 
   if type(data_path) ~= "string" or #data_path < 1 then
-    error("[fml.path.locate_data_filepath] bad data_path" .. vim.inspect(data_path))
+    reporter.error({
+      from = "fml.core.path",
+      subject = "locate_data_filepath",
+      message = "Cannot resolve the data_paths.",
+      details = { data_paths = data_paths }
+    })
     return ""
   end
 
@@ -234,7 +244,12 @@ function M.locate_script_filepath(...)
   local config_path = type(config_paths) == "table" and config_paths[1] or config_paths
 
   if type(config_path) ~= "string" or #config_path < 1 then
-    error("[fml.path.locate_script_filepath] bad config_path" .. vim.inspect(config_path))
+    reporter.error({
+      from = "fml.core.path",
+      subject = "locate_script_filepath",
+      message = "Cannot resolve the config_paths.",
+      details = { config_paths = config_paths }
+    })
     return ""
   end
 
@@ -249,7 +264,12 @@ function M.locate_state_filepath(...)
   local state_path = type(state_paths) == "table" and state_paths[1] or state_paths
 
   if type(state_path) ~= "string" or #state_path < 1 then
-    error("[fml.path.locate_state_filepath] bad state_path" .. vim.inspect(state_path))
+    reporter.error({
+      from = "fml.core.path",
+      subject = "locate_state_filepath",
+      message = "Cannot resolve the state_paths.",
+      details = { state_paths = state_paths }
+    })
     return ""
   end
 
@@ -263,7 +283,7 @@ function M.locate_session_filepath(opts)
   local filename = opts.filename
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = fml.md5.sumhexa(workspace_path)
+  local hash = md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   local session_filename = filename ---@type string
   local session_filepath = M.locate_state_filepath("ghc/sessions", session_dir, session_filename)
@@ -274,14 +294,14 @@ end
 function M.remove_session_filepaths(opts)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = fml.md5.sumhexa(workspace_path)
+  local hash = md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   for _, filename in ipairs(opts.filenames) do
     local session_filepath = session_dir .. PATH_SEPARATOR .. filename
     if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
       os.remove(session_filepath)
-      util_reporter.info({
-        from = "path.lua",
+      reporter.info({
+        from = "fml.core.path",
         subject = "remove_session_filepaths",
         message = "Removed " .. session_filepath,
       })
@@ -300,9 +320,9 @@ function M.remove_session_filepaths_all(opts)
           local session_filepath = session_root_dir .. PATH_SEPARATOR .. dirname .. PATH_SEPARATOR .. filename
           if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
             os.remove(session_filepath)
-            util_reporter.info({
-              from = "path.lua",
-              subject = "remove_session_filepaths",
+            reporter.info({
+              from = "fml.core.path",
+              subject = "remove_session_filepaths_all",
               message = "Removed " .. session_filepath,
             })
           end

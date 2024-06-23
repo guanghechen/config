@@ -1,4 +1,3 @@
-local guanghechen = require("guanghechen")
 local action_session = require("ghc.core.action.session")
 local action_window = require("ghc.core.action.window")
 local context_config = require("ghc.core.context.config")
@@ -34,8 +33,8 @@ function M.autocmd_startup()
       local cwd = vim.fn.getcwd()
       local p = vim.fn.expand("%:p:h")
 
-      local A = guanghechen.util.path.locate_git_repo(p)
-      local B = guanghechen.util.path.locate_git_repo(cwd)
+      local A = fml.path.locate_git_repo(p)
+      local B = fml.path.locate_git_repo(cwd)
 
       if A == nil then
         vim.cmd("cd " .. p .. "")

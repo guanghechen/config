@@ -1,5 +1,3 @@
-local guanghechen = require("guanghechen")
-
 local runners = {
   [".lua"] = require("ghc.core.action.run.lua"),
 }
@@ -8,8 +6,8 @@ local runners = {
 local M = {}
 
 function M.run()
-  local filepath = guanghechen.util.path.current_filepath()
-  local extname = guanghechen.util.path.extname(filepath)
+  local filepath = fml.path.current_filepath()
+  local extname = fml.path.extname(filepath)
 
   local runner = runners[extname]
   if runner ~= nil then

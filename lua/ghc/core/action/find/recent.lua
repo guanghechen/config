@@ -1,4 +1,3 @@
-local guanghechen = require("guanghechen")
 local context_session = require("ghc.core.context.session")
 local autocmd = require("ghc.core.action.autocmd")
 
@@ -62,9 +61,9 @@ end
 local function find_recent(opts)
   ---@type IFindRecentContext
   local find_recent_context = {
-    workspace = guanghechen.util.path.workspace(),
-    cwd = guanghechen.util.path.cwd(),
-    directory = guanghechen.util.path.current_directory(),
+    workspace = fml.path.workspace(),
+    cwd = fml.path.cwd(),
+    directory = fml.path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
   context_session.caller_winnr:next(vim.api.nvim_get_current_win())

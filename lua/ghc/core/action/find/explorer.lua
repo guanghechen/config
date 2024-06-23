@@ -1,11 +1,9 @@
-local guanghechen = require("guanghechen")
-
 ---@class ghc.core.action.find
 local M = require("ghc.core.action.find.module")
 
 function M.find_explorer_workspace()
   require("telescope").extensions.file_browser.file_browser({
-    cwd = guanghechen.util.path.workspace(),
+    cwd = fml.path.workspace(),
     workspace = "CWD",
     show_untracked = true,
     grouped = true,
@@ -16,7 +14,7 @@ end
 
 function M.find_explorer_cwd()
   require("telescope").extensions.file_browser.file_browser({
-    cwd = guanghechen.util.path.cwd(),
+    cwd = fml.path.cwd(),
     workspace = "CWD",
     select_buffer = true,
     show_untracked = true,
@@ -27,8 +25,8 @@ function M.find_explorer_cwd()
 end
 
 function M.find_explorer_current()
-  local absolute_path = guanghechen.util.path.current_directory()
-  local relative_path = guanghechen.util.path.relative(guanghechen.util.path.cwd(), absolute_path)
+  local absolute_path = fml.path.current_directory()
+  local relative_path = fml.path.relative(fml.path.cwd(), absolute_path)
   require("telescope").extensions.file_browser.file_browser({
     cwd = absolute_path,
     workspace = "CWD",

@@ -1,10 +1,8 @@
-local guanghechen = require("guanghechen")
-
 return {
   "tomasky/bookmarks.nvim",
   config = function()
     require("bookmarks").setup({
-      save_file = guanghechen.util.path.locate_session_filepath({ filename = "bookmark.vim" }), -- bookmarks save file path
+      save_file = fml.path.locate_session_filepath({ filename = "bookmark.vim" }), -- bookmarks save file path
       keywords = {
         ["@t"] = "  ", -- mark annotation startswith @t ,signs this icon as `Todo`
         ["@w"] = "⚠️ ", -- mark annotation startswith @w ,signs this icon as `Warn`

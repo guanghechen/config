@@ -26,7 +26,7 @@ local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
 ---@field public search_scope guanghechen.observable.Observable
 local context = Viewmodel.new({
   name = "context:session",
-  filepath = guanghechen.util.path.locate_session_filepath({ filename = "config.json" }),
+  filepath = fml.path.locate_session_filepath({ filename = "config.json" }),
 })
   :register("buftype_extra", Observable.new(nil), false, false)
   :register("caller_winnr", Observable.new(nil), false, false)

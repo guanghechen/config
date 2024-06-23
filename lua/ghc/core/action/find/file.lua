@@ -1,4 +1,3 @@
-local guanghechen = require("guanghechen")
 local action_autocmd = require("ghc.core.action.autocmd")
 local context_session = require("ghc.core.context.session")
 
@@ -62,8 +61,8 @@ end
 ---@param cwd string
 ---@return string
 local function gen_filemap(force, cwd)
-  local filemap_filepath = guanghechen.util.path.locate_session_filepath({ filename = "filemap.json" })
-  if force or not guanghechen.util.path.is_exist(filemap_filepath) or context_session.filemap_dirty:get_snapshot() then
+  local filemap_filepath = fml.path.locate_session_filepath({ filename = "filemap.json" })
+  if force or not fml.path.is_exist(filemap_filepath) or context_session.filemap_dirty:get_snapshot() then
     local stdout = vim.uv.new_pipe(false)
     local stderr = vim.uv.new_pipe(false)
     local subprocess
@@ -121,9 +120,9 @@ local function find_file(opts, force)
 
   ---@type IFindFileContext
   local find_file_context = {
-    workspace = guanghechen.util.path.workspace(),
-    cwd = guanghechen.util.path.cwd(),
-    directory = guanghechen.util.path.current_directory(),
+    workspace = fml.path.workspace(),
+    cwd = fml.path.cwd(),
+    directory = fml.path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
   context_session.caller_winnr:next(vim.api.nvim_get_current_win())
