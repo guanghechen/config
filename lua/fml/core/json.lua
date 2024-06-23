@@ -95,7 +95,7 @@ local function stringify_json_prettier(json, preceding, lines)
   table.insert(lines, preceding .. text)
 end
 
----@class guanghechen.util.json
+---@class fml.core.json
 local M = {}
 
 ---@param json any

@@ -1,4 +1,3 @@
-local util_json = require("guanghechen.util.json")
 local oxi = require("kyokuya.oxi")
 
 ---@param data kyokuya.replace.IReplaceStateData

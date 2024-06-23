@@ -4,7 +4,6 @@ local Textarea = require("kyokuya.component.textarea")
 local Previewer = require("kyokuya.replace.previewer")
 local constants = require("kyokuya.constant")
 local util_filetype = require("guanghechen.util.filetype")
-local util_json = require("guanghechen.util.json")
 local util_path = require("guanghechen.util.path")
 local util_reporter = require("guanghechen.util.reporter")
 local util_string = require("guanghechen.util.string")
@@ -290,7 +289,7 @@ function M:internal_bind_keymaps(bufnr)
 
     local textarea = Textarea:new()
     local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
-    local lines = util_json.stringify_prettier_lines(data) ---@type string[]
+    local lines = fml.core.json.stringify_prettier_lines(data) ---@type string[]
     textarea:open({
       title = data.mode == "search" and "[Search options]" or "[Replace options]",
       value = lines,
@@ -301,7 +300,7 @@ function M:internal_bind_keymaps(bufnr)
       on_confirm = function(next_value)
         local content = table.concat(next_value, "\n") ---@type string
         local ok, json = pcall(function()
-          return util_json.parse(content)
+          return fml.core.json.parse(content)
         end)
 
         if not ok then

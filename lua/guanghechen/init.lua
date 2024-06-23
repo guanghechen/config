@@ -23,7 +23,6 @@ M.util = {
   disposable = require("guanghechen.util.disposable"),
   filetype = require("guanghechen.util.filetype"),
   fs = require("guanghechen.util.fs"),
-  json = require("guanghechen.util.json"),
   misc = require("guanghechen.util.misc"),
   navigator = require("guanghechen.util.navigator"),
   observable = require("guanghechen.util.observable"),

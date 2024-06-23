@@ -1,6 +1,6 @@
--- https://github.com/folke/lazy.nvim/blob/3f13f080434ac942b150679223d54f5ca91e0d52/lua/lazy/core/util.lua#L1
+local util_json = require("fml.core.json")
 
-local util_json = require("guanghechen.util.json")
+-- https://github.com/folke/lazy.nvim/blob/3f13f080434ac942b150679223d54f5ca91e0d52/lua/lazy/core/util.lua#L1
 
 ---@class guanghechen.util.reporter.ReporterLevelEnum
 local ReporterLevelEnum = {

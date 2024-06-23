@@ -4,7 +4,7 @@ local Subscriber = require("guanghechen.subscriber.Subscriber")
 local util_disposable = require("guanghechen.util.disposable")
 local util_observable = require("guanghechen.util.observable")
 local util_fs = require("guanghechen.util.fs")
-local util_json = require("guanghechen.util.json")
+local util_json = require("fml.core.json")
 local util_reporter = require("guanghechen.util.reporter")
 
 ---@class guanghechen.viewmodel.Viewmodel.IOptions

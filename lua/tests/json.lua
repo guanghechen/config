@@ -1,4 +1,3 @@
-local json = require("guanghechen.util.json")
 local obj = {
   name = "wulala",
   favorites = {
@@ -19,8 +18,8 @@ local obj = {
 
 vim.notify(vim.json.encode(obj))
 vim.notify(vim.fn.json_encode(obj))
-vim.notify(json.stringify_prettier(obj))
+vim.notify(fml.core.json.stringify_prettier(obj))
 
 vim.notify(vim.json.encode("banana\nahaha\tdfe"))
 vim.notify(vim.fn.json_encode("banana\nahaha\tdfe"))
-vim.notify(json.stringify_prettier("banana\nahaha\tdfe"))
+vim.notify(fml.core.json.stringify_prettier("banana\nahaha\tdfe"))
