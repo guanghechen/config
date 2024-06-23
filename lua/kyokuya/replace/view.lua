@@ -5,7 +5,6 @@ local Previewer = require("kyokuya.replace.previewer")
 local constants = require("kyokuya.constant")
 local util_path = require("guanghechen.util.path")
 local util_reporter = require("guanghechen.util.reporter")
-local util_table = require("guanghechen.util.table")
 
 local kyokuya_buf_delete_augroup = vim.api.nvim_create_augroup("kyokuya_buf_delete", { clear = true })
 
@@ -212,7 +211,7 @@ function M:internal_bind_keymaps(bufnr)
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local value = self.state:get_value(key) ---@type string
-      local lines = util_table.parse_comma_list(value) ---@type string[]
+      local lines = fml.core.table.parse_comma_list(value) ---@type string[]
 
       local cursor = vim.api.nvim_win_get_cursor(winnr)
       self.cursor_row = cursor[1]

@@ -7,6 +7,7 @@ fml.core = {
   md5 = require("fml.core.md5"),
   os = require("fml.core.os"),
   string = require("fml.core.string"),
+  table = require("fml.core.table"),
 }
 
 ---@class fml.core

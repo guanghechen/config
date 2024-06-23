@@ -1,4 +1,6 @@
----@class guanghechen.util.table
+local util_string = require("fml.core.string")
+
+---@class fml.core.table
 local M = {}
 
 ---@generic T
@@ -121,7 +123,7 @@ end
 function M.parse_comma_list(str, separator_pattern)
   separator_pattern = separator_pattern or ","
   local result = {}
-  local items = fml.core.string.split(str, separator_pattern)
+  local items = util_string.split(str, separator_pattern)
   for _, item in ipairs(items) do
     local v = item:match("^%s*(.-)%s*$")
     if #v > 0 then

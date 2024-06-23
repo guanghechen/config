@@ -17,7 +17,7 @@ local function replace_word(opts)
     context_session.search_keyword:next(selected_text)
   end
 
-  local search_paths = guanghechen.util.table.filter_non_blank_string(context_session.search_include_paths:get_snapshot()) ---@type string[]
+  local search_paths = fml.core.table.filter_non_blank_string(context_session.search_include_paths:get_snapshot()) ---@type string[]
   local search_text = context_session.search_keyword:get_snapshot() ---@type string
   local replace_text = context_session.replace_keyword:get_snapshot() or search_text ---@type string
 

@@ -29,7 +29,6 @@ M.util = {
   regex = require("guanghechen.util.regex"),
   reporter = require("guanghechen.util.reporter"),
   selection = require("guanghechen.util.selection"),
-  table = require("guanghechen.util.table"),
   tmux = require("guanghechen.util.tmux"),
   window = require("guanghechen.util.window"),
 }

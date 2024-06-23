@@ -2,7 +2,6 @@
 -- https://github.com/NvChad/NvChad/blob/v2.5/lua/nvconfig.lua
 
 local context_config = require("ghc.core.context.config")
-local util_table = require("guanghechen.util.table")
 
 ---@type boolean
 local transparency = context_config.transparency:get_snapshot()
@@ -52,7 +51,7 @@ M.ui = {
   statusline = {
     theme = "default", -- default / minimal / vscode / vscode_colored
     separator_style = "default",
-    order = util_table.merge_multiple_array(
+    order = fml.core.table.merge_multiple_array(
       statusline.order_left,
       { "%=" },
       statusline.order_middle,
@@ -69,7 +68,7 @@ M.ui = {
   tabufline = {
     enabled = true,
     lazyload = true,
-    order = util_table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs" }, bufferline.order_right),
+    order = fml.core.table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs" }, bufferline.order_right),
     modules = vim.tbl_deep_extend("force", bufferline.modules_left, bufferline.modules_right),
   },
   telescope = {

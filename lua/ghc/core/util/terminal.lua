@@ -1,6 +1,5 @@
 -- https://github.com/LazyVim/LazyVim/blob/f086bcde253c29be9a2b9c90b413a516f5d5a3b2/lua/lazyvim/util/terminal.lua#L1
 
-local guanghechen = require("guanghechen.util.table")
 local context_session = require("ghc.core.context.session")
 
 ---@type table<string,LazyFloat>
