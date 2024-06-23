@@ -1,3 +1,8 @@
+---@class fml.collection
+local collection = {
+  CircularQueue = require("fml.collection.circular_queue"),
+}
+
 ---@class fml.core
 local core = {
   json = require("fml.core.json"),
@@ -16,8 +21,9 @@ local fn = {
 }
 
 ---@class fml : fml.core
----@field public core     fml.core
----@field public fn       fml.fn
-local fml = vim.tbl_extend("force", { fn = fn, core = core }, core)
+---@field public collection   fml.collection
+---@field public core         fml.core
+---@field public fn           fml.fn
+local fml = vim.tbl_extend("force", { collection = collection, core = core, fn = fn }, core)
 
 return fml

@@ -1,15 +1,15 @@
----@class guanghechen.queue.CircularQueue : guanghechen.types.ICircularQueue
----@field private _elements guanghechen.types.T[]
+---@class fml.collection.CircularQueue : fml.types.collection.ICircularQueue
+---@field private _elements fml.types.T[]
 ---@field private _capacity number
 ---@field private _size number
 ---@field private _start number
 ---@field private _end number
-local CircularQueue = {}
-CircularQueue.__index = CircularQueue
+local M = {}
+M.__index = M
 
 ---@param opts {capacity: number}
-function CircularQueue.new(opts)
-  local self = setmetatable({}, CircularQueue)
+function M.new(opts)
+  local self = setmetatable({}, M)
 
   self._elements = {}
   self._size = 0
@@ -21,12 +21,12 @@ function CircularQueue.new(opts)
 end
 
 ---@return number
-function CircularQueue:size()
+function M:size()
   return self._size
 end
 
----@return guanghechen.types.T[]
-function CircularQueue:collect()
+---@return fml.types.T[]
+function M:collect()
   local _capacity = self._capacity
   local _elements = self._elements
   local _start = self._start
@@ -34,6 +34,7 @@ function CircularQueue:collect()
   local id = _start - 1
   local result = {}
 
+  ---@diagnostic disable-next-line: unused-local
   for i = 1, _size do
     id = id + 1
     if id > _capacity then
@@ -45,8 +46,8 @@ function CircularQueue:collect()
 end
 
 ---@param index number
----@return guanghechen.types.T|nil
-function CircularQueue:at(index)
+---@return fml.types.T|nil
+function M:at(index)
   if index < 1 or index > self._size then
     return nil
   end
@@ -58,23 +59,23 @@ function CircularQueue:at(index)
   return self._elements[idx]
 end
 
----@return guanghechen.types.T|nil
-function CircularQueue:front()
+---@return fml.types.T|nil
+function M:front()
   if self._size > 0 then
     return self._elements[self._start]
   end
 end
 
----@return guanghechen.types.T|nil
-function CircularQueue:back()
+---@return fml.types.T|nil
+function M:back()
   if self._size > 0 then
     return self._elements[self._end]
   end
 end
 
----@param element guanghechen.types.T
+---@param element fml.types.T
 ---@return nil
-function CircularQueue:enqueue(element)
+function M:enqueue(element)
   self._end = self._end + 1
   if self._end > self._capacity then
     self._end = 1
@@ -91,8 +92,8 @@ function CircularQueue:enqueue(element)
   end
 end
 
----@return guanghechen.types.T|nil
-function CircularQueue:dequeue()
+---@return fml.types.T|nil
+function M:dequeue()
   if self._size < 1 then
     return nil
   end
@@ -112,8 +113,8 @@ function CircularQueue:dequeue()
   return target
 end
 
----@return guanghechen.types.T|nil
-function CircularQueue:dequeue_back()
+---@return fml.types.T|nil
+function M:dequeue_back()
   if self._size < 1 then
     return nil
   end
@@ -133,7 +134,7 @@ function CircularQueue:dequeue_back()
   return target
 end
 
-function CircularQueue:iterator()
+function M:iterator()
   local _capacity = self._capacity
   local _elements = self._elements
   local _start = self._start
@@ -153,7 +154,7 @@ function CircularQueue:iterator()
   end
 end
 
-function CircularQueue:iterator_reverse()
+function M:iterator_reverse()
   local _capacity = self._capacity
   local _elements = self._elements
   local _end = self._end
@@ -173,4 +174,4 @@ function CircularQueue:iterator_reverse()
   end
 end
 
-return CircularQueue
+return M

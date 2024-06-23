@@ -1,5 +1,3 @@
-local CircularQueue = require("guanghechen.queue.CircularQueue")
-
 ---@class guanghechen.history.History: guanghechen.types.IHistory
 ---@field private _comparator fun(x:guanghechen.types.T, y:guanghechen.types.T): number
 ---@field private _name string
@@ -15,7 +13,7 @@ function History.new(opts)
   self._name = opts.name ---@type string
   self._comparator = opts.comparator
   self._present_idx = 0 ---@type number
-  self._stack = CircularQueue.new({ capacity = opts.max_count }) ---@type guanghechen.types.ICircularQueue
+  self._stack = fml.collection.CircularQueue.new({ capacity = opts.max_count }) ---@type guanghechen.types.ICircularQueue
 
   return self
 end

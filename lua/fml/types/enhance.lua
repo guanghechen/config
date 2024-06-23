@@ -1,0 +1,1 @@
+---@alias fml.types.T any
