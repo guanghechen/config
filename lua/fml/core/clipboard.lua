@@ -2,6 +2,9 @@ local path = require("fml.core.path")
 local tmux = require("fml.core.tmux")
 local reporter = require("fml.core.reporter")
 
+---@class fml.core.clipboard
+local M = {}
+
 local function wsl_clipboard()
   return {
     name = "WslClipboard",
@@ -26,7 +29,8 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
     local file = io.open(clipboard_file, "w")
     if file == nil then
       reporter.error({
-        from = "write_to_fake_clipboard",
+        from = "fml.core.clipboard",
+        subject = "write_to_fake_clipboard",
         message = "Unable to open fake clipboard file for writing.",
         details = {
           filepath = fake_clipboard_filepath,
@@ -51,7 +55,8 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
     local file = io.open(clipboard_file, "r")
     if file == nil then
       reporter.error({
-        from = "read_from_fake_clipboard",
+        from = "fml.core.clipboard",
+        subject = "read_from_fake_clipboard",
         message = "Unable to open fake clipboard file for reading.",
         details = {
           filepath = fake_clipboard_filepath,
@@ -79,9 +84,6 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   }
 end
 
----@class guanghechen.util.clipboard
-local M = {}
-
 function M.get_clipboard()
   if fml.os.is_wsl() then
     return wsl_clipboard()
@@ -90,7 +92,11 @@ function M.get_clipboard()
     if vim.env.TMUX ~= nil then
       local fake_clipboard_filepath = tmux.get_tmux_env_value("ghc_use_fake_clipboard")
       if fake_clipboard_filepath ~= nil and path.is_exist(fake_clipboard_filepath) then
-        vim.notify("Using fake clipboard:" .. fake_clipboard_filepath)
+        reporter.info({
+          from = "fml.core.clipboard",
+          subject = "get_clipboard",
+          message = "Using fake clipboard:" .. fake_clipboard_filepath,
+        })
         return macos_fake_clipborad(fake_clipboard_filepath)
       end
       return nil

@@ -1,4 +1,3 @@
-local guanghechen = require("guanghechen")
 local context_config = require("ghc.core.context.config")
 
 local function list(items, sep)
@@ -8,7 +7,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 -- clipboard
-vim.g.clipboard = guanghechen.util.clipboard.get_clipboard()
+vim.g.clipboard = fml.clipboard.get_clipboard()
 
 -- mouse
 vim.opt.mouse:append("a")
