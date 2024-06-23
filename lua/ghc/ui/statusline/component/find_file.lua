@@ -1,8 +1,7 @@
-local context_config = require("ghc.core.context.config")
 local context_session = require("ghc.core.context.session")
 
 ---@type boolean
-local transparency = context_config.transparency:get_snapshot()
+local transparency = fml.context.shared.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.find_file
 local M = {

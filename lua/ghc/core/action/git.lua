@@ -1,4 +1,3 @@
-local context_config = require("ghc.core.context.config")
 local context_session = require("ghc.core.context.session")
 local util_terminal = require("ghc.core.util.terminal")
 
@@ -76,7 +75,7 @@ local function get_lazygit_config_filepath()
     fml.path.join(lazygit_config_dir, "config.yaml"),
     fml.path.join(
       lazygit_config_dir,
-      context_config.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"
+      fml.context.shared.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"
     ),
   }
   local lazygit_theme_config_filepath = table.concat(config_filepaths, ",")

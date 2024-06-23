@@ -1,6 +1,5 @@
 local action_session = require("ghc.core.action.session")
 local action_window = require("ghc.core.action.window")
-local context_config = require("ghc.core.context.config")
 local context_session = require("ghc.core.context.session")
 
 ---@class ghc.core.action.autocmd
@@ -300,7 +299,7 @@ function M.autocmd_toggle_linenumber()
     group = augroup,
     callback = function()
       if vim.o.nu and vim.api.nvim_get_mode().mode == "n" then
-        if context_config.relativenumber:get_snapshot() then
+        if fml.context.shared.relativenumber:get_snapshot() then
           vim.opt.relativenumber = true
         end
       end

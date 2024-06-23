@@ -1,5 +1,3 @@
-local context_config = require("ghc.core.context.config")
-
 local function list(items, sep)
   return table.concat(items, sep or ",")
 end
@@ -73,7 +71,7 @@ vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim`
 vim.opt.number = true -- Print line number
 vim.opt.pumblend = 10 -- Popup blend
 vim.opt.pumheight = 10 -- Maximum number of entries in a popup
-vim.opt.relativenumber = context_config.relativenumber:get_snapshot()
+vim.opt.relativenumber = fml.context.shared.relativenumber:get_snapshot()
 vim.opt.scrolloff = 4 -- Lines of context
 vim.opt.shiftround = true -- Round indent
 vim.opt.shiftwidth = 2

@@ -1,7 +1,5 @@
-local context_config = require("ghc.core.context.config")
-
 ---@type boolean
-local transparency = context_config.transparency:get_snapshot()
+local transparency = fml.context.shared.transparency:get_snapshot()
 
 local fileformat_text_map = {
   dos = "CRLF",

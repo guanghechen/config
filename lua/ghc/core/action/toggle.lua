@@ -1,4 +1,3 @@
-local context_config = require("ghc.core.context.config")
 local context_session = require("ghc.core.context.session")
 
 ---@class ghc.core.action.toggle
@@ -10,25 +9,25 @@ function M.flight_copilot()
 end
 
 function M.transparency()
-  context_config.transparency:next(not context_config.transparency:get_snapshot())
+  fml.context.shared.transparency:next(not fml.context.shared.transparency:get_snapshot())
 
-  require("nvconfig").ui.transparency = context_config.transparency:get_snapshot()
+  require("nvconfig").ui.transparency = fml.context.shared.transparency:get_snapshot()
   require("base46").load_all_highlights()
 end
 
 function M.theme()
   ---@type boolean
-  local darken = context_config.darken:get_snapshot()
-  context_config.darken:next(not darken)
+  local darken = fml.context.shared.darken:get_snapshot()
+  fml.context.shared.darken:next(not darken)
 
-  require("nvconfig").ui.theme = context_config.get_current_theme()
+  require("nvconfig").ui.theme = fml.context.shared.get_current_theme()
   require("base46").load_all_highlights()
 end
 
 function M.relative_line_number()
   ---@type boolean
-  local next_relativenumber = not context_config.relativenumber:get_snapshot()
-  context_config.relativenumber:next(next_relativenumber)
+  local next_relativenumber = not fml.context.shared.relativenumber:get_snapshot()
+  fml.context.shared.relativenumber:next(next_relativenumber)
 
   local bufnr = vim.api.nvim_get_current_buf()
 

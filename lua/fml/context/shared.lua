@@ -1,15 +1,18 @@
-local Observable = fml.collection.Observable
-local context_filepath = fml.path.locate_context_filepath("config.json")
+local Observable = require("fml.collection.Observable")
+local Viewmodel = require("fml.collection.Viewmodel")
+local watch_observables = require("fml.fn.watch_observables")
+local path = require("fml.core.path")
+local context_filepath = path.locate_context_filepath("shared.json")
 
----@class ghc.core.context.config: fml.collection.Viewmodel
+---@class fml.context.shared: fml.collection.Viewmodel
 ---@field public darken fml.types.collection.IObservable
 ---@field public relativenumber fml.types.collection.IObservable
 ---@field public theme_lighten fml.types.collection.IObservable
 ---@field public theme_darken fml.types.collection.IObservable
 ---@field public transparency fml.types.collection.IObservable
 ---@field public get_current_theme fun():string
-local context = fml.collection.Viewmodel.new({
-  name = "context:config",
+local context = Viewmodel.new({
+  name = "context:shared",
   filepath = context_filepath,
 })
   :register("darken", Observable.from_value(true), true, true)
@@ -36,7 +39,7 @@ context:load()
 context:auto_reload()
 
 --Auto refresh statusline
-fml.fn.watch_observables({
+watch_observables({
   context.darken,
   context.theme_lighten,
   context.theme_darken,

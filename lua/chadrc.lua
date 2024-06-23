@@ -1,10 +1,8 @@
 -- This file  needs to have same structure as nvconfig.lua
 -- https://github.com/NvChad/NvChad/blob/v2.5/lua/nvconfig.lua
 
-local context_config = require("ghc.core.context.config")
-
 ---@type boolean
-local transparency = context_config.transparency:get_snapshot()
+local transparency = fml.context.shared.transparency:get_snapshot()
 
 local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
@@ -36,9 +34,9 @@ M.ui = {
     CursorLine = { bg = "one_bg2" },
     Visual = { bg = "light_grey" },
   },
-  theme = context_config.get_current_theme(),
+  theme = fml.context.shared.get_current_theme(),
   theme_toggle = {},
-  transparency = context_config.transparency:get_snapshot(),
+  transparency = fml.context.shared.transparency:get_snapshot(),
   base46 = {
     integration = {
       "blankline",

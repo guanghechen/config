@@ -17,6 +17,11 @@ local collection = {
   Viewmodel = require("fml.collection.viewmodel"),
 }
 
+---@class fml.context
+local context = {
+  shared = require("fml.context.shared"),
+}
+
 ---@class fml.core
 local core = {
   clipboard = require("fml.core.clipboard"),
@@ -56,12 +61,14 @@ local ui = {
 ---@class fml : fml.core
 ---@field public api          fml.api
 ---@field public collection   fml.collection
+---@field public context      fml.context
 ---@field public core         fml.core
 ---@field public fn           fml.fn
 ---@field public ui           fml.ui
 local fml = vim.tbl_extend("force", core, {
   api = api,
   collection = collection,
+  context = context,
   core = core,
   fn = fn,
   ui = ui,
