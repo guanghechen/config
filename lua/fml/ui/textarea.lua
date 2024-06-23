@@ -1,9 +1,9 @@
----@class fml.component.Textarea
+---@class fml.ui.Textarea
 ---@field public popup any|nil
 local M = {}
 M.__index = M
 
----@class fml.component.Textarea.IProps
+---@class fml.ui.Textarea.IProps
 ---@field public title                  string
 ---@field public value                  string[]
 ---@field public position               "center"|"cursor"
@@ -14,7 +14,7 @@ M.__index = M
 ---@field public win_options            ?table<string, any>
 ---@field public on_confirm              fun(next_value: string[]): nil
 
----@return fml.component.Textarea
+---@return fml.ui.Textarea
 function M.new()
   local self = setmetatable({}, M)
 
@@ -23,7 +23,7 @@ function M.new()
   return self
 end
 
----@param props fml.component.Textarea.IProps
+---@param props fml.ui.Textarea.IProps
 ---@return nil
 function M:open(props)
   local title = props.title ---@type string

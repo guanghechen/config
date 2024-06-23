@@ -1,9 +1,9 @@
----@class fml.component.Input
+---@class fml.ui.Input
 ---@field input any|nil
 local M = {}
 M.__index = M
 
----@class fml.component.Input.IProps
+---@class fml.ui.Input.IProps
 ---@field public title                  string
 ---@field public prompt                 string
 ---@field public value                  string
@@ -11,7 +11,7 @@ M.__index = M
 ---@field public cursor_col             integer
 ---@field public on_confirm             fun(next_value: string):nil
 
----@return fml.component.Input
+---@return fml.ui.Input
 function M.new()
   local self = setmetatable({}, M)
 
@@ -20,7 +20,7 @@ function M.new()
   return self
 end
 
----@param props fml.component.Input.IProps
+---@param props fml.ui.Input.IProps
 ---@return nil
 function M:open(props)
   local title = props.title ---@type string
