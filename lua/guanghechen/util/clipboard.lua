@@ -1,5 +1,5 @@
-local util_path = require("fml.core.path")
-local util_tmux = require("guanghechen.util.tmux")
+local path = require("fml.core.path")
+local tmux = require("fml.core.tmux")
 local reporter = require("fml.core.reporter")
 
 local function wsl_clipboard()
@@ -88,8 +88,8 @@ function M.get_clipboard()
   end
   if fml.os.is_mac() then
     if vim.env.TMUX ~= nil then
-      local fake_clipboard_filepath = util_tmux.get_tmux_env_value("ghc_use_fake_clipboard")
-      if fake_clipboard_filepath ~= nil and util_path.is_exist(fake_clipboard_filepath) then
+      local fake_clipboard_filepath = tmux.get_tmux_env_value("ghc_use_fake_clipboard")
+      if fake_clipboard_filepath ~= nil and path.is_exist(fake_clipboard_filepath) then
         vim.notify("Using fake clipboard:" .. fake_clipboard_filepath)
         return macos_fake_clipborad(fake_clipboard_filepath)
       end

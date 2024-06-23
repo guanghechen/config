@@ -20,6 +20,7 @@ local core = {
   reporter = require("fml.core.reporter"),
   string = require("fml.core.string"),
   table = require("fml.core.table"),
+  tmux = require("fml.core.tmux"),
 }
 
 ---@class fml.fn

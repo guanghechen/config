@@ -1,3 +1,6 @@
+---@class fml.core.tmux
+local M = {}
+
 --- https://github.com/alexghergh/nvim-tmux-navigation/blob/4898c98702954439233fdaf764c39636681e2861/lua/nvim-tmux-navigation/tmux_util.lua#L1
 
 local tmux_directions = { ["p"] = "l", ["h"] = "L", ["j"] = "D", ["k"] = "U", ["l"] = "R", ["n"] = "t:.+" }
@@ -7,7 +10,7 @@ local tmux_directions = { ["p"] = "l", ["h"] = "L", ["j"] = "D", ["k"] = "U", ["
 --
 -- the check if tmux is actually running (so the variable $TMUX is
 -- not nil) is made before actually calling this function
----@param command string
+---@param command                       string
 local function tmux_command(command)
   local tmux_socket = vim.fn.split(vim.env.TMUX, ",")[1]
   return vim.fn.system("tmux -S " .. tmux_socket .. " " .. command)
@@ -20,12 +23,10 @@ local function is_tmux_pane_zoomed()
   return tmux_command("display-message -p '#{window_zoomed_flag}'") == "1\n"
 end
 
----@class ghc.core.util.tmux
-local M = {}
-
 -- whether tmux should take control over the navigation
----@param is_same_winnr boolean
----@param disable_nav_when_zoomed boolean
+---@param is_same_winnr                 boolean
+---@param disable_nav_when_zoomed       boolean
+---@return boolean
 function M.should_tmux_control(is_same_winnr, disable_nav_when_zoomed)
   if is_tmux_pane_zoomed() and disable_nav_when_zoomed then
     return false

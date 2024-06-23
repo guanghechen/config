@@ -1,4 +1,3 @@
-local guanghechen = require("guanghechen")
 local vim_navigate = require("ghc.core.action.window.navigate-vim")
 
 local DISABLE_WHEN_ZOOMED = true ---@type boolean
@@ -20,7 +19,7 @@ local function tmux_navigate(direction)
 
     if is_last_win then
       pcall(navigate_window_topest)
-      guanghechen.util.tmux.change_pane(direction)
+      fml.tmux.change_pane(direction)
     else
       vim_navigate(direction)
     end
@@ -28,7 +27,7 @@ local function tmux_navigate(direction)
     -- if the last pane was a tmux pane, then we need to handle control
     -- to tmux; otherwise, just issue a last pane command in vim
     if tmux_control == true then
-      guanghechen.util.tmux.change_pane(direction)
+      fml.tmux.change_pane(direction)
     elseif tmux_control == false then
       vim_navigate(direction)
     end
@@ -44,8 +43,8 @@ local function tmux_navigate(direction)
     local is_same_winnr = (winnr == vim.fn.winnr())
 
     -- if we're in the same window and zoom is not disabled, tmux should take control
-    if guanghechen.util.tmux.should_tmux_control(is_same_winnr, DISABLE_WHEN_ZOOMED) then
-      guanghechen.util.tmux.change_pane(direction)
+    if fml.tmux.should_tmux_control(is_same_winnr, DISABLE_WHEN_ZOOMED) then
+      fml.tmux.change_pane(direction)
       tmux_control = true
     else
       tmux_control = false

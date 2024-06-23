@@ -7,7 +7,6 @@ M.util = {
   clipboard = require("guanghechen.util.clipboard"),
   debounce = require("guanghechen.util.debounce"),
   navigator = require("guanghechen.util.navigator"),
-  tmux = require("guanghechen.util.tmux"),
   window = require("guanghechen.util.window"),
 }
 
