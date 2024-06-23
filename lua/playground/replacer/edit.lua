@@ -1,7 +1,7 @@
 local Popup = require("nui.popup")
 local Layout = require("nui.layout")
 
----@alias guanghechen.replacer.IStateKey
+---@alias playground.replacer.IStateKey
 ---|"flag_ignore_case"
 ---|"flag_regex"
 ---|"search_excludes"
@@ -10,7 +10,7 @@ local Layout = require("nui.layout")
 ---|"search_text"
 ---|"replace_text"
 
----@class guanghechen.replacer.IState
+---@class playground.replacer.IState
 ---@field public flag_ignore_case boolean
 ---@field public flag_regex boolean
 ---@field public search_excludes string
@@ -19,7 +19,7 @@ local Layout = require("nui.layout")
 ---@field public search_text string
 ---@field public replace_text string
 
----@class guanghechen.replace.ITab
+---@class playground.replacer.ITab
 ---@field public tabnr number
 ---@field public winnr1 number
 ---@field public winnr2 number
@@ -28,13 +28,13 @@ local Layout = require("nui.layout")
 ---@field public bufnr2 number
 ---@field public bufnr3 number
 
----@class guanghechen.replacer.IPopup
----@field public key guanghechen.replacer.IStateKey
+---@class playground.replacer.IPopup
+---@field public key playground.replacer.IStateKey
 ---@field public popup any
 ---@field public get_value fun():string
 
----@class guanghechen.replacer.IPopupOptions
----@field key guanghechen.replacer.IStateKey
+---@class playground.replacer.IPopupOptions
+---@field key playground.replacer.IStateKey
 ---@field title string
 ---@field initial_value string
 ---@field enter boolean|nil
@@ -43,19 +43,19 @@ local Layout = require("nui.layout")
 ---@field on_concel fun():nil
 ---@field on_confirm fun():nil
 
----@class guanghechen.replacer.IOptions
----@field public state guanghechen.replacer.IState
----@field public on_change fun(next_state:guanghechen.replacer.IState):nil
+---@class playground.replacer.IOptions
+---@field public state playground.replacer.IState
+---@field public on_change fun(next_state:playground.replacer.IState):nil
 
----@class guanghechen.replacer.Popup : guanghechen.replacer.IPopup
+---@class playground.replacer.Popup : playground.replacer.IPopup
 local ReplacerPopup = {}
 ReplacerPopup.__index = ReplacerPopup
 
----@param opts guanghechen.replacer.IPopupOptions
+---@param opts playground.replacer.IPopupOptions
 function ReplacerPopup.new(opts)
   local self = setmetatable({}, ReplacerPopup)
 
-  local key = opts.key ---@type guanghechen.replacer.IStateKey
+  local key = opts.key ---@type playground.replacer.IStateKey
   local title = opts.title ---@type string
   local initial_value = opts.initial_value ---@type string
   local enter = opts.enter ---@type boolean|nil
@@ -109,20 +109,20 @@ function ReplacerPopup.new(opts)
   return self
 end
 
----@class guanghechen.replacer.Replacer
----@field public state guanghechen.replacer.IState
----@field public tab guanghechen.replace.ITab|nil
+---@class playground.replacer.Replacer
+---@field public state playground.replacer.IState
+---@field public tab playground.replacer.ITab|nil
 ---@field public layout any|nil
----@field private on_change fun(next_state:guanghechen.replacer.IState):nil
+---@field private on_change fun(next_state:playground.replacer.IState):nil
 local Replacer = {}
 Replacer.__index = Replacer
 
----@param opts guanghechen.replacer.IOptions
----@return guanghechen.replacer.Replacer
+---@param opts playground.replacer.IOptions
+---@return playground.replacer.Replacer
 function Replacer.new(opts)
   local self = setmetatable({}, Replacer)
 
-  ---@type guanghechen.replacer.IState
+  ---@type playground.replacer.IState
   local state = {
     flag_ignore_case = opts.state.flag_ignore_case, ---@type boolean
     flag_regex = opts.state.flag_regex, ---@type boolean
@@ -153,7 +153,7 @@ function Replacer:edit()
     return
   end
 
-  local popups = {} ---@type guanghechen.replacer.IPopup[]
+  local popups = {} ---@type playground.replacer.IPopup[]
 
   local function focus_prev(index)
     return function()
@@ -179,7 +179,7 @@ function Replacer:edit()
 
   local function on_confirm()
     local has_changed = false ---@type boolean
-    local next_state = vim.tbl_deep_extend("force", {}, self.state) ---@type guanghechen.replacer.IState
+    local next_state = vim.tbl_deep_extend("force", {}, self.state) ---@type playground.replacer.IState
 
     ---@diagnostic disable-next-line: unused-local
     for index, popup in ipairs(popups) do
@@ -200,7 +200,7 @@ function Replacer:edit()
   end
 
   ---@param index number
-  ---@param key guanghechen.replacer.IStateKey
+  ---@param key playground.replacer.IStateKey
   ---@param title string
   ---@param initial_value string
   ---@param enter? boolean
