@@ -1,6 +1,9 @@
 ---@class fml.collection
 local collection = {
+  BatchHandler = require("fml.collection.batch_handler"),
+  BatchDisposable = require("fml.collection.batch_disposable"),
   CircularQueue = require("fml.collection.circular_queue"),
+  Disposable = require("fml.collection.disposable"),
   History = require("fml.collection.history"),
 }
 
@@ -18,7 +21,9 @@ local core = {
 ---@class fml.fn
 local fn = {
   calc_fileicon = require("fml.fn.calc_fileicon"),
+  dispose_all = require("fml.fn.dispose_all"),
   get_selected_text = require("fml.fn.get_selected_text"),
+  is_disposable = require("fml.fn.is_disposable"),
 }
 
 ---@class fml : fml.core

@@ -28,7 +28,7 @@ function Subscriber.new(options)
 end
 
 ---@return boolean
-function Subscriber:isDisposed()
+function Subscriber:is_disposed()
   return self._disposed
 end
 

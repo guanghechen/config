@@ -1,4 +1,4 @@
-local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
+local BatchDisposable = require("fml.collection.batch_disposable")
 local Subscribers = require("guanghechen.subscriber.Subscribers")
 local util_misc = require("guanghechen.util.misc")
 
@@ -55,7 +55,7 @@ end
 
 ---@return nil
 function Observable:dispose()
-  if self:isDisposed() then
+  if self:is_disposed() then
     return
   end
 
@@ -72,7 +72,7 @@ function Observable:next(value, options)
   options = options or {}
   ---@cast options guanghechen.types.IObservableNextOptions
 
-  if self:isDisposed() then
+  if self:is_disposed() then
     ---@type boolean
     local strict = options.strict ~= nil and options.strict or true
     if strict then
@@ -92,7 +92,7 @@ end
 ---@param subscriber guanghechen.types.ISubscriber
 ---@return guanghechen.types.IUnsubscribable
 function Observable:subscribe(subscriber)
-  if subscriber:isDisposed() then
+  if subscriber:is_disposed() then
     return util_misc.noop_unsubscribable
   end
 
@@ -102,7 +102,7 @@ function Observable:subscribe(subscriber)
   ---@type guanghechen.types.T
   local value = self._value
 
-  if self:isDisposed() then
+  if self:is_disposed() then
     subscriber:next(value, value_prev)
     subscriber:dispose()
     return util_misc.noop_unsubscribable

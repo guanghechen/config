@@ -1,4 +1,4 @@
----@class guanghechen.types.IViewmodel : guanghechen.types.IBatchDisposable
+---@class guanghechen.types.IViewmodel : fml.types.collection.IBatchDisposable
 ---@field get_name fun():string
 ---@field get_filepath fun():string
 ---@field get_snapshot fun():table

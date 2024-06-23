@@ -1,6 +1,6 @@
-local guanghechen = require("guanghechen")
 local Observable = require("guanghechen.observable.Observable")
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
+local util_observable = require("guanghechen.util.observable")
 
 ---@class ghc.core.context.session : guanghechen.viewmodel.Viewmodel
 ---@field public buftype_extra guanghechen.observable.Observable
@@ -54,7 +54,7 @@ context:load()
 context:auto_reload()
 
 --Auto refresh statusline
-guanghechen.util.observable.watch_observables({
+util_observable.watch_observables({
   context.buftype_extra,
   context.find_file_enable_case_sensitive,
   context.find_file_enable_regex,

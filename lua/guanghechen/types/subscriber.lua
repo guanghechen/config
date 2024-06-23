@@ -1,4 +1,4 @@
----@class guanghechen.types.ISubscriber : guanghechen.types.IDisposable
+---@class guanghechen.types.ISubscriber : fml.types.collection.IDisposable
 ---@field public  next fun(self: guanghechen.types.ISubscriber, value: guanghechen.types.T, value_prev: guanghechen.types.T| nil): nil
 
 ---@class guanghechen.types.IUnsubscribable
@@ -7,6 +7,6 @@
 ---@class guanghechen.types.ISubscribable
 ---@field public  subscribe fun(self: guanghechen.types.ISubscribable, subscriber: guanghechen.types.ISubscriber): guanghechen.types.IUnsubscribable
 
----@class guanghechen.types.ISubscribers : guanghechen.types.ISubscribable, guanghechen.types.IDisposable
+---@class guanghechen.types.ISubscribers : guanghechen.types.ISubscribable, fml.types.collection.IDisposable
 ---@field public  getSize fun(self: guanghechen.types.ISubscribers):nil
 ---@field public  notify fun(self: guanghechen.types.ISubscribers, value: guanghechen.types.T, value_prev: guanghechen.types.T | nil): nil

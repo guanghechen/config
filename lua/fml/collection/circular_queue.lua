@@ -1,16 +1,17 @@
 ---@class fml.collection.CircularQueue : fml.types.collection.ICircularQueue
----@field private _elements         fml.types.T[]
----@field private _capacity         number
----@field private _size             number
----@field private _start            number
----@field private _end              number
+---@field private _elements             fml.types.T[]
+---@field private _capacity             number
+---@field private _size                 number
+---@field private _start                number
+---@field private _end                  number
 local M = {}
 M.__index = M
 
 ---@class fml.collection.ICircularQueueProps
----@field public capacity           number
+---@field public capacity               number
 
 ---@param props fml.collection.ICircularQueueProps
+---@return fml.collection.CircularQueue
 function M.new(props)
   local self = setmetatable({}, M)
 

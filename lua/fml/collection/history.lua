@@ -1,17 +1,18 @@
 ---@class fml.collection.History : fml.types.collection.IHistory
----@field private _comparator fun(x:fml.types.T, y:fml.types.T): number
----@field private _name string
----@field private _present_idx number
----@field private _stack fml.types.collection.ICircularQueue
+---@field private _comparator           fun(x: fml.types.T, y: fml.types.T): number
+---@field private _name                 string
+---@field private _present_idx          number
+---@field private _stack                fml.types.collection.ICircularQueue
 local M = {}
 M.__index = M
 
 ---@class fml.collection.IHistoryProps
----@field public name         string
----@field public max_count    number
----@field public comparator   fun(x: fml.types.T, y: fml.types.T): number
+---@field public name                   string
+---@field public max_count              number
+---@field public comparator             fun(x: fml.types.T, y: fml.types.T): number
 
 ---@param props fml.collection.IHistoryProps
+---@return fml.collection.History
 function M.new(props)
   local self = setmetatable({}, M)
 

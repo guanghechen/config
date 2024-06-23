@@ -1,7 +1,5 @@
 local ReplaceState = require("kyokuya.replace.state")
 local ReplaceView = require("kyokuya.replace.view")
-local Disposable = require("guanghechen.disposable.Disposable")
-local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
 local Subscriber = require("guanghechen.subscriber.Subscriber")
 local util_observable = require("guanghechen.util.observable")
 
@@ -17,7 +15,7 @@ local util_observable = require("guanghechen.util.observable")
 ---@field private winnr  integer
 ---@field private nsnr   integer
 ---@field private reuse  boolean
----@field private batch_disposable guanghechen.types.IBatchDisposable
+---@field private batch_disposable fml.types.collection.IBatchDisposable
 local M = {}
 M.__index = M
 
@@ -29,7 +27,7 @@ function M.new(opts)
   local nsnr = opts.nsnr ---@type integer
   local winnr = opts.winnr ~= nil and opts.winnr or 0 ---@type integer
   local reuse = not not opts.reuse ---@type boolean
-  local batch_disposable = BatchDisposable.new()
+  local batch_disposable = fml.collection.BatchDisposable.new()
 
   local state ---@type kyokuya.replace.ReplaceState
   if util_observable.is_observable(opts.data) then
@@ -50,9 +48,11 @@ function M.new(opts)
       end,
     })
     local unsubscribable = observable:subscribe(subscriber)
-    batch_disposable:registerDisposable(Disposable.new(function()
-      unsubscribable:unsubscribe()
-    end))
+    batch_disposable:add_disposable(fml.collection.Disposable.new({
+      on_dispose = function()
+        unsubscribable:unsubscribe()
+      end
+    }))
   else
     local data = opts.data
     ---@cast data kyokuya.replace.IReplaceStateData
@@ -76,12 +76,12 @@ function M.new(opts)
   return self
 end
 
-function M:isDisposed()
-  return self.batch_disposable:isDisposed()
+function M:is_disposed()
+  return self.batch_disposable:is_disposed()
 end
 
 function M:dispose()
-  if not self:isDisposed() then
+  if not self:is_disposed() then
     self.batch_disposable:dispose()
   end
 end

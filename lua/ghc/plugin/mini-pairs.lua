@@ -1,5 +1,3 @@
-local guanghechen = require("guanghechen")
-
 -- auto pairs
 return {
   "echasnovski/mini.pairs",

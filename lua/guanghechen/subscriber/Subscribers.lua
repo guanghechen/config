@@ -1,4 +1,4 @@
-local SafeBatchHandler = require("guanghechen.disposable.SafeBatchHandler")
+local BatchHandler = require("fml.collection.batch_handler")
 local util_misc = require("guanghechen.util.misc")
 
 ---@class guanghechen.subscriber.Subscribers : guanghechen.types.ISubscribers
@@ -39,7 +39,7 @@ function Subscribers:getSize()
 end
 
 ---@return boolean
-function Subscribers:isDisposed()
+function Subscribers:is_disposed()
   return self._disposed
 end
 
@@ -51,7 +51,7 @@ function Subscribers:dispose()
 
   self._disposed = true
 
-  local batcher = SafeBatchHandler:new()
+  local handler = BatchHandler.new()
   local items = self._items
 
   local i = 1
@@ -62,11 +62,11 @@ function Subscribers:dispose()
     end
 
     item.unsubscribed = true
-    if item.subscriber:isDisposed() then
+    if item.subscriber:is_disposed() then
       goto continue
     end
 
-    batcher:run(function()
+    handler:run(function()
       item.subscriber:dispose()
     end)
 
@@ -76,8 +76,8 @@ function Subscribers:dispose()
 
   self._items = {}
   self._subscribingCount = 0
-  batcher:summary("[Subscribers:dispose] Encountered errors while disposing.")
-  batcher:cleanup()
+  handler:summary("[Subscribers:dispose] Encountered errors while disposing.")
+  handler:cleanup()
 end
 
 ---@param value any
@@ -88,29 +88,29 @@ function Subscribers:notify(value, value_prev)
     return
   end
 
-  local batcher = SafeBatchHandler:new()
+  local handler = BatchHandler:new()
   local items = self._items
 
   local i = 1
   local L = #items
   while i <= L do
     local item = items[i]
-    if not item.unsubscribed and not item.subscriber:isDisposed() then
-      batcher:run(function()
+    if not item.unsubscribed and not item.subscriber:is_disposed() then
+      handler:run(function()
         item.subscriber:next(value, value_prev)
       end)
     end
     i = i + 1
   end
 
-  batcher:summary("[Subscribers:notify] Encountered errors while notifying subscribers.")
-  batcher:cleanup()
+  handler:summary("[Subscribers:notify] Encountered errors while notifying subscribers.")
+  handler:cleanup()
 end
 
 ---@param subscriber guanghechen.types.ISubscriber
 ---@return guanghechen.types.IUnsubscribable
 function Subscribers:subscribe(subscriber)
-  if subscriber:isDisposed() then
+  if subscriber:is_disposed() then
     return util_misc.noop_unsubscribable
   end
 
@@ -152,7 +152,7 @@ function Subscribers:_arrange()
     local i = 1
     while i <= #items do
       local item = items[i]
-      if not item.unsubscribed and not item.subscriber:isDisposed() then
+      if not item.unsubscribed and not item.subscriber:is_disposed() then
         table.insert(next_items, item)
       end
       i = i + 1

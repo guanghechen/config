@@ -1,7 +1,8 @@
-local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
-local Disposable = require("guanghechen.disposable.Disposable")
 local Subscriber = require("guanghechen.subscriber.Subscriber")
-local util_disposable = require("guanghechen.util.disposable")
+local BatchDisposable = require("fml.collection.batch_disposable")
+local Disposable = require("fml.collection.disposable")
+local is_disposable = require("fml.fn.is_disposable")
+local dispose_all = require("fml.fn.dispose_all")
 local util_observable = require("guanghechen.util.observable")
 local util_fs = require("guanghechen.util.fs")
 local util_json = require("fml.core.json")
@@ -41,17 +42,17 @@ end
 
 ---@return nil
 function Viewmodel:dispose()
-  if self:isDisposed() then
+  if self:is_disposed() then
     return
   end
 
   BatchDisposable.dispose(self)
 
-  ---@type guanghechen.types.IDisposable[]
+  ---@type fml.types.collection.IDisposable[]
   local disposables = {}
   for _, disposable in pairs(self) do
-    if util_disposable(disposable) then
-      ---@cast disposable guanghechen.types.IDisposable
+    if is_disposable(disposable) then
+      ---@cast disposable fml.types.collection.IDisposable
       table.insert(disposables, disposable)
     end
   end
@@ -61,7 +62,7 @@ function Viewmodel:dispose()
     self._unwatch = nil
   end
 
-  util_disposable.disposeAll(disposables)
+  dispose_all(disposables)
 end
 
 function Viewmodel:get_name()
@@ -119,9 +120,11 @@ function Viewmodel:register(name, observable, persistable, auto_save)
       end,
     })
     local unsubscribable = observable:subscribe(subscriber)
-    self:registerDisposable(Disposable.new(function()
-      unsubscribable:unsubscribe()
-    end))
+    self:add_disposable(Disposable.new({
+      on_dispose = function()
+        unsubscribable:unsubscribe()
+      end
+    }))
   end
 
   return self

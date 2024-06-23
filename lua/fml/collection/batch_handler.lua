@@ -1,10 +1,10 @@
----@class guanghechen.disposable.SafeBatchHandler
-local SafeBatchHandler = {}
-SafeBatchHandler.__index = SafeBatchHandler
+---@class fml.collection.BatchHandler : fml.types.collection.IBatchHandler
+local M = {}
+M.__index = M
 
----@return guanghechen.disposable.SafeBatchHandler
-function SafeBatchHandler.new()
-  local self = setmetatable({}, SafeBatchHandler)
+---@return fml.collection.BatchHandler
+function M.new()
+  local self = setmetatable({}, M)
 
   ---@type any[]
   self._errors = {}
@@ -16,14 +16,14 @@ function SafeBatchHandler.new()
 end
 
 ---@return nil
-function SafeBatchHandler:cleanup()
+function M:cleanup()
   self._errors = {}
   self._summary = nil
 end
 
 ---@param action fun():nil
 ---@return nil
-function SafeBatchHandler:run(action)
+function M:run(action)
   local ok, error = pcall(action)
   if not ok then
     table.insert(self._errors, error)
@@ -33,7 +33,7 @@ end
 
 ---@param title string
 ---@return nil
-function SafeBatchHandler:summary(title)
+function M:summary(title)
   if self._summary == nil then
     if #self._errors > 0 then
       self._summary = vim.inspect({
@@ -47,4 +47,4 @@ function SafeBatchHandler:summary(title)
   end
 end
 
-return SafeBatchHandler
+return M
