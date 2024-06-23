@@ -27,6 +27,8 @@ local fn = {
   dispose_all = require("fml.fn.dispose_all"),
   get_selected_text = require("fml.fn.get_selected_text"),
   is_disposable = require("fml.fn.is_disposable"),
+  is_observable = require("fml.fn.is_observable"),
+  watch_observables = require("fml.fn.watch_observables"),
 }
 
 ---@class fml : fml.core

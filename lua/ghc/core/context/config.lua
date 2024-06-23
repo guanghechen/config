@@ -1,6 +1,5 @@
 local Observable = fml.collection.Observable
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
-local util_observable = require("guanghechen.util.observable")
 
 local context_config_filepath = fml.path.locate_context_filepath("config.json")
 
@@ -39,7 +38,7 @@ context:load()
 context:auto_reload()
 
 --Auto refresh statusline
-util_observable.watch_observables({
+fml.fn.watch_observables({
   context.darken,
   context.theme_lighten,
   context.theme_darken,

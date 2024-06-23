@@ -15,7 +15,6 @@ M.util = {
   fs = require("guanghechen.util.fs"),
   misc = require("guanghechen.util.misc"),
   navigator = require("guanghechen.util.navigator"),
-  observable = require("guanghechen.util.observable"),
   tmux = require("guanghechen.util.tmux"),
   window = require("guanghechen.util.window"),
 }

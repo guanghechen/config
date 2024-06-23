@@ -1,6 +1,5 @@
 local ReplaceState = require("kyokuya.replace.state")
 local ReplaceView = require("kyokuya.replace.view")
-local util_observable = require("guanghechen.util.observable")
 
 ---@class kyokuya.replace.IReplacerOptions
 ---@field public  data   kyokuya.replace.IReplaceStateData|fml.types.collection.IObservable
@@ -29,7 +28,7 @@ function M.new(opts)
   local batch_disposable = fml.collection.BatchDisposable.new()
 
   local state ---@type kyokuya.replace.ReplaceState
-  if util_observable.is_observable(opts.data) then
+  if fml.fn.is_observable(opts.data) then
     local observable = opts.data
     ---@cast observable  fml.types.collection.IObservable
     state = ReplaceState.new({

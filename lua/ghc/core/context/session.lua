@@ -1,6 +1,5 @@
 local Observable = fml.collection.Observable
 local Viewmodel = require("guanghechen.viewmodel.Viewmodel")
-local util_observable = require("guanghechen.util.observable")
 
 ---@class ghc.core.context.session : guanghechen.viewmodel.Viewmodel
 ---@field public buftype_extra fml.types.collection.IObservable
@@ -54,7 +53,7 @@ context:load()
 context:auto_reload()
 
 --Auto refresh statusline
-util_observable.watch_observables({
+fml.fn.watch_observables({
   context.buftype_extra,
   context.find_file_enable_case_sensitive,
   context.find_file_enable_regex,

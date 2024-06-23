@@ -2,8 +2,8 @@ local BatchDisposable = require("fml.collection.batch_disposable")
 local Disposable = require("fml.collection.disposable")
 local Subscriber = require("fml.collection.subscriber")
 local is_disposable = require("fml.fn.is_disposable")
+local is_observable = require("fml.fn.is_observable")
 local dispose_all = require("fml.fn.dispose_all")
-local util_observable = require("guanghechen.util.observable")
 local util_fs = require("guanghechen.util.fs")
 local util_json = require("fml.core.json")
 
@@ -77,7 +77,7 @@ end
 function Viewmodel:get_snapshot()
   local data = {}
   for key, observable in pairs(self._persistable_observables) do
-    if util_observable.is_observable(observable) then
+    if is_observable(observable) then
       ---@cast observable fml.types.collection.IObservable
       data[key] = observable:get_snapshot()
     end
@@ -89,7 +89,7 @@ end
 function Viewmodel:get_snapshot_all()
   local data = {}
   for key, observable in pairs(self._all_observables) do
-    if util_observable.is_observable(observable) then
+    if is_observable(observable) then
       ---@cast observable fml.types.collection.IObservable
       data[key] = observable:get_snapshot()
     end
@@ -193,7 +193,7 @@ function Viewmodel:load()
 
   for key, value in pairs(data) do
     local observable = self[key]
-    if value ~= nil and util_observable.is_observable(observable) then
+    if value ~= nil and is_observable(observable) then
       self._initial_values[key] = value
       observable:next(value)
     end
