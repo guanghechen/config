@@ -138,7 +138,7 @@ function Viewmodel:save()
       from = "fml.collection.viewmodel",
       subject = "save",
       message = "Failed to encode json data",
-      details = data,
+      details = { name = self._name, data = data },
     })
     return
   end
@@ -151,7 +151,7 @@ function Viewmodel:save()
       from = "fml.collection.viewmodel",
       subject = "save",
       message = "Failed to save json",
-      details = data,
+      details = { name = self._name, data = data },
     })
     return
   end
@@ -176,7 +176,7 @@ function Viewmodel:load()
       from = "fml.collection.viewmodel",
       subject = "load",
       message = "Failed to decode json",
-      details = json_text,
+      details = { name = self._name, json_text = json_text },
     })
     return
   end
@@ -186,7 +186,7 @@ function Viewmodel:load()
       from = "fml.collection.viewmodel",
       subject = "load",
       message = "Bad json, not a table",
-      details = json_text,
+      details = { name = self._name, json_text = json_text },
     })
     return
   end
@@ -214,8 +214,8 @@ function Viewmodel:auto_reload()
           from = "fml.collection.viewmodel",
           subject = "auto_reload",
           message = "auto reloaded.",
-          details = { filepath = filepath },
-          --details = { filepath = filepath, event = event },
+          details = { name = self._name, filepath = filepath },
+          --details = { name = self._name, filepath = filepath, event = event },
         })
       end
     end,
@@ -224,10 +224,7 @@ function Viewmodel:auto_reload()
         from = "fml.collection.viewmodel",
         subject = "auto_reload",
         message = "Failed!",
-        details = {
-          err = err,
-          filepath = filepath,
-        },
+        details = { err = err, name = self._name, filepath = filepath },
       })
     end,
   })
