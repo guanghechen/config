@@ -225,7 +225,7 @@ local function find_file(opts, force)
     table.insert(cmd, prompt)
     table.insert(cmd, filemap_filepath)
 
-    context_session.find_file_last_command:next(fml.core.table.slice(cmd))
+    context_session.find_file_last_command:next(fml.table.slice(cmd))
     return cmd
   end
 

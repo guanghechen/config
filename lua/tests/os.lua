@@ -1,1 +1,1 @@
-vim.notify(vim.inspect(fml.core.os.is_mac()))
+vim.notify(vim.inspect(fml.os.is_mac()))

@@ -68,7 +68,7 @@ function M.replace_text_preview(opts)
     opts.keep_search_pieces,
     opts.flag_regex
   )
-  local json = fml.core.json.parse(json_str)
+  local json = fml.json.parse(json_str)
   ---@cast json kyokuya.oxi.replace.IReplacePreviewBlockItem
   return json
 end
@@ -76,9 +76,9 @@ end
 ---@param opts kyokuya.oxi.replace.ISearchOptions
 ---@return kyokuya.oxi.replace.ISearchResult
 function M.search(opts)
-  local options_stringified = fml.core.json.stringify(opts)
+  local options_stringified = fml.json.stringify(opts)
   local result_str = nvim_tools.search(options_stringified)
-  local json = fml.core.json.parse(result_str)
+  local json = fml.json.parse(result_str)
   ---@cast json kyokuya.oxi.replace.ISearchResult
   return json
 end

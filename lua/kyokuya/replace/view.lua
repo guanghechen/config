@@ -154,7 +154,7 @@ function M:internal_bind_keymaps(bufnr)
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local value = self.state:get_value(key) ---@type string
-      local lines = fml.core.string.split(value, "\n") ---@type string[]
+      local lines = fml.string.split(value, "\n") ---@type string[]
 
       local cursor = vim.api.nvim_win_get_cursor(winnr)
       self.cursor_row = cursor[1]
@@ -211,7 +211,7 @@ function M:internal_bind_keymaps(bufnr)
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local value = self.state:get_value(key) ---@type string
-      local lines = fml.core.table.parse_comma_list(value) ---@type string[]
+      local lines = fml.table.parse_comma_list(value) ---@type string[]
 
       local cursor = vim.api.nvim_win_get_cursor(winnr)
       self.cursor_row = cursor[1]
@@ -286,7 +286,7 @@ function M:internal_bind_keymaps(bufnr)
 
     local textarea = Textarea:new()
     local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
-    local lines = fml.core.json.stringify_prettier_lines(data) ---@type string[]
+    local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
     textarea:open({
       title = data.mode == "search" and "[Search options]" or "[Replace options]",
       value = lines,
@@ -297,7 +297,7 @@ function M:internal_bind_keymaps(bufnr)
       on_confirm = function(next_value)
         local content = table.concat(next_value, "\n") ---@type string
         local ok, json = pcall(function()
-          return fml.core.json.parse(content)
+          return fml.json.parse(content)
         end)
 
         if not ok then
@@ -419,7 +419,7 @@ function M:internal_render_cfg(data)
     local title_width = #title ---@type integer
     local cfg_name_len = self.cfg_name_len ---@type integer
     local invisible_width = cfg_name_len - title_width ---@type integer
-    local left = fml.core.string.pad_start(title, cfg_name_len, " ") .. ": " ---@type string
+    local left = fml.string.pad_start(title, cfg_name_len, " ") .. ": " ---@type string
     local value_start_pos = cfg_name_len + 2 ---@type integer
 
     ---@type kyokuya.replace.IReplaceViewLineHighlights[]
@@ -522,7 +522,7 @@ function M:internal_render_result(data, result)
               { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
             }
             local padding = i > 1 and continous_line_padding
-              or "│ " .. fml.core.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
+              or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
               table.insert(
@@ -558,7 +558,7 @@ function M:internal_render_result(data, result)
               { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
             }
             local padding = i > 1 and continous_line_padding
-              or "│ " .. fml.core.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
+              or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
               local hlname = piece.i % 2 == 0 and "kyokuya_replace_text_deleted" or "kyokuya_replace_text_added" ---@type string

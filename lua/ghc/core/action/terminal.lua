@@ -26,7 +26,7 @@ function M.open_terminal_current()
 end
 
 function M.open_terminal_workspace_tmux()
-  if fml.core.os.is_windows() then
+  if fml.os.is_windows() then
     M.open_terminal_workspace()
   else
     local cwd = guanghechen.util.path.workspace()

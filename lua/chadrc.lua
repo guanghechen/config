@@ -51,7 +51,7 @@ M.ui = {
   statusline = {
     theme = "default", -- default / minimal / vscode / vscode_colored
     separator_style = "default",
-    order = fml.core.table.merge_multiple_array(
+    order = fml.table.merge_multiple_array(
       statusline.order_left,
       { "%=" },
       statusline.order_middle,
@@ -68,7 +68,7 @@ M.ui = {
   tabufline = {
     enabled = true,
     lazyload = true,
-    order = fml.core.table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs" }, bufferline.order_right),
+    order = fml.table.merge_multiple_array(bufferline.order_left, { "buffers", "tabs" }, bufferline.order_right),
     modules = vim.tbl_deep_extend("force", bufferline.modules_left, bufferline.modules_right),
   },
   telescope = {

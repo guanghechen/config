@@ -83,10 +83,10 @@ end
 local M = {}
 
 function M.get_clipboard()
-  if fml.core.os.is_wsl() then
+  if fml.os.is_wsl() then
     return wsl_clipboard()
   end
-  if fml.core.os.is_mac() then
+  if fml.os.is_mac() then
     if vim.env.TMUX ~= nil then
       local fake_clipboard_filepath = util_tmux.get_tmux_env_value("ghc_use_fake_clipboard")
       if fake_clipboard_filepath ~= nil and util_path.is_exist(fake_clipboard_filepath) then

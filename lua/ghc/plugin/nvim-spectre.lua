@@ -5,7 +5,7 @@ local function get_build_cmd()
     return ""
   end
 
-  if fml.core.os.is_windows() then
+  if fml.os.is_windows() then
     return "./build.ps1"
   end
 

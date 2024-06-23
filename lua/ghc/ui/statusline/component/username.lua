@@ -1,11 +1,11 @@
 local icons = require("ghc.core.setting.icons")
 
 local function get_os_icon()
-  if fml.core.os.is_mac() then
+  if fml.os.is_mac() then
     return icons.os.mac
-  elseif fml.core.os.is_windows() then
+  elseif fml.os.is_windows() then
     return icons.os.dos
-  elseif fml.core.os.is_linux() or fml.core.os.is_wsl() then
+  elseif fml.os.is_linux() or fml.os.is_wsl() then
     return icons.os.unix
   else
     return icons.os.unknown
