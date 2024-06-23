@@ -32,6 +32,8 @@ local fn = {
   get_selected_text = require("fml.fn.get_selected_text"),
   is_disposable = require("fml.fn.is_disposable"),
   is_observable = require("fml.fn.is_observable"),
+  navigate_circular = require("fml.fn.navigate_circular"),
+  navigate_limit = require("fml.fn.navigate_limit"),
   watch_observables = require("fml.fn.watch_observables"),
 }
 

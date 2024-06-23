@@ -1,6 +1,5 @@
 local Popup = require("nui.popup")
 local Layout = require("nui.layout")
-local util_navigator = require("guanghechen.util.navigator")
 
 ---@alias guanghechen.replacer.IStateKey
 ---|"flag_ignore_case"
@@ -159,7 +158,7 @@ function Replacer:edit()
   local function focus_prev(index)
     return function()
       local step = vim.v.count1 or 1
-      local popup_idx = util_navigator.navigate_circular(index, -step, #popups)
+      local popup_idx = fml.fn.navigate_circular(index, -step, #popups)
       local popup = popups[popup_idx]
       vim.api.nvim_set_current_win(popup.popup.winid)
     end
@@ -168,7 +167,7 @@ function Replacer:edit()
   local function focus_next(index)
     return function()
       local step = vim.v.count1 or 1
-      local popup_idx = util_navigator.navigate_circular(index, step, #popups)
+      local popup_idx = fml.fn.navigate_circular(index, step, #popups)
       local popup = popups[popup_idx]
       vim.api.nvim_set_current_win(popup.popup.winid)
     end

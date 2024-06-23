@@ -1,5 +1,4 @@
 local action_buffer = require("ghc.core.action.buffer")
-local util_navigator = require("guanghechen.util.navigator")
 
 ---@class ghc.core.action.tab
 local M = {}
@@ -85,7 +84,7 @@ function M.goto_tab_left()
   local step = vim.v.count1 or 1
   local tabnr_current = vim.api.nvim_get_current_tabpage()
   local tabid_current = M.find_tabid(tabnr_current)
-  local tabid_next = util_navigator.navigate_circular(tabid_current, -step, totalid)
+  local tabid_next = fml.fn.navigate_circular(tabid_current, -step, totalid)
 
   if tabid_next ~= tabid_current then
     local tabnr_next = tabpages[tabid_next]
@@ -103,7 +102,7 @@ function M.goto_tab_right()
   local step = vim.v.count1 or 1
   local tabnr_current = vim.api.nvim_get_current_tabpage()
   local tabid_current = M.find_tabid(tabnr_current)
-  local tabid_next = util_navigator.navigate_circular(tabid_current, step, totalid)
+  local tabid_next = fml.fn.navigate_circular(tabid_current, step, totalid)
 
   if tabid_next ~= tabid_current then
     local tabnr_next = tabpages[tabid_next]
@@ -119,7 +118,7 @@ function M.goto_tab(tabid)
   end
 
   local tabnr_current = vim.api.nvim_get_current_tabpage()
-  local tabid_next = util_navigator.navigate_limit(0, tabid, totalid)
+  local tabid_next = fml.fn.navigate_limit(0, tabid, totalid)
   local tabnr_next = tabpages[tabid_next]
 
   if tabnr_current ~= tabnr_next then

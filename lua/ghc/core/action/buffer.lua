@@ -1,5 +1,3 @@
-local util_navigator = require("guanghechen.util.navigator")
-
 ---@param bufnr number
 ---@return number|nil
 local function locate_buffer_index(bufnr)
@@ -145,7 +143,7 @@ function M.open_buffer_left()
   local step = vim.v.count1 or 1
   local totalid = #vim.t.bufs
   local bufid_current = M.get_current_bufid()
-  local bufid_next = util_navigator.navigate_circular(bufid_current, -step, totalid)
+  local bufid_next = fml.fn.navigate_circular(bufid_current, -step, totalid)
 
   if bufid_next ~= bufid_current then
     local bufid = vim.t.bufs[bufid_next]
@@ -159,7 +157,7 @@ function M.open_buffer_right()
   local step = vim.v.count1 or 1
   local totalid = #vim.t.bufs
   local bufid_current = M.get_current_bufid()
-  local bufid_next = util_navigator.navigate_circular(bufid_current, step, totalid)
+  local bufid_next = fml.fn.navigate_circular(bufid_current, step, totalid)
 
   if bufid_next ~= bufid_current then
     local bufid = vim.t.bufs[bufid_next]
@@ -180,7 +178,7 @@ end
 function M.open_buffer(bufid)
   local totalid = #vim.t.bufs
   local bufid_current = M.get_current_bufid()
-  local bufid_next = util_navigator.navigate_limit(0, bufid, totalid)
+  local bufid_next = fml.fn.navigate_limit(0, bufid, totalid)
 
   if bufid_current ~= bufid_next then
     vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
