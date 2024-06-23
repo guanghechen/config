@@ -1,8 +1,8 @@
-local Observable = require("fml.collection.Observable")
-local Viewmodel = require("fml.collection.Viewmodel")
+local Observable = require("fml.collection.observable")
+local Viewmodel = require("fml.collection.viewmodel")
 local watch_observables = require("fml.fn.watch_observables")
 local path = require("fml.core.path")
-local context_filepath = path.locate_context_filepath("shared.json")
+local context_filepath = path.locate_context_filepath({ filename = "shared.json" })
 
 ---@class fml.context.shared: fml.collection.Viewmodel
 ---@field public darken fml.types.collection.IObservable

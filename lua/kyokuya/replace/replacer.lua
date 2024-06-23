@@ -2,22 +2,22 @@ local ReplaceState = require("kyokuya.replace.state")
 local ReplaceView = require("kyokuya.replace.view")
 
 ---@class kyokuya.replace.IReplacerOptions
----@field public  data   kyokuya.replace.IReplaceStateData|fml.types.collection.IObservable
----@field public  nsnr   integer
----@field public  winnr  integer
----@field public  reuse? boolean
+---@field public  data                  kyokuya.replace.IReplaceStateData
+---@field public  nsnr                  integer
+---@field public  winnr                 integer
+---@field public  reuse                 ?boolean
 
 ---@class kyokuya.replace.Replacer
----@field private state  kyokuya.replace.ReplaceState
----@field private view   kyokuya.replace.ReplaceView
----@field private winnr  integer
----@field private nsnr   integer
----@field private reuse  boolean
----@field private batch_disposable fml.types.collection.IBatchDisposable
+---@field private state                 kyokuya.replace.ReplaceState
+---@field private view                  kyokuya.replace.ReplaceView
+---@field private winnr                 integer
+---@field private nsnr                  integer
+---@field private reuse                 boolean
+---@field private batch_disposable      fml.types.collection.IBatchDisposable
 local M = {}
 M.__index = M
 
----@param opts kyokuya.replace.IReplacerOptions
+---@param opts                          kyokuya.replace.IReplacerOptions
 ---@return kyokuya.replace.Replacer
 function M.new(opts)
   local self = setmetatable({}, M)
@@ -28,39 +28,12 @@ function M.new(opts)
   local batch_disposable = fml.collection.BatchDisposable.new()
 
   local state ---@type kyokuya.replace.ReplaceState
-  if fml.fn.is_observable(opts.data) then
-    local observable = opts.data
-    ---@cast observable  fml.types.collection.IObservable
-    state = ReplaceState.new({
-      initial_data = observable:get_snapshot(),
-      on_changed = function()
-        local next_data = state:get_data()
-        observable:next(next_data)
-        self:replace()
-      end,
-    })
-
-    local subscriber = fml.collection.Subscriber.new({
-      on_next = function(next_data)
-        state:set_data(next_data)
-      end,
-    })
-    local unsubscribable = observable:subscribe(subscriber)
-    batch_disposable:add_disposable(fml.collection.Disposable.new({
-      on_dispose = function()
-        unsubscribable:unsubscribe()
-      end
-    }))
-  else
-    local data = opts.data
-    ---@cast data kyokuya.replace.IReplaceStateData
-    state = ReplaceState.new({
-      initial_data = data,
-      on_changed = function()
-        self:replace()
-      end,
-    })
-  end
+  state = ReplaceState.new({
+    initial_data = opts.data,
+    on_changed = function()
+      self:replace()
+    end,
+  })
 
   local view = ReplaceView.new({ state = state, nsnr = nsnr })
 
@@ -74,22 +47,12 @@ function M.new(opts)
   return self
 end
 
-function M:is_disposed()
-  return self.batch_disposable:is_disposed()
-end
-
-function M:dispose()
-  if not self:is_disposed() then
-    self.batch_disposable:dispose()
-  end
-end
-
 ---@return integer|nil
 function M:get_bufnr()
   return self.view:get_bufnr()
 end
 
----@param opts ?{ force?: boolean }
+---@param opts                          ?{ force?: boolean }
 ---@return nil
 function M:replace(opts)
   opts = opts or {}

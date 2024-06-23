@@ -202,7 +202,7 @@ function M.locate_config_filepath(...)
       from = "fml.core.path",
       subject = "locate_config_filepath",
       message = "Cannot resolve the data_paths.",
-      details = { config_paths = config_paths }
+      details = { config_paths = config_paths },
     })
     return ""
   end
@@ -211,10 +211,11 @@ function M.locate_config_filepath(...)
   return M.normalize(table.concat({ config_path, "config", ... }, PATH_SEPARATOR))
 end
 
----@type ... string[]
+---@param opts {filename: string}
 ---@return string
-function M.locate_context_filepath(...)
-  return M.locate_state_filepath("ghc/context", ...)
+function M.locate_context_filepath(opts)
+  local filename = opts.filename ---@type string
+  return M.locate_state_filepath("ghc/context", filename)
 end
 
 ---@type ... string[]
@@ -228,7 +229,7 @@ function M.locate_data_filepath(...)
       from = "fml.core.path",
       subject = "locate_data_filepath",
       message = "Cannot resolve the data_paths.",
-      details = { data_paths = data_paths }
+      details = { data_paths = data_paths },
     })
     return ""
   end
@@ -248,33 +249,13 @@ function M.locate_script_filepath(...)
       from = "fml.core.path",
       subject = "locate_script_filepath",
       message = "Cannot resolve the config_paths.",
-      details = { config_paths = config_paths }
+      details = { config_paths = config_paths },
     })
     return ""
   end
 
   ---@cast config_path string
   return M.normalize(table.concat({ config_path, "script", ... }, PATH_SEPARATOR))
-end
-
----@type ... string[]
----@return string
-function M.locate_state_filepath(...)
-  local state_paths = vim.fn.stdpath("state")
-  local state_path = type(state_paths) == "table" and state_paths[1] or state_paths
-
-  if type(state_path) ~= "string" or #state_path < 1 then
-    reporter.error({
-      from = "fml.core.path",
-      subject = "locate_state_filepath",
-      message = "Cannot resolve the state_paths.",
-      details = { state_paths = state_paths }
-    })
-    return ""
-  end
-
-  ---@cast state_path string
-  return M.normalize(table.concat({ state_path, ... }, PATH_SEPARATOR))
 end
 
 ---@param opts {filename: string}
@@ -288,6 +269,26 @@ function M.locate_session_filepath(opts)
   local session_filename = filename ---@type string
   local session_filepath = M.locate_state_filepath("ghc/sessions", session_dir, session_filename)
   return session_filepath
+end
+
+---@type ... string[]
+---@return string
+function M.locate_state_filepath(...)
+  local state_paths = vim.fn.stdpath("state")
+  local state_path = type(state_paths) == "table" and state_paths[1] or state_paths
+
+  if type(state_path) ~= "string" or #state_path < 1 then
+    reporter.error({
+      from = "fml.core.path",
+      subject = "locate_state_filepath",
+      message = "Cannot resolve the state_paths.",
+      details = { state_paths = state_paths },
+    })
+    return ""
+  end
+
+  ---@cast state_path string
+  return M.normalize(table.concat({ state_path, ... }, PATH_SEPARATOR))
 end
 
 ---@param opts {filenames: string[]}
@@ -350,3 +351,4 @@ function M.current_filepath()
 end
 
 return M
+

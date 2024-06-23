@@ -283,7 +283,7 @@ function M:internal_bind_keymaps(bufnr)
 
     local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
     local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
-    local textarea = fml.ui.Textarea:new({
+    local textarea = fml.ui.Textarea.new({
       title = "[Replace options]",
       position = "center",
     })
