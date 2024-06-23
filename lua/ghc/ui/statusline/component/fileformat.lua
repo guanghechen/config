@@ -1,5 +1,4 @@
 local context_config = require("ghc.core.context.config")
-local icons = require("ghc.core.setting.icons")
 
 ---@type boolean
 local transparency = context_config.transparency:get_snapshot()
@@ -33,7 +32,7 @@ function M.renderer()
 
   local text_fileformat = fileformat_text_map[vim.bo.fileformat] or "UNKNOWN"
 
-  local icon_tab = icons.ui.Tab .. " "
+  local icon_tab = fml.ui.icons.ui.Tab .. " "
   local text_tab = vim.api.nvim_get_option_value("shiftwidth", { scope = "local" })
 
   local text = " " .. text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab .. " "

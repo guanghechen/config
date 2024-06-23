@@ -1,5 +1,3 @@
-local icons = require("ghc.core.setting.icons")
-
 local function recursively_toggle(state, toggle_directory)
   require("ghc.core.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, false)
 end
@@ -59,14 +57,14 @@ return {
         expander_highlight = "NeoTreeExpander",
       },
       icon = {
-        folder_closed = icons.ui.Folder,
-        folder_open = icons.ui.FolderOpen,
-        folder_empty = icons.ui.EmptyFolder,
-        default = icons.ui.File,
+        folder_closed = fml.ui.icons.ui.Folder,
+        folder_open = fml.ui.icons.ui.FolderOpen,
+        folder_empty = fml.ui.icons.ui.EmptyFolder,
+        default = fml.ui.icons.ui.File,
         highlight = "NeoTreeFileIcon",
       },
       modified = {
-        symbol = icons.ui.Modified,
+        symbol = fml.ui.icons.ui.Modified,
         highlight = "NeoTreeModified",
       },
       name = {
@@ -79,14 +77,14 @@ return {
           -- Change type
           added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
           modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
-          deleted = icons.git.Remove, -- this can only be used in the git_status source
-          renamed = icons.git.Rename, -- this can only be used in the git_status source
+          deleted = fml.ui.icons.git.Remove, -- this can only be used in the git_status source
+          renamed = fml.ui.icons.git.Rename, -- this can only be used in the git_status source
           -- Status type
-          untracked = icons.git.Untracked,
-          ignored = icons.git.Ignore,
-          unstaged = icons.git.Unstaged,
-          staged = icons.git.Staged,
-          conflict = icons.git.Conflict,
+          untracked = fml.ui.icons.git.Untracked,
+          ignored = fml.ui.icons.git.Ignore,
+          unstaged = fml.ui.icons.git.Unstaged,
+          staged = fml.ui.icons.git.Staged,
+          conflict = fml.ui.icons.git.Conflict,
         },
       },
       -- If you don't want to use these columns, you can set `enabled = false` for each of them individually
@@ -309,13 +307,13 @@ return {
     local events = require("neo-tree.events")
 
     -- Set icons for diagnostic errors, you'll need to define them somewhere:
-    vim.fn.sign_define("DiagnosticSignError", { text = icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" })
-    vim.fn.sign_define("DiagnosticSignWarn", { text = icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" })
+    vim.fn.sign_define("DiagnosticSignError", { text = fml.ui.icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" })
+    vim.fn.sign_define("DiagnosticSignWarn", { text = fml.ui.icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" })
     vim.fn.sign_define(
       "DiagnosticSignInfo",
-      { text = icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" }
+      { text = fml.ui.icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" }
     )
-    vim.fn.sign_define("DiagnosticSignHint", { text = icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" })
+    vim.fn.sign_define("DiagnosticSignHint", { text = fml.ui.icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" })
 
     opts.event_handlers = opts.event_handlers or {}
     vim.list_extend(opts.event_handlers, {

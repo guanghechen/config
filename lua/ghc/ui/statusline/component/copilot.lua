@@ -1,6 +1,5 @@
 local context_config = require("ghc.core.context.config")
 local context_session = require("ghc.core.context.session")
-local icons = require("ghc.core.setting.icons")
 
 ---@type boolean
 local transparency = context_config.transparency:get_snapshot()
@@ -40,7 +39,7 @@ end
 function M.renderer()
   local status = require("copilot.api").status.data
   local color = "%#" .. M.name .. "_status_" .. status.status .. "#"
-  return color .. " " .. icons.cmp.copilot .. " "
+  return color .. " " .. fml.ui.icons.cmp.copilot .. " "
 end
 
 return M

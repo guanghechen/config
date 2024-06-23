@@ -1,6 +1,5 @@
-local icons = require("ghc.core.setting.icons")
 local kinds = {}
-for key, val in pairs(icons.kind) do
+for key, val in pairs(fml.ui.icons.kind) do
   kinds[key] = val .. " "
 end
 
@@ -15,14 +14,14 @@ return {
         top = "│ ",
         middle = "├╴",
         last = "└╴",
-        fold_open = icons.ui.ArrowOpen .. " ",
-        fold_closed = icons.ui.ArrowClosed .. " ",
+        fold_open = fml.ui.icons.ui.ArrowOpen .. " ",
+        fold_closed = fml.ui.icons.ui.ArrowClosed .. " ",
         ws = "  ",
       },
-      folder_closed = icons.ui.Folder .. " ",
-      folder_open = icons.ui.FolderOpen .. " ",
-      fold_open = icons.ui.ArrowOpen .. " ", -- icon used for open folds
-      fold_closed = icons.ui.ArrowClosed .. " ", -- icon used for closed folds
+      folder_closed = fml.ui.icons.ui.Folder .. " ",
+      folder_open = fml.ui.icons.ui.FolderOpen .. " ",
+      fold_open = fml.ui.icons.ui.ArrowOpen .. " ", -- icon used for open folds
+      fold_closed = fml.ui.icons.ui.ArrowClosed .. " ", -- icon used for closed folds
       kinds = kinds,
     },
   },

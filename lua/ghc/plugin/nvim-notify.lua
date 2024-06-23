@@ -1,5 +1,3 @@
-local icons = require("ghc.core.setting.icons")
-
 -- Better `vim.notify()`
 return {
   "rcarriga/nvim-notify",
@@ -23,11 +21,11 @@ return {
       vim.api.nvim_win_set_config(win, { zindex = 100 })
     end,
     icons = {
-      ERROR = icons.diagnostics.Error,
-      WARN = icons.diagnostics.Warning,
-      INFO = icons.diagnostics.Information,
-      DEBUG = icons.ui.Bug,
-      TRACE = icons.ui.Pencil,
+      ERROR = fml.ui.icons.diagnostics.Error,
+      WARN = fml.ui.icons.diagnostics.Warning,
+      INFO = fml.ui.icons.diagnostics.Information,
+      DEBUG = fml.ui.icons.ui.Bug,
+      TRACE = fml.ui.icons.ui.Pencil,
     },
   },
 }

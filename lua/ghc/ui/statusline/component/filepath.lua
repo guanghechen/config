@@ -1,5 +1,4 @@
 local context_config = require("ghc.core.context.config")
-local icons = require("ghc.core.setting.icons")
 
 ---@type boolean
 local transparency = context_config.transparency:get_snapshot()
@@ -55,15 +54,15 @@ function M.renderer()
     local git_status = buffer_status_line.gitsigns_status_dict
 
     if git_status.added and git_status.added > 0 then
-      added = " " .. icons.git.Add .. " " .. git_status.added
+      added = " " .. fml.ui.icons.git.Add .. " " .. git_status.added
     end
 
     if git_status.changed and git_status.changed > 0 then
-      changed = " " .. icons.git.Mod_alt .. " " .. git_status.changed
+      changed = " " .. fml.ui.icons.git.Mod_alt .. " " .. git_status.changed
     end
 
     if git_status.removed and git_status.removed > 0 then
-      removed = " " .. icons.git.Remove .. " " .. git_status.removed
+      removed = " " .. fml.ui.icons.git.Remove .. " " .. git_status.removed
     end
   end
 

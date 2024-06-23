@@ -1,7 +1,7 @@
----@class ghc.core.setting.icons
+---@class fml.ui.icons
 local M = {}
 
----@class ghc.core.setting.icons.kind
+---@class fml.ui.icons.kind
 M.kind = {
   Array = "[]",
   --Boolean = "",
@@ -58,7 +58,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class ghc.core.setting.icons.type
+---@class fml.ui.icons.type
 M.type = {
   Array = "󰅪",
   Boolean = "",
@@ -68,7 +68,7 @@ M.type = {
   String = "󰉿",
 }
 
----@class ghc.core.setting.icons.documents
+---@class fml.ui.icons.documents
 M.documents = {
   Default = "",
   File = "",
@@ -78,7 +78,7 @@ M.documents = {
   Symlink = "",
 }
 
----@class ghc.core.setting.icons.git
+---@class fml.ui.icons.git
 M.git = {
   Add = "",
   Branch = "",
@@ -97,7 +97,7 @@ M.git = {
   Conflict = "",
 }
 
----@class ghc.core.setting.icons.os
+---@class fml.ui.icons.os
 M.os = {
   unix = "",
   mac = "",
@@ -105,7 +105,7 @@ M.os = {
   unknown = "",
 }
 
----@class ghc.core.setting.icons.ui
+---@class fml.ui.icons.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",
@@ -174,7 +174,7 @@ M.ui = {
   Window = "",
 }
 
----@class ghc.core.setting.icons.diagnostics
+---@class fml.ui.icons.diagnostics
 M.diagnostics = {
   Error = "",
   Warning = "",
@@ -189,7 +189,7 @@ M.diagnostics = {
   Hint_alt = "󰌶",
 }
 
----@class ghc.core.setting.icons.misc
+---@class fml.ui.icons.misc
 M.misc = {
   Campass = "󰀹",
   Code = "",
@@ -197,6 +197,8 @@ M.misc = {
   Glass = "󰂖",
   NoActiveLsp = "󱚧",
   PyEnv = "󰢩",
+  Separator_left = "",
+  Separator_right = "",
   Squirrel = "",
   Tag = "",
   Tree = "",
@@ -212,7 +214,7 @@ M.misc = {
   Vim = "",
 }
 
----@class ghc.core.setting.icons.cmp
+---@class fml.ui.icons.cmp
 M.cmp = {
   buffer = "",
   cmp_tabnine = "",
@@ -230,7 +232,7 @@ M.cmp = {
   undefined = "",
 }
 
----@class ghc.core.setting.icons.dap
+---@class fml.ui.icons.dap
 M.dap = {
   Breakpoint = "󰝥",
   BreakpointCondition = "󰟃",
@@ -247,7 +249,7 @@ M.dap = {
   Terminate = "󰝤",
 }
 
----@class ghc.core.setting.icons.devicons
+---@class fml.ui.icons.devicons
 M.devicons = {
   default_icon = {
     icon = "󰈚",

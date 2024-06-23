@@ -1,4 +1,3 @@
-local icons = require("ghc.core.setting.icons")
 local util_lsp = require("ghc.core.util.lsp")
 
 local function register_lsp_symbol(name, icon)
@@ -12,10 +11,10 @@ return {
   config = function()
     dofile(vim.g.base46_cache .. "lsp")
 
-    register_lsp_symbol("Error", icons.diagnostics.Error)
-    register_lsp_symbol("Info", icons.diagnostics.Information)
-    register_lsp_symbol("Hint", icons.diagnostics.Hint)
-    register_lsp_symbol("Warn", icons.diagnostics.Warning)
+    register_lsp_symbol("Error", fml.ui.icons.diagnostics.Error)
+    register_lsp_symbol("Info", fml.ui.icons.diagnostics.Information)
+    register_lsp_symbol("Hint", fml.ui.icons.diagnostics.Hint)
+    register_lsp_symbol("Warn", fml.ui.icons.diagnostics.Warning)
 
     vim.diagnostic.config({
       virtual_text = {

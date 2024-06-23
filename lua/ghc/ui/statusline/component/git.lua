@@ -1,5 +1,4 @@
 local context_config = require("ghc.core.context.config")
-local icons = require("ghc.core.setting.icons")
 
 ---@type boolean
 local transparency = context_config.transparency:get_snapshot()
@@ -30,7 +29,7 @@ function M.renderer()
   local branch_name = git_status.head
 
   local color_text = "%#" .. M.name .. "_text#"
-  local text = " " .. icons.git.Branch .. " " .. branch_name .. " "
+  local text = " " .. fml.ui.icons.git.Branch .. " " .. branch_name .. " "
   return color_text .. text
 end
 

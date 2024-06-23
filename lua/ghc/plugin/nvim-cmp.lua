@@ -1,4 +1,3 @@
-local icons = require("ghc.core.setting.icons")
 local util_cmp = require("ghc.core.util.cmp")
 
 return {
@@ -38,7 +37,7 @@ return {
         fields = { "abbr", "kind", "menu" },
 
         format = function(_, item)
-          local icon = icons.kind[item.kind]
+          local icon = fml.ui.icons.kind[item.kind]
           if icon then
             item.kind = icon -- .. " " .. item.kind
           end

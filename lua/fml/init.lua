@@ -48,6 +48,7 @@ local fn = {
 local ui = {
   Input = require("fml.ui.input"),
   Textarea = require("fml.ui.textarea"),
+  icons = require("fml.ui.icons"),
 }
 
 ---@class fml : fml.core

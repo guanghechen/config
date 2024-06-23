@@ -1,5 +1,3 @@
-local icons = require("ghc.core.setting.icons")
-
 return {
   "sindrets/diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },
@@ -77,13 +75,13 @@ return {
         end,
       },
       icons = { -- Only applies when use_icons is true.
-        folder_closed = icons.ui.Folder,
-        folder_open = icons.ui.FolderOpen,
+        folder_closed = fml.ui.icons.ui.Folder,
+        folder_open = fml.ui.icons.ui.FolderOpen,
       },
       signs = {
-        fold_closed = icons.ui.ArrowClosed,
-        fold_open = icons.ui.ArrowOpen,
-        done = icons.ui.Accepted,
+        fold_closed = fml.ui.icons.ui.ArrowClosed,
+        fold_open = fml.ui.icons.ui.ArrowOpen,
+        done = fml.ui.icons.ui.Accepted,
       },
       keymaps = {
         disable_defaults = true, -- Disable the default keymaps

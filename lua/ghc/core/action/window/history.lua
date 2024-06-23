@@ -1,5 +1,3 @@
-local icons = require("ghc.core.setting.icons")
-
 ---@class ghc.core.action.window.IHistoryItem
 ---@field public bufnr number
 ---@field public filepath string
@@ -139,7 +137,7 @@ function M.find_history(opts)
 
         local display_text ---@type string
         if present_filepath == item.filepath then
-          display_text = icons.ui.Separator .. " " .. relative_filepath
+          display_text = fml.ui.icons.ui.Separator .. " " .. relative_filepath
           default_lnum = #entries + 1
         else
           display_text = "  " .. relative_filepath
@@ -164,7 +162,7 @@ function M.find_history(opts)
 
       local display_text ---@type string
       if present_index == item_index then
-        display_text = icons.ui.Separator .. " " .. tostring(item_index) .. " " .. relative_filepath
+        display_text = fml.ui.icons.ui.Separator .. " " .. tostring(item_index) .. " " .. relative_filepath
         default_lnum = #entries + 1
       else
         display_text = "  " .. tostring(item_index) .. " " .. relative_filepath

@@ -1,5 +1,4 @@
 local context_config = require("ghc.core.context.config")
-local icons = require("ghc.core.setting.icons")
 
 ---@type boolean
 local transparency = context_config.transparency:get_snapshot()
@@ -45,10 +44,10 @@ function M.renderer()
   local color_hint = "%#" .. M.name .. "_hint#"
   local color_info = "%#" .. M.name .. "_info#"
 
-  local text_error = (count_error and count_error > 0) and ("%#St_lspError#" .. icons.diagnostics.Error .. " " .. count_error .. " ") or ""
-  local text_warn = (count_warn and count_warn > 0) and ("%#St_lspWarning#" .. icons.diagnostics.Warning .. " " .. count_warn .. " ") or ""
-  local text_hint = (count_hint and count_hint > 0) and ("%#St_lspHints#" .. icons.diagnostics.Hint .. " " .. count_hint .. " ") or ""
-  local text_info = (count_info and count_info > 0) and ("%#St_lspInfo#" .. icons.diagnostics.Information .. " " .. count_info .. " ") or ""
+  local text_error = (count_error and count_error > 0) and ("%#St_lspError#" .. fml.ui.icons.diagnostics.Error .. " " .. count_error .. " ") or ""
+  local text_warn = (count_warn and count_warn > 0) and ("%#St_lspWarning#" .. fml.ui.icons.diagnostics.Warning .. " " .. count_warn .. " ") or ""
+  local text_hint = (count_hint and count_hint > 0) and ("%#St_lspHints#" .. fml.ui.icons.diagnostics.Hint .. " " .. count_hint .. " ") or ""
+  local text_info = (count_info and count_info > 0) and ("%#St_lspInfo#" .. fml.ui.icons.diagnostics.Information .. " " .. count_info .. " ") or ""
   return " " .. color_error .. text_error .. color_warn .. text_warn .. color_hint .. text_hint .. color_info .. text_info
 end
 

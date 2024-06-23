@@ -1,5 +1,3 @@
-local icons = require("ghc.core.setting.icons")
-
 local function flash(prompt_bufnr)
   require("flash").jump({
     pattern = "^",
@@ -47,8 +45,8 @@ return {
   "nvim-telescope/telescope.nvim",
   opts = {
     defaults = {
-      prompt_prefix = icons.ui.Telescope .. "  ",
-      selection_caret = icons.ui.ChevronRight .. " ", --" ",
+      prompt_prefix = fml.ui.icons.ui.Telescope .. "  ",
+      selection_caret = fml.ui.icons.ui.ChevronRight .. " ", --" ",
       border = {},
       borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
       color_devicons = true,
