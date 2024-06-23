@@ -1,5 +1,4 @@
 local oxi = require("kyokuya.oxi")
-local Printer = require("kyokuya.component.printer")
 local Previewer = require("kyokuya.replace.previewer")
 local constants = require("kyokuya.constant")
 
@@ -25,7 +24,7 @@ end
 ---@field private state         kyokuya.replace.ReplaceState
 ---@field private nsnr          integer
 ---@field private bufnr         integer|nil
----@field private printer       kyokuya.component.Printer
+---@field private printer       fml.ui.Printer
 ---@field private previewer     kyokuya.replace.ReplacePreviewer
 ---@field private cfg_name_len  integer
 ---@field private cursor_row    integer
@@ -43,7 +42,7 @@ function M.new(opts)
   self.state = state
   self.nsnr = nsnr
   self.bufnr = nil
-  self.printer = Printer.new({ bufnr = 0, nsnr = nsnr })
+  self.printer = fml.ui.Printer.new({ bufnr = 0, nsnr = nsnr })
   self.previewer = Previewer.new({ state = state, nsnr = nsnr })
   self.cfg_name_len = 7
   self.cursor_row = 6
@@ -401,7 +400,7 @@ function M:internal_bind_keymaps(bufnr)
   mk({ "n", "v" }, "ri", edit_list("include_patterns"), "replace: edit include patterns")
   mk({ "n", "v" }, "o", on_view_original_file, "replace: view original file")
   mk({ "n", "v" }, "<enter>", on_view_file, "replace: view file")
-  mk({ "n", "v" }, "<LeftRelease>", on_view_file, "replace: view file")
+  mk({ "n", "v" }, "<2-LeftMouse>", on_view_file, "replace: view file")
 end
 
 ---Render the search/replace options

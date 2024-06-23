@@ -1,5 +1,4 @@
 local oxi = require("kyokuya.oxi")
-local Printer = require("kyokuya.component.printer")
 local constants = require("kyokuya.constant")
 
 ---@class kyokuya.replace.IReplacePreviewerOptions
@@ -77,7 +76,7 @@ function M:preview(opts)
   vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
   vim.cmd(string.format("%sbufdo file %s/REPLACE_PREVIEW", bufnr, bufnr)) --- Rename the buf
   local nsnr = self.nsnr ---@type integer
-  local printer = Printer.new({ bufnr = bufnr, nsnr = nsnr })
+  local printer = fml.ui.Printer.new({ bufnr = bufnr, nsnr = nsnr })
 
   ---@type kyokuya.oxi.replace.IReplacePreviewBlockItem
   local block_match = oxi.replace_text_preview({

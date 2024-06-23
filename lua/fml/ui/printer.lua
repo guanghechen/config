@@ -1,27 +1,27 @@
----@class kyokuya.component.IPrinterOptions
----@field public nsnr         integer
----@field public bufnr        integer
-
----@class kyokuya.component.IPrinterLineHighlight
----@field public cstart               integer
----@field public cend                 integer
----@field public hlname               string|nil
-
----@class kyokuya.component.Printer
----@field public nsnr         integer
----@field bufnr               integer
----@field lnum                integer
----@field line_metas          table<integer, any|nil>
+---@class fml.ui.Printer
+---@field public nsnr                   integer
+---@field bufnr                         integer
+---@field lnum                          integer
+---@field line_metas                    table<integer, any|nil>
 local M = {}
 M.__index = M
 
----@param opts kyokuya.component.IPrinterOptions
----@return kyokuya.component.Printer
-function M.new(opts)
+---@class fml.ui.Printer.IProps
+---@field public nsnr                   integer
+---@field public bufnr                  integer
+
+---@class fml.ui.Printer.ILineHighlight
+---@field public cstart                 integer
+---@field public cend                   integer
+---@field public hlname                 string|nil
+
+---@param props fml.ui.Printer.IProps
+---@return fml.ui.Printer
+function M.new(props)
   local self = setmetatable({}, M)
 
-  self.nsnr = opts.nsnr
-  self.bufnr = opts.bufnr
+  self.nsnr = props.nsnr
+  self.bufnr = props.bufnr
   self.lnum = 0
   self.line_metas = {}
 
@@ -34,7 +34,7 @@ function M:clear()
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, {})
 end
 
----@param opts kyokuya.component.IPrinterOptions
+---@param opts fml.ui.Printer.IProps
 function M:reset(opts)
   self.nsnr = opts.nsnr
   self.bufnr = opts.bufnr
@@ -52,7 +52,7 @@ function M:get_current_lnum()
 end
 
 ---@param line           string
----@param highlights     ?kyokuya.component.IPrinterLineHighlight
+---@param highlights     ?fml.ui.Printer.ILineHighlight
 ---@param meta           ?any
 ---@return nil
 function M:print(line, highlights, meta)
