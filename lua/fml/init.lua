@@ -17,6 +17,11 @@ local collection = {
   Viewmodel = require("fml.collection.viewmodel"),
 }
 
+---@class fml.component
+local component = {
+  Input = require("fml.component.input"),
+}
+
 ---@class fml.core
 local core = {
   clipboard = require("fml.core.clipboard"),
@@ -46,9 +51,16 @@ local fn = {
 
 ---@class fml : fml.core
 ---@field public api          fml.api
+---@field public component    fml.component
 ---@field public collection   fml.collection
 ---@field public core         fml.core
 ---@field public fn           fml.fn
-local fml = vim.tbl_extend("force", { api = api, collection = collection, core = core, fn = fn }, core)
+local fml = vim.tbl_extend("force", core, {
+  api = api,
+  collection = collection,
+  component = component,
+  core = core,
+  fn = fn,
+})
 
 return fml
