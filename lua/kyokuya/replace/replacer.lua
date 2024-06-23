@@ -3,7 +3,7 @@ local ReplaceView = require("kyokuya.replace.view")
 local util_observable = require("guanghechen.util.observable")
 
 ---@class kyokuya.replace.IReplacerOptions
----@field public  data   kyokuya.replace.IReplaceStateData|guanghechen.observable.Observable
+---@field public  data   kyokuya.replace.IReplaceStateData|fml.types.collection.IObservable
 ---@field public  nsnr   integer
 ---@field public  winnr  integer
 ---@field public  reuse? boolean
@@ -31,7 +31,7 @@ function M.new(opts)
   local state ---@type kyokuya.replace.ReplaceState
   if util_observable.is_observable(opts.data) then
     local observable = opts.data
-    ---@cast observable  guanghechen.observable.Observable
+    ---@cast observable  fml.types.collection.IObservable
     state = ReplaceState.new({
       initial_data = observable:get_snapshot(),
       on_changed = function()

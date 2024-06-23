@@ -2,7 +2,7 @@
 ---@field get_name fun():string
 ---@field get_filepath fun():string
 ---@field get_snapshot fun():table
----@field register fun(name:string, observable:guanghechen.types.IObservable):nil
+---@field register fun(name:string, observable:fml.types.collection.IObservable):nil
 ---@field save fun():nil
 ---@field load fun():nil
 ---@field reload fun():nil

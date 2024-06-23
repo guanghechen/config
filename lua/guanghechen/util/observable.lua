@@ -12,7 +12,7 @@ function M.is_observable(observable)
     and type(observable.subscribe) == "function"
 end
 
----@param observables guanghechen.types.IObservable[]
+---@param observables fml.types.collection.IObservable[]
 ---@param callback fun():nil
 function M.watch_observables(observables, callback)
   local subscriber = Subscriber.new({

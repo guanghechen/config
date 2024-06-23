@@ -16,8 +16,8 @@ local util_json = require("fml.core.json")
 ---@field private _filepath string
 ---@field private _initial_values table<string, any>
 ---@field private _unwatch (fun():nil)|nil
----@field private _persistable_observables table<string, guanghechen.types.IObservable>
----@field private _all_observables table<string, guanghechen.types.IObservable>
+---@field private _persistable_observables table<string, fml.types.collection.IObservable>
+---@field private _all_observables table<string, fml.types.collection.IObservable>
 local Viewmodel = {}
 Viewmodel.__index = Viewmodel
 setmetatable(Viewmodel, { __index = BatchDisposable })
@@ -34,8 +34,8 @@ function Viewmodel.new(opts)
   self._filepath = opts.filepath ---@type string
   self._initial_values = {} ---@type table<string, any>
   self._unwatch = nil ---@type (fun():nil)|nil
-  self._persistable_observables = {} ---@type table<string, guanghechen.types.IObservable>
-  self._all_observables = {} ---@type table<string, guanghechen.types.IObservable>
+  self._persistable_observables = {} ---@type table<string, fml.types.collection.IObservable>
+  self._all_observables = {} ---@type table<string, fml.types.collection.IObservable>
 
   return self
 end
@@ -78,7 +78,7 @@ function Viewmodel:get_snapshot()
   local data = {}
   for key, observable in pairs(self._persistable_observables) do
     if util_observable.is_observable(observable) then
-      ---@cast observable guanghechen.types.IObservable
+      ---@cast observable fml.types.collection.IObservable
       data[key] = observable:get_snapshot()
     end
   end
@@ -90,7 +90,7 @@ function Viewmodel:get_snapshot_all()
   local data = {}
   for key, observable in pairs(self._all_observables) do
     if util_observable.is_observable(observable) then
-      ---@cast observable guanghechen.types.IObservable
+      ---@cast observable fml.types.collection.IObservable
       data[key] = observable:get_snapshot()
     end
   end
@@ -98,7 +98,7 @@ function Viewmodel:get_snapshot_all()
 end
 
 ---@param name string
----@param observable guanghechen.types.IObservable
+---@param observable fml.types.collection.IObservable
 ---@param persistable boolean
 ---@param auto_save boolean
 function Viewmodel:register(name, observable, persistable, auto_save)
@@ -123,7 +123,7 @@ function Viewmodel:register(name, observable, persistable, auto_save)
     self:add_disposable(Disposable.new({
       on_dispose = function()
         unsubscribable:unsubscribe()
-      end
+      end,
     }))
   end
 
