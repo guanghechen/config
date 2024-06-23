@@ -24,7 +24,6 @@ M.util = {
   filetype = require("guanghechen.util.filetype"),
   fs = require("guanghechen.util.fs"),
   json = require("guanghechen.util.json"),
-  md5 = require("guanghechen.util.md5"),
   misc = require("guanghechen.util.misc"),
   navigator = require("guanghechen.util.navigator"),
   observable = require("guanghechen.util.observable"),

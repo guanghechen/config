@@ -1,5 +1,4 @@
 local util_os = require("guanghechen.util.os")
-local util_md5 = require("guanghechen.util.md5")
 local util_reporter = require("guanghechen.util.reporter")
 local PATH_SEPARATOR = util_os.get_path_sep() ---@type string
 
@@ -265,7 +264,7 @@ function M.locate_session_filepath(opts)
   local filename = opts.filename
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = util_md5.sumhexa(workspace_path)
+  local hash = fml.core.md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   local session_filename = filename ---@type string
   local session_filepath = M.locate_state_filepath("ghc/sessions", session_dir, session_filename)
@@ -276,7 +275,7 @@ end
 function M.remove_session_filepaths(opts)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = util_md5.sumhexa(workspace_path)
+  local hash = fml.core.md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   for _, filename in ipairs(opts.filenames) do
     local session_filepath = session_dir .. PATH_SEPARATOR .. filename

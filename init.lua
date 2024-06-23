@@ -1,3 +1,7 @@
+local fml = require("fml")
+_G.fml = fml
+
+---
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
 local function load_config(name)
   pcall(require, "ghc." .. name)

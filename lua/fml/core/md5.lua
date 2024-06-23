@@ -1,7 +1,7 @@
 -- https://github.com/kikito/md5.lua/blob/4b5ce0cc277a5972aa3f5161d950f809c2c62bab/md5.lua#L1C1-L427C11
 
----@class guanghechen.util.md5
-local md5 = {
+---@class fml.core.md5
+local M = {
   _VERSION = "md5.lua 1.1.0",
   _DESCRIPTION = "MD5 computation in Lua (5.1-3, LuaJIT)",
   _URL = "https://github.com/kikito/md5.lua",
@@ -31,7 +31,7 @@ local md5 = {
   ]],
 }
 
--- bit lib implementions
+-- bit lib implementations
 
 local char, byte, format, rep, sub = string.char, string.byte, string.format, string.rep, string.sub
 local bit_or, bit_and, bit_not, bit_xor, bit_rshift, bit_lshift
@@ -39,7 +39,8 @@ local bit_or, bit_and, bit_not, bit_xor, bit_rshift, bit_lshift
 local ok, bit = pcall(require, "bit")
 local ok_ffi, ffi = pcall(require, "ffi")
 if ok then
-  bit_or, bit_and, bit_not, bit_xor, bit_rshift, bit_lshift = bit.bor, bit.band, bit.bnot, bit.bxor, bit.rshift, bit.lshift
+  bit_or, bit_and, bit_not, bit_xor, bit_rshift, bit_lshift =
+    bit.bor, bit.band, bit.bnot, bit.bxor, bit.rshift, bit.lshift
 else
   ok, bit = pcall(require, "bit32")
 
@@ -459,7 +460,10 @@ local function md5_finish(self)
     padLen = 64
   end
 
-  local s = char(128) .. rep(char(0), padLen - 1) .. lei2str(bit_and(8 * msgLen, 0xFFFFFFFF)) .. lei2str(math.floor(msgLen / 0x20000000))
+  local s = char(128)
+    .. rep(char(0), padLen - 1)
+    .. lei2str(bit_and(8 * msgLen, 0xFFFFFFFF))
+    .. lei2str(math.floor(msgLen / 0x20000000))
   md5_update(self, s)
 
   assert(self.pos % 64 == 0)
@@ -468,7 +472,7 @@ end
 
 ----------------------------------------------------------------
 
-function md5.new()
+function M.new()
   return {
     a = CONSTS[65],
     b = CONSTS[66],
@@ -481,16 +485,22 @@ function md5.new()
   }
 end
 
-function md5.tohex(s)
-  return format("%08x%08x%08x%08x", str2bei(sub(s, 1, 4)), str2bei(sub(s, 5, 8)), str2bei(sub(s, 9, 12)), str2bei(sub(s, 13, 16)))
+function M.tohex(s)
+  return format(
+    "%08x%08x%08x%08x",
+    str2bei(sub(s, 1, 4)),
+    str2bei(sub(s, 5, 8)),
+    str2bei(sub(s, 9, 12)),
+    str2bei(sub(s, 13, 16))
+  )
 end
 
-function md5.sum(s)
-  return md5.new():update(s):finish()
+function M.sum(s)
+  return M.new():update(s):finish()
 end
 
-function md5.sumhexa(s)
-  return md5.tohex(md5.sum(s))
+function M.sumhexa(s)
+  return M.tohex(M.sum(s))
 end
 
-return md5
+return M
