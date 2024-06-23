@@ -23,13 +23,13 @@ return {
       function()
         vim.g.minipairs_disable = not vim.g.minipairs_disable
         if vim.g.minipairs_disable then
-          guanghechen.util.reporter.warn({
+          fml.reporter.warn({
             from = "mini-pairs",
             subject = "toggle auto pairs",
             message = "Disabled auto pairs",
           })
         else
-          guanghechen.util.reporter.info({
+          fml.reporter.info({
             from = "mini-pairs",
             subject = "toggle auto pairs",
             message = "Enable auto pairs",

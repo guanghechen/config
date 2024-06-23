@@ -6,7 +6,7 @@ local M = {}
 function M.copy_current_buffer_filepath()
   local content = guanghechen.util.path.current_filepath() ---@type string
   vim.fn.setreg("+", content)
-  guanghechen.util.reporter.info({
+  fml.reporter.info({
     from = "enchance",
     subject = "copy_current_buffer_filepath",
     message = "Copied current buffer filepath to system clipboard!",

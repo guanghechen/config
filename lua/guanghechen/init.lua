@@ -27,7 +27,6 @@ M.util = {
   observable = require("guanghechen.util.observable"),
   path = require("guanghechen.util.path"),
   regex = require("guanghechen.util.regex"),
-  reporter = require("guanghechen.util.reporter"),
   tmux = require("guanghechen.util.tmux"),
   window = require("guanghechen.util.window"),
 }

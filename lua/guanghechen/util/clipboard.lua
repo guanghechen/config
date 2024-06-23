@@ -1,6 +1,6 @@
 local util_path = require("guanghechen.util.path")
 local util_tmux = require("guanghechen.util.tmux")
-local util_reporter = require("guanghechen.util.reporter")
+local util_reporter = require("fml.core.reporter")
 
 local function wsl_clipboard()
   return {

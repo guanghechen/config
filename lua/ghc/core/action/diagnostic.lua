@@ -1,5 +1,3 @@
-local guanghechen = require("guanghechen")
-
 ---@param next boolean
 ---@param severity? string
 local goto_diagnostic = function(next, severity)
@@ -64,7 +62,7 @@ function M.toggle_previous_quickfix_item()
   else
     local ok, err = pcall(vim.cmd.cprev)
     if not ok then
-      guanghechen.util.reporter.error({
+      fml.reporter.error({
         from = "vim.cmd.cprev",
         subject = "toggle_previous_quickfix_item",
         details = {
@@ -81,7 +79,7 @@ function M.toggle_next_quickfix_item()
   else
     local ok, err = pcall(vim.cmd.cnext)
     if not ok then
-      guanghechen.util.reporter.error({
+      fml.reporter.error({
         from = "vim.cmd.cnext",
         subject = "toggle_next_quickfix_item",
         details = {

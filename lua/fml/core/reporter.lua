@@ -1,8 +1,16 @@
+-- https://github.com/folke/lazy.nvim/blob/3f13f080434ac942b150679223d54f5ca91e0d52/lua/lazy/core/util.lua#L1
 local util_json = require("fml.core.json")
 
--- https://github.com/folke/lazy.nvim/blob/3f13f080434ac942b150679223d54f5ca91e0d52/lua/lazy/core/util.lua#L1
+---@class fml.core.reporter
+local M = {}
 
----@class guanghechen.util.reporter.ReporterLevelEnum
+---@class fml.core.reporter.IReporterOptions
+---@field from string
+---@field subject? string
+---@field message? string
+---@field details? any
+
+---@class fml.core.reporter.ReporterLevelEnum
 local ReporterLevelEnum = {
   DEBUG = vim.log.levels.DEBUG,
   INFO = vim.log.levels.INFO,
@@ -10,7 +18,7 @@ local ReporterLevelEnum = {
   ERROR = vim.log.levels.ERROR,
 }
 
----@param level guanghechen.types.IReporterLevelEnum|nil
+---@param level fml.enums.reporter.Level|nil
 ---@return number
 local function resolve_level(level)
   if level == nil then
@@ -24,7 +32,7 @@ local function resolve_level(level)
   return result
 end
 
----@param options guanghechen.types.IReporterOptions
+---@param options fml.core.reporter.IReporterOptions
 ---@param level integer
 ---@return nil
 local function log(options, level)
@@ -44,32 +52,29 @@ local function log(options, level)
   end)
 end
 
----@class guanghechen.util.reporter
-local M = {}
-
----@param options guanghechen.types.IReporterOptions
----@param level? guanghechen.types.IReporterLevelEnum
+---@param options fml.core.reporter.IReporterOptions
+---@param level? fml.enums.reporter.Level
 function M.log(options, level)
   local level_value = resolve_level(level) ---@type number
   log(options, level_value)
 end
 
----@param options guanghechen.types.IReporterOptions
+---@param options fml.core.reporter.IReporterOptions
 function M.debug(options)
   log(options, ReporterLevelEnum.DEBUG)
 end
 
----@param options guanghechen.types.IReporterOptions
+---@param options fml.core.reporter.IReporterOptions
 function M.info(options)
   log(options, ReporterLevelEnum.INFO)
 end
 
----@param options guanghechen.types.IReporterOptions
+---@param options fml.core.reporter.IReporterOptions
 function M.warn(options)
   log(options, ReporterLevelEnum.WARN)
 end
 
----@param options guanghechen.types.IReporterOptions
+---@param options fml.core.reporter.IReporterOptions
 function M.error(options)
   log(options, ReporterLevelEnum.ERROR)
 end

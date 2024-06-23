@@ -1,3 +1,6 @@
+---@class fml.core.json
+local M = {}
+
 ---@param obj table
 ---@return boolean
 local function check_if_array(obj)
@@ -94,9 +97,6 @@ local function stringify_json_prettier(json, preceding, lines)
   local text = vim.inspect(json)
   table.insert(lines, preceding .. text)
 end
-
----@class fml.core.json
-local M = {}
 
 ---@param json any
 ---@return string[]

@@ -1,7 +1,7 @@
-local os_name = vim.uv.os_uname().sysname
-
 ---@class fml.core.os
 local M = {}
+
+local os_name = vim.uv.os_uname().sysname
 
 ---@return boolean
 function M.is_mac()

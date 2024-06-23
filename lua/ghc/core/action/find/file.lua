@@ -74,7 +74,7 @@ local function gen_filemap(force, cwd)
       stderr:close()
       subprocess:close()
       if code ~= 0 then
-        guanghechen.util.reporter.warn({
+        fml.reporter.warn({
           from = "find_file",
           subject = "gen_filemap",
           message = "failed!",
@@ -159,7 +159,7 @@ local function find_file(opts, force)
   local actions = {
     show_last_find_file_cmd = function()
       local last_cmd = context_session.find_file_last_command:get_snapshot() or {}
-      guanghechen.util.reporter.info({
+      fml.reporter.info({
         from = "find_file",
         subject = "show_last_find_file_cmd",
         details = {

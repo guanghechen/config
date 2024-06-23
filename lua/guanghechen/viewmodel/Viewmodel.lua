@@ -5,7 +5,6 @@ local util_disposable = require("guanghechen.util.disposable")
 local util_observable = require("guanghechen.util.observable")
 local util_fs = require("guanghechen.util.fs")
 local util_json = require("fml.core.json")
-local util_reporter = require("guanghechen.util.reporter")
 
 ---@class guanghechen.viewmodel.Viewmodel.IOptions
 ---@field public name string
@@ -132,7 +131,7 @@ function Viewmodel:save()
   local data = self:get_snapshot()
   local ok_to_encode_json, json_text = pcall(util_json.stringify_prettier, data)
   if not ok_to_encode_json then
-    util_reporter.warn({
+    fml.reporter.warn({
       from = self._name,
       subject = "Viewmodel:save",
       message = "Failed to encode json data",
@@ -145,7 +144,7 @@ function Viewmodel:save()
 
   local file = io.open(self._filepath, "w")
   if not file then
-    util_reporter.warn({
+    fml.reporter.warn({
       from = self._name,
       subject = "Viewmodel:save",
       message = "Failed to save json",
@@ -170,7 +169,7 @@ function Viewmodel:load()
 
   local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
   if not ok_to_decode_json then
-    util_reporter.warn({
+    fml.reporter.warn({
       from = self._name,
       subject = "Viewmodel:load",
       message = "Failed to decode json",
@@ -180,7 +179,7 @@ function Viewmodel:load()
   end
 
   if type(data) ~= "table" then
-    util_reporter.warn({
+    fml.reporter.warn({
       from = self._name,
       subject = "Viewmodel:load",
       message = "Bad json, not a table",
@@ -208,7 +207,7 @@ function Viewmodel:auto_reload()
     on_event = function(filepath, event)
       if type(event) == "table" and event.change == true then
         self:load()
-        util_reporter.info({
+        fml.reporter.info({
           from = self._name,
           subject = "Viewmodel:auto_reload",
           message = "auto reloaded.",
@@ -217,7 +216,7 @@ function Viewmodel:auto_reload()
       end
     end,
     on_error = function(filepath, err)
-      util_reporter.error({
+      fml.reporter.error({
         from = self._name,
         subject = "Viewmodel:auto_reload",
         message = "Failed!",

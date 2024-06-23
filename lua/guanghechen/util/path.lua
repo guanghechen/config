@@ -1,4 +1,4 @@
-local util_reporter = require("guanghechen.util.reporter")
+local util_reporter = require("fml.core.reporter")
 local PATH_SEPARATOR = fml.os.get_path_sep() ---@type string
 
 ---@class guanghechen.util.path

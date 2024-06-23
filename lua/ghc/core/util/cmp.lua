@@ -1,5 +1,4 @@
 ---  https://github.com/LazyVim/LazyVim/blob/0f6ff53ce336082869314db11e9dfa487cf83292/lua/lazyvim/util/cmp.lua#L1
-local guanghechen = require("guanghechen")
 
 ---@class ghc.core.util.cmp
 local M = {}
@@ -82,7 +81,7 @@ function M.expand(snippet)
 %s
 ```]]):format(msg, vim.bo.filetype, snippet)
 
-    local log = ok and guanghechen.util.reporter.warn or guanghechen.util.reporter.error
+    local log = ok and fml.reporter.warn or fml.reporter.error
     log({
       from = "ghc.core.util.cmp.expand",
       subject = "vim.snippet",

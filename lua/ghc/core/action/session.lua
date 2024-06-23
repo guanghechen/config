@@ -60,7 +60,7 @@ function M.session_save()
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 
-  guanghechen.util.reporter.info({
+  fml.reporter.info({
     from = "session.lua",
     subject = "session_save",
     message = "Session saved successfully!",
@@ -77,7 +77,7 @@ function M.session_load()
     if session_filepath_autosaved and vim.fn.filereadable(session_filepath_autosaved) ~= 0 then
       vim.cmd("silent! source " .. vim.fn.fnameescape(session_filepath_autosaved))
     else
-      guanghechen.util.reporter.info({
+      fml.reporter.info({
         from = "session.lua",
         subject = "session_load",
         message = "Cannot find session_filepath at " .. session_filepath,

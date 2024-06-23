@@ -235,7 +235,7 @@ local function search(opts)
   local actions = {
     show_last_search_cmd = function()
       local last_cmd = context_session.search_last_command:get_snapshot() or {}
-      guanghechen.util.reporter.info({
+      fml.reporter.info({
         from = "search.lua",
         subject = "show_last_search_cmd",
         details = {

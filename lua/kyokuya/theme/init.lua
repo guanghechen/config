@@ -1,4 +1,3 @@
-local util_reporter = require("guanghechen.util.reporter")
 local Highlighter = require("kyokuya.theme.highlighter")
 
 local current_nsnr = 0 ---@type integer
@@ -19,7 +18,7 @@ function M.get_highlighter(scheme)
   if highlighter == nil then
     local present, palette = pcall(require, "kyokuya.theme.palette." .. scheme)
     if not present then
-      util_reporter.error({
+      fml.reporter.error({
         from = "kyokuya.theme",
         subject = "toggle_theme",
         message = "Cannot find palette",

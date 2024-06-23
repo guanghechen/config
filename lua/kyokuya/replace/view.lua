@@ -4,7 +4,6 @@ local Textarea = require("kyokuya.component.textarea")
 local Previewer = require("kyokuya.replace.previewer")
 local constants = require("kyokuya.constant")
 local util_path = require("guanghechen.util.path")
-local util_reporter = require("guanghechen.util.reporter")
 
 local kyokuya_buf_delete_augroup = vim.api.nvim_create_augroup("kyokuya_buf_delete", { clear = true })
 
@@ -301,7 +300,7 @@ function M:internal_bind_keymaps(bufnr)
         end)
 
         if not ok then
-          util_reporter.error({
+          fml.reporter.error({
             from = "kyokuya/replace",
             subject = "ui-edit.edit_replacer_state",
             message = "failed to parse json",
@@ -591,7 +590,7 @@ end
 function M:internal_print(line, highlights, meta)
   local bufnr = self.bufnr ---@type integer|nil
   if bufnr == nil then
-    util_reporter.error({
+    fml.reporter.error({
       from = "kyokuya.replace.view",
       subject = "internal_print_line",
       message = "bufnr is nil",

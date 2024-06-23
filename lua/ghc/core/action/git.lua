@@ -23,7 +23,7 @@ local function edit_lazygit_file_in_buffer()
   local channel_id = vim.fn.getbufvar(current_bufnr, "terminal_job_id")
 
   if not channel_id then
-    guanghechen.util.reporter.error({
+    fml.reporter.error({
       from = "git.lua",
       subject = "edit_lazygit_file_in_buffer",
       message = "No terminal job ID found.",
@@ -36,7 +36,7 @@ local function edit_lazygit_file_in_buffer()
 
   local relative_filepath = get_filepath_from_lazygit()
   if not relative_filepath then
-    guanghechen.util.reporter.error({
+    fml.reporter.error({
       from = "git.lua",
       subject = "edit_lazygit_file_in_buffer",
       message = "Clipboard is empty or invalid.",
@@ -47,7 +47,7 @@ local function edit_lazygit_file_in_buffer()
   local winid = context_session.caller_winnr:get_snapshot()
 
   if winid == nil then
-    guanghechen.util.reporter.error({
+    fml.reporter.error({
       from = "git.lua",
       subject = "edit_lazygit_file_in_buffer",
       message = "Could not find the original window.",
