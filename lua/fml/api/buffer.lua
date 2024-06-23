@@ -1,6 +1,6 @@
 local fs = require("fml.core.fs")
 
----@class guanghechen.util.buffer
+---@class fml.api.buffer
 local M = {}
 
 ---@param filepath string

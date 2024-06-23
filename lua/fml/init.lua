@@ -1,3 +1,8 @@
+---@class fml.api
+local api = {
+  buffer = require("fml.api.buffer"),
+}
+
 ---@class fml.collection
 local collection = {
   BatchHandler = require("fml.collection.batch_handler"),
@@ -39,9 +44,10 @@ local fn = {
 }
 
 ---@class fml : fml.core
+---@field public api          fml.api
 ---@field public collection   fml.collection
 ---@field public core         fml.core
 ---@field public fn           fml.fn
-local fml = vim.tbl_extend("force", { collection = collection, core = core, fn = fn }, core)
+local fml = vim.tbl_extend("force", { api = api, collection = collection, core = core, fn = fn }, core)
 
 return fml

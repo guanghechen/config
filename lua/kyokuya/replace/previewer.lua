@@ -1,7 +1,6 @@
 local oxi = require("kyokuya.oxi")
 local Printer = require("kyokuya.component.printer")
 local constants = require("kyokuya.constant")
-local util_buffer = require("guanghechen.util.buffer")
 local util_window = require("guanghechen.util.window")
 
 ---@class kyokuya.replace.IReplacePreviewerOptions
@@ -64,7 +63,7 @@ function M:preview(opts)
   local cursor_row = opts.cursor_row ---@type integer
   local cursor_col = opts.cursor_col ---@type integer
 
-  local original_text = util_buffer.read_of_load_buf_with_filepath(filepath)
+  local original_text = fml.api.buffer.read_of_load_buf_with_filepath(filepath)
   local search_pattern = self.state:get_value("search_pattern") ---@type string
   local replace_pattern = self.state:get_value("replace_pattern") ---@type string
   local flag_regex = self.state:get_value("flag_regex") ---@type boolean
