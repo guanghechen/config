@@ -7,10 +7,10 @@
 local M = {}
 M.__index = M
 
----@class fml.collection.ICircularQueueProps
+---@class fml.collection.CircularQueue.IProps
 ---@field public capacity               number
 
----@param props fml.collection.ICircularQueueProps
+---@param props fml.collection.CircularQueue.IProps
 ---@return fml.collection.CircularQueue
 function M.new(props)
   local self = setmetatable({}, M)

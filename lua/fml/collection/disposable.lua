@@ -3,10 +3,10 @@
 local M = {}
 M.__index = M
 
----@class fml.collection.IDisposableProps
+---@class fml.collection.Disposable.IProps
 ---@field public on_dispose             fun():nil
 
----@param props fml.collection.IDisposableProps
+---@param props fml.collection.Disposable.IProps
 ---@return fml.collection.Disposable
 function M.new(props)
   local self = setmetatable({}, M)

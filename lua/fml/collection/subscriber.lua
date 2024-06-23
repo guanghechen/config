@@ -7,11 +7,11 @@ M.__index = M
 ---@return nil
 local function noop(...) end
 
----@class fml.collection.ISubscriberProps
+---@class fml.collection.Subscriber.IProps
 ---@field on_next                       fun(value: any, value_prev: any|nil):nil
 ---@field on_dispose                    ?fun():nil
 
----@param props fml.collection.ISubscriberProps
+---@param props fml.collection.Subscriber.IProps
 ---@return fml.collection.Subscriber
 function M.new(props)
   local self = setmetatable({}, M)

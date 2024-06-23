@@ -1,3 +1,6 @@
+---@class fml.core.fs
+local M = {}
+
 ---@param filepath string
 ---@param err any
 ---@param unwatch fun():nil
@@ -5,9 +8,6 @@ local function default_watch_on_error(filepath, err, unwatch)
   error("[watch_file] encounter error on " .. filepath .. ", error:" .. vim.inspect(err))
   unwatch()
 end
-
----@class guanghechen.util.fs
-local M = {}
 
 ---@return string|nil
 function M.read_file(filepath)
@@ -22,7 +22,7 @@ function M.read_file(filepath)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
----@class IWatchFileOptions
+---@class fml.core.fs.IWatchFileOptions
 ---@field filepath string
 ---@field on_event fun(filepath:string, events: any, unwatch:fun():nil):nil
 ---@field on_error? fun(filepath:string, err: any, unwatch:fun():nil):nil

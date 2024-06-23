@@ -1,4 +1,4 @@
-local util_fs = require("guanghechen.util.fs")
+local fs = require("fml.core.fs")
 
 ---@class guanghechen.util.buffer
 local M = {}
@@ -31,7 +31,7 @@ function M.read_of_load_buf_with_filepath(filepath)
     return table.concat(lines, "\n")
   end
 
-  return util_fs.read_file(target_filepath) or ""
+  return fs.read_file(target_filepath) or ""
 end
 
 return M

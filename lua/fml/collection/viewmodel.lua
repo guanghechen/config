@@ -4,7 +4,7 @@ local Subscriber = require("fml.collection.subscriber")
 local is_disposable = require("fml.fn.is_disposable")
 local is_observable = require("fml.fn.is_observable")
 local dispose_all = require("fml.fn.dispose_all")
-local fs = require("guanghechen.util.fs")
+local fs = require("fml.core.fs")
 local json = require("fml.core.json")
 local reporter = require("fml.core.reporter")
 
@@ -19,11 +19,11 @@ local Viewmodel = {}
 Viewmodel.__index = Viewmodel
 setmetatable(Viewmodel, { __index = BatchDisposable })
 
----@class fml.collection.IViewmodelProps
+---@class fml.collection.Viewmodel.IProps
 ---@field public name                   string
 ---@field public filepath               string
 
----@param props fml.collection.IViewmodelProps
+---@param props fml.collection.Viewmodel.IProps
 ---@return fml.collection.Viewmodel
 function Viewmodel.new(props)
   local self = setmetatable(BatchDisposable.new(), Viewmodel)

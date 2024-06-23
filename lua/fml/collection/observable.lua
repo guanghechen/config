@@ -23,11 +23,11 @@ local function shallow_equals(x, y)
   return x == y
 end
 
----@class fml.collection.IObservableProps
+---@class fml.collection.Observable.IProps
 ---@field public initial_value          fml.types.T         Initial value of the observable
 ---@field public equals                 ?fml.types.IEquals  Determine whether the two values are equal.
 
----@param props                         fml.collection.IObservableProps
+---@param props                         fml.collection.Observable.IProps
 ---@return fml.collection.Observable
 function M.new(props)
   local equals = props.equals and props.equals or shallow_equals ---@type fml.types.IEquals
@@ -44,7 +44,6 @@ function M.new(props)
 
   return self
 end
-
 
 ---@param value                         fml.types.T         Initial value of the observable
 ---@param equals                        ?fml.types.IEquals  Determine whether the two values are equal.

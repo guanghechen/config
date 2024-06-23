@@ -3,7 +3,7 @@ local BatchHandler = require("fml.collection.batch_handler")
 ---@class fml.collection.Subscribers : fml.types.collection.ISubscribers
 ---@field private ARRANGE_THRESHOLD     number
 ---@field private _disposed             boolean
----@field private _items                fml.collection.ISubscriberItem[]
+---@field private _items                fml.collection.Subscribers.ISubscriberItem[]
 ---@field private _subscribing_count    integer
 local M = {}
 M.__index = M
@@ -13,14 +13,14 @@ local noop_unsubscribable = {
   unsubscribe = function(...) end,
 }
 
----@class fml.collection.ISubscribersProps
+---@class fml.collection.Subscribers.IProps
 ---@field public ARRANGE_THRESHOLD      ?number
 
----@class fml.collection.ISubscriberItem
+---@class fml.collection.Subscribers.ISubscriberItem
 ---@field subscriber                    fml.types.collection.ISubscriber
 ---@field unsubscribed                  boolean
 
----@param props                         ?fml.collection.ISubscribersProps
+---@param props                         ?fml.collection.Subscribers.IProps
 ---@return fml.collection.Subscribers
 function M.new(props)
   local self = setmetatable({}, M)
@@ -31,7 +31,7 @@ function M.new(props)
   ---@type boolean
   self._disposed = false
 
-  ---@type fml.collection.ISubscriberItem[]
+  ---@type fml.collection.Subscribers.ISubscriberItem[]
   self._items = {}
 
   ---@type number
@@ -126,7 +126,7 @@ function M:subscribe(subscriber)
     return noop_unsubscribable
   end
 
-  ---@type fml.collection.ISubscriberItem
+  ---@type fml.collection.Subscribers.ISubscriberItem
   local item = { subscriber = subscriber, unsubscribed = false }
 
   table.insert(self._items, item)
@@ -151,7 +151,7 @@ end
 function M:_arrange()
   local items = self._items
   if #items >= self.ARRANGE_THRESHOLD and self._subscribing_count * 2 <= #items then
-    ---@type fml.collection.ISubscriberItem[]
+    ---@type fml.collection.Subscribers.ISubscriberItem[]
     local next_items = {}
 
     local i = 1

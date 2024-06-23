@@ -11,7 +11,6 @@ M.util = {
   buffer = require("guanghechen.util.buffer"),
   clipboard = require("guanghechen.util.clipboard"),
   debounce = require("guanghechen.util.debounce"),
-  fs = require("guanghechen.util.fs"),
   navigator = require("guanghechen.util.navigator"),
   tmux = require("guanghechen.util.tmux"),
   window = require("guanghechen.util.window"),
