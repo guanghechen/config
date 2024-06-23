@@ -34,7 +34,7 @@ function M:present()
   return self._stack:at(self._present_idx)
 end
 
----@return number
+---@return integer
 function M:present_index()
   return self._present_idx
 end
@@ -118,6 +118,7 @@ function M:iterator_reverse()
   return self._stack:iterator_reverse()
 end
 
+---@return nil
 function M:print()
   local stack = self._stack:collect() ---@type fml.types.T[]
   vim.notify(vim.inspect({ stack = stack, present_index = self._present_idx }))

@@ -1,8 +1,11 @@
 ---@class fml.types.collection.IHistory
----@field public name                   string
----@field public present                fun(): fml.types.T|nil
----@field public present_index          fun(): number
----@field public back                   fun(step ?:number): fml.types.T|nil
----@field public go                     fun(index :number): fml.types.T|nil
----@field public forward                fun(step ?:number): fml.types.T|nil
----@field public push                   fun(element: fml.types.T|nil):nil
+---@field public name                   fun(self: fml.types.collection.IHistory): string
+---@field public present                fun(self: fml.types.collection.IHistory): fml.types.T|nil
+---@field public present_index          fun(self: fml.types.collection.IHistory): integer
+---@field public back                   fun(self: fml.types.collection.IHistory, step ?:number): fml.types.T|nil
+---@field public forward                fun(self: fml.types.collection.IHistory, step ?:number): fml.types.T|nil
+---@field public go                     fun(self: fml.types.collection.IHistory, index :number): fml.types.T|nil
+---@field public push                   fun(self: fml.types.collection.IHistory, element: fml.types.T|nil): nil
+---@field public iterator               fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
+---@field public iterator_reverse       fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
+---@field public print                  fun(self: fml.types.collection.IHistory): nil

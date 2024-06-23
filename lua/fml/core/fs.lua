@@ -27,7 +27,7 @@ end
 ---@field on_event fun(filepath:string, events: any, unwatch:fun():nil):nil
 ---@field on_error? fun(filepath:string, err: any, unwatch:fun():nil):nil
 
----@param opts IWatchFileOptions
+---@param opts fml.core.fs.IWatchFileOptions
 ---@return fun():nil
 function M.watch_file(opts)
   local filepath = opts.filepath
@@ -45,6 +45,7 @@ function M.watch_file(opts)
     vim.uv.fs_event_stop(handle)
   end
 
+  ---@diagnostic disable-next-line: unused-local
   local callback = function(err, filename, events)
     -- vim.notify("callback:" .. vim.inspect({ err = err, event = events, filename = filename }))
     if err then
