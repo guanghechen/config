@@ -1,11 +1,9 @@
-local oxi = require("kyokuya.oxi")
-
 ---@param data kyokuya.replace.IReplaceStateData
 ---@return kyokuya.replace.IReplaceStateData
 local function internal_normalize(data)
-  local search_paths = oxi.normalize_comma_list(data.search_paths) ---@type string
-  local include_patterns = oxi.normalize_comma_list(data.include_patterns) ---@type string
-  local exclude_patterns = oxi.normalize_comma_list(data.exclude_patterns) ---@type string
+  local search_paths = fml.oxi.normalize_comma_list(data.search_paths) ---@type string
+  local include_patterns = fml.oxi.normalize_comma_list(data.include_patterns) ---@type string
+  local exclude_patterns = fml.oxi.normalize_comma_list(data.exclude_patterns) ---@type string
 
   ---@type kyokuya.replace.IReplaceStateData
   local normalized = {
@@ -43,7 +41,7 @@ end
 
 ---@class kyokuya.replace.ReplaceState
 ---@field private data          kyokuya.replace.IReplaceStateData
----@field private search_result kyokuya.oxi.replace.ISearchResult|nil
+---@field private search_result fml.core.oxi.search.IResult|nil
 ---@field private dirty_search  boolean
 ---@field private dirty_replace boolean
 ---@field private on_changed    fun(): nil
@@ -115,12 +113,12 @@ function M:is_dirty_replace()
 end
 
 ---@param force ?boolean
----@return kyokuya.oxi.replace.ISearchResult|nil
+---@return fml.core.oxi.search.IResult|nil
 function M:search(force)
   if force or self:is_dirty_search() then
     local data = self.data ---@type kyokuya.replace.IReplaceStateData
 
-    ---@type kyokuya.oxi.replace.ISearchOptions
+    ---@type fml.core.oxi.search.IParams
     local options = {
       cwd = data.cwd,
       flag_regex = data.flag_regex,
@@ -130,7 +128,7 @@ function M:search(force)
       include_patterns = data.include_patterns,
       exclude_patterns = data.exclude_patterns,
     }
-    local result = oxi.search(options)
+    local result = fml.oxi.search(options)
 
     self.dirty = false
     self.search_result = result

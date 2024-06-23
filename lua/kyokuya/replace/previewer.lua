@@ -1,4 +1,3 @@
-local oxi = require("kyokuya.oxi")
 local constants = require("kyokuya.constant")
 
 ---@class kyokuya.replace.IReplacePreviewerOptions
@@ -78,8 +77,8 @@ function M:preview(opts)
   local nsnr = self.nsnr ---@type integer
   local printer = fml.ui.Printer.new({ bufnr = bufnr, nsnr = nsnr })
 
-  ---@type kyokuya.oxi.replace.IReplacePreviewBlockItem
-  local block_match = oxi.replace_text_preview({
+  ---@type fml.core.oxi.replace.IPreviewBlockItem
+  local block_match = fml.oxi.replace_text_preview({
     text = original_text,
     search_pattern = search_pattern,
     replace_pattern = replace_pattern,

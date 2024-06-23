@@ -1,4 +1,3 @@
-local oxi = require("kyokuya.oxi")
 local Previewer = require("kyokuya.replace.previewer")
 local constants = require("kyokuya.constant")
 
@@ -110,7 +109,7 @@ function M:internal_render(opts)
   local winnr = opts.winnr ---@type integer
   local force = not not opts.force ---@type boolean
   local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
-  local result = self.state:search(force) ---@type kyokuya.oxi.replace.ISearchResult|nil
+  local result = self.state:search(force) ---@type fml.core.oxi.search.IResult|nil
 
   self.printer:clear()
   self:internal_render_cfg(data)
@@ -251,7 +250,7 @@ function M:internal_bind_keymaps(bufnr)
         on_confirm = function(next_value)
           local normalized_list = {}
           for _, next_line in ipairs(next_value) do
-            table.insert(normalized_list, oxi.normalize_comma_list(next_line))
+            table.insert(normalized_list, fml.oxi.normalize_comma_list(next_line))
           end
           local normailized = table.concat(normalized_list, ", ")
           self.state:set_value(key, normailized)
@@ -470,7 +469,7 @@ function M:internal_render_cfg(data)
 end
 ---Render the search/replace options
 ---@param data kyokuya.replace.IReplaceStateData
----@param result kyokuya.oxi.replace.ISearchResult
+---@param result fml.core.oxi.search.IResult
 ---@return nil
 function M:internal_render_result(data, result)
   if result.items == nil or result.error then
@@ -541,8 +540,8 @@ function M:internal_render_result(data, result)
       else
         ---@diagnostic disable-next-line: unused-local
         for _2, _block_match in ipairs(file_item.matches) do
-          ---@type kyokuya.oxi.replace.IReplacePreviewBlockItem
-          local block_match = oxi.replace_text_preview({
+          ---@type fml.core.oxi.replace.IPreviewBlockItem
+          local block_match = fml.oxi.replace_text_preview({
             text = _block_match.text,
             search_pattern = data.search_pattern,
             replace_pattern = data.replace_pattern,
