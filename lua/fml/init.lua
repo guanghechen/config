@@ -6,6 +6,7 @@ fml.core = {
   json = require("fml.core.json"),
   md5 = require("fml.core.md5"),
   os = require("fml.core.os"),
+  string = require("fml.core.string"),
 }
 
 ---@class fml.core

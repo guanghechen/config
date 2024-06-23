@@ -5,7 +5,6 @@ local Previewer = require("kyokuya.replace.previewer")
 local constants = require("kyokuya.constant")
 local util_path = require("guanghechen.util.path")
 local util_reporter = require("guanghechen.util.reporter")
-local util_string = require("guanghechen.util.string")
 local util_table = require("guanghechen.util.table")
 
 local kyokuya_buf_delete_augroup = vim.api.nvim_create_augroup("kyokuya_buf_delete", { clear = true })
@@ -156,7 +155,7 @@ function M:internal_bind_keymaps(bufnr)
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local value = self.state:get_value(key) ---@type string
-      local lines = util_string.split(value, "\n") ---@type string[]
+      local lines = fml.core.string.split(value, "\n") ---@type string[]
 
       local cursor = vim.api.nvim_win_get_cursor(winnr)
       self.cursor_row = cursor[1]
@@ -421,7 +420,7 @@ function M:internal_render_cfg(data)
     local title_width = #title ---@type integer
     local cfg_name_len = self.cfg_name_len ---@type integer
     local invisible_width = cfg_name_len - title_width ---@type integer
-    local left = util_string.padStart(title, cfg_name_len, " ") .. ": " ---@type string
+    local left = fml.core.string.pad_start(title, cfg_name_len, " ") .. ": " ---@type string
     local value_start_pos = cfg_name_len + 2 ---@type integer
 
     ---@type kyokuya.replace.IReplaceViewLineHighlights[]
@@ -524,7 +523,7 @@ function M:internal_render_result(data, result)
               { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
             }
             local padding = i > 1 and continous_line_padding
-              or "│ " .. util_string.padStart(tostring(block_match.lnum), lnum_width, " ") .. ": "
+              or "│ " .. fml.core.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
               table.insert(
@@ -560,7 +559,7 @@ function M:internal_render_result(data, result)
               { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
             }
             local padding = i > 1 and continous_line_padding
-              or "│ " .. util_string.padStart(tostring(start_lnum), lnum_width, " ") .. ": "
+              or "│ " .. fml.core.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
               local hlname = piece.i % 2 == 0 and "kyokuya_replace_text_deleted" or "kyokuya_replace_text_added" ---@type string
