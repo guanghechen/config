@@ -26,6 +26,8 @@ local core = {
 ---@class fml.fn
 local fn = {
   calc_fileicon = require("fml.fn.calc_fileicon"),
+  debounce_leading = require("fml.fn.debounce_leading"),
+  debounce_tailing = require("fml.fn.debounce_tailing"),
   dispose_all = require("fml.fn.dispose_all"),
   get_selected_text = require("fml.fn.get_selected_text"),
   is_disposable = require("fml.fn.is_disposable"),
