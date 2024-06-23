@@ -215,7 +215,7 @@ local function search(opts)
   opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
   opts.use_regex = context_session.search_enable_regex:get_snapshot()
 
-  local selected_text = guanghechen.util.selection.get_selected_text()
+  local selected_text = fml.fn.get_selected_text()
   if selected_text and #selected_text > 1 then
     context_session.search_keyword:next(selected_text)
   end

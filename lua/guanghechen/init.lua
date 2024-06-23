@@ -28,7 +28,6 @@ M.util = {
   path = require("guanghechen.util.path"),
   regex = require("guanghechen.util.regex"),
   reporter = require("guanghechen.util.reporter"),
-  selection = require("guanghechen.util.selection"),
   tmux = require("guanghechen.util.tmux"),
   window = require("guanghechen.util.window"),
 }

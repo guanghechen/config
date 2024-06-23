@@ -1,8 +1,5 @@
----@class guanghechen.util.selection
-local M = {}
-
 ---@return string
-function M.get_selected_text()
+local function get_selected_text()
   local saved_reg = vim.fn.getreg("v")
   vim.cmd([[noautocmd sil norm! "vy]])
 
@@ -11,4 +8,4 @@ function M.get_selected_text()
   return selected_text or ""
 end
 
-return M
+return get_selected_text

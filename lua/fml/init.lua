@@ -10,9 +10,10 @@ fml.core = {
   table = require("fml.core.table"),
 }
 
----@class fml.core
+---@class fml.fn
 fml.fn = {
   calc_fileicon = require("fml.fn.calc_fileicon"),
+  get_selected_text = require("fml.fn.get_selected_text"),
 }
 
 return fml

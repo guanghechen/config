@@ -12,7 +12,7 @@ local function replace_word(opts)
     replace_path = context_session.replace_path:get_snapshot() ---@type string
   end
 
-  local selected_text = guanghechen.util.selection.get_selected_text() ---@type string
+  local selected_text = fml.fn.get_selected_text() ---@type string
   if selected_text and #selected_text > 1 then
     context_session.search_keyword:next(selected_text)
   end
