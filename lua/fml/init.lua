@@ -1,6 +1,7 @@
 ---@class fml.api
 local api = {
   buffer = require("fml.api.buffer"),
+  window = require("fml.api.window"),
 }
 
 ---@class fml.collection

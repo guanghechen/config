@@ -1,5 +1,3 @@
-local util_window = require("guanghechen.util.window")
-
 ---@class ghc.core.action.window
 local M = require("ghc.core.action.window.module")
 
@@ -36,7 +34,7 @@ end
 
 M.focus_window_with_picker = function()
   local winnr_current = vim.api.nvim_get_current_win()
-  local winnr_target = util_window.pick_window({ motivation = "focus" })
+  local winnr_target = fml.api.window.pick_window({ motivation = "focus" })
   if not winnr_target or winnr_current == winnr_target then
     return
   end
@@ -46,7 +44,7 @@ end
 -- Project the buffer on the current window to the selected window
 M.project_window_with_picker = function()
   local winnr_current = vim.api.nvim_get_current_win()
-  local winnr_target = util_window.pick_window({ motivation = "project" })
+  local winnr_target = fml.api.window.pick_window({ motivation = "project" })
   if not winnr_target or winnr_current == winnr_target then
     return
   end

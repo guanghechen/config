@@ -1,7 +1,6 @@
 local oxi = require("kyokuya.oxi")
 local Printer = require("kyokuya.component.printer")
 local constants = require("kyokuya.constant")
-local util_window = require("guanghechen.util.window")
 
 ---@class kyokuya.replace.IReplacePreviewerOptions
 ---@field public state              kyokuya.replace.ReplaceState
@@ -35,7 +34,7 @@ end
 ---@return integer|nil
 function M:select_preview_window()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local selected_winnr = util_window.pick_window({ motivation = "project" }) ---@type integer|nil
+  local selected_winnr = fml.api.window.pick_window({ motivation = "project" }) ---@type integer|nil
   if selected_winnr == nil then
     return nil
   end
