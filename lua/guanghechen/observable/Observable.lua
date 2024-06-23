@@ -1,7 +1,14 @@
 local BatchDisposable = require("guanghechen.disposable.BatchDisposable")
 local Subscribers = require("guanghechen.subscriber.Subscribers")
-local util_comparator = require("guanghechen.util.comparator")
 local util_misc = require("guanghechen.util.misc")
+
+---@generic T
+---@param x T
+---@param y T
+---@return boolean
+local function shallow_equals(x, y)
+  return x == y
+end
 
 ---@class guanghechen.observable.Observable : guanghechen.types.IObservable
 ---@field private _subscribers guanghechen.types.ISubscribers
@@ -20,7 +27,7 @@ function Observable.new(default_value, options)
   ---@cast options guanghechen.observable.Observable.IOptions
 
   ---@type guanghechen.types.IEquals
-  local equals = options.equals and options.equals or util_comparator.shallow_equals
+  local equals = options.equals and options.equals or shallow_equals
 
   local self = setmetatable(BatchDisposable.new(), Observable)
 

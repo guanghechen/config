@@ -18,14 +18,12 @@ M.clazz = {
 M.util = {
   buffer = require("guanghechen.util.buffer"),
   clipboard = require("guanghechen.util.clipboard"),
-  comparator = require("guanghechen.util.comparator"),
   debounce = require("guanghechen.util.debounce"),
   disposable = require("guanghechen.util.disposable"),
   fs = require("guanghechen.util.fs"),
   misc = require("guanghechen.util.misc"),
   navigator = require("guanghechen.util.navigator"),
   observable = require("guanghechen.util.observable"),
-  regex = require("guanghechen.util.regex"),
   tmux = require("guanghechen.util.tmux"),
   window = require("guanghechen.util.window"),
 }
