@@ -1,10 +1,9 @@
----@class guanghechen.util.filetype
-local M = {}
-
-function M.calc_fileicon(p)
+---@param filepath string
+---@return string, string|nil
+local function calc_fileicon(filepath)
   local icon = "󰈚"
   local icon_highlight = nil
-  local name = (p == "" and "Empty ") or p:match("([^/\\]+)[/\\]*$")
+  local name = (filepath == "" and "Empty ") or filepath:match("([^/\\]+)[/\\]*$")
 
   if name ~= "Empty " then
     local devicons_present, devicons = pcall(require, "nvim-web-devicons")
@@ -19,4 +18,4 @@ function M.calc_fileicon(p)
   return icon, icon_highlight
 end
 
-return M
+return calc_fileicon

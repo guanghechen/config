@@ -8,4 +8,9 @@ fml.core = {
   os = require("fml.core.os"),
 }
 
+---@class fml.core
+fml.fn = {
+  calc_fileicon = require("fml.fn.calc_fileicon"),
+}
+
 return fml

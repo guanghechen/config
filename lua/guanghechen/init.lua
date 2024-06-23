@@ -21,7 +21,6 @@ M.util = {
   comparator = require("guanghechen.util.comparator"),
   debounce = require("guanghechen.util.debounce"),
   disposable = require("guanghechen.util.disposable"),
-  filetype = require("guanghechen.util.filetype"),
   fs = require("guanghechen.util.fs"),
   misc = require("guanghechen.util.misc"),
   navigator = require("guanghechen.util.navigator"),

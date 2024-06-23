@@ -3,7 +3,6 @@ local Printer = require("kyokuya.component.printer")
 local Textarea = require("kyokuya.component.textarea")
 local Previewer = require("kyokuya.replace.previewer")
 local constants = require("kyokuya.constant")
-local util_filetype = require("guanghechen.util.filetype")
 local util_path = require("guanghechen.util.path")
 local util_reporter = require("guanghechen.util.reporter")
 local util_string = require("guanghechen.util.string")
@@ -507,7 +506,7 @@ function M:internal_render_result(data, result)
     --local continous_line_padding = "¦ " .. string.rep(" ", lnum_width) .. "  "
     local continous_line_padding = "│ " .. string.rep(" ", lnum_width) .. "  "
     for raw_filepath, file_item in pairs(result.items) do
-      local fileicon, fileicon_highlight = util_filetype.calc_fileicon(raw_filepath)
+      local fileicon, fileicon_highlight = fml.fn.calc_fileicon(raw_filepath)
       local filepath = util_path.relative(data.cwd, raw_filepath)
 
       self:internal_print(fileicon .. " " .. filepath, {

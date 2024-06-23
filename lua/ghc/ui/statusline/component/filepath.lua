@@ -70,7 +70,7 @@ function M.renderer()
 
   local color_text = "%#" .. M.name .. "_text#"
 
-  local icon = " " .. guanghechen.util.filetype.calc_fileicon(filepath) .. " "
+  local icon = " " .. fml.fn.calc_fileicon(filepath) .. " "
   local text = icon .. relative_to_cwd .. added .. removed .. changed .. " "
   return color_text .. text
 end
