@@ -182,11 +182,12 @@ function M:internal_bind_keymaps(bufnr)
 
       cursor_col = math.max(cursor_col, 0)
       cursor_col = math.min(cursor_col, #lines[cursor_row])
-      local textarea = fml.ui.Textarea.new()
-      textarea:open({
+      local textarea = fml.ui.Textarea.new({
         title = "[" .. key .. "]",
-        value = lines,
         position = position,
+      })
+      textarea:open({
+        value = lines,
         cursor_row = cursor_row,
         cursor_col = cursor_col,
         height = 10,
@@ -237,11 +238,12 @@ function M:internal_bind_keymaps(bufnr)
       cursor_col = math.max(cursor_col, 0)
       cursor_col = math.min(cursor_col, #lines[cursor_row])
 
-      local textarea = fml.ui.Textarea.new()
-      textarea:open({
+      local textarea = fml.ui.Textarea.new({
         title = "[" .. key .. "]",
-        value = lines,
         position = position,
+      })
+      textarea:open({
+        value = lines,
         cursor_row = cursor_row,
         cursor_col = cursor_col,
         height = 10,
@@ -280,13 +282,16 @@ function M:internal_bind_keymaps(bufnr)
     self.cursor_row = cursor[1]
     self.cursor_col = cursor[2]
 
-    local textarea = fml.ui.Textarea:new()
     local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
     local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
+    local textarea = fml.ui.Textarea:new({
+      title = "[Replace options]",
+      position = "center",
+    })
     textarea:open({
       title = data.mode == "search" and "[Search options]" or "[Replace options]",
       value = lines,
-      position = "center",
+      height = #lines,
       cursor_row = 1,
       cursor_col = 1,
       width = 100,

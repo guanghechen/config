@@ -1,11 +1,10 @@
 local reporter = require("fml.core.reporter")
 
 ---@class fml.ui.Input
----@field public _nui_input             any|nil
+---@field private _nui_input             any|nil
 ---@field public title                  string
 ---@field public prompt                 string
 ---@field public position               "center"|"cursor"
----@field public cursor_col             integer
 local M = {}
 M.__index = M
 
@@ -16,7 +15,11 @@ M.__index = M
 ---@field public cursor_col             integer
 
 ---@class fml.ui.Input.IOpenParams
+---@field public title                  ?string
+---@field public prompt                 ?string
+---@field public position               ?"center"|"cursor"
 ---@field public value                  string
+---@field public cursor_col             integer
 ---@field public on_confirm             fun(next_value: string):nil
 
 ---@param props fml.ui.Input.IProps
@@ -28,17 +31,8 @@ function M.new(props)
   self.title = props.title
   self.prompt = props.prompt
   self.position = props.position
-  self.cursor_col = props.cursor_col
 
   return self
-end
-
-function M:close()
-  if self._nui_input ~= nil then
-    local nui_input = self._nui_input
-    self._nui_input = nil
-    nui_input:unmount()
-  end
 end
 
 ---@param params fml.ui.Input.IOpenParams
@@ -46,9 +40,10 @@ end
 function M:open(params)
   self:close()
 
-  local title = self.title ---@type string
-  local prompt = self.prompt ---@type string
-  local cursor_col = self.cursor_col ---@type integer
+  local title = params.title or self.title ---@type string
+  local prompt = params.prompt or self.prompt ---@type string
+  local position = params.position or self.position ---@type "center"|"cursor"
+  local cursor_col = params.cursor_col ---@type integer
   local initial_value = params.value ---@type string
   local on_confirm = params.on_confirm
 
@@ -74,13 +69,13 @@ function M:open(params)
   end
 
   local event = nui_autocmd.event
-  local relative = self.position == "center" and "win" or "cursor"
-  local position = self.position == "center" and "50%" or { row = 1, col = 0 }
+  local cfg_relative = position == "center" and "win" or "cursor"
+  local cfg_position = position == "center" and "50%" or { row = 1, col = 0 }
   local width_value = vim.api.nvim_strwidth(initial_value) ---@type integer
   local width_title = vim.api.nvim_strwidth(title) ---@type integer
   local input = Input({
-    relative = relative,
-    position = position,
+    relative = cfg_relative,
+    position = cfg_position,
     size = {
       width = (width_value < width_title and width_title or width_value) + 2,
       height = 1,
@@ -103,7 +98,7 @@ function M:open(params)
   })
 
   -- mount/open the component
-  self._input = input
+  self._nui_input = input
   input:mount()
 
   local function stopinsert()
@@ -130,6 +125,14 @@ function M:get_bufnr()
     return nil
   end
   return self._nui_input.bufnr
+end
+
+function M:close()
+  if self._nui_input ~= nil then
+    local nui_input = self._nui_input
+    self._nui_input = nil
+    nui_input:unmount()
+  end
 end
 
 return M
