@@ -1,4 +1,3 @@
-local History = require("guanghechen.history.History")
 local icons = require("ghc.core.setting.icons")
 
 ---@class ghc.core.action.window.IHistoryItem
@@ -23,7 +22,7 @@ local IGNORED_FILETYPES = {
   ["TelescopePrompt"] = true,
   ["Trouble"] = true,
 }
-local histories = {} ---@type table<number, guanghechen.history.History>
+local histories = {} ---@type table<number, fml.types.collection.IHistory>
 
 ---@param x ghc.core.action.window.IHistoryItem
 ---@param y ghc.core.action.window.IHistoryItem
@@ -86,7 +85,7 @@ function M.push()
   local winnr = vim.api.nvim_get_current_win() ---@type number
   local history = histories[winnr]
   if history == nil then
-    history = History.new({
+    history = fml.collection.History.new({
       name = tostring(winnr),
       max_count = 50,
       comparator = comparator,

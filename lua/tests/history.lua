@@ -1,5 +1,4 @@
-local History = require("guanghechen.history.History")
-local history = History.new({
+local history = fml.collection.History.new({
   name = "haha",
   max_count = 50,
   comparator = function(x, y)

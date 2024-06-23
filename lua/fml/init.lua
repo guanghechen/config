@@ -1,6 +1,7 @@
 ---@class fml.collection
 local collection = {
   CircularQueue = require("fml.collection.circular_queue"),
+  History = require("fml.collection.history"),
 }
 
 ---@class fml.core

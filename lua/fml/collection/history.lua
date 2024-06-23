@@ -1,41 +1,46 @@
----@class guanghechen.history.History: guanghechen.types.IHistory
----@field private _comparator fun(x:guanghechen.types.T, y:guanghechen.types.T): number
+---@class fml.collection.History : fml.types.collection.IHistory
+---@field private _comparator fun(x:fml.types.T, y:fml.types.T): number
 ---@field private _name string
 ---@field private _present_idx number
----@field private _stack guanghechen.types.ICircularQueue
-local History = {}
-History.__index = History
+---@field private _stack fml.types.collection.ICircularQueue
+local M = {}
+M.__index = M
 
----@param opts { name: string, max_count: number, comparator: fun(x:guanghechen.types.T, y:guanghechen.types.T): number}
-function History.new(opts)
-  local self = setmetatable({}, History)
+---@class fml.collection.IHistoryProps
+---@field public name         string
+---@field public max_count    number
+---@field public comparator   fun(x: fml.types.T, y: fml.types.T): number
 
-  self._name = opts.name ---@type string
-  self._comparator = opts.comparator
-  self._present_idx = 0 ---@type number
-  self._stack = fml.collection.CircularQueue.new({ capacity = opts.max_count }) ---@type guanghechen.types.ICircularQueue
+---@param props fml.collection.IHistoryProps
+function M.new(props)
+  local self = setmetatable({}, M)
+
+  self._name = props.name
+  self._comparator = props.comparator
+  self._present_idx = 0
+  self._stack = fml.collection.CircularQueue.new({ capacity = props.max_count })
 
   return self
 end
 
 ---@return string
-function History:name()
+function M:name()
   return self._name
 end
 
----@return guanghechen.types.T|nil
-function History:present()
+---@return fml.types.T|nil
+function M:present()
   return self._stack:at(self._present_idx)
 end
 
 ---@return number
-function History:present_index()
+function M:present_index()
   return self._present_idx
 end
 
 ---@param step? number
----@return guanghechen.types.T|nil
-function History:back(step)
+---@return fml.types.T|nil
+function M:back(step)
   if step == nil or step < 1 then
     step = 1
   end
@@ -50,14 +55,14 @@ function History:back(step)
 end
 
 ---@param step? number
----@return guanghechen.types.T|nil
-function History:forward(step)
+---@return fml.types.T|nil
+function M:forward(step)
   if step == nil or step < 1 then
     step = 1
   end
 
   local idx = self._present_idx + step ---@type number
-  local stack = self._stack ---@type guanghechen.types.ICircularQueue
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
   if idx > stack:size() then
     idx = stack:size()
   end
@@ -67,10 +72,10 @@ function History:forward(step)
 end
 
 ---@param index number
----@return guanghechen.types.T|nil
-function History:go(index)
+---@return fml.types.T|nil
+function M:go(index)
   local idx = index ---@type number
-  local stack = self._stack ---@type guanghechen.types.ICircularQueue
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
   if idx > 0 and idx <= stack:size() then
     self._present_idx = idx
     return stack:at(idx)
@@ -78,11 +83,11 @@ function History:go(index)
   return nil
 end
 
----@param element guanghechen.types.T
+---@param element fml.types.T
 ---@return nil
-function History:push(element)
+function M:push(element)
   local idx = self._present_idx ---@type number
-  local stack = self._stack ---@type guanghechen.types.ICircularQueue
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
   local top = stack:at(idx)
   if top ~= nil and self._comparator(top, element) == 0 then
     return
@@ -104,17 +109,17 @@ function History:push(element)
   end
 end
 
-function History:iterator()
+function M:iterator()
   return self._stack:iterator()
 end
 
-function History:iterator_reverse()
+function M:iterator_reverse()
   return self._stack:iterator_reverse()
 end
 
-function History:print()
-  local stack = self._stack:collect() ---@type guanghechen.types.T[]
+function M:print()
+  local stack = self._stack:collect() ---@type fml.types.T[]
   vim.notify(vim.inspect({ stack = stack, present_index = self._present_idx }))
 end
 
-return History
+return M

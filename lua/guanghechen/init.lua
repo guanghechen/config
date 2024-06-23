@@ -6,7 +6,6 @@ M.clazz = {
   BatchDisposable = require("guanghechen.disposable.BatchDisposable"),
   Disposable = require("guanghechen.disposable.Disposable"),
   Observable = require("guanghechen.observable.Observable"),
-  History = require("guanghechen.history.History"),
   SafeBatchHandler = require("guanghechen.disposable.SafeBatchHandler"),
   Subscriber = require("guanghechen.subscriber.Subscriber"),
   Subscribers = require("guanghechen.subscriber.Subscribers"),
