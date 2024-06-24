@@ -66,4 +66,5 @@ return {
 
   --ui
   require("ghc.plugin.nvim-colorizer"),
+  require("ghc.plugin.barbecue"),
 }
