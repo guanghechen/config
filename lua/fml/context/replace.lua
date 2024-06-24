@@ -55,7 +55,7 @@ local context = Viewmodel.new({
   :register("exclude_patterns", Observable.from_value(".git/"), true, true)
 
 context:load()
-context:auto_reload()
+--context:auto_reload()
 
 --Auto refresh statusline
 watch_observables({

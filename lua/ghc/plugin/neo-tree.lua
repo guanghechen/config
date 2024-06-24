@@ -142,7 +142,8 @@ return {
         ["w"] = "open_with_window_picker",
 
         -- Tree node toggle collapse
-        ["<LeftRelease>"] = "open",
+        --["<LeftRelease>"] = "open",
+        ["<2-LeftMouse>"] = "open",
         ["<cr>"] = recursively_toggle,
         ["z"] = recursively_toggle_all,
 
@@ -307,13 +308,22 @@ return {
     local events = require("neo-tree.events")
 
     -- Set icons for diagnostic errors, you'll need to define them somewhere:
-    vim.fn.sign_define("DiagnosticSignError", { text = fml.ui.icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" })
-    vim.fn.sign_define("DiagnosticSignWarn", { text = fml.ui.icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" })
+    vim.fn.sign_define(
+      "DiagnosticSignError",
+      { text = fml.ui.icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" }
+    )
+    vim.fn.sign_define(
+      "DiagnosticSignWarn",
+      { text = fml.ui.icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" }
+    )
     vim.fn.sign_define(
       "DiagnosticSignInfo",
       { text = fml.ui.icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" }
     )
-    vim.fn.sign_define("DiagnosticSignHint", { text = fml.ui.icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" })
+    vim.fn.sign_define(
+      "DiagnosticSignHint",
+      { text = fml.ui.icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" }
+    )
 
     opts.event_handlers = opts.event_handlers or {}
     vim.list_extend(opts.event_handlers, {
