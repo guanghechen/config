@@ -1,7 +1,7 @@
----@param current                       number  current index
----@param step                          number  moving step
----@param total                         number  total index.
----@return number
+---@param current                       integer  current index
+---@param step                          integer  moving step
+---@param total                         integer  total index.
+---@return integer
 local function navigate_circular(current, step, total)
   local candidate = (current + step - 1) % total
 

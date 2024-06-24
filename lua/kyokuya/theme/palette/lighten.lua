@@ -1,10 +1,10 @@
----@class kyokuya.theme.lighten : kyokuya.theme.palette.IPalette
+---@class kyokuya.theme.lighten : fml.types.api.highlight.IPalette
 local M = {}
 
----@type kyokuya.theme.palette.IPaletteScheme
+---@type fml.enums.highlight.Theme
 M.scheme = "lighten"
 
----@type kyokuya.theme.palette.IColors
+---@type fml.types.api.highlight.IColors
 M.colors = {
   white = "#54555b",
   darker_black = "#efeff0",

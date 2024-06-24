@@ -1,6 +1,7 @@
 local BatchHandler = require("fml.collection.batch_handler")
 
 ---@param disposables fml.types.collection.IDisposable[]
+---@return nil
 local function dispose_all(disposables)
   if #disposables <= 0 then
     return

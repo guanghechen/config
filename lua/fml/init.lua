@@ -1,6 +1,7 @@
 ---@class fml.api
 local api = {
   buffer = require("fml.api.buffer"),
+  highlight = require("fml.api.highlight"),
   window = require("fml.api.window"),
 }
 
@@ -48,6 +49,7 @@ local fn = {
   is_observable = require("fml.fn.is_observable"),
   navigate_circular = require("fml.fn.navigate_circular"),
   navigate_limit = require("fml.fn.navigate_limit"),
+  resolve_hlgroup = require("fml.fn.resolve_hlgroup"),
   watch_observables = require("fml.fn.watch_observables"),
 }
 

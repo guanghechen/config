@@ -2,6 +2,7 @@ local Subscriber = require("fml.collection.subscriber")
 
 ---@param observables fml.types.collection.IObservable[]
 ---@param callback fun():nil
+---@return nil
 local function watch_observables(observables, callback)
   local subscriber = Subscriber.new({
     on_next = function()

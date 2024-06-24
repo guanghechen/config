@@ -1,0 +1,68 @@
+---@class fml.types.api.highlight.IColors
+---@field public  white                 string
+---@field public  darker_black          string
+---@field public  black                 string
+---@field public  black2                string
+---@field public  one_bg                string
+---@field public  one_bg2               string
+---@field public  one_bg3               string
+---@field public  grey                  string
+---@field public  grey_fg               string
+---@field public  grey_fg2              string
+---@field public  light_grey            string
+---@field public  red                   string
+---@field public  baby_pink             string
+---@field public  pink                  string
+---@field public  line                  string
+---@field public  green                 string
+---@field public  vibrant_green         string
+---@field public  nord_blue             string
+---@field public  blue                  string
+---@field public  yellow                string
+---@field public  sun                   string
+---@field public  purple                string
+---@field public  dark_purple           string
+---@field public  teal                  string
+---@field public  orange                string
+---@field public  cyan                  string
+---@field public  statusline_bg         string
+---@field public  lightbg               string
+---@field public  pmenu_bg              string
+---@field public  folder_bg             string
+---@field public  diff_delete           string
+---@field public  diff_add              string
+---@field public  diff_delete_hl        string
+---@field public  diff_add_hl           string
+
+---@class fml.types.api.highlight.IPalette
+---@field public scheme                 fml.enums.highlight.Theme
+---@field public colors                 fml.types.api.highlight.IColors
+
+---@class fml.types.api.highlight.IHighlightConfig
+---@field public fg                     ?fml.enums.highlight.Color|"none"
+---@field public bg                     ?fml.enums.highlight.Color|"none"
+---@field public sp                     ?fml.enums.highlight.Color|"none"
+---@field public blend                  ?integer  0-100 [0, 100]
+---@field public bold                   ?boolean
+---@field public standout               ?boolean
+---@field public underline              ?boolean
+---@field public undercurl              ?boolean
+---@field public underdouble            ?boolean
+---@field public underdotted            ?boolean
+---@field public underdashed            ?boolean
+---@field public strikethrough          ?boolean
+---@field public italic                 ?boolean
+---@field public reverse                ?boolean
+---@field public nocombine              ?boolean
+---@field public link                   ?string
+
+---@class fml.types.api.highlight.ISchemeCompileParams
+---@field public palette                fml.types.api.highlight.IPalette
+---@field public filepath               string
+---@field public nsnr                   ?integer
+
+---@class fml.types.api.highlight.IScheme
+---@field public apply                  fun(self: fml.types.api.highlight.IScheme, nsnr: integer, palette: fml.types.api.highlight.IPalette): nil
+---@field public compile                fun(self: fml.types.api.highlight.IScheme, params: fml.types.api.highlight.ISchemeCompileParams): nil
+---@field public register               fun(self: fml.types.api.highlight.IScheme, hlname: string, hlconfig: fml.types.api.highlight.IHighlightCOnfig): fml.types.api.highlight.IScheme
+---@field public resolve                fun(self: fml.types.api.highlight.IScheme, palette: fml.types.api.highlight.IPalette): table<string, vim.api.keyset.highlight>
