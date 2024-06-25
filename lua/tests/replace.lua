@@ -2,22 +2,40 @@ local Replacer = ghc.command.replace.Replacer
 
 ghc.context.theme.toggle_scheme({ mode = "darken", force = true })
 
+---@type ghc.types.command.replace.IStateData
+local test_data = {
+  mode = "replace",
+  cwd = fml.path.cwd(),
+  flag_regex = true,
+  flag_case_sensitive = true,
+  search_pattern = "Hello, (world|世界)!(?:\\n|\\r\\n)H",
+  replace_pattern = 'hello\nabc哈哈def\n - "$1"x',
+  search_paths = "rust/",
+  include_patterns = "*.txt, *.rs",
+  exclude_patterns = ".git/, c.txt",
+}
+
+---@type ghc.types.command.replace.IStateData
+local context_data = {
+  mode = ghc.context.replace.mode:get_snapshot(),
+  cwd = ghc.context.replace.cwd:get_snapshot(),
+  flag_regex = ghc.context.replace.flag_regex:get_snapshot(),
+  flag_case_sensitive = ghc.context.replace.flag_case_sensitive:get_snapshot(),
+  search_pattern = ghc.context.replace.search_pattern:get_snapshot(),
+  replace_pattern = ghc.context.replace.replace_pattern:get_snapshot(),
+  search_paths = ghc.context.replace.search_paths:get_snapshot(),
+  include_patterns = ghc.context.replace.include_patterns:get_snapshot(),
+  exclude_patterns = ghc.context.replace.exclude_patterns:get_snapshot(),
+}
+
+---vim.notify("test_data:\n" .. vim.inspect(test_data))
+---vim.notify("context_data:\n" .. vim.inspect(context_data))
+
 ---@type ghc.command.replace.Replacer
 local replacer = Replacer.new({
-  nsnr = 0,
   winnr = 0,
   reuse = true,
-  data = {
-    mode = "replace",
-    cwd = fml.path.cwd(),
-    flag_regex = true,
-    flag_case_sensitive = true,
-    search_pattern = "Hello, (world|世界)!(?:\\n|\\r\\n)H",
-    replace_pattern = 'hello\nabc哈哈def\n - "$1"x',
-    search_paths = "rust/",
-    include_patterns = "*.txt, *.rs",
-    exclude_patterns = ".git/, c.txt",
-  },
+  data = test_data,
 })
 
 local function run()
@@ -29,7 +47,7 @@ local function run()
     vim.cmd("vsplit")
   end
 
-  replacer:replace()
+  replacer:open()
   vim.api.nvim_set_current_win(cur_winnr)
   vim.api.nvim_set_current_buf(cur_bufnr)
 end

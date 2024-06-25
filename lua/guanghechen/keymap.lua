@@ -32,7 +32,7 @@ mk({ "i", "n", "t", "v" }, "<M-t>", A.terminal.open_terminal_cwd, "terminal: tog
 
 --- quick access widgets (diagnostic, explorer, terminal)
 mk({ "n", "v" }, "<leader>1", A.explorer.toggle_explorer_file_cwd, "explorer: files (cwd)")
-mk({ "n", "v" }, "<leader>2", A.explorer.toggle_explorer_buffer_cwd, "explorer: buffers (cwd)")
+mk({ "n", "v" }, "<leader>2", ghc.command.replace.open, "replace: search/replace")
 mk({ "n", "v" }, "<leader>3", A.explorer.toggle_explorer_git_cwd, "explorer: git (cwd)")
 ---------------------------------------------------------------------------------------#enhance-----
 

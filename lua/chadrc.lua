@@ -96,5 +96,6 @@ M.ui = {
 }
 
 --print(vim.inspect(M.ui))
+ghc.context.theme.reload_theme({ force = false })
 
 return M

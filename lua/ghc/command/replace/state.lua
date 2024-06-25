@@ -1,9 +1,9 @@
 ---@class ghc.command.replace.State
----@field private data          ghc.types.command.replace.IStateData
----@field private search_result fml.core.oxi.search.IResult|nil
----@field private dirty_search  boolean
----@field private dirty_replace boolean
----@field private on_changed    fun(): nil
+---@field private data                  ghc.types.command.replace.IStateData
+---@field private search_result         fml.core.oxi.search.IResult|nil
+---@field private dirty_search          boolean
+---@field private dirty_replace         boolean
+---@field private on_changed            fun(ghc.command.replace.State): nil
 local M = {}
 M.__index = M
 
@@ -45,8 +45,8 @@ local function internal_equals(left, right)
 end
 
 ---@class ghc.command.replace.state.IProps
----@field public initial_data ghc.types.command.replace.IStateData
----@field public on_changed   fun(): nil
+---@field public initial_data           ghc.types.command.replace.IStateData
+---@field public on_changed             fun(ghc.command.replace.State): nil
 
 ---@param props ghc.command.replace.state.IProps
 ---@return ghc.command.replace.State
@@ -67,6 +67,7 @@ function M:get_data()
   return vim.deepcopy(self.data)
 end
 
+---@param next_data ghc.types.command.replace.IStateData
 function M:set_data(next_data)
   local normalized_next_data = internal_normalize(next_data) ---@type ghc.types.command.replace.IStateData
   local state_equals, replace_equals = internal_equals(self.data, normalized_next_data)
@@ -75,7 +76,7 @@ function M:set_data(next_data)
 
   if self.dirty_search or self.dirty_replace then
     self.data = normalized_next_data
-    self.on_changed()
+    self.on_changed(self)
   end
 end
 
@@ -93,7 +94,7 @@ function M:set_value(key, val)
       self.dirty_search = true
     end
     self.dirty_replace = true
-    self.on_changed()
+    self.on_changed(self)
   end
 end
 

@@ -5,7 +5,6 @@ local buf_delete_augroup = vim.api.nvim_create_augroup("ghc_command_replace_view
 
 ---@class ghc.command.replace.Viewer
 ---@field private state         ghc.command.replace.State
----@field private nsnr          integer
 ---@field private bufnr         integer|nil
 ---@field private printer       ghc.ui.Printer
 ---@field private previewer     ghc.command.replace.Previewer
@@ -20,10 +19,7 @@ local function find_first_replace_buf()
   for _, bufnr in ipairs(vim.t.bufs) do
     local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr })
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-    if
-      buftype == constants.replace_view_buftype
-      and filetype == constants.replace_view_filetype
-    then
+    if buftype == constants.replace_view_buftype and filetype == constants.replace_view_filetype then
       return bufnr
     end
   end
@@ -32,20 +28,17 @@ end
 
 ---@class ghc.command.replace.viewer.IProps
 ---@field public state          ghc.command.replace.State
----@field public nsnr           integer
 
 ---@param opts ghc.command.replace.viewer.IProps
 ---@return ghc.command.replace.Viewer
 function M.new(opts)
   local self = setmetatable({}, M)
   local state = opts.state ---@type ghc.command.replace.State
-  local nsnr = opts.nsnr ---@type integer
 
   self.state = state
-  self.nsnr = nsnr
   self.bufnr = nil
-  self.printer = Printer.new({ bufnr = 0, nsnr = nsnr })
-  self.previewer = Previewer.new({ state = state, nsnr = nsnr })
+  self.printer = Printer.new({ bufnr = 0, nsnr = 0 })
+  self.previewer = Previewer.new({ state = state, nsnr = 0 })
   self.cfg_name_len = 7
   self.cursor_row = 6
   self.cursor_col = 21
@@ -85,7 +78,7 @@ function M:render(opts)
       })
 
       self.bufnr = bufnr
-      self.printer:reset({ bufnr = bufnr, nsnr = self.nsnr })
+      self.printer:reset({ bufnr = bufnr, nsnr = 0 })
       self:internal_bind_keymaps(bufnr)
     end
   end
@@ -183,7 +176,7 @@ function M:internal_bind_keymaps(bufnr)
       end
 
       cursor_col = math.max(cursor_col, 0)
-      cursor_col = math.min(cursor_col, #lines[cursor_row])
+      cursor_col = math.min(cursor_col, cursor_row > 0 and cursor_row <= #lines and #lines[cursor_row] or 0)
       local textarea = ghc.ui.Textarea.new({
         title = "[" .. key .. "]",
         position = position,

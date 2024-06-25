@@ -1,23 +1,20 @@
+local Printer = require("ghc.ui.printer")
 local constants = require("ghc.constant.command")
 
 ---@class ghc.command.replace.Previewer
 ---@field private state             ghc.command.replace.State
----@field private nsnr              integer
 local M = {}
 M.__index = M
 
 ---@class ghc.command.replace.previewer.IProps
 ---@field public state              ghc.command.replace.State
----@field public nsnr               integer
 
 ---@param props ghc.command.replace.previewer.IProps
 ---@return ghc.command.replace.Previewer
 function M.new(props)
   local self = setmetatable({}, M)
-  local nsnr = props.nsnr ---@type integer
 
   self.state = props.state
-  self.nsnr = nsnr
 
   return self
 end
@@ -67,8 +64,7 @@ function M:preview(opts)
   vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
   vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
   vim.cmd(string.format("%sbufdo file %s/REPLACE_PREVIEW", bufnr, bufnr)) --- Rename the buf
-  local nsnr = self.nsnr ---@type integer
-  local printer = ghc.ui.Printer.new({ bufnr = bufnr, nsnr = nsnr })
+  local printer = Printer.new({ bufnr = bufnr, nsnr = 0 })
 
   ---@type fml.core.oxi.replace.IPreviewBlockItem
   local block_match = fml.oxi.replace_text_preview({

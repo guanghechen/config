@@ -44,6 +44,17 @@ pub struct SearchOptions {
 pub fn search(
     options: &SearchOptions,
 ) -> Result<(SearchSucceedResult, String, String), (SearchFailedResult, String)> {
+    if options.search_pattern.is_empty() {
+        return Ok((
+            SearchSucceedResult {
+                elapsed_time: "0s".to_string(),
+                items: HashMap::new(),
+            },
+            "".to_string(),
+            "".to_string(),
+        ));
+    }
+
     let flag_case_sensitive: bool = options.flag_case_sensitive;
     let flag_regex: bool = options.flag_regex;
     let search_pattern: &String = &options.search_pattern;

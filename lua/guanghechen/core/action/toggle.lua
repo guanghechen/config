@@ -14,6 +14,7 @@ function M.transparency()
 
   require("nvconfig").ui.transparency = ghc.context.theme.transparency:get_snapshot()
   require("base46").load_all_highlights()
+  ghc.context.theme.reload_theme({ force = true })
 end
 
 function M.theme()
@@ -24,6 +25,7 @@ function M.theme()
   local current_theme = ghc.context.theme.mode:get_snapshot() == "darken" and "onedark" or "one_light" ---@type string
   require("nvconfig").ui.theme = current_theme
   require("base46").load_all_highlights()
+  ghc.context.theme.reload_theme({ force = true })
 end
 
 function M.relative_line_number()

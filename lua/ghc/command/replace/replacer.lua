@@ -3,44 +3,51 @@ local ReplaceState = require("ghc.command.replace.state")
 local ReplaceViewer = require("ghc.command.replace.viewer")
 
 ---@class ghc.command.replace.Replacer
----@field private state                 ghc.command.replace.State
+---@field public  state                 ghc.command.replace.State
 ---@field private view                  ghc.command.replace.Viewer
 ---@field private winnr                 integer
----@field private nsnr                  integer
 ---@field private reuse                 boolean
 ---@field private batch_disposable      fml.types.collection.IBatchDisposable
 local M = {}
 M.__index = M
 
 ---@class ghc.command.replace.replacer.IProps
----@field public  data                  ghc.types.command.replace.IStateData
----@field public  nsnr                  integer
----@field public  winnr                 integer
----@field public  reuse                 ?boolean
+---@field public data                   ghc.types.command.replace.IStateData
+---@field public winnr                  integer
+---@field public reuse                  ?boolean
+---@field public on_changed             ?fun(ghc.command.replace.State): nil
 
----@param opts                          ghc.command.replace.replacer.IProps
+---@class ghc.command.replace.replacer.IOpenParams
+---@field public mode                   ?ghc.enums.command.replace.Mode
+---@field public winnr                  ?integer
+---@field public reuse                  ?boolean
+---@field public force                  ?boolean
+
+---@param props                          ghc.command.replace.replacer.IProps
 ---@return ghc.command.replace.Replacer
-function M.new(opts)
+function M.new(props)
   local self = setmetatable({}, M)
 
-  local nsnr = opts.nsnr ---@type integer
-  local winnr = opts.winnr ~= nil and opts.winnr or 0 ---@type integer
-  local reuse = not not opts.reuse ---@type boolean
+  local winnr = props.winnr ~= nil and props.winnr or 0 ---@type integer
+  local reuse = not not props.reuse ---@type boolean
   local batch_disposable = BatchDisposable.new()
+  local on_changed = props.on_changed
 
-  local state ---@type ghc.command.replace.State
-  state = ReplaceState.new({
-    initial_data = opts.data,
-    on_changed = function()
-      self:replace()
+  ---@type ghc.command.replace.State
+  local state = ReplaceState.new({
+    initial_data = props.data,
+    on_changed = function(s)
+      self:open({ mode = s:get_value("mode") })
+      if on_changed then
+        on_changed(s)
+      end
     end,
   })
 
-  local view = ReplaceViewer.new({ state = state, nsnr = nsnr })
+  local view = ReplaceViewer.new({ state = state })
 
   self.state = state
   self.view = view
-  self.nsnr = nsnr
   self.winnr = winnr
   self.reuse = reuse
   self.batch_disposable = batch_disposable
@@ -53,12 +60,17 @@ function M:get_bufnr()
   return self.view:get_bufnr()
 end
 
----@param opts                          ?{ force?: boolean }
+---@param params                        ?ghc.command.replace.replacer.IOpenParams
 ---@return nil
-function M:replace(opts)
-  opts = opts or {}
-  local force = not not opts.force ---@type boolean
-  self.view:render({ winnr = self.winnr, force = force, reuse = self.reuse })
+function M:open(params)
+  params = params or {}
+  local mode = params.mode ---@type ghc.enums.command.replace.Mode
+  local winnr = params.winnr or self.winnr ---@type integer
+  local reuse = not not params.reuse ---@type boolean
+  local force = not not params.force ---@type boolean
+
+  self.state:set_value("mode", mode)
+  self.view:render({ winnr = winnr, force = force, reuse = reuse })
 end
 
 return M
