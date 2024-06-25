@@ -1,3 +1,9 @@
+# Set the directory name of the current script
+$scriptDir = Split-Path -Parent $PSCommandPath
+Set-Location $scriptDir
+
+# Add further script logic here
+
 # Navigate to the Spectre-oxi directory
 cd "nvim_tools"
 
