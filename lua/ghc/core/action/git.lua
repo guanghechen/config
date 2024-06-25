@@ -71,11 +71,12 @@ end
 
 local function get_lazygit_config_filepath()
   local lazygit_config_dir = fml.path.locate_config_filepath("lazygit")
+  local darken = fml.context.theme.mode:get_snapshot() == "darken" ---@type boolean
   local config_filepaths = {
     fml.path.join(lazygit_config_dir, "config.yaml"),
     fml.path.join(
       lazygit_config_dir,
-      fml.context.shared.darken:get_snapshot() and "theme.darken.yaml" or "theme.lighten.yaml"
+      darken and "theme.darken.yaml" or "theme.lighten.yaml"
     ),
   }
   local lazygit_theme_config_filepath = table.concat(config_filepaths, ",")

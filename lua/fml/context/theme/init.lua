@@ -8,7 +8,7 @@ local cache_theme_filepath = path.locate_context_filepath({ filename = "theme" }
 
 ---@class fml.context.theme : fml.types.context.theme
 local M = Viewmodel.new({
-  name = "context:session:replace",
+  name = "context:theme",
   filepath = context_filepath,
 })
   :register("mode", Observable.from_value("darken"), true, true)

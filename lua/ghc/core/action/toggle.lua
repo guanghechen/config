@@ -9,18 +9,20 @@ function M.flight_copilot()
 end
 
 function M.transparency()
-  fml.context.shared.transparency:next(not fml.context.shared.transparency:get_snapshot())
+  local next_transparency = not fml.context.theme.transparency:get_snapshot() ---@type boolean
+  fml.context.theme.toggle_scheme({ transparency = next_transparency })
 
-  require("nvconfig").ui.transparency = fml.context.shared.transparency:get_snapshot()
+  require("nvconfig").ui.transparency = fml.context.theme.transparency:get_snapshot()
   require("base46").load_all_highlights()
 end
 
 function M.theme()
-  ---@type boolean
-  local darken = fml.context.shared.darken:get_snapshot()
-  fml.context.shared.darken:next(not darken)
+  local darken = fml.context.theme.mode:get_snapshot() == "darken" ---@type boolean
+  local next_mode = darken and "lighten" or "darken"
+  fml.context.theme.toggle_scheme({ mode = next_mode })
 
-  require("nvconfig").ui.theme = fml.context.shared.get_current_theme()
+  local current_theme = fml.context.theme.mode:get_snapshot() == "darken" and "onedark" or "one_light" ---@type string
+  require("nvconfig").ui.theme = current_theme
   require("base46").load_all_highlights()
 end
 

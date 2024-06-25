@@ -14,5 +14,5 @@
 ---@class fml.types.context.theme : fml.collection.Viewmodel
 ---@field public mode                   fml.types.collection.IObservable
 ---@field public transparency           fml.types.collection.IObservable
----@field public toggle_scheme          fun(self: fml.types.context.theme, params: fml.types.context.theme.IToggleSchemeParams):nil
----@field public reload_theme           fun(self: fml.types.context.theme, params: fml.types.context.theme.IReloadThemeParams):nil
+---@field public toggle_scheme          fun(params: fml.types.context.theme.IToggleSchemeParams):nil
+---@field public reload_theme           fun(params: fml.types.context.theme.IReloadThemeParams):nil

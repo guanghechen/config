@@ -7,6 +7,8 @@ local statusline = require("ghc.ui.statusline")
 ---@type ChadrcConfig
 local M = {}
 
+local current_theme = fml.context.theme.mode:get_snapshot() == "darken" and "onedark" or "one_light" ---@type string
+
 M.ui = {
   hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, {
     ghc_DiffAdd_left = { bg = "#FFE0E0", fg = "none" },
@@ -26,9 +28,9 @@ M.ui = {
     CursorLine = { bg = "one_bg2" },
     Visual = { bg = "light_grey" },
   },
-  theme = fml.context.shared.get_current_theme(),
+  theme = current_theme,
   theme_toggle = {},
-  transparency = fml.context.shared.transparency:get_snapshot(),
+  transparency = fml.context.theme.transparency:get_snapshot(),
   base46 = {
     integration = {
       "blankline",

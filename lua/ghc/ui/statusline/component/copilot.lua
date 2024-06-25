@@ -1,7 +1,7 @@
 local context_session = require("ghc.core.context.session")
 
 ---@type boolean
-local transparency = fml.context.shared.transparency:get_snapshot()
+local transparency = fml.context.theme.transparency:get_snapshot()
 
 --- @class ghc.ui.statusline.component.copilot
 local M = {
