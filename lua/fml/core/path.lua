@@ -1,7 +1,7 @@
-local os = require("fml.core.os")
+local util_os = require("fml.core.os")
 local md5 = require("fml.core.md5")
 local reporter = require("fml.core.reporter")
-local PATH_SEPARATOR = os.get_path_sep() ---@type string
+local PATH_SEPARATOR = util_os.get_path_sep() ---@type string
 
 ---@class fml.core.path
 local M = {}
@@ -9,7 +9,7 @@ local M = {}
 ---@param filepath string
 ---@return boolean
 function M.is_absolute(filepath)
-  if os.is_windows() then
+  if util_os.is_windows() then
     return string.match(filepath, "^[%a]:[\\/].*$") ~= nil
   end
   return string.sub(filepath, 1, 1) == PATH_SEPARATOR

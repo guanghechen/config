@@ -101,6 +101,7 @@ function M:compile(params)
     .. ",k,v)\n"
     .. "end\nend, true)\n"
 
+  vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
   local file = io.open(filepath, "wb")
   if file then
     file:write(loadstring(lines)())
