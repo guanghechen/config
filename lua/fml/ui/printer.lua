@@ -6,16 +6,11 @@
 local M = {}
 M.__index = M
 
----@class fml.ui.Printer.IProps
+---@class fml.ui.printer.IProps
 ---@field public nsnr                   integer
 ---@field public bufnr                  integer
 
----@class fml.ui.Printer.ILineHighlight
----@field public cstart                 integer
----@field public cend                   integer
----@field public hlname                 string|nil
-
----@param props fml.ui.Printer.IProps
+---@param props fml.ui.printer.IProps
 ---@return fml.ui.Printer
 function M.new(props)
   local self = setmetatable({}, M)
@@ -34,7 +29,7 @@ function M:clear()
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, {})
 end
 
----@param opts fml.ui.Printer.IProps
+---@param opts fml.ui.printer.IProps
 function M:reset(opts)
   self.nsnr = opts.nsnr
   self.bufnr = opts.bufnr
@@ -52,7 +47,7 @@ function M:get_current_lnum()
 end
 
 ---@param line           string
----@param highlights     ?fml.ui.Printer.ILineHighlight
+---@param highlights     ?fml.ui.printer.ILineHighlight
 ---@param meta           ?any
 ---@return nil
 function M:print(line, highlights, meta)
