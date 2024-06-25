@@ -1,15 +1,10 @@
-local ReplaceState = require("kyokuya.replace.state")
-local ReplaceView = require("kyokuya.replace.view")
+local BatchDisposable = fml.collection.BatchDisposable
+local ReplaceState = require("ghc.command.replace.state")
+local ReplaceViewer = require("ghc.command.replace.viewer")
 
----@class kyokuya.replace.IReplacerOptions
----@field public  data                  kyokuya.replace.IReplaceStateData
----@field public  nsnr                  integer
----@field public  winnr                 integer
----@field public  reuse                 ?boolean
-
----@class kyokuya.replace.Replacer
----@field private state                 kyokuya.replace.ReplaceState
----@field private view                  kyokuya.replace.ReplaceView
+---@class ghc.command.replace.Replacer
+---@field private state                 ghc.command.replace.State
+---@field private view                  ghc.command.replace.Viewer
 ---@field private winnr                 integer
 ---@field private nsnr                  integer
 ---@field private reuse                 boolean
@@ -17,17 +12,23 @@ local ReplaceView = require("kyokuya.replace.view")
 local M = {}
 M.__index = M
 
----@param opts                          kyokuya.replace.IReplacerOptions
----@return kyokuya.replace.Replacer
+---@class ghc.command.replace.replacer.IProps
+---@field public  data                  ghc.types.command.replace.IStateData
+---@field public  nsnr                  integer
+---@field public  winnr                 integer
+---@field public  reuse                 ?boolean
+
+---@param opts                          ghc.command.replace.replacer.IProps
+---@return ghc.command.replace.Replacer
 function M.new(opts)
   local self = setmetatable({}, M)
 
   local nsnr = opts.nsnr ---@type integer
   local winnr = opts.winnr ~= nil and opts.winnr or 0 ---@type integer
   local reuse = not not opts.reuse ---@type boolean
-  local batch_disposable = fml.collection.BatchDisposable.new()
+  local batch_disposable = BatchDisposable.new()
 
-  local state ---@type kyokuya.replace.ReplaceState
+  local state ---@type ghc.command.replace.State
   state = ReplaceState.new({
     initial_data = opts.data,
     on_changed = function()
@@ -35,7 +36,7 @@ function M.new(opts)
     end,
   })
 
-  local view = ReplaceView.new({ state = state, nsnr = nsnr })
+  local view = ReplaceViewer.new({ state = state, nsnr = nsnr })
 
   self.state = state
   self.view = view

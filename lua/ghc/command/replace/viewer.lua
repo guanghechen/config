@@ -1,47 +1,50 @@
-local Previewer = require("kyokuya.replace.previewer")
-local constants = require("kyokuya.constant")
+local Previewer = require("ghc.command.replace.previewer")
+local constants = require("ghc.constant.command")
+local Printer = require("ghc.ui.printer")
+local buf_delete_augroup = vim.api.nvim_create_augroup("ghc_command_replace_view_buf_del", { clear = true })
 
-local kyokuya_buf_delete_augroup = vim.api.nvim_create_augroup("kyokuya_buf_delete", { clear = true })
-
----@return integer|nil
-local function find_first_replace_buf()
-  for _, bufnr in ipairs(vim.t.bufs) do
-    local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr })
-    local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-    if buftype == constants.kyokuya_replace_buftype and filetype == constants.kyokuya_replace_filetype then
-      return bufnr
-    end
-  end
-  return nil
-end
-
----@class kyokuya.replace.IReplaceViewOptions
----@field public state          kyokuya.replace.ReplaceState
----@field public nsnr           integer
-
----@class kyokuya.replace.ReplaceView
----@field private state         kyokuya.replace.ReplaceState
+---@class ghc.command.replace.Viewer
+---@field private state         ghc.command.replace.State
 ---@field private nsnr          integer
 ---@field private bufnr         integer|nil
 ---@field private printer       ghc.ui.Printer
----@field private previewer     kyokuya.replace.ReplacePreviewer
+---@field private previewer     ghc.command.replace.Previewer
 ---@field private cfg_name_len  integer
 ---@field private cursor_row    integer
 ---@field private cursor_col    integer
 local M = {}
 M.__index = M
 
----@param opts kyokuya.replace.IReplaceViewOptions
----@return kyokuya.replace.ReplaceView
+---@return integer|nil
+local function find_first_replace_buf()
+  for _, bufnr in ipairs(vim.t.bufs) do
+    local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr })
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
+    if
+      buftype == constants.replace_view_buftype
+      and filetype == constants.replace_view_filetype
+    then
+      return bufnr
+    end
+  end
+  return nil
+end
+
+---@class ghc.command.replace.viewer.IProps
+---@field public state          ghc.command.replace.State
+---@field public nsnr           integer
+
+---@param opts ghc.command.replace.viewer.IProps
+---@return ghc.command.replace.Viewer
 function M.new(opts)
   local self = setmetatable({}, M)
-  local state = opts.state ---@type kyokuya.replace.ReplaceState
+  local state = opts.state ---@type ghc.command.replace.State
   local nsnr = opts.nsnr ---@type integer
 
   self.state = state
   self.nsnr = nsnr
   self.bufnr = nil
-  self.printer = ghc.ui.Printer.new({ bufnr = 0, nsnr = nsnr })
+  self.printer = Printer.new({ bufnr = 0, nsnr = nsnr })
   self.previewer = Previewer.new({ state = state, nsnr = nsnr })
   self.cfg_name_len = 7
   self.cursor_row = 6
@@ -68,13 +71,13 @@ function M:render(opts)
     if self.bufnr == nil then
       local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
       vim.api.nvim_set_current_buf(bufnr)
-      vim.api.nvim_set_option_value("buftype", constants.kyokuya_replace_buftype, { buf = bufnr })
-      vim.api.nvim_set_option_value("filetype", constants.kyokuya_replace_filetype, { buf = bufnr })
+      vim.api.nvim_set_option_value("buftype", constants.replace_view_buftype, { buf = bufnr })
+      vim.api.nvim_set_option_value("filetype", constants.replace_view_filetype, { buf = bufnr })
       vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
       vim.opt_local.list = false
       vim.cmd(string.format("%sbufdo file %s/REPLACE", bufnr, bufnr)) --- Rename the buf
       vim.api.nvim_create_autocmd("BufDelete", {
-        group = kyokuya_buf_delete_augroup,
+        group = buf_delete_augroup,
         buffer = bufnr,
         callback = function()
           self.bufnr = nil
@@ -108,7 +111,7 @@ end
 function M:internal_render(opts)
   local winnr = opts.winnr ---@type integer
   local force = not not opts.force ---@type boolean
-  local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
+  local data = self.state:get_data() ---@type ghc.types.command.replace.IStateData
   local result = self.state:search(force) ---@type fml.core.oxi.search.IResult|nil
 
   self.printer:clear()
@@ -141,7 +144,7 @@ function M:internal_bind_keymaps(bufnr)
     vim.keymap.set(modes, key, action, { noremap = true, silent = true, buffer = bufnr, desc = desc })
   end
 
-  ---@param key kyokuya.replace.IReplaceStateKey
+  ---@param key ghc.enums.command.replace.StateKey
   ---@param position? "center"|"cursor
   ---@return nil
   local function edit_string(key, position)
@@ -199,7 +202,7 @@ function M:internal_bind_keymaps(bufnr)
     end
   end
 
-  ---@param key kyokuya.replace.IReplaceStateKey
+  ---@param key ghc.enums.command.replace.StateKey
   ---@param position? "center"|"cursor
   ---@return nil
   local function edit_list(key, position)
@@ -235,7 +238,7 @@ function M:internal_bind_keymaps(bufnr)
       end
 
       cursor_col = math.max(cursor_col, 0)
-      cursor_col = math.min(cursor_col, #lines[cursor_row])
+      cursor_col = math.min(cursor_col, cursor_row > 0 and cursor_row <= #lines and #lines[cursor_row] or 0)
 
       local textarea = ghc.ui.Textarea.new({
         title = "[" .. key .. "]",
@@ -263,7 +266,7 @@ function M:internal_bind_keymaps(bufnr)
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local cursor = vim.api.nvim_win_get_cursor(winnr)
     local cursor_row = cursor[1]
-    local meta = self.printer:get_meta(cursor_row) ---@type kyokuya.replace.IReplaceViewLineMeta|nil
+    local meta = self.printer:get_meta(cursor_row) ---@type ghc.types.command.replace.main.ILineMeta|nil
     if meta ~= nil and meta.key ~= nil then
       local key = meta.key
       if key == "cwd" or key == "search_pattern" or key == "replace_pattern" then
@@ -281,7 +284,7 @@ function M:internal_bind_keymaps(bufnr)
     self.cursor_row = cursor[1]
     self.cursor_col = cursor[2]
 
-    local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
+    local data = self.state:get_data() ---@type ghc.types.command.replace.IStateData
     local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
     local textarea = ghc.ui.Textarea.new({
       title = "[Replace options]",
@@ -302,7 +305,7 @@ function M:internal_bind_keymaps(bufnr)
 
         if not ok then
           fml.reporter.error({
-            from = "kyokuya/replace",
+            from = "ghc.command.replace.viewer",
             subject = "ui-edit.edit_replacer_state",
             message = "failed to parse json",
             details = {
@@ -313,10 +316,10 @@ function M:internal_bind_keymaps(bufnr)
           return
         end
 
-        ---@cast json kyokuya.replace.IReplaceStateData
+        ---@cast json ghc.types.command.replace.IStateData
         local raw = vim.tbl_extend("force", data, json)
 
-        ---@cast json kyokuya.replace.IReplaceStateData
+        ---@cast json ghc.types.command.replace.IStateData
         local next_data = {
           cwd = raw.cwd,
           mode = raw.mode,
@@ -356,7 +359,7 @@ function M:internal_bind_keymaps(bufnr)
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local cursor = vim.api.nvim_win_get_cursor(winnr)
     local cursor_row = cursor[1]
-    local meta = self.printer:get_meta(cursor_row) ---@type kyokuya.replace.IReplaceViewLineMeta|nil
+    local meta = self.printer:get_meta(cursor_row) ---@type ghc.types.command.replace.main.ILineMeta|nil
     if meta ~= nil and meta.filepath ~= nil then
       local selected_winnr = self.previewer:select_preview_window()
       if selected_winnr == nil then
@@ -375,7 +378,7 @@ function M:internal_bind_keymaps(bufnr)
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local cursor = vim.api.nvim_win_get_cursor(winnr)
     local cursor_row = cursor[1]
-    local meta = self.printer:get_meta(cursor_row) ---@type kyokuya.replace.IReplaceViewLineMeta|nil
+    local meta = self.printer:get_meta(cursor_row) ---@type ghc.types.command.replace.main.ILineMeta|nil
     if meta ~= nil and meta.filepath ~= nil then
       self.previewer:preview({
         filepath = meta.filepath,
@@ -408,10 +411,10 @@ function M:internal_bind_keymaps(bufnr)
 end
 
 ---Render the search/replace options
----@param data kyokuya.replace.IReplaceStateData
+---@param data ghc.types.command.replace.IStateData
 ---@return nil
 function M:internal_render_cfg(data)
-  ---@param key     kyokuya.replace.IReplaceStateKey
+  ---@param key     ghc.enums.command.replace.StateKey
   ---@param title   string
   ---@param hlvalue string
   ---@param flags   ?{ icon: string, enabled: boolean }[]
@@ -422,17 +425,17 @@ function M:internal_render_cfg(data)
     local left = fml.string.pad_start(title, cfg_name_len, " ") .. ": " ---@type string
     local value_start_pos = cfg_name_len + 2 ---@type integer
 
-    ---@type kyokuya.replace.IReplaceViewLineHighlights[]
+    ---@type ghc.ui.printer.ILineHighlight[]
     local highlights = {
-      { cstart = 0, cend = invisible_width, hlname = "KyokuyaReplaceInvisible" },
-      { cstart = invisible_width, cend = cfg_name_len, hlname = "KyokuyaReplaceOptName" },
+      { cstart = 0, cend = invisible_width, hlname = "GhcReplaceInvisible" },
+      { cstart = invisible_width, cend = cfg_name_len, hlname = "GhcReplaceOptName" },
     }
 
     if flags ~= nil and #flags > 0 then
       for _, flag in ipairs(flags) do
         local extra = " " .. flag.icon .. " " ---@type string
         local next_value_start_pos = value_start_pos + #extra ---@type integer
-        local hlflag = flag.enabled and "KyokuyaReplaceFlagEnabled" or "KyokuyaReplaceFlag"
+        local hlflag = flag.enabled and "GhcReplaceFlagEnabled" or "GhcReplaceFlag"
 
         left = left .. extra
         table.insert(highlights, {
@@ -453,22 +456,22 @@ function M:internal_render_cfg(data)
   local mode_indicator = data.mode == "search" and "[Search]" or "[Replace]"
   self:internal_print(
     mode_indicator .. " Press ? for mappings",
-    { { cstart = 0, cend = -1, hlname = "KyokuyaReplaceUsage" } }
+    { { cstart = 0, cend = -1, hlname = "GhcReplaceUsage" } }
   )
-  print_cfg_field("cwd", "CWD", "KyokuyaReplaceOptValue")
-  print_cfg_field("search_paths", "Paths", "KyokuyaReplaceOptValue")
-  print_cfg_field("include_patterns", "Include", "KyokuyaReplaceOptValue")
-  print_cfg_field("exclude_patterns", "Exclude", "KyokuyaReplaceOptValue")
-  print_cfg_field("search_pattern", "Search", "KyokuyaReplaceOptSearchPattern", {
+  print_cfg_field("cwd", "CWD", "GhcReplaceOptValue")
+  print_cfg_field("search_paths", "Paths", "GhcReplaceOptValue")
+  print_cfg_field("include_patterns", "Include", "GhcReplaceOptValue")
+  print_cfg_field("exclude_patterns", "Exclude", "GhcReplaceOptValue")
+  print_cfg_field("search_pattern", "Search", "GhcReplaceOptSearchPattern", {
     { icon = "󰑑", enabled = data.flag_regex },
     { icon = "", enabled = data.flag_case_sensitive },
   })
   if data.mode == "replace" then
-    print_cfg_field("replace_pattern", "Replace", "KyokuyaReplaceOptReplacePattern")
+    print_cfg_field("replace_pattern", "Replace", "GhcReplaceOptReplacePattern")
   end
 end
 ---Render the search/replace options
----@param data kyokuya.replace.IReplaceStateData
+---@param data ghc.types.command.replace.IStateData
 ---@param result fml.core.oxi.search.IResult
 ---@return nil
 function M:internal_render_result(data, result)
@@ -476,7 +479,7 @@ function M:internal_render_result(data, result)
     local summary = string.format("Time: %s", result.elapsed_time)
     self:internal_print(summary)
   else
-    local mode = data.mode ---@type kyokuya.replace.IReplaceMode
+    local mode = data.mode ---@type ghc.enums.command.replace.Mode
     local count_files = 0
     local count_matches = 0
     local maximum_lnum = 0 ---@type integer
@@ -497,7 +500,7 @@ function M:internal_render_result(data, result)
 
     self:internal_print(
       "┌─────────────────────────────────────────────────────────────────────────────",
-      { { cstart = 0, cend = -1, hlname = "KyokuyaReplaceFence" } }
+      { { cstart = 0, cend = -1, hlname = "GhcReplaceFence" } }
     )
 
     local lnum_width = #tostring(maximum_lnum)
@@ -509,7 +512,7 @@ function M:internal_render_result(data, result)
 
       self:internal_print(fileicon .. " " .. filepath, {
         { cstart = 0, cend = 2, hlname = fileicon_highlight },
-        { cstart = 2, cend = -1, hlname = "KyokuyaReplaceFilepath" },
+        { cstart = 2, cend = -1, hlname = "GhcReplaceFilepath" },
       }, { filepath = filepath })
 
       if mode == "search" then
@@ -517,9 +520,9 @@ function M:internal_render_result(data, result)
         for _2, block_match in ipairs(file_item.matches) do
           local text = block_match.text
           for i, line in ipairs(block_match.lines) do
-            ---@type kyokuya.replace.IReplaceViewLineHighlights[]
+            ---@type ghc.ui.printer.ILineHighlight[]
             local match_highlights = {
-              { cstart = 0, cend = 1, hlname = "KyokuyaReplaceFence" },
+              { cstart = 0, cend = 1, hlname = "GhcReplaceFence" },
             }
             local padding = i > 1 and continous_line_padding
               or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
@@ -527,7 +530,7 @@ function M:internal_render_result(data, result)
             for _3, piece in ipairs(line.p) do
               table.insert(
                 match_highlights,
-                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "KyokuyaReplaceTextDeleted" }
+                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "GhcReplaceTextDeleted" }
               )
             end
             self:internal_print(
@@ -553,15 +556,15 @@ function M:internal_render_result(data, result)
           local text = block_match.text ---@type string
           local start_lnum = _block_match.lnum ---@type integer
           for i, line in ipairs(block_match.lines) do
-            ---@type kyokuya.replace.IReplaceViewLineHighlights[]
+            ---@type ghc.ui.printer.ILineHighlight[]
             local match_highlights = {
-              { cstart = 0, cend = 1, hlname = "KyokuyaReplaceFence" },
+              { cstart = 0, cend = 1, hlname = "GhcReplaceFence" },
             }
             local padding = i > 1 and continous_line_padding
               or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
-              local hlname = piece.i % 2 == 0 and "KyokuyaReplaceTextDeleted" or "KyokuyaReplaceTextAdded" ---@type string
+              local hlname = piece.i % 2 == 0 and "GhcReplaceTextDeleted" or "GhcReplaceTextAdded" ---@type string
               table.insert(
                 match_highlights,
                 { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = hlname }
@@ -579,20 +582,20 @@ function M:internal_render_result(data, result)
 
     self:internal_print(
       "└─────────────────────────────────────────────────────────────────────────────",
-      { { cstart = 0, cend = -1, hlname = "KyokuyaReplaceFence" } }
+      { { cstart = 0, cend = -1, hlname = "GhcReplaceFence" } }
     )
   end
 end
 
 ---@param line           string
----@param highlights     ?kyokuya.replace.IReplaceViewLineHighlights[]
----@param meta           ?kyokuya.replace.IReplaceViewLineMeta
+---@param highlights     ?ghc.ui.printer.ILineHighlight[]
+---@param meta           ?ghc.types.command.replace.main.ILineMeta
 ---@return nil
 function M:internal_print(line, highlights, meta)
   local bufnr = self.bufnr ---@type integer|nil
   if bufnr == nil then
     fml.reporter.error({
-      from = "kyokuya.replace.view",
+      from = "ghc.command.replace.viewer",
       subject = "internal_print_line",
       message = "bufnr is nil",
       details = { line, meta, highlights },

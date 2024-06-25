@@ -18,19 +18,19 @@ local function gen_hlconfig_map(params)
     FlashLabel = { fg = "white", bg = transparency and "none" or "grey" },
     FlashMatch = { fg = "cyan", bg = transparency and "none" or "grey" },
 
-    ---kyokuya-replace
-    KyokuyaReplaceFilepath = { fg = "blue", bg = "none" },
-    KyokuyaReplaceFlag = { fg = "white", bg = "grey" },
-    KyokuyaReplaceFlagEnabled = { fg = "black", bg = "baby_pink" },
-    KyokuyaReplaceFence = { fg = "grey", bg = "none" },
-    KyokuyaReplaceInvisible = { fg = "none", bg = "none" },
-    KyokuyaReplaceOptName = { fg = "blue", bg = "none", bold = true },
-    KyokuyaReplaceOptReplacePattern = { fg = "diff_add_hl", bg = "none" },
-    KyokuyaReplaceOptSearchPattern = { fg = "diff_delete_hl", bg = "none" },
-    KyokuyaReplaceOptValue = { fg = "yellow", bg = "none" },
-    KyokuyaReplaceTextAdded = { fg = "diff_add_hl", bg = "none" },
-    KyokuyaReplaceTextDeleted = { fg = "diff_delete_hl", strikethrough = true },
-    KyokuyaReplaceUsage = { fg = "grey_fg2", bg = "none" },
+    ---ghc-replace
+    GhcReplaceFilepath = { fg = "blue", bg = "none" },
+    GhcReplaceFlag = { fg = "white", bg = "grey" },
+    GhcReplaceFlagEnabled = { fg = "black", bg = "baby_pink" },
+    GhcReplaceFence = { fg = "grey", bg = "none" },
+    GhcReplaceInvisible = { fg = "none", bg = "none" },
+    GhcReplaceOptName = { fg = "blue", bg = "none", bold = true },
+    GhcReplaceOptReplacePattern = { fg = "diff_add_hl", bg = "none" },
+    GhcReplaceOptSearchPattern = { fg = "diff_delete_hl", bg = "none" },
+    GhcReplaceOptValue = { fg = "yellow", bg = "none" },
+    GhcReplaceTextAdded = { fg = "diff_add_hl", bg = "none" },
+    GhcReplaceTextDeleted = { fg = "diff_delete_hl", strikethrough = true },
+    GhcReplaceUsage = { fg = "grey_fg2", bg = "none" },
 
     ---trouble
     TroubleCount = { fg = "pink" },

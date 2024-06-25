@@ -1,29 +1,22 @@
-local constants = require("kyokuya.constant")
+local constants = require("ghc.constant.command")
 
----@class kyokuya.replace.IReplacePreviewerOptions
----@field public state              kyokuya.replace.ReplaceState
----@field public nsnr               integer
-
----@class kyokuya.replace.IReplacePreviewerPreviewOptions
----@field public winnr              integer|nil
----@field public filepath           string
----@field public keep_search_pieces boolean
----@field public cursor_row         integer
----@field public cursor_col         integer
-
----@class kyokuya.replace.ReplacePreviewer
----@field private state             kyokuya.replace.ReplaceState
+---@class ghc.command.replace.Previewer
+---@field private state             ghc.command.replace.State
 ---@field private nsnr              integer
 local M = {}
 M.__index = M
 
----@param opts kyokuya.replace.IReplacePreviewerOptions
----@return kyokuya.replace.ReplacePreviewer
-function M.new(opts)
-  local self = setmetatable({}, M)
-  local nsnr = opts.nsnr ---@type integer
+---@class ghc.command.replace.previewer.IProps
+---@field public state              ghc.command.replace.State
+---@field public nsnr               integer
 
-  self.state = opts.state
+---@param props ghc.command.replace.previewer.IProps
+---@return ghc.command.replace.Previewer
+function M.new(props)
+  local self = setmetatable({}, M)
+  local nsnr = props.nsnr ---@type integer
+
+  self.state = props.state
   self.nsnr = nsnr
 
   return self
@@ -52,7 +45,7 @@ function M:select_preview_window()
   return selected_winnr
 end
 
----@param opts kyokuya.replace.IReplacePreviewerPreviewOptions
+---@param opts ghc.types.command.replace.previewer.IPreviewParams
 function M:preview(opts)
   local winnr = opts.winnr or self:select_preview_window() or 0 ---@type integer
   local filepath = opts.filepath ---@type string
@@ -70,7 +63,7 @@ function M:preview(opts)
   local filetype = vim.fn.system(string.format('nvim -c "filetype detect" -c "echo &filetype" -c "quit" %s', filepath))
 
   vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_set_option_value("buftype", constants.kyokuya_replace_preview_buftype, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", constants.replace_preview_filetype, { buf = bufnr })
   vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
   vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
   vim.cmd(string.format("%sbufdo file %s/REPLACE_PREVIEW", bufnr, bufnr)) --- Rename the buf
@@ -90,11 +83,11 @@ function M:preview(opts)
   local text = block_match.text ---@type string
   ---@diagnostic disable-next-line: unused-local
   for _1, line in ipairs(block_match.lines) do
-    ---@type kyokuya.replace.IReplaceViewLineHighlights[]
+    ---@type ghc.ui.printer.ILineHighlight[]
     local match_highlights = {}
     ---@diagnostic disable-next-line: unused-local
     for _3, piece in ipairs(line.p) do
-      local hlname = piece.i % 2 == 0 and "KyokuyaReplaceTextDeleted" or "KyokuyaReplaceTextAdded" ---@type string
+      local hlname = piece.i % 2 == 0 and "GhcReplaceTextDeleted" or "GhcReplaceTextAdded" ---@type string
       table.insert(match_highlights, { cstart = piece.l, cend = piece.r, hlname = hlname })
     end
     printer:print(text:sub(line.l + 1, line.r), match_highlights)

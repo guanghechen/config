@@ -8,14 +8,14 @@
 local M = {}
 M.__index = M
 
----@class ghc.ui.Textarea.IProps
+---@class ghc.ui.textarea.IProps
 ---@field public title                  string
 ---@field public position               "center"|"cursor"
 ---@field public width                  ?integer
 ---@field public height                 ?integer
 ---@field public win_options            ?table<string, any>
 
----@class ghc.ui.Textarea.IOpenParams
+---@class ghc.ui.textarea.IOpenParams
 ---@field public title                  ?string
 ---@field public position               ?"center"|"cursor"
 ---@field public value                  string[]
@@ -26,7 +26,7 @@ M.__index = M
 ---@field public win_options            ?table<string, any>
 ---@field public on_confirm              fun(next_value: string[]): nil
 
----@param props ghc.ui.Textarea.IProps
+---@param props ghc.ui.textarea.IProps
 ---@return ghc.ui.Textarea
 function M.new(props)
   local self = setmetatable({}, M)
@@ -41,7 +41,7 @@ function M.new(props)
   return self
 end
 
----@param params ghc.ui.Textarea.IOpenParams
+---@param params ghc.ui.textarea.IOpenParams
 ---@return nil
 function M:open(params)
   local title = params.title or self.title ---@type string

@@ -1,11 +1,20 @@
----@param data kyokuya.replace.IReplaceStateData
----@return kyokuya.replace.IReplaceStateData
+---@class ghc.command.replace.State
+---@field private data          ghc.types.command.replace.IStateData
+---@field private search_result fml.core.oxi.search.IResult|nil
+---@field private dirty_search  boolean
+---@field private dirty_replace boolean
+---@field private on_changed    fun(): nil
+local M = {}
+M.__index = M
+
+---@param data ghc.types.command.replace.IStateData
+---@return ghc.types.command.replace.IStateData
 local function internal_normalize(data)
   local search_paths = fml.oxi.normalize_comma_list(data.search_paths) ---@type string
   local include_patterns = fml.oxi.normalize_comma_list(data.include_patterns) ---@type string
   local exclude_patterns = fml.oxi.normalize_comma_list(data.exclude_patterns) ---@type string
 
-  ---@type kyokuya.replace.IReplaceStateData
+  ---@type ghc.types.command.replace.IStateData
   local normalized = {
     cwd = data.cwd,
     mode = data.mode,
@@ -20,8 +29,8 @@ local function internal_normalize(data)
   return normalized
 end
 
----@param left kyokuya.replace.IReplaceStateData
----@param right kyokuya.replace.IReplaceStateData
+---@param left ghc.types.command.replace.IStateData
+---@param right ghc.types.command.replace.IStateData
 ---@return boolean, boolean
 local function internal_equals(left, right)
   local state_equals = left.cwd == right.cwd
@@ -35,40 +44,31 @@ local function internal_equals(left, right)
   return state_equals, replace_equals
 end
 
----@class kyokuya.replace.IReplaceStateOptions
----@field public initial_data kyokuya.replace.IReplaceStateData
+---@class ghc.command.replace.state.IProps
+---@field public initial_data ghc.types.command.replace.IStateData
 ---@field public on_changed   fun(): nil
 
----@class kyokuya.replace.ReplaceState
----@field private data          kyokuya.replace.IReplaceStateData
----@field private search_result fml.core.oxi.search.IResult|nil
----@field private dirty_search  boolean
----@field private dirty_replace boolean
----@field private on_changed    fun(): nil
-local M = {}
-M.__index = M
-
----@param opts kyokuya.replace.IReplaceStateOptions
----@return kyokuya.replace.ReplaceState
-function M.new(opts)
+---@param props ghc.command.replace.state.IProps
+---@return ghc.command.replace.State
+function M.new(props)
   local self = setmetatable({}, M)
 
-  self.data = internal_normalize(opts.initial_data)
+  self.data = internal_normalize(props.initial_data)
   self.search_result = nil
   self.dirty_search = true
   self.dirty_replace = true
-  self.on_changed = opts.on_changed
+  self.on_changed = props.on_changed
 
   return self
 end
 
----@return kyokuya.replace.IReplaceStateData
+---@return ghc.types.command.replace.IStateData
 function M:get_data()
   return vim.deepcopy(self.data)
 end
 
 function M:set_data(next_data)
-  local normalized_next_data = internal_normalize(next_data) ---@type kyokuya.replace.IReplaceStateData
+  local normalized_next_data = internal_normalize(next_data) ---@type ghc.types.command.replace.IStateData
   local state_equals, replace_equals = internal_equals(self.data, normalized_next_data)
   self.dirty_search = not state_equals
   self.dirty_replace = not replace_equals
@@ -79,13 +79,13 @@ function M:set_data(next_data)
   end
 end
 
----@param key kyokuya.replace.IReplaceStateKey
+---@param key ghc.enums.command.replace.StateKey
 function M:get_value(key)
   return self.data[key]
 end
 
----@param key kyokuya.replace.IReplaceStateKey
----@param val string|boolean|kyokuya.replace.IReplaceMode
+---@param key ghc.enums.command.replace.StateKey
+---@param val string|boolean|ghc.enums.command.replace.Mode
 function M:set_value(key, val)
   if self.data[key] ~= val then
     self.data[key] = val
@@ -116,7 +116,7 @@ end
 ---@return fml.core.oxi.search.IResult|nil
 function M:search(force)
   if force or self:is_dirty_search() then
-    local data = self.data ---@type kyokuya.replace.IReplaceStateData
+    local data = self.data ---@type ghc.types.command.replace.IStateData
 
     ---@type fml.core.oxi.search.IParams
     local options = {

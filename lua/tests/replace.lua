@@ -1,8 +1,8 @@
-local Replacer = require("kyokuya.replace.replacer")
+local Replacer = ghc.command.replace.Replacer
 
 ghc.context.theme.toggle_scheme({ mode = "darken", force = true })
 
----@type kyokuya.replace.Replacer
+---@type ghc.command.replace.Replacer
 local replacer = Replacer.new({
   nsnr = 0,
   winnr = 0,

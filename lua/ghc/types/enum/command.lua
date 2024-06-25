@@ -1,0 +1,14 @@
+---@alias ghc.enums.command.replace.Mode
+---| "replace"
+---| "search"
+
+---@alias ghc.enums.command.replace.StateKey
+---|"cwd"
+---|"mode"
+---|"flag_regex"
+---|"flag_case_sensitive"
+---|"search_pattern"
+---|"replace_pattern"
+---|"search_paths"
+---|"include_patterns"
+---|"exclude_patterns"

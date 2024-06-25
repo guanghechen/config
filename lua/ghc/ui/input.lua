@@ -6,13 +6,13 @@
 local M = {}
 M.__index = M
 
----@class ghc.ui.Input.IProps
+---@class ghc.ui.input.IProps
 ---@field public title                  string
 ---@field public prompt                 string
 ---@field public position               "center"|"cursor"
 ---@field public cursor_col             integer
 
----@class ghc.ui.Input.IOpenParams
+---@class ghc.ui.input.IOpenParams
 ---@field public title                  ?string
 ---@field public prompt                 ?string
 ---@field public position               ?"center"|"cursor"
@@ -20,7 +20,7 @@ M.__index = M
 ---@field public cursor_col             integer
 ---@field public on_confirm             fun(next_value: string):nil
 
----@param props ghc.ui.Input.IProps
+---@param props ghc.ui.input.IProps
 ---@return ghc.ui.Input
 function M.new(props)
   local self = setmetatable({}, M)
@@ -33,7 +33,7 @@ function M.new(props)
   return self
 end
 
----@param params ghc.ui.Input.IOpenParams
+---@param params ghc.ui.input.IOpenParams
 ---@return nil
 function M:open(params)
   self:close()
