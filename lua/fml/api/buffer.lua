@@ -31,7 +31,7 @@ function M.read_of_load_buf_with_filepath(filepath)
     return table.concat(lines, "\n")
   end
 
-  return fs.read_file(target_filepath) or ""
+  return fs.read_file({ filepath = target_filepath, silent = true }) or ""
 end
 
 return M

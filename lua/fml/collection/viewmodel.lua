@@ -5,7 +5,6 @@ local is_disposable = require("fml.fn.is_disposable")
 local is_observable = require("fml.fn.is_observable")
 local dispose_all = require("fml.fn.dispose_all")
 local fs = require("fml.core.fs")
-local json = require("fml.core.json")
 local reporter = require("fml.core.reporter")
 
 ---@class fml.collection.Viewmodel : fml.types.collection.IViewmodel
@@ -13,6 +12,7 @@ local reporter = require("fml.core.reporter")
 ---@field private _filepath             string
 ---@field private _initial_values       table<string, any>
 ---@field private _unwatch              (fun():nil)|nil
+---@field private _verbose              boolean
 ---@field private _persistables         table<string, fml.types.collection.IObservable>
 ---@field private _all_observables      table<string, fml.types.collection.IObservable>
 local Viewmodel = {}
@@ -22,6 +22,7 @@ setmetatable(Viewmodel, { __index = BatchDisposable })
 ---@class fml.collection.Viewmodel.IProps
 ---@field public name                   string
 ---@field public filepath               string
+---@field public verbose                ?boolean
 
 ---@param props fml.collection.Viewmodel.IProps
 ---@return fml.collection.Viewmodel
@@ -35,6 +36,7 @@ function Viewmodel.new(props)
   self._initial_values = {} ---@type table<string, any>
   self._unwatch = nil ---@type (fun():nil)|nil
   self._persistables = {} ---@type table<string, fml.types.collection.IObservable>
+  self._verbose = not not props.verbose ---@type boolean
   self._all_observables = {} ---@type table<string, fml.types.collection.IObservable>
 
   return self
@@ -131,92 +133,69 @@ function Viewmodel:register(name, observable, persistable, auto_save)
 end
 
 function Viewmodel:save()
-  local data = self:get_snapshot()
-  local ok_to_encode_json, json_text = pcall(json.stringify_prettier, data)
-  if not ok_to_encode_json then
-    reporter.warn({
-      from = "fml.collection.viewmodel",
-      subject = "save",
-      message = "Failed to encode json data",
-      details = { name = self._name, data = data },
-    })
-    return
-  end
-
-  vim.fn.mkdir(vim.fn.fnamemodify(self._filepath, ":p:h"), "p")
-
-  local file = io.open(self._filepath, "w")
-  if not file then
-    reporter.warn({
-      from = "fml.collection.viewmodel",
-      subject = "save",
-      message = "Failed to save json",
-      details = { name = self._name, data = data },
-    })
-    return
-  end
-
-  file:write(json_text)
-  file:close()
+  local filepath = self._filepath ---@type string
+  local data = self:get_snapshot() ---@type table
+  fs.write_json(filepath, data)
 end
 
+---@return boolean  Indicate whether if the content loaded is different with current data.
 function Viewmodel:load()
-  local ok_to_load_json, json_text = pcall(fs.read_file, self._filepath)
-  if not ok_to_load_json then
-    return
-  end
-
-  if json_text == nil then
-    return
-  end
-
-  local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
-  if not ok_to_decode_json then
-    reporter.warn({
-      from = "fml.collection.viewmodel",
-      subject = "load",
-      message = "Failed to decode json",
-      details = { name = self._name, json_text = json_text },
-    })
-    return
-  end
-
+  local filepath = self._filepath ---@type string
+  local data = fs.read_json({ filepath = filepath, silent_on_bad_path = true })
   if type(data) ~= "table" then
-    reporter.warn({
-      from = "fml.collection.viewmodel",
-      subject = "load",
-      message = "Bad json, not a table",
-      details = { name = self._name, json_text = json_text },
-    })
-    return
+    if data ~= nil then
+      reporter.warn({
+        from = "fml.collection.viewmodel",
+        subject = "load",
+        message = "Bad json, not a table",
+        details = { name = self._name, data = data },
+      })
+    end
+    return false
   end
 
+  local has_changed = false ---@type boolean
   for key, value in pairs(data) do
     local observable = self[key]
     if value ~= nil and is_observable(observable) then
       self._initial_values[key] = value
-      observable:next(value)
+      has_changed = observable:next(value) or has_changed
     end
   end
+  return has_changed
 end
 
-function Viewmodel:auto_reload()
+---@param params                        ?fml.types.collection.viewmodel.IAutoReloadParams
+---@return nil
+function Viewmodel:auto_reload(params)
+  params = params or {}
+  ---@cast params fml.types.collection.viewmodel.IAutoReloadParams
+
+  local on_changed = params.on_changed or fml.fn.noop ---@type fun(): nil
+
+
   if self._unwatch ~= nil then
     return
   end
 
+  local filepath = self._filepath ---@type string
   local unwatch = fs.watch_file({
-    filepath = self._filepath,
+    filepath = filepath,
     on_event = function(filepath, event)
       if type(event) == "table" and event.change == true then
-        self:load()
-        reporter.info({
-          from = "fml.collection.viewmodel",
-          subject = "auto_reload",
-          message = "auto reloaded.",
-          details = { name = self._name, filepath = filepath },
-          --details = { name = self._name, filepath = filepath, event = event },
-        })
+        local has_changed = self:load()
+        if has_changed then
+          vim.schedule(on_changed)
+          if self._verbose then
+            reporter.info({
+              from = "fml.collection.viewmodel",
+              subject = "auto_reload",
+              message = "auto reloaded.",
+              details = { name = self._name, filepath = filepath },
+              --details = { name = self._name, filepath = filepath, event = event },
+            })
+          end
+        end
       end
     end,
     on_error = function(filepath, err)

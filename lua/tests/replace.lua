@@ -1,6 +1,6 @@
 local Replacer = ghc.command.replace.Replacer
 
-ghc.context.theme.toggle_scheme({ mode = "darken", force = true })
+ghc.context.shared.toggle_scheme({ mode = "darken", force = true })
 
 ---@type ghc.types.command.replace.IStateData
 local test_data = {

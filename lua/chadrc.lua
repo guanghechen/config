@@ -7,7 +7,7 @@ local statusline = require("guanghechen.ui.statusline")
 ---@type ChadrcConfig
 local M = {}
 
-local current_theme = ghc.context.theme.mode:get_snapshot() == "darken" and "onedark" or "one_light" ---@type string
+local current_theme = ghc.context.shared.mode:get_snapshot() == "darken" and "onedark" or "one_light" ---@type string
 
 M.ui = {
   hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, {
@@ -30,7 +30,7 @@ M.ui = {
   },
   theme = current_theme,
   theme_toggle = {},
-  transparency = ghc.context.theme.transparency:get_snapshot(),
+  transparency = ghc.context.shared.transparency:get_snapshot(),
   base46 = {
     integration = {
       "blankline",
@@ -96,6 +96,6 @@ M.ui = {
 }
 
 --print(vim.inspect(M.ui))
-ghc.context.theme.reload_theme({ force = false })
+--ghc.context.shared.reload_theme({ force = false })
 
 return M

@@ -70,7 +70,7 @@ end
 
 ---@param value fml.types.T
 ---@param options? fml.types.collection.IObservableNextOptions
----@return nil
+---@return boolean Indicate whether if the value changed.
 function M:next(value, options)
   options = options or {}
   ---@cast options fml.types.collection.IObservableNextOptions
@@ -86,7 +86,7 @@ function M:next(value, options)
         details = { value = value },
       })
     end
-    return
+    return false
   end
 
   ---@type boolean
@@ -94,7 +94,9 @@ function M:next(value, options)
   if force or not self.equals(value, self._value) then
     self._value = value
     self:_notify()
+    return true
   end
+  return false
 end
 
 ---@param subscriber fml.types.collection.ISubscriber
@@ -129,7 +131,10 @@ function M:_notify()
   local value = self._value
 
   self._value_last_notified = value
-  self._subscribers:notify(value, value_prev)
+
+  vim.schedule(function()
+    self._subscribers:notify(value, value_prev)
+  end)
 end
 
 return M

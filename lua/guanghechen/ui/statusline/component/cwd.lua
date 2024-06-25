@@ -1,5 +1,5 @@
 ---@type boolean
-local transparency = ghc.context.theme.transparency:get_snapshot()
+local transparency = ghc.context.shared.transparency:get_snapshot()
 
 --- @class guanghechen.ui.statusline.component.cwd
 local M = {

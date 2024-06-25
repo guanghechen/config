@@ -1,0 +1,10 @@
+---@class ghc.types.context.replace.IData
+---@field public cwd                  string
+---@field public mode                 ghc.context.replace.IMode
+---@field public flag_regex           boolean
+---@field public flag_case_sensitive  boolean
+---@field public search_pattern       string
+---@field public replace_pattern      string
+---@field public search_paths         string
+---@field public include_patterns     string
+---@field public exclude_patterns     string

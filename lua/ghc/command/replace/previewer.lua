@@ -1,4 +1,4 @@
-local Printer = require("ghc.ui.printer")
+local Printer = fml.ui.Printer
 local constants = require("ghc.constant.command")
 
 ---@class ghc.command.replace.Previewer
@@ -79,7 +79,7 @@ function M:preview(opts)
   local text = block_match.text ---@type string
   ---@diagnostic disable-next-line: unused-local
   for _1, line in ipairs(block_match.lines) do
-    ---@type ghc.ui.printer.ILineHighlight[]
+    ---@type fml.ui.printer.ILineHighlight[]
     local match_highlights = {}
     ---@diagnostic disable-next-line: unused-local
     for _3, piece in ipairs(line.p) do

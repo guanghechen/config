@@ -6,3 +6,6 @@
 ---@field public save                   fun(): nil
 ---@field public load                   fun(): nil
 ---@field public reload                 fun(): nil
+
+---@class fml.types.collection.viewmodel.IAutoReloadParams
+---@field public on_changed             ?fun(): nil

@@ -20,6 +20,7 @@ local collection = {
 ---@class fml.core
 local core = {
   clipboard = require("fml.core.clipboard"),
+  debug = require("fml.core.debug"),
   fs = require("fml.core.fs"),
   json = require("fml.core.json"),
   md5 = require("fml.core.md5"),
@@ -43,7 +44,15 @@ local fn = {
   is_observable = require("fml.fn.is_observable"),
   navigate_circular = require("fml.fn.navigate_circular"),
   navigate_limit = require("fml.fn.navigate_limit"),
+  noop = require("fml.fn.noop"),
+  resolve_hlgroup = require("fml.fn.resolve_hlgroup"),
   watch_observables = require("fml.fn.watch_observables"),
+}
+
+---@class fml.ui
+local ui = {
+  Printer = require("fml.ui.printer"),
+  Theme = require("fml.ui.theme"),
 }
 
 ---@class fml : fml.core
@@ -51,11 +60,13 @@ local fn = {
 ---@field public collection   fml.collection
 ---@field public core         fml.core
 ---@field public fn           fml.fn
+---@field public ui           fml.ui
 local fml = vim.tbl_extend("force", core, {
   api = api,
   collection = collection,
   core = core,
   fn = fn,
+  ui = ui,
 })
 
 return fml

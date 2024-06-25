@@ -1,4 +1,4 @@
----@class ghc.ui.printer.ILineHighlight
+---@class fml.ui.printer.ILineHighlight
 ---@field public cstart                 integer
 ---@field public cend                   integer
 ---@field public hlname                 string|nil

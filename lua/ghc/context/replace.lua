@@ -18,16 +18,18 @@ local context_filepath = fml.path.locate_session_filepath({ filename = "replace.
 ---|"include_patterns"
 ---|"exclude_patterns"
 
----@class ghc.context.replace.IData
----@field public cwd                  string
----@field public mode                 ghc.context.replace.IMode
----@field public flag_regex           boolean
----@field public flag_case_sensitive  boolean
----@field public search_pattern       string
----@field public replace_pattern      string
----@field public search_paths         string
----@field public include_patterns     string
----@field public exclude_patterns     string
+---@type ghc.types.context.replace.IData
+local data = {
+  cwd = fml.path.cwd(),
+  mode = "search",
+  flag_regex = true,
+  flag_case_sensitive = true,
+  search_pattern = "",
+  replace_pattern = "",
+  search_paths = "",
+  include_patterns = "",
+  exclude_patterns = ".git/",
+}
 
 ---@class ghc.context.replace : fml.collection.Viewmodel
 ---@field public cwd                  fml.types.collection.IObservable

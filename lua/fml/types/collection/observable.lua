@@ -5,4 +5,4 @@
 ---@class fml.types.collection.IObservable: fml.types.collection.IBatchDisposable, fml.types.collection.ISubscribable
 ---@field public equals                 fml.types.IEquals
 ---@field public get_snapshot           fun(self: fml.types.collection.IObservable): fml.types.T
----@field public next                   fun(self: fml.types.collection.IObservable, value: fml.types.T, options?: fml.types.collection.IObservableNextOptions):nil
+---@field public next                   fun(self: fml.types.collection.IObservable, value: fml.types.T, options?: fml.types.collection.IObservableNextOptions):boolean

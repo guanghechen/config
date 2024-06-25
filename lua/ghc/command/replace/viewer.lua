@@ -1,12 +1,12 @@
+local Printer = fml.ui.Printer
 local Previewer = require("ghc.command.replace.previewer")
 local constants = require("ghc.constant.command")
-local Printer = require("ghc.ui.printer")
 local buf_delete_augroup = vim.api.nvim_create_augroup("ghc_command_replace_view_buf_del", { clear = true })
 
 ---@class ghc.command.replace.Viewer
 ---@field private state         ghc.command.replace.State
 ---@field private bufnr         integer|nil
----@field private printer       ghc.ui.Printer
+---@field private printer       fml.ui.Printer
 ---@field private previewer     ghc.command.replace.Previewer
 ---@field private cfg_name_len  integer
 ---@field private cursor_row    integer
@@ -418,7 +418,7 @@ function M:internal_render_cfg(data)
     local left = fml.string.pad_start(title, cfg_name_len, " ") .. ": " ---@type string
     local value_start_pos = cfg_name_len + 2 ---@type integer
 
-    ---@type ghc.ui.printer.ILineHighlight[]
+    ---@type fml.ui.printer.ILineHighlight[]
     local highlights = {
       { cstart = 0, cend = invisible_width, hlname = "GhcReplaceInvisible" },
       { cstart = invisible_width, cend = cfg_name_len, hlname = "GhcReplaceOptName" },
@@ -513,7 +513,7 @@ function M:internal_render_result(data, result)
         for _2, block_match in ipairs(file_item.matches) do
           local text = block_match.text
           for i, line in ipairs(block_match.lines) do
-            ---@type ghc.ui.printer.ILineHighlight[]
+            ---@type fml.ui.printer.ILineHighlight[]
             local match_highlights = {
               { cstart = 0, cend = 1, hlname = "GhcReplaceFence" },
             }
@@ -549,7 +549,7 @@ function M:internal_render_result(data, result)
           local text = block_match.text ---@type string
           local start_lnum = _block_match.lnum ---@type integer
           for i, line in ipairs(block_match.lines) do
-            ---@type ghc.ui.printer.ILineHighlight[]
+            ---@type fml.ui.printer.ILineHighlight[]
             local match_highlights = {
               { cstart = 0, cend = 1, hlname = "GhcReplaceFence" },
             }
@@ -581,7 +581,7 @@ function M:internal_render_result(data, result)
 end
 
 ---@param line           string
----@param highlights     ?ghc.ui.printer.ILineHighlight[]
+---@param highlights     ?fml.ui.printer.ILineHighlight[]
 ---@param meta           ?ghc.types.command.replace.main.ILineMeta
 ---@return nil
 function M:internal_print(line, highlights, meta)

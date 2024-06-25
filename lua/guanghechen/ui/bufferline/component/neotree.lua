@@ -1,5 +1,5 @@
 ---@type boolean
-local transparency = ghc.context.theme.transparency:get_snapshot()
+local transparency = ghc.context.shared.transparency:get_snapshot()
 
 local function get_neotree_width()
   for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do

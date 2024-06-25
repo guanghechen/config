@@ -1,4 +1,4 @@
----@class ghc.types.ui.theme.IColors
+---@class fml.types.ui.theme.IColors
 ---@field public  white                 string
 ---@field public  darker_black          string
 ---@field public  black                 string
@@ -34,14 +34,14 @@
 ---@field public  diff_delete_hl        string
 ---@field public  diff_add_hl           string
 
----@class ghc.types.ui.theme.IScheme
----@field public mode                   ghc.enums.theme.Mode
----@field public colors                 ghc.types.ui.theme.IColors
+---@class fml.types.ui.theme.IScheme
+---@field public mode                   fml.enums.theme.Mode
+---@field public colors                 fml.types.ui.theme.IColors
 
----@class ghc.types.ui.theme.IHighlightConfig
----@field public fg                     ?ghc.enums.theme.Color|"none"
----@field public bg                     ?ghc.enums.theme.Color|"none"
----@field public sp                     ?ghc.enums.theme.Color|"none"
+---@class fml.types.ui.theme.IHighlightConfig
+---@field public fg                     ?fml.enums.theme.Color|"none"
+---@field public bg                     ?fml.enums.theme.Color|"none"
+---@field public sp                     ?fml.enums.theme.Color|"none"
 ---@field public blend                  ?integer  0-100 [0, 100]
 ---@field public bold                   ?boolean
 ---@field public standout               ?boolean
@@ -56,20 +56,20 @@
 ---@field public nocombine              ?boolean
 ---@field public link                   ?string
 
----@class ghc.types.ui.theme.IHighlightGroup : vim.api.keyset.highlight
+---@class fml.types.ui.theme.IHighlightGroup : vim.api.keyset.highlight
 
----@class ghc.types.ui.theme.IApplyParams
----@field public scheme                 ghc.types.ui.theme.IScheme
+---@class fml.types.ui.theme.IApplyParams
+---@field public scheme                 fml.types.ui.theme.IScheme
 ---@field public nsnr                   integer
 
----@class ghc.types.ui.theme.ICompileParams
----@field public scheme                 ghc.types.ui.theme.IScheme
+---@class fml.types.ui.theme.ICompileParams
+---@field public scheme                 fml.types.ui.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
----@class ghc.types.ui.ITheme
----@field public apply                  fun(self: ghc.types.ui.ITheme, params: ghc.types.ui.theme.IApplyParams): nil
----@field public compile                fun(self: ghc.types.ui.ITheme, params: ghc.types.ui.theme.ICompileParams): nil
----@field public register               fun(self: ghc.types.ui.ITheme, hlname: string, hlconfig: ghc.types.ui.theme.IHighlightConfig): ghc.types.ui.ITheme
----@field public registers              fun(self: ghc.types.ui.ITheme, hlconfig_map: table<string, ghc.types.ui.theme.IHighlightConfig>): ghc.types.ui.ITheme
----@field public resolve                fun(self: ghc.types.ui.ITheme, scheme: ghc.types.ui.theme.IScheme): table<string, ghc.types.ui.theme.IHighlightGroup>
+---@class fml.types.ui.ITheme
+---@field public apply                  fun(self: fml.types.ui.ITheme, params: fml.types.ui.theme.IApplyParams): nil
+---@field public compile                fun(self: fml.types.ui.ITheme, params: fml.types.ui.theme.ICompileParams): nil
+---@field public register               fun(self: fml.types.ui.ITheme, hlname: string, hlconfig: fml.types.ui.theme.IHighlightConfig): fml.types.ui.ITheme
+---@field public registers              fun(self: fml.types.ui.ITheme, hlconfig_map: table<string, fml.types.ui.theme.IHighlightConfig>): fml.types.ui.ITheme
+---@field public resolve                fun(self: fml.types.ui.ITheme, scheme: fml.types.ui.theme.IScheme): table<string, fml.types.ui.theme.IHighlightGroup>

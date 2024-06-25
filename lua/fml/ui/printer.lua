@@ -1,4 +1,4 @@
----@class ghc.ui.Printer
+---@class fml.ui.Printer
 ---@field public nsnr                   integer
 ---@field bufnr                         integer
 ---@field lnum                          integer
@@ -6,12 +6,12 @@
 local M = {}
 M.__index = M
 
----@class ghc.ui.printer.IProps
+---@class fml.ui.printer.IProps
 ---@field public nsnr                   integer
 ---@field public bufnr                  integer
 
----@param props ghc.ui.printer.IProps
----@return ghc.ui.Printer
+---@param props fml.ui.printer.IProps
+---@return fml.ui.Printer
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -23,13 +23,15 @@ function M.new(props)
   return self
 end
 
+---@return nil
 function M:clear()
   self.lnum = 0
   self.line_metas = {}
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, {})
 end
 
----@param opts ghc.ui.printer.IProps
+---@param opts fml.ui.printer.IProps
+---@return nil
 function M:reset(opts)
   self.nsnr = opts.nsnr
   self.bufnr = opts.bufnr
@@ -47,7 +49,7 @@ function M:get_current_lnum()
 end
 
 ---@param line           string
----@param highlights     ?ghc.ui.printer.ILineHighlight
+---@param highlights     ?fml.ui.printer.ILineHighlight
 ---@param meta           ?any
 ---@return nil
 function M:print(line, highlights, meta)
