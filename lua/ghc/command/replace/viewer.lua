@@ -523,7 +523,7 @@ function M:internal_render_result(data, result)
             for _3, piece in ipairs(line.p) do
               table.insert(
                 match_highlights,
-                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "GhcReplaceTextDeleted" }
+                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "GhcReplaceOptSearchPattern" }
               )
             end
             self:internal_print(

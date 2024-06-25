@@ -10,22 +10,20 @@ end
 
 function M.transparency()
   local next_transparency = not ghc.context.theme.transparency:get_snapshot() ---@type boolean
-  ghc.context.theme.toggle_scheme({ transparency = next_transparency })
+  ghc.context.theme.toggle_scheme({ transparency = next_transparency, persistent = true })
 
   require("nvconfig").ui.transparency = ghc.context.theme.transparency:get_snapshot()
   require("base46").load_all_highlights()
-  ghc.context.theme.reload_theme({ force = true })
 end
 
 function M.theme()
   local darken = ghc.context.theme.mode:get_snapshot() == "darken" ---@type boolean
   local next_mode = darken and "lighten" or "darken"
-  ghc.context.theme.toggle_scheme({ mode = next_mode })
+  ghc.context.theme.toggle_scheme({ mode = next_mode, persistent = true })
 
   local current_theme = ghc.context.theme.mode:get_snapshot() == "darken" and "onedark" or "one_light" ---@type string
   require("nvconfig").ui.theme = current_theme
   require("base46").load_all_highlights()
-  ghc.context.theme.reload_theme({ force = true })
 end
 
 function M.relative_line_number()

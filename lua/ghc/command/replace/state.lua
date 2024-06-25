@@ -86,9 +86,9 @@ function M:get_value(key)
 end
 
 ---@param key ghc.enums.command.replace.StateKey
----@param val string|boolean|ghc.enums.command.replace.Mode
+---@param val string|boolean|ghc.enums.command.replace.Mode|nil
 function M:set_value(key, val)
-  if self.data[key] ~= val then
+  if val ~= nil and self.data[key] ~= val then
     self.data[key] = val
     if key ~= "mode" and key ~= "replace_pattern" then
       self.dirty_search = true
@@ -105,10 +105,12 @@ function M:toggle_flag(flag_name)
   self:set_value(flag_name, next_value)
 end
 
+---@return boolean
 function M:is_dirty_search()
   return self.dirty_search
 end
 
+---@return boolean
 function M:is_dirty_replace()
   return self.dirty_replace
 end
