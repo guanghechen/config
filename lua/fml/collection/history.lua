@@ -1,3 +1,5 @@
+local CircularQueue = require("fml.collection.circular_queue")
+
 ---@class fml.collection.History : fml.types.collection.IHistory
 ---@field private _comparator           fun(x: fml.types.T, y: fml.types.T): number
 ---@field private _name                 string
@@ -19,7 +21,7 @@ function M.new(props)
   self._name = props.name
   self._comparator = props.comparator
   self._present_idx = 0
-  self._stack = fml.collection.CircularQueue.new({ capacity = props.max_count })
+  self._stack = CircularQueue.new({ capacity = props.max_count })
 
   return self
 end

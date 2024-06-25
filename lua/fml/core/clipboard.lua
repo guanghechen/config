@@ -1,3 +1,4 @@
+local os = require("fml.core.os")
 local path = require("fml.core.path")
 local tmux = require("fml.core.tmux")
 local reporter = require("fml.core.reporter")
@@ -85,10 +86,10 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
 end
 
 function M.get_clipboard()
-  if fml.os.is_wsl() then
+  if os.is_wsl() then
     return wsl_clipboard()
   end
-  if fml.os.is_mac() then
+  if os.is_mac() then
     if vim.env.TMUX ~= nil then
       local fake_clipboard_filepath = tmux.get_tmux_env_value("ghc_use_fake_clipboard")
       if fake_clipboard_filepath ~= nil and path.is_exist(fake_clipboard_filepath) then

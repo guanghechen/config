@@ -1,6 +1,8 @@
 local Observable = require("fml.collection.observable")
 local Viewmodel = require("fml.collection.viewmodel")
 local path = require("fml.core.path")
+local reporter = require("fml.core.reporter")
+local Theme = require("fml.ui.theme")
 local watch_observables = require("fml.fn.watch_observables")
 local gen_hlconfig_map = require("fml.context.theme.hlconfig")
 
@@ -32,7 +34,7 @@ function M.toggle_scheme(params)
 
   local present_scheme, scheme = pcall(require, "fml.context.theme.scheme." .. mode)
   if not present_scheme then
-    fml.reporter.error({
+    reporter.error({
       from = "fml.context.theme",
       subject = "toggle_scheme",
       message = "Cannot find scheme",
@@ -42,7 +44,7 @@ function M.toggle_scheme(params)
   end
 
   local hlconfig_map = gen_hlconfig_map({ transparency = transparency })
-  local theme = fml.ui.Theme.new():registers(hlconfig_map)
+  local theme = Theme.new():registers(hlconfig_map)
   if persistent then
     theme:compile({ nsnr = 0, scheme = scheme, filepath = cache_theme_filepath })
     dofile(cache_theme_filepath)
@@ -58,7 +60,7 @@ end
 ---@return nil
 function M.reload_theme(params)
   local force = params.force or false ---@type boolean
-  if force or not fml.path.is_exist(cache_theme_filepath) then
+  if force or not path.is_exist(cache_theme_filepath) then
     local mode = M.mode:get_snapshot() ---@type fml.enums.theme.Mode
     local transparency = M.transparency:get_snapshot() ---@type boolean
     M.toggle_scheme({ mode = mode, transparency = transparency, persistent = true, force = true })
