@@ -1,22 +1,14 @@
 -- This file  needs to have same structure as nvconfig.lua
 -- https://github.com/NvChad/NvChad/blob/v2.5/lua/nvconfig.lua
 
----@type boolean
-local transparency = fml.context.shared.transparency:get_snapshot()
-
 local bufferline = require("ghc.ui.bufferline")
 local statusline = require("ghc.ui.statusline")
-local theme_integrations = require("ghc.ui.theme.integration")
 
 ---@type ChadrcConfig
 local M = {}
 
 M.ui = {
-  hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, theme_integrations, {
-    FlashBackdrop = { fg = "grey_fg", bg = "none", italic = true },
-    FlashCursor = { fg = "red", bg = transparency and "none" or "grey" },
-    FlashLabel = { fg = "white", bg = transparency and "none" or "grey" },
-    FlashMatch = { fg = "cyan", bg = transparency and "none" or "grey" },
+  hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, {
     ghc_DiffAdd_left = { bg = "#FFE0E0", fg = "none" },
     ghc_DiffDelete_left = { bg = "#FFE0E0", fg = "none" },
     ghc_DiffChange_left = { bg = "#FFE0E0", fg = "none" },

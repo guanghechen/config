@@ -1,4 +1,4 @@
----@class fml.types.api.highlight.IColors
+---@class fml.types.ui.theme.IColors
 ---@field public  white                 string
 ---@field public  darker_black          string
 ---@field public  black                 string
@@ -34,14 +34,14 @@
 ---@field public  diff_delete_hl        string
 ---@field public  diff_add_hl           string
 
----@class fml.types.api.highlight.IPalette
----@field public scheme                 fml.enums.highlight.Theme
----@field public colors                 fml.types.api.highlight.IColors
+---@class fml.types.ui.theme.IScheme
+---@field public mode                   fml.enums.theme.Mode
+---@field public colors                 fml.types.ui.theme.IColors
 
----@class fml.types.api.highlight.IHighlightConfig
----@field public fg                     ?fml.enums.highlight.Color|"none"
----@field public bg                     ?fml.enums.highlight.Color|"none"
----@field public sp                     ?fml.enums.highlight.Color|"none"
+---@class fml.types.ui.theme.IHighlightConfig
+---@field public fg                     ?fml.enums.theme.Color|"none"
+---@field public bg                     ?fml.enums.theme.Color|"none"
+---@field public sp                     ?fml.enums.theme.Color|"none"
 ---@field public blend                  ?integer  0-100 [0, 100]
 ---@field public bold                   ?boolean
 ---@field public standout               ?boolean
@@ -56,13 +56,20 @@
 ---@field public nocombine              ?boolean
 ---@field public link                   ?string
 
----@class fml.types.api.highlight.ISchemeCompileParams
----@field public palette                fml.types.api.highlight.IPalette
----@field public filepath               string
----@field public nsnr                   ?integer
+---@class fml.types.ui.theme.IHighlightGroup : vim.api.keyset.highlight
 
----@class fml.types.api.highlight.IScheme
----@field public apply                  fun(self: fml.types.api.highlight.IScheme, nsnr: integer, palette: fml.types.api.highlight.IPalette): nil
----@field public compile                fun(self: fml.types.api.highlight.IScheme, params: fml.types.api.highlight.ISchemeCompileParams): nil
----@field public register               fun(self: fml.types.api.highlight.IScheme, hlname: string, hlconfig: fml.types.api.highlight.IHighlightCOnfig): fml.types.api.highlight.IScheme
----@field public resolve                fun(self: fml.types.api.highlight.IScheme, palette: fml.types.api.highlight.IPalette): table<string, vim.api.keyset.highlight>
+---@class fml.types.ui.theme.IApplyParams
+---@field public scheme                 fml.types.ui.theme.IScheme
+---@field public nsnr                   integer
+
+---@class fml.types.ui.theme.ICompileParams
+---@field public scheme                 fml.types.ui.theme.IScheme
+---@field public filepath               string
+---@field public nsnr                   integer
+
+---@class fml.types.ui.ITheme
+---@field public apply                  fun(self: fml.types.ui.ITheme, params: fml.types.ui.theme.IApplyParams): nil
+---@field public compile                fun(self: fml.types.ui.ITheme, params: fml.types.ui.theme.ICompileParams): nil
+---@field public register               fun(self: fml.types.ui.ITheme, hlname: string, hlconfig: fml.types.ui.theme.IHighlightConfig): fml.types.ui.ITheme
+---@field public registers              fun(self: fml.types.ui.ITheme, hlconfig_map: table<string, fml.types.ui.theme.IHighlightConfig>): fml.types.ui.ITheme
+---@field public resolve                fun(self: fml.types.ui.ITheme, scheme: fml.types.ui.theme.IScheme): table<string, fml.types.ui.theme.IHighlightGroup>

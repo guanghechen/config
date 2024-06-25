@@ -1,20 +1,20 @@
----@param hlconfig                      fml.types.api.highlight.IHighlightConfig
----@param palette                       fml.types.api.highlight.IPalette
----@return vim.api.keyset.highlight
-local function resolve_hlgroup(hlconfig, palette)
+---@param hlconfig                      fml.types.ui.theme.IHighlightConfig
+---@param scheme                        fml.types.ui.theme.IScheme
+---@return fml.types.ui.theme.IHighlightGroup
+local function resolve_hlgroup(hlconfig, scheme)
   ---@diagnostic disable-next-line: assign-type-mismatch
-  local hlgroup = vim.deepcopy(hlconfig) ---@type vim.api.keyset.highlight
+  local hlgroup = vim.deepcopy(hlconfig) ---@type fml.types.ui.theme.IHighlightGroup
 
   if hlconfig.fg ~= nil then
-    hlgroup.fg = palette.colors[hlconfig.fg] or hlconfig.fg
+    hlgroup.fg = scheme.colors[hlconfig.fg] or hlconfig.fg
   end
 
   if hlconfig.bg ~= nil then
-    hlgroup.bg = palette.colors[hlconfig.bg] or hlconfig.bg
+    hlgroup.bg = scheme.colors[hlconfig.bg] or hlconfig.bg
   end
 
   if hlconfig.sp ~= nil then
-    hlgroup.sp = palette.colors[hlconfig.sp] or hlconfig.sp
+    hlgroup.sp = scheme.colors[hlconfig.sp] or hlconfig.sp
   end
   return hlgroup
 end

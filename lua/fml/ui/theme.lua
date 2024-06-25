@@ -1,56 +1,66 @@
 local resolve_hlgroup = require("fml.fn.resolve_hlgroup")
 
----@class fml.api.highlight.Scheme : fml.types.api.highlight.IScheme
----@field private hlconfig_map          table<string, fml.types.api.highlight.IHighlightConfig>
+---@class fml.ui.Theme : fml.types.ui.ITheme
+---@field private hlconfig_map          table<string, fml.types.ui.theme.IHighlightConfig>
 local M = {}
 M.__index = M
 
----@return fml.api.highlight.Scheme
+---@return fml.ui.Theme
 function M.new()
   local self = setmetatable({}, M)
   self.hlconfig_map = {}
   return self
 end
 
----@param nsnr                          integer
----@param palette                       fml.types.api.highlight.IPalette
+---@param params                        fml.types.ui.theme.IApplyParams
 ---@return nil
-function M:apply(nsnr, palette)
+function M:apply(params)
+  local nsnr = params.nsnr ---@type integer
+  local scheme = params.scheme ---@type fml.types.ui.theme.IScheme
   for hlname, hlconfig in pairs(self.hlconfig_map) do
-    local hlgroup = resolve_hlgroup(hlconfig, palette)
+    local hlgroup = resolve_hlgroup(hlconfig, scheme)
     vim.api.nvim_set_hl(nsnr, hlname, hlgroup)
   end
 end
 
 ---@param hlname                        string
----@param hlconfig                      fml.types.api.highlight.IHighlightConfig
----@return fml.api.highlight.Scheme
+---@param hlconfig                      fml.types.ui.theme.IHighlightConfig
+---@return fml.ui.Theme
 function M:register(hlname, hlconfig)
   self.hlconfig_map[hlname] = hlconfig
   return self
 end
 
----@param palette                       fml.types.api.highlight.IPalette
----@return table<string, vim.api.keyset.highlight>
-function M:resolve(palette)
-  local hlgroups = {} ---@type table<string, vim.api.keyset.highlight>
+---@param hlconfig_map                  table<string, fml.types.ui.theme.IHighlightConfig>
+---@return fml.ui.Theme
+function M:registers(hlconfig_map)
+  for hlname, hlconfig in pairs(hlconfig_map) do
+    self.hlconfig_map[hlname] = hlconfig
+  end
+  return self
+end
+
+---@param scheme                        fml.types.ui.theme.IScheme
+---@return table<string, fml.types.ui.theme.IHighlightGroup>
+function M:resolve(scheme)
+  local hlgroups = {} ---@type table<string, fml.types.ui.theme.IHighlightGroup>
   for hlname, hlconfig in pairs(self.hlconfig_map) do
-    local hlgroup = resolve_hlgroup(hlconfig, palette) ---@type vim.api.keyset.highlight
+    local hlgroup = resolve_hlgroup(hlconfig, scheme) ---@type fml.types.ui.theme.IHighlightGroup
     hlgroups[hlname] = hlgroup
   end
   return hlgroups
 end
 
----@param params                        fml.types.api.highlight.ISchemeCompileParams
+---@param params                        fml.types.ui.theme.ICompileParams
 ---@return nil
 function M:compile(params)
-  local palette = params.palette ---@type fml.types.api.highlight.IPalette
+  local scheme = params.scheme ---@type fml.types.ui.theme.IScheme
   local filepath = params.filepath ---@type string
   local nsnr = tostring(params.nsnr or 0) ---@type string
 
   local hlgroup_strs = {} ---@type string[]
   for hlname, hlconfig in pairs(self.hlconfig_map) do
-    local hlgroup = resolve_hlgroup(hlconfig, palette) ---@type vim.api.keyset.highlight
+    local hlgroup = resolve_hlgroup(hlconfig, scheme) ---@type fml.types.ui.theme.IHighlightGroup
     local hlgroup_fields = {} ---@type string[]
     for key, value in pairs(hlgroup) do
       local value_type = type(value) ---@type string

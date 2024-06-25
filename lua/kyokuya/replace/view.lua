@@ -424,15 +424,15 @@ function M:internal_render_cfg(data)
 
     ---@type kyokuya.replace.IReplaceViewLineHighlights[]
     local highlights = {
-      { cstart = 0, cend = invisible_width, hlname = "kyokuya_invisible" },
-      { cstart = invisible_width, cend = cfg_name_len, hlname = "kyokuya_replace_cfg_name" },
+      { cstart = 0, cend = invisible_width, hlname = "KyokuyaReplaceInvisible" },
+      { cstart = invisible_width, cend = cfg_name_len, hlname = "KyokuyaReplaceOptName" },
     }
 
     if flags ~= nil and #flags > 0 then
       for _, flag in ipairs(flags) do
         local extra = " " .. flag.icon .. " " ---@type string
         local next_value_start_pos = value_start_pos + #extra ---@type integer
-        local hlflag = flag.enabled and "kyokuya_replace_flag_enabled" or "kyokuya_replace_flag"
+        local hlflag = flag.enabled and "KyokuyaReplaceFlagEnabled" or "KyokuyaReplaceFlag"
 
         left = left .. extra
         table.insert(highlights, {
@@ -453,18 +453,18 @@ function M:internal_render_cfg(data)
   local mode_indicator = data.mode == "search" and "[Search]" or "[Replace]"
   self:internal_print(
     mode_indicator .. " Press ? for mappings",
-    { { cstart = 0, cend = -1, hlname = "kyokuya_replace_usage" } }
+    { { cstart = 0, cend = -1, hlname = "KyokuyaReplaceUsage" } }
   )
-  print_cfg_field("cwd", "CWD", "kyokuya_replace_cfg_value")
-  print_cfg_field("search_paths", "Paths", "kyokuya_replace_cfg_value")
-  print_cfg_field("include_patterns", "Include", "kyokuya_replace_cfg_value")
-  print_cfg_field("exclude_patterns", "Exclude", "kyokuya_replace_cfg_value")
-  print_cfg_field("search_pattern", "Search", "kyokuya_replace_cfg_search_pattern", {
+  print_cfg_field("cwd", "CWD", "KyokuyaReplaceOptValue")
+  print_cfg_field("search_paths", "Paths", "KyokuyaReplaceOptValue")
+  print_cfg_field("include_patterns", "Include", "KyokuyaReplaceOptValue")
+  print_cfg_field("exclude_patterns", "Exclude", "KyokuyaReplaceOptValue")
+  print_cfg_field("search_pattern", "Search", "KyokuyaReplaceOptSearchPattern", {
     { icon = "󰑑", enabled = data.flag_regex },
     { icon = "", enabled = data.flag_case_sensitive },
   })
   if data.mode == "replace" then
-    print_cfg_field("replace_pattern", "Replace", "kyokuya_replace_cfg_replace_pattern")
+    print_cfg_field("replace_pattern", "Replace", "KyokuyaReplaceOptReplacePattern")
   end
 end
 ---Render the search/replace options
@@ -497,7 +497,7 @@ function M:internal_render_result(data, result)
 
     self:internal_print(
       "┌─────────────────────────────────────────────────────────────────────────────",
-      { { cstart = 0, cend = -1, hlname = "kyokuya_replace_result_fence" } }
+      { { cstart = 0, cend = -1, hlname = "KyokuyaReplaceFence" } }
     )
 
     local lnum_width = #tostring(maximum_lnum)
@@ -509,7 +509,7 @@ function M:internal_render_result(data, result)
 
       self:internal_print(fileicon .. " " .. filepath, {
         { cstart = 0, cend = 2, hlname = fileicon_highlight },
-        { cstart = 2, cend = -1, hlname = "kyokuya_replace_filepath" },
+        { cstart = 2, cend = -1, hlname = "KyokuyaReplaceFilepath" },
       }, { filepath = filepath })
 
       if mode == "search" then
@@ -519,7 +519,7 @@ function M:internal_render_result(data, result)
           for i, line in ipairs(block_match.lines) do
             ---@type kyokuya.replace.IReplaceViewLineHighlights[]
             local match_highlights = {
-              { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
+              { cstart = 0, cend = 1, hlname = "KyokuyaReplaceFence" },
             }
             local padding = i > 1 and continous_line_padding
               or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
@@ -527,7 +527,7 @@ function M:internal_render_result(data, result)
             for _3, piece in ipairs(line.p) do
               table.insert(
                 match_highlights,
-                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "kyokuya_replace_text_deleted" }
+                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "KyokuyaReplaceTextDeleted" }
               )
             end
             self:internal_print(
@@ -555,13 +555,13 @@ function M:internal_render_result(data, result)
           for i, line in ipairs(block_match.lines) do
             ---@type kyokuya.replace.IReplaceViewLineHighlights[]
             local match_highlights = {
-              { cstart = 0, cend = 1, hlname = "kyokuya_replace_result_fence" },
+              { cstart = 0, cend = 1, hlname = "KyokuyaReplaceFence" },
             }
             local padding = i > 1 and continous_line_padding
               or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
-              local hlname = piece.i % 2 == 0 and "kyokuya_replace_text_deleted" or "kyokuya_replace_text_added" ---@type string
+              local hlname = piece.i % 2 == 0 and "KyokuyaReplaceTextDeleted" or "KyokuyaReplaceTextAdded" ---@type string
               table.insert(
                 match_highlights,
                 { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = hlname }
@@ -579,7 +579,7 @@ function M:internal_render_result(data, result)
 
     self:internal_print(
       "└─────────────────────────────────────────────────────────────────────────────",
-      { { cstart = 0, cend = -1, hlname = "kyokuya_replace_result_fence" } }
+      { { cstart = 0, cend = -1, hlname = "KyokuyaReplaceFence" } }
     )
   end
 end

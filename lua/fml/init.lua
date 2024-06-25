@@ -1,7 +1,6 @@
 ---@class fml.api
 local api = {
   buffer = require("fml.api.buffer"),
-  highlight = require("fml.api.highlight"),
   window = require("fml.api.window"),
 }
 
@@ -22,11 +21,13 @@ local collection = {
 local context = {
   replace = require("fml.context.replace"),
   shared = require("fml.context.shared"),
+  theme = require("fml.context.theme"),
 }
 
 ---@class fml.core
 local core = {
   clipboard = require("fml.core.clipboard"),
+  fs = require("fml.core.fs"),
   json = require("fml.core.json"),
   md5 = require("fml.core.md5"),
   os = require("fml.core.os"),
@@ -58,6 +59,7 @@ local ui = {
   Input = require("fml.ui.input"),
   Printer = require("fml.ui.printer"),
   Textarea = require("fml.ui.textarea"),
+  Theme = require("fml.ui.theme"),
   icons = require("fml.ui.icons"),
 }
 

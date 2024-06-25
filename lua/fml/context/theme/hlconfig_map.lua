@@ -1,5 +1,30 @@
-return {
-  -- trouble
+---@type table<string, fml.types.ui.theme.IHighlightConfig>
+local hlconfig_map = {
+  ---override
+  CursorLine = { bg = "one_bg2" },
+  Visual = { bg = "light_grey" },
+
+  ---flash
+  FlashBackdrop = { fg = "grey_fg", bg = "none", italic = true },
+  FlashCursor = { fg = "red", bg = "grey" },
+  FlashLabel = { fg = "white", bg = "grey" },
+  FlashMatch = { fg = "cyan", bg = "grey" },
+
+  ---kyokuya-replace
+  KyokuyaReplaceFilepath = { fg = "blue", bg = "none" },
+  KyokuyaReplaceFlag = { fg = "white", bg = "grey" },
+  KyokuyaReplaceFlagEnabled = { fg = "black", bg = "baby_pink" },
+  KyokuyaReplaceFence = { fg = "grey", bg = "none" },
+  KyokuyaReplaceInvisible = { fg = "none", bg = "none" },
+  KyokuyaReplaceOptName = { fg = "blue", bg = "none", bold = true },
+  KyokuyaReplaceOptReplacePattern = { fg = "diff_add_hl", bg = "none" },
+  KyokuyaReplaceOptSearchPattern = { fg = "diff_delete_hl", bg = "none" },
+  KyokuyaReplaceOptValue = { fg = "yellow", bg = "none" },
+  KyokuyaReplaceTextAdded = { fg = "diff_add_hl", bg = "none" },
+  KyokuyaReplaceTextDeleted = { fg = "diff_delete_hl", strikethrough = true },
+  KyokuyaReplaceUsage = { fg = "grey_fg2", bg = "none" },
+
+  ---trouble
   TroubleCount = { fg = "pink" },
   TroubleCode = { fg = "white" },
   TroubleWarning = { fg = "orange" },
@@ -24,7 +49,7 @@ return {
   TroubleLocation = { fg = "red" },
   TroubleIndent = { link = "Comment" },
 
-  -- vim-notify
+  ---vim-notify
   NotifyERRORBorder = { fg = "red" },
   NotifyERRORIcon = { fg = "red" },
   NotifyERRORTitle = { fg = "red" },
@@ -40,4 +65,8 @@ return {
   NotifyTRACEBorder = { fg = "purple" },
   NotifyTRACEIcon = { fg = "purple" },
   NotifyTRACETitle = { fg = "purple" },
+
+  ---
 }
+
+return hlconfig_map
