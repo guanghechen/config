@@ -1,7 +1,7 @@
----@class fml.ui.icons
+---@class ghc.ui.icons
 local M = {}
 
----@class fml.ui.icons.kind
+---@class ghc.ui.icons.kind
 M.kind = {
   Array = "[]",
   --Boolean = "",
@@ -58,7 +58,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class fml.ui.icons.type
+---@class ghc.ui.icons.type
 M.type = {
   Array = "󰅪",
   Boolean = "",
@@ -68,7 +68,7 @@ M.type = {
   String = "󰉿",
 }
 
----@class fml.ui.icons.documents
+---@class ghc.ui.icons.documents
 M.documents = {
   Default = "",
   File = "",
@@ -78,7 +78,7 @@ M.documents = {
   Symlink = "",
 }
 
----@class fml.ui.icons.git
+---@class ghc.ui.icons.git
 M.git = {
   Add = "",
   Branch = "",
@@ -97,7 +97,7 @@ M.git = {
   Conflict = "",
 }
 
----@class fml.ui.icons.os
+---@class ghc.ui.icons.os
 M.os = {
   unix = "",
   mac = "",
@@ -105,7 +105,7 @@ M.os = {
   unknown = "",
 }
 
----@class fml.ui.icons.ui
+---@class ghc.ui.icons.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",
@@ -174,7 +174,7 @@ M.ui = {
   Window = "",
 }
 
----@class fml.ui.icons.diagnostics
+---@class ghc.ui.icons.diagnostics
 M.diagnostics = {
   Error = "",
   Warning = "",
@@ -189,7 +189,7 @@ M.diagnostics = {
   Hint_alt = "󰌶",
 }
 
----@class fml.ui.icons.misc
+---@class ghc.ui.icons.misc
 M.misc = {
   Campass = "󰀹",
   Code = "",
@@ -214,7 +214,7 @@ M.misc = {
   Vim = "",
 }
 
----@class fml.ui.icons.cmp
+---@class ghc.ui.icons.cmp
 M.cmp = {
   buffer = "",
   cmp_tabnine = "",
@@ -232,7 +232,7 @@ M.cmp = {
   undefined = "",
 }
 
----@class fml.ui.icons.dap
+---@class ghc.ui.icons.dap
 M.dap = {
   Breakpoint = "󰝥",
   BreakpointCondition = "󰟃",
@@ -249,7 +249,7 @@ M.dap = {
   Terminate = "󰝤",
 }
 
----@class fml.ui.icons.devicons
+---@class ghc.ui.icons.devicons
 M.devicons = {
   default_icon = {
     icon = "󰈚",

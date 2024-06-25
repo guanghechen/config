@@ -11,10 +11,10 @@ return {
   config = function()
     dofile(vim.g.base46_cache .. "lsp")
 
-    register_lsp_symbol("Error", fml.ui.icons.diagnostics.Error)
-    register_lsp_symbol("Info", fml.ui.icons.diagnostics.Information)
-    register_lsp_symbol("Hint", fml.ui.icons.diagnostics.Hint)
-    register_lsp_symbol("Warn", fml.ui.icons.diagnostics.Warning)
+    register_lsp_symbol("Error", ghc.ui.icons.diagnostics.Error)
+    register_lsp_symbol("Info", ghc.ui.icons.diagnostics.Information)
+    register_lsp_symbol("Hint", ghc.ui.icons.diagnostics.Hint)
+    register_lsp_symbol("Warn", ghc.ui.icons.diagnostics.Warning)
 
     vim.diagnostic.config({
       virtual_text = {

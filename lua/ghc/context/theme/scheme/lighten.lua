@@ -1,6 +1,6 @@
 -- https://github.com/NvChad/base46/blob/adb64a6ae70f8c61c5ab8892f07d29dafd4d47ad/lua/base46/themes/one_light.lua
 
----@type fml.types.ui.theme.IScheme
+---@type ghc.types.ui.theme.IScheme
 local M = {
   mode = "lighten",
   colors = {

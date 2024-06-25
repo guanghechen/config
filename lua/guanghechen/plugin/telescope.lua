@@ -45,8 +45,8 @@ return {
   "nvim-telescope/telescope.nvim",
   opts = {
     defaults = {
-      prompt_prefix = fml.ui.icons.ui.Telescope .. "  ",
-      selection_caret = fml.ui.icons.ui.ChevronRight .. " ", --" ",
+      prompt_prefix = ghc.ui.icons.ui.Telescope .. "  ",
+      selection_caret = ghc.ui.icons.ui.ChevronRight .. " ", --" ",
       border = {},
       borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
       color_devicons = true,

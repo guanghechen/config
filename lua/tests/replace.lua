@@ -1,6 +1,6 @@
 local Replacer = require("kyokuya.replace.replacer")
 
-fml.context.theme.toggle_scheme({ mode = "darken", force = true })
+ghc.context.theme.toggle_scheme({ mode = "darken", force = true })
 
 ---@type kyokuya.replace.Replacer
 local replacer = Replacer.new({

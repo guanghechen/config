@@ -1,4 +1,4 @@
----@alias fml.enums.theme.Color
+---@alias ghc.enums.theme.Color
 ---| "white"
 ---| "darker_black"
 ---| "black"
@@ -34,6 +34,6 @@
 ---| "diff_delete_hl"
 ---| "diff_add_hl"
 
----@alias fml.enums.theme.Mode
+---@alias ghc.enums.theme.Mode
 ---| "lighten"
 ---| "darken"

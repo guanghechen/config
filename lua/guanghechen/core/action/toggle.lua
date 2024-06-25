@@ -9,27 +9,27 @@ function M.flight_copilot()
 end
 
 function M.transparency()
-  local next_transparency = not fml.context.theme.transparency:get_snapshot() ---@type boolean
-  fml.context.theme.toggle_scheme({ transparency = next_transparency })
+  local next_transparency = not ghc.context.theme.transparency:get_snapshot() ---@type boolean
+  ghc.context.theme.toggle_scheme({ transparency = next_transparency })
 
-  require("nvconfig").ui.transparency = fml.context.theme.transparency:get_snapshot()
+  require("nvconfig").ui.transparency = ghc.context.theme.transparency:get_snapshot()
   require("base46").load_all_highlights()
 end
 
 function M.theme()
-  local darken = fml.context.theme.mode:get_snapshot() == "darken" ---@type boolean
+  local darken = ghc.context.theme.mode:get_snapshot() == "darken" ---@type boolean
   local next_mode = darken and "lighten" or "darken"
-  fml.context.theme.toggle_scheme({ mode = next_mode })
+  ghc.context.theme.toggle_scheme({ mode = next_mode })
 
-  local current_theme = fml.context.theme.mode:get_snapshot() == "darken" and "onedark" or "one_light" ---@type string
+  local current_theme = ghc.context.theme.mode:get_snapshot() == "darken" and "onedark" or "one_light" ---@type string
   require("nvconfig").ui.theme = current_theme
   require("base46").load_all_highlights()
 end
 
 function M.relative_line_number()
   ---@type boolean
-  local next_relativenumber = not fml.context.shared.relativenumber:get_snapshot()
-  fml.context.shared.relativenumber:next(next_relativenumber)
+  local next_relativenumber = not ghc.context.shared.relativenumber:get_snapshot()
+  ghc.context.shared.relativenumber:next(next_relativenumber)
 
   local bufnr = vim.api.nvim_get_current_buf()
 

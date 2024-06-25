@@ -1,5 +1,5 @@
 local function test_compile_highlights()
-  local theme = fml.ui.Theme
+  local theme = ghc.ui.Theme
     .new()
     :register("KyokuyaReplaceInvisible", { fg = "none", bg = "none" })
     :register("KyokuyaReplaceOptName", { fg = "blue", bg = "none", bold = true })
@@ -14,7 +14,7 @@ local function test_compile_highlights()
     :register("KyokuyaReplaceTextAdded", { fg = "diff_add_hl", bg = "none" })
     :register("KyokuyaReplaceUsage", { fg = "grey_fg2", bg = "none" })
 
-  local scheme = require("fml.context.theme.scheme.darken") ---@type fml.types.ui.theme.IScheme
+  local scheme = require("ghc.context.theme.scheme.darken") ---@type ghc.types.ui.theme.IScheme
   local hlgroup_strs = {} ---@type string[]
   for hlname, hlgroup in pairs(theme:resolve(scheme)) do
     local hlgroup_fields = {} ---@type string[]

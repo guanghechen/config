@@ -133,7 +133,7 @@ local function find_file(opts, force)
   opts.bufnr = find_file_context.bufnr
   opts.show_untracked = true
   opts.workspace = "CWD"
-  opts.use_regex = fml.context.replace.flag_regex:get_snapshot()
+  opts.use_regex = ghc.context.replace.flag_regex:get_snapshot()
 
   ---@type guanghechen.core.types.enum.FIND_FILE_SCOPE
   local scope0 = context_session.find_file_scope:get_snapshot()
@@ -168,13 +168,13 @@ local function find_file(opts, force)
       })
     end,
     toggle_enable_regex = function()
-      local next_flag_regex = fml.context.replace.flag_regex:get_snapshot() ---@type boolean
-      fml.context.replace.flag_regex:next(next_flag_regex)
+      local next_flag_regex = ghc.context.replace.flag_regex:get_snapshot() ---@type boolean
+      ghc.context.replace.flag_regex:next(next_flag_regex)
       opts.use_regex = next_flag_regex
       open_picker()
     end,
     toggle_case_sensitive = function()
-      fml.context.replace.flag_case_sensitive:next(not fml.context.replace.flag_case_sensitive:get_snapshot())
+      ghc.context.replace.flag_case_sensitive:next(not ghc.context.replace.flag_case_sensitive:get_snapshot())
       open_picker()
     end,
     change_scope_workspace = function()
@@ -211,10 +211,10 @@ local function find_file(opts, force)
       "--no-column",
       "--no-follow",
     }
-    if not fml.context.replace.flag_regex:get_snapshot() then
+    if not ghc.context.replace.flag_regex:get_snapshot() then
       table.insert(cmd, "--fixed-strings")
     end
-    if fml.context.replace.flag_case_sensitive:get_snapshot() then
+    if ghc.context.replace.flag_case_sensitive:get_snapshot() then
       table.insert(cmd, "--case-sensitive")
     else
       table.insert(cmd, "--ignore-case")

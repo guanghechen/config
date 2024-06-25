@@ -193,8 +193,8 @@ function M.autocmd_remember_spectre_prompt(opts)
       local replace_pattern = state.query.replace_query ---@type string
       local search_pattern = state.query.search_query ---@type string
 
-      fml.context.replace.search_pattern:next(search_pattern)
-      fml.context.replace.replace_pattern:next(replace_pattern)
+      ghc.context.replace.search_pattern:next(search_pattern)
+      ghc.context.replace.replace_pattern:next(replace_pattern)
 
       if sync_path then
         local query_path = state.query.path ---@type string
@@ -299,7 +299,7 @@ function M.autocmd_toggle_linenumber()
     group = augroup,
     callback = function()
       if vim.o.nu and vim.api.nvim_get_mode().mode == "n" then
-        if fml.context.shared.relativenumber:get_snapshot() then
+        if ghc.context.shared.relativenumber:get_snapshot() then
           vim.opt.relativenumber = true
         end
       end

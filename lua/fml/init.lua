@@ -17,13 +17,6 @@ local collection = {
   Viewmodel = require("fml.collection.viewmodel"),
 }
 
----@class fml.context
-local context = {
-  replace = require("fml.context.replace"),
-  shared = require("fml.context.shared"),
-  theme = require("fml.context.theme"),
-}
-
 ---@class fml.core
 local core = {
   clipboard = require("fml.core.clipboard"),
@@ -50,33 +43,19 @@ local fn = {
   is_observable = require("fml.fn.is_observable"),
   navigate_circular = require("fml.fn.navigate_circular"),
   navigate_limit = require("fml.fn.navigate_limit"),
-  resolve_hlgroup = require("fml.fn.resolve_hlgroup"),
   watch_observables = require("fml.fn.watch_observables"),
-}
-
----@class fml.ui
-local ui = {
-  Input = require("fml.ui.input"),
-  Printer = require("fml.ui.printer"),
-  Textarea = require("fml.ui.textarea"),
-  Theme = require("fml.ui.theme"),
-  icons = require("fml.ui.icons"),
 }
 
 ---@class fml : fml.core
 ---@field public api          fml.api
 ---@field public collection   fml.collection
----@field public context      fml.context
 ---@field public core         fml.core
 ---@field public fn           fml.fn
----@field public ui           fml.ui
 local fml = vim.tbl_extend("force", core, {
   api = api,
   collection = collection,
-  context = context,
   core = core,
   fn = fn,
-  ui = ui,
 })
 
 return fml

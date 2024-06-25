@@ -1,7 +1,7 @@
 local context_session = require("guanghechen.core.context.session")
 
 ---@type boolean
-local transparency = fml.context.theme.transparency:get_snapshot()
+local transparency = ghc.context.theme.transparency:get_snapshot()
 
 --- @class guanghechen.ui.statusline.component.find_file
 local M = {
@@ -33,8 +33,8 @@ end
 
 function M.renderer()
   local scope = context_session.find_file_scope:get_snapshot() ---@type guanghechen.core.types.enum.SEARCH_SCOPE
-  local enable_regex = fml.context.replace.flag_regex:get_snapshot() ---@type boolean
-  local enable_case_sensitive = fml.context.replace.flag_case_sensitive:get_snapshot() ---@type boolean
+  local enable_regex = ghc.context.replace.flag_regex:get_snapshot() ---@type boolean
+  local enable_case_sensitive = ghc.context.replace.flag_case_sensitive:get_snapshot() ---@type boolean
 
   local color_scope = "%#" .. M.name .. "_flag_scope#"
   local color_enable_regex = enable_regex and "%#" .. M.name .. "_flag_enabled#" or "%#" .. M.name .. "_flag#"

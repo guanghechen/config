@@ -1,14 +1,13 @@
-local Observable = require("fml.collection.observable")
-local Viewmodel = require("fml.collection.viewmodel")
-local path = require("fml.core.path")
-local watch_observables = require("fml.fn.watch_observables")
-local context_filepath = path.locate_session_filepath({ filename = "replace.json" })
+local Observable = fml.collection.Observable
+local Viewmodel = fml.collection.Viewmodel
 
----@alias fml.context.replace.IMode
+local context_filepath = fml.path.locate_session_filepath({ filename = "replace.json" })
+
+---@alias ghc.context.replace.IMode
 ---| "replace"
 ---| "search"
 
----@alias fml.context.replace.IDataKey
+---@alias ghc.context.replace.IDataKey
 ---|"cwd"
 ---|"mode"
 ---|"flag_regex"
@@ -19,9 +18,9 @@ local context_filepath = path.locate_session_filepath({ filename = "replace.json
 ---|"include_patterns"
 ---|"exclude_patterns"
 
----@class fml.context.replace.IData
+---@class ghc.context.replace.IData
 ---@field public cwd                  string
----@field public mode                 fml.context.replace.IMode
+---@field public mode                 ghc.context.replace.IMode
 ---@field public flag_regex           boolean
 ---@field public flag_case_sensitive  boolean
 ---@field public search_pattern       string
@@ -30,7 +29,7 @@ local context_filepath = path.locate_session_filepath({ filename = "replace.json
 ---@field public include_patterns     string
 ---@field public exclude_patterns     string
 
----@class fml.context.replace: fml.collection.Viewmodel
+---@class ghc.context.replace : fml.collection.Viewmodel
 ---@field public cwd                  fml.types.collection.IObservable
 ---@field public mode                 fml.types.collection.IObservable
 ---@field public flag_regex           fml.types.collection.IObservable
@@ -44,7 +43,7 @@ local context = Viewmodel.new({
   name = "context:session:replace",
   filepath = context_filepath,
 })
-  :register("cwd", Observable.from_value(path.cwd()), true, true)
+  :register("cwd", Observable.from_value(fml.path.cwd()), true, true)
   :register("mode", Observable.from_value("search"), true, true)
   :register("flag_regex", Observable.from_value(true), true, true)
   :register("flag_case_sensitive", Observable.from_value(true), true, true)
@@ -58,7 +57,7 @@ context:load()
 --context:auto_reload()
 
 --Auto refresh statusline
-watch_observables({
+fml.fn.watch_observables({
   context.flag_regex,
   context.flag_case_sensitive,
 }, function()

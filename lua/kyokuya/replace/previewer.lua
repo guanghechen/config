@@ -75,7 +75,7 @@ function M:preview(opts)
   vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
   vim.cmd(string.format("%sbufdo file %s/REPLACE_PREVIEW", bufnr, bufnr)) --- Rename the buf
   local nsnr = self.nsnr ---@type integer
-  local printer = fml.ui.Printer.new({ bufnr = bufnr, nsnr = nsnr })
+  local printer = ghc.ui.Printer.new({ bufnr = bufnr, nsnr = nsnr })
 
   ---@type fml.core.oxi.replace.IPreviewBlockItem
   local block_match = fml.oxi.replace_text_preview({

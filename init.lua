@@ -1,5 +1,5 @@
-local fml = require("fml")
-_G.fml = fml
+_G.fml = require("fml")
+_G.ghc = require("ghc")
 
 ---
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"

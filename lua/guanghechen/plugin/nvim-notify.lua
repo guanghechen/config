@@ -21,11 +21,11 @@ return {
       vim.api.nvim_win_set_config(win, { zindex = 100 })
     end,
     icons = {
-      ERROR = fml.ui.icons.diagnostics.Error,
-      WARN = fml.ui.icons.diagnostics.Warning,
-      INFO = fml.ui.icons.diagnostics.Information,
-      DEBUG = fml.ui.icons.ui.Bug,
-      TRACE = fml.ui.icons.ui.Pencil,
+      ERROR = ghc.ui.icons.diagnostics.Error,
+      WARN = ghc.ui.icons.diagnostics.Warning,
+      INFO = ghc.ui.icons.diagnostics.Information,
+      DEBUG = ghc.ui.icons.ui.Bug,
+      TRACE = ghc.ui.icons.ui.Pencil,
     },
   },
 }

@@ -1,5 +1,5 @@
 local kinds = {}
-for key, val in pairs(fml.ui.icons.kind) do
+for key, val in pairs(ghc.ui.icons.kind) do
   kinds[key] = val .. " "
 end
 
@@ -14,14 +14,14 @@ return {
         top = "│ ",
         middle = "├╴",
         last = "└╴",
-        fold_open = fml.ui.icons.ui.ArrowOpen .. " ",
-        fold_closed = fml.ui.icons.ui.ArrowClosed .. " ",
+        fold_open = ghc.ui.icons.ui.ArrowOpen .. " ",
+        fold_closed = ghc.ui.icons.ui.ArrowClosed .. " ",
         ws = "  ",
       },
-      folder_closed = fml.ui.icons.ui.Folder .. " ",
-      folder_open = fml.ui.icons.ui.FolderOpen .. " ",
-      fold_open = fml.ui.icons.ui.ArrowOpen .. " ", -- icon used for open folds
-      fold_closed = fml.ui.icons.ui.ArrowClosed .. " ", -- icon used for closed folds
+      folder_closed = ghc.ui.icons.ui.Folder .. " ",
+      folder_open = ghc.ui.icons.ui.FolderOpen .. " ",
+      fold_open = ghc.ui.icons.ui.ArrowOpen .. " ", -- icon used for open folds
+      fold_closed = ghc.ui.icons.ui.ArrowClosed .. " ", -- icon used for closed folds
       kinds = kinds,
     },
   },

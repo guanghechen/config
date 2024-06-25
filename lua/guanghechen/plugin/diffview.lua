@@ -75,13 +75,13 @@ return {
         end,
       },
       icons = { -- Only applies when use_icons is true.
-        folder_closed = fml.ui.icons.ui.Folder,
-        folder_open = fml.ui.icons.ui.FolderOpen,
+        folder_closed = ghc.ui.icons.ui.Folder,
+        folder_open = ghc.ui.icons.ui.FolderOpen,
       },
       signs = {
-        fold_closed = fml.ui.icons.ui.ArrowClosed,
-        fold_open = fml.ui.icons.ui.ArrowOpen,
-        done = fml.ui.icons.ui.Accepted,
+        fold_closed = ghc.ui.icons.ui.ArrowClosed,
+        fold_open = ghc.ui.icons.ui.ArrowOpen,
+        done = ghc.ui.icons.ui.Accepted,
       },
       keymaps = {
         disable_defaults = true, -- Disable the default keymaps

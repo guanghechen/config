@@ -23,7 +23,7 @@ end
 ---@field private state         kyokuya.replace.ReplaceState
 ---@field private nsnr          integer
 ---@field private bufnr         integer|nil
----@field private printer       fml.ui.Printer
+---@field private printer       ghc.ui.Printer
 ---@field private previewer     kyokuya.replace.ReplacePreviewer
 ---@field private cfg_name_len  integer
 ---@field private cursor_row    integer
@@ -41,7 +41,7 @@ function M.new(opts)
   self.state = state
   self.nsnr = nsnr
   self.bufnr = nil
-  self.printer = fml.ui.Printer.new({ bufnr = 0, nsnr = nsnr })
+  self.printer = ghc.ui.Printer.new({ bufnr = 0, nsnr = nsnr })
   self.previewer = Previewer.new({ state = state, nsnr = nsnr })
   self.cfg_name_len = 7
   self.cursor_row = 6
@@ -181,7 +181,7 @@ function M:internal_bind_keymaps(bufnr)
 
       cursor_col = math.max(cursor_col, 0)
       cursor_col = math.min(cursor_col, #lines[cursor_row])
-      local textarea = fml.ui.Textarea.new({
+      local textarea = ghc.ui.Textarea.new({
         title = "[" .. key .. "]",
         position = position,
       })
@@ -237,7 +237,7 @@ function M:internal_bind_keymaps(bufnr)
       cursor_col = math.max(cursor_col, 0)
       cursor_col = math.min(cursor_col, #lines[cursor_row])
 
-      local textarea = fml.ui.Textarea.new({
+      local textarea = ghc.ui.Textarea.new({
         title = "[" .. key .. "]",
         position = position,
       })
@@ -283,7 +283,7 @@ function M:internal_bind_keymaps(bufnr)
 
     local data = self.state:get_data() ---@type kyokuya.replace.IReplaceStateData
     local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
-    local textarea = fml.ui.Textarea.new({
+    local textarea = ghc.ui.Textarea.new({
       title = "[Replace options]",
       position = "center",
     })

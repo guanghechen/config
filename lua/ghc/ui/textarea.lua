@@ -1,6 +1,4 @@
-local reporter = require("fml.core.reporter")
-
----@class fml.ui.Textarea
+---@class ghc.ui.Textarea
 ---@field private _nui_popup            any|nil
 ---@field public title                  string
 ---@field public position               "center"|"cursor"
@@ -10,14 +8,14 @@ local reporter = require("fml.core.reporter")
 local M = {}
 M.__index = M
 
----@class fml.ui.Textarea.IProps
+---@class ghc.ui.Textarea.IProps
 ---@field public title                  string
 ---@field public position               "center"|"cursor"
 ---@field public width                  ?integer
 ---@field public height                 ?integer
 ---@field public win_options            ?table<string, any>
 
----@class fml.ui.Textarea.IOpenParams
+---@class ghc.ui.Textarea.IOpenParams
 ---@field public title                  ?string
 ---@field public position               ?"center"|"cursor"
 ---@field public value                  string[]
@@ -28,8 +26,8 @@ M.__index = M
 ---@field public win_options            ?table<string, any>
 ---@field public on_confirm              fun(next_value: string[]): nil
 
----@param props fml.ui.Textarea.IProps
----@return fml.ui.Textarea
+---@param props ghc.ui.Textarea.IProps
+---@return ghc.ui.Textarea
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -43,7 +41,7 @@ function M.new(props)
   return self
 end
 
----@param params fml.ui.Textarea.IOpenParams
+---@param params ghc.ui.Textarea.IOpenParams
 ---@return nil
 function M:open(params)
   local title = params.title or self.title ---@type string
@@ -55,8 +53,8 @@ function M:open(params)
   local ok_nui_popup, Popup = pcall(require, "nui.popup")
   local ok_nui_autocmd, nui_autocmd = pcall(require, "nui.utils.autocmd")
   if not ok_nui_popup then
-    reporter.error({
-      from = "fml.ui.popup",
+    fml.reporter.error({
+      from = "ghc.ui.popup",
       subject = "open",
       message = "Cannot find nui.popup",
       details = { title = title, value = initial_value, error = Popup },
@@ -64,8 +62,8 @@ function M:open(params)
     return nil
   end
   if not ok_nui_autocmd then
-    reporter.error({
-      from = "fml.ui.popup",
+    fml.reporter.error({
+      from = "ghc.ui.popup",
       subject = "open",
       message = "Cannot find nui.utils.autocmd",
       details = { title = title, value = initial_value, error = nui_autocmd },

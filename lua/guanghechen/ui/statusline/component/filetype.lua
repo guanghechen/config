@@ -1,5 +1,5 @@
 ---@type boolean
-local transparency = fml.context.theme.transparency:get_snapshot()
+local transparency = ghc.context.theme.transparency:get_snapshot()
 
 --- @class guanghechen.ui.statusline.component.filetype
 local M = {

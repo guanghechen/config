@@ -1,5 +1,5 @@
 ---@type boolean
-local transparency = fml.context.theme.transparency:get_snapshot()
+local transparency = ghc.context.theme.transparency:get_snapshot()
 
 --- @class guanghechen.ui.statusline.component.git
 local M = {
@@ -27,7 +27,7 @@ function M.renderer()
   local branch_name = git_status.head
 
   local color_text = "%#" .. M.name .. "_text#"
-  local text = " " .. fml.ui.icons.git.Branch .. " " .. branch_name .. " "
+  local text = " " .. ghc.ui.icons.git.Branch .. " " .. branch_name .. " "
   return color_text .. text
 end
 

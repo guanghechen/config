@@ -1,7 +1,7 @@
 local context_session = require("guanghechen.core.context.session")
 
 ---@type boolean
-local transparency = fml.context.theme.transparency:get_snapshot()
+local transparency = ghc.context.theme.transparency:get_snapshot()
 
 --- @class guanghechen.ui.statusline.component.copilot
 local M = {
@@ -38,7 +38,7 @@ end
 function M.renderer()
   local status = require("copilot.api").status.data
   local color = "%#" .. M.name .. "_status_" .. status.status .. "#"
-  return color .. " " .. fml.ui.icons.cmp.copilot .. " "
+  return color .. " " .. ghc.ui.icons.cmp.copilot .. " "
 end
 
 return M

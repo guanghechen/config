@@ -1,12 +1,12 @@
----@class fml.context.theme.hlconfig.IGenHighlightConfigMapParams
+---@class ghc.context.theme.hlconfig.IGenHighlightConfigMapParams
 ---@field public transparency           boolean
 
----@param params                        fml.context.theme.hlconfig.IGenHighlightConfigMapParams
----@return table<string, fml.types.ui.theme.IHighlightConfig>
+---@param params                        ghc.context.theme.hlconfig.IGenHighlightConfigMapParams
+---@return table<string, ghc.types.ui.theme.IHighlightConfig>
 local function gen_hlconfig_map(params)
   local transparency = params.transparency ---@type boolean
 
-  ---@type table<string, fml.types.ui.theme.IHighlightConfig>
+  ---@type table<string, ghc.types.ui.theme.IHighlightConfig>
   local hlconfig_map = {
     ---override
     CursorLine = { bg = "one_bg2" },

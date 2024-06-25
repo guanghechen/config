@@ -79,7 +79,7 @@ end
 
 local function build_search_text_command(prompt)
   if prompt then
-    fml.context.replace.search_pattern:next(prompt)
+    ghc.context.replace.search_pattern:next(prompt)
   end
 
   if not prompt or prompt == "" then
@@ -106,10 +106,10 @@ local function build_search_text_command(prompt)
     "--follow",
     "--vimgrep",
   }
-  if not fml.context.replace.flag_regex:get_snapshot() then
+  if not ghc.context.replace.flag_regex:get_snapshot() then
     table.insert(grep_cmd, "--fixed-strings")
   end
-  if fml.context.replace.flag_case_sensitive:get_snapshot() then
+  if ghc.context.replace.flag_case_sensitive:get_snapshot() then
     table.insert(grep_cmd, "--case-sensitive")
   else
     table.insert(grep_cmd, "--ignore-case")
@@ -212,11 +212,11 @@ local function search(opts)
   opts.bufnr = search_context.bufnr
   opts.show_untracked = true
   opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
-  opts.use_regex = fml.context.replace.flag_regex:get_snapshot()
+  opts.use_regex = ghc.context.replace.flag_regex:get_snapshot()
 
   local selected_text = fml.fn.get_selected_text()
   if selected_text and #selected_text > 1 then
-    fml.context.replace.search_pattern:next(selected_text)
+    ghc.context.replace.search_pattern:next(selected_text)
   end
 
   ---@type fun():nil
@@ -244,14 +244,14 @@ local function search(opts)
       })
     end,
     toggle_enable_regex = function()
-      local next_flag_regex = not fml.context.replace.flag_regex:get_snapshot() ---@type boolean
-      fml.context.replace.flag_regex:next(next_flag_regex)
+      local next_flag_regex = not ghc.context.replace.flag_regex:get_snapshot() ---@type boolean
+      ghc.context.replace.flag_regex:next(next_flag_regex)
       opts.use_regex = next_flag_regex
       open_picker()
     end,
     toggle_case_sensitive = function()
-      local next_flag_case_sensitive = not fml.context.replace.flag_case_sensitive:get_snapshot() ---@type boolean
-      fml.context.replace.flag_case_sensitive:next(next_flag_case_sensitive)
+      local next_flag_case_sensitive = not ghc.context.replace.flag_case_sensitive:get_snapshot() ---@type boolean
+      ghc.context.replace.flag_case_sensitive:next(next_flag_case_sensitive)
       open_picker()
     end,
     change_scope_workspace = function()
@@ -282,7 +282,7 @@ local function search(opts)
     local resolved_opts
     local picker_params = {
       prompt_title = "Search word (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = fml.context.replace.search_pattern:get_snapshot(),
+      default_text = ghc.context.replace.search_pattern:get_snapshot(),
       attach_mappings = function(prompt_bufnr)
         local function mapkey(mode, key, action, desc)
           vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })
@@ -326,7 +326,7 @@ local function search(opts)
       local make_entry_from_vimgrep = make_entry.gen_from_vimgrep(opts)
       local make_entry_from_file = make_entry.gen_from_file(opts)
       local entry_maker = function(...)
-        local last_prompt = fml.context.replace.search_pattern:get_snapshot()
+        local last_prompt = ghc.context.replace.search_pattern:get_snapshot()
         if not last_prompt or last_prompt == "" then
           return make_entry_from_file(...)
         else
