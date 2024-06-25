@@ -4,7 +4,7 @@ _G.fml = fml
 ---
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
 local function load_config(name)
-  pcall(require, "ghc." .. name)
+  pcall(require, "guanghechen." .. name)
 
   if vim.g.neovide then
     pcall(require, "neovide." .. name)
@@ -23,7 +23,7 @@ local function load_plugins()
   vim.opt.rtp:prepend(lazypath)
 
   -- load plugins
-  require("lazy").setup(require("ghc.plugin.lazy"))
+  require("lazy").setup(require("guanghechen.plugin.lazy"))
 end
 
 local function load_theme()

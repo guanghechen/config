@@ -1,8 +1,8 @@
 -- This file  needs to have same structure as nvconfig.lua
 -- https://github.com/NvChad/NvChad/blob/v2.5/lua/nvconfig.lua
 
-local bufferline = require("ghc.ui.bufferline")
-local statusline = require("ghc.ui.statusline")
+local bufferline = require("guanghechen.ui.bufferline")
+local statusline = require("guanghechen.ui.statusline")
 
 ---@type ChadrcConfig
 local M = {}
