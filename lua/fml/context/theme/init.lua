@@ -2,6 +2,7 @@ local Observable = require("fml.collection.observable")
 local Viewmodel = require("fml.collection.viewmodel")
 local path = require("fml.core.path")
 local watch_observables = require("fml.fn.watch_observables")
+local gen_hlconfig_map = require("fml.context.theme.hlconfig")
 
 local context_filepath = path.locate_context_filepath({ filename = "theme.json" }) ---@type string
 local cache_theme_filepath = path.locate_context_filepath({ filename = "theme" }) ---@type string
@@ -40,18 +41,7 @@ function M.toggle_scheme(params)
     return
   end
 
-  local present_hlconfig_map, hlconfig_map =
-    pcall(require, transparency and "fml.context.theme.hlconfig_map_transparency" or "fml.context.theme.hlconfig_map")
-  if not present_hlconfig_map then
-    fml.reporter.error({
-      from = "fml.context.theme",
-      subject = "toggle_scheme",
-      message = "Cannot find hlconfig map",
-      details = { mode = mode, transparency = transparency },
-    })
-    return
-  end
-
+  local hlconfig_map = gen_hlconfig_map({ transparency = transparency })
   local theme = fml.ui.Theme.new():registers(hlconfig_map)
   if persistent then
     theme:compile({ nsnr = 0, scheme = scheme, filepath = cache_theme_filepath })
