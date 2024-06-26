@@ -1,7 +1,7 @@
----@class ghc.ui.hlconfig.IGenHighlightConfigMapParams
+---@class ghc.ui.theme.hlconfig.IGenHighlightConfigMapParams
 ---@field public transparency           boolean
 
----@param params                        ghc.ui.hlconfig.IGenHighlightConfigMapParams
+---@param params                        ghc.ui.theme.hlconfig.IGenHighlightConfigMapParams
 ---@return table<string, fml.types.ui.theme.IHighlightConfig>
 local function gen_hlconfig_map(params)
   local transparency = params.transparency ---@type boolean

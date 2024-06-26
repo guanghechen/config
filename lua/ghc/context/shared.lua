@@ -1,4 +1,4 @@
-local gen_hlconfig_map = require("ghc.ui.hlconfig")
+local gen_hlconfig_map = require("ghc.ui.theme.hlconfig")
 local Theme = fml.ui.Theme
 local Observable = fml.collection.Observable
 local Viewmodel = fml.collection.Viewmodel
@@ -45,7 +45,7 @@ local function load_theme(params)
   local transparency = params.transparency ---@type boolean
   local persistent = params.persistent ---@type boolean
 
-  local present_scheme, scheme = pcall(require, "ghc.ui.scheme." .. mode)
+  local present_scheme, scheme = pcall(require, "ghc.ui.theme.scheme." .. mode)
   if not present_scheme then
     fml.reporter.error({
       from = "ghc.context.shared",

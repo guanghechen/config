@@ -14,7 +14,7 @@ local function test_compile_highlights()
     :register("GhcReplaceTextAdded", { fg = "diff_add_hl", bg = "none" })
     :register("GhcReplaceUsage", { fg = "grey_fg2", bg = "none" })
 
-  local scheme = require("ghc.ui.scheme.darken") ---@type fml.types.ui.theme.IScheme
+  local scheme = require("ghc.ui.theme.scheme.darken") ---@type fml.types.ui.theme.IScheme
   local hlgroup_strs = {} ---@type string[]
   for hlname, hlgroup in pairs(theme:resolve(scheme)) do
     local hlgroup_fields = {} ---@type string[]
