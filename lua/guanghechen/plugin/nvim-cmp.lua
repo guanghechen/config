@@ -37,7 +37,7 @@ return {
         fields = { "abbr", "kind", "menu" },
 
         format = function(_, item)
-          local icon = ghc.ui.icons.kind[item.kind]
+          local icon = fml.ui.icons.kind[item.kind]
           if icon then
             item.kind = icon -- .. " " .. item.kind
           end

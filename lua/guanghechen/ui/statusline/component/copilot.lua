@@ -38,7 +38,7 @@ end
 function M.renderer()
   local status = require("copilot.api").status.data
   local color = "%#" .. M.name .. "_status_" .. status.status .. "#"
-  return color .. " " .. ghc.ui.icons.cmp.copilot .. " "
+  return color .. " " .. fml.ui.icons.cmp.copilot .. " "
 end
 
 return M

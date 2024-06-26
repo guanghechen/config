@@ -27,7 +27,7 @@ function M.renderer()
   local branch_name = git_status.head
 
   local color_text = "%#" .. M.name .. "_text#"
-  local text = " " .. ghc.ui.icons.git.Branch .. " " .. branch_name .. " "
+  local text = " " .. fml.ui.icons.git.Branch .. " " .. branch_name .. " "
   return color_text .. text
 end
 

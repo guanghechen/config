@@ -18,7 +18,7 @@ end
 
 function M.renderer()
   local color_text = "%#" .. M.name .. "_text#"
-  local text = " " .. ghc.ui.icons.ui.Location .. " %l·%c "
+  local text = " " .. fml.ui.icons.ui.Location .. " %l·%c "
   return color_text .. text
 end
 

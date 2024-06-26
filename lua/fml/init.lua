@@ -55,6 +55,7 @@ local ui = {
   Printer = require("fml.ui.printer"),
   Textarea = require("fml.ui.textarea"),
   Theme = require("fml.ui.theme"),
+  icons = require("fml.ui.icons"),
 }
 
 ---@class fml : fml.std

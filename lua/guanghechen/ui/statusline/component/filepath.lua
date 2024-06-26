@@ -52,15 +52,15 @@ function M.renderer()
     local git_status = buffer_status_line.gitsigns_status_dict
 
     if git_status.added and git_status.added > 0 then
-      added = " " .. ghc.ui.icons.git.Add .. " " .. git_status.added
+      added = " " .. fml.ui.icons.git.Add .. " " .. git_status.added
     end
 
     if git_status.changed and git_status.changed > 0 then
-      changed = " " .. ghc.ui.icons.git.Mod_alt .. " " .. git_status.changed
+      changed = " " .. fml.ui.icons.git.Mod_alt .. " " .. git_status.changed
     end
 
     if git_status.removed and git_status.removed > 0 then
-      removed = " " .. ghc.ui.icons.git.Remove .. " " .. git_status.removed
+      removed = " " .. fml.ui.icons.git.Remove .. " " .. git_status.removed
     end
   end
 
