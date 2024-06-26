@@ -1,6 +1,6 @@
 local BatchDisposable = require("fml.collection.batch_disposable")
 local Subscribers = require("fml.collection.subscribers")
-local reporter = require("fml.core.reporter")
+local reporter = require("fml.std.reporter")
 
 ---@class fml.collection.Observable : fml.types.collection.IObservable
 ---@field private _value                fml.types.T

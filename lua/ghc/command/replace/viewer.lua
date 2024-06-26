@@ -105,7 +105,7 @@ function M:internal_render(opts)
   local winnr = opts.winnr ---@type integer
   local force = not not opts.force ---@type boolean
   local data = self.state:get_data() ---@type ghc.types.command.replace.IStateData
-  local result = self.state:search(force) ---@type fml.core.oxi.search.IResult|nil
+  local result = self.state:search(force) ---@type fml.std.oxi.search.IResult|nil
 
   self.printer:clear()
   self:internal_render_cfg(data)
@@ -465,7 +465,7 @@ function M:internal_render_cfg(data)
 end
 ---Render the search/replace options
 ---@param data ghc.types.command.replace.IStateData
----@param result fml.core.oxi.search.IResult
+---@param result fml.std.oxi.search.IResult
 ---@return nil
 function M:internal_render_result(data, result)
   if result.items == nil or result.error then
@@ -536,7 +536,7 @@ function M:internal_render_result(data, result)
       else
         ---@diagnostic disable-next-line: unused-local
         for _2, _block_match in ipairs(file_item.matches) do
-          ---@type fml.core.oxi.replace.IPreviewBlockItem
+          ---@type fml.std.oxi.replace.IPreviewBlockItem
           local block_match = fml.oxi.replace_text_preview({
             text = _block_match.text,
             search_pattern = data.search_pattern,

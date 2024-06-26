@@ -1,4 +1,4 @@
-local fs = require("fml.core.fs")
+local fs = require("fml.std.fs")
 
 ---@class fml.api.buffer
 local M = {}

@@ -1,5 +1,5 @@
----@class fml.core.oxi
-local M = require("fml.core.oxi.mod")
+---@class fml.std.oxi
+local M = require("fml.std.oxi.mod")
 
 ---@param input string
 ---@return string

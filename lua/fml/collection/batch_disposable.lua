@@ -1,4 +1,4 @@
-local reporter = require("fml.core.reporter")
+local reporter = require("fml.std.reporter")
 local dispose_all = require("fml.fn.dispose_all")
 
 ---@class fml.collection.BatchDisposable : fml.types.collection.IBatchDisposable

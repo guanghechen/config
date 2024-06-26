@@ -1,16 +1,16 @@
 -- https://github.com/folke/lazy.nvim/blob/3f13f080434ac942b150679223d54f5ca91e0d52/lua/lazy/core/util.lua#L1
-local util_json = require("fml.core.json")
+local std_json = require("fml.std.json")
 
----@class fml.core.reporter
+---@class fml.std.reporter
 local M = {}
 
----@class fml.core.reporter.IReporterOptions
+---@class fml.std.reporter.IReporterOptions
 ---@field from string
 ---@field subject? string
 ---@field message? string
 ---@field details? any
 
----@class fml.core.reporter.ReporterLevelEnum
+---@class fml.std.reporter.ReporterLevelEnum
 local ReporterLevelEnum = {
   DEBUG = vim.log.levels.DEBUG,
   INFO = vim.log.levels.INFO,
@@ -32,7 +32,7 @@ local function resolve_level(level)
   return result
 end
 
----@param options fml.core.reporter.IReporterOptions
+---@param options fml.std.reporter.IReporterOptions
 ---@param level integer
 ---@return nil
 local function log(options, level)
@@ -45,36 +45,36 @@ local function log(options, level)
       text = text .. ": " .. options.message
     end
     if options.details ~= nil then
-      local details = util_json.stringify_prettier(options.details) or "" ---@type string
+      local details = std_json.stringify_prettier(options.details) or "" ---@type string
       text = text .. "\n\n" .. details
     end
     vim.notify(text, level)
   end)
 end
 
----@param options fml.core.reporter.IReporterOptions
+---@param options fml.std.reporter.IReporterOptions
 ---@param level? fml.enums.reporter.Level
 function M.log(options, level)
   local level_value = resolve_level(level) ---@type number
   log(options, level_value)
 end
 
----@param options fml.core.reporter.IReporterOptions
+---@param options fml.std.reporter.IReporterOptions
 function M.debug(options)
   log(options, ReporterLevelEnum.DEBUG)
 end
 
----@param options fml.core.reporter.IReporterOptions
+---@param options fml.std.reporter.IReporterOptions
 function M.info(options)
   log(options, ReporterLevelEnum.INFO)
 end
 
----@param options fml.core.reporter.IReporterOptions
+---@param options fml.std.reporter.IReporterOptions
 function M.warn(options)
   log(options, ReporterLevelEnum.WARN)
 end
 
----@param options fml.core.reporter.IReporterOptions
+---@param options fml.std.reporter.IReporterOptions
 function M.error(options)
   log(options, ReporterLevelEnum.ERROR)
 end

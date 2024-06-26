@@ -17,22 +17,6 @@ local collection = {
   Viewmodel = require("fml.collection.viewmodel"),
 }
 
----@class fml.core
-local core = {
-  clipboard = require("fml.core.clipboard"),
-  debug = require("fml.core.debug"),
-  fs = require("fml.core.fs"),
-  json = require("fml.core.json"),
-  md5 = require("fml.core.md5"),
-  os = require("fml.core.os"),
-  oxi = require("fml.core.oxi"),
-  path = require("fml.core.path"),
-  reporter = require("fml.core.reporter"),
-  string = require("fml.core.string"),
-  table = require("fml.core.table"),
-  tmux = require("fml.core.tmux"),
-}
-
 ---@class fml.fn
 local fn = {
   calc_fileicon = require("fml.fn.calc_fileicon"),
@@ -49,23 +33,39 @@ local fn = {
   watch_observables = require("fml.fn.watch_observables"),
 }
 
+---@class fml.std
+local std = {
+  clipboard = require("fml.std.clipboard"),
+  debug = require("fml.std.debug"),
+  fs = require("fml.std.fs"),
+  json = require("fml.std.json"),
+  md5 = require("fml.std.md5"),
+  os = require("fml.std.os"),
+  oxi = require("fml.std.oxi"),
+  path = require("fml.std.path"),
+  reporter = require("fml.std.reporter"),
+  string = require("fml.std.string"),
+  table = require("fml.std.table"),
+  tmux = require("fml.std.tmux"),
+}
+
 ---@class fml.ui
 local ui = {
   Printer = require("fml.ui.printer"),
   Theme = require("fml.ui.theme"),
 }
 
----@class fml : fml.core
+---@class fml : fml.std
 ---@field public api          fml.api
 ---@field public collection   fml.collection
----@field public core         fml.core
 ---@field public fn           fml.fn
+---@field public std          fml.std
 ---@field public ui           fml.ui
-local fml = vim.tbl_extend("force", core, {
+local fml = vim.tbl_extend("force", std, {
   api = api,
   collection = collection,
-  core = core,
   fn = fn,
+  std = std,
   ui = ui,
 })
 

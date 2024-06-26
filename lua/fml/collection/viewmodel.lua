@@ -4,8 +4,8 @@ local Subscriber = require("fml.collection.subscriber")
 local is_disposable = require("fml.fn.is_disposable")
 local is_observable = require("fml.fn.is_observable")
 local dispose_all = require("fml.fn.dispose_all")
-local fs = require("fml.core.fs")
-local reporter = require("fml.core.reporter")
+local fs = require("fml.std.fs")
+local reporter = require("fml.std.reporter")
 
 ---@class fml.collection.Viewmodel : fml.types.collection.IViewmodel
 ---@field private _name                 string

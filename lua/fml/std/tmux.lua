@@ -1,4 +1,4 @@
----@class fml.core.tmux
+---@class fml.std.tmux
 local M = {}
 
 --- https://github.com/alexghergh/nvim-tmux-navigation/blob/4898c98702954439233fdaf764c39636681e2861/lua/nvim-tmux-navigation/tmux_util.lua#L1

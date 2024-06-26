@@ -1,4 +1,4 @@
----@class fml.core.os
+---@class fml.std.os
 local M = {}
 
 local os_name = vim.uv.os_uname().sysname

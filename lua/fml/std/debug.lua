@@ -1,6 +1,6 @@
-local util_json = require("fml.core.json")
+local std_json = require("fml.std.json")
 
----@class fml.core.debug
+---@class fml.std.debug
 local M = {}
 
 ---@param value any|nil
@@ -13,7 +13,7 @@ local function better_stringify(value)
     return value
   end
 
-  return util_json.stringify_prettier(value)
+  return std_json.stringify_prettier(value)
 end
 
 function M.log(...)

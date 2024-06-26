@@ -1,15 +1,15 @@
-local util_os = require("fml.core.os")
-local md5 = require("fml.core.md5")
-local reporter = require("fml.core.reporter")
-local PATH_SEPARATOR = util_os.get_path_sep() ---@type string
+local std_os = require("fml.std.os")
+local md5 = require("fml.std.md5")
+local reporter = require("fml.std.reporter")
+local PATH_SEPARATOR = std_os.get_path_sep() ---@type string
 
----@class fml.core.path
+---@class fml.std.path
 local M = {}
 
 ---@param filepath string
 ---@return boolean
 function M.is_absolute(filepath)
-  if util_os.is_windows() then
+  if std_os.is_windows() then
     return string.match(filepath, "^[%a]:[\\/].*$") ~= nil
   end
   return string.sub(filepath, 1, 1) == PATH_SEPARATOR
@@ -199,7 +199,7 @@ function M.locate_config_filepath(...)
 
   if type(config_path) ~= "string" or #config_path < 1 then
     reporter.error({
-      from = "fml.core.path",
+      from = "fml.std.path",
       subject = "locate_config_filepath",
       message = "Cannot resolve the data_paths.",
       details = { config_paths = config_paths },
@@ -226,7 +226,7 @@ function M.locate_data_filepath(...)
 
   if type(data_path) ~= "string" or #data_path < 1 then
     reporter.error({
-      from = "fml.core.path",
+      from = "fml.std.path",
       subject = "locate_data_filepath",
       message = "Cannot resolve the data_paths.",
       details = { data_paths = data_paths },
@@ -246,7 +246,7 @@ function M.locate_script_filepath(...)
 
   if type(config_path) ~= "string" or #config_path < 1 then
     reporter.error({
-      from = "fml.core.path",
+      from = "fml.std.path",
       subject = "locate_script_filepath",
       message = "Cannot resolve the config_paths.",
       details = { config_paths = config_paths },
@@ -279,7 +279,7 @@ function M.locate_state_filepath(...)
 
   if type(state_path) ~= "string" or #state_path < 1 then
     reporter.error({
-      from = "fml.core.path",
+      from = "fml.std.path",
       subject = "locate_state_filepath",
       message = "Cannot resolve the state_paths.",
       details = { state_paths = state_paths },
@@ -302,7 +302,7 @@ function M.remove_session_filepaths(opts)
     if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
       os.remove(session_filepath)
       reporter.info({
-        from = "fml.core.path",
+        from = "fml.std.path",
         subject = "remove_session_filepaths",
         message = "Removed " .. session_filepath,
       })
@@ -322,7 +322,7 @@ function M.remove_session_filepaths_all(opts)
           if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
             os.remove(session_filepath)
             reporter.info({
-              from = "fml.core.path",
+              from = "fml.std.path",
               subject = "remove_session_filepaths_all",
               message = "Removed " .. session_filepath,
             })

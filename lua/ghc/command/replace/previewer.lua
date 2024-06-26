@@ -66,7 +66,7 @@ function M:preview(opts)
   vim.cmd(string.format("%sbufdo file %s/REPLACE_PREVIEW", bufnr, bufnr)) --- Rename the buf
   local printer = Printer.new({ bufnr = bufnr, nsnr = 0 })
 
-  ---@type fml.core.oxi.replace.IPreviewBlockItem
+  ---@type fml.std.oxi.replace.IPreviewBlockItem
   local block_match = fml.oxi.replace_text_preview({
     text = original_text,
     search_pattern = search_pattern,

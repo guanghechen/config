@@ -1,6 +1,6 @@
 ---@class ghc.command.replace.State
 ---@field private data                  ghc.types.command.replace.IStateData
----@field private search_result         fml.core.oxi.search.IResult|nil
+---@field private search_result         fml.std.oxi.search.IResult|nil
 ---@field private dirty_search          boolean
 ---@field private dirty_replace         boolean
 ---@field private on_changed            fun(ghc.command.replace.State): nil
@@ -116,12 +116,12 @@ function M:is_dirty_replace()
 end
 
 ---@param force ?boolean
----@return fml.core.oxi.search.IResult|nil
+---@return fml.std.oxi.search.IResult|nil
 function M:search(force)
   if force or self:is_dirty_search() then
     local data = self.data ---@type ghc.types.command.replace.IStateData
 
-    ---@type fml.core.oxi.search.IParams
+    ---@type fml.std.oxi.search.IParams
     local options = {
       cwd = data.cwd,
       flag_regex = data.flag_regex,

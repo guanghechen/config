@@ -1,4 +1,4 @@
----@class fml.core.string
+---@class fml.std.string
 local M = {}
 
 -- capitalization util, only capitalizes the first character of the whole word

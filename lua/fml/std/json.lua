@@ -1,4 +1,4 @@
----@class fml.core.json
+---@class fml.std.json
 local M = {}
 
 ---@param obj table
