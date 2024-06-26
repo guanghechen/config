@@ -1,4 +1,5 @@
 local Printer = fml.ui.Printer
+local Textarea = fml.ui.Textarea
 local Previewer = require("ghc.command.replace.previewer")
 local constants = require("ghc.constant.command")
 local buf_delete_augroup = vim.api.nvim_create_augroup("ghc_command_replace_view_buf_del", { clear = true })
@@ -177,7 +178,7 @@ function M:internal_bind_keymaps(bufnr)
 
       cursor_col = math.max(cursor_col, 0)
       cursor_col = math.min(cursor_col, cursor_row > 0 and cursor_row <= #lines and #lines[cursor_row] or 0)
-      local textarea = ghc.ui.Textarea.new({
+      local textarea = Textarea.new({
         title = "[" .. key .. "]",
         position = position,
       })
@@ -233,7 +234,7 @@ function M:internal_bind_keymaps(bufnr)
       cursor_col = math.max(cursor_col, 0)
       cursor_col = math.min(cursor_col, cursor_row > 0 and cursor_row <= #lines and #lines[cursor_row] or 0)
 
-      local textarea = ghc.ui.Textarea.new({
+      local textarea = Textarea.new({
         title = "[" .. key .. "]",
         position = position,
       })
@@ -279,7 +280,7 @@ function M:internal_bind_keymaps(bufnr)
 
     local data = self.state:get_data() ---@type ghc.types.command.replace.IStateData
     local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
-    local textarea = ghc.ui.Textarea.new({
+    local textarea = Textarea.new({
       title = "[Replace options]",
       position = "center",
     })

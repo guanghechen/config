@@ -53,6 +53,7 @@ local std = {
 local ui = {
   Input = require("fml.ui.input"),
   Printer = require("fml.ui.printer"),
+  Textarea = require("fml.ui.textarea"),
   Theme = require("fml.ui.theme"),
 }
 
