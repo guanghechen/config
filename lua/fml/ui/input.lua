@@ -1,4 +1,6 @@
----@class ghc.ui.Input
+local reporter = require("fml.std.reporter")
+
+---@class fml.ui.Input
 ---@field private _nui_input             any|nil
 ---@field public title                  string
 ---@field public prompt                 string
@@ -6,13 +8,13 @@
 local M = {}
 M.__index = M
 
----@class ghc.ui.input.IProps
+---@class fml.ui.input.IProps
 ---@field public title                  string
 ---@field public prompt                 string
 ---@field public position               "center"|"cursor"
 ---@field public cursor_col             integer
 
----@class ghc.ui.input.IOpenParams
+---@class fml.ui.input.IOpenParams
 ---@field public title                  ?string
 ---@field public prompt                 ?string
 ---@field public position               ?"center"|"cursor"
@@ -20,8 +22,8 @@ M.__index = M
 ---@field public cursor_col             integer
 ---@field public on_confirm             fun(next_value: string):nil
 
----@param props ghc.ui.input.IProps
----@return ghc.ui.Input
+---@param props fml.ui.input.IProps
+---@return fml.ui.Input
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -33,7 +35,7 @@ function M.new(props)
   return self
 end
 
----@param params ghc.ui.input.IOpenParams
+---@param params fml.ui.input.IOpenParams
 ---@return nil
 function M:open(params)
   self:close()
@@ -48,8 +50,8 @@ function M:open(params)
   local ok_nui_input, Input = pcall(require, "nui.input")
   local ok_nui_autocmd, nui_autocmd = pcall(require, "nui.utils.autocmd")
   if not ok_nui_input then
-    fml.reporter.error({
-      from = "ghc.ui.input",
+    reporter.error({
+      from = "fml.ui.input",
       subject = "open",
       message = "Cannot find nui.input",
       details = { title = title, value = initial_value, error = Input },
@@ -57,8 +59,8 @@ function M:open(params)
     return nil
   end
   if not ok_nui_autocmd then
-    fml.reporter.error({
-      from = "ghc.ui.input",
+    reporter.error({
+      from = "fml.ui.input",
       subject = "open",
       message = "Cannot find nui.utils.autocmd",
       details = { title = title, value = initial_value, error = nui_autocmd },

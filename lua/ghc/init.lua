@@ -16,7 +16,6 @@ local constant = {
 
 ---@class ghc.ui
 local ui = {
-  Input = require("ghc.ui.input"),
   Textarea = require("ghc.ui.textarea"),
   icons = require("ghc.ui.icons"),
 }

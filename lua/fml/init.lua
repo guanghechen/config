@@ -51,6 +51,7 @@ local std = {
 
 ---@class fml.ui
 local ui = {
+  Input = require("fml.ui.input"),
   Printer = require("fml.ui.printer"),
   Theme = require("fml.ui.theme"),
 }
