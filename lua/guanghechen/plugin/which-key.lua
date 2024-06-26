@@ -28,8 +28,6 @@ return {
     },
   },
   config = function(_, opts)
-    dofile(vim.g.base46_cache .. "whichkey")
-
     vim.o.timeout = true
     vim.o.timeoutlen = 700
 

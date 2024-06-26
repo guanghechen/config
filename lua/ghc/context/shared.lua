@@ -1,4 +1,4 @@
-local gen_hlconfig_map = require("ghc.ui.theme.hlconfig")
+local gen_hlgroup_map = require("ghc.ui.theme.hlgroup")
 local Theme = fml.ui.Theme
 local Observable = fml.collection.Observable
 local Viewmodel = fml.collection.Viewmodel
@@ -18,20 +18,6 @@ local M = Viewmodel.new({
   :register("mode", Observable.from_value("darken"), true, true)
   :register("relativenumber", Observable.from_value(true), true, true)
   :register("transparency", Observable.from_value(false), true, true)
-
----@param mode                         fml.enums.theme.Mode
----@param transparency                 boolean
----@return nil
-local function load_nvchad_theme(mode, transparency)
-  local present_nvconfig, nvconfig = pcall(require, "nvconfig")
-  local preset_base46, base46 = pcall(require, "base46")
-  if present_nvconfig and preset_base46 then
-    local current_theme = mode == "darken" and "onedark" or "one_light" ---@type string
-    nvconfig.ui.theme = current_theme
-    nvconfig.ui.transparency = transparency
-    base46.load_all_highlights()
-  end
-end
 
 ---@class ghc.context.shared.ILoadThemeParams
 ---@field public mode                   fml.enums.theme.Mode
@@ -56,8 +42,9 @@ local function load_theme(params)
     return
   end
 
-  local hlconfig_map = gen_hlconfig_map({ transparency = transparency })
-  local theme = Theme.new():registers(hlconfig_map)
+  ---@return table<string, fml.types.ui.theme.IHighlightGroup | nil>
+  local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
+  local theme = Theme.new():registers(hlgroup_map)
   vim.schedule(function ()
     if persistent then
       theme:compile({ nsnr = 0, scheme = scheme, filepath = cache_theme_filepath })
@@ -85,7 +72,6 @@ function M.toggle_scheme(params)
 
   if force or has_changed then
     load_theme({ mode = mode, transparency = transparency, persistent = persistent })
-    load_nvchad_theme(mode, transparency)
   end
 end
 
@@ -99,7 +85,6 @@ function M.reload_theme(params)
     M.toggle_scheme({ mode = mode, transparency = transparency, persistent = true, force = true })
   else
     dofile(cache_theme_filepath)
-    load_nvchad_theme(mode, transparency)
   end
 end
 

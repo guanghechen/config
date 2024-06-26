@@ -9,7 +9,7 @@ local fileformat_text_map = {
 
 --- @class guanghechen.ui.statusline.component.fileformat
 local M = {
-  name = "ghc_statusline_os",
+  name = "ghc_statusline_fileformat",
   color = {
     text = {
       fg = "white",

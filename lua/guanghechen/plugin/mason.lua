@@ -53,7 +53,6 @@ return {
     },
   },
   config = function(_, opts)
-    dofile(vim.g.base46_cache .. "mason")
     require("mason").setup(opts)
     require("mason-lspconfig").setup({
       ensure_installed = {

@@ -134,8 +134,6 @@ return {
     return options
   end,
   config = function(_, opts)
-    dofile(vim.g.base46_cache .. "cmp")
-
     local parse = require("cmp.utils.snippet").parse
     require("cmp.utils.snippet").parse = function(input)
       local ok, ret = pcall(parse, input)

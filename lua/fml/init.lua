@@ -29,13 +29,13 @@ local fn = {
   navigate_circular = require("fml.fn.navigate_circular"),
   navigate_limit = require("fml.fn.navigate_limit"),
   noop = require("fml.fn.noop"),
-  resolve_hlgroup = require("fml.fn.resolve_hlgroup"),
   watch_observables = require("fml.fn.watch_observables"),
 }
 
 ---@class fml.std
 local std = {
   clipboard = require("fml.std.clipboard"),
+  color = require("fml.std.color"),
   debug = require("fml.std.debug"),
   fs = require("fml.std.fs"),
   json = require("fml.std.json"),

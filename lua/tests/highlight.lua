@@ -1,22 +1,23 @@
 local function test_compile_highlights()
-  local theme = fml.ui.Theme
-    .new()
-    :register("GhcReplaceInvisible", { fg = "none", bg = "none" })
-    :register("GhcReplaceOptName", { fg = "blue", bg = "none", bold = true })
-    :register("GhcReplaceOptReplacePattern", { fg = "diff_add_hl", bg = "none" })
-    :register("GhcReplaceOptSearchPattern", { fg = "diff_delete_hl", bg = "none" })
-    :register("GhcReplaceOptValue", { fg = "yellow", bg = "none" })
-    :register("GhcReplaceFilepath", { fg = "blue", bg = "none" })
-    :register("GhcReplaceFlag", { fg = "white", bg = "grey" })
-    :register("GhcReplaceFlagEnabled", { fg = "black", bg = "baby_pink" })
-    :register("GhcReplaceFence", { fg = "grey", bg = "none" })
-    :register("GhcReplaceTextDeleted", { fg = "diff_delete_hl", strikethrough = true })
-    :register("GhcReplaceTextAdded", { fg = "diff_add_hl", bg = "none" })
-    :register("GhcReplaceUsage", { fg = "grey_fg2", bg = "none" })
-
   local scheme = require("ghc.ui.theme.scheme.darken") ---@type fml.types.ui.theme.IScheme
+  local c = scheme.colors
+  local hlgroup_map = {
+    GhcReplaceInvisible = { fg = "none", bg = "none" },
+    GhcReplaceOptName = { fg = c.blue, bg = "none", bold = true },
+    GhcReplaceOptReplacePattern = { fg = c.diff_add_hl, bg = "none" },
+    GhcReplaceOptSearchPattern = { fg = c.diff_delete_hl, bg = "none" },
+    GhcReplaceOptValue = { fg = c.yellow, bg = "none" },
+    GhcReplaceFilepath = { fg = c.blue, bg = "none" },
+    GhcReplaceFlag = { fg = c.white, bg = "grey" },
+    GhcReplaceFlagEnabled = { fg = c.black, bg = c.baby_pink },
+    GhcReplaceFence = { fg = c.grey, bg = "none" },
+    GhcReplaceTextDeleted = { fg = c.diff_delete_hl, strikethrough = true },
+    GhcReplaceTextAdded = { fg = c.diff_add_hl, bg = "none" },
+    GhcReplaceUsage = { fg = c.grey_fg2, bg = "none" },
+  }
+
   local hlgroup_strs = {} ---@type string[]
-  for hlname, hlgroup in pairs(theme:resolve(scheme)) do
+  for hlname, hlgroup in pairs(hlgroup_map) do
     local hlgroup_fields = {} ---@type string[]
     for key, value in pairs(hlgroup) do
       local value_type = type(value) ---@type string

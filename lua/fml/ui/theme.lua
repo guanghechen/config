@@ -1,14 +1,12 @@
-local resolve_hlgroup = require("fml.fn.resolve_hlgroup")
-
 ---@class fml.ui.Theme : fml.types.ui.ITheme
----@field private hlconfig_map          table<string, fml.types.ui.theme.IHighlightConfig>
+---@field private hlgroup_map          table<string, fml.types.ui.theme.IHighlightGroup>
 local M = {}
 M.__index = M
 
 ---@return fml.ui.Theme
 function M.new()
   local self = setmetatable({}, M)
-  self.hlconfig_map = {}
+  self.hlgroup_map = {}
   return self
 end
 
@@ -16,51 +14,38 @@ end
 ---@return nil
 function M:apply(params)
   local nsnr = params.nsnr ---@type integer
-  local scheme = params.scheme ---@type fml.types.ui.theme.IScheme
-  for hlname, hlconfig in pairs(self.hlconfig_map) do
-    local hlgroup = resolve_hlgroup(hlconfig, scheme)
+  for hlname, hlgroup in pairs(self.hlgroup_map) do
     vim.api.nvim_set_hl(nsnr, hlname, hlgroup)
   end
 end
 
 ---@param hlname                        string
----@param hlconfig                      fml.types.ui.theme.IHighlightConfig
+---@param hlgroup                       fml.types.ui.theme.IHighlightGroup
 ---@return fml.ui.Theme
-function M:register(hlname, hlconfig)
-  self.hlconfig_map[hlname] = hlconfig
+function M:register(hlname, hlgroup)
+  self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlconfig_map                  table<string, fml.types.ui.theme.IHighlightConfig>
+---@param hlgroup_map                   table<string, fml.types.ui.theme.IHighlightGroup|nil>
 ---@return fml.ui.Theme
-function M:registers(hlconfig_map)
-  for hlname, hlconfig in pairs(hlconfig_map) do
-    self.hlconfig_map[hlname] = hlconfig
+function M:registers(hlgroup_map)
+  for hlname, hlgroup in pairs(hlgroup_map) do
+    if hlgroup ~= nil then
+      self.hlgroup_map[hlname] = hlgroup
+    end
   end
   return self
-end
-
----@param scheme                        fml.types.ui.theme.IScheme
----@return table<string, fml.types.ui.theme.IHighlightGroup>
-function M:resolve(scheme)
-  local hlgroups = {} ---@type table<string, fml.types.ui.theme.IHighlightGroup>
-  for hlname, hlconfig in pairs(self.hlconfig_map) do
-    local hlgroup = resolve_hlgroup(hlconfig, scheme) ---@type fml.types.ui.theme.IHighlightGroup
-    hlgroups[hlname] = hlgroup
-  end
-  return hlgroups
 end
 
 ---@param params                        fml.types.ui.theme.ICompileParams
 ---@return nil
 function M:compile(params)
-  local scheme = params.scheme ---@type fml.types.ui.theme.IScheme
   local filepath = params.filepath ---@type string
   local nsnr = tostring(params.nsnr or 0) ---@type string
 
   local hlgroup_strs = {} ---@type string[]
-  for hlname, hlconfig in pairs(self.hlconfig_map) do
-    local hlgroup = resolve_hlgroup(hlconfig, scheme) ---@type fml.types.ui.theme.IHighlightGroup
+  for hlname, hlgroup in pairs(self.hlgroup_map) do
     local hlgroup_fields = {} ---@type string[]
     for key, value in pairs(hlgroup) do
       local value_type = type(value) ---@type string
@@ -69,11 +54,13 @@ function M:compile(params)
       local field = key .. "=" .. value_stringified ---@type string
       table.insert(hlgroup_fields, field)
     end
-    local hlgroup_str = hlname .. "={" .. table.concat(hlgroup_fields, ",") .. "}"
+
+    local hlname_stringified = string.sub(hlname, 1, 1) == '@' and '["' .. hlname .. '"]' or hlname
+    local hlgroup_str = hlname_stringified .. "={" .. table.concat(hlgroup_fields, ",") .. "}"
     table.insert(hlgroup_strs, hlgroup_str)
   end
 
-  local lines = "return string.dump(function()\nlocal hls={"
+  local code = "return string.dump(function()\nlocal hls={"
     .. table.concat(hlgroup_strs, ",")
     .. "}\n"
     .. "for k, v in pairs(hls) do\n"
@@ -85,7 +72,7 @@ function M:compile(params)
   vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
   local file = io.open(filepath, "wb")
   if file then
-    file:write(loadstring(lines)())
+    file:write(loadstring(code)())
     file:close()
   end
 end

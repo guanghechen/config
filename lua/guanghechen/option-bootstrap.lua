@@ -1,5 +1,4 @@
 vim.g.mapleader = " "
-vim.g.base46_cache = vim.fn.stdpath("data") .. "/nvchad/base46/"
 vim.opt.shortmess:append("I") --Don't show the intro message when starting nvim
 
 -- disable some default providers

@@ -10,24 +10,6 @@ local M = {}
 local current_theme = ghc.context.shared.mode:get_snapshot() == "darken" and "onedark" or "one_light" ---@type string
 
 M.ui = {
-  hl_add = vim.tbl_deep_extend("force", bufferline.colors, statusline.colors, {
-    ghc_DiffAdd_left = { bg = "#FFE0E0", fg = "none" },
-    ghc_DiffDelete_left = { bg = "#FFE0E0", fg = "none" },
-    ghc_DiffChange_left = { bg = "#FFE0E0", fg = "none" },
-    ghc_DiffText_left = { bg = "#FFC0C0", fg = "none" },
-    ghc_DiffAdd_right = { bg = "#D0FFD0", fg = "none" },
-    ghc_DiffDelete_right = { bg = "#FFE0E0", fg = "none" },
-    ghc_DiffChange_right = { bg = "#D0FFD0", fg = "none" },
-    ghc_DiffText_right = { bg = "#A0EFA0", fg = "none" },
-    ghc_spectre_filedirectory = { bg = "none", fg = "blue" },
-    ghc_spectre_filename = { bg = "none", fg = "blue" },
-    ghc_spectre_replace = { bg = "none", fg = "#A0EFA0" },
-    ghc_spectre_search = { bg = "none", fg = "#FFC0C0", strikethrough = true },
-  }),
-  hl_override = {
-    CursorLine = { bg = "one_bg2" },
-    Visual = { bg = "light_grey" },
-  },
   theme = current_theme,
   theme_toggle = {},
   transparency = ghc.context.shared.transparency:get_snapshot(),

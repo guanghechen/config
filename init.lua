@@ -1,7 +1,11 @@
 _G.fml = require("fml")
 _G.ghc = require("ghc")
 
----
+---load theme
+vim.schedule(function()
+  ghc.context.shared.reload_theme({ force = false })
+end)
+
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
 local function load_config(name)
   pcall(require, "guanghechen." .. name)
@@ -26,19 +30,12 @@ local function load_plugins()
   require("lazy").setup(require("guanghechen.plugin.lazy"))
 end
 
-local function load_theme()
-  dofile(vim.g.base46_cache .. "defaults")
-  dofile(vim.g.base46_cache .. "statusline")
-end
-
 load_config("option-bootstrap")
 load_config("keymap-bootstrap")
 load_config("autocmd-bootstrap")
 
 local ok = pcall(load_plugins)
 if ok then
-  load_theme()
-
   load_config("option")
   load_config("keymap")
   load_config("autocmd")

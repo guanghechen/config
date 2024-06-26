@@ -9,8 +9,6 @@ return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   config = function()
-    dofile(vim.g.base46_cache .. "lsp")
-
     register_lsp_symbol("Error", fml.ui.icons.diagnostics.Error)
     register_lsp_symbol("Info", fml.ui.icons.diagnostics.Information)
     register_lsp_symbol("Hint", fml.ui.icons.diagnostics.Hint)
