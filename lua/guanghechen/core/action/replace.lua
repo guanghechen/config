@@ -1,5 +1,4 @@
 local action_autocmd = require("guanghechen.core.action.autocmd")
-local context_session = require("guanghechen.core.context.session")
 
 ---@param opts { cwd: string, replace_path?: string }
 local function replace_word(opts)
@@ -8,7 +7,7 @@ local function replace_word(opts)
 
   local replace_path = opts.replace_path ---@type string
   if replace_path == nil or replace_path == "" then
-    replace_path = context_session.replace_path:get_snapshot() ---@type string
+    replace_path = ghc.context.session.replace_path:get_snapshot() ---@type string
   end
 
   local selected_text = fml.fn.get_selected_text() ---@type string

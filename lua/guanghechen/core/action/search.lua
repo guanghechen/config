@@ -1,5 +1,4 @@
 local action_autocmd = require("guanghechen.core.action.autocmd")
-local context_session = require("guanghechen.core.context.session")
 
 ---@alias ISearchContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
@@ -91,7 +90,7 @@ local function build_search_text_command(prompt)
       "--color=never",
       "--follow",
     }
-    context_session.search_last_command:next(fd_cmd)
+    ghc.context.session.search_last_command:next(fd_cmd)
     return fd_cmd
   end
 
@@ -117,7 +116,7 @@ local function build_search_text_command(prompt)
   table.insert(grep_cmd, "--")
   table.insert(grep_cmd, prompt)
 
-  context_session.search_last_command:next(grep_cmd)
+  ghc.context.session.search_last_command:next(grep_cmd)
   return grep_cmd
 end
 
@@ -204,8 +203,8 @@ local function search(opts)
     directory = fml.path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
-  context_session.caller_winnr:next(vim.api.nvim_get_current_win())
-  context_session.caller_bufnr:next(vim.api.nvim_get_current_buf())
+  ghc.context.session.caller_winnr:next(vim.api.nvim_get_current_win())
+  ghc.context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
   opts = opts or {}
   opts.initial_mode = "normal"
@@ -224,16 +223,16 @@ local function search(opts)
 
   ---@param scope_next guanghechen.core.types.enum.SEARCH_SCOPE
   local function change_scope(scope_next)
-    local scope_current = context_session.search_scope:get_snapshot()
+    local scope_current = ghc.context.session.search_scope:get_snapshot()
     if scope_next ~= scope_current then
-      context_session.search_scope:next(scope_next)
+      ghc.context.session.search_scope:next(scope_next)
       open_picker()
     end
   end
 
   local actions = {
     show_last_search_cmd = function()
-      local last_cmd = context_session.search_last_command:get_snapshot() or {}
+      local last_cmd = ghc.context.session.search_last_command:get_snapshot() or {}
       fml.reporter.info({
         from = "search.lua",
         subject = "show_last_search_cmd",
@@ -268,7 +267,7 @@ local function search(opts)
     end,
     change_scope_carousel = function()
       ---@type guanghechen.core.types.enum.SEARCH_SCOPE
-      local scope = context_session.search_scope:get_snapshot()
+      local scope = ghc.context.session.search_scope:get_snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
     end,
@@ -276,7 +275,7 @@ local function search(opts)
 
   open_picker = function()
     ---@type guanghechen.core.types.enum.SEARCH_SCOPE
-    local scope = context_session.search_scope:get_snapshot()
+    local scope = ghc.context.session.search_scope:get_snapshot()
     opts.cwd = get_cwd_by_scope(search_context, scope)
 
     local resolved_opts
@@ -307,7 +306,7 @@ local function search(opts)
 
         ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
         local buftype_extra = "search"
-        context_session.buftype_extra:next(buftype_extra)
+        ghc.context.session.buftype_extra:next(buftype_extra)
 
         action_autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
         return true
@@ -350,22 +349,22 @@ end
 local M = {}
 
 function M.grep_selected_text_workspace()
-  context_session.search_scope:next("W")
+  ghc.context.session.search_scope:next("W")
   search()
 end
 
 function M.grep_selected_text_cwd()
-  context_session.search_scope:next("C")
+  ghc.context.session.search_scope:next("C")
   search()
 end
 
 function M.grep_selected_text_directory()
-  context_session.search_scope:next("D")
+  ghc.context.session.search_scope:next("D")
   search()
 end
 
 function M.grep_selected_text_buffer()
-  context_session.search_scope:next("B")
+  ghc.context.session.search_scope:next("B")
   search()
 end
 

@@ -1,4 +1,3 @@
-vim.g.mapleader = " "
 vim.opt.shortmess:append("I") --Don't show the intro message when starting nvim
 
 -- disable some default providers

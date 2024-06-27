@@ -4,11 +4,7 @@ return {
     branch = "v2.5",
     lazy = false,
     config = function()
-      ---require("nvchad")
-
       local config = require("nvconfig").ui
-      vim.o.statusline = "%!v:lua.require('nvchad.stl." .. config.statusline.theme .. "')()"
-
       if config.tabufline.enabled then
         require("nvchad.tabufline.lazyload")
       end
@@ -43,5 +39,5 @@ return {
         })
       end)
     end,
-  }
+  },
 }

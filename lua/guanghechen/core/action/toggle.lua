@@ -1,11 +1,9 @@
-local context_session = require("guanghechen.core.context.session")
-
 ---@class guanghechen.core.action.toggle
 local M = {}
 
 function M.flight_copilot()
-  local flight_copilot_next = not context_session.flight_copilot:get_snapshot() ---@type boolean
-  context_session.flight_copilot:next(flight_copilot_next)
+  local flight_copilot_next = not ghc.context.session.flight_copilot:get_snapshot() ---@type boolean
+  ghc.context.session.flight_copilot:next(flight_copilot_next)
 end
 
 function M.transparency()

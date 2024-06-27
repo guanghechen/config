@@ -1,5 +1,4 @@
 local action_autocmd = require("guanghechen.core.action.autocmd")
-local context_session = require("guanghechen.core.context.session")
 
 ---@alias IFindFileContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
@@ -62,7 +61,7 @@ end
 ---@return string
 local function gen_filemap(force, cwd)
   local filemap_filepath = fml.path.locate_session_filepath({ filename = "filemap.json" })
-  if force or not fml.path.is_exist(filemap_filepath) or context_session.filemap_dirty:get_snapshot() then
+  if force or not fml.path.is_exist(filemap_filepath) or ghc.context.session.filemap_dirty:get_snapshot() then
     local stdout = vim.uv.new_pipe(false)
     local stderr = vim.uv.new_pipe(false)
     local subprocess
@@ -103,7 +102,7 @@ local function gen_filemap(force, cwd)
         stdout:read_stop()
       end
     end)
-    context_session.filemap_dirty:next(false)
+    ghc.context.session.filemap_dirty:next(false)
   end
   return filemap_filepath
 end
@@ -125,8 +124,8 @@ local function find_file(opts, force)
     directory = fml.path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
-  context_session.caller_winnr:next(vim.api.nvim_get_current_win())
-  context_session.caller_bufnr:next(vim.api.nvim_get_current_buf())
+  ghc.context.session.caller_winnr:next(vim.api.nvim_get_current_win())
+  ghc.context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
   opts = opts or {}
   opts.initial_mode = "normal"
@@ -136,7 +135,7 @@ local function find_file(opts, force)
   opts.use_regex = ghc.context.replace.flag_regex:get_snapshot()
 
   ---@type guanghechen.core.types.enum.FIND_FILE_SCOPE
-  local scope0 = context_session.find_file_scope:get_snapshot()
+  local scope0 = ghc.context.session.find_file_scope:get_snapshot()
   opts.cwd = get_cwd_by_scope(find_file_context, scope0)
 
   ---@type string
@@ -147,17 +146,17 @@ local function find_file(opts, force)
 
   ---@param scope_next guanghechen.core.types.enum.FIND_FILE_SCOPE
   local function change_scope(scope_next)
-    local scope_current = context_session.find_file_scope:get_snapshot()
+    local scope_current = ghc.context.session.find_file_scope:get_snapshot()
     if scope_next ~= scope_current then
-      context_session.find_file_scope:next(scope_next)
-      context_session.filemap_dirty:next(true)
+      ghc.context.session.find_file_scope:next(scope_next)
+      ghc.context.session.filemap_dirty:next(true)
       open_picker()
     end
   end
 
   local actions = {
     show_last_find_file_cmd = function()
-      local last_cmd = context_session.find_file_last_command:get_snapshot() or {}
+      local last_cmd = ghc.context.session.find_file_last_command:get_snapshot() or {}
       fml.reporter.info({
         from = "find_file",
         subject = "show_last_find_file_cmd",
@@ -188,7 +187,7 @@ local function find_file(opts, force)
     end,
     change_scope_carousel = function()
       ---@type guanghechen.core.types.enum.FIND_FILE_SCOPE
-      local scope = context_session.find_file_scope:get_snapshot()
+      local scope = ghc.context.session.find_file_scope:get_snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
     end,
@@ -196,7 +195,7 @@ local function find_file(opts, force)
 
   local function build_find_file_command(prompt)
     if prompt then
-      context_session.find_file_keyword:next(prompt)
+      ghc.context.session.find_file_keyword:next(prompt)
     else
       prompt = ""
     end
@@ -223,20 +222,20 @@ local function find_file(opts, force)
     table.insert(cmd, prompt)
     table.insert(cmd, filemap_filepath)
 
-    context_session.find_file_last_command:next(fml.table.slice(cmd))
+    ghc.context.session.find_file_last_command:next(fml.table.slice(cmd))
     return cmd
   end
 
   open_picker = function()
     ---@type guanghechen.core.types.enum.FIND_FILE_SCOPE
-    local scope = context_session.find_file_scope:get_snapshot()
+    local scope = ghc.context.session.find_file_scope:get_snapshot()
     opts.cwd = get_cwd_by_scope(find_file_context, scope)
     opts.entry_maker = vim.F.if_nil(opts.entry_maker, make_entry.gen_from_file(opts))
     gen_filemap(false, opts.cwd)
 
     local picker_params = {
       prompt_title = "Find files (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = context_session.find_file_keyword:get_snapshot() or "",
+      default_text = ghc.context.session.find_file_keyword:get_snapshot() or "",
       attach_mappings = function(prompt_bufnr)
         local function mapkey(mode, key, action, desc)
           vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })
@@ -260,7 +259,7 @@ local function find_file(opts, force)
 
         ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
         local buftype_extra = "find_file"
-        context_session.buftype_extra:next(buftype_extra)
+        ghc.context.session.buftype_extra:next(buftype_extra)
 
         action_autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
         return true

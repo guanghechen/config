@@ -1,5 +1,3 @@
-local std_json = require("fml.std.json")
-
 ---@class fml.std.debug
 local M = {}
 
@@ -13,7 +11,7 @@ local function better_stringify(value)
     return value
   end
 
-  return std_json.stringify_prettier(value)
+  return vim.inspect(value)
 end
 
 function M.log(...)
@@ -26,7 +24,7 @@ function M.log(...)
 
   if #elements == 1 then
     text = better_stringify(elements[1])
-  else 
+  else
     local texts = {} ---@type string[]
     for _, element in ipairs(elements) do
       table.insert(texts, better_stringify(element))
@@ -38,3 +36,4 @@ function M.log(...)
 end
 
 return M
+

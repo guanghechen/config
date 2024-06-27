@@ -1,6 +1,12 @@
 ---@class fml.ui.icons
 local M = {}
 
+---@class fml.ui.icons.flag
+M.flag = {
+  Regex = "󰑑",
+  CaseSensitive = "",
+}
+
 ---@class fml.ui.icons.kind
 M.kind = {
   Array = "[]",

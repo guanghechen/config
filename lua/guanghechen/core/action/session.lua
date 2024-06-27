@@ -25,7 +25,7 @@ end
 
 function M.session_autosave()
   -- save context
-  require("guanghechen.core.context.session"):save()
+  require("ghc.context.session"):save()
 
   local bufs = vim.tbl_filter(function(b)
     return vim.bo[b].buftype ~= "" and vim.api.nvim_buf_get_name(b) ~= ""

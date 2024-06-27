@@ -17,23 +17,31 @@ local collection = {
   Viewmodel = require("fml.collection.viewmodel"),
 }
 
+---@class fml.core
+local core = {
+  Statusline = require("fml.core.statusline"),
+}
+
 ---@class fml.fn
 local fn = {
   calc_fileicon = require("fml.fn.calc_fileicon"),
   debounce_leading = require("fml.fn.debounce_leading"),
   debounce_tailing = require("fml.fn.debounce_tailing"),
   dispose_all = require("fml.fn.dispose_all"),
+  falsy = require("fml.fn.falsy"),
   get_selected_text = require("fml.fn.get_selected_text"),
   is_disposable = require("fml.fn.is_disposable"),
   is_observable = require("fml.fn.is_observable"),
   navigate_circular = require("fml.fn.navigate_circular"),
   navigate_limit = require("fml.fn.navigate_limit"),
   noop = require("fml.fn.noop"),
+  truthy = require("fml.fn.truthy"),
   watch_observables = require("fml.fn.watch_observables"),
 }
 
 ---@class fml.std
 local std = {
+  G = require("fml.std.G"),
   clipboard = require("fml.std.clipboard"),
   color = require("fml.std.color"),
   debug = require("fml.std.debug"),
@@ -61,12 +69,14 @@ local ui = {
 ---@class fml : fml.std
 ---@field public api          fml.api
 ---@field public collection   fml.collection
+---@field public core         fml.core
 ---@field public fn           fml.fn
 ---@field public std          fml.std
 ---@field public ui           fml.ui
 local fml = vim.tbl_extend("force", std, {
   api = api,
   collection = collection,
+  core = core,
   fn = fn,
   std = std,
   ui = ui,

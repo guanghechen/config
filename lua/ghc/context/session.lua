@@ -1,7 +1,9 @@
 local Observable = fml.collection.Observable
-local context_filepath = fml.path.locate_session_filepath({ filename = "config.json" })
+local Viewmodel = fml.collection.Viewmodel
 
----@class guanghechen.core.context.session : fml.collection.Viewmodel
+local context_filepath = fml.path.locate_session_filepath({ filename = "session.json" })
+
+---@class ghc.context.session : fml.collection.Viewmodel
 ---@field public buftype_extra fml.types.collection.IObservable
 ---@field public caller_winnr fml.types.collection.IObservable
 ---@field public caller_bufnr fml.types.collection.IObservable
@@ -15,7 +17,7 @@ local context_filepath = fml.path.locate_session_filepath({ filename = "config.j
 ---@field public replace_path fml.types.collection.IObservable
 ---@field public search_last_command fml.types.collection.IObservable
 ---@field public search_scope fml.types.collection.IObservable
-local context = fml.collection.Viewmodel
+local context = Viewmodel
   .new({
     name = "context:session",
     filepath = context_filepath,
@@ -35,7 +37,7 @@ local context = fml.collection.Viewmodel
   :register("search_scope", Observable.from_value("C"), true, false)
 
 context:load()
-context:auto_reload()
+--context:auto_reload()
 
 --Auto refresh statusline
 fml.fn.watch_observables({

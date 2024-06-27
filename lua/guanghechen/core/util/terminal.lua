@@ -1,7 +1,5 @@
 -- https://github.com/LazyVim/LazyVim/blob/f086bcde253c29be9a2b9c90b413a516f5d5a3b2/lua/lazyvim/util/terminal.lua#L1
 
-local context_session = require("guanghechen.core.context.session")
-
 ---@type table<string,LazyFloat>
 local terminals = {}
 
@@ -28,8 +26,8 @@ local M = {}
 ---@param cmd? string[]|string
 ---@param opts? LazyTermOpts
 function M.open_terminal(cmd, opts)
-  context_session.caller_bufnr:next(vim.api.nvim_get_current_buf())
-  context_session.caller_winnr:next(vim.api.nvim_get_current_win())
+  ghc.context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
+  ghc.context.session.caller_winnr:next(vim.api.nvim_get_current_win())
 
   opts = vim.tbl_deep_extend("force", {
     ft = "term",

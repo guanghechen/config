@@ -1,4 +1,3 @@
-local context_session = require("guanghechen.core.context.session")
 local util_terminal = require("guanghechen.core.util.terminal")
 
 -- Function to check clipboard with retries
@@ -42,7 +41,7 @@ local function edit_lazygit_file_in_buffer()
     return
   end
 
-  local winid = context_session.caller_winnr:get_snapshot()
+  local winid = ghc.context.session.caller_winnr:get_snapshot()
 
   if winid == nil then
     fml.reporter.error({

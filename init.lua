@@ -1,5 +1,9 @@
+vim.g.mapleader = " "
+
 _G.fml = require("fml")
 _G.ghc = require("ghc")
+
+vim.o.statusline = "%!v:lua._G.ghc.ui.statusline.render()"
 
 ---load theme
 vim.schedule(function()

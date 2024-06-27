@@ -1,6 +1,5 @@
 local action_session = require("guanghechen.core.action.session")
 local action_window = require("guanghechen.core.action.window")
-local context_session = require("guanghechen.core.context.session")
 
 ---@class guanghechen.core.action.autocmd
 local M = {}
@@ -71,7 +70,7 @@ function M.autocmd_clear_buftype_extra(bufnr, callback)
     buffer = bufnr,
     group = M.augroup("clear_buftype_extra"),
     callback = function()
-      context_session.buftype_extra:next(nil)
+      ghc.context.session.buftype_extra:next(nil)
       if callback then
         callback(bufnr)
       end
@@ -83,7 +82,7 @@ end
 ---@param opts {pattern: table}
 function M.autocmd_close_with_q(opts)
   local function close()
-    context_session.buftype_extra:next(nil)
+    ghc.context.session.buftype_extra:next(nil)
     vim.cmd("close")
   end
 
@@ -198,7 +197,7 @@ function M.autocmd_remember_spectre_prompt(opts)
 
       if sync_path then
         local query_path = state.query.path ---@type string
-        context_session.replace_path:next(query_path)
+        ghc.context.session.replace_path:next(query_path)
       end
 
       if type(callback) == "function" then

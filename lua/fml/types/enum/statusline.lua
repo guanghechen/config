@@ -1,0 +1,15 @@
+---@alias fml.enums.statusline.VimMode
+---| "normal"
+---| "visual"
+---| "insert"
+---| "terminal"
+---| "nterminal"
+---| "replace"
+---| "confirm"
+---| "command"
+---| "select"
+
+---@alias fml.enums.statusline.ComponentPosition
+---| "left"
+---| "center"
+---| "right"
