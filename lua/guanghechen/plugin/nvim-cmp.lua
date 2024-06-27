@@ -134,6 +134,8 @@ return {
     return options
   end,
   config = function(_, opts)
+    ghc.context.shared.reload_partial({ integration = "nvim_cmp" })
+
     local parse = require("cmp.utils.snippet").parse
     require("cmp.utils.snippet").parse = function(input)
       local ok, ret = pcall(parse, input)

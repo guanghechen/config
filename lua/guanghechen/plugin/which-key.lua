@@ -28,6 +28,8 @@ return {
     },
   },
   config = function(_, opts)
+    ghc.context.shared.reload_partial({ integration = "which_key" })
+
     vim.o.timeout = true
     vim.o.timeoutlen = 700
 

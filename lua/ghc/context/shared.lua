@@ -78,6 +78,24 @@ function M.toggle_scheme(params)
   end
 end
 
+---@param params                        ghc.types.context.shared.IReloadPartialThemeParams
+---@return nil
+function M.reload_partial(params)
+  local integration = params.integration ---@type ghc.enum.ui.theme.HighlightIntegration
+  local force = not not params.force ---@type boolean
+  local filepath = fml.path.join(theme_cache_dir, integration)
+  if force or not fml.path.is_exist(filepath) then
+    M.toggle_scheme({
+      mode = M.mode:get_snapshot(),
+      transparency = M.transparency:get_snapshot(),
+      persistent = true,
+      force = true,
+    })
+  else
+    dofile(filepath)
+  end
+end
+
 ---@param params                        ghc.types.context.shared.IReloadThemeParams
 ---@return nil
 function M.reload_theme(params)

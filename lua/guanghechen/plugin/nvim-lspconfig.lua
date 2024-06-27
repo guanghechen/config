@@ -9,6 +9,8 @@ return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   config = function()
+    ghc.context.shared.reload_partial({ integration = "nvim_lspconfig" })
+
     register_lsp_symbol("Error", fml.ui.icons.diagnostics.Error)
     register_lsp_symbol("Info", fml.ui.icons.diagnostics.Information)
     register_lsp_symbol("Hint", fml.ui.icons.diagnostics.Hint)

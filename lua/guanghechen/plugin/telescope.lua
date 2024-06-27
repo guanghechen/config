@@ -146,6 +146,7 @@ return {
     },
   },
   config = function(_, opts)
+    ghc.context.shared.reload_partial({ integration = "telescope" })
     require("telescope").setup(opts)
   end,
   dependencies = {
