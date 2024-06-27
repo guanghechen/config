@@ -2,7 +2,7 @@ local Printer = fml.ui.Printer
 local Textarea = fml.ui.Textarea
 local Previewer = require("ghc.command.replace.previewer")
 local constants = require("ghc.constant.command")
-local buf_delete_augroup = vim.api.nvim_create_augroup("ghc_command_replace_view_buf_del", { clear = true })
+local buf_delete_augroup = fml.fn.augroup("command_replace_view_buf_del", { clear = true })
 
 ---@class ghc.command.replace.Viewer
 ---@field private state         ghc.command.replace.State

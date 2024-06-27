@@ -1,73 +1,14 @@
----@param bufnr number
----@return number|nil
-local function locate_buffer_index(bufnr)
-  for i, value in ipairs(vim.t.bufs) do
-    if value == bufnr then
-      return i
-    end
-  end
-  return nil
-end
-
----see https://github.com/NvChad/ui/blob/5fe258afeb248519fc2a1681b48d24208ed22abe/lua/nvchad/tabufline/init.lua#L38
----@param bufnr number
----@return nil
-local function close_buffer(bufnr)
-  if vim.bo.buftype == "terminal" then
-    vim.cmd(vim.bo.buflisted and "set nobl | enew" or "hide")
-  else
-    -- for those who have disabled tabufline
-    if not vim.t.bufs then
-      vim.cmd("bd")
-      return
-    end
-
-    local curBufIndex = locate_buffer_index(bufnr)
-    local bufhidden = vim.bo.bufhidden
-
-    -- force close floating wins or nonbuflisted
-    if (not vim.bo[bufnr].buflisted) or vim.api.nvim_win_get_config(0).zindex then
-      vim.cmd("bw")
-      return
-
-      -- handle listed bufs
-    elseif curBufIndex and #vim.t.bufs > 1 then
-      local newBufIndex = curBufIndex == #vim.t.bufs and -1 or 1
-      vim.cmd("b" .. vim.t.bufs[curBufIndex + newBufIndex])
-
-      -- handle unlisted
-    elseif not vim.bo.buflisted then
-      local tmpbufnr = vim.t.bufs[1]
-
-      if vim.g.nv_previous_buf and vim.api.nvim_buf_is_valid(vim.g.nv_previous_buf) then
-        tmpbufnr = vim.g.nv_previous_buf
-      end
-
-      vim.cmd("b" .. tmpbufnr .. " | bw" .. bufnr)
-      return
-    else
-      vim.cmd("enew")
-    end
-
-    if not (bufhidden == "delete") then
-      vim.cmd("confirm bd" .. bufnr)
-    end
-  end
-
-  vim.cmd("redrawtabline")
-end
-
 ---@class guanghechen.core.action.buffer
 local M = {}
 
 function M.close_buffer()
   local bufnr = vim.api.nvim_get_current_buf() ---@type number
-  close_buffer(bufnr)
+  fml.api.buffer.close_buffer(bufnr)
 end
 
 function M.close_buffer_to_leftest()
   local bufnr = vim.api.nvim_get_current_buf() ---@type number
-  local bufidx = locate_buffer_index(bufnr) ---@type number|nil
+  local bufidx = fml.api.buffer.locate_buffer_index(bufnr) ---@type number|nil
 
   if bufidx == nil then
     return
@@ -75,14 +16,14 @@ function M.close_buffer_to_leftest()
 
   for l_bufidx, l_bufnr in ipairs(vim.t.bufs) do
     if l_bufidx < bufidx then
-      close_buffer(l_bufnr)
+      fml.api.buffer.close_buffer(l_bufnr)
     end
   end
 end
 
 function M.close_buffer_to_rightest()
   local bufnr = vim.api.nvim_get_current_buf() ---@type number
-  local bufidx = locate_buffer_index(bufnr) ---@type number|nil
+  local bufidx = fml.api.buffer.locate_buffer_index(bufnr) ---@type number|nil
 
   if bufidx == nil then
     return
@@ -90,7 +31,7 @@ function M.close_buffer_to_rightest()
 
   for r_bufidx, r_bufnr in ipairs(vim.t.bufs) do
     if r_bufidx > bufidx then
-      close_buffer(r_bufnr)
+      fml.api.buffer.close_buffer(r_bufnr)
     end
   end
 end
@@ -99,16 +40,16 @@ function M.close_buffer_others()
   local bufnr = vim.api.nvim_get_current_buf() ---@type number
   for _, o_bufnr in ipairs(vim.t.bufs) do
     if bufnr ~= o_bufnr then
-      close_buffer(o_bufnr)
+      fml.api.buffer.close_buffer(o_bufnr)
     end
   end
 end
 
 function M.close_buffer_all()
   for _, bufnr in ipairs(vim.t.bufs) do
-    close_buffer(bufnr)
+    fml.api.buffer.close_buffer(bufnr)
   end
-  vim.cmd("enew")
+  vim.cmd("new")
 end
 
 function M.get_current_bufid()
@@ -226,7 +167,7 @@ function M.open_buffer_10()
 end
 
 function M.new_buffer()
-  vim.cmd("enew")
+  vim.cmd("new")
 end
 
 return M

@@ -249,17 +249,16 @@ function M.show_window_history()
   end
 end
 
----@param augroup fun(groupname: string): string
-function M.register_autocmd_window_history(augroup)
+function M.register_autocmd_window_history()
   vim.api.nvim_create_autocmd("BufEnter", {
-    group = augroup("window_history_update"),
+    group = fml.fn.augroup("window_history_update"),
     callback = function()
       M.push()
     end,
   })
 
   vim.api.nvim_create_autocmd("WinClosed", {
-    group = augroup("window_history_clear"),
+    group = fml.fn.augroup("window_history_clear"),
     callback = function(args)
       local winnr = args.id ---@type number
       if type(winnr) == "number" then

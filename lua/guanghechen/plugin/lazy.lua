@@ -6,7 +6,7 @@ local opts = {
     lazy = true,
   },
   install = {
-    colorscheme = { "nvchad" },
+    colorscheme = {},
   },
   checker = {
     enabled = false, -- set true to automatically check for plugin updates

@@ -24,6 +24,7 @@ local core = {
 
 ---@class fml.fn
 local fn = {
+  augroup = require("fml.fn.augroup"),
   calc_fileicon = require("fml.fn.calc_fileicon"),
   debounce_leading = require("fml.fn.debounce_leading"),
   debounce_tailing = require("fml.fn.debounce_tailing"),
