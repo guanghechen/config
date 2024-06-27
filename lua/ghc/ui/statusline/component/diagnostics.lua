@@ -11,7 +11,7 @@ local M = {
       end,
       text = function(context)
         local count_error = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.ERROR })
-        return count_error > 0 and  fml.ui.icons.diagnostics.Error .. " " .. count_error .. " " or ""
+        return count_error > 0 and fml.ui.icons.diagnostics.Error .. " " .. count_error .. " " or ""
       end,
     },
     {
@@ -20,7 +20,7 @@ local M = {
       end,
       text = function(context)
         local count_warn = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.WARN })
-        return count_warn > 0 and  fml.ui.icons.diagnostics.Warning .. " " .. count_warn .. " " or ""
+        return count_warn > 0 and fml.ui.icons.diagnostics.Warning .. " " .. count_warn .. " " or ""
       end,
     },
     {
@@ -29,7 +29,7 @@ local M = {
       end,
       text = function(context)
         local count_hint = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.HINT })
-        return count_hint > 0 and  fml.ui.icons.diagnostics.Hint .. " " .. count_hint .. " " or ""
+        return count_hint > 0 and fml.ui.icons.diagnostics.Hint .. " " .. count_hint .. " " or ""
       end,
     },
     {
@@ -38,7 +38,7 @@ local M = {
       end,
       text = function(context)
         local count_info = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.INFO })
-        return count_info > 0 and  fml.ui.icons.diagnostics.Info .. " " .. count_info .. " " or ""
+        return count_info > 0 and fml.ui.icons.diagnostics.Information .. " " .. count_info .. " " or ""
       end,
     },
   },
