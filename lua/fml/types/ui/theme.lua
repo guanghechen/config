@@ -55,7 +55,7 @@
 ---@field public mode                   fml.enums.theme.Mode
 ---@field public colors                 fml.types.ui.theme.IColors
 
----@class fml.types.ui.theme.IHighlightGroup : vim.api.keyset.highlight
+---@class fml.types.ui.theme.IHlgroup : vim.api.keyset.highlight
 
 ---@class fml.types.ui.theme.IApplyParams
 ---@field public scheme                 fml.types.ui.theme.IScheme
@@ -69,5 +69,5 @@
 ---@class fml.types.ui.ITheme
 ---@field public apply                  fun(self: fml.types.ui.ITheme, params: fml.types.ui.theme.IApplyParams): nil
 ---@field public compile                fun(self: fml.types.ui.ITheme, params: fml.types.ui.theme.ICompileParams): nil
----@field public register               fun(self: fml.types.ui.ITheme, hlname: string, hlgroup: fml.types.ui.theme.IHighlightGroup): fml.types.ui.ITheme
----@field public registers              fun(self: fml.types.ui.ITheme, hlgroup_map: table<string, fml.types.ui.theme.IHighlightGroup | nil>): fml.types.ui.ITheme
+---@field public register               fun(self: fml.types.ui.ITheme, hlname: string, hlgroup: fml.types.ui.theme.IHlgroup): fml.types.ui.ITheme
+---@field public registers              fun(self: fml.types.ui.ITheme, hlgroup_map: table<string, fml.types.ui.theme.IHlgroup | nil>): fml.types.ui.ITheme

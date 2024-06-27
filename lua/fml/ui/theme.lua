@@ -1,5 +1,7 @@
+local path = require("fml.std.path")
+
 ---@class fml.ui.Theme : fml.types.ui.ITheme
----@field private hlgroup_map          table<string, fml.types.ui.theme.IHighlightGroup>
+---@field private hlgroup_map          table<string, fml.types.ui.theme.IHlgroup>
 local M = {}
 M.__index = M
 
@@ -20,14 +22,14 @@ function M:apply(params)
 end
 
 ---@param hlname                        string
----@param hlgroup                       fml.types.ui.theme.IHighlightGroup
+---@param hlgroup                       fml.types.ui.theme.IHlgroup
 ---@return fml.ui.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlgroup_map                   table<string, fml.types.ui.theme.IHighlightGroup|nil>
+---@param hlgroup_map                   table<string, fml.types.ui.theme.IHlgroup|nil>
 ---@return fml.ui.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do
@@ -55,7 +57,7 @@ function M:compile(params)
       table.insert(hlgroup_fields, field)
     end
 
-    local hlname_stringified = string.sub(hlname, 1, 1) == '@' and '["' .. hlname .. '"]' or hlname
+    local hlname_stringified = string.sub(hlname, 1, 1) == "@" and '["' .. hlname .. '"]' or hlname
     local hlgroup_str = hlname_stringified .. "={" .. table.concat(hlgroup_fields, ",") .. "}"
     table.insert(hlgroup_strs, hlgroup_str)
   end
@@ -69,7 +71,7 @@ function M:compile(params)
     .. ",k,v)\n"
     .. "end\nend, true)\n"
 
-  vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
+  path.mkdir_if_nonexist(vim.fn.fnamemodify(filepath, ":p:h"))
   local file = io.open(filepath, "wb")
   if file then
     file:write(loadstring(code)())

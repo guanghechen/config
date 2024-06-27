@@ -1,0 +1,3 @@
+---@class ghc.types.ui.theme.IGenHlgroupMapParams
+---@field public scheme                 fml.types.ui.theme.IScheme
+---@field public transparency           boolean

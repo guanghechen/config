@@ -22,6 +22,12 @@ function M.is_exist(filepath)
   return stat ~= nil and not vim.tbl_isempty(stat)
 end
 
+function M.mkdir_if_nonexist(dirpath)
+  if not M.is_exist(dirpath) then
+    vim.fn.mkdir(dirpath, "p")
+  end
+end
+
 ---Check if the `to` path is under the `from` path.
 ---@param from string
 ---@param to string
@@ -351,4 +357,3 @@ function M.current_filepath()
 end
 
 return M
-

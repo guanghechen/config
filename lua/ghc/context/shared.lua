@@ -1,10 +1,10 @@
-local gen_hlgroup_map = require("ghc.ui.theme.hlgroup")
+local highlight = require("ghc.ui.theme.highlight")
 local Theme = fml.ui.Theme
 local Observable = fml.collection.Observable
 local Viewmodel = fml.collection.Viewmodel
 
-local context_filepath = fml.path.locate_context_filepath({ filename = "theme.json" }) ---@type string
-local cache_theme_filepath = fml.path.locate_context_filepath({ filename = "theme" }) ---@type string
+local context_filepath = fml.path.locate_context_filepath({ filename = "shared.json" }) ---@type string
+local theme_cache_dir = fml.path.locate_context_filepath({ filename = "_themes" }) ---@type string
 
 ---@class ghc.context.shared : ghc.types.context.shared
 ---@field public mode                   fml.types.collection.IObservable
@@ -42,17 +42,20 @@ local function load_theme(params)
     return
   end
 
-  ---@return table<string, fml.types.ui.theme.IHighlightGroup | nil>
-  local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
-  local theme = Theme.new():registers(hlgroup_map)
-  vim.schedule(function ()
-    if persistent then
-      theme:compile({ nsnr = 0, scheme = scheme, filepath = cache_theme_filepath })
-      dofile(cache_theme_filepath)
-    else
-      theme:apply({ nsnr = 0, scheme = scheme })
-    end
-  end)
+  ---@return table<string, table<string, fml.types.ui.theme.IHlgroup|nil>>
+  local hlgroup_map = highlight.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
+  for hlg_name, hlg_map in pairs(hlgroup_map) do
+    local theme = Theme.new():registers(hlg_map)
+    local filepath = fml.path.join(theme_cache_dir, hlg_name)
+    vim.schedule(function()
+      if persistent then
+        theme:compile({ nsnr = 0, scheme = scheme, filepath = filepath })
+        dofile(filepath)
+      else
+        theme:apply({ nsnr = 0, scheme = scheme })
+      end
+    end)
+  end
 end
 
 ---@param params                        ghc.types.context.shared.IToggleSchemeParams
@@ -81,10 +84,27 @@ function M.reload_theme(params)
   local force = params.force or false ---@type boolean
   local mode = M.mode:get_snapshot() ---@type fml.enums.theme.Mode
   local transparency = M.transparency:get_snapshot() ---@type boolean
-  if force or not fml.path.is_exist(cache_theme_filepath) then
+
+  if force then
     M.toggle_scheme({ mode = mode, transparency = transparency, persistent = true, force = true })
   else
-    dofile(cache_theme_filepath)
+    local has_uncompiled_theme = false
+    for _, hlg_name in ipairs(highlight.integrations) do
+      local filepath = fml.path.join(theme_cache_dir, hlg_name)
+      if not fml.path.is_exist(filepath) then
+        has_uncompiled_theme = true
+        break
+      end
+    end
+
+    if has_uncompiled_theme then
+      M.toggle_scheme({ mode = mode, transparency = transparency, persistent = true, force = true })
+    else
+      for _, hlg_name in ipairs(highlight.integrations) do
+        local filepath = fml.path.join(theme_cache_dir, hlg_name)
+        dofile(filepath)
+      end
+    end
   end
 end
 
