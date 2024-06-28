@@ -10,24 +10,18 @@ local function get_os_icon()
   end
 end
 
----@type fml.types.core.statusline.IRawComponent
+---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "username",
-  will_change = function (context, prev_context)
+  will_change = function(context, prev_context)
     return prev_context == nil
   end,
-  pieces = {
-    {
-      hlname = function()
-        return "f_sl_username"
-      end,
-      text = function()
-        local icon = get_os_icon()
-        local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
-        return " " .. icon .. " " .. username .. " "
-      end,
-    },
-  },
+  render = function()
+    local icon = get_os_icon()
+    local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
+    local text = " " .. icon .. " " .. username .. " "
+    return fml.nvimbar.add_highlight(text, "f_sl_username")
+  end
 }
 
 return M

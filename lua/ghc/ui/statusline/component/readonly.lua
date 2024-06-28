@@ -1,20 +1,14 @@
----@type fml.types.core.statusline.IRawComponent
+---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "readonly",
-  condition = function ()
+  condition = function()
     local readonly = vim.api.nvim_get_option_value("readonly", { buf = 0 }) ---@type boolean
     return readonly
   end,
-  pieces = {
-    {
-      hlname = function()
-        return "f_sl_readonly"
-      end,
-      text = function()
-        return fml.ui.icons.ui.Lock .. " [RO]"
-      end,
-    },
-  },
+  render = function()
+    local text = fml.ui.icons.ui.Lock .. " [RO]"
+    return fml.nvimbar.add_highlight(text, "f_sl_readonly")
+  end
 }
 
 return M

@@ -1,19 +1,14 @@
----@type fml.types.core.statusline.IRawComponent
+---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "pos",
-  will_change = function (context, prev_context)
+  ---@diagnostic disable-next-line: unused-local
+  will_change = function(context, prev_context)
     return prev_context == nil
   end,
-  pieces = {
-    {
-      hlname = function()
-        return "f_sl_text"
-      end,
-      text = function()
-        return fml.ui.icons.ui.Location .. " %l·%c"
-      end,
-    },
-  },
+  render = function()
+    local text = fml.ui.icons.ui.Location .. " %l·%c"
+    return fml.nvimbar.add_highlight(text, "f_sl_text")
+  end
 }
 
 return M

@@ -1,4 +1,4 @@
----@type fml.types.core.statusline.IRawComponent
+---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "find_file",
   condition = function()
@@ -10,34 +10,22 @@ local M = {
     local buftype_extra = ghc.context.session.buftype_extra:get_snapshot() ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
     return buftype_extra == "find_file"
   end,
-  pieces = {
-    {
-      hlname = function()
-        return "f_sl_flag_scope"
-      end,
-      text = function()
-        return " " .. ghc.context.session.find_recent_scope:get_snapshot() .. " "
-      end,
-    },
-    {
-      hlname = function()
-        local enabled = ghc.context.replace.flag_regex:get_snapshot() ---@type boolean
-        return enabled and "f_sl_flag_enabled" or "f_sl_flag"
-      end,
-      text = function()
-        return " " .. fml.ui.icons.flag.Regex .. " "
-      end,
-    },
-    {
-      hlname = function()
-        local enabled = ghc.context.replace.flag_case_sensitive:get_snapshot() ---@type boolean
-        return enabled and "f_sl_flag_enabled" or "f_sl_flag"
-      end,
-      text = function()
-        return " " .. fml.ui.icons.flag.CaseSensitive .. " "
-      end,
-    },
-  },
+  render = function()
+    local text_scope                  = " " .. ghc.context.session.find_file_scope:get_snapshot() .. " "
+    local text_flag_regex             = " " .. fml.ui.icons.flag.Regex .. " " ---@type string
+    local text_flag_case_sensitive    = " " .. fml.ui.icons.flag.CaseSensitive .. " " ---@type string
+
+    local flag_regex_enabled          = ghc.context.replace.flag_regex:get_snapshot() ---@type boolean
+    local flag_case_sensitive_enabled = ghc.context.replace.flag_case_sensitive:get_snapshot() ---@type boolean
+
+    local hlname_scope                = "f_sl_flag_scope"
+    local hlname_flag_regex           = flag_regex_enabled and "f_sl_flag_enabled" or "f_sl_flag"
+    local hlname_flag_case_sensitive  = flag_case_sensitive_enabled and "f_sl_flag_enabled" or "f_sl_flag"
+
+    return fml.nvimbar.add_highlight(text_scope, hlname_scope)
+        .. fml.nvimbar.add_highlight(text_flag_regex, hlname_flag_regex)
+        .. fml.nvimbar.add_highlight(text_flag_case_sensitive, hlname_flag_case_sensitive)
+  end
 }
 
 return M

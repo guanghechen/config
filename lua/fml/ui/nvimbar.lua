@@ -11,6 +11,7 @@ local truthy = require("fml.fn.truthy")
 ---@field private center_components     fml.types.ui.nvimbar.IComponent[]
 ---@field private right_components      fml.types.ui.nvimbar.IComponent[]
 local M = {}
+M.__index = M
 
 ---@class fml.ui.nvimbar.IProps
 ---@field public component_sep          string

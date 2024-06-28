@@ -17,11 +17,6 @@ local collection = {
   Viewmodel = require("fml.collection.viewmodel"),
 }
 
----@class fml.core
-local core = {
-  Statusline = require("fml.core.statusline"),
-}
-
 ---@class fml.fn
 local fn = {
   augroup = require("fml.fn.augroup"),

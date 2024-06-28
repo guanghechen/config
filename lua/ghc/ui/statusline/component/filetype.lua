@@ -1,4 +1,4 @@
----@type fml.types.core.statusline.IRawComponent
+---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "filetype",
   will_change = function(context, prev_context)
@@ -7,16 +7,10 @@ local M = {
   condition = function(context)
     return context.filetype and #context.filetype > 0
   end,
-  pieces = {
-    {
-      hlname = function()
-        return "f_sl_text"
-      end,
-      text = function(context)
-        return context.fileicon .. " " .. context.filetype
-      end,
-    },
-  },
+  render = function(context)
+    local text = context.fileicon .. " " .. context.filetype ---@type string
+    return fml.nvimbar.add_highlight(text, "f_sl_text")
+  end
 }
 
 return M
