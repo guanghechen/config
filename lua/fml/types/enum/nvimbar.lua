@@ -1,0 +1,15 @@
+---@alias fml.enums.nvimbar.VimMode
+---| "normal"
+---| "visual"
+---| "insert"
+---| "terminal"
+---| "nterminal"
+---| "replace"
+---| "confirm"
+---| "command"
+---| "select"
+
+---@alias fml.enums.nvimbar.ComponentPosition
+---| "left"
+---| "center"
+---| "right"
