@@ -13,22 +13,15 @@ local function debounce_tailing(fn, timeout, first)
   local debounced
 
   if not first then
-    function debounced(...)
-      local argv = { ... }
-      local argc = select("#", ...)
-
+    function debounced()
       timer:start(timeout, 0, function()
-        pcall(vim.schedule_wrap(fn), vim.unpack(argv, 1, argc))
+        pcall(vim.schedule_wrap(fn))
       end)
     end
   else
-    local argv, argc
-    function debounced(...)
-      argv = argv or { ... }
-      argc = argc or select("#", ...)
-
+    function debounced()
       timer:start(timeout, 0, function()
-        pcall(vim.schedule_wrap(fn), vim.unpack(argv, 1, argc))
+        pcall(vim.schedule_wrap(fn))
       end)
     end
   end

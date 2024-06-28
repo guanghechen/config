@@ -10,14 +10,14 @@ local function debounce_leading(fn, timeout)
   local timer = vim.uv.new_timer()
   local running = false
 
-  local function debounced(...)
+  local function debounced()
     timer:start(timeout, 0, function()
       running = false
     end)
 
     if not running then
       running = true
-      pcall(vim.schedule_wrap(fn), select(1, ...))
+      pcall(vim.schedule_wrap(fn))
     end
   end
 
