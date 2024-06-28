@@ -146,7 +146,7 @@ function M:add(position, raw_component)
     local piece = {
       hlname = raw_piece.hlname,
       text = raw_piece.text,
-      callback_fn = raw_piece.on_click and G.add_anonymous_fn(raw_piece.on_click) or nil,
+      callback_fn = raw_piece.on_click and G.register_anonymous_fn(raw_piece.on_click) or nil,
     }
     table.insert(component.pieces, piece)
   end
@@ -215,14 +215,14 @@ function M:internal_render()
   local center_results = render_components(self.center_components, context, prev_context, bg_patch) ---@type string
   local right_results = render_components(self.right_components, context, prev_context, bg_patch) ---@type string
   local final_result = left_results
-    .. bg_patch
-    .. "%="
-    .. bg_patch
-    .. center_results
-    .. bg_patch
-    .. "%="
-    .. bg_patch
-    .. right_results
+      .. bg_patch
+      .. "%="
+      .. bg_patch
+      .. center_results
+      .. bg_patch
+      .. "%="
+      .. bg_patch
+      .. right_results
 
   self.last_context = context
   self.last_result = final_result
