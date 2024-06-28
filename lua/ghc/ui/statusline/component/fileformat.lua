@@ -17,7 +17,7 @@ local M = {
     local icon_tab = fml.ui.icons.ui.Tab .. " "
     local text_tab = vim.api.nvim_get_option_value("shiftwidth", { scope = "local" })
     local text = text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab
-    return fml.nvimbar.add_highlight(text, "f_sl_text")
+    return fml.nvimbar.txt(text, "f_sl_text")
   end
 }
 

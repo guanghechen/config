@@ -46,6 +46,7 @@
 ---@field public red                    string
 ---@field public statusline_bg          string
 ---@field public sun                    string
+---@field public tabline_bg             string
 ---@field public teal                   string
 ---@field public vibrant_green          string
 ---@field public white                  string

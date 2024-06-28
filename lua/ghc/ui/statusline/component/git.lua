@@ -10,7 +10,7 @@ local M = {
     local git_status = buffer_status_line.gitsigns_status_dict
     local branch_name = git_status.head
     local text = fml.ui.icons.git.Branch .. " " .. branch_name
-    return fml.nvimbar.add_highlight(text, "f_sl_text")
+    return fml.nvimbar.txt(text, "f_sl_text")
   end
 }
 

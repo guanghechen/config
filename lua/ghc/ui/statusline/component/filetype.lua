@@ -9,7 +9,7 @@ local M = {
   end,
   render = function(context)
     local text = context.fileicon .. " " .. context.filetype ---@type string
-    return fml.nvimbar.add_highlight(text, "f_sl_text")
+    return fml.nvimbar.txt(text, "f_sl_text")
   end
 }
 

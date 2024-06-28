@@ -22,9 +22,9 @@ local M = {
     local hlname_flag_regex           = flag_regex_enabled and "f_sl_flag_enabled" or "f_sl_flag"
     local hlname_flag_case_sensitive  = flag_case_sensitive_enabled and "f_sl_flag_enabled" or "f_sl_flag"
 
-    return fml.nvimbar.add_highlight(text_scope, hlname_scope)
-        .. fml.nvimbar.add_highlight(text_flag_regex, hlname_flag_regex)
-        .. fml.nvimbar.add_highlight(text_flag_case_sensitive, hlname_flag_case_sensitive)
+    return fml.nvimbar.txt(text_scope, hlname_scope)
+        .. fml.nvimbar.txt(text_flag_regex, hlname_flag_regex)
+        .. fml.nvimbar.txt(text_flag_case_sensitive, hlname_flag_case_sensitive)
   end
 }
 

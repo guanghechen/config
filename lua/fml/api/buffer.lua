@@ -41,8 +41,6 @@ function M.close_buffer(bufnr)
       vim.cmd("confirm bd" .. bufnr)
     end
   end
-
-  vim.cmd("redrawtabline")
 end
 
 ---@param filepath string

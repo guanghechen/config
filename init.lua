@@ -3,7 +3,10 @@ vim.g.mapleader = " "
 _G.fml = require("fml")
 _G.ghc = require("ghc")
 
-vim.o.statusline = "%!v:lua._G.ghc.ui.statusline.render()"
+vim.opt.laststatus = 3 -- Keep only the global status bar.
+vim.opt.showtabline = 2
+vim.opt.statusline = "%!v:lua._G.ghc.ui.statusline.render()"
+vim.opt.tabline = "%!v:lua._G.ghc.ui.tabline.render()"
 
 ---load theme
 vim.schedule(function()

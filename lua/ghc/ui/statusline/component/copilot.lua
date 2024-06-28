@@ -8,7 +8,7 @@ local M = {
     local status = require("copilot.api").status.data.status
     local text = fml.ui.icons.cmp.copilot .. " " ---@type string
     local hlname = (status == nil or #status < 1) and "f_sl_text" or ("f_sl_copilot_" .. status)
-    return fml.nvimbar.add_highlight(text, hlname)
+    return fml.nvimbar.txt(text, hlname)
   end
 }
 

@@ -7,7 +7,7 @@ local M = {
   render = function(context)
     local cwd_name = (context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd)
     local text = "󰉋 " .. cwd_name .. " "
-    return fml.nvimbar.add_highlight(text, "f_sl_text")
+    return fml.nvimbar.txt(text, "f_sl_text")
   end
 }
 

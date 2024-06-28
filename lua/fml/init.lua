@@ -1,6 +1,11 @@
+---autocmd
+require("fml.autocmd.bootstrap")
+require("fml.autocmd.buffer")
+
 ---@class fml.api
 local api = {
   buffer = require("fml.api.buffer"),
+  tab = require("fml.api.tab"),
   window = require("fml.api.window"),
 }
 
@@ -67,14 +72,12 @@ local ui = {
 ---@class fml : fml.std
 ---@field public api          fml.api
 ---@field public collection   fml.collection
----@field public core         fml.core
 ---@field public fn           fml.fn
 ---@field public std          fml.std
 ---@field public ui           fml.ui
 local fml = vim.tbl_extend("force", std, {
   api = api,
   collection = collection,
-  core = core,
   fn = fn,
   std = std,
   ui = ui,

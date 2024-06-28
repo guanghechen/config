@@ -45,8 +45,8 @@ local M = {
   render = function(context)
     local text_filepath = get_filepath(context) ---@type string
     local text_filestatus = get_filestatus() ---@type string
-    return fml.nvimbar.add_highlight(text_filepath, "f_sl_text")
-        .. fml.nvimbar.add_highlight(text_filestatus, "f_sl_text")
+    return fml.nvimbar.txt(text_filepath, "f_sl_text")
+        .. fml.nvimbar.txt(text_filestatus, "f_sl_text")
   end
 }
 

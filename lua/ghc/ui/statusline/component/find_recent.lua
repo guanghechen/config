@@ -12,7 +12,7 @@ local M = {
   end,
   render = function()
     local text = " " .. ghc.context.session.find_recent_scope:get_snapshot() .. " "
-    return fml.nvimbar.add_highlight(text, "f_sl_flag_scope")
+    return fml.nvimbar.txt(text, "f_sl_flag_scope")
   end
 }
 

@@ -38,6 +38,9 @@ function M.gen_hlgroup_map(params)
       ghc_bufferline_neotree_icon = { fg = c.white, bg = t and "none" or c.black2 },
       ghc_bufferline_neotree_text = { fg = c.white, bg = t and "none" or c.black2 },
 
+      ---common
+      f_transparent = { bg = "none" },
+
       ---diff
       ghc_DiffAdd_left = { bg = "#FFE0E0", fg = "none" },
       ghc_DiffDelete_left = { bg = "#FFE0E0", fg = "none" },
@@ -175,6 +178,15 @@ function M.gen_hlgroup_map(params)
       f_sl_text_terminal = { fg = c.green, bg = t and "none" or c.statusline_bg, bold = true },
       f_sl_text_visual = { fg = c.cyan, bg = t and "none" or c.statusline_bg },
       f_sl_username = { fg = c.black, bg = c.cyan },
+
+      ---tabline
+      f_tl_bg = { fg = t and "none" or c.statusline_bg, bg = t and "none" or c.statusline_bg },
+      f_tl_neotree_blank = { fg = c.white, bg = t and "none" or c.black2 },
+      f_tl_neotree_text = { fg = c.white, bg = t and "none" or c.black2 },
+      f_tl_tab_add = { fg = c.white, bg = c.one_bg2 },
+      f_tl_tab_item = { fg = c.white, bg = c.black2 },
+      f_tl_tab_item_cur = { fg = c.red },
+      f_tl_tab_toggle = { fg = c.black, bg = c.blue },
 
       ---tabline
       TbFill = { bg = t and "none" or c.black2 },

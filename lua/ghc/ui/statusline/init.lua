@@ -3,7 +3,7 @@ local M = {}
 
 ---@type fml.types.ui.INvimbar
 local statusline = fml.ui.Nvimbar.new({
-  component_sep = fml.nvimbar.add_highlight("  ", "f_sl_bg"),
+  component_sep = fml.nvimbar.txt("  ", "f_sl_bg"),
 })
 
 statusline

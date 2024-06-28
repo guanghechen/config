@@ -7,7 +7,7 @@ local M = {
   end,
   render = function()
     local text = fml.ui.icons.ui.Location .. " %l·%c"
-    return fml.nvimbar.add_highlight(text, "f_sl_text")
+    return fml.nvimbar.txt(text, "f_sl_text")
   end
 }
 

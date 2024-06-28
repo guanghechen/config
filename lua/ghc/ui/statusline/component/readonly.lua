@@ -7,7 +7,7 @@ local M = {
   end,
   render = function()
     local text = fml.ui.icons.ui.Lock .. " [RO]"
-    return fml.nvimbar.add_highlight(text, "f_sl_readonly")
+    return fml.nvimbar.txt(text, "f_sl_readonly")
   end
 }
 

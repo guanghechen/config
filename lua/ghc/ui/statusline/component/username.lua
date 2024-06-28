@@ -20,7 +20,7 @@ local M = {
     local icon = get_os_icon()
     local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
     local text = " " .. icon .. " " .. username .. " "
-    return fml.nvimbar.add_highlight(text, "f_sl_username")
+    return fml.nvimbar.txt(text, "f_sl_username")
   end
 }
 

@@ -17,7 +17,7 @@ local M = {
   end,
   render = function()
     local text = get_text() ---@type string
-    return fml.nvimbar.add_highlight(text, "f_sl_text")
+    return fml.nvimbar.txt(text, "f_sl_text")
   end
 }
 
