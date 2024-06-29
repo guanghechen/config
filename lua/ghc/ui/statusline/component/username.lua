@@ -20,7 +20,8 @@ local M = {
     local icon = get_os_icon()
     local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
     local text = " " .. icon .. " " .. username .. " "
-    return fml.nvimbar.txt(text, "f_sl_username")
+    local width = vim.fn.strwidth(text) ---@type integer
+    return fml.nvimbar.txt(text, "f_sl_username"), width
   end
 }
 

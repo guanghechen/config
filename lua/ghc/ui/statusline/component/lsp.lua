@@ -17,7 +17,8 @@ local M = {
   end,
   render = function()
     local text = get_text() ---@type string
-    return fml.nvimbar.txt(text, "f_sl_text")
+    local width = vim.fn.strwidth(text) ---@type integer
+    return fml.nvimbar.txt(text, "f_sl_text"), width
   end
 }
 

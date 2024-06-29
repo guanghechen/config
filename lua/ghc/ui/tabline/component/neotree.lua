@@ -16,19 +16,20 @@ local M = {
   render = function()
     local width = get_neotree_width()
     if width <= 0 then
-      return ""
+      return "", 0
     end
 
     local text = " Explorer"
-    local word_size = vim.fn.strwidth(text)
-    local left_width = math.floor((width - word_size) / 2)
-    local right_width = width - left_width - word_size
+    local text_width = vim.fn.strwidth(text)
+    local left_width = math.floor((width - text_width) / 2)
+    local right_width = width - left_width - text_width
     local left_blank = string.rep(" ", left_width)
     local right_blank = string.rep(" ", right_width)
 
-    return fml.nvimbar.txt(left_blank, 'f_tl_neotree_blank')
+    local hl_text = fml.nvimbar.txt(left_blank, 'f_tl_neotree_blank')
         .. fml.nvimbar.txt(text, 'f_tl_neotree_text')
         .. fml.nvimbar.txt(right_blank, 'f_tl_neotree_blank')
+    return hl_text, width + 1
   end,
 }
 

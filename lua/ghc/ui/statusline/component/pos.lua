@@ -7,7 +7,8 @@ local M = {
   end,
   render = function()
     local text = fml.ui.icons.ui.Location .. " %l·%c"
-    return fml.nvimbar.txt(text, "f_sl_text")
+    local width = vim.fn.strwidth(text) ---@type integer
+    return fml.nvimbar.txt(text, "f_sl_text"), width
   end
 }
 

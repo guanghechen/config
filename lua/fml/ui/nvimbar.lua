@@ -3,18 +3,18 @@ local truthy = require("fml.fn.truthy")
 
 ---@class fml.ui.Nvimbar : fml.types.ui.INvimbar
 ---@field private sep                   string
+---@field private sep_width             integer
 ---@field private dirty                 boolean
 ---@field private rendering             boolean
 ---@field private last_result           string|nil
 ---@field private last_context          fml.types.ui.nvimbar.IContext|nil
----@field private left_components       fml.types.ui.nvimbar.IComponent[]
----@field private center_components     fml.types.ui.nvimbar.IComponent[]
----@field private right_components      fml.types.ui.nvimbar.IComponent[]
+---@field private components            fml.types.ui.nvimbar.IComponent[]
 local M = {}
 M.__index = M
 
 ---@class fml.ui.nvimbar.IProps
 ---@field public component_sep          string
+---@field public component_sep_hlname   string
 
 local modes_map = {
   ["n"] = { "normal", "NORMAL" },
@@ -84,57 +84,38 @@ end
 ---@param component                     fml.types.ui.nvimbar.IComponent
 ---@param context                       fml.types.ui.nvimbar.IContext
 ---@param prev_context                  fml.types.ui.nvimbar.IContext|nil
----@return string
-local function render_component(component, context, prev_context)
+---@return nil
+local function render_component(component, context, prev_context, remain_width)
   if not component.will_change(context, prev_context) then
-    return component.last_result
+    return
   end
 
-  if not component.condition(context) then
-    return ""
+  if not component.condition(context, remain_width) then
+    component.last_result_text = ""
+    component.last_result_width = 0
+    return
   end
 
-  return component.render(context)
-end
-
----@param components                    fml.types.ui.nvimbar.IComponent[]
----@param context                       fml.types.ui.nvimbar.IContext
----@param prev_context                  fml.types.ui.nvimbar.IContext|nil
----@param sep                           string
----@return string
-local function render_components(components, context, prev_context, sep)
-  local results = {} ---@type string[]
-  for _, component in ipairs(components) do
-    local ok, result = pcall(render_component, component, context, prev_context)
-    if ok then
-      if #result > 0 then
-        component.last_result = result
-        table.insert(results, result)
-      end
-    else
-      reporter.error({
-        from = "fml.ui.nvimbar",
-        subject = "render_components",
-        message = "Encounter error while render the nvimbar component.",
-        details = { name = component.name, error = result },
-      })
-    end
-  end
-  return table.concat(results, sep)
+  local text, width = component.render(context, remain_width)
+  component.last_result_text = text
+  component.last_result_width = width
 end
 
 ---@param props                         fml.ui.nvimbar.IProps
 ---@return fml.ui.Nvimbar
 function M.new(props)
+  local component_sep = props.component_sep ---@type string
+  local component_sep_hlname = props.component_sep_hlname ---@type string
+
+
   local self = setmetatable({}, M)
-  self.sep = props.component_sep
+  self.sep = fml.nvimbar.txt(component_sep, component_sep_hlname)
+  self.sep_width = vim.fn.strwidth(component_sep)
   self.dirty = true
   self.rendering = false
   self.last_result = nil
   self.last_context = nil
-  self.left_components = {}
-  self.center_components = {}
-  self.right_components = {}
+  self.components = {}
   return self
 end
 
@@ -146,26 +127,13 @@ function M:add(position, raw_component)
   local component = {
     name = raw_component.name,
     position = position,
-    last_result = "",
+    last_result_text = "",
+    last_result_width = 0,
     render = raw_component.render,
     will_change = raw_component.will_change or truthy,
     condition = raw_component.condition or truthy,
   }
-
-  if position == "left" then
-    table.insert(self.left_components, component)
-  elseif position == "center" then
-    table.insert(self.center_components, component)
-  elseif position == "right" then
-    table.insert(self.right_components, 1, component)
-  else
-    reporter.error({
-      from = "fml.ui.nvimbar",
-      subject = "add",
-      message = "Bad component position.",
-      details = { position = position, component = component },
-    })
-  end
+  table.insert(self.components, component)
   return self
 end
 
@@ -187,22 +155,68 @@ function M:internal_render()
 
   self.rendering = true
 
+  local sep = self.sep ---@type string
+  local sep_width = self.sep_width ---@type integer
   local context = build_context() ---@type fml.types.ui.nvimbar.IContext
   local prev_context = self.last_context ---@type fml.types.ui.nvimbar.IContext|nil
 
-  local left_results = render_components(self.left_components, context, prev_context, self.sep) ---@type string
-  local center_results = render_components(self.center_components, context, prev_context, self.sep) ---@type string
-  local right_results = render_components(self.right_components, context, prev_context, self.sep) ---@type string
-  local final_result = left_results
-      .. self.sep
-      .. "%="
-      .. self.sep
-      .. center_results
-      .. self.sep
-      .. "%="
-      .. self.sep
-      .. right_results
+  local lc = '' ---@type string
+  local cc = '' ---@type string
+  local rc = '' ---@type string
+  local remain_width = vim.o.columns - sep_width - sep_width ---@type integer
+  local components = self.components ---@type fml.types.ui.nvimbar.IComponent[]
+  for i = 1, #components, 1 do
+    local component = components[i] ---@type fml.types.ui.nvimbar.IComponent
+    local ok, err = pcall(render_component, component, context, prev_context, remain_width)
+    if ok then
+      local text = component.last_result_text ---@type string
+      local width = component.last_result_width ---@type integer
+      if width > 0 then
+        remain_width = remain_width - width - sep_width
+        if component.position == "left" then
+          if #lc > 0 then
+            lc = lc .. sep .. text
+            remain_width = remain_width - width - sep_width - sep_width
+          else
+            lc = text
+            remain_width = remain_width - width - sep_width
+          end
+        elseif component.position == "center" then
+          if #cc > 0 then
+            cc = cc .. sep .. text
+            remain_width = remain_width - width - sep_width - sep_width
+          else
+            cc = text
+            remain_width = remain_width - width - sep_width
+          end
+        elseif component.position == "right" then
+          if #rc > 0 then
+            rc = text .. sep .. rc
+            remain_width = remain_width - width - sep_width - sep_width
+          else
+            rc = text
+            remain_width = remain_width - width - sep_width
+          end
+        else
+          reporter.error({
+            from = "fml.ui.nvimbar",
+            subject = "add",
+            message = "Bad component position.",
+            details = { component = component },
+          })
+        end
+      end
+    else
+      reporter.error({
+        from = "fml.ui.nvimbar",
+        subject = "render_components",
+        message = "Encounter error while render the nvimbar component.",
+        details = { name = component.name, error = err },
+      })
+    end
+  end
 
+  local final_result = lc .. sep .. "%=" .. sep .. cc .. sep .. "%=" .. sep .. rc ---@type string
   self.last_context = context
   self.last_result = final_result
   self.dirty = false

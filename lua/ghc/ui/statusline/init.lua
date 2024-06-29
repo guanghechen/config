@@ -3,7 +3,8 @@ local M = {}
 
 ---@type fml.types.ui.INvimbar
 local statusline = fml.ui.Nvimbar.new({
-  component_sep = fml.nvimbar.txt("  ", "f_sl_bg"),
+  component_sep = "  ",
+  component_sep_hlname = "f_sl_bg",
 })
 
 statusline
@@ -23,7 +24,6 @@ statusline
     :add("right", require("ghc.ui.statusline.component.fileformat"))
     :add("right", require("ghc.ui.statusline.component.pos"))
     :add("right", require("ghc.ui.statusline.component.noice"))
-    :add("right", require("ghc.ui.statusline.component.diagnostics"))
 
 ---@return string
 function M.render()

@@ -27,22 +27,27 @@ local M = {
     dirty = false
 
     if last_tab_count <= 1 then
-      return ""
+      return "", 0
     end
 
     if last_folded then
-      return fml.nvimbar.btn(" 󰅁 ", fn_toggle_tabs_folded, "f_tl_tab_toggle")
+      local text = " 󰅁 "
+      local width = vim.fn.strwidth(text)
+      local hl_text = fml.nvimbar.btn(" 󰅁 ", fn_toggle_tabs_folded, "f_tl_tab_toggle")
+      return hl_text, width
     end
 
-    ---@type string[]
-    local btns = { fml.nvimbar.btn(" 󰅂 ", fn_toggle_tabs_folded, "f_tl_tab_toggle") }
+    local width = vim.fn.strwidth(" 󰅂 ") ---@type integer
+    local hl_text = fml.nvimbar.btn(" 󰅂 ", fn_toggle_tabs_folded, "f_tl_tab_toggle")
 
     for nr = 1, last_tab_count, 1 do
       local hlname = last_tab_cur == nr and "f_tl_tab_item_cur" or "f_tl_tab_item"
-      table.insert(btns, fml.nvimbar.btn(" " .. nr .. " ", "fml.api.tab.goto_tab" .. nr, hlname))
+      local text = " " .. nr .. " "
+      width = width + #text
+      hl_text = hl_text .. fml.nvimbar.btn(text, "fml.api.tab.goto_tab" .. nr, hlname)
     end
-    -- table.insert(btns, fml.nvimbar.btn("  ", "fml.api.tab.new_tab", "f_tl_tab_add"))
-    return table.concat(btns, '')
+
+    return hl_text, width
   end
 }
 

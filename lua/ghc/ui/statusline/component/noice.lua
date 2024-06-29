@@ -8,8 +8,10 @@ local M = {
     local status = require("noice").api.status
     local text_noice_command = status.command.get() or ""
     local text_noice_mode = status.mode.get() or ""
-    return fml.nvimbar.txt(text_noice_command, "f_sl_noice_command")
+    local text_hl = fml.nvimbar.txt(text_noice_command, "f_sl_noice_command")
         .. fml.nvimbar.txt(text_noice_mode, "f_sl_noice_mode")
+    local width = vim.fn.strwidth(text_noice_command) + vim.fn.strwidth(text_noice_mode)
+    return text_hl, width
   end
 }
 

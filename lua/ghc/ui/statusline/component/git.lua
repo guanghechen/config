@@ -10,7 +10,8 @@ local M = {
     local git_status = buffer_status_line.gitsigns_status_dict
     local branch_name = git_status.head
     local text = fml.ui.icons.git.Branch .. " " .. branch_name
-    return fml.nvimbar.txt(text, "f_sl_text")
+    local width = vim.fn.strwidth(text)
+    return fml.nvimbar.txt(text, "f_sl_text"), width
   end
 }
 

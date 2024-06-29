@@ -10,7 +10,8 @@ local M = {
   render = function(context)
     local text = " " .. context.mode_name ---@type string
     local hlname = "f_sl_text_" .. context.mode ---@type string
-    return fml.nvimbar.txt(text, hlname)
+    local width = vim.fn.strwidth(text) ---@type integer
+    return fml.nvimbar.txt(text, hlname), width
   end
 }
 

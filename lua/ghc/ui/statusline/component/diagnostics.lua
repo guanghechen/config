@@ -17,10 +17,16 @@ local M = {
     local count_info = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.INFO })
     local text_count_info = count_info > 0 and fml.ui.icons.diagnostics.Information .. " " .. count_info .. " " or ""
 
-    return fml.nvimbar.txt(text_count_error, "f_sl_diagnostics_error")
+    local text_hl = fml.nvimbar.txt(text_count_error, "f_sl_diagnostics_error")
         .. fml.nvimbar.txt(text_count_warn, "f_sl_diagnostics_warn")
         .. fml.nvimbar.txt(text_count_hint, "f_sl_diagnostics_hint")
         .. fml.nvimbar.txt(text_count_info, "f_sl_diagnostics_info")
+    local width = vim.fn.strwidth(text_count_error)
+        + vim.fn.strwidth(text_count_warn)
+        + vim.fn.strwidth(text_count_hint)
+        + vim.fn.strwidth(text_count_info)
+
+    return text_hl, width
   end,
 }
 

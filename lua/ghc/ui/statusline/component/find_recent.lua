@@ -12,7 +12,8 @@ local M = {
   end,
   render = function()
     local text = " " .. ghc.context.session.find_recent_scope:get_snapshot() .. " "
-    return fml.nvimbar.txt(text, "f_sl_flag_scope")
+    local width = vim.fn.strwidth(text)
+    return fml.nvimbar.txt(text, "f_sl_flag_scope"), width
   end
 }
 

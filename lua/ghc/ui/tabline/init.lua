@@ -3,7 +3,8 @@ local M = {}
 
 ---@type fml.types.ui.INvimbar
 local tabline = fml.ui.Nvimbar.new({
-  component_sep = fml.nvimbar.txt("", "f_transparent"),
+  component_sep = "",
+  component_sep_hlname = "f_transparent",
 })
 
 tabline

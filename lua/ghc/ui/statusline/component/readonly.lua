@@ -7,7 +7,8 @@ local M = {
   end,
   render = function()
     local text = fml.ui.icons.ui.Lock .. " [RO]"
-    return fml.nvimbar.txt(text, "f_sl_readonly")
+    local width = vim.fn.strwidth(text) ---@type integer
+    return fml.nvimbar.txt(text, "f_sl_readonly"), width
   end
 }
 

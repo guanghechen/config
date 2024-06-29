@@ -45,8 +45,10 @@ local M = {
   render = function(context)
     local text_filepath = get_filepath(context) ---@type string
     local text_filestatus = get_filestatus() ---@type string
-    return fml.nvimbar.txt(text_filepath, "f_sl_text")
+    local hl_text = fml.nvimbar.txt(text_filepath, "f_sl_text")
         .. fml.nvimbar.txt(text_filestatus, "f_sl_text")
+    local width = vim.fn.strwidth(text_filepath) + vim.fn.strwidth(text_filestatus)
+    return hl_text, width
   end
 }
 
