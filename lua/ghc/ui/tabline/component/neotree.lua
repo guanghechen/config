@@ -1,3 +1,5 @@
+local neotree_width = 0 ---@type integer
+
 local function get_neotree_width()
   for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type number
@@ -13,8 +15,16 @@ end
 --- @type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "neotree",
+  will_change = function()
+    local width = get_neotree_width() ---@type integer
+    if width ~= neotree_width then
+      neotree_width = width
+      return true
+    end
+    return false
+  end,
   render = function()
-    local width = get_neotree_width()
+    local width = neotree_width
     if width <= 0 then
       return "", 0
     end

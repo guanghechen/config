@@ -2,6 +2,7 @@ local reporter = require("fml.std.reporter")
 local truthy = require("fml.fn.truthy")
 
 ---@class fml.ui.Nvimbar : fml.types.ui.INvimbar
+---@field public name                   string
 ---@field private sep                   string
 ---@field private sep_width             integer
 ---@field private dirty                 boolean
@@ -13,6 +14,7 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.nvimbar.IProps
+---@field public name                   string
 ---@field public component_sep          string
 ---@field public component_sep_hlname   string
 
@@ -104,11 +106,12 @@ end
 ---@param props                         fml.ui.nvimbar.IProps
 ---@return fml.ui.Nvimbar
 function M.new(props)
+  local name = props.name ---@type string
   local component_sep = props.component_sep ---@type string
   local component_sep_hlname = props.component_sep_hlname ---@type string
 
-
   local self = setmetatable({}, M)
+  self.name = name
   self.sep = fml.nvimbar.txt(component_sep, component_sep_hlname)
   self.sep_width = vim.fn.strwidth(component_sep)
   self.dirty = true
@@ -172,7 +175,6 @@ function M:internal_render()
       local text = component.last_result_text ---@type string
       local width = component.last_result_width ---@type integer
       if width > 0 then
-        remain_width = remain_width - width - sep_width
         if component.position == "left" then
           if #lc > 0 then
             lc = lc .. sep .. text

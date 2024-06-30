@@ -1,3 +1,5 @@
+local last_bufnr_cur = 1 ---@type integer
+
 ---@class ghc.ui.tabline.component.IBufItem
 ---@field public bufnr                  integer
 ---@field public filepath               string
@@ -49,10 +51,18 @@ local M = {
     local bufs = build_buf_items()
     local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
 
-    ---@type integer, nil
+    ---@type integer|nil
     local bufid_cur = fml.table.find(bufs, function(item)
       return item.bufnr == bufnr_cur
-    end) or 1
+    end)
+
+    if bufid_cur ~= nil then
+      last_bufnr_cur = bufnr_cur
+    else
+      bufid_cur = fml.table.find(bufs, function(item)
+        return item.bufnr == last_bufnr_cur
+      end) or 1
+    end
 
     local text, width = render_buf(bufs[bufid_cur], bufid_cur, true)
 
@@ -71,7 +81,6 @@ local M = {
         text = text .. t
       end
     end
-
     return text, width
   end,
 }

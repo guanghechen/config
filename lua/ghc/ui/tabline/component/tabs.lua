@@ -33,17 +33,18 @@ local M = {
     if last_folded then
       local text = " 󰅁 "
       local width = vim.fn.strwidth(text)
-      local hl_text = fml.nvimbar.btn(" 󰅁 ", fn_toggle_tabs_folded, "f_tl_tab_toggle")
+      local hl_text = fml.nvimbar.btn(text, fn_toggle_tabs_folded, "f_tl_tab_toggle")
       return hl_text, width
     end
 
-    local width = vim.fn.strwidth(" 󰅂 ") ---@type integer
-    local hl_text = fml.nvimbar.btn(" 󰅂 ", fn_toggle_tabs_folded, "f_tl_tab_toggle")
+    local text = " 󰅂 " ---@type string
+    local width = vim.fn.strwidth(text) ---@type integer
+    local hl_text = fml.nvimbar.btn(text, fn_toggle_tabs_folded, "f_tl_tab_toggle")
 
     for nr = 1, last_tab_count, 1 do
       local hlname = last_tab_cur == nr and "f_tl_tab_item_cur" or "f_tl_tab_item"
-      local text = " " .. nr .. " "
-      width = width + #text
+      text = " " .. nr .. " "
+      width = width + vim.fn.strwidth(text)
       hl_text = hl_text .. fml.nvimbar.btn(text, "fml.api.tab.goto_tab" .. nr, hlname)
     end
 
