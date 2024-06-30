@@ -3,7 +3,13 @@ local M = {}
 
 ---@type ghc.enum.ui.theme.HighlightIntegration[]
 M.integrations = {
+  --- orders as needed
   "default",
+  "treesitter",
+  "nvim_web_devicons",
+  "nvim_lspconfig",
+
+  ---
   "flash",
   "gitsigns",
   "indent_blank_line",
@@ -11,11 +17,8 @@ M.integrations = {
   "nvim_cmp",
   "nvim_dap",
   "nvim_dap_ui",
-  "nvim_lspconfig",
   "nvim_navic",
-  "nvim_web_devicons",
   "telescope",
-  "treesitter",
   "trouble",
   "vim_illuminate",
   "vim_notify",
@@ -193,22 +196,6 @@ function M.gen_hlgroup_map(params)
       f_tl_tab_item = { fg = c.white, bg = c.black2 },
       f_tl_tab_item_cur = { fg = c.red },
       f_tl_tab_toggle = { fg = c.black, bg = c.blue },
-
-      ---tabline
-      TbFill = { bg = t and "none" or c.black2 },
-      TbBufOff = { fg = c.light_grey, bg = t and "none" or c.black2 },
-      TbBufOffClose = { fg = c.light_grey, bg = t and "none" or c.black2 },
-      TbBufOffModified = { fg = c.red, bg = t and "none" or c.black2 },
-      TbBufOn = { fg = c.white, bg = t and "none" or c.black },
-      TbBufOnClose = { fg = c.red, bg = t and "none" or c.black },
-      TbBufOnModified = { fg = c.green, bg = t and "none" or c.black },
-      TbCloseAllBufsBtn = { bold = true, bg = c.red, fg = c.black },
-      TbTabNewBtn = { fg = c.white, bg = c.one_bg2 },
-      TbTabCloseBtn = { fg = c.black, bg = c.nord_blue },
-      TbTabOff = { fg = c.white, bg = c.black2 },
-      TbTabOn = { fg = c.red },
-      TBTabTitle = { fg = c.black, bg = c.blue },
-      TbThemeToggleBtn = { bold = true, fg = c.white, bg = c.one_bg3 },
     },
     flash = {
       FlashBackdrop = { fg = c.grey_fg, bg = "none", italic = true },
