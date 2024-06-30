@@ -11,6 +11,7 @@ tabline
 ---
     :add("left", require("ghc.ui.tabline.component.neotree"))
     :add("right", require("ghc.ui.tabline.component.tabs"))
+    :add("left", require("ghc.ui.tabline.component.bufs"))
 
 local dirty = true
 local running = false

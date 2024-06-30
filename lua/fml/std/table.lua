@@ -46,6 +46,19 @@ function M.equals_array(arr1, arr2)
 end
 
 ---@generic T
+---@param arr                           T[]
+---@param check                         fun(ele: T, index: integer): boolean
+---@return integer|nil
+function M.find(arr, check)
+  for i = 1, #arr do
+    if check(arr[i], i) then
+      return i
+    end
+  end
+  return nil
+end
+
+---@generic T
 ---@param arr T[]
 ---@param filter? fun(v, i):boolean
 ---@return T[]
@@ -134,3 +147,4 @@ function M.parse_comma_list(str, separator_pattern)
 end
 
 return M
+

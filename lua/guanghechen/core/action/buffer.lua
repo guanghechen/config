@@ -126,43 +126,43 @@ function M.open_buffer(bufid)
   end
 end
 
-function M.open_buffer_1()
+function M.goto_buf1()
   M.open_buffer(1)
 end
 
-function M.open_buffer_2()
+function M.goto_buf2()
   M.open_buffer(2)
 end
 
-function M.open_buffer_3()
+function M.goto_buf3()
   M.open_buffer(3)
 end
 
-function M.open_buffer_4()
+function M.goto_buf4()
   M.open_buffer(4)
 end
 
-function M.open_buffer_5()
+function M.goto_buf5()
   M.open_buffer(5)
 end
 
-function M.open_buffer_6()
+function M.goto_buf6()
   M.open_buffer(6)
 end
 
-function M.open_buffer_7()
+function M.goto_buf7()
   M.open_buffer(7)
 end
 
-function M.open_buffer_8()
+function M.goto_buf8()
   M.open_buffer(8)
 end
 
-function M.open_buffer_9()
+function M.goto_buf9()
   M.open_buffer(9)
 end
 
-function M.open_buffer_10()
+function M.goto_buf10()
   M.open_buffer(10)
 end
 

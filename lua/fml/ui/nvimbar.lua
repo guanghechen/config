@@ -86,7 +86,7 @@ end
 ---@param prev_context                  fml.types.ui.nvimbar.IContext|nil
 ---@return nil
 local function render_component(component, context, prev_context, remain_width)
-  if not component.will_change(context, prev_context) then
+  if not component.will_change(context, prev_context, remain_width) then
     return
   end
 

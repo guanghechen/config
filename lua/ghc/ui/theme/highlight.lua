@@ -181,6 +181,12 @@ function M.gen_hlgroup_map(params)
 
       ---tabline
       f_tl_bg = { fg = t and "none" or c.statusline_bg, bg = t and "none" or c.statusline_bg },
+      f_tl_buf_item = { fg = c.light_grey, bg = t and "none" or c.black2 },
+      f_tl_buf_item_cur = { fg = c.white, bg = t and "none" or c.black },
+      f_tl_buf_mod = { fg = c.red, bg = t and "none" or c.black2 },
+      f_tl_buf_mod_cur = { fg = c.green, bg = t and "none" or c.black },
+      f_tl_buf_title = { fg = c.light_grey, bg = t and "none" or c.black2 },
+      f_tl_buf_title_cur = { fg = c.white, bg = t and "none" or c.black },
       f_tl_neotree_blank = { fg = c.white, bg = t and "none" or c.black2 },
       f_tl_neotree_text = { fg = c.white, bg = t and "none" or c.black2 },
       f_tl_tab_add = { fg = c.white, bg = c.one_bg2 },

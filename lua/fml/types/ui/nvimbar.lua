@@ -13,7 +13,7 @@
 ---@field public name                   string
 ---@field public render                 fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): string, integer
 ---@field public condition              ?fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): boolean
----@field public will_change            ?fun(context: fml.types.ui.nvimbar.IContext, prev_context: fml.types.ui.nvimbar.IContext|nil): boolean
+---@field public will_change            ?fun(context: fml.types.ui.nvimbar.IContext, prev_context: fml.types.ui.nvimbar.IContext|nil, remain_width: integer): boolean
 
 ---@class fml.types.ui.nvimbar.IComponent
 ---@field public name                   string
@@ -22,7 +22,7 @@
 ---@field public last_result_width      integer
 ---@field public render                 fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): string, integer
 ---@field public condition              fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): boolean
----@field public will_change            fun(context: fml.types.ui.nvimbar.IContext, prev_context: fml.types.ui.nvimbar.IContext|nil): boolean
+---@field public will_change            fun(context: fml.types.ui.nvimbar.IContext, prev_context: fml.types.ui.nvimbar.IContext|nil, remain_width: integer): boolean
 
 ---@class fml.types.ui.INvimbar
 ---@field public add                    fun(self: fml.types.ui.INvimbar, position: fml.enums.nvimbar.ComponentPosition, component: fml.types.ui.nvimbar.IRawComponent): fml.types.ui.INvimbar

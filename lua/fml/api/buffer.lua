@@ -1,7 +1,56 @@
 local fs = require("fml.std.fs")
 
+---@return integer
+local function get_current_bufid()
+  local bufnr = vim.api.nvim_get_current_buf()
+  for i, value in ipairs(vim.t.bufs) do
+    if value == bufnr then
+      return i
+    end
+  end
+  return 0
+end
+
 ---@class fml.api.buffer
+---@field public goto_buf1              fun(): nil
+---@field public goto_buf2              fun(): nil
+---@field public goto_buf3              fun(): nil
+---@field public goto_buf4              fun(): nil
+---@field public goto_buf5              fun(): nil
+---@field public goto_buf6              fun(): nil
+---@field public goto_buf7              fun(): nil
+---@field public goto_buf8              fun(): nil
+---@field public goto_buf9              fun(): nil
+---@field public goto_buf10             fun(): nil
+---@field public goto_buf11             fun(): nil
+---@field public goto_buf12             fun(): nil
+---@field public goto_buf13             fun(): nil
+---@field public goto_buf14             fun(): nil
+---@field public goto_buf15             fun(): nil
+---@field public goto_buf16             fun(): nil
+---@field public goto_buf17             fun(): nil
+---@field public goto_buf18             fun(): nil
+---@field public goto_buf19             fun(): nil
+---@field public goto_buf20             fun(): nil
 local M = {}
+
+---@param bufid                         integer
+---@return nil
+function M.goto_buf(bufid)
+  local totalid = #vim.t.bufs
+  local bufid_current = get_current_bufid()
+  local bufid_next = fml.fn.navigate_limit(0, bufid, totalid)
+
+  if bufid_current ~= bufid_next then
+    vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
+  end
+end
+
+for i = 1, 20 do
+  M['goto_buf' .. i] = function()
+    M.goto_buf(i)
+  end
+end
 
 ---see https://github.com/NvChad/ui/blob/5fe258afeb248519fc2a1681b48d24208ed22abe/lua/nvchad/tabufline/init.lua#L38
 ---@param bufnr number
