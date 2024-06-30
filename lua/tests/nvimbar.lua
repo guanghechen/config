@@ -1,10 +1,11 @@
 fml.debug.log({
   a = vim.o.columns,
   b = #" ",
-  c = " ",
-  d = vim.api.nvim_win_get_width(0)
+  c = vim.fn.strwidth(" "),
+  d = #fml.nvimbar.txt(" ", "Number"),
+  e = vim.fn.strwidth(fml.nvimbar.txt(" ", "Comment")),
+  f = vim.api.nvim_win_get_width(0),
 })
-
 
 local winnrs = vim.api.nvim_tabpage_list_wins(0)
 fml.debug.log("winnrs:", winnrs)

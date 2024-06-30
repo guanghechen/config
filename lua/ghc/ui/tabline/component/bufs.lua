@@ -26,21 +26,23 @@ local function render_buf(buf, bufid, is_curbuf)
   local filename          = (not buf.filename or buf.filename == "") and " No Name " or buf.filename
   local icon, fileicon_hl = fml.fn.calc_fileicon(filename)
 
-  local text_icon         = " " .. icon .. "  " ---@type string
-  local text_title        = filename ---@type string
+  local left_pad          = " " ---@type string
+  local text_icon         = icon .. " " ---@type string
+  local text_title        = " " .. filename ---@type string
   local text_mod          = is_mod and "  " or "  " ---@type string
 
   local buf_hl            = is_curbuf and "f_tl_buf_item_cur" or "f_tl_buf_item" ---@type string
-  local icon_hl           = fml.highlight.blend_color("f_tl_buf_icon_" .. fileicon_hl, fileicon_hl, buf_hl)
+  local icon_hl           = fml.highlight.blend_color(fileicon_hl, buf_hl)
   local title_hl          = is_curbuf and "f_tl_buf_title_cur" or "f_tl_buf_title" ---@type string
   local mod_hl            = is_curbuf and "f_tl_buf_mod_cur" or "f_tl_buf_mod" ---@type string
 
+  local hl_text_left_pad  = fml.nvimbar.txt(left_pad, title_hl)
   local hl_text_icon      = fml.nvimbar.txt(text_icon, icon_hl)
   local hl_text_title     = fml.nvimbar.txt(text_title, title_hl)
   local hl_text_mod       = is_mod and fml.nvimbar.txt(text_mod, mod_hl) or text_mod
 
-  local hl_text           = hl_text_icon .. hl_text_title .. hl_text_mod
-  local width             = vim.fn.strwidth(text_icon .. text_title .. text_mod) ---@type integer
+  local hl_text           = hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod
+  local width             = vim.fn.strwidth(hl_text_left_pad .. text_icon .. text_title .. text_mod) ---@type integer
   return fml.nvimbar.btn(hl_text, "fml.api.buf.goto_buf" .. bufid, buf_hl), width
 end
 

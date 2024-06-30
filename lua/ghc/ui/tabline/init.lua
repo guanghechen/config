@@ -5,7 +5,7 @@ local M = {}
 local tabline = fml.ui.Nvimbar.new({
   name = "tabline",
   component_sep = "",
-  component_sep_hlname = "f_transparent",
+  component_sep_hlname = "f_tl_bg",
 })
 
 tabline
@@ -33,7 +33,7 @@ local render_tabline = fml.fn.throttle_leading(function()
       details = { result = result }
     })
   end
-end, 200).throttled
+end, 50).throttled
 
 ---@return string
 function M.render()
