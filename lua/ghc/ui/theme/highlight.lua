@@ -53,10 +53,6 @@ function M.gen_hlgroup_map(params)
       ghc_DiffDelete_right = { bg = "#FFE0E0", fg = "none" },
       ghc_DiffChange_right = { bg = "#D0FFD0", fg = "none" },
       ghc_DiffText_right = { bg = "#A0EFA0", fg = "none" },
-      ghc_spectre_filedirectory = { bg = "none", fg = "blue" },
-      ghc_spectre_filename = { bg = "none", fg = "blue" },
-      ghc_spectre_replace = { bg = "none", fg = "#A0EFA0" },
-      ghc_spectre_search = { bg = "none", fg = "#FFC0C0", strikethrough = true },
 
       ---lazy_nvim
       --LazyButton = { bg = c.one_bg, fg = fml.color.change_hex_lightness("light_grey", vim.o.bg == c.dark and 10 or -20) },

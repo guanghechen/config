@@ -23,7 +23,6 @@ return {
       "noice",
       "notify",
       "quickfix",
-      "spectre_panel",
       "term",
     },
     large_file_cutoff = 2000,

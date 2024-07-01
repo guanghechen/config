@@ -1,37 +1,8 @@
-local action_autocmd = require("guanghechen.core.action.autocmd")
-
 ---@param opts { cwd: string, replace_path?: string }
 local function replace_word(opts)
-  local sync_path = opts.replace_path == nil ---@type boolean
   local cwd = opts.cwd ---@type string
-
-  local replace_path = opts.replace_path ---@type string
-  if replace_path == nil or replace_path == "" then
-    replace_path = ghc.context.session.replace_path:get_snapshot() ---@type string
-  end
-
   local selected_text = fml.fn.get_selected_text() ---@type string
-  if selected_text and #selected_text > 1 then
-    ghc.context.search.search_pattern:next(selected_text)
-  end
-
-  local search_paths_text = ghc.context.search.search_paths:get_snapshot() ---@type string
-  local search_paths = fml.table.parse_comma_list(search_paths_text) ---@type string[]
-  local search_text = ghc.context.search.search_pattern:get_snapshot() ---@type string
-  local replace_text = ghc.context.search.replace_pattern:get_snapshot() or search_text ---@type string
-
-  require("spectre").open({
-    cwd = cwd,
-    search_paths = #search_paths > 0 and search_paths or nil,
-    path = replace_path,
-    search_text = search_text,
-    replace_text = replace_text,
-    is_close = false, -- close an exists instance of spectre and open new
-    is_insert_mode = false,
-  })
-
-  local prompt_bufnr = vim.api.nvim_get_current_buf()
-  action_autocmd.autocmd_remember_spectre_prompt({ prompt_bufnr = prompt_bufnr, sync_path = sync_path })
+  ghc.command.replace.search({ cwd = cwd, word = selected_text })
 end
 
 ---@class guanghechen.core.action.replace
@@ -54,10 +25,9 @@ function M.replace_word_current_file()
 end
 
 function M.toggle_case_sensitive()
-  local current_case_sensitive = ghc.context.search.flag_case_sensitive:get_snapshot() ---@type boolean
-  local next_case_sensitive = not current_case_sensitive
+  local next_case_sensitive = not ghc.context.search.flag_case_sensitive:get_snapshot() ---@type boolean
   ghc.context.search.flag_case_sensitive:next(next_case_sensitive)
-  require("spectre").change_options("ignore-case")
 end
 
 return M
+

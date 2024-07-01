@@ -58,9 +58,6 @@ return {
   require("guanghechen.plugin.mason"),
   require("guanghechen.plugin.nvim-lspconfig"),
 
-  --replace
-  require("guanghechen.plugin.nvim-spectre"),
-
   --search
   require("guanghechen.plugin.flash"),
 

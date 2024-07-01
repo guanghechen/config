@@ -15,7 +15,6 @@ action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
     "notify",
     "PlenaryTestPopup",
     "qf",
-    "spectre_panel",
     "startuptime",
     "term",
     "tsplayground",

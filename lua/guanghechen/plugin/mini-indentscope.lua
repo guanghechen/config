@@ -24,7 +24,6 @@ return {
         "mason",
         "notify",
         "lazyterm",
-        "spectre_pane",
         "term",
         "ghc-replace",
       },
