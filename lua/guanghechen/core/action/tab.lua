@@ -74,7 +74,7 @@ function M.close_tab_others()
   vim.cmd("tabonly")
 end
 
-function M.goto_tab_left()
+function M.open_left()
   local tabpages = vim.api.nvim_list_tabpages()
   local totalid = #tabpages
   if totalid <= 1 then
@@ -92,7 +92,7 @@ function M.goto_tab_left()
   end
 end
 
-function M.goto_tab_right()
+function M.open_right()
   local tabpages = vim.api.nvim_list_tabpages()
   local totalid = #tabpages
   if totalid <= 1 then
@@ -110,7 +110,7 @@ function M.goto_tab_right()
   end
 end
 
-function M.goto_tab(tabid)
+function M.open(tabid)
   local tabpages = vim.api.nvim_list_tabpages()
   local totalid = #tabpages
   if totalid <= 1 then
@@ -126,44 +126,44 @@ function M.goto_tab(tabid)
   end
 end
 
-function M.goto_tab_1()
-  M.goto_tab(1)
+function M.open_1()
+  M.open(1)
 end
 
-function M.goto_tab_2()
-  M.goto_tab(2)
+function M.open_2()
+  M.open(2)
 end
 
-function M.goto_tab_3()
-  M.goto_tab(3)
+function M.open_3()
+  M.open(3)
 end
 
-function M.goto_tab_4()
-  M.goto_tab(4)
+function M.open_4()
+  M.open(4)
 end
 
-function M.goto_tab_5()
-  M.goto_tab(5)
+function M.open_5()
+  M.open(5)
 end
 
-function M.goto_tab_6()
-  M.goto_tab(6)
+function M.open_6()
+  M.open(6)
 end
 
-function M.goto_tab_7()
-  M.goto_tab(7)
+function M.open_7()
+  M.open(7)
 end
 
-function M.goto_tab_8()
-  M.goto_tab(8)
+function M.open_8()
+  M.open(8)
 end
 
-function M.goto_tab_9()
-  M.goto_tab(9)
+function M.open_9()
+  M.open(9)
 end
 
-function M.goto_tab_10()
-  M.goto_tab(10)
+function M.open_10()
+  M.open(10)
 end
 
 function M.open_tab_new()
@@ -180,7 +180,7 @@ function M.open_tab_new_with_current_buf()
   vim.cmd("$tabnew")
   vim.api.nvim_win_set_buf(0, bufnr_current)
   vim.api.nvim_win_set_cursor(0, cursor_current)
-  action_buffer.close_buffer_others()
+  action_buffer.close_others()
 end
 
 return M

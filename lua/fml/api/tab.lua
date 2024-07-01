@@ -1,27 +1,27 @@
 ---@class fml.api.tab
----@field public goto_tab1              fun(): nil
----@field public goto_tab2              fun(): nil
----@field public goto_tab3              fun(): nil
----@field public goto_tab4              fun(): nil
----@field public goto_tab5              fun(): nil
----@field public goto_tab6              fun(): nil
----@field public goto_tab7              fun(): nil
----@field public goto_tab8              fun(): nil
----@field public goto_tab9              fun(): nil
----@field public goto_tab10             fun(): nil
----@field public goto_tab11             fun(): nil
----@field public goto_tab12             fun(): nil
----@field public goto_tab13             fun(): nil
----@field public goto_tab14             fun(): nil
----@field public goto_tab15             fun(): nil
----@field public goto_tab16             fun(): nil
----@field public goto_tab17             fun(): nil
----@field public goto_tab18             fun(): nil
----@field public goto_tab19             fun(): nil
----@field public goto_tab20             fun(): nil
+---@field public open1              fun(): nil
+---@field public open2              fun(): nil
+---@field public open3              fun(): nil
+---@field public open4              fun(): nil
+---@field public open5              fun(): nil
+---@field public open6              fun(): nil
+---@field public open7              fun(): nil
+---@field public open8              fun(): nil
+---@field public open9              fun(): nil
+---@field public open10             fun(): nil
+---@field public open11             fun(): nil
+---@field public open12             fun(): nil
+---@field public open13             fun(): nil
+---@field public open14             fun(): nil
+---@field public open15             fun(): nil
+---@field public open16             fun(): nil
+---@field public open17             fun(): nil
+---@field public open18             fun(): nil
+---@field public open19             fun(): nil
+---@field public open20             fun(): nil
 local M = {}
 
-function M.goto_tab(tab)
+function M.open(tab)
   local tab_current = vim.fn.tabpagenr() ---@type integer
   if tab_current == tab then
     return
@@ -35,8 +35,8 @@ function M.goto_tab(tab)
 end
 
 for i = 1, 20 do
-  M['goto_tab' .. i] = function()
-    M.goto_tab(i)
+  M['open' .. i] = function()
+    M.open(i)
   end
 end
 

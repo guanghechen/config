@@ -4,9 +4,9 @@ require("fml.autocmd.buffer")
 
 ---@class fml.api
 local api = {
-  buffer = require("fml.api.buffer"),
+  buf = require("fml.api.buf"),
   tab = require("fml.api.tab"),
-  window = require("fml.api.window"),
+  win = require("fml.api.win"),
 }
 
 ---@class fml.collection

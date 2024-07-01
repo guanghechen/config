@@ -43,7 +43,7 @@ local function render_buf(buf, bufid, is_curbuf)
 
   local hl_text           = hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod
   local width             = vim.fn.strwidth(hl_text_left_pad .. text_icon .. text_title .. text_mod) ---@type integer
-  return fml.nvimbar.btn(hl_text, "fml.api.buf.goto_buf" .. bufid, buf_hl), width
+  return fml.nvimbar.btn(hl_text, "fml.api.buf.open" .. bufid, buf_hl), width
 end
 
 --- @type fml.types.ui.nvimbar.IRawComponent

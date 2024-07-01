@@ -1,4 +1,4 @@
----@class fml.api.window
+---@class fml.api.win
 local M = {}
 
 ---@param ignored_buftypes string[]

@@ -11,32 +11,32 @@ local function get_current_bufid()
   return 0
 end
 
----@class fml.api.buffer
----@field public goto_buf1              fun(): nil
----@field public goto_buf2              fun(): nil
----@field public goto_buf3              fun(): nil
----@field public goto_buf4              fun(): nil
----@field public goto_buf5              fun(): nil
----@field public goto_buf6              fun(): nil
----@field public goto_buf7              fun(): nil
----@field public goto_buf8              fun(): nil
----@field public goto_buf9              fun(): nil
----@field public goto_buf10             fun(): nil
----@field public goto_buf11             fun(): nil
----@field public goto_buf12             fun(): nil
----@field public goto_buf13             fun(): nil
----@field public goto_buf14             fun(): nil
----@field public goto_buf15             fun(): nil
----@field public goto_buf16             fun(): nil
----@field public goto_buf17             fun(): nil
----@field public goto_buf18             fun(): nil
----@field public goto_buf19             fun(): nil
----@field public goto_buf20             fun(): nil
+---@class fml.api.buf
+---@field public open1              fun(): nil
+---@field public open2              fun(): nil
+---@field public open3              fun(): nil
+---@field public open4              fun(): nil
+---@field public open5              fun(): nil
+---@field public open6              fun(): nil
+---@field public open7              fun(): nil
+---@field public open8              fun(): nil
+---@field public open9              fun(): nil
+---@field public open10             fun(): nil
+---@field public open11             fun(): nil
+---@field public open12             fun(): nil
+---@field public open13             fun(): nil
+---@field public open14             fun(): nil
+---@field public open15             fun(): nil
+---@field public open16             fun(): nil
+---@field public open17             fun(): nil
+---@field public open18             fun(): nil
+---@field public open19             fun(): nil
+---@field public open20             fun(): nil
 local M = {}
 
 ---@param bufid                         integer
 ---@return nil
-function M.goto_buf(bufid)
+function M.open(bufid)
   local totalid = #vim.t.bufs
   local bufid_current = get_current_bufid()
   local bufid_next = fml.fn.navigate_limit(0, bufid, totalid)
@@ -47,15 +47,43 @@ function M.goto_buf(bufid)
 end
 
 for i = 1, 20 do
-  M['goto_buf' .. i] = function()
-    M.goto_buf(i)
+  M['open' .. i] = function()
+    M.open(i)
+  end
+end
+
+function M.open_left()
+  local step = vim.v.count1 or 1
+  local totalid = #vim.t.bufs
+  local bufid_current = get_current_bufid()
+  local bufid_next = fml.fn.navigate_circular(bufid_current, -step, totalid)
+
+  if bufid_next ~= bufid_current then
+    local bufid = vim.t.bufs[bufid_next]
+    if type(bufid) == "number" then
+      vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
+    end
+  end
+end
+
+function M.open_right()
+  local step = vim.v.count1 or 1
+  local totalid = #vim.t.bufs
+  local bufid_current = get_current_bufid()
+  local bufid_next = fml.fn.navigate_circular(bufid_current, step, totalid)
+
+  if bufid_next ~= bufid_current then
+    local bufid = vim.t.bufs[bufid_next]
+    if type(bufid) == "number" then
+      vim.api.nvim_set_current_buf(vim.t.bufs[bufid_next])
+    end
   end
 end
 
 ---see https://github.com/NvChad/ui/blob/5fe258afeb248519fc2a1681b48d24208ed22abe/lua/nvchad/tabufline/init.lua#L38
 ---@param bufnr number
 ---@return nil
-function M.close_buffer(bufnr)
+function M.close(bufnr)
   if vim.bo.buftype == "terminal" then
     vim.cmd(vim.bo.buflisted and "set nobl | new" or "hide")
   else
@@ -122,7 +150,7 @@ end
 
 ---@param filepath string
 ---@return string
-function M.read_of_load_buf_with_filepath(filepath)
+function M.read_or_load_buf_with_filepath(filepath)
   local target_filepath = vim.fn.fnamemodify(filepath, ":p") ---@type string
   local target_bufnr = M.find_buf_with_filepath(filepath) ---@type integer|nil
 
