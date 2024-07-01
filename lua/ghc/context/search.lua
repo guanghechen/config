@@ -16,8 +16,10 @@ local replace_pattern = Observable.from_value("")
 local search_paths = Observable.new({ initial_value = "", normalize = normalize_paths })
 local include_patterns = Observable.new({ initial_value = "", normalize = normalize_paths })
 local exclude_patterns = Observable.new({ initial_value = ".git/", normalize = normalize_paths })
+local find_scope = Observable.from_value("C")
+local search_scope = Observable.from_value("C")
 
----@class ghc.context.replace : fml.collection.Viewmodel
+---@class ghc.context.search : fml.collection.Viewmodel
 ---@field public cwd                    fml.types.collection.IObservable
 ---@field public mode                   fml.types.collection.IObservable
 ---@field public flag_regex             fml.types.collection.IObservable
@@ -27,9 +29,11 @@ local exclude_patterns = Observable.new({ initial_value = ".git/", normalize = n
 ---@field public search_paths           fml.types.collection.IObservable
 ---@field public include_patterns       fml.types.collection.IObservable
 ---@field public exclude_patterns       fml.types.collection.IObservable
+---@field public find_scope             fml.types.collection.IObservable
+---@field public search_scope           fml.types.collection.IObservable
 local context = Viewmodel.new({
-      name = "context:session:replace",
-      filepath = fml.path.locate_session_filepath({ filename = "replace.json" }),
+      name = "context:session:search",
+      filepath = fml.path.locate_session_filepath({ filename = "search.json" }),
     })
     :register("cwd", cwd, true, true)
     :register("mode", mode, true, true)
@@ -40,6 +44,8 @@ local context = Viewmodel.new({
     :register("search_paths", search_paths, true, true)
     :register("include_patterns", include_patterns, true, true)
     :register("exclude_patterns", exclude_patterns, true, true)
+    :register("find_scope", find_scope, true, true)
+    :register("search_scope", search_scope, true, true)
 
 context:load()
 --context:auto_reload()
@@ -48,6 +54,8 @@ context:load()
 fml.fn.watch_observables({
   context.flag_regex,
   context.flag_case_sensitive,
+  context.find_scope,
+  context.search_scope,
 }, function()
   vim.cmd("redrawstatus")
 end)

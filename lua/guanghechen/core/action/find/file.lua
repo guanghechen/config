@@ -3,7 +3,7 @@ local action_autocmd = require("guanghechen.core.action.autocmd")
 ---@alias IFindFileContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
 ---@param find_file_context IFindFileContext
----@param scope guanghechen.core.types.enum.FIND_FILE_SCOPE
+---@param scope ghc.enums.context.FindScope
 local function get_cwd_by_scope(find_file_context, scope)
   if scope == "W" then
     return find_file_context.workspace
@@ -20,7 +20,7 @@ local function get_cwd_by_scope(find_file_context, scope)
   return find_file_context.cwd
 end
 
----@param scope guanghechen.core.types.enum.FIND_FILE_SCOPE
+---@param scope ghc.enums.context.FindScope
 ---@return string
 local function get_display_name_of_scope(scope)
   if scope == "W" then
@@ -38,8 +38,8 @@ local function get_display_name_of_scope(scope)
   return "cwd"
 end
 
----@param scope guanghechen.core.types.enum.FIND_FILE_SCOPE
----@return guanghechen.core.types.enum.FIND_FILE_SCOPE
+---@param scope ghc.enums.context.FindScope
+---@return ghc.enums.context.FindScope
 local function toggle_scope_carousel(scope)
   if scope == "W" then
     return "C"
@@ -132,10 +132,10 @@ local function find_file(opts, force)
   opts.bufnr = find_file_context.bufnr
   opts.show_untracked = true
   opts.workspace = "CWD"
-  opts.use_regex = ghc.context.replace.flag_regex:get_snapshot()
+  opts.use_regex = ghc.context.search.flag_regex:get_snapshot()
 
-  ---@type guanghechen.core.types.enum.FIND_FILE_SCOPE
-  local scope0 = ghc.context.session.find_file_scope:get_snapshot()
+  ---@type ghc.enums.context.FindScope
+  local scope0 = ghc.context.search.find_scope:get_snapshot()
   opts.cwd = get_cwd_by_scope(find_file_context, scope0)
 
   ---@type string
@@ -144,11 +144,11 @@ local function find_file(opts, force)
   ---@type fun():nil
   local open_picker
 
-  ---@param scope_next guanghechen.core.types.enum.FIND_FILE_SCOPE
+  ---@param scope_next ghc.enums.context.FindScope
   local function change_scope(scope_next)
-    local scope_current = ghc.context.session.find_file_scope:get_snapshot()
+    local scope_current = ghc.context.search.find_scope:get_snapshot()
     if scope_next ~= scope_current then
-      ghc.context.session.find_file_scope:next(scope_next)
+      ghc.context.search.find_scope:next(scope_next)
       ghc.context.session.filemap_dirty:next(true)
       open_picker()
     end
@@ -167,13 +167,13 @@ local function find_file(opts, force)
       })
     end,
     toggle_enable_regex = function()
-      local next_flag_regex = ghc.context.replace.flag_regex:get_snapshot() ---@type boolean
-      ghc.context.replace.flag_regex:next(next_flag_regex)
+      local next_flag_regex = ghc.context.search.flag_regex:get_snapshot() ---@type boolean
+      ghc.context.search.flag_regex:next(next_flag_regex)
       opts.use_regex = next_flag_regex
       open_picker()
     end,
     toggle_case_sensitive = function()
-      ghc.context.replace.flag_case_sensitive:next(not ghc.context.replace.flag_case_sensitive:get_snapshot())
+      ghc.context.search.flag_case_sensitive:next(not ghc.context.search.flag_case_sensitive:get_snapshot())
       open_picker()
     end,
     change_scope_workspace = function()
@@ -186,8 +186,8 @@ local function find_file(opts, force)
       change_scope("D")
     end,
     change_scope_carousel = function()
-      ---@type guanghechen.core.types.enum.FIND_FILE_SCOPE
-      local scope = ghc.context.session.find_file_scope:get_snapshot()
+      ---@type ghc.enums.context.FindScope
+      local scope = ghc.context.search.find_scope:get_snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
     end,
@@ -210,10 +210,10 @@ local function find_file(opts, force)
       "--no-column",
       "--no-follow",
     }
-    if not ghc.context.replace.flag_regex:get_snapshot() then
+    if not ghc.context.search.flag_regex:get_snapshot() then
       table.insert(cmd, "--fixed-strings")
     end
-    if ghc.context.replace.flag_case_sensitive:get_snapshot() then
+    if ghc.context.search.flag_case_sensitive:get_snapshot() then
       table.insert(cmd, "--case-sensitive")
     else
       table.insert(cmd, "--ignore-case")
@@ -227,8 +227,8 @@ local function find_file(opts, force)
   end
 
   open_picker = function()
-    ---@type guanghechen.core.types.enum.FIND_FILE_SCOPE
-    local scope = ghc.context.session.find_file_scope:get_snapshot()
+    ---@type ghc.enums.context.FindScope
+    local scope = ghc.context.search.find_scope:get_snapshot()
     opts.cwd = get_cwd_by_scope(find_file_context, scope)
     opts.entry_maker = vim.F.if_nil(opts.entry_maker, make_entry.gen_from_file(opts))
     gen_filemap(false, opts.cwd)

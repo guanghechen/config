@@ -1,6 +1,6 @@
 ---@class ghc.context
 local context = {
-  replace = require("ghc.context.replace"),
+  search = require("ghc.context.search"),
   shared = require("ghc.context.shared"),
   session = require("ghc.context.session"),
 }

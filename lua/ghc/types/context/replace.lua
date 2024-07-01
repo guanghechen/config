@@ -1,4 +1,4 @@
----@class ghc.types.context.replace.IData
+---@class ghc.types.context.search.IData
 ---@field public cwd                  string
 ---@field public mode                 ghc.enums.context.replacee.IMode
 ---@field public flag_regex           boolean

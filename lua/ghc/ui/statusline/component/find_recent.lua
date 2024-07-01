@@ -11,7 +11,7 @@ local M = {
     return buftype_extra == "find_recent"
   end,
   render = function()
-    local text = " " .. ghc.context.session.find_recent_scope:get_snapshot() .. " "
+    local text = " " .. ghc.context.search.find_scope:get_snapshot() .. " "
     local width = vim.fn.strwidth(text)
     return fml.nvimbar.txt(text, "f_sl_flag_scope"), width
   end

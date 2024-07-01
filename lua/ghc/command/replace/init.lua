@@ -1,5 +1,5 @@
 local Replacer = require("ghc.command.replace.replacer")
-local context_replace = require("ghc.context.replace")
+local context_replace = require("ghc.context.search")
 
 ---@class ghc.command.replace
 local M = {}

@@ -3,7 +3,7 @@ local autocmd = require("guanghechen.core.action.autocmd")
 ---@alias IFindRecentContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
 ---@param find_recent_context IFindRecentContext
----@param scope guanghechen.core.types.enum.FIND_RECENT_SCOPE
+---@param scope ghc.enums.context.FindScope
 local function get_cwd_by_scope(find_recent_context, scope)
   if scope == "W" then
     return find_recent_context.workspace
@@ -20,7 +20,7 @@ local function get_cwd_by_scope(find_recent_context, scope)
   return find_recent_context.cwd
 end
 
----@param scope guanghechen.core.types.enum.FIND_RECENT_SCOPE
+---@param scope ghc.enums.context.FindScope
 ---@return string
 local function get_display_name_of_scope(scope)
   if scope == "W" then
@@ -38,8 +38,8 @@ local function get_display_name_of_scope(scope)
   return "cwd"
 end
 
----@param scope guanghechen.core.types.enum.FIND_RECENT_SCOPE
----@return guanghechen.core.types.enum.FIND_RECENT_SCOPE
+---@param scope ghc.enums.context.FindScope
+---@return ghc.enums.context.FindScope
 local function toggle_scope_carousel(scope)
   if scope == "W" then
     return "C"
@@ -77,11 +77,11 @@ local function find_recent(opts)
   ---@type fun():nil
   local open_picker
 
-  ---@param scope_next guanghechen.core.types.enum.FIND_RECENT_SCOPE
+  ---@param scope_next ghc.enums.context.FindScope
   local function change_scope(scope_next)
-    local scope_current = ghc.context.session.find_recent_scope:get_snapshot()
+    local scope_current = ghc.context.search.find_scope:get_snapshot()
     if scope_next ~= scope_current then
-      ghc.context.session.find_recent_scope:next(scope_next)
+      ghc.context.search.find_scope:next(scope_next)
       open_picker()
     end
   end
@@ -97,16 +97,16 @@ local function find_recent(opts)
       change_scope("D")
     end,
     change_scope_carousel = function()
-      ---@type guanghechen.core.types.enum.FIND_RECENT_SCOPE
-      local scope = ghc.context.session.find_recent_scope:get_snapshot()
+      ---@type ghc.enums.context.FindScope
+      local scope = ghc.context.search.find_scope:get_snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
     end,
   }
 
   open_picker = function()
-    ---@type guanghechen.core.types.enum.FIND_RECENT_SCOPE
-    local scope = ghc.context.session.find_recent_scope:get_snapshot()
+    ---@type ghc.enums.context.FindScope
+    local scope = ghc.context.search.find_scope:get_snapshot()
     opts.cwd = get_cwd_by_scope(find_recent_context, scope)
     opts.initial_mode = "normal"
 
@@ -154,17 +154,17 @@ end
 local M = require("guanghechen.core.action.find.module")
 
 function M.find_recent_workspace()
-  ghc.context.session.find_recent_scope:next("W")
+  ghc.context.search.find_scope:next("W")
   find_recent()
 end
 
 function M.find_recent_cwd()
-  ghc.context.session.find_recent_scope:next("C")
+  ghc.context.search.find_scope:next("C")
   find_recent()
 end
 
 function M.find_recent_current()
-  ghc.context.session.find_recent_scope:next("D")
+  ghc.context.search.find_scope:next("D")
   find_recent()
 end
 

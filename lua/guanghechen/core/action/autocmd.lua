@@ -188,8 +188,8 @@ function M.autocmd_remember_spectre_prompt(opts)
       local replace_pattern = state.query.replace_query ---@type string
       local search_pattern = state.query.search_query ---@type string
 
-      ghc.context.replace.search_pattern:next(search_pattern)
-      ghc.context.replace.replace_pattern:next(replace_pattern)
+      ghc.context.search.search_pattern:next(search_pattern)
+      ghc.context.search.replace_pattern:next(replace_pattern)
 
       if sync_path then
         local query_path = state.query.path ---@type string
