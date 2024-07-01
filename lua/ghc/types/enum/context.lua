@@ -1,0 +1,3 @@
+---@alias ghc.enums.context.replace.IMode
+---| "replace"
+---| "search"

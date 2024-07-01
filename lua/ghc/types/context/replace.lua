@@ -1,6 +1,6 @@
 ---@class ghc.types.context.replace.IData
 ---@field public cwd                  string
----@field public mode                 ghc.context.replace.IMode
+---@field public mode                 ghc.enums.context.replacee.IMode
 ---@field public flag_regex           boolean
 ---@field public flag_case_sensitive  boolean
 ---@field public search_pattern       string
