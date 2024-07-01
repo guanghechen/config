@@ -23,14 +23,23 @@ local function shallow_equals(x, y)
   return x == y
 end
 
+---@generic T
+---@param x T
+---@return T
+local function identity(x)
+  return x
+end
+
 ---@class fml.collection.Observable.IProps
----@field public initial_value          fml.types.T         Initial value of the observable
----@field public equals                 ?fml.types.IEquals  Determine whether the two values are equal.
+---@field public initial_value          fml.types.T           Initial value of the observable
+---@field public equals                 ?fml.types.IEquals    Determine whether the two values are equal.
+---@field public normalize              ?fml.types.INormalize Normalize the value before compare or update
 
 ---@param props                         fml.collection.Observable.IProps
 ---@return fml.collection.Observable
 function M.new(props)
-  local equals = props.equals and props.equals or shallow_equals ---@type fml.types.IEquals
+  local equals = props.equals or shallow_equals ---@type fml.types.IEquals
+  local normalize = props.normalize or identity ---@type fml.types.INormalize
   local initial_value = props.initial_value ---@type fml.types.T
 
   local self = setmetatable(BatchDisposable.new(), M)
@@ -38,7 +47,8 @@ function M.new(props)
   ---@cast self fml.collection.Observable
 
   self.equals = equals
-  self._value = initial_value
+  self.normalize = normalize
+  self._value = normalize and normalize(initial_value) or initial_value
   self._value_last_notified = nil
   self._subscribers = Subscribers.new()
 
@@ -47,9 +57,10 @@ end
 
 ---@param value                         fml.types.T         Initial value of the observable
 ---@param equals                        ?fml.types.IEquals  Determine whether the two values are equal.
+---@param normalize                     ?fml.types.INormalize Normalize the value before compare or update
 ---@return fml.collection.Observable
-function M.from_value(value, equals)
-  return M.new({ initial_value = value, equals = equals })
+function M.from_value(value, equals, normalize)
+  return M.new({ initial_value = value, equals = equals, normalize = normalize })
 end
 
 function M:get_snapshot()
@@ -88,6 +99,8 @@ function M:next(value, options)
     end
     return false
   end
+
+  value = self.normalize(value)
 
   ---@type boolean
   local force = options.force ~= nil and options.force or false
