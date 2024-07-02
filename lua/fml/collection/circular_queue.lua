@@ -29,6 +29,14 @@ function M:size()
   return self._size
 end
 
+---@return nil
+function M:clear()
+  self._elements = {}
+  self._size = 0
+  self._start = 1
+  self._end = 0
+end
+
 ---@return fml.types.T[]
 function M:collect()
   local _capacity = self._capacity

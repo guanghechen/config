@@ -2,6 +2,7 @@
 ---@field public name                   fun(self: fml.types.collection.IHistory): string
 ---@field public present                fun(self: fml.types.collection.IHistory): fml.types.T|nil
 ---@field public present_index          fun(self: fml.types.collection.IHistory): integer
+---@field public clear                  fun(self: fml.types.collection.IHistory): nil
 ---@field public back                   fun(self: fml.types.collection.IHistory, step ?:number): fml.types.T|nil
 ---@field public forward                fun(self: fml.types.collection.IHistory, step ?:number): fml.types.T|nil
 ---@field public go                     fun(self: fml.types.collection.IHistory, index :number): fml.types.T|nil

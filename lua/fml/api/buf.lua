@@ -12,26 +12,26 @@ local function get_current_bufid()
 end
 
 ---@class fml.api.buf
----@field public open1              fun(): nil
----@field public open2              fun(): nil
----@field public open3              fun(): nil
----@field public open4              fun(): nil
----@field public open5              fun(): nil
----@field public open6              fun(): nil
----@field public open7              fun(): nil
----@field public open8              fun(): nil
----@field public open9              fun(): nil
----@field public open10             fun(): nil
----@field public open11             fun(): nil
----@field public open12             fun(): nil
----@field public open13             fun(): nil
----@field public open14             fun(): nil
----@field public open15             fun(): nil
----@field public open16             fun(): nil
----@field public open17             fun(): nil
----@field public open18             fun(): nil
----@field public open19             fun(): nil
----@field public open20             fun(): nil
+---@field public focus_1              fun(): nil
+---@field public focus_2              fun(): nil
+---@field public focus_3              fun(): nil
+---@field public focus_4              fun(): nil
+---@field public focus_5              fun(): nil
+---@field public focus_6              fun(): nil
+---@field public focus_7              fun(): nil
+---@field public focus_8              fun(): nil
+---@field public focus_9              fun(): nil
+---@field public focus_10             fun(): nil
+---@field public focus_11             fun(): nil
+---@field public focus_12             fun(): nil
+---@field public focus_13             fun(): nil
+---@field public focus_14             fun(): nil
+---@field public focus_15             fun(): nil
+---@field public focus_16             fun(): nil
+---@field public focus_17             fun(): nil
+---@field public focus_18             fun(): nil
+---@field public focus_19             fun(): nil
+---@field public focus_20             fun(): nil
 local M = {}
 
 ---@param bufid                         integer
@@ -47,7 +47,7 @@ function M.open(bufid)
 end
 
 for i = 1, 20 do
-  M['open' .. i] = function()
+  M["focus_" .. i] = function()
     M.open(i)
   end
 end

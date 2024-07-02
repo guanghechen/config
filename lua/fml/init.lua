@@ -7,6 +7,7 @@ local api = {
   buf = require("fml.api.buf"),
   tab = require("fml.api.tab"),
   win = require("fml.api.win"),
+  state = require("fml.api.state"),
 }
 
 ---@class fml.collection

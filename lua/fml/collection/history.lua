@@ -41,6 +41,11 @@ function M:present_index()
   return self._present_idx
 end
 
+function M:clear()
+  self._present_idx = 0
+  self._stack:clear()
+end
+
 ---@param step? number
 ---@return fml.types.T|nil
 function M:back(step)

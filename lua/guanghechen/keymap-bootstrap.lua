@@ -7,7 +7,6 @@ local A = {
   file = require("guanghechen.core.action.file"),
   run = require("guanghechen.core.action.run"),
   session = require("guanghechen.core.action.session"),
-  tab = require("guanghechen.core.action.tab"),
   toggle = require("guanghechen.core.action.toggle"),
   window = require("guanghechen.core.action.window"),
 }
@@ -57,10 +56,10 @@ mk({ "i", "n", "v" }, "<C-C>", A.enhance.copy_current_buffer_filepath, "copy: cu
 
 --#navigation---------------------------------------------------------------------------------------
 ----- tab -----
-mk({ "n", "v" }, "<leader><", A.tab.open_left, "tab: goto left tab", true)
-mk({ "n", "v" }, "<leader>>", A.tab.open_right, "tab: goto right tab", true)
-mk({ "n", "v" }, "[t", A.tab.open_left, "tab: goto left tab", true)
-mk({ "n", "v" }, "]t", A.tab.open_right, "tab: goto right tab", true)
+mk({ "n", "v" }, "<leader><", fml.api.tab.focus_left, "tab: focus left tab", true)
+mk({ "n", "v" }, "<leader>>", fml.api.tab.focus_right, "tab: focus right tab", true)
+mk({ "n", "v" }, "[t", fml.api.tab.focus_left, "tab: focus left tab", true)
+mk({ "n", "v" }, "]t", fml.api.tab.focus_right, "tab: focus right tab", true)
 
 ----- window -----
 mk({ "i", "n", "v" }, "<C-b>h", A.window.focus_window_left, "window: focus on the left window", true)
@@ -88,16 +87,16 @@ mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward", true)
 ---------------------------------------------------------------------------------------#navigation--
 
 --[#]buffer-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>b1", fml.api.buf.open1, "buffer: open buffer 1", true)
-mk({ "n", "v" }, "<leader>b2", fml.api.buf.open2, "buffer: open buffer 2", true)
-mk({ "n", "v" }, "<leader>b3", fml.api.buf.open3, "buffer: open buffer 3", true)
-mk({ "n", "v" }, "<leader>b4", fml.api.buf.open4, "buffer: open buffer 4", true)
-mk({ "n", "v" }, "<leader>b5", fml.api.buf.open5, "buffer: open buffer 5", true)
-mk({ "n", "v" }, "<leader>b6", fml.api.buf.open6, "buffer: open buffer 6", true)
-mk({ "n", "v" }, "<leader>b7", fml.api.buf.open7, "buffer: open buffer 7", true)
-mk({ "n", "v" }, "<leader>b8", fml.api.buf.open8, "buffer: open buffer 8", true)
-mk({ "n", "v" }, "<leader>b9", fml.api.buf.open9, "buffer: open buffer 9", true)
-mk({ "n", "v" }, "<leader>b0", fml.api.buf.open10, "buffer: open buffer 10", true)
+mk({ "n", "v" }, "<leader>b1", fml.api.buf.focus_1, "buffer: open buffer 1", true)
+mk({ "n", "v" }, "<leader>b2", fml.api.buf.focus_2, "buffer: open buffer 2", true)
+mk({ "n", "v" }, "<leader>b3", fml.api.buf.focus_3, "buffer: open buffer 3", true)
+mk({ "n", "v" }, "<leader>b4", fml.api.buf.focus_4, "buffer: open buffer 4", true)
+mk({ "n", "v" }, "<leader>b5", fml.api.buf.focus_5, "buffer: open buffer 5", true)
+mk({ "n", "v" }, "<leader>b6", fml.api.buf.focus_6, "buffer: open buffer 6", true)
+mk({ "n", "v" }, "<leader>b7", fml.api.buf.focus_7, "buffer: open buffer 7", true)
+mk({ "n", "v" }, "<leader>b8", fml.api.buf.focus_8, "buffer: open buffer 8", true)
+mk({ "n", "v" }, "<leader>b9", fml.api.buf.focus_9, "buffer: open buffer 9", true)
+mk({ "n", "v" }, "<leader>b0", fml.api.buf.focus_10, "buffer: open buffer 10", true)
 mk({ "n", "v" }, "<leader>b[", fml.api.buf.open_left, "buffer: open left buffer", true)
 mk({ "n", "v" }, "<leader>b]", fml.api.buf.open_right, "buffer: open right buffer", true)
 mk({ "n", "v" }, "<leader>ba", A.buffer.close_all, "buffer: close all buffers", true)
@@ -133,24 +132,24 @@ mk({ "i", "n", "v" }, "<F5>", A.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
 
 --#[t]ab--------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>t1", A.tab.open_1, "tab: goto tab 1", true)
-mk({ "n", "v" }, "<leader>t2", A.tab.open_2, "tab: goto tab 2", true)
-mk({ "n", "v" }, "<leader>t3", A.tab.open_3, "tab: goto tab 3", true)
-mk({ "n", "v" }, "<leader>t4", A.tab.open_4, "tab: goto tab 4", true)
-mk({ "n", "v" }, "<leader>t5", A.tab.open_5, "tab: goto tab 5", true)
-mk({ "n", "v" }, "<leader>t6", A.tab.open_6, "tab: goto tab 6", true)
-mk({ "n", "v" }, "<leader>t7", A.tab.open_7, "tab: goto tab 7", true)
-mk({ "n", "v" }, "<leader>t8", A.tab.open_8, "tab: goto tab 8", true)
-mk({ "n", "v" }, "<leader>t9", A.tab.open_9, "tab: goto tab 9", true)
-mk({ "n", "v" }, "<leader>t0", A.tab.open_10, "tab: goto tab 10", true)
-mk({ "n", "v" }, "<leader>t[", A.tab.open_left, "tab: goto left tab", true)
-mk({ "n", "v" }, "<leader>t]", A.tab.open_right, "tab: goto right tab", true)
-mk({ "n", "v" }, "<leader>tN", A.tab.open_tab_new, "tab: new tab", true)
-mk({ "n", "v" }, "<leader>tn", A.tab.open_tab_new_with_current_buf, "tab: new tab with current buf", true)
-mk({ "n", "v" }, "<leader>td", A.tab.close_tab_current, "tab: close current", true)
-mk({ "n", "v" }, "<leader>th", A.tab.close_tab_to_leftest, "tab: close tabs to the leftest", true)
-mk({ "n", "v" }, "<leader>tl", A.tab.close_tab_to_rightest, "tab: close tabs to the rightest", true)
-mk({ "n", "v" }, "<leader>to", A.tab.close_tab_others, "tab: close other tabs", true)
+mk({ "n", "v" }, "<leader>t1", fml.api.tab.focus_1, "tab: focus tab 1", true)
+mk({ "n", "v" }, "<leader>t2", fml.api.tab.focus_2, "tab: focus tab 2", true)
+mk({ "n", "v" }, "<leader>t3", fml.api.tab.focus_3, "tab: focus tab 3", true)
+mk({ "n", "v" }, "<leader>t4", fml.api.tab.focus_4, "tab: focus tab 4", true)
+mk({ "n", "v" }, "<leader>t5", fml.api.tab.focus_5, "tab: focus tab 5", true)
+mk({ "n", "v" }, "<leader>t6", fml.api.tab.focus_6, "tab: focus tab 6", true)
+mk({ "n", "v" }, "<leader>t7", fml.api.tab.focus_7, "tab: focus tab 7", true)
+mk({ "n", "v" }, "<leader>t8", fml.api.tab.focus_8, "tab: focus tab 8", true)
+mk({ "n", "v" }, "<leader>t9", fml.api.tab.focus_9, "tab: focus tab 9", true)
+mk({ "n", "v" }, "<leader>t0", fml.api.tab.focus_10, "tab: focus tab 10", true)
+mk({ "n", "v" }, "<leader>t[", fml.api.tab.focus_left, "tab: focus the left tab", true)
+mk({ "n", "v" }, "<leader>t]", fml.api.tab.focus_right, "tab: focus the right tab", true)
+mk({ "n", "v" }, "<leader>tN", fml.api.tab.create, "tab: new tab", true)
+mk({ "n", "v" }, "<leader>tn", fml.api.tab.create_with_buf, "tab: new tab with current buf", true)
+mk({ "n", "v" }, "<leader>td", fml.api.tab.close, "tab: close", true)
+mk({ "n", "v" }, "<leader>th", fml.api.tab.close_to_leftest, "tab: close tabs to the leftest", true)
+mk({ "n", "v" }, "<leader>tl", fml.api.tab.close_to_rightest, "tab: close tabs to the rightest", true)
+mk({ "n", "v" }, "<leader>to", fml.api.tab.close_others, "tab: close other tabs", true)
 --------------------------------------------------------------------------------------------#[t]ab--
 
 --#[t]oggle-----------------------------------------------------------------------------------------

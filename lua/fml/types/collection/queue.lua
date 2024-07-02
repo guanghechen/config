@@ -1,6 +1,7 @@
 ---@class fml.types.collection.ICircularQueue
 ---@field public size                   fun(self: fml.types.collection.ICircularQueue): number
 ---@field public at                     fun(self: fml.types.collection.ICircularQueue, index: number): fml.types.T|nil
+---@field public clear                  fun(self: fml.types.collection.ICircularQueue): nil
 ---@field public front                  fun(self: fml.types.collection.ICircularQueue): fml.types.T|nil
 ---@field public back                   fun(self: fml.types.collection.ICircularQueue): fml.types.T|nil
 ---@field public collect                fun(): fml.types.T[]
