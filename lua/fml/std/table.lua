@@ -4,9 +4,9 @@ local std_string = require("fml.std.string")
 local M = {}
 
 ---@generic T
----@param arr T[]
----@param start? integer
----@param stop? integer
+---@param arr                           T[]
+---@param start                         ?integer
+---@param stop                          ?integer
 ---@return T[]
 function M.slice(arr, start, stop)
   local result = {}
@@ -47,6 +47,19 @@ end
 
 ---@generic T
 ---@param arr                           T[]
+---@param element                       T
+---@return boolean
+function M.contains(arr, element)
+  for i = 1, #arr, 1 do
+    if arr[i] == element then
+      return true
+    end
+  end
+  return false
+end
+
+---@generic T
+---@param arr                           T[]
 ---@param check                         fun(ele: T, index: integer): boolean
 ---@return integer|nil
 function M.find(arr, check)
@@ -59,26 +72,37 @@ function M.find(arr, check)
 end
 
 ---@generic T
----@param arr T[]
----@param filter? fun(v, i):boolean
+---@param arr                           T[]
+---@param filter                        fun(v: T, i: integer): boolean
+---@return T[]
+function M.filter_inline(arr, filter)
+  local N = #arr ---@type integer
+  local k = 1 ---@type integer
+
+  for i = 2, N, 1 do
+    local value = arr[i]
+    if filter(value, i) then
+      k = k + 1
+      arr[k] = value
+    end
+  end
+  for i = k + 1, N, 1 do
+    arr[i] = nil
+  end
+  return arr
+end
+
+---@generic T
+---@param arr                           T[]
+---@param filter                        fun(v: T, i: integer): boolean
 ---@return T[]
 function M.filter(arr, filter)
-  local i = 1
-  local size = #arr
+  local N = #arr ---@type integer
   local result = {}
-
-  if filter then
-    while i <= size do
-      local value = arr[i]
-      if filter(value, i) then
-        table.insert(result, value)
-      end
-      i = i + 1
-    end
-  else
-    while i <= size do
-      table.insert(result, arr[i])
-      i = i + 1
+  for i = 1, N do
+    local value = arr[i]
+    if filter(value, i) then
+      table.insert(result, value)
     end
   end
   return result
@@ -102,7 +126,7 @@ function M.map(arr, map, filter)
   return result
 end
 
----@param arr string[]
+---@param arr                           string[]
 ---@return string[]
 function M.filter_non_blank_string(arr)
   return M.filter(arr, function(x)
@@ -130,8 +154,8 @@ function M.trim_and_filter(strs)
   end)
 end
 
----@param str string
----@param separator_pattern? string
+---@param str                           string
+---@param separator_pattern             ?string
 ---@return string[]
 function M.parse_comma_list(str, separator_pattern)
   separator_pattern = separator_pattern or ","
@@ -147,4 +171,3 @@ function M.parse_comma_list(str, separator_pattern)
 end
 
 return M
-

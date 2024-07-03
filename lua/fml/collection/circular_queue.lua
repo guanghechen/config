@@ -57,6 +57,25 @@ function M:collect()
   return result
 end
 
+---@param filter                        fun(element: fml.types.T, index: integer): boolean
+---@return integer
+function M:count(filter)
+  local _capacity = self._capacity ---@type integer
+  local _elements = self._elements ---@type fml.types.T[]
+  local _start = self._start ---@type integer
+  local _size = self._size ---@type integer
+  local id = _start - 1 ---@type integer
+  local count = 0 ---@type integer
+
+  for i = 1, _size do
+    id = id == _capacity and 1 or id + 1
+    if filter(_elements[id], i) then
+      count = count + 1
+    end
+  end
+  return count
+end
+
 ---@param index number
 ---@return fml.types.T|nil
 function M:at(index)
@@ -157,10 +176,7 @@ function M:iterator()
   return function()
     i = i + 1
     if i <= _size then
-      id = id + 1
-      if id > _capacity then
-        id = 1
-      end
+      id = id == _capacity and 1 or id + 1
       return _elements[id], i
     end
   end
@@ -177,10 +193,7 @@ function M:iterator_reverse()
   return function()
     i = i - 1
     if i > 0 then
-      id = id - 1
-      if id < 1 then
-        id = _capacity
-      end
+      id = id == 1 and _capacity or id - 1
       return _elements[id], i
     end
   end

@@ -2,6 +2,7 @@ local CircularQueue = require("fml.collection.circular_queue")
 
 ---@class fml.collection.History : fml.types.collection.IHistory
 ---@field private _comparator           fun(x: fml.types.T, y: fml.types.T): number
+---@field private _validate             fun(v: fml.types.T): boolean
 ---@field private _name                 string
 ---@field private _present_idx          number
 ---@field private _stack                fml.types.collection.ICircularQueue
@@ -12,6 +13,7 @@ M.__index = M
 ---@field public name                   string
 ---@field public max_count              number
 ---@field public comparator             fun(x: fml.types.T, y: fml.types.T): number
+---@field public validate               fun(v: fml.types.T): boolean
 
 ---@param props fml.collection.History.IProps
 ---@return fml.collection.History
@@ -20,6 +22,7 @@ function M.new(props)
 
   self._name = props.name
   self._comparator = props.comparator
+  self._validate = props.validate
   self._present_idx = 0
   self._stack = CircularQueue.new({ capacity = props.max_count })
 
@@ -33,11 +36,19 @@ end
 
 ---@return fml.types.T|nil
 function M:present()
-  return self._stack:at(self._present_idx)
+  while self._present_idx > 0 do
+    local present = self._stack:at(self._present_idx)
+    if present == nil or self._validate(present) then
+      return present
+    end
+    self._present_idx = self._present_idx - 1
+  end
+  return nil
 end
 
 ---@return integer
 function M:present_index()
+  self:present()
   return self._present_idx
 end
 
@@ -49,46 +60,32 @@ end
 ---@param step? number
 ---@return fml.types.T|nil
 function M:back(step)
-  if step == nil or step < 1 then
-    step = 1
+  step = math.max(1, step or 1)
+  for _ = 1, step, 1 do
+    local present = self:present()
+    if present == nil then
+      return nil
+    end
+    self._present_idx = self._present_idx - 1
   end
-
-  local idx = self._present_idx - step ---@type number
-  if idx < 1 then
-    idx = 1
-  end
-
-  self._present_idx = idx
-  return self._stack:at(idx)
+  return self:present()
 end
 
 ---@param step? number
 ---@return fml.types.T|nil
 function M:forward(step)
-  if step == nil or step < 1 then
-    step = 1
+  step = math.max(1, step or 1)
+  for _ = 1, step, 1 do
+    local present = self:present()
+    if present == nil then
+      return nil
+    end
+    if self._present_idx == self._stack:size() then
+      break
+    end
+    self._present_idx = self._present_idx + 1
   end
-
-  local idx = self._present_idx + step ---@type number
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
-  if idx > stack:size() then
-    idx = stack:size()
-  end
-
-  self._present_idx = idx
-  return stack:at(idx)
-end
-
----@param index number
----@return fml.types.T|nil
-function M:go(index)
-  local idx = index ---@type number
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
-  if idx > 0 and idx <= stack:size() then
-    self._present_idx = idx
-    return stack:at(idx)
-  end
-  return nil
+  return self:present()
 end
 
 ---@param element fml.types.T
@@ -97,7 +94,7 @@ function M:push(element)
   local idx = self._present_idx ---@type number
   local stack = self._stack ---@type fml.types.collection.ICircularQueue
   local top = stack:at(idx)
-  if top ~= nil and self._comparator(top, element) == 0 then
+  if top ~= nil and self._comparator(top, element) == 0 or not self.validate(element) then
     return
   end
 
@@ -115,20 +112,57 @@ function M:push(element)
     stack:enqueue(element)
     self._present_idx = stack:size()
   end
+  self:present()
 end
 
 function M:iterator()
-  return self._stack:iterator()
+  local iterator = self._stack:iterator()
+
+  local i = 0
+  return function()
+    while true do
+      local element = iterator()
+      if element == nil then
+        return nil
+      end
+      if self:validate(element) then
+        i = i + 1
+        return element, i
+      end
+    end
+  end
 end
 
 function M:iterator_reverse()
-  return self._stack:iterator_reverse()
+  ---@type integer
+  local size = self._stack:count(function(element)
+    return self:validate(element)
+  end)
+
+  local iterator = self._stack:iterator_reverse()
+
+  local i = size + 1
+  return function()
+    while true do
+      local element = iterator()
+      if element == nil then
+        return nil
+      end
+      if self:validate(element) then
+        i = i - 1
+        return element, i
+      end
+    end
+  end
 end
 
 ---@return nil
 function M:print()
-  local stack = self._stack:collect() ---@type fml.types.T[]
-  vim.notify(vim.inspect({ stack = stack, present_index = self._present_idx }))
+  local history = {} ---@type fml.types.T[]
+  for element in self:iterator() do
+    table.insert(history, element)
+  end
+  vim.notify(vim.inspect({ history = history }))
 end
 
 return M

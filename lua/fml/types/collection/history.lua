@@ -3,9 +3,9 @@
 ---@field public present                fun(self: fml.types.collection.IHistory): fml.types.T|nil
 ---@field public present_index          fun(self: fml.types.collection.IHistory): integer
 ---@field public clear                  fun(self: fml.types.collection.IHistory): nil
+---@field public validate               fun(self: fml.types.collection.IHistory, v: fml.types.T): boolean
 ---@field public back                   fun(self: fml.types.collection.IHistory, step ?:number): fml.types.T|nil
 ---@field public forward                fun(self: fml.types.collection.IHistory, step ?:number): fml.types.T|nil
----@field public go                     fun(self: fml.types.collection.IHistory, index :number): fml.types.T|nil
 ---@field public push                   fun(self: fml.types.collection.IHistory, element: fml.types.T|nil): nil
 ---@field public iterator               fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
 ---@field public iterator_reverse       fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
