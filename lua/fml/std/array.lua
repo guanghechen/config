@@ -94,27 +94,27 @@ end
 ---@generic T
 ---@param arr                           T[]
 ---@param element                       T
----@return integer|nil
+---@return integer
 function M.first(arr, element)
   for i = 1, #arr, 1 do
     if arr[i] == element then
       return i
     end
   end
-  return nil
+  return 0
 end
 
 ---@generic T
 ---@param arr                           T[]
 ---@param element                       T
----@return integer|nil
+---@return integer
 function M.last(arr, element)
   for i = #arr, 1, -1 do
     if arr[i] == element then
       return i
     end
   end
-  return nil
+  return 0
 end
 
 ---@generic T1
