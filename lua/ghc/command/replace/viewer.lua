@@ -204,7 +204,7 @@ function M:internal_bind_keymaps(bufnr)
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local value = self.state:get_value(key) ---@type string
-      local lines = fml.table.parse_comma_list(value) ---@type string[]
+      local lines = fml.array.parse_comma_list(value) ---@type string[]
 
       local cursor = vim.api.nvim_win_get_cursor(winnr)
       self.cursor_row = cursor[1]

@@ -222,7 +222,7 @@ local function find_file(opts, force)
     table.insert(cmd, prompt)
     table.insert(cmd, filemap_filepath)
 
-    ghc.context.session.find_file_last_command:next(fml.table.slice(cmd))
+    ghc.context.session.find_file_last_command:next(fml.array.slice(cmd))
     return cmd
   end
 

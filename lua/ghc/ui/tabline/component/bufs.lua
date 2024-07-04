@@ -54,14 +54,14 @@ local M = {
     local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
 
     ---@type integer|nil
-    local bufid_cur = fml.table.find(bufs, function(item)
+    local bufid_cur = fml.array.find(bufs, function(item)
       return item.bufnr == bufnr_cur
     end)
 
     if bufid_cur ~= nil then
       last_bufnr_cur = bufnr_cur
     else
-      bufid_cur = fml.table.find(bufs, function(item)
+      bufid_cur = fml.array.find(bufs, function(item)
         return item.bufnr == last_bufnr_cur
       end) or 1
     end

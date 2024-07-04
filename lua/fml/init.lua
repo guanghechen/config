@@ -45,6 +45,7 @@ local fn = {
 ---@class fml.std
 local std = {
   G = require("fml.std.G"),
+  array = require("fml.std.array"),
   clipboard = require("fml.std.clipboard"),
   color = require("fml.std.color"),
   debug = require("fml.std.debug"),
@@ -58,7 +59,6 @@ local std = {
   path = require("fml.std.path"),
   reporter = require("fml.std.reporter"),
   string = require("fml.std.string"),
-  table = require("fml.std.table"),
   tmux = require("fml.std.tmux"),
 }
 
