@@ -54,6 +54,7 @@ local std = {
   json = require("fml.std.json"),
   md5 = require("fml.std.md5"),
   nvimbar = require("fml.std.nvimbar"),
+  object = require("fml.std.object"),
   os = require("fml.std.os"),
   oxi = require("fml.std.oxi"),
   path = require("fml.std.path"),

@@ -91,6 +91,32 @@ function M.find(arr, check)
   return nil
 end
 
+---@generic T
+---@param arr                           T[]
+---@param element                       T
+---@return integer|nil
+function M.first(arr, element)
+  for i = 1, #arr, 1 do
+    if arr[i] == element then
+      return i
+    end
+  end
+  return nil
+end
+
+---@generic T
+---@param arr                           T[]
+---@param element                       T
+---@return integer|nil
+function M.last(arr, element)
+  for i = #arr, 1, -1 do
+    if arr[i] == element then
+      return i
+    end
+  end
+  return nil
+end
+
 ---@generic T1
 ---@generic T2
 ---@param arr                           T1[]
