@@ -1,6 +1,5 @@
 ---@class guanghechen.keymap.actions
 local A = {
-  buffer = require("guanghechen.core.action.buffer"),
   context = require("guanghechen.core.action.context"),
   debug = require("guanghechen.core.action.debug"),
   enhance = require("guanghechen.core.action.enhance"),
@@ -8,7 +7,6 @@ local A = {
   run = require("guanghechen.core.action.run"),
   session = require("guanghechen.core.action.session"),
   toggle = require("guanghechen.core.action.toggle"),
-  window = require("guanghechen.core.action.window"),
 }
 
 ---@param mode string | string[]
@@ -56,30 +54,30 @@ mk({ "i", "n", "v" }, "<C-C>", A.enhance.copy_current_buffer_filepath, "copy: cu
 
 --#navigation---------------------------------------------------------------------------------------
 ----- tab -----
-mk({ "n", "v" }, "<leader><", fml.api.tab.focus_left, "tab: focus left tab", true)
-mk({ "n", "v" }, "<leader>>", fml.api.tab.focus_right, "tab: focus right tab", true)
-mk({ "n", "v" }, "[t", fml.api.tab.focus_left, "tab: focus left tab", true)
-mk({ "n", "v" }, "]t", fml.api.tab.focus_right, "tab: focus right tab", true)
+mk({ "n", "v" }, "<leader><", fml.api.tab.focus_left, "tab: focus left", true)
+mk({ "n", "v" }, "<leader>>", fml.api.tab.focus_right, "tab: focus right", true)
+mk({ "n", "v" }, "[t", fml.api.tab.focus_left, "tab: focus left", true)
+mk({ "n", "v" }, "]t", fml.api.tab.focus_right, "tab: focus right", true)
 
 ----- window -----
-mk({ "i", "n", "v" }, "<C-b>h", A.window.focus_window_left, "window: focus on the left window", true)
-mk({ "i", "n", "v" }, "<C-b>j", A.window.focus_window_bottom, "window: focus on the bottom window", true)
-mk({ "i", "n", "v" }, "<C-b>k", A.window.focus_window_top, "window: focus on the top window", true)
-mk({ "i", "n", "v" }, "<C-b>l", A.window.focus_window_right, "window: focus on the right window", true)
-mk({ "i", "n", "v" }, "<M-h>", A.window.focus_window_left, "window: focus on the left window", true)
-mk({ "i", "n", "v" }, "<M-j>", A.window.focus_window_bottom, "window: focus on the bottom window", true)
-mk({ "i", "n", "v" }, "<M-k>", A.window.focus_window_top, "window: focus on the top window", true)
-mk({ "i", "n", "v" }, "<M-l>", A.window.focus_window_right, "window: focus on the right window", true)
-mk({ "i", "n", "v" }, "<C-b>i", A.window.back, "window: back", true)
-mk({ "i", "n", "v" }, "<C-b>o", A.window.forward, "window: forward", true)
-mk({ "i", "n", "v" }, "<M-i>", A.window.back, "window: back", true)
-mk({ "i", "n", "v" }, "<M-o>", A.window.forward, "window: forward", true)
+mk({ "i", "n", "v" }, "<C-b>h", fml.api.win.focus_left, "window: focus left", true)
+mk({ "i", "n", "v" }, "<C-b>j", fml.api.win.focus_bottom, "window: focus bottom", true)
+mk({ "i", "n", "v" }, "<C-b>k", fml.api.win.focus_top, "window: focus top", true)
+mk({ "i", "n", "v" }, "<C-b>l", fml.api.win.focus_right, "window: focus right", true)
+mk({ "i", "n", "v" }, "<M-h>", fml.api.win.focus_left, "window: focus left", true)
+mk({ "i", "n", "v" }, "<M-j>", fml.api.win.focus_bottom, "window: focus bottom", true)
+mk({ "i", "n", "v" }, "<M-k>", fml.api.win.focus_top, "window: focus top", true)
+mk({ "i", "n", "v" }, "<M-l>", fml.api.win.focus_right, "window: focus right", true)
+mk({ "i", "n", "v" }, "<C-b>i", fml.api.win.back, "window: back", true)
+mk({ "i", "n", "v" }, "<C-b>o", fml.api.win.forward, "window: forward", true)
+mk({ "i", "n", "v" }, "<M-i>", fml.api.win.back, "window: back", true)
+mk({ "i", "n", "v" }, "<M-o>", fml.api.win.forward, "window: forward", true)
 
 ----- buffer -----
-mk({ "n", "v" }, "<leader>[", fml.api.buf.open_left, "buffer: open left buffer", true)
-mk({ "n", "v" }, "<leader>]", fml.api.buf.open_right, "buffer: open right buffer", true)
-mk({ "n", "v" }, "[b", fml.api.buf.open_left, "buffer: open left buffer", true)
-mk({ "n", "v" }, "]b", fml.api.buf.open_right, "buffer: open right buffer", true)
+mk({ "n", "v" }, "<leader>[", fml.api.buf.focus_left, "buffer: focus left", true)
+mk({ "n", "v" }, "<leader>]", fml.api.buf.focus_right, "buffer: focus right", true)
+mk({ "n", "v" }, "[b", fml.api.buf.focus_left, "buffer: focus left", true)
+mk({ "n", "v" }, "]b", fml.api.buf.focus_right, "buffer: focus right", true)
 
 ----- jump list -----
 mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back", true)
@@ -87,30 +85,30 @@ mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward", true)
 ---------------------------------------------------------------------------------------#navigation--
 
 --[#]buffer-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>b1", fml.api.buf.focus_1, "buffer: open buffer 1", true)
-mk({ "n", "v" }, "<leader>b2", fml.api.buf.focus_2, "buffer: open buffer 2", true)
-mk({ "n", "v" }, "<leader>b3", fml.api.buf.focus_3, "buffer: open buffer 3", true)
-mk({ "n", "v" }, "<leader>b4", fml.api.buf.focus_4, "buffer: open buffer 4", true)
-mk({ "n", "v" }, "<leader>b5", fml.api.buf.focus_5, "buffer: open buffer 5", true)
-mk({ "n", "v" }, "<leader>b6", fml.api.buf.focus_6, "buffer: open buffer 6", true)
-mk({ "n", "v" }, "<leader>b7", fml.api.buf.focus_7, "buffer: open buffer 7", true)
-mk({ "n", "v" }, "<leader>b8", fml.api.buf.focus_8, "buffer: open buffer 8", true)
-mk({ "n", "v" }, "<leader>b9", fml.api.buf.focus_9, "buffer: open buffer 9", true)
-mk({ "n", "v" }, "<leader>b0", fml.api.buf.focus_10, "buffer: open buffer 10", true)
-mk({ "n", "v" }, "<leader>b[", fml.api.buf.open_left, "buffer: open left buffer", true)
-mk({ "n", "v" }, "<leader>b]", fml.api.buf.open_right, "buffer: open right buffer", true)
-mk({ "n", "v" }, "<leader>ba", A.buffer.close_all, "buffer: close all buffers", true)
-mk({ "n", "v" }, "<leader>bd", A.buffer.close, "buffer: close current buffer", true)
-mk({ "n", "v" }, "<leader>bh", A.buffer.close_to_leftest, "buffer: close buffers to the leftest", true)
-mk({ "n", "v" }, "<leader>bl", A.buffer.close_to_rightest, "buffer: close buffers to the rightest", true)
-mk({ "n", "v" }, "<leader>bn", A.buffer.new_buffer, "buffer: new buffer", true)
-mk({ "n", "v" }, "<leader>bo", A.buffer.close_others, "buffer: close other buffers", true)
+mk({ "n", "v" }, "<leader>b1", fml.api.buf.focus_1, "buffer: focus buffer 1", true)
+mk({ "n", "v" }, "<leader>b2", fml.api.buf.focus_2, "buffer: focus buffer 2", true)
+mk({ "n", "v" }, "<leader>b3", fml.api.buf.focus_3, "buffer: focus buffer 3", true)
+mk({ "n", "v" }, "<leader>b4", fml.api.buf.focus_4, "buffer: focus buffer 4", true)
+mk({ "n", "v" }, "<leader>b5", fml.api.buf.focus_5, "buffer: focus buffer 5", true)
+mk({ "n", "v" }, "<leader>b6", fml.api.buf.focus_6, "buffer: focus buffer 6", true)
+mk({ "n", "v" }, "<leader>b7", fml.api.buf.focus_7, "buffer: focus buffer 7", true)
+mk({ "n", "v" }, "<leader>b8", fml.api.buf.focus_8, "buffer: focus buffer 8", true)
+mk({ "n", "v" }, "<leader>b9", fml.api.buf.focus_9, "buffer: focus buffer 9", true)
+mk({ "n", "v" }, "<leader>b0", fml.api.buf.focus_10, "buffer: focus buffer 10", true)
+mk({ "n", "v" }, "<leader>b[", fml.api.buf.focus_left, "buffer: focus left", true)
+mk({ "n", "v" }, "<leader>b]", fml.api.buf.focus_right, "buffer: focus right", true)
+mk({ "n", "v" }, "<leader>ba", fml.api.buf.close_all, "buffer: close all", true)
+mk({ "n", "v" }, "<leader>bd", fml.api.buf.close_current, "buffer: close current", true)
+mk({ "n", "v" }, "<leader>bh", fml.api.buf.close_to_leftest, "buffer: close to the leftest", true)
+mk({ "n", "v" }, "<leader>bl", fml.api.buf.close_to_rightest, "buffer: close to the rightest", true)
+mk({ "n", "v" }, "<leader>bn", fml.api.buf.create, "buffer: new", true)
+mk({ "n", "v" }, "<leader>bo", fml.api.buf.close_others, "buffer: close others", true)
 -----------------------------------------------------------------------------------------#[b]uffer--
 
 ----#[d]ebug-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>dC", A.debug.show_context_all, "debug: show context (all)", true)
 mk({ "n", "v" }, "<leader>dc", A.debug.show_context, "debug: show context (persistentable)", true)
-mk({ "n", "v" }, "<leader>dw", A.window.show_window_history, "debug: show window history", true)
+mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window history", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[f]ile-------------------------------------------------------------------------------------------
@@ -146,7 +144,7 @@ mk({ "n", "v" }, "<leader>t[", fml.api.tab.focus_left, "tab: focus the left tab"
 mk({ "n", "v" }, "<leader>t]", fml.api.tab.focus_right, "tab: focus the right tab", true)
 mk({ "n", "v" }, "<leader>tN", fml.api.tab.create, "tab: new tab", true)
 mk({ "n", "v" }, "<leader>tn", fml.api.tab.create_with_buf, "tab: new tab with current buf", true)
-mk({ "n", "v" }, "<leader>td", fml.api.tab.close, "tab: close", true)
+mk({ "n", "v" }, "<leader>td", fml.api.tab.close_current, "tab: close", true)
 mk({ "n", "v" }, "<leader>th", fml.api.tab.close_to_leftest, "tab: close tabs to the leftest", true)
 mk({ "n", "v" }, "<leader>tl", fml.api.tab.close_to_rightest, "tab: close tabs to the rightest", true)
 mk({ "n", "v" }, "<leader>to", fml.api.tab.close_others, "tab: close other tabs", true)
@@ -161,17 +159,17 @@ mk({ "n", "v" }, "<leader>tuw", A.toggle.wrap, "toggle: wrap")
 -----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[w]indow-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>wW", A.window.find_history_all, "window: find history", true)
-mk({ "n", "v" }, "<leader>ww", A.window.find_history_unique, "window: find history (unique)", true)
-mk({ "n", "v" }, "<leader>wf", A.window.focus_window_with_picker, "window: focus window (with picker)", true)
-mk({ "n", "v" }, "<leader>ws", A.window.swap_window_with_picker, "window: swap window (with picker)", true)
-mk({ "n", "v" }, "<leader>wp", A.window.project_window_with_picker, "window: project window (with picker)", true)
-mk({ "n", "v" }, "<leader>wj", A.window.split_window_horizontal, "window: split window horizontally", true)
-mk({ "n", "v" }, "<leader>wl", A.window.split_window_vertical, "window: split window vertically", true)
-mk({ "n", "v" }, "<leader>wH", A.window.resize_window_vertical_minus, "window: resize -(v:count) vertically.", true)
-mk({ "n", "v" }, "<leader>wJ", A.window.resize_window_horizontal_minus, "window: resize -(v:count) horizontally.", true)
-mk({ "n", "v" }, "<leader>wK", A.window.resize_window_horizontal_plus, "window: resize +(v:count) horizontally.", true)
-mk({ "n", "v" }, "<leader>wL", A.window.resize_window_vertical_plus, "window: resize +(v:count) vertically.", true)
-mk({ "n", "v" }, "<leader>wd", A.window.close_window_current, "window: close current window", true)
-mk({ "n", "v" }, "<leader>wo", A.window.close_window_others, "window: close others", true)
+mk({ "n", "v" }, "<leader>wW", fml.api.win.find_history_all, "window: find history", true)
+mk({ "n", "v" }, "<leader>ww", fml.api.win.find_history_unique, "window: find history (unique)", true)
+mk({ "n", "v" }, "<leader>wf", fml.api.win.focus_with_picker, "window: focus (with picker)", true)
+mk({ "n", "v" }, "<leader>ws", fml.api.win.swap_with_picker, "window: swap (with picker)", true)
+mk({ "n", "v" }, "<leader>wp", fml.api.win.project_with_picker, "window: project (with picker)", true)
+mk({ "n", "v" }, "<leader>wj", fml.api.win.split_horizontal, "window: split horizontally", true)
+mk({ "n", "v" }, "<leader>wl", fml.api.win.split_vertical, "window: split vertically", true)
+mk({ "n", "v" }, "<leader>wH", fml.api.win.resize_vertical_minus, "window: resize -(v:count) vertically.", true)
+mk({ "n", "v" }, "<leader>wJ", fml.api.win.resize_horizontal_minus, "window: resize -(v:count) horizontally.", true)
+mk({ "n", "v" }, "<leader>wK", fml.api.win.resize_horizontal_plus, "window: resize +(v:count) horizontally.", true)
+mk({ "n", "v" }, "<leader>wL", fml.api.win.resize_vertical_plus, "window: resize +(v:count) vertically.", true)
+mk({ "n", "v" }, "<leader>wd", fml.api.win.close_current, "window: close current window", true)
+mk({ "n", "v" }, "<leader>wo", fml.api.win.close_others, "window: close others", true)
 -----------------------------------------------------------------------------------------#[w]indow--

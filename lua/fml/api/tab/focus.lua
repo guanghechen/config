@@ -35,26 +35,32 @@ function M.focus(tabid)
   M.go(tabnr_next)
 end
 
-for i = 1, 10 do
-  M["focus_" .. i] = function()
-    M.focus(i)
-  end
-end
-
-function M.focus_left()
+---@param step                         ?integer
+---@return nil
+function M.focus_left(step)
+  step = math.max(1, step or vim.v.count1 or 1)
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
-  local tabid_next = navigate_circular(tabid_cur, -1, tab_count)
+  local tabid_next = navigate_circular(tabid_cur, -step, tab_count)
   local tabpages = vim.api.nviwism_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   M.go(tabnr_next)
 end
 
-function M.focus_right()
+---@param step                         ?integer
+---@return nil
+function M.focus_right(step)
+  step = math.max(1, step or vim.v.count1 or 1)
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
-  local tabid_next = navigate_circular(tabid_cur, 1, tab_count)
+  local tabid_next = navigate_circular(tabid_cur, step, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   M.go(tabnr_next)
+end
+
+for i = 1, 10 do
+  M["focus_" .. i] = function()
+    M.focus(i)
+  end
 end

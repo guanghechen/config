@@ -1,4 +1,5 @@
-local vim_navigate = require("guanghechen.core.action.window.navigate-vim")
+local navigate_vim = require("fml.api.win.navigate_vim")
+local tmux = require("fml.std.tmux")
 
 local DISABLE_WHEN_ZOOMED = true ---@type boolean
 
@@ -13,23 +14,23 @@ local function navigate_window_topest()
 end
 
 ---@param direction "p"|"n"|"h"|"j"|"k"|"l"
-local function tmux_navigate(direction)
+local function navigate_tmux(direction)
   if direction == "n" then
     local is_last_win = (vim.fn.winnr() == vim.fn.winnr("$"))
 
     if is_last_win then
       pcall(navigate_window_topest)
-      fml.tmux.change_pane(direction)
+      tmux.change_pane(direction)
     else
-      vim_navigate(direction)
+      navigate_vim(direction)
     end
   elseif direction == "p" then
     -- if the last pane was a tmux pane, then we need to handle control
     -- to tmux; otherwise, just issue a last pane command in vim
     if tmux_control == true then
-      fml.tmux.change_pane(direction)
+      tmux.change_pane(direction)
     elseif tmux_control == false then
-      vim_navigate(direction)
+      navigate_vim(direction)
     end
   else
     -- save the current window number to check later whether we're in the same
@@ -37,14 +38,14 @@ local function tmux_navigate(direction)
     local winnr = vim.fn.winnr()
 
     -- try to navigate normally
-    vim_navigate(direction)
+    navigate_vim(direction)
 
     -- if we're in the same window after navigating
     local is_same_winnr = (winnr == vim.fn.winnr())
 
     -- if we're in the same window and zoom is not disabled, tmux should take control
-    if fml.tmux.should_tmux_control(is_same_winnr, DISABLE_WHEN_ZOOMED) then
-      fml.tmux.change_pane(direction)
+    if tmux.should_tmux_control(is_same_winnr, DISABLE_WHEN_ZOOMED) then
+      tmux.change_pane(direction)
       tmux_control = true
     else
       tmux_control = false
@@ -52,4 +53,4 @@ local function tmux_navigate(direction)
   end
 end
 
-return tmux_navigate
+return navigate_tmux

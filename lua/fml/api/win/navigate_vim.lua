@@ -12,7 +12,7 @@ local function navigate_window(direction)
 end
 
 ---@param direction "p"|"n"|"h"|"j"|"k"|"l"
-local function navigate(direction)
+local function navigate_vim(direction)
   if direction == "p" then
     pcall(navigate_window_prev)
     return
@@ -32,4 +32,4 @@ local function navigate(direction)
   end
 end
 
-return navigate
+return navigate_vim

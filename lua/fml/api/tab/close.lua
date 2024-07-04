@@ -1,54 +1,68 @@
 local state = require("fml.api.state")
+local navigate_limit = require("fml.fn.navigate_limit")
+local std_object = require("fml.std.object")
 
 ---@class fml.api.tab
 local M = require("fml.api.tab.mod")
 
 ---@return nil
-function M.close()
+function M.close_current()
   local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
   state.tabs[tabnr_cur] = nil
-  M.rearrange_history()
 
   vim.cmd("tabclose")
-  local tabnr_last = M.internal_back() ---@type integer|nil
+
+  local tabnr_last = state.tab_history:present() ---@type integer|nil
   if tabnr_last ~= nil then
     vim.api.nvim_set_current_tabpage(tabnr_last)
   end
+  state.schedule_refresh_tabs()
 end
 
----@param count                         integer
+---@param step                         integer
 ---@return nil
-function M.close_left(count)
+function M.close_left(step)
+  step = math.max(1, step or vim.v.count1 or 1)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
-  local step = math.min(count, tabid_cur - 1)
-  for i = 1, step, 1 do
-    local tabnr = tabpages[tabid_cur - i] ---@type integer
+  local tabid_next = navigate_limit(tabid_cur, -step, #tabpages)
+
+  for i = tabid_next, tabid_cur - 1, 1 do
+    local tabnr = tabpages[i] ---@type integer
     state.tabs[tabnr] = nil
   end
-  M.rearrange_history()
-
-  for _ = 1, step, 1 do
+  for _ = tabid_next, tabid_cur - 1, 1 do
     vim.cmd("-tabclose")
   end
+
+  local tabnr_last = state.tab_history:present() ---@type integer|nil
+  if tabnr_last ~= nil then
+    vim.api.nvim_set_current_tabpage(tabnr_last)
+  end
+  state.schedule_refresh_tabs()
 end
 
----@param count                         integer
+---@param step                         integer
 ---@return nil
-function M.close_right(count)
+function M.close_right(step)
+  step = math.max(1, step or vim.v.count1 or 1)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
-  local tab_count = #tabpages ---@type integer
-  local step = math.min(count, tab_count - tabid_cur)
-  for i = 1, step, 1 do
-    local tabnr = tabpages[tabid_cur + i] ---@type integer
+  local tabid_next = navigate_limit(tabid_cur, step, #tabpages)
+
+  for i = tabid_cur + 1, tabid_next, 1 do
+    local tabnr = tabpages[i] ---@type integer
     state.tabs[tabnr] = nil
   end
-  M.rearrange_history()
-
-  for _ = 1, step, 1 do
+  for _ = tabid_cur + 1, tabid_next, 1 do
     vim.cmd("+tabclose")
   end
+
+  local tabnr_last = state.tab_history:present() ---@type integer|nil
+  if tabnr_last ~= nil then
+    vim.api.nvim_set_current_tabpage(tabnr_last)
+  end
+  state.schedule_refresh_tabs()
 end
 
 ---@return nil
@@ -62,15 +76,13 @@ function M.close_to_rightest()
 end
 
 function M.close_others()
-  local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
-  for _, tabnr in ipairs(tabpages) do
-    if tabnr ~= tabnr_cur then
-      state.tabs[tabnr] = nil
-    end
-  end
+  std_object.filter_inline(state.tabs, function(_, tabnr)
+    return tabnr ~= tabnr_cur
+  end)
   state.tab_history:clear()
   state.tab_history:push(tabnr_cur)
 
   vim.cmd("tabonly")
+  state.schedule_refresh_tabs()
 end

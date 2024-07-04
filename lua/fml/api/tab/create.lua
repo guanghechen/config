@@ -1,4 +1,3 @@
-local buffer = require("fml.api.buffer")
 local state = require("fml.api.state")
 local History = require("fml.collection.history")
 
@@ -15,38 +14,26 @@ function M.create(name, bufnr)
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
 
-  ---@type table<integer, fml.api.state.ITabWinItem>
-  local wins = {
-    winnr = {
-      buf_history = History.new({
-        name = name .. "#wins",
-        max_count = 100,
-        comparator = function(x, y)
-          return x - y
-        end,
-      }),
-    },
+  ---@type fml.api.state.ITabWinItem
+  local win = {
+    buf_history = History.new({
+      name = name .. "#wins",
+      max_count = 1000,
+      comparator = state.compare_bufnr,
+      validate = state.validate_buf,
+    }),
   }
-  wins[winnr].buf_history:push(bufnr)
+  win.buf_history:push(bufnr)
 
   ---@type fml.api.state.ITabItem
   local tab = {
-    tabnr = tabnr,
     name = name,
     bufnrs = { bufnr },
-    buf_history = History.new({
-      name = name .. "#bufs",
-      max_count = 100,
-      comparator = function(x, y)
-        return x - y
-      end,
-    }),
-    wins = wins,
-    winnr_cur = winnr,
+    wins = { winnr = win },
   }
-
   state.tabs[tabnr] = tab
   state.tab_history:push(tabnr)
+  state.schedule_refresh_tabs()
 end
 
 function M.create_with_buf()
@@ -57,5 +44,4 @@ function M.create_with_buf()
   M.create("unnamed", bufnr)
 
   vim.api.nvim_win_set_cursor(winnr, cursor)
-  buffer.close_others()
 end

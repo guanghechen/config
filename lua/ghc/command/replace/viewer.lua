@@ -17,7 +17,12 @@ M.__index = M
 
 ---@return integer|nil
 local function find_first_replace_buf()
-  for _, bufnr in ipairs(vim.t.bufs) do
+  local tab = fml.api.state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  if tab == nil then
+    return nil
+  end
+
+  for _, bufnr in ipairs(tab.bufnrs) do
     local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr })
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
     if buftype == constants.replace_view_buftype and filetype == constants.replace_view_filetype then
@@ -421,8 +426,8 @@ function M:internal_render_cfg(data)
 
     ---@type fml.ui.printer.ILineHighlight[]
     local highlights = {
-      { cstart = 0,               cend = invisible_width, hlname = "GhcReplaceInvisible" },
-      { cstart = invisible_width, cend = cfg_name_len,    hlname = "GhcReplaceOptName" },
+      { cstart = 0, cend = invisible_width, hlname = "GhcReplaceInvisible" },
+      { cstart = invisible_width, cend = cfg_name_len, hlname = "GhcReplaceOptName" },
     }
 
     if flags ~= nil and #flags > 0 then
@@ -506,7 +511,7 @@ function M:internal_render_result(data, result)
       local filepath = fml.path.relative(data.cwd, raw_filepath)
 
       self:internal_print(fileicon .. " " .. filepath, {
-        { cstart = 0, cend = 2,  hlname = fileicon_highlight },
+        { cstart = 0, cend = 2, hlname = fileicon_highlight },
         { cstart = 2, cend = -1, hlname = "GhcReplaceFilepath" },
       }, { filepath = filepath })
 
@@ -520,7 +525,7 @@ function M:internal_render_result(data, result)
               { cstart = 0, cend = 1, hlname = "GhcReplaceFence" },
             }
             local padding = i > 1 and continous_line_padding
-                or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
+              or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
               table.insert(
@@ -556,7 +561,7 @@ function M:internal_render_result(data, result)
               { cstart = 0, cend = 1, hlname = "GhcReplaceFence" },
             }
             local padding = i > 1 and continous_line_padding
-                or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
+              or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
               local hlname = piece.i % 2 == 0 and "GhcReplaceTextDeleted" or "GhcReplaceTextAdded" ---@type string

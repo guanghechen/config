@@ -37,6 +37,15 @@ function M:clear()
   self._end = 0
 end
 
+---@return fml.collection.CircularQueue
+function M:clone()
+  local queue = M.new({ capacity = self._capacity })
+  for element in self:iterator() do
+    queue:enqueue(element)
+  end
+  return queue
+end
+
 ---@return fml.types.T[]
 function M:collect()
   local _capacity = self._capacity

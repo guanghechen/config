@@ -1,6 +1,9 @@
 local history = fml.collection.History.new({
   name = "haha",
   max_count = 50,
+  validate = function()
+    return true
+  end,
   comparator = function(x, y)
     if x == y then
       return 0

@@ -1,5 +1,8 @@
+local nvimbar = require("fml.std.nvimbar")
+local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
 local truthy = require("fml.fn.truthy")
+local calc_fileicon = require("fml.fn.calc_fileicon")
 
 ---@class fml.ui.Nvimbar : fml.types.ui.INvimbar
 ---@field public name                   string
@@ -63,9 +66,9 @@ local function build_context()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local cwd = fml.path.cwd() ---@type string
+  local cwd = path.cwd() ---@type string
   local filepath = vim.fn.expand("%:p") ---@type string
-  local fileicon = fml.fn.calc_fileicon(filepath) ---@type string
+  local fileicon = calc_fileicon(filepath) ---@type string
   local filetype = vim.bo.filetype ---@type string
 
   ---@type fml.types.ui.nvimbar.IContext
@@ -112,7 +115,7 @@ function M.new(props)
 
   local self = setmetatable({}, M)
   self.name = name
-  self.sep = fml.nvimbar.txt(component_sep, component_sep_hlname)
+  self.sep = nvimbar.txt(component_sep, component_sep_hlname)
   self.sep_width = vim.fn.strwidth(component_sep)
   self.dirty = true
   self.rendering = false

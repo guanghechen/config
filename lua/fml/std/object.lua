@@ -33,3 +33,5 @@ function M.filter_inline(object, filter)
   end
   return object
 end
+
+return M

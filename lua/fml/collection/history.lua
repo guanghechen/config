@@ -1,18 +1,20 @@
+local reporter = require("fml.std.reporter")
 local CircularQueue = require("fml.collection.circular_queue")
 
 ---@class fml.collection.History : fml.types.collection.IHistory
----@field private _present_idx          number
 ---@field private _stack                fml.types.collection.ICircularQueue
+---@field private _max_count            integer
+---@field private _present_idx          integer
 local M = {}
 M.__index = M
 
 ---@class fml.collection.History.IProps
 ---@field public name                   string
 ---@field public validate               fun(v: fml.types.T): boolean
----@field public max_count              number
----@field public comparator             fun(x: fml.types.T, y: fml.types.T): number
+---@field public comparator             fun(x: fml.types.T, y: fml.types.T): integer
+---@field public max_count              integer
 
----@param props fml.collection.History.IProps
+---@param props                         fml.collection.History.IProps
 ---@return fml.collection.History
 function M.new(props)
   local self = setmetatable({}, M)
@@ -20,13 +22,28 @@ function M.new(props)
   self.name = props.name
   self.comparator = props.comparator
   self.validate = props.validate
-  self._present_idx = 0
   self._stack = CircularQueue.new({ capacity = props.max_count })
+  self._max_count = props.max_count
+  self._present_idx = 0
 
   return self
 end
 
----@param step? number
+---@param new_name                      ?string
+---@return fml.collection.History
+function M:clone(new_name)
+  local history = M.new({
+    name = new_name or self.name,
+    validate = self.validate,
+    comparator = self.comparator,
+    max_count = 0,
+  })
+  history._stack = self._stack:clone()
+  history:go(self._present_idx)
+  return history
+end
+
+---@param step                          ?number
 ---@return fml.types.T|nil
 function M:back(step)
   step = math.max(1, step or 1)
@@ -40,6 +57,7 @@ function M:back(step)
   return self:present()
 end
 
+---@return nil
 function M:clear()
   self._present_idx = 0
   self._stack:clear()
@@ -50,7 +68,7 @@ function M:empty()
   return self:present() == nil
 end
 
----@param step? number
+---@param step                          ?number
 ---@return fml.types.T|nil
 function M:forward(step)
   step = math.max(1, step or 1)
@@ -67,18 +85,26 @@ function M:forward(step)
   return self:present()
 end
 
+---@param idx                           integer
+---@return fml.types.T|nil
+function M:go(idx)
+  idx = math.max(1, math.min(self._stack:size(), idx))
+  self._present_idx = idx
+  return self._stack:at(idx)
+end
+
 function M:iterator()
   local iterator = self._stack:iterator()
 
   local i = 0
   return function()
     while true do
+      i = i + 1
       local element = iterator()
       if element == nil then
         return nil
       end
       if self.validate(element) then
-        i = i + 1
         return element, i
       end
     end
@@ -86,22 +112,18 @@ function M:iterator()
 end
 
 function M:iterator_reverse()
-  ---@type integer
-  local size = self._stack:count(function(element)
-    return self.validate(element)
-  end)
-
+  local size = self._stack:size() ---@type integer
   local iterator = self._stack:iterator_reverse()
 
   local i = size + 1
   return function()
     while true do
+      i = i - 1
       local element = iterator()
       if element == nil then
         return nil
       end
       if self.validate(element) then
-        i = i - 1
         return element, i
       end
     end
@@ -120,16 +142,28 @@ function M:present()
   return nil
 end
 
+---@return integer
+function M:present_index()
+  return self._present_idx
+end
+
 ---@return nil
 function M:print()
   local history = {} ---@type fml.types.T[]
-  for element in self:iterator() do
-    table.insert(history, element)
+  for element in self._stack:iterator() do
+    if self.validate(element) then
+      table.insert(history, element)
+    end
   end
-  vim.notify(vim.inspect({ history = history }))
+  reporter.info({
+    from = "fml.collection.history",
+    subject = "print",
+    message = "History",
+    details = { history = history },
+  })
 end
 
----@param element fml.types.T
+---@param element                       fml.types.T
 ---@return nil
 function M:push(element)
   local idx = self._present_idx ---@type number
