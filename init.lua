@@ -1,12 +1,5 @@
-vim.g.mapleader = " "
-
 _G.fml = require("fml")
 _G.ghc = require("ghc")
-
-vim.opt.laststatus = 3 -- Keep only the global status bar.
-vim.opt.showtabline = 2
-vim.opt.statusline = "%!v:lua._G.ghc.ui.statusline.render()"
-vim.opt.tabline = "%!v:lua._G.ghc.ui.tabline.render()"
 
 ---load theme
 ghc.context.shared.reload_theme({ force = false })
@@ -22,22 +15,20 @@ local function load_config(name)
   pcall(require, "local." .. name)
 end
 
+load_config("option-bootstrap")
+load_config("autocmd-bootstrap")
+load_config("keymap-bootstrap")
+
 -- bootstrap lazy and all plugins
 local function load_plugins()
-  local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-  if not vim.uv.fs_stat(lazypath) then
+  local lazypath = fml.path.locate_data_filepath("/lazy/lazy.nvim")
+  if not fml.path.is_exist(lazypath) then
     local repo = "https://github.com/folke/lazy.nvim.git"
     vim.fn.system({ "git", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath })
   end
   vim.opt.rtp:prepend(lazypath)
-
-  -- load plugins
   require("lazy").setup(require("guanghechen.plugin.lazy"))
 end
-
-load_config("option-bootstrap")
-load_config("keymap-bootstrap")
-load_config("autocmd-bootstrap")
 
 local ok = pcall(load_plugins)
 if ok then
@@ -47,3 +38,8 @@ if ok then
 else
   load_config("option")
 end
+
+---reload theme
+vim.schedule(function()
+  ghc.context.shared.reload_theme({ force = false })
+end)
