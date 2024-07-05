@@ -1,6 +1,5 @@
 ---autocmd
-require("fml.autocmd.bootstrap")
-require("fml.autocmd.buffer")
+require("fml.autocmd")
 
 ---@class fml.api
 local api = {

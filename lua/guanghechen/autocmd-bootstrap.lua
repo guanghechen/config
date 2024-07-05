@@ -1,6 +1,5 @@
 local action_autocmd = require("guanghechen.core.action.autocmd")
 
-action_autocmd.autocmd_startup()
 action_autocmd.autocmd_checktime() -- Check if we need to reload the file when it changed
 action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
   pattern = {
@@ -21,9 +20,7 @@ action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
     "Trouble",
   },
 })
-action_autocmd.autocmd_create_dirs()
 action_autocmd.autocmd_highlight_yank()
-action_autocmd.autocmd_remember_last_tabnr()
 action_autocmd.autocmd_resize_splits() -- resize splits if window got resized
 action_autocmd.autocmd_session_autosave() -- auto save session
 action_autocmd.autocmd_show_lsp_progress() -- show lsp progress
