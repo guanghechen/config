@@ -5,20 +5,23 @@ local last_bufnr_cur = 1 ---@type integer
 ---@field public filepath               string
 ---@field public filename               string
 
-local function build_buf_items()
-  local tab = fml.api.state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
-    return {}
-  end
-
+---@param bufnr_cur                     integer
+---@return ghc.ui.tabline.component.IBufItem[], integer
+local function build_buf_items(bufnr_cur)
   local bufs = {} ---@type ghc.ui.tabline.component.IBufItem[]
-  for _, bufnr in ipairs(tab.bufnrs) do
-    local filepath = vim.api.nvim_buf_get_name(bufnr)
-    local filename = fml.path.basename(filepath)
-    table.insert(bufs, { bufnr = bufnr, filepath = filepath, filename = filename })
+  local bufid_cur = 0 ---@type integer
+  local tab = fml.api.state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  if tab ~= nil then
+    for _, bufnr in ipairs(tab.bufnrs) do
+      local filepath = vim.api.nvim_buf_get_name(bufnr)
+      local filename = fml.path.basename(filepath)
+      table.insert(bufs, { bufnr = bufnr, filepath = filepath, filename = filename })
+      if bufnr == bufnr_cur then
+        bufid_cur = #bufs
+      end
+    end
   end
-
-  return bufs
+  return bufs, bufid_cur
 end
 
 ---@param buf                           ghc.ui.tabline.component.IBufItem
@@ -53,21 +56,21 @@ end
 --- @type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "bufs",
+  ---@diagnostic disable-next-line: unused-local
   render = function(context, remain_width)
-    local bufs = build_buf_items()
     local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+    local bufs, bufid_cur = build_buf_items(bufnr_cur)
+    if #bufs < 1 then
+      return "", 0
+    end
 
-    ---@type integer|nil
-    local bufid_cur = fml.array.find(bufs, function(item)
-      return item.bufnr == bufnr_cur
-    end)
-
-    if bufid_cur ~= nil then
+    if bufid_cur ~= 0 then
       last_bufnr_cur = bufnr_cur
     else
-      bufid_cur = fml.array.find(bufs, function(item)
+      local bufid_last = fml.array.first(bufs, function(item)
         return item.bufnr == last_bufnr_cur
-      end) or 1
+      end)
+      bufid_cur = bufid_last or 1
     end
 
     local text, width = render_buf(bufs[bufid_cur], bufid_cur, true)

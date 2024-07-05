@@ -26,7 +26,7 @@ action_autocmd.autocmd_highlight_yank()
 action_autocmd.autocmd_remember_last_tabnr()
 action_autocmd.autocmd_resize_splits() -- resize splits if window got resized
 action_autocmd.autocmd_session_autosave() -- auto save session
-action_autocmd.autocmd_show_lsp_progress()() -- show lsp progress
+action_autocmd.autocmd_show_lsp_progress() -- show lsp progress
 action_autocmd.autocmd_toggle_linenumber()
 action_autocmd.autocmd_goto_last_location({ exclude = { "gitcommit" } })
 action_autocmd.autocmd_unlist_buffer({ pattern = { "man" } }) -- make it easier to close man-files when opened inline
@@ -61,6 +61,3 @@ action_autocmd.autocmd_set_tabstop({
   pattern = { "markdown" },
   width = 2,
 })
-
---#window
-action_autocmd.autocmd_window_update_history()

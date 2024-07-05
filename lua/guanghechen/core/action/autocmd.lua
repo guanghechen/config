@@ -1,5 +1,4 @@
 local action_session = require("guanghechen.core.action.session")
-local action_window = require("guanghechen.core.action.window")
 
 ---@class guanghechen.core.action.autocmd
 local M = {}
@@ -307,10 +306,6 @@ function M.autocmd_unlist_buffer(opts)
       vim.bo[event.buf].buflisted = false
     end,
   })
-end
-
-function M.autocmd_window_update_history()
-  action_window.register_autocmd_window_history()
 end
 
 return M

@@ -122,12 +122,12 @@ function M.close_right(step)
 end
 
 ---@return nil
-function M.close_to_left()
+function M.close_to_leftest()
   M.close_left(math.huge)
 end
 
 ---@return nil
-function M.close_to_right()
+function M.close_to_rightest()
   M.close_right(math.huge)
 end
 
