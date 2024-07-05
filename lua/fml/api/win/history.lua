@@ -1,3 +1,4 @@
+local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
 local state = require("fml.api.state")
 
@@ -81,7 +82,7 @@ function M.find_history(opts)
 
   local prompt_title = unique and "window history (unique)" or "window history"
   local entries = {} ---@type fml.api.win.IHistoryItemEntry[]
-  local cwd = fml.path.cwd()
+  local cwd = path.cwd()
   local minwidth = #prompt_title + 16 ---@type number
   local default_lnum = 1 ---@type number
   if unique then
@@ -90,7 +91,7 @@ function M.find_history(opts)
     local visited = {} ---@type table<string, boolean>
     for item, item_index in win.buf_history:iterator_reverse() do
       ---@cast item fml.api.win.IHistoryItem
-      local relative_filepath = fml.path.relative(cwd, item.filepath)
+      local relative_filepath = path.relative(cwd, item.filepath)
       if not visited[relative_filepath] then
         visited[relative_filepath] = true
 
@@ -117,7 +118,7 @@ function M.find_history(opts)
     local present_index = win.buf_history:present_index() ---@type number
     for item, item_index in win.buf_history:iterator_reverse() do
       ---@cast item fml.api.win.IHistoryItem
-      local relative_filepath = fml.path.relative(cwd, item.filepath)
+      local relative_filepath = path.relative(cwd, item.filepath)
 
       local display_text ---@type string
       if present_index == item_index then
