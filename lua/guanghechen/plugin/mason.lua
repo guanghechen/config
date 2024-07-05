@@ -53,7 +53,6 @@ return {
     },
   },
   config = function(_, opts)
-    ghc.context.shared.reload_partial({ integration = "mason" })
     require("mason").setup(opts)
     require("mason-lspconfig").setup({
       ensure_installed = {

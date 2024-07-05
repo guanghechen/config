@@ -91,7 +91,6 @@ return {
     },
   },
   config = function(_, opts)
-    ghc.context.shared.reload_partial({ integration = "treesitter" })
     require("nvim-treesitter.configs").setup(opts)
   end,
   dependencies = {

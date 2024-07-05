@@ -14,7 +14,6 @@
 
 ---@class ghc.types.context.shared.IReloadPartialThemeParams
 ---@field public integration            ghc.enum.ui.theme.HighlightIntegration
----@field public force                  ?boolean
 
 ---@class ghc.types.context.shared : fml.collection.Viewmodel
 ---@field public mode                   fml.types.collection.IObservable

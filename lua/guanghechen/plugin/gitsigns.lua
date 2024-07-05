@@ -74,7 +74,6 @@ return {
     end,
   },
   config = function(_, opts)
-    ghc.context.shared.reload_partial({ integration = "gitsigns" })
     require("gitsigns").setup(opts)
   end,
 }
