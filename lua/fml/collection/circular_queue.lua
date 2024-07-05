@@ -24,7 +24,30 @@ function M.new(props)
   return self
 end
 
----@return number
+---@param queue                         fml.types.collection.ICircularQueue
+---@return fml.collection.CircularQueue
+function M.from(queue)
+  local self = setmetatable({}, M)
+
+  self._elements = {}
+  self._size = queue:size()
+  self._start = 1
+  self._end = 0
+  self._capacity = queue:capacity()
+  for element in queue:iterator() do
+    self._end = self._end + 1
+    self._elements[self._end] = element
+  end
+
+  return self
+end
+
+---@return integer
+function M:capacity()
+  return self._capacity
+end
+
+---@return integer
 function M:size()
   return self._size
 end
@@ -35,15 +58,6 @@ function M:clear()
   self._size = 0
   self._start = 1
   self._end = 0
-end
-
----@return fml.collection.CircularQueue
-function M:clone()
-  local queue = M.new({ capacity = self._capacity })
-  for element in self:iterator() do
-    queue:enqueue(element)
-  end
-  return queue
 end
 
 ---@return fml.types.T[]

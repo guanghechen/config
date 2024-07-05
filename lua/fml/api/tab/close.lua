@@ -12,7 +12,7 @@ function M.close_current()
 
   vim.cmd("tabclose")
 
-  local tabnr_last = state.tab_history:present() ---@type integer|nil
+  local tabnr_last = state.tab_history:solid_present() ---@type integer|nil
   if tabnr_last ~= nil then
     vim.api.nvim_set_current_tabpage(tabnr_last)
   end
@@ -35,7 +35,7 @@ function M.close_left(step)
     vim.cmd("-tabclose")
   end
 
-  local tabnr_last = state.tab_history:present() ---@type integer|nil
+  local tabnr_last = state.tab_history:solid_present() ---@type integer|nil
   if tabnr_last ~= nil then
     vim.api.nvim_set_current_tabpage(tabnr_last)
   end
@@ -58,7 +58,7 @@ function M.close_right(step)
     vim.cmd("+tabclose")
   end
 
-  local tabnr_last = state.tab_history:present() ---@type integer|nil
+  local tabnr_last = state.tab_history:solid_present() ---@type integer|nil
   if tabnr_last ~= nil then
     vim.api.nvim_set_current_tabpage(tabnr_last)
   end

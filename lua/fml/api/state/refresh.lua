@@ -1,4 +1,5 @@
 local path = require("fml.std.path")
+local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
 local schedule_fn = require("fml.fn.schedule_fn")
 local History = require("fml.collection.history")
@@ -64,6 +65,7 @@ function M.refresh_buf(bufnr)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   if buf == nil then
     local filename = path.basename(filepath) ---@type string
+    filename = (not filename or filename == "") and "Untitled" or filename
     M.bufs[bufnr] = {
       filepath = filepath,
       filename = filename,
@@ -74,6 +76,7 @@ function M.refresh_buf(bufnr)
 
   if buf.filepath ~= filepath then
     local filename = path.basename(filepath) ---@type string
+    filename = (not filename or filename == "") and "Untitled" or filename
     buf.filepath = filepath
     buf.filename = filename
     return
@@ -129,8 +132,10 @@ function M.refresh_tab(tabnr)
         buf_history = History.new({
           name = "win$bufs",
           max_count = 1000,
-          comparator = M.compare_bufnr,
-          validate = M.validate_buf,
+          validate = function (bufnr) 
+            local t = M.tabs[tabnr]
+            return M.validate_buf(bufnr) and t and std_array.contains(t.bufnrs, bufnr)
+          end
         }),
       }
       win.buf_history:push(bufnr)

@@ -1,4 +1,5 @@
 local state = require("fml.api.state")
+local std_array = require("fml.std.array")
 local History = require("fml.collection.history")
 
 ---@class fml.api.tab
@@ -19,8 +20,10 @@ function M.create(name, bufnr)
     buf_history = History.new({
       name = name .. "#wins",
       max_count = 1000,
-      comparator = state.compare_bufnr,
-      validate = state.validate_buf,
+      validate = function(i_bufnr)
+        local t = state.tabs[tabnr]
+        return state.validate_buf(i_bufnr) and t and std_array.contains(t.bufnrs, i_bufnr)
+      end,
     }),
   }
   win.buf_history:push(bufnr)

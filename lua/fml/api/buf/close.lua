@@ -45,7 +45,7 @@ function M.close(bufnrs)
     end
   end
 
-  local tabnr_last = state.tab_history:present() ---@type integer|nil
+  local tabnr_last = state.tab_history:solid_present() ---@type integer|nil
   if tabnr_last ~= nil then
     vim.api.nvim_set_current_tabpage(tabnr_last)
   end

@@ -42,7 +42,7 @@ function M.focus_left(step)
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
   local tabid_next = navigate_circular(tabid_cur, -step, tab_count)
-  local tabpages = vim.api.nviwism_list_tabpages()
+  local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   M.go(tabnr_next)
 end

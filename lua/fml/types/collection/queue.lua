@@ -1,10 +1,10 @@
 ---@class fml.types.collection.ICircularQueue
+---@field public capacity               fun(self: fml.types.collection.ICircularQueue): number
 ---@field public size                   fun(self: fml.types.collection.ICircularQueue): number
 ---@field public at                     fun(self: fml.types.collection.ICircularQueue, index: number): fml.types.T|nil
 ---@field public clear                  fun(self: fml.types.collection.ICircularQueue): nil
 ---@field public front                  fun(self: fml.types.collection.ICircularQueue): fml.types.T|nil
 ---@field public back                   fun(self: fml.types.collection.ICircularQueue): fml.types.T|nil
----@field public clone                  fun(self: fml.types.collection.ICircularQueue): fml.types.collection.ICircularQueue
 ---@field public collect                fun(self: fml.types.collection.ICircularQueue): fml.types.T[]
 ---@field public count                  fun(self: fml.types.collection.ICircularQueue, filter: fun(element: fml.types.T, index: integer): boolean): integer
 ---@field public enqueue                fun(self: fml.types.collection.ICircularQueue, element: fml.types.T): nil

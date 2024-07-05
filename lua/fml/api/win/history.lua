@@ -24,7 +24,7 @@ function M.back()
   end
 
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr_last = win.buf_history:back(1) ---@type integer
+  local bufnr_last = win.buf_history:solid_back(1) ---@type integer
   if bufnr_cur ~= bufnr_last and bufnr_last ~= nil then
     vim.api.nvim_win_set_buf(winnr, bufnr_last)
   end
@@ -49,7 +49,7 @@ function M.forward()
   end
 
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr_next = win.buf_history:forward(1) ---@type integer
+  local bufnr_next = win.buf_history:solid_forward(1) ---@type integer
   if bufnr_cur ~= bufnr_next and bufnr_next ~= nil then
     vim.api.nvim_win_set_buf(winnr, bufnr_next)
   end
@@ -85,7 +85,7 @@ function M.find_history(opts)
   local minwidth = #prompt_title + 16 ---@type number
   local default_lnum = 1 ---@type number
   if unique then
-    local present_item = win.buf_history:present()
+    local present_item = win.buf_history:solid_present()
     local present_filepath = present_item and present_item.filepath or "" ---@type string
     local visited = {} ---@type table<string, boolean>
     for item, item_index in win.buf_history:iterator_reverse() do

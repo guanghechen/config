@@ -39,20 +39,10 @@ M.tabs = {}
 M.tab_history = History.new({
   name = "tabs",
   max_count = 100,
-  comparator = function(x, y)
-    return x - y
-  end,
   validate = function(tabnr)
-    return M.tabs[tabnr] ~= nil and vim.api.nvim_tabpage_is_valid(tabnr)
+    return vim.api.nvim_tabpage_is_valid(tabnr)
   end,
 })
-
----@param x                             integer
----@param y                             integer
----@return integer
-function M.compare_bufnr(x, y)
-  return x - y
-end
 
 ---@param bufnr                         integer
 ---@return integer
@@ -66,6 +56,7 @@ function M.count_buf_copies(bufnr)
   return copies
 end
 
+---@param bufnr                         integer
 ---@return fml.api.state.IBufItem|nil
 function M.get_buf(bufnr)
   if M.bufs[bufnr] == nil then
@@ -106,14 +97,13 @@ end
 ---@param bufnr                         integer
 ---@return boolean
 function M.validate_buf(bufnr)
-  local buf = M.bufs[bufnr]
-  return buf ~= nil and vim.api.nvim_buf_is_valid(bufnr) and vim.fn.buflisted(bufnr) == 1
+  return vim.api.nvim_buf_is_valid(bufnr) and vim.fn.buflisted(bufnr) == 1
 end
 
 ---@param tabnr                         integer
 ---@return boolean
 function M.validate_tab(tabnr)
-  return M.tabs[tabnr] ~= nil and vim.api.nvim_tabpage_is_valid(tabnr)
+  return vim.api.nvim_tabpage_is_valid(tabnr)
 end
 
 return M

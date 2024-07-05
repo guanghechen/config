@@ -17,7 +17,7 @@ function M.split_horizontal()
   local win = tab.wins[winnr_cur]
   if win ~= nil then
     tab.wins[winnr_new] = {
-      buf_history = win.buf_history:clone(),
+      buf_history = win.buf_history:fork(),
     }
   end
 end
@@ -35,7 +35,7 @@ function M.split_vertical()
   local win = tab.wins[winnr_cur]
   if win ~= nil then
     tab.wins[winnr_new] = {
-      buf_history = win.buf_history:clone(),
+      buf_history = win.buf_history:fork(),
     }
   end
 end

@@ -66,8 +66,8 @@ function M.filter_inline(arr, filter)
       arr[k] = value
     end
   end
-  for i = k + 1, N, 1 do
-    arr[i] = nil
+  for _ = k + 1, N, 1 do
+    table.remove(arr)
   end
   return arr
 end
