@@ -203,8 +203,6 @@ local function search(opts)
     directory = fml.path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
-  ghc.context.session.caller_winnr:next(vim.api.nvim_get_current_win())
-  ghc.context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
   opts = opts or {}
   opts.initial_mode = "normal"

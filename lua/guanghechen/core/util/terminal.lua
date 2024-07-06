@@ -26,9 +26,6 @@ local M = {}
 ---@param cmd? string[]|string
 ---@param opts? LazyTermOpts
 function M.open_terminal(cmd, opts)
-  ghc.context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
-  ghc.context.session.caller_winnr:next(vim.api.nvim_get_current_win())
-
   opts = vim.tbl_deep_extend("force", {
     ft = "term",
     size = { width = 0.9, height = 0.9 },

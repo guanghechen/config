@@ -45,15 +45,33 @@ local function rearrange_buf_history(bufnrs, history, validate_buf)
   end
 end
 
+---@param winnr                         integer
+---@return boolean
+local function validate_win(winnr)
+  if not vim.api.nvim_win_is_valid(winnr) then
+    return false
+  end
+
+  local config = vim.api.nvim_win_get_config(winnr)
+  return config.relative == nil or config.relative == ""
+end
+
 ---@class fml.api.state.IWinItem
 ---@field public tabnr                  integer
 ---@field public buf_history            fml.types.collection.IHistory
 
 ---@class fml.api.state
 ---@field public wins                   table<integer, fml.api.state.IWinItem>
+---@field public win_history            fml.types.collection.IHistory
 local M = require("fml.api.state.mod")
 
 M.wins = {}
+M.win_history = History.new({
+  name = "wins",
+  max_count = 100,
+  validate = validate_win,
+})
+M.validate_win = validate_win
 
 ---@param tabnr                         integer
 ---@return nil

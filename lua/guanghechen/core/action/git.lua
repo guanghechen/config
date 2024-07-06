@@ -16,8 +16,8 @@ end
 
 ---https://github.com/kdheepak/lazygit.nvim/issues/22#issuecomment-1815426074
 local function edit_lazygit_file_in_buffer()
-  local current_bufnr = vim.fn.bufnr("%")
-  local channel_id = vim.fn.getbufvar(current_bufnr, "terminal_job_id")
+  local bufnr_cur = vim.fn.bufnr("%")
+  local channel_id = vim.fn.getbufvar(bufnr_cur, "terminal_job_id")
 
   if not channel_id then
     fml.reporter.error({
@@ -29,7 +29,7 @@ local function edit_lazygit_file_in_buffer()
   end
 
   vim.fn.chansend(channel_id, "\15") -- \15 is <c-o>
-  vim.cmd("close") -- Close Lazygit
+  vim.cmd("close")                   -- Close Lazygit
 
   local relative_filepath = get_filepath_from_lazygit()
   if not relative_filepath then
@@ -41,18 +41,18 @@ local function edit_lazygit_file_in_buffer()
     return
   end
 
-  local winid = ghc.context.session.caller_winnr:get_snapshot()
-
-  if winid == nil then
+  local winnr = fml.api.state.win_history:present()
+  if winnr == nil then
     fml.reporter.error({
-      from = "git.lua",
+      from = "guanghechen.core.action.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "Could not find the original window.",
+      details = { bufnr_cur = bufnr_cur, channel_id = channel_id },
     })
     return
   end
 
-  vim.fn.win_gotoid(winid)
+  vim.api.nvim_set_current_win(winnr)
   vim.cmd("e " .. relative_filepath)
 end
 

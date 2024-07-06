@@ -105,7 +105,6 @@ function M.watch_file(opts)
 
   ---@diagnostic disable-next-line: unused-local
   local callback = function(err, filename, events)
-    -- vim.notify("callback:" .. vim.inspect({ err = err, event = events, filename = filename }))
     if err then
       on_error(filepath, err, unwatch)
     else

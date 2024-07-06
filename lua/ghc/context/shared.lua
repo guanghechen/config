@@ -75,7 +75,9 @@ M:auto_reload({
 
 ---Auto refresh statusline
 fml.fn.watch_observables({ M.mode, M.transparency }, function()
-  vim.cmd("redrawstatus")
+  vim.schedule(function()
+    vim.cmd("redrawstatus")
+  end)
 end)
 
 return M

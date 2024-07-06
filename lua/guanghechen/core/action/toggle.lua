@@ -2,13 +2,13 @@
 local M = {}
 
 function M.flight_copilot()
-  local flight_copilot_next = not ghc.context.session.flight_copilot:get_snapshot() ---@type boolean
-  ghc.context.session.flight_copilot:next(flight_copilot_next)
+  local flight_copilot = ghc.context.search.flight_copilot:get_snapshot() ---@type boolean
+  ghc.context.search.flight_copilot:next(not flight_copilot)
 end
 
 function M.transparency()
-  local next_transparency = not ghc.context.shared.transparency:get_snapshot() ---@type boolean
-  ghc.context.shared.toggle_scheme({ transparency = next_transparency, persistent = true })
+  local transparency = not ghc.context.shared.transparency:get_snapshot() ---@type boolean
+  ghc.context.shared.toggle_scheme({ transparency = not transparency, persistent = true })
 end
 
 function M.theme()
@@ -34,11 +34,9 @@ function M.relative_line_number()
 end
 
 function M.wrap()
-  ---@type boolean
-  local wrap_current = vim.opt_local.wrap:get()
-  ---@type boolean
-  local wrap_next = not wrap_current
-  vim.opt_local.wrap = wrap_next
+  ---@diagnostic disable-next-line: undefined-field
+  local wrap = vim.opt_local.wrap:get() ---@type boolean
+  vim.opt_local.wrap = not wrap
 end
 
 return M

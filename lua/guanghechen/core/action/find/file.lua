@@ -124,8 +124,6 @@ local function find_file(opts, force)
     directory = fml.path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
-  ghc.context.session.caller_winnr:next(vim.api.nvim_get_current_win())
-  ghc.context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
   opts = opts or {}
   opts.initial_mode = "normal"
@@ -195,7 +193,7 @@ local function find_file(opts, force)
 
   local function build_find_file_command(prompt)
     if prompt then
-      ghc.context.session.find_file_keyword:next(prompt)
+      ghc.context.search.find_file_pattern:next(prompt)
     else
       prompt = ""
     end
@@ -235,7 +233,7 @@ local function find_file(opts, force)
 
     local picker_params = {
       prompt_title = "Find files (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = ghc.context.session.find_file_keyword:get_snapshot() or "",
+      default_text = ghc.context.search.find_file_pattern:get_snapshot() or "",
       attach_mappings = function(prompt_bufnr)
         local function mapkey(mode, key, action, desc)
           vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })

@@ -65,8 +65,6 @@ local function find_recent(opts)
     directory = fml.path.current_directory(),
     bufnr = vim.api.nvim_get_current_buf(),
   }
-  ghc.context.session.caller_winnr:next(vim.api.nvim_get_current_win())
-  ghc.context.session.caller_bufnr:next(vim.api.nvim_get_current_buf())
 
   opts = opts or {}
   opts.initial_mode = "normal"
@@ -112,7 +110,7 @@ local function find_recent(opts)
 
     require("telescope").extensions.frecency.frecency(vim.tbl_deep_extend("force", {
       prompt_title = "Find recent (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = ghc.context.session.find_recent_keyword:get_snapshot(),
+      default_text = ghc.context.search.find_file_pattern:get_snapshot(),
       show_untracked = true,
       workspace = "CWD",
       attach_mappings = function(prompt_bufnr)
@@ -139,7 +137,7 @@ local function find_recent(opts)
 
         autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
         autocmd.autocmd_remember_telescope_prompt(prompt_bufnr, function(prompt)
-          ghc.context.session.find_recent_keyword:next(prompt)
+          ghc.context.search.find_file_pattern:next(prompt)
         end)
 
         return true

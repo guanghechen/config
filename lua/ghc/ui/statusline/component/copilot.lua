@@ -2,7 +2,7 @@
 local M = {
   name = "copilot",
   condition = function()
-    return not not package.loaded["copilot"] and ghc.context.session.flight_copilot:get_snapshot()
+    return not not package.loaded["copilot"] and ghc.context.search.flight_copilot:get_snapshot()
   end,
   render = function()
     local status = require("copilot.api").status.data.status
