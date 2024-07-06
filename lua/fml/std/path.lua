@@ -44,14 +44,14 @@ function M.is_under(from, to)
     from = M.resolve(M.cwd(), from)
   end
 
-  local from_pieces = M.split(from)
-  local to_pieces = M.normalize(to)
+  local from_pieces = M.split(from) ---@type string[]
+  local to_pieces = M.split(to) ---@type string[]
 
-  if #to_pieces > #from_pieces then
+  if #to_pieces < #from_pieces then
     return false
   end
 
-  for i = 1, #to_pieces do
+  for i = 1, #from_pieces do
     if to_pieces[i] ~= from_pieces[i] then
       return false
     end
@@ -157,6 +157,7 @@ end
 function M.extname(filepath)
   return filepath:match("^.+(%..+)$") or ""
 end
+
 ---@param path_string string
 ---@return string[]
 function M.parse_paths(path_string)

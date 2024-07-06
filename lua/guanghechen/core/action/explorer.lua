@@ -133,6 +133,7 @@ function M.reveal_file_explorer()
       action = "close",
     })
   else
+    fml.debug.log("reveal:", check_could_reveal())
     require("neo-tree.command").execute({
       action = "focus",
       source = "filesystem",

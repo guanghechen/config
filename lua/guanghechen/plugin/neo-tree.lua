@@ -75,8 +75,8 @@ return {
       git_status = {
         symbols = {
           -- Change type
-          added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
-          modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
+          added = "",                        -- or "✚", but this is redundant info if you use git_status_colors on the name
+          modified = "",                     -- or "", but this is redundant info if you use git_status_colors on the name
           deleted = fml.ui.icons.git.Remove, -- this can only be used in the git_status source
           renamed = fml.ui.icons.git.Rename, -- this can only be used in the git_status source
           -- Status type
@@ -149,7 +149,7 @@ return {
 
         -- Add / Copy / Move
         ["a"] = {
-          "add", -- this command supports BASH style brace expansion ("x{a,b,c}" -> xa,xb,xc). see `:h neo-tree-file-actions` for details
+          "add",                    -- this command supports BASH style brace expansion ("x{a,b,c}" -> xa,xb,xc). see `:h neo-tree-file-actions` for details
           config = {
             show_path = "relative", -- "none", "relative", "absolute"
           },
@@ -224,7 +224,7 @@ return {
         },
       },
       follow_current_file = {
-        enabled = true,
+        enabled = false,
         leave_dirs_open = true,
       },
       group_empty_dirs = true, -- when true, empty folders will be grouped together
@@ -327,7 +327,7 @@ return {
 
     opts.event_handlers = opts.event_handlers or {}
     vim.list_extend(opts.event_handlers, {
-      { event = events.FILE_MOVED, handler = on_move },
+      { event = events.FILE_MOVED,   handler = on_move },
       { event = events.FILE_RENAMED, handler = on_move },
     })
     require("neo-tree").setup(opts)
