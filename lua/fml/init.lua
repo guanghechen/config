@@ -60,6 +60,7 @@ local std = {
   oxi = require("fml.std.oxi"),
   path = require("fml.std.path"),
   reporter = require("fml.std.reporter"),
+  statuscolumn = require("fml.std.statuscolumn"),
   string = require("fml.std.string"),
   tmux = require("fml.std.tmux"),
 }
