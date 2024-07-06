@@ -67,21 +67,50 @@ function M.find_history(opts)
   local minwidth = #prompt_title + 16 ---@type number
   local default_lnum = 1 ---@type number
   if unique then
-    local present_item = win.buf_history:present()
-    local present_filepath = present_item and present_item.filepath or "" ---@type string
+    local present_bufnr = win.buf_history:present()
+    local present_buf = state.bufs[present_bufnr]
+    local present_filepath = present_buf and present_buf.filepath or "" ---@type string
     local visited = {} ---@type table<string, boolean>
-    for item, item_index in win.buf_history:iterator_reverse() do
-      ---@cast item fml.api.win.IHistoryItem
-      local relative_filepath = path.relative(cwd, item.filepath)
-      if not visited[relative_filepath] then
-        visited[relative_filepath] = true
+    for bufnr, index in win.buf_history:iterator_reverse() do
+      local buf = state.bufs[bufnr]
+      if buf ~= nil then
+        local relative_filepath = path.relative(cwd, buf.filepath)
+        if not visited[relative_filepath] then
+          visited[relative_filepath] = true
+
+          local display_text ---@type string
+          if present_filepath == buf.filepath then
+            display_text = fml.ui.icons.ui.Separator .. " " .. relative_filepath
+            default_lnum = #entries + 1
+          else
+            display_text = "  " .. relative_filepath
+          end
+          minwidth = minwidth < #display_text and #display_text or minwidth
+
+          ---@type fml.api.win.IHistoryItemEntry
+          local entry = {
+            display = display_text,
+            ordinal = relative_filepath,
+            item = { bufnr = bufnr, filepath = buf.filepath },
+            item_index = index
+          }
+          table.insert(entries, entry)
+        end
+      end
+    end
+  else
+    local present_index = win.buf_history:present_index() ---@type number
+    for bufnr, index in win.buf_history:iterator_reverse() do
+      local buf = state.bufs[bufnr]
+      if buf ~= nil then
+        local relative_filepath = path.relative(cwd, buf.filepath)
 
         local display_text ---@type string
-        if present_filepath == item.filepath then
-          display_text = fml.ui.icons.ui.Separator .. " " .. relative_filepath
+        if present_index == index then
+          display_text = fml.ui.icons.ui.Separator .. " " .. tostring(index) .. " " .. relative_filepath
           default_lnum = #entries + 1
         else
-          display_text = "  " .. relative_filepath
+          display_text = "  " .. tostring(index) .. " " .. relative_filepath
         end
         minwidth = minwidth < #display_text and #display_text or minwidth
 
@@ -89,35 +118,11 @@ function M.find_history(opts)
         local entry = {
           display = display_text,
           ordinal = relative_filepath,
-          item = item,
-          item_index = item_index,
+          item = { bufnr = bufnr, filepath = buf.filepath },
+          item_index = index,
         }
         table.insert(entries, entry)
       end
-    end
-  else
-    local present_index = win.buf_history:present_index() ---@type number
-    for item, item_index in win.buf_history:iterator_reverse() do
-      ---@cast item fml.api.win.IHistoryItem
-      local relative_filepath = path.relative(cwd, item.filepath)
-
-      local display_text ---@type string
-      if present_index == item_index then
-        display_text = fml.ui.icons.ui.Separator .. " " .. tostring(item_index) .. " " .. relative_filepath
-        default_lnum = #entries + 1
-      else
-        display_text = "  " .. tostring(item_index) .. " " .. relative_filepath
-      end
-      minwidth = minwidth < #display_text and #display_text or minwidth
-
-      ---@type fml.api.win.IHistoryItemEntry
-      local entry = {
-        display = display_text,
-        ordinal = relative_filepath,
-        item = item,
-        item_index = item_index,
-      }
-      table.insert(entries, entry)
     end
   end
 
@@ -141,37 +146,38 @@ function M.find_history(opts)
     },
   })
   pickers
-    .new(picker_opts, {
-      prompt_title = prompt_title,
-      finder = finders.new_table({
-        results = entries,
-        entry_maker = function(entry)
-          return entry
-        end,
-      }),
-      sorter = conf.generic_sorter(picker_opts),
-      attach_mappings = function(prompt_bufnr, map)
-        local function set_selection()
-          local picker = action_state.get_current_picker(prompt_bufnr)
-          if picker ~= nil then
-            picker:set_selection(default_lnum - 1)
+      .new(picker_opts, {
+        prompt_title = prompt_title,
+        finder = finders.new_table({
+          results = entries,
+          entry_maker = function(entry)
+            return entry
+          end,
+        }),
+        sorter = conf.generic_sorter(picker_opts),
+        attach_mappings = function(prompt_bufnr, map)
+          local function set_selection()
+            local picker = action_state.get_current_picker(prompt_bufnr)
+            if picker ~= nil then
+              picker:set_selection(default_lnum - 1)
+            end
           end
-        end
 
-        map("n", "<cr>", set_selection)
+          map("n", "<C-r>", set_selection)
 
-        actions.select_default:replace(function()
-          local selection = action_state.get_selected_entry()
-          actions.close(prompt_bufnr)
-          win.buf_history:go(selection.item_index)
-          return false
-        end)
+          actions.select_default:replace(function()
+            local selection = action_state.get_selected_entry()
+            actions.close(prompt_bufnr)
+            win.buf_history:go(selection.item_index)
+            vim.api.nvim_win_set_buf(winnr, selection.item.bufnr)
+            return false
+          end)
 
-        vim.defer_fn(set_selection, 32)
-        return true
-      end,
-    })
-    :find()
+          vim.defer_fn(set_selection, 32)
+          return true
+        end,
+      })
+      :find()
 end
 
 function M.find_history_unique()

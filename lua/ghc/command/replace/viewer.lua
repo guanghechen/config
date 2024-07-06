@@ -405,7 +405,7 @@ function M:internal_bind_keymaps(bufnr)
   mk({ "n", "v" }, "re", edit_list("exclude_patterns"), "replace: edit exclude patterns")
   mk({ "n", "v" }, "ri", edit_list("include_patterns"), "replace: edit include patterns")
   mk({ "n", "v" }, "o", on_view_original_file, "replace: view original file")
-  mk({ "n", "v" }, "<enter>", on_view_file, "replace: view file")
+  mk({ "n", "v" }, "<cr>", on_view_file, "replace: view file")
   mk({ "n", "v" }, "<2-LeftMouse>", on_view_file, "replace: view file")
 end
 

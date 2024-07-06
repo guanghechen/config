@@ -34,12 +34,17 @@ function M.hover()
 end
 
 function M.rename()
-  -- vim.lsp.buf.rename()
-  require("guanghechen.core.action.lsp.rename")()
+  vim.lsp.buf.rename()
+  vim.schedule(function()
+    vim.cmd("stopinsert")
+  end)
 end
 
 function M.show_code_action()
   vim.lsp.buf.code_action()
+  vim.schedule(function()
+    vim.cmd("stopinsert")
+  end)
 end
 
 function M.show_code_action_source()
@@ -49,6 +54,9 @@ function M.show_code_action_source()
       diagnostics = {},
     },
   })
+  vim.schedule(function()
+    vim.cmd("stopinsert")
+  end)
 end
 
 function M.show_references()
