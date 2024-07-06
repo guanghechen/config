@@ -14,7 +14,7 @@ vim.opt.tabline = "%!v:lua._G.ghc.ui.tabline.render()"
 vim.opt.mouse:append("a")
 vim.opt.shortmess:append("I") --Don't show the intro message when starting nvim
 
--- appearance
+---! appearance
 vim.opt.autoindent = true
 vim.opt.autowrite = true
 vim.opt.backspace = table.concat({ "indent", "eol", "start" }, ",")
@@ -51,6 +51,7 @@ vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim`
 vim.opt.number = true -- Print line number
 vim.opt.pumblend = 10 -- Popup blend
 vim.opt.pumheight = 10 -- Maximum number of entries in a popup
+vim.opt.relativenumber = ghc.context.shared.relativenumber:get_snapshot()
 vim.opt.scrolloff = 4 -- Lines of context
 vim.opt.shiftround = true -- Round indent
 vim.opt.shiftwidth = 2
@@ -68,7 +69,7 @@ vim.opt.timeoutlen = vim.g.vscode and 1000 and 300 -- Lower than default (1000) 
 vim.opt.winminwidth = 10 -- Minimum window width
 vim.opt.wrap = false
 
--- diff
+---! diff
 vim.opt.diffopt = table.concat({
   "algorithm:histogram",
   "closeoff",
@@ -81,18 +82,29 @@ vim.opt.diffopt = table.concat({
   "vertical",
 }, ",")
 
--- disable some default providers
+---! disable some default providers
 vim.g.loaded_node_provider = 0
 vim.g.loaded_perl_provider = 0
 vim.g.loaded_python3_provider = 0
 vim.g.loaded_ruby_provider = 0
 
--- encoding
+---! encoding
 vim.opt.fileencoding = "utf-8"
 vim.opt.fileformat = "unix"
 vim.opt_global.fileencodings = "utf-8"
 
--- panel split
+---! format
+vim.opt.formatoptions = table.concat({
+  --  "c", -- Auto wrap using 'textwidth'
+  "r", -- Auto insert comment leader
+  "o", -- Auto insert comment leader after "o" or "O"
+  "q", -- Allow formatting of comments with "gq"
+  "2", -- The second line decides the indent for the paragraph
+  "l", -- Long lines are not broken in insert mode
+  "j", -- Remove comment leader when joining lines
+}, "")
+
+---! panel split
 vim.opt.splitbelow = true
 vim.opt.splitright = true
 vim.opt.splitkeep = "screen"
