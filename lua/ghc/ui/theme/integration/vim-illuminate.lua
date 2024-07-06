@@ -3,9 +3,9 @@
 ---@diagnostic disable-next-line: unused-local
 local function gen_hlgroup(params)
   return {
-    IlluminatedWordText = { bold = true, reverse = true },
-    IlluminatedWordRead = { bold = true, reverse = true },
-    IlluminatedWordWrite = { bold = true, reverse = true },
+    IlluminatedWordText = { bold = true, underline = true },
+    IlluminatedWordRead = { bold = true, underline = true },
+    IlluminatedWordWrite = { bold = true, underline = true },
   }
 end
 

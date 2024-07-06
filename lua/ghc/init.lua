@@ -19,6 +19,7 @@ local constant = {
 local ui = {
   statusline = require("ghc.ui.statusline"),
   tabline = require("ghc.ui.tabline"),
+  theme = require('ghc.ui.theme'),
 }
 
 ---@class ghc
