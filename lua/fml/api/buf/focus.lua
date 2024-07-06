@@ -27,6 +27,11 @@ function M.go(bufnr)
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
 
+  if state.wins[winnr] == nil then
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    state.refresh_tab(tabnr)
+  end
+
   local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
   if win == nil then
     reporter.error({

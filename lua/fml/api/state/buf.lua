@@ -1,7 +1,6 @@
 local path = require("fml.std.path")
 local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
-local reporter = require("fml.std.reporter")
 
 ---@class fml.api.state.IBufItem
 ---@field public filepath               string
