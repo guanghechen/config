@@ -1,9 +1,3 @@
-local function list(items, sep)
-  return table.concat(items, sep or ",")
-end
-
-----------------------------------------------------------------------------------------------------
-
 -- clipboard
 vim.g.clipboard = fml.clipboard.get_clipboard()
 
@@ -11,7 +5,7 @@ vim.g.clipboard = fml.clipboard.get_clipboard()
 vim.opt.mouse:append("a")
 
 -- diff
-vim.opt.diffopt = list({
+vim.opt.diffopt = fml.array.to_comma_list({
   "algorithm:histogram",
   "closeoff",
   "context:0",
@@ -31,7 +25,7 @@ vim.opt.splitkeep = "screen"
 -- appearance
 vim.opt.autoindent = true
 vim.opt.autowrite = true
-vim.opt.backspace = list({ "indent", "eol", "start" })
+vim.opt.backspace = fml.array.to_comma_list({ "indent", "eol", "start" })
 vim.opt.breakindent = true
 vim.opt.colorcolumn = { 100, 120 }
 vim.opt.conceallevel = 0     -- Disable conceal.
@@ -88,9 +82,8 @@ vim.opt.winminwidth = 10                           -- Minimum window width
 vim.opt.wrap = false
 
 ---format
-vim.o.formatexpr =
-"v:lua.require'conform'.formatexpr()"                    -- better format: https://github.com/stevearc/conform.nvim/issues/372#issuecomment-2066778074
-vim.opt.formatoptions = list({
+vim.o.formatexpr = "v:lua.require'conform'.formatexpr()" -- better format: https://github.com/stevearc/conform.nvim/issues/372#issuecomment-2066778074
+vim.opt.formatoptions = fml.array.to_comma_list({
   --  "c", -- Auto wrap using 'textwidth'
   "r", -- Auto insert comment leader
   "o", -- Auto insert comment leader after "o" or "O"

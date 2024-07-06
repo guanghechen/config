@@ -3,7 +3,6 @@ local A = {
   context = require("guanghechen.core.action.context"),
   debug = require("guanghechen.core.action.debug"),
   enhance = require("guanghechen.core.action.enhance"),
-  file = require("guanghechen.core.action.file"),
   run = require("guanghechen.core.action.run"),
   session = require("guanghechen.core.action.session"),
   toggle = require("guanghechen.core.action.toggle"),

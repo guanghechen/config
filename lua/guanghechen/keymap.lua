@@ -4,7 +4,6 @@ local A = {
   diagnostic = require("guanghechen.core.action.diagnostic"),
   explorer = require("guanghechen.core.action.explorer"),
   find = require("guanghechen.core.action.find"),
-  file = require("guanghechen.core.action.file"),
   git = require("guanghechen.core.action.git"),
   replace = require("guanghechen.core.action.replace"),
   search = require("guanghechen.core.action.search"),

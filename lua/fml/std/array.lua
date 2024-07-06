@@ -166,16 +166,6 @@ function M.merge_multiple_array(...)
   return result
 end
 
----@param strs                                         string[]
----@return string[]
-function M.trim_and_filter(strs)
-  return M.map(strs, function(v)
-    return v:match("^%s*(.-)%s*$")
-  end, function(v)
-    return #v > 0
-  end)
-end
-
 ---@param str                           string
 ---@param separator_pattern             ?string
 ---@return string[]
@@ -209,6 +199,23 @@ function M.slice(arr, start, stop)
     table.insert(result, arr[i])
   end
   return result
+end
+
+---@param items                         string[]
+---@param sep                           string
+---@return string
+function M.to_comma_list(items, sep)
+  return table.concat(items, sep or ",")
+end
+
+---@param strs                                         string[]
+---@return string[]
+function M.trim_and_filter(strs)
+  return M.map(strs, function(v)
+    return v:match("^%s*(.-)%s*$")
+  end, function(v)
+    return #v > 0
+  end)
 end
 
 return M

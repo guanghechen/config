@@ -30,6 +30,7 @@ local fn = {
   debounce_tailing = require("fml.fn.debounce_tailing"),
   dispose_all = require("fml.fn.dispose_all"),
   falsy = require("fml.fn.falsy"),
+  foldexpr = require("fml.fn.foldexpr"),
   get_selected_text = require("fml.fn.get_selected_text"),
   is_disposable = require("fml.fn.is_disposable"),
   is_observable = require("fml.fn.is_observable"),
