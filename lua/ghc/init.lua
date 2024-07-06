@@ -1,6 +1,6 @@
 ---@class ghc.context
 local context = {
-  shared = require("ghc.context.shared"),
+  client = require("ghc.context.client"),
   session = require("ghc.context.session"),
   transient = require("ghc.context.transient"),
 }

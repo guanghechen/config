@@ -70,7 +70,7 @@ end
 
 local function get_lazygit_config_filepath()
   local lazygit_config_dir = fml.path.locate_config_filepath("lazygit")
-  local darken = ghc.context.shared.mode:get_snapshot() == "darken" ---@type boolean
+  local darken = ghc.context.client.mode:get_snapshot() == "darken" ---@type boolean
   local config_filepaths = {
     fml.path.join(lazygit_config_dir, "config.yaml"),
     fml.path.join(

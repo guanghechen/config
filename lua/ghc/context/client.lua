@@ -2,23 +2,20 @@ local theme = require("ghc.ui.theme")
 local Observable = fml.collection.Observable
 local Viewmodel = fml.collection.Viewmodel
 
-local context_filepath = fml.path.locate_context_filepath({ filename = "shared.json" }) ---@type string
+local context_filepath = fml.path.locate_context_filepath({ filename = "client.json" }) ---@type string
 local theme_cache_path = fml.path.locate_context_filepath({ filename = "theme" }) ---@type string
 
----@class ghc.context.shared : ghc.types.context.shared
+---@class ghc.context.client : ghc.types.context.client
 ---@field public mode                   fml.types.collection.IObservable
 ---@field public relativenumber         fml.types.collection.IObservable
 ---@field public transparency           fml.types.collection.IObservable
-local M = Viewmodel.new({
-      name = "context:theme",
-      filepath = context_filepath,
-      verbose = true,
-    })
+local M = Viewmodel
+    .new({ name = "context:client", filepath = context_filepath, verbose = true })
     :register("mode", Observable.from_value("darken"), true, true)
     :register("relativenumber", Observable.from_value(true), true, true)
     :register("transparency", Observable.from_value(false), true, true)
 
----@param params                        ghc.types.context.shared.IToggleSchemeParams
+---@param params                        ghc.types.context.client.IToggleSchemeParams
 ---@return nil
 function M.toggle_scheme(params)
   local mode = params.mode or M.mode:get_snapshot() ---@type fml.enums.theme.Mode
@@ -38,7 +35,7 @@ function M.toggle_scheme(params)
   end
 end
 
----@param params                        ghc.types.context.shared.IReloadPartialThemeParams
+---@param params                        ghc.types.context.client.IReloadPartialThemeParams
 ---@return nil
 function M.reload_partial(params)
   local integration = params.integration ---@type ghc.enum.ui.theme.HighlightIntegration
@@ -47,7 +44,7 @@ function M.reload_partial(params)
   theme.load_partial_theme({ mode = mode, transparency = transparency, integration = integration })
 end
 
----@param params                        ghc.types.context.shared.IReloadThemeParams
+---@param params                        ghc.types.context.client.IReloadThemeParams
 ---@return nil
 function M.reload_theme(params)
   local force = params.force or false ---@type boolean

@@ -7,20 +7,20 @@ function M.flight_copilot()
 end
 
 function M.transparency()
-  local transparency = not ghc.context.shared.transparency:get_snapshot() ---@type boolean
-  ghc.context.shared.toggle_scheme({ transparency = not transparency, persistent = true })
+  local transparency = not ghc.context.client.transparency:get_snapshot() ---@type boolean
+  ghc.context.client.toggle_scheme({ transparency = not transparency, persistent = true })
 end
 
 function M.theme()
-  local darken = ghc.context.shared.mode:get_snapshot() == "darken" ---@type boolean
+  local darken = ghc.context.client.mode:get_snapshot() == "darken" ---@type boolean
   local next_mode = darken and "lighten" or "darken"
-  ghc.context.shared.toggle_scheme({ mode = next_mode, persistent = true })
+  ghc.context.client.toggle_scheme({ mode = next_mode, persistent = true })
 end
 
 function M.relative_line_number()
   ---@type boolean
-  local next_relativenumber = not ghc.context.shared.relativenumber:get_snapshot()
-  ghc.context.shared.relativenumber:next(next_relativenumber)
+  local next_relativenumber = not ghc.context.client.relativenumber:get_snapshot()
+  ghc.context.client.relativenumber:next(next_relativenumber)
 
   local bufnr = vim.api.nvim_get_current_buf()
 

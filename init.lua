@@ -2,7 +2,7 @@ _G.fml = require("fml")
 _G.ghc = require("ghc")
 
 ---load theme
-ghc.context.shared.reload_theme({ force = false })
+ghc.context.client.reload_theme({ force = false })
 
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
 local function load_config(name)
@@ -41,5 +41,5 @@ end
 
 ---reload theme
 vim.schedule(function()
-  ghc.context.shared.reload_theme({ force = false })
+  ghc.context.client.reload_theme({ force = false })
 end)
