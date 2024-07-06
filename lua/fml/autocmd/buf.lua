@@ -1,5 +1,6 @@
 local state = require("fml.api.state")
 local std_array = require("fml.std.array")
+local std_object = require("fml.std.object")
 
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost" }, {
   callback = function(args)
@@ -17,7 +18,7 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost" }, {
     if not std_array.contains(tab.bufnrs, bufnr) then
       table.insert(tab.bufnrs, bufnr)
       local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local win = tab.wins[winnr]
+      local win = state.wins[winnr]
       if win ~= nil then
         win.buf_history:push(bufnr)
       end
@@ -28,22 +29,33 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost" }, {
 vim.api.nvim_create_autocmd({ "BufDelete" }, {
   callback = function(args)
     local bufnr = args.buf
-    if bufnr == nil or not state.validate_buf(bufnr) then
+    if bufnr == nil or state.bufs[bufnr] == nil or not state.validate_buf(bufnr) then
       return
     end
 
     state.bufs[bufnr] = nil
-    for tabnr, tab in pairs(state.tabs) do
+
+    local has_tab_removed = false ---@type boolean
+    std_object.filter_inline(state.tabs, function(tab, tabnr)
       if not state.validate_tab(tabnr) then
-        state.tabs[tabnr] = nil
-      else
-        std_array.filter_inline(tab.bufnrs, function(nr)
-          return nr ~= bufnr
-        end)
-        if #tab.bufnrs < 1 then
-          state.tabs[tabnr] = nil
-        end
+        has_tab_removed = true
+        return false
       end
+
+      std_array.filter_inline(tab.bufnrs, function(nr)
+        return nr ~= bufnr
+      end)
+
+      if #tab.bufnrs < 1 then
+        has_tab_removed = true
+        return false
+      end
+
+      return true
+    end)
+
+    if has_tab_removed then
+      state.schedule_refresh_tabs()
     end
   end,
 })

@@ -7,16 +7,8 @@ local M = require("fml.api.tab.mod")
 
 ---@return nil
 function M.close_current()
-  local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
-  state.tabs[tabnr_cur] = nil
-
-  vim.cmd("tabclose")
-
-  local tabnr_last = state.tab_history:solid_present() ---@type integer|nil
-  if tabnr_last ~= nil then
-    vim.api.nvim_set_current_tabpage(tabnr_last)
-  end
-  state.schedule_refresh_tabs()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  state.close_tab(tabnr)
 end
 
 ---@param step                         integer
@@ -35,7 +27,7 @@ function M.close_left(step)
     vim.cmd("-tabclose")
   end
 
-  local tabnr_last = state.tab_history:solid_present() ---@type integer|nil
+  local tabnr_last = state.tab_history:present() ---@type integer|nil
   if tabnr_last ~= nil then
     vim.api.nvim_set_current_tabpage(tabnr_last)
   end
@@ -58,7 +50,7 @@ function M.close_right(step)
     vim.cmd("+tabclose")
   end
 
-  local tabnr_last = state.tab_history:solid_present() ---@type integer|nil
+  local tabnr_last = state.tab_history:present() ---@type integer|nil
   if tabnr_last ~= nil then
     vim.api.nvim_set_current_tabpage(tabnr_last)
   end

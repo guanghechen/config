@@ -1,5 +1,4 @@
 local fs = require("fml.std.fs")
-local state = require("fml.api.state")
 
 ---@class fml.api.buf
 local M = require("fml.api.buf.mod")
@@ -7,17 +6,6 @@ local M = require("fml.api.buf.mod")
 ---@return nil
 function M.create()
   vim.cmd("new")
-
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  state.refresh_tab(bufnr)
-
-  local tab, tabnr = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
-    return
-  end
-
-  table.insert(tab.bufnrs, bufnr)
-  state.refresh_tab(tabnr)
 end
 
 ---@param filepath                      string

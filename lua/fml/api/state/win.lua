@@ -93,7 +93,7 @@ function M.refresh_win(tabnr, winnr)
         max_count = 100,
         validate = function(nr)
           local tab = M.tabs[tabnr]
-          return vim.api.nvim_buf_is_valid(nr) and tab and tab.bufnr_set[nr]
+          return vim.api.nvim_buf_is_valid(nr) and tab and std_array.contains(tab.bufnrs, nr)
         end,
       }),
     }

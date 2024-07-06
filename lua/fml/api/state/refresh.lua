@@ -5,6 +5,7 @@ local M = require("fml.api.state.mod")
 
 M.schedule_refresh = schedule_fn("fml.api.state.refresh", function()
   M.refresh()
+  vim.cmd("redrawtabline")
 end)
 
 M.schedule_refresh_bufs = schedule_fn("fml.api.state.refresh_bufs", function()

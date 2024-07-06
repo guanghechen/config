@@ -1,50 +1,31 @@
 local state = require("fml.api.state")
-local std_array = require("fml.std.array")
-local History = require("fml.collection.history")
 
 ---@class fml.api.tab
 local M = require("fml.api.tab.mod")
 
----@param name                          string
 ---@param bufnr                         integer
+---@param name                          ?string|nil
 ---@return nil
-function M.create(name, bufnr)
+function M.create(bufnr, name)
   vim.cmd("$tabnew")
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
 
-  ---@type fml.api.state.ITabWinItem
-  local win = {
-    buf_history = History.new({
-      name = name .. "#wins",
-      max_count = 1000,
-      validate = function(i_bufnr)
-        local t = state.tabs[tabnr]
-        return state.validate_buf(i_bufnr) and t and std_array.contains(t.bufnrs, i_bufnr)
-      end,
-    }),
-  }
-  win.buf_history:push(bufnr)
-
-  ---@type fml.api.state.ITabItem
-  local tab = {
-    name = name,
-    bufnrs = { bufnr },
-    wins = { winnr = win },
-  }
-  state.tabs[tabnr] = tab
-  state.tab_history:push(tabnr)
-  state.schedule_refresh_tabs()
+  state.refresh_tab(tabnr)
+  if name and state.tabs[tabnr] then
+    state.tabs[tabnr].name = name
+  end
 end
 
-function M.create_with_buf()
+---@param name                          ?string
+function M.create_with_buf(name)
   local winnr = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_win_get_buf(winnr)
   local cursor = vim.api.nvim_win_get_cursor(winnr)
 
-  M.create("unnamed", bufnr)
+  M.create(bufnr, name)
 
   vim.api.nvim_win_set_cursor(winnr, cursor)
 end

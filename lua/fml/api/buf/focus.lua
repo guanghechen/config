@@ -27,8 +27,7 @@ function M.go(bufnr)
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
 
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  local win = tab and tab.wins[winnr] ---@type fml.api.state.ITabWinItem|nil
+  local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
   if win == nil then
     reporter.error({
       from = "fml.api.buf",
@@ -37,7 +36,6 @@ function M.go(bufnr)
       details = {
         winnr = winnr,
         bufnr = bufnr,
-        tab = tab,
       },
     })
     return

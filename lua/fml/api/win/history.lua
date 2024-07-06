@@ -7,50 +7,40 @@ local M = require("fml.api.win.mod")
 
 ---@return nil
 function M.back()
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
-    return
-  end
-
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local win = tab.wins[winnr]
+  local win = state.wins[winnr]
   if win == nil then
     reporter.error({
       from = "fml.api.win",
       subject = "back",
       message = "Cannot find window.",
-      details = { winnr = winnr, tab = tab },
+      details = { winnr = winnr },
     })
     return
   end
 
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr_last = win.buf_history:solid_back(1) ---@type integer
+  local bufnr_last = win.buf_history:back(1) ---@type integer
   if bufnr_cur ~= bufnr_last and bufnr_last ~= nil then
     vim.api.nvim_win_set_buf(winnr, bufnr_last)
   end
 end
 
 function M.forward()
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
-    return
-  end
-
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local win = tab.wins[winnr]
+  local win = state.wins[winnr]
   if win == nil then
     reporter.error({
       from = "fml.api.win",
       subject = "back",
       message = "Cannot find window.",
-      details = { winnr = winnr, tab = tab },
+      details = { winnr = winnr },
     })
     return
   end
 
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr_next = win.buf_history:solid_forward(1) ---@type integer
+  local bufnr_next = win.buf_history:forward(1) ---@type integer
   if bufnr_cur ~= bufnr_next and bufnr_next ~= nil then
     vim.api.nvim_win_set_buf(winnr, bufnr_next)
   end
@@ -58,24 +48,15 @@ end
 
 ---@param opts { unique: boolean }
 function M.find_history(opts)
-  if state.IGNORED_FILETYPES[vim.bo.filetype] then
-    return
-  end
-
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
-    return
-  end
-
   local unique = opts.unique ---@type boolean
   local winnr = vim.api.nvim_get_current_win()
-  local win = tab.wins[winnr] ---@type fml.api.state.ITabWinItem|nil
+  local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
   if win == nil then
     reporter.error({
       from = "fml.api.win",
       subject = "find_history",
       message = "Cannot find window.",
-      details = { winnr = winnr, tab = tab, unique = unique },
+      details = { winnr = winnr, unique = unique },
     })
     return
   end
@@ -86,7 +67,7 @@ function M.find_history(opts)
   local minwidth = #prompt_title + 16 ---@type number
   local default_lnum = 1 ---@type number
   if unique then
-    local present_item = win.buf_history:solid_present()
+    local present_item = win.buf_history:present()
     local present_filepath = present_item and present_item.filepath or "" ---@type string
     local visited = {} ---@type table<string, boolean>
     for item, item_index in win.buf_history:iterator_reverse() do
@@ -177,7 +158,7 @@ function M.find_history(opts)
           end
         end
 
-        map("n", "<C-r>", set_selection)
+        map("n", "<cr>", set_selection)
 
         actions.select_default:replace(function()
           local selection = action_state.get_selected_entry()
@@ -202,19 +183,14 @@ function M.find_history_all()
 end
 
 function M.show_history()
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
-    return
-  end
-
   local winnr = vim.api.nvim_get_current_win()
-  local win = tab.wins[winnr]
+  local win = state.wins[winnr]
   if win == nil then
     reporter.error({
       from = "fml.api.win",
       subject = "show_history",
       message = "Cannot find window.",
-      details = { winnr = winnr, tab = tab },
+      details = { winnr = winnr },
     })
     return
   end

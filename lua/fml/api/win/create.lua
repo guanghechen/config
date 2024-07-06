@@ -5,37 +5,37 @@ local M = require("fml.api.win.mod")
 
 ---@return nil
 function M.split_horizontal()
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
-    return
-  end
-
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-  vim.cmd("split")
-  local winnr_new = vim.api.nvim_get_current_win() ---@type integer
 
-  local win = tab.wins[winnr_cur]
-  if win ~= nil then
-    tab.wins[winnr_new] = {
-      buf_history = win.buf_history:fork(),
+  vim.cmd("split")
+
+  local winnr_new = vim.api.nvim_get_current_win() ---@type integer
+  local win_cur = state.wins[winnr_cur]
+  if win_cur ~= nil then
+    state.wins[winnr_new] = {
+      tabnr = tabnr,
+      buf_history = win_cur.buf_history:fork(),
     }
+  else
+    state.refresh_tab(tabnr)
   end
 end
 
 function M.split_vertical()
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
-    return
-  end
-
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-  vim.cmd("vsplit")
-  local winnr_new = vim.api.nvim_get_current_win() ---@type integer
 
-  local win = tab.wins[winnr_cur]
-  if win ~= nil then
-    tab.wins[winnr_new] = {
-      buf_history = win.buf_history:fork(),
+  vim.cmd("vsplit")
+
+  local winnr_new = vim.api.nvim_get_current_win() ---@type integer
+  local win_cur = state.wins[winnr_cur]
+  if win_cur ~= nil then
+    state.wins[winnr_new] = {
+      tabnr = tabnr,
+      buf_history = win_cur.buf_history:fork(),
     }
+  else
+    state.refresh_tab(tabnr)
   end
 end

@@ -4,7 +4,7 @@ local state = require("fml.api.state")
 local M = require("fml.api.win.mod")
 
 -- Project the buffer on the current window to the selected window
-M.project_with_picker = function()
+function M.project_with_picker()
   local winnr_current = vim.api.nvim_get_current_win()
   local winnr_target = M.pick("project")
   if not winnr_target or winnr_current == winnr_target then
@@ -18,8 +18,7 @@ M.project_with_picker = function()
   vim.api.nvim_win_set_cursor(winnr_target, cursor_current)
   vim.api.nvim_set_current_win(winnr_target)
 
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  local win = tab and tab.wins[winnr_target] ---@type fml.api.state.ITabWinItem|nil
+  local win = state.wins[winnr_target]
   if win ~= nil then
     win.buf_history:push(bufnr_current)
   end

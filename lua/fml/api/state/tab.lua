@@ -52,7 +52,6 @@ end
 ---@class fml.api.state.ITabItem
 ---@field public name                   string
 ---@field public bufnrs                 integer[]
----@field public bufnr_set              table<integer, boolean>
 
 ---@class fml.api.state
 ---@field public TAB_UNAMED             string
@@ -65,6 +64,23 @@ M.TAB_UNAMED = "unnamed"
 M.tabs = {}
 M.tab_history = History.new({ name = "tabs", max_count = 100, validate = validate_tab })
 M.validate_tab = validate_tab
+
+---@param tabnr                         integer
+---@return nil
+function M.close_tab(tabnr)
+  M.tabs[tabnr] = nil
+
+  if validate_tab(tabnr) then
+    vim.api.nvim_set_current_tabpage(tabnr)
+    vim.cmd("tabclose")
+  end
+
+  local tabnr_last = M.tab_history:present() ---@type integer|nil
+  if tabnr_last ~= nil then
+    vim.api.nvim_set_current_tabpage(tabnr_last)
+  end
+  M.refresh_tabs()
+end
 
 ---@return fml.api.state.ITabItem|nil, integer
 function M.get_current_tab()
@@ -118,27 +134,28 @@ function M.refresh_tab(tabnr)
     tab = {
       name = M.TAB_UNAMED,
       bufnrs = {},
-      bufnr_set = {},
     }
     M.tabs[tabnr] = tab
   end
 
-  local bufnr_set = tab.bufnr_set or {} ---@type table<integer, boolean>
+  local bufnr_set = {} ---@type table<integer, boolean>
+  for _, bufnr in ipairs(tab.bufnrs) do
+    bufnr_set[bufnr] = true
+  end
+
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr)
     bufnr_set[bufnr] = true
   end
 
-  local bufnr_used_set = {} ---@type table<integer, boolean>
   std_array.filter_inline(tab.bufnrs, function(bufnr)
-    bufnr_used_set[bufnr] = true
-    return bufnr_set[bufnr]
+    local ok = bufnr_set[bufnr]
+    bufnr_set[bufnr] = nil
+    return ok
   end)
   for bufnr in pairs(bufnr_set) do
-    if not bufnr_used_set[bufnr] then
-      table.insert(tab.bufnrs, bufnr)
-    end
+    table.insert(tab.bufnrs, bufnr)
   end
 
   M.refresh_wins(tabnr)

@@ -11,9 +11,9 @@ function M.close_current()
   vim.cmd("close")
 
   if #winnrs == 1 then
-    state.refresh()
+    state.schedule_refresh()
   else
-    state.schedule_refresh_tab(tabnr)
+    state.refresh_tab(tabnr)
   end
 end
 
@@ -23,5 +23,5 @@ function M.close_others()
 
   vim.cmd("only")
 
-  state.schedule_refresh_tab(tabnr)
+  state.refresh_tab(tabnr)
 end
