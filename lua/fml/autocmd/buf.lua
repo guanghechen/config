@@ -1,14 +1,13 @@
 local state = require("fml.api.state")
 local std_array = require("fml.std.array")
 
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost" }, {
   callback = function(args)
     local bufnr = args.buf
-    if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) or vim.fn.buflisted(bufnr) ~= 1 then
+    state.refresh_buf(bufnr)
+    if bufnr == nil or state.bufs[bufnr] == nil then
       return
     end
-
-    state.refresh_buf(bufnr)
 
     local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
     if tab == nil then
@@ -21,6 +20,29 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
       local win = tab.wins[winnr]
       if win ~= nil then
         win.buf_history:push(bufnr)
+      end
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "BufDelete" }, {
+  callback = function(args)
+    local bufnr = args.buf
+    if bufnr == nil or not state.validate_buf(bufnr) then
+      return
+    end
+
+    state.bufs[bufnr] = nil
+    for tabnr, tab in pairs(state.tabs) do
+      if not state.validate_tab(tabnr) then
+        state.tabs[tabnr] = nil
+      else
+        std_array.filter_inline(tab.bufnrs, function(nr)
+          return nr ~= bufnr
+        end)
+        if #tab.bufnrs < 1 then
+          state.tabs[tabnr] = nil
+        end
       end
     end
   end,
