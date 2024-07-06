@@ -45,7 +45,7 @@ local M = {
       local hlname = last_tab_cur == nr and "f_tl_tab_item_cur" or "f_tl_tab_item"
       text = " " .. nr .. " "
       width = width + vim.fn.strwidth(text)
-      hl_text = hl_text .. fml.nvimbar.btn(text, "fml.api.tab.open" .. nr, hlname)
+      hl_text = hl_text .. fml.nvimbar.btn(text, "fml.api.tab.focus_" .. nr, hlname)
     end
 
     return hl_text, width
