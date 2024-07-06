@@ -106,6 +106,18 @@ function M.autocmd_highlight_yank()
   })
 end
 
+function M.autocmd_lsp_show_progress()
+  vim.api.nvim_create_autocmd("LspProgress", {
+    group = fml.fn.augroup("lsp_show_progress"),
+    callback = function(args)
+      if string.find(args.match, "end") then
+        vim.cmd("redrawstatus")
+      end
+      vim.cmd("redrawstatus")
+    end,
+  })
+end
+
 ---@param prompt_bufnr number
 ---@param callback fun(prompt:string):nil
 function M.autocmd_remember_telescope_prompt(prompt_bufnr, callback)
@@ -185,18 +197,6 @@ function M.autocmd_set_tabstop(opts)
       vim.opt.shiftwidth = width
       vim.opt.softtabstop = width -- set the tab width
       vim.opt.tabstop = width -- set the tab width
-    end,
-  })
-end
-
-function M.autocmd_show_lsp_progress()
-  vim.api.nvim_create_autocmd("LspProgress", {
-    group = fml.fn.augroup("show_lsp_progress"),
-    callback = function(args)
-      if string.find(args.match, "end") then
-        vim.cmd("redrawstatus")
-      end
-      vim.cmd("redrawstatus")
     end,
   })
 end

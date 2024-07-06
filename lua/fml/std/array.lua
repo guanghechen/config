@@ -202,7 +202,7 @@ function M.slice(arr, start, stop)
 end
 
 ---@param items                         string[]
----@param sep                           string
+---@param sep                           ?string
 ---@return string
 function M.to_comma_list(items, sep)
   return table.concat(items, sep or ",")
