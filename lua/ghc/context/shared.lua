@@ -10,13 +10,13 @@ local theme_cache_path = fml.path.locate_context_filepath({ filename = "theme" }
 ---@field public relativenumber         fml.types.collection.IObservable
 ---@field public transparency           fml.types.collection.IObservable
 local M = Viewmodel.new({
-  name = "context:theme",
-  filepath = context_filepath,
-  verbose = true,
-})
-  :register("mode", Observable.from_value("darken"), true, true)
-  :register("relativenumber", Observable.from_value(true), true, true)
-  :register("transparency", Observable.from_value(false), true, true)
+      name = "context:theme",
+      filepath = context_filepath,
+      verbose = true,
+    })
+    :register("mode", Observable.from_value("darken"), true, true)
+    :register("relativenumber", Observable.from_value(true), true, true)
+    :register("transparency", Observable.from_value(false), true, true)
 
 ---@param params                        ghc.types.context.shared.IToggleSchemeParams
 ---@return nil
@@ -58,6 +58,11 @@ function M.reload_theme(params)
     M.toggle_scheme({ mode = mode, transparency = transparency, persistent = true, force = true })
   else
     dofile(theme_cache_path)
+  end
+
+  local scheme = theme.get_scheme(mode) ---@type fml.types.ui.theme.IScheme|nil
+  if scheme ~= nil then
+    theme.set_term_colors(scheme)
   end
 end
 
