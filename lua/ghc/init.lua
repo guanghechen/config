@@ -1,8 +1,8 @@
 ---@class ghc.context
 local context = {
-  search = require("ghc.context.search"),
   shared = require("ghc.context.shared"),
   session = require("ghc.context.session"),
+  transient = require("ghc.context.transient"),
 }
 
 ---@class ghc.command

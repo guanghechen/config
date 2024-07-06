@@ -1,5 +1,5 @@
 local Replacer = require("ghc.command.replace.replacer")
-local context = require("ghc.context.search")
+local context = require("ghc.context.session")
 
 local function get_state_from_context()
   return {
@@ -68,10 +68,10 @@ end)
 function M.search(params)
   params = params or {}
   if params.cwd then
-    ghc.context.search.cwd:next(params.cwd)
+    ghc.context.session.cwd:next(params.cwd)
   end
   if params.word then
-    ghc.context.search.search_pattern:next(params.word)
+    ghc.context.session.search_pattern:next(params.word)
   end
   replacer:open({ mode = "search" })
 end
@@ -81,10 +81,10 @@ end
 function M.replace(params)
   params = params or {}
   if params.cwd then
-    ghc.context.search.cwd:next(params.cwd)
+    ghc.context.session.cwd:next(params.cwd)
   end
   if params.word then
-    ghc.context.search.search_pattern:next(params.word)
+    ghc.context.session.search_pattern:next(params.word)
   end
   replacer:open({ mode = "replace" })
 end

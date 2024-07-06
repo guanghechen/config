@@ -4,7 +4,7 @@ return {
   build = ":Copilot auth signin",
   event = { "InsertEnter" },
   cond = function()
-    return ghc.context.search.flight_copilot:get_snapshot()
+    return ghc.context.session.flight_copilot:get_snapshot()
   end,
   opts = {
     suggestion = { enabled = false },

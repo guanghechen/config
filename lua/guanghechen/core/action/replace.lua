@@ -25,8 +25,8 @@ function M.replace_word_current_file()
 end
 
 function M.toggle_case_sensitive()
-  local next_case_sensitive = not ghc.context.search.flag_case_sensitive:get_snapshot() ---@type boolean
-  ghc.context.search.flag_case_sensitive:next(next_case_sensitive)
+  local next_case_sensitive = not ghc.context.session.flag_case_sensitive:get_snapshot() ---@type boolean
+  ghc.context.session.flag_case_sensitive:next(next_case_sensitive)
 end
 
 return M

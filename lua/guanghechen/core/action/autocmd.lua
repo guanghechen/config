@@ -22,7 +22,7 @@ function M.autocmd_clear_buftype_extra(bufnr, callback)
     buffer = bufnr,
     group = fml.fn.augroup("clear_buftype_extra"),
     callback = function()
-      ghc.context.session.buftype_extra:next(nil)
+      ghc.context.transient.buftype_extra:next(nil)
       if callback then
         callback(bufnr)
       end
@@ -34,7 +34,7 @@ end
 ---@param opts {pattern: table}
 function M.autocmd_close_with_q(opts)
   local function close()
-    ghc.context.session.buftype_extra:next(nil)
+    ghc.context.transient.buftype_extra:next(nil)
     vim.cmd("close")
   end
 

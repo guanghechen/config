@@ -2,8 +2,8 @@
 local M = {}
 
 function M.flight_copilot()
-  local flight_copilot = ghc.context.search.flight_copilot:get_snapshot() ---@type boolean
-  ghc.context.search.flight_copilot:next(not flight_copilot)
+  local flight_copilot = ghc.context.session.flight_copilot:get_snapshot() ---@type boolean
+  ghc.context.session.flight_copilot:next(not flight_copilot)
 end
 
 function M.transparency()

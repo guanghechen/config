@@ -1,6 +1,6 @@
 ---@class fml.types.collection.IViewmodel : fml.types.collection.IBatchDisposable
 ---@field public get_name               fun(): string
----@field public get_filepath           fun(): string
+---@field public get_filepath           fun(): string|nil
 ---@field public get_snapshot           fun(): table
 ---@field public register               fun(name: string, observable: fml.types.collection.IObservable):nil
 ---@field public save                   fun(): nil

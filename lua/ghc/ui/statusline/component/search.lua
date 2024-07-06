@@ -7,16 +7,16 @@ local M = {
       return false
     end
 
-    local buftype_extra = ghc.context.session.buftype_extra:get_snapshot() ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
+    local buftype_extra = ghc.context.transient.buftype_extra:get_snapshot() ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
     return buftype_extra == "search"
   end,
   render = function()
-    local text_scope                  = " " .. ghc.context.search.search_scope:get_snapshot() .. " " ---@type string
+    local text_scope                  = " " .. ghc.context.session.search_scope:get_snapshot() .. " " ---@type string
     local text_flag_regex             = " " .. fml.ui.icons.flag.Regex .. " " ---@type string
     local text_flag_case_sensitive    = " " .. fml.ui.icons.flag.CaseSensitive .. " " ---@type string
 
-    local flag_regex_enabled          = ghc.context.search.flag_regex:get_snapshot() ---@type boolean
-    local flag_case_sensitive_enabled = ghc.context.search.flag_case_sensitive:get_snapshot() ---@type boolean
+    local flag_regex_enabled          = ghc.context.session.flag_regex:get_snapshot() ---@type boolean
+    local flag_case_sensitive_enabled = ghc.context.session.flag_case_sensitive:get_snapshot() ---@type boolean
 
     local hlname_scope                = "f_sl_flag_scope"
     local hlname_flag_regex           = flag_regex_enabled and "f_sl_flag_enabled" or "f_sl_flag"
