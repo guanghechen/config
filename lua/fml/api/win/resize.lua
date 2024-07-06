@@ -20,6 +20,3 @@ function M.resize_vertical_plus()
   local step = vim.v.count1 or 1
   vim.cmd("vertical resize +" .. step)
 end
-
-M.split_horizontal = "<C-w>s"
-M.split_vertical = "<C-w>v"
