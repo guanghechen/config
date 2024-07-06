@@ -1,8 +1,10 @@
 ---@alias ghc.enum.ui.theme.HighlightIntegration
+---| "basic"
 ---| "default"
 ---| "flash"
 ---| "gitsigns"
 ---| "indent-blank-line"
+---| "lazy"
 ---| "mason"
 ---| "nvim-cmp"
 ---| "nvim-dap"

@@ -4,34 +4,7 @@ local function gen_hlgroup(params)
   local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
 
   return {
-    ---syntax
-    Boolean = { fg = c.base09 },
-    Character = { fg = c.base08 },
-    Conditional = { fg = c.base0E },
-    Constant = { fg = c.base08 },
-    Define = { fg = c.base0E, sp = "none" },
-    Delimiter = { fg = c.base0F },
-    Float = { fg = c.base09 },
-    Variable = { fg = c.base05 },
-    Function = { fg = c.base0D },
-    Identifier = { fg = c.base08, sp = "none" },
-    Include = { fg = c.base0D },
-    Keyword = { fg = c.base0E },
-    Label = { fg = c.base0A },
-    Number = { fg = c.base09 },
-    Operator = { fg = c.base05, sp = "none" },
-    PreProc = { fg = c.base0A },
-    Repeat = { fg = c.base0A },
-    Special = { fg = c.base0C },
-    SpecialChar = { fg = c.base0F },
-    Statement = { fg = c.base08 },
-    StorageClass = { fg = c.base0A },
-    String = { fg = c.base0B },
-    Structure = { fg = c.base0E },
-    Tag = { fg = c.base0A },
-    Todo = { fg = c.base0A, bg = c.base01 },
-    Type = { fg = c.base0A, sp = "none" },
-    Typedef = { fg = c.base0A },
+
 
     ---tokens
     ["@annotation"] = { fg = c.base0F },

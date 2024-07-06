@@ -4,10 +4,12 @@ local M = {}
 ---@type ghc.enum.ui.theme.HighlightIntegration[]
 M.integrations = {
   --- orders as needed
+  "basic",
   "default",
   "treesitter",
   "nvim-web-devicons",
   "nvim-lspconfig",
+  "lazy",
 
   ---
   "flash",
