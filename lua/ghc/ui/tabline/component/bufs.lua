@@ -5,7 +5,11 @@ local last_bufnr_cur = 1 ---@type integer
 ---@param is_curbuf                     boolean
 ---@return string, integer
 local function render_buf(bufnr, bufid, is_curbuf)
-  local buf = fml.api.state.get_buf(bufnr) ---@type fml.api.state.IBufItem|nil
+  if fml.api.state.bufs[bufnr] == nil then
+    fml.api.state.refresh_buf(bufnr)
+  end
+
+  local buf = fml.api.state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
   if buf == nil then
     return "", 0
   end

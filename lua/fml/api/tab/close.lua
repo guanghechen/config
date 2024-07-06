@@ -1,12 +1,23 @@
 local state = require("fml.api.state")
 local navigate_limit = require("fml.fn.navigate_limit")
 local std_object = require("fml.std.object")
+local reporter = require("fml.std.reporter")
 
 ---@class fml.api.tab
 local M = require("fml.api.tab.mod")
 
 ---@return nil
 function M.close_current()
+  local tab_count = vim.fn.tabpagenr("$") ---@type integer
+  if tab_count <= 1 then
+    reporter.info({
+      from = "fml.api.tab",
+      subject = "close_current",
+      message = "This is the last tab, cannot close it.",
+    })
+    return
+  end
+
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   state.close_tab(tabnr)
 end

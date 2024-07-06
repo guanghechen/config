@@ -78,25 +78,6 @@ function M.count_buf_copies(bufnr)
   return copies
 end
 
----@param bufnr                         integer
----@return fml.api.state.IBufItem|nil
-function M.get_buf(bufnr)
-  if M.bufs[bufnr] == nil then
-    M.refresh_buf(bufnr)
-  end
-
-  local buf = M.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
-  if buf == nil then
-    reporter.error({
-      from = "fml.api.state",
-      subject = "get_buf",
-      message = "Cannot find buf from the state",
-      details = { bufnr = bufnr },
-    })
-  end
-  return buf
-end
-
 ---@return nil
 function M.refresh_bufs()
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
