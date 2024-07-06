@@ -111,10 +111,6 @@ mk({ "n", "v" }, "<leader>dc", A.debug.show_context, "debug: show context (persi
 mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window history", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
 
---#[f]ile-------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>fn", A.file.new_file, "file: new file")
--------------------------------------------------------------------------------------------#[f]ile--
-
 --#[q]uit/session/context--------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>qq", A.session.quit_all, "quit: quit all", true)
 mk({ "n", "v" }, "<leader>qL", A.session.session_load_autosaved, "session: restore autosaved session", true)
