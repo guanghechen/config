@@ -16,7 +16,6 @@ local function gen_hlgroup(params)
     DapUIPlayPauseNC = { fg = c.green },
     DapUIRestart = { fg = c.green },
     DapUIRestartNC = { fg = c.green },
-    DAPUIScope = { fg = c.cyan },
     DapUISource = { fg = c.lavender },
     DapUIStepBack = { fg = c.blue },
     DapUIStepBackNC = { fg = c.blue },
@@ -38,6 +37,7 @@ local function gen_hlgroup(params)
     DapUIWatchesEmpty = { fg = c.baby_pink },
     DapUIWatchesError = { fg = c.baby_pink },
     DapUIWatchesValue = { fg = c.green },
+    DAPUIScope = { fg = c.cyan },
   }
 end
 

@@ -1,11 +1,11 @@
 ---@param params                        ghc.types.ui.theme.IGenHlgroupMapParams
 ---@return table<string, fml.types.ui.theme.IHlgroup|nil>
 local function gen_hlgroup(params)
+  local mode = params.scheme.mode ---@type fml.enums.theme.Mode
   local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
 
   return {
-    ---lazy_nvim
-    --LazyButton = { bg = c.one_bg, fg = fml.color.change_hex_lightness("light_grey", vim.o.bg == c.dark and 10 or -20) },
+    LazyButton = { bg = c.one_bg, fg = fml.color.change_hex_lightness(c.light_grey, mode == "darken" and 10 or -20) },
     LazyCommit = { fg = c.green },
     LazyCommitIssue = { fg = c.pink },
     LazyDir = { fg = c.base05 },

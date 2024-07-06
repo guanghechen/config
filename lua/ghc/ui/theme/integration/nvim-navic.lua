@@ -38,9 +38,9 @@ local function gen_hlgroup(params)
     NavicIconsText = { fg = c.base0B, bg = c.statusline_bg },
     NavicIconsType = { fg = c.base0A, bg = c.statusline_bg },
     NavicIconsTypeParameter = { fg = c.base08, bg = c.statusline_bg },
-    NavicIconsVariable = { fg = c.base0E, bg = c.statusline_bg },
     NavicIconsUnit = { fg = c.base0E, bg = c.statusline_bg },
     NavicIconsValue = { fg = c.cyan, bg = c.statusline_bg },
+    NavicIconsVariable = { fg = c.base0E, bg = c.statusline_bg },
     NavicSeparator = { fg = c.red, bg = c.statusline_bg },
     NavicText = { fg = c.light_grey, bg = c.statusline_bg },
   }

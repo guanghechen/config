@@ -58,17 +58,17 @@ return {
           if ctx.layout_name:match("^diff2") then
             if ctx.symbol == "a" then
               vim.opt_local.winhl = table.concat({
-                "DiffAdd:ghc_DiffAdd_left",
-                "DiffDelete:ghc_DiffDelete_left",
-                "DiffChange:ghc_DiffChange_left",
-                "DiffText:ghc_DiffText_left",
+                "DiffAdd:f_diff_add_left",
+                "DiffDelete:f_diff_del_left",
+                "DiffChange:f_diff_mod_left",
+                "DiffText:f_diff_word_left",
               }, ",")
             elseif ctx.symbol == "b" then
               vim.opt_local.winhl = table.concat({
-                "DiffAdd:ghc_DiffAdd_right",
-                "DiffDelete:ghc_DiffDelete_right",
-                "DiffChange:ghc_DiffChange_right",
-                "DiffText:ghc_DiffText_right",
+                "DiffAdd:f_diff_add_right",
+                "DiffDelete:f_diff_del_right",
+                "DiffChange:f_diff_mod_right",
+                "DiffText:f_diff_word_right",
               }, ",")
             end
           end

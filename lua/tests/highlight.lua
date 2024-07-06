@@ -4,15 +4,15 @@ local function test_compile_highlights()
   local hlgroup_map = {
     GhcReplaceInvisible = { fg = "none", bg = "none" },
     GhcReplaceOptName = { fg = c.blue, bg = "none", bold = true },
-    GhcReplaceOptReplacePattern = { fg = c.diff_add_hl, bg = "none" },
-    GhcReplaceOptSearchPattern = { fg = c.diff_delete_hl, bg = "none" },
+    GhcReplaceOptReplacePattern = { fg = c.diff_add_word, bg = "none" },
+    GhcReplaceOptSearchPattern = { fg = c.diff_del_word, bg = "none" },
     GhcReplaceOptValue = { fg = c.yellow, bg = "none" },
     GhcReplaceFilepath = { fg = c.blue, bg = "none" },
     GhcReplaceFlag = { fg = c.white, bg = "grey" },
     GhcReplaceFlagEnabled = { fg = c.black, bg = c.baby_pink },
     GhcReplaceFence = { fg = c.grey, bg = "none" },
-    GhcReplaceTextDeleted = { fg = c.diff_delete_hl, strikethrough = true },
-    GhcReplaceTextAdded = { fg = c.diff_add_hl, bg = "none" },
+    GhcReplaceTextDeleted = { fg = c.diff_del_word, strikethrough = true },
+    GhcReplaceTextAdded = { fg = c.diff_add_word, bg = "none" },
     GhcReplaceUsage = { fg = c.grey_fg2, bg = "none" },
   }
 

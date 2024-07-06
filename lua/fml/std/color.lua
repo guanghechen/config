@@ -1,6 +1,6 @@
 ---https://github.com/NvChad/base46/blob/bbbdde83001701047b88f4978f05ea43ea4462e1/lua/base46/colors.lua#L1
 
----fml.std.color
+---@class fml.std.color
 local M = {}
 
 -- Convert a hex color value to RGB

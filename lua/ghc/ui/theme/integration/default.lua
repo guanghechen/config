@@ -8,6 +8,16 @@ local function gen_hlgroup(params)
     ---common
     f_transparent = { bg = "none" },
 
+    ---diff
+    f_diff_add_left = { bg = c.diff_del, fg = "none" },
+    f_diff_add_right = { bg = c.diff_add, fg = "none" },
+    f_diff_del_left = { bg = c.diff_del, fg = "none" },
+    f_diff_del_right = { bg = c.diff_del, fg = "none" },
+    f_diff_mod_left = { bg = c.diff_del, fg = "none" },
+    f_diff_mod_right = { bg = c.diff_add, fg = "none" },
+    f_diff_word_left = { bg = c.diff_del_word, fg = "none" },
+    f_diff_word_right = { bg = c.diff_add_word, fg = "none" },
+
     ---statusline
     f_sl_bg = { fg = t and "none" or c.statusline_bg, bg = t and "none" or c.statusline_bg },
     f_sl_copilot_InProgress = { fg = c.cyan, bg = t and "none" or c.statusline_bg },
@@ -50,16 +60,6 @@ local function gen_hlgroup(params)
     f_tl_tab_item_cur = { fg = c.red },
     f_tl_tab_toggle = { fg = c.black, bg = c.blue },
 
-    ---diff
-    ghc_DiffAdd_left = { bg = "#FFE0E0", fg = "none" },
-    ghc_DiffDelete_left = { bg = "#FFE0E0", fg = "none" },
-    ghc_DiffChange_left = { bg = "#FFE0E0", fg = "none" },
-    ghc_DiffText_left = { bg = "#FFC0C0", fg = "none" },
-    ghc_DiffAdd_right = { bg = "#D0FFD0", fg = "none" },
-    ghc_DiffDelete_right = { bg = "#FFE0E0", fg = "none" },
-    ghc_DiffChange_right = { bg = "#D0FFD0", fg = "none" },
-    ghc_DiffText_right = { bg = "#A0EFA0", fg = "none" },
-
     ---replace
     GhcReplaceFilepath = { fg = c.blue, bg = "none" },
     GhcReplaceFlag = { fg = c.white, bg = c.grey },
@@ -67,19 +67,12 @@ local function gen_hlgroup(params)
     GhcReplaceFence = { fg = c.grey, bg = "none" },
     GhcReplaceInvisible = { fg = "none", bg = "none" },
     GhcReplaceOptName = { fg = c.blue, bg = "none", bold = true },
-    GhcReplaceOptReplacePattern = { fg = c.diff_add_hl, bg = "none" },
-    GhcReplaceOptSearchPattern = { fg = c.diff_delete_hl, bg = "none" },
+    GhcReplaceOptReplacePattern = { fg = c.diff_add_word, bg = "none" },
+    GhcReplaceOptSearchPattern = { fg = c.diff_del_word, bg = "none" },
     GhcReplaceOptValue = { fg = c.yellow, bg = "none" },
-    GhcReplaceTextAdded = { fg = c.diff_add_hl, bg = "none" },
-    GhcReplaceTextDeleted = { fg = c.diff_delete_hl, strikethrough = true },
+    GhcReplaceTextAdded = { fg = c.diff_add_word, bg = "none" },
+    GhcReplaceTextDeleted = { fg = c.diff_del_word, strikethrough = true },
     GhcReplaceUsage = { fg = c.grey_fg2, bg = "none" },
-
-    ---spell
-    healthSuccess = { bg = c.green, fg = c.black },
-    SpellBad = { undercurl = true, sp = c.base08 },
-    SpellCap = { undercurl = true, sp = c.base0D },
-    SpellLocal = { undercurl = true, sp = c.base0C },
-    SpellRare = { undercurl = true, sp = c.base0E },
   }
 end
 

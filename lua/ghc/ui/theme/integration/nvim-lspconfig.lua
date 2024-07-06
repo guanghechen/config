@@ -1,9 +1,11 @@
 ---@param params                        ghc.types.ui.theme.IGenHlgroupMapParams
 ---@return table<string, fml.types.ui.theme.IHlgroup|nil>
 local function gen_hlgroup(params)
+  local mode = params.scheme.mode ---@type fml.enums.theme.Mode
   local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
 
   return {
+    ["@event"] = { fg = c.base08 },
     ["@lsp.type.class"] = { link = "Structure" },
     ["@lsp.type.decorator"] = { link = "Function" },
     ["@lsp.type.enum"] = { link = "Type" },
@@ -19,17 +21,19 @@ local function gen_hlgroup(params)
     ["@lsp.type.type"] = { link = "@type" },
     ["@lsp.type.typeParamater"] = { link = "TypeDef" },
     ["@lsp.type.variable"] = { link = "@variable" },
-    LspReferenceText = { fg = c.darker_black, bg = c.white },
-    LspReferenceRead = { fg = c.darker_black, bg = c.white },
-    LspReferenceWrite = { fg = c.darker_black, bg = c.white },
+    ["@modifier"] = { fg = c.base08 },
+    ["@regexp"] = { fg = c.base0F },
     DiagnosticHint = { fg = c.purple },
     DiagnosticError = { fg = c.red },
-    DiagnosticWarn = { fg = c.yellow },
     DiagnosticInfo = { fg = c.green },
+    DiagnosticWarn = { fg = c.yellow },
+    LspInlayHint = { bg = fml.color.change_hex_lightness(c.black2, mode == "darken" and 0 or 3), fg = c.light_grey },
+    LspReferenceRead = { fg = c.darker_black, bg = c.white },
+    LspReferenceText = { fg = c.darker_black, bg = c.white },
+    LspReferenceWrite = { fg = c.darker_black, bg = c.white },
     LspSignatureActiveParameter = { fg = c.black, bg = c.green },
-    RenamerTitle = { fg = c.black, bg = c.red },
     RenamerBorder = { fg = c.red },
-    --LspInlayHint = { bg = fml.color.change_hex_lightness("black2", vim.o.bg == c.dark and 0 or 3), fg = c.light_grey },
+    RenamerTitle = { fg = c.black, bg = c.red },
   }
 end
 

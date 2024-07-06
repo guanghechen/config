@@ -12,7 +12,6 @@ local function gen_hlgroup(params)
     Define = { fg = c.base0E, sp = "none" },
     Delimiter = { fg = c.base0F },
     Float = { fg = c.base09 },
-    Variable = { fg = c.base05 },
     Function = { fg = c.base0D },
     Identifier = { fg = c.base08, sp = "none" },
     Include = { fg = c.base0D },
@@ -32,6 +31,14 @@ local function gen_hlgroup(params)
     Todo = { fg = c.base0A, bg = c.base01 },
     Type = { fg = c.base0A, sp = "none" },
     Typedef = { fg = c.base0A },
+    Variable = { fg = c.base05 },
+
+    ---spell
+    healthSuccess = { bg = c.green, fg = c.black },
+    SpellBad = { undercurl = true, sp = c.base08 },
+    SpellCap = { undercurl = true, sp = c.base0D },
+    SpellLocal = { undercurl = true, sp = c.base0C },
+    SpellRare = { undercurl = true, sp = c.base0E },
 
     ---misc
     Added = { fg = c.green },
@@ -51,13 +58,13 @@ local function gen_hlgroup(params)
     ErrorMsg = { fg = c.base08, bg = c.base00 },
     Exception = { fg = c.base08 },
     FloatBorder = { fg = c.blue },
-    Folded = { fg = c.light_grey, bg = c.black2 },
     FoldColumn = { fg = c.base0C, bg = c.base01 },
+    Folded = { fg = c.light_grey, bg = c.black2 },
     IncSearch = { fg = c.base01, bg = c.base09 },
     Italic = { italic = true },
     LineNr = { fg = c.grey },
     Macro = { fg = c.base08 },
-    MatchParen = { link = "MatchWord" },
+    MatchParen = { bg = c.grey, fg = c.white },
     MatchWord = { bg = c.grey, fg = c.white },
     ModeMsg = { fg = c.base0B },
     MoreMsg = { fg = c.base0B },
@@ -68,9 +75,9 @@ local function gen_hlgroup(params)
     Pmenu = { bg = c.one_bg },
     PmenuSbar = { bg = c.one_bg },
     PmenuSel = { bg = c.pmenu_bg, fg = c.black },
+    PmenuThumb = { bg = c.grey },
     Question = { fg = c.base0D },
     QuickFixLine = { bg = c.base01, sp = "none" },
-    PmenuThumb = { bg = c.grey },
     Removed = { fg = c.red },
     Search = { fg = c.base01, bg = c.base0A },
     SignColumn = { fg = c.base03, sp = "none" },
@@ -82,8 +89,8 @@ local function gen_hlgroup(params)
     Visual = { bg = c.light_grey },
     VisualNOS = { fg = c.base08 },
     WarningMsg = { fg = c.base08 },
-    WinSeparator = { fg = c.line },
     WildMenu = { fg = c.base08, bg = c.base0A },
+    WinSeparator = { fg = c.line },
   }
 end
 
