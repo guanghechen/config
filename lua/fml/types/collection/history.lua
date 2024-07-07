@@ -1,5 +1,6 @@
 ---@class fml.types.collection.IHistory
 ---@field public name                   string
+---@field public capacity               integer
 ---@field public equals                 fun(x: fml.types.T, y: fml.types.T): boolean
 ---@field public validate               fun(v: fml.types.T): boolean
 ---@field public back                   fun(self: fml.types.collection.IHistory, step ?:number): fml.types.T|nil

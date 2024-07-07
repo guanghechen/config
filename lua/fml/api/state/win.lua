@@ -1,3 +1,4 @@
+local constant = require("fml.constant")
 local History = require("fml.collection.history")
 local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
@@ -63,15 +64,34 @@ end
 ---@class fml.api.state
 ---@field public wins                   table<integer, fml.api.state.IWinItem>
 ---@field public win_history            fml.types.collection.IHistory
+---@field public validate_win           fun(winnr: integer): boolean
 local M = require("fml.api.state.mod")
 
 M.wins = {}
 M.win_history = History.new({
   name = "wins",
-  max_count = 100,
+  capacity = constant.WIN_HISTORY_CAPACITY,
   validate = validate_win,
 })
 M.validate_win = validate_win
+
+---@param winnr                         integer
+---@return fun(bufnr: integer): boolean
+function M.create_win_buf_history_validate(winnr)
+  return function(bufnr)
+    local win = M.wins[winnr]
+    if win == nil then
+      return false
+    end
+
+    local tab = M.tabs[win.tabnr]
+    if tab == nil then
+      return false
+    end
+
+    return vim.api.nvim_buf_is_valid(bufnr) and std_array.contains(tab.bufnrs, bufnr)
+  end
+end
 
 ---@param tabnr                         integer
 ---@return nil
@@ -108,11 +128,8 @@ function M.refresh_win(tabnr, winnr)
       tabnr = tabnr,
       buf_history = History.new({
         name = "win#bufs",
-        max_count = 100,
-        validate = function(nr)
-          local tab = M.tabs[tabnr]
-          return vim.api.nvim_buf_is_valid(nr) and tab and std_array.contains(tab.bufnrs, nr)
-        end,
+        capacity = constant.WIN_BUF_HISTORY_CAPACITY,
+        validate = M.create_win_buf_history_validate(winnr),
       }),
     }
     M.wins[winnr] = win
@@ -127,13 +144,3 @@ function M.refresh_win(tabnr, winnr)
   rearrange_buf_history(bufnrs, win.buf_history, M.validate_buf)
 end
 
----@param winnr                         integer
----@return boolean
-function M.validate_win(winnr)
-  if not vim.api.nvim_win_is_valid(winnr) then
-    return false
-  end
-
-  local config = vim.api.nvim_win_get_config(winnr)
-  return config.relative == nil or config.relative == ""
-end

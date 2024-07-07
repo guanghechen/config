@@ -61,7 +61,11 @@ end
 local M = require("fml.api.state.mod")
 
 M.tabs = {}
-M.tab_history = History.new({ name = "tabs", max_count = 100, validate = validate_tab })
+M.tab_history = History.new({
+  name = "tabs",
+  capacity = constant.TAB_HISTORY_CAPACITY,
+  validate = validate_tab,
+})
 M.validate_tab = validate_tab
 
 ---@param tabnr                         integer

@@ -24,9 +24,12 @@ end
 
 ---@class fml.collection.history.IProps
 ---@field public name                   string
----@field public max_count              integer
+---@field public capacity               integer
 ---@field public equals                 ?fun(x: fml.types.T, y: fml.types.T): boolean
 ---@field public validate               ?fun(v: fml.types.T): boolean
+
+---@class fml.collection.history.IDeserializeProps : fml.collection.history.IProps
+---@field public data                   fml.types.collection.history.ISerializedData
 
 ---@param props                         fml.collection.history.IProps
 ---@return fml.collection.History
@@ -34,6 +37,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   self.name = props.name
+  self.capacity = props.capacity
   self.equals = props.equals or default_equals
   self.validate = props.validate or default_validate
 
@@ -43,16 +47,16 @@ function M.new(props)
   return self
 end
 
----@param data                          fml.types.collection.history.ISerializedData
----@param props                         fml.collection.history.IProps
+---@param props                         fml.collection.history.IDeserializeProps
 ---@return fml.collection.History
-function M.deserialize(data, props)
+function M.deserialize(props)
   local self = setmetatable({}, M)
 
   self.name = props.name
   self.equals = props.equals or default_equals
   self.validate = props.validate or default_validate
 
+  local data = props.data
   self._stack = std_array.slice(data.stack) ---@type fml.types.T[]
   self._present_idx = data.present_index
 
