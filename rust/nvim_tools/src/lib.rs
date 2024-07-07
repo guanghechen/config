@@ -8,6 +8,7 @@ extern crate lazy_static;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
+use uuid::Uuid;
 
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
@@ -59,6 +60,11 @@ fn nvim_tools() -> Dictionary {
         },
     );
 
+    let oxi_uuid = Function::from_fn(|_: String| -> String {
+        let uuid = Uuid::new_v4();
+        uuid.to_string()
+    });
+
     Dictionary::from_iter([
         (
             "normalize_comma_list",
@@ -71,5 +77,6 @@ fn nvim_tools() -> Dictionary {
         ),
         ("replace_text", Object::from(oxi_replace_text)),
         ("search", Object::from(oxi_search)),
+        ("uuid", Object::from(oxi_uuid)),
     ])
 }
