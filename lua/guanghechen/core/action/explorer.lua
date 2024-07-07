@@ -41,7 +41,7 @@ function M.toggle_explorer_file_workspace()
     source = "filesystem",
     dir = cwd,
     position = "left",
-    reveal = check_could_reveal(),
+    reveal = false,
     toggle = toggle,
   })
 end
@@ -57,7 +57,7 @@ function M.toggle_explorer_file_cwd()
     source = "filesystem",
     dir = cwd,
     position = "left",
-    reveal = check_could_reveal(),
+    reveal = false,
     toggle = toggle,
   })
 end
@@ -119,7 +119,7 @@ function M.toggle_explorer_last()
     action = "focus",
     source = "last",
     dir = cwd,
-    reveal = check_could_reveal(),
+    reveal = false,
     toggle = true,
   })
 end
