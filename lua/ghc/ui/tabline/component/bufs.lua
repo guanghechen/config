@@ -17,17 +17,18 @@ local function render_buf(bufnr, bufid, is_curbuf)
   local is_mod = vim.api.nvim_get_option_value("mod", { buf = bufnr }) ---@type boolean
   local icon, fileicon_hl = fml.fn.calc_fileicon(buf.filename)
 
-  local left_pad = " " ---@type string
+  local left_pad = is_curbuf and "┃" or " " ---@type string
   local text_icon = icon .. " " ---@type string
   local text_title = buf.filename ---@type string
   local text_mod = is_mod and "  " or "  " ---@type string
 
+  local left_pad_hl = is_curbuf and "f_tl_buf_left_pad_cur" or "f_tl_buf_left_pad"
   local buf_hl = is_curbuf and "f_tl_buf_item_cur" or "f_tl_buf_item" ---@type string
   local icon_hl = fml.highlight.blend_color(fileicon_hl, buf_hl)
   local title_hl = is_curbuf and "f_tl_buf_title_cur" or "f_tl_buf_title" ---@type string
   local mod_hl = is_curbuf and "f_tl_buf_mod_cur" or "f_tl_buf_mod" ---@type string
 
-  local hl_text_left_pad = fml.nvimbar.txt(left_pad, title_hl)
+  local hl_text_left_pad = fml.nvimbar.txt(left_pad, left_pad_hl)
   local hl_text_icon = fml.nvimbar.txt(text_icon, icon_hl)
   local hl_text_title = fml.nvimbar.txt(text_title, title_hl)
   local hl_text_mod = is_mod and fml.nvimbar.txt(text_mod, mod_hl) or text_mod

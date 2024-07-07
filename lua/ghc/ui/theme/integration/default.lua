@@ -49,6 +49,8 @@ local function gen_hlgroup(params)
     f_tl_bg = { fg = t and "none" or c.statusline_bg, bg = t and "none" or c.statusline_bg },
     f_tl_buf_item = { fg = c.light_grey, bg = t and "none" or c.black2 },
     f_tl_buf_item_cur = { fg = c.white, bg = t and "none" or c.black },
+    f_tl_buf_left_pad = { fg = c.light_grey, bg = t and "none" or c.black2 },
+    f_tl_buf_left_pad_cur = { fg = c.blue, bg = t and "none" or c.black },
     f_tl_buf_mod = { fg = c.red, bg = t and "none" or c.black2 },
     f_tl_buf_mod_cur = { fg = c.green, bg = t and "none" or c.black },
     f_tl_buf_title = { fg = c.light_grey, bg = t and "none" or c.black2 },
