@@ -22,6 +22,12 @@ function M.is_exist(filepath)
   return stat ~= nil and not vim.tbl_isempty(stat)
 end
 
+---@return boolean
+function M.is_git_repo()
+  local cwd = vim.fn.getcwd()
+  return M.locate_git_repo(cwd) ~= nil
+end
+
 function M.mkdir_if_nonexist(dirpath)
   if not M.is_exist(dirpath) then
     vim.fn.mkdir(dirpath, "p")
@@ -340,19 +346,23 @@ function M.remove_session_filepaths_all(opts)
   end
 end
 
+---@return nil
 function M.workspace()
   local cwd = vim.fn.getcwd()
   return M.locate_git_repo(cwd) or cwd
 end
 
+---@return nil
 function M.cwd()
   return vim.fn.getcwd()
 end
 
+---@return nil
 function M.current_directory()
   return vim.fn.expand("%:p:h")
 end
 
+---@return nil
 function M.current_filepath()
   return vim.api.nvim_buf_get_name(0)
 end

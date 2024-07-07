@@ -40,15 +40,17 @@ else
 end
 
 vim.schedule(function()
-  ---reload session
-  local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
-  if not ok_load_session then
-    fml.reporter.error({
-      from = "init",
-      subject = "auto reload session",
-      message = "Failed to load autosaved session",
-      details = { error = error_load_session }
-    })
+  ---! Reload session if not specify file and current directory is a git repository.
+  if vim.fn.argc() < 1 and fml.path.is_git_repo() then
+    local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
+    if not ok_load_session then
+      fml.reporter.error({
+        from = "init",
+        subject = "auto reload session",
+        message = "Failed to load autosaved session",
+        details = { error = error_load_session }
+      })
+    end
   end
 
   ---reload theme

@@ -152,7 +152,9 @@ function M.autocmd_session_autosave()
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = fml.fn.augroup("session_autosave"),
     callback = function()
-      ghc.command.session.autosave()
+      if vim.fn.argc() < 1 and fml.path.is_git_repo() then
+        ghc.command.session.autosave()
+      end
     end,
   })
 end
@@ -194,7 +196,7 @@ function M.autocmd_set_tabstop(opts)
     callback = function()
       vim.opt.shiftwidth = width
       vim.opt.softtabstop = width -- set the tab width
-      vim.opt.tabstop = width -- set the tab width
+      vim.opt.tabstop = width     -- set the tab width
     end,
   })
 end
