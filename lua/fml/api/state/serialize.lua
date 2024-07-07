@@ -39,6 +39,60 @@ local History = require("fml.collection.history")
 local fs = require("fml.std.fs")
 local reporter = require("fml.std.reporter")
 
+
+---@param data                          fml.api.state.ISerializedData
+---@return table<integer, integer>
+local function gen_real_bufnr_map(data)
+  if type(data.bufs) ~= "table" then
+    return {}
+  end
+
+  local filepath_2_real_bufnr_map = {} ---@type table<string, integer>
+  local bufnr_2_real_bufnr = {} ---@type table<integer, integer>
+  local real_bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+
+  for _, real_bufnr in ipairs(real_bufnrs) do
+    local real_filepath = vim.api.nvim_buf_get_name(real_bufnr)
+    if type(real_filepath) == "string" then
+      filepath_2_real_bufnr_map[real_filepath] = real_bufnr
+    end
+  end
+
+  for _, item in ipairs(data.bufs) do
+    if type(item.bufnr) == "number" and type(item.filepath) == "string" then
+      local real_bufnr = filepath_2_real_bufnr_map[item.filepath]
+      bufnr_2_real_bufnr[item.bufnr] = real_bufnr
+    end
+  end
+
+  return bufnr_2_real_bufnr
+end
+
+---@param data                          fml.api.state.ISerializedData
+---@return table<integer, integer>
+local function gen_real_tabnr_map(data)
+  if type(data.tabs) ~= "table" then
+    return {}
+  end
+
+  local tabnr_2_real_tabnr = {} ---@type table<integer, integer>
+  local real_tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+
+  local tabnrs = {} ---@type integer[]
+  for _, item in ipairs(data.tabs) do
+    table.insert(tabnrs, item.tabnr)
+  end
+  table.sort(tabnrs)
+
+  for i, tabnr in ipairs(tabnrs) do
+    if i <= #real_tabnrs then
+      tabnr_2_real_tabnr[tabnr] = real_tabnrs[i]
+    end
+  end
+
+  return tabnr_2_real_tabnr
+end
+
 ---@class fml.api.state
 local M = require("fml.api.state.mod")
 
@@ -105,72 +159,70 @@ function M.load(filepath)
     return
   end
 
+  local bufnr_2_real_bufnr = gen_real_bufnr_map(data) ---@type table<integer, integer>
+  local tabnr_2_real_tabnr = gen_real_tabnr_map(data) ---@type table<integer, integer>
+
   if type(data.bufs) == "table" then
     local bufs = {} ---@type table<integer, fml.api.state.IBufItem>
     for _, item in ipairs(data.bufs) do
-      if type(item.bufnr) == "number" and type(item.buf) == "table" then
+      local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
+      if real_bufnr ~= nil then
         ---@type fml.api.state.IBufItem
         local buf = {
           filename = item.filename,
           filepath = item.filepath,
           pinned = item.pinned,
         }
-        bufs[item.bufnr] = buf
+        bufs[real_bufnr] = buf
       end
     end
     M.bufs = bufs
   end
+
   if type(data.tabs) == "table" then
     local tabs = {} ---@type table<integer, fml.api.state.ITabItem>
     for _, item in ipairs(data.tabs) do
-      if type(item.tabnr) == "number" and type(item.tab) == "table" then
+      local real_tabnr = type(item.tabnr) == "number" and tabnr_2_real_tabnr[item.tabnr] or nil
+      if real_tabnr ~= nil then
+        local bufnrs = {} ---@type integer[]
+        if type(item.bufnrs) == "table" then
+          for _, bufnr in ipairs(item.bufnrs) do
+            local real_bufnr = bufnr_2_real_bufnr[bufnr]
+            if real_bufnr ~= nil then
+              table.insert(bufnrs, real_bufnr)
+            end
+          end
+        end
+
         ---@type fml.api.state.ITabItem
-        local tab = {
-          name = item.name,
-          bufnrs = item.bufnrs,
-        }
-        tabs[item.tabnr] = tab
+        local tab = { name = item.name, bufnrs = bufnrs, }
+        tabs[real_tabnr] = tab
       end
     end
     M.tabs = tabs
   end
-  if type(data.wins) == "table" then
-    local wins = {}
-    for _, item in ipairs(data.wins) do
-      if type(item.winnr) == "number" and type(item.win) == "table" then
-        ---@type fml.api.state.IWinItem
-        local win = {
-          tabnr = item.win.tabnr,
-          buf_history = History.deserialize({
-            data = item.win.buf_history,
-            name = "win#bufs",
-            capacity = constant.WIN_BUF_HISTORY_CAPACITY,
-            validate = M.create_win_buf_history_validate(item.winnr),
-          }),
-        }
-        wins[item.winnr] = win
+
+  if type(data.tab_history) == "table" and type(data.tab_history.stack) == "table" then
+    local stack = {} ---@type integer[]
+    local present_index = data.tab_history.present_index ---@type integer
+    for i, tabnr in ipairs(data.tab_history.stack) do
+      local real_tabnr = tabnr_2_real_tabnr[tabnr]
+      if real_tabnr ~= nil then
+        table.insert(stack, real_tabnr)
+      elseif present_index > i then
+        present_index = present_index - 1
+      end
+      if present_index == i then
+        present_index = #stack
       end
     end
-    M.wins = wins
-  end
 
-  if type(data.tab_history) == "table" then
     M.tab_history:clear()
     M.tab_history = History.deserialize({
-      data = data.tab_history,
+      data = { stack = stack, present_index = present_index },
       name = M.tab_history.name,
       capacity = constant.TAB_HISTORY_CAPACITY,
       validate = M.validate_tab,
-    })
-  end
-
-  if type(data.win_history) == "table" then
-    M.win_history:clear()
-    M.win_history = History.deserialize({
-      data = data.win_history,
-      name = M.win_history.name,
-      capacity = constant.WIN_HISTORY_CAPACITY,
-      validate = M.validate_win,
     })
   end
 end
