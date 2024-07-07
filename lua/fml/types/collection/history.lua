@@ -3,14 +3,14 @@
 ---@field public capacity               integer
 ---@field public equals                 fun(x: fml.types.T, y: fml.types.T): boolean
 ---@field public validate               fun(v: fml.types.T): boolean
----@field public back                   fun(self: fml.types.collection.IHistory, step ?:number): fml.types.T|nil
+---@field public back                   fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil
 ---@field public clear                  fun(self: fml.types.collection.IHistory): nil
 ---@field public empty                  fun(self: fml.types.collection.IHistory): boolean
 ---@field public fork                   fun(self: fml.types.collection.IHistory, params?: fml.types.collection.IHistoryForkParams): fml.types.collection.IHistory
----@field public forward                fun(self: fml.types.collection.IHistory, step ?:number): fml.types.T|nil
+---@field public forward                fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil
 ---@field public iterator               fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
 ---@field public iterator_reverse       fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
----@field public go                     fun(self: fml.types.collection.IHistory, idx: number): fml.types.T|nil
+---@field public go                     fun(self: fml.types.collection.IHistory, idx: integer): fml.types.T|nil
 ---@field public present                fun(self: fml.types.collection.IHistory): fml.types.T|nil
 ---@field public present_index          fun(self: fml.types.collection.IHistory): integer
 ---@field public print                  fun(self: fml.types.collection.IHistory): nil

@@ -14,14 +14,13 @@ M.__index = M
 ---@return fml.collection.CircularQueue
 function M.new(props)
   local capacity = math.max(1, props.capacity)
-  local self = setmetatable({}, M)
 
+  local self = setmetatable({}, M)
   self._elements = {}
   self._capacity = capacity
   self._size = 0
   self._start = 1
   self._end = 0
-
   return self
 end
 
@@ -29,17 +28,14 @@ end
 ---@return fml.collection.CircularQueue
 function M.from(queue)
   local self = setmetatable({}, M)
-
   self._elements = {}
   self._capacity = queue:capacity()
   self._size = queue:size()
   self._start = 1
-  self._end = 0
-  for element in queue:iterator() do
-    self._end = self._end + 1
-    self._elements[self._end] = element
+  self._end = queue:size()
+  for element, index in queue:iterator() do
+    self._elements[index] = element
   end
-
   return self
 end
 
@@ -47,11 +43,10 @@ end
 ---@param capacity                     integer
 ---@return fml.collection.CircularQueue
 function M.from_array(arr, capacity)
-  local self = setmetatable({}, M)
-
   local start = #arr > capacity and #arr - capacity + 1 or 1 ---@type integer
   local size = #arr - start + 1 ---@type integer
 
+  local self = setmetatable({}, M)
   self._elements = {}
   self._capacity = capacity
   self._size = size
@@ -60,7 +55,6 @@ function M.from_array(arr, capacity)
   for i = 1, #arr, 1 do
     self._elements[i] = arr[start + i - 1]
   end
-
   return self
 end
 
@@ -203,12 +197,12 @@ function M:enqueue(element)
   end
 end
 
----@param filter                        fun(element: fml.types.T): boolean
+---@param filter                        fun(element: fml.types.T, index: integer): boolean
 ---@return fml.collection.CircularQueue
 function M:fork(filter)
-  local instance = setmetatable({}, M)
   self:rearrange(filter)
 
+  local instance = setmetatable({}, M)
   instance._elements = {}
   instance._capacity = self._capacity
   instance._size = self._size
@@ -217,7 +211,6 @@ function M:fork(filter)
   for i = 1, self._size, 1 do
     instance._elements[i] = self._elements[i]
   end
-
   return instance
 end
 
@@ -263,44 +256,50 @@ function M:iterator_reverse()
   end
 end
 
----@param filter                        fun(element: fml.types.T): boolean
+---@param filter                        fun(element: fml.types.T, index: integer): boolean
 ---@return nil
 function M:rearrange(filter)
-  local k = 0
-
-  if self._start <= self._end then
-    for i = self._start, self._end, 1 do
-      local value = self._elements[i]
-      if filter(value) then
-        k = k + 1
-        self._elements[k] = value
+  local k = 0 ---@type integer
+  if self._size > 0 then
+    if self._start <= self._end then
+      local index = 0 ---@type integer
+      for i = self._start, self._end, 1 do
+        index = index + 1
+        local value = self._elements[i]
+        if filter(value, index) then
+          k = k + 1
+          self._elements[k] = value
+        end
       end
-    end
-  else
-    local tmp_array = {}
-    for i = 1, self._end, 1 do
-      table.insert(tmp_array, self._elements[i])
-    end
-
-    for i = self._start, self._capacity, 1 do
-      local value = self._elements[i]
-      if filter(value) then
-        k = k + 1
-        self._elements[k] = value
+    else
+      local tmp_array = {}
+      for i = 1, self._end, 1 do
+        table.insert(tmp_array, self._elements[i])
       end
-    end
-    for i = 1, self._end, 1 do
-      local value = tmp_array[i]
-      if filter(value) then
-        k = k + 1
-        self._elements[k] = value
+
+      local index = 0 ---@type integer
+      for i = self._start, self._capacity, 1 do
+        index = index + 1
+        local value = self._elements[i]
+        if filter(value, index) then
+          k = k + 1
+          self._elements[k] = value
+        end
+      end
+      for i = 1, self._end, 1 do
+        local value = tmp_array[i]
+        index = index + 1
+        if filter(value, index) then
+          k = k + 1
+          self._elements[k] = value
+        end
       end
     end
   end
 
+  self._size = k
   self._start = 1
   self._end = k
-  self._size = k
 end
 
 return M
