@@ -205,6 +205,7 @@ function M:iterator()
   end
 end
 
+---@return nil
 function M:iterator_reverse()
   local _capacity = self._capacity
   local _elements = self._elements
@@ -220,6 +221,46 @@ function M:iterator_reverse()
       return _elements[id], i
     end
   end
+end
+
+---@param filter                        fun(element: fml.types.T): boolean
+---@return nil
+function M:rearrange(filter)
+  local k = 0
+
+  if self._start <= self._end then
+    for i = self._start, self._end, 1 do
+      local value = self._elements[i]
+      if filter(value) then
+        k = k + 1
+        self._elements[k] = value
+      end
+    end
+  else
+    local tmp_array = {}
+    for i = 1, self._end, 1 do
+      table.insert(tmp_array, self._elements[i])
+    end
+
+    for i = self._start, self._capacity, 1 do
+      local value = self._elements[i]
+      if filter(value) then
+        k = k + 1
+        self._elements[k] = value
+      end
+    end
+    for i = 1, self._end, 1 do
+      local value = tmp_array[i]
+      if filter(value) then
+        k = k + 1
+        self._elements[k] = value
+      end
+    end
+  end
+
+  self._start = 1
+  self._end = k
+  self._size = k
 end
 
 return M
