@@ -1,6 +1,6 @@
 local history = fml.collection.History.new({
   name = "haha",
-  max_count = 50,
+  capacity = 50,
   validate = function(v)
     return string.sub(v, 1, 1) ~= '_'
   end

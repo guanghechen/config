@@ -22,7 +22,7 @@ end
 ---@return integer|nil
 function M:select_preview_window()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local selected_winnr = fml.api.win.pick({ motivation = "project" }) ---@type integer|nil
+  local selected_winnr = fml.api.win.pick("project") ---@type integer|nil
   if selected_winnr == nil then
     return nil
   end

@@ -1,17 +1,17 @@
 local Replacer = require("ghc.command.replace.replacer")
-local context = require("ghc.context.session")
+local session = require("ghc.context.session")
 
 local function get_state_from_context()
   return {
-    mode = context.mode:get_snapshot(),
-    cwd = context.cwd:get_snapshot(),
-    flag_regex = context.flag_regex:get_snapshot(),
-    flag_case_sensitive = context.flag_case_sensitive:get_snapshot(),
-    search_pattern = context.search_pattern:get_snapshot(),
-    replace_pattern = context.replace_pattern:get_snapshot(),
-    search_paths = context.search_paths:get_snapshot(),
-    include_patterns = context.include_patterns:get_snapshot(),
-    exclude_patterns = context.exclude_patterns:get_snapshot(),
+    mode = session.mode:get_snapshot(),
+    cwd = session.cwd:get_snapshot(),
+    flag_regex = session.flag_regex:get_snapshot(),
+    flag_case_sensitive = session.flag_case_sensitive:get_snapshot(),
+    search_pattern = session.search_pattern:get_snapshot(),
+    replace_pattern = session.replace_pattern:get_snapshot(),
+    search_paths = session.search_paths:get_snapshot(),
+    include_patterns = session.include_patterns:get_snapshot(),
+    exclude_patterns = session.exclude_patterns:get_snapshot(),
   }
 end
 
@@ -36,28 +36,28 @@ local replacer = Replacer.new({
   data = get_state_from_context(),
   on_changed = function(s)
     local next_data = s:get_data() ---@type ghc.types.command.replace.IStateData
-    context.mode:next(next_data.mode)
-    context.cwd:next(next_data.cwd)
-    context.flag_regex:next(next_data.flag_regex)
-    context.flag_case_sensitive:next(next_data.flag_case_sensitive)
-    context.search_pattern:next(next_data.search_pattern)
-    context.replace_pattern:next(next_data.replace_pattern)
-    context.search_paths:next(next_data.search_paths)
-    context.include_patterns:next(next_data.include_patterns)
-    context.exclude_patterns:next(next_data.exclude_patterns)
+    session.mode:next(next_data.mode)
+    session.cwd:next(next_data.cwd)
+    session.flag_regex:next(next_data.flag_regex)
+    session.flag_case_sensitive:next(next_data.flag_case_sensitive)
+    session.search_pattern:next(next_data.search_pattern)
+    session.replace_pattern:next(next_data.replace_pattern)
+    session.search_paths:next(next_data.search_paths)
+    session.include_patterns:next(next_data.include_patterns)
+    session.exclude_patterns:next(next_data.exclude_patterns)
   end,
 })
 
 fml.fn.watch_observables({
-  context.mode,
-  context.cwd,
-  context.flag_regex,
-  context.flag_case_sensitive,
-  context.search_pattern,
-  context.replace_pattern,
-  context.search_paths,
-  context.include_patterns,
-  context.exclude_patterns,
+  session.mode,
+  session.cwd,
+  session.flag_regex,
+  session.flag_case_sensitive,
+  session.search_pattern,
+  session.replace_pattern,
+  session.search_paths,
+  session.include_patterns,
+  session.exclude_patterns,
 }, function()
   local next_data = get_state_from_context() ---@type ghc.types.command.replace.IStateData
   replacer.state:set_data(next_data)
