@@ -1,11 +1,6 @@
 ---@class guanghechen.keymap.actions
 local A = {
-  context = require("guanghechen.core.action.context"),
-  debug = require("guanghechen.core.action.debug"),
-  enhance = require("guanghechen.core.action.enhance"),
-  run = require("guanghechen.core.action.run"),
   session = require("guanghechen.core.action.session"),
-  toggle = require("guanghechen.core.action.toggle"),
 }
 
 ---@param mode string | string[]
@@ -48,7 +43,7 @@ mk({ "i", "n", "v" }, "<C-b>a", "<esc>gg0vG$", "select all")
 mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "select all")
 mk({ "i", "n", "v" }, "<C-b>v", '<esc>"+p', "paste: from system clipboard")
 mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "paste: from system clipboard")
-mk({ "i", "n", "v" }, "<C-C>", A.enhance.copy_current_buffer_filepath, "copy: current buffer filepath")
+mk({ "i", "n", "v" }, "<C-C>", ghc.command.copy.current_buffer_filepath, "copy: current buffer filepath")
 ---------------------------------------------------------------------------------------#enhance-----
 
 --#navigation---------------------------------------------------------------------------------------
@@ -105,8 +100,8 @@ mk({ "n", "v" }, "<leader>bo", fml.api.buf.close_others, "buffer: close others",
 -----------------------------------------------------------------------------------------#[b]uffer--
 
 ----#[d]ebug-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>dC", A.debug.show_context_all, "debug: show context (all)", true)
-mk({ "n", "v" }, "<leader>dc", A.debug.show_context, "debug: show context (persistentable)", true)
+mk({ "n", "v" }, "<leader>dC", ghc.command.debug.show_context_all, "debug: show context (all)", true)
+mk({ "n", "v" }, "<leader>dc", ghc.command.debug.show_context, "debug: show context (persistentable)", true)
 mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window history", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
 
@@ -114,14 +109,14 @@ mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window his
 mk({ "n", "v" }, "<leader>qq", A.session.quit_all, "quit: quit all", true)
 mk({ "n", "v" }, "<leader>qL", A.session.session_load_autosaved, "session: restore autosaved session", true)
 mk({ "n", "v" }, "<leader>ql", A.session.session_load, "session: restore session", true)
-mk({ "n", "v" }, "<leader>qo", A.context.edit_session, "context: restore session", true)
+mk({ "n", "v" }, "<leader>qo", ghc.command.context.edit_session, "context: edit session", true)
 mk({ "n", "v" }, "<leader>qs", A.session.session_save, "session: save session", true)
 mk({ "n", "v" }, "<leader>qc", A.session.session_clear, "session: clear session", true)
 mk({ "n", "v" }, "<leader>qC", A.session.session_clear_all, "session: clear all sessions", true)
 --------------------------------------------------------------------------#[q]uit/session/context--
 
 --#[r]un--------------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<F5>", A.run.run, "run: run codes", true)
+mk({ "i", "n", "v" }, "<F5>", ghc.command.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
 
 --#[t]ab--------------------------------------------------------------------------------------------
@@ -146,11 +141,11 @@ mk({ "n", "v" }, "<leader>to", fml.api.tab.close_others, "tab: close other tabs"
 --------------------------------------------------------------------------------------------#[t]ab--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>tfc", A.toggle.flight_copilot, "toggle: copilot")
-mk({ "n", "v" }, "<leader>tul", A.toggle.relative_line_number, "toggle: relative line number")
-mk({ "n", "v" }, "<leader>tuT", A.toggle.transparency, "toggle: transparency")
-mk({ "n", "v" }, "<leader>tut", A.toggle.theme, "toggle: theme")
-mk({ "n", "v" }, "<leader>tuw", A.toggle.wrap, "toggle: wrap")
+mk({ "n", "v" }, "<leader>tfc", ghc.command.toggle.flight_copilot, "toggle: copilot")
+mk({ "n", "v" }, "<leader>tul", ghc.command.toggle.relative_line_number, "toggle: relative line number")
+mk({ "n", "v" }, "<leader>tuT", ghc.command.toggle.transparency, "toggle: transparency")
+mk({ "n", "v" }, "<leader>tut", ghc.command.toggle.theme, "toggle: theme")
+mk({ "n", "v" }, "<leader>tuw", ghc.command.toggle.wrap, "toggle: wrap")
 -----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[w]indow-----------------------------------------------------------------------------------------

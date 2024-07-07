@@ -7,7 +7,12 @@ local context = {
 
 ---@class ghc.command
 local command = {
+  context = require("ghc.command.context"),
+  copy = require("ghc.command.copy"),
+  debug = require("ghc.command.debug"),
   replace = require("ghc.command.replace"),
+  run = require("ghc.command.run"),
+  toggle = require("ghc.command.toggle"),
 }
 
 ---@class ghc.constant

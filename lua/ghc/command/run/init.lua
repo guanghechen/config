@@ -1,10 +1,11 @@
 local runners = {
-  [".lua"] = require("guanghechen.core.action.run.lua"),
+  [".lua"] = require("ghc.command.run.lua"),
 }
 
----@class guanghechen.core.action.run
+---@class ghc.command.run
 local M = {}
 
+---@return nil
 function M.run()
   local filepath = fml.path.current_filepath()
   local extname = fml.path.extname(filepath)
