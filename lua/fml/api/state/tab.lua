@@ -1,3 +1,4 @@
+local constant = require("fml.constant")
 local History = require("fml.collection.history")
 local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
@@ -54,13 +55,11 @@ end
 ---@field public bufnrs                 integer[]
 
 ---@class fml.api.state
----@field public TAB_UNAMED             string
 ---@field public tabs                   table<integer, fml.api.state.ITabItem>
 ---@field public tab_history            fml.types.collection.IHistory
 ---@field public validate_tab           fun(tabnr: integer): boolean
 local M = require("fml.api.state.mod")
 
-M.TAB_UNAMED = "unnamed"
 M.tabs = {}
 M.tab_history = History.new({ name = "tabs", max_count = 100, validate = validate_tab })
 M.validate_tab = validate_tab
@@ -132,7 +131,7 @@ function M.refresh_tab(tabnr)
   if tab == nil then
     ---@type fml.api.state.ITabItem
     tab = {
-      name = M.TAB_UNAMED,
+      name = constant.TAB_UNNAMED,
       bufnrs = {},
     }
     M.tabs[tabnr] = tab
