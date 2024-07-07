@@ -1,43 +1,56 @@
 ---@param params                        ghc.types.ui.theme.IGenHlgroupMapParams
 ---@return table<string, fml.types.ui.theme.IHlgroup|nil>
 local function gen_hlgroup(params)
+  ---@diagnostic disable-next-line: unused-local
+  local m = params.scheme.mode ---@type fml.enums.theme.Mode
   local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
-  local t = params.transparency ---@type boolean
+
+  ---@type string
+  local item_kind_bg =
+  --(m == "darken" and fml.color.change_hex_lightness(c.black2, 6)) or
+  --(m == "lighten" and fml.color.change_hex_lightness(c.black2, -6)) or
+  "none"
 
   return {
-    CmpBorder = { fg = c.grey_fg },
-    CmpDoc = t and { fg = c.grey_fg, bg = "none" } or nil,
-    CmpItemKindClass = { fg = c.teal },
-    CmpItemKindCodeium = { fg = c.vibrant_green },
-    CmpItemKindColor = { fg = c.white },
-    CmpItemKindConstant = { fg = c.base09 },
-    CmpItemKindConstructor = { fg = c.blue },
-    CmpItemKindCopilot = { fg = c.green },
-    CmpItemKindEnum = { fg = c.blue },
-    CmpItemKindEnumMember = { fg = c.purple },
-    CmpItemKindEvent = { fg = c.yellow },
-    CmpItemKindField = { fg = c.base08 },
-    CmpItemKindFile = { fg = c.base07 },
-    CmpItemKindFolder = { fg = c.base07 },
-    CmpItemKindFunction = { fg = c.base0D },
-    CmpItemKindIdentifier = { fg = c.base08 },
-    CmpItemKindInterface = { fg = c.green },
-    CmpItemKindKeyword = { fg = c.base07 },
-    CmpItemKindMethod = { fg = c.base0D },
-    CmpItemKindModule = { fg = c.base0A },
-    CmpItemKindOperator = { fg = c.base05 },
-    CmpItemKindProperty = { fg = c.base08 },
-    CmpItemKindReference = { fg = c.base05 },
-    CmpItemKindSnippet = { fg = c.red },
-    CmpItemKindStruct = { fg = c.base0E },
-    CmpItemKindStructure = { fg = c.base0E },
-    CmpItemKindTabNine = { fg = c.baby_pink },
-    CmpItemKindText = { fg = c.base0B },
-    CmpItemKindType = { fg = c.base0A },
-    CmpItemKindTypeParameter = { fg = c.base08 },
-    CmpItemKindUnit = { fg = c.base0E },
-    CmpItemKindValue = { fg = c.cyan },
-    CmpItemKindVariable = { fg = c.base0E },
+    CmpBorder                = { fg = c.grey_fg },
+    CmpDoc                   = { bg = c.darker_black },
+    CmpDocBorder             = { fg = c.grey_fg, bg = c.darker_black },
+    CmpItemAbbr              = { fg = c.white },
+    CmpItemAbbrMatch         = { fg = c.blue, bold = true },
+    CmpItemKindClass         = { fg = c.teal, bg = item_kind_bg },
+    CmpItemKindCodeium       = { fg = c.vibrant_green, bg = item_kind_bg },
+    CmpItemKindColor         = { fg = c.white, bg = item_kind_bg },
+    CmpItemKindConstant      = { fg = c.base09, bg = item_kind_bg },
+    CmpItemKindConstructor   = { fg = c.blue, bg = item_kind_bg },
+    CmpItemKindCopilot       = { fg = c.green, bg = item_kind_bg },
+    CmpItemKindEnum          = { fg = c.blue, bg = item_kind_bg },
+    CmpItemKindEnumMember    = { fg = c.purple, bg = item_kind_bg },
+    CmpItemKindEvent         = { fg = c.yellow, bg = item_kind_bg },
+    CmpItemKindField         = { fg = c.base08, bg = item_kind_bg },
+    CmpItemKindFile          = { fg = c.base07, bg = item_kind_bg },
+    CmpItemKindFolder        = { fg = c.base07, bg = item_kind_bg },
+    CmpItemKindFunction      = { fg = c.base0D, bg = item_kind_bg },
+    CmpItemKindIdentifier    = { fg = c.base08, bg = item_kind_bg },
+    CmpItemKindInterface     = { fg = c.green, bg = item_kind_bg },
+    CmpItemKindKeyword       = { fg = c.base07, bg = item_kind_bg },
+    CmpItemKindMethod        = { fg = c.base0D, bg = item_kind_bg },
+    CmpItemKindModule        = { fg = c.base0A, bg = item_kind_bg },
+    CmpItemKindOperator      = { fg = c.base05, bg = item_kind_bg },
+    CmpItemKindProperty      = { fg = c.base08, bg = item_kind_bg },
+    CmpItemKindReference     = { fg = c.base05, bg = item_kind_bg },
+    CmpItemKindSnippet       = { fg = c.red, bg = item_kind_bg },
+    CmpItemKindStruct        = { fg = c.base0E, bg = item_kind_bg },
+    CmpItemKindStructure     = { fg = c.base0E, bg = item_kind_bg },
+    CmpItemKindTabNine       = { fg = c.baby_pink, bg = item_kind_bg },
+    CmpItemKindText          = { fg = c.base0B, bg = item_kind_bg },
+    CmpItemKindType          = { fg = c.base0A, bg = item_kind_bg },
+    CmpItemKindTypeParameter = { fg = c.base08, bg = item_kind_bg },
+    CmpItemKindUnit          = { fg = c.base0E, bg = item_kind_bg },
+    CmpItemKindValue         = { fg = c.cyan, bg = item_kind_bg },
+    CmpItemKindVariable      = { fg = c.base0E, bg = item_kind_bg },
+    CmpItemMenu              = { fg = c.light_grey, italic = true },
+    CmpPmenu                 = { bg = c.black2 },
+    CmpSel                   = { link = "PmenuSel", bold = true },
   }
 end
 
