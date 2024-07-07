@@ -50,13 +50,13 @@ local M = {}
 
 ---@return nil
 function M.clear_current()
-  local filenames = { "session.autosave.vim", "session.vim" }
+  local filenames = { "session.vim", "state.vim", "session.autosave.nvim", "state.autosave.json" }
   fml.path.remove_session_filepaths({ filenames = filenames })
 end
 
 ---@return nil
 function M.clear_all()
-  local filenames = { "session.autosave.vim", "session.vim" }
+  local filenames = { "session.vim", "state.vim", "session.autosave.nvim", "state.autosave.json" }
   fml.path.remove_session_filepaths_all({ filenames = filenames })
 end
 
@@ -91,7 +91,7 @@ function M.save()
   fml.api.state.save(state_fliepath)
 
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = fml.constant.SESSION_AUTOSAVE_OPTION
+  vim.o.sessionoptions = fml.constant.SESSION_SAVE_OPTION
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 

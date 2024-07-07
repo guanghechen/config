@@ -39,7 +39,18 @@ else
   load_config("option")
 end
 
----reload theme
 vim.schedule(function()
+  ---reload session
+  local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
+  if not ok_load_session then
+    fml.reporter.error({
+      from = "init",
+      subject = "auto reload session",
+      message = "Failed to load autosaved session",
+      details = { error = error_load_session }
+    })
+  end
+
+  ---reload theme
   ghc.context.client.reload_theme({ force = false })
 end)

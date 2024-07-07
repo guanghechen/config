@@ -127,15 +127,15 @@ function M.save(filepath)
     }
     table.insert(data.tabs, item)
   end
-  for winnr, win in pairs(M.wins) do
-    ---@type fml.api.state.IWinItemData
-    local item = {
-      winnr = winnr,
-      tabnr = win.tabnr,
-      buf_history = win.buf_history:serialize(),
-    }
-    table.insert(data.wins, item)
-  end
+  -- for winnr, win in pairs(M.wins) do
+  --   ---@type fml.api.state.IWinItemData
+  --   local item = {
+  --     winnr = winnr,
+  --     tabnr = win.tabnr,
+  --     buf_history = win.buf_history:serialize(),
+  --   }
+  --   table.insert(data.wins, item)
+  -- end
 
   fs.write_json(filepath, data)
 end
