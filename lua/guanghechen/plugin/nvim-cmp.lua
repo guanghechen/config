@@ -45,8 +45,8 @@ return {
         end,
       },
       mapping = {
-        ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
-        ["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+        ["<C-k>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+        ["<C-j>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
         ["<C-b>"] = cmp.mapping.scroll_docs(-4),
         ["<C-f>"] = cmp.mapping.scroll_docs(4),
         ["<C-Space>"] = cmp.mapping.complete(),
@@ -125,9 +125,9 @@ return {
       sources = {
         { name = "snippets", group_index = 1 },
         { name = "nvim_lsp", group_index = 1 },
-        { name = "copilot", group_index = 1 },
-        { name = "path", group_index = 2 },
-        { name = "buffer", group_index = 2 },
+        { name = "copilot",  group_index = 1 },
+        { name = "path",     group_index = 2 },
+        { name = "buffer",   group_index = 2 },
       },
     }
 
