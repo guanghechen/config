@@ -1,7 +1,5 @@
 -- https://github.com/folke/persistence.nvim/blob/4982499c1636eac254b72923ab826ee7827b3084/lua/persistence/init.lua#L1
 
-local context_session = require("ghc.context.session")
-
 ---@param bufnr                         integer
 ---@return boolean
 local function does_buf_savable(bufnr)
@@ -73,8 +71,6 @@ function M.autosave()
 
   local session_filepath = get_filepath("session_autosaved")
   local state_fliepath = get_filepath("state_autosaved")
-
-  context_session:save()
   fml.api.state.save(state_fliepath)
 
   local tmp = vim.o.sessionoptions
@@ -86,8 +82,6 @@ end
 function M.save()
   local session_filepath = get_filepath("session")
   local state_fliepath = get_filepath("state")
-
-  context_session:save()
   fml.api.state.save(state_fliepath)
 
   local tmp = vim.o.sessionoptions
@@ -107,7 +101,6 @@ function M.load()
   local state_fliepath = get_filepath("state")
 
   if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
-    context_session:load()
     vim.cmd("silent! source " .. vim.fn.fnameescape(session_filepath))
 
     if state_fliepath and vim.fn.filereadable(state_fliepath) ~= 0 then
@@ -122,7 +115,6 @@ function M.load_autosaved()
   local session_filepath = get_filepath("session_autosaved")
   local state_fliepath = get_filepath("state_autosaved")
   if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
-    context_session:load()
     vim.cmd("silent! source " .. vim.fn.fnameescape(session_filepath))
 
     if state_fliepath and vim.fn.filereadable(state_fliepath) ~= 0 then
