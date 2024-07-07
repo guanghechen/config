@@ -19,7 +19,7 @@ local function render_buf(bufnr, bufid, is_curbuf)
 
   local left_pad = " " ---@type string
   local text_icon = icon .. " " ---@type string
-  local text_title = " " .. buf.filename ---@type string
+  local text_title = buf.filename ---@type string
   local text_mod = is_mod and "  " or "  " ---@type string
 
   local buf_hl = is_curbuf and "f_tl_buf_item_cur" or "f_tl_buf_item" ---@type string

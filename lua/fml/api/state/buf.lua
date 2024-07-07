@@ -1,3 +1,4 @@
+local constant = require("fml.constant")
 local path = require("fml.std.path")
 local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
@@ -23,7 +24,6 @@ M.BUF_IGNORED_FILETYPES = {
   ["startuptime"] = true,
   ["term"] = true,
 }
-M.BUF_UNTITLED_FILENAME = "Untitled"
 M.bufs = {}
 
 ---@param bufnrs                        integer[]
@@ -106,7 +106,7 @@ function M.refresh_buf(bufnr)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   if buf == nil then
     local filename = path.basename(filepath) ---@type string
-    filename = (not filename or filename == "") and M.BUF_UNTITLED_FILENAME or filename
+    filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
 
     ---@type fml.api.state.IBufItem
     buf = {
@@ -117,7 +117,7 @@ function M.refresh_buf(bufnr)
     M.bufs[bufnr] = buf
   elseif buf.filepath ~= filepath then
     local filename = path.basename(filepath) ---@type string
-    filename = (not filename or filename == "") and M.BUF_UNTITLED_FILENAME or filename
+    filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
     buf.filepath = filepath
     buf.filename = filename
     return
