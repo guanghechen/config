@@ -13,13 +13,14 @@ M.__index = M
 ---@param props fml.collection.CircularQueue.IProps
 ---@return fml.collection.CircularQueue
 function M.new(props)
+  local capacity = math.max(1, props.capacity)
   local self = setmetatable({}, M)
 
   self._elements = {}
+  self._capacity = capacity
   self._size = 0
   self._start = 1
   self._end = 0
-  self._capacity = props.capacity
 
   return self
 end
@@ -30,13 +31,34 @@ function M.from(queue)
   local self = setmetatable({}, M)
 
   self._elements = {}
+  self._capacity = queue:capacity()
   self._size = queue:size()
   self._start = 1
   self._end = 0
-  self._capacity = queue:capacity()
   for element in queue:iterator() do
     self._end = self._end + 1
     self._elements[self._end] = element
+  end
+
+  return self
+end
+
+---@param arr                          fml.types.T[]
+---@param capacity                     integer
+---@return fml.collection.CircularQueue
+function M.from_array(arr, capacity)
+  local self = setmetatable({}, M)
+
+  local start = #arr > capacity and #arr - capacity + 1 or 1 ---@type integer
+  local size = #arr - start + 1 ---@type integer
+
+  self._elements = {}
+  self._capacity = capacity
+  self._size = size
+  self._start = 1
+  self._end = size
+  for i = 1, #arr, 1 do
+    self._elements[i] = arr[start + i - 1]
   end
 
   return self
@@ -50,6 +72,27 @@ end
 ---@return integer
 function M:size()
   return self._size
+end
+
+---@param index number
+---@return fml.types.T|nil
+function M:at(index)
+  if index < 1 or index > self._size then
+    return nil
+  end
+
+  local idx = self._start + index - 1 ---@type number
+  if idx > self._capacity then
+    idx = idx - self._capacity
+  end
+  return self._elements[idx]
+end
+
+---@return fml.types.T|nil
+function M:back()
+  if self._size > 0 then
+    return self._elements[self._end]
+  end
 end
 
 ---@return nil
@@ -99,53 +142,6 @@ function M:count(filter)
   return count
 end
 
----@param index number
----@return fml.types.T|nil
-function M:at(index)
-  if index < 1 or index > self._size then
-    return nil
-  end
-
-  local idx = self._start + index - 1 ---@type number
-  if idx > self._capacity then
-    idx = idx - self._capacity
-  end
-  return self._elements[idx]
-end
-
----@return fml.types.T|nil
-function M:front()
-  if self._size > 0 then
-    return self._elements[self._start]
-  end
-end
-
----@return fml.types.T|nil
-function M:back()
-  if self._size > 0 then
-    return self._elements[self._end]
-  end
-end
-
----@param element fml.types.T
----@return nil
-function M:enqueue(element)
-  self._end = self._end + 1
-  if self._end > self._capacity then
-    self._end = 1
-  end
-  self._elements[self._end] = element
-
-  if self._size < self._capacity then
-    self._size = self._size + 1
-  else
-    self._start = self._start + 1
-    if self._start > self._capacity then
-      self._start = 1
-    end
-  end
-end
-
 ---@return fml.types.T|nil
 function M:dequeue()
   if self._size < 1 then
@@ -186,6 +182,50 @@ function M:dequeue_back()
     end
   end
   return target
+end
+
+---@param element fml.types.T
+---@return nil
+function M:enqueue(element)
+  self._end = self._end + 1
+  if self._end > self._capacity then
+    self._end = 1
+  end
+  self._elements[self._end] = element
+
+  if self._size < self._capacity then
+    self._size = self._size + 1
+  else
+    self._start = self._start + 1
+    if self._start > self._capacity then
+      self._start = 1
+    end
+  end
+end
+
+---@param filter                        fun(element: fml.types.T): boolean
+---@return fml.collection.CircularQueue
+function M:fork(filter)
+  local instance = setmetatable({}, M)
+  self:rearrange(filter)
+
+  instance._elements = {}
+  instance._capacity = self._capacity
+  instance._size = self._size
+  instance._start = 1
+  instance._end = self._size
+  for i = 1, self._size, 1 do
+    instance._elements[i] = self._elements[i]
+  end
+
+  return instance
+end
+
+---@return fml.types.T|nil
+function M:front()
+  if self._size > 0 then
+    return self._elements[self._start]
+  end
 end
 
 function M:iterator()

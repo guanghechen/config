@@ -1,15 +1,16 @@
 ---@class fml.types.collection.ICircularQueue
----@field public capacity               fun(self: fml.types.collection.ICircularQueue): number
----@field public size                   fun(self: fml.types.collection.ICircularQueue): number
----@field public at                     fun(self: fml.types.collection.ICircularQueue, index: number): fml.types.T|nil
----@field public clear                  fun(self: fml.types.collection.ICircularQueue): nil
----@field public front                  fun(self: fml.types.collection.ICircularQueue): fml.types.T|nil
+---@field public capacity               fun(self: fml.types.collection.ICircularQueue): integer
+---@field public size                   fun(self: fml.types.collection.ICircularQueue): integer
+---@field public at                     fun(self: fml.types.collection.ICircularQueue, index: integer): fml.types.T|nil
 ---@field public back                   fun(self: fml.types.collection.ICircularQueue): fml.types.T|nil
+---@field public clear                  fun(self: fml.types.collection.ICircularQueue): nil
 ---@field public collect                fun(self: fml.types.collection.ICircularQueue): fml.types.T[]
 ---@field public count                  fun(self: fml.types.collection.ICircularQueue, filter: fun(element: fml.types.T, index: integer): boolean): integer
----@field public enqueue                fun(self: fml.types.collection.ICircularQueue, element: fml.types.T): nil
 ---@field public dequeue                fun(self: fml.types.collection.ICircularQueue): fml.types.T|nil
 ---@field public dequeue_back           fun(self: fml.types.collection.ICircularQueue): fml.types.T|nil
+---@field public enqueue                fun(self: fml.types.collection.ICircularQueue, element: fml.types.T): nil
+---@field public fork                   fun(self: fml.types.collection.ICircularQueue, filter: fun(element: fml.types.T, index: integer): boolean): fml.types.collection.ICircularQueue
+---@field public front                  fun(self: fml.types.collection.ICircularQueue): fml.types.T|nil
 ---@field public iterator               fun(self: fml.types.collection.ICircularQueue): fun(): fml.types.T|nil
 ---@field public iterator_reverse       fun(self: fml.types.collection.ICircularQueue): fun(): fml.types.T|nil
 ---@field public rearrange              fun(self: fml.types.collection.ICircularQueue, filter: fun(element: fml.types.T, index: integer): boolean): fun(): fml.types.T|nil
