@@ -25,6 +25,7 @@ statusline
     :add("right", require("ghc.ui.statusline.component.fileformat"))
     :add("right", require("ghc.ui.statusline.component.pos"))
     :add("right", require("ghc.ui.statusline.component.noice"))
+    :add("right", require("ghc.ui.statusline.component.diagnostics"))
 
 ---@return string
 function M.render()
