@@ -15,6 +15,11 @@
 ---@field public print                  fun(self: fml.types.collection.IHistory): nil
 ---@field public push                   fun(self: fml.types.collection.IHistory, element: fml.types.T|nil): nil
 ---@field public rearrange              fun(self: fml.types.collection.IHistory): nil
+---@field public serialize              fun(self: fml.types.collection.IHistory): fml.types.collection.history.ISerializedData
+
+---@class fml.types.collection.history.ISerializedData
+---@field public stack                  fml.types.T[]
+---@field public present_index          integer
 
 ---@class fml.types.collection.IHistoryForkParams
 ---@field public name                   ?string

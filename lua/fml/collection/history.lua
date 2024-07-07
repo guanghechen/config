@@ -43,6 +43,22 @@ function M.new(props)
   return self
 end
 
+---@param data                          fml.types.collection.history.ISerializedData
+---@param props                         fml.collection.history.IProps
+---@return fml.collection.History
+function M.deserialize(data, props)
+  local self = setmetatable({}, M)
+
+  self.name = props.name
+  self.equals = props.equals or default_equals
+  self.validate = props.validate or default_validate
+
+  self._stack = std_array.slice(data.stack) ---@type fml.types.T[]
+  self._present_idx = data.present_index
+
+  return self
+end
+
 ---@param step                          ?number
 ---@return fml.types.T|nil
 function M:back(step)
@@ -260,6 +276,15 @@ function M:rearrange()
   end
 
   self._present_idx = new_present_index == 0 and idx or new_present_index
+end
+
+---@return fml.types.collection.history.ISerializedData
+function M:searalize()
+  self:rearrange()
+  return {
+    stack = std_array.slice(self._stack),
+    present_index = self._present_idx,
+  }
 end
 
 return M
