@@ -1,10 +1,4 @@
-fml.debug.log("x = ", 0 or 1)
+fml.debug.log("0 or 1 = ", 0 or 1)
 
-local a = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }
-fml.debug.log("#a:", #a)
-
-for i = 6, 10 do
-  a[i] = nil
-end
-
-fml.debug.log("#a:", #a)
+local data = {}
+fml.debug.log(vim.json.encode(data))

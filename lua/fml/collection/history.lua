@@ -283,7 +283,7 @@ function M:rearrange()
 end
 
 ---@return fml.types.collection.history.ISerializedData
-function M:searalize()
+function M:serialize()
   self:rearrange()
   return {
     stack = std_array.slice(self._stack),

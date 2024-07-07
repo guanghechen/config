@@ -1,8 +1,3 @@
----@class guanghechen.keymap.actions
-local A = {
-  session = require("guanghechen.core.action.session"),
-}
-
 ---@param mode string | string[]
 ---@param key string
 ---@param action any
@@ -106,13 +101,13 @@ mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window his
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[q]uit/session/context--------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>qq", A.session.quit_all, "quit: quit all", true)
-mk({ "n", "v" }, "<leader>qL", A.session.session_load_autosaved, "session: restore autosaved session", true)
-mk({ "n", "v" }, "<leader>ql", A.session.session_load, "session: restore session", true)
+mk({ "n", "v" }, "<leader>qq", ghc.command.session.quit_all, "quit: quit all", true)
+mk({ "n", "v" }, "<leader>qL", ghc.command.session.load_autosaved, "session: restore autosaved session", true)
+mk({ "n", "v" }, "<leader>ql", ghc.command.session.load, "session: restore session", true)
 mk({ "n", "v" }, "<leader>qo", ghc.command.context.edit_session, "context: edit session", true)
-mk({ "n", "v" }, "<leader>qs", A.session.session_save, "session: save session", true)
-mk({ "n", "v" }, "<leader>qc", A.session.session_clear, "session: clear session", true)
-mk({ "n", "v" }, "<leader>qC", A.session.session_clear_all, "session: clear all sessions", true)
+mk({ "n", "v" }, "<leader>qs", ghc.command.session.save, "session: save session", true)
+mk({ "n", "v" }, "<leader>qc", ghc.command.session.clear_current, "session: clear", true)
+mk({ "n", "v" }, "<leader>qC", ghc.command.session.clear_all, "session: clear all", true)
 --------------------------------------------------------------------------#[q]uit/session/context--
 
 --#[r]un--------------------------------------------------------------------------------------------

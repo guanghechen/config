@@ -21,7 +21,7 @@ local function edit_lazygit_file_in_buffer()
 
   if not channel_id then
     fml.reporter.error({
-      from = "git.lua",
+      from = "guanghechen.core.action.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "No terminal job ID found.",
     })
@@ -34,7 +34,7 @@ local function edit_lazygit_file_in_buffer()
   local relative_filepath = get_filepath_from_lazygit()
   if not relative_filepath then
     fml.reporter.error({
-      from = "git.lua",
+      from = "guanghechen.core.action.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "Clipboard is empty or invalid.",
     })

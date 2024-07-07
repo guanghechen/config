@@ -1,5 +1,3 @@
-local action_session = require("guanghechen.core.action.session")
-
 ---@class guanghechen.core.action.autocmd
 local M = {}
 
@@ -154,7 +152,7 @@ function M.autocmd_session_autosave()
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = fml.fn.augroup("session_autosave"),
     callback = function()
-      action_session.session_autosave()
+      ghc.command.session.autosave()
     end,
   })
 end

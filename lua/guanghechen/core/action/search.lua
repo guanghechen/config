@@ -232,7 +232,7 @@ local function search(opts)
     show_last_search_cmd = function()
       local last_cmd = ghc.context.transient.search_last_command:get_snapshot() or {}
       fml.reporter.info({
-        from = "search.lua",
+        from = "guanghechen.core.action.search",
         subject = "show_last_search_cmd",
         details = {
           context = search_context,

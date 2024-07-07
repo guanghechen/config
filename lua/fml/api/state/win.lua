@@ -57,9 +57,7 @@ local function validate_win(winnr)
   return config.relative == nil or config.relative == ""
 end
 
----@class fml.api.state.IWinItem
----@field public tabnr                  integer
----@field public buf_history            fml.types.collection.IHistory
+
 
 ---@class fml.api.state
 ---@field public wins                   table<integer, fml.api.state.IWinItem>
@@ -143,4 +141,3 @@ function M.refresh_win(tabnr, winnr)
   local bufnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   rearrange_buf_history(bufnrs, win.buf_history, M.validate_buf)
 end
-

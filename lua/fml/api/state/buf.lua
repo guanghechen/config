@@ -3,11 +3,6 @@ local path = require("fml.std.path")
 local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
 
----@class fml.api.state.IBufItem
----@field public filepath               string
----@field public filename               string
----@field public pinned                 boolean
-
 ---@class fml.api.state
 ---@field public BUF_IGNORED_FILETYPES  table<string, boolean>
 ---@field public bufs                   table<integer, fml.api.state.IBufItem>

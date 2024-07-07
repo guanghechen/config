@@ -50,9 +50,6 @@ local function rearrange_tab_history(tabnrs, history)
   end
 end
 
----@class fml.api.state.ITabItem
----@field public name                   string
----@field public bufnrs                 integer[]
 
 ---@class fml.api.state
 ---@field public tabs                   table<integer, fml.api.state.ITabItem>

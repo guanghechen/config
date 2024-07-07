@@ -17,6 +17,22 @@ function M.contains(arr, element)
 end
 
 ---@generic T
+---@param arr                           T[]
+---@param filter                        fun(v: T, i: integer, arr: T[]): boolean
+---@return integer
+function M.count(arr, filter)
+  local N = #arr ---@type integer
+  local count = 0
+  for i = 1, N, 1 do
+    local value = arr[i]
+    if filter(value, i, arr) then
+      count = count + 1
+    end
+  end
+  return count
+end
+
+---@generic T
 ---@param arr1                          T[]
 ---@param arr2                          T[]
 ---@return boolean
@@ -29,6 +45,21 @@ function M.equals(arr1, arr2)
   end
   for i = 1, #arr1, 1 do
     if arr1[i] ~= arr2[i] then
+      return false
+    end
+  end
+  return true
+end
+
+---@generic T
+---@param arr                           T[]
+---@param filter                        fun(v: T, i: integer, arr: T[]): boolean
+---@return boolean
+function M.every(arr, filter)
+  local N = #arr ---@type integer
+  for i = 1, N, 1 do
+    local value = arr[i]
+    if not filter(value, i, arr) then
       return false
     end
   end
@@ -199,6 +230,21 @@ function M.slice(arr, start, stop)
     table.insert(result, arr[i])
   end
   return result
+end
+
+---@generic T
+---@param arr                           T[]
+---@param filter                        fun(v: T, i: integer, arr: T[]): boolean
+---@return boolean
+function M.some(arr, filter)
+  local N = #arr ---@type integer
+  for i = 1, N, 1 do
+    local value = arr[i]
+    if filter(value, i, arr) then
+      return true
+    end
+  end
+  return false
 end
 
 ---@param items                         string[]

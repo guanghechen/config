@@ -93,7 +93,7 @@ function M.focus_right(step)
   M.go(bufnr_next)
 end
 
-for i = 1, 10 do
+for i = 1, 200 do
   M["focus_" .. i] = function()
     M.focus(i)
   end
