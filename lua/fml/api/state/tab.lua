@@ -103,15 +103,12 @@ end
 ---@return nil
 function M.refresh_tabs()
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-  local valid_tabnr_set = {} ---@type table<integer, boolean>
   for _, tabnr in ipairs(tabnrs) do
-    valid_tabnr_set[tabnr] = true
     M.refresh_tab(tabnr)
   end
   std_object.filter_inline(M.tabs, function(tabnr)
-    return not not valid_tabnr_set[tabnr]
+    return std_array.contains(tabnrs, tabnr)
   end)
-
   rearrange_tab_history(tabnrs, M.tab_history)
 end
 
@@ -149,15 +146,32 @@ function M.refresh_tab(tabnr)
   end
 
   ---! Remove invalid bufnrs.
-  local N = #tab.bufnrs ---@type integer
   local k = 0 ---@type integer
+  local N = #tab.bufnrs ---@type integer
+  tab.bufnr_set = {} ---@type table<integer, boolean>
   for i = 1, N, 1 do
     local bufnr = tab.bufnrs[i]
-    if M.validate_buf(bufnr) then
-      k = k + 1
-      tab.bufnrs[k] = bufnr
-    else
-      tab.bufnr_set[bufnr] = nil
+    local buf = M.bufs[bufnr]
+    if not tab.bufnr_set[bufnr] and buf ~= nil then
+      if buf.filename ~= constant.BUF_UNTITLED then
+        k = k + 1
+        tab.bufnrs[k] = bufnr
+        tab.bufnr_set[bufnr] = true
+      end
+    end
+  end
+
+  ---! No valid buf, add the untitled buf back.
+  if k == 0 then
+    for i = 1, N, 1 do
+      local bufnr = tab.bufnrs[i]
+      local buf = M.bufs[bufnr]
+      if buf ~= nil and buf.filename == constant.BUF_UNTITLED then
+        k = k + 1
+        tab.bufnrs[k] = bufnr
+        tab.bufnr_set[bufnr] = true
+        break
+      end
     end
   end
   for _ = k + 1, N do

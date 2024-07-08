@@ -1,43 +1,30 @@
+local constant = require("fml.constant")
 local state = require("fml.api.state")
 local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
 
-vim.api.nvim_create_autocmd({ "BufAdd", "BufNew", "BufEnter" }, {
+vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
   callback = function(args)
     local bufnr = args.buf
-    if type(bufnr) ~= "number" or not state.validate_buf(bufnr) then
+    if type(bufnr) ~= "number" then
       return
     end
 
-    if state.bufs[bufnr] == nil then
+    if not state.validate_buf(bufnr) then
+      state.bufs[bufnr] = nil
+    else
       state.refresh_buf(bufnr)
-      if state.bufs[bufnr] == nil then
-        return
-      end
     end
 
-    local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-    if tab == nil then
-      return
-    end
-
-    if not tab.bufnr_set[bufnr] then
-      table.insert(tab.bufnrs, bufnr)
-      tab.bufnr_set[bufnr] = true
-
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local win = state.wins[winnr]
-      if win ~= nil then
-        win.buf_history:push(bufnr)
-      end
-    end
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    state.refresh_tab(tabnr)
   end,
 })
 
 vim.api.nvim_create_autocmd({ "BufDelete" }, {
   callback = function(args)
     local bufnr = args.buf
-    if type(bufnr) ~= "number" or state.bufs[bufnr] == nil or not state.validate_buf(bufnr) then
+    if type(bufnr) ~= "number" or state.bufs[bufnr] == nil then
       return
     end
 

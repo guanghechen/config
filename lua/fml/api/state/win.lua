@@ -57,8 +57,6 @@ local function validate_win(winnr)
   return config.relative == nil or config.relative == ""
 end
 
-
-
 ---@class fml.api.state
 ---@field public wins                   table<integer, fml.api.state.IWinItem>
 ---@field public win_history            fml.types.collection.IHistory
@@ -87,7 +85,7 @@ function M.create_win_buf_history_validate(winnr)
       return false
     end
 
-    return vim.api.nvim_buf_is_valid(bufnr) and std_array.contains(tab.bufnrs, bufnr)
+    return vim.api.nvim_buf_is_valid(bufnr) and tab.bufnr_set[bufnr]
   end
 end
 
@@ -95,25 +93,18 @@ end
 ---@return nil
 function M.refresh_wins(tabnr)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  std_object.filter_inline(M.wins, function(win, winnr)
-    if not vim.api.nvim_win_is_valid(winnr) then
-      return false
-    end
-    return win.tabnr ~= tabnr or std_array.contains(winnrs, winnr)
-  end)
   for _, winnr in ipairs(winnrs) do
     M.refresh_win(tabnr, winnr)
   end
+  std_object.filter_inline(M.wins, function(win, winnr)
+    return win.tabnr ~= tabnr or std_array.contains(winnrs, winnr)
+  end)
 end
 
 ---@param tabnr                         integer
 ---@param winnr                         integer
 ---@return nil
 function M.refresh_win(tabnr, winnr)
-  if winnr == nil or type(winnr) ~= "number" then
-    return
-  end
-
   if not M.validate_win(winnr) then
     M.wins[winnr] = nil
     return
@@ -137,7 +128,4 @@ function M.refresh_win(tabnr, winnr)
   if bufnr ~= nil then
     win.buf_history:push(bufnr)
   end
-
-  local bufnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  rearrange_buf_history(bufnrs, win.buf_history, M.validate_buf)
 end

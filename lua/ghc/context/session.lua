@@ -2,10 +2,10 @@ local Observable = fml.collection.Observable
 local Viewmodel = fml.collection.Viewmodel
 
 ---@type string|nil
-local context_filepath = vim.fn.argc() < 1
-    and fml.path.is_git_repo()
+local context_filepath = 
+  fml.path.is_git_repo() 
     and fml.path.locate_session_filepath({ filename = "session.json" })
-  or nil
+    or nil
 
 ---@param paths                         string
 ---@return string
