@@ -39,18 +39,7 @@ function M.close(bufnrs)
     end
   end
 
-  for _, bufnr in ipairs(bufnrs) do
-    local buf = state.bufs[bufnr]
-    if buf ~= nil then
-      local copies = state.count_buf_copies(bufnr)
-      if copies <= 1 then
-        state.bufs[bufnr] = nil
-        if state.validate_buf(bufnr) then
-          vim.api.nvim_buf_delete(bufnr, { force = true })
-        end
-      end
-    end
-  end
+  state.remove_unrefereced_bufs(bufnrs)
 end
 
 ---@return nil

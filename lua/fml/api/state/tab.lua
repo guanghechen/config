@@ -67,18 +67,14 @@ M.validate_tab = validate_tab
 ---@param tabnr                         integer
 ---@return nil
 function M.close_tab(tabnr)
-  M.tabs[tabnr] = nil
+  local tab = M.tabs[tabnr] ---@type fml.api.state.ITabItem|nil
+  local bufnrs = tab and std_array.slice(tab.bufnrs) or {} ---@type integer[]
 
+  M.tabs[tabnr] = nil
   if validate_tab(tabnr) then
     vim.api.nvim_set_current_tabpage(tabnr)
     vim.cmd("tabclose")
   end
-
-  local tabnr_last = M.tab_history:present() ---@type integer|nil
-  if tabnr_last ~= nil then
-    vim.api.nvim_set_current_tabpage(tabnr_last)
-  end
-  M.refresh_tabs()
 end
 
 ---@return fml.api.state.ITabItem|nil, integer
@@ -106,7 +102,7 @@ function M.refresh_tabs()
   for _, tabnr in ipairs(tabnrs) do
     M.refresh_tab(tabnr)
   end
-  std_object.filter_inline(M.tabs, function(tabnr)
+  std_object.filter_inline(M.tabs, function(_, tabnr)
     return std_array.contains(tabnrs, tabnr)
   end)
   rearrange_tab_history(tabnrs, M.tab_history)

@@ -7,6 +7,6 @@ if handle_find_files_cmd then
   if pipe_grep_text_cmd then
     local file_list = pipe_grep_text_cmd:read("*a")
     pipe_grep_text_cmd:close()
-    vim.notify(file_list)
+    fml.debug.log(file_list)
   end
 end

@@ -331,7 +331,7 @@ local replacer = Replacer.new({
     replace_text = "world",
   },
   on_change = function(next_state)
-    vim.notify("next state:\n" .. vim.inspect(next_state))
+    fml.debug.log("next state:\n", next_state)
   end,
 })
 

@@ -37,12 +37,6 @@ function M.close_left(step)
   for _ = tabid_next, tabid_cur - 1, 1 do
     vim.cmd("-tabclose")
   end
-
-  local tabnr_last = state.tab_history:present() ---@type integer|nil
-  if tabnr_last ~= nil then
-    vim.api.nvim_set_current_tabpage(tabnr_last)
-  end
-  state.schedule_refresh_tabs()
 end
 
 ---@param step                         integer
@@ -60,12 +54,6 @@ function M.close_right(step)
   for _ = tabid_cur + 1, tabid_next, 1 do
     vim.cmd("+tabclose")
   end
-
-  local tabnr_last = state.tab_history:present() ---@type integer|nil
-  if tabnr_last ~= nil then
-    vim.api.nvim_set_current_tabpage(tabnr_last)
-  end
-  state.schedule_refresh_tabs()
 end
 
 ---@return nil
@@ -81,11 +69,10 @@ end
 function M.close_others()
   local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
   std_object.filter_inline(state.tabs, function(_, tabnr)
-    return tabnr ~= tabnr_cur
+    return tabnr == tabnr_cur
   end)
   state.tab_history:clear()
   state.tab_history:push(tabnr_cur)
 
   vim.cmd("tabonly")
-  state.schedule_refresh_tabs()
 end

@@ -40,8 +40,8 @@ function M.refresh_bufs()
     valid_bufnr_set[bufnr] = true
     M.refresh_buf(bufnr)
   end
-  std_object.filter_inline(M.bufs, function(bufnr)
-    return not not valid_bufnr_set[bufnr]
+  std_object.filter_inline(M.bufs, function(_, bufnr)
+    return valid_bufnr_set[bufnr] == true
   end)
 end
 
@@ -75,6 +75,26 @@ function M.refresh_buf(bufnr)
     filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
     buf.filepath = filepath
     buf.filename = filename
+  end
+end
+
+---@param bufnrs                        ?integer[]
+---@return nil
+function M.remove_unrefereced_bufs(bufnrs)
+  bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    local buf = M.bufs[bufnr]
+    if buf ~= nil then
+      if M.validate_buf(bufnr) then
+        local copies = M.count_buf_copies(bufnr)
+        if copies < 1 then
+          M.bufs[bufnr] = nil
+          vim.api.nvim_buf_delete(bufnr, { force = true })
+        end
+      else
+        M.bufs[bufnr] = nil
+      end
+    end
   end
 end
 
