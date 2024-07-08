@@ -15,22 +15,6 @@ local test_data = {
   exclude_patterns = ".git/, c.txt",
 }
 
----@type ghc.types.command.replace.IStateData
-local context_data = {
-  mode = ghc.context.search.mode:get_snapshot(),
-  cwd = ghc.context.search.cwd:get_snapshot(),
-  flag_regex = ghc.context.search.flag_regex:get_snapshot(),
-  flag_case_sensitive = ghc.context.search.flag_case_sensitive:get_snapshot(),
-  search_pattern = ghc.context.search.search_pattern:get_snapshot(),
-  replace_pattern = ghc.context.search.replace_pattern:get_snapshot(),
-  search_paths = ghc.context.search.search_paths:get_snapshot(),
-  include_patterns = ghc.context.search.include_patterns:get_snapshot(),
-  exclude_patterns = ghc.context.search.exclude_patterns:get_snapshot(),
-}
-
----vim.notify("test_data:\n" .. vim.inspect(test_data))
----vim.notify("context_data:\n" .. vim.inspect(context_data))
-
 ---@type ghc.command.replace.Replacer
 local replacer = Replacer.new({
   winnr = 0,

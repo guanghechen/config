@@ -130,7 +130,7 @@ local function find_file(opts, force)
   opts.bufnr = find_file_context.bufnr
   opts.show_untracked = true
   opts.workspace = "CWD"
-  opts.use_regex = ghc.context.session.flag_regex:get_snapshot()
+  opts.use_regex = ghc.context.session.search_flag_regex:get_snapshot()
 
   ---@type ghc.enums.context.FindScope
   local scope0 = ghc.context.session.find_scope:get_snapshot()
@@ -165,13 +165,15 @@ local function find_file(opts, force)
       })
     end,
     toggle_enable_regex = function()
-      local next_flag_regex = ghc.context.session.flag_regex:get_snapshot() ---@type boolean
-      ghc.context.session.flag_regex:next(next_flag_regex)
+      local next_flag_regex = ghc.context.session.search_flag_regex:get_snapshot() ---@type boolean
+      ghc.context.session.search_flag_regex:next(next_flag_regex)
       opts.use_regex = next_flag_regex
       open_picker()
     end,
     toggle_case_sensitive = function()
-      ghc.context.session.flag_case_sensitive:next(not ghc.context.session.flag_case_sensitive:get_snapshot())
+      ghc.context.session.search_flag_case_sensitive:next(
+        not ghc.context.session.search_flag_case_sensitive:get_snapshot()
+      )
       open_picker()
     end,
     change_scope_workspace = function()
@@ -208,10 +210,10 @@ local function find_file(opts, force)
       "--no-column",
       "--no-follow",
     }
-    if not ghc.context.session.flag_regex:get_snapshot() then
+    if not ghc.context.session.search_flag_regex:get_snapshot() then
       table.insert(cmd, "--fixed-strings")
     end
-    if ghc.context.session.flag_case_sensitive:get_snapshot() then
+    if ghc.context.session.search_flag_case_sensitive:get_snapshot() then
       table.insert(cmd, "--case-sensitive")
     else
       table.insert(cmd, "--ignore-case")
