@@ -34,6 +34,8 @@ function M.close(bufnrs)
 
     if k == 0 then
       state.close_tab(tabnr)
+    else
+      state.refresh_tab(tabnr)
     end
   end
 

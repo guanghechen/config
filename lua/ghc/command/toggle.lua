@@ -5,6 +5,12 @@ local session = require("ghc.context.session")
 local M = {}
 
 ---@return nil
+function M.flight_autoload_session()
+  local next_flight_autoload_session = not session.flight_autoload_session:get_snapshot() ---@type boolean
+  session.flight_autoload_session:next(next_flight_autoload_session)
+end
+
+---@return nil
 function M.flight_copilot()
   local next_flight_copilot = not session.flight_copilot:get_snapshot() ---@type boolean
   session.flight_copilot:next(next_flight_copilot)
