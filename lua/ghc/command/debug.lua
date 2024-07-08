@@ -54,6 +54,17 @@ function M.show_context_all()
 end
 
 function M.show_state()
+  local wins = {}
+  for winnr, win in pairs(fml.api.state.wins) do
+    ---@type fml.api.state.IWinItemData
+    local item = {
+      winnr = winnr,
+      tabnr = win.tabnr,
+      buf_history = win.buf_history:serialize(),
+    }
+    wins[winnr] = item
+  end
+
   fml.reporter.info({
     from = "ghc.command.debug",
     subject = "show_state",
@@ -62,6 +73,7 @@ function M.show_state()
       bufnrs = vim.api.nvim_list_bufs(),
       bufs = fml.api.state.bufs,
       tabs = fml.api.state.tabs,
+      wins = wins,
     },
   })
 end
