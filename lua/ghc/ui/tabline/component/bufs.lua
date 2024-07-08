@@ -17,7 +17,7 @@ local function render_buf(bufnr, bufid, is_curbuf)
   local is_mod = vim.api.nvim_get_option_value("mod", { buf = bufnr }) ---@type boolean
   local icon, fileicon_hl = fml.fn.calc_fileicon(buf.filename)
 
-  local left_pad = is_curbuf and "┃" or " " ---@type string
+  local left_pad = is_curbuf and "▎" or " " ---@type string
   local text_icon = icon .. " " ---@type string
   local text_title = buf.filename ---@type string
   local text_mod = is_mod and "  " or "  " ---@type string

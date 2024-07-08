@@ -1,5 +1,5 @@
-local client = require('ghc.context.client')
-local session = require('ghc.context.session')
+local client = require("ghc.context.client")
+local session = require("ghc.context.session")
 
 ---@class ghc.command.toggle
 local M = {}

@@ -1,6 +1,9 @@
 vim.g.mapleader = " "
 vim.g.clipboard = fml.clipboard.get_clipboard()
 
+vim.opt.mouse:append("a")
+vim.opt.shortmess:append({ W = true, I = true, c = true, C = true }) --Don't show the intro message when starting nvim
+
 vim.opt.foldenable = true
 vim.opt.foldexpr = "v:lua._G.fml.fn.foldexpr()"
 vim.opt.foldlevel = 99
@@ -10,9 +13,6 @@ vim.opt.laststatus = 3 -- Keep only the global status bar.
 vim.opt.showtabline = 2
 vim.opt.statusline = "%!v:lua._G.ghc.ui.statusline.render()"
 vim.opt.tabline = "%!v:lua._G.ghc.ui.tabline.render()"
-
-vim.opt.mouse:append("a")
-vim.opt.shortmess:append("I") --Don't show the intro message when starting nvim
 
 ---! appearance
 vim.opt.autoindent = true
@@ -36,6 +36,7 @@ vim.opt.fillchars = {
   vert = "│",
 }
 vim.opt.guifont = { "RobotoMono Nerd Font" }
+vim.opt.linebreak = true -- Wrap lines at convenient points
 vim.opt.list = true -- Show some invisible characters (tabs...
 vim.opt.listchars:append({
   eol = "↲",
@@ -115,9 +116,14 @@ vim.opt.grepprg = "rg --vimgrep"
 vim.opt.ignorecase = true
 vim.opt.smartcase = true -- Don't ignore case with capitals
 
--- misc
-vim.opt.confirm = true -- Confirm to save changes before exiting modified buffer
+-- spell
 vim.opt.spelllang = { "en" }
+vim.opt.spelloptions:append("noplainbuffer")
+
+-- misc
+vim.opt.completeopt = "menu,menuone,noselect"
+vim.opt.confirm = true -- Confirm to save changes before exiting modified buffer
+vim.opt.jumpoptions = "view"
 vim.opt.updatetime = 200 -- Save swap file and trigger CursorHold
 vim.opt.undofile = true
 vim.opt.undolevels = 10000

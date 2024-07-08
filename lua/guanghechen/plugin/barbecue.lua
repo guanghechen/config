@@ -1,3 +1,10 @@
+vim.api.nvim_create_autocmd({ "WinResized", "BufWinEnter", "CursorHold", "InsertLeave" }, {
+  group = fml.fn.augroup("barbecue.updater"),
+  callback = function()
+    require("barbecue.ui").update()
+  end,
+})
+
 return {
   "utilyre/barbecue.nvim",
   name = "barbecue",
@@ -7,6 +14,7 @@ return {
     "nvim-tree/nvim-web-devicons", -- optional dependency
   },
   opts = {
+    create_autocmd = false,
     theme = {
       normal = { fg = "#989898" },
 

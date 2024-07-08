@@ -44,8 +44,16 @@ return {
     word_diff = false,
     max_file_length = 3000, -- Disable if file is longer than this (in lines)
     signs = {
-      add = { text = "┃" },
-      change = { text = "┃" },
+      add = { text = "▎" },
+      change = { text = "▎" },
+      delete = { text = "_" },
+      topdelete = { text = "‾" },
+      changedelete = { text = "~" },
+      untracked = { text = "┆" },
+    },
+    signs_staged = {
+      add = { text = "▎" },
+      change = { text = "▎" },
       delete = { text = "_" },
       topdelete = { text = "‾" },
       changedelete = { text = "~" },
@@ -66,14 +74,12 @@ return {
         )
       end
 
-      mapkey("n", "[h", goto_prev_hunk, "git: Prev hunk", true)
-      mapkey("n", "]h", goto_next_hunk, "git: Next hunk", true)
+      mapkey("n", "[h", goto_prev_hunk, "git: prev hunk", true)
+      mapkey("n", "]h", goto_next_hunk, "git: next hunk", true)
       mapkey("n", "<leader>gb", blame_line, "git: Preview hunk inline", true)
-      mapkey("n", "<leader>gd", diff_current_file, "git: Diff current file", true)
-      mapkey("n", "<leader>gp", preview_hunk_inline, "git: Preview hunk inline", true)
+      mapkey("n", "<leader>gd", diff_current_file, "git: diff current file", true)
+      mapkey("n", "<leader>gp", preview_hunk_inline, "git: preview hunk inline", true)
+      mapkey("n", "<leader>gu", undo_stage_hunk, "git: undo stage hunk", true)
     end,
   },
-  config = function(_, opts)
-    require("gitsigns").setup(opts)
-  end,
 }
