@@ -26,7 +26,7 @@ vim.keymap.set("n", "N", "'nN'[v:searchforward].'zv'", { expr = true, desc = "pr
 vim.keymap.set("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
 vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
 
-mk("n", "<esc>", "<cmd>noh<cr><esc>", "remove search highlights", true)    -- Clear search with <esc>
+mk("n", "<esc>", "<cmd>noh<cr><esc>", "remove search highlights", true) -- Clear search with <esc>
 mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true) -- Exit terminal
 
 -- better copy/paste
@@ -97,6 +97,8 @@ mk({ "n", "v" }, "<leader>bo", fml.api.buf.close_others, "buffer: close others",
 ----#[d]ebug-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>dC", ghc.command.debug.show_context_all, "debug: show context (all)", true)
 mk({ "n", "v" }, "<leader>dc", ghc.command.debug.show_context, "debug: show context (persistentable)", true)
+mk({ "n", "v" }, "<leader>dd", ghc.command.debug.inspect, "debug: inspect", true)
+mk({ "n", "v" }, "<leader>ds", ghc.command.debug.show_state, "debug: show state", true)
 mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window history", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
 
