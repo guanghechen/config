@@ -63,6 +63,7 @@ M.tab_history = History.new({
   validate = validate_tab,
 })
 M.validate_tab = validate_tab
+M.tab_history:push(vim.api.nvim_get_current_tabpage())
 
 ---@param tabnr                         integer
 ---@return nil
@@ -133,11 +134,15 @@ function M.refresh_tab(tabnr)
 
   ---! Add bufs in windows of the tab to the tab.bufnrs.
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+  local active_bufnr_set = {} ---@type table<integer, boolean>
   for _, winnr in ipairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr)
-    if not tab.bufnr_set[bufnr] then
-      table.insert(tab.bufnrs, bufnr)
-      tab.bufnr_set[bufnr] = true
+    if M.validate_win(winnr) then
+      local bufnr = vim.api.nvim_win_get_buf(winnr)
+      active_bufnr_set[bufnr] = true
+      if not tab.bufnr_set[bufnr] then
+        table.insert(tab.bufnrs, bufnr)
+        tab.bufnr_set[bufnr] = true
+      end
     end
   end
 
@@ -149,24 +154,12 @@ function M.refresh_tab(tabnr)
     local bufnr = tab.bufnrs[i]
     local buf = M.bufs[bufnr]
     if not tab.bufnr_set[bufnr] and buf ~= nil then
-      if buf.filename ~= constant.BUF_UNTITLED then
+      local good = active_bufnr_set[bufnr] or buf.filename ~= constant.BUF_UNTITLED ---@type boolean
+      good = good or vim.api.nvim_get_option_value("mod", { buf = bufnr })
+      if good then
         k = k + 1
         tab.bufnrs[k] = bufnr
         tab.bufnr_set[bufnr] = true
-      end
-    end
-  end
-
-  ---! No valid buf, add the untitled buf back.
-  if k == 0 then
-    for i = 1, N, 1 do
-      local bufnr = tab.bufnrs[i]
-      local buf = M.bufs[bufnr]
-      if buf ~= nil and buf.filename == constant.BUF_UNTITLED then
-        k = k + 1
-        tab.bufnrs[k] = bufnr
-        tab.bufnr_set[bufnr] = true
-        break
       end
     end
   end
