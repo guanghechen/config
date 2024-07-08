@@ -31,7 +31,8 @@ end
 
 ---@param left ghc.types.command.replace.IStateData
 ---@param right ghc.types.command.replace.IStateData
----@return boolean, boolean
+---@return boolean
+---@return boolean
 local function internal_equals(left, right)
   local state_equals = left.cwd == right.cwd
     and left.flag_regex == right.flag_regex
@@ -71,8 +72,8 @@ end
 function M:set_data(next_data)
   local normalized_next_data = internal_normalize(next_data) ---@type ghc.types.command.replace.IStateData
   local state_equals, replace_equals = internal_equals(self.data, normalized_next_data)
-  self.dirty_search = not state_equals
-  self.dirty_replace = not replace_equals
+  self.dirty_search = self.dirty_search or not state_equals
+  self.dirty_replace = self.dirty_replace or not replace_equals
 
   if self.dirty_search or self.dirty_replace then
     self.data = normalized_next_data
@@ -133,7 +134,7 @@ function M:search(force)
     }
     local result = fml.oxi.search(options)
 
-    self.dirty = false
+    self.dirty_search = false
     self.search_result = result
   end
   return vim.deepcopy(self.search_result)
