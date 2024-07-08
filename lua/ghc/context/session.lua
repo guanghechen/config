@@ -1,7 +1,11 @@
 local Observable = fml.collection.Observable
 local Viewmodel = fml.collection.Viewmodel
 
-local context_filepath = fml.path.locate_session_filepath({ filename = "session.json" })
+---@type string|nil
+local context_filepath = vim.fn.argc() < 1
+    and fml.path.is_git_repo()
+    and fml.path.locate_session_filepath({ filename = "session.json" })
+  or nil
 
 ---@param paths                         string
 ---@return string
@@ -37,28 +41,24 @@ local search_scope = Observable.from_value("C")
 ---@field public search_paths           fml.types.collection.IObservable
 ---@field public search_pattern         fml.types.collection.IObservable
 ---@field public search_scope           fml.types.collection.IObservable
-local context = Viewmodel
-    .new({ name = "context:session", filepath = context_filepath })
-    :register("cwd", cwd, true, true)
-    :register("exclude_patterns", exclude_patterns, true, true)
-    :register("find_file_pattern", find_file_pattern, true, true)
-    :register("find_scope", find_scope, true, true)
-    :register("flag_regex", flag_regex, true, true)
-    :register("flag_case_sensitive", flag_case_sensitive, true, true)
-    :register("flight_copilot", flight_copilot, true, true)
-    :register("include_patterns", include_patterns, true, true)
-    :register("mode", mode, true, true)
-    :register("replace_pattern", replace_pattern, true, true)
-    :register("search_paths", search_paths, true, true)
-    :register("search_pattern", search_pattern, true, true)
-    :register("search_scope", search_scope, true, true)
+local context = Viewmodel.new({ name = "context:session", filepath = context_filepath })
+  :register("cwd", cwd, true, true)
+  :register("exclude_patterns", exclude_patterns, true, true)
+  :register("find_file_pattern", find_file_pattern, true, true)
+  :register("find_scope", find_scope, true, true)
+  :register("flag_regex", flag_regex, true, true)
+  :register("flag_case_sensitive", flag_case_sensitive, true, true)
+  :register("flight_copilot", flight_copilot, true, true)
+  :register("include_patterns", include_patterns, true, true)
+  :register("mode", mode, true, true)
+  :register("replace_pattern", replace_pattern, true, true)
+  :register("search_paths", search_paths, true, true)
+  :register("search_pattern", search_pattern, true, true)
+  :register("search_scope", search_scope, true, true)
 
-if not fml.path.is_exist(context_filepath) then
-  context:save()
+if context_filepath ~= nil and not fml.path.is_exist(context_filepath) then
+  context:load()
 end
-
-context:load()
---context:auto_reload()
 
 --Auto refresh statusline
 fml.fn.watch_observables({

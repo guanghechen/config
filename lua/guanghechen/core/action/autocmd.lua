@@ -149,14 +149,14 @@ function M.autocmd_resize_splits()
 end
 
 function M.autocmd_session_autosave()
-  vim.api.nvim_create_autocmd("VimLeavePre", {
-    group = fml.fn.augroup("session_autosave"),
-    callback = function()
-      if vim.fn.argc() < 1 and fml.path.is_git_repo() then
+  if vim.fn.argc() < 1 and fml.path.is_git_repo() then
+    vim.api.nvim_create_autocmd("VimLeavePre", {
+      group = fml.fn.augroup("session_autosave"),
+      callback = function()
         ghc.command.session.autosave()
-      end
-    end,
-  })
+      end,
+    })
+  end
 end
 
 ---@param opts {pattern:string[], format?: "unix" | "dos"}

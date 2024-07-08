@@ -9,11 +9,10 @@ local theme_cache_path = fml.path.locate_context_filepath({ filename = "theme" }
 ---@field public mode                   fml.types.collection.IObservable
 ---@field public relativenumber         fml.types.collection.IObservable
 ---@field public transparency           fml.types.collection.IObservable
-local M = Viewmodel
-    .new({ name = "context:client", filepath = context_filepath, verbose = true })
-    :register("mode", Observable.from_value("darken"), true, true)
-    :register("relativenumber", Observable.from_value(true), true, true)
-    :register("transparency", Observable.from_value(false), true, true)
+local M = Viewmodel.new({ name = "context:client", filepath = context_filepath, verbose = true })
+  :register("mode", Observable.from_value("darken"), true, true)
+  :register("relativenumber", Observable.from_value(true), true, true)
+  :register("transparency", Observable.from_value(false), true, true)
 
 ---@param params                        ghc.types.context.client.IToggleSchemeParams
 ---@return nil
@@ -66,7 +65,7 @@ end
 M:load()
 M:auto_reload({
   on_changed = function()
-    M.reload_theme({ force = true })
+    M.reload_theme({ force = false })
   end,
 })
 
