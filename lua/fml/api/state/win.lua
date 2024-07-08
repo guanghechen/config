@@ -125,7 +125,7 @@ function M.refresh_win(tabnr, winnr)
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr)
-  if bufnr ~= nil then
+  if bufnr ~= nil and win.buf_history:empty() then
     win.buf_history:push(bufnr)
   end
 end

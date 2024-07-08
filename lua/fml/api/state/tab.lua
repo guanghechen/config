@@ -68,9 +68,6 @@ M.tab_history:push(vim.api.nvim_get_current_tabpage())
 ---@param tabnr                         integer
 ---@return nil
 function M.close_tab(tabnr)
-  local tab = M.tabs[tabnr] ---@type fml.api.state.ITabItem|nil
-  local bufnrs = tab and std_array.slice(tab.bufnrs) or {} ---@type integer[]
-
   M.tabs[tabnr] = nil
   if validate_tab(tabnr) then
     vim.api.nvim_set_current_tabpage(tabnr)

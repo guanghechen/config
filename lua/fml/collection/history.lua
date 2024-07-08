@@ -4,7 +4,6 @@ local reporter = require("fml.std.reporter")
 ---@class fml.collection.History : fml.types.collection.IHistory
 ---@field private _present_idx          integer
 ---@field private _stack                fml.types.collection.ICircularQueue
-
 local M = {}
 M.__index = M
 
@@ -91,10 +90,10 @@ function M:back(step)
     idx = idx - 1
   end
 
-  if idx < 1 or self._present_idx - step > idx then
+  if idx <= 1 then
     self:rearrange()
-    self._present_idx = math.min(self._stack:size(), math.max(1, self._present_idx - step))
-    return self._stack:at(self._present_idx)
+    self._present_idx = self._stack:size() > 0 and 1 or 0
+    return self._stack:front()
   end
 
   self._present_idx = idx
@@ -109,7 +108,8 @@ end
 
 ---@return boolean
 function M:empty()
-  return self:present() == nil
+  self:rearrange()
+  return self._stack:size() == 0
 end
 
 ---@param params                        ?fml.types.collection.IHistoryForkParams
@@ -117,7 +117,7 @@ end
 function M:fork(params)
   self:rearrange()
 
-  local new_name = params and params.name
+  local new_name = params and params.name or self.name
   local instance = setmetatable({}, M)
   instance.name = new_name
   instance.equals = self.equals
@@ -147,15 +147,10 @@ function M:forward(step)
     end
   end
 
-  if idx > self._stack:size() then
-    idx = self._stack:size()
-    while idx > 0 do
-      local present = self._stack:at(idx) ---@type fml.types.T
-      if self.validate(present) then
-        break
-      end
-      idx = idx - 1
-    end
+  if idx >= self._stack:size() then
+    self:rearrange()
+    self._present_idx = self._stack:size()
+    return self._stack:back()
   end
 
   if idx < 1 then
@@ -164,12 +159,7 @@ function M:forward(step)
   end
 
   self._present_idx = idx
-  local present = self._stack:at(idx) ---@type fml.types.T|nil
-
-  if self._present_idx + step > idx then
-    self:rearrange()
-  end
-  return present
+  return self._stack:at(idx)
 end
 
 function M:iterator()
@@ -199,7 +189,6 @@ end
 ---@param idx                           integer
 ---@return fml.types.T|nil
 function M:go(idx)
-  self:rearrange()
   idx = math.max(1, math.min(self._stack:size(), idx))
   self._present_idx = idx
   return self._stack:at(idx)
@@ -215,8 +204,9 @@ function M:present()
     end
   end
 
-  self._present_idx = 0
-  return nil
+  self:rearrange()
+  self._present_idx = self._stack:size() > 0 and 1 or 0
+  return self._stack:front()
 end
 
 function M:present_index()
@@ -248,10 +238,8 @@ function M:push(element)
 
   self:rearrange()
 
-  if self._present_idx < self._stack:size() then
-    local _next_idx = self._present_idx + 1 ---@type integer
-    if self.equals(self._stack:at(_next_idx), element) then
-      self._present_idx = _next_idx
+  if self._present_idx <= self._stack:size() then
+    if self.equals(self._stack:back(), element) then
       return
     end
 
