@@ -16,33 +16,20 @@ vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
       state.bufs[bufnr] = nil
     end
 
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    state.refresh_tab(tabnr)
+    ---! The current bufnr of the window still be the old one, so use vim.schedule to refresh later.
+    local is_buf_add_event = args.event == "BufAdd" ---@type boolean
+    vim.schedule(function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      state.refresh_tab(tabnr)
 
-    ---! The current bufnr of the window still be the old one.
-    local tab = state.tabs[tabnr]
-    if tab ~= nil then
-      if not tab.bufnr_set[bufnr] then
-        tab.bufnr_set[bufnr] = true
-        table.insert(tab.bufnrs, bufnr)
+      if is_buf_add_event then
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        local win = state.wins[winnr]
+        if win ~= nil then
+          win.buf_history:push(bufnr)
+        end
       end
-    end
-
-    if args.event == "BufAdd" then
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local win = state.wins[winnr]
-      if win ~= nil then
-        fml.debug.log("1", { 
-          winnr = winnr,
-          bufnr = bufnr,
-          buf_history = win.buf_history._stack:collect(),
-          valid = state.validate_buf(bufnr),
-          bufnrs = state.tabs[win.tabnr] and state.tabs[win.tabnr].bufnrs or "nil",
-        })
-        win.buf_history:push(bufnr)
-        fml.debug.log("2", { winnr = winnr, bufnr = bufnr, buf_history = win.buf_history._stack:collect() })
-      end
-    end
+    end)
   end,
 })
 
