@@ -1,34 +1,72 @@
 local state = require("fml.api.state")
 local navigate_limit = require("fml.fn.navigate_limit")
 local std_array = require("fml.std.array")
+local std_set = require("fml.std.set")
 
 ---@class fml.api.buf
 local M = require("fml.api.buf.mod")
 
+---@param bufnrs                        integer[]
+---@return nil
+function M.close(bufnrs)
+  if #bufnrs < 1 then
+    return
+  end
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = state.tabs[tabnr] ---@type fml.api.state.ITabItem
+  if tab ~= nil then
+    local bufnr_set = std_set.from_integer_array(bufnrs) ---@type table<integer, boolean>
+    local k = 0 ---@type integer
+    local N = #tab.bufnrs ---@type integer
+    for i = 1, N, 1 do
+      local bufnr = tab.bufnrs[i]
+      if not bufnr_set[bufnr] then
+        k = k + 1
+        tab.bufnrs[k] = bufnr
+      else
+        tab.bufnr_set[bufnr] = false
+      end
+    end
+    for _ = k + 1, N, 1 do
+      table.remove(tab.bufnrs)
+    end
+
+    if k == 0 then
+      state.close_tab(tabnr)
+    end
+  end
+
+  for _, bufnr in ipairs(bufnrs) do
+    local buf = state.bufs[bufnr]
+    if buf ~= nil then
+      local copies = state.count_buf_copies(bufnr)
+      if copies <= 1 then
+        state.bufs[bufnr] = nil
+        if state.validate_buf(bufnr) then
+          vim.api.nvim_buf_delete(bufnr, { force = true })
+        end
+      end
+    end
+  end
+end
+
 ---@return nil
 function M.close_current()
-  local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
   local tab = state.get_current_tab()
-  if tab == nil or not std_array.contains(tab.bufnrs, bufnr_cur) then
-    state.schedule_refresh()
+  if tab == nil then
+    return
   end
-  state.close_bufs({ bufnr_cur })
+
+  local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+  M.close({ bufnr_cur })
 end
 
 ---@param step                          ?integer
 ---@return nil
 function M.close_left(step)
-  local tab, tabnr_cur = state.get_current_tab()
+  local tab = state.get_current_tab()
   if tab == nil then
-    return
-  end
-
-  if #tab.bufnrs < 1 then
-    state.tabs[tabnr_cur] = nil
-    if vim.api.nvim_tabpage_is_valid(tabnr_cur) then
-      vim.cmd("tabclose")
-    end
-    state.schedule_refresh()
     return
   end
 
@@ -36,28 +74,15 @@ function M.close_left(step)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
   local bufid_next = navigate_limit(bufid_cur, -step, #tab.bufnrs)
-
-  local bufnrs_to_remove = {} ---@type integer[]
-  for i = bufid_next, bufid_cur - 1, 1 do
-    table.insert(bufnrs_to_remove, tab.bufnrs[i])
-  end
-  state.close_bufs(bufnrs_to_remove)
+  local bufnrs_to_remove = std_array.slice(tab.bufnrs, bufid_next, bufid_cur - 1) ---@type integer[]
+  M.close(bufnrs_to_remove)
 end
 
 ---@param step                          ?integer
 ---@return nil
 function M.close_right(step)
-  local tab, tabnr_cur = state.get_current_tab()
+  local tab = state.get_current_tab()
   if tab == nil then
-    return
-  end
-
-  if #tab.bufnrs < 1 then
-    state.tabs[tabnr_cur] = nil
-    if vim.api.nvim_tabpage_is_valid(tabnr_cur) then
-      vim.cmd("tabclose")
-    end
-    state.schedule_refresh()
     return
   end
 
@@ -65,12 +90,8 @@ function M.close_right(step)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
   local bufid_next = navigate_limit(bufid_cur, step, #tab.bufnrs)
-
-  local bufnrs_to_remove = {} ---@type integer[]
-  for i = bufid_cur + 1, bufid_next, 1 do
-    table.insert(bufnrs_to_remove, tab.bufnrs[i])
-  end
-  state.close_bufs(bufnrs_to_remove)
+  local bufnrs_to_remove = std_array.slice(tab.bufnrs, bufid_cur + 1, bufid_next)({}) ---@type integer[]
+  M.close(bufnrs_to_remove)
 end
 
 ---@return nil
@@ -94,7 +115,7 @@ function M.close_others()
   local bufnrs_to_remove = std_array.filter(tab.bufnrs, function(bufnr)
     return bufnr ~= bufnr_cur
   end)
-  state.close_bufs(bufnrs_to_remove)
+  M.close(bufnrs_to_remove)
 end
 
 ---@return nil
@@ -105,5 +126,5 @@ function M.close_all()
   end
 
   local bufnrs_to_remove = std_array.slice(tab.bufnrs) ---@type integer[]
-  state.close_bufs(bufnrs_to_remove)
+  M.close(bufnrs_to_remove)
 end

@@ -221,9 +221,6 @@ end
 function M.slice(arr, start, stop)
   start = math.max(1, start or 1)
   stop = math.min(#arr, stop or #arr)
-  if start > stop then
-    return {}
-  end
 
   local result = {}
   for i = start, stop, 1 do

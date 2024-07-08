@@ -6,3 +6,6 @@ fml.debug.log(vim.json.encode(data))
 local a = { 12, 11, 10, 9, 8, 7, 6, 4, 3, 2, 1, 5, 0 }
 table.sort(a)
 fml.debug.log(a)
+
+table.remove(a)
+fml.debug.log(a)

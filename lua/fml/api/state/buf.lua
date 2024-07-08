@@ -1,6 +1,5 @@
 local constant = require("fml.constant")
 local path = require("fml.std.path")
-local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
 
 ---@class fml.api.state
@@ -21,51 +20,12 @@ M.BUF_IGNORED_FILETYPES = {
 }
 M.bufs = {}
 
----@param bufnrs                        integer[]
----@return nil
-function M.close_bufs(bufnrs)
-  if #bufnrs < 1 then
-    return
-  end
-
-  local tab, tabnr_cur = M.get_current_tab()
-  if tab == nil then
-    return
-  end
-
-  local bufnr_set = {} ---@type table<integer, boolean>
-  for _, bufnr in ipairs(bufnrs) do
-    bufnr_set[bufnr] = true
-  end
-  std_array.filter_inline(tab.bufnrs, function(bufnr)
-    return not bufnr_set[bufnr]
-  end)
-
-  if #tab.bufnrs < 1 then
-    M.close_tab(tabnr_cur)
-  end
-
-  for bufnr in pairs(bufnr_set) do
-    local buf = M.bufs[bufnr]
-    if buf ~= nil then
-      local copies = M.count_buf_copies(bufnr)
-      if copies <= 1 then
-        M.bufs[bufnr] = nil
-        if M.validate_buf(bufnr) then
-          vim.api.nvim_buf_delete(bufnr, { force = true })
-        end
-      end
-    end
-  end
-  M.schedule_refresh()
-end
-
 ---@param bufnr                         integer
 ---@return integer
 function M.count_buf_copies(bufnr)
   local copies = 0 ---@type integer
   for _, tab in pairs(M.tabs) do
-    if std_array.contains(tab.bufnrs, bufnr) then
+    if tab.bufnr_set[bufnr] then
       copies = copies + 1
     end
   end
@@ -115,7 +75,6 @@ function M.refresh_buf(bufnr)
     filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
     buf.filepath = filepath
     buf.filename = filename
-    return
   end
 end
 

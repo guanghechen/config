@@ -50,7 +50,6 @@ local function rearrange_tab_history(tabnrs, history)
   end
 end
 
-
 ---@class fml.api.state
 ---@field public tabs                   table<integer, fml.api.state.ITabItem>
 ---@field public tab_history            fml.types.collection.IHistory
@@ -134,28 +133,35 @@ function M.refresh_tab(tabnr)
     tab = {
       name = constant.TAB_UNNAMED,
       bufnrs = {},
+      bufnr_set = {},
     }
     M.tabs[tabnr] = tab
   end
 
-  local bufnr_set = {} ---@type table<integer, boolean>
-  for _, bufnr in ipairs(tab.bufnrs) do
-    bufnr_set[bufnr] = true
-  end
-
+  ---! Add bufs in windows of the tab to the tab.bufnrs.
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr)
-    bufnr_set[bufnr] = true
+    if not tab.bufnr_set[bufnr] then
+      table.insert(tab.bufnrs, bufnr)
+      tab.bufnr_set[bufnr] = true
+    end
   end
 
-  std_array.filter_inline(tab.bufnrs, function(bufnr)
-    local ok = bufnr_set[bufnr]
-    bufnr_set[bufnr] = nil
-    return ok
-  end)
-  for bufnr in pairs(bufnr_set) do
-    table.insert(tab.bufnrs, bufnr)
+  ---! Remove invalid bufnrs.
+  local N = #tab.bufnrs ---@type integer
+  local k = 0 ---@type integer
+  for i = 1, N, 1 do
+    local bufnr = tab.bufnrs[i]
+    if M.validate_buf(bufnr) then
+      k = k + 1
+      tab.bufnrs[k] = bufnr
+    else
+      tab.bufnr_set[bufnr] = nil
+    end
+  end
+  for _ = k + 1, N do
+    table.remove(tab.bufnrs)
   end
 
   M.refresh_wins(tabnr)

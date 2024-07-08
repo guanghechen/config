@@ -12,6 +12,7 @@
 ---@class fml.api.state.ITabItem
 ---@field public name                   string
 ---@field public bufnrs                 integer[]
+---@field public bufnr_set              table<integer, boolean>
 
 ---@class fml.api.state.ITabItemData
 ---@field public tabnr                  integer
@@ -38,7 +39,7 @@ local constant = require("fml.constant")
 local History = require("fml.collection.history")
 local fs = require("fml.std.fs")
 local reporter = require("fml.std.reporter")
-
+local std_set = require("fml.std.set")
 
 ---@param data                          fml.api.state.ISerializedData
 ---@return table<integer, integer>
@@ -146,7 +147,7 @@ function M.load(filepath)
   local data = fs.read_json({
     filepath = filepath,
     silent_on_bad_path = true,
-    silent_on_bad_json = true
+    silent_on_bad_json = true,
   })
 
   if data == nil then
@@ -195,7 +196,7 @@ function M.load(filepath)
         end
 
         ---@type fml.api.state.ITabItem
-        local tab = { name = item.name, bufnrs = bufnrs, }
+        local tab = { name = item.name, bufnrs = bufnrs, bufnr_set = std_set.from_integer_array(bufnrs) }
         tabs[real_tabnr] = tab
       end
     end
