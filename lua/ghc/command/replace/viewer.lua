@@ -374,6 +374,10 @@ function M:internal_bind_keymaps(bufnr)
   end
 
   local function on_view_file()
+    if self.state:get_value("mode") == "search" then
+      on_view_original_file()
+    end
+
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local cursor = vim.api.nvim_win_get_cursor(winnr)
     local cursor_row = cursor[1]

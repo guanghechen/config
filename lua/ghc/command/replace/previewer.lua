@@ -50,7 +50,7 @@ function M:preview(opts)
   local cursor_row = opts.cursor_row ---@type integer
   local cursor_col = opts.cursor_col ---@type integer
 
-  local original_text = fml.api.buf.read_or_load_buf_with_filepath(filepath)
+  local original_text = fml.api.buf.reload_or_load(filepath)
   local search_pattern = self.state:get_value("search_pattern") ---@type string
   local replace_pattern = self.state:get_value("replace_pattern") ---@type string
   local flag_regex = self.state:get_value("flag_regex") ---@type boolean
