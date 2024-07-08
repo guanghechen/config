@@ -305,6 +305,7 @@ function M.locate_state_filepath(...)
 end
 
 ---@param opts {filenames: string[]}
+---@return nil
 function M.remove_session_filepaths(opts)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
@@ -324,6 +325,7 @@ function M.remove_session_filepaths(opts)
 end
 
 ---@param opts {filenames: string[]}
+---@return nil
 function M.remove_session_filepaths_all(opts)
   local session_root_dir = M.locate_state_filepath("guanghechen/sessions") ---@type string
   local pfile = io.popen('ls -a "' .. session_root_dir .. '"')
@@ -346,23 +348,23 @@ function M.remove_session_filepaths_all(opts)
   end
 end
 
----@return nil
+---@return string
 function M.workspace()
   local cwd = vim.fn.getcwd()
   return M.locate_git_repo(cwd) or cwd
 end
 
----@return nil
+---@return string
 function M.cwd()
   return vim.fn.getcwd()
 end
 
----@return nil
+---@return string
 function M.current_directory()
   return vim.fn.expand("%:p:h")
 end
 
----@return nil
+---@return string
 function M.current_filepath()
   return vim.api.nvim_buf_get_name(0)
 end
