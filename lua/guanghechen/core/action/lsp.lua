@@ -15,22 +15,18 @@ function M.goto_definitions()
     initial_mode = "normal",
     reuse_win = false,
   })
-  fml.api.state.update_state_when_buf_jump()
 end
 
 function M.goto_declarations()
   vim.lsp.buf.declaration()
-  fml.api.state.update_state_when_buf_jump()
 end
 
 function M.goto_type_definitions()
   require("telescope.builtin").lsp_type_definitions({ reuse_win = false })
-  fml.api.state.update_state_when_buf_jump()
 end
 
 function M.goto_implementations()
   require("telescope.builtin").lsp_implementations({ reuse_win = false })
-  fml.api.state.update_state_when_buf_jump()
 end
 
 function M.hover()

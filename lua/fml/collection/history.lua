@@ -74,7 +74,7 @@ function M:back(step)
   for _ = 1, step, 1 do
     while idx > 0 do
       local present = self._stack:at(idx) ---@type fml.types.T|nil
-      if present == nil or self.validate(present) then
+      if self.validate(present) then
         break
       end
       idx = idx - 1
@@ -82,22 +82,8 @@ function M:back(step)
     idx = idx - 1
   end
 
-  while idx > 0 do
-    local present = self._stack:at(idx) ---@type fml.types.T|nil
-    if self.validate(present) then
-      break
-    end
-    idx = idx - 1
-  end
-
-  if idx <= 1 then
-    self:rearrange()
-    self._present_idx = self._stack:size() > 0 and 1 or 0
-    return self._stack:front()
-  end
-
-  self._present_idx = idx
-  return self._stack:at(idx)
+  self._present_idx = math.max(idx, 0)
+  return self:present()
 end
 
 ---@return nil
@@ -147,19 +133,17 @@ function M:forward(step)
     end
   end
 
-  if idx >= self._stack:size() then
-    self:rearrange()
-    self._present_idx = self._stack:size()
-    return self._stack:back()
-  end
+  self._present_idx = math.min(idx, self._stack:size())
+  return self:present()
+end
 
-  if idx < 1 then
-    self:clear()
-    return nil
-  end
-
+---@param idx                           integer
+---@return fml.types.T|nil
+function M:go(idx)
+  idx = math.min(idx, self._stack:size())
+  idx = math.max(idx, self._stack:size() > 0 and 1 or 0)
   self._present_idx = idx
-  return self._stack:at(idx)
+  return self:present()
 end
 
 function M:iterator()
@@ -186,27 +170,25 @@ function M:iterator_reverse()
   end
 end
 
----@param idx                           integer
----@return fml.types.T|nil
-function M:go(idx)
-  idx = math.max(1, math.min(self._stack:size(), idx))
-  self._present_idx = idx
-  return self._stack:at(idx)
-end
-
 ---@return fml.types.T|nil
 function M:present()
-  for i = self._present_idx, 1, -1 do
-    local present = self._stack:at(i) ---@type fml.types.T|nil
+  local idx = self._present_idx
+  while idx > 0 do
+    local present = self._stack:at(idx) ---@type fml.types.T|nil
     if self.validate(present) then
-      self._present_idx = i
-      return present
+      break
     end
+    idx = idx - 1
+  end
+
+  if idx > 0 then
+    self._present_idx = idx
+    return self._stack:at(idx)
   end
 
   self:rearrange()
   self._present_idx = self._stack:size() > 0 and 1 or 0
-  return self._stack:front()
+  return self._stack:at(self._present_idx)
 end
 
 function M:present_index()
@@ -218,6 +200,7 @@ end
 function M:print()
   self:rearrange()
 
+  local present_index = self._present_idx --@type integer
   local present = self._stack:at(self._present_idx) ---@type fml.types.T|nil
   local history = self._stack:collect()
 
@@ -225,7 +208,7 @@ function M:print()
     from = "fml.collection.history",
     subject = "print",
     message = "History",
-    details = { present = present, history = history },
+    details = { present_index = present_index, present = present, history = history },
   })
 end
 
@@ -238,16 +221,13 @@ function M:push(element)
 
   self:rearrange()
 
-  if self._present_idx <= self._stack:size() then
-    if self.equals(self._stack:back(), element) then
-      return
-    end
-
-    while self._stack:size() > self._present_idx do
-      self._stack:dequeue_back()
-    end
+  if self.equals(self._stack:at(self._present_idx), element) then
+    return
   end
 
+  while self._stack:size() > self._present_idx do
+    self._stack:dequeue_back()
+  end
   self._stack:enqueue(element)
   self._present_idx = self._stack:size()
 end
@@ -255,12 +235,16 @@ end
 function M:rearrange()
   local old_present_index = self._present_idx ---@type integer
   local new_present_index = 0 ---@type integer
+  local not_matched = true ---@type boolean
   local idx = 0 ---@type integer
 
   self._stack:rearrange(function(element, index)
     if self.validate(element) then
       idx = idx + 1
-      if new_present_index == 0 and index >= old_present_index then
+      if index < old_present_index then
+        new_present_index = idx
+      elseif not_matched then
+        not_matched = false
         new_present_index = index == old_present_index and idx or idx - 1
       end
       return true
@@ -268,7 +252,10 @@ function M:rearrange()
     return false
   end)
 
-  self._present_idx = new_present_index == 0 and idx or new_present_index
+  if new_present_index == 0 and self._stack:size() > 0 then
+    new_present_index = 1
+  end
+  self._present_idx = new_present_index
 end
 
 ---@return fml.types.collection.history.ISerializedData

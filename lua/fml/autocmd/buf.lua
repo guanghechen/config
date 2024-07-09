@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local state = require("fml.api.state")
 local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
@@ -17,17 +16,14 @@ vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
     end
 
     ---! The current bufnr of the window still be the old one, so use vim.schedule to refresh later.
-    local is_buf_add_event = args.event == "BufAdd" ---@type boolean
     vim.schedule(function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       state.refresh_tab(tabnr)
 
-      if is_buf_add_event then
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        local win = state.wins[winnr]
-        if win ~= nil then
-          win.buf_history:push(bufnr)
-        end
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local win = state.wins[winnr]
+      if win ~= nil then
+        win.buf_history:push(bufnr)
       end
     end)
   end,

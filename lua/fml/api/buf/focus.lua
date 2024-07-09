@@ -25,14 +25,32 @@ function M.go(bufnr)
 
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
-  state.update_state_when_buf_jump()
+  if state.wins[winnr] == nil then
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    state.refresh_tab(tabnr)
+  end
+
+  local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
+  if win == nil then
+    reporter.error({
+      from = "fml.api.buf",
+      subject = "go",
+      message = "Cannot find win from the state",
+      details = {
+        winnr = winnr,
+        bufnr = bufnr,
+      },
+    })
+    return
+  end
+  win.buf_history:push(bufnr)
 end
 
 ---@param bufid                         integer the index of buffer list
 ---@return nil
 function M.focus(bufid)
   local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
+  if tab == nil or bufid < 1 or bufid > #tab.bufnrs then
     return
   end
 
@@ -51,10 +69,13 @@ function M.focus_left(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
-  local bufid_next = navigate_circular(bufid_cur, -step, #tab.bufnrs)
-  local bufnr_next = tab.bufnrs[bufid_next]
-  M.go(bufnr_next)
+  local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
+
+  if bufid_cur ~= nil then
+    local bufid_next = navigate_circular(bufid_cur, -step, #tab.bufnrs)
+    local bufnr_next = tab.bufnrs[bufid_next]
+    M.go(bufnr_next)
+  end
 end
 
 ---@param step                         ?integer
@@ -67,10 +88,12 @@ function M.focus_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local bufid_cur = std_array.first(tab.bufnrs, bufnr) or 1 ---@type integer
-  local bufid_next = navigate_circular(bufid_cur, step, #tab.bufnrs)
-  local bufnr_next = tab.bufnrs[bufid_next]
-  M.go(bufnr_next)
+  local bufid_cur = std_array.first(tab.bufnrs, bufnr) ---@type integer|nil
+  if bufid_cur ~= nil then
+    local bufid_next = navigate_circular(bufid_cur, step, #tab.bufnrs)
+    local bufnr_next = tab.bufnrs[bufid_next]
+    M.go(bufnr_next)
+  end
 end
 
 for i = 1, 200 do

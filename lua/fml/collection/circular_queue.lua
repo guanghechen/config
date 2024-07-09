@@ -84,9 +84,7 @@ end
 
 ---@return fml.types.T|nil
 function M:back()
-  if self._size > 0 then
-    return self._elements[self._end]
-  end
+  return self._size > 0 and self._elements[self._end] or nil
 end
 
 ---@return nil
@@ -181,19 +179,13 @@ end
 ---@param element fml.types.T
 ---@return nil
 function M:enqueue(element)
-  self._end = self._end + 1
-  if self._end > self._capacity then
-    self._end = 1
-  end
+  self._end = self._end == self._capacity and 1 or self._end + 1
   self._elements[self._end] = element
 
   if self._size < self._capacity then
     self._size = self._size + 1
   else
-    self._start = self._start + 1
-    if self._start > self._capacity then
-      self._start = 1
-    end
+    self._start = self._start == self._capacity and 1 or self._start + 1
   end
 end
 
@@ -216,9 +208,7 @@ end
 
 ---@return fml.types.T|nil
 function M:front()
-  if self._size > 0 then
-    return self._elements[self._start]
-  end
+  return self._size > 0 and self._elements[self._start] or nil
 end
 
 function M:iterator()
@@ -287,8 +277,8 @@ function M:rearrange(filter)
         end
       end
       for i = 1, self._end, 1 do
-        local value = tmp_array[i]
         index = index + 1
+        local value = tmp_array[i]
         if filter(value, index) then
           k = k + 1
           self._elements[k] = value
