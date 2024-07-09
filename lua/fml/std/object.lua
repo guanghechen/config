@@ -34,4 +34,19 @@ function M.filter_inline(object, filter)
   return object
 end
 
+---@generic K
+---@generic V
+---@param object                        table<K, V>
+---@param filter                        fun(v: V, k: K, object: table<K, V>): boolean
+---@return K|nil
+---@return V|nil
+function M.find(object, filter)
+  for key, val in pairs(object) do
+    if filter(val, key, object) then
+      return key, val
+    end
+  end
+  return nil, nil
+end
+
 return M

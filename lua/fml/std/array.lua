@@ -111,60 +111,50 @@ end
 
 ---@generic T
 ---@param arr                           T[]
----@param check                         fun(ele: T, index: integer, arr: T[]): boolean
----@return T|nil
-function M.find(arr, check)
-  for i = 1, #arr, 1 do
-    local v = arr[i]
-    if check(v, i, arr) then
-      return v
-    end
-  end
-  return nil
-end
-
----@generic T
----@param arr                           T[]
----@param element                       T|fun(ele: T, index: integer, arr: T[]): boolean
+---@param filter                        T|fun(ele: T, index: integer, arr: T[]): boolean
 ---@return integer|nil
-function M.first(arr, element)
-  if type(element) == "function" then
+---@return T|nil
+function M.first(arr, filter)
+  if type(filter) == "function" then
     for i = 1, #arr, 1 do
       local v = arr[i]
-      if element(v, i, arr) then
-        return i
+      if filter(v, i, arr) then
+        return i, v
       end
     end
   else
     for i = 1, #arr, 1 do
-      if arr[i] == element then
-        return i
+      local v = arr[i]
+      if v == filter then
+        return i, v
       end
     end
   end
-  return nil
+  return nil, nil
 end
 
 ---@generic T
 ---@param arr                           T[]
 ---@param element                       T|fun(ele: T, index: integer, arr: T[]): boolean
 ---@return integer|nil
+---@return T|nil
 function M.last(arr, element)
   if type(element) == "function" then
     for i = #arr, 1, -1 do
       local v = arr[i]
       if element(v, i, arr) then
-        return i
+        return i, v
       end
     end
   else
     for i = #arr, 1, -1 do
-      if arr[i] == element then
-        return i
+      local v = arr[i]
+      if v == element then
+        return i, v
       end
     end
   end
-  return nil
+  return nil, nil
 end
 
 ---@generic T1
