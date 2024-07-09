@@ -19,6 +19,15 @@ function M.new(props)
   return self
 end
 
+---@param unsubscribable                fml.types.collection.IUnsubscribable
+function M.from_unsubscribable(unsubscribable)
+  return M.new({
+    on_dispose = function()
+      unsubscribable:unsubscribe()
+    end,
+  })
+end
+
 ---@return boolean
 function M:is_disposed()
   return self._disposed
