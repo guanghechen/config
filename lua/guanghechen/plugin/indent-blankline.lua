@@ -14,6 +14,7 @@ return {
     },
     exclude = {
       filetypes = {
+        fml.constant.FT_SEARCH_REPLACE,
         "help",
         "alpha",
         "dashboard",
@@ -26,7 +27,6 @@ return {
         "toggleterm",
         "lazyterm",
         "term",
-        "ghc-replace",
       },
     },
   },
