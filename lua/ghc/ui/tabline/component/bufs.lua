@@ -38,7 +38,7 @@ local function render_buf(bufnr, bufid, is_curbuf)
   return fml.nvimbar.btn(hl_text, "fml.api.buf.focus_" .. bufid, buf_hl), width
 end
 
---- @type fml.types.ui.nvimbar.IRawComponent
+---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "bufs",
   ---@diagnostic disable-next-line: unused-local
@@ -58,8 +58,12 @@ local M = {
     end
 
     local text, width = render_buf(tab.bufnrs[bufid_cur], bufid_cur, true)
-
     remain_width = remain_width - width
+
+    if remain_width < 0 then
+      return "", 0
+    end
+
     for i = bufid_cur - 1, 1, -1 do
       local t, w = render_buf(tab.bufnrs[i], i, false)
       remain_width = remain_width - w

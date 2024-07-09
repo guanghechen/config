@@ -12,19 +12,21 @@ local function get_pane_width()
   return 0
 end
 
---- @type fml.types.ui.nvimbar.IRawComponent
+---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "neotree",
-  will_change = function()
-    local width = get_pane_width() ---@type integer
+  ---@diagnostic disable-next-line: unused-local
+  will_change = function(context, prev_context, remain_width)
+    local width = math.min(remain_width, get_pane_width()) ---@type integer
     if width ~= neotree_width then
       neotree_width = width
       return true
     end
     return false
   end,
-  render = function()
-    local width = neotree_width
+  ---@diagnostic disable-next-line: unused-local
+  render = function(context, remain_width)
+    local width = math.min(remain_width, neotree_width)
     if width <= 0 then
       return "", 0
     end

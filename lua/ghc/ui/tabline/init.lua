@@ -10,9 +10,9 @@ local tabline = fml.ui.Nvimbar.new({
 
 tabline
   ---
+  :add("right", require("ghc.ui.tabline.component.tabs"))
   :add("left", require("ghc.ui.tabline.component.neotree"))
   :add("left", require("ghc.ui.tabline.component.search"))
-  :add("right", require("ghc.ui.tabline.component.tabs"))
   :add("left", require("ghc.ui.tabline.component.bufs"))
 
 local dirty = true

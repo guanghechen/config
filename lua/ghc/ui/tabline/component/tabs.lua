@@ -11,7 +11,7 @@ local fn_toggle_tabs_folded = fml.G.register_anonymous_fn(function()
 end) or ""
 
 
---- @type fml.types.ui.nvimbar.IRawComponent
+---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "tabs",
   will_change = function()
