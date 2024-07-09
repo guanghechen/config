@@ -5,18 +5,8 @@
 ---@field public cursor_row         integer
 ---@field public cursor_col         integer
 
----@class ghc.types.command.replace.IStateData
----@field public cwd                  string
----@field public mode                 ghc.enums.command.replace.Mode
----@field public flag_regex           boolean
----@field public flag_case_sensitive  boolean
----@field public search_pattern       string
----@field public replace_pattern      string
----@field public search_paths         string
----@field public include_patterns     string
----@field public exclude_patterns     string
-
 ---@class ghc.types.command.replace.main.ILineMeta
 ---@field public filepath             ?string current line indicate the filepath
 ---@field public lnum                 ?integer current line indicate the filepath
 ---@field public key                  ?ghc.enums.command.replace.StateKey
+

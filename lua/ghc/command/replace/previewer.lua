@@ -1,20 +1,13 @@
 local Printer = fml.ui.Printer
+local state = require("ghc.command.replace.state")
 
 ---@class ghc.command.replace.Previewer
----@field private state             ghc.command.replace.State
 local M = {}
 M.__index = M
 
----@class ghc.command.replace.previewer.IProps
----@field public state              ghc.command.replace.State
-
----@param props ghc.command.replace.previewer.IProps
 ---@return ghc.command.replace.Previewer
-function M.new(props)
+function M.new()
   local self = setmetatable({}, M)
-
-  self.state = props.state
-
   return self
 end
 
@@ -49,11 +42,11 @@ function M:preview(opts)
   local cursor_row = opts.cursor_row ---@type integer
   local cursor_col = opts.cursor_col ---@type integer
 
-  local original_text = fml.api.buf.reload_or_load(filepath)
-  local search_pattern = self.state:get_value("search_pattern") ---@type string
-  local replace_pattern = self.state:get_value("replace_pattern") ---@type string
-  local flag_regex = self.state:get_value("flag_regex") ---@type boolean
-  local flag_case_sensitive = self.state:get_value("flag_case_sensitive") ---@type boolean
+  local original_text = fml.api.buf.reload_or_load(filepath) ---@type string
+  local search_pattern = state.get_search_pattern() ---@type string
+  local replace_pattern = state.get_replace_pattern() ---@type string
+  local flag_regex = state.get_flag_regex() ---@type boolean
+  local flag_case_sensitive = state.get_flag_case_sensitive() ---@type boolean
 
   local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
   local filetype = vim.fn.system(string.format('nvim -c "filetype detect" -c "echo &filetype" -c "quit" %s', filepath))

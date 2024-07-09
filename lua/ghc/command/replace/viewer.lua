@@ -1,10 +1,10 @@
+local state = require("ghc.command.replace.state")
 local Printer = fml.ui.Printer
 local Textarea = fml.ui.Textarea
 local Previewer = require("ghc.command.replace.previewer")
 local buf_delete_augroup = fml.fn.augroup("command_replace_view_buf_del")
 
 ---@class ghc.command.replace.Viewer
----@field private state         ghc.command.replace.State
 ---@field private bufnr         integer|nil
 ---@field private printer       fml.ui.Printer
 ---@field private previewer     ghc.command.replace.Previewer
@@ -27,19 +27,13 @@ local function find_first_replace_buf()
   end)
 end
 
----@class ghc.command.replace.viewer.IProps
----@field public state          ghc.command.replace.State
-
----@param opts ghc.command.replace.viewer.IProps
 ---@return ghc.command.replace.Viewer
-function M.new(opts)
+function M.new()
   local self = setmetatable({}, M)
-  local state = opts.state ---@type ghc.command.replace.State
 
-  self.state = state
   self.bufnr = nil
   self.printer = Printer.new({ bufnr = 0, nsnr = 0 })
-  self.previewer = Previewer.new({ state = state, nsnr = 0 })
+  self.previewer = Previewer.new()
   self.cfg_name_len = 7
   self.cursor_row = 6
   self.cursor_col = 21
@@ -105,15 +99,14 @@ end
 function M:internal_render(opts)
   local winnr = opts.winnr ---@type integer
   local force = not not opts.force ---@type boolean
-  local data = self.state:get_data() ---@type ghc.types.command.replace.IStateData
-  local result = self.state:search(force) ---@type fml.std.oxi.search.IResult|nil
+  local result = state.search(force) ---@type fml.std.oxi.search.IResult|nil
 
   self.printer:clear()
-  self:internal_render_cfg(data)
+  self:internal_render_cfg()
   if result ~= nil then
     self:internal_print("")
     self:internal_print("")
-    self:internal_render_result(data, result)
+    self:internal_render_result(result)
   end
 
   ---Set cursor position.
@@ -139,13 +132,13 @@ function M:internal_bind_keymaps(bufnr)
   end
 
   ---@param key ghc.enums.command.replace.StateKey
-  ---@param position? "center"|"cursor
+  ---@param position ?"center"|"cursor
   ---@return nil
   local function edit_string(key, position)
     position = position or "cursor"
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local value = self.state:get_value(key) ---@type string
+      local value = state.get_value(key) ---@cast value string
       local lines = fml.string.split(value, "\n") ---@type string[]
 
       local cursor = vim.api.nvim_win_get_cursor(winnr)
@@ -190,7 +183,7 @@ function M:internal_bind_keymaps(bufnr)
         width = 80,
         on_confirm = function(next_lines)
           local resolved = table.concat(next_lines, "\n") ---@type string
-          self.state:set_value(key, resolved)
+          state.set_value(key, resolved)
         end,
       })
     end
@@ -203,7 +196,7 @@ function M:internal_bind_keymaps(bufnr)
     position = position or "cursor"
     return function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local value = self.state:get_value(key) ---@type string
+      local value = state.get_value(key) ---@cast value string
       local lines = fml.array.parse_comma_list(value) ---@type string[]
 
       local cursor = vim.api.nvim_win_get_cursor(winnr)
@@ -250,7 +243,7 @@ function M:internal_bind_keymaps(bufnr)
             table.insert(normalized_list, fml.oxi.normalize_comma_list(next_line))
           end
           local normailized = table.concat(normalized_list, ", ")
-          self.state:set_value(key, normailized)
+          state.set_value(key, normailized)
         end,
       })
     end
@@ -278,14 +271,14 @@ function M:internal_bind_keymaps(bufnr)
     self.cursor_row = cursor[1]
     self.cursor_col = cursor[2]
 
-    local data = self.state:get_data() ---@type ghc.types.command.replace.IStateData
+    local data = state.get_data() ---@type ghc.command.replace.state.IData
     local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
     local textarea = Textarea.new({
       title = "[Replace options]",
       position = "center",
     })
     textarea:open({
-      title = data.mode == "search" and "[Search options]" or "[Replace options]",
+      title = state.get_mode() == "search" and "[Search options]" or "[Replace options]",
       value = lines,
       height = #lines,
       cursor_row = 1,
@@ -310,10 +303,9 @@ function M:internal_bind_keymaps(bufnr)
           return
         end
 
-        ---@cast json ghc.types.command.replace.IStateData
+        ---@cast json ghc.command.replace.state.IData
         local raw = vim.tbl_extend("force", data, json)
-
-        ---@cast json ghc.types.command.replace.IStateData
+        ---@type ghc.command.replace.state.IData
         local next_data = {
           cwd = raw.cwd,
           mode = raw.mode,
@@ -325,7 +317,7 @@ function M:internal_bind_keymaps(bufnr)
           include_patterns = raw.include_patterns,
           exclude_patterns = raw.exclude_patterns,
         }
-        self.state:set_data(next_data)
+        state.set_data(next_data)
       end,
     })
 
@@ -333,20 +325,6 @@ function M:internal_bind_keymaps(bufnr)
     if textarea_bufnr ~= nil then
       vim.api.nvim_set_option_value("filetype", "json", { buf = textarea_bufnr })
     end
-  end
-
-  local function on_toggle_case_sensitive()
-    self.state:toggle_flag("flag_case_sensitive")
-  end
-
-  local function on_toggle_regex()
-    self.state:toggle_flag("flag_regex")
-  end
-
-  local function on_toggle_mode()
-    local current_mode = self.state:get_value("mode")
-    local next_mode = current_mode == "search" and "replace" or "search"
-    self.state:set_value("mode", next_mode)
   end
 
   local function on_view_original_file()
@@ -369,7 +347,7 @@ function M:internal_bind_keymaps(bufnr)
   end
 
   local function on_view_file()
-    if self.state:get_value("mode") == "search" then
+    if state.get_mode() == "search" then
       on_view_original_file()
       return
     end
@@ -388,9 +366,9 @@ function M:internal_bind_keymaps(bufnr)
     end
   end
 
-  mk({ "n", "v" }, "<leader>i", on_toggle_case_sensitive, "replace: toggle case sensitive")
-  mk({ "n", "v" }, "<leader>r", on_toggle_regex, "replace: toggle regex mode")
-  mk({ "n", "v" }, "<leader>m", on_toggle_mode, "replace: toggle ux mode")
+  mk({ "n", "v" }, "<leader>i", state.tog_flag_case_sensitive, "replace: toggle case sensitive")
+  mk({ "n", "v" }, "<leader>r", state.tog_flag_regex, "replace: toggle regex mode")
+  mk({ "n", "v" }, "<leader>m", state.tog_mode, "replace: toggle ux mode")
   mk({ "n", "v" }, "i", on_edit, "replace: edit config")
   mk({ "n", "v" }, "a", on_edit, "replace: edit config")
   mk({ "n", "v" }, "d", on_edit, "replace: edit config")
@@ -410,9 +388,8 @@ function M:internal_bind_keymaps(bufnr)
 end
 
 ---Render the search/replace options
----@param data ghc.types.command.replace.IStateData
 ---@return nil
-function M:internal_render_cfg(data)
+function M:internal_render_cfg()
   ---@param key     ghc.enums.command.replace.StateKey
   ---@param title   string
   ---@param hlvalue string
@@ -447,39 +424,36 @@ function M:internal_render_cfg(data)
       left = left .. " "
     end
 
-    local value = string.gsub(data[key], "\n", "↲")
+    local val = state.get_value(key) ---@cast val string
+    local value = string.gsub(val, "\n", "↲")
     table.insert(highlights, { cstart = value_start_pos, cend = -1, hlname = hlvalue })
     self:internal_print(left .. value, highlights, { key = key })
   end
 
-  local mode_indicator = data.mode == "search" and "[Search]" or "[Replace]"
-  self:internal_print(
-    mode_indicator .. " Press ? for mappings",
-    { { cstart = 0, cend = -1, hlname = "f_sr_usage" } }
-  )
+  local mode_indicator = state.get_mode() == "search" and "[Search]" or "[Replace]"
+  self:internal_print(mode_indicator .. " Press ? for mappings", { { cstart = 0, cend = -1, hlname = "f_sr_usage" } })
   print_cfg_field("cwd", "CWD", "f_sr_opt_value")
   print_cfg_field("search_paths", "Paths", "f_sr_opt_value")
   print_cfg_field("include_patterns", "Include", "f_sr_opt_value")
   print_cfg_field("exclude_patterns", "Exclude", "f_sr_opt_value")
   print_cfg_field("search_pattern", "Search", "f_sr_opt_search_pattern", {
-    { icon = "󰑑", enabled = data.flag_regex },
-    { icon = "", enabled = data.flag_case_sensitive },
+    { icon = "󰑑", enabled = state.get_flag_regex() },
+    { icon = "", enabled = state.get_flag_case_sensitive() },
   })
-  if data.mode == "replace" then
+  if state.get_mode() == "replace" then
     print_cfg_field("replace_pattern", "Replace", "f_sr_opt_replace_pattern")
   end
 end
 
 ---Render the search/replace options
----@param data ghc.types.command.replace.IStateData
 ---@param result fml.std.oxi.search.IResult
 ---@return nil
-function M:internal_render_result(data, result)
+function M:internal_render_result(result)
   if result.items == nil or result.error then
     local summary = string.format("Time: %s", result.elapsed_time)
     self:internal_print(summary)
   else
-    local mode = data.mode ---@type ghc.enums.command.replace.Mode
+    local mode = state.get_mode() ---@type ghc.enums.command.replace.Mode
     local count_files = 0
     local count_matches = 0
     local maximum_lnum = 0 ---@type integer
@@ -506,9 +480,10 @@ function M:internal_render_result(data, result)
     local lnum_width = #tostring(maximum_lnum)
     --local continous_line_padding = "¦ " .. string.rep(" ", lnum_width) .. "  "
     local continous_line_padding = "│ " .. string.rep(" ", lnum_width) .. "  "
+    local search_cwd = state.get_cwd() ---@type string
     for raw_filepath, file_item in pairs(result.items) do
       local fileicon, fileicon_highlight = fml.fn.calc_fileicon(raw_filepath)
-      local filepath = fml.path.relative(data.cwd, raw_filepath)
+      local filepath = fml.path.relative(search_cwd, raw_filepath)
 
       self:internal_print(fileicon .. " " .. filepath, {
         { cstart = 0, cend = 2, hlname = fileicon_highlight },
@@ -546,11 +521,11 @@ function M:internal_render_result(data, result)
           ---@type fml.std.oxi.replace.IPreviewBlockItem
           local block_match = fml.oxi.replace_text_preview({
             text = _block_match.text,
-            search_pattern = data.search_pattern,
-            replace_pattern = data.replace_pattern,
+            search_pattern = state.get_search_pattern(),
+            replace_pattern = state.get_replace_pattern(),
             keep_search_pieces = true,
-            flag_regex = data.flag_regex,
-            flag_case_sensitive = data.flag_case_sensitive,
+            flag_regex = state.get_flag_regex(),
+            flag_case_sensitive = state.get_flag_case_sensitive(),
           })
 
           local text = block_match.text ---@type string
