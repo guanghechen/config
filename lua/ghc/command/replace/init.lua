@@ -78,8 +78,8 @@ function M.search(params)
     ghc.context.session.search_pattern:next(params.word)
   end
 
-  local replacer = get_replacer() ---@type ghc.command.replace.Replacer
-  replacer:open({ mode = "search" })
+  ghc.context.session.search_mode:next("search")
+  M.open()
 end
 
 ---@param params                        ?ghc.command.replace.IReplaceParams
@@ -93,12 +93,13 @@ function M.replace(params)
     ghc.context.session.search_pattern:next(params.word)
   end
 
-  local replacer = get_replacer() ---@type ghc.command.replace.Replacer
-  replacer:open({ mode = "replace" })
+  ghc.context.session.search_mode:next("replace")
+  M.open()
 end
 
 ---@return nil
 function M.open()
+  fml.api.tab.create_if_nonexist("replace")
   local replacer = get_replacer() ---@type ghc.command.replace.Replacer
   replacer:open()
 end
