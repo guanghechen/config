@@ -9,7 +9,7 @@ function M.create()
 end
 
 ---@param filepath                      string
----@return nil
+---@return string
 function M.reload_or_load(filepath)
   local target_filepath = vim.fn.fnamemodify(filepath, ":p") ---@type string
   local target_bufnr = M.locate_by_filepath(filepath) ---@type integer|nil
