@@ -1,7 +1,6 @@
 local Printer = fml.ui.Printer
 local Textarea = fml.ui.Textarea
 local Previewer = require("ghc.command.replace.previewer")
-local constants = require("ghc.constant.command")
 local buf_delete_augroup = fml.fn.augroup("command_replace_view_buf_del")
 
 ---@class ghc.command.replace.Viewer
@@ -22,14 +21,10 @@ local function find_first_replace_buf()
     return nil
   end
 
-  for _, bufnr in ipairs(tab.bufnrs) do
-    local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr })
+  return fml.array.first(tab.bufnrs, function(bufnr)
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-    if buftype == constants.replace_view_buftype and filetype == constants.replace_view_filetype then
-      return bufnr
-    end
-  end
-  return nil
+    return filetype == fml.constant.FT_SEARCH_REPLACE
+  end)
 end
 
 ---@class ghc.command.replace.viewer.IProps
@@ -70,9 +65,9 @@ function M:render(opts)
     if self.bufnr == nil then
       local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
       vim.api.nvim_set_current_buf(bufnr)
-      vim.api.nvim_set_option_value("buftype", constants.replace_view_buftype, { buf = bufnr })
-      vim.api.nvim_set_option_value("filetype", constants.replace_view_filetype, { buf = bufnr })
-      vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
+      vim.api.nvim_set_option_value("buftype", fml.constant.BT_SEARCH_REPLACE, { buf = bufnr })
+      vim.api.nvim_set_option_value("filetype", fml.constant.FT_SEARCH_REPLACE, { buf = bufnr })
+      vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
       vim.opt_local.list = false
       vim.cmd(string.format("%sbufdo file %s/REPLACE", bufnr, bufnr)) --- Rename the buf
       vim.api.nvim_create_autocmd("BufDelete", {
@@ -376,6 +371,7 @@ function M:internal_bind_keymaps(bufnr)
   local function on_view_file()
     if self.state:get_value("mode") == "search" then
       on_view_original_file()
+      return
     end
 
     local winnr = vim.api.nvim_get_current_win() ---@type integer

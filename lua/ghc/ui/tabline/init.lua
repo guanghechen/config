@@ -9,14 +9,15 @@ local tabline = fml.ui.Nvimbar.new({
 })
 
 tabline
----
-    :add("left", require("ghc.ui.tabline.component.neotree"))
-    :add("right", require("ghc.ui.tabline.component.tabs"))
-    :add("left", require("ghc.ui.tabline.component.bufs"))
+  ---
+  :add("left", require("ghc.ui.tabline.component.neotree"))
+  :add("left", require("ghc.ui.tabline.component.search"))
+  :add("right", require("ghc.ui.tabline.component.tabs"))
+  :add("left", require("ghc.ui.tabline.component.bufs"))
 
 local dirty = true
 local running = false
-local last_tabline_result = '' ---@type string
+local last_tabline_result = "" ---@type string
 local render_tabline = fml.fn.throttle_leading(function()
   running = true
   local ok, result = pcall(tabline.render, tabline)
@@ -30,7 +31,7 @@ local render_tabline = fml.fn.throttle_leading(function()
       from = "ghc.ui.tabline",
       subject = "render",
       message = "Encounter errors while render tabline",
-      details = { result = result }
+      details = { result = result },
     })
   end
 end, 50).throttled
