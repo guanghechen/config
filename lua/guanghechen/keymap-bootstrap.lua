@@ -104,6 +104,7 @@ mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window his
 
 --#[q]uit/session/context--------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>qq", ghc.command.session.quit_all, "quit: quit all", true)
+mk({ "n", "v" }, "<leader>qL", ghc.command.session.load_autosaved, "session: restore session (autosaved)", true)
 mk({ "n", "v" }, "<leader>ql", ghc.command.session.load, "session: restore session", true)
 mk({ "n", "v" }, "<leader>qo", ghc.command.context.edit_session, "context: edit session", true)
 mk({ "n", "v" }, "<leader>qs", ghc.command.session.save, "session: save session", true)
