@@ -426,15 +426,15 @@ function M:internal_render_cfg(data)
 
     ---@type fml.ui.printer.ILineHighlight[]
     local highlights = {
-      { cstart = 0, cend = invisible_width, hlname = "GhcReplaceInvisible" },
-      { cstart = invisible_width, cend = cfg_name_len, hlname = "GhcReplaceOptName" },
+      { cstart = 0, cend = invisible_width, hlname = "f_sr_invisible" },
+      { cstart = invisible_width, cend = cfg_name_len, hlname = "f_sr_opt_name" },
     }
 
     if flags ~= nil and #flags > 0 then
       for _, flag in ipairs(flags) do
         local extra = " " .. flag.icon .. " " ---@type string
         local next_value_start_pos = value_start_pos + #extra ---@type integer
-        local hlflag = flag.enabled and "GhcReplaceFlagEnabled" or "GhcReplaceFlag"
+        local hlflag = flag.enabled and "f_sr_flag_enabled" or "f_sr_flag"
 
         left = left .. extra
         table.insert(highlights, {
@@ -455,18 +455,18 @@ function M:internal_render_cfg(data)
   local mode_indicator = data.mode == "search" and "[Search]" or "[Replace]"
   self:internal_print(
     mode_indicator .. " Press ? for mappings",
-    { { cstart = 0, cend = -1, hlname = "GhcReplaceUsage" } }
+    { { cstart = 0, cend = -1, hlname = "f_sr_usage" } }
   )
-  print_cfg_field("cwd", "CWD", "GhcReplaceOptValue")
-  print_cfg_field("search_paths", "Paths", "GhcReplaceOptValue")
-  print_cfg_field("include_patterns", "Include", "GhcReplaceOptValue")
-  print_cfg_field("exclude_patterns", "Exclude", "GhcReplaceOptValue")
-  print_cfg_field("search_pattern", "Search", "GhcReplaceOptSearchPattern", {
+  print_cfg_field("cwd", "CWD", "f_sr_opt_value")
+  print_cfg_field("search_paths", "Paths", "f_sr_opt_value")
+  print_cfg_field("include_patterns", "Include", "f_sr_opt_value")
+  print_cfg_field("exclude_patterns", "Exclude", "f_sr_opt_value")
+  print_cfg_field("search_pattern", "Search", "f_sr_opt_search_pattern", {
     { icon = "󰑑", enabled = data.flag_regex },
     { icon = "", enabled = data.flag_case_sensitive },
   })
   if data.mode == "replace" then
-    print_cfg_field("replace_pattern", "Replace", "GhcReplaceOptReplacePattern")
+    print_cfg_field("replace_pattern", "Replace", "f_sr_opt_replace_pattern")
   end
 end
 
@@ -500,7 +500,7 @@ function M:internal_render_result(data, result)
 
     self:internal_print(
       "┌─────────────────────────────────────────────────────────────────────────────",
-      { { cstart = 0, cend = -1, hlname = "GhcReplaceFence" } }
+      { { cstart = 0, cend = -1, hlname = "f_sr_result_fence" } }
     )
 
     local lnum_width = #tostring(maximum_lnum)
@@ -512,7 +512,7 @@ function M:internal_render_result(data, result)
 
       self:internal_print(fileicon .. " " .. filepath, {
         { cstart = 0, cend = 2, hlname = fileicon_highlight },
-        { cstart = 2, cend = -1, hlname = "GhcReplaceFilepath" },
+        { cstart = 2, cend = -1, hlname = "f_sr_filepath" },
       }, { filepath = filepath })
 
       if mode == "search" then
@@ -522,7 +522,7 @@ function M:internal_render_result(data, result)
           for i, line in ipairs(block_match.lines) do
             ---@type fml.ui.printer.ILineHighlight[]
             local match_highlights = {
-              { cstart = 0, cend = 1, hlname = "GhcReplaceFence" },
+              { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
             }
             local padding = i > 1 and continous_line_padding
               or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
@@ -530,7 +530,7 @@ function M:internal_render_result(data, result)
             for _3, piece in ipairs(line.p) do
               table.insert(
                 match_highlights,
-                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "GhcReplaceOptSearchPattern" }
+                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "f_sr_opt_search_pattern" }
               )
             end
             self:internal_print(
@@ -558,13 +558,13 @@ function M:internal_render_result(data, result)
           for i, line in ipairs(block_match.lines) do
             ---@type fml.ui.printer.ILineHighlight[]
             local match_highlights = {
-              { cstart = 0, cend = 1, hlname = "GhcReplaceFence" },
+              { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
             }
             local padding = i > 1 and continous_line_padding
               or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
-              local hlname = piece.i % 2 == 0 and "GhcReplaceTextDeleted" or "GhcReplaceTextAdded" ---@type string
+              local hlname = piece.i % 2 == 0 and "f_sr_text_deleted" or "f_sr_text_added" ---@type string
               table.insert(
                 match_highlights,
                 { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = hlname }
@@ -582,7 +582,7 @@ function M:internal_render_result(data, result)
 
     self:internal_print(
       "└─────────────────────────────────────────────────────────────────────────────",
-      { { cstart = 0, cend = -1, hlname = "GhcReplaceFence" } }
+      { { cstart = 0, cend = -1, hlname = "f_sr_result_fence" } }
     )
   end
 end

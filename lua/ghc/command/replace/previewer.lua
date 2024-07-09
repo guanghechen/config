@@ -82,7 +82,7 @@ function M:preview(opts)
     local match_highlights = {}
     ---@diagnostic disable-next-line: unused-local
     for _3, piece in ipairs(line.p) do
-      local hlname = piece.i % 2 == 0 and "GhcReplaceTextDeleted" or "GhcReplaceTextAdded" ---@type string
+      local hlname = piece.i % 2 == 0 and "f_sr_text_deleted" or "f_sr_text_added" ---@type string
       table.insert(match_highlights, { cstart = piece.l, cend = piece.r, hlname = hlname })
     end
     printer:print(text:sub(line.l + 1, line.r), match_highlights)
