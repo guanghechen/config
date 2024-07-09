@@ -1,6 +1,5 @@
 local state = require("fml.api.state")
 local navigate_circular = require("fml.fn.navigate_circular")
-local reporter = require("fml.std.reporter")
 local std_array = require("fml.std.array")
 
 ---@class fml.api.buf
@@ -26,26 +25,7 @@ function M.go(bufnr)
 
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
-
-  if state.wins[winnr] == nil then
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    state.refresh_tab(tabnr)
-  end
-
-  local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
-  if win == nil then
-    reporter.error({
-      from = "fml.api.buf",
-      subject = "focus.go",
-      message = "Cannot find win from the state",
-      details = {
-        winnr = winnr,
-        bufnr = bufnr,
-      },
-    })
-    return
-  end
-  win.buf_history:push(bufnr)
+  state.update_state_when_buf_jump()
 end
 
 ---@param bufid                         integer the index of buffer list

@@ -1,5 +1,6 @@
 local constant = require("fml.constant")
 local path = require("fml.std.path")
+local reporter = require("fml.std.reporter")
 local std_object = require("fml.std.object")
 
 ---@class fml.api.state
@@ -95,6 +96,32 @@ function M.remove_unrefereced_bufs(bufnrs)
         M.bufs[bufnr] = nil
       end
     end
+  end
+end
+
+function M.update_state_when_buf_jump()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  if M.validate_buf(bufnr) then
+    if M.wins[winnr] == nil then
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      M.refresh_tab(tabnr)
+    end
+
+    local win = M.wins[winnr] ---@type fml.api.state.IWinItem|nil
+    if win == nil then
+      reporter.error({
+        from = "fml.api.buf",
+        subject = "focus.update_state_when_buf_jump",
+        message = "Cannot find win from the state",
+        details = {
+          winnr = winnr,
+          bufnr = bufnr,
+        },
+      })
+      return
+    end
+    win.buf_history:push(bufnr)
   end
 end
 
