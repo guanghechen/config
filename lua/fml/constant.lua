@@ -1,11 +1,16 @@
 ---@class fml.constant
 local M = {}
 
+---! buftypes
 M.BT_REPLACE_PREVIEW = "nowrite"
 M.BT_SEARCH_REPLACE = "nofile"
 
+---! filetypes
 M.FT_NEOTREE = "neo-tree"
 M.FT_SEARCH_REPLACE = "ghc_search_replace"
+
+---! tab names
+M.TN_SEARCH_REPLACE = "ghc_search_replace"
 
 M.BUF_UNTITLED = "untitled"
 M.SESSION_SAVE_OPTION = "buffers,curdir,folds,help,resize,tabpages,unix,winpos,winsize"

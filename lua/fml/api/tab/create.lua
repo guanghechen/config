@@ -38,7 +38,7 @@ end
 
 ---@param name                          string
 ---@param bufnr                         ?integer
----@return nil
+---@return integer
 function M.create_if_nonexist(name, bufnr)
   local tabnr, tab = std_object.find(state.tabs, function(tab)
     return tab.name == name
@@ -54,8 +54,10 @@ function M.create_if_nonexist(name, bufnr)
     if winnr ~= nil then
       vim.api.nvim_set_current_win(winnr)
     end
+    return tabnr
   else
     M.create(name, bufnr)
+    return vim.api.nvim_get_current_tabpage()
   end
 end
 
