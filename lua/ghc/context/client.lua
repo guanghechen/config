@@ -65,7 +65,9 @@ end
 M:load()
 M:auto_reload({
   on_changed = function()
-    M.reload_theme({ force = false })
+    vim.defer_fn(function()
+      M.reload_theme({ force = false })
+    end, 200)
   end,
 })
 

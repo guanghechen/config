@@ -8,17 +8,17 @@ local function mk(mode, key, action, desc, silent)
 end
 
 --#enhance------------------------------------------------------------------------------------------
--- better indenting
+---! better indenting
 vim.keymap.set("v", "<", "<gv")
 vim.keymap.set("v", ">", ">gv")
 
--- better up/down
+---! better up/down
 vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true, desc = "down" })
 vim.keymap.set({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true, desc = "down" })
 vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true, desc = "up" })
 vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true, desc = "up" })
 
--- https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
+---! https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
 vim.keymap.set("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "next Search Result" })
 vim.keymap.set("x", "n", "'Nn'[v:searchforward]", { expr = true, desc = "next Search Result" })
 vim.keymap.set("o", "n", "'Nn'[v:searchforward]", { expr = true, desc = "next Search Result" })
@@ -29,7 +29,11 @@ vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Se
 mk("n", "<esc>", "<cmd>noh<cr><esc>", "remove search highlights", true) -- Clear search with <esc>
 mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true) -- Exit terminal
 
--- better copy/paste
+---! quick shortcut
+mk({ "i", "n", "v" }, "<C-b>T", ghc.command.toggle.theme, "toggle: theme")
+mk({ "i", "n", "v" }, "<M-T>", ghc.command.toggle.theme, "toggle: theme")
+
+---! better copy/paste
 mk("v", "<C-b>c", '"+y', "copy to system clipboard")
 mk("v", "<M-c>", '"+y', "copy to system clipboard")
 mk("v", "<C-b>x", '"+x', "cut to system clipboard")

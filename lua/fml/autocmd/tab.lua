@@ -2,8 +2,8 @@ local state = require("fml.api.state")
 local std_object = require("fml.std.object")
 
 vim.api.nvim_create_autocmd({ "TabNew" }, {
-  callback = function(args)
-    vim.notify("tab new: " .. vim.inspect(args))
+  callback = function()
+    -- vim.notify("tab new: " .. vim.inspect(args))
   end,
 })
 
