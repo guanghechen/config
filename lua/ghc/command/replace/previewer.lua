@@ -10,7 +10,6 @@ local state = require("ghc.command.replace.state")
 
 ---@class ghc.command.replace.Previewer
 local M = {}
-M.__index = M
 
 ---@param opts ghc.types.command.replace.previewer.IPreviewParams
 function M.preview(opts)

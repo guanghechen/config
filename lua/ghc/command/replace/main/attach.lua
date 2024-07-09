@@ -232,12 +232,16 @@ function M.on_view_file()
   local cursor_row = cursor[1]
   local meta = M.printer:get_meta(cursor_row) ---@type ghc.types.command.replace.main.ILineMeta|nil
   if meta ~= nil and meta.filepath ~= nil then
-    previewer:preview({
-      filepath = meta.filepath,
-      keep_search_pieces = true,
-      cursor_row = meta.lnum or 1,
-      cursor_col = 0,
-    })
+    local winnr_previewer = M.locate_or_create_preview_window() ---@type integer|nil
+    if winnr_previewer ~= nil then
+      previewer.preview({
+        winnr = winnr_previewer,
+        filepath = meta.filepath,
+        keep_search_pieces = true,
+        cursor_row = meta.lnum or 1,
+        cursor_col = 0,
+      })
+    end
   end
 end
 

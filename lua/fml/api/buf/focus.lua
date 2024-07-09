@@ -1,6 +1,7 @@
 local state = require("fml.api.state")
 local navigate_circular = require("fml.fn.navigate_circular")
 local std_array = require("fml.std.array")
+local reporter = require("fml.std.reporter")
 
 ---@class fml.api.buf
 ---@field public focus_1                fun(): nil
