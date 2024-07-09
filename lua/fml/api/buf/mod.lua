@@ -8,7 +8,7 @@ local M = {}
 function M.is_visible(bufnr)
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   return std_array.some(winnrs, function(winnr)
-    local win_bufnr = vim.api.nvim_win_get_buf(winnr)
+    local win_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     return win_bufnr == bufnr
   end)
 end

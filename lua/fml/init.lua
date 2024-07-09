@@ -37,6 +37,7 @@ local fn = {
   navigate_circular = require("fml.fn.navigate_circular"),
   navigate_limit = require("fml.fn.navigate_limit"),
   noop = require("fml.fn.noop"),
+  run_async = require("fml.fn.run_async"),
   schedule_fn = require("fml.fn.schedule_fn"),
   throttle_leading = require("fml.fn.throttle_leading"),
   truthy = require("fml.fn.truthy"),

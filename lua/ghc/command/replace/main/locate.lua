@@ -4,10 +4,11 @@ local M = require("ghc.command.replace.main.mod")
 ---@return integer|nil
 function M.locate_main_buf()
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  return fml.array.first(bufnrs, function(bufnr)
+  local _, bufnr = fml.array.first(bufnrs, function(bufnr)
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
     return filetype == fml.constant.FT_SEARCH_REPLACE
   end)
+  return bufnr
 end
 
 ---@return integer
@@ -31,12 +32,12 @@ end
 ---@return integer
 function M.locate_main_win(tabnr)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  local _, matched = fml.array.first(winnrs, function(winnr)
+  local _, winnr_matched = fml.array.first(winnrs, function(winnr)
     local bufnr = vim.api.nvim_win_get_buf(winnr)
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
     return filetype == fml.constant.FT_SEARCH_REPLACE
   end)
-  return matched or winnrs[1]
+  return winnr_matched or winnrs[1]
 end
 
 ---@return integer|nil

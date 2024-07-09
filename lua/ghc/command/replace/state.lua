@@ -1,5 +1,6 @@
 local session = require("ghc.context.session")
 
+local __searching = false ---@type boolean
 ---@diagnostic disable-next-line: unused-local
 local __replace_dirty = true ---@type boolean
 local __search_dirty = true ---@type boolean
@@ -259,20 +260,40 @@ end
 ---@return fml.std.oxi.search.IResult
 function M.search(force)
   if force or __search_dirty then
-    ---@type fml.std.oxi.search.IParams
-    local options = {
-      cwd = M.get_cwd(),
-      flag_case_sensitive = M.get_flag_case_sensitive(),
-      flag_regex = M.get_flag_regex(),
-      search_pattern = M.get_search_pattern(),
-      search_paths = M.get_search_paths(),
-      include_patterns = M.get_include_patterns(),
-      exclude_patterns = M.get_exclude_patterns(),
-    }
+    if __searching then
+      __search_dirty = true
+    else
+      __searching = true
+      fml.fn.run_async(function()
+        ---@type fml.std.oxi.search.IParams
+        local options = {
+          cwd = M.get_cwd(),
+          flag_case_sensitive = M.get_flag_case_sensitive(),
+          flag_regex = M.get_flag_regex(),
+          search_pattern = M.get_search_pattern(),
+          search_paths = M.get_search_paths(),
+          include_patterns = M.get_include_patterns(),
+          exclude_patterns = M.get_exclude_patterns(),
+        }
 
-    local result = fml.oxi.search(options) ---@type fml.std.oxi.search.IResult
-    __search_dirty = false
-    __search_result = result
+        __search_dirty = false
+        local ok, result = pcall(fml.oxi.search, options)
+        if ok then
+          __search_result = result
+          __search_dirty_ticker:next(__search_dirty_ticker:get_snapshot() + 1)
+        else
+          fml.reporter.error({
+            from = "ghc.command.replace.state",
+            subject = "search",
+            message = "Failed to search",
+            details = { options = options },
+          })
+        end
+
+        M.search(false)
+        __searching = false
+      end)
+    end
   end
 
   ---@cast __search_result  fml.std.oxi.search.IResult

@@ -47,7 +47,7 @@ function M.create_if_nonexist(name, bufnr)
   if tabnr ~= nil and tab ~= nil then
     vim.api.nvim_set_current_tabpage(tabnr)
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-    local winnr = std_array.first(winnrs, function(winnr)
+    local _, winnr = std_array.first(winnrs, function(winnr)
       local win_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       return win_bufnr == bufnr
     end)
