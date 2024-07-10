@@ -18,6 +18,7 @@ fn test_rg() {
         search_paths: "tests/fixtures".to_string(),
         include_patterns: "*.txt".to_string(),
         exclude_patterns: ".git, c.txt".to_string(),
+        specified_filepath: None,
     };
     let result = search::search(&replace_options);
 

@@ -39,6 +39,7 @@ pub struct SearchOptions {
     pub search_paths: String,
     pub include_patterns: String,
     pub exclude_patterns: String,
+    pub specified_filepath: Option<String>,
 }
 
 pub fn search(
@@ -101,6 +102,12 @@ pub fn search(
             cmd.args(["--regexp", search_pattern]);
         } else {
             cmd.args(["--fixed-strings", search_pattern]);
+        }
+
+        if let Some(specified_filepath) = &options.specified_filepath {
+            if !specified_filepath.is_empty() {
+                cmd.arg(specified_filepath);
+            }
         }
 
         let start_time = SystemTime::now();
