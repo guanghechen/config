@@ -30,12 +30,12 @@ local function identity(x)
   return x
 end
 
----@class fml.collection.Observable.IProps
+---@class fml.collection.observable.IProps
 ---@field public initial_value          fml.types.T           Initial value of the observable
 ---@field public equals                 ?fml.types.IEquals    Determine whether the two values are equal.
 ---@field public normalize              ?fml.types.INormalize Normalize the value before compare or update
 
----@param props                         fml.collection.Observable.IProps
+---@param props                         fml.collection.observable.IProps
 ---@return fml.collection.Observable
 function M.new(props)
   local equals = props.equals or shallow_equals ---@type fml.types.IEquals
@@ -43,7 +43,6 @@ function M.new(props)
   local initial_value = props.initial_value ---@type fml.types.T
 
   local self = setmetatable(BatchDisposable.new(), M)
-  ---@diagnostic disable-next-line: cast-type-mismatch
   ---@cast self fml.collection.Observable
 
   self.equals = equals

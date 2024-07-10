@@ -5,8 +5,8 @@ local __searching = false ---@type boolean
 local __replace_dirty = true ---@type boolean
 local __search_dirty = true ---@type boolean
 local __search_result = nil ---@type fml.std.oxi.search.IResult|nil
-local __search_dirty_ticker = fml.collection.Observable.from_value(0)
-local __replace_dirty_ticker = fml.collection.Observable.from_value(0)
+local __search_dirty_ticker = fml.collection.Ticker.new()
+local __replace_dirty_ticker = fml.collection.Ticker.new()
 
 ---@alias ghc.command.replace.state.IKey
 ---| "cwd"
@@ -43,7 +43,7 @@ fml.fn.watch_observables({
   session.search_exclude_patterns,
 }, function()
   __search_dirty = true
-  __search_dirty_ticker:next(__search_dirty_ticker:get_snapshot() + 1)
+  __search_dirty_ticker:tick()
 end)
 
 fml.fn.watch_observables({
@@ -175,6 +175,7 @@ function M.set_include_patterns(patterns)
     session.search_include_patterns:next(patterns)
   end
 end
+
 ---@return string
 function M.get_exclude_patterns()
   return session.search_exclude_patterns:get_snapshot()
@@ -280,7 +281,7 @@ function M.search(force)
         local ok, result = pcall(fml.oxi.search, options)
         if ok then
           __search_result = result
-          __search_dirty_ticker:next(__search_dirty_ticker:get_snapshot() + 1)
+          __search_dirty_ticker:tick()
         else
           fml.reporter.error({
             from = "ghc.command.replace.state",

@@ -19,6 +19,7 @@ local collection = {
   Observable = require("fml.collection.observable"),
   Subscriber = require("fml.collection.subscriber"),
   Subscribers = require("fml.collection.subscribers"),
+  Ticker = require("fml.collection.ticker"),
   Viewmodel = require("fml.collection.viewmodel"),
 }
 
