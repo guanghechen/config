@@ -40,7 +40,7 @@ else
 end
 
 ---! Reload session if not specify file and current directory is a git repository.
-if ghc.context.session.flight_autoload_session:get_snapshot() and vim.fn.argc() < 1 and fml.path.is_git_repo() then
+if ghc.context.session.flight_autoload_session:snapshot() and vim.fn.argc() < 1 and fml.path.is_git_repo() then
   vim.schedule(function()
     local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
     if not ok_load_session then

@@ -257,6 +257,11 @@ function M.watch_replace_changes(on_change)
   return __replace_dirty_ticker:subscribe(subscriber)
 end
 
+function M.mark_search_dirty()
+  __search_dirty = true
+  __search_dirty_ticker:tick()
+end
+
 ---@param force                         ?boolean
 ---@return fml.std.oxi.search.IResult
 function M.search(force)
