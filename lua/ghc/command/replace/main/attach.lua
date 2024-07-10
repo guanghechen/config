@@ -262,6 +262,7 @@ function M.on_replace()
     if meta.lnum == nil then
       ---@type boolean
       local success = fml.oxi.replace_entire_file({
+        cwd = state.get_cwd(),
         filepath = meta.filepath,
         flag_regex = state.get_flag_regex(),
         flag_case_sensitive = state.get_flag_case_sensitive(),

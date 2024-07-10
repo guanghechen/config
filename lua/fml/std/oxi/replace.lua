@@ -1,3 +1,4 @@
+local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
 
 ---@class fml.std.oxi
@@ -20,6 +21,7 @@ local M = require("fml.std.oxi.mod")
 ---@field public text                   string
 
 ---@class fml.std.oxi.replace.IReplaceEntireFileParams
+---@field public cwd                    string
 ---@field public filepath               string
 ---@field public flag_regex             boolean
 ---@field public flag_case_sensitive    boolean
@@ -54,9 +56,12 @@ function M.replace_entire_file(params)
   if params.flag_regex and not params.flag_case_sensitive then
     search_pattern = "(?i)" .. search_pattern:lower()
   end
+
+  local filepath = path.resolve(params.cwd, params.filepath) ---@type string
+
   ---@type string
   local json_str = M.nvim_tools.replace_entire_file( ---
-    params.filepath,
+    filepath,
     search_pattern,
     params.replace_pattern,
     params.flag_regex
