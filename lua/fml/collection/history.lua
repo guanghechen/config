@@ -220,6 +220,11 @@ function M:push(element)
   end
 
   self:rearrange()
+  if self._stack:size() < 1 then
+    self._stack:enqueue(element)
+    self._present_idx = 1
+    return
+  end
 
   if self.equals(self._stack:at(self._present_idx), element) then
     return
@@ -255,7 +260,7 @@ function M:rearrange()
   if new_present_index == 0 and self._stack:size() > 0 then
     new_present_index = 1
   end
-  self._present_idx = new_present_index
+  self._present_idx = math.max(new_present_index, self._stack:size() > 0 and 1 or 0)
 end
 
 ---@return fml.types.collection.history.ISerializedData
