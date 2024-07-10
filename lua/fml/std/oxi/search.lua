@@ -27,7 +27,8 @@ local M = require("fml.std.oxi.mod")
 ---@class fml.std.oxi.search.IResult
 ---@field public elapsed_time           string
 ---@field public items                  ?table<string, fml.std.oxi.search.IFileMatch>
----@field public error                  ? string
+---@field public item_orders            ?string[]
+---@field public error                  ?string
 
 ---@class fml.std.oxi.search.IParams
 ---@field public cwd                    string
@@ -45,5 +46,15 @@ function M.search(params)
   local result_str = M.nvim_tools.search(options_stringified)
   local result = M.json.parse(result_str)
   ---@cast result fml.std.oxi.search.IResult
+
+  if result.items ~= nil then
+    local orders = {}
+    for filepath in pairs(result.items) do
+      table.insert(orders, filepath)
+    end
+    table.sort(orders)
+    result.item_orders = orders
+  end
+
   return result
 end

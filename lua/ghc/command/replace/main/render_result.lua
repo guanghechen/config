@@ -7,7 +7,7 @@ local M = require("ghc.command.replace.main.mod")
 ---@return nil
 function M.internal_render_result(state, force)
   local result = state.search(force) ---@type fml.std.oxi.search.IResult
-  if result.items == nil or result.error then
+  if result.items == nil or result.item_orders == nil or result.error then
     local summary = string.format("Time: %s", result.elapsed_time)
     M.internal_print(summary)
   else
@@ -39,12 +39,13 @@ function M.internal_render_result(state, force)
     --local continous_line_padding = "¦ " .. string.rep(" ", lnum_width) .. "  "
     local continous_line_padding = "│ " .. string.rep(" ", lnum_width) .. "  "
     local search_cwd = state.get_cwd() ---@type string
-    for raw_filepath, file_item in pairs(result.items) do
+    for _, raw_filepath in ipairs(result.item_orders) do
+      local file_item = result.items[raw_filepath]
       local fileicon, fileicon_highlight = fml.fn.calc_fileicon(raw_filepath)
       local filepath = fml.path.relative(search_cwd, raw_filepath)
 
       M.internal_print(fileicon .. " " .. filepath, {
-        { cstart = 0, cend = 2, hlname = fileicon_highlight },
+        { cstart = 0, cend = 2,  hlname = fileicon_highlight },
         { cstart = 2, cend = -1, hlname = "f_sr_filepath" },
       }, { filepath = filepath })
 
@@ -58,7 +59,7 @@ function M.internal_render_result(state, force)
               { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
             }
             local padding = i > 1 and continous_line_padding
-              or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
+                or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
               table.insert(
@@ -94,7 +95,7 @@ function M.internal_render_result(state, force)
               { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
             }
             local padding = i > 1 and continous_line_padding
-              or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
+                or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
             ---@diagnostic disable-next-line: unused-local
             for _3, piece in ipairs(line.p) do
               local hlname = piece.i % 2 == 0 and "f_sr_text_deleted" or "f_sr_text_added" ---@type string
