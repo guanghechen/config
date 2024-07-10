@@ -1,6 +1,7 @@
 local constant = require("fml.constant")
 local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
+local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
 
 ---@class fml.api.state
@@ -83,19 +84,20 @@ end
 ---@return nil
 function M.remove_unrefereced_bufs(bufnrs)
   bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
+  local bufnrs_to_remove = {} ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    local buf = M.bufs[bufnr]
-    if buf ~= nil then
-      if M.validate_buf(bufnr) then
-        local copies = M.count_buf_copies(bufnr)
-        if copies < 1 then
-          M.bufs[bufnr] = nil
-          vim.api.nvim_buf_delete(bufnr, { force = true })
-        end
-      else
+    if M.validate_buf(bufnr) then
+      if M.count_buf_copies(bufnr) < 1 then
         M.bufs[bufnr] = nil
+        table.insert(bufnrs_to_remove, bufnr)
       end
+    else
+      M.bufs[bufnr] = nil
     end
+  end
+
+  for _, bufnr in ipairs(bufnrs_to_remove) do
+    vim.api.nvim_buf_delete(bufnr, { force = true })
   end
 end
 

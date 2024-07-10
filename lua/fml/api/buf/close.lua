@@ -31,12 +31,6 @@ function M.close(bufnrs)
     for _ = k + 1, N, 1 do
       table.remove(tab.bufnrs)
     end
-
-    if k == 0 then
-      state.close_tab(tabnr)
-    else
-      state.refresh_tab(tabnr)
-    end
   end
 
   state.remove_unrefereced_bufs(bufnrs)
