@@ -1,5 +1,22 @@
+local std_string = require("fml.std.string")
+
 ---@class fml.std.object
 local M = {}
+
+---@param object                        table|nil
+---@param path                          string
+---@return any|nil
+function M.get(object, path)
+  local pieces = std_string.split(path, ".") ---@type string[]
+  local o = object
+  for _, piece in ipairs(pieces) do
+    if type(o) ~= "table" then
+      break
+    end
+    o = o[piece]
+  end
+  return o
+end
 
 ---@generic K
 ---@generic V
