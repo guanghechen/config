@@ -7,7 +7,7 @@ function _ghc_tmux_popup_ {
   local popup_session_name="_popup@${current_session_name}"
   local popup_window_name="${current_window_name}"
 
-  if [[ "${current_session_name}" = _popup@* ]]; then
+  if [[ "${current_session_name}" == _popup@* ]]; then
     tmux detach-client
   else
     # Check if popup session already exists
@@ -44,12 +44,12 @@ function _ghc_tmux_popup_ {
     local popup_pane_count=$(tmux list-panes | wc -l)
     if [ "${popup_pane_count}" -eq 1 ]; then
       local current_popup_pane_path=$(tmux display-message -p -F "#{pane_current_path}")
+      local current_pane_path_with_slash="${current_pane_path%/}/"
 
-      # Check if the current pane path differs from the popup pane path.
-      if [ "${current_pane_path}" != "${current_popup_pane_path}" ]; then
-        current_pane_path=$(printf '%q' "$current_pane_path") # Escape the path.
-
+      # Check if the current popup pane is not under or equals with the current_pane_path
+      if [[ "${current_popup_pane_path}" != "${current_pane_path}" ]] && [[ "${current_popup_pane_path}" != "${current_pane_path_with_slash}"* ]]; then
         local popup_active_pane_id=$(tmux display-message -p -t "${popup_session_name}:${popup_window_name}" "#{pane_id}")
+        current_pane_path=$(printf '%q' "$current_pane_path") # Escape the path.
         tmux send-keys -t "${popup_active_pane_id}" "cd ${current_pane_path}" C-m
       fi
     fi
