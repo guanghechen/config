@@ -49,6 +49,7 @@ local fn = {
 local std = {
   G = require("fml.std.G"),
   array = require("fml.std.array"),
+  boolean = require("fml.std.boolean"),
   clipboard = require("fml.std.clipboard"),
   color = require("fml.std.color"),
   debug = require("fml.std.debug"),
