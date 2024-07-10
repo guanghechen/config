@@ -251,6 +251,31 @@ function M.on_refresh_all()
 end
 
 ---@return nil
+function M.on_replace()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  M.record_cursor_pos(winnr)
+
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
+  local cursor_row = cursor[1]
+  local meta = M.printer:get_meta(cursor_row) ---@type ghc.types.command.replace.main.ILineMeta|nil
+  if meta ~= nil and meta.filepath ~= nil then
+    if meta.lnum == nil then
+      ---@type boolean
+      local success = fml.oxi.replace_entire_file({
+        filepath = meta.filepath,
+        flag_regex = state.get_flag_regex(),
+        flag_case_sensitive = state.get_flag_case_sensitive(),
+        search_pattern = state.get_search_pattern(),
+        replace_pattern = state.get_replace_pattern(),
+      })
+      if success then
+        state.refresh_on_file(meta.filepath)
+      end
+    end
+  end
+end
+
+---@return nil
 function M.on_view_file()
   if state.get_mode() == "search" then
     M.on_open_file()
@@ -289,6 +314,7 @@ function M.attach(bufnr)
   mk({ "n", "v" }, "<f5>", M.on_refresh_all, "replace: refresh search (all)")
   mk({ "n", "v" }, "<cr>", M.on_view_file, "replace: view file")
   mk({ "n", "v" }, "<2-LeftMouse>", M.on_view_file, "replace: view file")
+  mk({ "n", "v" }, "<leader><cr>", M.on_replace, "replace: replace")
   mk({ "n", "v" }, "<leader>i", state.tog_flag_case_sensitive, "replace: toggle case sensitive")
   mk({ "n", "v" }, "<leader>r", state.tog_flag_regex, "replace: toggle regex mode")
   mk({ "n", "v" }, "<leader>m", state.tog_mode, "replace: toggle ux mode")

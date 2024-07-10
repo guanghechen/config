@@ -3,11 +3,9 @@ use crate::algorithm::kmp::find_all_matched_points;
 use super::r#match::{find_matches_per_line, LineMatch, MatchPoint};
 use regex::{Captures, Regex};
 use serde::{Deserialize, Serialize};
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, Write},
-    sync::Mutex,
-};
+use std::fs::File;
+use std::io::{Read, Write};
+use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReplacePreview {
@@ -147,59 +145,53 @@ pub fn replace_text_preview(
     }
 }
 
-/// Replaces all non-overlapping matches in `text` with the replacement provided.
-pub fn replace_text(text: &str, search_pattern: &String, replace_pattern: &str) -> String {
-    if let Ok(r) = get_static_regex(search_pattern) {
-        let regex = r.lock().unwrap();
-        return regex.replace_all(text, replace_pattern).to_string();
-    }
-    text.to_string()
-}
+/// Peform replacement on the entire file.
+pub fn replace_entire_file(
+    filepath: &str,
+    search_pattern: &String,
+    replace_pattern: &str,
+    flag_regex: bool,
+) -> Result<bool, String> {
+    let mut file = File::open(filepath).map_err(|e| e.to_string())?;
+    let mut text = String::new();
+    file.read_to_string(&mut text).map_err(|e| e.to_string())?;
 
-/// Replace text on specify line number of file
-pub fn replace_file(filepath: &str, lnum: i32, search_query: &String, replace_query: &str) -> bool {
-    if File::open(filepath).is_err() {
-        return false;
+    let mut next_text: String = text.to_string();
+    if flag_regex {
+        if let Ok(r) = get_static_regex(search_pattern) {
+            let regex = r.lock().unwrap();
+            next_text = regex
+                .replace_all(&text, |caps: &Captures| {
+                    let mut replacement = replace_pattern.to_string();
+                    for i in 1..caps.len() {
+                        if let Some(cap) = caps.get(i) {
+                            let placeholder = format!("${}", i);
+                            replacement = replacement.replace(&placeholder, cap.as_str());
+                        }
+                    }
+                    replacement
+                })
+                .to_string();
+        }
+    } else {
+        let match_points: Vec<usize> =
+            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes());
+        let len_of_search: usize = search_pattern.len();
+        let mut pieces: Vec<&str> = vec![];
+        let mut i: usize = 0;
+        for m in match_points {
+            let j: usize = m + len_of_search;
+            pieces.push(&text[i..m]);
+            pieces.push(replace_pattern);
+            i = j;
+        }
+        pieces.push(&text[i..]);
+        next_text = pieces.join("");
     }
-    let static_regex = get_static_regex(search_query);
-    if static_regex.is_err() {
-        return false;
-    }
-    let regex = static_regex.unwrap().lock().unwrap();
-    let file = File::open(filepath);
-    if file.is_err() {
-        return false;
-    }
-    let f = BufReader::new(file.unwrap());
-    let mut lines: Vec<String> = Vec::new();
-    let mut is_modified = false;
 
-    // Is this good?
-    // I only want replace 1 line with another line
-    let mut line_number = 1;
-    for line in f.lines() {
-        // it only read a valid utf-8
-        if line.is_err() {
-            return false;
-        }
-        let text = line.unwrap();
-        if line_number == (lnum as usize) {
-            let new_line = regex.replace_all(&text, replace_query).to_string();
-            if new_line != text {
-                is_modified = true;
-                lines.push(new_line);
-            } else {
-                lines.push(text);
-            }
-        } else {
-            lines.push(text);
-        }
-        line_number += 1;
-    }
-    if is_modified {
+    if text != next_text {
         let mut new_file = File::create(filepath).unwrap();
-        new_file.write_all(lines.join("\n").as_bytes()).unwrap();
-        return true;
+        new_file.write_all(next_text.as_bytes()).unwrap();
     }
-    false
+    Ok(true)
 }

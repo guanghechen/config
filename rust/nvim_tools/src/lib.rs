@@ -8,6 +8,7 @@ extern crate lazy_static;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
+use types::replace::ReplaceEntireFileResult;
 use uuid::Uuid;
 
 #[nvim_oxi::plugin]
@@ -48,15 +49,30 @@ fn nvim_tools() -> Dictionary {
         },
     );
 
-    let oxi_replace_text = Function::from_fn(
-        |(text, search_query, replace_query): (String, String, String)| {
-            util::replace::replace_text(&text, &search_query, &replace_query)
-        },
-    );
-
-    let oxi_replace_file = Function::from_fn(
-        |(file_path, lnum, search_query, replace_query): (String, i32, String, String)| {
-            util::replace::replace_file(&file_path, lnum, &search_query, &replace_query)
+    let oxi_replace_entire_file = Function::from_fn(
+        |(file_path, search_pattern, replace_pattern, flag_regex): (
+            String,
+            String,
+            String,
+            bool,
+        )|
+         -> String {
+            let result = match util::replace::replace_entire_file(
+                &file_path,
+                &search_pattern,
+                &replace_pattern,
+                flag_regex,
+            ) {
+                Ok(success) => ReplaceEntireFileResult {
+                    success,
+                    error: None,
+                },
+                Err(error) => ReplaceEntireFileResult {
+                    success: false,
+                    error: Some(error),
+                },
+            };
+            serde_json::to_string(&result).unwrap()
         },
     );
 
@@ -70,12 +86,11 @@ fn nvim_tools() -> Dictionary {
             "normalize_comma_list",
             Object::from(oxi_normalize_comma_list),
         ),
-        ("replace_file", Object::from(oxi_replace_file)),
+        ("replace_entire_file", Object::from(oxi_replace_entire_file)),
         (
             "replace_text_preview",
             Object::from(oxi_replace_text_preview),
         ),
-        ("replace_text", Object::from(oxi_replace_text)),
         ("search", Object::from(oxi_search)),
         ("uuid", Object::from(oxi_uuid)),
     ])
