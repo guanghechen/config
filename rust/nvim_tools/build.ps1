@@ -1,11 +1,5 @@
 # Set the directory name of the current script
-$scriptDir = Split-Path -Parent $PSCommandPath
-Set-Location $scriptDir
-
-# Add further script logic here
-
-# Navigate to the nvim_tools directory
-cd "nvim_tools"
+Set-Location $PSScriptRoot
 
 # Assuming cargo build is run from the root of the project, navigate there if necessary
 # Navigate to the project directory where Cargo.toml is located
