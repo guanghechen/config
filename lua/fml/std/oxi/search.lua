@@ -38,6 +38,7 @@ local M = require("fml.std.oxi.mod")
 ---@field public search_paths           string
 ---@field public include_patterns       string
 ---@field public exclude_patterns       string
+---@field public specified_filepath     ?string
 
 ---@param params                        fml.std.oxi.search.IParams
 ---@return fml.std.oxi.search.IResult

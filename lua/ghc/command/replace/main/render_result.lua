@@ -41,74 +41,76 @@ function M.internal_render_result(state, force)
     local search_cwd = state.get_cwd() ---@type string
     for _, raw_filepath in ipairs(result.item_orders) do
       local file_item = result.items[raw_filepath]
-      local fileicon, fileicon_highlight = fml.fn.calc_fileicon(raw_filepath)
-      local filepath = fml.path.relative(search_cwd, raw_filepath)
+      if file_item ~= nil then
+        local fileicon, fileicon_highlight = fml.fn.calc_fileicon(raw_filepath)
+        local filepath = fml.path.relative(search_cwd, raw_filepath)
 
-      M.internal_print(fileicon .. " " .. filepath, {
-        { cstart = 0, cend = 2,  hlname = fileicon_highlight },
-        { cstart = 2, cend = -1, hlname = "f_sr_filepath" },
-      }, { filepath = filepath })
+        M.internal_print(fileicon .. " " .. filepath, {
+          { cstart = 0, cend = 2,  hlname = fileicon_highlight },
+          { cstart = 2, cend = -1, hlname = "f_sr_filepath" },
+        }, { filepath = filepath })
 
-      if mode == "search" then
-        ---@diagnostic disable-next-line: unused-local
-        for _2, block_match in ipairs(file_item.matches) do
-          local text = block_match.text
-          for i, line in ipairs(block_match.lines) do
-            ---@type fml.ui.printer.ILineHighlight[]
-            local match_highlights = {
-              { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
-            }
-            local padding = i > 1 and continous_line_padding
-                or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
-            ---@diagnostic disable-next-line: unused-local
-            for _3, piece in ipairs(line.p) do
-              table.insert(
+        if mode == "search" then
+          ---@diagnostic disable-next-line: unused-local
+          for _2, block_match in ipairs(file_item.matches) do
+            local text = block_match.text
+            for i, line in ipairs(block_match.lines) do
+              ---@type fml.ui.printer.ILineHighlight[]
+              local match_highlights = {
+                { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
+              }
+              local padding = i > 1 and continous_line_padding
+                  or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
+              ---@diagnostic disable-next-line: unused-local
+              for _3, piece in ipairs(line.p) do
+                table.insert(
+                  match_highlights,
+                  { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "f_sr_opt_search_pattern" }
+                )
+              end
+              M.internal_print(
+                padding .. text:sub(line.l + 1, line.r),
                 match_highlights,
-                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = "f_sr_opt_search_pattern" }
+                { filepath = filepath, lnum = block_match.lnum + i - 1 }
               )
             end
-            M.internal_print(
-              padding .. text:sub(line.l + 1, line.r),
-              match_highlights,
-              { filepath = filepath, lnum = block_match.lnum + i - 1 }
-            )
           end
-        end
-      else
-        ---@diagnostic disable-next-line: unused-local
-        for _2, _block_match in ipairs(file_item.matches) do
-          ---@type fml.std.oxi.replace.IPreviewBlockItem
-          local block_match = fml.oxi.replace_text_preview({
-            text = _block_match.text,
-            search_pattern = state.get_search_pattern(),
-            replace_pattern = state.get_replace_pattern(),
-            keep_search_pieces = true,
-            flag_regex = state.get_flag_regex(),
-            flag_case_sensitive = state.get_flag_case_sensitive(),
-          })
+        else
+          ---@diagnostic disable-next-line: unused-local
+          for _2, _block_match in ipairs(file_item.matches) do
+            ---@type fml.std.oxi.replace.IPreviewBlockItem
+            local block_match = fml.oxi.replace_text_preview({
+              text = _block_match.text,
+              search_pattern = state.get_search_pattern(),
+              replace_pattern = state.get_replace_pattern(),
+              keep_search_pieces = true,
+              flag_regex = state.get_flag_regex(),
+              flag_case_sensitive = state.get_flag_case_sensitive(),
+            })
 
-          local text = block_match.text ---@type string
-          local start_lnum = _block_match.lnum ---@type integer
-          for i, line in ipairs(block_match.lines) do
-            ---@type fml.ui.printer.ILineHighlight[]
-            local match_highlights = {
-              { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
-            }
-            local padding = i > 1 and continous_line_padding
-                or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
-            ---@diagnostic disable-next-line: unused-local
-            for _3, piece in ipairs(line.p) do
-              local hlname = piece.i % 2 == 0 and "f_sr_text_deleted" or "f_sr_text_added" ---@type string
-              table.insert(
+            local text = block_match.text ---@type string
+            local start_lnum = _block_match.lnum ---@type integer
+            for i, line in ipairs(block_match.lines) do
+              ---@type fml.ui.printer.ILineHighlight[]
+              local match_highlights = {
+                { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
+              }
+              local padding = i > 1 and continous_line_padding
+                  or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
+              ---@diagnostic disable-next-line: unused-local
+              for _3, piece in ipairs(line.p) do
+                local hlname = piece.i % 2 == 0 and "f_sr_text_deleted" or "f_sr_text_added" ---@type string
+                table.insert(
+                  match_highlights,
+                  { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = hlname }
+                )
+              end
+              M.internal_print(
+                padding .. text:sub(line.l + 1, line.r),
                 match_highlights,
-                { cstart = #padding + piece.l, cend = #padding + piece.r, hlname = hlname }
+                { filepath = filepath, lnum = start_lnum + i - 1 }
               )
             end
-            M.internal_print(
-              padding .. text:sub(line.l + 1, line.r),
-              match_highlights,
-              { filepath = filepath, lnum = start_lnum + i - 1 }
-            )
           end
         end
       end

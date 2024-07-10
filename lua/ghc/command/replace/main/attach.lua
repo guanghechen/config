@@ -4,6 +4,13 @@ local state = require("ghc.command.replace.state")
 ---@class ghc.command.replace.main
 local M = require("ghc.command.replace.main.mod")
 
+---@return nil
+function M.record_cursor_pos(winnr)
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
+  M.cursor_row = cursor[1]
+  M.cursor_col = cursor[2]
+end
+
 ---@param key                           ghc.enums.command.replace.StateKey
 ---@param position                      ?"center"|"cursor
 ---@return nil
@@ -221,6 +228,29 @@ function M.on_open_file()
 end
 
 ---@return nil
+function M.on_refresh()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  M.record_cursor_pos(winnr)
+
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
+  local cursor_row = cursor[1]
+  local meta = M.printer:get_meta(cursor_row) ---@type ghc.types.command.replace.main.ILineMeta|nil
+  if meta ~= nil and meta.filepath ~= nil then
+    state.refresh_on_file(meta.filepath)
+  else
+    state.mark_search_dirty()
+  end
+end
+
+---@return nil
+function M.on_refresh_all()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  M.record_cursor_pos(winnr)
+
+  state.mark_search_dirty()
+end
+
+---@return nil
 function M.on_view_file()
   if state.get_mode() == "search" then
     M.on_open_file()
@@ -255,7 +285,8 @@ function M.attach(bufnr)
     vim.keymap.set(modes, key, action, { noremap = true, silent = true, buffer = bufnr, desc = desc })
   end
 
-  mk({ "n", "v" }, "<f5>", state.mark_search_dirty, "replace: refresh search")
+  mk({ "n", "v" }, "<f6>", M.on_refresh, "replace: refresh search")
+  mk({ "n", "v" }, "<f5>", M.on_refresh_all, "replace: refresh search (all)")
   mk({ "n", "v" }, "<cr>", M.on_view_file, "replace: view file")
   mk({ "n", "v" }, "<2-LeftMouse>", M.on_view_file, "replace: view file")
   mk({ "n", "v" }, "<leader>i", state.tog_flag_case_sensitive, "replace: toggle case sensitive")

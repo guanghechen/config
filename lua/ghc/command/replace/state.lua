@@ -306,4 +306,50 @@ function M.search(force)
   return __search_result
 end
 
+---@param filepath                      string
+---@return nil
+function M.refresh_on_file(filepath)
+  if __search_result == nil then
+    M.search(false)
+    return
+  end
+
+  if __search_result.items == nil then
+    return
+  end
+  ---@cast __search_result  fml.std.oxi.search.IResult
+
+  fml.fn.run_async(function()
+    ---@type fml.std.oxi.search.IParams
+    local options = {
+      cwd = M.get_cwd(),
+      flag_case_sensitive = M.get_flag_case_sensitive(),
+      flag_regex = M.get_flag_regex(),
+      search_pattern = M.get_search_pattern(),
+      search_paths = M.get_search_paths(),
+      include_patterns = M.get_include_patterns(),
+      exclude_patterns = M.get_exclude_patterns(),
+      specified_filepath = filepath,
+    }
+
+    local ok, result = pcall(fml.oxi.search, options)
+    if ok then
+      if __search_result.items ~= nil then
+        __search_result.items[filepath] = nil
+        if result.items ~= nil then
+          vim.tbl_extend("force", __search_result.items, result.items)
+        end
+        __search_dirty_ticker:tick()
+      end
+    else
+      fml.reporter.error({
+        from = "ghc.command.replace.state",
+        subject = "refresh_on_file",
+        message = "Failed to search",
+        details = { options = options },
+      })
+    end
+  end)
+end
+
 return M
