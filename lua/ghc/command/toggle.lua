@@ -25,7 +25,7 @@ end
 
 ---@return nil
 function M.transparency()
-  local next_transparency = client.transparency:snapshot() ---@type boolean
+  local next_transparency = not client.transparency:snapshot() ---@type boolean
   client.toggle_scheme({ transparency = next_transparency, persistent = true })
 end
 

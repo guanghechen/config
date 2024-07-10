@@ -18,9 +18,9 @@ local M = Viewmodel.new({ name = "context:client", filepath = context_filepath, 
 ---@return nil
 function M.toggle_scheme(params)
   local mode = params.mode or M.mode:snapshot() ---@type fml.enums.theme.Mode
-  local transparency = params.transparency or M.transparency:snapshot() ---@type boolean
-  local persistent = params.persistent or false ---@type boolean
-  local force = params.force or false ---@type boolean
+  local transparency = fml.boolean.cover(params.transparency, M.transparency:snapshot()) ---@type boolean
+  local persistent = fml.boolean.cover(params.persistent, false) ---@type boolean
+  local force = fml.boolean.cover(params.force, false) ---@type boolean
 
   ---@type boolean
   local has_changed = M.mode:snapshot() ~= mode or M.transparency:snapshot() ~= transparency
