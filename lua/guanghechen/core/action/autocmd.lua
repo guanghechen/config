@@ -209,7 +209,7 @@ function M.autocmd_toggle_linenumber()
     group = augroup,
     callback = function()
       if vim.o.nu and vim.api.nvim_get_mode().mode == "n" then
-        if ghc.context.client.relativenumber:get_snapshot() then
+        if ghc.context.client.relativenumber:snapshot() then
           vim.opt.relativenumber = true
         end
       end

@@ -10,20 +10,20 @@ local theme_cache_path = fml.path.locate_context_filepath({ filename = "theme" }
 ---@field public relativenumber         fml.types.collection.IObservable
 ---@field public transparency           fml.types.collection.IObservable
 local M = Viewmodel.new({ name = "context:client", filepath = context_filepath, verbose = true })
-  :register("mode", Observable.from_value("darken"), true, true)
-  :register("relativenumber", Observable.from_value(true), true, true)
-  :register("transparency", Observable.from_value(false), true, true)
+    :register("mode", Observable.from_value("darken"), true, true)
+    :register("relativenumber", Observable.from_value(true), true, true)
+    :register("transparency", Observable.from_value(false), true, true)
 
 ---@param params                        ghc.types.context.client.IToggleSchemeParams
 ---@return nil
 function M.toggle_scheme(params)
-  local mode = params.mode or M.mode:get_snapshot() ---@type fml.enums.theme.Mode
-  local transparency = params.transparency or M.transparency:get_snapshot() ---@type boolean
+  local mode = params.mode or M.mode:snapshot() ---@type fml.enums.theme.Mode
+  local transparency = params.transparency or M.transparency:snapshot() ---@type boolean
   local persistent = params.persistent or false ---@type boolean
   local force = params.force or false ---@type boolean
 
   ---@type boolean
-  local has_changed = M.mode:get_snapshot() ~= mode or M.transparency:get_snapshot() ~= transparency
+  local has_changed = M.mode:snapshot() ~= mode or M.transparency:snapshot() ~= transparency
   if has_changed then
     M.mode:next(mode)
     M.transparency:next(transparency)
@@ -38,8 +38,8 @@ end
 ---@return nil
 function M.reload_partial(params)
   local integration = params.integration ---@type ghc.enum.ui.theme.HighlightIntegration
-  local mode = M.mode:get_snapshot() ---@type fml.enums.theme.Mode
-  local transparency = M.transparency:get_snapshot() ---@type boolean
+  local mode = M.mode:snapshot() ---@type fml.enums.theme.Mode
+  local transparency = M.transparency:snapshot() ---@type boolean
   theme.load_partial_theme({ mode = mode, transparency = transparency, integration = integration })
 end
 
@@ -47,8 +47,8 @@ end
 ---@return nil
 function M.reload_theme(params)
   local force = params.force or false ---@type boolean
-  local mode = M.mode:get_snapshot() ---@type fml.enums.theme.Mode
-  local transparency = M.transparency:get_snapshot() ---@type boolean
+  local mode = M.mode:snapshot() ---@type fml.enums.theme.Mode
+  local transparency = M.transparency:snapshot() ---@type boolean
 
   if force or not fml.path.is_exist(theme_cache_path) then
     M.toggle_scheme({ mode = mode, transparency = transparency, persistent = true, force = true })

@@ -62,7 +62,7 @@ function M.from_value(value, equals, normalize)
   return M.new({ initial_value = value, equals = equals, normalize = normalize })
 end
 
-function M:get_snapshot()
+function M:snapshot()
   return self._value
 end
 

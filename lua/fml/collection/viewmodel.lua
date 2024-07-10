@@ -76,24 +76,24 @@ function Viewmodel:get_filepath()
 end
 
 ---@return table<string, any>
-function Viewmodel:get_snapshot()
+function Viewmodel:snapshot()
   local data = {}
   for key, observable in pairs(self._persistables) do
     if is_observable(observable) then
       ---@cast observable fml.types.collection.IObservable
-      data[key] = observable:get_snapshot()
+      data[key] = observable:snapshot()
     end
   end
   return data
 end
 
 ---@return table<string, any>
-function Viewmodel:get_snapshot_all()
+function Viewmodel:snapshot_all()
   local data = {}
   for key, observable in pairs(self._all_observables) do
     if is_observable(observable) then
       ---@cast observable fml.types.collection.IObservable
-      data[key] = observable:get_snapshot()
+      data[key] = observable:snapshot()
     end
   end
   return data
@@ -112,7 +112,7 @@ function Viewmodel:register(name, observable, persistable, auto_save)
   self._all_observables[name] = observable
 
   if auto_save then
-    self._initial_values[name] = observable:get_snapshot()
+    self._initial_values[name] = observable:snapshot()
     local subscriber = Subscriber.new({
       on_next = function(next_value)
         if not observable.equals(self._initial_values[name], next_value) then
@@ -144,7 +144,7 @@ function Viewmodel:save()
     return
   end
 
-  local data = self:get_snapshot() ---@type table
+  local data = self:snapshot() ---@type table
   fs.write_json(filepath, data)
 end
 

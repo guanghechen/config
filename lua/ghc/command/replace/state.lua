@@ -52,12 +52,12 @@ fml.fn.watch_observables({
 }, function()
   ---@diagnostic disable-next-line: unused-local
   __replace_dirty = true
-  __replace_dirty_ticker:next(__replace_dirty_ticker:get_snapshot() + 1)
+  __replace_dirty_ticker:next(__replace_dirty_ticker:snapshot() + 1)
 end)
 
 ---@return string
 function M.get_cwd()
-  return session.search_cwd:get_snapshot()
+  return session.search_cwd:snapshot()
 end
 
 ---@param cwd                           string|nil
@@ -70,7 +70,7 @@ end
 
 ---@return ghc.enums.command.replace.Mode
 function M.get_mode()
-  return session.search_mode:get_snapshot()
+  return session.search_mode:snapshot()
 end
 
 ---@param mode                          ghc.enums.command.replace.Mode|nil
@@ -83,14 +83,14 @@ end
 
 ---@return nil
 function M.tog_mode()
-  local cur = session.search_mode:get_snapshot() ---@type ghc.enums.command.replace.Mode
+  local cur = session.search_mode:snapshot() ---@type ghc.enums.command.replace.Mode
   local nxt = cur == "replace" and "search" or "replace"
   session.search_mode:next(nxt)
 end
 
 ---@return boolean
 function M.get_flag_regex()
-  return session.search_flag_regex:get_snapshot()
+  return session.search_flag_regex:snapshot()
 end
 
 ---@param flag                          boolean|nil
@@ -102,13 +102,13 @@ function M.set_flag_regex(flag)
 end
 
 function M.tog_flag_regex()
-  local flag = session.search_flag_regex:get_snapshot() ---@type boolean
+  local flag = session.search_flag_regex:snapshot() ---@type boolean
   session.search_flag_regex:next(not flag)
 end
 
 ---@return boolean
 function M.get_flag_case_sensitive()
-  return session.search_flag_case_sensitive:get_snapshot()
+  return session.search_flag_case_sensitive:snapshot()
 end
 
 ---@param flag                          boolean|nil
@@ -120,13 +120,13 @@ function M.set_flag_case_sensitive(flag)
 end
 
 function M.tog_flag_case_sensitive()
-  local flag = session.search_flag_case_sensitive:get_snapshot() ---@type boolean
+  local flag = session.search_flag_case_sensitive:snapshot() ---@type boolean
   session.search_flag_case_sensitive:next(not flag)
 end
 
 ---@return string
 function M.get_search_pattern()
-  return session.search_pattern:get_snapshot()
+  return session.search_pattern:snapshot()
 end
 
 ---@param pattern                       string|nil
@@ -139,7 +139,7 @@ end
 
 ---@return string
 function M.get_replace_pattern()
-  return session.replace_pattern:get_snapshot()
+  return session.replace_pattern:snapshot()
 end
 
 ---@param pattern                       string|nil
@@ -152,7 +152,7 @@ end
 
 ---@return string
 function M.get_search_paths()
-  return session.search_paths:get_snapshot()
+  return session.search_paths:snapshot()
 end
 
 ---@param paths                         string|nil
@@ -165,7 +165,7 @@ end
 
 ---@return string
 function M.get_include_patterns()
-  return session.search_include_patterns:get_snapshot()
+  return session.search_include_patterns:snapshot()
 end
 
 ---@param patterns                      string|nil
@@ -178,7 +178,7 @@ end
 
 ---@return string
 function M.get_exclude_patterns()
-  return session.search_exclude_patterns:get_snapshot()
+  return session.search_exclude_patterns:snapshot()
 end
 
 ---@param patterns                      string|nil

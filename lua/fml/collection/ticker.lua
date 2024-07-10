@@ -20,7 +20,7 @@ end
 
 ---@return nil
 function M:tick()
-  local val = self:get_snapshot()
+  local val = self:snapshot()
   self:next(val + 1)
 end
 

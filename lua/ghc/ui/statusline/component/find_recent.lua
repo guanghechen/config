@@ -7,11 +7,11 @@ local M = {
       return false
     end
 
-    local buftype_extra = ghc.context.transient.buftype_extra:get_snapshot() ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
+    local buftype_extra = ghc.context.transient.buftype_extra:snapshot() ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
     return buftype_extra == "find_recent"
   end,
   render = function()
-    local text = " " .. ghc.context.session.find_scope:get_snapshot() .. " "
+    local text = " " .. ghc.context.session.find_scope:snapshot() .. " "
     local width = vim.fn.strwidth(text)
     return fml.nvimbar.txt(text, "f_sl_flag_scope"), width
   end

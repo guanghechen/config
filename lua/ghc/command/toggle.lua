@@ -6,32 +6,32 @@ local M = {}
 
 ---@return nil
 function M.flight_autoload_session()
-  local next_flight_autoload_session = not session.flight_autoload_session:get_snapshot() ---@type boolean
+  local next_flight_autoload_session = not session.flight_autoload_session:snapshot() ---@type boolean
   session.flight_autoload_session:next(next_flight_autoload_session)
 end
 
 ---@return nil
 function M.flight_copilot()
-  local next_flight_copilot = not session.flight_copilot:get_snapshot() ---@type boolean
+  local next_flight_copilot = not session.flight_copilot:snapshot() ---@type boolean
   session.flight_copilot:next(next_flight_copilot)
 end
 
 ---@return nil
 function M.theme()
-  local darken = client.mode:get_snapshot() == "darken" ---@type boolean
+  local darken = client.mode:snapshot() == "darken" ---@type boolean
   local next_mode = darken and "lighten" or "darken"
   client.toggle_scheme({ mode = next_mode, persistent = true })
 end
 
 ---@return nil
 function M.transparency()
-  local next_transparency = client.transparency:get_snapshot() ---@type boolean
+  local next_transparency = client.transparency:snapshot() ---@type boolean
   client.toggle_scheme({ transparency = next_transparency, persistent = true })
 end
 
 ---@return nil
 function M.relative_line_number()
-  local next_relativenumber = not client.relativenumber:get_snapshot() ---@type boolean
+  local next_relativenumber = not client.relativenumber:snapshot() ---@type boolean
   client.relativenumber:next(next_relativenumber)
 
   local bufnr = vim.api.nvim_get_current_buf()

@@ -22,9 +22,9 @@ end
 ---@return nil
 function M.show_context()
   local context = {
-    config = client:get_snapshot(),
-    session = session:get_snapshot(),
-    transient = transient:get_snapshot(),
+    config = client:snapshot(),
+    session = session:snapshot(),
+    transient = transient:snapshot(),
   }
 
   fml.reporter.info({
@@ -37,13 +37,13 @@ end
 ---@return nil
 function M.show_context_all()
   local context = {
-    config = vim.tbl_deep_extend("force", { _location = ghc.context.client:get_filepath() }, client:get_snapshot_all()),
+    config = vim.tbl_deep_extend("force", { _location = ghc.context.client:get_filepath() }, client:snapshot_all()),
     session = vim.tbl_deep_extend(
       "force",
       { _location = ghc.context.session:get_filepath() },
-      session:get_snapshot_all()
+      session:snapshot_all()
     ),
-    transient = vim.tbl_deep_extend("force", {}, transient:get_snapshot_all()),
+    transient = vim.tbl_deep_extend("force", {}, transient:snapshot_all()),
   }
 
   fml.reporter.info({

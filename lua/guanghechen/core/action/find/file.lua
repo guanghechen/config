@@ -61,7 +61,7 @@ end
 ---@return string
 local function gen_filemap(force, cwd)
   local filemap_filepath = fml.path.locate_session_filepath({ filename = "filemap.json" })
-  if force or not fml.path.is_exist(filemap_filepath) or ghc.context.transient.filemap_dirty:get_snapshot() then
+  if force or not fml.path.is_exist(filemap_filepath) or ghc.context.transient.filemap_dirty:snapshot() then
     local stdout = vim.uv.new_pipe(false)
     local stderr = vim.uv.new_pipe(false)
     local subprocess
@@ -130,10 +130,10 @@ local function find_file(opts, force)
   opts.bufnr = find_file_context.bufnr
   opts.show_untracked = true
   opts.workspace = "CWD"
-  opts.use_regex = ghc.context.session.search_flag_regex:get_snapshot()
+  opts.use_regex = ghc.context.session.search_flag_regex:snapshot()
 
   ---@type ghc.enums.context.FindScope
-  local scope0 = ghc.context.session.find_scope:get_snapshot()
+  local scope0 = ghc.context.session.find_scope:snapshot()
   opts.cwd = get_cwd_by_scope(find_file_context, scope0)
 
   ---@type string
@@ -144,7 +144,7 @@ local function find_file(opts, force)
 
   ---@param scope_next ghc.enums.context.FindScope
   local function change_scope(scope_next)
-    local scope_current = ghc.context.session.find_scope:get_snapshot()
+    local scope_current = ghc.context.session.find_scope:snapshot()
     if scope_next ~= scope_current then
       ghc.context.session.find_scope:next(scope_next)
       ghc.context.transient.filemap_dirty:next(true)
@@ -154,7 +154,7 @@ local function find_file(opts, force)
 
   local actions = {
     show_last_find_file_cmd = function()
-      local last_cmd = ghc.context.transient.find_file_last_command:get_snapshot() or {}
+      local last_cmd = ghc.context.transient.find_file_last_command:snapshot() or {}
       fml.reporter.info({
         from = "guanghechen.core.action.find.file",
         subject = "show_last_find_file_cmd",
@@ -165,14 +165,14 @@ local function find_file(opts, force)
       })
     end,
     toggle_enable_regex = function()
-      local next_flag_regex = ghc.context.session.search_flag_regex:get_snapshot() ---@type boolean
+      local next_flag_regex = ghc.context.session.search_flag_regex:snapshot() ---@type boolean
       ghc.context.session.search_flag_regex:next(next_flag_regex)
       opts.use_regex = next_flag_regex
       open_picker()
     end,
     toggle_case_sensitive = function()
       ghc.context.session.search_flag_case_sensitive:next(
-        not ghc.context.session.search_flag_case_sensitive:get_snapshot()
+        not ghc.context.session.search_flag_case_sensitive:snapshot()
       )
       open_picker()
     end,
@@ -187,7 +187,7 @@ local function find_file(opts, force)
     end,
     change_scope_carousel = function()
       ---@type ghc.enums.context.FindScope
-      local scope = ghc.context.session.find_scope:get_snapshot()
+      local scope = ghc.context.session.find_scope:snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
     end,
@@ -210,10 +210,10 @@ local function find_file(opts, force)
       "--no-column",
       "--no-follow",
     }
-    if not ghc.context.session.search_flag_regex:get_snapshot() then
+    if not ghc.context.session.search_flag_regex:snapshot() then
       table.insert(cmd, "--fixed-strings")
     end
-    if ghc.context.session.search_flag_case_sensitive:get_snapshot() then
+    if ghc.context.session.search_flag_case_sensitive:snapshot() then
       table.insert(cmd, "--case-sensitive")
     else
       table.insert(cmd, "--ignore-case")
@@ -228,14 +228,14 @@ local function find_file(opts, force)
 
   open_picker = function()
     ---@type ghc.enums.context.FindScope
-    local scope = ghc.context.session.find_scope:get_snapshot()
+    local scope = ghc.context.session.find_scope:snapshot()
     opts.cwd = get_cwd_by_scope(find_file_context, scope)
     opts.entry_maker = vim.F.if_nil(opts.entry_maker, make_entry.gen_from_file(opts))
     gen_filemap(false, opts.cwd)
 
     local picker_params = {
       prompt_title = "Find files (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = ghc.context.session.find_file_pattern:get_snapshot() or "",
+      default_text = ghc.context.session.find_file_pattern:snapshot() or "",
       attach_mappings = function(prompt_bufnr)
         local function mapkey(mode, key, action, desc)
           vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })

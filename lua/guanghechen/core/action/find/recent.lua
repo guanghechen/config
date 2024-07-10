@@ -77,7 +77,7 @@ local function find_recent(opts)
 
   ---@param scope_next ghc.enums.context.FindScope
   local function change_scope(scope_next)
-    local scope_current = ghc.context.session.find_scope:get_snapshot()
+    local scope_current = ghc.context.session.find_scope:snapshot()
     if scope_next ~= scope_current then
       ghc.context.session.find_scope:next(scope_next)
       open_picker()
@@ -96,7 +96,7 @@ local function find_recent(opts)
     end,
     change_scope_carousel = function()
       ---@type ghc.enums.context.FindScope
-      local scope = ghc.context.session.find_scope:get_snapshot()
+      local scope = ghc.context.session.find_scope:snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
     end,
@@ -104,13 +104,13 @@ local function find_recent(opts)
 
   open_picker = function()
     ---@type ghc.enums.context.FindScope
-    local scope = ghc.context.session.find_scope:get_snapshot()
+    local scope = ghc.context.session.find_scope:snapshot()
     opts.cwd = get_cwd_by_scope(find_recent_context, scope)
     opts.initial_mode = "normal"
 
     require("telescope").extensions.frecency.frecency(vim.tbl_deep_extend("force", {
       prompt_title = "Find recent (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = ghc.context.session.find_file_pattern:get_snapshot(),
+      default_text = ghc.context.session.find_file_pattern:snapshot(),
       show_untracked = true,
       workspace = "CWD",
       attach_mappings = function(prompt_bufnr)
@@ -171,4 +171,3 @@ function M.find_recent()
 end
 
 return M
-

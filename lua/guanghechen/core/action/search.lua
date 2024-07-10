@@ -105,10 +105,10 @@ local function build_search_text_command(prompt)
     "--follow",
     "--vimgrep",
   }
-  if not ghc.context.session.search_flag_regex:get_snapshot() then
+  if not ghc.context.session.search_flag_regex:snapshot() then
     table.insert(grep_cmd, "--fixed-strings")
   end
-  if ghc.context.session.search_flag_case_sensitive:get_snapshot() then
+  if ghc.context.session.search_flag_case_sensitive:snapshot() then
     table.insert(grep_cmd, "--case-sensitive")
   else
     table.insert(grep_cmd, "--ignore-case")
@@ -209,7 +209,7 @@ local function search(opts)
   opts.bufnr = search_context.bufnr
   opts.show_untracked = true
   opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
-  opts.use_regex = ghc.context.session.search_flag_regex:get_snapshot()
+  opts.use_regex = ghc.context.session.search_flag_regex:snapshot()
 
   local selected_text = fml.fn.get_selected_text()
   if selected_text and #selected_text > 1 then
@@ -221,7 +221,7 @@ local function search(opts)
 
   ---@param scope_next ghc.enums.context.SearchScope
   local function change_scope(scope_next)
-    local scope_current = ghc.context.session.search_scope:get_snapshot()
+    local scope_current = ghc.context.session.search_scope:snapshot()
     if scope_next ~= scope_current then
       ghc.context.session.search_scope:next(scope_next)
       open_picker()
@@ -230,7 +230,7 @@ local function search(opts)
 
   local actions = {
     show_last_search_cmd = function()
-      local last_cmd = ghc.context.transient.search_last_command:get_snapshot() or {}
+      local last_cmd = ghc.context.transient.search_last_command:snapshot() or {}
       fml.reporter.info({
         from = "guanghechen.core.action.search",
         subject = "show_last_search_cmd",
@@ -241,13 +241,13 @@ local function search(opts)
       })
     end,
     toggle_enable_regex = function()
-      local next_flag_regex = not ghc.context.session.search_flag_regex:get_snapshot() ---@type boolean
+      local next_flag_regex = not ghc.context.session.search_flag_regex:snapshot() ---@type boolean
       ghc.context.session.search_flag_regex:next(next_flag_regex)
       opts.use_regex = next_flag_regex
       open_picker()
     end,
     toggle_case_sensitive = function()
-      local next_flag_case_sensitive = not ghc.context.session.search_flag_case_sensitive:get_snapshot() ---@type boolean
+      local next_flag_case_sensitive = not ghc.context.session.search_flag_case_sensitive:snapshot() ---@type boolean
       ghc.context.session.search_flag_case_sensitive:next(next_flag_case_sensitive)
       open_picker()
     end,
@@ -265,7 +265,7 @@ local function search(opts)
     end,
     change_scope_carousel = function()
       ---@type ghc.enums.context.SearchScope
-      local scope = ghc.context.session.search_scope:get_snapshot()
+      local scope = ghc.context.session.search_scope:snapshot()
       local scope_next = toggle_scope_carousel(scope)
       change_scope(scope_next)
     end,
@@ -273,13 +273,13 @@ local function search(opts)
 
   open_picker = function()
     ---@type ghc.enums.context.SearchScope
-    local scope = ghc.context.session.search_scope:get_snapshot()
+    local scope = ghc.context.session.search_scope:snapshot()
     opts.cwd = get_cwd_by_scope(search_context, scope)
 
     local resolved_opts
     local picker_params = {
       prompt_title = "Search word (" .. get_display_name_of_scope(scope) .. ")",
-      default_text = ghc.context.session.search_pattern:get_snapshot(),
+      default_text = ghc.context.session.search_pattern:snapshot(),
       attach_mappings = function(prompt_bufnr)
         local function mapkey(mode, key, action, desc)
           vim.keymap.set(mode, key, action, { buffer = prompt_bufnr, silent = true, noremap = true, desc = desc })
@@ -323,7 +323,7 @@ local function search(opts)
       local make_entry_from_vimgrep = make_entry.gen_from_vimgrep(opts)
       local make_entry_from_file = make_entry.gen_from_file(opts)
       local entry_maker = function(...)
-        local last_prompt = ghc.context.session.search_pattern:get_snapshot()
+        local last_prompt = ghc.context.session.search_pattern:snapshot()
         if not last_prompt or last_prompt == "" then
           return make_entry_from_file(...)
         else
@@ -333,7 +333,7 @@ local function search(opts)
 
       resolved_opts = opts
       picker_params.finder =
-        finders.new_job(build_search_text_command, entry_maker, resolved_opts.max_results, resolved_opts.cwd)
+          finders.new_job(build_search_text_command, entry_maker, resolved_opts.max_results, resolved_opts.cwd)
       picker_params.previewer = conf.grep_previewer(resolved_opts)
       picker_params.sorter = sorters.highlighter_only(resolved_opts)
     end
