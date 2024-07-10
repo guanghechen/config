@@ -125,12 +125,19 @@ function M.toggle_explorer_last()
 end
 
 function M.reveal_file_explorer()
-  require("neo-tree.command").execute({
-    action = "focus",
-    source = "filesystem",
-    dir = cwd,
-    reveal = check_could_reveal(),
-  })
+  local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
+  if ft_current == "neo-tree" then
+    require("neo-tree.command").execute({
+      action = "close",
+    })
+  else
+    require("neo-tree.command").execute({
+      action = "focus",
+      source = "filesystem",
+      dir = cwd,
+      reveal = check_could_reveal(),
+    })
+  end
 end
 
 function M.toggle_explorers()
