@@ -60,7 +60,7 @@ fn nvim_tools() -> Dictionary {
         },
     );
 
-    let oxi_uuid = Function::from_fn(|_: String| -> String {
+    let oxi_uuid = Function::from_fn(|()| -> String {
         let uuid = Uuid::new_v4();
         uuid.to_string()
     });
