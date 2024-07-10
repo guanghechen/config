@@ -1,6 +1,7 @@
 local BatchDisposable = require("fml.collection.batch_disposable")
 local Subscribers = require("fml.collection.subscribers")
 local reporter = require("fml.std.reporter")
+local std_boolean = require("fml.std.boolean")
 
 ---@class fml.collection.Observable : fml.types.collection.IObservable
 ---@field private _value                fml.types.T
@@ -47,7 +48,7 @@ function M.new(props)
 
   self.equals = equals
   self.normalize = normalize
-  self._value = normalize and normalize(initial_value) or initial_value
+  self._value = normalize(initial_value)
   self._value_last_notified = nil
   self._subscribers = Subscribers.new()
 
@@ -87,7 +88,7 @@ function M:next(value, options)
 
   if self:is_disposed() then
     ---@type boolean
-    local strict = options.strict ~= nil and options.strict or true
+    local strict = std_boolean.cover(options.strict, true)
     if strict then
       reporter.error({
         from = "fml.collection.observable",
@@ -102,7 +103,7 @@ function M:next(value, options)
   value = self.normalize(value)
 
   ---@type boolean
-  local force = options.force ~= nil and options.force or false
+  local force = std_boolean.cover(options.force, false)
   if force or not self.equals(value, self._value) then
     self._value = value
     self:_notify()
