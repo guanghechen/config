@@ -9,14 +9,14 @@ vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
       return
     end
 
-    if state.validate_buf(bufnr) then
-      state.refresh_buf(bufnr)
-    else
-      state.bufs[bufnr] = nil
-    end
-
     ---! The current bufnr of the window still be the old one, so use vim.schedule to refresh later.
     vim.schedule(function()
+      if state.validate_buf(bufnr) then
+        state.refresh_buf(bufnr)
+      else
+        state.bufs[bufnr] = nil
+      end
+
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       state.refresh_tab(tabnr)
 
@@ -37,29 +37,13 @@ vim.api.nvim_create_autocmd({ "BufDelete" }, {
     end
 
     state.bufs[bufnr] = nil
-
-    local has_tab_removed = false ---@type boolean
-    std_object.filter_inline(state.tabs, function(tab, tabnr)
-      if not state.validate_tab(tabnr) then
-        has_tab_removed = true
-        return false
+    for _, tab in pairs(state.tabs) do
+      if tab.bufnr_set[bufnr] then
+        tab.bufnr_set[bufnr] = nil
+        std_array.filter_inline(tab.bufnrs, function(nr)
+          return nr ~= bufnr
+        end)
       end
-
-      tab.bufnr_set[bufnr] = nil
-      std_array.filter_inline(tab.bufnrs, function(nr)
-        return nr ~= bufnr
-      end)
-
-      if #tab.bufnrs < 1 then
-        has_tab_removed = true
-        return false
-      end
-
-      return true
-    end)
-
-    if has_tab_removed then
-      state.schedule_refresh_tabs()
     end
   end,
 })
