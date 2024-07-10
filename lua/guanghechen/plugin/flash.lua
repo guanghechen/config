@@ -47,7 +47,28 @@ return {
   },
   opts = {
     jump = {
-      autojump = true,
+      autojump = false,
     },
+    label = {
+      uppercase = false,
+      rainbow = {
+        enabled = false,
+        shade = 5,
+      }
+    },
+    modes = {
+      char = {
+        enabled = false,
+      }
+    },
+    search = {
+      mode = "exact",
+      exclude = {
+        "cmp_menu",
+        "noice",
+        "notify",
+        "flash_prompt",
+      }
+    }
   },
 }
