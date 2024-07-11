@@ -1,9 +1,9 @@
 local function get_os_icon()
   if fml.os.is_mac() then
     return fml.ui.icons.os.mac
-  elseif fml.os.is_windows() then
+  elseif fml.os.is_win() then
     return fml.ui.icons.os.dos
-  elseif fml.os.is_linux() or fml.os.is_wsl() then
+  elseif fml.os.is_nix() or fml.os.is_wsl() then
     return fml.ui.icons.os.unix
   else
     return fml.ui.icons.os.unknown
@@ -22,7 +22,7 @@ local M = {
     local text = " " .. icon .. " " .. username .. " "
     local width = vim.fn.strwidth(text) ---@type integer
     return fml.nvimbar.txt(text, "f_sl_username"), width
-  end
+  end,
 }
 
 return M

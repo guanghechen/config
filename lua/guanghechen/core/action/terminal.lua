@@ -25,7 +25,7 @@ function M.open_terminal_current()
 end
 
 function M.open_terminal_workspace_tmux()
-  if fml.os.is_windows() then
+  if fml.os.is_win() then
     M.open_terminal_workspace()
   else
     local cwd = fml.path.workspace()
@@ -46,4 +46,3 @@ function M.open_terminal_workspace_tmux()
 end
 
 return M
-
