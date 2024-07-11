@@ -1,14 +1,14 @@
 local reporter = require("fml.std.reporter")
 
 local id = 0 ---@type integer
-local gfn = {} ---@type table<string, fun(): nil>
+local gfn = {} ---@type table<string, fun(...): nil>
 
 ---@class fml.std.G
 local M = {}
 setmetatable(M, { __index = gfn })
 
 ---@param fn_name                       string
----@param callback                      fun(): nil
+---@param callback                      fun(...): nil
 ---@return string|nil
 function M.register_known_fn(fn_name, callback)
   if type(callback) ~= "function" then
@@ -21,13 +21,11 @@ function M.register_known_fn(fn_name, callback)
     return nil
   end
 
-  gfn[fn_name] = function()
-    callback()
-  end
+  gfn[fn_name] = callback
   return fn_name
 end
 
----@param fn                       fun(args?: string): nil
+---@param fn                       fun(...): nil
 ---@return string|nil
 function M.register_anonymous_fn(fn)
   if type(fn) ~= "function" then

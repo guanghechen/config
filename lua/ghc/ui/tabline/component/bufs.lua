@@ -2,7 +2,6 @@ local last_bufnr_cur = 1 ---@type integer
 
 ---@type string
 local fn_active_buf = fml.G.register_anonymous_fn(function(bufnr)
-  bufnr = tonumber(bufnr)
   if type(bufnr) == "number" and vim.api.nvim_buf_is_valid(bufnr) then
     fml.api.buf.go(bufnr)
   end
@@ -43,7 +42,7 @@ local function render_buf(bufnr, is_curbuf)
 
   local hl_text = fml.nvimbar.txt(hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod, buf_hl)
   local width = vim.fn.strwidth(left_pad .. text_icon .. text_title .. text_mod) ---@type integer
-  return fml.nvimbar.btn(hl_text, fn_active_buf, tostring(bufnr)), width
+  return fml.nvimbar.btn(hl_text, fn_active_buf, bufnr), width
 end
 
 ---@type fml.types.ui.nvimbar.IRawComponent

@@ -5,7 +5,6 @@ local last_tab_count = 0 ---@type integer
 
 ---@type string
 local fn_active_tab = fml.G.register_anonymous_fn(function(tabnr)
-  tabnr = tonumber(tabnr)
   if type(tabnr) == "number" and vim.api.nvim_tabpage_is_valid(tabnr) then
     fml.api.tab.go(tabnr)
   end
@@ -56,7 +55,7 @@ local M = {
       text = " " .. tabid .. " "
       width = width + vim.fn.strwidth(text)
       local hl_text_inner = fml.nvimbar.txt(text, hlname)
-      hl_text = hl_text .. fml.nvimbar.btn(hl_text_inner, fn_active_tab, tostring(tabnrs[tabid]))
+      hl_text = hl_text .. fml.nvimbar.btn(hl_text_inner, fn_active_tab, tabnrs[tabid])
     end
     return hl_text, width
   end,

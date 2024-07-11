@@ -1,3 +1,5 @@
+local sep = " "
+
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "dirpath",
@@ -14,7 +16,7 @@ local M = {
     local N = #buf.real_paths - 1 ---@type integer
     for i = 1, N, 1 do
       local piece = buf.real_paths[i] ---@type string
-      text = text .. " " .. piece .. " "
+      text = text .. " " .. piece .. sep
     end
 
     local text_hln = "f_wl_dirpath_text" ---@type string

@@ -1,3 +1,21 @@
+local sep = "  "
+
+---@type string
+local fn_goto_lsp_pos = fml.G.register_anonymous_fn(function(num)
+  local args = fml.nvimbar.decode_btn_args(tostring(num)) ---@type integer[]
+  if #args == 3 then
+    local winnr = args[1] ---@type integer|nil
+    local row = args[2] ---@type integer|nil
+    local col = args[3] ---@type integer|nil
+
+    if type(winnr) == "number" and type(row) == "number" and type(col) == "number" then
+      if vim.api.nvim_win_is_valid(winnr) then
+        vim.api.nvim_win_set_cursor(winnr, { row, col })
+      end
+    end
+  end
+end) or ""
+
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "lsp",
@@ -19,7 +37,6 @@ local M = {
     for _, symbol in ipairs(symbols) do
       local title = symbol.name or "" ---@type string
       local icon = (fml.ui.icons.kind[symbol.kind] or "") .. " " ---@type string
-      local sep = "  "
       local t = sep .. icon .. " " .. title ---@type string
       local w = vim.fn.strwidth(t) ---@type integer
 
@@ -28,10 +45,10 @@ local M = {
       end
 
       width = width + w
-      text_hl = text_hl
-        .. fml.nvimbar.txt(sep, "f_wl_lsp_sep")
+      local t_hl = fml.nvimbar.txt(sep, "f_wl_lsp_sep")
         .. fml.nvimbar.txt(icon, "f_wl_lsp_icon")
         .. fml.nvimbar.txt(title, "f_wl_lsp_text")
+      text_hl = text_hl .. fml.nvimbar.btn(t_hl, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
     end
     return text_hl, width
   end,
