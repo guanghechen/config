@@ -1,3 +1,13 @@
+---@class fml.api.state.ILspSymbol
+---@field public kind                   string
+---@field public name                   string
+---@field public row                    integer
+---@field public col                    integer
+
+---@class fml.api.state.ILspSymbolPos
+---@field public line                   integer
+---@field public character              integer
+
 ---@class fml.api.state.IBufItem
 ---@field public filename               string
 ---@field public filepath               string
@@ -23,6 +33,7 @@
 ---@class fml.api.state.IWinItem
 ---@field public tabnr                  integer
 ---@field public buf_history            fml.types.collection.IHistory
+---@field public lsp_symbols            fml.api.state.ILspSymbol[]
 
 ---@class fml.api.state.IWinItemData : fml.api.state.IWinItem
 ---@field public winnr                  integer

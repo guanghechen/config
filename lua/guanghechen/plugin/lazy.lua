@@ -56,9 +56,7 @@ local opts = {
     require("guanghechen.plugin.flash"),
 
     --ui
-    -- require("guanghechen.plugin.barbecue"),
     require("guanghechen.plugin.nvim-colorizer"),
-    require("guanghechen.plugin.nvim-navic"),
     require("guanghechen.plugin.nvim-treesitter"),
     -- require("guanghechen.plugin.nvim-treesitter-context"),
     require("guanghechen.plugin.nvim-treesitter-textobjects"),

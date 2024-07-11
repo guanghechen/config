@@ -1,4 +1,5 @@
 local state = require("fml.api.state")
+local std_array = require("fml.std.array")
 
 ---@class fml.api.win
 local M = require("fml.api.win.mod")
@@ -16,6 +17,7 @@ function M.split_horizontal()
     state.wins[winnr_new] = {
       tabnr = tabnr,
       buf_history = win_cur.buf_history:fork(),
+      lsp_symbols = std_array.slice(win_cur.lsp_symbols),
     }
   else
     state.refresh_tab(tabnr)
@@ -34,6 +36,7 @@ function M.split_vertical()
     state.wins[winnr_new] = {
       tabnr = tabnr,
       buf_history = win_cur.buf_history:fork(),
+      lsp_symbols = std_array.slice(win_cur.lsp_symbols),
     }
   else
     state.refresh_tab(tabnr)
