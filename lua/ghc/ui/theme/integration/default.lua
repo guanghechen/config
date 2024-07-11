@@ -64,6 +64,10 @@ local function gen_hlgroup(params)
     f_tl_tab_item_cur = { fg = c.red },
     f_tl_tab_toggle = { fg = c.black, bg = c.blue },
 
+    ---winline
+    f_wl_bg = { fg = t and "none" or c.statusline_bg, bg = t and "none" or c.statusline_bg },
+    f_wl_filename_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
+
     ---replace
     f_sr_filepath = { fg = c.blue, bg = "none" },
     f_sr_flag = { fg = c.white, bg = c.grey },

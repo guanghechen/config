@@ -1,9 +1,4 @@
----@class ghc.context
-local context = {
-  client = require("ghc.context.client"),
-  session = require("ghc.context.session"),
-  transient = require("ghc.context.transient"),
-}
+require("ghc.autocmd")
 
 ---@class ghc.command
 local command = {
@@ -16,20 +11,28 @@ local command = {
   toggle = require("ghc.command.toggle"),
 }
 
+---@class ghc.context
+local context = {
+  client = require("ghc.context.client"),
+  session = require("ghc.context.session"),
+  transient = require("ghc.context.transient"),
+}
+
 ---@class ghc.ui
 local ui = {
   statusline = require("ghc.ui.statusline"),
   tabline = require("ghc.ui.tabline"),
-  theme = require('ghc.ui.theme'),
+  winline = require("ghc.ui.winline"),
+  theme = require("ghc.ui.theme"),
 }
 
 ---@class ghc
----@field public context      ghc.context
----@field public command      ghc.command
----@field public ui           ghc.ui
+---@field public command                ghc.command
+---@field public context                ghc.context
+---@field public ui                     ghc.ui
 local ghc = {
-  context = context,
   command = command,
+  context = context,
   ui = ui,
 }
 

@@ -1,7 +1,10 @@
+---@class fml.types.ui.nvimbar.IPresetContext
+---@field public winnr                  ?integer
+
 ---@class fml.types.ui.nvimbar.IContext
----@field public tabnr                  number
----@field public winnr                  number
----@field public bufnr                  number
+---@field public tabnr                  integer
+---@field public winnr                  integer
+---@field public bufnr                  integer
 ---@field public cwd                    string
 ---@field public filepath               string
 ---@field public fileicon               string

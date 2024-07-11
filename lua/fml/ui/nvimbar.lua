@@ -6,6 +6,7 @@ local calc_fileicon = require("fml.fn.calc_fileicon")
 
 ---@class fml.ui.Nvimbar : fml.types.ui.INvimbar
 ---@field public name                   string
+---@field private preset_context        fml.types.ui.nvimbar.IPresetContext
 ---@field private sep                   string
 ---@field private sep_width             integer
 ---@field private dirty                 boolean
@@ -20,6 +21,7 @@ M.__index = M
 ---@field public name                   string
 ---@field public component_sep          string
 ---@field public component_sep_hlname   string
+---@field public preset_context         ?fml.types.ui.nvimbar.IPresetContext
 
 local modes_map = {
   ["n"] = { "normal", "NORMAL" },
@@ -60,11 +62,12 @@ local modes_map = {
   ["!"] = { "terminal", "SHELL" },
 }
 
+---@param preset_context                fml.types.ui.nvimbar.IPresetContext
 ---@return fml.types.ui.nvimbar.IContext
-local function build_context()
+local function build_context(preset_context)
   local m = modes_map[vim.api.nvim_get_mode().mode]
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local winnr = preset_context.winnr or vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local cwd = path.cwd() ---@type string
   local filepath = vim.fn.expand("%:p") ---@type string
@@ -112,9 +115,11 @@ function M.new(props)
   local name = props.name ---@type string
   local component_sep = props.component_sep ---@type string
   local component_sep_hlname = props.component_sep_hlname ---@type string
+  local preset_context = props.preset_context or {} ---@type fml.types.ui.nvimbar.IPresetContext
 
   local self = setmetatable({}, M)
   self.name = name
+  self.preset_context = preset_context
   self.sep = nvimbar.txt(component_sep, component_sep_hlname)
   self.sep_width = vim.fn.strwidth(component_sep)
   self.dirty = true
@@ -163,12 +168,12 @@ function M:internal_render()
 
   local sep = self.sep ---@type string
   local sep_width = self.sep_width ---@type integer
-  local context = build_context() ---@type fml.types.ui.nvimbar.IContext
+  local context = build_context(self.preset_context) ---@type fml.types.ui.nvimbar.IContext
   local prev_context = self.last_context ---@type fml.types.ui.nvimbar.IContext|nil
 
-  local lc = '' ---@type string
-  local cc = '' ---@type string
-  local rc = '' ---@type string
+  local lc = "" ---@type string
+  local cc = "" ---@type string
+  local rc = "" ---@type string
   local remain_width = vim.o.columns - sep_width - sep_width ---@type integer
   local components = self.components ---@type fml.types.ui.nvimbar.IComponent[]
   for i = 1, #components, 1 do

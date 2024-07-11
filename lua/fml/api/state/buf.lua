@@ -1,7 +1,5 @@
 local constant = require("fml.constant")
 local path = require("fml.std.path")
-local reporter = require("fml.std.reporter")
-local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
 
 ---@class fml.api.state

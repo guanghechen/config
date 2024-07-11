@@ -23,8 +23,6 @@ local opts = {
     require("guanghechen.plugin.indent-blankline"),
     require("guanghechen.plugin.mini-indentscope"),
 
-    --enhance
-
     --explorer
     require("guanghechen.plugin.neo-tree"),
     require("guanghechen.plugin.nvim-window-picker"),
@@ -50,11 +48,6 @@ local opts = {
     require("guanghechen.plugin.diffview"),
     require("guanghechen.plugin.gitsigns"),
 
-    --highlight
-    require("guanghechen.plugin.nvim-treesitter"),
-    -- require("guanghechen.plugin.nvim-treesitter-context"),
-    require("guanghechen.plugin.nvim-treesitter-textobjects"),
-
     --lsp
     require("guanghechen.plugin.mason"),
     require("guanghechen.plugin.nvim-lspconfig"),
@@ -63,8 +56,12 @@ local opts = {
     require("guanghechen.plugin.flash"),
 
     --ui
+    -- require("guanghechen.plugin.barbecue"),
     require("guanghechen.plugin.nvim-colorizer"),
-    require("guanghechen.plugin.barbecue"),
+    require("guanghechen.plugin.nvim-navic"),
+    require("guanghechen.plugin.nvim-treesitter"),
+    -- require("guanghechen.plugin.nvim-treesitter-context"),
+    require("guanghechen.plugin.nvim-treesitter-textobjects"),
   },
   defaults = {
     lazy = true,
