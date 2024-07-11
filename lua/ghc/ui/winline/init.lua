@@ -44,9 +44,9 @@ function M.render(winnr)
     })
     winline_map[winnr] = winline
     winline
-      :add("left", require("ghc.ui.winline.component.dirpath"))
-      :add("left", require("ghc.ui.winline.component.filename"))
-      :add("left", require("ghc.ui.winline.component.context"))
+        :add("left", require("ghc.ui.winline.component.dirpath"))
+        :add("left", require("ghc.ui.winline.component.filename"))
+        :add("left", require("ghc.ui.winline.component.lsp"))
   end
   return winline:render()
 end

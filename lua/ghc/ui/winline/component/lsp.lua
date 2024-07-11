@@ -1,6 +1,6 @@
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
-  name = "context",
+  name = "lsp",
   condition = function()
     return not not package.loaded["nvim-navic"] and require("nvim-navic").is_available()
   end,
@@ -29,9 +29,9 @@ local M = {
 
       width = width + w
       text_hl = text_hl
-        .. fml.nvimbar.txt(sep, "f_wl_context_sep")
-        .. fml.nvimbar.txt(icon, "f_wl_context_icon")
-        .. fml.nvimbar.txt(title, "f_wl_context_text")
+          .. fml.nvimbar.txt(sep, "f_wl_lsp_sep")
+          .. fml.nvimbar.txt(icon, "f_wl_lsp_icon")
+          .. fml.nvimbar.txt(title, "f_wl_lsp_text")
     end
     return text_hl, width
   end,
