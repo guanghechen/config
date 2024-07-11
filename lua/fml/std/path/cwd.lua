@@ -1,3 +1,6 @@
+local last_cwd = "" ---@type string
+local last_cwd_pieces = {} ---@type string[]
+
 ---@class fml.std.path
 local M = require("fml.std.path.mod")
 
@@ -15,7 +18,17 @@ end
 
 ---@return string
 function M.cwd()
-  return vim.fn.getcwd()
+  local cwd = vim.fn.getcwd()
+  if cwd ~= last_cwd then
+    last_cwd = cwd
+    last_cwd_pieces = M.split(cwd)
+  end
+  return cwd
+end
+
+---@return string[]
+function M.get_cwd_pieces()
+  return last_cwd_pieces
 end
 
 ---@return string

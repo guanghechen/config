@@ -1,6 +1,7 @@
 ---@class fml.api.state.IBufItem
 ---@field public filename               string
 ---@field public filepath               string
+---@field public real_paths             string[]
 ---@field public pinned                 boolean
 
 ---@class fml.api.state.IBufItemData
@@ -38,6 +39,7 @@
 local constant = require("fml.constant")
 local History = require("fml.collection.history")
 local fs = require("fml.std.fs")
+local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
 local std_set = require("fml.std.set")
 
@@ -165,6 +167,7 @@ function M.load(filepath)
 
   if type(data.bufs) == "table" then
     local bufs = {} ---@type table<integer, fml.api.state.IBufItem>
+    local CWD_PIECES = path.get_cwd_pieces() ---@type string[]
     for _, item in ipairs(data.bufs) do
       local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
       if real_bufnr ~= nil then
@@ -172,6 +175,7 @@ function M.load(filepath)
         local buf = {
           filename = item.filename,
           filepath = item.filepath,
+          real_paths = path.split_prettier(CWD_PIECES, item.filepath),
           pinned = item.pinned,
         }
         bufs[real_bufnr] = buf

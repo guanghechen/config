@@ -67,6 +67,7 @@ function M.refresh_buf(bufnr)
     buf = {
       filepath = filepath,
       filename = filename,
+      real_paths = path.split_prettier(path.get_cwd_pieces(), filepath),
       pinned = false,
     }
     M.bufs[bufnr] = buf

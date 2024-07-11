@@ -148,3 +148,31 @@ function M.split(filepath)
   end
   return pieces
 end
+
+---! Check if the `to` path is under the `from` path.
+---@param from_pieces                   string[]
+---@param to                            string
+---@return string[]
+function M.split_prettier(from_pieces, to)
+  local to_pieces = M.split(to) ---@type string[]
+  local is_under = true ---@type boolean
+  for i = 1, #from_pieces do
+    if to_pieces[i] ~= from_pieces[i] then
+      is_under = false
+      break
+    end
+  end
+
+  if is_under then
+    local k = 0 ---@type integer
+    local N = #to_pieces ---@type integer
+    for i = #from_pieces + 1, N, 1 do
+      k = k + 1
+      to_pieces[k] = to_pieces[i]
+    end
+    for i = k + 1, N, 1 do
+      to_pieces[i] = nil
+    end
+  end
+  return to_pieces
+end

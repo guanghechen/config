@@ -66,6 +66,7 @@ local function gen_hlgroup(params)
 
     ---winline
     f_wl_bg = { fg = t and "none" or c.statusline_bg, bg = t and "none" or c.statusline_bg },
+    f_wl_dirpath_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
     f_wl_filename_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
 
     ---replace

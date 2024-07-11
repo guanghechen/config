@@ -43,7 +43,9 @@ function M.render(winnr)
       preset_context = { winnr = winnr },
     })
     winline_map[winnr] = winline
-    winline:add("right", require("ghc.ui.winline.component.filename"))
+    winline
+      :add("left", require("ghc.ui.winline.component.dirpath"))
+      :add("left", require("ghc.ui.winline.component.filename"))
   end
   return winline:render()
 end

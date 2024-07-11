@@ -10,10 +10,12 @@ local M = {
       return "", 0
     end
 
-    local icon, icon_hl = fml.fn.calc_fileicon(buf.filename)
-    local text_icon = icon .. " " ---@type string
+    local icon, fileicon_hl = fml.fn.calc_fileicon(buf.filename)
+    local text_icon = " " .. icon .. " " ---@type string
     local text_title = buf.filename ---@type string
+
     local title_hl = "f_wl_filename_text" ---@type string
+    local icon_hl = fml.highlight.blend_color(fileicon_hl, title_hl)
 
     local hl_text_icon = fml.nvimbar.txt(text_icon, icon_hl) ---@type string
     local hl_text_title = fml.nvimbar.txt(text_title, title_hl) ---@type string

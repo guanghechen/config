@@ -3,7 +3,8 @@ local last_bufnr_cur = 1 ---@type integer
 ---@param bufnr                         integer
 ---@param bufid                         integer
 ---@param is_curbuf                     boolean
----@return string, integer
+---@return string
+---@return integer
 local function render_buf(bufnr, bufid, is_curbuf)
   if fml.api.state.bufs[bufnr] == nil then
     fml.api.state.refresh_buf(bufnr)
