@@ -44,9 +44,9 @@ function M.render(winnr)
     })
     winline_map[winnr] = winline
     winline
-        :add("left", require("ghc.ui.winline.component.dirpath"))
-        :add("left", require("ghc.ui.winline.component.filename"))
-        :add("left", require("ghc.ui.winline.component.lsp"))
+      :add("left", require("ghc.ui.winline.component.dirpath"))
+      :add("left", require("ghc.ui.winline.component.filename"))
+      :add("left", require("ghc.ui.winline.component.lsp"))
   end
   return winline:render()
 end
@@ -58,5 +58,12 @@ function M.update(winnr)
     vim.wo[winnr].winbar = result
   end
 end
+
+fml.api.state.winline_dirty_ticker:subscribe(fml.collection.Subscriber.new({
+  on_next = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    M.update(winnr)
+  end,
+}))
 
 return M

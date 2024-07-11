@@ -1,6 +1,6 @@
 local winline = require("ghc.ui.winline")
 
-vim.api.nvim_create_autocmd({ "WinResized", "BufWinEnter", "CursorHold", "InsertLeave" }, {
+vim.api.nvim_create_autocmd({ "WinResized", "BufWinEnter" }, {
   group = fml.fn.augroup("winline_autorefresh"),
   callback = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

@@ -56,9 +56,9 @@ local function locate_symbols(winnr)
 
   -- Callback function to handle the response
   ---@param err                         any|nil
-  ---@param result                      any
+  ---@param symbols                     any[]
   ---@return nil
-  local function handler(err, result)
+  local function handler(err, symbols)
     locating[winnr] = nil
 
     if err then
@@ -66,36 +66,40 @@ local function locate_symbols(winnr)
         from = "fml.api.lsp",
         subject = "locate_symbols",
         message = "Failed to request document symbols",
-        details = { err = err, result = result, bufnr = bufnr, winnr = winnr },
+        details = { err = err, result = symbols, bufnr = bufnr, winnr = winnr },
       })
-      return
-    end
+    else
+      local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
+      if win ~= nil and type(symbols) == "table" then
+        local pieces = win.lsp_symbols ---@type fml.api.state.ILspSymbol[]
+        local N = #pieces ---@type integer
+        local cursor_pos = { line = row - 1, character = col }
+        local symbol_path = find_symbol_path(cursor_pos, symbols)
 
-    local pieces = {} ---@type fml.api.state.ILspSymbol[]
-    if result then
-      local cursor_pos = { line = row - 1, character = col }
-      local symbol_path = find_symbol_path(cursor_pos, result)
-      if symbol_path then
-        for _, symbol in ipairs(symbol_path) do
-          local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
-          local name = symbol.name
-          local position = symbol.range and symbol.range.start or symbol.location.range.start
+        local k = 0
+        if symbol_path then
+          for _, symbol in ipairs(symbol_path) do
+            local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
+            local name = symbol.name
+            local position = symbol.range and symbol.range.start or symbol.location.range.start
+            ---@type fml.api.state.ILspSymbol
+            local piece = {
+              kind = kind,
+              name = name,
+              row = position.line + 1,
+              col = position.character + 1,
+            }
 
-          ---@type fml.api.state.ILspSymbol
-          local piece = {
-            kind = kind,
-            name = name,
-            row = position.line + 1,
-            col = position.character + 1,
-          }
-          table.insert(pieces, piece)
+            k = k + 1
+            pieces[k] = piece
+          end
         end
-      end
-    end
+        for i = k + 1, N, 1 do
+          pieces[i] = nil
+        end
 
-    local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
-    if win ~= nil then
-      win.lsp_symbols = pieces
+        state.winline_dirty_ticker:tick()
+      end
     end
 
     if dirty[winnr] then
