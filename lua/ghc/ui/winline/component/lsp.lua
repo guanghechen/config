@@ -37,6 +37,7 @@ local M = {
     for _, symbol in ipairs(symbols) do
       local title = symbol.name or "" ---@type string
       local icon = (fml.ui.icons.kind[symbol.kind] or "") .. " " ---@type string
+      local icon_hln = symbol.kind and "f_wl_lsp_icon_" .. symbol.kind or "f_wl_lsp_icon"
       local t = sep .. icon .. " " .. title ---@type string
       local w = vim.fn.strwidth(t) ---@type integer
 
@@ -46,7 +47,7 @@ local M = {
 
       width = width + w
       local t_hl = fml.nvimbar.txt(sep, "f_wl_lsp_sep")
-        .. fml.nvimbar.txt(icon, "f_wl_lsp_icon")
+        .. fml.nvimbar.txt(icon, icon_hln)
         .. fml.nvimbar.txt(title, "f_wl_lsp_text")
       text_hl = text_hl .. fml.nvimbar.btn(t_hl, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
     end

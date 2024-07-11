@@ -35,8 +35,6 @@ if ok then
   load_config("option")
   load_config("keymap")
   load_config("autocmd")
-else
-  load_config("option")
 end
 
 ---! Reload session if not specify file and current directory is a git repository.

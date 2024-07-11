@@ -19,7 +19,6 @@ M.integrations = {
   "nvim-cmp",
   "nvim-dap",
   "nvim-dap-ui",
-  "nvim-navic",
   "telescope",
   "trouble",
   "vim-illuminate",

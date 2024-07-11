@@ -10,7 +10,6 @@
 ---| "nvim-dap"
 ---| "nvim-dap-ui"
 ---| "nvim-lspconfig"
----| "nvim-navic"
 ---| "nvim-web-devicons"
 ---| "telescope"
 ---| "treesitter"

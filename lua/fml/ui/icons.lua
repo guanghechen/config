@@ -9,7 +9,7 @@ M.flag = {
 
 ---@class fml.ui.icons.kind
 M.kind = {
-  Array = "󰅪 ",
+  Array = "󰅪",
   --Boolean = "",
   Boolean = "◩",
   Calendar = "",
@@ -33,7 +33,7 @@ M.kind = {
   Keyword = "",
   Macro = "",
   Method = "󰆧",
-  Module = "",
+  Module = "",
   -- Namespace = "󰌗",
   Namespace = "󰦮",
   Null = "󰟢",
@@ -41,7 +41,7 @@ M.kind = {
   Number = "󰎠",
   Object = "󰅩",
   Operator = "󰆕",
-  Package = "",
+  Package = "",
   Parameter = "",
   Property = "",
   Reference = "",
