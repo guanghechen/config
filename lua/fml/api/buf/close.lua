@@ -38,12 +38,21 @@ end
 
 ---@return nil
 function M.close_current()
-  local tab = state.get_current_tab()
-  if tab == nil then
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
+
+  if win == nil then
     return
   end
 
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+
+  ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.
+  local bufnr_last = win.buf_history:back() ---@type integer|nil
+  if bufnr_last ~= nil and vim.api.nvim_buf_is_valid(bufnr_last) then
+    vim.api.nvim_win_set_buf(winnr, bufnr_last)
+  end
+
   M.close({ bufnr_cur })
 end
 

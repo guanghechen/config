@@ -45,7 +45,7 @@ local function gen_hlgroup(params)
     Bold = { bold = true },
     Changed = { fg = c.yellow },
     ColorColumn = { bg = c.black2 },
-    Comment = { fg = "#5D8A4A" },
+    Comment = { fg = c.grey_fg },
     Conceal = { bg = "none" },
     Cursor = { fg = c.base00, bg = c.base05 },
     CursorColumn = { bg = c.base01, sp = "none" },
