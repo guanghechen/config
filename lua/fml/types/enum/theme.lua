@@ -44,7 +44,7 @@
 ---| "pmenu_bg"
 ---| "purple"
 ---| "red"
----| "statusline_bg"
+---| "bg_statusline"
 ---| "sun"
 ---| "teal"
 ---| "vibrant_green"
