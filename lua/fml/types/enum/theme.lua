@@ -21,7 +21,7 @@
 ---| "blue"
 ---| "cyan"
 ---| "darker_black"
----| "dark_purple"
+---| "darker_purple"
 ---| "diff_add"
 ---| "diff_add_word"
 ---| "diff_del"

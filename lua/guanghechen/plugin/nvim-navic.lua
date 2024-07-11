@@ -7,7 +7,6 @@ return {
       group = fml.fn.augroup("navic_attach"),
       callback = function(a)
         local client_id = fml.object.get(a, "data.client_id")
-        fml.debug.log({ a = a, client_id = client_id })
         if client_id ~= nil then
           local client = vim.lsp.get_client_by_id(client_id)
           if client and client.server_capabilities["documentSymbolProvider"] then

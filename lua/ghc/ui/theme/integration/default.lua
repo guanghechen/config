@@ -36,7 +36,7 @@ local function gen_hlgroup(params)
     f_sl_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
     f_sl_text_command = { fg = c.vibrant_green, bg = t and "none" or c.statusline_bg, bold = true },
     f_sl_text_confirm = { fg = c.teal, bg = t and "none" or c.statusline_bg, bold = true },
-    f_sl_text_insert = { fg = c.dark_purple, bg = t and "none" or c.statusline_bg, bold = true },
+    f_sl_text_insert = { fg = c.darker_purple, bg = t and "none" or c.statusline_bg, bold = true },
     f_sl_text_normal = { fg = c.nord_blue, bg = t and "none" or c.statusline_bg, bold = true },
     f_sl_text_nterminal = { fg = c.yellow, bg = t and "none" or c.statusline_bg, bold = true },
     f_sl_text_replace = { fg = c.orange, bg = t and "none" or c.statusline_bg, bold = true },
@@ -66,11 +66,11 @@ local function gen_hlgroup(params)
 
     ---winline
     f_wl_bg = { fg = t and "none" or c.statusline_bg, bg = t and "none" or c.statusline_bg },
-    f_wl_dirpath_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
-    f_wl_filename_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
-    f_wl_context_sep = { fg = c.white, bg = t and "none" or c.statusline_bg },
-    f_wl_context_icon = { fg = c.purple, bg = t and "none" or c.statusline_bg },
-    f_wl_context_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
+    f_wl_dirpath_text = { fg = c.darker_white, bg = t and "none" or c.statusline_bg },
+    f_wl_filename_text = { fg = c.darker_white, bg = t and "none" or c.statusline_bg },
+    f_wl_context_icon = { fg = c.darker_purple, bg = t and "none" or c.statusline_bg },
+    f_wl_context_sep = { fg = c.darker_white, bg = t and "none" or c.statusline_bg },
+    f_wl_context_text = { fg = c.darker_white, bg = t and "none" or c.statusline_bg },
 
     ---replace
     f_sr_filepath = { fg = c.blue, bg = "none" },

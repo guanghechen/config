@@ -29,7 +29,7 @@ local function gen_hlgroup(params)
     DapUIStopNC = { fg = c.red },
     DapUIStoppedThread = { fg = c.cyan },
     DapUIThread = { fg = c.green },
-    DAPUIType = { fg = c.dark_purple },
+    DAPUIType = { fg = c.darker_purple },
     DapUIUnavailable = { fg = c.grey_fg },
     DapUIUnavailableNC = { fg = c.grey_fg },
     DAPUIValue = { fg = c.cyan },
