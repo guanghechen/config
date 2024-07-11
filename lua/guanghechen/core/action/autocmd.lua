@@ -1,18 +1,6 @@
 ---@class guanghechen.core.action.autocmd
 local M = {}
 
--- Check if we need to reload the file when it changed
-function M.autocmd_checktime()
-  vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
-    group = fml.fn.augroup("checktime"),
-    callback = function()
-      if vim.o.buftype ~= "nofile" then
-        vim.cmd("checktime")
-      end
-    end,
-  })
-end
-
 ---@param bufnr number
 ---@param callback? fun(bufnr:number):nil
 function M.autocmd_clear_buftype_extra(bufnr, callback)
@@ -94,28 +82,6 @@ function M.autocmd_goto_last_location(opts)
   })
 end
 
--- Highlight on yank
-function M.autocmd_highlight_yank()
-  vim.api.nvim_create_autocmd({ "TextYankPost" }, {
-    group = fml.fn.augroup("highlight_yank"),
-    callback = function()
-      vim.highlight.on_yank()
-    end,
-  })
-end
-
-function M.autocmd_lsp_show_progress()
-  vim.api.nvim_create_autocmd("LspProgress", {
-    group = fml.fn.augroup("lsp_show_progress"),
-    callback = function(args)
-      if string.find(args.match, "end") then
-        vim.cmd("redrawstatus")
-      end
-      vim.cmd("redrawstatus")
-    end,
-  })
-end
-
 ---@param prompt_bufnr number
 ---@param callback fun(prompt:string):nil
 function M.autocmd_remember_telescope_prompt(prompt_bufnr, callback)
@@ -132,18 +98,6 @@ function M.autocmd_remember_telescope_prompt(prompt_bufnr, callback)
           callback(prompt)
         end
       end
-    end,
-  })
-end
-
--- resize splits if window got resized
-function M.autocmd_resize_splits()
-  vim.api.nvim_create_autocmd({ "VimResized" }, {
-    group = fml.fn.augroup("resize_splits"),
-    callback = function()
-      local current_tab = vim.fn.tabpagenr()
-      vim.cmd("tabdo wincmd =")
-      vim.cmd("tabnext " .. current_tab)
     end,
   })
 end
@@ -196,34 +150,7 @@ function M.autocmd_set_tabstop(opts)
     callback = function()
       vim.opt.shiftwidth = width
       vim.opt.softtabstop = width -- set the tab width
-      vim.opt.tabstop = width     -- set the tab width
-    end,
-  })
-end
-
-function M.autocmd_toggle_linenumber()
-  local augroup = fml.fn.augroup("toggle_linenumber")
-
-  vim.api.nvim_create_autocmd({ "InsertLeave" }, {
-    pattern = "*",
-    group = augroup,
-    callback = function()
-      if vim.o.nu and vim.api.nvim_get_mode().mode == "n" then
-        if ghc.context.client.relativenumber:snapshot() then
-          vim.opt.relativenumber = true
-        end
-      end
-    end,
-  })
-
-  vim.api.nvim_create_autocmd({ "InsertEnter" }, {
-    pattern = "*",
-    group = augroup,
-    callback = function()
-      if vim.o.nu then
-        vim.opt.relativenumber = false
-        vim.cmd("redraw")
-      end
+      vim.opt.tabstop = width -- set the tab width
     end,
   })
 end
