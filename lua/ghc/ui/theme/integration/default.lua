@@ -68,6 +68,9 @@ local function gen_hlgroup(params)
     f_wl_bg = { fg = t and "none" or c.statusline_bg, bg = t and "none" or c.statusline_bg },
     f_wl_dirpath_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
     f_wl_filename_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
+    f_wl_context_sep = { fg = c.white, bg = t and "none" or c.statusline_bg },
+    f_wl_context_icon = { fg = c.purple, bg = t and "none" or c.statusline_bg },
+    f_wl_context_text = { fg = c.white, bg = t and "none" or c.statusline_bg },
 
     ---replace
     f_sr_filepath = { fg = c.blue, bg = "none" },

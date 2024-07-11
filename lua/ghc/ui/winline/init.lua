@@ -46,6 +46,7 @@ function M.render(winnr)
     winline
       :add("left", require("ghc.ui.winline.component.dirpath"))
       :add("left", require("ghc.ui.winline.component.filename"))
+      :add("left", require("ghc.ui.winline.component.context"))
   end
   return winline:render()
 end
