@@ -4,12 +4,19 @@ local last_tab_cur = 0 ---@type integer
 local last_tab_count = 0 ---@type integer
 
 ---@type string
+local fn_active_tab = fml.G.register_anonymous_fn(function(tabnr)
+  tabnr = tonumber(tabnr)
+  if type(tabnr) == "number" and vim.api.nvim_tabpage_is_valid(tabnr) then
+    fml.api.tab.go(tabnr)
+  end
+end) or ""
+
+---@type string
 local fn_toggle_tabs_folded = fml.G.register_anonymous_fn(function()
   last_folded = not last_folded
   dirty = true
   vim.cmd("redrawtabline")
 end) or ""
-
 
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
@@ -33,23 +40,26 @@ local M = {
     if last_folded then
       local text = " 󰅁 "
       local width = vim.fn.strwidth(text)
-      local hl_text = fml.nvimbar.btn(text, fn_toggle_tabs_folded, "f_tl_tab_toggle")
+      local hl_text = fml.nvimbar.txt(text, "f_tl_tab_toggle")
+      hl_text = fml.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
       return hl_text, width
     end
 
     local text = " 󰅂 " ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
-    local hl_text = fml.nvimbar.btn(text, fn_toggle_tabs_folded, "f_tl_tab_toggle")
+    local hl_text = fml.nvimbar.txt(text, "f_tl_tab_toggle")
+    hl_text = fml.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
 
-    for nr = 1, last_tab_count, 1 do
-      local hlname = last_tab_cur == nr and "f_tl_tab_item_cur" or "f_tl_tab_item"
-      text = " " .. nr .. " "
+    local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+    for tabid = 1, last_tab_count, 1 do
+      local hlname = last_tab_cur == tabid and "f_tl_tab_item_cur" or "f_tl_tab_item"
+      text = " " .. tabid .. " "
       width = width + vim.fn.strwidth(text)
-      hl_text = hl_text .. fml.nvimbar.btn(text, "fml.api.tab.focus_" .. nr, hlname)
+      local hl_text_inner = fml.nvimbar.txt(text, hlname)
+      hl_text = hl_text .. fml.nvimbar.btn(hl_text_inner, fn_active_tab, tostring(tabnrs[tabid]))
     end
-
     return hl_text, width
-  end
+  end,
 }
 
 return M

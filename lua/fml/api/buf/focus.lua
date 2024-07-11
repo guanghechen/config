@@ -97,7 +97,7 @@ function M.focus_right(step)
   end
 end
 
-for i = 1, 200 do
+for i = 1, 10 do
   M["focus_" .. i] = function()
     M.focus(i)
   end

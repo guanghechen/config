@@ -1,11 +1,18 @@
 local last_bufnr_cur = 1 ---@type integer
 
+---@type string
+local fn_active_buf = fml.G.register_anonymous_fn(function(bufnr)
+  bufnr = tonumber(bufnr)
+  if type(bufnr) == "number" and vim.api.nvim_buf_is_valid(bufnr) then
+    fml.api.buf.go(bufnr)
+  end
+end) or ""
+
 ---@param bufnr                         integer
----@param bufid                         integer
 ---@param is_curbuf                     boolean
 ---@return string
 ---@return integer
-local function render_buf(bufnr, bufid, is_curbuf)
+local function render_buf(bufnr, is_curbuf)
   if fml.api.state.bufs[bufnr] == nil then
     fml.api.state.refresh_buf(bufnr)
   end
@@ -34,9 +41,9 @@ local function render_buf(bufnr, bufid, is_curbuf)
   local hl_text_title = fml.nvimbar.txt(text_title, title_hl)
   local hl_text_mod = is_mod and fml.nvimbar.txt(text_mod, mod_hl) or text_mod
 
-  local hl_text = hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod
+  local hl_text = fml.nvimbar.txt(hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod, buf_hl)
   local width = vim.fn.strwidth(left_pad .. text_icon .. text_title .. text_mod) ---@type integer
-  return fml.nvimbar.btn(hl_text, "fml.api.buf.focus_" .. bufid, buf_hl), width
+  return fml.nvimbar.btn(hl_text, fn_active_buf, tostring(bufnr)), width
 end
 
 ---@type fml.types.ui.nvimbar.IRawComponent
@@ -58,7 +65,7 @@ local M = {
       bufid_cur = bufid_last or 1
     end
 
-    local text, width = render_buf(tab.bufnrs[bufid_cur], bufid_cur, true)
+    local text, width = render_buf(tab.bufnrs[bufid_cur], true)
     remain_width = remain_width - width
 
     if remain_width < 0 then
@@ -66,14 +73,14 @@ local M = {
     end
 
     for i = bufid_cur - 1, 1, -1 do
-      local t, w = render_buf(tab.bufnrs[i], i, false)
+      local t, w = render_buf(tab.bufnrs[i], false)
       remain_width = remain_width - w
       if remain_width >= 0 then
         text = t .. text
       end
     end
     for i = bufid_cur + 1, #tab.bufnrs, 1 do
-      local t, w = render_buf(tab.bufnrs[i], i, false)
+      local t, w = render_buf(tab.bufnrs[i], false)
       remain_width = remain_width - w
       if remain_width >= 0 then
         text = text .. t

@@ -10,15 +10,13 @@ end
 
 ---@param text                          string
 ---@param callback                      string
----@param hlname                        ?string
-function M.btn(text, callback, hlname)
-  if hlname ~= nil then
-    text = M.txt(text, hlname)
-  end
+---@param args                          ?string
+function M.btn(text, callback, args)
+  args = args or ""
   if callback.sub(callback, 1, 3) == "fml" then
-    return "%@v:lua._G." .. callback .. "@" .. text .. "%X"
+    return "%" .. args .. "@v:lua." .. callback .. "@" .. text .. "%X"
   end
-  return "%@v:lua._G.fml.G." .. callback .. "@" .. text .. "%X"
+  return "%" .. args .. "@v:lua.fml.G." .. callback .. "@" .. text .. "%X"
 end
 
 return M

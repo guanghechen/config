@@ -27,7 +27,7 @@ function M.register_known_fn(fn_name, callback)
   return fn_name
 end
 
----@param fn                       fun(): nil
+---@param fn                       fun(args?: string): nil
 ---@return string|nil
 function M.register_anonymous_fn(fn)
   if type(fn) ~= "function" then
@@ -42,9 +42,7 @@ function M.register_anonymous_fn(fn)
 
   id = id + 1
   local fn_name = "_" .. id
-  gfn[fn_name] = function()
-    fn()
-  end
+  gfn[fn_name] = fn
   return fn_name
 end
 
