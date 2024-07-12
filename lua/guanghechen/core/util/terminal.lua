@@ -65,10 +65,4 @@ function M.open_terminal(cmd, opts)
   return terminals[termkey]
 end
 
----@param cmd? string[]|string
----@param opts? LazyTermOpts
-function M.toggle_terminal(cmd, opts)
-  M.open_terminal(cmd, opts)
-end
-
 return M

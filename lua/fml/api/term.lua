@@ -89,6 +89,7 @@ function M.create_term_win(name, position, bufnr)
 end
 
 ---@param params                        fml.api.term.ICreateParams
+---@return integer|nil
 function M.create(params)
   local name = params.name ---@type string
   local command = params.command or vim.o.shell ---@type string
@@ -147,10 +148,12 @@ function M.create(params)
   vim.schedule(function()
     vim.cmd("startinsert")
   end)
+
+  return bufnr
 end
 
 ---@param name                          string
----@return nil
+---@return integer|nil
 function M.toggle(name)
   local term = state.term_map[name] ---@type fml.api.state.ITerm|nil
   if term == nil then
@@ -191,15 +194,17 @@ function M.toggle(name)
   vim.schedule(function()
     vim.cmd("startinsert")
   end)
+
+  return bufnr
 end
 
 ---@param params                        fml.api.term.ICreateParams
----@return nil
+---@return integer|nil
 function M.toggle_or_create(params)
   if state.term_map[params.name] == nil then
-    M.create(params)
+    return M.create(params)
   else
-    M.toggle(params.name)
+    return M.toggle(params.name)
   end
 end
 

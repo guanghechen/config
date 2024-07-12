@@ -4,7 +4,6 @@ local A = {
   diagnostic = require("guanghechen.core.action.diagnostic"),
   explorer = require("guanghechen.core.action.explorer"),
   find = require("guanghechen.core.action.find"),
-  git = require("guanghechen.core.action.git"),
   replace = require("guanghechen.core.action.replace"),
   search = require("guanghechen.core.action.search"),
   ui = require("guanghechen.core.action.ui"),
@@ -20,13 +19,8 @@ local function mk(mode, key, action, desc, silent)
 end
 
 --#enhance------------------------------------------------------------------------------------------
---- better access git from nvim
-mk({ "i", "n", "t", "v" }, "<C-b>g", A.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
-mk({ "i", "n", "t", "v" }, "<M-g>", A.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
-
 --- quick access widgets (diagnostic, explorer, terminal)
 mk({ "n", "v" }, "<leader>1", A.explorer.toggle_explorer_file_cwd, "explorer: files (cwd)")
-mk({ "n", "v" }, "<leader>2", ghc.command.replace.open, "replace: search/replace")
 mk({ "n", "v" }, "<leader>3", A.explorer.toggle_explorer_git_cwd, "explorer: git (cwd)")
 ---------------------------------------------------------------------------------------#enhance-----
 
@@ -58,9 +52,8 @@ mk({ "n", "v" }, "<leader><leader>", A.find.find_recent, "find recent")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>gG", A.git.open_diffview, "git: open diff view", true)
-mk({ "n", "v" }, "<leader>gg", A.git.open_lazygit_cwd, "git: open lazygit", true)
-mk({ "n", "v" }, "<leader>gf", A.git.open_diffview_filehistory, "git: open file history", true)
+mk({ "n", "v" }, "<leader>gG", ghc.command.git.open_diffview, "git: open diff view", true)
+mk({ "n", "v" }, "<leader>gf", ghc.command.git.open_diffview_filehistory, "git: open file history", true)
 -------------------------------------------------------------------------------------------#[g]it---
 
 --#book[m]ark---------------------------------------------------------------------------------------

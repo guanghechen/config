@@ -5,6 +5,7 @@ local command = {
   context = require("ghc.command.context"),
   copy = require("ghc.command.copy"),
   debug = require("ghc.command.debug"),
+  git = require("ghc.command.git"),
   replace = require("ghc.command.replace"),
   run = require("ghc.command.run"),
   session = require("ghc.command.session"),

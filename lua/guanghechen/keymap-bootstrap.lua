@@ -8,6 +8,9 @@ local function mk(mode, key, action, desc, silent)
 end
 
 --#enhance------------------------------------------------------------------------------------------
+---! Functional widgets.
+mk({ "n", "v" }, "<leader>2", ghc.command.replace.open, "replace: search/replace")
+
 ---! better indenting
 vim.keymap.set("v", "<", "<gv")
 vim.keymap.set("v", ">", ">gv")
@@ -32,6 +35,10 @@ mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true) -- Ex
 ---! quick shortcut
 mk({ "i", "n", "v" }, "<C-b>T", ghc.command.toggle.theme, "toggle: theme")
 mk({ "i", "n", "v" }, "<M-T>", ghc.command.toggle.theme, "toggle: theme")
+
+--- better access lazygit
+mk({ "i", "n", "t", "v" }, "<C-b>g", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
+mk({ "i", "n", "t", "v" }, "<M-g>", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
 
 --- better access terminal
 mk({ "i", "n", "t", "v" }, "<C-b>t", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
@@ -109,6 +116,10 @@ mk({ "n", "v" }, "<leader>dd", ghc.command.debug.inspect, "debug: inspect", true
 mk({ "n", "v" }, "<leader>ds", ghc.command.debug.show_state, "debug: show state", true)
 mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window history", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
+
+--#[g]it--------------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>gg", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
+-------------------------------------------------------------------------------------------#[g]it---
 
 --#[q]uit/session/context--------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>qq", ghc.command.session.quit_all, "quit: quit all", true)
