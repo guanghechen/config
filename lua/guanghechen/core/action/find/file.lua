@@ -171,9 +171,7 @@ local function find_file(opts, force)
       open_picker()
     end,
     toggle_case_sensitive = function()
-      ghc.context.session.search_flag_case_sensitive:next(
-        not ghc.context.session.search_flag_case_sensitive:snapshot()
-      )
+      ghc.command.toggle.flag_case_sensitive()
       open_picker()
     end,
     change_scope_workspace = function()

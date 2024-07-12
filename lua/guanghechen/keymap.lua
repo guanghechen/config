@@ -68,7 +68,7 @@ mk({ "n", "v" }, "<leader>ml", A.bookmark.open_bookmarks_into_quickfix, "bookmar
 --#[r]eplace----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>rR", A.replace.replace_word_workspace, "replace: word (workspace)")
 mk({ "n", "v" }, "<leader>rr", A.replace.replace_word_current_file, "replace: word (current file)")
-mk("v", "<leader>rti", A.replace.toggle_case_sensitive, "replace: toggle case sensitive")
+mk("v", "<leader>rti", ghc.command.toggle.flag_case_sensitive, "replace: toggle case sensitive")
 ----------------------------------------------------------------------------------------#[r]eplace--
 
 --#[s]earch-----------------------------------------------------------------------------------------

@@ -247,8 +247,7 @@ local function search(opts)
       open_picker()
     end,
     toggle_case_sensitive = function()
-      local next_flag_case_sensitive = not ghc.context.session.search_flag_case_sensitive:snapshot() ---@type boolean
-      ghc.context.session.search_flag_case_sensitive:next(next_flag_case_sensitive)
+      ghc.command.toggle.flag_case_sensitive()
       open_picker()
     end,
     change_scope_workspace = function()

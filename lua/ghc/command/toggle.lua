@@ -5,6 +5,12 @@ local session = require("ghc.context.session")
 local M = {}
 
 ---@return nil
+function M.flag_case_sensitive()
+  local next_case_sensitive = not session.search_flag_case_sensitive:snapshot() ---@type boolean
+  session.search_flag_case_sensitive:next(next_case_sensitive)
+end
+
+---@return nil
 function M.flight_autoload_session()
   local next_flight_autoload_session = not session.flight_autoload_session:snapshot() ---@type boolean
   session.flight_autoload_session:next(next_flight_autoload_session)
@@ -35,13 +41,10 @@ function M.relativenumber()
   client.relativenumber:next(next_relativenumber)
 
   local bufnr = vim.api.nvim_get_current_buf()
-  vim.opt.relativenumber = next_relativenumber
-  if next_relativenumber then
-    vim.cmd("bufdo set relativenumber")
-  else
-    vim.cmd("bufdo set norelativenumber")
+  if vim.o.nu then
+    vim.opt.relativenumber = next_relativenumber
+    vim.cmd("redraw")
   end
-  vim.api.nvim_set_current_buf(bufnr)
 end
 
 function M.wrap()
