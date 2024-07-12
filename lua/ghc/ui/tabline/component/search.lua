@@ -34,13 +34,15 @@ local M = {
     local text = "󰍉 Search/Replace"
     local text_width = vim.fn.strwidth(text)
     local left_width = math.floor((width - text_width) / 2)
-    local right_width = width - left_width - text_width
+    local right_width = width - left_width - text_width - 1
     local left_blank = string.rep(" ", left_width)
     local right_blank = string.rep(" ", right_width)
+    local right_split = "│"
 
     local hl_text = fml.nvimbar.txt(left_blank, "f_tl_search_blank")
       .. fml.nvimbar.txt(text, "f_tl_search_text")
       .. fml.nvimbar.txt(right_blank, "f_tl_search_blank")
+      .. fml.nvimbar.txt(right_split, "f_tl_search_split")
     return hl_text, width + 1
   end,
 }
