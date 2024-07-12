@@ -172,11 +172,10 @@ mk({ "n", "v" }, "<leader>tuw", ghc.command.toggle.wrap, "toggle: wrap")
 -----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[w]indow-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>wW", fml.api.win.find_history_all, "window: find history", true)
-mk({ "n", "v" }, "<leader>ww", fml.api.win.find_history_unique, "window: find history (unique)", true)
-mk({ "n", "v" }, "<leader>wf", fml.api.win.focus_with_picker, "window: focus (with picker)", true)
-mk({ "n", "v" }, "<leader>ws", fml.api.win.swap_with_picker, "window: swap (with picker)", true)
+mk({ "n", "v" }, "<leader>wh", fml.api.win.find_history_all, "window: history", true)
 mk({ "n", "v" }, "<leader>wp", fml.api.win.project_with_picker, "window: project (with picker)", true)
+mk({ "n", "v" }, "<leader>ws", fml.api.win.swap_with_picker, "window: swap (with picker)", true)
+mk({ "n", "v" }, "<leader>ww", fml.api.win.focus_with_picker, "window: focus (with picker)", true)
 mk({ "n", "v" }, "<leader>wj", fml.api.win.split_horizontal, "window: split horizontally", true)
 mk({ "n", "v" }, "<leader>wl", fml.api.win.split_vertical, "window: split vertically", true)
 mk({ "n", "v" }, "<leader>wH", fml.api.win.resize_vertical_minus, "window: resize -(v:count) vertically.", true)
