@@ -86,11 +86,14 @@ local function gen_hlgroup(params)
     Title = { fg = c.base0D, sp = "none" },
     TooLong = { fg = c.base08 },
     UnderLined = { underline = true },
+    VertSplit = { fg = c.line },
+    VertSplitActive = { fg = c.darker_pink },
     Visual = { bg = c.light_grey },
     VisualNOS = { fg = c.base08 },
     WarningMsg = { fg = c.base08 },
     WildMenu = { fg = c.base08, bg = c.base0A },
     WinSeparator = { fg = c.line },
+    WinSeparatorActive = { fg = c.darker_pink },
   }
 end
 
