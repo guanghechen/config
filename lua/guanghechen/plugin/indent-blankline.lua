@@ -7,10 +7,12 @@ return {
     indent = {
       char = "│",
       tab_char = "│",
+      highlight = "IblChar",
     },
     scope = {
       show_start = false,
       show_end = false,
+      highlight = "IblScopeChar",
     },
     exclude = {
       filetypes = {

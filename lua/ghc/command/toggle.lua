@@ -30,7 +30,7 @@ function M.transparency()
 end
 
 ---@return nil
-function M.relative_line_number()
+function M.relativenumber()
   local next_relativenumber = not client.relativenumber:snapshot() ---@type boolean
   client.relativenumber:next(next_relativenumber)
 

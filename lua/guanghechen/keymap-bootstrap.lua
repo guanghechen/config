@@ -143,7 +143,7 @@ mk({ "n", "v" }, "<leader>to", fml.api.tab.close_others, "tab: close other tabs"
 
 --#[t]oggle-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>tfc", ghc.command.toggle.flight_copilot, "toggle: copilot")
-mk({ "n", "v" }, "<leader>tul", ghc.command.toggle.relative_line_number, "toggle: relative line number")
+mk({ "n", "v" }, "<leader>tul", ghc.command.toggle.relativenumber, "toggle: relative line number")
 mk({ "n", "v" }, "<leader>tuT", ghc.command.toggle.transparency, "toggle: transparency")
 mk({ "n", "v" }, "<leader>tut", ghc.command.toggle.theme, "toggle: theme")
 mk({ "n", "v" }, "<leader>tuw", ghc.command.toggle.wrap, "toggle: wrap")
