@@ -108,6 +108,7 @@ mk({ "n", "v" }, "<leader>bh", fml.api.buf.close_to_leftest, "buffer: close to t
 mk({ "n", "v" }, "<leader>bl", fml.api.buf.close_to_rightest, "buffer: close to the rightest", true)
 mk({ "n", "v" }, "<leader>bn", fml.api.buf.create, "buffer: new", true)
 mk({ "n", "v" }, "<leader>bo", fml.api.buf.close_others, "buffer: close others", true)
+mk({ "n", "v" }, "<leader>bp", fml.api.buf.toggle_pin_cur, "buffer: toggle pin", true)
 -----------------------------------------------------------------------------------------#[b]uffer--
 
 ----#[d]ebug-----------------------------------------------------------------------------------------

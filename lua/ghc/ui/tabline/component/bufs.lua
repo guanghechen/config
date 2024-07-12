@@ -21,13 +21,14 @@ local function render_buf(bufnr, is_curbuf)
     return "", 0
   end
 
+  local is_pinned = buf.pinned ---@type boolean
   local is_mod = vim.api.nvim_get_option_value("mod", { buf = bufnr }) ---@type boolean
   local icon, fileicon_hl = fml.fn.calc_fileicon(buf.filename)
 
   local left_pad = is_curbuf and "▎" or " " ---@type string
   local text_icon = icon .. " " ---@type string
   local text_title = buf.filename ---@type string
-  local text_mod = is_mod and "  " or "  " ---@type string
+  local text_mod = is_pinned and (is_mod and "  " or "  ") or (is_mod and "  " or "  ") ---@type string
 
   local left_pad_hl = is_curbuf and "f_tl_buf_left_pad_cur" or "f_tl_buf_left_pad"
   local buf_hl = is_curbuf and "f_tl_buf_item_cur" or "f_tl_buf_item" ---@type string

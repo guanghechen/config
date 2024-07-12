@@ -5,5 +5,6 @@ require("fml.api.buf.close")
 require("fml.api.buf.create")
 require("fml.api.buf.focus")
 require("fml.api.buf.locate")
+require("fml.api.buf.pin")
 
 return M
