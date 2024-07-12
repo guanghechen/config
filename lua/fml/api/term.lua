@@ -37,8 +37,10 @@ function M.create_term_buf(name)
   end
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.bo[bufnr].filetype = constant.FT_TERM
+  vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
+  vim.bo[bufnr].filetype = constant.FT_TERM
+  vim.bo[bufnr].swapfile = false
   vim.keymap.set({ "n" }, "q", toggle, { buffer = bufnr, nowait = true })
   return bufnr
 end
@@ -79,6 +81,10 @@ function M.create_term_win(name, position, bufnr)
   vim.wo[winnr].number = false
   vim.wo[winnr].relativenumber = false
   vim.wo[winnr].signcolumn = "no"
+
+  if position == "float" then
+    vim.wo[winnr].winblend = 20
+  end
   return winnr, bufnr
 end
 
