@@ -2,7 +2,6 @@ local action_autocmd = require("guanghechen.core.action.autocmd")
 
 action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
   pattern = {
-    fml.constant.FT_TERM,
     "checkhealth",
     "git",
     "help",

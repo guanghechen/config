@@ -35,6 +35,15 @@ function M.create_term_buf()
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].filetype = constant.FT_TERM
   vim.bo[bufnr].swapfile = false
+
+  ---@return nil
+  local function close_buf()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end
+
+  vim.keymap.set({ "n" }, "q", close_buf, { desc = "close", noremap = true, silent = true })
   return bufnr
 end
 
