@@ -1,5 +1,4 @@
-require("fml.autocmd.auto_change_dir")
-require("fml.autocmd.enhance")
+require("fml.autocmd.bootstrap")
 
 local state = require("fml.api.state")
 
