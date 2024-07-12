@@ -16,7 +16,7 @@ M.BUF_IGNORED_FILETYPES = {
   ["neo-tree"] = true,
   ["notify"] = true,
   ["startuptime"] = true,
-  ["term"] = true,
+  [constant.FT_TERM] = true,
 }
 M.bufs = {}
 

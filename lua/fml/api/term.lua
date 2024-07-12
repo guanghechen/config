@@ -29,33 +29,25 @@ local function validate_position(position, subject)
   return false
 end
 
----@param name                          string
 ---@return integer
-function M.create_term_buf(name)
-  local function toggle()
-    M.toggle(name)
-  end
-
+function M.create_term_buf()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].filetype = constant.FT_TERM
   vim.bo[bufnr].swapfile = false
-  vim.keymap.set({ "n" }, "q", toggle, { buffer = bufnr, nowait = true })
   return bufnr
 end
 
----@param name                          string
 ---@param position                      fml.api.state.TermPosition
 ---@param bufnr                         integer|nil
 ---@return integer|nil
 ---@return integer|nil
-function M.create_term_win(name, position, bufnr)
+function M.create_term_win(position, bufnr)
   if not validate_position(position, "create_term_win") then
     return
   end
 
-  bufnr = (bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr)) and bufnr or M.create_term_buf(name) ---@type integer
+  bufnr = (bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr)) and bufnr or M.create_term_buf() ---@type integer
   if position == "float" then
     local width = math.ceil(0.9 * vim.o.columns) ---@type integer
     local height = math.ceil(0.9 * vim.o.lines) ---@type integer
@@ -106,7 +98,7 @@ function M.create(params)
     return
   end
 
-  local winnr, bufnr = M.create_term_win(name, position, nil) ---@type integer|nil
+  local winnr, bufnr = M.create_term_win(position, nil) ---@type integer|nil
   if winnr == nil or bufnr == nil then
     reporter.error({
       from = "fml.api.term",
@@ -137,8 +129,10 @@ function M.create(params)
     once = true,
     buffer = bufnr,
     callback = function()
-      if vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_win_close(winnr, true)
+      local term_winnr = term and term.winnr ---@type integer|nil
+      if term_winnr and vim.api.nvim_win_is_valid(term_winnr) then
+        term.winnr = nil
+        vim.api.nvim_win_close(term_winnr, true)
         vim.cmd("redraw")
       end
       state.term_map[name] = nil
@@ -175,7 +169,7 @@ function M.toggle(name)
     return
   end
 
-  local winnr, bufnr = M.create_term_win(name, term.position, term.bufnr) ---@type integer|nil
+  local winnr, bufnr = M.create_term_win(term.position, term.bufnr) ---@type integer|nil
   if winnr == nil or bufnr == nil then
     reporter.error({
       from = "fml.api.term",

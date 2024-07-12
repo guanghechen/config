@@ -15,6 +15,7 @@ return {
     vim.api.nvim_create_autocmd("FileType", {
       pattern = {
         fml.constant.FT_SEARCH_REPLACE,
+        fml.constant.FT_TERM,
         "help",
         "alpha",
         "dashboard",
@@ -24,8 +25,6 @@ return {
         "lazy",
         "mason",
         "notify",
-        "lazyterm",
-        "term",
       },
       callback = function()
         vim.b.miniindentscope_disable = true

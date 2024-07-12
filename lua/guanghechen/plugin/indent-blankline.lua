@@ -17,6 +17,7 @@ return {
     exclude = {
       filetypes = {
         fml.constant.FT_SEARCH_REPLACE,
+        fml.constant.FT_TERM,
         "help",
         "alpha",
         "dashboard",
@@ -26,9 +27,6 @@ return {
         "lazy",
         "mason",
         "notify",
-        "toggleterm",
-        "lazyterm",
-        "term",
       },
     },
   },
