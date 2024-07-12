@@ -73,18 +73,15 @@ local function edit_lazygit_file_in_buffer(cwd)
   vim.cmd("e " .. relative_filepath)
 end
 
----@return nil
-function M.toggle_lazygit_workspace()
-  local cwd = fml.path.workspace() ---@type string
-  local lazygit_theme_config_filepath = get_lazygit_config_filepath()
+---@param name                          string
+---@param cwd                           string
+---@param args                          ?string[]
+local function open_lazygit(name, cwd, args)
+  local config_path = get_lazygit_config_filepath()
   local bufnr = fml.api.term.toggle_or_create({
-    name = "lazygit_workspace",
+    name = name,
     position = "float",
-    command = table.concat({
-      "lazygit",
-      "--use-config-file",
-      vim.fn.fnameescape(lazygit_theme_config_filepath),
-    }, " "),
+    command = "lazygit --use-config-file " .. vim.fn.fnameescape(config_path) .. " " .. table.concat(args or {}, " "),
     cwd = cwd,
   })
 
@@ -92,57 +89,26 @@ function M.toggle_lazygit_workspace()
     local function edit()
       edit_lazygit_file_in_buffer(cwd)
     end
+    vim.keymap.set("t", "<esc>", "<esc>", { buffer = bufnr, noremap = true, silent = true })
+    vim.keymap.set("t", "<esc><esc>", "<esc><esc>", { buffer = bufnr, noremap = true, silent = true })
     vim.keymap.set("t", "<c-e>", edit, { buffer = bufnr, noremap = true, silent = true })
   end
+end
+
+---@return nil
+function M.toggle_lazygit_workspace()
+  open_lazygit("lazygit_workspace", fml.path.workspace())
 end
 
 ---@return nil
 function M.toggle_lazygit_cwd()
-  local cwd = fml.path.workspace() ---@type string
-  local lazygit_theme_config_filepath = get_lazygit_config_filepath()
-  local bufnr = fml.api.term.toggle_or_create({
-    name = "lazygit_cwd",
-    position = "float",
-    command = table.concat({
-      "lazygit",
-      "--use-config-file",
-      vim.fn.fnameescape(lazygit_theme_config_filepath),
-    }, " "),
-    cwd = cwd,
-  })
-
-  if bufnr ~= nil then
-    local function edit()
-      edit_lazygit_file_in_buffer(cwd)
-    end
-    vim.keymap.set("t", "<c-e>", edit, { buffer = bufnr, noremap = true, silent = true })
-  end
+  open_lazygit("lazygit_cwd", fml.path.cwd())
 end
 
 ---@return nil
 function M.toggle_lazygit_file_history()
-  local cwd = fml.path.cwd()
-  local lazygit_theme_config_filepath = get_lazygit_config_filepath()
   local filepath = vim.api.nvim_buf_get_name(0)
-  local bufnr = fml.api.term.toggle_or_create({
-    name = "lazygit_file_history",
-    position = "float",
-    command = table.concat({
-      "lazygit",
-      "--use-config-file",
-      vim.fn.fnameescape(lazygit_theme_config_filepath),
-      "-f",
-      vim.fn.fnameescape(filepath),
-    }, " "),
-    cwd = cwd,
-  })
-
-  if bufnr ~= nil then
-    local function edit()
-      edit_lazygit_file_in_buffer(cwd)
-    end
-    vim.keymap.set("t", "<c-e>", edit, { buffer = bufnr, noremap = true, silent = true })
-  end
+  open_lazygit("lazygit_file_history", fml.path.cwd(), { "-f", vim.fn.fnameescape(filepath) })
 end
 
 ---@return nil
