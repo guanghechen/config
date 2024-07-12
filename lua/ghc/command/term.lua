@@ -29,7 +29,7 @@ function M.toggle_current()
 end
 
 ---@return nil
-function M.open_terminal_workspace_tmux()
+function M.toggle_tmux()
   if fml.os.is_win() then
     M.toggle_workspace()
   else

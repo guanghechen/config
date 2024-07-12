@@ -29,6 +29,7 @@ local M = {
     blue = "#61AFEF",
     cyan = "#A3B8EF",
     darker_black = "#1B1F27",
+    darker_pink = "#AC719B",
     darker_purple = "#A284E0",
     darker_white = "#8b95a7",
     diff_add = "#D0FFD0",

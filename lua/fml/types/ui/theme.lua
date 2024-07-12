@@ -24,6 +24,7 @@
 ---@field public blue                   string
 ---@field public cyan                   string
 ---@field public darker_black           string
+---@field public darker_pink            string
 ---@field public darker_purple          string
 ---@field public darker_white           string
 ---@field public diff_add               string

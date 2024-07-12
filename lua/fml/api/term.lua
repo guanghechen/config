@@ -57,8 +57,8 @@ function M.create_term_win(name, position, bufnr)
   if position == "float" then
     local width = math.ceil(0.9 * vim.o.columns) ---@type integer
     local height = math.ceil(0.9 * vim.o.lines) ---@type integer
-    local row = math.ceil((vim.o.lines - height) / 2) ---@type integer
-    local col = math.ceil((vim.o.columns - width) / 2) ---@type integer
+    local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
+    local col = math.floor((vim.o.columns - width) / 2) ---@type integer
     vim.api.nvim_open_win(bufnr, true, {
       relative = "editor",
       height = height,
@@ -66,8 +66,8 @@ function M.create_term_win(name, position, bufnr)
       row = row,
       col = col,
       focusable = true,
-      border = "none",
-      title = name,
+      title = "",
+      border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
     })
   elseif position == "bottom" then
     vim.cmd("split")
@@ -78,7 +78,7 @@ function M.create_term_win(name, position, bufnr)
   local winnr = vim.api.nvim_get_current_win()
   vim.wo[winnr].number = false
   vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].winhl = "Normal:term,WinSeparator:WinSeparator"
+  vim.wo[winnr].signcolumn = "no"
   return winnr, bufnr
 end
 
@@ -126,9 +126,6 @@ function M.create(params)
   state.term_map[name] = term
 
   vim.fn.termopen(command, { cwd = params.cwd, env = params.env })
-  vim.schedule(function()
-    vim.cmd("startinsert")
-  end)
   vim.api.nvim_create_autocmd("TermClose", {
     once = true,
     buffer = bufnr,
@@ -140,6 +137,10 @@ function M.create(params)
       state.term_map[name] = nil
     end,
   })
+
+  vim.schedule(function()
+    vim.cmd("startinsert")
+  end)
 end
 
 ---@param name                          string
@@ -180,6 +181,10 @@ function M.toggle(name)
   term.bufnr = bufnr
   vim.api.nvim_win_set_buf(winnr, term.bufnr)
   vim.api.nvim_tabpage_set_win(0, winnr)
+
+  vim.schedule(function()
+    vim.cmd("startinsert")
+  end)
 end
 
 ---@param params                        fml.api.term.ICreateParams
