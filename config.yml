@@ -42,15 +42,13 @@ gui:
     defaultFgColor:
       - default
       - "#ABB2BF" # white
-
 git:
   autoFetch: false
   paging:
     # cargo install git-delta
     colorArg: always
-    pager: delta
     useConfig: false
-
+    pager: delta --paging=never
 os:
   editCommand: "nvim"
   editCommandTemplate: "{{editor}} {{filename}}"

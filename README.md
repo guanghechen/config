@@ -9,5 +9,8 @@
 2. Install delta: https://github.com/dandavison/delta
 
    ```zsh
-    cargo install git-delta
+   cargo install git-delta
    ```
+
+3. Enable whitespace diff: Press `<c-w>`
+
