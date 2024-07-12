@@ -5,9 +5,10 @@ require("fml.autocmd")
 local api = {
   buf = require("fml.api.buf"),
   lsp = require("fml.api.lsp"),
-  tab = require("fml.api.tab"),
-  win = require("fml.api.win"),
   state = require("fml.api.state"),
+  tab = require("fml.api.tab"),
+  term = require("fml.api.term"),
+  win = require("fml.api.win"),
 }
 
 ---@class fml.collection

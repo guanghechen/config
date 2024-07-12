@@ -2,9 +2,11 @@ local Ticker = require("fml.collection.ticker")
 local schedule_fn = require("fml.fn.schedule_fn")
 
 ---@class fml.api.state
+---@field public term_map               table<string, fml.api.state.ITerm>
 ---@field public winline_dirty_ticker   fml.types.collection.ITicker
 local M = {}
 
+M.term_map = {}
 M.winline_dirty_ticker = Ticker.new()
 
 M.schedule_refresh = schedule_fn("fml.api.state.refresh", M.refresh)

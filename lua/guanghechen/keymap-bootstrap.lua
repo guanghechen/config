@@ -33,6 +33,10 @@ mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true) -- Ex
 mk({ "i", "n", "v" }, "<C-b>T", ghc.command.toggle.theme, "toggle: theme")
 mk({ "i", "n", "v" }, "<M-T>", ghc.command.toggle.theme, "toggle: theme")
 
+--- better access terminal
+mk({ "i", "n", "t", "v" }, "<C-b>t", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
+mk({ "i", "n", "t", "v" }, "<M-t>", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
+
 ---! better copy/paste
 mk("v", "<C-b>c", '"+y', "copy to system clipboard")
 mk("v", "<M-c>", '"+y', "copy to system clipboard")
@@ -140,6 +144,11 @@ mk({ "n", "v" }, "<leader>th", fml.api.tab.close_to_leftest, "tab: close tabs to
 mk({ "n", "v" }, "<leader>tl", fml.api.tab.close_to_rightest, "tab: close tabs to the rightest", true)
 mk({ "n", "v" }, "<leader>to", fml.api.tab.close_others, "tab: close other tabs", true)
 --------------------------------------------------------------------------------------------#[t]ab--
+
+--#[t]merinal---------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>tT", ghc.command.term.toggle_workspace, "terminal: toggle (workspace)")
+mk({ "n", "v" }, "<leader>tt", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
+---------------------------------------------------------------------------------------#[t]merinal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>tfc", ghc.command.toggle.flight_copilot, "toggle: copilot")

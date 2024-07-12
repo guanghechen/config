@@ -8,6 +8,7 @@ local command = {
   replace = require("ghc.command.replace"),
   run = require("ghc.command.run"),
   session = require("ghc.command.session"),
+  term = require("ghc.command.term"),
   toggle = require("ghc.command.toggle"),
 }
 

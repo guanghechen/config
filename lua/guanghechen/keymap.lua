@@ -7,7 +7,6 @@ local A = {
   git = require("guanghechen.core.action.git"),
   replace = require("guanghechen.core.action.replace"),
   search = require("guanghechen.core.action.search"),
-  terminal = require("guanghechen.core.action.terminal"),
   ui = require("guanghechen.core.action.ui"),
 }
 
@@ -24,10 +23,6 @@ end
 --- better access git from nvim
 mk({ "i", "n", "t", "v" }, "<C-b>g", A.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
 mk({ "i", "n", "t", "v" }, "<M-g>", A.git.open_lazygit_cwd, "git: open lazygit (cwd)", true)
-
---- better access terminal
-mk({ "i", "n", "t", "v" }, "<C-b>t", A.terminal.open_terminal_cwd, "terminal: toggle terminal (cwd)")
-mk({ "i", "n", "t", "v" }, "<M-t>", A.terminal.open_terminal_cwd, "terminal: toggle terminal (cwd)")
 
 --- quick access widgets (diagnostic, explorer, terminal)
 mk({ "n", "v" }, "<leader>1", A.explorer.toggle_explorer_file_cwd, "explorer: files (cwd)")
@@ -90,11 +85,6 @@ mk({ "n", "v" }, "<leader>sd", A.search.grep_selected_text_directory, "search: g
 mk({ "n", "v" }, "<leader>sb", A.search.grep_selected_text_buffer, "search: grep word (buffer)")
 mk({ "n", "v" }, "<leader>ss", A.search.grep_selected_text, "search: grep word")
 -----------------------------------------------------------------------------------------#[s]earch--
-
---#[t]merinal---------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>tT", A.terminal.open_terminal_workspace, "terminal: toggle terminal (workspace)")
-mk({ "n", "v" }, "<leader>tt", A.terminal.open_terminal_cwd, "terminal: toggle terminal (cwd)")
----------------------------------------------------------------------------------------#[t]merinal--
 
 --#[u]i---------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>uI", A.ui.show_inspect_tree, "ui: show inspect tree")

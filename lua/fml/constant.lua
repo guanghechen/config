@@ -8,6 +8,7 @@ M.BT_SEARCH_REPLACE = "nofile"
 ---! filetypes
 M.FT_NEOTREE = "neo-tree"
 M.FT_SEARCH_REPLACE = "ghc_search_replace"
+M.FT_TERM = "term"
 
 ---! tab names
 M.TN_SEARCH_REPLACE = "ghc_search_replace"
