@@ -1,10 +1,11 @@
----@param mode string | string[]
----@param key string
----@param action any
----@param desc string
----@param silent? boolean
-local function mk(mode, key, action, desc, silent)
-  vim.keymap.set(mode, key, action, { noremap = true, silent = silent ~= nil and silent or false, desc = desc })
+---@param mode                          string | string[]
+---@param key                           string
+---@param action                        any
+---@param desc                          string
+---@param silent                        ?boolean
+---@param nowait                        ?boolean
+local function mk(mode, key, action, desc, silent, nowait)
+  vim.keymap.set(mode, key, action, { noremap = true, silent = silent, nowait = nowait, desc = desc })
 end
 
 --#enhance------------------------------------------------------------------------------------------
@@ -29,8 +30,8 @@ vim.keymap.set("n", "N", "'nN'[v:searchforward].'zv'", { expr = true, desc = "pr
 vim.keymap.set("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
 vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
 
-mk("n", "<esc>", "<cmd>noh<cr><esc>", "remove search highlights", true) -- Clear search with <esc>
-mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true) -- Exit terminal
+mk("n", "<esc>", "<cmd>noh<cr><esc>", "remove search highlights", true, true) -- Clear search with <esc>
+mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true, true) -- Exit terminal
 
 ---! quick shortcut
 mk({ "i", "n", "v" }, "<C-b>T", ghc.command.toggle.theme, "toggle: theme")
@@ -58,49 +59,49 @@ mk({ "i", "n", "v" }, "<C-C>", ghc.command.copy.current_buffer_filepath, "copy: 
 
 --#navigation---------------------------------------------------------------------------------------
 ----- tab -----
-mk({ "n", "v" }, "<leader><", fml.api.tab.focus_left, "tab: focus left", true)
-mk({ "n", "v" }, "<leader>>", fml.api.tab.focus_right, "tab: focus right", true)
-mk({ "n", "v" }, "[t", fml.api.tab.focus_left, "tab: focus left", true)
-mk({ "n", "v" }, "]t", fml.api.tab.focus_right, "tab: focus right", true)
+mk({ "n", "v" }, "<leader><", fml.api.tab.focus_left, "tab: focus left", true, true)
+mk({ "n", "v" }, "<leader>>", fml.api.tab.focus_right, "tab: focus right", true, true)
+mk({ "n", "v" }, "[t", fml.api.tab.focus_left, "tab: focus left", true, true)
+mk({ "n", "v" }, "]t", fml.api.tab.focus_right, "tab: focus right", true, true)
 
 ----- window -----
-mk({ "i", "n", "v" }, "<C-b>h", fml.api.win.focus_left, "window: focus left", true)
-mk({ "i", "n", "v" }, "<C-b>j", fml.api.win.focus_bottom, "window: focus bottom", true)
-mk({ "i", "n", "v" }, "<C-b>k", fml.api.win.focus_top, "window: focus top", true)
-mk({ "i", "n", "v" }, "<C-b>l", fml.api.win.focus_right, "window: focus right", true)
-mk({ "i", "n", "v" }, "<M-h>", fml.api.win.focus_left, "window: focus left", true)
-mk({ "i", "n", "v" }, "<M-j>", fml.api.win.focus_bottom, "window: focus bottom", true)
-mk({ "i", "n", "v" }, "<M-k>", fml.api.win.focus_top, "window: focus top", true)
-mk({ "i", "n", "v" }, "<M-l>", fml.api.win.focus_right, "window: focus right", true)
-mk({ "i", "n", "v" }, "<C-b>i", fml.api.win.back, "window: back", true)
-mk({ "i", "n", "v" }, "<C-b>o", fml.api.win.forward, "window: forward", true)
-mk({ "i", "n", "v" }, "<M-i>", fml.api.win.back, "window: back", true)
-mk({ "i", "n", "v" }, "<M-o>", fml.api.win.forward, "window: forward", true)
+mk({ "i", "n", "v" }, "<C-b>h", fml.api.win.focus_left, "window: focus left", true, true)
+mk({ "i", "n", "v" }, "<C-b>j", fml.api.win.focus_bottom, "window: focus bottom", true, true)
+mk({ "i", "n", "v" }, "<C-b>k", fml.api.win.focus_top, "window: focus top", true, true)
+mk({ "i", "n", "v" }, "<C-b>l", fml.api.win.focus_right, "window: focus right", true, true)
+mk({ "i", "n", "v" }, "<M-h>", fml.api.win.focus_left, "window: focus left", true, true)
+mk({ "i", "n", "v" }, "<M-j>", fml.api.win.focus_bottom, "window: focus bottom", true, true)
+mk({ "i", "n", "v" }, "<M-k>", fml.api.win.focus_top, "window: focus top", true, true)
+mk({ "i", "n", "v" }, "<M-l>", fml.api.win.focus_right, "window: focus right", true, true)
+mk({ "i", "n", "v" }, "<C-b>i", fml.api.win.back, "window: back", true, true)
+mk({ "i", "n", "v" }, "<C-b>o", fml.api.win.forward, "window: forward", true, true)
+mk({ "i", "n", "v" }, "<M-i>", fml.api.win.back, "window: back", true, true)
+mk({ "i", "n", "v" }, "<M-o>", fml.api.win.forward, "window: forward", true, true)
 
 ----- buffer -----
-mk({ "n", "v" }, "<leader>[", fml.api.buf.focus_left, "buffer: focus left", true)
-mk({ "n", "v" }, "<leader>]", fml.api.buf.focus_right, "buffer: focus right", true)
-mk({ "n", "v" }, "[b", fml.api.buf.focus_left, "buffer: focus left", true)
-mk({ "n", "v" }, "]b", fml.api.buf.focus_right, "buffer: focus right", true)
+mk({ "n", "v" }, "<leader>[", fml.api.buf.focus_left, "buffer: focus left", true, true)
+mk({ "n", "v" }, "<leader>]", fml.api.buf.focus_right, "buffer: focus right", true, true)
+mk({ "n", "v" }, "[b", fml.api.buf.focus_left, "buffer: focus left", true, true)
+mk({ "n", "v" }, "]b", fml.api.buf.focus_right, "buffer: focus right", true, true)
 
 ----- jump list -----
-mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back", true)
-mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward", true)
+mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back", true, true)
+mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward", true, true)
 ---------------------------------------------------------------------------------------#navigation--
 
 --[#]buffer-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>b1", fml.api.buf.focus_1, "buffer: focus buffer 1", true)
-mk({ "n", "v" }, "<leader>b2", fml.api.buf.focus_2, "buffer: focus buffer 2", true)
-mk({ "n", "v" }, "<leader>b3", fml.api.buf.focus_3, "buffer: focus buffer 3", true)
-mk({ "n", "v" }, "<leader>b4", fml.api.buf.focus_4, "buffer: focus buffer 4", true)
-mk({ "n", "v" }, "<leader>b5", fml.api.buf.focus_5, "buffer: focus buffer 5", true)
-mk({ "n", "v" }, "<leader>b6", fml.api.buf.focus_6, "buffer: focus buffer 6", true)
-mk({ "n", "v" }, "<leader>b7", fml.api.buf.focus_7, "buffer: focus buffer 7", true)
-mk({ "n", "v" }, "<leader>b8", fml.api.buf.focus_8, "buffer: focus buffer 8", true)
-mk({ "n", "v" }, "<leader>b9", fml.api.buf.focus_9, "buffer: focus buffer 9", true)
-mk({ "n", "v" }, "<leader>b0", fml.api.buf.focus_10, "buffer: focus buffer 10", true)
-mk({ "n", "v" }, "<leader>b[", fml.api.buf.focus_left, "buffer: focus left", true)
-mk({ "n", "v" }, "<leader>b]", fml.api.buf.focus_right, "buffer: focus right", true)
+mk({ "n", "v" }, "<leader>b1", fml.api.buf.focus_1, "buffer: focus buffer 1", true, true)
+mk({ "n", "v" }, "<leader>b2", fml.api.buf.focus_2, "buffer: focus buffer 2", true, true)
+mk({ "n", "v" }, "<leader>b3", fml.api.buf.focus_3, "buffer: focus buffer 3", true, true)
+mk({ "n", "v" }, "<leader>b4", fml.api.buf.focus_4, "buffer: focus buffer 4", true, true)
+mk({ "n", "v" }, "<leader>b5", fml.api.buf.focus_5, "buffer: focus buffer 5", true, true)
+mk({ "n", "v" }, "<leader>b6", fml.api.buf.focus_6, "buffer: focus buffer 6", true, true)
+mk({ "n", "v" }, "<leader>b7", fml.api.buf.focus_7, "buffer: focus buffer 7", true, true)
+mk({ "n", "v" }, "<leader>b8", fml.api.buf.focus_8, "buffer: focus buffer 8", true, true)
+mk({ "n", "v" }, "<leader>b9", fml.api.buf.focus_9, "buffer: focus buffer 9", true, true)
+mk({ "n", "v" }, "<leader>b0", fml.api.buf.focus_10, "buffer: focus buffer 10", true, true)
+mk({ "n", "v" }, "<leader>b[", fml.api.buf.focus_left, "buffer: focus left", true, true)
+mk({ "n", "v" }, "<leader>b]", fml.api.buf.focus_right, "buffer: focus right", true, true)
 mk({ "n", "v" }, "<leader>ba", fml.api.buf.close_all, "buffer: close all", true)
 mk({ "n", "v" }, "<leader>bd", fml.api.buf.close_current, "buffer: close current", true)
 mk({ "n", "v" }, "<leader>bh", fml.api.buf.close_to_leftest, "buffer: close to the leftest", true)
@@ -136,16 +137,16 @@ mk({ "i", "n", "v" }, "<F5>", ghc.command.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
 
 --#[t]ab--------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>t1", fml.api.tab.focus_1, "tab: focus tab 1", true)
-mk({ "n", "v" }, "<leader>t2", fml.api.tab.focus_2, "tab: focus tab 2", true)
-mk({ "n", "v" }, "<leader>t3", fml.api.tab.focus_3, "tab: focus tab 3", true)
-mk({ "n", "v" }, "<leader>t4", fml.api.tab.focus_4, "tab: focus tab 4", true)
-mk({ "n", "v" }, "<leader>t5", fml.api.tab.focus_5, "tab: focus tab 5", true)
-mk({ "n", "v" }, "<leader>t6", fml.api.tab.focus_6, "tab: focus tab 6", true)
-mk({ "n", "v" }, "<leader>t7", fml.api.tab.focus_7, "tab: focus tab 7", true)
-mk({ "n", "v" }, "<leader>t8", fml.api.tab.focus_8, "tab: focus tab 8", true)
-mk({ "n", "v" }, "<leader>t9", fml.api.tab.focus_9, "tab: focus tab 9", true)
-mk({ "n", "v" }, "<leader>t0", fml.api.tab.focus_10, "tab: focus tab 10", true)
+mk({ "n", "v" }, "<leader>t1", fml.api.tab.focus_1, "tab: focus tab 1", true, true)
+mk({ "n", "v" }, "<leader>t2", fml.api.tab.focus_2, "tab: focus tab 2", true, true)
+mk({ "n", "v" }, "<leader>t3", fml.api.tab.focus_3, "tab: focus tab 3", true, true)
+mk({ "n", "v" }, "<leader>t4", fml.api.tab.focus_4, "tab: focus tab 4", true, true)
+mk({ "n", "v" }, "<leader>t5", fml.api.tab.focus_5, "tab: focus tab 5", true, true)
+mk({ "n", "v" }, "<leader>t6", fml.api.tab.focus_6, "tab: focus tab 6", true, true)
+mk({ "n", "v" }, "<leader>t7", fml.api.tab.focus_7, "tab: focus tab 7", true, true)
+mk({ "n", "v" }, "<leader>t8", fml.api.tab.focus_8, "tab: focus tab 8", true, true)
+mk({ "n", "v" }, "<leader>t9", fml.api.tab.focus_9, "tab: focus tab 9", true, true)
+mk({ "n", "v" }, "<leader>t0", fml.api.tab.focus_10, "tab: focus tab 10", true, true)
 mk({ "n", "v" }, "<leader>t[", fml.api.tab.focus_left, "tab: focus the left tab", true)
 mk({ "n", "v" }, "<leader>t]", fml.api.tab.focus_right, "tab: focus the right tab", true)
 mk({ "n", "v" }, "<leader>tN", fml.api.tab.create, "tab: new tab", true)
