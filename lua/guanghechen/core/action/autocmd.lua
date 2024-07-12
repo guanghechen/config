@@ -1,12 +1,26 @@
 ---@class guanghechen.core.action.autocmd
 local M = {}
 
+local augroups = {
+  clear_buftype_extra = fml.fn.augroup("clear_buftype_extra"),
+  close_with_q = fml.fn.augroup("close_with_q"),
+  enable_spell = fml.fn.augroup("enable_spell"),
+  enable_wrap = fml.fn.augroup("enable_wrap"),
+  goto_last_loction = fml.fn.augroup("goto_last_loction"),
+  remember_telescope_prompt = fml.fn.augroup("remember_telescope_prompt"),
+  session_autosave = fml.fn.augroup("session_autosave"),
+  set_fileformat = fml.fn.augroup("set_fileformat"),
+  set_filetype = fml.fn.augroup("set_filetype"),
+  set_tabstop = fml.fn.augroup("set_tabstop"),
+  unlist_buffer = fml.fn.augroup("unlist_buffer"),
+}
+
 ---@param bufnr number
 ---@param callback? fun(bufnr:number):nil
 function M.autocmd_clear_buftype_extra(bufnr, callback)
   vim.api.nvim_create_autocmd({ "BufLeave", "BufUnload" }, {
     buffer = bufnr,
-    group = fml.fn.augroup("clear_buftype_extra"),
+    group = augroups.clear_buftype_extra,
     callback = function()
       ghc.context.transient.buftype_extra:next(nil)
       if callback then
@@ -26,10 +40,9 @@ function M.autocmd_close_with_q(opts)
 
   local pattern = opts.pattern
   vim.api.nvim_create_autocmd("FileType", {
-    group = fml.fn.augroup("close_with_q"),
+    group = augroups.close_with_q,
     pattern = pattern,
     callback = function(event)
-      vim.bo[event.buf].buflisted = false
       vim.keymap.set("n", "q", close, { buffer = event.buf, noremap = true, silent = true })
     end,
   })
@@ -40,7 +53,7 @@ end
 function M.autocmd_enable_spell(opts)
   local pattern = opts.pattern
   vim.api.nvim_create_autocmd("FileType", {
-    group = fml.fn.augroup("enable_spell"),
+    group = augroups.enable_spell,
     pattern = pattern,
     callback = function()
       vim.opt_local.spell = true
@@ -53,7 +66,7 @@ end
 function M.autocmd_enable_wrap(opts)
   local pattern = opts.pattern
   vim.api.nvim_create_autocmd("FileType", {
-    group = fml.fn.augroup("enable_wrap"),
+    group = augroups.enable_wrap,
     pattern = pattern,
     callback = function()
       vim.opt_local.wrap = true
@@ -66,7 +79,7 @@ end
 function M.autocmd_goto_last_location(opts)
   local exclude = opts.exclude
   vim.api.nvim_create_autocmd({ "BufReadPost" }, {
-    group = fml.fn.augroup("goto_last_loction"),
+    group = augroups.goto_last_loction,
     callback = function(event)
       local buf = event.buf
       if vim.tbl_contains(exclude, vim.bo[buf].filetype) or vim.b[buf].lazyvim_last_loc then
@@ -87,7 +100,7 @@ end
 function M.autocmd_remember_telescope_prompt(prompt_bufnr, callback)
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     buffer = prompt_bufnr,
-    group = fml.fn.augroup("remember_telescope_prompt"),
+    group = augroups.remember_telescope_prompt,
     callback = function()
       local action_state = require("telescope.actions.state")
       local picker = action_state.get_current_picker(prompt_bufnr or 0)
@@ -105,7 +118,7 @@ end
 function M.autocmd_session_autosave()
   if vim.fn.argc() < 1 and fml.path.is_git_repo() then
     vim.api.nvim_create_autocmd("VimLeavePre", {
-      group = fml.fn.augroup("session_autosave"),
+      group = augroups.session_autosave,
       callback = function()
         ghc.command.session.autosave()
       end,
@@ -118,7 +131,7 @@ function M.autocmd_set_fileformat(opts)
   local pattern = opts.pattern
   local format = opts.format or "unix"
   vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-    group = fml.fn.augroup("set_fileformat"),
+    group = augroups.set_fileformat,
     pattern = pattern,
     callback = function()
       vim.bo.fileformat = format
@@ -131,7 +144,7 @@ function M.autocmd_set_filetype(opts)
   local filetype_map = opts.filetype_map
   for filetype, file_patterns in pairs(filetype_map) do
     vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-      group = fml.fn.augroup("set_filetype"),
+      group = augroups.set_filetype,
       pattern = file_patterns,
       callback = function()
         vim.bo.filetype = filetype
@@ -145,8 +158,8 @@ function M.autocmd_set_tabstop(opts)
   local pattern = opts.pattern ---@type string[]
   local width = opts.width ---@type number
   vim.api.nvim_create_autocmd("FileType", {
-    group = fml.fn.augroup("set_tabstop"),
     pattern = pattern,
+    group = augroups.set_tabstop,
     callback = function()
       vim.opt.shiftwidth = width
       vim.opt.softtabstop = width -- set the tab width
@@ -160,7 +173,7 @@ end
 function M.autocmd_unlist_buffer(opts)
   local pattern = opts.pattern
   vim.api.nvim_create_autocmd("FileType", {
-    group = fml.fn.augroup("unlist_buffer"),
+    group = augroups.unlist_buffer,
     pattern = pattern,
     callback = function(event)
       vim.bo[event.buf].buflisted = false

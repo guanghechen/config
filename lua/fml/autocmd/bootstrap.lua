@@ -1,6 +1,15 @@
 local augroup = require("fml.fn.augroup")
 local path = require("fml.std.path")
 
+local augroups = {
+  checktime = augroup("checktime"),
+  create_dirs = augroup("create_dirs"),
+  highlight_yank = augroup("highlight_yank"),
+  lsp_show_progress = augroup("lsp_show_progress"),
+  resize_splits = augroup("resize_splits"),
+  startup = augroup("startup"),
+}
+
 -- Auto cd the directory:
 -- 1. the opend file is under a git repo, let's remember the the git repo path as A, and assume the
 --    git repo directory of the shell cwd is B.
@@ -25,7 +34,7 @@ end
 -- Clear jumplist
 -- See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
 vim.api.nvim_create_autocmd({ "VimEnter" }, {
-  group = augroup("startup"),
+  group = augroups.startup,
   callback = function()
     vim.schedule(function()
       vim.cmd("clearjumps")
@@ -35,7 +44,7 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
 
 -- Auto create dir when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
-  group = augroup("create_dirs"),
+  group = augroups.create_dirs,
   callback = function(event)
     if event.match:match("^%w%w+:[\\/][\\/]") then
       return
@@ -47,7 +56,7 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 
 -- Check if we need to reload the file when it changed
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
-  group = augroup("checktime"),
+  group = augroups.checktime,
   callback = function()
     if vim.o.buftype ~= "nofile" then
       vim.cmd("checktime")
@@ -57,7 +66,7 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
 
 ---! Show lsp progress.
 vim.api.nvim_create_autocmd("LspProgress", {
-  group = augroup("lsp_show_progress"),
+  group = augroups.lsp_show_progress,
   callback = function(args)
     if string.find(args.match, "end") then
       vim.cmd("redrawstatus")
@@ -68,7 +77,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
 
 ---! Auto resize splits when window got resized.
 vim.api.nvim_create_autocmd({ "VimResized" }, {
-  group = augroup("resize_splits"),
+  group = augroups.resize_splits,
   callback = function()
     local current_tab = vim.fn.tabpagenr()
     vim.cmd("tabdo wincmd =")
@@ -78,7 +87,7 @@ vim.api.nvim_create_autocmd({ "VimResized" }, {
 
 ---! Highlight on yank.
 vim.api.nvim_create_autocmd({ "TextYankPost" }, {
-  group = augroup("highlight_yank"),
+  group = augroups.highlight_yank,
   callback = function()
     vim.highlight.on_yank()
   end,
