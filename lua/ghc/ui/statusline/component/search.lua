@@ -12,8 +12,8 @@ local M = {
   end,
   render = function()
     local text_scope = " " .. ghc.context.session.search_scope:snapshot() .. " " ---@type string
-    local text_flag_regex = " " .. fml.ui.icons.flag.Regex .. " " ---@type string
-    local text_flag_case_sensitive = " " .. fml.ui.icons.flag.CaseSensitive .. " " ---@type string
+    local text_flag_regex = " " .. fml.ui.icons.symbols.flag_regex .. " " ---@type string
+    local text_flag_case_sensitive = " " .. fml.ui.icons.symbols.flag_case_sensitive .. " " ---@type string
 
     local flag_regex_enabled = ghc.context.session.search_flag_regex:snapshot() ---@type boolean
     local flag_case_sensitive_enabled = ghc.context.session.search_flag_case_sensitive:snapshot() ---@type boolean

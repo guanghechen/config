@@ -15,8 +15,8 @@ local M = {
   end,
   render = function()
     local text_scope = " " .. session.find_scope:snapshot() .. " "
-    local text_flag_regex = " " .. fml.ui.icons.flag.Regex .. " " ---@type string
-    local text_flag_case_sensitive = " " .. fml.ui.icons.flag.CaseSensitive .. " " ---@type string
+    local text_flag_regex = " " .. fml.ui.icons.symbols.flag_regex .. " " ---@type string
+    local text_flag_case_sensitive = " " .. fml.ui.icons.symbols.flag_case_sensitive .. " " ---@type string
 
     local flag_regex_enabled = session.search_flag_regex:snapshot() ---@type boolean
     local flag_case_sensitive_enabled = session.search_flag_case_sensitive:snapshot() ---@type boolean

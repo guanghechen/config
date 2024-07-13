@@ -1,10 +1,12 @@
 ---@class fml.ui.icons
 local M = {}
 
----@class fml.ui.icons.flag
-M.flag = {
-  Regex = "󰑑",
-  CaseSensitive = "",
+---@class fml.ui.icons.symbols
+M.symbols = {
+  flag_regex = "󰑑",
+  flag_case_sensitive = "",
+  win_indicator = " ",
+  win_indicator_active = "▎",
 }
 
 ---@class fml.ui.icons.kind
