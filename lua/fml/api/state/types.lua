@@ -24,6 +24,7 @@
 ---@field public name                   string
 ---@field public bufnrs                 integer[]
 ---@field public bufnr_set              table<integer, boolean>
+---@field public winnr_cur              fml.types.collection.IObservable
 
 ---@class fml.api.state.ITabItemData
 ---@field public tabnr                  integer

@@ -1,5 +1,6 @@
 local constant = require("fml.constant")
 local History = require("fml.collection.history")
+local Observable = require("fml.collection.observable")
 local fs = require("fml.std.fs")
 local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
@@ -161,8 +162,14 @@ function M.load(filepath)
           end
         end
 
+        local winnr_cur = vim.api.nvim_tabpage_get_win(real_tabnr) ---@type integer
         ---@type fml.api.state.ITabItem
-        local tab = { name = item.name, bufnrs = bufnrs, bufnr_set = std_set.from_integer_array(bufnrs) }
+        local tab = {
+          name = item.name,
+          bufnrs = bufnrs,
+          bufnr_set = std_set.from_integer_array(bufnrs),
+          winnr_cur = Observable.from_value(winnr_cur),
+        }
         tabs[real_tabnr] = tab
       end
     end

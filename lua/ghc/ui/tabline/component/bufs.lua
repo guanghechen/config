@@ -1,5 +1,3 @@
-local last_bufnr_cur = 1 ---@type integer
-
 ---@type string
 local fn_active_buf = fml.G.register_anonymous_fn(function(bufnr)
   if type(bufnr) == "number" and vim.api.nvim_buf_is_valid(bufnr) then
@@ -57,18 +55,13 @@ local M = {
       return "", 0
     end
 
-    local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-    local bufid_cur = fml.array.first(tab.bufnrs, bufnr_cur)
-    if bufid_cur ~= nil then
-      last_bufnr_cur = bufnr_cur
-    else
-      local bufid_last = fml.array.first(tab.bufnrs, last_bufnr_cur)
-      bufid_cur = bufid_last or 1
-    end
+    local winnr_cur = fml.api.state.get_current_tab_winnr() ---@type integer
+    local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
+    local bufid_cur = fml.array.first(tab.bufnrs, bufnr_cur) or 1
+    bufnr_cur = tab.bufnrs[bufid_cur]
 
     local text, width = render_buf(tab.bufnrs[bufid_cur], true, bufid_cur == 1)
     remain_width = remain_width - width
-
     if remain_width < 0 then
       return "", 0
     end

@@ -1,5 +1,6 @@
 local constant = require("fml.constant")
 local History = require("fml.collection.history")
+local Observable = require("fml.collection.observable")
 local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
 local reporter = require("fml.std.reporter")
@@ -94,6 +95,19 @@ function M.get_current_tab()
   return tab, tabnr
 end
 
+---@return integer
+function M.get_current_tab_winnr()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = M.tabs[tabnr] ---@type fml.api.state.ITabItem|nil
+  if tab ~= nil then
+    local winnr = tab.winnr_cur:snapshot() ---@type integer
+    if winnr ~= 0 and vim.api.nvim_win_is_valid(winnr) then
+      return winnr
+    end
+  end
+  return vim.api.nvim_tabpage_get_win(tabnr)
+end
+
 ---@return nil
 function M.refresh_tabs()
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
@@ -125,6 +139,7 @@ function M.refresh_tab(tabnr)
       name = constant.TAB_UNNAMED,
       bufnrs = {},
       bufnr_set = {},
+      winnr_cur = Observable.from_value(0),
     }
     M.tabs[tabnr] = tab
   end
@@ -162,6 +177,11 @@ function M.refresh_tab(tabnr)
   end
   for _ = k + 1, N do
     table.remove(tab.bufnrs)
+  end
+
+  local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer|nil
+  if M.validate_win(winnr_cur) then
+    tab.winnr_cur:next(winnr_cur)
   end
 
   M.refresh_wins(tabnr)
