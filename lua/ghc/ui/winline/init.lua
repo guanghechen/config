@@ -41,18 +41,27 @@ function M.render(winnr)
       component_sep = "",
       component_sep_hlname = "f_wl_bg",
       preset_context = { winnr = winnr },
+      get_max_width = function()
+        return vim.api.nvim_win_get_width(winnr)
+      end
     })
     winline_map[winnr] = winline
     winline
-      :add("left", require("ghc.ui.winline.component.dirpath"))
-      :add("left", require("ghc.ui.winline.component.filename"))
-      :add("left", require("ghc.ui.winline.component.lsp"))
+        :add("left", require("ghc.ui.winline.component.indicator"))
+        :add("left", require("ghc.ui.winline.component.dirpath"))
+        :add("left", require("ghc.ui.winline.component.filename"))
+        :add("left", require("ghc.ui.winline.component.lsp"))
   end
   return winline:render()
 end
 
+---@param winnr                         integer|nil
 ---@return nil
 function M.update(winnr)
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
   local result = M.render(winnr) ---@type string
   if #result > 0 then
     vim.wo[winnr].winbar = result

@@ -14,6 +14,7 @@ local calc_fileicon = require("fml.fn.calc_fileicon")
 ---@field private last_result           string|nil
 ---@field private last_context          fml.types.ui.nvimbar.IContext|nil
 ---@field private components            fml.types.ui.nvimbar.IComponent[]
+---@field private get_max_width         fun(): integer
 local M = {}
 M.__index = M
 
@@ -22,6 +23,12 @@ M.__index = M
 ---@field public component_sep          string
 ---@field public component_sep_hlname   string
 ---@field public preset_context         ?fml.types.ui.nvimbar.IPresetContext
+---@field public get_max_width          ?fun(): integer
+
+---@return integer
+local function default_get_max_width()
+  return vim.o.columns
+end
 
 local modes_map = {
   ["n"] = { "normal", "NORMAL" },
@@ -116,6 +123,7 @@ function M.new(props)
   local component_sep = props.component_sep ---@type string
   local component_sep_hlname = props.component_sep_hlname ---@type string
   local preset_context = props.preset_context or {} ---@type fml.types.ui.nvimbar.IPresetContext
+  local get_max_width = props.get_max_width or default_get_max_width ---@type fun(): integer
 
   local self = setmetatable({}, M)
   self.name = name
@@ -127,6 +135,7 @@ function M.new(props)
   self.last_result = nil
   self.last_context = nil
   self.components = {}
+  self.get_max_width = get_max_width
   return self
 end
 
@@ -174,7 +183,7 @@ function M:internal_render()
   local lc = "" ---@type string
   local cc = "" ---@type string
   local rc = "" ---@type string
-  local remain_width = vim.o.columns - sep_width - sep_width ---@type integer
+  local remain_width = self.get_max_width() - sep_width - sep_width ---@type integer
   local components = self.components ---@type fml.types.ui.nvimbar.IComponent[]
   for i = 1, #components, 1 do
     local component = components[i] ---@type fml.types.ui.nvimbar.IComponent

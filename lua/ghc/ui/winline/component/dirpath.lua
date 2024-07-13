@@ -12,11 +12,17 @@ local M = {
       return "", 0
     end
 
+    local first = true ---@type boolean
     local text = "" ---@type string
     local N = #buf.real_paths - 1 ---@type integer
     for i = 1, N, 1 do
       local piece = buf.real_paths[i] ---@type string
-      text = text .. " " .. piece .. sep
+      if first then
+        first = false
+        text = piece .. sep
+      else
+        text = text .. " " .. piece .. sep
+      end
     end
 
     local text_hln = "f_wl_dirpath_text" ---@type string

@@ -70,6 +70,7 @@ local function gen_hlgroup(params)
     f_wl_bg = { fg = t and "none" or c.bg_winline, bg = t and "none" or c.bg_winline },
     f_wl_dirpath_text = { fg = c.darker_white, bg = t and "none" or c.bg_winline },
     f_wl_filename_text = { fg = c.darker_white, bg = t and "none" or c.bg_winline },
+    f_wl_indicator = { fg = c.pink, bg = t and "none" or c.bg_winline },
     f_wl_lsp_icon = { fg = c.darker_purple, bg = t and "none" or c.bg_winline },
     f_wl_lsp_icon_Array = { fg = c.blue, bg = t and "none" or c.bg_winline },
     f_wl_lsp_icon_Boolean = { fg = c.orange, bg = t and "none" or c.bg_winline },
