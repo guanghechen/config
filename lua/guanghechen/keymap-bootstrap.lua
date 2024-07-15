@@ -81,8 +81,12 @@ mk({ "i", "n", "v" }, "<M-o>", fml.api.win.forward, "window: forward", true, tru
 ----- buffer -----
 mk({ "n", "v" }, "<leader>[", fml.api.buf.focus_left, "buffer: focus left", true, true)
 mk({ "n", "v" }, "<leader>]", fml.api.buf.focus_right, "buffer: focus right", true, true)
+mk({ "n", "v" }, "<leader>{", fml.api.buf.swap_left, "buffer: swap left", true, true)
+mk({ "n", "v" }, "<leader>}", fml.api.buf.swap_right, "buffer: swap right", true, true)
 mk({ "n", "v" }, "[b", fml.api.buf.focus_left, "buffer: focus left", true, true)
 mk({ "n", "v" }, "]b", fml.api.buf.focus_right, "buffer: focus right", true, true)
+mk({ "n", "v" }, "[B", fml.api.buf.swap_left, "buffer: swap left", true, true)
+mk({ "n", "v" }, "]B", fml.api.buf.swap_right, "buffer: swap right", true, true)
 
 ----- jump list -----
 mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back", true, true)
@@ -102,6 +106,8 @@ mk({ "n", "v" }, "<leader>b9", fml.api.buf.focus_9, "buffer: focus buffer 9", tr
 mk({ "n", "v" }, "<leader>b0", fml.api.buf.focus_10, "buffer: focus buffer 10", true, true)
 mk({ "n", "v" }, "<leader>b[", fml.api.buf.focus_left, "buffer: focus left", true, true)
 mk({ "n", "v" }, "<leader>b]", fml.api.buf.focus_right, "buffer: focus right", true, true)
+mk({ "n", "v" }, "<leader>bH", fml.api.buf.swap_left, "buffer: swap left", true, true)
+mk({ "n", "v" }, "<leader>bL", fml.api.buf.swap_right, "buffer: swap right", true, true)
 mk({ "n", "v" }, "<leader>ba", fml.api.buf.close_all, "buffer: close all", true)
 mk({ "n", "v" }, "<leader>bd", fml.api.buf.close_current, "buffer: close current", true)
 mk({ "n", "v" }, "<leader>bh", fml.api.buf.close_to_leftest, "buffer: close to the leftest", true)
