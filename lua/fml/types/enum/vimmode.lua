@@ -1,0 +1,11 @@
+---@alias fml.enums.Vimmode
+---| "c" Command-line
+---| "i" Insert
+---| "n" Normal
+---| "o" Operator-pending
+---| "s" Select
+---| "S" Select-line
+---| "t" Terminal
+---| "v" Visual
+---| "V" Visual-line
+---| "x" Visual-block

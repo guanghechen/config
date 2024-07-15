@@ -28,6 +28,7 @@ local collection = {
 ---@class fml.fn
 local fn = {
   augroup = require("fml.fn.augroup"),
+  bind_keys = require("fml.fn.bind_keys"),
   calc_fileicon = require("fml.fn.calc_fileicon"),
   debounce_leading = require("fml.fn.debounce_leading"),
   debounce_tailing = require("fml.fn.debounce_tailing"),

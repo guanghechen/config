@@ -1,0 +1,11 @@
+---@class fml.types.ui.IKeymapOverridable
+---@field public bufnr                  ?integer
+---@field public nowait                 ?boolean
+---@field public noremap                ?boolean
+---@field public silent                 ?boolean
+
+---@class fml.types.ui.IKeymap : fml.types.ui.IKeymapOverridable
+---@field public modes                  string[]
+---@field public key                    string
+---@field public callback               fun(): nil
+---@field public desc                   string
