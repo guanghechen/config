@@ -3,20 +3,26 @@ local History = require("fml.collection.history")
 local std_array = require("fml.std.array")
 local std_object = require("fml.std.object")
 
+---@param winnr number
+---@return boolean
+local function is_floating_win(winnr)
+  local config = vim.api.nvim_win_get_config(winnr)
+  return config.relative ~= nil and config.relative ~= ""
+end
+
 ---@param winnr                         integer
 ---@return boolean
 local function validate_win(winnr)
   if not vim.api.nvim_win_is_valid(winnr) then
     return false
   end
-
-  local config = vim.api.nvim_win_get_config(winnr)
-  return config.relative == nil or config.relative == ""
+  return not is_floating_win(winnr)
 end
 
 ---@class fml.api.state
 ---@field public wins                   table<integer, fml.api.state.IWinItem>
 ---@field public win_history            fml.types.collection.IHistory
+---@field public is_floating_win        fun(winnr: integer): boolean
 ---@field public validate_win           fun(winnr: integer): boolean
 local M = require("fml.api.state.mod")
 
@@ -26,6 +32,7 @@ M.win_history = History.new({
   capacity = constant.WIN_HISTORY_CAPACITY,
   validate = validate_win,
 })
+M.is_floating_win = is_floating_win
 M.validate_win = validate_win
 
 ---@param winnr                         integer

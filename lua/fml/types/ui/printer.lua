@@ -1,4 +1,16 @@
----@class fml.ui.printer.ILineHighlight
+---@class fml.types.ui.printer.ILineHighlight
 ---@field public cstart                 integer
 ---@field public cend                   integer
 ---@field public hlname                 string|nil
+
+---@class fml.types.ui.printer.IResetParams
+---@field public nsnr                   integer
+---@field public bufnr                  integer
+---
+---@class fml.types.ui.IPrinter
+---@field public nsnr                   integer
+---@field public clear                  fun(self: fml.types.ui.IPrinter): nil
+---@field public reset                  fun(self: fml.types.ui.IPrinter, params: fml.types.ui.printer.IResetParams): nil
+---@field public get_meta               fun(self: fml.types.ui.IPrinter, lnum: integer): any|nil
+---@field public get_current_lnum       fun(self: fml.types.ui.IPrinter): integer
+---@field public print                  fun(self: fml.types.ui.IPrinter, line: string, highlights?: fml.types.ui.printer.ILineHighlight[], meta?: any): nil

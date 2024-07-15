@@ -46,7 +46,7 @@ function M.internal_render_result(state, force)
         local filepath = fml.path.relative(search_cwd, raw_filepath)
 
         M.internal_print(fileicon .. " " .. filepath, {
-          { cstart = 0, cend = 2,  hlname = fileicon_highlight },
+          { cstart = 0, cend = 2, hlname = fileicon_highlight },
           { cstart = 2, cend = -1, hlname = "f_sr_filepath" },
         }, { filepath = filepath })
 
@@ -55,12 +55,12 @@ function M.internal_render_result(state, force)
           for _2, block_match in ipairs(file_item.matches) do
             local text = block_match.text
             for i, line in ipairs(block_match.lines) do
-              ---@type fml.ui.printer.ILineHighlight[]
+              ---@type fml.types.ui.printer.ILineHighlight[]
               local match_highlights = {
                 { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
               }
               local padding = i > 1 and continous_line_padding
-                  or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
+                or "│ " .. fml.string.pad_start(tostring(block_match.lnum), lnum_width, " ") .. ": "
               ---@diagnostic disable-next-line: unused-local
               for _3, piece in ipairs(line.p) do
                 table.insert(
@@ -91,12 +91,12 @@ function M.internal_render_result(state, force)
             local text = block_match.text ---@type string
             local start_lnum = _block_match.lnum ---@type integer
             for i, line in ipairs(block_match.lines) do
-              ---@type fml.ui.printer.ILineHighlight[]
+              ---@type fml.types.ui.printer.ILineHighlight[]
               local match_highlights = {
                 { cstart = 0, cend = 1, hlname = "f_sr_result_fence" },
               }
               local padding = i > 1 and continous_line_padding
-                  or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
+                or "│ " .. fml.string.pad_start(tostring(start_lnum), lnum_width, " ") .. ": "
               ---@diagnostic disable-next-line: unused-local
               for _3, piece in ipairs(line.p) do
                 local hlname = piece.i % 2 == 0 and "f_sr_text_deleted" or "f_sr_text_added" ---@type string

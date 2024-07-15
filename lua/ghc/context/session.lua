@@ -41,7 +41,7 @@ local search_scope = Observable.from_value("C")
 ---@field public search_paths               fml.types.collection.IObservable
 ---@field public search_pattern             fml.types.collection.IObservable
 ---@field public search_scope               fml.types.collection.IObservable
-local M = Viewmodel.new({ name = "context:session", filepath = context_filepath })
+local context = Viewmodel.new({ name = "context:session", filepath = context_filepath })
   :register("find_file_pattern", find_file_pattern, true, true)
   :register("find_scope", find_scope, true, true)
   :register("flight_autoload_session", flight_autoload_session, true, true)
@@ -58,20 +58,20 @@ local M = Viewmodel.new({ name = "context:session", filepath = context_filepath 
   :register("search_scope", search_scope, true, true)
 
 if context_filepath ~= nil and fml.path.is_exist(context_filepath) then
-  M:load()
+  context:load()
 end
 
 --Auto refresh statusline
 fml.fn.watch_observables({
-  M.find_scope,
-  M.search_flag_case_sensitive,
-  M.search_flag_regex,
-  M.flight_copilot,
-  M.search_scope,
+  context.find_scope,
+  context.search_flag_case_sensitive,
+  context.search_flag_regex,
+  context.flight_copilot,
+  context.search_scope,
 }, function()
   vim.schedule(function()
     vim.cmd("redrawstatus")
   end)
 end)
 
-return M
+return context

@@ -3,7 +3,7 @@ local M = {}
 
 ---@param winnr                         integer
 local function should_show_winline(winnr)
-  if fml.api.win.is_floating(winnr) then
+  if fml.api.state.is_floating_win(winnr) then
     return false
   end
 

@@ -16,7 +16,7 @@ M.cursor_col = 21
 M.printer = fml.ui.Printer.new({ bufnr = 0, nsnr = 0 })
 
 ---@param line                          string
----@param highlights                    ?fml.ui.printer.ILineHighlight[]
+---@param highlights                    ?fml.types.ui.printer.ILineHighlight[]
 ---@param meta                          ?ghc.types.command.replace.main.ILineMeta
 ---@return nil
 function M.internal_print(line, highlights, meta)

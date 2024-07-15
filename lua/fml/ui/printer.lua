@@ -1,8 +1,7 @@
----@class fml.ui.Printer
----@field public nsnr                   integer
----@field bufnr                         integer
----@field lnum                          integer
----@field line_metas                    table<integer, any|nil>
+---@class fml.ui.Printer : fml.types.ui.IPrinter
+---@field protected bufnr               integer
+---@field protected lnum                integer
+---@field protected line_metas          table<integer, any|nil>
 local M = {}
 M.__index = M
 
@@ -30,11 +29,11 @@ function M:clear()
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, {})
 end
 
----@param opts fml.ui.printer.IProps
+---@param params                        fml.types.ui.printer.IResetParams
 ---@return nil
-function M:reset(opts)
-  self.nsnr = opts.nsnr
-  self.bufnr = opts.bufnr
+function M:reset(params)
+  self.nsnr = params.nsnr
+  self.bufnr = params.bufnr
   self:clear()
 end
 
@@ -48,9 +47,9 @@ function M:get_current_lnum()
   return self.lnum
 end
 
----@param line           string
----@param highlights     ?fml.ui.printer.ILineHighlight
----@param meta           ?any
+---@param line                          string
+---@param highlights                    ?fml.types.ui.printer.ILineHighlight
+---@param meta                          ?any
 ---@return nil
 function M:print(line, highlights, meta)
   local nsnr = self.nsnr ---@type integer

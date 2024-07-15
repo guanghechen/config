@@ -19,7 +19,9 @@ return {
     delay = 200,
     filetypes_denylist = {
       fml.constant.FT_TERM,
-      "neo-tree",
+      fml.constant.FT_SELECT_INPUT,
+      fml.constant.FT_SELECT_MAIN,
+      fml.constant.FT_NEOTREE,
       "noice",
       "notify",
       "quickfix",

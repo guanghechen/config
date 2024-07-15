@@ -25,6 +25,13 @@ function M.go(bufnr)
   end
 
   local winnr = vim.api.nvim_get_current_win() ---@type integer
+  if state.is_floating_win(winnr) then
+    winnr = state.win_history:present()
+  end
+  if winnr == nil then
+    return
+  end
+
   vim.api.nvim_win_set_buf(winnr, bufnr)
   if state.wins[winnr] == nil then
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

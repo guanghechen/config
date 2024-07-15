@@ -16,7 +16,7 @@ function M.internal_render_cfg(state)
     local left = fml.string.pad_start(title, cfg_name_len, " ") .. ": " ---@type string
     local value_start_pos = cfg_name_len + 2 ---@type integer
 
-    ---@type fml.ui.printer.ILineHighlight[]
+    ---@type fml.types.ui.printer.ILineHighlight[]
     local highlights = {
       { cstart = 0, cend = invisible_width, hlname = "f_sr_invisible" },
       { cstart = invisible_width, cend = cfg_name_len, hlname = "f_sr_opt_name" },
