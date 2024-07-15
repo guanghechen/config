@@ -17,11 +17,13 @@ local M = {
     local N = #buf.real_paths - 1 ---@type integer
     for i = 1, N, 1 do
       local piece = buf.real_paths[i] ---@type string
-      if first then
-        first = false
-        text = piece .. sep
-      else
-        text = text .. " " .. piece .. sep
+      if #piece > 0 then
+        if first then
+          first = false
+          text = piece .. sep
+        else
+          text = text .. " " .. piece .. sep
+        end
       end
     end
 
