@@ -1,8 +1,7 @@
 local action_lsp = require("guanghechen.core.action.lsp")
-local util_lsp = require("guanghechen.core.util.lsp")
 
 local function on_rename(from, to)
-  local clients = util_lsp.get_clients()
+  local clients = vim.lsp.get_clients()
   for _, client in ipairs(clients) do
     if client.supports_method("workspace/willRenameFiles") then
       local resp = client.request_sync("workspace/willRenameFiles", {
@@ -35,16 +34,16 @@ local function on_attach(client, bufnr)
   vim.keymap.set("n", "gt", action_lsp.goto_type_definitions, opts("lsp: Goto type definition"))
 
   -- code actions
-  if util_lsp.has_support_method(bufnr, "codeLens") then
+  if fml.lsp.has_support_method(bufnr, "codeLens") then
     vim.keymap.set({ "n", "v" }, "<leader>cc", action_lsp.codelens_run, opts("lsp: CodeLens"))
     vim.keymap.set("n", "<leader>cC", action_lsp.codelens_refresh, opts("lsp: Refresh & Display Codelens"))
   end
-  if util_lsp.has_support_method(bufnr, "codeAction") then
+  if fml.lsp.has_support_method(bufnr, "codeAction") then
     vim.keymap.set({ "n", "v" }, "<leader>ca", action_lsp.show_code_action, opts("lsp: Code action"))
     vim.keymap.set({ "n", "v" }, "<m-cr>", action_lsp.show_code_action, opts("lsp: Code action"))
     vim.keymap.set("n", "<leader>cA", action_lsp.show_code_action_source, opts("lsp: Source action"))
   end
-  if util_lsp.has_support_method(bufnr, "rename") then
+  if fml.lsp.has_support_method(bufnr, "rename") then
     vim.keymap.set("n", "<leader>cr", action_lsp.rename, opts("lsp: Rename"))
   end
 end

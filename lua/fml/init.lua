@@ -59,6 +59,7 @@ local std = {
   highlight = require("fml.std.highlight"),
   fs = require("fml.std.fs"),
   json = require("fml.std.json"),
+  lsp = require("fml.std.lsp"),
   md5 = require("fml.std.md5"),
   nvimbar = require("fml.std.nvimbar"),
   object = require("fml.std.object"),

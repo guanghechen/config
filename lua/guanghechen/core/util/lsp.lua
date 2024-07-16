@@ -1,7 +1,6 @@
 --https://github.com/LazyVim/LazyVim/blob/ae6d8f1a34fff49f9f1abf9fdd8a559c95b85cf3/lua/lazyvim/util/lsp.lua#L1
 
 ---@alias LspWord {from:{[1]:number, [2]:number}, to:{[1]:number, [2]:number}, current?:boolean} 1-0 indexed
----@alias lsp.Client.filter {id?: number, bufnr?: number, name?: string, method?: string, filter?:fun(client: lsp.Client):boolean}
 
 ---@class guhc.core.util.lsp
 local M = {}
@@ -24,35 +23,6 @@ function M.toggle_inlay_hints(buf, value)
     end
     ih.enable(value, { bufnr = buf })
   end
-end
-
----@param opts? lsp.Client.filter
-function M.get_clients(opts)
-  local ret = {} ---@type vim.lsp.Client[]
-  if vim.lsp.get_clients then
-    ret = vim.lsp.get_clients(opts)
-  else
-    ---@diagnostic disable-next-line: deprecated
-    ret = vim.lsp.get_active_clients(opts)
-    if opts and opts.method then
-      ---@param client vim.lsp.Client
-      ret = vim.tbl_filter(function(client)
-        return client.supports_method(opts.method, { bufnr = opts.bufnr })
-      end, ret)
-    end
-  end
-  return opts and opts.filter and vim.tbl_filter(opts.filter, ret) or ret
-end
-
-function M.has_support_method(bufnr, method)
-  method = method:find("/") and method or "textDocument/" .. method
-  local clients = M.get_clients({ bufnr = bufnr })
-  for _, client in ipairs(clients) do
-    if client.supports_method(method) then
-      return true
-    end
-  end
-  return false
 end
 
 ---@param on_attach fun(client:vim.lsp.Client, buffer)
