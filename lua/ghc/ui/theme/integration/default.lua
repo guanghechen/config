@@ -112,6 +112,9 @@ local function gen_hlgroup(params)
     f_wl_lsp_sep = { fg = c.darker_white, bg = t and "none" or c.bg_winline },
     f_wl_lsp_text = { fg = c.darker_white, bg = t and "none" or c.bg_winline },
 
+    ---select
+    f_us_input_prompt = { fg = c.red, bg = c.black2 },
+
     ---replace
     f_sr_filepath = { fg = c.blue, bg = "none" },
     f_sr_flag = { fg = c.white, bg = c.grey },
