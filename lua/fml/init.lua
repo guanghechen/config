@@ -82,6 +82,7 @@ local ui = {
   Theme = require("fml.ui.theme"),
   icons = require("fml.ui.icons"),
   signcolumn = require("fml.ui.signcolumn"),
+  select = require("fml.ui.select"),
 }
 
 ---@class fml : fml.std
