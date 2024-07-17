@@ -114,6 +114,7 @@ local function gen_hlgroup(params)
 
     ---select
     f_us_input_prompt = { fg = c.red, bg = c.black2 },
+    f_us_main_current = { fg = c.white, bg = c.black2 },
 
     ---replace
     f_sr_filepath = { fg = c.blue, bg = "none" },

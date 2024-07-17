@@ -4,11 +4,6 @@ return {
   "hrsh7th/nvim-cmp",
   event = { "InsertEnter" },
   opts = function()
-    vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
-
-    local cmp = require("cmp") ---@type any
-    local compare = require("cmp.config.compare")
-
     local function border(hl_name)
       return {
         { "╭", hl_name },
@@ -22,6 +17,8 @@ return {
       }
     end
 
+    local cmp = require("cmp") ---@type any
+    local compare = require("cmp.config.compare")
     local options = {
       auto_brackets = {}, -- configure any filetype to auto add brackets
       completion = {
@@ -35,7 +32,6 @@ return {
       formatting = {
         -- default fields order i.e completion word + item.kind + item.kind icons
         fields = { "abbr", "kind", "menu" },
-
         format = function(_, item)
           local icon = fml.ui.icons.kind[item.kind]
           if icon then
@@ -125,9 +121,9 @@ return {
       sources = {
         { name = "snippets", group_index = 1 },
         { name = "nvim_lsp", group_index = 1 },
-        { name = "copilot",  group_index = 1 },
-        { name = "path",     group_index = 2 },
-        { name = "buffer",   group_index = 2 },
+        { name = "copilot", group_index = 1 },
+        { name = "path", group_index = 2 },
+        { name = "buffer", group_index = 2 },
       },
     }
 

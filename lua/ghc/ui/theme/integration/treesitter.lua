@@ -71,6 +71,8 @@ local function gen_hlgroup(params)
     ["@text.emphasis"] = { fg = c.base09 },
     ["@text.strike"] = { fg = c.base0F, strikethrough = true },
     ["@text"] = { fg = c.base05 },
+    ["@text.diff.add"] = { link = "DiffAdded", default = true },
+    ["@text.diff.delete"] = { link = "DiffRemoved", default = true },
     ["@type.builtin"] = { fg = c.base0A },
     ["@variable.builtin"] = { fg = c.base09 },
     ["@variable.member.key"] = { fg = c.base08 },
