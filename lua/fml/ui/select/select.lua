@@ -115,6 +115,7 @@ function M.new(props)
       callback = actions.on_main_mouse_click,
       desc = "select: mouse click (main)",
     },
+    { modes = { "n" }, key = "<cr>", callback = on_confirm, desc = "select: confirm" },
     { modes = { "n" }, key = "k", callback = actions.on_main_up, desc = "select: focus prev item" },
     { modes = { "n" }, key = "A", callback = actions.on_A, desc = "select: insert" },
     { modes = { "n" }, key = "a", callback = actions.on_a, desc = "select: insert" },
@@ -182,11 +183,10 @@ function M:create_wins_as_needed(match_count)
   local state = self.state ---@type fml.types.ui.select.IState
   local bufnr_input = self.input:create_buf_as_needed() ---@type integer
   local bufnr_main = self.main:create_buf_as_needed() ---@type integer
-  local height = math.min(math.floor(vim.o.lines * 0.9), #state.items + 3) ---@type integer
-  local width = math.min(math.floor(vim.o.columns * 0.9), state.max_width + 10) ---@type integer
-  local row = math.floor((vim.o.lines - height) / 2) ---@type integer
+  local height = math.min(math.floor(vim.o.lines * 0.8), #state.items + 3) ---@type integer
+  local width = math.min(math.floor(vim.o.columns * 0.8), state.max_width + 10) ---@type integer
+  local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
   local col = math.floor((vim.o.columns - width) / 2) ---@type integer
-
   local winnr_input = self.winnr_input ---@type integer|nil
   local winnr_main = self.winnr_main ---@type integer|nil
 

@@ -93,9 +93,20 @@ function M:filter()
             return self._full_matches
           end
 
+          local last_input = self.input_history:present() ---@type string|nil
+          local last_input_lower = last_input ~= nil and last_input:lower() or nil ---@type string|nil
           local matches = {} ---@type fml.types.ui.select.ILineMatch[]
           local input_lower = input:lower() ---@type string
-          for idx, text in ipairs(items_lowercase) do
+
+          ---@type fml.types.ui.select.ILineMatch[]
+          local old_matches = (last_input_lower ~= nil and input_lower:sub(1, #last_input_lower) == input_lower)
+              and self._matches
+            or self._full_matches
+
+          for _, m in ipairs(old_matches) do
+            local idx = m.idx ---@type integer
+            local text = items_lowercase[idx] ---@type string
+
             local l = 1 ---@type integer
             local r = N1 ---@type integer
             local score = 0 ---@type integer

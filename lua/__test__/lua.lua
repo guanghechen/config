@@ -1,15 +1,4 @@
-local items = {
-  "lua/fml/collection/batch_disposable.lua",
-  "lua/fml/collection/batch_handler.lua",
-  "lua/fml/collection/circular_queue.lua",
-  "lua/fml/collection/disposable.lua",
-  "lua/fml/collection/history.lua",
-  "lua/fml/collection/observable.lua",
-  "lua/fml/collection/subscriber.lua",
-  "lua/fml/collection/subscribers.lua",
-  "lua/fml/collection/ticker.lua",
-  "lua/fml/constant.lua",
-}
+local items = fml.oxi.collect_file_paths(fml.path.cwd(), { ".git/" })
 
 local matches = {} ---@type fml.types.ui.select.ILineMatch[]
 local input = "observable" ---@type string

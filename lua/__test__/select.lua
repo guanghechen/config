@@ -2,18 +2,13 @@ local oxi = require("fml.std.oxi")
 local Observable = require("fml.collection.observable")
 
 ---@type fml.types.ui.select.IItem[]
-local items = {
-  { display = "lua/fml/collection/batch_disposable.lua" },
-  { display = "lua/fml/collection/batch_handler.lua" },
-  { display = "lua/fml/collection/circular_queue.lua" },
-  { display = "lua/fml/collection/disposable.lua" },
-  { display = "lua/fml/collection/history.lua" },
-  { display = "lua/fml/collection/observable.lua" },
-  { display = "lua/fml/collection/subscriber.lua" },
-  { display = "lua/fml/collection/subscribers.lua" },
-  { display = "lua/fml/collection/ticker.lua" },
-  { display = "lua/fml/constant.lua" },
-}
+local items = {}
+local paths = fml.oxi.collect_file_paths(fml.path.cwd(), { ".git/**", "rust/target/**" })
+for _, path in ipairs(paths) do
+  local item = { display = path } ---@type fml.types.ui.select.IItem
+  table.insert(items, item)
+end
+
 local select = fml.ui.select.Select.new({
   state = fml.ui.select.State.new({
     title = "Select file",
