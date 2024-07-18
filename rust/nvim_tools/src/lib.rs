@@ -18,6 +18,10 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::path::collect_file_paths)),
         ),
         (
+            "find_match_points",
+            Object::from(Function::from_fn(oxi::string::find_match_points)),
+        ),
+        (
             "normalize_comma_list",
             Object::from(Function::from_fn(oxi::list::normalize_comma_list)),
         ),

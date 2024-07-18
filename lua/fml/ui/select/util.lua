@@ -1,3 +1,5 @@
+local oxi = require("fml.std.oxi")
+
 ---@class fml.ui.select.util
 local M = {}
 
@@ -16,32 +18,15 @@ end
 ---@param old_matches                   fml.types.ui.select.ILineMatch[]
 ---@return fml.types.ui.select.ILineMatch[]
 function M.default_match(lower_input, lower_texts, old_matches)
-  local matches = {} ---@type fml.types.ui.select.ILineMatch[]
-  local N1 = #lower_input ---@type integer
+  local lines = {} ---@type string[]
   for _, m in ipairs(old_matches) do
     local idx = m.idx ---@type integer
     local text = lower_texts[idx] ---@type string
-
-    local l = 1 ---@type integer
-    local r = N1 ---@type integer
-    local score = 0 ---@type integer
-    local pieces = {} ---@type fml.types.ui.select.ILineMatchPiece[]
-    local N2 = #text ---@type integer
-    while r <= N2 do
-      if string.sub(text, l, r) == lower_input then
-        table.insert(pieces, { l = l, r = r })
-        score = score + 10
-        l = r + 1
-        r = r + N1
-      else
-        l = l + 1
-        r = r + 1
-      end
-    end
-    if #pieces > 0 then
-      local match = { idx = idx, score = score, pieces = pieces } ---@type fml.types.ui.select.ILineMatch
-      table.insert(matches, match)
-    end
+    table.insert(lines, text)
+  end
+  local matches = oxi.find_match_points(lower_input, lines) ---@type fml.types.ui.select.ILineMatch[]
+  for _, match in ipairs(matches) do
+    match.idx = old_matches[match.idx + 1].idx
   end
   return matches
 end

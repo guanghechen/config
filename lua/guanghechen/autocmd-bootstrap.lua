@@ -2,6 +2,7 @@ local action_autocmd = require("guanghechen.core.action.autocmd")
 
 action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
   pattern = {
+    fml.constant.FT_TERM,
     "checkhealth",
     "git",
     "help",
@@ -22,7 +23,6 @@ action_autocmd.autocmd_session_autosave() -- auto save session
 action_autocmd.autocmd_goto_last_location({ exclude = { "gitcommit" } })
 action_autocmd.autocmd_unlist_buffer({
   pattern = {
-
     "checkhealth",
     "git",
     "help",
