@@ -4,35 +4,39 @@ return {
     vim.o.timeout = true
     vim.o.timeoutlen = 300
   end,
-  keys = { "<leader>", '"', "'", "`", "c", "v", "g" },
-  opts = {
-    defaults = {
-      mode = { "n", "v" },
-      ["g"] = { name = "+goto" },
-      ["gs"] = { name = "+surround" },
-      ["z"] = { name = "+fold" },
-      ["]"] = { name = "+next" },
-      ["["] = { name = "+prev" },
-      ["<leader>b"] = { name = "+buffer" },
-      ["<leader>c"] = { name = "+code" },
-      ["<leader>d"] = { name = "+debug" },
-      ["<leader>e"] = { name = "+explorer" },
-      ["<leader>f"] = { name = "+find/file" },
-      ["<leader>g"] = { name = "+find/git" },
-      ["<leader>m"] = { name = "+marks/bookmarks" },
-      ["<leader>q"] = { name = "+quit/session" },
-      ["<leader>s"] = { name = "+search/replace" },
-      ["<leader>t"] = { name = "+tab/terminal" },
-      ["<leader>u"] = { name = "+ui" },
-      ["<leader>w"] = { name = "+window" },
-      ["<leader>x"] = { name = "+diagnostics/quickfix" },
+  keys = {
+    {
+      "<leader>?",
+      function()
+        require("which-key").show({ global = false })
+      end,
+      desc = "Buffer Local Keymaps (which-key)",
     },
   },
-  config = function(_, opts)
-    vim.o.timeout = true
-    vim.o.timeoutlen = 700
-
-    require("which-key").setup(opts)
-    require("which-key").register(opts.defaults)
-  end,
+  opts_extend = { "spec" },
+  opts = {
+    spec = {
+      {
+        mode = { "n", "v" },
+        { "g", group = "goto" },
+        { "gs", group = "surround" },
+        { "z", group = "fold" },
+        { "]", group = "next" },
+        { "[", group = "prev" },
+        { "<leader>b", group = "buffer" },
+        { "<leader>c", group = "code" },
+        { "<leader>d", group = "debug" },
+        { "<leader>e", group = "explorer" },
+        { "<leader>f", group = "find/file" },
+        { "<leader>g", group = "find/git" },
+        { "<leader>m", group = "marks/bookmarks" },
+        { "<leader>q", group = "quit/session" },
+        { "<leader>s", group = "search/replace" },
+        { "<leader>t", group = "tab/terminal" },
+        { "<leader>u", group = "ui" },
+        { "<leader>w", group = "window" },
+        { "<leader>x", group = "diagnostics/quickfix" },
+      },
+    },
+  },
 }
