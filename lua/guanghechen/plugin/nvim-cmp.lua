@@ -20,8 +20,11 @@ return {
     local cmp = require("cmp") ---@type any
     local compare = require("cmp.config.compare")
     local options = {
-      auto_brackets = {}, -- configure any filetype to auto add brackets
+      auto_brackets = {
+        "python",
+      }, -- configure any filetype to auto add brackets
       completion = {
+        cmp = { enabled = true },
         completeopt = "menu,menuone,noinsert",
       },
       experimental = {
@@ -36,6 +39,16 @@ return {
           local icon = fml.ui.icons.kind[item.kind]
           if icon then
             item.kind = icon -- .. " " .. item.kind
+          end
+
+          local widths = {
+            abbr = vim.g.cmp_widths and vim.g.cmp_widths.abbr or 40,
+            menu = vim.g.cmp_widths and vim.g.cmp_widths.menu or 30,
+          }
+          for key, width in pairs(widths) do
+            if item[key] and vim.fn.strdisplaywidth(item[key]) > width then
+              item[key] = vim.fn.strcharpart(item[key], 0, width - 1) .. "…"
+            end
           end
           return item
         end,
@@ -78,6 +91,7 @@ return {
           end
         end, { "i", "s" }),
       },
+      preselect = cmp.PreselectMode.Item,
       snippet = {
         expand = function(args)
           util_cmp.expand(args.body)
@@ -106,6 +120,13 @@ return {
           compare.order,
         },
       },
+      sources = {
+        { name = "copilot", group_index = 1, priority = 100 },
+        { name = "nvim_lsp", group_index = 1, priority = 100 },
+        { name = "snippets", group_index = 1, priority = 90 },
+        { name = "path", group_index = 2, priority = 60 },
+        { name = "buffer", group_index = 2, priority = 60 },
+      },
       window = {
         completion = {
           border = border("CmpBorder"),
@@ -117,13 +138,6 @@ return {
           border = border("CmpDocBorder"),
           winhighlight = "Normal:CmpDoc",
         },
-      },
-      sources = {
-        { name = "snippets", group_index = 1 },
-        { name = "nvim_lsp", group_index = 1 },
-        { name = "copilot", group_index = 1 },
-        { name = "path", group_index = 2 },
-        { name = "buffer", group_index = 2 },
       },
     }
 
