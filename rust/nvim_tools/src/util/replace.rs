@@ -94,7 +94,7 @@ pub fn replace_text_preview(
         }
     } else {
         let match_points: Vec<usize> =
-            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes());
+            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
         let len_of_search: usize = search_pattern.len();
         let len_of_replace: usize = replace_pattern.len();
         let mut total_search_len: usize = 0;
@@ -175,7 +175,7 @@ pub fn replace_entire_file(
         }
     } else {
         let match_points: Vec<usize> =
-            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes());
+            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
         let len_of_search: usize = search_pattern.len();
         let mut pieces: Vec<&str> = vec![];
         let mut i: usize = 0;

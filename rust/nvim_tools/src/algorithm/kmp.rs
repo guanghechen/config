@@ -11,11 +11,23 @@ pub fn calc_fails<T: PartialEq>(pattern: &[T], fails: &mut [usize]) {
     }
 }
 
-pub fn find_all_matched_points<T: PartialEq>(pattern: &[T], text: &[T]) -> Vec<usize> {
+pub fn find_all_matched_points<T: PartialEq>(
+    pattern: &[T],
+    text: &[T],
+    fails: Option<&Vec<usize>>,
+) -> Vec<usize> {
     let n_pattern: usize = pattern.len();
     let n_text: usize = text.len();
-    let mut fails = vec![0; n_pattern + 1];
-    calc_fails(pattern, &mut fails);
+
+    let mut local_fails;
+    let fails: &Vec<usize> = match fails {
+        Some(f) => f,
+        None => {
+            local_fails = vec![0; n_pattern + 1];
+            calc_fails(pattern, &mut local_fails);
+            &local_fails
+        }
+    };
 
     let mut result: Vec<usize> = Vec::new();
     let mut j: usize = 0;
@@ -46,11 +58,23 @@ pub fn find_all_matched_points<T: PartialEq>(pattern: &[T], text: &[T]) -> Vec<u
     result
 }
 
-pub fn find_first_matched_point<T: PartialEq>(pattern: &[T], text: &[T]) -> Option<usize> {
+pub fn find_first_matched_point<T: PartialEq>(
+    pattern: &[T],
+    text: &[T],
+    fails: Option<&Vec<usize>>,
+) -> Option<usize> {
     let n_pattern: usize = pattern.len();
     let n_text: usize = text.len();
-    let mut fails = vec![0; n_pattern + 1];
-    calc_fails(pattern, &mut fails);
+
+    let mut local_fails;
+    let fails: &Vec<usize> = match fails {
+        Some(f) => f,
+        None => {
+            local_fails = vec![0; n_pattern + 1];
+            calc_fails(pattern, &mut local_fails);
+            &local_fails
+        }
+    };
 
     let mut j: usize = 0;
     let mut k: usize = n_pattern + 1;
@@ -85,11 +109,11 @@ mod tests {
     fn test_find_all_matched_points() {
         let left: Vec<char> = "hello, world!".chars().collect();
         let right: Vec<char> = "hello, world!".repeat(4).chars().collect();
-        let result = find_all_matched_points(&left, &right);
+        let result = find_all_matched_points(&left, &right, None);
         assert_eq!(result, [0, 13, 26, 39]);
 
         let right: Vec<char> = "wawhello, world!h".repeat(4).chars().collect();
-        let result = find_all_matched_points(&left, &right);
+        let result = find_all_matched_points(&left, &right, None);
         assert_eq!(result, [3, 20, 37, 54]);
     }
 }
