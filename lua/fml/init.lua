@@ -17,6 +17,7 @@ local collection = {
   BatchDisposable = require("fml.collection.batch_disposable"),
   CircularQueue = require("fml.collection.circular_queue"),
   Disposable = require("fml.collection.disposable"),
+  Frecency = require("fml.collection.frecency"),
   History = require("fml.collection.history"),
   Observable = require("fml.collection.observable"),
   Subscriber = require("fml.collection.subscriber"),
