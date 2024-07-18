@@ -10,6 +10,12 @@
 ---@field public score                  integer
 ---@field public pieces                 fml.types.ui.select.ILineMatchPiece[]
 
+---@alias fml.types.ui.select.ILineMatchCmp
+---| fun(item1: fml.types.ui.select.ILineMatch, item2: fml.types.ui.select.ILineMatch): boolean
+
+---@alias fml.types.ui.select.IMatch
+---| fun(lower_input: string, lower_texts: string[], old_matches: fml.types.ui.select.ILineMatch[]): fml.types.ui.select.ILineMatch[]
+
 ---@class fml.types.ui.select.IState
 ---@field public uuid                   string
 ---@field public title                  string

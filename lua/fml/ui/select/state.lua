@@ -4,8 +4,11 @@ local Ticker = require("fml.collection.ticker")
 local navigate_circular = require("fml.fn.navigate_circular")
 local run_async = require("fml.fn.run_async")
 local std_array = require("fml.std.array")
+local util = require("fml.ui.select.util")
 
 ---@class fml.ui.select.State : fml.types.ui.select.IState
+---@field protected _cmp                fml.types.ui.select.ILineMatchCmp
+---@field protected _match              fml.types.ui.select.IMatch
 ---@field protected _current_item_lnum  integer
 ---@field protected _current_item_idx   integer
 ---@field protected _dirty              boolean
@@ -21,6 +24,8 @@ M.__index = M
 ---@field public title                  string
 ---@field public items                  fml.types.ui.select.IItem[]
 ---@field public input                  fml.types.collection.IObservable
+---@field public cmp                    ?fml.types.ui.select.ILineMatchCmp
+---@field public match                  ?fml.types.ui.select.IMatch
 
 ---@param props                         fml.ui.select.state.IProps
 ---@return fml.ui.select.State
@@ -45,6 +50,10 @@ function M.new(props)
     table.insert(full_matches, match)
   end
 
+  ---@type fml.types.ui.select.ILineMatchCmp
+  local cmp = props.cmp or util.default_line_match_cmp
+  local match = props.match or util.default_match
+
   self.uuid = uuid
   self.title = title
   self.input = input
@@ -54,6 +63,8 @@ function M.new(props)
   self.max_width = max_width
   self.ticker = Ticker.new({ start = 0 })
 
+  self._cmp = cmp
+  self._match = match
   self._current_item_lnum = #full_matches > 0 and 1 or 0
   self._current_item_idx = 0
   self._dirty = true
@@ -81,65 +92,33 @@ function M:filter()
   self._filtering = true
   vim.defer_fn(function()
     local input = self.input:snapshot() ---@type string
-    local items_lowercase = self.items_lowercase ---@type string[]
+    local lower_texts = self.items_lowercase ---@type string[]
 
     self._dirty = false
     run_async(function()
       local ok, matches = pcall(
         ---@return fml.types.ui.select.ILineMatch[]
         function()
-          local N1 = #input ---@type integer
-          if N1 < 1 then
+          if #input < 1 then
             return self._full_matches
           end
 
+          local lower_input = input:lower() ---@type string
           local last_input = self.input_history:present() ---@type string|nil
           local last_input_lower = last_input ~= nil and last_input:lower() or nil ---@type string|nil
-          local matches = {} ---@type fml.types.ui.select.ILineMatch[]
-          local input_lower = input:lower() ---@type string
 
           ---@type fml.types.ui.select.ILineMatch[]
-          local old_matches = (last_input_lower ~= nil and input_lower:sub(1, #last_input_lower) == input_lower)
+          local old_matches = (last_input_lower ~= nil and lower_input:sub(1, #last_input_lower) == lower_input)
               and self._matches
             or self._full_matches
 
-          for _, m in ipairs(old_matches) do
-            local idx = m.idx ---@type integer
-            local text = items_lowercase[idx] ---@type string
-
-            local l = 1 ---@type integer
-            local r = N1 ---@type integer
-            local score = 0 ---@type integer
-            local pieces = {} ---@type fml.types.ui.select.ILineMatchPiece[]
-            local N2 = #text ---@type integer
-            while r <= N2 do
-              if string.sub(text, l, r) == input_lower then
-                table.insert(pieces, { l = l, r = r })
-                score = score + 10
-                l = r + 1
-                r = r + N1
-              else
-                l = l + 1
-                r = r + 1
-              end
-            end
-            if #pieces > 0 then
-              local match = { idx = idx, score = score, pieces = pieces } ---@type fml.types.ui.select.ILineMatch
-              table.insert(matches, match)
-            end
-          end
-
-          table.sort(matches, function(a, b)
-            if a.score == b.score then
-              return a.idx < b.idx
-            end
-            return a.score > b.score
-          end)
+          local matches = self._match(lower_input, lower_texts, old_matches) ---@type fml.types.ui.select.ILineMatch[]
           return matches
         end
       )
 
       if ok and matches then
+        table.sort(matches, self._cmp)
         ---@type integer|nil
         local current_item_lnum = std_array.first(matches, function(match)
           return match.idx == self._current_item_idx
