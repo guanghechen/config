@@ -41,6 +41,20 @@ function M:access(uuid)
   end
 end
 
+---@return fml.types.collection.IFrecencyData
+function M:dump()
+  ---@type fml.types.collection.IFrecencyData
+  local data = { items = self._items }
+  return data
+end
+
+---@param data                          fml.types.collection.IFrecencyData
+---@return nil
+function M:load(data)
+  local items = data.items ---@type fml.types.collection.IFrecencyItem[]
+  self._items = items
+end
+
 ---@param uuid                          string
 ---@return number
 function M:score(uuid)
@@ -76,5 +90,7 @@ function M:score(uuid)
 
   return score
 end
+
+function M:to_json() end
 
 return M
