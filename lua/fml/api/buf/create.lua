@@ -21,3 +21,14 @@ function M.reload_or_load(filepath)
 
   return fs.read_file({ filepath = target_filepath, silent = true }) or ""
 end
+
+---@param winnr                         integer
+---@param filepath                      string
+---@return nil
+function M.open(winnr, filepath)
+  filepath = vim.fn.fnameescape(filepath)
+  if vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_set_current_win(winnr)
+    vim.cmd("edit " .. filepath)
+  end
+end

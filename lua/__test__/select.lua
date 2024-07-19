@@ -1,13 +1,20 @@
 local oxi = require("fml.std.oxi")
 local Observable = require("fml.collection.observable")
 
----@type fml.types.ui.select.IItem[]
-local items = {}
-local paths = fml.oxi.collect_file_paths(fml.path.cwd(), { ".git/**", "rust/target/**" })
+local cwd = fml.path.cwd() ---@type string
+local paths = fml.oxi.collect_file_paths(cwd, {
+  ".git/**",
+  "rust/*/target/**",
+  "rust/*/debug/**",
+})
+local items = {} ---@type fml.types.ui.select.IItem[]
 for _, path in ipairs(paths) do
-  local item = { display = path } ---@type fml.types.ui.select.IItem
+  local item = { display = path, lower = path:lower() } ---@type fml.types.ui.select.IItem
   table.insert(items, item)
 end
+table.sort(items, function(a, b)
+  return a.display < b.display
+end)
 
 local select = fml.ui.select.Select.new({
   state = fml.ui.select.State.new({
@@ -17,9 +24,18 @@ local select = fml.ui.select.Select.new({
     input = Observable.from_value(""),
     visible = Observable.from_value(false),
   }),
+  max_height = 25,
   render_line = fml.ui.select.util.default_render_filepath,
-  on_confirm = function(item, idx)
-    fml.debug.log("confirm:", { item = item, idx = idx })
+  on_confirm = function(item)
+    local winnr = fml.api.state.win_history:present() ---@type integer
+    if winnr ~= nil then
+      local filepath = fml.path.join(cwd, item.display) ---@type string
+      vim.schedule(function()
+        fml.api.buf.open(winnr, filepath)
+      end)
+      return true
+    end
+    return false
   end,
 })
 

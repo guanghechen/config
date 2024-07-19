@@ -6,6 +6,8 @@ local SelectMain = require("fml.ui.select.main")
 ---@field public state                  fml.types.ui.select.IState
 ---@field protected input                  fml.types.ui.select.IInput
 ---@field protected main                   fml.types.ui.select.IMain
+---@field protected max_width              number
+---@field protected max_height             number
 ---@field protected winnr_input            integer|nil
 ---@field protected winnr_main             integer|nil
 local M = {}
@@ -13,7 +15,9 @@ M.__index = M
 
 ---@class fml.types.ui.select.IProps
 ---@field public state                  fml.types.ui.select.IState
----@field public on_confirm             fun(item: fml.types.ui.select.IItem, idx: number): nil
+---@field public max_width              ?number
+---@field public max_height             ?number
+---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public render_line            ?fml.types.ui.select.main.IRenderLine
 
 ---@param props                         fml.types.ui.select.IProps
@@ -23,13 +27,17 @@ function M.new(props)
 
   local state = props.state ---@type fml.types.ui.select.IState
   local render_line = props.render_line ---@type fml.types.ui.select.main.IRenderLine|nil
-  local on_confirm_from_props = props.on_confirm ---@type fun(item: fml.types.ui.select.IItem, idx: number): nil
+  local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
+  local max_width = props.max_width or 0.8 ---@type number
+  local max_height = props.max_height or 0.8 ---@type number
 
   ---@return nil
   local function on_confirm()
     local item, idx = state:get_current()
     if item ~= nil and idx ~= nil then
-      on_confirm_from_props(item, idx)
+      if on_confirm_from_props(item, idx) then
+        self:close()
+      end
     end
   end
 
@@ -151,6 +159,8 @@ function M.new(props)
   self.state = state
   self.input = input
   self.main = main
+  self.max_width = max_width
+  self.max_height = max_height
   self.winnr_input = nil
   self.winnr_main = nil
 
@@ -199,8 +209,10 @@ function M:create_wins_as_needed(match_count)
   local state = self.state ---@type fml.types.ui.select.IState
   local bufnr_input = self.input:create_buf_as_needed() ---@type integer
   local bufnr_main = self.main:create_buf_as_needed() ---@type integer
-  local height = math.min(math.floor(vim.o.lines * 0.8), #state.items + 3) ---@type integer
-  local width = math.min(math.floor(vim.o.columns * 0.8), state.max_width + 10) ---@type integer
+  local max_height = self.max_height <= 1 and math.floor(vim.o.lines * self.max_height) or self.max_height ---@type number
+  local max_width = self.max_width <= 1 and math.floor(vim.o.columns * self.max_width) or self.max_width ---@type number
+  local height = math.min(max_height, #state.items + 3) ---@type integer
+  local width = math.min(max_width, state.max_width + 10) ---@type integer
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
   local col = math.floor((vim.o.columns - width) / 2) ---@type integer
   local winnr_input = self.winnr_input ---@type integer|nil

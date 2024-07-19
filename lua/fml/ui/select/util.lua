@@ -15,14 +15,14 @@ function M.default_line_match_cmp(item1, item2)
 end
 
 ---@param lower_input                   string
----@param lower_texts                   string[]
+---@param items                         fml.types.ui.select.IItem[]
 ---@param old_matches                   fml.types.ui.select.ILineMatch[]
 ---@return fml.types.ui.select.ILineMatch[]
-function M.default_match(lower_input, lower_texts, old_matches)
+function M.default_match(lower_input, items, old_matches)
   local lines = {} ---@type string[]
   for _, m in ipairs(old_matches) do
     local idx = m.idx ---@type integer
-    local text = lower_texts[idx] ---@type string
+    local text = items[idx].lower ---@type string
     table.insert(lines, text)
   end
   local matches = oxi.find_match_points(lower_input, lines) ---@type fml.types.ui.select.ILineMatch[]

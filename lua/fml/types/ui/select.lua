@@ -1,5 +1,6 @@
 ---@class fml.types.ui.select.IItem
 ---@field public display                string
+---@field public lower                  string
 
 ---@class fml.types.ui.select.IFileItem
 ---@field public display                string
@@ -24,7 +25,10 @@
 ---| fun(item1: fml.types.ui.select.ILineMatch, item2: fml.types.ui.select.ILineMatch): boolean
 
 ---@alias fml.types.ui.select.IMatch
----| fun(lower_input: string, lower_texts: string[], old_matches: fml.types.ui.select.ILineMatch[]): fml.types.ui.select.ILineMatch[]
+---| fun(lower_input: string, items: fml.types.ui.select.IItem[], old_matches: fml.types.ui.select.ILineMatch[]): fml.types.ui.select.ILineMatch[]
+
+---@alias fml.types.ui.select.IOnConfirm
+---| fun(item: fml.types.ui.select.IItem, idx: number): boolean
 
 ---@alias fml.types.ui.select.main.IRenderLine
 ---| fun(params: fml.types.ui.select.main.IRenderLineParams): string
@@ -35,7 +39,6 @@
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory
 ---@field public items                  fml.types.ui.select.IItem[]
----@field public items_lowercase        string[]
 ---@field public max_width              integer
 ---@field public ticker                 fml.types.collection.ITicker
 ---@field public filter                 fun(self: fml.types.ui.select.IState): fml.types.ui.select.ILineMatch[]

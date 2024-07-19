@@ -40,14 +40,12 @@ function M.new(props)
   local input_history = History.new({ name = uuid, capacity = 100 }) ---@type fml.types.collection.IHistory
 
   local max_width = 0 ---@type integer
-  local items_lowercase = {} ---@type string[]
   local full_matches = {} ---@type fml.types.ui.select.ILineMatch[]
   for idx, item in ipairs(items) do
-    local text = item.display:lower() ---@type string
+    local text = item.lower ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
     local match = { idx = idx, score = 0, pieces = {} } ---@type fml.types.ui.select.ILineMatch
     max_width = max_width < width and width or max_width
-    table.insert(items_lowercase, text)
     table.insert(full_matches, match)
   end
 
@@ -60,7 +58,6 @@ function M.new(props)
   self.input = input
   self.input_history = input_history
   self.items = items
-  self.items_lowercase = items_lowercase
   self.max_width = max_width
   self.ticker = Ticker.new({ start = 0 })
 
@@ -95,7 +92,6 @@ function M:filter()
   vim.defer_fn(function()
     local input = self.input:snapshot() ---@type string
     local input_lower = input:lower() ---@type string
-    local lower_texts = self.items_lowercase ---@type string[]
 
     self._dirty = false
     run_async(function()
@@ -112,9 +108,11 @@ function M:filter()
             and #input_lower > #last_input_lower
             and input_lower:sub(1, #last_input_lower) == last_input_lower
           then
-            return self._match(input_lower, lower_texts, self._matches) ---@type fml.types.ui.select.ILineMatch[]
+            ---@type fml.types.ui.select.ILineMatch[]
+            return self._match(input_lower, self.items, self._matches)
           else
-            return self._match(input_lower, lower_texts, self._full_matches)
+            ---@type fml.types.ui.select.ILineMatch[]
+            return self._match(input_lower, self.items, self._full_matches)
           end
         end
       )
@@ -215,14 +213,12 @@ end
 ---@return nil
 function M:update_items(items)
   local max_width = 0 ---@type integer
-  local items_lowercase = {} ---@type string[]
   local full_matches = {} ---@type fml.types.ui.select.ILineMatch[]
   for idx, item in ipairs(items) do
     local text = item.display:lower() ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
     local match = { idx = idx, score = 0, pieces = {} } ---@type fml.types.ui.select.ILineMatch
     max_width = max_width < width and width or max_width
-    table.insert(items_lowercase, text)
     table.insert(full_matches, match)
   end
 
@@ -232,7 +228,6 @@ function M:update_items(items)
   end) or (#full_matches > 0 and 1 or 0)
 
   self.items = items
-  self.items_lowercase = items_lowercase
   self.max_width = max_width
   self._current_item_lnum = current_item_lnum
   self._dirty = true
