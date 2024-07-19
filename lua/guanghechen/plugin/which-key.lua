@@ -1,5 +1,6 @@
 return {
   "folke/which-key.nvim",
+  event = { "VeryLazy" },
   init = function()
     vim.o.timeout = true
     vim.o.timeoutlen = 300
@@ -15,6 +16,13 @@ return {
   },
   opts_extend = { "spec" },
   opts = {
+    disable = {
+      ft = {
+        fml.constant.FT_TERM,
+        fml.constant.FT_SELECT_INPUT,
+        fml.constant.FT_SELECT_MAIN,
+      },
+    },
     spec = {
       {
         mode = { "n", "v" },
