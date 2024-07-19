@@ -88,7 +88,7 @@ function M.locate_script_filepath(...)
   return M.normalize(table.concat({ config_path, "script", ... }, PATH_SEP))
 end
 
----@param opts {filename: string}
+---@param opts                          { filename: string }
 ---@return string
 function M.locate_session_filepath(opts)
   local filename = opts.filename

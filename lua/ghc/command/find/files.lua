@@ -1,18 +1,26 @@
 ---@class ghc.command.find
 local M = require("ghc.command.find.mod")
 
----@type fml.types.ui.select.ISelect|nil
-local _select = nil
+local _select = nil ---@type fml.types.ui.select.ISelect|nil
+local _uuid = "eba42821-7a63-42b8-91bd-43a8005f2c91" ---@type string
+local _filepath = fml.path.locate_session_filepath({ filename = "select-" .. _uuid .. ".json" }) ---@type string
+
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  callback = function()
+    if _select ~= nil then
+      local data = _select.state:dump() ---@type fml.types.ui.select.state.ISerializedData
+      fml.fs.write_json(_filepath, data)
+    end
+  end,
+})
 
 ---@return fml.types.ui.select.ISelect
 local function get_select()
   if _select == nil then
-    local uuid = "eba42821-7a63-42b8-91bd-43a8005f2c91" ---@type string
-
     _select = fml.ui.select.Select.new({
       state = fml.ui.select.State.new({
         title = "Select file",
-        uuid = uuid,
+        uuid = _uuid,
         items = {},
         input = fml.collection.Observable.from_value(""),
         visible = fml.collection.Observable.from_value(false),
@@ -32,6 +40,11 @@ local function get_select()
         return false
       end,
     })
+
+    local data = fml.fs.read_json({ filepath = _filepath, silent_on_bad_path = true, silent_on_bad_json = false })
+    if data ~= nil then
+      _select.state:load(data)
+    end
   end
 
   local cwd = fml.path.cwd() ---@type string

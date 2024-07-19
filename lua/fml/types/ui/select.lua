@@ -67,6 +67,7 @@
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.select.IInput): integer
 
 ---@class fml.types.ui.select.ISelect
+---@field public state                  fml.types.ui.select.IState
 ---@field public close                  fun(self: fml.types.ui.select.ISelect): nil
 ---@field public open                   fun(self: fml.types.ui.select.ISelect): nil
 ---@field public toggle                 fun(self: fml.types.ui.select.ISelect): nil
