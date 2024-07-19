@@ -40,3 +40,5 @@ local select = fml.ui.select.Select.new({
 })
 
 select:toggle()
+
+fml.debug.log(oxi.uuid())

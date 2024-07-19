@@ -41,14 +41,14 @@ mk({ "n", "v" }, "<leader>fb", A.find.find_buffers, "find: buffers")
 mk({ "n", "v" }, "<leader>fE", A.find.find_explorer_workspace, "find: file explorer (from workspace)")
 mk({ "n", "v" }, "<leader>fe", A.find.find_explorer_current, "find: file explorer (from current directory)")
 mk({ "n", "v" }, "<leader>fF", A.find.find_file_force, "find: files (force)")
-mk({ "n", "v" }, "<leader>ff", A.find.find_file, "find: files")
+mk({ "n", "v" }, "<leader>ff", ghc.command.find.files, "find: files")
 mk({ "n", "v" }, "<leader>fg", A.find.find_file_git, "find: files (git)")
 mk({ "n", "v" }, "<leader>fh", A.find.find_highlights, "find: highlights")
 mk({ "n", "v" }, "<leader>fm", A.find.find_bookmark_workspace, "find: bookmarks")
 mk({ "n", "v" }, "<leader>fq", A.find.find_quickfix_history, "find: quickfix history")
 mk({ "n", "v" }, "<leader>fr", A.find.find_recent, "find: recent")
 mk({ "n", "v" }, "<leader>fv", A.find.find_vim_options, "find: vim options")
-mk({ "n", "v" }, "<leader><leader>", A.find.find_recent, "find recent")
+mk({ "n", "v" }, "<leader><leader>", A.find.find_recent, "find: recent")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
