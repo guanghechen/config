@@ -14,6 +14,7 @@ M.__index = M
 ---@class fml.types.ui.select.IProps
 ---@field public state                  fml.types.ui.select.IState
 ---@field public on_confirm             fun(item: fml.types.ui.select.IItem, idx: number): nil
+---@field public render_line            ?fml.types.ui.select.main.IRenderLine
 
 ---@param props                         fml.types.ui.select.IProps
 ---@return fml.ui.select.Select
@@ -21,6 +22,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local state = props.state ---@type fml.types.ui.select.IState
+  local render_line = props.render_line ---@type fml.types.ui.select.main.IRenderLine|nil
   local on_confirm_from_props = props.on_confirm ---@type fun(item: fml.types.ui.select.IItem, idx: number): nil
 
   ---@return nil
@@ -132,9 +134,23 @@ function M.new(props)
     { modes = { "n" }, key = "k", callback = actions.on_main_up, desc = "select: focus prev item" },
   }
 
+  ---@type fml.types.ui.select.IInput
+  local input = SelectInput.new({
+    state = state,
+    keymaps = input_keymaps,
+  })
+
+  ---@type fml.types.ui.select.IMain
+  local main = SelectMain.new({
+    state = state,
+    keymaps = main_keymaps,
+    render_line = render_line,
+    on_rendered = on_main_renderered,
+  })
+
   self.state = state
-  self.input = SelectInput.new({ state = state, keymaps = input_keymaps })
-  self.main = SelectMain.new({ state = state, keymaps = main_keymaps, on_rendered = on_main_renderered })
+  self.input = input
+  self.main = main
   self.winnr_input = nil
   self.winnr_main = nil
 

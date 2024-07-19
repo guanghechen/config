@@ -1,6 +1,12 @@
 ---@class fml.types.ui.select.IItem
 ---@field public display                string
 
+---@class fml.types.ui.select.IFileItem
+---@field public display                string
+---@field public filename               ?string
+---@field public icon                   ?string
+---@field public icon_hl                ?string
+
 ---@class fml.types.ui.select.ILineMatchPiece
 ---@field public l                      integer
 ---@field public r                      integer
@@ -10,11 +16,18 @@
 ---@field public score                  integer
 ---@field public pieces                 fml.types.ui.select.ILineMatchPiece[]
 
+---@class fml.types.ui.select.main.IRenderLineParams
+---@field public item                   fml.types.ui.select.IItem
+---@field public match                  fml.types.ui.select.ILineMatch
+
 ---@alias fml.types.ui.select.ILineMatchCmp
 ---| fun(item1: fml.types.ui.select.ILineMatch, item2: fml.types.ui.select.ILineMatch): boolean
 
 ---@alias fml.types.ui.select.IMatch
 ---| fun(lower_input: string, lower_texts: string[], old_matches: fml.types.ui.select.ILineMatch[]): fml.types.ui.select.ILineMatch[]
+
+---@alias fml.types.ui.select.main.IRenderLine
+---| fun(params: fml.types.ui.select.main.IRenderLineParams): string
 
 ---@class fml.types.ui.select.IState
 ---@field public uuid                   string
@@ -34,10 +47,6 @@
 ---@field public movedown               fun(self: fml.types.ui.select.IState): integer
 ---@field public toggle_visible         fun(self: fml.types.ui.select.IState, visible?: boolean): nil
 ---@field public update_items           fun(self: fml.types.ui.select.IState, items: fml.types.ui.select.IItem[]): nil
-
----@class fml.types.ui.select.main.IRenderLineParams
----@field public item                   fml.types.ui.select.IItem
----@field public match                  fml.types.ui.select.ILineMatch
 
 ---@class fml.types.ui.select.IMain
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.select.IMain): integer

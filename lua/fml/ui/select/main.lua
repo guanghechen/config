@@ -3,6 +3,7 @@ local Subscriber = require("fml.collection.subscriber")
 local bind_keys = require("fml.fn.bind_keys")
 local run_async = require("fml.fn.run_async")
 local signcolumn = require("fml.ui.signcolumn")
+local util = require("fml.ui.select.util")
 
 ---@class fml.ui.select.Main : fml.types.ui.select.IMain
 ---@field protected bufnr               integer|nil
@@ -10,8 +11,8 @@ local signcolumn = require("fml.ui.signcolumn")
 ---@field protected keymaps             fml.types.ui.IKeymap[]
 ---@field protected dirty               boolean
 ---@field protected rendering           boolean
+---@field protected render_line         fml.types.ui.select.main.IRenderLine
 ---@field protected on_rendered         fun(): nil
----@field protected render_line            fun(params: fml.types.ui.select.main.IRenderLineParams): string
 local M = {}
 M.__index = M
 
@@ -19,20 +20,7 @@ M.__index = M
 ---@field public state                  fml.types.ui.select.IState
 ---@field public keymaps                fml.types.ui.IKeymap[]
 ---@field public on_rendered            fun(): nil
----@field public render_line            ?fun(params: fml.types.ui.select.main.IRenderLineParams): string, fml.types.ui.printer.ILineHighlight[]
-
----@param params                        fml.types.ui.select.main.IRenderLineParams
----@return string
----@return fml.types.ui.printer.ILineHighlight[]
-local function default_render_line(params)
-  local match = params.match ---@type fml.types.ui.select.ILineMatch
-  local item = params.item ---@type fml.types.ui.select.IItem
-  local highlights = {} ---@type fml.types.ui.printer.ILineHighlight[]
-  for _, piece in ipairs(match.pieces) do
-    table.insert(highlights, { cstart = piece.l - 1, cend = piece.r, hlname = "Search" })
-  end
-  return item.display, highlights
-end
+---@field public render_line            ?fml.types.ui.select.main.IRenderLine
 
 ---@param props                         fml.ui.select.main.IProps
 ---@return fml.ui.select.Main
@@ -42,7 +30,7 @@ function M.new(props)
   local state = props.state ---@type fml.types.ui.select.IState
   local keymaps = props.keymaps ---@type fml.types.ui.IKeymap[]
   local on_rendered = props.on_rendered ---@type fun(): nil
-  local render_line = props.render_line or default_render_line ---@type fun(params: fml.types.ui.select.main.IRenderLineParams): string
+  local render_line = props.render_line or util.default_render_line ---@type fun(params: fml.types.ui.select.main.IRenderLineParams): string
 
   self.bufnr = nil
   self.state = state

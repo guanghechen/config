@@ -14,6 +14,7 @@ local util = require("fml.ui.select.util")
 ---@field protected _dirty              boolean
 ---@field protected _filtering          boolean
 ---@field protected _full_matches       fml.types.ui.select.ILineMatch[]
+---@field protected _last_input_lower   string|nil
 ---@field protected _matches            fml.types.ui.select.ILineMatch[]
 ---@field protected _visible            boolean
 local M = {}
@@ -70,6 +71,7 @@ function M.new(props)
   self._dirty = true
   self._filtering = false
   self._full_matches = full_matches
+  self._last_input_lower = nil
   self._matches = full_matches
   self._visible = false
 
@@ -92,6 +94,7 @@ function M:filter()
   self._filtering = true
   vim.defer_fn(function()
     local input = self.input:snapshot() ---@type string
+    local input_lower = input:lower() ---@type string
     local lower_texts = self.items_lowercase ---@type string[]
 
     self._dirty = false
@@ -103,17 +106,16 @@ function M:filter()
             return self._full_matches
           end
 
-          local lower_input = input:lower() ---@type string
-          local last_input = self.input_history:present() ---@type string|nil
-          local last_input_lower = last_input ~= nil and last_input:lower() or nil ---@type string|nil
-
-          ---@type fml.types.ui.select.ILineMatch[]
-          local old_matches = (last_input_lower ~= nil and lower_input:sub(1, #last_input_lower) == lower_input)
-              and self._matches
-            or self._full_matches
-
-          local matches = self._match(lower_input, lower_texts, old_matches) ---@type fml.types.ui.select.ILineMatch[]
-          return matches
+          local last_input_lower = self._last_input_lower ---@type string|nil
+          if
+            last_input_lower ~= nil
+            and #input_lower > #last_input_lower
+            and input_lower:sub(1, #last_input_lower) == last_input_lower
+          then
+            return self._match(input_lower, lower_texts, self._matches) ---@type fml.types.ui.select.ILineMatch[]
+          else
+            return self._match(input_lower, lower_texts, self._full_matches)
+          end
         end
       )
 
@@ -123,8 +125,10 @@ function M:filter()
         local current_item_lnum = std_array.first(matches, function(match)
           return match.idx == self._current_item_idx
         end)
-        self._matches = matches
+
         self._current_item_lnum = current_item_lnum or (#matches > 0 and 1 or 0)
+        self._last_input_lower = input_lower
+        self._matches = matches
       end
 
       self._filtering = false

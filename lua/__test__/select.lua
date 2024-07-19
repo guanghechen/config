@@ -17,6 +17,7 @@ local select = fml.ui.select.Select.new({
     input = Observable.from_value(""),
     visible = Observable.from_value(false),
   }),
+  render_line = fml.ui.select.util.default_render_filepath,
   on_confirm = function(item, idx)
     fml.debug.log("confirm:", { item = item, idx = idx })
   end,

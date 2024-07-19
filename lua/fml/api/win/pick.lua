@@ -4,7 +4,7 @@ local M = require("fml.api.win.mod")
 local pick_config_map = {
   focus = {
     bo = {
-      filetype = { "notify", "noice" },
+      filetype = { "noice" },
       buftype = {},
     },
   },
