@@ -1,4 +1,5 @@
 ---@class fml.types.ui.select.IItem
+---@field public uuid                   string
 ---@field public display                string
 ---@field public lower                  string
 
@@ -37,7 +38,6 @@
 ---@field public uuid                   string
 ---@field public title                  string
 ---@field public input                  fml.types.collection.IObservable
----@field public input_history          fml.types.collection.IHistory
 ---@field public items                  fml.types.ui.select.IItem[]
 ---@field public max_width              integer
 ---@field public ticker                 fml.types.collection.ITicker
@@ -48,7 +48,7 @@
 ---@field public locate                 fun(self: fml.types.ui.select.IState, lnum: integer): integer
 ---@field public moveup                 fun(self: fml.types.ui.select.IState): integer
 ---@field public movedown               fun(self: fml.types.ui.select.IState): integer
----@field public on_confirmed           fun(self: fml.types.ui.select.IState): nil
+---@field public on_confirmed           fun(self: fml.types.ui.select.IState, item: fml.types.ui.select.IItem, idx: integer): nil
 ---@field public toggle_visible         fun(self: fml.types.ui.select.IState, visible?: boolean): nil
 ---@field public update_items           fun(self: fml.types.ui.select.IState, items: fml.types.ui.select.IItem[]): nil
 

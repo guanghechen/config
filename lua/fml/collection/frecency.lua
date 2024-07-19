@@ -1,17 +1,17 @@
----@class fml.std.Frecency
+---@class fml.collection.Frecency : fml.types.collection.IFrecency
 ---@field private MAX_TIMESTAMPS        integer
 ---@field private MIN_SCORE_THRESHOLD   number
 ---@field private _items                table<string, fml.types.collection.IFrecencyItem>
 local M = {}
 M.__index = M
 
----@class fml.std.frecency.IProps
+---@class fml.collection.frecency.IProps
 ---@field public MAX_TIMESTAMPS         ?integer
 ---@field public MIN_SCORE_THRESHOLD    ?number
 ---@field public items                  table<string, fml.types.collection.IFrecencyItem>
 
----@param props                         fml.std.frecency.IProps
----@return fml.std.Frecency
+---@param props                         fml.collection.frecency.IProps
+---@return fml.collection.Frecency
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -49,10 +49,31 @@ function M:score(uuid)
   local score = 0 ---@type number
   if item ~= nil then
     for _, timestamp in ipairs(item.timestamps) do
-      local delta = timestamp < timestamp_cur and timestamp_cur - timestamp or 1 ---@type integer
-      score = score + 1 / delta
+      local delta = timestamp_cur - timestamp ---@type integer
+      if delta <= 1800 then --- 30 minutes
+        score = score + 10
+      elseif delta <= 3600 then --- 1 hour
+        score = score + 9
+      elseif delta <= 86400 then --- 1 day
+        score = score + 7
+      elseif delta <= 259200 then --- 3 day
+        score = score + 6
+      elseif delta <= 604800 then --- 7 day
+        score = score + 5
+      elseif delta <= 1209600 then --- 14 day
+        score = score + 3
+      elseif delta <= 2592000 then --- 30 day
+        score = score + 1
+      end
     end
   end
+
+  ---! Remove the item if the score is below the threshold.
+  if score < self.MIN_SCORE_THRESHOLD then
+    score = self.MIN_SCORE_THRESHOLD
+    self._items[uuid] = nil
+  end
+
   return score
 end
 

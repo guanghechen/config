@@ -3,5 +3,5 @@
 ---@field public idx                    integer
 
 ---@class fml.types.collection.IFrecency
----@field public access                 fun(uuid: string): nil
----@field public score                  fun(uuid: string): number
+---@field public access                 fun(self: fml.types.collection.IFrecency, uuid: string): nil
+---@field public score                  fun(self: fml.types.collection.IFrecency, uuid: string): number

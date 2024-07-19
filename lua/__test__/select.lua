@@ -9,7 +9,7 @@ local paths = fml.oxi.collect_file_paths(cwd, {
 })
 local items = {} ---@type fml.types.ui.select.IItem[]
 for _, path in ipairs(paths) do
-  local item = { display = path, lower = path:lower() } ---@type fml.types.ui.select.IItem
+  local item = { uuid = path, display = path, lower = path:lower() } ---@type fml.types.ui.select.IItem
   table.insert(items, item)
 end
 table.sort(items, function(a, b)

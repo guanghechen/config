@@ -36,7 +36,7 @@ function M.new(props)
     local item, idx = state:get_current()
     if item ~= nil and idx ~= nil then
       if on_confirm_from_props(item, idx) then
-        self.state:on_confirmed()
+        self.state:on_confirmed(item, idx)
         self:close()
       end
     end
