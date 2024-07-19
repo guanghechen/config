@@ -4,12 +4,12 @@ local SelectMain = require("fml.ui.select.main")
 
 ---@class fml.ui.select.Select : fml.types.ui.select.ISelect
 ---@field public state                  fml.types.ui.select.IState
----@field protected input                  fml.types.ui.select.IInput
----@field protected main                   fml.types.ui.select.IMain
----@field protected max_width              number
----@field protected max_height             number
----@field protected winnr_input            integer|nil
----@field protected winnr_main             integer|nil
+---@field protected input               fml.types.ui.select.IInput
+---@field protected main                fml.types.ui.select.IMain
+---@field protected max_width           number
+---@field protected max_height          number
+---@field protected winnr_input         integer|nil
+---@field protected winnr_main          integer|nil
 local M = {}
 M.__index = M
 
@@ -36,6 +36,7 @@ function M.new(props)
     local item, idx = state:get_current()
     if item ~= nil and idx ~= nil then
       if on_confirm_from_props(item, idx) then
+        self.state:on_confirmed()
         self:close()
       end
     end

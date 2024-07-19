@@ -14,6 +14,7 @@ local util = require("fml.ui.select.util")
 ---@field protected _dirty              boolean
 ---@field protected _filtering          boolean
 ---@field protected _full_matches       fml.types.ui.select.ILineMatch[]
+---@field protected _last_input         string|nil
 ---@field protected _last_input_lower   string|nil
 ---@field protected _matches            fml.types.ui.select.ILineMatch[]
 ---@field protected _visible            boolean
@@ -68,6 +69,7 @@ function M.new(props)
   self._dirty = true
   self._filtering = false
   self._full_matches = full_matches
+  self._last_input = nil
   self._last_input_lower = nil
   self._matches = full_matches
   self._visible = false
@@ -125,6 +127,7 @@ function M:filter()
         end)
 
         self._current_item_lnum = current_item_lnum or (#matches > 0 and 1 or 0)
+        self._last_input = input
         self._last_input_lower = input_lower
         self._matches = matches
       end
@@ -195,6 +198,14 @@ function M:moveup()
   self._current_item_lnum = lnum
   self._current_item_idx = lnum > 0 and matches[lnum].idx or self._current_item_idx
   return lnum
+end
+
+---@return nil
+function M:on_confirmed()
+  local last_input = self._last_input
+  if last_input ~= nil then
+    self.input_history:push(last_input)
+  end
 end
 
 ---@param visible                       ?boolean

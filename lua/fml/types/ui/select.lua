@@ -48,6 +48,7 @@
 ---@field public locate                 fun(self: fml.types.ui.select.IState, lnum: integer): integer
 ---@field public moveup                 fun(self: fml.types.ui.select.IState): integer
 ---@field public movedown               fun(self: fml.types.ui.select.IState): integer
+---@field public on_confirmed           fun(self: fml.types.ui.select.IState): nil
 ---@field public toggle_visible         fun(self: fml.types.ui.select.IState, visible?: boolean): nil
 ---@field public update_items           fun(self: fml.types.ui.select.IState, items: fml.types.ui.select.IItem[]): nil
 
