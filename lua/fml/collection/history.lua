@@ -27,23 +27,25 @@ end
 ---@field public equals                 ?fun(x: fml.types.T, y: fml.types.T): boolean
 ---@field public validate               ?fun(v: fml.types.T): boolean
 
----@class fml.collection.history.IDeserializeProps : fml.collection.history.IProps
+---@class fml.collection.history.IDeserializeProps
 ---@field public data                   fml.types.collection.history.ISerializedData
+---@field public name                   string
+---@field public capacity               integer
+---@field public equals                 ?fun(x: fml.types.T, y: fml.types.T): boolean
+---@field public validate               ?fun(v: fml.types.T): boolean
 
 ---@param props                         fml.collection.history.IProps
 ---@return fml.collection.History
 function M.new(props)
   local capacity = math.max(1, props.capacity) ---@type integer
-  local self = setmetatable({}, M)
 
+  local self = setmetatable({}, M)
   self.name = props.name
   self.capacity = capacity
   self.equals = props.equals or default_equals
   self.validate = props.validate or default_validate
-
   self._present_idx = 0
   self._stack = CircularQueue.new({ capacity = capacity })
-
   return self
 end
 
@@ -52,16 +54,14 @@ end
 function M.deserialize(props)
   local capacity = math.max(1, props.capacity) ---@type integer
   local data = props.data ---@type fml.types.collection.history.ISerializedData
-  local self = setmetatable({}, M)
 
+  local self = setmetatable({}, M)
   self.name = props.name
   self.capacity = capacity
   self.equals = props.equals or default_equals
   self.validate = props.validate or default_validate
-
   self._present_idx = data.present_index
   self._stack = CircularQueue.from_array(data.stack, capacity)
-
   return self
 end
 
@@ -92,13 +92,22 @@ function M:clear()
   self._stack:clear()
 end
 
+---@return fml.types.collection.history.ISerializedData
+function M:dump()
+  self:rearrange()
+  return {
+    present_index = self._present_idx,
+    stack = self._stack:collect(),
+  }
+end
+
 ---@return boolean
 function M:empty()
   self:rearrange()
   return self._stack:size() == 0
 end
 
----@param params                        ?fml.types.collection.IHistoryForkParams
+---@param params                        ?fml.types.collection.history.IForkParams
 ---@return fml.collection.History
 function M:fork(params)
   self:rearrange()
@@ -170,6 +179,15 @@ function M:iterator_reverse()
   end
 end
 
+---@param data                          fml.types.collection.history.ISerializedData
+---@return nil
+function M:load(data)
+  local stack = data.stack ---@type fml.types.T[]
+  local present_index = data.present_index ---@type integer
+  self._present_index = present_index
+  self._stack:reset(stack)
+end
+
 ---@return fml.types.T|nil
 function M:present()
   local idx = self._present_idx
@@ -200,7 +218,7 @@ end
 function M:print()
   self:rearrange()
 
-  local present_index = self._present_idx --@type integer
+  local present_index = self._present_idx ---@type integer
   local present = self._stack:at(self._present_idx) ---@type fml.types.T|nil
   local history = self._stack:collect()
 
@@ -261,15 +279,6 @@ function M:rearrange()
     new_present_index = 1
   end
   self._present_idx = math.max(new_present_index, self._stack:size() > 0 and 1 or 0)
-end
-
----@return fml.types.collection.history.ISerializedData
-function M:serialize()
-  self:rearrange()
-  return {
-    present_index = self._present_idx,
-    stack = self._stack:collect(),
-  }
 end
 
 return M

@@ -292,4 +292,13 @@ function M:rearrange(filter)
   self._end = k
 end
 
+---@param elements                      fml.types.T[]
+---@return nil
+function M:reset(elements)
+  self:clear()
+  for _, element in ipairs(elements) do
+    self:enqueue(element)
+  end
+end
+
 return M

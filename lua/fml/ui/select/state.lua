@@ -88,6 +88,13 @@ function M.new(props)
   return self
 end
 
+---@return fml.types.ui.select.state.ISerializedData
+function M:dump()
+  local frecency = self._frecency:dump() ---@type fml.types.collection.frecency.ISerializedData
+  local input_history = self._input_history:dump() ---@type fml.types.collection.history.ISerializedData
+  return { frecency = frecency, input_history = input_history } ---@type fml.types.ui.select.state.ISerializedData
+end
+
 ---@return fml.types.ui.select.ILineMatch[]
 function M:filter()
   if self._filtering or not self._visible or not self._dirty then
@@ -179,6 +186,15 @@ end
 ---@return boolean
 function M:is_visible()
   return self._visible
+end
+
+---@param data                          fml.types.ui.select.state.ISerializedData
+---@return nil
+function M:load(data)
+  local frecency = data.frecency ---@type fml.types.collection.frecency.ISerializedData
+  local input_history = data.input_history ---@type fml.types.collection.history.ISerializedData
+  self._frecency:load(frecency)
+  self._input_history:load(input_history)
 end
 
 ---@param lnum                          integer

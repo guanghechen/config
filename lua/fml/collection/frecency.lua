@@ -1,14 +1,16 @@
 ---@class fml.collection.Frecency : fml.types.collection.IFrecency
----@field private MAX_TIMESTAMPS        integer
----@field private MIN_SCORE_THRESHOLD   number
----@field private _items                table<string, fml.types.collection.IFrecencyItem>
+---@field public MAX_TIMESTAMPS        integer
+---@field private _items                table<string, fml.types.collection.frecency.IItem>
 local M = {}
 M.__index = M
 
 ---@class fml.collection.frecency.IProps
 ---@field public MAX_TIMESTAMPS         ?integer
----@field public MIN_SCORE_THRESHOLD    ?number
----@field public items                  table<string, fml.types.collection.IFrecencyItem>
+---@field public items                  table<string, fml.types.collection.frecency.IItem>
+
+---@class fml.collection.frecency.IDeserializeProps
+---@field public data                   fml.types.collection.frecency.ISerializedData
+---@field public MAX_TIMESTAMPS         ?integer
 
 ---@param props                         fml.collection.frecency.IProps
 ---@return fml.collection.Frecency
@@ -16,23 +18,28 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
-  local MIN_SCORE_THRESHOLD = props.MIN_SCORE_THRESHOLD or 1e-9 ---@type number
-  local items = props.items ---@type table<string, fml.types.collection.IFrecencyItem>
+  local items = props.items ---@type table<string, fml.types.collection.frecency.IItem>
 
   self.MAX_TIMESTAMPS = MAX_TIMESTAMPS
-  self.MIN_SCORE_THRESHOLD = MIN_SCORE_THRESHOLD
   self._items = items
 
   return self
+end
+
+---@param props                         fml.collection.frecency.IDeserializeProps
+---@return fml.collection.Frecency
+function M.deserialize(props)
+  local data = props.data ---@type fml.types.collection.frecency.ISerializedData
+  return M.new({ items = data.items })
 end
 
 ---@param uuid                          string
 ---@return nil
 function M:access(uuid)
   local timestamp = os.time() ---@type integer
-  local item = self._items[uuid] ---@type fml.types.collection.IFrecencyItem|nil
+  local item = self._items[uuid] ---@type fml.types.collection.frecency.IItem|nil
   if item == nil then
-    item = { timestamps = { timestamp }, idx = 1 } ---@type fml.types.collection.IFrecencyItem
+    item = { timestamps = { timestamp }, idx = 1 } ---@type fml.types.collection.frecency.IItem
     self._items[uuid] = item
   else
     local idx = item.idx == self.MAX_TIMESTAMPS and 1 or item.idx + 1 ---@type integer
@@ -41,17 +48,17 @@ function M:access(uuid)
   end
 end
 
----@return fml.types.collection.IFrecencyData
+---@return fml.types.collection.frecency.ISerializedData
 function M:dump()
-  ---@type fml.types.collection.IFrecencyData
+  ---@type fml.types.collection.frecency.ISerializedData
   local data = { items = self._items }
   return data
 end
 
----@param data                          fml.types.collection.IFrecencyData
+---@param data                          fml.types.collection.frecency.ISerializedData
 ---@return nil
 function M:load(data)
-  local items = data.items ---@type fml.types.collection.IFrecencyItem[]
+  local items = data.items ---@type fml.types.collection.frecency.IItem[]
   self._items = items
 end
 
@@ -59,7 +66,7 @@ end
 ---@return number
 function M:score(uuid)
   local timestamp_cur = os.time() ---@type integer
-  local item = self._items[uuid] ---@type fml.types.collection.IFrecencyItem|nil
+  local item = self._items[uuid] ---@type fml.types.collection.frecency.IItem|nil
   local score = 0 ---@type number
   if item ~= nil then
     for _, timestamp in ipairs(item.timestamps) do
@@ -83,8 +90,8 @@ function M:score(uuid)
   end
 
   ---! Remove the item if the score is below the threshold.
-  if score < self.MIN_SCORE_THRESHOLD then
-    score = self.MIN_SCORE_THRESHOLD
+  if score <= 0 then
+    score = 0
     self._items[uuid] = nil
   end
 

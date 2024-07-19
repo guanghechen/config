@@ -5,22 +5,23 @@
 ---@field public validate               fun(v: fml.types.T): boolean
 ---@field public back                   fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil
 ---@field public clear                  fun(self: fml.types.collection.IHistory): nil
+---@field public dump                   fun(self: fml.types.collection.IHistory): fml.types.collection.history.ISerializedData
 ---@field public empty                  fun(self: fml.types.collection.IHistory): boolean
----@field public fork                   fun(self: fml.types.collection.IHistory, params?: fml.types.collection.IHistoryForkParams): fml.types.collection.IHistory
+---@field public fork                   fun(self: fml.types.collection.IHistory, params?: fml.types.collection.history.IForkParams): fml.types.collection.IHistory
 ---@field public forward                fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil
 ---@field public iterator               fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
 ---@field public iterator_reverse       fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
+---@field public load                   fun(self: fml.types.collection.IHistory, data: fml.types.collection.history.ISerializedData): nil
 ---@field public go                     fun(self: fml.types.collection.IHistory, idx: integer): fml.types.T|nil
 ---@field public present                fun(self: fml.types.collection.IHistory): fml.types.T|nil
 ---@field public present_index          fun(self: fml.types.collection.IHistory): integer
 ---@field public print                  fun(self: fml.types.collection.IHistory): nil
 ---@field public push                   fun(self: fml.types.collection.IHistory, element: fml.types.T|nil): nil
 ---@field public rearrange              fun(self: fml.types.collection.IHistory): nil
----@field public serialize              fun(self: fml.types.collection.IHistory): fml.types.collection.history.ISerializedData
+
+---@class fml.types.collection.history.IForkParams
+---@field public name                   ?string
 
 ---@class fml.types.collection.history.ISerializedData
 ---@field public stack                  fml.types.T[]
 ---@field public present_index          integer
-
----@class fml.types.collection.IHistoryForkParams
----@field public name                   ?string

@@ -38,11 +38,7 @@ end
 function M.show_context_all()
   local context = {
     config = vim.tbl_deep_extend("force", { _location = ghc.context.client:get_filepath() }, client:snapshot_all()),
-    session = vim.tbl_deep_extend(
-      "force",
-      { _location = ghc.context.session:get_filepath() },
-      session:snapshot_all()
-    ),
+    session = vim.tbl_deep_extend("force", { _location = ghc.context.session:get_filepath() }, session:snapshot_all()),
     transient = vim.tbl_deep_extend("force", {}, transient:snapshot_all()),
   }
 
@@ -60,7 +56,7 @@ function M.show_state()
     local item = {
       winnr = winnr,
       tabnr = win.tabnr,
-      buf_history = win.buf_history:serialize(),
+      buf_history = win.buf_history:dump(),
     }
     wins[winnr] = item
   end

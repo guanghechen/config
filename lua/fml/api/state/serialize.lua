@@ -70,8 +70,8 @@ function M.save(filepath)
     bufs = {},
     tabs = {},
     wins = {},
-    tab_history = M.tab_history:serialize(),
-    win_history = M.win_history:serialize(),
+    tab_history = M.tab_history:dump(),
+    win_history = M.win_history:dump(),
   }
 
   for bufnr, buf in pairs(M.bufs) do
@@ -93,16 +93,6 @@ function M.save(filepath)
     }
     table.insert(data.tabs, item)
   end
-  -- for winnr, win in pairs(M.wins) do
-  --   ---@type fml.api.state.IWinItemData
-  --   local item = {
-  --     winnr = winnr,
-  --     tabnr = win.tabnr,
-  --     buf_history = win.buf_history:serialize(),
-  --   }
-  --   table.insert(data.wins, item)
-  -- end
-
   fs.write_json(filepath, data)
 end
 
@@ -117,7 +107,7 @@ function M.load(filepath)
 
   if data == nil then
     reporter.warn({
-      from = "fml.api.state.serialize",
+      from = "fml.api.state.load",
       subject = "load",
       message = "Failed to load json data",
       details = { filepath = filepath, data = data },
