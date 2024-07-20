@@ -49,12 +49,14 @@ local function get_select()
 
   local cwd = fml.path.cwd() ---@type string
   local paths = fml.oxi.collect_file_paths(cwd, {
-    ".git/**",
     ".cache/**",
+    ".git/**",
+    ".yarn/**",
     "**/build/**",
     "**/debug/**",
     "**/node_modules/**",
     "**/target/**",
+    "**/tmp/**",
     "**/*.pdf",
     "**/*.mkv",
     "**/*.mp4",

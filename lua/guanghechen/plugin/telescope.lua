@@ -107,36 +107,6 @@ return {
     },
     extensions = {
       file_browser = {},
-      frecency = {
-        auto_validate = true,
-        db_safe_mode = true,
-        db_validate_threshold = 5,
-        default_workspace = "CWD",
-        use_sqlite = false,
-        show_filter_column = false,
-        show_scores = false,
-        show_unindexed = true,
-        workspace_scan_cmd = {
-          "fd",
-          "--hidden",
-          "--type",
-          "file",
-          "--color=never",
-          "--follow",
-        },
-        ignore_patterns = {
-          "*.git/*",
-          "*/tmp/*",
-          "*/node_modules/*",
-          ".yarn/*",
-
-          -- for windows
-          [[*.git\*]],
-          [[*\tmp\*]],
-          [[*\node_modules\*]],
-          [[.yarn\*]],
-        },
-      },
       fzf = {
         fuzzy = false,
         override_generic_sorter = true,
