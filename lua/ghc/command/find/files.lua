@@ -50,8 +50,15 @@ local function get_select()
   local cwd = fml.path.cwd() ---@type string
   local paths = fml.oxi.collect_file_paths(cwd, {
     ".git/**",
-    "rust/*/target/**",
-    "rust/*/debug/**",
+    ".cache/**",
+    "**/build/**",
+    "**/debug/**",
+    "**/node_modules/**",
+    "**/target/**",
+    "**/*.pdf",
+    "**/*.mkv",
+    "**/*.mp4",
+    "**/*.zip",
   })
   local items = {} ---@type fml.types.ui.select.IItem[]
   for _, path in ipairs(paths) do
