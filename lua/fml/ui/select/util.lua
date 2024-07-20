@@ -27,7 +27,9 @@ function M.default_match(lower_input, items, old_matches)
   end
   local matches = oxi.find_match_points(lower_input, lines) ---@type fml.types.ui.select.ILineMatch[]
   for _, match in ipairs(matches) do
-    match.idx = old_matches[match.idx + 1].idx
+    ---! The index in lua is start from 1 but rust is start from 0.
+    local idx = old_matches[match.idx + 1].idx
+    match.idx = idx
   end
   return matches
 end
