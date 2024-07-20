@@ -237,13 +237,15 @@ function M:create_wins_as_needed(match_count)
       vim.api.nvim_win_set_config(winnr_main, wincfg_main)
       vim.api.nvim_win_set_buf(winnr_main, bufnr_main)
     else
-      vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
-      winnr_main = vim.api.nvim_get_current_win()
-      vim.wo[winnr_main].number = false
-      vim.wo[winnr_main].relativenumber = false
-      vim.wo[winnr_main].signcolumn = "yes"
+      winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
       self.winnr_main = winnr_main
     end
+
+    vim.wo[winnr_main].cursorline = true
+    vim.wo[winnr_main].number = false
+    vim.wo[winnr_main].relativenumber = false
+    vim.wo[winnr_main].signcolumn = "yes"
+    vim.wo[winnr_main].winhighlight = "Normal:NormalFloat,CursorLine:f_us_main_selection"
     self:sync_main_cursor()
   else
     self.winnr_main = nil
@@ -271,13 +273,12 @@ function M:create_wins_as_needed(match_count)
     vim.api.nvim_win_set_config(winnr_input, wincfg_config)
     vim.api.nvim_win_set_buf(winnr_input, bufnr_input)
   else
-    vim.api.nvim_open_win(bufnr_input, true, wincfg_config)
-    winnr_input = vim.api.nvim_get_current_win()
-    vim.wo[winnr_input].number = false
-    vim.wo[winnr_input].relativenumber = false
-    vim.wo[winnr_input].signcolumn = "yes"
+    winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_config)
     self.winnr_input = winnr_input
   end
+  vim.wo[winnr_input].number = false
+  vim.wo[winnr_input].relativenumber = false
+  vim.wo[winnr_input].signcolumn = "yes"
 
   ---! Set the default focused window to the input window.
   vim.api.nvim_tabpage_set_win(0, winnr_input)
