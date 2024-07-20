@@ -42,20 +42,19 @@ function M.new(props)
   local input = props.input ---@type fml.types.collection.IObservable
   local input_history = History.new({ name = uuid, capacity = 100 }) ---@type fml.types.collection.IHistory
   local frecency = fml.collection.Frecency.new({ items = {} }) ---@type fml.types.collection.IFrecency
+  local cmp = props.cmp or util.default_line_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
+  local match = props.match or util.default_match ---@type fml.types.ui.select.IMatch
 
   local max_width = 0 ---@type integer
   local full_matches = {} ---@type fml.types.ui.select.ILineMatch[]
   for idx, item in ipairs(items) do
     local text = item.lower ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
-    local match = { idx = idx, score = frecency:score(item.uuid), pieces = {} } ---@type fml.types.ui.select.ILineMatch
-    max_width = max_width < width and width or max_width
-    table.insert(full_matches, match)
+    local m = { idx = idx, score = frecency:score(item.uuid), pieces = {} } ---@type fml.types.ui.select.ILineMatch
+    max_width = max_width < width and width or max_width ---@type integer
+    table.insert(full_matches, m)
   end
-
-  ---@type fml.types.ui.select.ILineMatchCmp
-  local cmp = props.cmp or util.default_line_match_cmp
-  local match = props.match or util.default_match
+  table.sort(full_matches, cmp)
 
   self.uuid = uuid
   self.title = title
@@ -140,11 +139,12 @@ function M:filter()
         table.sort(matches, self._cmp)
 
         ---@type integer|nil
-        local current_item_lnum = std_array.first(matches, function(match)
+        local lnum = std_array.first(matches, function(match)
           return match.idx == self._current_item_idx
         end)
 
-        self._current_item_lnum = current_item_lnum or (#matches > 0 and 1 or 0)
+        self._current_item_lnum = lnum or (#matches > 0 and 1 or 0)
+        self._current_item_idx = lnum ~= nil and matches[lnum].idx or 0
         self._last_input = input
         self._last_input_lower = input_lower
         self._matches = matches
@@ -166,15 +166,13 @@ end
 ---@return fml.types.ui.select.IItem|nil
 ---@return integer|nil
 function M:get_current()
-  local idx = self._current_item_idx ---@type integer
-  if idx > 0 then
-    local item = self._full_matches[idx] ---@type fml.types.ui.select.ILineMatch|nil
-    if item ~= nil then
-      return self.items[item.idx], idx
+  local lnum = self._current_item_lnum ---@type integer
+  if lnum > 0 then
+    local match = self._matches[lnum] ---@type fml.types.ui.select.ILineMatch|nil
+    if match ~= nil then
+      local idx = match.idx ---@type integer
+      return self.items[idx], idx
     end
-  end
-  if #self.items > 0 then
-    return self.items[1], 1
   end
 end
 
@@ -262,15 +260,17 @@ function M:update_items(items)
     max_width = max_width < width and width or max_width
     table.insert(full_matches, match)
   end
+  table.sort(full_matches, self._cmp)
 
-  ---@type integer
-  local current_item_lnum = std_array.first(full_matches, function(match)
+  ---@type integer|nil
+  local lnum = std_array.first(full_matches, function(match)
     return match.idx == self._current_item_idx
-  end) or (#full_matches > 0 and 1 or 0)
+  end)
 
   self.items = items
   self.max_width = max_width
-  self._current_item_lnum = current_item_lnum
+  self._current_item_lnum = lnum or (#full_matches > 0 and 1 or 0)
+  self._current_item_idx = lnum ~= nil and full_matches[lnum].idx or 0
   self._dirty = true
   self._full_matches = full_matches
   self._matches = full_matches
