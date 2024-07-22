@@ -19,6 +19,9 @@ local function on_rename(from, to)
   end
 end
 
+---@param client                        vim.lsp.Client
+---@param bufnr                         integer
+---@diagnostic disable-next-line: unused-local
 local function on_attach(client, bufnr)
   local function opts(desc)
     return { buffer = bufnr, desc = "LSP " .. desc }

@@ -1,6 +1,6 @@
 ---  https://github.com/LazyVim/LazyVim/blob/0f6ff53ce336082869314db11e9dfa487cf83292/lua/lazyvim/util/cmp.lua#L1
 
----@class guanghechen.core.util.cmp
+---@class guanghechen.util.cmp
 local M = {}
 
 ---@class Placeholder
@@ -83,7 +83,7 @@ function M.expand(snippet)
 
     local log = ok and fml.reporter.warn or fml.reporter.error
     log({
-      from = "guanghechen.core.util.cmp.expand",
+      from = "guanghechen.util.cmp.expand",
       subject = "vim.snippet",
       message = formatted_msg,
     })

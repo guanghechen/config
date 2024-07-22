@@ -1,4 +1,4 @@
-local util_lsp = require("guanghechen.core.util.lsp")
+local util_lsp = require("guanghechen.util.lsp")
 
 local function register_lsp_symbol(name, icon)
   local hl = "DiagnosticSign" .. name

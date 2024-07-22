@@ -1,9 +1,9 @@
 local function recursively_toggle(state, toggle_directory)
-  require("guanghechen.core.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, false)
+  require("guanghechen.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, false)
 end
 
 local function recursively_toggle_all(state, toggle_directory)
-  require("guanghechen.core.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, true)
+  require("guanghechen.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, true)
 end
 
 -- Sorts files and directories descendantly.

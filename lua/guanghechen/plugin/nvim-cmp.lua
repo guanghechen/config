@@ -1,4 +1,4 @@
-local util_cmp = require("guanghechen.core.util.cmp")
+local util_cmp = require("guanghechen.util.cmp")
 
 return {
   "hrsh7th/nvim-cmp",
