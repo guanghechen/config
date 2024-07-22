@@ -116,7 +116,7 @@ local function gen_hlgroup(params)
     f_us_input_prompt = { fg = c.red, bg = c.black2 },
     f_us_main_bg = { bg = c.darker_black },
     f_us_main_current = { fg = c.white, bg = c.darker_black },
-    f_us_main_match = { fg = c.blue, bg = c.darker_black },
+    f_us_main_match = { fg = c.blue },
     f_us_main_selection = { bg = c.one_bg2 },
 
     ---replace
