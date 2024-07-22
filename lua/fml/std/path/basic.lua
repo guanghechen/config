@@ -14,6 +14,16 @@ end
 
 ---@param filepath string
 ---@return string
+function M.dirname(filepath)
+  local pieces = M.split(M.resolve(M.cwd(), filepath))
+  if #pieces == 1 then
+    return pieces[1]
+  end
+  return pieces > 0 and table.concat(pieces, PATH_SEP, 1, #pieces - 1) or ""
+end
+
+---@param filepath string
+---@return string
 function M.extname(filepath)
   return filepath:match("^.+(%..+)$") or ""
 end

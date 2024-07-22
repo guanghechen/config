@@ -29,14 +29,23 @@ local ui = {
   theme = require("ghc.ui.theme"),
 }
 
+---@class ghc.util
+local util = {
+  find = {
+    scope = require("ghc.util.find.scope"),
+  },
+}
+
 ---@class ghc
 ---@field public command                ghc.command
 ---@field public context                ghc.context
 ---@field public ui                     ghc.ui
+---@field public util                   ghc.util
 local ghc = {
   command = command,
   context = context,
   ui = ui,
+  util = util,
 }
 
 return ghc

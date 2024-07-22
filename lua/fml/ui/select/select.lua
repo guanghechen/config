@@ -17,6 +17,8 @@ M.__index = M
 ---@field public state                  fml.types.ui.select.IState
 ---@field public max_width              ?number
 ---@field public max_height             ?number
+---@field public input_keymaps          ?fml.types.ui.IKeymap[]
+---@field public main_keymaps           ?fml.types.ui.IKeymap[]
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.select.IOnClose
 ---@field public render_line            ?fml.types.ui.select.main.IRenderLine
@@ -116,7 +118,7 @@ function M.new(props)
   }
 
   ---@type fml.types.ui.IKeymap[]
-  local input_keymaps = {
+  local input_keymaps = vim.tbl_extend("force", {
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "select: confirm" },
     { modes = { "n", "v" }, key = "A", callback = actions.on_A, desc = "select: insert" },
     { modes = { "n", "v" }, key = "a", callback = actions.on_a, desc = "select: insert" },
@@ -126,10 +128,10 @@ function M.new(props)
     { modes = { "n", "v" }, key = "x", callback = actions.on_x, desc = "select: insert" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "select: close" },
     { modes = { "n", "v" }, key = "j", callback = actions.on_input_down, desc = "select: focus result" },
-  }
+  }, props.input_keymaps or {})
 
   ---@type fml.types.ui.IKeymap[]
-  local main_keymaps = {
+  local main_keymaps = vim.tbl_extend("force", {
     {
       modes = { "n", "v" },
       key = "<LeftRelease>",
@@ -151,7 +153,7 @@ function M.new(props)
     { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "select: goto first line" },
     { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "select: focus next item" },
     { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "select: focus prev item" },
-  }
+  }, props.main_keymaps or {})
 
   ---@type fml.types.ui.select.IInput
   local input = SelectInput.new({
