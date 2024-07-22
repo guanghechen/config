@@ -28,6 +28,9 @@
 ---@alias fml.types.ui.select.IMatch
 ---| fun(lower_input: string, items: fml.types.ui.select.IItem[], old_matches: fml.types.ui.select.ILineMatch[]): fml.types.ui.select.ILineMatch[]
 
+---@alias fml.types.ui.select.IOnClose
+---| fun(): nil
+
 ---@alias fml.types.ui.select.IOnConfirm
 ---| fun(item: fml.types.ui.select.IItem, idx: number): boolean
 

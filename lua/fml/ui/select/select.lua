@@ -18,6 +18,7 @@ M.__index = M
 ---@field public max_width              ?number
 ---@field public max_height             ?number
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
+---@field public on_close               ?fml.types.ui.select.IOnClose
 ---@field public render_line            ?fml.types.ui.select.main.IRenderLine
 
 ---@param props                         fml.types.ui.select.IProps
@@ -28,8 +29,17 @@ function M.new(props)
   local state = props.state ---@type fml.types.ui.select.IState
   local render_line = props.render_line ---@type fml.types.ui.select.main.IRenderLine|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
+  local on_close_from_props = props.on_close ---@type fml.types.ui.select.IOnClose|nil
   local max_width = props.max_width or 0.8 ---@type number
   local max_height = props.max_height or 0.8 ---@type number
+
+  ---@return nil
+  local function on_close()
+    if on_close_from_props ~= nil then
+      on_close_from_props()
+    end
+    self:close()
+  end
 
   ---@return nil
   local function on_confirm()
@@ -37,7 +47,7 @@ function M.new(props)
     if item ~= nil and idx ~= nil then
       if on_confirm_from_props(item, idx) then
         self.state:on_confirmed(item, idx)
-        self:close()
+        on_close()
       end
     end
   end
@@ -49,7 +59,7 @@ function M.new(props)
 
   local actions = {
     on_close = function()
-      self:close()
+      on_close()
     end,
     on_A = function()
       self:edit_input("A")

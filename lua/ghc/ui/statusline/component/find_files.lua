@@ -1,6 +1,6 @@
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
-  name = "find_recent",
+  name = "find_files",
   render = function()
     local text = " " .. ghc.context.session.find_scope:snapshot() .. " "
     local width = vim.fn.strwidth(text)

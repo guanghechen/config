@@ -1,3 +1,5 @@
+local statusline = require("ghc.ui.statusline")
+
 ---@class ghc.command.find
 local M = require("ghc.command.find.mod")
 
@@ -27,6 +29,9 @@ local function get_select()
       }),
       max_height = 25,
       render_line = fml.ui.select.util.default_render_filepath,
+      on_close = function()
+        statusline.disable(statusline.cnames.find_files)
+      end,
       on_confirm = function(item)
         local winnr = fml.api.state.win_history:present() ---@type integer
         if winnr ~= nil then
@@ -78,5 +83,6 @@ end
 ---@return nil
 function M.files()
   local select = get_select() ---@type fml.types.ui.select.ISelect
+  statusline.enable(statusline.cnames.find_files)
   select:open()
 end
