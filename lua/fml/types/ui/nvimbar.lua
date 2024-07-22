@@ -19,14 +19,20 @@
 ---@field public will_change            ?fun(context: fml.types.ui.nvimbar.IContext, prev_context: fml.types.ui.nvimbar.IContext|nil, remain_width: integer): boolean
 
 ---@class fml.types.ui.nvimbar.IComponent
----@field public name                   string
----@field public position               fml.enums.nvimbar.ComponentPosition
+---@field public enabled                boolean
 ---@field public last_result_text       string
 ---@field public last_result_width      integer
 ---@field public render                 fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): string, integer
 ---@field public condition              fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): boolean
 ---@field public will_change            fun(context: fml.types.ui.nvimbar.IContext, prev_context: fml.types.ui.nvimbar.IContext|nil, remain_width: integer): boolean
 
+---@class fml.types.ui.nvimbar.IItem
+---@field public name                   string
+---@field public position               fml.enums.nvimbar.ComponentPosition
+
 ---@class fml.types.ui.INvimbar
----@field public add                    fun(self: fml.types.ui.INvimbar, position: fml.enums.nvimbar.ComponentPosition, component: fml.types.ui.nvimbar.IRawComponent): fml.types.ui.INvimbar
+---@field public disable                fun(self: fml.types.ui.INvimbar, name: string): fml.types.ui.INvimbar
+---@field public enable                 fun(self: fml.types.ui.INvimbar, name: string): fml.types.ui.INvimbar
+---@field public place                  fun(self: fml.types.ui.INvimbar, name: string, position: fml.enums.nvimbar.ComponentPosition): fml.types.ui.INvimbar
+---@field public register               fun(self: fml.types.ui.INvimbar, name: string, component: fml.types.ui.nvimbar.IRawComponent, enabled?: boolean): fml.types.ui.INvimbar
 ---@field public render                 fun(self: fml.types.ui.INvimbar): string

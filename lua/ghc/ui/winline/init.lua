@@ -1,6 +1,3 @@
----@class ghc.ui.winline
-local M = {}
-
 ---@param winnr                         integer
 local function should_show_winline(winnr)
   if fml.api.state.is_floating_win(winnr) then
@@ -28,6 +25,9 @@ end
 
 local winline_map = {} ---@type table<string, fml.types.ui.INvimbar>
 
+---@class ghc.ui.winline
+local M = {}
+
 ---@return string
 function M.render(winnr)
   if not should_show_winline(winnr) then
@@ -43,14 +43,26 @@ function M.render(winnr)
       preset_context = { winnr = winnr },
       get_max_width = function()
         return vim.api.nvim_win_get_width(winnr)
-      end
+      end,
     })
     winline_map[winnr] = winline
+
+    local c = {
+      dirpath = "dirpath",
+      filename = "filename",
+      indicator = "indicator",
+      lsp = "lsp",
+    }
+    for _, name in pairs(c) do
+      winline:register(name, require("ghc.ui.winline.component." .. name))
+    end
+
     winline
-        :add("left", require("ghc.ui.winline.component.indicator"))
-        :add("left", require("ghc.ui.winline.component.dirpath"))
-        :add("left", require("ghc.ui.winline.component.filename"))
-        :add("left", require("ghc.ui.winline.component.lsp"))
+      ---
+      :place(c.indicator, "left")
+      :place(c.dirpath, "left")
+      :place(c.filename, "left")
+      :place(c.lsp, "left")
   end
   return winline:render()
 end
