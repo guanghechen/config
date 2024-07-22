@@ -1,4 +1,4 @@
-local action_autocmd = require("guanghechen.core.action.autocmd")
+local statusline = require("ghc.ui.statusline")
 
 ---@alias ISearchContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
@@ -301,11 +301,13 @@ local function search(opts)
         mapkey("n", "<leader>b", actions.change_scope_buffer)
         mapkey("n", "<leader>s", actions.change_scope_carousel)
 
-        ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
-        local buftype_extra = "search"
-        ghc.context.transient.buftype_extra:next(buftype_extra)
-
-        action_autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
+        statusline.enable(statusline.cnames.search)
+        vim.api.nvim_create_autocmd({ "BufLeave", "BufUnload" }, {
+          buffer = prompt_bufnr,
+          callback = function()
+            statusline.disable(statusline.cnames.search)
+          end,
+        })
         return true
       end,
     }
@@ -332,7 +334,7 @@ local function search(opts)
 
       resolved_opts = opts
       picker_params.finder =
-          finders.new_job(build_search_text_command, entry_maker, resolved_opts.max_results, resolved_opts.cwd)
+        finders.new_job(build_search_text_command, entry_maker, resolved_opts.max_results, resolved_opts.cwd)
       picker_params.previewer = conf.grep_previewer(resolved_opts)
       picker_params.sorter = sorters.highlighter_only(resolved_opts)
     end

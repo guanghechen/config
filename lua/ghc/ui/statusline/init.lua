@@ -57,6 +57,20 @@ statusline
 ---@class ghc.ui.statusline
 local M = { cnames = vim.deepcopy(c) }
 
+---@param name                          string
+---@return ghc.ui.statusline
+function M.disable(name)
+  statusline:disable(name)
+  return M
+end
+
+---@param name                          string
+---@return ghc.ui.statusline
+function M.enable(name)
+  statusline:enable(name)
+  return M
+end
+
 ---@return string
 function M.render()
   return statusline:render()

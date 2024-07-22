@@ -1,18 +1,8 @@
 local session = require("ghc.context.session")
-local transient = require("ghc.context.transient")
 
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "find_file",
-  condition = function()
-    local filetype = vim.bo.filetype
-    if filetype ~= "TelescopePrompt" then
-      return false
-    end
-
-    local buftype_extra = transient.buftype_extra:snapshot() ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
-    return buftype_extra == "find_file"
-  end,
   render = function()
     local text_scope = " " .. session.find_scope:snapshot() .. " "
     local text_flag_regex = " " .. fml.ui.icons.symbols.flag_regex .. " " ---@type string

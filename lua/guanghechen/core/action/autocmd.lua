@@ -2,7 +2,6 @@
 local M = {}
 
 local augroups = {
-  clear_buftype_extra = fml.fn.augroup("clear_buftype_extra"),
   close_with_q = fml.fn.augroup("close_with_q"),
   enable_spell = fml.fn.augroup("enable_spell"),
   enable_wrap = fml.fn.augroup("enable_wrap"),
@@ -15,35 +14,15 @@ local augroups = {
   unlist_buffer = fml.fn.augroup("unlist_buffer"),
 }
 
----@param bufnr number
----@param callback? fun(bufnr:number):nil
-function M.autocmd_clear_buftype_extra(bufnr, callback)
-  vim.api.nvim_create_autocmd({ "BufLeave", "BufUnload" }, {
-    buffer = bufnr,
-    group = augroups.clear_buftype_extra,
-    callback = function()
-      ghc.context.transient.buftype_extra:next(nil)
-      if callback then
-        callback(bufnr)
-      end
-    end,
-  })
-end
-
 -- close some filetypes with <q>
 ---@param opts {pattern: table}
 function M.autocmd_close_with_q(opts)
-  local function close()
-    ghc.context.transient.buftype_extra:next(nil)
-    vim.cmd("close")
-  end
-
   local pattern = opts.pattern
   vim.api.nvim_create_autocmd("FileType", {
     group = augroups.close_with_q,
     pattern = pattern,
     callback = function(event)
-      vim.keymap.set("n", "q", close, { buffer = event.buf, noremap = true, silent = true })
+      vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = event.buf, noremap = true, silent = true })
     end,
   })
 end

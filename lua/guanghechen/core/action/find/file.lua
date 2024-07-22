@@ -1,4 +1,4 @@
-local action_autocmd = require("guanghechen.core.action.autocmd")
+local statusline = require("ghc.ui.statusline")
 
 ---@alias IFindFileContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
@@ -255,11 +255,13 @@ local function find_file(opts, force)
         mapkey("n", "<leader>d", actions.change_scope_directory)
         mapkey("n", "<leader>s", actions.change_scope_carousel)
 
-        ---@type guanghechen.core.types.enum.BUFTYPE_EXTRA
-        local buftype_extra = "find_file"
-        ghc.context.transient.buftype_extra:next(buftype_extra)
-
-        action_autocmd.autocmd_clear_buftype_extra(prompt_bufnr)
+        statusline.enable(statusline.cnames.find_file)
+        vim.api.nvim_create_autocmd({ "BufLeave", "BufUnload" }, {
+          buffer = prompt_bufnr,
+          callback = function()
+            statusline.disable(statusline.cnames.find_file)
+          end,
+        })
         return true
       end,
     }
