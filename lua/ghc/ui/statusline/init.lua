@@ -16,7 +16,6 @@ local c = {
   filepath = "filepath",
   filestatus = "filestatus",
   filetype = "filetype",
-  find_file = "find_file",
   find_recent = "find_recent",
   git = "git",
   lsp = "lsp",
@@ -32,7 +31,6 @@ for _, name in pairs(c) do
 end
 statusline
   ---
-  :disable(c.find_file)
   :disable(c.find_recent)
   :disable(c.search)
 
@@ -44,7 +42,6 @@ statusline
   :place(c.filestatus, "left")
   :place(c.readonly, "left")
   :place(c.search, "center")
-  :place(c.find_file, "center")
   :place(c.find_recent, "center")
   :place(c.cwd, "right")
   :place(c.lsp, "right")

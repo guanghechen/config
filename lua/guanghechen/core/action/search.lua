@@ -2,6 +2,8 @@ local statusline = require("ghc.ui.statusline")
 
 ---@alias ISearchContext { workspace: string, cwd: string, directory: string, bufnr: number }
 
+local search_last_command = fml.collection.Observable.from_value(nil)
+
 ---@param scope_paths ISearchContext
 ---@param scope ghc.enums.context.SearchScope
 local function get_cwd_by_scope(scope_paths, scope)
@@ -90,7 +92,7 @@ local function build_search_text_command(prompt)
       "--color=never",
       "--follow",
     }
-    ghc.context.transient.search_last_command:next(fd_cmd)
+    search_last_command:next(fd_cmd)
     return fd_cmd
   end
 
@@ -116,7 +118,7 @@ local function build_search_text_command(prompt)
   table.insert(grep_cmd, "--")
   table.insert(grep_cmd, prompt)
 
-  ghc.context.transient.search_last_command:next(grep_cmd)
+  search_last_command:next(grep_cmd)
   return grep_cmd
 end
 
@@ -230,7 +232,7 @@ local function search(opts)
 
   local actions = {
     show_last_search_cmd = function()
-      local last_cmd = ghc.context.transient.search_last_command:snapshot() or {}
+      local last_cmd = search_last_command:snapshot() or {}
       fml.reporter.info({
         from = "guanghechen.core.action.search",
         subject = "show_last_search_cmd",

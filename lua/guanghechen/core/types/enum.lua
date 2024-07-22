@@ -1,5 +1,0 @@
----@alias guanghechen.core.types.enum.BUFTYPE_EXTRA
----|"find_file"
----|"find_recent"
----|"search"
----|nil

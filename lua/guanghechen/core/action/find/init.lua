@@ -3,5 +3,4 @@ local M = require("guanghechen.core.action.find.module")
 require("guanghechen.core.action.find.bookmark")
 require("guanghechen.core.action.find.builtin")
 require("guanghechen.core.action.find.explorer")
-require("guanghechen.core.action.find.file")
 return M
