@@ -1,11 +1,11 @@
 ---@class guanghechen.keymap.actions
 local A = {
-  diagnostic = require("guanghechen.core.action.diagnostic"),
-  explorer = require("guanghechen.core.action.explorer"),
-  find = require("guanghechen.core.action.find"),
-  replace = require("guanghechen.core.action.replace"),
-  search = require("guanghechen.core.action.search"),
-  ui = require("guanghechen.core.action.ui"),
+  diagnostic = require("guanghechen.command.diagnostic"),
+  explorer = require("guanghechen.command.explorer"),
+  find = require("guanghechen.command.find"),
+  replace = require("guanghechen.command.replace"),
+  search = require("guanghechen.command.search"),
+  ui = require("guanghechen.command.ui"),
 }
 
 ---@param mode string | string[]

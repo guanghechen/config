@@ -234,7 +234,7 @@ local function search(opts)
     show_last_search_cmd = function()
       local last_cmd = search_last_command:snapshot() or {}
       fml.reporter.info({
-        from = "guanghechen.core.action.search",
+        from = "guanghechen.command.search",
         subject = "show_last_search_cmd",
         details = {
           context = search_context,
@@ -347,7 +347,7 @@ local function search(opts)
   open_picker()
 end
 
----@class guanghechen.core.action.search
+---@class guanghechen.command.search
 local M = {}
 
 function M.grep_selected_text_workspace()

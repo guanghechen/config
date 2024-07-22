@@ -1,5 +1,5 @@
----@class guanghechen.core.action.find
-local M = require("guanghechen.core.action.find.module")
+---@class guanghechen.command.find
+local M = require("guanghechen.command.find.module")
 
 function M.find_explorer_workspace()
   require("telescope").extensions.file_browser.file_browser({

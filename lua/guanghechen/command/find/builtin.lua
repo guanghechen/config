@@ -1,5 +1,5 @@
----@class guanghechen.core.action.find
-local M = require("guanghechen.core.action.find.module")
+---@class guanghechen.command.find
+local M = require("guanghechen.command.find.module")
 
 function M.find_buffers()
   vim.cmd("Telescope buffers sort_mru=true sort_lastused=true")

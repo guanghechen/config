@@ -9,7 +9,7 @@ local goto_diagnostic = function(next, severity)
   end
 end
 
----@class guanghechen.core.action.diagnostic
+---@class guanghechen.command.diagnostic
 local M = {}
 
 function M.open_line_diagnostics()

@@ -1,4 +1,4 @@
----@class guanghechen.core.action.autocmd
+---@class guanghechen.command.autocmd
 local M = {}
 
 local augroups = {

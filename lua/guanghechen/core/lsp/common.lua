@@ -1,4 +1,4 @@
-local action_lsp = require("guanghechen.core.action.lsp")
+local action_lsp = require("guanghechen.command.lsp")
 
 local function on_rename(from, to)
   local clients = vim.lsp.get_clients()

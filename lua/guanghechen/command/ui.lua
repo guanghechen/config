@@ -1,4 +1,4 @@
----@class guanghechen.core.action.ui
+---@class guanghechen.command.ui
 local M = {}
 
 function M.show_inspect_pos()

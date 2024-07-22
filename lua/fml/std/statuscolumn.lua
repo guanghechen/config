@@ -1,4 +1,4 @@
----@class guanghechen.core.action.ui_statucolumn
+---@class fml.std.statuscolumn
 local M = {}
 
 -- Returns a list of regular and extmark signs sorted by priority (low to high)
@@ -23,7 +23,13 @@ function M.get_signs(buf, lnum)
   end
 
   -- Get extmark signs
-  local extmarks = vim.api.nvim_buf_get_extmarks(buf, -1, { lnum - 1, 0 }, { lnum - 1, -1 }, { details = true, type = "sign" })
+  local extmarks = vim.api.nvim_buf_get_extmarks(
+    buf,
+    -1,
+    { lnum - 1, 0 },
+    { lnum - 1, -1 },
+    { details = true, type = "sign" }
+  )
   for _, extmark in pairs(extmarks) do
     signs[#signs + 1] = {
       name = extmark[4].sign_hl_group or "",

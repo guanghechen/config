@@ -38,7 +38,7 @@ local function edit_lazygit_file_in_buffer(cwd)
 
   if not channel_id then
     fml.reporter.error({
-      from = "guanghechen.core.action.git",
+      from = "guanghechen.command.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "No terminal job ID found.",
     })
@@ -51,7 +51,7 @@ local function edit_lazygit_file_in_buffer(cwd)
   local relative_filepath = get_filepath_from_lazygit(cwd)
   if not relative_filepath then
     fml.reporter.error({
-      from = "guanghechen.core.action.git",
+      from = "guanghechen.command.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "Clipboard is empty or invalid.",
     })
@@ -61,7 +61,7 @@ local function edit_lazygit_file_in_buffer(cwd)
   local winnr = fml.api.state.win_history:present()
   if winnr == nil then
     fml.reporter.error({
-      from = "guanghechen.core.action.git",
+      from = "guanghechen.command.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "Could not find the original window.",
       details = { bufnr_cur = bufnr_cur, channel_id = channel_id },

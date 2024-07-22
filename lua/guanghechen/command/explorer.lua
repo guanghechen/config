@@ -28,7 +28,7 @@ local function check_could_reveal()
   return fml.path.is_under(cwd, filepath)
 end
 
----@class guanghechen.core.action.explorer
+---@class guanghechen.command.explorer
 local M = {}
 
 function M.toggle_explorer_file_workspace()

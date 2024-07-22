@@ -5,7 +5,7 @@ local function replace_word(opts)
   ghc.command.replace.search({ cwd = cwd, word = selected_text })
 end
 
----@class guanghechen.core.action.replace
+---@class guanghechen.command.replace
 local M = {}
 
 function M.replace_word_workspace()

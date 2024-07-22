@@ -1,4 +1,4 @@
----@class guanghechen.core.action.lsp
+---@class guanghechen.command.lsp
 local M = {}
 
 function M.codelens_run()
