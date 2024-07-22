@@ -1,3 +1,4 @@
+local std_array = require("fml.std.array")
 local Subscriber = require("fml.collection.subscriber")
 local SelectInput = require("fml.ui.select.input")
 local SelectMain = require("fml.ui.select.main")
@@ -118,7 +119,7 @@ function M.new(props)
   }
 
   ---@type fml.types.ui.IKeymap[]
-  local input_keymaps = vim.tbl_extend("force", {
+  local input_keymaps = std_array.merge_multiple_array({
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "select: confirm" },
     { modes = { "n", "v" }, key = "A", callback = actions.on_A, desc = "select: insert" },
     { modes = { "n", "v" }, key = "a", callback = actions.on_a, desc = "select: insert" },
@@ -131,7 +132,7 @@ function M.new(props)
   }, props.input_keymaps or {})
 
   ---@type fml.types.ui.IKeymap[]
-  local main_keymaps = vim.tbl_extend("force", {
+  local main_keymaps = std_array.merge_multiple_array({
     {
       modes = { "n", "v" },
       key = "<LeftRelease>",

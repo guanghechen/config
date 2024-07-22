@@ -13,7 +13,7 @@ M.scope_2_name = {
 
 ---@param scope                         ghc.enums.context.FindScope
 ---@return ghc.enums.context.FindScope
-function M.toggle_carousel(scope)
+function M.get_carousel_next(scope)
   local idx = fml.array.first(M.scopes, scope) or 1 ---@type integer
   local idx_next = idx == #M.scopes and 1 or idx + 1 ---@type integer
   return M.scopes[idx_next]
