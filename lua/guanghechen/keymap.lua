@@ -1,6 +1,5 @@
 ---@class guanghechen.keymap.actions
 local A = {
-  bookmark = require("guanghechen.core.action.bookmark"),
   diagnostic = require("guanghechen.core.action.diagnostic"),
   explorer = require("guanghechen.core.action.explorer"),
   find = require("guanghechen.core.action.find"),
@@ -42,7 +41,6 @@ mk({ "n", "v" }, "<leader>fE", A.find.find_explorer_workspace, "find: file explo
 mk({ "n", "v" }, "<leader>fe", A.find.find_explorer_current, "find: file explorer (from current directory)")
 mk({ "n", "v" }, "<leader>fg", A.find.find_file_git, "find: files (git)")
 mk({ "n", "v" }, "<leader>fh", A.find.find_highlights, "find: highlights")
-mk({ "n", "v" }, "<leader>fm", A.find.find_bookmark_workspace, "find: bookmarks")
 mk({ "n", "v" }, "<leader>fq", A.find.find_quickfix_history, "find: quickfix history")
 mk({ "n", "v" }, "<leader>fv", A.find.find_vim_options, "find: vim options")
 -------------------------------------------------------------------------------------------#[f]ind--
@@ -51,15 +49,6 @@ mk({ "n", "v" }, "<leader>fv", A.find.find_vim_options, "find: vim options")
 mk({ "n", "v" }, "<leader>gG", ghc.command.git.open_diffview, "git: open diff view", true)
 mk({ "n", "v" }, "<leader>gf", ghc.command.git.open_diffview_filehistory, "git: open file history", true)
 -------------------------------------------------------------------------------------------#[g]it---
-
---#book[m]ark---------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>mm", A.bookmark.toggle_on_current_line, "bookmark: toggle bookmark (current line)")
-mk({ "n", "v" }, "<leader>me", A.bookmark.edit_annotation_on_current_line, "bookmark: edit bookmark (current line)")
-mk({ "n", "v" }, "<leader>mc", A.bookmark.clear_marks_buffer, "bookmark: clear bookmark (current buffer)")
-mk({ "n", "v" }, "<leader>m[", A.bookmark.goto_prev_mark_buffer, "bookmark: goto prev bookmark (current buffer)")
-mk({ "n", "v" }, "<leader>m]", A.bookmark.goto_next_mark_buffer, "bookmark: goto next bookmark (current buffer)")
-mk({ "n", "v" }, "<leader>ml", A.bookmark.open_bookmarks_into_quickfix, "bookmark: open bookmark list (quickfix)")
----------------------------------------------------------------------------------------#book[m]ark--
 
 --#[r]eplace----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>rR", A.replace.replace_word_workspace, "replace: word (workspace)")

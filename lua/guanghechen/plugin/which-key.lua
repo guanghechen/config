@@ -37,7 +37,6 @@ return {
         { "<leader>e", group = "explorer" },
         { "<leader>f", group = "find/file" },
         { "<leader>g", group = "find/git" },
-        { "<leader>m", group = "marks/bookmarks" },
         { "<leader>q", group = "quit/session" },
         { "<leader>s", group = "search/replace" },
         { "<leader>t", group = "tab/terminal" },

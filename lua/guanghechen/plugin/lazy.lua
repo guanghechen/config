@@ -35,7 +35,6 @@ local opts = {
     require("guanghechen.plugin.which-key"),
 
     --find
-    require("guanghechen.plugin.bookmarks"),
     require("guanghechen.plugin.telescope"),
     require("guanghechen.plugin.telescope-file-browser"),
     require("guanghechen.plugin.telescope-fzf-native"),
