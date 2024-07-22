@@ -148,16 +148,34 @@ function Viewmodel:save()
   fs.write_json(filepath, data)
 end
 
+---@param opts                          ?{ silent_on_notfound?: boolean }
 ---@return boolean  Indicate whether if the content loaded is different with current data.
-function Viewmodel:load()
+function Viewmodel:load(opts)
+  opts = opts or {}
+  local silent_on_notfound = not not opts.silent_on_notfound ---@type boolean
+
   local filepath = self._filepath ---@type string|nil
   if filepath == nil then
-    reporter.error({
-      from = "fml.collection.viewmodel",
-      subject = "load",
-      message = "The filepath not specified",
-      details = { name = self._name },
-    })
+    if not silent_on_notfound then
+      reporter.error({
+        from = "fml.collection.viewmodel",
+        subject = "load",
+        message = "The filepath not specified",
+        details = { name = self._name, filepath = filepath },
+      })
+    end
+    return false
+  end
+
+  if not fml.path.is_exist(filepath) then
+    if not silent_on_notfound then
+      reporter.error({
+        from = "fml.collection.viewmodel",
+        subject = "load",
+        message = "The filepath not exist",
+        details = { name = self._name, filepath = filepath },
+      })
+    end
     return false
   end
 
@@ -192,7 +210,6 @@ function Viewmodel:auto_reload(params)
   ---@cast params fml.types.collection.viewmodel.IAutoReloadParams
 
   local on_changed = params.on_changed or fml.fn.noop ---@type fun(): nil
-
 
   if self._unwatch ~= nil then
     return
