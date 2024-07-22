@@ -74,7 +74,7 @@ return {
         "yamlls", -- yaml -- by redhat
       },
       automatic_installation = false,
-      handlers = require("guanghechen.core.lsp.setup"),
+      handlers = require("guanghechen.lsp.setup"),
     })
 
     -- custom cmd to install all mason binaries listed

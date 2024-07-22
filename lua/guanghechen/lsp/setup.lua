@@ -29,28 +29,28 @@ local setup = {
     require("lspconfig")[server_name].setup({})
   end,
   clangd = function()
-    require("lspconfig").clangd.setup(require("guanghechen.core.lsp.lang.cpp"))
+    require("lspconfig").clangd.setup(require("guanghechen.lsp.lang.cpp"))
   end,
   eslint = function()
-    require("lspconfig").clangd.setup(require("guanghechen.core.lsp.lang.eslint"))
+    require("lspconfig").clangd.setup(require("guanghechen.lsp.lang.eslint"))
   end,
   html = function()
-    require("lspconfig").html.setup(require("guanghechen.core.lsp.lang.html"))
+    require("lspconfig").html.setup(require("guanghechen.lsp.lang.html"))
   end,
   jsonls = function()
-    require("lspconfig").jsonls.setup(require("guanghechen.core.lsp.lang.json"))
+    require("lspconfig").jsonls.setup(require("guanghechen.lsp.lang.json"))
   end,
   lua_ls = function()
-    require("lspconfig").lua_ls.setup(require("guanghechen.core.lsp.lang.lua"))
+    require("lspconfig").lua_ls.setup(require("guanghechen.lsp.lang.lua"))
   end,
   pyright = function()
-    require("lspconfig").pyright.setup(require("guanghechen.core.lsp.lang.python"))
+    require("lspconfig").pyright.setup(require("guanghechen.lsp.lang.python"))
   end,
   rust_analyzer = function()
-    require("lspconfig").rust_analyzer.setup(require("guanghechen.core.lsp.lang.rust"))
+    require("lspconfig").rust_analyzer.setup(require("guanghechen.lsp.lang.rust"))
   end,
   tsserver = function()
-    require("lspconfig").tsserver.setup(require("guanghechen.core.lsp.lang.typescript"))
+    require("lspconfig").tsserver.setup(require("guanghechen.lsp.lang.typescript"))
   end,
 }
 

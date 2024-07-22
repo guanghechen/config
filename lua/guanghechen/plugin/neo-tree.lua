@@ -302,7 +302,7 @@ return {
   },
   config = function(_, opts)
     local function on_move(data)
-      require("guanghechen.core.lsp.common").on_rename(data.source, data.destination)
+      require("guanghechen.lsp.common").on_rename(data.source, data.destination)
     end
 
     local events = require("neo-tree.events")
