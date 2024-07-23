@@ -20,29 +20,70 @@ pub fn normalize_comma_list(input: &str) -> String {
 }
 
 pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineMatch> {
-    let n_pattern: usize = pattern.len();
-    let mut fails: Vec<usize> = vec![0; n_pattern + 1];
-    calc_fails(pattern.as_bytes(), &mut fails);
+    let pattern_bytes = pattern.as_bytes();
+    let pattern_chars = pattern.chars().collect::<Vec<char>>();
+    let n_pattern_bytes: usize = pattern_bytes.len();
 
+    let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
     let mut matches: Vec<LineMatch> = vec![];
+    calc_fails(pattern_bytes, &mut fails);
+
     for (idx, line) in lines.iter().enumerate() {
         let line = line.as_ref();
         let line_bytes = line.as_bytes();
-        let points = find_all_matched_points(pattern.as_bytes(), line_bytes, Some(&fails));
+        let points = find_all_matched_points(pattern_bytes, line_bytes, Some(&fails));
         if !points.is_empty() {
             let mut pieces: Vec<LineMatchPiece> = vec![];
             let mut score = 0;
             for p in points {
                 pieces.push(LineMatchPiece {
                     l: p,
-                    r: p + n_pattern,
+                    r: p + n_pattern_bytes,
                 });
                 score += 10;
             }
-            let m: LineMatch = LineMatch { idx, score, pieces };
-            matches.push(m);
+            matches.push(LineMatch { idx, score, pieces });
+            continue;
+        }
+
+        let mut pieces: Vec<LineMatchPiece> = vec![];
+        let mut score = 0;
+        let mut i: usize = 0;
+        let mut t: usize = 0;
+        let mut continous: bool = false;
+        let mut valid_piece_index: usize = 0;
+        for c in line.chars() {
+            let t2: usize = t + c.len_utf8();
+            if c != pattern_chars[i] {
+                t = t2;
+                continous = false;
+                continue;
+            }
+
+            if continous {
+                if let Some(last) = pieces.last_mut() {
+                    last.r = t2;
+                }
+            } else {
+                continous = true;
+                pieces.push(LineMatchPiece { l: t, r: t2 });
+            }
+
+            i += 1;
+            t = t2;
+            if i == pattern_chars.len() {
+                score += 3;
+                i = 0;
+                continous = false;
+                valid_piece_index = pieces.len();
+            }
+        }
+        if score > 0 {
+            pieces.truncate(valid_piece_index);
+            matches.push(LineMatch { idx, score, pieces });
         }
     }
+
     matches
 }
 
