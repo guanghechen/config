@@ -9,6 +9,8 @@ local SelectMain = require("fml.ui.select.main")
 ---@field protected main                fml.types.ui.select.IMain
 ---@field protected max_width           number
 ---@field protected max_height          number
+---@field protected width               number|nil
+---@field protected height              number|nil
 ---@field protected winnr_input         integer|nil
 ---@field protected winnr_main          integer|nil
 local M = {}
@@ -18,6 +20,8 @@ M.__index = M
 ---@field public state                  fml.types.ui.select.IState
 ---@field public max_width              ?number
 ---@field public max_height             ?number
+---@field public width                  ?number
+---@field public height                 ?number
 ---@field public input_keymaps          ?fml.types.ui.IKeymap[]
 ---@field public main_keymaps           ?fml.types.ui.IKeymap[]
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
@@ -35,6 +39,8 @@ function M.new(props)
   local on_close_from_props = props.on_close ---@type fml.types.ui.select.IOnClose|nil
   local max_width = props.max_width or 0.8 ---@type number
   local max_height = props.max_height or 0.8 ---@type number
+  local width = props.width ---@type number|nil
+  local height = props.height ---@type number|nil
 
   ---@return nil
   local function on_close()
@@ -175,6 +181,8 @@ function M.new(props)
   self.main = main
   self.max_width = max_width
   self.max_height = max_height
+  self.width = width
+  self.height = height
   self.winnr_input = nil
   self.winnr_main = nil
 
@@ -225,8 +233,19 @@ function M:create_wins_as_needed(match_count)
   local bufnr_main = self.main:create_buf_as_needed() ---@type integer
   local max_height = self.max_height <= 1 and math.floor(vim.o.lines * self.max_height) or self.max_height ---@type number
   local max_width = self.max_width <= 1 and math.floor(vim.o.columns * self.max_width) or self.max_width ---@type number
-  local height = math.min(max_height, #state.items + 3) ---@type integer
-  local width = math.min(max_width, state.max_width + 10) ---@type integer
+
+  local height = self.height or (#state.items + 3) ---@type number
+  if height < 1 then
+    height = math.floor(vim.o.lines * height)
+  end
+  height = math.min(max_height, math.max(3, height)) ---@type integer
+
+  local width = self.width or state.max_width + 10 ---@type number
+  if width < 1 then
+    width = math.floor(vim.o.columns * width)
+  end
+  width = math.min(max_width, math.max(10, width)) ---@type integer
+
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
   local col = math.floor((vim.o.columns - width) / 2) ---@type integer
   local winnr_input = self.winnr_input ---@type integer|nil
