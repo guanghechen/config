@@ -125,7 +125,7 @@ local function get_select()
         visible = fml.collection.Observable.from_value(false),
       }),
       width = 0.4,
-      height = 0.8,
+      height = 0.5,
       render_line = fml.ui.select.util.default_render_filepath,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
