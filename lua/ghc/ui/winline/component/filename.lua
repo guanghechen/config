@@ -10,18 +10,17 @@ local M = {
       return "", 0
     end
 
-    local icon, fileicon_hl = fml.fn.calc_fileicon(buf.filename)
-    local text_icon = " " .. icon .. " " ---@type string
-    local text_title = buf.filename ---@type string
+    local icon, icon_hl = fml.fn.calc_fileicon(buf.filename)
+    local icon_text = " " .. icon .. " " ---@type string
 
     local title_hl = "f_wl_filename_text" ---@type string
-    local icon_hl = fml.highlight.blend_color(fileicon_hl, title_hl)
+    local title_text = buf.filename ---@type string
 
-    local hl_text_icon = fml.nvimbar.txt(text_icon, icon_hl) ---@type string
-    local hl_text_title = fml.nvimbar.txt(text_title, title_hl) ---@type string
+    local hl_icon_text = fml.nvimbar.txt(icon_text, icon_hl) ---@type string
+    local hl_title_text = fml.nvimbar.txt(title_text, title_hl) ---@type string
 
-    local hl_text = hl_text_icon .. hl_text_title
-    local width = vim.fn.strwidth(text_icon .. text_title) ---@type integer
+    local hl_text = hl_icon_text .. hl_title_text
+    local width = vim.fn.strwidth(icon_text .. title_text) ---@type integer
     return hl_text, width
   end,
 }

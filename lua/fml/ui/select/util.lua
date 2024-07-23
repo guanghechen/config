@@ -71,7 +71,6 @@ function M.default_render_filepath(params)
     item.icon_hl = icon_hl
   end
 
-  icon_hl = fml.highlight.blend_color(icon_hl, "f_us_main_bg")
   local icon_width = string.len(icon) ---@type integer
   local text = icon .. item.display ---@type string
   local highlights = { { cstart = 0, cend = icon_width, hlname = icon_hl } } ---@type fml.types.ui.printer.ILineHighlight[]

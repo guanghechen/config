@@ -12,4 +12,13 @@ function M.blend_color(fg_hlname, bg_hlname)
   return new_hlname
 end
 
+---@param hlname                        string
+---@return string
+function M.make_bg_transparency(hlname)
+  local fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlname)), "fg#")
+  local new_hlname = "_t_" .. hlname
+  vim.api.nvim_set_hl(0, new_hlname, { fg = fg, bg = "none" })
+  return new_hlname
+end
+
 return M

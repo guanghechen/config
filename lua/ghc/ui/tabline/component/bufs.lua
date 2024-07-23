@@ -22,7 +22,7 @@ local function render_buf(bufnr, is_current, is_first)
 
   local is_pinned = buf.pinned ---@type boolean
   local is_mod = vim.api.nvim_get_option_value("mod", { buf = bufnr }) ---@type boolean
-  local icon, fileicon_hl = fml.fn.calc_fileicon(buf.filename)
+  local icon, icon_hl = fml.fn.calc_fileicon(buf.filename)
 
   local left_pad = is_current and "▎" or (is_first and " " or "▏") ---@type string
   local text_icon = icon .. " " ---@type string
@@ -31,7 +31,6 @@ local function render_buf(bufnr, is_current, is_first)
 
   local left_pad_hl = is_current and "f_tl_buf_left_pad_cur" or "f_tl_buf_left_pad"
   local buf_hl = is_current and "f_tl_buf_item_cur" or "f_tl_buf_item" ---@type string
-  local icon_hl = fml.highlight.blend_color(fileicon_hl, buf_hl)
   local title_hl = is_current and "f_tl_buf_title_cur" or "f_tl_buf_title" ---@type string
   local mod_hl = is_current and "f_tl_buf_mod_cur" or "f_tl_buf_mod" ---@type string
 
