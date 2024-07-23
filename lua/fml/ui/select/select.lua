@@ -3,6 +3,21 @@ local Subscriber = require("fml.collection.subscriber")
 local SelectInput = require("fml.ui.select.input")
 local SelectMain = require("fml.ui.select.main")
 
+---@type string
+local INPUT_WIN_HIGHLIGHT = table.concat({
+  "FloatBorder:f_us_input_border",
+  "FloatTitle:f_us_input_title",
+  "Normal:f_us_input_normal",
+}, ",")
+
+---@type string
+local MAIN_WIN_HIGHLIGHT = table.concat({
+  "Cursor:f_us_main_cursor",
+  "CursorLine:f_us_main_selection",
+  "FloatBorder:f_us_main_border",
+  "Normal:f_us_main_normal",
+}, ",")
+
 ---@class fml.ui.select.Select : fml.types.ui.select.ISelect
 ---@field public state                  fml.types.ui.select.IState
 ---@field protected input               fml.types.ui.select.IInput
@@ -256,13 +271,13 @@ function M:create_wins_as_needed(match_count)
     local wincfg_main = {
       relative = "editor",
       anchor = "NW",
-      height = math.min(match_count + 1, height - 2),
+      height = math.min(match_count + 1, height - 3),
       width = width,
-      row = row + 2,
+      row = row + 3,
       col = col,
       focusable = true,
       title = "",
-      border = { "│", " ", "│", "│", "╯", "─", "╰", "│" },
+      border = "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
       style = "minimal",
     }
     if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
@@ -277,7 +292,7 @@ function M:create_wins_as_needed(match_count)
     vim.wo[winnr_main].number = false
     vim.wo[winnr_main].relativenumber = false
     vim.wo[winnr_main].signcolumn = "yes"
-    vim.wo[winnr_main].winhighlight = "Normal:NormalFloat,CursorLine:f_us_main_selection"
+    vim.wo[winnr_main].winhighlight = MAIN_WIN_HIGHLIGHT
     self:sync_main_cursor()
   else
     self.winnr_main = nil
@@ -295,10 +310,9 @@ function M:create_wins_as_needed(match_count)
     row = row,
     col = col,
     focusable = true,
-    title = state.title,
+    title = " " .. state.title .. " ",
     title_pos = "center",
-    border = match_count < 1 and { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }
-      or { "╭", "─", "╮", "│", "│", " ", "│", "│" },
+    border = "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
     style = "minimal",
   }
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
@@ -310,7 +324,8 @@ function M:create_wins_as_needed(match_count)
   end
   vim.wo[winnr_input].number = false
   vim.wo[winnr_input].relativenumber = false
-  vim.wo[winnr_input].signcolumn = "yes"
+  vim.wo[winnr_input].signcolumn = "yes:1"
+  vim.wo[winnr_input].winhighlight = INPUT_WIN_HIGHLIGHT
 
   ---! Set the default focused window to the input window.
   vim.api.nvim_tabpage_set_win(0, winnr_input)

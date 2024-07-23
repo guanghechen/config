@@ -113,10 +113,16 @@ local function gen_hlgroup(params)
     f_wl_lsp_text = { fg = c.darker_white, bg = t and "none" or c.bg_winline },
 
     ---select
+    f_us_input_border = { fg = c.black2, bg = c.black2 },
+    f_us_input_normal = { fg = c.white, bg = c.black2 },
     f_us_input_prompt = { fg = c.red, bg = c.black2 },
+    f_us_input_title = { fg = c.black, bg = c.red },
     f_us_main_bg = { bg = c.darker_black },
+    f_us_main_border = { fg = c.darker_black, bg = c.darker_black },
     f_us_main_current = { fg = c.white, bg = c.darker_black },
+    f_us_main_cursor = { fg = "none", bg = c.one_bg2 },
     f_us_main_match = { fg = c.blue },
+    f_us_main_normal = { bg = c.darker_black },
     f_us_main_selection = { bg = c.one_bg2 },
 
     ---replace
