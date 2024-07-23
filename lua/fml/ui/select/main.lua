@@ -83,17 +83,19 @@ function M:place_lnum_sign()
   return nil
 end
 
+---@param opts                          ?fml.types.ui.select.main.IRenderParams
 ---@return nil
-function M:render()
+function M:render(opts)
+  opts = opts or {}
+  local force = not not opts.force ---@type boolean
+  self.dirty = self.dirty or force
+
   local state = self.state ---@type fml.types.ui.select.IState
-  if self.rendering or not state:is_visible() then
-    return
-  end
   if self.bufnr == nil or not vim.api.nvim_buf_is_valid(self.bufnr) then
     self.bufnr = nil
     self.dirty = true
   end
-  if not self.dirty then
+  if self.rendering or not state:is_visible() or not self.dirty then
     return
   end
 

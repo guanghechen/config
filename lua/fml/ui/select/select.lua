@@ -1,4 +1,5 @@
 local std_array = require("fml.std.array")
+local augroup = require("fml.fn.augroup")
 local Subscriber = require("fml.collection.subscriber")
 local SelectInput = require("fml.ui.select.input")
 local SelectMain = require("fml.ui.select.main")
@@ -12,22 +13,25 @@ local INPUT_WIN_HIGHLIGHT = table.concat({
 
 ---@type string
 local MAIN_WIN_HIGHLIGHT = table.concat({
-  "Cursor:f_us_main_cursor",
-  "CursorLine:f_us_main_selection",
+  "Cursor:f_us_main_current",
+  "CursorColumn:f_us_main_current",
+  "CursorLine:f_us_main_current",
+  "CursorLineNr:f_us_main_current",
   "FloatBorder:f_us_main_border",
   "Normal:f_us_main_normal",
 }, ",")
 
 ---@class fml.ui.select.Select : fml.types.ui.select.ISelect
 ---@field public state                  fml.types.ui.select.IState
+---@field public winnr_input            integer|nil
+---@field public winnr_main             integer|nil
 ---@field protected input               fml.types.ui.select.IInput
 ---@field protected main                fml.types.ui.select.IMain
 ---@field protected max_width           number
 ---@field protected max_height          number
 ---@field protected width               number|nil
 ---@field protected height              number|nil
----@field protected winnr_input         integer|nil
----@field protected winnr_main          integer|nil
+---@field protected _augroup_win_focus  integer
 local M = {}
 M.__index = M
 
@@ -56,6 +60,7 @@ function M.new(props)
   local max_height = props.max_height or 0.8 ---@type number
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
+  local augroup_win_focus = augroup(state.uuid .. "_win_focus") ---@type integer
 
   ---@return nil
   local function on_close()
@@ -81,32 +86,12 @@ function M.new(props)
     self:sync_main_cursor()
   end
 
+  ---@class fml.ui.select.select.actions
   local actions = {
     on_close = function()
       on_close()
     end,
-    on_A = function()
-      self:edit_input("A")
-    end,
-    on_a = function()
-      self:edit_input("a")
-    end,
-    on_I = function()
-      self:edit_input("I")
-    end,
-    on_i = function()
-      self:edit_input("i")
-    end,
-    on_d = function()
-      self:edit_input("d")
-    end,
-    on_x = function()
-      self:edit_input("x")
-    end,
     noop = function() end,
-    on_input_down = function()
-      self:focus_main()
-    end,
     on_main_G = function()
       state:locate(#state:filter())
       self:sync_main_cursor()
@@ -142,14 +127,12 @@ function M.new(props)
   ---@type fml.types.ui.IKeymap[]
   local input_keymaps = std_array.merge_multiple_array({
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "select: confirm" },
-    { modes = { "n", "v" }, key = "A", callback = actions.on_A, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "a", callback = actions.on_a, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "I", callback = actions.on_I, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "i", callback = actions.on_i, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "d", callback = actions.on_d, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "x", callback = actions.on_x, desc = "select: insert" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "select: close" },
-    { modes = { "n", "v" }, key = "j", callback = actions.on_input_down, desc = "select: focus result" },
+    { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "select: goto last line" },
+    { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "select: locate" },
+    { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "select: goto first line" },
+    { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "select: focus next item" },
+    { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "select: focus prev item" },
   }, props.input_keymaps or {})
 
   ---@type fml.types.ui.IKeymap[]
@@ -161,14 +144,6 @@ function M.new(props)
       desc = "select: mouse click (main)",
     },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "select: confirm" },
-    { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "select: focus prev item" },
-    { modes = { "n", "v" }, key = "A", callback = actions.on_A, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "a", callback = actions.on_a, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "I", callback = actions.on_I, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "i", callback = actions.on_i, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "d", callback = actions.on_d, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "x", callback = actions.on_x, desc = "select: insert" },
-    { modes = { "n", "v" }, key = "v", callback = actions.noop, desc = "" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "select: close" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "select: goto last line" },
     { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "select: locate" },
@@ -192,14 +167,15 @@ function M.new(props)
   })
 
   self.state = state
+  self.winnr_input = nil
+  self.winnr_main = nil
   self.input = input
   self.main = main
   self.max_width = max_width
   self.max_height = max_height
   self.width = width
   self.height = height
-  self.winnr_input = nil
-  self.winnr_main = nil
+  self._augroup_win_focus = augroup_win_focus
 
   state.ticker:subscribe(Subscriber.new({
     on_next = function()
@@ -208,25 +184,20 @@ function M.new(props)
       end
     end,
   }))
+
+  -- Detect focus on the main window and move cursor back to input
+  vim.api.nvim_create_autocmd("WinEnter", {
+    group = augroup_win_focus,
+    callback = function()
+      local winnr_cur = vim.api.nvim_get_current_win()
+      if winnr_cur == self.winnr_main then
+        if self.winnr_input ~= nil and vim.api.nvim_win_is_valid(self.winnr_input) then
+          vim.api.nvim_tabpage_set_win(0, self.winnr_input)
+        end
+      end
+    end,
+  })
   return self
-end
-
----@param key                           string
----@return nil
-function M:edit_input(key)
-  local winnr_input = self.winnr_input ---@type integer|nil
-  if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-    vim.api.nvim_tabpage_set_win(0, winnr_input)
-    vim.api.nvim_feedkeys(key, "n", false)
-  end
-end
-
----@return nil
-function M:focus_main()
-  local winnr_main = self.winnr_main ---@type integer|nil
-  if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-    vim.api.nvim_tabpage_set_win(0, winnr_main)
-  end
 end
 
 ---@return nil
@@ -347,6 +318,8 @@ function M:close()
   if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
     vim.api.nvim_win_close(winnr_main, true)
   end
+
+  vim.api.nvim_clear_autocmds({ group = self._augroup_win_focus })
 end
 
 function M:open()

@@ -61,10 +61,13 @@
 ---@field public dump                   fun(self: fml.types.ui.select.IState): fml.types.ui.select.state.ISerializedData
 ---@field public load                   fun(self: fml.types.ui.select.IState, data: fml.types.ui.select.state.ISerializedData): nil
 
+---@class fml.types.ui.select.main.IRenderParams
+---@field public force                  ?boolean
+
 ---@class fml.types.ui.select.IMain
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.select.IMain): integer
 ---@field public place_lnum_sign        fun(self: fml.types.ui.select.IMain): integer|nil
----@field public render                 fun(self: fml.types.ui.select.IMain): nil
+---@field public render                 fun(self: fml.types.ui.select.IMain, opts?: fml.types.ui.select.main.IRenderParams): nil
 
 ---@class fml.types.ui.select.IInput
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.select.IInput): integer
