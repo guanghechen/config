@@ -1,7 +1,7 @@
 local winline = require("ghc.ui.winline")
 
 local augroups = {
-  refresh_winline = fml.fn.augroup("refresh_winline"),
+  refresh_winline = fml.util.augroup("refresh_winline"),
 }
 
 vim.api.nvim_create_autocmd({ "WinResized" }, {

@@ -28,16 +28,7 @@ local collection = {
 
 ---@class fml.fn
 local fn = {
-  augroup = require("fml.fn.augroup"),
-  bind_keys = require("fml.fn.bind_keys"),
-  calc_fileicon = require("fml.fn.calc_fileicon"),
-  falsy = require("fml.fn.falsy"),
   foldexpr = require("fml.fn.foldexpr"),
-  get_selected_text = require("fml.fn.get_selected_text"),
-  noop = require("fml.fn.noop"),
-  run_async = require("fml.fn.run_async"),
-  schedule_fn = require("fml.fn.schedule_fn"),
-  truthy = require("fml.fn.truthy"),
   watch_observables = require("fml.fn.watch_observables"),
 }
 
@@ -66,6 +57,7 @@ local std = {
   statuscolumn = require("fml.std.statuscolumn"),
   string = require("fml.std.string"),
   tmux = require("fml.std.tmux"),
+  util = require("fml.std.util"),
 }
 
 ---@class fml.ui

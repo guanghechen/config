@@ -213,7 +213,7 @@ local function search(opts)
   opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
   opts.use_regex = ghc.context.session.search_flag_regex:snapshot()
 
-  local selected_text = fml.fn.get_selected_text()
+  local selected_text = fml.util.get_selected_text()
   if selected_text and #selected_text > 1 then
     ghc.context.session.search_pattern:next(selected_text)
   end

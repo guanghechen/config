@@ -1,14 +1,14 @@
 local oxi = require("fml.std.oxi")
 local path = require("fml.std.path")
-local calc_fileicon = require("fml.fn.calc_fileicon")
+local util = require("fml.std.util")
 
----@class fml.ui.select.util
+---@class fml.ui.select.defaults
 local M = {}
 
 ---@param item1                         fml.types.ui.select.ILineMatch
 ---@param item2                         fml.types.ui.select.ILineMatch
 ---@return boolean
-function M.default_line_match_cmp(item1, item2)
+function M.line_match_cmp(item1, item2)
   if item1.score == item2.score then
     return item1.idx < item2.idx
   end
@@ -19,7 +19,7 @@ end
 ---@param items                         fml.types.ui.select.IItem[]
 ---@param old_matches                   fml.types.ui.select.ILineMatch[]
 ---@return fml.types.ui.select.ILineMatch[]
-function M.default_match(lower_input, items, old_matches)
+function M.match(lower_input, items, old_matches)
   local lines = {} ---@type string[]
   for _, m in ipairs(old_matches) do
     local idx = m.idx ---@type integer
@@ -38,7 +38,7 @@ end
 ---@param params                        fml.types.ui.select.main.IRenderLineParams
 ---@return string
 ---@return fml.types.ui.printer.ILineHighlight[]
-function M.default_render_line(params)
+function M.render_line(params)
   local match = params.match ---@type fml.types.ui.select.ILineMatch
   local item = params.item ---@type fml.types.ui.select.IItem
   local highlights = {} ---@type fml.types.ui.printer.ILineHighlight[]
@@ -51,7 +51,7 @@ end
 ---@param params                        fml.types.ui.select.main.IRenderLineParams
 ---@return string
 ---@return fml.types.ui.printer.ILineHighlight[]
-function M.default_render_filepath(params)
+function M.render_filepath(params)
   local match = params.match ---@type fml.types.ui.select.ILineMatch
   local item = params.item ---@type fml.types.ui.select.IItem
 
@@ -64,7 +64,7 @@ function M.default_render_filepath(params)
 
   if filename == nil or icon == nil or icon_hl == nil then
     filename = path.basename(item.display)
-    icon, icon_hl = calc_fileicon(filename)
+    icon, icon_hl = util.calc_fileicon(filename)
     icon = icon .. " "
 
     item.filename = filename

@@ -42,7 +42,7 @@ function M.internal_render_result(state, force)
     for _, raw_filepath in ipairs(result.item_orders) do
       local file_item = result.items[raw_filepath]
       if file_item ~= nil then
-        local fileicon, fileicon_highlight = fml.fn.calc_fileicon(raw_filepath)
+        local fileicon, fileicon_highlight = fml.util.calc_fileicon(raw_filepath)
         local filepath = fml.path.relative(search_cwd, raw_filepath)
 
         M.internal_print(fileicon .. " " .. filepath, {

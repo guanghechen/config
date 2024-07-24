@@ -3,9 +3,9 @@ local Subscriber = require("fml.collection.subscriber")
 local Ticker = require("fml.collection.ticker")
 local Frecency = require("fml.collection.frecency")
 local navigate = require("fml.std.navigate")
-local run_async = require("fml.fn.run_async")
 local std_array = require("fml.std.array")
-local util = require("fml.ui.select.util")
+local util = require("fml.std.util")
+local defaults = require("fml.ui.select.defaults")
 
 ---@class fml.ui.select.State : fml.types.ui.select.IState
 ---@field protected _cmp                fml.types.ui.select.ILineMatchCmp
@@ -43,8 +43,8 @@ function M.new(props)
   local input = props.input ---@type fml.types.collection.IObservable
   local input_history = History.new({ name = uuid, capacity = 100 }) ---@type fml.types.collection.IHistory
   local frecency = Frecency.new({ items = {} }) ---@type fml.types.collection.IFrecency
-  local cmp = props.cmp or util.default_line_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
-  local match = props.match or util.default_match ---@type fml.types.ui.select.IMatch
+  local cmp = props.cmp or defaults.line_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
+  local match = props.match or defaults.match ---@type fml.types.ui.select.IMatch
 
   local max_width = 0 ---@type integer
   local full_matches = {} ---@type fml.types.ui.select.ILineMatch[]
@@ -109,56 +109,56 @@ function M:filter()
     local frecency = self._frecency ---@type fml.types.collection.IFrecency
 
     self._dirty = false
-    run_async(function()
-      local ok, matches = pcall(
-        ---@return fml.types.ui.select.ILineMatch[]
-        function()
-          if #input < 1 then
-            return self._full_matches
-          end
-
-          local last_input_lower = self._last_input_lower ---@type string|nil
-          if
-            last_input_lower ~= nil
-            and #input_lower > #last_input_lower
-            and input_lower:sub(1, #last_input_lower) == last_input_lower
-          then
-            ---@type fml.types.ui.select.ILineMatch[]
-            return self._match(input_lower, items, self._matches)
-          else
-            ---@type fml.types.ui.select.ILineMatch[]
-            return self._match(input_lower, items, self._full_matches)
-          end
+    util.run_async(
+      "fml.ui.select.state:filter",
+      ---@return fml.types.ui.select.ILineMatch[]
+      function()
+        if #input < 1 then
+          return self._full_matches
         end
-      )
 
-      if ok and matches then
-        for _, match in ipairs(matches) do
-          local item = items[match.idx] ---@type fml.types.ui.select.IItem
-          match.score = match.score + frecency:score(item.uuid)
+        local last_input_lower = self._last_input_lower ---@type string|nil
+        if
+          last_input_lower ~= nil
+          and #input_lower > #last_input_lower
+          and input_lower:sub(1, #last_input_lower) == last_input_lower
+        then
+          ---@type fml.types.ui.select.ILineMatch[]
+          return self._match(input_lower, items, self._matches)
+        else
+          ---@type fml.types.ui.select.ILineMatch[]
+          return self._match(input_lower, items, self._full_matches)
         end
-        table.sort(matches, self._cmp)
+      end,
+      function(ok, matches)
+        if ok and matches then
+          for _, match in ipairs(matches) do
+            local item = items[match.idx] ---@type fml.types.ui.select.IItem
+            match.score = match.score + frecency:score(item.uuid)
+          end
+          table.sort(matches, self._cmp)
 
-        ---@type integer|nil
-        local lnum = std_array.first(matches, function(match)
-          return match.idx == self._current_item_idx
-        end)
+          ---@type integer|nil
+          local lnum = std_array.first(matches, function(match)
+            return match.idx == self._current_item_idx
+          end)
 
-        self._current_item_lnum = lnum or (#matches > 0 and 1 or 0)
-        self._current_item_idx = lnum ~= nil and matches[lnum].idx or 0
-        self._last_input = input
-        self._last_input_lower = input_lower
-        self._matches = matches
+          self._current_item_lnum = lnum or (#matches > 0 and 1 or 0)
+          self._current_item_idx = lnum ~= nil and matches[lnum].idx or 0
+          self._last_input = input
+          self._last_input_lower = input_lower
+          self._matches = matches
+        end
+
+        self._filtering = false
+        self._input_history:push(input)
+        self.ticker:tick()
+
+        if self._dirty then
+          self:filter()
+        end
       end
-
-      self._filtering = false
-      self._input_history:push(input)
-      self.ticker:tick()
-
-      if self._dirty then
-        self:filter()
-      end
-    end)
+    )
   end, 50)
 
   return self._matches

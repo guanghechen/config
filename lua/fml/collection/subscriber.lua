@@ -1,11 +1,10 @@
+local util = require("fml.std.util")
+
 ---@class fml.collection.Subscriber : fml.types.collection.ISubscriber
 ---@field private _on_next              fun(value: any, value_prev: any|nil):nil
 ---@field private _on_dispose           fun():nil
 local M = {}
 M.__index = M
-
----@return nil
-local function noop(...) end
 
 ---@class fml.collection.Subscriber.IProps
 ---@field on_next                       fun(value: any, value_prev: any|nil):nil
@@ -16,14 +15,9 @@ local function noop(...) end
 function M.new(props)
   local self = setmetatable({}, M)
 
-  ---@type fun(value: any, value_prev: any|nil): nil
-  self._on_next = props.on_next
-
-  ---@type fun(): nil
-  self._on_dispose = props.on_dispose or noop
-
-  ---@type boolean
-  self._disposed = false
+  self._disposed = false ---@type boolean
+  self._on_dispose = props.on_dispose or util.noop ---@type fun(): nil
+  self._on_next = props.on_next ---@type fun(value: any, value_prev: any|nil): nil
 
   return self
 end

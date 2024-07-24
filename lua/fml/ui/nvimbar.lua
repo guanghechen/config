@@ -1,8 +1,7 @@
 local nvimbar = require("fml.std.nvimbar")
 local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
-local truthy = require("fml.fn.truthy")
-local calc_fileicon = require("fml.fn.calc_fileicon")
+local util = require("fml.std.util")
 
 ---@class fml.ui.Nvimbar : fml.types.ui.INvimbar
 ---@field public name                   string
@@ -74,7 +73,7 @@ local function build_context(preset_context)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local cwd = path.cwd() ---@type string
   local filepath = vim.fn.expand("%:p") ---@type string
-  local fileicon = calc_fileicon(filepath) ---@type string
+  local fileicon = util.calc_fileicon(filepath) ---@type string
   local filetype = vim.bo.filetype ---@type string
 
   ---@type fml.types.ui.nvimbar.IContext
@@ -178,8 +177,8 @@ function M:register(name, raw_component, enabled)
     last_result_text = "",
     last_result_width = 0,
     render = raw_component.render,
-    will_change = raw_component.will_change or truthy,
-    condition = raw_component.condition or truthy,
+    will_change = raw_component.will_change or util.truthy,
+    condition = raw_component.condition or util.truthy,
   }
   self._components[name] = component
   return self

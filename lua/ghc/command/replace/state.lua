@@ -4,7 +4,7 @@ local __searching = false ---@type boolean
 ---@diagnostic disable-next-line: unused-local
 local __replace_dirty = true ---@type boolean
 local __search_dirty = true ---@type boolean
-local __search_result = nil ---@type fml.std.oxi.search.IResult|nil
+local __search_result = { elapsed_time = "0s", items = {}, item_orders = {} } ---@type fml.std.oxi.search.IResult
 local __search_dirty_ticker = fml.collection.Ticker.new()
 local __replace_dirty_ticker = fml.collection.Ticker.new()
 
@@ -265,44 +265,53 @@ end
 ---@param force                         ?boolean
 ---@return fml.std.oxi.search.IResult
 function M.search(force)
-  if force or __search_dirty then
-    if __searching then
-      __search_dirty = true
-    else
-      __searching = true
-      fml.fn.run_async(function()
-        ---@type fml.std.oxi.search.IParams
-        local options = {
-          cwd = M.get_cwd(),
-          flag_case_sensitive = M.get_flag_case_sensitive(),
-          flag_regex = M.get_flag_regex(),
-          search_pattern = M.get_search_pattern(),
-          search_paths = M.get_search_paths(),
-          include_patterns = M.get_include_patterns(),
-          exclude_patterns = M.get_exclude_patterns(),
-        }
-
-        __search_dirty = false
-        local ok, result = pcall(fml.oxi.search, options)
-        if ok then
-          __search_result = result
-          __search_dirty_ticker:tick()
-        else
-          fml.reporter.error({
-            from = "ghc.command.replace.state",
-            subject = "search",
-            message = "Failed to search",
-            details = { options = options },
-          })
-        end
-
-        M.search(false)
-        __searching = false
-      end)
-    end
+  force = not not force ---@type boolean
+  __search_dirty = __search_dirty or force
+  if __searching then
+    return __search_result
   end
 
-  ---@cast __search_result  fml.std.oxi.search.IResult
+  __searching = true
+  local options ---@type fml.std.oxi.search.IParams
+
+  fml.util.run_async(
+    "ghc.command.replace.state.search",
+    ---@return fml.std.oxi.search.IResult
+    function()
+      ---@type fml.std.oxi.search.IParams
+      options = {
+        cwd = M.get_cwd(),
+        flag_case_sensitive = M.get_flag_case_sensitive(),
+        flag_regex = M.get_flag_regex(),
+        search_pattern = M.get_search_pattern(),
+        search_paths = M.get_search_paths(),
+        include_patterns = M.get_include_patterns(),
+        exclude_patterns = M.get_exclude_patterns(),
+      }
+
+      __search_dirty = false
+      return fml.oxi.search(options)
+    end,
+    function(ok, result)
+      if ok then
+        __search_result = result
+        __search_dirty_ticker:tick()
+      else
+        fml.reporter.error({
+          from = "ghc.command.replace.state",
+          subject = "search",
+          message = "Failed to search",
+          details = { options = options },
+        })
+      end
+
+      __searching = false
+      if __search_dirty then
+        M.search(false)
+      end
+    end
+  )
+
   return __search_result
 end
 
@@ -319,37 +328,43 @@ function M.refresh_on_file(filepath)
   end
   ---@cast __search_result  fml.std.oxi.search.IResult
 
-  fml.fn.run_async(function()
-    ---@type fml.std.oxi.search.IParams
-    local options = {
-      cwd = M.get_cwd(),
-      flag_case_sensitive = M.get_flag_case_sensitive(),
-      flag_regex = M.get_flag_regex(),
-      search_pattern = M.get_search_pattern(),
-      search_paths = M.get_search_paths(),
-      include_patterns = M.get_include_patterns(),
-      exclude_patterns = M.get_exclude_patterns(),
-      specified_filepath = filepath,
-    }
-
-    local ok, result = pcall(fml.oxi.search, options)
-    if ok then
-      if __search_result.items ~= nil then
-        __search_result.items[filepath] = nil
-        if result.items ~= nil then
-          vim.tbl_extend("force", __search_result.items, result.items)
+  local options ---@type fml.std.oxi.search.IParams
+  fml.util.run_async(
+    "ghc.command.replace.state.refresh_on_file",
+    ---@return fml.std.oxi.search.IResult
+    function()
+      ---@type fml.std.oxi.search.IParams
+      options = {
+        cwd = M.get_cwd(),
+        flag_case_sensitive = M.get_flag_case_sensitive(),
+        flag_regex = M.get_flag_regex(),
+        search_pattern = M.get_search_pattern(),
+        search_paths = M.get_search_paths(),
+        include_patterns = M.get_include_patterns(),
+        exclude_patterns = M.get_exclude_patterns(),
+        specified_filepath = filepath,
+      }
+      return fml.oxi.search(options)
+    end,
+    function(ok, result)
+      if ok then
+        if __search_result.items ~= nil then
+          __search_result.items[filepath] = nil
+          if result.items ~= nil then
+            vim.tbl_extend("force", __search_result.items, result.items)
+          end
+          __search_dirty_ticker:tick()
         end
-        __search_dirty_ticker:tick()
+      else
+        fml.reporter.error({
+          from = "ghc.command.replace.state",
+          subject = "refresh_on_file",
+          message = "Failed to search",
+          details = { options = options },
+        })
       end
-    else
-      fml.reporter.error({
-        from = "ghc.command.replace.state",
-        subject = "refresh_on_file",
-        message = "Failed to search",
-        details = { options = options },
-      })
     end
-  end)
+  )
 end
 
 return M

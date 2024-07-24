@@ -1,6 +1,5 @@
 local constant = require("fml.constant")
-local augroup = require("fml.fn.augroup")
-local bind_keys = require("fml.fn.bind_keys")
+local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.select.Input : fml.types.ui.select.IInput
@@ -43,7 +42,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].swapfile = false
 
   local state = self.state ---@type fml.types.ui.select.IState
-  local group = augroup(state.uuid .. ":select_input")
+  local group = util.augroup(state.uuid .. ":select_input")
   local queued = false ---@type boolean
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     group = group,
@@ -75,7 +74,7 @@ function M:create_buf_as_needed()
 
   local input = state.input:snapshot() ---@type string
   vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, { input })
-  bind_keys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  util.bind_keys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   self.bufnr = bufnr
   vim.fn.sign_place(bufnr, "", signcolumn.names.select_input_cursor, bufnr, { lnum = 1 })

@@ -4,6 +4,7 @@ local Subscriber = require("fml.collection.subscriber")
 local fs = require("fml.std.fs")
 local is = require("fml.std.is")
 local path = require("fml.std.path")
+local util = require("fml.std.util")
 local reporter = require("fml.std.reporter")
 
 ---@class fml.collection.Viewmodel : fml.types.collection.IViewmodel
@@ -208,7 +209,7 @@ function Viewmodel:auto_reload(params)
   params = params or {}
   ---@cast params fml.types.collection.viewmodel.IAutoReloadParams
 
-  local on_changed = params.on_changed or fml.fn.noop ---@type fun(): nil
+  local on_changed = params.on_changed or util.noop ---@type fun(): nil
 
   if self._unwatch ~= nil then
     return

@@ -1,5 +1,5 @@
 local std_array = require("fml.std.array")
-local augroup = require("fml.fn.augroup")
+local util = require("fml.std.util")
 local Subscriber = require("fml.collection.subscriber")
 local SelectInput = require("fml.ui.select.input")
 local SelectMain = require("fml.ui.select.main")
@@ -60,7 +60,7 @@ function M.new(props)
   local max_height = props.max_height or 0.8 ---@type number
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
-  local augroup_win_focus = augroup(state.uuid .. "_win_focus") ---@type integer
+  local augroup_win_focus = util.augroup(state.uuid .. "_win_focus") ---@type integer
 
   ---@return nil
   local function on_close()
@@ -91,7 +91,7 @@ function M.new(props)
     on_close = function()
       on_close()
     end,
-    noop = function() end,
+    noop = util.noop,
     on_main_G = function()
       state:locate(#state:filter())
       self:sync_main_cursor()

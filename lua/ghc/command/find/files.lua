@@ -126,7 +126,7 @@ local function get_select()
       }),
       width = 0.4,
       height = 0.5,
-      render_line = fml.ui.select.util.default_render_filepath,
+      render_line = fml.ui.select.defaults.render_filepath,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
       on_close = function()

@@ -10,7 +10,7 @@ local M = {
       return "", 0
     end
 
-    local icon, icon_hl = fml.fn.calc_fileicon(buf.filename)
+    local icon, icon_hl = fml.util.calc_fileicon(buf.filename)
     local icon_text = " " .. icon .. " " ---@type string
 
     local title_hl = "f_wl_filename_text" ---@type string

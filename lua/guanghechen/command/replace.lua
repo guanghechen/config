@@ -1,7 +1,7 @@
 ---@param opts { cwd: string, replace_path?: string }
 local function replace_word(opts)
   local cwd = opts.cwd ---@type string
-  local selected_text = fml.fn.get_selected_text() ---@type string
+  local selected_text = fml.util.get_selected_text() ---@type string
   ghc.command.replace.search({ cwd = cwd, word = selected_text })
 end
 

@@ -1,13 +1,13 @@
-local augroup = require("fml.fn.augroup")
 local path = require("fml.std.path")
+local util = require("fml.std.util")
 
 local augroups = {
-  checktime = augroup("checktime"),
-  create_dirs = augroup("create_dirs"),
-  highlight_yank = augroup("highlight_yank"),
-  lsp_show_progress = augroup("lsp_show_progress"),
-  resize_splits = augroup("resize_splits"),
-  startup = augroup("startup"),
+  checktime = util.augroup("checktime"),
+  create_dirs = util.augroup("create_dirs"),
+  highlight_yank = util.augroup("highlight_yank"),
+  lsp_show_progress = util.augroup("lsp_show_progress"),
+  resize_splits = util.augroup("resize_splits"),
+  startup = util.augroup("startup"),
 }
 
 -- Auto cd the directory:

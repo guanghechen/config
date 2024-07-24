@@ -2,16 +2,16 @@
 local M = {}
 
 local augroups = {
-  close_with_q = fml.fn.augroup("close_with_q"),
-  enable_spell = fml.fn.augroup("enable_spell"),
-  enable_wrap = fml.fn.augroup("enable_wrap"),
-  goto_last_loction = fml.fn.augroup("goto_last_loction"),
-  remember_telescope_prompt = fml.fn.augroup("remember_telescope_prompt"),
-  session_autosave = fml.fn.augroup("session_autosave"),
-  set_fileformat = fml.fn.augroup("set_fileformat"),
-  set_filetype = fml.fn.augroup("set_filetype"),
-  set_tabstop = fml.fn.augroup("set_tabstop"),
-  unlist_buffer = fml.fn.augroup("unlist_buffer"),
+  close_with_q = fml.util.augroup("close_with_q"),
+  enable_spell = fml.util.augroup("enable_spell"),
+  enable_wrap = fml.util.augroup("enable_wrap"),
+  goto_last_loction = fml.util.augroup("goto_last_loction"),
+  remember_telescope_prompt = fml.util.augroup("remember_telescope_prompt"),
+  session_autosave = fml.util.augroup("session_autosave"),
+  set_fileformat = fml.util.augroup("set_fileformat"),
+  set_filetype = fml.util.augroup("set_filetype"),
+  set_tabstop = fml.util.augroup("set_tabstop"),
+  unlist_buffer = fml.util.augroup("unlist_buffer"),
 }
 
 -- close some filetypes with <q>

@@ -1,9 +1,8 @@
 local constant = require("fml.constant")
 local Subscriber = require("fml.collection.subscriber")
-local bind_keys = require("fml.fn.bind_keys")
-local run_async = require("fml.fn.run_async")
+local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
-local util = require("fml.ui.select.util")
+local defaults = require("fml.ui.select.defaults")
 
 ---@class fml.ui.select.Main : fml.types.ui.select.IMain
 ---@field protected bufnr               integer|nil
@@ -30,7 +29,7 @@ function M.new(props)
   local state = props.state ---@type fml.types.ui.select.IState
   local keymaps = props.keymaps ---@type fml.types.ui.IKeymap[]
   local on_rendered = props.on_rendered ---@type fun(): nil
-  local render_line = props.render_line or util.default_render_line ---@type fun(params: fml.types.ui.select.main.IRenderLineParams): string
+  local render_line = props.render_line or defaults.render_line ---@type fun(params: fml.types.ui.select.main.IRenderLineParams): string
 
   self.bufnr = nil
   self.state = state
@@ -63,7 +62,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
-  bind_keys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  util.bind_keys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
   self.bufnr = bufnr
   return bufnr
 end
@@ -103,7 +102,7 @@ function M:render(opts)
   vim.defer_fn(function()
     local matches = state:filter() ---@type fml.types.ui.select.ILineMatch[]
     self.dirty = false
-    run_async(function()
+    util.run_async("fml.ui.select.main:render", function()
       local bufnr = self:create_buf_as_needed() ---@type integer
 
       vim.bo[bufnr].modifiable = true
