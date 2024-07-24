@@ -1,5 +1,5 @@
 local state = require("fml.api.state")
-local navigate_limit = require("fml.fn.navigate_limit")
+local navigate = require("fml.std.navigate")
 local std_array = require("fml.std.array")
 local std_set = require("fml.std.set")
 
@@ -67,7 +67,7 @@ function M.close_left(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
-  local bufid_next = navigate_limit(bufid_cur, -step, #tab.bufnrs)
+  local bufid_next = navigate.limit(bufid_cur, -step, #tab.bufnrs)
   local bufnrs_to_remove = {} ---@type integer[]
   for id = bufid_next, bufid_cur - 1, 1 do
     local nr = tab.bufnrs[id]
@@ -91,7 +91,7 @@ function M.close_right(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
-  local bufid_next = navigate_limit(bufid_cur, step, #tab.bufnrs)
+  local bufid_next = navigate.limit(bufid_cur, step, #tab.bufnrs)
   local bufnrs_to_remove = {} ---@type integer[]
   for id = bufid_cur + 1, bufid_next, 1 do
     local nr = tab.bufnrs[id]

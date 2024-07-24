@@ -1,10 +1,9 @@
 local BatchDisposable = require("fml.collection.batch_disposable")
 local Disposable = require("fml.collection.disposable")
 local Subscriber = require("fml.collection.subscriber")
-local is_disposable = require("fml.fn.is_disposable")
-local is_observable = require("fml.fn.is_observable")
-local dispose_all = require("fml.fn.dispose_all")
 local fs = require("fml.std.fs")
+local is = require("fml.std.is")
+local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
 
 ---@class fml.collection.Viewmodel : fml.types.collection.IViewmodel
@@ -53,7 +52,7 @@ function Viewmodel:dispose()
   ---@type fml.types.collection.IDisposable[]
   local disposables = {}
   for _, disposable in pairs(self) do
-    if is_disposable(disposable) then
+    if is.disposable(disposable) then
       ---@cast disposable fml.types.collection.IDisposable
       table.insert(disposables, disposable)
     end
@@ -64,7 +63,7 @@ function Viewmodel:dispose()
     self._unwatch = nil
   end
 
-  dispose_all(disposables)
+  BatchDisposable.dispose_all(disposables)
 end
 
 function Viewmodel:get_name()
@@ -79,7 +78,7 @@ end
 function Viewmodel:snapshot()
   local data = {}
   for key, observable in pairs(self._persistables) do
-    if is_observable(observable) then
+    if is.observable(observable) then
       ---@cast observable fml.types.collection.IObservable
       data[key] = observable:snapshot()
     end
@@ -91,7 +90,7 @@ end
 function Viewmodel:snapshot_all()
   local data = {}
   for key, observable in pairs(self._all_observables) do
-    if is_observable(observable) then
+    if is.observable(observable) then
       ---@cast observable fml.types.collection.IObservable
       data[key] = observable:snapshot()
     end
@@ -167,7 +166,7 @@ function Viewmodel:load(opts)
     return false
   end
 
-  if not fml.path.is_exist(filepath) then
+  if not path.is_exist(filepath) then
     if not silent_on_notfound then
       reporter.error({
         from = "fml.collection.viewmodel",
@@ -195,7 +194,7 @@ function Viewmodel:load(opts)
   local has_changed = false ---@type boolean
   for key, value in pairs(data) do
     local observable = self[key]
-    if value ~= nil and is_observable(observable) then
+    if value ~= nil and is.observable(observable) then
       self._initial_values[key] = value
       has_changed = observable:next(value) or has_changed
     end
@@ -228,7 +227,7 @@ function Viewmodel:auto_reload(params)
 
   local unwatch = fs.watch_file({
     filepath = filepath,
-    on_event = function(filepath, event)
+    on_event = function(p, event)
       if type(event) == "table" and event.change == true then
         local has_changed = self:load()
         if has_changed then
@@ -238,19 +237,19 @@ function Viewmodel:auto_reload(params)
               from = "fml.collection.viewmodel",
               subject = "auto_reload",
               message = "auto reloaded.",
-              details = { name = self._name, filepath = filepath },
+              details = { name = self._name, filepath = p },
               --details = { name = self._name, filepath = filepath, event = event },
             })
           end
         end
       end
     end,
-    on_error = function(filepath, err)
+    on_error = function(p, err)
       reporter.error({
         from = "fml.collection.viewmodel",
         subject = "auto_reload",
         message = "Failed!",
-        details = { err = err, name = self._name, filepath = filepath },
+        details = { err = err, name = self._name, filepath = p },
       })
     end,
   })

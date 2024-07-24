@@ -1,6 +1,5 @@
 local state = require("fml.api.state")
-local navigate_limit = require("fml.fn.navigate_limit")
-local navigate_circular = require("fml.fn.navigate_circular")
+local navigate = require("fml.std.navigate")
 
 ---@class fml.api.tab
 ---@field public focus_1                fun(): nil
@@ -29,7 +28,7 @@ end
 ---@return nil
 function M.focus(tabid)
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
-  local tabid_next = navigate_limit(0, tabid, tab_count)
+  local tabid_next = navigate.limit(0, tabid, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   M.go(tabnr_next)
@@ -41,7 +40,7 @@ function M.focus_left(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
-  local tabid_next = navigate_circular(tabid_cur, -step, tab_count)
+  local tabid_next = navigate.circular(tabid_cur, -step, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   M.go(tabnr_next)
@@ -53,7 +52,7 @@ function M.focus_right(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
-  local tabid_next = navigate_circular(tabid_cur, step, tab_count)
+  local tabid_next = navigate.circular(tabid_cur, step, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   M.go(tabnr_next)

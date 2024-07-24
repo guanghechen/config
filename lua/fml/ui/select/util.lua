@@ -1,5 +1,6 @@
 local oxi = require("fml.std.oxi")
 local path = require("fml.std.path")
+local calc_fileicon = require("fml.fn.calc_fileicon")
 
 ---@class fml.ui.select.util
 local M = {}
@@ -63,7 +64,7 @@ function M.default_render_filepath(params)
 
   if filename == nil or icon == nil or icon_hl == nil then
     filename = path.basename(item.display)
-    icon, icon_hl = fml.fn.calc_fileicon(filename)
+    icon, icon_hl = calc_fileicon(filename)
     icon = icon .. " "
 
     item.filename = filename

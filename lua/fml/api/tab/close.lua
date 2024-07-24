@@ -1,5 +1,5 @@
 local state = require("fml.api.state")
-local navigate_limit = require("fml.fn.navigate_limit")
+local navigate = require("fml.std.navigate")
 local std_object = require("fml.std.object")
 local reporter = require("fml.std.reporter")
 
@@ -28,7 +28,7 @@ function M.close_left(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
-  local tabid_next = navigate_limit(tabid_cur, -step, #tabpages)
+  local tabid_next = navigate.limit(tabid_cur, -step, #tabpages)
 
   for i = tabid_next, tabid_cur - 1, 1 do
     local tabnr = tabpages[i] ---@type integer
@@ -45,7 +45,7 @@ function M.close_right(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
-  local tabid_next = navigate_limit(tabid_cur, step, #tabpages)
+  local tabid_next = navigate.limit(tabid_cur, step, #tabpages)
 
   for i = tabid_cur + 1, tabid_next, 1 do
     local tabnr = tabpages[i] ---@type integer

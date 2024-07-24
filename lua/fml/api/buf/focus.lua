@@ -1,5 +1,5 @@
 local state = require("fml.api.state")
-local navigate_circular = require("fml.fn.navigate_circular")
+local navigate = require("fml.std.navigate")
 local std_array = require("fml.std.array")
 local reporter = require("fml.std.reporter")
 
@@ -62,7 +62,7 @@ function M.focus(bufid)
     return
   end
 
-  local bufid_next = navigate_circular(0, bufid, #tab.bufnrs)
+  local bufid_next = navigate.circular(0, bufid, #tab.bufnrs)
   local bufnr_next = tab.bufnrs[bufid_next]
   M.go(bufnr_next)
 end
@@ -80,7 +80,7 @@ function M.focus_left(step)
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
 
   if bufid_cur ~= nil then
-    local bufid_next = navigate_circular(bufid_cur, -step, #tab.bufnrs)
+    local bufid_next = navigate.circular(bufid_cur, -step, #tab.bufnrs)
     local bufnr_next = tab.bufnrs[bufid_next]
     M.go(bufnr_next)
   end
@@ -98,7 +98,7 @@ function M.focus_right(step)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local bufid_cur = std_array.first(tab.bufnrs, bufnr) ---@type integer|nil
   if bufid_cur ~= nil then
-    local bufid_next = navigate_circular(bufid_cur, step, #tab.bufnrs)
+    local bufid_next = navigate.circular(bufid_cur, step, #tab.bufnrs)
     local bufnr_next = tab.bufnrs[bufid_next]
     M.go(bufnr_next)
   end

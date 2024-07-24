@@ -1,7 +1,8 @@
 local History = require("fml.collection.history")
 local Subscriber = require("fml.collection.subscriber")
 local Ticker = require("fml.collection.ticker")
-local navigate_circular = require("fml.fn.navigate_circular")
+local Frecency = require("fml.collection.frecency")
+local navigate = require("fml.std.navigate")
 local run_async = require("fml.fn.run_async")
 local std_array = require("fml.std.array")
 local util = require("fml.ui.select.util")
@@ -41,7 +42,7 @@ function M.new(props)
   local items = props.items ---@type fml.types.ui.select.IItem[]
   local input = props.input ---@type fml.types.collection.IObservable
   local input_history = History.new({ name = uuid, capacity = 100 }) ---@type fml.types.collection.IHistory
-  local frecency = fml.collection.Frecency.new({ items = {} }) ---@type fml.types.collection.IFrecency
+  local frecency = Frecency.new({ items = {} }) ---@type fml.types.collection.IFrecency
   local cmp = props.cmp or util.default_line_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
   local match = props.match or util.default_match ---@type fml.types.ui.select.IMatch
 
@@ -209,7 +210,7 @@ end
 function M:movedown()
   local step = vim.v.count1 or 1 ---@type integer
   local matches = self._matches ---@type fml.types.ui.select.ILineMatch[]
-  local lnum = navigate_circular(self._current_item_lnum, step, #matches) ---@type integer
+  local lnum = navigate.circular(self._current_item_lnum, step, #matches) ---@type integer
   self._current_item_lnum = lnum
   self._current_item_idx = lnum > 0 and matches[lnum].idx or self._current_item_idx
   return lnum
@@ -219,7 +220,7 @@ end
 function M:moveup()
   local step = vim.v.count1 or 1 ---@type integer
   local matches = self._matches ---@type fml.types.ui.select.ILineMatch[]
-  local lnum = navigate_circular(self._current_item_lnum, -step, #matches) ---@type integer
+  local lnum = navigate.circular(self._current_item_lnum, -step, #matches) ---@type integer
   self._current_item_lnum = lnum
   self._current_item_idx = lnum > 0 and matches[lnum].idx or self._current_item_idx
   return lnum

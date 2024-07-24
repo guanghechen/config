@@ -1,5 +1,5 @@
+local BatchHandler = require("fml.collection.batch_handler")
 local reporter = require("fml.std.reporter")
-local dispose_all = require("fml.fn.dispose_all")
 
 ---@class fml.collection.BatchDisposable : fml.types.collection.IBatchDisposable
 local M = {}
@@ -15,6 +15,22 @@ function M.new()
   ---@type fml.types.collection.IDisposable[]
   self._disposables = {}
   return self
+end
+
+---@param disposables                   fml.types.collection.IDisposable[]
+---@return nil
+function M.dispose_all(disposables)
+  if #disposables <= 0 then
+    return
+  end
+
+  local handler = BatchHandler.new()
+  for _, disposable in ipairs(disposables) do
+    handler:run(function()
+      disposable:dispose()
+    end)
+  end
+  handler:summary("[fml.collection.batch_disposable.dispose_all] Encountered error(s) while disposing.")
 end
 
 ---@return boolean
@@ -34,7 +50,7 @@ function M:dispose()
   end
 
   local ok, result = pcall(function()
-    dispose_all(self._disposables)
+    M.dispose_all(self._disposables)
   end)
   self._disposables = {}
 
