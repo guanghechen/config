@@ -6,13 +6,13 @@ local signcolumn = require("fml.ui.signcolumn")
 ---@field protected bufnr               integer|nil
 ---@field protected state               fml.types.ui.select.IState
 ---@field protected rendering           boolean
----@field protected keymaps             fml.types.ui.IKeymap[]
+---@field protected keymaps             fml.types.IKeymap[]
 local M = {}
 M.__index = M
 
 ---@class fml.ui.select.input.IProps
 ---@field public state                  fml.types.ui.select.IState
----@field public keymaps                fml.types.ui.IKeymap[]
+---@field public keymaps                fml.types.IKeymap[]
 
 ---@param props                         fml.ui.select.input.IProps
 ---@return fml.ui.select.Input
@@ -20,7 +20,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local state = props.state ---@type fml.types.ui.select.IState
-  local keymaps = props.keymaps ---@type fml.types.ui.IKeymap[]
+  local keymaps = props.keymaps ---@type fml.types.IKeymap[]
 
   self.bufnr = nil
   self.state = state

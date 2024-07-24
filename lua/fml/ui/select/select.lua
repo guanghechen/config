@@ -41,8 +41,8 @@ M.__index = M
 ---@field public max_height             ?number
 ---@field public width                  ?number
 ---@field public height                 ?number
----@field public input_keymaps          ?fml.types.ui.IKeymap[]
----@field public main_keymaps           ?fml.types.ui.IKeymap[]
+---@field public input_keymaps          ?fml.types.IKeymap[]
+---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.select.IOnClose
 ---@field public render_line            ?fml.types.ui.select.main.IRenderLine
@@ -124,7 +124,7 @@ function M.new(props)
     end,
   }
 
-  ---@type fml.types.ui.IKeymap[]
+  ---@type fml.types.IKeymap[]
   local input_keymaps = std_array.merge_multiple_array({
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "select: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "select: close" },
@@ -135,7 +135,7 @@ function M.new(props)
     { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "select: focus prev item" },
   }, props.input_keymaps or {})
 
-  ---@type fml.types.ui.IKeymap[]
+  ---@type fml.types.IKeymap[]
   local main_keymaps = std_array.merge_multiple_array({
     {
       modes = { "n", "v" },

@@ -7,7 +7,7 @@ local defaults = require("fml.ui.select.defaults")
 ---@class fml.ui.select.Main : fml.types.ui.select.IMain
 ---@field protected bufnr               integer|nil
 ---@field protected state               fml.types.ui.select.IState
----@field protected keymaps             fml.types.ui.IKeymap[]
+---@field protected keymaps             fml.types.IKeymap[]
 ---@field protected dirty               boolean
 ---@field protected rendering           boolean
 ---@field protected render_line         fml.types.ui.select.main.IRenderLine
@@ -17,7 +17,7 @@ M.__index = M
 
 ---@class fml.ui.select.main.IProps
 ---@field public state                  fml.types.ui.select.IState
----@field public keymaps                fml.types.ui.IKeymap[]
+---@field public keymaps                fml.types.IKeymap[]
 ---@field public on_rendered            fun(): nil
 ---@field public render_line            ?fml.types.ui.select.main.IRenderLine
 
@@ -27,7 +27,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local state = props.state ---@type fml.types.ui.select.IState
-  local keymaps = props.keymaps ---@type fml.types.ui.IKeymap[]
+  local keymaps = props.keymaps ---@type fml.types.IKeymap[]
   local on_rendered = props.on_rendered ---@type fun(): nil
   local render_line = props.render_line or defaults.render_line ---@type fun(params: fml.types.ui.select.main.IRenderLineParams): string
 

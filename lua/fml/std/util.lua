@@ -9,8 +9,8 @@ function M.augroup(name)
   return vim.api.nvim_create_augroup("fml_" .. name, { clear = true })
 end
 
----@param keymaps                       fml.types.ui.IKeymap[]
----@param keymap_override               fml.types.ui.IKeymapOverridable
+---@param keymaps                       fml.types.IKeymap[]
+---@param keymap_override               fml.types.IKeymapOverridable
 function M.bind_keys(keymaps, keymap_override)
   for _, keymap in ipairs(keymaps) do
     vim.keymap.set(keymap.modes, keymap.key, keymap.callback, {

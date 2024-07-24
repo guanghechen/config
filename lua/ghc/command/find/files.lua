@@ -85,7 +85,7 @@ local function get_select()
       end,
     }
 
-    ---@type fml.types.ui.IKeymap[]
+    ---@type fml.types.IKeymap[]
     local input_keymaps = {
       {
         modes = { "n", "v" },
@@ -113,7 +113,7 @@ local function get_select()
       },
     }
 
-    ---@type fml.types.ui.IKeymap[]
+    ---@type fml.types.IKeymap[]
     local main_keymaps = vim.tbl_deep_extend("force", {}, input_keymaps)
 
     _select = fml.ui.select.Select.new({
