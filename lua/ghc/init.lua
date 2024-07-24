@@ -7,6 +7,7 @@ local command = {
   debug = require("ghc.command.debug"),
   find = require("ghc.command.find"),
   git = require("ghc.command.git"),
+  refresh = require("ghc.command.refresh"),
   replace = require("ghc.command.replace"),
   run = require("ghc.command.run"),
   session = require("ghc.command.session"),
