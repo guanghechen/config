@@ -2,8 +2,8 @@
 local M = {}
 
 ---! buftypes
-M.BT_REPLACE_PREVIEW = "nowrite"
-M.BT_SEARCH_REPLACE = "nofile"
+M.BT_NOWRITE = "nowrite"
+M.BT_NOFILE = "nofile"
 
 ---! filetypes
 M.FT_NEOTREE = "neo-tree"

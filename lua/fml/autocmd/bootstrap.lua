@@ -1,3 +1,4 @@
+local constant = require("fml.constant")
 local path = require("fml.std.path")
 local util = require("fml.std.util")
 
@@ -10,12 +11,12 @@ local augroups = {
   startup = util.augroup("startup"),
 }
 
--- Auto cd the directory:
--- 1. the opend file is under a git repo, let's remember the the git repo path as A,
---    and assume the git repo directory of the shell cwd is B.
---      a) If A is different from B, then auto cd the A.
---      b) If A is the same as B, then no action needed.
--- 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
+---! Auto cd the directory:
+---! 1. the opend file is under a git repo, let's remember the the git repo path as A,
+---!    and assume the git repo directory of the shell cwd is B.
+---!      a) If A is different from B, then auto cd the A.
+---!      b) If A is the same as B, then no action needed.
+---! 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
 if vim.fn.expand("%") ~= "" then
   local cwd = vim.fn.getcwd()
   local p = vim.fn.expand("%:p:h")
@@ -29,18 +30,12 @@ if vim.fn.expand("%") ~= "" then
   end
 end
 
--- Clear jumplist
--- See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
-vim.api.nvim_create_autocmd({ "VimEnter" }, {
-  group = augroups.startup,
-  callback = function()
-    vim.schedule(function()
-      vim.cmd("clearjumps")
-    end)
-  end,
-})
+---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
+vim.schedule(function()
+  vim.cmd("clearjumps")
+end)
 
--- Auto create dir when saving a file, in case some intermediate directory does not exist
+---! Auto create dirs when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   group = augroups.create_dirs,
   callback = function(event)
@@ -52,11 +47,11 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   end,
 })
 
--- Check if we need to reload the file when it changed
+---! Check if we need to reload the file when it changed
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   group = augroups.checktime,
   callback = function()
-    if vim.o.buftype ~= "nofile" then
+    if vim.o.buftype ~= constant.BT_NOFILE then
       vim.cmd("checktime")
     end
   end,

@@ -29,7 +29,7 @@ function M.preview(opts)
   local filetype = vim.fn.system(string.format('nvim -c "filetype detect" -c "echo &filetype" -c "quit" %s', filepath))
 
   vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_set_option_value("buftype", fml.constant.BT_REPLACE_PREVIEW, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", fml.constant.BT_NOWRITE, { buf = bufnr })
   vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
   vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
   vim.cmd(string.format("%sbufdo file %s/REPLACE_PREVIEW", bufnr, bufnr)) --- Rename the buf

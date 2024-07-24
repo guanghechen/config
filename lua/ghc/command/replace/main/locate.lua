@@ -17,7 +17,7 @@ function M.locate_or_create_main_buf()
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
     vim.api.nvim_set_current_buf(bufnr)
-    vim.api.nvim_set_option_value("buftype", fml.constant.BT_SEARCH_REPLACE, { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", fml.constant.BT_NOFILE, { buf = bufnr })
     vim.api.nvim_set_option_value("filetype", fml.constant.FT_SEARCH_REPLACE, { buf = bufnr })
     vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
     vim.opt_local.list = false
