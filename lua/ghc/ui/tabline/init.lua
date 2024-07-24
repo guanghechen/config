@@ -39,6 +39,10 @@ function M.render()
     return last_tabline_result
   end
 
+  if not dirty then
+    return last_tabline_result
+  end
+
   dirty = false
   running = true
   vim.defer_fn(function()

@@ -267,13 +267,13 @@ end
 function M.search(force)
   force = not not force ---@type boolean
   __search_dirty = __search_dirty or force
-  if __searching then
+  if __searching or not __search_dirty then
     return __search_result
   end
 
-  __searching = true
   local options ---@type fml.std.oxi.search.IParams
 
+  __searching = true
   fml.util.run_async(
     "ghc.command.replace.state.search",
     ---@return fml.std.oxi.search.IResult

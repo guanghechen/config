@@ -101,10 +101,10 @@ function M:render(opts)
   self.rendering = true
   vim.defer_fn(function()
     local matches = state:filter() ---@type fml.types.ui.select.ILineMatch[]
+
     self.dirty = false
     util.run_async("fml.ui.select.main:render", function()
       local bufnr = self:create_buf_as_needed() ---@type integer
-
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
 
@@ -126,10 +126,10 @@ function M:render(opts)
 
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
-      self.rendering = false
 
       self.on_rendered()
 
+      self.rendering = false
       if self.dirty then
         self:render()
       end

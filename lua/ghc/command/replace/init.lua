@@ -74,7 +74,6 @@ function M.open(params)
   params = params or {}
   local mode = params.mode ---@type ghc.enums.command.replace.Mode|nil
   local force = not not params.force ---@type boolean
-
   local tabnr = fml.api.tab.create_if_nonexist(fml.constant.TN_SEARCH_REPLACE) ---@type integer
   local winnr = main.locate_main_win(tabnr) ---@type integer
 

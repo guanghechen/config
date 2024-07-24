@@ -118,17 +118,16 @@ function M:filter()
         end
 
         local last_input_lower = self._last_input_lower ---@type string|nil
-        if
+
+        ---@type fml.types.ui.select.ILineMatch[]
+        local result = (
           last_input_lower ~= nil
           and #input_lower > #last_input_lower
           and input_lower:sub(1, #last_input_lower) == last_input_lower
-        then
-          ---@type fml.types.ui.select.ILineMatch[]
-          return self._match(input_lower, items, self._matches)
-        else
-          ---@type fml.types.ui.select.ILineMatch[]
-          return self._match(input_lower, items, self._full_matches)
-        end
+        )
+            and self._match(input_lower, items, self._matches)
+          or self._match(input_lower, items, self._full_matches)
+        return result
       end,
       function(ok, matches)
         if ok and matches then

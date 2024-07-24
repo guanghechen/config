@@ -72,14 +72,13 @@ function M.run_async(name, fn, callback)
   local cancelled = false
 
   local function wrapped_fn()
-    if not cancelled then
+    if cancelled then
+      vim.notify('[fml.std.util] run_async: The "' .. name .. '" was cancelled.')
+    else
       local ok, result = pcall(fn)
       if type(callback) == "function" then
         callback(ok, result)
       end
-      return
-    else
-      vim.notify('[fml.std.util] run_async: The "' .. name .. '" was cancelled.')
     end
     handle:close() -- Close the handle when done
   end
