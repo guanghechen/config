@@ -55,6 +55,8 @@ bindings = [
   { key = "W",                          mods = "Command|Control",       chars = "\u0002\u0017" },       # <Ctrl-b><Ctrl-w>
   { key = "P",                          mods = "Command|Control",       chars = "\u0002\u0010" },       # <Ctrl-b><Ctrl-p>
 
+  ## ---- Reload ----
+  { key = "R",                          mods = "Command",               chars = "\u0002\u0072" },       # <Ctrl-b>r
 
   ## ---- Resize ----
   { key = "Up",                         mods = "Command|Control",       chars = "\u0002\u001b[1;5A" },  # <Ctrl-b><Ctrl-Up>
@@ -72,12 +74,11 @@ bindings = [
   { key = "L",                          mods = "Command|Shift",         chars = "\u0002\u004C" },       # <Ctrl-b>L
   { key = "J",                          mods = "Command|Shift",         chars = "\u0002\u004a" },       # <Ctrl-b>J
   { key = "H",                          mods = "Command|Shift",         chars = "\u0002\u0048" },       # <Ctrl-b>H
-  { key = "R",                          mods = "Command|Shift",         chars = "\u0002\u0052" },       # <Ctrl-b>R
   { key = "T",                          mods = "Command|Shift",         chars = "\u0002\u0054" },       # <Ctrl-b>T
   { key = "{",                          mods = "Command|Shift",         chars = "\u0002\u007b" },       # <Ctrl-b>{
   { key = "}",                          mods = "Command|Shift",         chars = "\u0002\u007d" },       # <Ctrl-b>}
-  { key = "<",                          mods = "Command|Shift",         chars = "\u0002\u003c" },      # <Ctrl-b><
-  { key = ">",                          mods = "Command|Shift",         chars = "\u0002\u003e" },      # <Ctrl-b>>
+  { key = "<",                          mods = "Command|Shift",         chars = "\u0002\u003c" },       # <Ctrl-b><
+  { key = ">",                          mods = "Command|Shift",         chars = "\u0002\u003e" },       # <Ctrl-b>>
 
   ## ---- Focus ----
   { key = "Key1",                       mods = "Command",               chars = "\u0002\u0031" },       # <Ctrl-b>1
