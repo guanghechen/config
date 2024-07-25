@@ -1,0 +1,188 @@
+# Key bindings
+# A list with all available `key` names can be found here:
+# https://docs.rs/glutin/*/glutin/enum.VirtualKeyCode.html#variants
+#
+# Run "xxd -psd" to find hex codes of keys.
+#
+# Alacritty + Tmux key integratio
+#   `\u0002` is `C-b` as tmux prefix
+#   `\u001b` is `Esc`
+
+[mouse]
+bindings = [
+  { mouse = "Left",     mods = "Control",                   action = "Open" },
+  { mouse = "Left",     mods = "Command",                   action = "Open" },
+]
+
+[keyboard]
+bindings = [
+  # ----- tmux -----
+  { key = "F1",                                             chars = "\u001b[11~" },         # F1
+  { key = "F2",                                             chars = "\u001b[12~" },         # F2
+  { key = "F3",                                             chars = "\u001b[13~" },         # F3
+  { key = "F4",                                             chars = "\u001b[14~" },         # F4
+  { key = "F5",                                             chars = "\u001b[15~" },         # F5
+  { key = "F6",                                             chars = "\u001b[17~" },         # F6
+  { key = "F7",                                             chars = "\u001b[18~" },         # F7
+  { key = "F8",                                             chars = "\u001b[19~" },         # F8
+  { key = "F9",                                             chars = "\u001b[20~" },         # F9
+  { key = "F10",                                            chars = "\u001b[21~" },         # F10
+  { key = "F11",                                            chars = "\u001b[23~" },         # F11
+  { key = "F12",                                            chars = "\u001b[24~" },         # F12
+  { key = "F1",         mods = "Shift",                     chars = "\u001b[1;2P" },        # S-F1
+  { key = "F2",         mods = "Shift",                     chars = "\u001b[1;2Q" },        # S-F2
+  { key = "F3",         mods = "Shift",                     chars = "\u001b[1;2R" },        # S-F3
+  { key = "F4",         mods = "Shift",                     chars = "\u001b[1;2S" },        # S-F4
+  { key = "F5",         mods = "Shift",                     chars = "\u001b[15;2~" },       # S-F5
+  { key = "F6",         mods = "Shift",                     chars = "\u001b[17;2~" },       # S-F6
+  { key = "F7",         mods = "Shift",                     chars = "\u001b[18;2~" },       # S-F7
+  { key = "F8",         mods = "Shift",                     chars = "\u001b[19;2~" },       # S-F8
+  { key = "F9",         mods = "Shift",                     chars = "\u001b[20;2~" },       # S-F9
+  { key = "F10",        mods = "Shift",                     chars = "\u001b[21;2~" },       # S-F10
+  { key = "F11",        mods = "Shift",                     chars = "\u001b[23;2~" },       # S-F11
+  { key = "F12",        mods = "Shift",                     chars = "\u001b[24;2~" },       # S-F12
+  { key = "F1",         mods = "Command",                   chars = "\u0002\u001b[11~" },   # <Ctrl-b>F1
+  { key = "F2",         mods = "Command",                   chars = "\u0002\u001b[12~" },   # <Ctrl-b>F2
+  { key = "F3",         mods = "Command",                   chars = "\u0002\u001b[13~" },   # <Ctrl-b>F3
+  { key = "F4",         mods = "Command",                   chars = "\u0002\u001b[14~" },   # <Ctrl-b>F4
+  { key = "F5",         mods = "Command",                   chars = "\u0002\u001b[15~" },   # <Ctrl-b>F5
+  { key = "F6",         mods = "Command",                   chars = "\u0002\u001b[17~" },   # <Ctrl-b>F6
+  { key = "F7",         mods = "Command",                   chars = "\u0002\u001b[18~" },   # <Ctrl-b>F7
+  { key = "F8",         mods = "Command",                   chars = "\u0002\u001b[19~" },   # <Ctrl-b>F8
+  { key = "F9",         mods = "Command",                   chars = "\u0002\u001b[20~" },   # <Ctrl-b>F9
+  { key = "F10",        mods = "Command",                   chars = "\u0002\u001b[21~" },   # <Ctrl-b>F10
+  { key = "F11",        mods = "Command",                   chars = "\u0002\u001b[23~" },   # <Ctrl-b>F11
+  { key = "F12",        mods = "Command",                   chars = "\u0002\u001b[24~" },   # <Ctrl-b>F12
+
+  { key = "Up",         mods = "Command",                   chars = "\u0002\u001b[A" },     # <Ctrl-b><Up>
+  { key = "Right",      mods = "Command",                   chars = "\u0002\u001b[C" },     # <Ctrl-b><Right>
+  { key = "Down",       mods = "Command",                   chars = "\u0002\u001b[B" },     # <Ctrl-b><Down>
+  { key = "Left",       mods = "Command",                   chars = "\u0002\u001b[D" },     # <Ctrl-b><Left>
+  { key = "Up",         mods = "Command|Control",           chars = "\u0002\u001b[1;5A" },  # <Ctrl-b><Ctrl-Up>
+  { key = "Right",      mods = "Command|Control",           chars = "\u0002\u001b[1;5C" },  # <Ctrl-b><Ctrl-Right>
+  { key = "Down",       mods = "Command|Control",           chars = "\u0002\u001b[1;5B" },  # <Ctrl-b><Ctrl-Down> 
+  { key = "Left",       mods = "Command|Control",           chars = "\u0002\u001b[1;5D" },  # <Ctrl-b><Ctrl-Left>
+
+  { key = "Key1",       mods = "Command",                   chars = "\u0002\u0031" },       # <Ctrl-b>1
+  { key = "Key2",       mods = "Command",                   chars = "\u0002\u0032" },       # <Ctrl-b>2
+  { key = "Key3",       mods = "Command",                   chars = "\u0002\u0033" },       # <Ctrl-b>3
+  { key = "Key4",       mods = "Command",                   chars = "\u0002\u0034" },       # <Ctrl-b>4
+  { key = "Key5",       mods = "Command",                   chars = "\u0002\u0035" },       # <Ctrl-b>5
+  { key = "Key6",       mods = "Command",                   chars = "\u0002\u0036" },       # <Ctrl-b>6
+  { key = "Key7",       mods = "Command",                   chars = "\u0002\u0037" },       # <Ctrl-b>7
+  { key = "Key8",       mods = "Command",                   chars = "\u0002\u0038" },       # <Ctrl-b>8
+  { key = "Key9",       mods = "Command",                   chars = "\u0002\u0039" },       # <Ctrl-b>9
+  { key = "Key0",       mods = "Command",                   chars = "\u0002\u0030" },       # <Ctrl-b>0
+  { key = "Key1",       mods = "Command|Control",           chars = "\u0002\u001b[49;5u" }, # <Ctrl-b><Ctrl-1>
+  { key = "Key2",       mods = "Command|Control",           chars = "\u0002\u001b[50;5u" }, # <Ctrl-b><Ctrl-2>
+  { key = "Key3",       mods = "Command|Control",           chars = "\u0002\u001b[51;5u" }, # <Ctrl-b><Ctrl-3>
+  { key = "Key4",       mods = "Command|Control",           chars = "\u0002\u001b[52;5u" }, # <Ctrl-b><Ctrl-4>
+  { key = "Key5",       mods = "Command|Control",           chars = "\u0002\u001b[53;5u" }, # <Ctrl-b><Ctrl-5>
+  { key = "Key6",       mods = "Command|Control",           chars = "\u0002\u001b[54;5u" }, # <Ctrl-b><Ctrl-6>
+  { key = "Key7",       mods = "Command|Control",           chars = "\u0002\u001b[55;5u" }, # <Ctrl-b><Ctrl-7>
+  { key = "Key8",       mods = "Command|Control",           chars = "\u0002\u001b[56;5u" }, # <Ctrl-b><Ctrl-8>
+  { key = "Key9",       mods = "Command|Control",           chars = "\u0002\u001b[57;5u" }, # <Ctrl-b><Ctrl-9>
+  { key = "Key0",       mods = "Command|Control",           chars = "\u0002\u001b[48;5u" }, # <Ctrl-b><Ctrl-0>
+
+  { key = "A",          mods = "Command",                   chars = "\u0002\u0061" },       # <Ctrl-b>a
+  { key = "B",          mods = "Command",                   chars = "\u0002\u0062" },       # <Ctrl-b>b
+  { key = "C",          mods = "Command",                   chars = "\u0002\u0063" },       # <Ctrl-b>c
+  { key = "D",          mods = "Command",                   chars = "\u0002\u0064" },       # <Ctrl-b>d
+  { key = "E",          mods = "Command",                   chars = "\u0002\u0065" },       # <Ctrl-b>e
+  { key = "F",          mods = "Command",                   chars = "\u0002\u0066" },       # <Ctrl-b>f
+  { key = "G",          mods = "Command",                   chars = "\u0002\u0067" },       # <Ctrl-b>g
+  { key = "H",          mods = "Command",                   chars = "\u0002\u0068" },       # <Ctrl-b>h
+  { key = "I",          mods = "Command",                   chars = "\u0002\u0069" },       # <Ctrl-b>i
+  { key = "J",          mods = "Command",                   chars = "\u0002\u006a" },       # <Ctrl-b>j
+  { key = "K",          mods = "Command",                   chars = "\u0002\u006b" },       # <Ctrl-b>k
+  { key = "L",          mods = "Command",                   chars = "\u0002\u006c" },       # <Ctrl-b>l
+  { key = "M",          mods = "Command",                   chars = "\u0002\u006d" },       # <Ctrl-b>m
+  { key = "N",          mods = "Command",                   chars = "\u0002\u006e" },       # <Ctrl-b>n
+  { key = "O",          mods = "Command",                   chars = "\u0002\u006f" },       # <Ctrl-b>o
+  { key = "P",          mods = "Command",                   chars = "\u0002\u0070" },       # <Ctrl-b>p
+  { key = "Q",          mods = "Command",                   chars = "\u0002\u0071" },       # <Ctrl-b>q
+  { key = "R",          mods = "Command",                   chars = "\u0002\u0072" },       # <ctrl-b>r
+  { key = "S",          mods = "Command",                   chars = "\u0002\u0073" },       # <Ctrl-b>s
+  { key = "T",          mods = "Command",                   chars = "\u0002\u0074" },       # <Ctrl-b>t
+  { key = "U",          mods = "Command",                   chars = "\u0002\u0075" },       # <Ctrl-b>u
+  { key = "V",          mods = "Command",                   chars = "\u0002\u0076" },       # <Ctrl-b>v
+  { key = "W",          mods = "Command",                   chars = "\u0002\u0077" },       # <Ctrl-b>w
+  { key = "X",          mods = "Command",                   chars = "\u0002\u0078" },       # <Ctrl-b>x
+  { key = "Y",          mods = "Command",                   chars = "\u0002\u0079" },       # <Ctrl-b>y
+  { key = "Z",          mods = "Command",                   chars = "\u0002\u007a" },       # <Ctrl-b>z
+  { key = "A",          mods = "Command|Shift",             chars = "\u0002\u0041" },       # <Ctrl-b>A
+  { key = "B",          mods = "Command|Shift",             chars = "\u0002\u0042" },       # <Ctrl-b>B
+  { key = "C",          mods = "Command|Shift",             chars = "\u0002\u0043" },       # <Ctrl-b>C
+  { key = "D",          mods = "Command|Shift",             chars = "\u0002\u0044" },       # <Ctrl-b>D
+  { key = "E",          mods = "Command|Shift",             chars = "\u0002\u0045" },       # <Ctrl-b>E
+  { key = "F",          mods = "Command|Shift",             chars = "\u0002\u0046" },       # <Ctrl-b>F
+  { key = "G",          mods = "Command|Shift",             chars = "\u0002\u0047" },       # <Ctrl-b>G
+  { key = "H",          mods = "Command|Shift",             chars = "\u0002\u0048" },       # <Ctrl-b>H
+  { key = "I",          mods = "Command|Shift",             chars = "\u0002\u0049" },       # <Ctrl-b>I
+  { key = "J",          mods = "Command|Shift",             chars = "\u0002\u004a" },       # <Ctrl-b>J
+  { key = "K",          mods = "Command|Shift",             chars = "\u0002\u004b" },       # <Ctrl-b>K
+  { key = "L",          mods = "Command|Shift",             chars = "\u0002\u004c" },       # <Ctrl-b>L
+  { key = "M",          mods = "Command|Shift",             chars = "\u0002\u004d" },       # <Ctrl-b>M
+  { key = "N",          mods = "Command|Shift",             chars = "\u0002\u004e" },       # <Ctrl-b>N
+  { key = "O",          mods = "Command|Shift",             chars = "\u0002\u004f" },       # <Ctrl-b>O
+  { key = "P",          mods = "Command|Shift",             chars = "\u0002\u0050" },       # <Ctrl-b>P
+  { key = "Q",          mods = "Command|Shift",             chars = "\u0002\u0051" },       # <Ctrl-b>Q
+  { key = "R",          mods = "Command|Shift",             chars = "\u0002\u0052" },       # <Ctrl-b>R
+  { key = "S",          mods = "Command|Shift",             chars = "\u0002\u0053" },       # <Ctrl-b>S
+  { key = "T",          mods = "Command|Shift",             chars = "\u0002\u0054" },       # <Ctrl-b>T
+  { key = "U",          mods = "Command|Shift",             chars = "\u0002\u0055" },       # <Ctrl-b>U
+  { key = "V",          mods = "Command|Shift",             chars = "\u0002\u0056" },       # <Ctrl-b>V
+  { key = "W",          mods = "Command|Shift",             chars = "\u0002\u0057" },       # <Ctrl-b>W
+  { key = "X",          mods = "Command|Shift",             chars = "\u0002\u0058" },       # <Ctrl-b>X
+  { key = "Y",          mods = "Command|Shift",             chars = "\u0002\u0059" },       # <Ctrl-b>Y
+  { key = "Z",          mods = "Command|Shift",             chars = "\u0002\u005a" },       # <Ctrl-b>Z
+  { key = "A",          mods = "Command|Control",           chars = "\u0002\u0001" },       # <Ctrl-b><Ctrl-a>
+  { key = "B",          mods = "Command|Control",           chars = "\u0002\u0002" },       # <Ctrl-b><Ctrl-b>
+  { key = "C",          mods = "Command|Control",           chars = "\u0002\u0003" },       # <Ctrl-b><Ctrl-c>
+  { key = "D",          mods = "Command|Control",           chars = "\u0002\u0004" },       # <Ctrl-b><Ctrl-d>
+  { key = "E",          mods = "Command|Control",           chars = "\u0002\u0005" },       # <Ctrl-b><Ctrl-e>
+  { key = "F",          mods = "Command|Control",           chars = "\u0002\u0006" },       # <Ctrl-b><Ctrl-f>
+  { key = "G",          mods = "Command|Control",           chars = "\u0002\u0007" },       # <Ctrl-b><Ctrl-g>
+  { key = "H",          mods = "Command|Control",           chars = "\u0002\u0008" },       # <Ctrl-b><Ctrl-h>
+  { key = "I",          mods = "Command|Control",           chars = "\u0002\u0009" },       # <Ctrl-b><Ctrl-i>
+  { key = "J",          mods = "Command|Control",           chars = "\u0002\u000a" },       # <Ctrl-b><Ctrl-j>
+  { key = "K",          mods = "Command|Control",           chars = "\u0002\u000b" },       # <Ctrl-b><Ctrl-k>
+  { key = "L",          mods = "Command|Control",           chars = "\u0002\u000c" },       # <Ctrl-b><Ctrl-l>
+  { key = "M",          mods = "Command|Control",           chars = "\u0002\u000d" },       # <Ctrl-b><Ctrl-m>
+  { key = "N",          mods = "Command|Control",           chars = "\u0002\u000e" },       # <Ctrl-b><Ctrl-n>
+  { key = "O",          mods = "Command|Control",           chars = "\u0002\u000f" },       # <Ctrl-b><Ctrl-o>
+  { key = "P",          mods = "Command|Control",           chars = "\u0002\u0000" },       # <Ctrl-b><Ctrl-p>
+  { key = "Q",          mods = "Command|Control",           chars = "\u0002\u0011" },       # <Ctrl-b><Ctrl-q>
+  { key = "R",          mods = "Command|Control",           chars = "\u0002\u0012" },       # <ctrl-b><Ctrl-r>
+  { key = "S",          mods = "Command|Control",           chars = "\u0002\u0013" },       # <Ctrl-b><Ctrl-s>
+  { key = "T",          mods = "Command|Control",           chars = "\u0002\u0014" },       # <Ctrl-b><Ctrl-t>
+  { key = "U",          mods = "Command|Control",           chars = "\u0002\u0015" },       # <Ctrl-b><Ctrl-u>
+  { key = "V",          mods = "Command|Control",           chars = "\u0002\u0016" },       # <Ctrl-b><Ctrl-v>
+  { key = "W",          mods = "Command|Control",           chars = "\u0002\u0017" },       # <Ctrl-b><Ctrl-w>
+  { key = "X",          mods = "Command|Control",           chars = "\u0002\u0018" },       # <Ctrl-b><Ctrl-x>
+  { key = "Y",          mods = "Command|Control",           chars = "\u0002\u0019" },       # <Ctrl-b><Ctrl-y>
+  { key = "Z",          mods = "Command|Control",           chars = "\u0002\u001a" },       # <Ctrl-b><Ctrl-z>
+
+  { key = "Enter",      mods = "Command",                   chars = "\u001b\u000d" },       # <alt-cr>
+  { key = "[",          mods = "Command",                   chars = "\u0002\u005b" },       # <Ctrl-b>[
+  { key = "]",          mods = "Command",                   chars = "\u0002\u005d" },       # <Ctrl-b>]
+  { key = ":",          mods = "Command|Shift",             chars = "\u0002\u003a" },       # <Ctrl-b>:
+  { key = "<",          mods = "Command|Shift",             chars = "\u0002\u003c" },       # <Ctrl-b><
+  { key = ">",          mods = "Command|Shift",             chars = "\u0002\u003e" },       # <Ctrl-b>>
+  { key = "{",          mods = "Command|Shift",             chars = "\u0002\u007b" },       # <Ctrl-b>{
+  { key = "}",          mods = "Command|Shift",             chars = "\u0002\u007d" },       # <Ctrl-b>}
+
+  # ----- Alacritty function keys ----
+  { key = "V",          mods = "Command",                   action = "Paste"       },
+  { key = "Insert",     mods = "Control",                   action = "Copy"        },
+  { key = "Insert",     mods = "Shift",                     action = "Paste"       },
+  { key = "F",          mods = "Command|Control|Shift",     action = "ToggleFullscreen" },
+  { key = "N",          mods = "Command|Control|Shift",     action = "CreateNewWindow" },
+  { key = "V",          mods = "Command|Control|Shift",     action = "ToggleViMode" },
+  { key = "W",          mods = "Command|Control|Shift",     action = "Quit" },
+  { key = "Z",          mods = "Command|Control|Shift",     action = "ToggleSimpleFullscreen" },
+  { key = ")",          mods = "Command|Control|Shift",     action = "ResetFontSize" },
+  { key = "Plus",       mods = "Command|Control|Shift",     action = "IncreaseFontSize" },
+  { key = "_",          mods = "Command|Control|Shift",     action = "DecreaseFontSize" },
+]
+
