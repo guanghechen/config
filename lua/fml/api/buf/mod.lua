@@ -1,3 +1,4 @@
+local state = require("fml.api.state")
 local std_array = require("fml.std.array")
 
 ---@class fml.api.buf
@@ -23,6 +24,39 @@ function M.is_visible(bufnr)
     local win_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     return win_bufnr == bufnr
   end)
+end
+
+---@param filepath                      string
+---@return integer|nil
+function M.locate_by_filepath(filepath)
+  local target_filepath = vim.fn.fnamemodify(filepath, ":p") ---@type string
+  for bufnr, buf in pairs(state.bufs) do
+    if buf.filepath == target_filepath then
+      return bufnr
+    end
+  end
+
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then
+      local bufname = vim.api.nvim_buf_get_name(bufnr)
+      local buf_filepath = vim.fn.fnamemodify(bufname, ":p")
+      if buf_filepath == target_filepath then
+        state.schedule_refresh_bufs()
+        return bufnr
+      end
+    end
+  end
+  return nil
+end
+
+---@return nil
+function M.toggle_pin_cur()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local buf = state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+  if buf ~= nil then
+    buf.pinned = true
+    vim.cmd("redrawtabline")
+  end
 end
 
 return M
