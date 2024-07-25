@@ -76,7 +76,8 @@ function M.close_tab(tabnr)
   end
 end
 
----@return fml.api.state.ITabItem|nil, integer
+---@return fml.api.state.ITabItem|nil
+---@return integer
 function M.get_current_tab()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   if M.tabs[tabnr] == nil then

@@ -38,19 +38,16 @@ end
 
 ---@return nil
 function M.close_current()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
-
-  if win == nil then
-    return
-  end
-
+  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+  local win = state.wins[winnr_cur] ---@type fml.api.state.IWinItem|nil
 
   ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.
-  local bufnr_last = win.buf_history:back() ---@type integer|nil
-  if bufnr_last ~= nil and vim.api.nvim_buf_is_valid(bufnr_last) then
-    vim.api.nvim_win_set_buf(winnr, bufnr_last)
+  if win ~= nil then
+    local bufnr_last = win.buf_history:back() ---@type integer|nil
+    if bufnr_last ~= nil and vim.api.nvim_buf_is_valid(bufnr_last) then
+      vim.api.nvim_win_set_buf(winnr_cur, bufnr_last)
+    end
   end
 
   M.close({ bufnr_cur })
@@ -59,7 +56,7 @@ end
 ---@param step                          ?integer
 ---@return nil
 function M.close_left(step)
-  local tab = state.get_current_tab()
+  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -69,11 +66,12 @@ function M.close_left(step)
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
   local bufid_next = navigate.limit(bufid_cur, -step, #tab.bufnrs)
   local bufnrs_to_remove = {} ---@type integer[]
+  local visible_bufnrs = M.get_visible_bufnrs(0) ---@type table<integer, boolean>
   for id = bufid_next, bufid_cur - 1, 1 do
-    local nr = tab.bufnrs[id]
-    local buf = state.bufs[nr]
-    if buf == nil or not buf.pinned then
-      table.insert(bufnrs_to_remove, nr)
+    local bufnr = tab.bufnrs[id] ---@type integer
+    local buf = state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+    if (buf == nil or not buf.pinned) and not visible_bufnrs[bufnr] then
+      table.insert(bufnrs_to_remove, bufnr)
     end
   end
 
@@ -83,7 +81,7 @@ end
 ---@param step                          ?integer
 ---@return nil
 function M.close_right(step)
-  local tab = state.get_current_tab()
+  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -93,11 +91,12 @@ function M.close_right(step)
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
   local bufid_next = navigate.limit(bufid_cur, step, #tab.bufnrs)
   local bufnrs_to_remove = {} ---@type integer[]
+  local visible_bufnrs = M.get_visible_bufnrs(0) ---@type table<integer, boolean>
   for id = bufid_cur + 1, bufid_next, 1 do
-    local nr = tab.bufnrs[id]
-    local buf = state.bufs[nr]
-    if buf == nil or not buf.pinned then
-      table.insert(bufnrs_to_remove, nr)
+    local bufnr = tab.bufnrs[id] ---@type integer
+    local buf = state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+    if (buf == nil or not buf.pinned) and not visible_bufnrs[bufnr] then
+      table.insert(bufnrs_to_remove, bufnr)
     end
   end
 
@@ -121,29 +120,11 @@ function M.close_others()
     return
   end
 
-  local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
   local bufnrs_to_remove = {} ---@type integer[]
+  local visible_bufnrs = M.get_visible_bufnrs(0) ---@type table<integer, boolean>
   for _, bufnr in ipairs(tab.bufnrs) do
-    local buf = state.bufs[bufnr]
-    if bufnr ~= bufnr_cur and (buf == nil or not buf.pinned) then
-      table.insert(bufnrs_to_remove, bufnr)
-    end
-  end
-
-  M.close(bufnrs_to_remove)
-end
-
----@return nil
-function M.close_all()
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
-  if tab == nil then
-    return
-  end
-
-  local bufnrs_to_remove = {} ---@type integer[]
-  for _, bufnr in ipairs(tab.bufnrs) do
-    local buf = state.bufs[bufnr]
-    if buf == nil or not buf.pinned then
+    local buf = state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+    if (buf == nil or not buf.pinned) and not visible_bufnrs[bufnr] then
       table.insert(bufnrs_to_remove, bufnr)
     end
   end
