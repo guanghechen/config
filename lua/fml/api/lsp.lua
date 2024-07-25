@@ -5,9 +5,6 @@ local reporter = require("fml.std.reporter")
 local locating = {} ---@type table<integer, boolean>
 local dirty = {} ---@type table<integer, boolean>
 
----@class fml.api.lsp
-local M = require("fml.api.lsp.mod")
-
 --- Check if cursor is within range
 ---@param cursor                      fml.api.state.ILspSymbolPos
 ---@param range                       { start: fml.api.state.ILspSymbolPos, end: fml.api.state.ILspSymbolPos }
@@ -116,6 +113,11 @@ local function locate_symbols(winnr)
   end
 end
 
+---@class fml.api.lsp
+local M = {}
+
+---@param winnr                         integer
+---@return nil
 function M.locate_symbols(winnr)
   if locating[winnr] then
     dirty[winnr] = true
@@ -125,3 +127,5 @@ function M.locate_symbols(winnr)
   dirty[winnr] = false
   pcall(locate_symbols, winnr)
 end
+
+return M
