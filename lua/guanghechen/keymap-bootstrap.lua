@@ -144,7 +144,8 @@ mk({ "n", "v" }, "<leader>qC", ghc.command.session.clear_all, "session: clear al
 --------------------------------------------------------------------------#[q]uit/session/context--
 
 --#[r]efresh---------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<S-F5>", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
+mk({ "i", "n", "t", "v" }, "<C-b>r", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
+mk({ "i", "n", "t", "v" }, "<M-r>", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
 ---------------------------------------------------------------------------------------#[r]efresh--
 
 --#[r]un--------------------------------------------------------------------------------------------
