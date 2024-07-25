@@ -21,15 +21,15 @@ function M.close(bufnrs)
     local N = #tab.bufnrs ---@type integer
     for i = 1, N, 1 do
       local bufnr = tab.bufnrs[i]
-      if not bufnr_set[bufnr] then
+      if bufnr_set[bufnr] then
+        tab.bufnr_set[bufnr] = false
+      else
         k = k + 1
         tab.bufnrs[k] = bufnr
-      else
-        tab.bufnr_set[bufnr] = false
       end
     end
     for _ = k + 1, N, 1 do
-      table.remove(tab.bufnrs)
+      tab.bufnrs[k] = nil
     end
   end
 

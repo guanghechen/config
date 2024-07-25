@@ -46,14 +46,16 @@ mk({ "i", "n", "t", "v" }, "<C-b>t", ghc.command.term.toggle_cwd, "terminal: tog
 mk({ "i", "n", "t", "v" }, "<M-t>", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
 
 ---! better copy/paste
-mk("v", "<C-b>c", '"+y', "copy to system clipboard")
-mk("v", "<M-c>", '"+y', "copy to system clipboard")
-mk("v", "<C-b>x", '"+x', "cut to system clipboard")
-mk("v", "<M-x>", '"+x', "cut to system clipboard")
-mk({ "i", "n", "v" }, "<C-b>a", "<esc>gg0vG$", "select all")
-mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "select all")
-mk({ "i", "n", "v" }, "<C-b>v", '<esc>"+p', "paste: from system clipboard")
-mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "paste: from system clipboard")
+mk("v", "<C-b>c", '"+y', "system: copy to clipboard")
+mk("v", "<M-c>", '"+y', "system: copy to clipboard")
+mk("v", "<C-b>x", '"+x', "system: cut to clipboard")
+mk("v", "<M-x>", '"+x', "system: cut to clipboard")
+mk("v", "<C-b>s", "<cmd>wa<cr>", "system: save changes")
+mk("v", "<M-s>", "<cmd>wa<cr>", "system: save changes")
+mk({ "i", "n", "v" }, "<C-b>a", "<esc>gg0vG$", "system: select all")
+mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "system: select all")
+mk({ "i", "n", "v" }, "<C-b>v", '<esc>"+p', "system: paste from clipboard")
+mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "system: paste from clipboard")
 mk({ "i", "n", "v" }, "<C-C>", ghc.command.copy.current_buffer_filepath, "copy: current buffer filepath")
 ---------------------------------------------------------------------------------------#enhance-----
 
@@ -144,8 +146,8 @@ mk({ "n", "v" }, "<leader>qC", ghc.command.session.clear_all, "session: clear al
 --------------------------------------------------------------------------#[q]uit/session/context--
 
 --#[r]efresh---------------------------------------------------------------------------------------
-mk({ "i", "n", "t", "v" }, "<C-b>r", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
-mk({ "i", "n", "t", "v" }, "<M-r>", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
+mk({ "i", "n", "v" }, "<C-b>r", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
+mk({ "i", "n", "v" }, "<M-r>", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
 ---------------------------------------------------------------------------------------#[r]efresh--
 
 --#[r]un--------------------------------------------------------------------------------------------
