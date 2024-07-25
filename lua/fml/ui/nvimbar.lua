@@ -193,7 +193,7 @@ function M:render()
 
   self._dirty = false
   self._rendering = true
-  vim.defer_fn(function()
+  vim.schedule(function()
     local sep = self._sep ---@type string
     local sep_width = self._sep_width ---@type integer
     local context = build_context(self._preset_context) ---@type fml.types.ui.nvimbar.IContext
@@ -269,7 +269,7 @@ function M:render()
     if self._dirty then
       self:render()
     end
-  end, 16)
+  end)
   return self._last_result or ""
 end
 

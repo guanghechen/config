@@ -67,23 +67,22 @@ function M.render(winnr)
   return winline:render()
 end
 
----@param winnr                         integer|nil
+---@param winnr                         integer
 ---@return nil
 function M.update(winnr)
-  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    return
-  end
-
-  local result = M.render(winnr) ---@type string
-  if #result > 0 then
-    vim.wo[winnr].winbar = result
+  if vim.api.nvim_win_is_valid(winnr) then
+    local result = M.render(winnr) ---@type string
+    if #result > 0 then
+      vim.wo[winnr].winbar = result
+    end
   end
 end
 
-fml.api.state.winline_dirty_ticker:subscribe(fml.collection.Subscriber.new({
-  on_next = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    M.update(winnr)
+fml.api.state.winline_dirty_nr:subscribe(fml.collection.Subscriber.new({
+  on_next = function(winnr)
+    if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+      M.update(winnr)
+    end
   end,
 }))
 

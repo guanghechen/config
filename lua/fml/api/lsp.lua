@@ -2,10 +2,10 @@ local state = require("fml.api.state")
 local lsp = require("fml.std.lsp")
 local reporter = require("fml.std.reporter")
 
-local locating = {} ---@type table<integer, boolean>
-local dirty = {} ---@type table<integer, boolean>
+local locating_set = {} ---@type table<integer, boolean>
+local dirty_set = {} ---@type table<integer, boolean>
 
---- Check if cursor is within range
+---! Check if cursor is within range
 ---@param cursor                      fml.api.state.ILspSymbolPos
 ---@param range                       { start: fml.api.state.ILspSymbolPos, end: fml.api.state.ILspSymbolPos }
 ---@return boolean
@@ -45,19 +45,42 @@ local function find_symbol_path(cursor, symbols)
   return nil
 end
 
+---@class fml.api.lsp
+local M = {}
+
 ---@param winnr                         integer
-local function locate_symbols(winnr)
+---@param force                         ?boolean
+function M.locate_symbols(winnr, force)
+  dirty_set[winnr] = dirty_set[winnr] or force
+  if locating_set[winnr] or not dirty_set[winnr] then
+    return
+  end
+
+  if not vim.api.nvim_win_is_valid(winnr) then
+    dirty_set[winnr] = nil
+    locating_set[winnr] = nil
+    return
+  end
+
+  ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local win_cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-  local row = win_cursor[1] ---@type integer
-  local col = win_cursor[2] ---@type integer
+  if not lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
+    return
+  end
+
+  locating_set[winnr] = true
+  dirty_set[winnr] = nil
+
+  local cursor = vim.api.nvim_win_get_cursor(winnr) or { 1, 1 } ---@type integer[]
+  local row = cursor[1] or 1 ---@type integer
+  local col = cursor[2] or 1 ---@type integer
 
   -- Callback function to handle the response
   ---@param err                         any|nil
   ---@param symbols                     any[]
   ---@return nil
   local function handler(err, symbols)
-    locating[winnr] = nil
+    locating_set[winnr] = nil
 
     if err then
       reporter.error({
@@ -66,66 +89,57 @@ local function locate_symbols(winnr)
         message = "Failed to request document symbols",
         details = { err = err, result = symbols, bufnr = bufnr, winnr = winnr },
       })
-    else
-      local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
-      if win ~= nil and type(symbols) == "table" then
-        local pieces = win.lsp_symbols ---@type fml.api.state.ILspSymbol[]
-        local N = #pieces ---@type integer
-        local cursor_pos = { line = row - 1, character = col }
-        local symbol_path = find_symbol_path(cursor_pos, symbols)
-
-        local k = 0
-        if symbol_path then
-          for _, symbol in ipairs(symbol_path) do
-            local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
-            local name = symbol.name
-            local position = symbol.range and symbol.range.start or symbol.location.range.start
-            ---@type fml.api.state.ILspSymbol
-            local piece = {
-              kind = kind,
-              name = name,
-              row = position.line + 1,
-              col = position.character + 1,
-            }
-
-            k = k + 1
-            pieces[k] = piece
-          end
-        end
-        for i = k + 1, N, 1 do
-          pieces[i] = nil
-        end
-
-        state.winline_dirty_ticker:tick()
-      end
+      return
     end
 
-    if dirty[winnr] then
-      locate_symbols(winnr)
+    ---! Check if the window still valid.
+    if not vim.api.nvim_win_is_valid(winnr) then
+      return
+    end
+
+    local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
+    if win ~= nil and type(symbols) == "table" then
+      local cursor_pos = { line = row - 1, character = col }
+      local symbol_path = find_symbol_path(cursor_pos, symbols)
+
+      local pieces = win.lsp_symbols ---@type fml.api.state.ILspSymbol[]
+      local N = #pieces ---@type integer
+      local k = 0 ---@type integer
+      if symbol_path then
+        for _, symbol in ipairs(symbol_path) do
+          local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
+          local name = symbol.name
+          local position = symbol.range and symbol.range.start or symbol.location.range.start
+          ---@type fml.api.state.ILspSymbol
+          local piece = {
+            kind = kind,
+            name = name,
+            row = position.line + 1,
+            col = position.character + 1,
+          }
+
+          k = k + 1
+          pieces[k] = piece
+        end
+      end
+      for i = k + 1, N, 1 do
+        pieces[i] = nil
+      end
+      state.winline_dirty_nr:next(winnr)
+    end
+
+    if dirty_set[winnr] then
+      M.locate_symbols(winnr, false)
     end
   end
 
   ---! Make the request to the LSP server
-  if lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
-    vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", {
-      textDocument = vim.lsp.util.make_text_document_params(),
-    }, handler)
-  end
-end
-
----@class fml.api.lsp
-local M = {}
-
----@param winnr                         integer
----@return nil
-function M.locate_symbols(winnr)
-  if locating[winnr] then
-    dirty[winnr] = true
-    return
-  end
-
-  dirty[winnr] = false
-  pcall(locate_symbols, winnr)
+  vim.lsp.buf_request(
+    bufnr,
+    "textDocument/documentSymbol",
+    { textDocument = vim.lsp.util.make_text_document_params() },
+    handler
+  )
 end
 
 return M

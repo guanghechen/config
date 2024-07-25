@@ -60,10 +60,7 @@ vim.api.nvim_create_autocmd({ "FocusGained" }, {
 ---! Show lsp progress.
 vim.api.nvim_create_autocmd("LspProgress", {
   group = augroups.lsp_show_progress,
-  callback = function(args)
-    if string.find(args.match, "end") then
-      vim.cmd("redrawstatus")
-    end
+  callback = function()
     vim.cmd("redrawstatus")
   end,
 })
