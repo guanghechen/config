@@ -151,7 +151,7 @@ bindings = [
   { key = "M",          mods = "Command|Control",           chars = "\u0002\u000d" },       # <Ctrl-b><Ctrl-m>
   { key = "N",          mods = "Command|Control",           chars = "\u0002\u000e" },       # <Ctrl-b><Ctrl-n>
   { key = "O",          mods = "Command|Control",           chars = "\u0002\u000f" },       # <Ctrl-b><Ctrl-o>
-  { key = "P",          mods = "Command|Control",           chars = "\u0002\u0000" },       # <Ctrl-b><Ctrl-p>
+  { key = "P",          mods = "Command|Control",           chars = "\u0002\u0010" },       # <Ctrl-b><Ctrl-p>
   { key = "Q",          mods = "Command|Control",           chars = "\u0002\u0011" },       # <Ctrl-b><Ctrl-q>
   { key = "R",          mods = "Command|Control",           chars = "\u0002\u0012" },       # <ctrl-b><Ctrl-r>
   { key = "S",          mods = "Command|Control",           chars = "\u0002\u0013" },       # <Ctrl-b><Ctrl-s>
