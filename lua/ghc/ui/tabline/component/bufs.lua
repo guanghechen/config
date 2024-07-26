@@ -15,7 +15,7 @@ local function render_buf(bufnr, is_current, is_first)
     fml.api.state.refresh_buf(bufnr)
   end
 
-  local buf = fml.api.state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+  local buf = fml.api.state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
   if buf == nil then
     return "", 0
   end
@@ -49,7 +49,7 @@ local M = {
   name = "bufs",
   ---@diagnostic disable-next-line: unused-local
   render = function(context, remain_width)
-    local tab = fml.api.state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+    local tab = fml.api.state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
     if tab == nil or #tab.bufnrs < 1 then
       return "", 0
     end

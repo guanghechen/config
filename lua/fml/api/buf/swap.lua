@@ -8,7 +8,7 @@ local M = require("fml.api.buf.mod")
 ---@param step                         ?integer
 ---@return nil
 function M.swap_left(step)
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -31,7 +31,7 @@ end
 ---@param step                         ?integer
 ---@return nil
 function M.swap_right(step)
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end

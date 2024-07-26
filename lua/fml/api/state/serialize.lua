@@ -6,7 +6,7 @@ local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
 local std_set = require("fml.std.set")
 
----@param data                          fml.api.state.ISerializedData
+---@param data                          fml.types.api.state.ISerializedData
 ---@return table<integer, integer>
 local function gen_real_bufnr_map(data)
   if type(data.bufs) ~= "table" then
@@ -34,7 +34,7 @@ local function gen_real_bufnr_map(data)
   return bufnr_2_real_bufnr
 end
 
----@param data                          fml.api.state.ISerializedData
+---@param data                          fml.types.api.state.ISerializedData
 ---@return table<integer, integer>
 local function gen_real_tabnr_map(data)
   if type(data.tabs) ~= "table" then
@@ -65,7 +65,7 @@ local M = require("fml.api.state.mod")
 ---@param filepath                      string
 ---@return nil
 function M.save(filepath)
-  ---@type fml.api.state.ISerializedData
+  ---@type fml.types.api.state.ISerializedData
   local data = {
     bufs = {},
     tabs = {},
@@ -75,7 +75,7 @@ function M.save(filepath)
   }
 
   for bufnr, buf in pairs(M.bufs) do
-    ---@type fml.api.state.IBufItemData
+    ---@type fml.types.api.state.IBufItemData
     local item = {
       bufnr = bufnr,
       filename = buf.filename,
@@ -85,7 +85,7 @@ function M.save(filepath)
     table.insert(data.bufs, item)
   end
   for tabnr, tab in pairs(M.tabs) do
-    ---@type fml.api.state.ITabItemData
+    ---@type fml.types.api.state.ITabItemData
     local item = {
       tabnr = tabnr,
       name = tab.name,
@@ -119,12 +119,12 @@ function M.load(filepath)
   local tabnr_2_real_tabnr = gen_real_tabnr_map(data) ---@type table<integer, integer>
 
   if type(data.bufs) == "table" then
-    local bufs = {} ---@type table<integer, fml.api.state.IBufItem>
+    local bufs = {} ---@type table<integer, fml.types.api.state.IBufItem>
     local CWD_PIECES = path.get_cwd_pieces() ---@type string[]
     for _, item in ipairs(data.bufs) do
       local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
       if real_bufnr ~= nil then
-        ---@type fml.api.state.IBufItem
+        ---@type fml.types.api.state.IBufItem
         local buf = {
           filename = item.filename,
           filepath = item.filepath,
@@ -138,7 +138,7 @@ function M.load(filepath)
   end
 
   if type(data.tabs) == "table" then
-    local tabs = {} ---@type table<integer, fml.api.state.ITabItem>
+    local tabs = {} ---@type table<integer, fml.types.api.state.ITabItem>
     for _, item in ipairs(data.tabs) do
       local real_tabnr = type(item.tabnr) == "number" and tabnr_2_real_tabnr[item.tabnr] or nil
       if real_tabnr ~= nil then
@@ -153,7 +153,7 @@ function M.load(filepath)
         end
 
         local winnr_cur = vim.api.nvim_tabpage_get_win(real_tabnr) ---@type integer
-        ---@type fml.api.state.ITabItem
+        ---@type fml.types.api.state.ITabItem
         local tab = {
           name = item.name,
           bufnrs = bufnrs,

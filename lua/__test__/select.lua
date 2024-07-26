@@ -25,7 +25,7 @@ local select = fml.ui.select.Select.new({
     visible = Observable.from_value(false),
   }),
   max_height = 25,
-  render_line = fml.ui.select.util.default_render_filepath,
+  render_line = fml.ui.select.defaults.render_filepath,
   on_confirm = function(item)
     local winnr = fml.api.state.win_history:present() ---@type integer
     if winnr ~= nil then

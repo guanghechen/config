@@ -47,6 +47,14 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   end,
 })
 
+---! Make the buffers not listed.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "qf",
+  callback = function()
+    vim.opt_local.buflisted = false
+  end,
+})
+
 ---! Check if we need to reload the file when it changed
 vim.api.nvim_create_autocmd({ "FocusGained" }, {
   group = augroups.checktime,

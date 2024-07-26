@@ -6,18 +6,18 @@ local locating_set = {} ---@type table<integer, boolean>
 local dirty_set = {} ---@type table<integer, boolean>
 
 ---! Check if cursor is within range
----@param cursor                      fml.api.state.ILspSymbolPos
----@param range                       { start: fml.api.state.ILspSymbolPos, end: fml.api.state.ILspSymbolPos }
+---@param cursor                      fml.types.api.state.ILspSymbolPos
+---@param range                       { start: fml.types.api.state.ILspSymbolPos, end: fml.types.api.state.ILspSymbolPos }
 ---@return boolean
 local function is_within_range(cursor, range)
-  local start = range.start ---@type fml.api.state.ILspSymbolPos
-  local finish = range["end"] ---@type fml.api.state.ILspSymbolPos
+  local start = range.start ---@type fml.types.api.state.ILspSymbolPos
+  local finish = range["end"] ---@type fml.types.api.state.ILspSymbolPos
   return (cursor.line > start.line or (cursor.line == start.line and cursor.character >= start.character))
     and (cursor.line < finish.line or (cursor.line == finish.line and cursor.character <= finish.character))
 end
 
 ---! Find the symbol path recursively
----@param cursor                      fml.api.state.ILspSymbolPos
+---@param cursor                      fml.types.api.state.ILspSymbolPos
 ---@param symbols                     any[]
 local function find_symbol_path(cursor, symbols)
   for _, symbol in ipairs(symbols) do
@@ -97,12 +97,12 @@ function M.locate_symbols(winnr, force)
       return
     end
 
-    local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
+    local win = state.wins[winnr] ---@type fml.types.api.state.IWinItem|nil
     if win ~= nil and type(symbols) == "table" then
       local cursor_pos = { line = row - 1, character = col }
       local symbol_path = find_symbol_path(cursor_pos, symbols)
 
-      local pieces = win.lsp_symbols ---@type fml.api.state.ILspSymbol[]
+      local pieces = win.lsp_symbols ---@type fml.types.api.state.ILspSymbol[]
       local N = #pieces ---@type integer
       local k = 0 ---@type integer
       if symbol_path then
@@ -110,7 +110,7 @@ function M.locate_symbols(winnr, force)
           local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
           local name = symbol.name
           local position = symbol.range and symbol.range.start or symbol.location.range.start
-          ---@type fml.api.state.ILspSymbol
+          ---@type fml.types.api.state.ILspSymbol
           local piece = {
             kind = kind,
             name = name,

@@ -38,7 +38,7 @@ function M.go(bufnr)
     state.refresh_tab(tabnr)
   end
 
-  local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
+  local win = state.wins[winnr] ---@type fml.types.api.state.IWinItem|nil
   if win == nil then
     reporter.error({
       from = "fml.api.buf",
@@ -57,7 +57,7 @@ end
 ---@param bufid                         integer the index of buffer list
 ---@return nil
 function M.focus(bufid)
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
   if tab == nil or bufid < 1 or bufid > #tab.bufnrs then
     return
   end
@@ -70,7 +70,7 @@ end
 ---@param step                         ?integer
 ---@return nil
 function M.focus_left(step)
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -89,7 +89,7 @@ end
 ---@param step                         ?integer
 ---@return nil
 function M.focus_right(step)
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end

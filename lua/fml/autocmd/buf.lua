@@ -8,18 +8,13 @@ vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
       return
     end
 
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+
     ---! The current bufnr of the window still be the old one, so use vim.schedule to refresh later.
     vim.schedule(function()
-      if state.validate_buf(bufnr) then
-        state.refresh_buf(bufnr)
-      else
-        state.bufs[bufnr] = nil
-      end
-
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      state.refresh_buf(bufnr)
       state.refresh_tab(tabnr)
-
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
       local win = state.wins[winnr]
       if win ~= nil then
         win.buf_history:push(bufnr)
@@ -31,7 +26,7 @@ vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
 vim.api.nvim_create_autocmd({ "BufDelete" }, {
   callback = function(args)
     local bufnr = args.buf
-    if type(bufnr) ~= "number" or state.bufs[bufnr] == nil then
+    if type(bufnr) ~= "number" then
       return
     end
 
@@ -44,12 +39,5 @@ vim.api.nvim_create_autocmd({ "BufDelete" }, {
         end)
       end
     end
-  end,
-})
-
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "qf",
-  callback = function()
-    vim.opt_local.buflisted = false
   end,
 })

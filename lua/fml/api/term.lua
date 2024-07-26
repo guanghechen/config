@@ -7,12 +7,12 @@ local M = {}
 
 ---@class fml.api.term.ICreateParams
 ---@field public name                   string
----@field public position               fml.api.state.TermPosition
+---@field public position               fml.enums.api.TermPosition
 ---@field public command                ?string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 
----@param position                      fml.api.state.TermPosition
+---@param position                      fml.enums.api.TermPosition
 ---@param subject                       string
 ---@return boolean
 local function validate_position(position, subject)
@@ -47,7 +47,7 @@ function M.create_term_buf()
   return bufnr
 end
 
----@param position                      fml.api.state.TermPosition
+---@param position                      fml.enums.api.TermPosition
 ---@param bufnr                         integer|nil
 ---@return integer|nil
 ---@return integer|nil
@@ -94,9 +94,9 @@ end
 function M.create(params)
   local name = params.name ---@type string
   local command = params.command or vim.o.shell ---@type string
-  local position = params.position ---@type fml.api.state.TermPosition
+  local position = params.position ---@type fml.enums.api.TermPosition
 
-  local term = state.term_map[name] ---@type fml.api.state.ITerm|nil
+  local term = state.term_map[name] ---@type fml.types.api.state.ITerm|nil
   if term ~= nil then
     reporter.error({
       from = "fml.api.term",
@@ -124,7 +124,7 @@ function M.create(params)
     return
   end
 
-  ---@type fml.api.state.ITerm
+  ---@type fml.types.api.state.ITerm
   term = {
     name = name,
     bufnr = bufnr,
@@ -158,7 +158,7 @@ end
 ---@param name                          string
 ---@return integer|nil
 function M.toggle(name)
-  local term = state.term_map[name] ---@type fml.api.state.ITerm|nil
+  local term = state.term_map[name] ---@type fml.types.api.state.ITerm|nil
   if term == nil then
     reporter.error({
       from = "fml.api.term",

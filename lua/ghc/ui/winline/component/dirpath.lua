@@ -7,7 +7,7 @@ local M = {
   render = function(context, remain_width)
     local winnr = context.winnr ---@type integer
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local buf = fml.api.state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+    local buf = fml.api.state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
     if buf == nil or buf.filename == nil then
       return "", 0
     end

@@ -7,7 +7,7 @@ local M = require("fml.api.tab.mod")
 
 ---@param name                          ?string|nil
 ---@param bufnr                         ?integer
----@return nil
+---@return integer
 function M.create(name, bufnr)
   vim.cmd("$tabnew")
 
@@ -25,15 +25,14 @@ function M.create(name, bufnr)
       state.tabs[tabnr].name = name
     end
 
-    if bufnr == nil and state.tabs[tabnr] and #state.tabs[tabnr].bufnrs > 1 then
-      local tab = state.tabs[tabnr] ---@type fml.api.state.ITabItem
-      local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-      if tab.bufnr_set[bufnr_cur] ~= nil then
-        tab.bufnrs = { bufnr_cur }
-        tab.bufnr_set = { [bufnr_cur] = true }
-      end
+    local tab = state.tabs[tabnr] ---@type fml.types.api.state.ITabItem
+    if bufnr ~= nil and tab ~= nil and #tab.bufnrs > 1 then
+      tab.bufnrs = { bufnr }
+      tab.bufnr_set = { [bufnr] = true }
     end
   end)
+
+  return tabnr
 end
 
 ---@param name                          string
@@ -44,7 +43,11 @@ function M.create_if_nonexist(name, bufnr)
     return tab.name == name
   end)
 
-  if tabnr ~= nil and tab ~= nil and vim.api.nvim_tabpage_is_valid(tabnr) then
+  if tabnr ~= nil and vim.api.nvim_tabpage_is_valid(tabnr) then
+    if tab == nil then
+      state.refresh_tab(tabnr)
+    end
+
     vim.api.nvim_set_current_tabpage(tabnr)
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
     local _, winnr = std_array.first(winnrs, function(winnr)
@@ -54,20 +57,20 @@ function M.create_if_nonexist(name, bufnr)
     if winnr ~= nil then
       vim.api.nvim_set_current_win(winnr)
     end
-    return tabnr
   else
-    M.create(name, bufnr)
-    return vim.api.nvim_get_current_tabpage()
+    tabnr = M.create(name, bufnr) ---@type integer
   end
+  return tabnr
 end
 
 ---@param name                          ?string
+---@return integer
 function M.create_with_buf(name)
   local winnr = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_win_get_buf(winnr)
   local cursor = vim.api.nvim_win_get_cursor(winnr)
-
-  M.create(name, bufnr)
+  local tabnr = M.create(name, bufnr)
 
   vim.api.nvim_win_set_cursor(winnr, cursor)
+  return tabnr
 end

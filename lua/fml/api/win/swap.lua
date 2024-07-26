@@ -22,8 +22,8 @@ function M.swap_with_picker()
   vim.api.nvim_win_set_cursor(winnr_current, cursor_target)
   vim.api.nvim_set_current_win(winnr_target)
 
-  local win_current = state.wins[winnr_current] ---@type fml.api.state.IWinItem|nil
-  local win_target = state.wins[winnr_target] ---@type fml.api.state.IWinItem|nil
+  local win_current = state.wins[winnr_current] ---@type fml.types.api.state.IWinItem|nil
+  local win_target = state.wins[winnr_target] ---@type fml.types.api.state.IWinItem|nil
   if win_current ~= nil and win_target ~= nil then
     state.wins[winnr_current] = win_target
     state.wins[winnr_target] = win_current

@@ -1,9 +1,7 @@
 require("fml.autocmd.bootstrap")
 
-local state = require("fml.api.state")
-
 ---Rebuild the fml.api.state
-state.refresh()
+require("fml.api.state").refresh_all()
 
 require("fml.autocmd.buf")
 require("fml.autocmd.tab")

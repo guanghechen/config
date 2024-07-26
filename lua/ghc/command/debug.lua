@@ -52,10 +52,9 @@ end
 function M.show_state()
   local wins = {}
   for winnr, win in pairs(fml.api.state.wins) do
-    ---@type fml.api.state.IWinItemData
+    ---@type fml.types.api.state.IWinItemData
     local item = {
       winnr = winnr,
-      tabnr = win.tabnr,
       buf_history = win.buf_history:dump(),
     }
     wins[winnr] = item
@@ -69,6 +68,7 @@ function M.show_state()
       bufnrs = vim.api.nvim_list_bufs(),
       bufs = fml.api.state.bufs,
       tabs = fml.api.state.tabs,
+      win_history = fml.api.state.win_history,
       wins = wins,
     },
   })

@@ -14,7 +14,7 @@ function M.close(bufnrs)
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tab = state.tabs[tabnr] ---@type fml.api.state.ITabItem
+  local tab = state.tabs[tabnr] ---@type fml.types.api.state.ITabItem
   if tab ~= nil then
     local bufnr_set = std_set.from_integer_array(bufnrs) ---@type table<integer, boolean>
     local k = 0 ---@type integer
@@ -33,14 +33,19 @@ function M.close(bufnrs)
     end
   end
 
-  state.remove_unrefereced_bufs(bufnrs)
+  local removed_buf_count = state.remove_unrefereced_bufs(bufnrs) ---@type integer
+  if removed_buf_count > 0 then
+    vim.schedule(function()
+      state.refresh_tab(tabnr)
+    end)
+  end
 end
 
 ---@return nil
 function M.close_current()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local win = state.wins[winnr_cur] ---@type fml.api.state.IWinItem|nil
+  local win = state.wins[winnr_cur] ---@type fml.types.api.state.IWinItem|nil
 
   ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.
   if win ~= nil then
@@ -56,7 +61,7 @@ end
 ---@param step                          ?integer
 ---@return nil
 function M.close_left(step)
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -69,7 +74,7 @@ function M.close_left(step)
   local visible_bufnrs = M.get_visible_bufnrs(0) ---@type table<integer, boolean>
   for id = bufid_next, bufid_cur - 1, 1 do
     local bufnr = tab.bufnrs[id] ---@type integer
-    local buf = state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+    local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
     if (buf == nil or not buf.pinned) and not visible_bufnrs[bufnr] then
       table.insert(bufnrs_to_remove, bufnr)
     end
@@ -81,7 +86,7 @@ end
 ---@param step                          ?integer
 ---@return nil
 function M.close_right(step)
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -94,7 +99,7 @@ function M.close_right(step)
   local visible_bufnrs = M.get_visible_bufnrs(0) ---@type table<integer, boolean>
   for id = bufid_cur + 1, bufid_next, 1 do
     local bufnr = tab.bufnrs[id] ---@type integer
-    local buf = state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+    local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
     if (buf == nil or not buf.pinned) and not visible_bufnrs[bufnr] then
       table.insert(bufnrs_to_remove, bufnr)
     end
@@ -115,7 +120,7 @@ end
 
 ---@return nil
 function M.close_others()
-  local tab = state.get_current_tab() ---@type fml.api.state.ITabItem|nil
+  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -123,7 +128,7 @@ function M.close_others()
   local bufnrs_to_remove = {} ---@type integer[]
   local visible_bufnrs = M.get_visible_bufnrs(0) ---@type table<integer, boolean>
   for _, bufnr in ipairs(tab.bufnrs) do
-    local buf = state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+    local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
     if (buf == nil or not buf.pinned) and not visible_bufnrs[bufnr] then
       table.insert(bufnrs_to_remove, bufnr)
     end

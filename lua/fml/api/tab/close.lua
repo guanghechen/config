@@ -10,7 +10,7 @@ local M = require("fml.api.tab.mod")
 function M.close_current()
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
   if tab_count <= 1 then
-    reporter.info({
+    reporter.warn({
       from = "fml.api.tab",
       subject = "close_current",
       message = "This is the last tab, cannot close it.",
@@ -19,7 +19,8 @@ function M.close_current()
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  state.close_tab(tabnr)
+  state.tabs[tabnr] = nil
+  vim.cmd("tabclose")
 end
 
 ---@param step                         integer
@@ -68,11 +69,11 @@ end
 
 function M.close_others()
   local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
+  vim.cmd("tabonly")
+
   std_object.filter_inline(state.tabs, function(_, tabnr)
     return tabnr == tabnr_cur
   end)
   state.tab_history:clear()
   state.tab_history:push(tabnr_cur)
-
-  vim.cmd("tabonly")
 end

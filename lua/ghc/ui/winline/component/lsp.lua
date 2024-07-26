@@ -22,12 +22,12 @@ local M = {
   ---@diagnostic disable-next-line: unused-local
   render = function(context, remain_width)
     local winnr = context.winnr ---@type integer
-    local win = fml.api.state.wins[winnr] ---@type fml.api.state.IWinItem|nil
+    local win = fml.api.state.wins[winnr] ---@type fml.types.api.state.IWinItem|nil
     if win == nil then
       return "", 0
     end
 
-    local symbols = win.lsp_symbols ---@type fml.api.state.ILspSymbol[]
+    local symbols = win.lsp_symbols ---@type fml.types.api.state.ILspSymbol[]
     if symbols == nil or #symbols < 1 then
       return "", 0
     end
@@ -46,8 +46,8 @@ local M = {
 
       width = width + w
       local t_hl = fml.nvimbar.txt(sep, "f_wl_lsp_sep")
-          .. fml.nvimbar.txt(icon, icon_hln)
-          .. fml.nvimbar.txt(title, "f_wl_lsp_text")
+        .. fml.nvimbar.txt(icon, icon_hln)
+        .. fml.nvimbar.txt(title, "f_wl_lsp_text")
       text_hl = text_hl .. fml.nvimbar.btn(t_hl, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
     end
     return text_hl, width

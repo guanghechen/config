@@ -5,7 +5,7 @@ local function should_show_winline(winnr)
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local buf = fml.api.state.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
+  local buf = fml.api.state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
   if buf == nil or buf.filename == fml.constant.BUF_UNTITLED then
     return false
   end
@@ -16,7 +16,7 @@ local function should_show_winline(winnr)
   end
 
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if fml.api.state.BUF_IGNORED_FILETYPES[filetype] then
+  if fml.api.state.is_ignored_filetype(filetype) then
     return false
   end
 

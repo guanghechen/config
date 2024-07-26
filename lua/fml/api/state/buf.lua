@@ -1,52 +1,25 @@
 local constant = require("fml.constant")
 local path = require("fml.std.path")
-local std_object = require("fml.std.object")
 
 ---@class fml.api.state
----@field public BUF_IGNORED_FILETYPES  table<string, boolean>
----@field public bufs                   table<integer, fml.api.state.IBufItem>
 local M = require("fml.api.state.mod")
-
-M.BUF_IGNORED_FILETYPES = {
-  ["PlenaryTestPopup"] = true,
-  ["TelescopePrompt"] = true,
-  ["Trouble"] = true,
-  ["checkhealth"] = true,
-  ["lspinfo"] = true,
-  ["neo-tree"] = true,
-  ["notify"] = true,
-  ["startuptime"] = true,
-  [constant.FT_TERM] = true,
-}
-M.bufs = {}
-
----@param bufnr                         integer
----@return integer
-function M.count_buf_copies(bufnr)
-  local copies = 0 ---@type integer
-  for _, tab in pairs(M.tabs) do
-    if tab.bufnr_set[bufnr] then
-      copies = copies + 1
-    end
-  end
-  return copies
-end
 
 ---@return nil
 function M.refresh_bufs()
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  local valid_bufnr_set = {} ---@type table<integer, boolean>
+  local bufs = {} ---@type table<integer, fml.types.api.state.IBufItem>
   for _, bufnr in ipairs(bufnrs) do
-    valid_bufnr_set[bufnr] = true
-    M.refresh_buf(bufnr)
+    local buf = M.refresh_buf(bufnr) ---@type fml.types.api.state.IBufItem|nil
+    if buf ~= nil then
+      bufs[bufnr] = buf
+    end
   end
-  std_object.filter_inline(M.bufs, function(_, bufnr)
-    return valid_bufnr_set[bufnr] == true
-  end)
+
+  M.bufs = bufs
 end
 
 ---@param bufnr                         integer|nil
----@return nil
+---@return fml.types.api.state.IBufItem|nil
 function M.refresh_buf(bufnr)
   if bufnr == nil or type(bufnr) ~= "number" then
     return
@@ -57,13 +30,14 @@ function M.refresh_buf(bufnr)
     return
   end
 
-  local buf = M.bufs[bufnr] ---@type fml.api.state.IBufItem|nil
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+
+  local buf = M.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
   if buf == nil then
     local filename = path.basename(filepath) ---@type string
     filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
 
-    ---@type fml.api.state.IBufItem
+    ---@type fml.types.api.state.IBufItem
     buf = {
       filepath = filepath,
       filename = filename,
@@ -73,20 +47,29 @@ function M.refresh_buf(bufnr)
     M.bufs[bufnr] = buf
   elseif buf.filepath ~= filepath then
     local filename = path.basename(filepath) ---@type string
-    filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
+    filename = #filename > 0 and filename or constant.BUF_UNTITLED
     buf.filepath = filepath
     buf.filename = filename
   end
+  return buf
 end
 
 ---@param bufnrs                        ?integer[]
----@return nil
+---@return integer
 function M.remove_unrefereced_bufs(bufnrs)
   bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
   local bufnrs_to_remove = {} ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
     if M.validate_buf(bufnr) then
-      if M.count_buf_copies(bufnr) < 1 then
+      local has_copy = false ---@type boolean
+      for _, tab in pairs(M.tabs) do
+        if tab.bufnr_set[bufnr] then
+          has_copy = true
+          break
+        end
+      end
+
+      if not has_copy then
         M.bufs[bufnr] = nil
         table.insert(bufnrs_to_remove, bufnr)
       end
@@ -98,19 +81,5 @@ function M.remove_unrefereced_bufs(bufnrs)
   for _, bufnr in ipairs(bufnrs_to_remove) do
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
-end
-
----@param bufnr                         integer
----@return boolean
-function M.validate_buf(bufnr)
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return false
-  end
-
-  if vim.fn.buflisted(bufnr) ~= 1 then
-    return false
-  end
-
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-  return not M.BUF_IGNORED_FILETYPES[filetype]
+  return #bufnrs_to_remove
 end

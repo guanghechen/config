@@ -50,7 +50,7 @@ end
 function M.find_history(opts)
   local unique = opts.unique ---@type boolean
   local winnr = vim.api.nvim_get_current_win()
-  local win = state.wins[winnr] ---@type fml.api.state.IWinItem|nil
+  local win = state.wins[winnr] ---@type fml.types.api.state.IWinItem|nil
   if win == nil then
     reporter.error({
       from = "fml.api.win",
@@ -92,7 +92,7 @@ function M.find_history(opts)
             display = display_text,
             ordinal = relative_filepath,
             item = { bufnr = bufnr, filepath = buf.filepath },
-            item_index = index
+            item_index = index,
           }
           table.insert(entries, entry)
         end
@@ -146,38 +146,38 @@ function M.find_history(opts)
     },
   })
   pickers
-      .new(picker_opts, {
-        prompt_title = prompt_title,
-        finder = finders.new_table({
-          results = entries,
-          entry_maker = function(entry)
-            return entry
-          end,
-        }),
-        sorter = conf.generic_sorter(picker_opts),
-        attach_mappings = function(prompt_bufnr, map)
-          local function set_selection()
-            local picker = action_state.get_current_picker(prompt_bufnr)
-            if picker ~= nil then
-              picker:set_selection(default_lnum - 1)
-            end
-          end
-
-          map("n", "<C-r>", set_selection)
-
-          actions.select_default:replace(function()
-            local selection = action_state.get_selected_entry()
-            actions.close(prompt_bufnr)
-            win.buf_history:go(selection.item_index)
-            vim.api.nvim_win_set_buf(winnr, selection.item.bufnr)
-            return false
-          end)
-
-          vim.defer_fn(set_selection, 32)
-          return true
+    .new(picker_opts, {
+      prompt_title = prompt_title,
+      finder = finders.new_table({
+        results = entries,
+        entry_maker = function(entry)
+          return entry
         end,
-      })
-      :find()
+      }),
+      sorter = conf.generic_sorter(picker_opts),
+      attach_mappings = function(prompt_bufnr, map)
+        local function set_selection()
+          local picker = action_state.get_current_picker(prompt_bufnr)
+          if picker ~= nil then
+            picker:set_selection(default_lnum - 1)
+          end
+        end
+
+        map("n", "<C-r>", set_selection)
+
+        actions.select_default:replace(function()
+          local selection = action_state.get_selected_entry()
+          actions.close(prompt_bufnr)
+          win.buf_history:go(selection.item_index)
+          vim.api.nvim_win_set_buf(winnr, selection.item.bufnr)
+          return false
+        end)
+
+        vim.defer_fn(set_selection, 32)
+        return true
+      end,
+    })
+    :find()
 end
 
 function M.find_history_unique()
