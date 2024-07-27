@@ -1,30 +1,17 @@
----@class fml.std.statuscolumn
+---@class guanghechen.core.action.ui_statucolumn
 local M = {}
 
 -- Returns a list of regular and extmark signs sorted by priority (low to high)
+---@param bufnr                         integer
+---@param lnum                          integer
 ---@return Sign[]
----@param buf number
----@param lnum number
-function M.get_signs(buf, lnum)
+function M.get_signs(bufnr, lnum)
   -- Get regular signs
-  ---@type Sign[]
-  local signs = {}
-
-  if vim.fn.has("nvim-0.10") == 0 then
-    -- Only needed for Neovim <0.10
-    -- Newer versions include legacy signs in nvim_buf_get_extmarks
-    for _, sign in ipairs(vim.fn.sign_getplaced(buf, { group = "*", lnum = lnum })[1].signs) do
-      local ret = vim.fn.sign_getdefined(sign.name)[1] --[[@as Sign]]
-      if ret then
-        ret.priority = sign.priority
-        signs[#signs + 1] = ret
-      end
-    end
-  end
+  local signs = {} ---@type Sign[]
 
   -- Get extmark signs
   local extmarks = vim.api.nvim_buf_get_extmarks(
-    buf,
+    bufnr,
     -1,
     { lnum - 1, 0 },
     { lnum - 1, -1 },
@@ -43,18 +30,17 @@ function M.get_signs(buf, lnum)
   table.sort(signs, function(a, b)
     return (a.priority or 0) < (b.priority or 0)
   end)
-
   return signs
 end
 
----@return Sign?
----@param buf number
----@param lnum number
-function M.get_mark(buf, lnum)
-  local marks = vim.fn.getmarklist(buf)
+---@param bufnr                         integer
+---@param lnum                          integer
+---@return Sign|nil
+function M.get_mark(bufnr, lnum)
+  local marks = vim.fn.getmarklist(bufnr)
   vim.list_extend(marks, vim.fn.getmarklist())
   for _, mark in ipairs(marks) do
-    if mark.pos[1] == buf and mark.pos[2] == lnum and mark.mark:match("[a-zA-Z]") then
+    if mark.pos[1] == bufnr and mark.pos[2] == lnum and mark.mark:match("[a-zA-Z]") then
       return { text = mark.mark:sub(2), texthl = "DiagnosticHint" }
     end
   end
@@ -62,6 +48,7 @@ end
 
 ---@alias Sign {name:string, text:string, texthl:string, priority:number}
 
+---@return string
 function M.statuscolumn()
   local win = vim.g.statusline_winid
   local buf = vim.api.nvim_win_get_buf(win)
@@ -114,8 +101,8 @@ function M.statuscolumn()
   return table.concat(components, "")
 end
 
----@param sign? Sign
----@param len? number
+---@param sign                          ?Sign
+---@param len                           ?number
 function M.icon(sign, len)
   sign = sign or {}
   len = len or 2
