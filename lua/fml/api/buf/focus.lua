@@ -33,31 +33,17 @@ function M.go(bufnr)
   end
 
   vim.api.nvim_win_set_buf(winnr, bufnr)
-  if state.wins[winnr] == nil then
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    state.refresh_tab(tabnr)
+  local win = state.get_win(winnr) ---@type fml.types.api.state.IWinItem|nil
+  if win ~= nil then
+    win.buf_history:push(bufnr)
   end
-
-  local win = state.wins[winnr] ---@type fml.types.api.state.IWinItem|nil
-  if win == nil then
-    reporter.error({
-      from = "fml.api.buf",
-      subject = "go",
-      message = "Cannot find win from the state",
-      details = {
-        winnr = winnr,
-        bufnr = bufnr,
-      },
-    })
-    return
-  end
-  win.buf_history:push(bufnr)
 end
 
 ---@param bufid                         integer the index of buffer list
 ---@return nil
 function M.focus(bufid)
-  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
   if tab == nil or bufid < 1 or bufid > #tab.bufnrs then
     return
   end
@@ -70,7 +56,8 @@ end
 ---@param step                         ?integer
 ---@return nil
 function M.focus_left(step)
-  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -89,7 +76,8 @@ end
 ---@param step                         ?integer
 ---@return nil
 function M.focus_right(step)
-  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end

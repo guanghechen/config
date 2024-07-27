@@ -1,8 +1,28 @@
 local constant = require("fml.constant")
 local History = require("fml.collection.history")
+local reporter = require("fml.std.reporter")
 
 ---@class fml.api.state
 local M = require("fml.api.state.mod")
+
+---@param winnr                         integer
+---@return fml.types.api.state.IWinItem|nil
+function M.get_win(winnr)
+  if M.wins[winnr] == nil then
+    M.refresh_win(winnr)
+  end
+
+  local win = M.wins[winnr] ---@type fml.types.api.state.IWinItem|nil
+  if win == nil then
+    reporter.error({
+      from = "fml.api.state",
+      subject = "get_win",
+      message = "Cannot find win from the state",
+      details = { winnr = winnr },
+    })
+  end
+  return win
+end
 
 ---@param tabnr                         integer
 ---@return nil

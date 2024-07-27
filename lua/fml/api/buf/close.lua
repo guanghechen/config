@@ -33,12 +33,7 @@ function M.close(bufnrs)
     end
   end
 
-  local removed_buf_count = state.remove_unrefereced_bufs(bufnrs) ---@type integer
-  if removed_buf_count > 0 then
-    vim.schedule(function()
-      state.refresh_tab(tabnr)
-    end)
-  end
+  state.remove_unrefereced_bufs(bufnrs) ---@type integer
 end
 
 ---@return nil
@@ -61,7 +56,8 @@ end
 ---@param step                          ?integer
 ---@return nil
 function M.close_left(step)
-  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -86,7 +82,8 @@ end
 ---@param step                          ?integer
 ---@return nil
 function M.close_right(step)
-  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -120,7 +117,8 @@ end
 
 ---@return nil
 function M.close_others()
-  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end

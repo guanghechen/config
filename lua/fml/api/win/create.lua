@@ -6,39 +6,36 @@ local M = require("fml.api.win.mod")
 
 ---@return nil
 function M.split_horizontal()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
 
   vim.cmd("split")
 
-  local winnr_new = vim.api.nvim_get_current_win() ---@type integer
-  local win_cur = state.wins[winnr_cur]
-  if win_cur ~= nil then
-    state.wins[winnr_new] = {
-      tabnr = tabnr,
-      buf_history = win_cur.buf_history:fork(),
-      lsp_symbols = std_array.slice(win_cur.lsp_symbols),
-    }
-  else
-    state.refresh_tab(tabnr)
+  if not state.is_floating_win(winnr_cur) then
+    local winnr_new = vim.api.nvim_get_current_win() ---@type integer
+    local win_cur = state.wins[winnr_cur]
+    if win_cur ~= nil then
+      state.wins[winnr_new] = {
+        buf_history = win_cur.buf_history:fork(),
+        lsp_symbols = std_array.slice(win_cur.lsp_symbols),
+      }
+    end
   end
 end
 
+---@return nil
 function M.split_vertical()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
 
   vim.cmd("vsplit")
 
-  local winnr_new = vim.api.nvim_get_current_win() ---@type integer
-  local win_cur = state.wins[winnr_cur]
-  if win_cur ~= nil then
-    state.wins[winnr_new] = {
-      tabnr = tabnr,
-      buf_history = win_cur.buf_history:fork(),
-      lsp_symbols = std_array.slice(win_cur.lsp_symbols),
-    }
-  else
-    state.refresh_tab(tabnr)
+  if not state.is_floating_win(winnr_cur) then
+    local winnr_new = vim.api.nvim_get_current_win() ---@type integer
+    local win_cur = state.wins[winnr_cur]
+    if win_cur ~= nil then
+      state.wins[winnr_new] = {
+        buf_history = win_cur.buf_history:fork(),
+        lsp_symbols = std_array.slice(win_cur.lsp_symbols),
+      }
+    end
   end
 end

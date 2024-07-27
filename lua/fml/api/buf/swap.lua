@@ -8,7 +8,8 @@ local M = require("fml.api.buf.mod")
 ---@param step                         ?integer
 ---@return nil
 function M.swap_left(step)
-  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end
@@ -31,7 +32,8 @@ end
 ---@param step                         ?integer
 ---@return nil
 function M.swap_right(step)
-  local tab = state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tab = state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     return
   end

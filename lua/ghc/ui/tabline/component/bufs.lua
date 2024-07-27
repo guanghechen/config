@@ -49,7 +49,8 @@ local M = {
   name = "bufs",
   ---@diagnostic disable-next-line: unused-local
   render = function(context, remain_width)
-    local tab = fml.api.state.get_current_tab() ---@type fml.types.api.state.ITabItem|nil
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local tab = fml.api.state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
     if tab == nil or #tab.bufnrs < 1 then
       return "", 0
     end

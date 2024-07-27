@@ -6,10 +6,9 @@ local reporter = require("fml.std.reporter")
 ---@class fml.api.state
 local M = require("fml.api.state.mod")
 
+---@param tabnr                         integer
 ---@return fml.types.api.state.ITabItem|nil
----@return integer
-function M.get_current_tab()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+function M.get_tab(tabnr)
   if M.tabs[tabnr] == nil then
     M.refresh_tab(tabnr)
   end
@@ -18,12 +17,12 @@ function M.get_current_tab()
   if tab == nil then
     reporter.error({
       from = "fml.api.state",
-      subject = "get_current_tab",
+      subject = "get_tab",
       message = "Cannot find tab from the state",
       details = { tabnr = tabnr },
     })
   end
-  return tab, tabnr
+  return tab
 end
 
 ---@return integer
