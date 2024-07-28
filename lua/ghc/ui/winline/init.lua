@@ -44,6 +44,11 @@ function M.render(winnr)
       get_max_width = function()
         return vim.api.nvim_win_get_width(winnr)
       end,
+      trigger_rerender = function()
+        vim.schedule(function()
+          M.update(winnr)
+        end)
+      end,
     })
     winline_map[winnr] = winline
 

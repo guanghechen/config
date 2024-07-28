@@ -6,6 +6,11 @@ local tabline = fml.ui.Nvimbar.new({
   get_max_width = function()
     return vim.o.columns
   end,
+  trigger_rerender = function()
+    vim.schedule(function()
+      vim.cmd("redrawtabline")
+    end)
+  end,
 })
 
 local c = {

@@ -4,15 +4,12 @@ local M = {
   will_change = function(context, prev_context)
     return prev_context == nil or context.mode ~= prev_context.mode
   end,
-  condition = function()
-    return vim.api.nvim_get_current_win() == vim.g.statusline_winid
-  end,
   render = function(context)
     local text = " " .. context.mode_name ---@type string
     local hlname = "f_sl_text_" .. context.mode ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
     return fml.nvimbar.txt(text, hlname), width
-  end
+  end,
 }
 
 return M

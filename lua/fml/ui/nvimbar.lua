@@ -15,6 +15,7 @@ local util = require("fml.std.util")
 ---@field private _components           table<string, fml.types.ui.nvimbar.IComponent>
 ---@field private _items                fml.types.ui.nvimbar.IItem[]
 ---@field private _get_max_width        fun(): integer
+---@field private _trigger_rerender     fun(): nil
 local M = {}
 M.__index = M
 
@@ -24,6 +25,7 @@ M.__index = M
 ---@field public component_sep_hlname   string
 ---@field public preset_context         ?fml.types.ui.nvimbar.IPresetContext
 ---@field public get_max_width          fun(): integer
+---@field public trigger_rerender       fun(): nil
 
 local modes_map = {
   ["n"] = { "normal", "NORMAL" },
@@ -119,6 +121,7 @@ function M.new(props)
   local component_sep_hlname = props.component_sep_hlname ---@type string
   local preset_context = props.preset_context or {} ---@type fml.types.ui.nvimbar.IPresetContext
   local get_max_width = props.get_max_width ---@type fun(): integer
+  local trigger_rerender = props.trigger_rerender ---@type fun(): nil
 
   local self = setmetatable({}, M)
   self.name = name
@@ -132,6 +135,7 @@ function M.new(props)
   self._components = {}
   self._items = {}
   self._get_max_width = get_max_width
+  self._trigger_rerender = trigger_rerender
   return self
 end
 
@@ -267,7 +271,7 @@ function M:render()
 
     self._rendering = false
     if self._dirty then
-      self:render()
+      self._trigger_rerender()
     end
   end)
   return self._last_result or ""
