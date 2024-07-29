@@ -1,3 +1,4 @@
+local History = require("fml.collection.history")
 local statusline = require("ghc.ui.statusline")
 local session = require("ghc.context.session")
 local util_find_scope = require("ghc.util.find.scope")
@@ -122,6 +123,8 @@ local function get_select()
         uuid = _uuid,
         items = {},
         input = fml.collection.Observable.from_value(""),
+        input_history = History.new({ name = _uuid, capacity = 100 }),
+        frecency = fml.collection.Frecency.new({ items = {} }),
         visible = fml.collection.Observable.from_value(false),
       }),
       width = 0.4,

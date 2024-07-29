@@ -1,7 +1,5 @@
-local History = require("fml.collection.history")
 local Subscriber = require("fml.collection.subscriber")
 local Ticker = require("fml.collection.ticker")
-local Frecency = require("fml.collection.frecency")
 local navigate = require("fml.std.navigate")
 local std_array = require("fml.std.array")
 local util = require("fml.std.util")
@@ -13,10 +11,10 @@ local defaults = require("fml.ui.select.defaults")
 ---@field protected _current_item_lnum  integer
 ---@field protected _current_item_idx   integer
 ---@field protected _dirty              boolean
+---@field protected _frecency           fml.types.collection.IFrecency|nil
 ---@field protected _filtering          boolean
----@field protected _frecency           fml.types.collection.IFrecency
 ---@field protected _full_matches       fml.types.ui.select.ILineMatch[]
----@field protected _input_history      fml.types.collection.IHistory
+---@field protected _input_history      fml.types.collection.IHistory|nil
 ---@field protected _last_input         string|nil
 ---@field protected _last_input_lower   string|nil
 ---@field protected _matches            fml.types.ui.select.ILineMatch[]
@@ -29,6 +27,8 @@ M.__index = M
 ---@field public title                  string
 ---@field public items                  fml.types.ui.select.IItem[]
 ---@field public input                  fml.types.collection.IObservable
+---@field public input_history          ?fml.types.collection.IHistory
+---@field public frecency               ?fml.types.collection.IFrecency
 ---@field public cmp                    ?fml.types.ui.select.ILineMatchCmp
 ---@field public match                  ?fml.types.ui.select.IMatch
 
@@ -41,8 +41,8 @@ function M.new(props)
   local title = props.title ---@type string
   local items = props.items ---@type fml.types.ui.select.IItem[]
   local input = props.input ---@type fml.types.collection.IObservable
-  local input_history = History.new({ name = uuid, capacity = 100 }) ---@type fml.types.collection.IHistory
-  local frecency = Frecency.new({ items = {} }) ---@type fml.types.collection.IFrecency
+  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
+  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local cmp = props.cmp or defaults.line_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
   local match = props.match or defaults.match ---@type fml.types.ui.select.IMatch
 
@@ -51,7 +51,7 @@ function M.new(props)
   for idx, item in ipairs(items) do
     local text = item.lower ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
-    local m = { idx = idx, score = frecency:score(item.uuid), pieces = {} } ---@type fml.types.ui.select.ILineMatch
+    local m = { idx = idx, score = frecency and frecency:score(item.uuid) or 0, pieces = {} } ---@type fml.types.ui.select.ILineMatch
     max_width = max_width < width and width or max_width ---@type integer
     table.insert(full_matches, m)
   end
@@ -90,8 +90,12 @@ end
 
 ---@return fml.types.ui.select.state.ISerializedData
 function M:dump()
-  local frecency = self._frecency:dump() ---@type fml.types.collection.frecency.ISerializedData
-  local input_history = self._input_history:dump() ---@type fml.types.collection.history.ISerializedData
+  ---@type fml.types.collection.frecency.ISerializedData|nil
+  local frecency = self._frecency and self._frecency:dump() or nil
+
+  ---@type fml.types.collection.history.ISerializedData|nil
+  local input_history = self._input_history and self._input_history:dump() or nil
+
   return { frecency = frecency, input_history = input_history } ---@type fml.types.ui.select.state.ISerializedData
 end
 
@@ -106,7 +110,6 @@ function M:filter()
     local input = self.input:snapshot() ---@type string
     local input_lower = input:lower() ---@type string
     local items = self.items ---@type fml.types.ui.select.IItem[]
-    local frecency = self._frecency ---@type fml.types.collection.IFrecency
 
     self._dirty = false
     util.run_async(
@@ -131,9 +134,12 @@ function M:filter()
       end,
       function(ok, matches)
         if ok and matches then
-          for _, match in ipairs(matches) do
-            local item = items[match.idx] ---@type fml.types.ui.select.IItem
-            match.score = match.score + frecency:score(item.uuid)
+          if self._frecency ~= nil then
+            local frecency = self._frecency ---@type fml.types.collection.IFrecency
+            for _, match in ipairs(matches) do
+              local item = items[match.idx] ---@type fml.types.ui.select.IItem
+              match.score = match.score + frecency:score(item.uuid)
+            end
           end
           table.sort(matches, self._cmp)
 
@@ -150,7 +156,9 @@ function M:filter()
         end
 
         self._filtering = false
-        self._input_history:push(input)
+        if self._input_history ~= nil then
+          self._input_history:push(input)
+        end
         self.ticker:tick()
 
         if self._dirty then
@@ -189,10 +197,14 @@ end
 ---@param data                          fml.types.ui.select.state.ISerializedData
 ---@return nil
 function M:load(data)
-  local frecency = data.frecency ---@type fml.types.collection.frecency.ISerializedData
-  local input_history = data.input_history ---@type fml.types.collection.history.ISerializedData
-  self._frecency:load(frecency)
-  self._input_history:load(input_history)
+  local frecency = data.frecency ---@type fml.types.collection.frecency.ISerializedData|nil
+  local input_history = data.input_history ---@type fml.types.collection.history.ISerializedData|nil
+  if frecency ~= nil and self._frecency ~= nil then
+    self._frecency:load(frecency)
+  end
+  if input_history ~= nil and self._input_history ~= nil then
+    self._input_history:load(input_history)
+  end
 end
 
 ---@param lnum                          integer
@@ -230,8 +242,12 @@ end
 function M:on_confirmed(item)
   local last_input = self._last_input
   if last_input ~= nil then
-    self._frecency:access(item.uuid)
-    self._input_history:push(last_input)
+    if self._frecency ~= nil then
+      self._frecency:access(item.uuid)
+    end
+    if self._input_history ~= nil then
+      self._input_history:push(last_input)
+    end
   end
 end
 
@@ -252,13 +268,23 @@ end
 function M:update_items(items)
   local max_width = 0 ---@type integer
   local full_matches = {} ---@type fml.types.ui.select.ILineMatch[]
-  local frecency = self._frecency ---@type fml.types.collection.IFrecency
-  for idx, item in ipairs(items) do
-    local text = item.display:lower() ---@type string
-    local width = vim.fn.strwidth(text) ---@type integer
-    local match = { idx = idx, score = frecency:score(item.uuid), pieces = {} } ---@type fml.types.ui.select.ILineMatch
-    max_width = max_width < width and width or max_width
-    table.insert(full_matches, match)
+  if self._frecency ~= nil then
+    local frecency = self._frecency ---@type fml.types.collection.IFrecency
+    for idx, item in ipairs(items) do
+      local text = item.display:lower() ---@type string
+      local width = vim.fn.strwidth(text) ---@type integer
+      local match = { idx = idx, score = frecency:score(item.uuid), pieces = {} } ---@type fml.types.ui.select.ILineMatch
+      max_width = max_width < width and width or max_width
+      table.insert(full_matches, match)
+    end
+  else
+    for idx, item in ipairs(items) do
+      local text = item.display:lower() ---@type string
+      local width = vim.fn.strwidth(text) ---@type integer
+      local match = { idx = idx, score = 0, pieces = {} } ---@type fml.types.ui.select.ILineMatch
+      max_width = max_width < width and width or max_width
+      table.insert(full_matches, match)
+    end
   end
   table.sort(full_matches, self._cmp)
 

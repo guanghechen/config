@@ -38,8 +38,8 @@
 ---| fun(params: fml.types.ui.select.main.IRenderLineParams): string
 
 ---@class fml.types.ui.select.state.ISerializedData
----@field frecency                      fml.types.collection.frecency.ISerializedData
----@field input_history                 fml.types.collection.history.ISerializedData
+---@field frecency                      fml.types.collection.frecency.ISerializedData|nil
+---@field input_history                 fml.types.collection.history.ISerializedData|nil
 
 ---@class fml.types.ui.select.IState
 ---@field public uuid                   string
