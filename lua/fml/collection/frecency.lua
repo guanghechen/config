@@ -1,12 +1,16 @@
+local util = require("fml.std.util")
+
 ---@class fml.collection.Frecency : fml.types.collection.IFrecency
----@field public MAX_TIMESTAMPS        integer
----@field private _items                table<string, fml.types.collection.frecency.IItem>
+---@field public MAX_TIMESTAMPS         integer
+---@field protected _items              table<string, fml.types.collection.frecency.IItem>
+---@field protected _normalize          fun(key: string): string
 local M = {}
 M.__index = M
 
 ---@class fml.collection.frecency.IProps
 ---@field public MAX_TIMESTAMPS         ?integer
 ---@field public items                  table<string, fml.types.collection.frecency.IItem>
+---@field public normalize              ?fun(key: string): string
 
 ---@class fml.collection.frecency.IDeserializeProps
 ---@field public data                   fml.types.collection.frecency.ISerializedData
@@ -19,9 +23,11 @@ function M.new(props)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
   local items = props.items ---@type table<string, fml.types.collection.frecency.IItem>
+  local normalize = props.normalize or util.identity ---@type fun(key: string): string
 
   self.MAX_TIMESTAMPS = MAX_TIMESTAMPS
   self._items = items
+  self._normalize = normalize
 
   return self
 end
@@ -33,14 +39,15 @@ function M.deserialize(props)
   return M.new({ items = data.items })
 end
 
----@param uuid                          string
+---@param key                          string
 ---@return nil
-function M:access(uuid)
+function M:access(key)
+  key = self._normalize(key)
   local timestamp = os.time() ---@type integer
-  local item = self._items[uuid] ---@type fml.types.collection.frecency.IItem|nil
+  local item = self._items[key] ---@type fml.types.collection.frecency.IItem|nil
   if item == nil then
     item = { timestamps = { timestamp }, idx = 1 } ---@type fml.types.collection.frecency.IItem
-    self._items[uuid] = item
+    self._items[key] = item
   else
     local idx = item.idx == self.MAX_TIMESTAMPS and 1 or item.idx + 1 ---@type integer
     item.idx = idx
@@ -62,11 +69,12 @@ function M:load(data)
   self._items = items
 end
 
----@param uuid                          string
+---@param key                          string
 ---@return number
-function M:score(uuid)
+function M:score(key)
+  key = self._normalize(key)
   local timestamp_cur = os.time() ---@type integer
-  local item = self._items[uuid] ---@type fml.types.collection.frecency.IItem|nil
+  local item = self._items[key] ---@type fml.types.collection.frecency.IItem|nil
   local score = 0 ---@type number
   if item ~= nil then
     for _, timestamp in ipairs(item.timestamps) do
@@ -92,7 +100,7 @@ function M:score(uuid)
   ---! Remove the item if the score is below the threshold.
   if score <= 0 then
     score = 0
-    self._items[uuid] = nil
+    self._items[key] = nil
   end
 
   return score

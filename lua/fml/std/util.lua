@@ -60,6 +60,12 @@ function M.get_selected_text()
   return selected_text or ""
 end
 
+---@param value                         any
+---@return any
+function M.identity(value)
+  return value
+end
+
 ---@param ...                           any[]
 ---@return any
 function M.noop(...) end

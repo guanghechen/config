@@ -11,10 +11,24 @@ local util_find_scope = require("ghc.util.find.scope")
 ---@class ghc.command.find
 local M = require("ghc.command.find.mod")
 
-local _uuid = "eba42821-7a63-42b8-91bd-43a8005f2c91" ---@type string
-local _filepath = fml.path.locate_session_filepath({ filename = "state_find_files.json" }) ---@type string
-local _frecency = fml.collection.Frecency.new({ items = {} }) ---@type fml.types.collection.IFrecency
-local _input_history = History.new({ name = _uuid, capacity = 100, validate = fml.string.is_non_blank_string }) ---@type fml.types.collection.IHistory
+---@type string
+local _filepath = fml.path.locate_session_filepath({ filename = "state.find_files.json" })
+
+---@type fml.types.collection.IFrecency
+local _frecency = fml.collection.Frecency.new({
+  items = {},
+  normalize = function(key)
+    return fml.md5.sumhexa(key)
+  end,
+})
+
+---@type fml.types.collection.IHistory
+local _input_history = History.new({
+  name = "find_files",
+  capacity = 100,
+  validate = fml.string.is_non_blank_string,
+})
+
 local _state_data = fml.fs.read_json({ filepath = _filepath, silent_on_bad_path = true, silent_on_bad_json = false })
 if _state_data ~= nil then
   ---@cast _state_data ghc.command.find.files.IStateData
@@ -148,8 +162,8 @@ local function get_select()
 
     _select = fml.ui.select.Select.new({
       state = fml.ui.select.State.new({
-        title = "Select file",
-        uuid = _uuid,
+        title = "Find files",
+        uuid = "eba42821-7a63-42b8-91bd-43a8005f2c91",
         items = {},
         input = fml.collection.Observable.from_value(""),
         input_history = _input_history,

@@ -61,7 +61,7 @@ function M.new(props)
   local max_height = props.max_height or 0.8 ---@type number
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
-  local augroup_win_focus = util.augroup(state.uuid .. "_win_focus") ---@type integer
+  local augroup_win_focus = util.augroup(state.uuid .. ":win_focus") ---@type integer
 
   ---@return nil
   local function on_close()
