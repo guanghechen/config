@@ -35,4 +35,4 @@
 ---@field public enable                 fun(self: fml.types.ui.INvimbar, name: string): fml.types.ui.INvimbar
 ---@field public place                  fun(self: fml.types.ui.INvimbar, name: string, position: fml.enums.nvimbar.ComponentPosition): fml.types.ui.INvimbar
 ---@field public register               fun(self: fml.types.ui.INvimbar, name: string, component: fml.types.ui.nvimbar.IRawComponent, enabled?: boolean): fml.types.ui.INvimbar
----@field public render                 fun(self: fml.types.ui.INvimbar): string
+---@field public render                 fun(self: fml.types.ui.INvimbar, force: boolean): string

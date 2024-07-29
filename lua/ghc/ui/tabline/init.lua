@@ -1,3 +1,5 @@
+local tabline_dirty = true ---@type boolean
+
 ---@type fml.types.ui.INvimbar
 local tabline = fml.ui.Nvimbar.new({
   name = "tabline",
@@ -7,9 +9,8 @@ local tabline = fml.ui.Nvimbar.new({
     return vim.o.columns
   end,
   trigger_rerender = function()
-    vim.schedule(function()
-      vim.cmd("redrawtabline")
-    end)
+    tabline_dirty = false
+    vim.cmd("redrawtabline")
   end,
 })
 
@@ -30,47 +31,14 @@ tabline
   :place(c.search, "left")
   :place(c.bufs, "left")
 
-local dirty = true
-local running = false
-local last_tabline_result = "" ---@type string
-
 ---@class ghc.ui.tabline
 local M = { cnames = vim.deepcopy(c) }
 
 ---@return string
 function M.render()
-  if running then
-    dirty = true
-    return last_tabline_result
-  end
-
-  if not dirty then
-    return last_tabline_result
-  end
-
-  dirty = false
-  running = true
-  vim.defer_fn(function()
-    local ok, result = pcall(tabline.render, tabline)
-    if ok then
-      last_tabline_result = result
-      dirty = false
-      vim.cmd("redrawtabline")
-    else
-      fml.reporter.error({
-        from = "ghc.ui.tabline",
-        subject = "render",
-        message = "Encounter errors while render tabline",
-        details = { result = result },
-      })
-    end
-
-    running = false
-    if dirty then
-      M.render()
-    end
-  end, 32)
-  return last_tabline_result
+  local result = tabline:render(tabline_dirty) ---@type string
+  tabline_dirty = true
+  return result
 end
 
 return M

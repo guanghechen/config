@@ -188,16 +188,18 @@ function M:register(name, raw_component, enabled)
   return self
 end
 
+---@param force boolean
 ---@return string
-function M:render()
-  if self._rendering then
-    self._dirty = true
+function M:render(force)
+  self._dirty = self._dirty or force
+  if self._rendering or not self._dirty then
     return self._last_result or ""
   end
 
-  self._dirty = false
   self._rendering = true
   vim.schedule(function()
+    self._dirty = false
+
     local sep = self._sep ---@type string
     local sep_width = self._sep_width ---@type integer
     local context = build_context(self._preset_context) ---@type fml.types.ui.nvimbar.IContext
@@ -271,9 +273,12 @@ function M:render()
 
     self._rendering = false
     if self._dirty then
+      self:render(false)
+    else
       self._trigger_rerender()
     end
   end)
+
   return self._last_result or ""
 end
 

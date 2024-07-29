@@ -1,3 +1,5 @@
+local statusline_dirty = true ---@type boolean
+
 ---@type fml.types.ui.INvimbar
 local statusline = fml.ui.Nvimbar.new({
   name = "statusline",
@@ -7,9 +9,8 @@ local statusline = fml.ui.Nvimbar.new({
     return vim.o.columns
   end,
   trigger_rerender = function()
-    vim.schedule(function()
-      vim.cmd("redrawstatus")
-    end)
+    statusline_dirty = false
+    vim.cmd("redrawstatus")
   end,
 })
 
@@ -75,7 +76,9 @@ end
 
 ---@return string
 function M.render()
-  return statusline:render()
+  local result = statusline:render(statusline_dirty) ---@type string
+  statusline_dirty = true
+  return result
 end
 
 return M

@@ -28,8 +28,10 @@ local winline_map = {} ---@type table<string, fml.types.ui.INvimbar>
 ---@class ghc.ui.winline
 local M = {}
 
+---@param winnr                         integer
+---@param force                         boolean
 ---@return string
-function M.render(winnr)
+function M.render(winnr, force)
   if not should_show_winline(winnr) then
     return ""
   end
@@ -46,7 +48,7 @@ function M.render(winnr)
       end,
       trigger_rerender = function()
         vim.schedule(function()
-          M.update(winnr)
+          M.update(winnr, false)
         end)
       end,
     })
@@ -69,14 +71,15 @@ function M.render(winnr)
       :place(c.filename, "left")
       :place(c.lsp, "left")
   end
-  return winline:render()
+  return winline:render(force)
 end
 
 ---@param winnr                         integer
+---@param force                         boolean
 ---@return nil
-function M.update(winnr)
+function M.update(winnr, force)
   if vim.api.nvim_win_is_valid(winnr) then
-    local result = M.render(winnr) ---@type string
+    local result = M.render(winnr, force) ---@type string
     if #result > 0 then
       vim.wo[winnr].winbar = result
     end
@@ -86,7 +89,7 @@ end
 fml.api.state.winline_dirty_nr:subscribe(fml.collection.Subscriber.new({
   on_next = function(winnr)
     if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-      M.update(winnr)
+      M.update(winnr, true)
     end
   end,
 }))

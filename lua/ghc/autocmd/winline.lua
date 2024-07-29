@@ -11,18 +11,18 @@ vim.api.nvim_create_autocmd({ "WinResized" }, {
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
       vim.schedule(function()
-        winline.update(winnr)
+        winline.update(winnr, true)
       end)
     end
   end,
 })
 
-vim.api.nvim_create_autocmd({ "WinEnter", "WinLeave", "BufWinEnter" }, {
+vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
   group = augroups.refresh_winline,
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     vim.schedule(function()
-      winline.update(winnr)
+      winline.update(winnr, true)
     end)
-  end
+  end,
 })
