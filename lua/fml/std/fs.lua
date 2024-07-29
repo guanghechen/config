@@ -66,7 +66,7 @@ function M.read_json(params)
 
   local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
   if not ok_to_decode_json then
-    if not silent_on_bad_json  then
+    if not silent_on_bad_json then
       reporter.warn({
         from = "fml.std.fs",
         subject = "read_json",
@@ -149,9 +149,10 @@ end
 
 ---@param filepath                      string
 ---@param data                          any
+---@param prettier                      boolean
 ---@return nil
-function M.write_json(filepath, data)
-  local ok_to_encode_json, json_text = pcall(std_json.stringify_prettier, data)
+function M.write_json(filepath, data, prettier)
+  local ok_to_encode_json, json_text = pcall(prettier and std_json.stringify_prettier or std_json.stringify, data)
   if not ok_to_encode_json then
     reporter.warn({
       from = "fml.std.fs",

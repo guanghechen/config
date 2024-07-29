@@ -17,7 +17,7 @@ fml.disposable:add_disposable(fml.collection.Disposable.new({
   on_dispose = function()
     if _select ~= nil then
       local data = _select.state:dump() ---@type fml.types.ui.select.state.ISerializedData
-      fml.fs.write_json(_filepath, data)
+      fml.fs.write_json(_filepath, data, false)
     end
   end,
 }))

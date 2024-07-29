@@ -41,8 +41,8 @@
 
 ---@class fml.types.api.state.ISerializedData
 ---@field public bufs                   fml.types.api.state.IBufItemData[]
----@field public tabs                   fml.types.api.state.IWinItemData[]
----@field public wins                   fml.types.api.state.ITabItemData[]
+---@field public tabs                   fml.types.api.state.ITabItemData[]
+---@field public wins                   fml.types.api.state.IWinItemData[]
 ---@field public tab_history            fml.types.collection.history.ISerializedData
 ---@field public win_history            fml.types.collection.history.ISerializedData
 

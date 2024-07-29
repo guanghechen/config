@@ -145,7 +145,7 @@ function Viewmodel:save()
   end
 
   local data = self:snapshot() ---@type table
-  fs.write_json(filepath, data)
+  fs.write_json(filepath, data, true)
 end
 
 ---@param opts                          ?{ silent_on_notfound?: boolean }

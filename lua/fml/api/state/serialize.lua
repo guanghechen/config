@@ -93,7 +93,7 @@ function M.save(filepath)
     }
     table.insert(data.tabs, item)
   end
-  fs.write_json(filepath, data)
+  fs.write_json(filepath, data, false)
 end
 
 ---@param filepath                      string
