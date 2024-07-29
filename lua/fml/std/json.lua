@@ -1,21 +1,7 @@
+local is = require("fml.std.is")
+
 ---@class fml.std.json
 local M = {}
-
----@param obj table
----@return boolean
-local function check_if_array(obj)
-  if #obj > 0 then
-    return true
-  end
-
-  for key, _ in pairs(table) do
-    if type(key) ~= "number" then
-      return false
-    end
-  end
-
-  return true
-end
 
 ---@param json any
 ---@param preceding string
@@ -51,7 +37,7 @@ local function stringify_json_prettier(json, preceding, lines)
 
   if t == "table" then
     local preceding_next = preceding .. "  "
-    if check_if_array(json) then
+    if is.array(json) then
       if #json == 0 then
         lines[#lines] = last_line .. "[]"
         return

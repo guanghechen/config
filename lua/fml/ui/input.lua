@@ -8,7 +8,7 @@ setmetatable(M, { __index = Textarea })
 
 ---@class fml.ui.input.IProps
 ---@field public position               fml.enums.BoxPosition
----@field public width                  number
+---@field public width                  ?number
 ---@field public title                  ?string
 ---@field public max_width              ?number
 ---@field public min_width              ?number
@@ -22,7 +22,7 @@ setmetatable(M, { __index = Textarea })
 ---@return fml.ui.Input
 function M.new(props)
   local position = props.position ---@type fml.enums.BoxPosition
-  local width = props.width ---@type number
+  local width = props.width ---@type number|nil
   local max_width = props.max_width ---@type number|nil
   local min_width = props.min_width ---@type number|nil
   local title = props.title ---@type string|nil
@@ -99,11 +99,14 @@ end
 ---@param params                        fml.types.ui.input.IOpenParams
 ---@return nil
 function M:open(params)
+  local text = params.initial_value ---@type string
+
   ---@type fml.types.ui.textarea.IOpenParams
   local opts = {
-    initial_lines = { params.initial_value },
+    initial_lines = { text },
     row = params.row,
     col = params.col,
+    width = params.width or vim.fn.strwidth(text) + 10,
     win_cursor_col = params.win_cursor_col,
     win_cursor_row = params.win_cursor_row,
   }

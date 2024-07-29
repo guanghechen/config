@@ -1,21 +1,39 @@
 ---@class fml.std.is
 local M = {}
 
----@param disposable                    any
+---@param value                         any
 ---@return boolean
-function M.disposable(disposable)
-  return type(disposable) == "table"
-    and type(disposable.isDisposable) == "function"
-    and type(disposable.dispose) == "function"
+function M.array(value)
+  if type(value) ~= "table" then
+    return false
+  end
+
+  if #value > 0 then
+    return true
+  end
+
+  for key, _ in pairs(table) do
+    if type(key) ~= "number" then
+      return false
+    end
+  end
+
+  return true
 end
 
----@param observable                    any
+---@param value                         any
 ---@return boolean
-function M.observable(observable)
-  return type(observable) == "table"
-    and type(observable.snapshot) == "function"
-    and type(observable.next) == "function"
-    and type(observable.subscribe) == "function"
+function M.disposable(value)
+  return type(value) == "table" and type(value.isDisposable) == "function" and type(value.dispose) == "function"
+end
+
+---@param value                         any
+---@return boolean
+function M.observable(value)
+  return type(value) == "table"
+    and type(value.snapshot) == "function"
+    and type(value.next) == "function"
+    and type(value.subscribe) == "function"
 end
 
 return M

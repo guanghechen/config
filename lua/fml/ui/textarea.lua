@@ -5,8 +5,8 @@ local util = require("fml.std.util")
 
 ---@class fml.ui.Textarea : fml.types.ui.ITextarea
 ---@field protected position            fml.enums.BoxPosition
----@field protected width               number
----@field protected height              number
+---@field protected width               number|nil
+---@field protected height              number|nil
 ---@field protected max_width           number|nil
 ---@field protected max_height          number|nil
 ---@field protected min_width           number|nil
@@ -20,8 +20,8 @@ M.__index = M
 
 ---@class fml.ui.textarea.IProps
 ---@field public position               fml.enums.BoxPosition
----@field public width                  number
----@field public height                 number
+---@field public width                  ?number
+---@field public height                 ?number
 ---@field public title                  ?string
 ---@field public max_width              ?number
 ---@field public max_height             ?number
@@ -40,13 +40,13 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local position = props.position ---@type fml.enums.BoxPosition
-  local width = props.width ---@type number
-  local height = props.height ---@type number
-  local max_width = props.max_width ---@type number
-  local max_height = props.max_height ---@type number
-  local min_width = props.min_width ---@type number
-  local min_height = props.min_height ---@type number
-  local filetype = props.filetype ---@type string
+  local width = props.width ---@type number|nil
+  local height = props.height ---@type number|nil
+  local max_width = props.max_width ---@type number|nil
+  local max_height = props.max_height ---@type number|nil
+  local min_width = props.min_width ---@type number|nil
+  local min_height = props.min_height ---@type number|nil
+  local filetype = props.filetype ---@type string|nil
 
   ---@type table<string, any>
   local win_opts = vim.tbl_extend("force", {
@@ -133,8 +133,8 @@ end
 function M:open(params)
   local rect = box.measure({
     position = self.position,
-    width = self.width,
-    height = self.height,
+    width = params.width or self.width or 0.5,
+    height = params.height or self.height or 0.5,
     row = params.row,
     col = params.col,
     cursor_row = params.win_cursor_row,

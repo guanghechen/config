@@ -8,5 +8,7 @@
 ---@field public initial_value          fml.types.T
 ---@field public row                    ?number
 ---@field public col                    ?number
+---@field public width                  ?number
+---@field public height                 ?number
 ---@field public win_cursor_row         ?integer
 ---@field public win_cursor_col         ?integer

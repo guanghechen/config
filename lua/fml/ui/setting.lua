@@ -9,8 +9,8 @@ setmetatable(M, { __index = Textarea })
 
 ---@class fml.ui.setting.IProps
 ---@field public position               fml.enums.BoxPosition
----@field public width                  number
----@field public height                 number
+---@field public width                  ?number
+---@field public height                 ?number
 ---@field public title                  ?string
 ---@field public max_width              ?number
 ---@field public max_height             ?number
@@ -26,8 +26,8 @@ setmetatable(M, { __index = Textarea })
 ---@return fml.ui.Setting
 function M.new(props)
   local position = props.position ---@type fml.enums.BoxPosition
-  local width = props.width ---@type number
-  local height = props.height ---@type number
+  local width = props.width ---@type number|nil
+  local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil
   local max_height = props.max_height ---@type number|nil
   local min_width = props.min_width ---@type number|nil
@@ -103,11 +103,14 @@ end
 ---@param params                        fml.types.ui.setting.IOpenParams
 ---@return nil
 function M:open(params)
+  local lines = json.stringify_prettier_lines(params.initial_value) ---@type string[]
   ---@type fml.types.ui.textarea.IOpenParams
   local opts = {
-    initial_lines = json.stringify_prettier_lines(params.initial_value),
+    initial_lines = lines,
     row = params.row,
     col = params.col,
+    height = params.height or self.height or #lines + 1,
+    width = params.width,
     win_cursor_col = params.win_cursor_col,
     win_cursor_row = params.win_cursor_row,
   }

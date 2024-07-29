@@ -8,6 +8,7 @@
 ---@field public initial_value          string
 ---@field public row                    ?number
 ---@field public col                    ?number
+---@field public width                  ?number
 ---@field public text_cursor_col        ?integer
 ---@field public win_cursor_row         ?integer
 ---@field public win_cursor_col         ?integer

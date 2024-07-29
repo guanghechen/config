@@ -154,11 +154,9 @@ function M.on_edit_full_config()
   M.cursor_col = cursor[2]
 
   local data = state.get_data() ---@type ghc.command.replace.state.IData
-  local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
   local setting = fml.ui.Setting.new({
     position = "center",
     width = 100,
-    height = #lines,
     title = state.get_mode() == "search" and "[Search options]" or "[Replace options]",
     on_confirm = function(raw_data)
       ---@cast raw_data ghc.command.replace.state.IData

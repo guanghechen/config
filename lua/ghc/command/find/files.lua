@@ -4,6 +4,9 @@ local statusline = require("ghc.ui.statusline")
 local session = require("ghc.context.session")
 local util_find_scope = require("ghc.util.find.scope")
 
+---@class ghc.command.find.files.IConfigData
+---@field public exclude_patterns       string[]
+
 ---@class ghc.command.find.files.IStateData
 ---@field frecency                      ?fml.types.collection.frecency.ISerializedData|nil
 ---@field input_history                 ?fml.types.collection.history.ISerializedData|nil
@@ -81,23 +84,46 @@ local function change_scope(scope)
 end
 
 ---@return nil
+local function edit_config()
+  ---@type ghc.command.find.files.IConfigData
+  local data = {
+    exclude_patterns = session.find_exclude_pattern:snapshot(),
+  }
+  local setting = fml.ui.Setting.new({
+    position = "center",
+    width = 100,
+    title = "Edit Configuration (find files)",
+    validate = function(raw_data)
+      if type(raw_data) ~= "table" then
+        return "Invalid find_files configuration, expect an object."
+      end
+      ---@cast raw_data ghc.command.find.files.IConfigData
+      if raw_data.exclude_patterns == nil or not fml.is.array(raw_data.exclude_patterns) then
+        return "Invalid data.exclude_patterns, expect an array."
+      end
+    end,
+    on_confirm = function(raw_data)
+      ---@cast raw_data ghc.command.replace.state.IData
+      local raw = vim.tbl_extend("force", data, raw_data)
+
+      local exclude_patterns = raw.exclude_patterns ---@type string[]
+      session.find_exclude_pattern:next(exclude_patterns)
+      M.reload()
+    end,
+  })
+  setting:open({
+    initial_value = data,
+    text_cursor_row = 1,
+    text_cursor_col = 1,
+  })
+end
+
+---@return nil
 function M.reload()
   if _select ~= nil then
     local find_cwd = state_find_cwd:snapshot() ---@type string
-    local paths = fml.oxi.collect_file_paths(find_cwd, {
-      ".cache/**",
-      ".git/**",
-      ".yarn/**",
-      "**/build/**",
-      "**/debug/**",
-      "**/node_modules/**",
-      "**/target/**",
-      "**/tmp/**",
-      "**/*.pdf",
-      "**/*.mkv",
-      "**/*.mp4",
-      "**/*.zip",
-    })
+    local exclude_pattern = session.find_exclude_pattern:snapshot() ---@type string[]
+    local paths = fml.oxi.collect_file_paths(find_cwd, exclude_pattern)
     local items = {} ---@type fml.types.ui.select.IItem[]
     for _, path in ipairs(paths) do
       local item = { uuid = path, display = path, lower = path:lower() } ---@type fml.types.ui.select.IItem
@@ -133,6 +159,12 @@ local function get_select()
 
     ---@type fml.types.IKeymap[]
     local input_keymaps = {
+      {
+        modes = { "i", "n" },
+        key = "<c-b>c",
+        callback = edit_config,
+        desc = "find: edit configuration",
+      },
       {
         modes = { "n", "v" },
         key = "<leader>w",
