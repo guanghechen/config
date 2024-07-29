@@ -66,13 +66,16 @@ function M.close_left(step)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
   local bufid_next = navigate.limit(bufid_cur, -step, #tab.bufnrs)
+
   local bufnrs_to_remove = {} ---@type integer[]
-  local visible_bufnrs = M.get_visible_bufnrs(0) ---@type table<integer, boolean>
+  local visible_bufnrs = M.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   for id = bufid_next, bufid_cur - 1, 1 do
     local bufnr = tab.bufnrs[id] ---@type integer
-    local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
-    if (buf == nil or not buf.pinned) and not visible_bufnrs[bufnr] then
-      table.insert(bufnrs_to_remove, bufnr)
+    if not visible_bufnrs[bufnr] then
+      local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
+      if buf == nil or not buf.pinned then
+        table.insert(bufnrs_to_remove, bufnr)
+      end
     end
   end
 
@@ -92,13 +95,16 @@ function M.close_right(step)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
   local bufid_next = navigate.limit(bufid_cur, step, #tab.bufnrs)
+
   local bufnrs_to_remove = {} ---@type integer[]
-  local visible_bufnrs = M.get_visible_bufnrs(0) ---@type table<integer, boolean>
+  local visible_bufnrs = M.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   for id = bufid_cur + 1, bufid_next, 1 do
     local bufnr = tab.bufnrs[id] ---@type integer
-    local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
-    if (buf == nil or not buf.pinned) and not visible_bufnrs[bufnr] then
-      table.insert(bufnrs_to_remove, bufnr)
+    if not visible_bufnrs[bufnr] then
+      local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
+      if buf == nil or not buf.pinned then
+        table.insert(bufnrs_to_remove, bufnr)
+      end
     end
   end
 
@@ -124,11 +130,13 @@ function M.close_others()
   end
 
   local bufnrs_to_remove = {} ---@type integer[]
-  local visible_bufnrs = M.get_visible_bufnrs(0) ---@type table<integer, boolean>
+  local visible_bufnrs = M.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   for _, bufnr in ipairs(tab.bufnrs) do
-    local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
-    if (buf == nil or not buf.pinned) and not visible_bufnrs[bufnr] then
-      table.insert(bufnrs_to_remove, bufnr)
+    if not visible_bufnrs[bufnr] then
+      local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
+      if buf == nil or not buf.pinned then
+        table.insert(bufnrs_to_remove, bufnr)
+      end
     end
   end
 
