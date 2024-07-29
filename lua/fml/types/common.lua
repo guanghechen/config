@@ -1,3 +1,9 @@
+---@alias fml.enums.VimMode
+---| "i"
+---| "n"
+---| "v"
+---| "t"
+
 ---@alias fml.types.T any
 
 ---@generic T
@@ -13,7 +19,7 @@
 ---@field public silent                 ?boolean
 
 ---@class fml.types.IKeymap : fml.types.IKeymapOverridable
----@field public modes                  string[]
+---@field public modes                  fml.enums.VimMode[]
 ---@field public key                    string
 ---@field public callback               fun(): nil
 ---@field public desc                   string

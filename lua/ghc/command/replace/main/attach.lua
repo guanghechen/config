@@ -12,7 +12,7 @@ function M.record_cursor_pos(winnr)
 end
 
 ---@param key                           ghc.enums.command.replace.StateKey
----@param position                      ?"center"|"cursor
+---@param position                      ?fml.enums.BoxPosition
 ---@return nil
 function M.edit_string(key, position)
   position = position or "cursor"
@@ -52,19 +52,18 @@ function M.edit_string(key, position)
     cursor_col = math.max(cursor_col, 0)
     cursor_col = math.min(cursor_col, cursor_row > 0 and cursor_row <= #lines and #lines[cursor_row] or 0)
     local textarea = fml.ui.Textarea.new({
-      title = "[" .. key .. "]",
       position = position,
-    })
-    textarea:open({
-      value = lines,
-      cursor_row = cursor_row,
-      cursor_col = cursor_col,
       height = 10,
       width = 80,
-      on_confirm = function(next_lines)
-        local resolved = table.concat(next_lines, "\n") ---@type string
-        state.set_value(key, resolved)
+      title = "[" .. key .. "]",
+      on_confirm = function(text)
+        state.set_value(key, text)
       end,
+    })
+    textarea:open({
+      initial_text = table.concat(lines, "\n"),
+      text_cursor_row = cursor_row,
+      text_cursor_col = cursor_col,
     })
   end
 end
@@ -108,23 +107,24 @@ function M.edit_list(key, position)
     cursor_col = math.min(cursor_col, cursor_row > 0 and cursor_row <= #lines and #lines[cursor_row] or 0)
 
     local textarea = fml.ui.Textarea.new({
-      title = "[" .. key .. "]",
       position = position,
-    })
-    textarea:open({
-      value = lines,
-      cursor_row = cursor_row,
-      cursor_col = cursor_col,
       height = 10,
       width = 80,
-      on_confirm = function(next_value)
+      title = "[" .. key .. "]",
+      on_confirm = function(text)
         local normalized_list = {}
-        for _, next_line in ipairs(next_value) do
-          table.insert(normalized_list, fml.oxi.normalize_comma_list(next_line))
+        local next_lines = vim.split(text, "\n") ---@type string[]
+        for _, line in ipairs(next_lines) do
+          table.insert(normalized_list, fml.oxi.normalize_comma_list(line))
         end
         local normailized = table.concat(normalized_list, ", ")
         state.set_value(key, normailized)
       end,
+    })
+    textarea:open({
+      initial_text = table.concat(lines, "\n"),
+      text_cursor_row = cursor_row,
+      text_cursor_col = cursor_col,
     })
   end
 end
@@ -156,20 +156,23 @@ function M.on_edit_full_config()
   local data = state.get_data() ---@type ghc.command.replace.state.IData
   local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
   local textarea = fml.ui.Textarea.new({
-    title = "[Replace options]",
     position = "center",
-  })
-  textarea:open({
-    title = state.get_mode() == "search" and "[Search options]" or "[Replace options]",
-    value = lines,
-    height = #lines,
-    cursor_row = 1,
-    cursor_col = 1,
     width = 100,
-    on_confirm = function(next_value)
-      local content = table.concat(next_value, "\n") ---@type string
+    height = #lines,
+    title = state.get_mode() == "search" and "[Search options]" or "[Replace options]",
+    filetype = "json",
+    validate = function(text)
+      local ok = pcall(function()
+        return fml.json.parse(text)
+      end)
+
+      if not ok then
+        return "Invalid json"
+      end
+    end,
+    on_confirm = function(text)
       local ok, json = pcall(function()
-        return fml.json.parse(content)
+        return fml.json.parse(text)
       end)
 
       if not ok then
@@ -178,7 +181,7 @@ function M.on_edit_full_config()
           subject = "ui-edit.edit_replacer_state",
           message = "failed to parse json",
           details = {
-            content = content,
+            content = text,
             json = json,
           },
         })
@@ -202,11 +205,11 @@ function M.on_edit_full_config()
       state.set_data(next_data)
     end,
   })
-
-  local textarea_bufnr = textarea:get_bufnr()
-  if textarea_bufnr ~= nil then
-    vim.api.nvim_set_option_value("filetype", "json", { buf = textarea_bufnr })
-  end
+  textarea:open({
+    initial_text = table.concat(lines, "\n"),
+    text_cursor_row = 1,
+    text_cursor_col = 1,
+  })
 end
 
 ---@return nil
