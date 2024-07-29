@@ -28,14 +28,12 @@ function M.new(props)
       if input_history ~= nil then
         if input_history:is_top() then
           local present = input_history:present() ---@type string|nil
-          if
-            present == nil
-            or #present < #constant.EDITING_INPUT_PREFIX
-            or string.sub(present, 1, #constant.EDITING_INPUT_PREFIX) ~= constant.EDITING_INPUT_PREFIX
-          then
-            input_history:push(constant.EDITING_INPUT_PREFIX .. input_cur)
+          local prefix = constant.EDITING_INPUT_PREFIX ---@type string
+          local input_cur_with_prefix = prefix .. input_cur ---@type string
+          if present == nil or #present < #prefix or string.sub(present, 1, #prefix) ~= prefix then
+            input_history:push(input_cur_with_prefix)
           else
-            input_history:update_top(constant.EDITING_INPUT_PREFIX .. input_cur)
+            input_history:update_top(input_cur_with_prefix)
           end
         end
 
@@ -49,6 +47,10 @@ function M.new(props)
             self:reset_input(input_next)
             return
           end
+
+          if input_history:is_bottom() then
+            break
+          end
         end
       end
     end,
@@ -56,13 +58,11 @@ function M.new(props)
       local input_cur = state.input:snapshot() ---@type string
       local input_history = state.input_history ---@type fml.types.collection.IHistory|nil
       if input_history ~= nil then
+        local prefix = constant.EDITING_INPUT_PREFIX ---@type string
         local input_next = input_history:forward() ---@type string|nil
         if input_history:is_top() and input_next ~= nil then
-          if
-            #input_next >= #constant.EDITING_INPUT_PREFIX
-            and string.sub(input_next, 1, #constant.EDITING_INPUT_PREFIX) == constant.EDITING_INPUT_PREFIX
-          then
-            input_next = string.sub(input_next, #constant.EDITING_INPUT_PREFIX + 1)
+          if #input_next >= #prefix and string.sub(input_next, 1, #prefix) == prefix then
+            input_next = string.sub(input_next, #prefix + 1)
           end
         end
 

@@ -82,11 +82,8 @@ function M.new(props)
 
           input_history:go(math.huge)
           local top = input_history:present() ---@type string|nil
-          if
-            top == nil
-            or #top < #constant.EDITING_INPUT_PREFIX
-            or string.sub(top, 1, #constant.EDITING_INPUT_PREFIX) ~= constant.EDITING_INPUT_PREFIX
-          then
+          local prefix = constant.EDITING_INPUT_PREFIX ---@type string
+          if top == nil or #top < #prefix or string.sub(top, 1, #prefix) ~= prefix then
             input_history:push(input)
           else
             input_history:update_top(input)

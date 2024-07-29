@@ -37,10 +37,6 @@
 ---@alias fml.types.ui.select.main.IRenderLine
 ---| fun(params: fml.types.ui.select.main.IRenderLineParams): string
 
----@class fml.types.ui.select.state.ISerializedData
----@field frecency                      fml.types.collection.frecency.ISerializedData|nil
----@field input_history                 fml.types.collection.history.ISerializedData|nil
-
 ---@class fml.types.ui.select.IState
 ---@field public uuid                   string
 ---@field public title                  string
@@ -58,8 +54,6 @@
 ---@field public on_confirmed           fun(self: fml.types.ui.select.IState, item: fml.types.ui.select.IItem, idx: integer): nil
 ---@field public toggle_visible         fun(self: fml.types.ui.select.IState, visible?: boolean): nil
 ---@field public update_items           fun(self: fml.types.ui.select.IState, items: fml.types.ui.select.IItem[]): nil
----@field public dump                   fun(self: fml.types.ui.select.IState): fml.types.ui.select.state.ISerializedData
----@field public load                   fun(self: fml.types.ui.select.IState, data: fml.types.ui.select.state.ISerializedData): nil
 
 ---@class fml.types.ui.select.main.IRenderParams
 ---@field public force                  ?boolean

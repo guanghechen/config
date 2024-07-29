@@ -1,14 +1,27 @@
+local constant = require("fml.constant")
 local History = require("fml.collection.history")
 local statusline = require("ghc.ui.statusline")
 local session = require("ghc.context.session")
 local util_find_scope = require("ghc.util.find.scope")
 
+---@class ghc.command.find.files.IStateData
+---@field frecency                      ?fml.types.collection.frecency.ISerializedData|nil
+---@field input_history                 ?fml.types.collection.history.ISerializedData|nil
+
 ---@class ghc.command.find
 local M = require("ghc.command.find.mod")
 
-local _select = nil ---@type fml.types.ui.select.ISelect|nil
 local _uuid = "eba42821-7a63-42b8-91bd-43a8005f2c91" ---@type string
-local _filepath = fml.path.locate_session_filepath({ filename = "select-" .. _uuid .. ".json" }) ---@type string
+local _filepath = fml.path.locate_session_filepath({ filename = "state_find_files.json" }) ---@type string
+local _frecency = fml.collection.Frecency.new({ items = {} }) ---@type fml.types.collection.IFrecency
+local _input_history = History.new({ name = _uuid, capacity = 100, validate = fml.string.is_non_blank_string }) ---@type fml.types.collection.IHistory
+local _state_data = fml.fs.read_json({ filepath = _filepath, silent_on_bad_path = true, silent_on_bad_json = false })
+if _state_data ~= nil then
+  ---@cast _state_data ghc.command.find.files.IStateData
+  _frecency:load(_state_data.frecency)
+  _input_history:load(_state_data.input_history)
+end
+local _select = nil ---@type fml.types.ui.select.ISelect|nil
 
 local state_dirpath = fml.collection.Observable.from_value(vim.fn.expand("%:p:h")) ---@type fml.collection.Observable
 local state_find_cwd = fml.collection.Observable.from_value("") ---@type fml.collection.Observable
@@ -16,8 +29,24 @@ local state_find_cwd = fml.collection.Observable.from_value("") ---@type fml.col
 fml.disposable:add_disposable(fml.collection.Disposable.new({
   on_dispose = function()
     if _select ~= nil then
-      local data = _select.state:dump() ---@type fml.types.ui.select.state.ISerializedData
-      fml.fs.write_json(_filepath, data, false)
+      local ok, data = pcall(function()
+        local frecency = _frecency:dump() ---@type fml.types.collection.frecency.ISerializedData
+        local input_history = _input_history:dump() ---@type fml.types.collection.history.ISerializedData
+        local stack = input_history.stack ---@type fml.types.T[]
+        if #stack > 0 then
+          local prefix = constant.EDITING_INPUT_PREFIX ---@type string
+          local top = stack[#stack] ---@type string
+          if #top > #prefix and string.sub(top, 1, #prefix) == prefix then
+            stack[#stack] = string.sub(top, #prefix + 1)
+          end
+        end
+        return { frecency = frecency, input_history = input_history } ---@type ghc.command.find.files.IStateData
+      end)
+      if ok then
+        fml.fs.write_json(_filepath, data, false)
+      else
+        fml.fs.write_json(_filepath, { error = data }, false)
+      end
     end
   end,
 }))
@@ -123,8 +152,8 @@ local function get_select()
         uuid = _uuid,
         items = {},
         input = fml.collection.Observable.from_value(""),
-        input_history = History.new({ name = _uuid, capacity = 100 }),
-        frecency = fml.collection.Frecency.new({ items = {} }),
+        input_history = _input_history,
+        frecency = _frecency,
         visible = fml.collection.Observable.from_value(false),
       }),
       width = 0.4,
@@ -148,11 +177,6 @@ local function get_select()
         return false
       end,
     })
-
-    local data = fml.fs.read_json({ filepath = _filepath, silent_on_bad_path = true, silent_on_bad_json = false })
-    if data ~= nil then
-      _select.state:load(data)
-    end
   end
 
   local scope = session.find_scope:snapshot() ---@type ghc.enums.context.FindScope

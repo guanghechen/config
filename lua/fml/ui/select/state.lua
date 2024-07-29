@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local Subscriber = require("fml.collection.subscriber")
 local Ticker = require("fml.collection.ticker")
 local navigate = require("fml.std.navigate")
@@ -86,29 +85,6 @@ function M.new(props)
     end,
   }))
   return self
-end
-
----@return fml.types.ui.select.state.ISerializedData
-function M:dump()
-  ---@type fml.types.collection.frecency.ISerializedData|nil
-  local frecency = self._frecency and self._frecency:dump() or nil
-
-  ---@type fml.types.collection.history.ISerializedData|nil
-  local input_history = self.input_history and self.input_history:dump() or nil
-  if input_history ~= nil then
-    local stack = input_history.stack ---@type fml.types.T[]
-    if #stack > 0 then
-      local top = stack[#stack] ---@type string
-      if
-        #top > constant.EDITING_INPUT_PREFIX
-        and string.sub(top, 1, #constant.EDITING_INPUT_PREFIX) == constant.EDITING_INPUT_PREFIX
-      then
-        stack[#stack] = string.sub(top, #constant.EDITING_INPUT_PREFIX + 1)
-      end
-    end
-  end
-
-  return { frecency = frecency, input_history = input_history } ---@type fml.types.ui.select.state.ISerializedData
 end
 
 ---@return fml.types.ui.select.ILineMatch[]
@@ -201,19 +177,6 @@ end
 ---@return boolean
 function M:is_visible()
   return self._visible
-end
-
----@param data                          fml.types.ui.select.state.ISerializedData
----@return nil
-function M:load(data)
-  local frecency = data.frecency ---@type fml.types.collection.frecency.ISerializedData|nil
-  local input_history = data.input_history ---@type fml.types.collection.history.ISerializedData|nil
-  if frecency ~= nil and self._frecency ~= nil then
-    self._frecency:load(frecency)
-  end
-  if input_history ~= nil and self.input_history ~= nil then
-    self.input_history:load(input_history)
-  end
 end
 
 ---@param lnum                          integer

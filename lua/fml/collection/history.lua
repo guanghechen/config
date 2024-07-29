@@ -168,8 +168,12 @@ function M:iterator()
 end
 
 ---@return boolean
+function M:is_bottom()
+  return self._present_idx <= 1
+end
+
+---@return boolean
 function M:is_top()
-  self:present()
   return self._present_idx == self._stack:size()
 end
 
@@ -291,13 +295,14 @@ end
 ---@param input                         string
 ---@return nil
 function M:update_top(input)
-  local idx = self._stack:size()
+  local idx = self._stack:size() ---@type integer
   while idx > 0 do
     local value = self._stack:at(idx) ---@type string|nil
     if self.validate(value) then
       self._stack:update(idx, input)
       break
     end
+    idx = idx - 1
   end
 end
 

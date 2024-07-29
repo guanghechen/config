@@ -9,6 +9,7 @@
 ---@field public empty                  fun(self: fml.types.collection.IHistory): boolean
 ---@field public fork                   fun(self: fml.types.collection.IHistory, params?: fml.types.collection.history.IForkParams): fml.types.collection.IHistory
 ---@field public forward                fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil
+---@field public is_bottom              fun(self: fml.types.collection.IHistory): boolean
 ---@field public is_top                 fun(self: fml.types.collection.IHistory): boolean
 ---@field public iterator               fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
 ---@field public iterator_reverse       fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
