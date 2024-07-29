@@ -3,11 +3,11 @@
 ---@field public winnr                  integer|nil
 ---@field public on_close               fun(): nil
 ---@field public on_confirm             fun(): nil
----@field public open                   fun(self: fml.types.ui.ITextarea): nil
+---@field public open                   fun(self: fml.types.ui.ITextarea, params: fml.types.ui.textarea.IOpenParams): nil
 ---@field public close                  fun(self: fml.types.ui.ITextarea): nil
 
----@class fml.ui.textarea.IOpenParams
----@field public initial_text           string
+---@class fml.types.ui.textarea.IOpenParams
+---@field public initial_lines          string[]
 ---@field public row                    ?number
 ---@field public col                    ?number
 ---@field public win_cursor_row         ?integer

@@ -5,8 +5,8 @@ local util = require("fml.std.util")
 
 ---@class fml.ui.Textarea : fml.types.ui.ITextarea
 ---@field protected position            fml.enums.BoxPosition
----@field protected height              number
 ---@field protected width               number
+---@field protected height              number
 ---@field protected max_width           number|nil
 ---@field protected max_height          number|nil
 ---@field protected min_width           number|nil
@@ -20,8 +20,8 @@ M.__index = M
 
 ---@class fml.ui.textarea.IProps
 ---@field public position               fml.enums.BoxPosition
----@field public height                 number
 ---@field public width                  number
+---@field public height                 number
 ---@field public title                  ?string
 ---@field public max_width              ?number
 ---@field public max_height             ?number
@@ -30,9 +30,9 @@ M.__index = M
 ---@field public filetype               ?string
 ---@field public keymaps                ?fml.types.IKeymap[]
 ---@field public win_opts               ?table<string, any>
----@field public validate               ?fun(text: string): string|nil
+---@field public validate               ?fun(lines: string[]): string|nil
 ---@field public on_close               ?fun(): nil
----@field public on_confirm             fun(text: string): nil
+---@field public on_confirm             fun(lines: string[]): nil
 
 ---@param props                         fml.ui.textarea.IProps
 ---@return fml.ui.Textarea
@@ -61,9 +61,9 @@ function M.new(props)
   local title = props.title ---@type string|nil
   title = (type(title) == "string" and #title > 0) and (" " .. title .. " ") or "" ---@type string
 
-  local validate = props.validate ---@type (fun(text: string): string|nil)|nil
+  local validate = props.validate ---@type (fun(lines: string[]): string|nil)|nil
   local on_close_from_props = props.on_close ---@type (fun(): nil)
-  local on_confirm_from_props = props.on_confirm ---@type fun(text: string): nil
+  local on_confirm_from_props = props.on_confirm ---@type fun(lines: string[]): nil
 
   ---@return nil
   local function on_close()
@@ -86,20 +86,19 @@ function M.new(props)
     end
 
     local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false) ---@type string[]
-    local text = table.concat(lines, "\n") ---@type string
-    local err_msg = type(validate) == "function" and validate(text) or nil ---@type string|nil
+    local err_msg = type(validate) == "function" and validate(lines) or nil ---@type string|nil
     if err_msg ~= nil then
       reporter.warn({
         from = "fml.ui.textarea",
         subject = "confirm",
         message = "Validation failed.",
-        details = { text = text, err_msg = err_msg },
+        details = { lines = lines, err_msg = err_msg },
       })
       return
     end
 
     self:close()
-    on_confirm_from_props(text)
+    on_confirm_from_props(lines)
   end
 
   ---@type fml.types.IKeymap[]
@@ -129,7 +128,7 @@ function M.new(props)
   return self
 end
 
----@param params                        fml.ui.textarea.IOpenParams
+---@param params                        fml.types.ui.textarea.IOpenParams
 ---@return nil
 function M:open(params)
   local rect = box.measure({
@@ -161,7 +160,7 @@ function M:open(params)
     end)
   end
 
-  local lines = vim.split(params.initial_text, "\n") ---@type string[]
+  local lines = params.initial_lines ---@type string[]
   local text_cursor_row = params.text_cursor_row or #lines ---@type integer
   local text_cursor_col = params.text_cursor_col or string.len(lines[#lines]) ---@type integer
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, lines)

@@ -56,12 +56,13 @@ function M.edit_string(key, position)
       height = 10,
       width = 80,
       title = "[" .. key .. "]",
-      on_confirm = function(text)
+      on_confirm = function(next_lines)
+        local text = table.concat(next_lines, "\n") ---@type string
         state.set_value(key, text)
       end,
     })
     textarea:open({
-      initial_text = table.concat(lines, "\n"),
+      initial_lines = lines,
       text_cursor_row = cursor_row,
       text_cursor_col = cursor_col,
     })
@@ -111,9 +112,8 @@ function M.edit_list(key, position)
       height = 10,
       width = 80,
       title = "[" .. key .. "]",
-      on_confirm = function(text)
+      on_confirm = function(next_lines)
         local normalized_list = {}
-        local next_lines = vim.split(text, "\n") ---@type string[]
         for _, line in ipairs(next_lines) do
           table.insert(normalized_list, fml.oxi.normalize_comma_list(line))
         end
@@ -122,7 +122,7 @@ function M.edit_list(key, position)
       end,
     })
     textarea:open({
-      initial_text = table.concat(lines, "\n"),
+      initial_lines = lines,
       text_cursor_row = cursor_row,
       text_cursor_col = cursor_col,
     })
@@ -155,41 +155,14 @@ function M.on_edit_full_config()
 
   local data = state.get_data() ---@type ghc.command.replace.state.IData
   local lines = fml.json.stringify_prettier_lines(data) ---@type string[]
-  local textarea = fml.ui.Textarea.new({
+  local setting = fml.ui.Setting.new({
     position = "center",
     width = 100,
     height = #lines,
     title = state.get_mode() == "search" and "[Search options]" or "[Replace options]",
-    filetype = "json",
-    validate = function(text)
-      local ok = pcall(function()
-        return fml.json.parse(text)
-      end)
-
-      if not ok then
-        return "Invalid json"
-      end
-    end,
-    on_confirm = function(text)
-      local ok, json = pcall(function()
-        return fml.json.parse(text)
-      end)
-
-      if not ok then
-        fml.reporter.error({
-          from = "ghc.command.replace.viewer",
-          subject = "ui-edit.edit_replacer_state",
-          message = "failed to parse json",
-          details = {
-            content = text,
-            json = json,
-          },
-        })
-        return
-      end
-
-      ---@cast json ghc.command.replace.state.IData
-      local raw = vim.tbl_extend("force", data, json)
+    on_confirm = function(raw_data)
+      ---@cast raw_data ghc.command.replace.state.IData
+      local raw = vim.tbl_extend("force", data, raw_data)
       ---@type ghc.command.replace.state.IData
       local next_data = {
         cwd = raw.cwd,
@@ -205,8 +178,8 @@ function M.on_edit_full_config()
       state.set_data(next_data)
     end,
   })
-  textarea:open({
-    initial_text = table.concat(lines, "\n"),
+  setting:open({
+    initial_value = data,
     text_cursor_row = 1,
     text_cursor_col = 1,
   })

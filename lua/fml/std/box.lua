@@ -40,9 +40,13 @@ function M.measure(params)
   local max_height = M.flat(params.max_height or 1, full_height) ---@type integer
   local min_width = M.flat(params.min_width or 0, full_width) ---@type integer
   local min_height = M.flat(params.min_height or 0, full_height) ---@type integer
-
   local width = M.flat(params.width, full_width) ---@type integer
   local height = M.flat(params.height, full_height) ---@type integer
+
+  max_width = math.max(10, math.min(full_width, max_width))
+  max_height = math.max(10, math.min(full_height, max_height))
+  min_width = math.max(1, math.min(max_width, min_width))
+  min_height = math.max(1, math.min(max_height, min_height))
   width = math.max(min_width, math.min(max_width, width)) ---@type integer
   height = math.max(min_height, math.min(max_height, height)) ---@type integer
 

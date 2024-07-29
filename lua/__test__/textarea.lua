@@ -11,4 +11,4 @@ local textarea = fml.ui.Textarea.new({
     fml.debug.log("on confirm:", { text = text or "nil" })
   end,
 })
-textarea:open({ initial_text = "haha" })
+textarea:open({ initial_lines = { "haha" } })
