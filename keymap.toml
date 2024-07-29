@@ -63,32 +63,32 @@ bindings = [
   { key = "Key8",       mods = "Control|Shift",             action = "ReceiveChar" },
   { key = "Key9",       mods = "Control|Shift",             action = "ReceiveChar" },
   { key = "Key0",       mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "A",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "B",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "C",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "D",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "E",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "F",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "G",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "H",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "I",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "J",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "K",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "L",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "M",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "N",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "O",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "P",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "Q",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "R",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "S",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "T",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "U",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "V",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "W",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "X",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "Y",          mods = "Control|Shift",             action = "ReceiveChar" },
-  { key = "Z",          mods = "Control|Shift",             action = "ReceiveChar" },
+  { key = "A",          mods = "Control|Shift",             chars = "\u001b\u0001" },       # Esc<c-a>
+  { key = "B",          mods = "Control|Shift",             chars = "\u001b\u0002" },       # Esc<c-b>
+  { key = "C",          mods = "Control|Shift",             chars = "\u001b\u0003" },       # Esc<c-c>
+  { key = "D",          mods = "Control|Shift",             chars = "\u001b\u0004" },       # Esc<c-d>
+  { key = "E",          mods = "Control|Shift",             chars = "\u001b\u0005" },       # Esc<c-e>
+  { key = "F",          mods = "Control|Shift",             chars = "\u001b\u0006" },       # Esc<c-f>
+  { key = "G",          mods = "Control|Shift",             chars = "\u001b\u0007" },       # Esc<c-g>
+  { key = "H",          mods = "Control|Shift",             chars = "\u001b\u0008" },       # Esc<c-h>
+  { key = "I",          mods = "Control|Shift",             chars = "\u001b\u0009" },       # Esc<c-i>
+  { key = "J",          mods = "Control|Shift",             chars = "\u001b\u000a" },       # Esc<c-j>
+  { key = "K",          mods = "Control|Shift",             chars = "\u001b\u000b" },       # Esc<c-k>
+  { key = "L",          mods = "Control|Shift",             chars = "\u001b\u000c" },       # Esc<c-l>
+  { key = "M",          mods = "Control|Shift",             chars = "\u001b\u000d" },       # Esc<c-m>
+  { key = "N",          mods = "Control|Shift",             chars = "\u001b\u000e" },       # Esc<c-n>
+  { key = "O",          mods = "Control|Shift",             chars = "\u001b\u000f" },       # Esc<c-o>
+  { key = "P",          mods = "Control|Shift",             chars = "\u001b\u0010" },       # Esc<c-p>
+  { key = "Q",          mods = "Control|Shift",             chars = "\u001b\u0011" },       # Esc<c-q>
+  { key = "R",          mods = "Control|Shift",             chars = "\u001b\u0012" },       # Esc<c-r>
+  { key = "S",          mods = "Control|Shift",             chars = "\u001b\u0013" },       # Esc<c-s>
+  { key = "T",          mods = "Control|Shift",             chars = "\u001b\u0014" },       # Esc<c-t>
+  { key = "U",          mods = "Control|Shift",             chars = "\u001b\u0015" },       # Esc<c-u>
+  { key = "V",          mods = "Control|Shift",             chars = "\u001b\u0016" },       # Esc<c-v>
+  { key = "W",          mods = "Control|Shift",             chars = "\u001b\u0017" },       # Esc<c-w>
+  { key = "X",          mods = "Control|Shift",             chars = "\u001b\u0018" },       # Esc<c-x>
+  { key = "Y",          mods = "Control|Shift",             chars = "\u001b\u0019" },       # Esc<c-y>
+  { key = "Z",          mods = "Control|Shift",             chars = "\u001b\u001a" },       # Esc<c-z>
 
   # ----- tmux -----
   { key = "F1",                                             chars = "\u001b[11~" },         # F1
