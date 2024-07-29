@@ -19,7 +19,6 @@ end)
 local select = fml.ui.select.Select.new({
   state = fml.ui.select.State.new({
     title = "Select file",
-    uuid = oxi.uuid(),
     items = items,
     input = Observable.from_value(""),
     visible = Observable.from_value(false),

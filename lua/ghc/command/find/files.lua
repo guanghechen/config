@@ -163,7 +163,6 @@ local function get_select()
     _select = fml.ui.select.Select.new({
       state = fml.ui.select.State.new({
         title = "Find files",
-        uuid = "eba42821-7a63-42b8-91bd-43a8005f2c91",
         items = {},
         input = fml.collection.Observable.from_value(""),
         input_history = _input_history,

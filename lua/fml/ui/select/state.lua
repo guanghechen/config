@@ -2,6 +2,7 @@ local Subscriber = require("fml.collection.subscriber")
 local Ticker = require("fml.collection.ticker")
 local navigate = require("fml.std.navigate")
 local std_array = require("fml.std.array")
+local oxi = require("fml.std.oxi")
 local util = require("fml.std.util")
 local defaults = require("fml.ui.select.defaults")
 
@@ -22,7 +23,6 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.select.state.IProps
----@field public uuid                   string
 ---@field public title                  string
 ---@field public items                  fml.types.ui.select.IItem[]
 ---@field public input                  fml.types.collection.IObservable
@@ -36,7 +36,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local uuid = props.uuid ---@type string
+  local uuid = oxi.uuid() ---@type string
   local title = props.title ---@type string
   local items = props.items ---@type fml.types.ui.select.IItem[]
   local input = props.input ---@type fml.types.collection.IObservable
