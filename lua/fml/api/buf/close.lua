@@ -1,7 +1,6 @@
 local state = require("fml.api.state")
 local navigate = require("fml.std.navigate")
 local std_array = require("fml.std.array")
-local std_set = require("fml.std.set")
 
 ---@class fml.api.buf
 local M = require("fml.api.buf.mod")
@@ -16,20 +15,21 @@ function M.close(bufnrs)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tab = state.tabs[tabnr] ---@type fml.types.api.state.ITabItem
   if tab ~= nil then
-    local bufnr_set = std_set.from_integer_array(bufnrs) ---@type table<integer, boolean>
+    for _, bufnr in ipairs(bufnrs) do
+      tab.bufnr_set[bufnr] = nil
+    end
+
     local k = 0 ---@type integer
     local N = #tab.bufnrs ---@type integer
     for i = 1, N, 1 do
       local bufnr = tab.bufnrs[i]
-      if bufnr_set[bufnr] then
-        tab.bufnr_set[bufnr] = false
-      else
+      if tab.bufnr_set[bufnr] then
         k = k + 1
         tab.bufnrs[k] = bufnr
       end
     end
-    for _ = k + 1, N, 1 do
-      tab.bufnrs[k] = nil
+    for i = k + 1, N, 1 do
+      tab.bufnrs[i] = nil
     end
   end
 
