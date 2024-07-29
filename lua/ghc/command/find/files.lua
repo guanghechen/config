@@ -37,8 +37,10 @@ if _state_data ~= nil then
 end
 local _select = nil ---@type fml.types.ui.select.ISelect|nil
 
-local state_dirpath = fml.collection.Observable.from_value(vim.fn.expand("%:p:h")) ---@type fml.collection.Observable
-local state_find_cwd = fml.collection.Observable.from_value("") ---@type fml.collection.Observable
+local state_dirpath = fml.collection.Observable.from_value(vim.fn.expand("%:p:h"))
+local state_find_cwd = fml.collection.Observable.from_value(
+  util_find_scope.get_cwd(session.find_scope:snapshot(), state_dirpath:snapshot()) ---@type string
+)
 
 fml.disposable:add_disposable(fml.collection.Disposable.new({
   on_dispose = function()
@@ -123,7 +125,7 @@ local function get_select()
       end,
       change_scope_carousel = function()
         ---@type ghc.enums.context.FindScope
-        local scope = ghc.context.session.find_scope:snapshot()
+        local scope = session.find_scope:snapshot()
         local scope_next = util_find_scope.get_carousel_next(scope)
         change_scope(scope_next)
       end,
@@ -164,7 +166,7 @@ local function get_select()
       state = fml.ui.select.State.new({
         title = "Find files",
         items = {},
-        input = fml.collection.Observable.from_value(""),
+        input = session.find_file_pattern,
         input_history = _input_history,
         frecency = _frecency,
         visible = fml.collection.Observable.from_value(false),

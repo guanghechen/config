@@ -339,9 +339,13 @@ end
 
 function M:open()
   self.state:toggle_visible(true)
+
   local matches = self.state:filter() ---@type fml.types.ui.select.ILineMatch[]
   self:create_wins_as_needed(#matches)
   self.main:render()
+
+  local input = self.state.input:snapshot() ---@type string
+  self.input:reset_input(input)
 end
 
 ---@return nil

@@ -144,7 +144,14 @@ end
 ---@return nil
 function M:reset_input(input)
   self.state.input:next(input)
-  vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, { input })
+
+  local bufnr = self.bufnr ---@type integer|nil
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+    if #lines ~= 1 or lines[1] ~= input then
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { input })
+    end
+  end
 end
 
 return M
