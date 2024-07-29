@@ -301,4 +301,20 @@ function M:reset(elements)
   end
 end
 
+---@param index                         integer
+---@param value                         fml.types.T
+---@return nil
+function M:update(index, value)
+  if index < 1 or index > self._size then
+    return
+  end
+
+  local idx = self._start + index - 1 ---@type number
+  if idx > self._capacity then
+    idx = idx - self._capacity
+  end
+
+  self._elements[idx] = value
+end
+
 return M

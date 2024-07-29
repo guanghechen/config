@@ -1,3 +1,4 @@
+local constant = require("fml.constant")
 local std_array = require("fml.std.array")
 local util = require("fml.std.util")
 local Subscriber = require("fml.collection.subscriber")
@@ -75,6 +76,23 @@ function M.new(props)
     local item, idx = state:get_current()
     if item ~= nil and idx ~= nil then
       if on_confirm_from_props(item, idx) then
+        if state.input_history ~= nil then
+          local input = state.input:snapshot() ---@type string
+          local input_history = state.input_history ---@type fml.types.collection.IHistory
+
+          input_history:go(math.huge)
+          local top = input_history:present() ---@type string|nil
+          if
+            top == nil
+            or #top < #constant.EDITING_INPUT_PREFIX
+            or string.sub(top, 1, #constant.EDITING_INPUT_PREFIX) ~= constant.EDITING_INPUT_PREFIX
+          then
+            input_history:push(input)
+          else
+            input_history:update_top(input)
+          end
+        end
+
         self.state:on_confirmed(item, idx)
         on_close()
       end

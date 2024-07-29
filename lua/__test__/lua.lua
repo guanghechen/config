@@ -71,4 +71,4 @@ local function strwidth()
   vim.keymap.set("n", "q", "<cmd>q<cr>", { buffer = bufnr, nowait = true })
 end
 
-strwidth()
+fml.debug.log(string.sub("hello", 1, 2))

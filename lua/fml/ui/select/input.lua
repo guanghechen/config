@@ -1,4 +1,5 @@
 local constant = require("fml.constant")
+local std_array = require("fml.std.array")
 local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
 
@@ -20,7 +21,65 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local state = props.state ---@type fml.types.ui.select.IState
-  local keymaps = props.keymaps ---@type fml.types.IKeymap[]
+  local actions = {
+    apply_prev_input = function()
+      local input_cur = state.input:snapshot() ---@type string
+      local input_history = state.input_history ---@type fml.types.collection.IHistory|nil
+      if input_history ~= nil then
+        if input_history:is_top() then
+          local present = input_history:present() ---@type string|nil
+          if
+            present == nil
+            or #present < #constant.EDITING_INPUT_PREFIX
+            or string.sub(present, 1, #constant.EDITING_INPUT_PREFIX) ~= constant.EDITING_INPUT_PREFIX
+          then
+            input_history:push(constant.EDITING_INPUT_PREFIX .. input_cur)
+          else
+            input_history:update_top(constant.EDITING_INPUT_PREFIX .. input_cur)
+          end
+        end
+
+        while true do
+          local input_next = input_history:back() ---@type string|nil
+          if input_next == nil then
+            break
+          end
+
+          if input_next ~= input_cur then
+            self:reset_input(input_next)
+            return
+          end
+        end
+      end
+    end,
+    apply_next_input = function()
+      local input_cur = state.input:snapshot() ---@type string
+      local input_history = state.input_history ---@type fml.types.collection.IHistory|nil
+      if input_history ~= nil then
+        local input_next = input_history:forward() ---@type string|nil
+        if input_history:is_top() and input_next ~= nil then
+          if
+            #input_next >= #constant.EDITING_INPUT_PREFIX
+            and string.sub(input_next, 1, #constant.EDITING_INPUT_PREFIX) == constant.EDITING_INPUT_PREFIX
+          then
+            input_next = string.sub(input_next, #constant.EDITING_INPUT_PREFIX + 1)
+          end
+        end
+
+        if input_next ~= nil and input_next ~= input_cur then
+          self:reset_input(input_next)
+        end
+      end
+    end,
+  }
+
+  ---@type fml.types.IKeymap[]
+  local keymaps = state.input_history ~= nil
+      and std_array.concat({
+        { modes = { "i", "n", "v" }, key = "<c-j>", callback = actions.apply_next_input, desc = "select: last input" },
+        { modes = { "i", "n", "v" }, key = "<c-k>", callback = actions.apply_prev_input, desc = "select: next input" },
+      }, props.keymaps)
+    or props.keymaps
 
   self.bufnr = nil
   self.state = state
@@ -79,6 +138,13 @@ function M:create_buf_as_needed()
   self.bufnr = bufnr
   vim.fn.sign_place(bufnr, "", signcolumn.names.select_input_cursor, bufnr, { lnum = 1 })
   return bufnr
+end
+
+---@param input                         string
+---@return nil
+function M:reset_input(input)
+  self.state.input:next(input)
+  vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, { input })
 end
 
 return M

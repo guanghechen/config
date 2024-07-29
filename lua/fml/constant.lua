@@ -1,6 +1,9 @@
 ---@class fml.constant
 local M = {}
 
+---! special symbols.
+M.EDITING_INPUT_PREFIX = "@#!fml!#@"
+
 ---! buftypes
 M.BT_NOWRITE = "nowrite"
 M.BT_NOFILE = "nofile"

@@ -9,6 +9,7 @@
 ---@field public empty                  fun(self: fml.types.collection.IHistory): boolean
 ---@field public fork                   fun(self: fml.types.collection.IHistory, params?: fml.types.collection.history.IForkParams): fml.types.collection.IHistory
 ---@field public forward                fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil
+---@field public is_top                 fun(self: fml.types.collection.IHistory): boolean
 ---@field public iterator               fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
 ---@field public iterator_reverse       fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
 ---@field public load                   fun(self: fml.types.collection.IHistory, data: fml.types.collection.history.ISerializedData): nil
@@ -18,6 +19,7 @@
 ---@field public print                  fun(self: fml.types.collection.IHistory): nil
 ---@field public push                   fun(self: fml.types.collection.IHistory, element: fml.types.T|nil): nil
 ---@field public rearrange              fun(self: fml.types.collection.IHistory): nil
+---@field public update_top             fun(self: fml.types.collection.IHistory, input: string): nil
 
 ---@class fml.types.collection.history.IForkParams
 ---@field public name                   ?string

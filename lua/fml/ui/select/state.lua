@@ -1,3 +1,4 @@
+local constant = require("fml.constant")
 local Subscriber = require("fml.collection.subscriber")
 local Ticker = require("fml.collection.ticker")
 local navigate = require("fml.std.navigate")
@@ -14,7 +15,6 @@ local defaults = require("fml.ui.select.defaults")
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
 ---@field protected _filtering          boolean
 ---@field protected _full_matches       fml.types.ui.select.ILineMatch[]
----@field protected _input_history      fml.types.collection.IHistory|nil
 ---@field protected _last_input         string|nil
 ---@field protected _last_input_lower   string|nil
 ---@field protected _matches            fml.types.ui.select.ILineMatch[]
@@ -72,7 +72,7 @@ function M.new(props)
   self._filtering = false
   self._frecency = frecency
   self._full_matches = full_matches
-  self._input_history = input_history
+  self.input_history = input_history
   self._last_input = nil
   self._last_input_lower = nil
   self._matches = full_matches
@@ -94,7 +94,19 @@ function M:dump()
   local frecency = self._frecency and self._frecency:dump() or nil
 
   ---@type fml.types.collection.history.ISerializedData|nil
-  local input_history = self._input_history and self._input_history:dump() or nil
+  local input_history = self.input_history and self.input_history:dump() or nil
+  if input_history ~= nil then
+    local stack = input_history.stack ---@type fml.types.T[]
+    if #stack > 0 then
+      local top = stack[#stack] ---@type string
+      if
+        #top > constant.EDITING_INPUT_PREFIX
+        and string.sub(top, 1, #constant.EDITING_INPUT_PREFIX) == constant.EDITING_INPUT_PREFIX
+      then
+        stack[#stack] = string.sub(top, #constant.EDITING_INPUT_PREFIX + 1)
+      end
+    end
+  end
 
   return { frecency = frecency, input_history = input_history } ---@type fml.types.ui.select.state.ISerializedData
 end
@@ -156,9 +168,6 @@ function M:filter()
         end
 
         self._filtering = false
-        if self._input_history ~= nil then
-          self._input_history:push(input)
-        end
         self.ticker:tick()
 
         if self._dirty then
@@ -202,8 +211,8 @@ function M:load(data)
   if frecency ~= nil and self._frecency ~= nil then
     self._frecency:load(frecency)
   end
-  if input_history ~= nil and self._input_history ~= nil then
-    self._input_history:load(input_history)
+  if input_history ~= nil and self.input_history ~= nil then
+    self.input_history:load(input_history)
   end
 end
 
@@ -245,8 +254,8 @@ function M:on_confirmed(item)
     if self._frecency ~= nil then
       self._frecency:access(item.uuid)
     end
-    if self._input_history ~= nil then
-      self._input_history:push(last_input)
+    if self.input_history ~= nil then
+      self.input_history:push(last_input)
     end
   end
 end

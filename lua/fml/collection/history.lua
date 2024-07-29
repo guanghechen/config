@@ -167,6 +167,12 @@ function M:iterator()
   end
 end
 
+---@return boolean
+function M:is_top()
+  self:present()
+  return self._present_idx == self._stack:size()
+end
+
 function M:iterator_reverse()
   self:rearrange()
 
@@ -255,6 +261,7 @@ function M:push(element)
   self._present_idx = self._stack:size()
 end
 
+---@return nil
 function M:rearrange()
   local old_present_index = self._present_idx ---@type integer
   local new_present_index = 0 ---@type integer
@@ -279,6 +286,19 @@ function M:rearrange()
     new_present_index = 1
   end
   self._present_idx = math.max(new_present_index, self._stack:size() > 0 and 1 or 0)
+end
+
+---@param input                         string
+---@return nil
+function M:update_top(input)
+  local idx = self._stack:size()
+  while idx > 0 do
+    local value = self._stack:at(idx) ---@type string|nil
+    if self.validate(value) then
+      self._stack:update(idx, input)
+      break
+    end
+  end
 end
 
 return M

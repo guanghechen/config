@@ -30,5 +30,8 @@ function M.open(winnr, filepath)
   if vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_set_current_win(winnr)
     vim.cmd("edit " .. filepath)
+    vim.schedule(function()
+      vim.cmd("stopinsert")
+    end)
   end
 end
