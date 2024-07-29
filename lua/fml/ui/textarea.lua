@@ -47,13 +47,13 @@ function M.new(props)
   local min_width = props.min_width ---@type number
   local min_height = props.min_height ---@type number
   local filetype = props.filetype ---@type string
-  local keymaps = props.keymaps or {} ---@type fml.types.IKeymap[]
 
   ---@type table<string, any>
   local win_opts = vim.tbl_extend("force", {
     cursorline = true,
     number = true,
     relativenumber = true,
+    signcolumn = "yes",
     wrap = false,
     winblend = 10,
   }, props.win_opts or {})
@@ -106,7 +106,7 @@ function M.new(props)
     { modes = { "n" }, key = "q", desc = "textarea: quit", callback = on_close },
     { modes = { "n" }, key = "<cr>", desc = "textarea: confirm", callback = on_confirm },
   }
-  keymaps = std_array.concat(keymaps, builtin_keymaps)
+  local keymaps = std_array.concat(builtin_keymaps, props.keymaps) ---@type fml.types.IKeymap[]
 
   self.bufnr = nil
   self.winnr = nil
@@ -154,6 +154,15 @@ function M:open(params)
     vim.bo[bufnr].filetype = self.filetype
     vim.bo[bufnr].swapfile = false
     util.bind_keys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
+
+    vim.api.nvim_create_autocmd("BufDelete", {
+      once = true,
+      buffer = bufnr,
+      callback = function()
+        self.bufnr = nil
+        self:close()
+      end,
+    })
 
     vim.schedule(function()
       vim.cmd("stopinsert")

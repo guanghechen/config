@@ -1,8 +1,8 @@
 ---@class fml.types.ui.ISetting
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
----@field public open                   fun(self: fml.types.ui.ITextarea, params: fml.types.ui.setting.IOpenParams): nil
----@field public close                  fun(self: fml.types.ui.ITextarea): nil
+---@field public open                   fun(self: fml.types.ui.ISetting, params: fml.types.ui.setting.IOpenParams): nil
+---@field public close                  fun(self: fml.types.ui.ISetting): nil
 
 ---@class fml.types.ui.setting.IOpenParams
 ---@field public initial_value          fml.types.T

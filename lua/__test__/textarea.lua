@@ -1,14 +1,36 @@
-local textarea = fml.ui.Textarea.new({
-  position = "center",
-  width = 0.4,
-  height = 0.4,
-  title = "Shit!",
-  validate = fml.util.noop,
-  on_close = function()
-    fml.debug.log("on close")
-  end,
-  on_confirm = function(text)
-    fml.debug.log("on confirm:", { text = text or "nil" })
-  end,
-})
-textarea:open({ initial_lines = { "haha" } })
+---@diagnostic disable: lowercase-global
+
+---@return nil
+function test_textarea()
+  local textarea = fml.ui.Textarea.new({
+    position = "center",
+    width = 0.4,
+    height = 0.4,
+    title = "Shit!",
+    on_close = function()
+      fml.debug.log("on close")
+    end,
+    on_confirm = function(text)
+      fml.debug.log("on confirm:", { text = text or "nil" })
+    end,
+  })
+  textarea:open({ initial_lines = { "haha" } })
+end
+
+---@return nil
+function test_input()
+  local input = fml.ui.Input.new({
+    position = "center",
+    width = 0.4,
+    title = "Shit!",
+    on_close = function()
+      fml.debug.log("on close")
+    end,
+    on_confirm = function(text)
+      fml.debug.log("on confirm:", { text = text or "nil" })
+    end,
+  })
+  input:open({ initial_value = "haha" })
+end
+
+test_input()
