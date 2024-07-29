@@ -32,6 +32,7 @@ function M.new(props)
     cursorline = false,
     number = false,
     relativenumber = false,
+    signcolumn = "yes",
   }, props.win_opts or {})
 
   local validate_from_props = props.validate ---@type (fun(value: string): string)|nil

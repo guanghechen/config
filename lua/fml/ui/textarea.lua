@@ -3,6 +3,16 @@ local box = require("fml.std.box")
 local reporter = require("fml.std.reporter")
 local util = require("fml.std.util")
 
+---@type string
+local WIN_HIGHLIGHT = table.concat({
+  "Cursor:f_ut_current",
+  "CursorColumn:f_ut_current",
+  "CursorLine:f_ut_current",
+  "CursorLineNr:f_ut_current",
+  "FloatBorder:f_ut_border",
+  "Normal:f_ut_normal",
+}, ",")
+
 ---@class fml.ui.Textarea : fml.types.ui.ITextarea
 ---@field protected position            fml.enums.BoxPosition
 ---@field protected width               number|nil
@@ -53,9 +63,10 @@ function M.new(props)
     cursorline = true,
     number = true,
     relativenumber = true,
-    signcolumn = "yes",
+    signcolumn = "no",
     wrap = false,
     winblend = 10,
+    winhighlight = WIN_HIGHLIGHT,
   }, props.win_opts or {})
 
   local title = props.title ---@type string|nil

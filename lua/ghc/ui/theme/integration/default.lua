@@ -123,6 +123,11 @@ local function gen_hlgroup(params)
     f_us_main_match = { fg = c.blue },
     f_us_main_normal = { bg = c.darker_black },
 
+    ---textarea
+    f_ut_current = { bg = c.one_bg2 },
+    f_ut_border = { fg = c.darker_pink },
+    f_ut_normal = { bg = c.black2 },
+
     ---replace
     f_sr_filepath = { fg = c.blue, bg = "none" },
     f_sr_flag = { fg = c.white, bg = c.grey },
