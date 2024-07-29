@@ -177,7 +177,7 @@ end
 
 ---@param ...                           any[][]
 ---@return any[]
-function M.merge_multiple_array(...)
+function M.concat(...)
   local result = {}
   for _, tbl in ipairs({ ... }) do
     for _, v in ipairs(tbl) do

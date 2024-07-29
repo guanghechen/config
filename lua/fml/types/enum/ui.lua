@@ -1,0 +1,3 @@
+---@alias fml.enums.BoxPosition
+---| "cursor"
+---| "center"

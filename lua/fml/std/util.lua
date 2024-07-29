@@ -33,6 +33,7 @@ function M.calc_fileicon(filepath)
   if name ~= constant.BUF_UNTITLED then
     local devicons_present, devicons = pcall(require, "nvim-web-devicons")
     if devicons_present then
+      ---@diagnostic disable-next-line: undefined-field
       local fticon, fticon_hl = devicons.get_icon(name)
       icon = fticon or icon
       icon_hl = fticon_hl or icon_hl
@@ -83,6 +84,7 @@ function M.run_async(name, fn, callback)
     handle:close() -- Close the handle when done
   end
 
+  ---@diagnostic disable-next-line: undefined-field
   handle = vim.uv.new_async(vim.schedule_wrap(wrapped_fn))
   handle:send()
 
@@ -111,8 +113,8 @@ function M.run_async_by_thread(name, fn, callback)
     end
   end
 
-  local work_handle
-  work_handle = vim.uv.new_work(function()
+  ---@diagnostic disable-next-line: undefined-field
+  local work_handle = vim.uv.new_work(function()
     if cancelled then
       return false, "Cancelled"
     end
@@ -122,6 +124,7 @@ function M.run_async_by_thread(name, fn, callback)
 
   return function()
     cancelled = true
+    ---@diagnostic disable-next-line: undefined-field
     vim.uv.cancel(work_handle)
   end
 end

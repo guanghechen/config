@@ -125,7 +125,7 @@ function M.new(props)
   }
 
   ---@type fml.types.IKeymap[]
-  local input_keymaps = std_array.merge_multiple_array({
+  local input_keymaps = std_array.concat({
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "select: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "select: close" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "select: goto last line" },
@@ -136,7 +136,7 @@ function M.new(props)
   }, props.input_keymaps or {})
 
   ---@type fml.types.IKeymap[]
-  local main_keymaps = std_array.merge_multiple_array({
+  local main_keymaps = std_array.concat({
     {
       modes = { "n", "v" },
       key = "<LeftRelease>",
