@@ -56,7 +56,7 @@ mk({ "i", "n", "v" }, "<C-b>a", "<esc>gg0vG$", "system: select all")
 mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "system: select all")
 mk({ "i", "n", "v" }, "<C-b>v", '<esc>"+p', "system: paste from clipboard")
 mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "system: paste from clipboard")
-mk({ "i", "n", "v" }, "<C-C>", ghc.command.copy.current_buffer_filepath, "copy: current buffer filepath")
+mk({ "i", "n", "v" }, "<Esc><C-c>", ghc.command.copy.current_buffer_filepath, "copy: current buffer filepath")
 ---------------------------------------------------------------------------------------#enhance-----
 
 --#navigation---------------------------------------------------------------------------------------
