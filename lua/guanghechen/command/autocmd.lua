@@ -94,17 +94,6 @@ function M.autocmd_remember_telescope_prompt(prompt_bufnr, callback)
   })
 end
 
-function M.autocmd_session_autosave()
-  if vim.fn.argc() < 1 and fml.path.is_git_repo() then
-    vim.api.nvim_create_autocmd("VimLeavePre", {
-      group = augroups.session_autosave,
-      callback = function()
-        ghc.command.session.autosave()
-      end,
-    })
-  end
-end
-
 ---@param opts {pattern:string[], format?: "unix" | "dos"}
 function M.autocmd_set_fileformat(opts)
   local pattern = opts.pattern

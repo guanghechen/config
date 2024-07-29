@@ -1,4 +1,5 @@
 require("fml.autocmd.bootstrap")
+require("fml.autocmd.disposable")
 
 ---Rebuild the fml.api.state
 require("fml.api.state").refresh_all()

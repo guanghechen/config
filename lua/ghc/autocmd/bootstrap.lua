@@ -3,6 +3,14 @@ local augroups = {
   redraw_when_mode_changes = fml.util.augroup("redraw_when_mode_changes"),
 }
 
+fml.disposable:add_disposable(fml.collection.Disposable.new({
+  on_dispose = function()
+    if vim.fn.argc() < 1 and fml.path.is_git_repo() then
+      ghc.command.session.autosave()
+    end
+  end,
+}))
+
 ---! Auto toggle realtive linenumber.
 vim.api.nvim_create_autocmd({ "InsertLeave" }, {
   pattern = "*",

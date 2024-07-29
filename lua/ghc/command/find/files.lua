@@ -13,14 +13,14 @@ local _filepath = fml.path.locate_session_filepath({ filename = "select-" .. _uu
 local state_dirpath = fml.collection.Observable.from_value(vim.fn.expand("%:p:h")) ---@type fml.collection.Observable
 local state_find_cwd = fml.collection.Observable.from_value("") ---@type fml.collection.Observable
 
-vim.api.nvim_create_autocmd("VimLeavePre", {
-  callback = function()
+fml.disposable:add_disposable(fml.collection.Disposable.new({
+  on_dispose = function()
     if _select ~= nil then
       local data = _select.state:dump() ---@type fml.types.ui.select.state.ISerializedData
       fml.fs.write_json(_filepath, data)
     end
   end,
-})
+}))
 
 ---@param scope                         ghc.enums.context.FindScope
 ---@return nil

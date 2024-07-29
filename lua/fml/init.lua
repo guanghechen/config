@@ -75,16 +75,18 @@ local ui = {
 }
 
 ---@class fml : fml.std
----@field public api          fml.api
----@field public constant     fml.constant
----@field public collection   fml.collection
----@field public fn           fml.fn
----@field public std          fml.std
----@field public ui           fml.ui
+---@field public api                    fml.api
+---@field public constant               fml.constant
+---@field public collection             fml.collection
+---@field public disposable             fml.types.collection.IBatchDisposable
+---@field public fn                     fml.fn
+---@field public std                    fml.std
+---@field public ui                     fml.ui
 local fml = vim.tbl_extend("force", std, {
   api = api,
   constant = require("fml.constant"),
   collection = collection,
+  disposable = require("fml.autocmd.disposable"),
   fn = fn,
   std = std,
   ui = ui,
