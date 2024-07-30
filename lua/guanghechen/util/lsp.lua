@@ -11,20 +11,6 @@ M._supports_method = {}
 M.words = {}
 M.words.ns = vim.api.nvim_create_namespace("vim_lsp_references")
 
----@param buf? number
----@param value? boolean
-function M.toggle_inlay_hints(buf, value)
-  local ih = vim.lsp.buf.inlay_hint or vim.lsp.inlay_hint
-  if type(ih) == "function" then
-    ih(buf, value)
-  elseif type(ih) == "table" and ih.enable then
-    if value == nil then
-      value = not ih.is_enabled({ bufnr = buf or 0 })
-    end
-    ih.enable(value, { bufnr = buf })
-  end
-end
-
 ---@param on_attach fun(client:vim.lsp.Client, buffer)
 function M.on_attach(on_attach)
   return vim.api.nvim_create_autocmd("LspAttach", {
@@ -54,11 +40,12 @@ function M.on_dynamic_capability(fn, opts)
   })
 end
 
----@param method string
----@param fn fun(client:vim.lsp.Client, buffer)
+---@param method                        string
+---@param fn                            fun(client: vim.lsp.Client, bufnr: integer): nil
+---@return nil
 function M.on_supports_method(method, fn)
   M._supports_method[method] = M._supports_method[method] or setmetatable({}, { __mode = "k" })
-  return vim.api.nvim_create_autocmd("User", {
+  vim.api.nvim_create_autocmd("User", {
     pattern = "LspSupportsMethod",
     callback = function(args)
       local client = vim.lsp.get_client_by_id(args.data.client_id)

@@ -35,25 +35,24 @@ return {
       return opts
     end
 
-    ---
-    if vim.fn.has("nvim-0.10") == 1 then
-      -- inlay hints
-      ---@diagnostic disable-next-line: unused-local
-      util_lsp.on_supports_method("textDocument/inlayHint", function(client, buffer)
-        util_lsp.toggle_inlay_hints(buffer, true)
-      end)
-
-      -- code lens
-      if vim.lsp.codelens then
-        ---@diagnostic disable-next-line: unused-local
-        util_lsp.on_supports_method("textDocument/codeLens", function(client, buffer)
-          vim.lsp.codelens.refresh()
-          vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
-            buffer = buffer,
-            callback = vim.lsp.codelens.refresh,
-          })
-        end)
+    -- inlay hints
+    ---@diagnostic disable-next-line: unused-local
+    util_lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
+      if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
+        vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
       end
+    end)
+
+    -- code lens
+    if vim.lsp.codelens then
+      ---@diagnostic disable-next-line: unused-local
+      util_lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
+        vim.lsp.codelens.refresh()
+        vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
+          buffer = bufnr,
+          callback = vim.lsp.codelens.refresh,
+        })
+      end)
     end
   end,
   dependencies = {
