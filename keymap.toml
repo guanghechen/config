@@ -238,11 +238,13 @@ bindings = [
   { key = "Z",          mods = "Command|Control",           chars = "\u0002\u001a" },       # <Ctrl-b><Ctrl-z>
 
   { key = "Enter",      mods = "Command",                   chars = "\u001b\u000d" },       # <alt-cr>
-  { key = "[",          mods = "Command",                   chars = "\u0002\u005b" },       # <Ctrl-b>[
-  { key = "]",          mods = "Command",                   chars = "\u0002\u005d" },       # <Ctrl-b>]
+  { key = ",",          mods = "Command",                   chars = "\u0002\u002c" },       # <Ctrl-b>,
+  { key = ".",          mods = "Command",                   chars = "\u0002\u002e" },       # <Ctrl-b>.
   { key = ":",          mods = "Command|Shift",             chars = "\u0002\u003a" },       # <Ctrl-b>:
   { key = "<",          mods = "Command|Shift",             chars = "\u0002\u003c" },       # <Ctrl-b><
-  { key = ">",          mods = "Command|Shift",             chars = "\u0002\u003e" },       # <Ctrl-b>>
+  { key = ">",          mods = "Command|Shift",             chars = "\u0002\u003e" },       # <Ctrl-b>
+  { key = "[",          mods = "Command",                   chars = "\u0002\u005b" },       # <Ctrl-b>[
+  { key = "]",          mods = "Command",                   chars = "\u0002\u005d" },       # <Ctrl-b>]>
   { key = "{",          mods = "Command|Shift",             chars = "\u0002\u007b" },       # <Ctrl-b>{
   { key = "}",          mods = "Command|Shift",             chars = "\u0002\u007d" },       # <Ctrl-b>}
 
