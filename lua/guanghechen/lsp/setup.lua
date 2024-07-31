@@ -49,6 +49,9 @@ local setup = {
   rust_analyzer = function()
     require("lspconfig").rust_analyzer.setup(require("guanghechen.lsp.lang.rust"))
   end,
+  tailwindcss = function()
+    require("lspconfig").tailwindcss.setup(require("guanghechen.lsp.lang.tailwindcss"))
+  end,
   tsserver = function()
     require("lspconfig").tsserver.setup(require("guanghechen.lsp.lang.typescript"))
   end,

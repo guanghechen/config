@@ -18,6 +18,7 @@ return {
       "pyright", -- pyright
       "rust-analyzer", -- rust_analyzer
       -- "sqls", -- sqls
+      "tailwindcss-language-server", --  tailwindcss
       "taplo", -- taplo
       "typescript-language-server", -- tsserver
       "vetur-vls", -- vuels
@@ -68,6 +69,7 @@ return {
         "pyright", -- python -- by microsoft
         "rust_analyzer", -- rust -- by rust official
         -- "sqls", -- sql
+        "tailwindcss",
         "taplo", -- toml
         "tsserver", -- javascript/typescript
         "vuels", -- vue -- by vuejs official
