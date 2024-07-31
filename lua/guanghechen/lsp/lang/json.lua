@@ -10,7 +10,7 @@ return {
   capabilities = capabilities,
   flags = { debounce_text_changes = 500 },
   settings = {
-    jsonls = {
+    json = {
       format = {
         enable = true,
       },
