@@ -60,9 +60,19 @@ mk({ "i", "n", "v" }, "<Esc><C-c>", ghc.command.copy.current_buffer_filepath, "c
 ---------------------------------------------------------------------------------------#enhance-----
 
 --#navigation---------------------------------------------------------------------------------------
+----- buffer -----
+mk({ "n", "v" }, "<leader>[", fml.api.buf.focus_left, "buffer: focus left", true, true)
+mk({ "n", "v" }, "<leader>]", fml.api.buf.focus_right, "buffer: focus right", true, true)
+mk({ "n", "v" }, "<leader>{", fml.api.buf.swap_left, "buffer: swap left", true, true)
+mk({ "n", "v" }, "<leader>}", fml.api.buf.swap_right, "buffer: swap right", true, true)
+mk({ "n", "v" }, "[b", fml.api.buf.focus_left, "buffer: focus left", true, true)
+mk({ "n", "v" }, "]b", fml.api.buf.focus_right, "buffer: focus right", true, true)
+mk({ "n", "v" }, "[B", fml.api.buf.swap_left, "buffer: swap left", true, true)
+mk({ "n", "v" }, "]B", fml.api.buf.swap_right, "buffer: swap right", true, true)
+
 ----- tab -----
-mk({ "n", "v" }, "<leader><", fml.api.tab.focus_left, "tab: focus left", true, true)
-mk({ "n", "v" }, "<leader>>", fml.api.tab.focus_right, "tab: focus right", true, true)
+mk({ "n", "v" }, "<leader>,", fml.api.tab.focus_left, "tab: focus left", true, true)
+mk({ "n", "v" }, "<leader>.", fml.api.tab.focus_right, "tab: focus right", true, true)
 mk({ "n", "v" }, "[t", fml.api.tab.focus_left, "tab: focus left", true, true)
 mk({ "n", "v" }, "]t", fml.api.tab.focus_right, "tab: focus right", true, true)
 
@@ -79,16 +89,6 @@ mk({ "i", "n", "v" }, "<C-b>i", fml.api.win.back, "window: back", true, true)
 mk({ "i", "n", "v" }, "<C-b>o", fml.api.win.forward, "window: forward", true, true)
 mk({ "i", "n", "v" }, "<M-i>", fml.api.win.back, "window: back", true, true)
 mk({ "i", "n", "v" }, "<M-o>", fml.api.win.forward, "window: forward", true, true)
-
------ buffer -----
-mk({ "n", "v" }, "<leader>[", fml.api.buf.focus_left, "buffer: focus left", true, true)
-mk({ "n", "v" }, "<leader>]", fml.api.buf.focus_right, "buffer: focus right", true, true)
-mk({ "n", "v" }, "<leader>{", fml.api.buf.swap_left, "buffer: swap left", true, true)
-mk({ "n", "v" }, "<leader>}", fml.api.buf.swap_right, "buffer: swap right", true, true)
-mk({ "n", "v" }, "[b", fml.api.buf.focus_left, "buffer: focus left", true, true)
-mk({ "n", "v" }, "]b", fml.api.buf.focus_right, "buffer: focus right", true, true)
-mk({ "n", "v" }, "[B", fml.api.buf.swap_left, "buffer: swap left", true, true)
-mk({ "n", "v" }, "]B", fml.api.buf.swap_right, "buffer: swap right", true, true)
 
 ----- jump list -----
 mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back", true, true)
