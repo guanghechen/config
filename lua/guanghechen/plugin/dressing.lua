@@ -1,7 +1,7 @@
 -- better vim.ui input/select
 return {
   "stevearc/dressing.nvim",
-  lazy = true,
+  event = { "VeryLazy" },
   opts = {
     input = {
       insert_only = false,

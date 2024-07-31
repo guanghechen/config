@@ -6,13 +6,27 @@ local M = {
   end,
   render = function()
     local status = require("noice").api.status
-    local text_noice_command = status.command.get() or ""
+    local text = "" ---@type string
+    local width = 0 ---@type integer
+
+    local text_noice_command = status.command.get() ---@type string | nil
+    if text_noice_command ~= nil and #text_noice_command > 0 then
+      text = fml.nvimbar.txt(text_noice_command, "f_sl_noice_command")
+      width = vim.fn.strwidth(text_noice_command)
+    end
+
     local text_noice_mode = status.mode.get() or ""
-    local text_hl = fml.nvimbar.txt(text_noice_command, "f_sl_noice_command")
-        .. fml.nvimbar.txt(text_noice_mode, "f_sl_noice_mode")
-    local width = vim.fn.strwidth(text_noice_command) + vim.fn.strwidth(text_noice_mode)
-    return text_hl, width
-  end
+    if text_noice_mode ~= nil and #text_noice_mode > 0 then
+      if width > 0 then
+        text = text .. fml.nvimbar.txt(" ", "f_sl_bg")
+        width = width + 1
+      end
+
+      text = text .. fml.nvimbar.txt(text_noice_mode, "f_sl_noice_mode")
+      width = width + vim.fn.strwidth(text_noice_mode)
+    end
+    return text, width
+  end,
 }
 
 return M
