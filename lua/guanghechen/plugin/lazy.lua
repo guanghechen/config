@@ -3,7 +3,7 @@ local opts = {
     --common
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
-    require("guanghechen.plugin.nvim-web-devicons"),
+    require("guanghechen.plugin.mini-icons"),
 
     --cmp
     require("guanghechen.plugin.mini-pairs"),

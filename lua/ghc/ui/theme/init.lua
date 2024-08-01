@@ -7,7 +7,7 @@ M.integrations = {
   "basic",
   "default",
   "treesitter",
-  "nvim-web-devicons",
+  "mini-icons",
   "nvim-lspconfig",
   "lazy",
 
