@@ -76,8 +76,8 @@ function M.new(props)
   ---@type fml.types.IKeymap[]
   local keymaps = state.input_history ~= nil
       and std_array.concat({
-        { modes = { "i", "n", "v" }, key = "<c-j>", callback = actions.apply_next_input, desc = "select: last input" },
-        { modes = { "i", "n", "v" }, key = "<c-k>", callback = actions.apply_prev_input, desc = "select: next input" },
+        { modes = { "i", "n", "v" }, key = "<C-j>", callback = actions.apply_next_input, desc = "select: last input" },
+        { modes = { "i", "n", "v" }, key = "<C-k>", callback = actions.apply_prev_input, desc = "select: next input" },
       }, props.keymaps)
     or props.keymaps
 

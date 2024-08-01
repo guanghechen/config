@@ -45,7 +45,7 @@ local function edit_lazygit_file_in_buffer(cwd)
     return
   end
 
-  vim.fn.chansend(channel_id, "\15") -- \15 is <c-o>
+  vim.fn.chansend(channel_id, "\15") -- \15 is <C-o>
   vim.cmd("close") -- Close Lazygit
 
   local relative_filepath = get_filepath_from_lazygit(cwd)
@@ -91,7 +91,7 @@ local function open_lazygit(name, cwd, args)
     end
     vim.keymap.set("t", "<esc>", "<esc>", { buffer = bufnr, noremap = true, silent = true })
     vim.keymap.set("t", "<esc><esc>", "<esc><esc>", { buffer = bufnr, noremap = true, silent = true })
-    vim.keymap.set("t", "<c-e>", edit, { buffer = bufnr, noremap = true, silent = true })
+    vim.keymap.set("t", "<C-e>", edit, { buffer = bufnr, noremap = true, silent = true })
   end
 end
 

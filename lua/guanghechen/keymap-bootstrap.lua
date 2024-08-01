@@ -34,27 +34,27 @@ mk("n", "<esc>", "<cmd>noh<cr><esc>", "remove search highlights", true, true) --
 mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true, true) -- Exit terminal
 
 ---! quick shortcut
-mk({ "i", "n", "v" }, "<C-b>T", ghc.command.toggle.theme, "toggle: theme")
+mk({ "i", "n", "v" }, "<C-a>T", ghc.command.toggle.theme, "toggle: theme")
 mk({ "i", "n", "v" }, "<M-T>", ghc.command.toggle.theme, "toggle: theme")
 
 --- better access lazygit
-mk({ "i", "n", "t", "v" }, "<C-b>g", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
+mk({ "i", "n", "t", "v" }, "<C-a>g", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
 mk({ "i", "n", "t", "v" }, "<M-g>", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
 
 --- better access terminal
-mk({ "i", "n", "t", "v" }, "<C-b>t", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
+mk({ "i", "n", "t", "v" }, "<C-a>t", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
 mk({ "i", "n", "t", "v" }, "<M-t>", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
 
 ---! better copy/paste
-mk("v", "<C-b>c", '"+y', "system: copy to clipboard")
+mk("v", "<C-a>c", '"+y', "system: copy to clipboard")
 mk("v", "<M-c>", '"+y', "system: copy to clipboard")
-mk("v", "<C-b>x", '"+x', "system: cut to clipboard")
+mk("v", "<C-a>x", '"+x', "system: cut to clipboard")
 mk("v", "<M-x>", '"+x', "system: cut to clipboard")
-mk({ "i", "n", "v" }, "<C-b>s", "<cmd>wa<cr>", "system: save changes")
+mk({ "i", "n", "v" }, "<C-a>s", "<cmd>wa<cr>", "system: save changes")
 mk({ "i", "n", "v" }, "<M-s>", "<cmd>wa<cr>", "system: save changes")
-mk({ "i", "n", "v" }, "<C-b>a", "<esc>gg0vG$", "system: select all")
+mk({ "i", "n", "v" }, "<C-a>a", "<esc>gg0vG$", "system: select all")
 mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "system: select all")
-mk({ "i", "n", "v" }, "<C-b>v", '<esc>"+p', "system: paste from clipboard")
+mk({ "i", "n", "v" }, "<C-a>v", '<esc>"+p', "system: paste from clipboard")
 mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "system: paste from clipboard")
 mk({ "i", "n", "v" }, "<Esc><C-c>", ghc.command.copy.current_buffer_filepath, "copy: current buffer filepath")
 ---------------------------------------------------------------------------------------#enhance-----
@@ -77,16 +77,16 @@ mk({ "n", "v" }, "[t", fml.api.tab.focus_left, "tab: focus left", true, true)
 mk({ "n", "v" }, "]t", fml.api.tab.focus_right, "tab: focus right", true, true)
 
 ----- window -----
-mk({ "i", "n", "v" }, "<C-b>h", fml.api.win.focus_left, "window: focus left", true, true)
-mk({ "i", "n", "v" }, "<C-b>j", fml.api.win.focus_bottom, "window: focus bottom", true, true)
-mk({ "i", "n", "v" }, "<C-b>k", fml.api.win.focus_top, "window: focus top", true, true)
-mk({ "i", "n", "v" }, "<C-b>l", fml.api.win.focus_right, "window: focus right", true, true)
+mk({ "i", "n", "v" }, "<C-a>h", fml.api.win.focus_left, "window: focus left", true, true)
+mk({ "i", "n", "v" }, "<C-a>j", fml.api.win.focus_bottom, "window: focus bottom", true, true)
+mk({ "i", "n", "v" }, "<C-a>k", fml.api.win.focus_top, "window: focus top", true, true)
+mk({ "i", "n", "v" }, "<C-a>l", fml.api.win.focus_right, "window: focus right", true, true)
 mk({ "i", "n", "v" }, "<M-h>", fml.api.win.focus_left, "window: focus left", true, true)
 mk({ "i", "n", "v" }, "<M-j>", fml.api.win.focus_bottom, "window: focus bottom", true, true)
 mk({ "i", "n", "v" }, "<M-k>", fml.api.win.focus_top, "window: focus top", true, true)
 mk({ "i", "n", "v" }, "<M-l>", fml.api.win.focus_right, "window: focus right", true, true)
-mk({ "i", "n", "v" }, "<C-b>i", fml.api.win.back, "window: back", true, true)
-mk({ "i", "n", "v" }, "<C-b>o", fml.api.win.forward, "window: forward", true, true)
+mk({ "i", "n", "v" }, "<C-a>i", fml.api.win.back, "window: back", true, true)
+mk({ "i", "n", "v" }, "<C-a>o", fml.api.win.forward, "window: forward", true, true)
 mk({ "i", "n", "v" }, "<M-i>", fml.api.win.back, "window: back", true, true)
 mk({ "i", "n", "v" }, "<M-o>", fml.api.win.forward, "window: forward", true, true)
 
@@ -145,7 +145,7 @@ mk({ "n", "v" }, "<leader>qC", ghc.command.session.clear_all, "session: clear al
 --------------------------------------------------------------------------#[q]uit/session/context--
 
 --#[r]efresh---------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<C-b>r", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
+mk({ "i", "n", "v" }, "<C-a>r", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
 mk({ "i", "n", "v" }, "<M-r>", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
 ---------------------------------------------------------------------------------------#[r]efresh--
 

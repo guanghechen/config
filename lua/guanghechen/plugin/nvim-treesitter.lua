@@ -9,7 +9,7 @@ return {
   build = ":TSUpdate",
   cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
   keys = {
-    { "<c-space>", desc = "Increment Selection" },
+    { "<C-space>", desc = "Increment Selection" },
     { "<bs>", desc = "Decrement Selection", mode = "x" },
   },
   init = function(plugin)

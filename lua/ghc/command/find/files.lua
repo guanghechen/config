@@ -161,7 +161,7 @@ local function get_select()
     local input_keymaps = {
       {
         modes = { "i", "n" },
-        key = "<c-b>c",
+        key = "<C-a>c",
         callback = edit_config,
         desc = "find: edit configuration",
       },

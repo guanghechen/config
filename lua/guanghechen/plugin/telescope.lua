@@ -77,18 +77,18 @@ return {
       wrap_results = false,
       mappings = {
         i = {
-          ["<c-s>"] = flash,
-          ["<c-t>"] = open_with_trouble,
-          ["<c-Up>"] = cycle_history_prev,
-          ["<c-Down>"] = cycle_history_next,
-          ["<c-b>"] = preview_scrolling_up,
-          ["<c-f>"] = preview_scrolling_down,
+          ["<C-s>"] = flash,
+          ["<C-t>"] = open_with_trouble,
+          ["<C-Up>"] = cycle_history_prev,
+          ["<C-Down>"] = cycle_history_next,
+          ["<C-b>"] = preview_scrolling_up,
+          ["<C-f>"] = preview_scrolling_down,
         },
         n = {
           q = close_telescope,
           s = flash,
           ["<esc>"] = false,
-          ["<c-t>"] = open_with_trouble,
+          ["<C-t>"] = open_with_trouble,
         },
       },
       -- open files in the first window that is an actual file.
