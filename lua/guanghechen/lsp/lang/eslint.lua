@@ -7,11 +7,10 @@ return {
   on_init = on_init,
   capabilities = capabilities,
   settings = {
-    eslint = {
-      root_dir = function(filename)
-        local util = require("lspconfig.util")
-        return util.root_pattern(".git")(filename) or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
-      end,
-    },
+    root_dir = function(filename)
+      local util = require("lspconfig.util")
+      return util.root_pattern(".git")(filename)
+        or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
+    end,
   },
 }
