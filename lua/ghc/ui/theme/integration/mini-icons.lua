@@ -8,7 +8,7 @@ local function gen_hlgroup(params)
     MiniIconsBlue = { fg = c.blue },
     MiniIconsCyan = { fg = c.cyan },
     MiniIconsGreen = { fg = c.green },
-    MiniIconsGrey = { fg = c.grey_fg2 },
+    MiniIconsGrey = { fg = c.white },
     MiniIconsOrange = { fg = c.orange },
     MiniIconsPurple = { fg = c.darker_purple },
     MiniIconsRed = { fg = c.red },
