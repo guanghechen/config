@@ -47,6 +47,7 @@
 ---@field public ticker                 fml.types.collection.ITicker
 ---@field public filter                 fun(self: fml.types.ui.select.IState): fml.types.ui.select.ILineMatch[]
 ---@field public get_current            fun(self: fml.types.ui.select.IState): fml.types.ui.select.IItem|nil, integer|nil
+---@field public get_lnum               fun(self: fml.types.ui.select.IState): integer
 ---@field public is_visible             fun(self: fml.types.ui.select.IState): boolean
 ---@field public locate                 fun(self: fml.types.ui.select.IState, lnum: integer): integer
 ---@field public moveup                 fun(self: fml.types.ui.select.IState): integer

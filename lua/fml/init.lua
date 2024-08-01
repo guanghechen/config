@@ -71,6 +71,7 @@ local ui = {
   Theme = require("fml.ui.theme"),
   icons = require("fml.ui.icons"),
   signcolumn = require("fml.ui.signcolumn"),
+  search = require("fml.ui.search"),
   select = require("fml.ui.select"),
 }
 
