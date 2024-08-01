@@ -2,7 +2,7 @@ local constant = require("fml.constant")
 local std_array = require("fml.std.array")
 local util = require("fml.std.util")
 local Subscriber = require("fml.collection.subscriber")
-local SelectInput = require("fml.ui.select.input")
+local SearchInput = require("fml.ui.search.input")
 local SelectMain = require("fml.ui.select.main")
 
 ---@type string
@@ -26,7 +26,7 @@ local MAIN_WIN_HIGHLIGHT = table.concat({
 ---@field public state                  fml.types.ui.select.IState
 ---@field public winnr_input            integer|nil
 ---@field public winnr_main             integer|nil
----@field protected input               fml.types.ui.select.IInput
+---@field protected input               fml.types.ui.search.IInput
 ---@field protected main                fml.types.ui.select.IMain
 ---@field protected max_width           number
 ---@field protected max_height          number
@@ -167,9 +167,11 @@ function M.new(props)
     { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "select: focus prev item" },
   }, props.main_keymaps or {})
 
-  ---@type fml.types.ui.select.IInput
-  local input = SelectInput.new({
-    state = state,
+  ---@type fml.types.ui.search.IInput
+  local input = SearchInput.new({
+    uuid = state.uuid,
+    input = state.input,
+    input_history = state.input_history,
     keymaps = input_keymaps,
   })
 

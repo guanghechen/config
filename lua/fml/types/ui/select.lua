@@ -64,10 +64,6 @@
 ---@field public place_lnum_sign        fun(self: fml.types.ui.select.IMain): integer|nil
 ---@field public render                 fun(self: fml.types.ui.select.IMain, opts?: fml.types.ui.select.main.IRenderParams): nil
 
----@class fml.types.ui.select.IInput
----@field public create_buf_as_needed   fun(self: fml.types.ui.select.IInput): integer
----@field public reset_input            fun(self: fml.types.ui.select.IInput, input: string): nil
-
 ---@class fml.types.ui.select.ISelect
 ---@field public state                  fml.types.ui.select.IState
 ---@field public close                  fun(self: fml.types.ui.select.ISelect): nil
