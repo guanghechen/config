@@ -132,7 +132,7 @@ function M.reload()
     table.sort(items, function(a, b)
       return a.display < b.display
     end)
-    _select.state:update_items(items)
+    _select:update_items(items)
   end
 end
 
@@ -195,14 +195,11 @@ local function get_select()
     local main_keymaps = vim.tbl_deep_extend("force", {}, input_keymaps)
 
     _select = fml.ui.select.Select.new({
-      state = fml.ui.select.State.new({
-        title = "Find files",
-        items = {},
-        input = session.find_file_pattern,
-        input_history = _input_history,
-        frecency = _frecency,
-        visible = fml.collection.Observable.from_value(false),
-      }),
+      title = "Find files",
+      items = {},
+      input = session.find_file_pattern,
+      input_history = _input_history,
+      frecency = _frecency,
       width = 0.4,
       height = 0.5,
       render_line = fml.ui.select.defaults.render_filepath,

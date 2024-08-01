@@ -1,363 +1,241 @@
-local constant = require("fml.constant")
+local Search = require("fml.ui.search.search")
+local defaults = require("fml.ui.select.defaults")
 local std_array = require("fml.std.array")
-local util = require("fml.std.util")
-local Subscriber = require("fml.collection.subscriber")
-local SearchInput = require("fml.ui.search.input")
-local SelectMain = require("fml.ui.select.main")
 
----@type string
-local INPUT_WIN_HIGHLIGHT = table.concat({
-  "FloatBorder:f_us_input_border",
-  "FloatTitle:f_us_input_title",
-  "Normal:f_us_input_normal",
-}, ",")
+---@param items                         fml.types.ui.select.IItem[]
+---@param frecency                      fml.types.collection.IFrecency|nil
+---@param cmp                           fml.types.ui.select.ILineMatchCmp
+---@return fml.types.ui.select.ILineMatch[]
+local function process_full_matches(items, frecency, cmp)
+  local full_matches = {} ---@type fml.types.ui.select.ILineMatch[]
+  if frecency ~= nil then
+    for idx, item in ipairs(items) do
+      local match = { idx = idx, score = frecency:score(item.uuid), pieces = {} } ---@type fml.types.ui.select.ILineMatch
+      table.insert(full_matches, match)
+    end
+  else
+    for idx in ipairs(items) do
+      local match = { idx = idx, score = 0, pieces = {} } ---@type fml.types.ui.select.ILineMatch
+      table.insert(full_matches, match)
+    end
+  end
+  table.sort(full_matches, cmp)
+  return full_matches
+end
 
----@type string
-local MAIN_WIN_HIGHLIGHT = table.concat({
-  "Cursor:f_us_main_current",
-  "CursorColumn:f_us_main_current",
-  "CursorLine:f_us_main_current",
-  "CursorLineNr:f_us_main_current",
-  "FloatBorder:f_us_main_border",
-  "Normal:f_us_main_normal",
-}, ",")
+---@param full_matches                  fml.types.ui.select.ILineMatch[]
+---@param items                         fml.types.ui.select.IItem[]
+---@param frecency                      fml.types.collection.IFrecency|nil
+---@param cmp                           fml.types.ui.select.ILineMatchCmp
+---@return nil
+local function refresh_full_matches(full_matches, items, frecency, cmp)
+  for _, match in ipairs(full_matches) do
+    local idx = match.idx ---@type integer
+    local item = items[idx] ---@type fml.types.ui.select.IItem|nil
+    local uuid = item and item.uuid or ""
+    match.score = frecency and frecency:score(uuid) or 0
+  end
+  table.sort(full_matches, cmp)
+end
 
 ---@class fml.ui.select.Select : fml.types.ui.select.ISelect
----@field public state                  fml.types.ui.select.IState
----@field public winnr_input            integer|nil
----@field public winnr_main             integer|nil
----@field protected input               fml.types.ui.search.IInput
----@field protected main                fml.types.ui.select.IMain
----@field protected max_width           number
----@field protected max_height          number
----@field protected width               number|nil
----@field protected height              number|nil
----@field protected _augroup_win_focus  integer
+---@field protected _cmp                fml.types.ui.select.ILineMatchCmp
+---@field protected _frecency           fml.types.collection.IFrecency|nil
+---@field protected _full_matches       fml.types.ui.select.ILineMatch[]
+---@field protected _items              fml.types.ui.select.IItem[]
+---@field protected _match              fml.types.ui.select.IMatch
+---@field protected _matches            fml.types.ui.select.ILineMatch[]
+---@field protected _render_line        fml.types.ui.select.main.IRenderLine
+---@field protected _search             fml.types.ui.search.ISearch
+---@field protected _last_input_lower   string|nil
 local M = {}
 M.__index = M
 
 ---@class fml.types.ui.select.IProps
----@field public state                  fml.types.ui.select.IState
+---@field public title                  string
+---@field public items                  fml.types.ui.select.IItem[]
+---@field public input                  fml.types.collection.IObservable
+---@field public input_history          fml.types.collection.IHistory|nil
+---@field public frecency               fml.types.collection.IFrecency|nil
+---@field public cmp                    ?fml.types.ui.select.ILineMatchCmp
+---@field public match                  ?fml.types.ui.select.IMatch
+---@field public render_line            ?fml.types.ui.select.main.IRenderLine
+---@field public input_keymaps          ?fml.types.IKeymap[]
+---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public max_width              ?number
 ---@field public max_height             ?number
 ---@field public width                  ?number
 ---@field public height                 ?number
----@field public input_keymaps          ?fml.types.IKeymap[]
----@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.select.IOnClose
----@field public render_line            ?fml.types.ui.select.main.IRenderLine
 
 ---@param props                         fml.types.ui.select.IProps
 ---@return fml.ui.select.Select
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local state = props.state ---@type fml.types.ui.select.IState
-  local render_line = props.render_line ---@type fml.types.ui.select.main.IRenderLine|nil
-  local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
-  local on_close_from_props = props.on_close ---@type fml.types.ui.select.IOnClose|nil
+  local title = props.title ---@type string
+  local items = props.items ---@type fml.types.ui.select.IItem[]
+  local input = props.input ---@type fml.types.collection.IObservable
+  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
+  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
+  local cmp = props.cmp or defaults.line_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
+  local match = props.match or defaults.match ---@type fml.types.ui.select.IMatch
+  local render_line = props.render_line or defaults.render_line ---@type fml.types.ui.select.main.IRenderLine
+  local input_keymaps = props.input_keymaps or {} ---@type fml.types.IKeymap[]
+  local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
   local max_width = props.max_width or 0.8 ---@type number
   local max_height = props.max_height or 0.8 ---@type number
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
-  local augroup_win_focus = util.augroup(state.uuid .. ":win_focus") ---@type integer
+  local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
+  local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
+  local full_matches = process_full_matches(items, frecency, cmp)
 
+  ---@param item                        fml.types.ui.search.IItem
   ---@return nil
-  local function on_close()
-    if on_close_from_props ~= nil then
-      on_close_from_props()
+  local function on_confirm(item)
+    if frecency ~= nil then
+      frecency:access(item.uuid)
     end
-    self:close()
-  end
-
-  ---@return nil
-  local function on_confirm()
-    local item, idx = state:get_current()
-    if item ~= nil and idx ~= nil then
-      if on_confirm_from_props(item, idx) then
-        if state.input_history ~= nil then
-          local input = state.input:snapshot() ---@type string
-          local input_history = state.input_history ---@type fml.types.collection.IHistory
-
-          input_history:go(math.huge)
-          local top = input_history:present() ---@type string|nil
-          local prefix = constant.EDITING_INPUT_PREFIX ---@type string
-          if top == nil or #top < #prefix or string.sub(top, 1, #prefix) ~= prefix then
-            input_history:push(input)
-          else
-            input_history:update_top(input)
-          end
-        end
-
-        self.state:on_confirmed(item, idx)
-        on_close()
-      end
+    ---@type integer|nil, fml.types.ui.select.IItem|nil
+    local idx, select_item = std_array.first(items, function(e)
+      return e.uuid == item.uuid
+    end)
+    if idx ~= nil and select_item ~= nil then
+      on_confirm_from_props(select_item, idx)
     end
   end
 
+  self._cmp = cmp
+  self._frecency = frecency
+  self._full_matches = full_matches
+  self._items = items
+  self._matches = full_matches
+  self._match = match
+  self._render_line = render_line
+  self._last_input_lower = nil ---@type string|nil
+
+  ---@param input_text                  string
+  ---@param callback                    fml.types.ui.search.IFetchItemsCallback
   ---@return nil
-  local function on_main_renderered()
-    self:sync_main_cursor()
+  local function fetch_items(input_text, callback)
+    vim.defer_fn(function()
+      local ok, search_items = pcall(self.fetch_items, self, input_text)
+      callback(ok, search_items)
+    end, 10)
   end
 
-  ---@class fml.ui.select.select.actions
-  local actions = {
-    on_close = function()
-      on_close()
-    end,
-    noop = util.noop,
-    on_main_G = function()
-      state:locate(#state:filter())
-      self:sync_main_cursor()
-    end,
-    on_main_g = function()
-      local lnum = vim.v.count1 or 1
-      state:locate(lnum)
-      self:sync_main_cursor()
-    end,
-    on_main_gg = function()
-      state:locate(1)
-      self:sync_main_cursor()
-    end,
-    on_main_down = function()
-      state:movedown()
-      self:sync_main_cursor()
-    end,
-    on_main_up = function()
-      state:moveup()
-      self:sync_main_cursor()
-    end,
-    on_main_mouse_click = function()
-      ---@diagnostic disable-next-line: invisible
-      local winnr_main = self.winnr_main ---@type integer|nil
-      if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-        local lnum = vim.api.nvim_win_get_cursor(winnr_main)[1]
-        state:locate(lnum)
-        self:sync_main_cursor()
-      end
-    end,
-  }
-
-  ---@type fml.types.IKeymap[]
-  local input_keymaps = std_array.concat({
-    { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "select: confirm" },
-    { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "select: close" },
-    { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "select: goto last line" },
-    { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "select: locate" },
-    { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "select: goto first line" },
-    { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "select: focus next item" },
-    { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "select: focus prev item" },
-  }, props.input_keymaps or {})
-
-  ---@type fml.types.IKeymap[]
-  local main_keymaps = std_array.concat({
-    {
-      modes = { "n", "v" },
-      key = "<LeftRelease>",
-      callback = actions.on_main_mouse_click,
-      desc = "select: mouse click (main)",
-    },
-    { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "select: confirm" },
-    { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "select: close" },
-    { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "select: goto last line" },
-    { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "select: locate" },
-    { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "select: goto first line" },
-    { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "select: focus next item" },
-    { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "select: focus prev item" },
-  }, props.main_keymaps or {})
-
-  ---@type fml.types.ui.search.IInput
-  local input = SearchInput.new({
-    uuid = state.uuid,
-    input = state.input,
-    input_history = state.input_history,
-    keymaps = input_keymaps,
+  ---@type fml.types.ui.search.ISearch
+  local search = Search.new({
+    title = title,
+    input = input,
+    fetch_items = fetch_items,
+    input_history = input_history,
+    input_keymaps = input_keymaps,
+    main_keymaps = main_keymaps,
+    max_width = max_width,
+    max_height = max_height,
+    width = width,
+    height = height,
+    on_confirm = on_confirm,
+    on_close = on_close_from_props,
   })
 
-  ---@type fml.types.ui.select.IMain
-  local main = SelectMain.new({
-    state = state,
-    keymaps = main_keymaps,
-    render_line = render_line,
-    on_rendered = on_main_renderered,
-  })
+  self.state = search.state
+  self._search = search
 
-  self.state = state
-  self.winnr_input = nil
-  self.winnr_main = nil
-  self.input = input
-  self.main = main
-  self.max_width = max_width
-  self.max_height = max_height
-  self.width = width
-  self.height = height
-  self._augroup_win_focus = augroup_win_focus
-
-  state.ticker:subscribe(Subscriber.new({
-    on_next = function()
-      if self.state:is_visible() then
-        self:open()
-      end
-    end,
-  }))
-
-  -- Detect focus on the main window and move cursor back to input
-  vim.api.nvim_create_autocmd("WinEnter", {
-    group = augroup_win_focus,
-    callback = function()
-      local winnr_cur = vim.api.nvim_get_current_win()
-      if winnr_cur == self.winnr_main then
-        if self.winnr_input ~= nil and vim.api.nvim_win_is_valid(self.winnr_input) then
-          vim.api.nvim_tabpage_set_win(0, self.winnr_input)
-        end
-      end
-    end,
-  })
   return self
 end
 
----@return nil
-function M:sync_main_cursor()
-  local lnum = self.main:place_lnum_sign() ---@type integer|nil
-  if lnum ~= nil then
-    local winnr_main = self.winnr_main ---@type integer|nil
-    if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-      vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
+---@param input                         string
+---@return fml.types.ui.select.ILineMatch[]
+function M:filter(input)
+  local input_lower = input:lower() ---@type string
+  local items = self._items ---@type fml.types.ui.select.IItem[]
+  local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
+  local cmp = self._cmp ---@type fml.types.ui.select.ILineMatchCmp
+  local last_input_lower = self._last_input_lower ---@type string|nil
+  self._last_input_lower = input_lower
+
+  if #input < 1 then
+    local matches = self._full_matches ---@type fml.types.ui.select.ILineMatch[]
+    refresh_full_matches(matches, items, frecency, cmp)
+    return matches
+  end
+
+  ---@type fml.types.ui.select.ILineMatch[]
+  local matches = (
+    last_input_lower ~= nil
+    and #input_lower > #last_input_lower
+    and input_lower:sub(1, #last_input_lower) == last_input_lower
+  )
+      and self._match(input_lower, items, self._matches)
+    or self._match(input_lower, items, self._full_matches)
+  if frecency ~= nil then
+    for _, match in ipairs(matches) do
+      local item = items[match.idx] ---@type fml.types.ui.select.IItem
+      match.score = match.score + frecency:score(item.uuid)
     end
   end
+  table.sort(matches, self._cmp)
+  return matches
 end
 
----@param match_count                   integer
----@return nil
-function M:create_wins_as_needed(match_count)
-  local state = self.state ---@type fml.types.ui.select.IState
-  local bufnr_input = self.input:create_buf_as_needed() ---@type integer
-  local bufnr_main = self.main:create_buf_as_needed() ---@type integer
-  local max_height = self.max_height <= 1 and math.floor(vim.o.lines * self.max_height) or self.max_height ---@type number
-  local max_width = self.max_width <= 1 and math.floor(vim.o.columns * self.max_width) or self.max_width ---@type number
-
-  local height = self.height or (#state.items + 3) ---@type number
-  if height < 1 then
-    height = math.floor(vim.o.lines * height)
-  end
-  height = math.min(max_height, math.max(3, height)) ---@type integer
-
-  local width = self.width or state.max_width + 10 ---@type number
-  if width < 1 then
-    width = math.floor(vim.o.columns * width)
-  end
-  width = math.min(max_width, math.max(10, width)) ---@type integer
-
-  local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
-  local col = math.floor((vim.o.columns - width) / 2) ---@type integer
-  local winnr_input = self.winnr_input ---@type integer|nil
-  local winnr_main = self.winnr_main ---@type integer|nil
-
-  if match_count > 0 then
-    ---@type vim.api.keyset.win_config
-    local wincfg_main = {
-      relative = "editor",
-      anchor = "NW",
-      height = math.min(match_count + 1, height - 3),
-      width = width,
-      row = row + 3,
-      col = col,
-      focusable = true,
-      title = "",
-      border = "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
-      style = "minimal",
+---@param input                       string
+---@return fml.types.ui.search.IItem[]
+function M:fetch_items(input)
+  local items = self._items ---@type fml.types.ui.select.IItem[]
+  local matches = self:filter(input) ---@type fml.types.ui.select.ILineMatch[]
+  local search_items = {} ---@type fml.types.ui.search.IItem[]
+  for _, m in ipairs(matches) do
+    local item = items[m.idx] ---@type fml.types.ui.select.IItem
+    local line, highlights = self._render_line({ item = item, match = m }) ---@type string, fml.types.ui.printer.ILineHighlight[]
+    ---@type fml.types.ui.search.IItem
+    local search_item = {
+      uuid = item.uuid,
+      text = line,
+      highlights = highlights,
     }
-    if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-      vim.api.nvim_win_set_config(winnr_main, wincfg_main)
-      vim.api.nvim_win_set_buf(winnr_main, bufnr_main)
-    else
-      winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
-      self.winnr_main = winnr_main
-    end
-
-    vim.wo[winnr_main].cursorline = true
-    vim.wo[winnr_main].number = false
-    vim.wo[winnr_main].relativenumber = false
-    vim.wo[winnr_main].signcolumn = "yes"
-    vim.wo[winnr_main].winhighlight = MAIN_WIN_HIGHLIGHT
-    self:sync_main_cursor()
-  else
-    self.winnr_main = nil
-    if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-      vim.api.nvim_win_close(winnr_main, true)
-    end
+    table.insert(search_items, search_item)
   end
+  return search_items
+end
 
-  ---@type vim.api.keyset.win_config
-  local wincfg_config = {
-    relative = "editor",
-    anchor = "NW",
-    height = 1,
-    width = width,
-    row = row,
-    col = col,
-    focusable = true,
-    title = " " .. state.title .. " ",
-    title_pos = "center",
-    border = "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
-    style = "minimal",
-  }
-  if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-    vim.api.nvim_win_set_config(winnr_input, wincfg_config)
-    vim.api.nvim_win_set_buf(winnr_input, bufnr_input)
-  else
-    winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_config)
-    self.winnr_input = winnr_input
-  end
-  vim.wo[winnr_input].number = false
-  vim.wo[winnr_input].relativenumber = false
-  vim.wo[winnr_input].signcolumn = "yes:1"
-  vim.wo[winnr_input].winhighlight = INPUT_WIN_HIGHLIGHT
+---@param items                         fml.types.ui.select.IItem[]
+---@return nil
+function M:update_items(items)
+  local frecency = self._frecency ---@type fml.types.collection.IFrecency
+  local cmp = self._cmp ---@type fml.types.ui.select.ILineMatchCmp
+  local full_matches = process_full_matches(items, frecency, cmp)
+  self._full_matches = full_matches
+  self._matches = full_matches
+  self._search.state.dirty:next(true)
+end
 
-  ---! Set the default focused window to the input window.
-  vim.api.nvim_tabpage_set_win(0, winnr_input)
+---@return integer|nil
+function M:get_winnr_main()
+  return self._search:get_winnr_main()
+end
+
+---@return integer|nil
+function M:get_winnr_input()
+  return self._search:get_winnr_input()
 end
 
 ---@return nil
 function M:close()
-  self.state:toggle_visible(false)
-
-  local winnr_input = self.winnr_input ---@type integer|nil
-  local winnr_main = self.winnr_main ---@type integer|nil
-
-  self.winnr_input = nil
-  if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-    vim.api.nvim_win_close(winnr_input, true)
-  end
-
-  self.winnr_main = nil
-  if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-    vim.api.nvim_win_close(winnr_main, true)
-  end
-
-  vim.api.nvim_clear_autocmds({ group = self._augroup_win_focus })
+  self._search:close()
 end
 
+---@return nil
 function M:open()
-  self.state:toggle_visible(true)
-
-  local matches = self.state:filter() ---@type fml.types.ui.select.ILineMatch[]
-  self:create_wins_as_needed(#matches)
-  self.main:render()
-
-  local input = self.state.input:snapshot() ---@type string
-  self.input:reset_input(input)
+  self._search:open()
 end
 
 ---@return nil
 function M:toggle()
-  local visible = self.state:is_visible() ---@type boolean
-  if visible then
-    self:close()
-  else
-    self:open()
-  end
+  self._search:toggle()
 end
 
 return M

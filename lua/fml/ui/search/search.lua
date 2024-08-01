@@ -23,6 +23,8 @@ local MAIN_WIN_HIGHLIGHT = table.concat({
 }, ",")
 
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
+---@field protected _winnr_input        integer|nil
+---@field protected _winnr_main         integer|nil
 ---@field protected _input              fml.types.ui.search.IInput
 ---@field protected _main               fml.types.ui.search.IMain
 ---@field protected _max_width          number
@@ -132,7 +134,7 @@ function M.new(props)
     end,
     on_main_mouse_click = function()
       ---@diagnostic disable-next-line: invisible
-      local winnr_main = self.winnr_main ---@type integer|nil
+      local winnr_main = self._winnr_main ---@type integer|nil
       if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
         local lnum = vim.api.nvim_win_get_cursor(winnr_main)[1]
         state:locate(lnum)
@@ -185,8 +187,8 @@ function M.new(props)
   })
 
   self.state = state
-  self.winnr_input = nil
-  self.winnr_main = nil
+  self._winnr_input = nil
+  self._winnr_main = nil
   self._input = input
   self._main = main
   self._max_width = max_width
@@ -200,9 +202,9 @@ function M.new(props)
     group = augroup_win_focus,
     callback = function()
       local winnr_cur = vim.api.nvim_get_current_win()
-      if winnr_cur == self.winnr_main then
-        if self.winnr_input ~= nil and vim.api.nvim_win_is_valid(self.winnr_input) then
-          vim.api.nvim_tabpage_set_win(0, self.winnr_input)
+      if winnr_cur == self._winnr_main then
+        if self._winnr_input ~= nil and vim.api.nvim_win_is_valid(self._winnr_input) then
+          vim.api.nvim_tabpage_set_win(0, self._winnr_input)
         end
       end
     end,
@@ -214,7 +216,7 @@ end
 function M:sync_main_cursor()
   local lnum = self._main:place_lnum_sign() ---@type integer|nil
   if lnum ~= nil then
-    local winnr_main = self.winnr_main ---@type integer|nil
+    local winnr_main = self._winnr_main ---@type integer|nil
     if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
       vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
     end
@@ -243,8 +245,8 @@ function M:create_wins_as_needed()
 
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
   local col = math.floor((vim.o.columns - width) / 2) ---@type integer
-  local winnr_input = self.winnr_input ---@type integer|nil
-  local winnr_main = self.winnr_main ---@type integer|nil
+  local winnr_input = self._winnr_input ---@type integer|nil
+  local winnr_main = self._winnr_main ---@type integer|nil
 
   local match_count = #state.items ---@type integer
   if match_count > 0 then
@@ -266,7 +268,7 @@ function M:create_wins_as_needed()
       vim.api.nvim_win_set_buf(winnr_main, bufnr_main)
     else
       winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
-      self.winnr_main = winnr_main
+      self._winnr_main = winnr_main
     end
 
     vim.wo[winnr_main].cursorline = true
@@ -276,7 +278,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_main].winhighlight = MAIN_WIN_HIGHLIGHT
     self:sync_main_cursor()
   else
-    self.winnr_main = nil
+    self._winnr_main = nil
     if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
       vim.api.nvim_win_close(winnr_main, true)
     end
@@ -301,7 +303,7 @@ function M:create_wins_as_needed()
     vim.api.nvim_win_set_buf(winnr_input, bufnr_input)
   else
     winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_config)
-    self.winnr_input = winnr_input
+    self._winnr_input = winnr_input
   end
   vim.wo[winnr_input].number = false
   vim.wo[winnr_input].relativenumber = false
@@ -312,19 +314,29 @@ function M:create_wins_as_needed()
   vim.api.nvim_tabpage_set_win(0, winnr_input)
 end
 
+---@return integer|nil
+function M:get_winnr_main()
+  return self._winnr_main
+end
+
+---@return integer|nil
+function M:get_winnr_input()
+  return self._winnr_input
+end
+
 ---@return nil
 function M:close()
   self._visible = false
 
-  local winnr_input = self.winnr_input ---@type integer|nil
-  local winnr_main = self.winnr_main ---@type integer|nil
+  local winnr_input = self._winnr_input ---@type integer|nil
+  local winnr_main = self._winnr_main ---@type integer|nil
 
-  self.winnr_input = nil
+  self._winnr_input = nil
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
     vim.api.nvim_win_close(winnr_input, true)
   end
 
-  self.winnr_main = nil
+  self._winnr_main = nil
   if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
     vim.api.nvim_win_close(winnr_main, true)
   end
