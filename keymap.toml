@@ -179,7 +179,7 @@ bindings = [
   { key = "S",          mods = "Command",                   chars = "\u0001\u0073" },       # <Ctrl-a>s
   { key = "T",          mods = "Command",                   chars = "\u0001\u0074" },       # <Ctrl-a>t
   { key = "U",          mods = "Command",                   chars = "\u0001\u0075" },       # <Ctrl-a>u
-  { key = "V",          mods = "Command",                   chars = "\u0001\u0076" },       # <Ctrl-a>v
+  #  { key = "V",          mods = "Command",                   chars = "\u0001\u0076" },       # <Ctrl-a>v
   { key = "W",          mods = "Command",                   chars = "\u0001\u0077" },       # <Ctrl-a>w
   { key = "X",          mods = "Command",                   chars = "\u0001\u0078" },       # <Ctrl-a>x
   { key = "Y",          mods = "Command",                   chars = "\u0001\u0079" },       # <Ctrl-a>y
@@ -249,16 +249,16 @@ bindings = [
   { key = "}",          mods = "Command|Shift",             chars = "\u0001\u007d" },       # <Ctrl-a>}
 
   # ----- Alacritty function keys ----
-  { key = "V",          mods = "Command",                   action = "Paste"       },
-  { key = "Insert",     mods = "Control",                   action = "Copy"        },
-  { key = "Insert",     mods = "Shift",                     action = "Paste"       },
-  { key = "F",          mods = "Command|Control|Shift",     action = "ToggleFullscreen" },
-  { key = "N",          mods = "Command|Control|Shift",     action = "CreateNewWindow" },
-  { key = "V",          mods = "Command|Control|Shift",     action = "ToggleViMode" },
-  { key = "W",          mods = "Command|Control|Shift",     action = "Quit" },
-  { key = "Z",          mods = "Command|Control|Shift",     action = "ToggleSimpleFullscreen" },
-  { key = ")",          mods = "Command|Control|Shift",     action = "ResetFontSize" },
-  { key = "Plus",       mods = "Command|Control|Shift",     action = "IncreaseFontSize" },
-  { key = "_",          mods = "Command|Control|Shift",     action = "DecreaseFontSize" },
+  { key = "V",          mods = "Command",                   action = "Paste"                    },
+  { key = "Insert",     mods = "Control",                   action = "Copy"                     },
+  { key = "Insert",     mods = "Shift",                     action = "Paste"                    },
+  { key = "F",          mods = "Command|Control|Shift",     action = "ToggleFullscreen"         },
+  { key = "N",          mods = "Command|Control|Shift",     action = "CreateNewWindow"          },
+  { key = "V",          mods = "Command|Control|Shift",     action = "ToggleViMode"             },
+  { key = "W",          mods = "Command|Control|Shift",     action = "Quit"                     },
+  { key = "Z",          mods = "Command|Control|Shift",     action = "ToggleSimpleFullscreen"   },
+  { key = ")",          mods = "Command|Control|Shift",     action = "ResetFontSize"            },
+  { key = "Plus",       mods = "Command|Control|Shift",     action = "IncreaseFontSize"         },
+  { key = "_",          mods = "Command|Control|Shift",     action = "DecreaseFontSize"         },
 ]
 
