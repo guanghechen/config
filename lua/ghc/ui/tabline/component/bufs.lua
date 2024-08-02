@@ -52,10 +52,11 @@ local M = {
 
     local winnr_cur = fml.api.state.get_current_tab_winnr() ---@type integer
     local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
-    local bufid_cur = fml.array.first(tab.bufnrs, bufnr_cur) or 1
+    local bufid_src = fml.array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
+    local bufid_cur = bufid_src or 1
     bufnr_cur = tab.bufnrs[bufid_cur]
 
-    local text, width = render_buf(tab.bufnrs[bufid_cur], true, bufid_cur == 1)
+    local text, width = render_buf(tab.bufnrs[bufid_cur], bufid_src ~= nil, bufid_cur == 1)
     remain_width = remain_width - width
     if remain_width < 0 then
       return "", 0

@@ -17,7 +17,7 @@ vim.api.nvim_create_autocmd({ "WinResized" }, {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
+vim.api.nvim_create_autocmd({ "WinEnter", "WinLeave", "BufWinEnter" }, {
   group = augroups.refresh_winline,
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer

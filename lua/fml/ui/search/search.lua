@@ -1,5 +1,6 @@
 local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
+local api_state = require("fml.api.state")
 local std_array = require("fml.std.array")
 local util = require("fml.std.util")
 local SearchInput = require("fml.ui.search.input")
@@ -76,6 +77,8 @@ function M.new(props)
     if on_close_from_props ~= nil then
       on_close_from_props()
     end
+    local winnr = api_state.get_current_tab_winnr() ---@type integer
+    vim.api.nvim_tabpage_set_win(0, winnr)
     self:close()
   end
 
