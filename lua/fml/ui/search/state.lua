@@ -59,13 +59,21 @@ function M.new(props)
 
       if succeed and items ~= nil then
         local max_width = 0 ---@type integer
+        local item_lnum_next = 1 ---@type integer
+        ---@diagnostic disable-next-line: invisible
+        local item_uuid_cur = self._item_uuid_cur ---@type string|nil
         for _, item in ipairs(items) do
           local width = vim.fn.strwidth(item.text) ---@type integer
           max_width = max_width < width and width or max_width
+
+          if item.uuid == item_uuid_cur then
+            item_lnum_next = item_lnum_next
+          end
         end
 
         self.items = items
         self.max_width = max_width
+        self:locate(item_lnum_next)
         dirty_main:next(true)
       end
 

@@ -1,7 +1,7 @@
 local navigate_vim = require("fml.api.win.navigate_vim")
 local tmux = require("fml.std.tmux")
 
-local DISABLE_WHEN_ZOOMED = true ---@type boolean
+local DISABLE_WHEN_ZOOMED = false ---@type boolean
 
 -- whether tmux should control the previous pane switching or no
 --
