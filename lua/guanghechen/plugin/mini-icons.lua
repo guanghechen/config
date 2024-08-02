@@ -43,6 +43,10 @@ return {
       dotenv = { glyph = "", hl = "MiniIconsYellow" },
       gitignore = { glyph = "󰊢", hl = "MiniIconsRed" },
       gotmpl = { glyph = "󰟓", hl = "MiniIconsGrey" },
+      tmux = { glyph = "", hl = "MiniIconsGreen" },
+    },
+    extension = {
+      ["tmux.conf"] = { glyph = "", hl = "MiniIconsGreen" },
     },
   },
   init = function()
