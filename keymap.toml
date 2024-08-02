@@ -8,11 +8,17 @@
 #   `\u0002` is `C-b` as tmux prefix
 #   `\u001b` is `Esc`
 
+[[hints.enabled]]
+command = "open"
+hyperlinks = true
+mouse.enabled = true
+mouse.mods = "Command"
+post_processing = true
+persist = false
+regex = "(ipfs:|ipns:|magnet:|mailto:|gemini://|gopher://|https://|http://|news:|file:|git://|ssh:|ftp://)[^\u0000-\u001F\u007F-\u009F<>\"\\s{-}\\^⟨⟩‘]+"
+
 [mouse]
-bindings = [
-  { mouse = "Left",     mods = "Control",                   action = "Open" },
-  { mouse = "Left",     mods = "Command",                   action = "Open" },
-]
+hide_when_typing = true
 
 [keyboard]
 bindings = [
