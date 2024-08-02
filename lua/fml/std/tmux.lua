@@ -20,18 +20,55 @@ end
 ---@return boolean
 local function is_tmux_pane_zoomed()
   -- the output of the tmux command is "1\n", so we have to test against that
-  return tmux_command("display-message -p '#{window_zoomed_flag}'") == "1\n"
+  return tonumber(tmux_command("display-message -p '#{window_zoomed_flag}'")) == 1
+end
+
+---@return boolean
+local function is_tmux_pane_leftest()
+  return tonumber(tmux_command("display-message -p '#{pane_at_left}'")) == 1
+end
+
+---@return boolean
+local function is_tmux_pane_topest()
+  return tonumber(tmux_command("display-message -p '#{pane_at_top}'")) == 1
+end
+
+---@return boolean
+local function is_tmux_pane_bottomest()
+  return tonumber(tmux_command("display-message -p '#{pane_at_bottom}'")) == 1
+end
+
+---@return boolean
+local function is_tmux_pane_rightest()
+  return tonumber(tmux_command("display-message -p '#{pane_at_right}'")) == 1
+end
+
+---@param direction                     "p"|"n"|"h"|"j"|"k"|"l"
+---@return boolean
+function M.is_tmux_pane_corner(direction)
+  if direction == "h" then
+    return is_tmux_pane_leftest()
+  end
+  if direction == "j" then
+    return is_tmux_pane_bottomest()
+  end
+  if direction == "k" then
+    return is_tmux_pane_topest()
+  end
+  if direction == "l" then
+    return is_tmux_pane_rightest()
+  end
+  return false
 end
 
 -- whether tmux should take control over the navigation
----@param is_same_winnr                 boolean
 ---@param disable_nav_when_zoomed       boolean
 ---@return boolean
-function M.should_tmux_control(is_same_winnr, disable_nav_when_zoomed)
+function M.should_tmux_control(disable_nav_when_zoomed)
   if is_tmux_pane_zoomed() and disable_nav_when_zoomed then
     return false
   end
-  return is_same_winnr
+  return true
 end
 
 -- change the current pane according to direction

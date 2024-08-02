@@ -1,19 +1,21 @@
 local navigate_vim = require("fml.api.win.navigate_vim")
 local tmux = require("fml.std.tmux")
 
-local DISABLE_WHEN_ZOOMED = false ---@type boolean
+local DISABLE_WHEN_ZOOMED = true ---@type boolean
 
 -- whether tmux should control the previous pane switching or no
 --
 -- by default it's true, so when you enter a new vim instance and
 -- try to switch to a previous pane, tmux should take control
-local tmux_control = true
+local tmux_control = true ---@type boolean
 
+---@return nil
 local function navigate_window_topest()
   vim.cmd("wincmd t")
 end
 
----@param direction "p"|"n"|"h"|"j"|"k"|"l"
+---@param direction                     "p"|"n"|"h"|"j"|"k"|"l"
+---@return nil
 local function navigate_tmux(direction)
   if direction == "n" then
     local is_last_win = (vim.fn.winnr() == vim.fn.winnr("$"))
@@ -44,7 +46,8 @@ local function navigate_tmux(direction)
     local is_same_winnr = (winnr == vim.fn.winnr())
 
     -- if we're in the same window and zoom is not disabled, tmux should take control
-    if tmux.should_tmux_control(is_same_winnr, DISABLE_WHEN_ZOOMED) then
+    -- if is_same_winnr and not tmux.is_tmux_pane_corner(direction) and tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
+    if is_same_winnr and tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
       tmux.change_pane(direction)
       tmux_control = true
     else
