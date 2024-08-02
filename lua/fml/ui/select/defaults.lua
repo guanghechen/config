@@ -10,27 +10,37 @@ local M = {}
 ---@return boolean
 function M.line_match_cmp(item1, item2)
   if item1.score == item2.score then
-    return item1.idx < item2.idx
+    return item1.order < item2.order
   end
   return item1.score > item2.score
 end
 
 ---@param lower_input                   string
----@param items                         fml.types.ui.select.IItem[]
+---@param item_map                      table<string, fml.types.ui.select.IItem>
 ---@param old_matches                   fml.types.ui.select.ILineMatch[]
 ---@return fml.types.ui.select.ILineMatch[]
-function M.match(lower_input, items, old_matches)
+function M.match(lower_input, item_map, old_matches)
   local lines = {} ---@type string[]
   for _, match in ipairs(old_matches) do
-    local idx = match.idx ---@type integer
-    local text = items[idx].lower ---@type string
+    local uuid = match.uuid ---@type string
+    local text = item_map[uuid].lower ---@type string
     table.insert(lines, text)
   end
-  local matches = oxi.find_match_points(lower_input, lines) ---@type fml.types.ui.select.ILineMatch[]
-  for _, match in ipairs(matches) do
+
+  local oxi_matches = oxi.find_match_points(lower_input, lines) ---@type fml.std.oxi.string.ILineMatch[]
+  local matches = {} ---@type fml.types.ui.select.ILineMatch[]
+  for _, oxi_match in ipairs(oxi_matches) do
     ---! The index in lua is start from 1 but rust is start from 0.
-    local idx = old_matches[match.idx + 1].idx
-    match.idx = idx
+    local old_match = old_matches[oxi_match.idx + 1] ---@type fml.types.ui.select.ILineMatch
+
+    ---@type fml.types.ui.select.ILineMatch
+    local match = {
+      order = old_match.order,
+      uuid = old_match.uuid,
+      score = oxi_match.score,
+      pieces = oxi_match.pieces,
+    }
+    table.insert(matches, match)
   end
   return matches
 end

@@ -17,12 +17,10 @@ table.sort(items, function(a, b)
 end)
 
 local select = fml.ui.select.Select.new({
-  state = fml.ui.select.State.new({
-    title = "Select file",
-    items = items,
-    input = Observable.from_value(""),
-    visible = Observable.from_value(false),
-  }),
+  title = "Select file",
+  items = items,
+  input = Observable.from_value(""),
+  visible = Observable.from_value(false),
   max_height = 25,
   render_line = fml.ui.select.defaults.render_filepath,
   on_confirm = function(item)

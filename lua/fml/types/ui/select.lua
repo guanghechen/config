@@ -14,7 +14,8 @@
 ---@field public r                      integer
 
 ---@class fml.types.ui.select.ILineMatch
----@field public idx                    integer
+---@field public order                  integer
+---@field public uuid                   string
 ---@field public score                  integer
 ---@field public pieces                 fml.types.ui.select.ILineMatchPiece[]
 
@@ -32,7 +33,7 @@
 ---| fun(): nil
 
 ---@alias fml.types.ui.select.IOnConfirm
----| fun(item: fml.types.ui.select.IItem, idx: number): boolean
+---| fun(item: fml.types.ui.select.IItem): boolean
 
 ---@alias fml.types.ui.select.main.IRenderLine
 ---| fun(params: fml.types.ui.select.main.IRenderLineParams): string

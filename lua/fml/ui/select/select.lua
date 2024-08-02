@@ -1,50 +1,32 @@
 local Search = require("fml.ui.search.search")
 local defaults = require("fml.ui.select.defaults")
 
----@class fm.types.ui.select.IItemData
----@field public idx                    integer
+---@alias fm.types.ui.select.IItemData
+---| integer
 
----@param items                         fml.types.ui.select.IItem[]
----@param frecency                      fml.types.collection.IFrecency|nil
 ---@param cmp                           fml.types.ui.select.ILineMatchCmp
+---@param frecency                      fml.types.collection.IFrecency|nil
+---@param items                         fml.types.ui.select.IItem[]
+---@return table<string, fml.types.ui.select.IItem>
 ---@return fml.types.ui.select.ILineMatch[]
-local function process_full_matches(items, frecency, cmp)
+local function process_items(cmp, frecency, items)
+  local item_map = {} ---@type table<string, fml.types.ui.select.IItem>
   local full_matches = {} ---@type fml.types.ui.select.ILineMatch[]
-  if frecency ~= nil then
-    for idx, item in ipairs(items) do
-      local match = { idx = idx, score = frecency:score(item.uuid), pieces = {} } ---@type fml.types.ui.select.ILineMatch
-      table.insert(full_matches, match)
-    end
-  else
-    for idx in ipairs(items) do
-      local match = { idx = idx, score = 0, pieces = {} } ---@type fml.types.ui.select.ILineMatch
-      table.insert(full_matches, match)
-    end
+  for order, item in ipairs(items) do
+    local score = frecency ~= nil and frecency:score(item.uuid) or 0 ---@type integer
+    local match = { order = order, uuid = item.uuid, score = score, pieces = {} } ---@type fml.types.ui.select.ILineMatch
+    item_map[item.uuid] = item
+    table.insert(full_matches, match)
   end
   table.sort(full_matches, cmp)
-  return full_matches
-end
-
----@param full_matches                  fml.types.ui.select.ILineMatch[]
----@param items                         fml.types.ui.select.IItem[]
----@param frecency                      fml.types.collection.IFrecency|nil
----@param cmp                           fml.types.ui.select.ILineMatchCmp
----@return nil
-local function refresh_full_matches(full_matches, items, frecency, cmp)
-  for _, match in ipairs(full_matches) do
-    local idx = match.idx ---@type integer
-    local item = items[idx] ---@type fml.types.ui.select.IItem|nil
-    local uuid = item and item.uuid or ""
-    match.score = frecency and frecency:score(uuid) or 0
-  end
-  table.sort(full_matches, cmp)
+  return item_map, full_matches
 end
 
 ---@class fml.ui.select.Select : fml.types.ui.select.ISelect
 ---@field protected _cmp                fml.types.ui.select.ILineMatchCmp
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
 ---@field protected _full_matches       fml.types.ui.select.ILineMatch[]
----@field protected _items              fml.types.ui.select.IItem[]
+---@field protected _item_map           table<string, fml.types.ui.select.IItem>
 ---@field protected _match              fml.types.ui.select.IMatch
 ---@field protected _matches            fml.types.ui.select.ILineMatch[]
 ---@field protected _render_line        fml.types.ui.select.main.IRenderLine
@@ -92,7 +74,18 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
-  local full_matches = process_full_matches(items, frecency, cmp)
+
+  local item_map, full_matches = process_items(cmp, frecency, items)
+
+  ---@param input_text                  string
+  ---@param callback                    fml.types.ui.search.IFetchItemsCallback
+  ---@return nil
+  local function fetch_items(input_text, callback)
+    vim.schedule(function()
+      local ok, search_items = pcall(self.fetch_items, self, input_text)
+      callback(ok, search_items)
+    end)
+  end
 
   ---@param item                        fml.types.ui.search.IItem
   ---@return nil
@@ -100,32 +93,11 @@ function M.new(props)
     if frecency ~= nil then
       frecency:access(item.uuid)
     end
-    local data = item.data ---@type fm.types.ui.select.IItemData
-    local idx = data.idx ---@type integer
     ---@diagnostic disable-next-line: invisible
-    local select_item = self._items[idx] ---@type fml.types.ui.select.IItem
-    if idx ~= nil and select_item ~= nil then
-      return on_confirm_from_props(select_item, idx)
+    local select_item = self._item_map[item.uuid] ---@type fml.types.ui.select.IItem
+    if select_item ~= nil then
+      return on_confirm_from_props(select_item)
     end
-  end
-
-  self._cmp = cmp
-  self._frecency = frecency
-  self._full_matches = full_matches
-  self._items = items
-  self._matches = full_matches
-  self._match = match
-  self._render_line = render_line
-  self._last_input_lower = nil ---@type string|nil
-
-  ---@param input_text                  string
-  ---@param callback                    fml.types.ui.search.IFetchItemsCallback
-  ---@return nil
-  local function fetch_items(input_text, callback)
-    vim.defer_fn(function()
-      local ok, search_items = pcall(self.fetch_items, self, input_text)
-      callback(ok, search_items)
-    end, 10)
   end
 
   ---@type fml.types.ui.search.ISearch
@@ -145,8 +117,15 @@ function M.new(props)
   })
 
   self.state = search.state
+  self._cmp = cmp
+  self._frecency = frecency
+  self._full_matches = full_matches
+  self._item_map = item_map
+  self._match = match
+  self._matches = full_matches
+  self._render_line = render_line
   self._search = search
-
+  self._last_input_lower = nil ---@type string|nil
   return self
 end
 
@@ -154,46 +133,53 @@ end
 ---@return fml.types.ui.select.ILineMatch[]
 function M:filter(input)
   local input_lower = input:lower() ---@type string
-  local items = self._items ---@type fml.types.ui.select.IItem[]
   local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
-  local cmp = self._cmp ---@type fml.types.ui.select.ILineMatchCmp
   local last_input_lower = self._last_input_lower ---@type string|nil
-  self._last_input_lower = input_lower
 
+  local matches = self._full_matches ---@type fml.types.ui.select.ILineMatch[]
   if #input < 1 then
-    local matches = self._full_matches ---@type fml.types.ui.select.ILineMatch[]
-    refresh_full_matches(matches, items, frecency, cmp)
-    return matches
-  end
+    if frecency ~= nil then
+      for _, match in ipairs(matches) do
+        local uuid = match.uuid ---@type string
+        match.score = frecency:score(uuid)
+      end
+    end
+  else
+    ---@type fml.types.ui.select.ILineMatch[]
+    local old_matches = (
+      last_input_lower ~= nil
+      and #input_lower > #last_input_lower
+      and input_lower:sub(1, #last_input_lower) == last_input_lower
+    )
+        and self._matches
+      or self._full_matches
 
-  ---@type fml.types.ui.select.ILineMatch[]
-  local matches = (
-    last_input_lower ~= nil
-    and #input_lower > #last_input_lower
-    and input_lower:sub(1, #last_input_lower) == last_input_lower
-  )
-      and self._match(input_lower, items, self._matches)
-    or self._match(input_lower, items, self._full_matches)
-  if frecency ~= nil then
-    for _, match in ipairs(matches) do
-      local item = items[match.idx] ---@type fml.types.ui.select.IItem
-      match.score = match.score + frecency:score(item.uuid)
+    ---@type fml.types.ui.select.ILineMatch[]
+    matches = self._match(input_lower, self._item_map, old_matches)
+    if frecency ~= nil then
+      for _, match in ipairs(matches) do
+        local uuid = match.uuid ---@type string
+        match.score = match.score + frecency:score(uuid)
+      end
     end
   end
+
   table.sort(matches, self._cmp)
+  self._last_input_lower = input_lower
+  self._matches = matches
   return matches
 end
 
 ---@param input                       string
 ---@return fml.types.ui.search.IItem[]
 function M:fetch_items(input)
-  local items = self._items ---@type fml.types.ui.select.IItem[]
+  local item_map = self._item_map ---@type table<string, fml.types.ui.select.IItem>
   local matches = self:filter(input) ---@type fml.types.ui.select.ILineMatch[]
   local search_items = {} ---@type fml.types.ui.search.IItem[]
   for _, match in ipairs(matches) do
-    local item = items[match.idx] ---@type fml.types.ui.select.IItem
+    local item = item_map[match.uuid] ---@type fml.types.ui.select.IItem
     local line, highlights = self._render_line({ item = item, match = match }) ---@type string, fml.types.ui.printer.ILineHighlight[]
-    local data = { idx = match.idx } ---@type fm.types.ui.select.IItemData
+    local data = match.order ---@type fm.types.ui.select.IItemData
     ---@type fml.types.ui.search.IItem
     local search_item = {
       uuid = item.uuid,
@@ -209,10 +195,10 @@ end
 ---@param items                         fml.types.ui.select.IItem[]
 ---@return nil
 function M:update_items(items)
-  local frecency = self._frecency ---@type fml.types.collection.IFrecency
   local cmp = self._cmp ---@type fml.types.ui.select.ILineMatchCmp
-  local full_matches = process_full_matches(items, frecency, cmp)
-  self._items = items
+  local frecency = self._frecency ---@type fml.types.collection.IFrecency
+  local item_map, full_matches = process_items(cmp, frecency, items)
+  self._item_map = item_map
   self._full_matches = full_matches
   self._matches = full_matches
   self._search.state:mark_items_dirty()
