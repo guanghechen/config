@@ -1,3 +1,4 @@
+local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local std_array = require("fml.std.array")
 local util = require("fml.std.util")
@@ -202,13 +203,22 @@ function M.new(props)
     group = augroup_win_focus,
     callback = function()
       local winnr_cur = vim.api.nvim_get_current_win()
-      if winnr_cur == self._winnr_main then
-        if self._winnr_input ~= nil and vim.api.nvim_win_is_valid(self._winnr_input) then
-          vim.api.nvim_tabpage_set_win(0, self._winnr_input)
+      local winnr_main = self:get_winnr_main() ---@type integer|nil
+      local winnr_input = self:get_winnr_input() ---@type integer|nil
+      if winnr_cur == winnr_main then
+        if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+          vim.api.nvim_tabpage_set_win(0, winnr_input)
         end
       end
     end,
   })
+
+  state.dirty_main:subscribe(Subscriber.new({
+    on_next = vim.schedule_wrap(function()
+      self:draw()
+    end),
+  }))
+
   return self
 end
 
@@ -324,6 +334,17 @@ function M:get_winnr_input()
   return self._winnr_input
 end
 
+---@param force                         ?boolean
+---@return nil
+function M:draw(force)
+  local state = self.state ---@type fml.types.ui.search.IState
+  local visible = state.visible:snapshot() ---@type boolean
+  if visible then
+    self:create_wins_as_needed()
+    self._main:render(force)
+  end
+end
+
 ---@return nil
 function M:close()
   self._visible = false
@@ -344,12 +365,12 @@ function M:close()
   vim.api.nvim_clear_autocmds({ group = self._augroup_win_focus })
 end
 
+---@return nil
 function M:open()
   local state = self.state ---@type fml.types.ui.search.IState
   state.visible:next(true)
-  self:create_wins_as_needed()
   self._input:reset_input()
-  self._main:render()
+  self:draw()
 end
 
 ---@return nil

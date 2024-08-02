@@ -17,9 +17,7 @@
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public highlights             fml.types.ui.printer.ILineHighlight[]
-
----@class fml.types.ui.search.main.IRenderParams
----@field public force                  ?boolean
+---@field public data                   any|nil
 
 ---@class fml.types.ui.search.IState
 ---@field public uuid                   string
@@ -28,10 +26,12 @@
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public visible                fml.types.collection.IObservable
----@field public dirty                  fml.types.collection.IObservable
+---@field public dirty_items            fml.types.collection.IObservable
+---@field public dirty_main             fml.types.collection.IObservable
 ---@field public max_width              integer
 ---@field public get_current            fun(self: fml.types.ui.search.IState): fml.types.ui.search.IItem|nil, integer
 ---@field public locate                 fun(self: fml.types.ui.search.IState): integer
+---@field public mark_items_dirty       fun(self: fml.types.ui.search.IState): nil
 ---@field public moveup                 fun(self: fml.types.ui.search.IState): integer
 ---@field public movedown               fun(self: fml.types.ui.search.IState): integer
 
@@ -39,7 +39,7 @@
 ---@field public state                  fml.types.ui.search.IState
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IMain): integer
 ---@field public place_lnum_sign        fun(self: fml.types.ui.search.IMain): integer|nil
----@field public render                 fun(self: fml.types.ui.search.IMain, opts?: fml.types.ui.search.main.IRenderParams): nil
+---@field public render                 fun(self: fml.types.ui.search.IMain, force?: boolean): nil
 
 ---@class fml.types.ui.search.IInput
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IInput): integer

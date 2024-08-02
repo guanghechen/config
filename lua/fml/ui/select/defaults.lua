@@ -21,8 +21,8 @@ end
 ---@return fml.types.ui.select.ILineMatch[]
 function M.match(lower_input, items, old_matches)
   local lines = {} ---@type string[]
-  for _, m in ipairs(old_matches) do
-    local idx = m.idx ---@type integer
+  for _, match in ipairs(old_matches) do
+    local idx = match.idx ---@type integer
     local text = items[idx].lower ---@type string
     table.insert(lines, text)
   end

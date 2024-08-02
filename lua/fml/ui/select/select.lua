@@ -1,6 +1,8 @@
 local Search = require("fml.ui.search.search")
 local defaults = require("fml.ui.select.defaults")
-local std_array = require("fml.std.array")
+
+---@class fm.types.ui.select.IItemData
+---@field public idx                    integer
 
 ---@param items                         fml.types.ui.select.IItem[]
 ---@param frecency                      fml.types.collection.IFrecency|nil
@@ -98,12 +100,12 @@ function M.new(props)
     if frecency ~= nil then
       frecency:access(item.uuid)
     end
-    ---@type integer|nil, fml.types.ui.select.IItem|nil
-    local idx, select_item = std_array.first(items, function(e)
-      return e.uuid == item.uuid
-    end)
+    local data = item.data ---@type fm.types.ui.select.IItemData
+    local idx = data.idx ---@type integer
+    ---@diagnostic disable-next-line: invisible
+    local select_item = self._items[idx] ---@type fml.types.ui.select.IItem
     if idx ~= nil and select_item ~= nil then
-      on_confirm_from_props(select_item, idx)
+      return on_confirm_from_props(select_item, idx)
     end
   end
 
@@ -188,14 +190,16 @@ function M:fetch_items(input)
   local items = self._items ---@type fml.types.ui.select.IItem[]
   local matches = self:filter(input) ---@type fml.types.ui.select.ILineMatch[]
   local search_items = {} ---@type fml.types.ui.search.IItem[]
-  for _, m in ipairs(matches) do
-    local item = items[m.idx] ---@type fml.types.ui.select.IItem
-    local line, highlights = self._render_line({ item = item, match = m }) ---@type string, fml.types.ui.printer.ILineHighlight[]
+  for _, match in ipairs(matches) do
+    local item = items[match.idx] ---@type fml.types.ui.select.IItem
+    local line, highlights = self._render_line({ item = item, match = match }) ---@type string, fml.types.ui.printer.ILineHighlight[]
+    local data = { idx = match.idx } ---@type fm.types.ui.select.IItemData
     ---@type fml.types.ui.search.IItem
     local search_item = {
       uuid = item.uuid,
       text = line,
       highlights = highlights,
+      data = data,
     }
     table.insert(search_items, search_item)
   end
@@ -208,9 +212,10 @@ function M:update_items(items)
   local frecency = self._frecency ---@type fml.types.collection.IFrecency
   local cmp = self._cmp ---@type fml.types.ui.select.ILineMatchCmp
   local full_matches = process_full_matches(items, frecency, cmp)
+  self._items = items
   self._full_matches = full_matches
   self._matches = full_matches
-  self._search.state.dirty:next(true)
+  self._search.state:mark_items_dirty()
 end
 
 ---@return integer|nil

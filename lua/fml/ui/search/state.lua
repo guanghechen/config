@@ -26,14 +26,16 @@ function M.new(props)
   local fetch_items = props.fetch_items ---@type fml.types.ui.search.IFetchItems
   local fetch_delay = math.max(0, props.fetch_delay or 32) ---@type integer
   local visible = Observable.from_value(false)
-  local dirty = Observable.from_value(true)
+  local dirty_items = Observable.from_value(true)
+  local dirty_main = Observable.from_value(true)
 
   self.uuid = uuid
   self.title = title
   self.input = input
   self.input_history = input_history
   self.visible = visible
-  self.dirty = dirty
+  self.dirty_items = dirty_items
+  self.dirty_main = dirty_main
   self.items = {} ---@type fml.types.ui.search.IItem[]
   self.max_width = 0 ---@type integer
   self._item_lnum_cur = 1 ---@type integer
@@ -41,7 +43,7 @@ function M.new(props)
 
   local fetching = false ---@type boolean
   local function fetch()
-    local is_dirty = dirty:snapshot() ---@type boolean
+    local is_dirty = dirty_items:snapshot() ---@type boolean
     local is_visible = visible:snapshot() ---@type boolean
 
     if fetching or not is_dirty or not is_visible then
@@ -49,7 +51,7 @@ function M.new(props)
     end
 
     fetching = true
-    dirty:next(false)
+    dirty_items:next(false)
 
     local input_cur = input:snapshot() ---@type string
     fetch_items(input_cur, function(succeed, items)
@@ -64,17 +66,25 @@ function M.new(props)
 
         self.items = items
         self.max_width = max_width
+        dirty_main:next(true)
       end
 
       vim.schedule(fetch)
     end)
   end
 
-  local fetch_deferred = function()
+  ---@return nil
+  local function fetch_deferred()
     vim.defer_fn(fetch, fetch_delay)
   end
 
-  dirty:subscribe(Subscriber.new({ on_next = fetch_deferred }))
+  ---@return nil
+  local function mark_dirty()
+    self:mark_items_dirty()
+  end
+
+  input:subscribe(Subscriber.new({ on_next = mark_dirty }))
+  dirty_items:subscribe(Subscriber.new({ on_next = fetch_deferred }))
   visible:subscribe(Subscriber.new({ on_next = fetch_deferred }))
 
   return self
@@ -82,7 +92,8 @@ end
 
 ---@return nil
 function M:dispose()
-  self.dirty:dispose()
+  self.dirty_items:dispose()
+  self.dirty_main:dispose()
   self.visible:dispose()
 end
 
@@ -101,6 +112,11 @@ function M:locate(lnum)
   self._item_lnum_cur = lnum ---@type integer
   self._item_uuid_cur = items[lnum] and items[lnum].uuid or nil ---@type string|nil
   return lnum
+end
+
+---@return nil
+function M:mark_items_dirty()
+  self.dirty_items:next(true)
 end
 
 ---@return integer

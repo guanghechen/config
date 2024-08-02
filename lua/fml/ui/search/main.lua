@@ -1,3 +1,4 @@
+local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
@@ -29,6 +30,12 @@ function M.new(props)
   self._keymaps = keymaps
   self._rendering = false
   self._on_rendered = on_rendered
+
+  state.dirty_main:subscribe(Subscriber.new({
+    on_next = vim.schedule_wrap(function()
+      self:render(false)
+    end),
+  }))
   return self
 end
 
@@ -72,15 +79,15 @@ function M:render(force)
   local state = self.state ---@type fml.types.ui.search.IState
 
   if force then
-    state.dirty:next(true)
+    state.dirty_main:next(true)
   end
 
   if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then
     self._bufnr = nil
-    state.dirty:next(true)
+    state.dirty_main:next(true)
   end
 
-  local dirty = state.dirty:snapshot() ---@type boolean
+  local dirty = state.dirty_main:snapshot() ---@type boolean
   local visible = state.visible:snapshot() ---@type boolean
   if self._rendering or not visible or not dirty then
     return
@@ -89,6 +96,7 @@ function M:render(force)
   self._rendering = true
   vim.defer_fn(function()
     util.run_async("fml.ui.search.main:render", function()
+      state.dirty_main:next(false)
       local bufnr = self:create_buf_as_needed() ---@type integer
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
