@@ -8,11 +8,12 @@ local M = {
   render = function(context)
     local buffer_status_line = vim.b[context.bufnr]
     local git_status = buffer_status_line.gitsigns_status_dict
-    local branch_name = git_status.head
-    local text = fml.ui.icons.git.Branch .. " " .. branch_name
-    local width = vim.fn.strwidth(text)
-    return fml.nvimbar.txt(text, "f_sl_text"), width
-  end
+    local branch_name = git_status.head ---@type string
+    local text = fml.ui.icons.git.Branch .. " " .. branch_name ---@type string
+    local hl_text = fml.nvimbar.txt(text, "f_sl_text") ---@type string
+    local width = vim.fn.strwidth(text) ---@type integer
+    return hl_text, width
+  end,
 }
 
 return M

@@ -35,14 +35,14 @@ function M.internal_render_result(state, force)
       { { cstart = 0, cend = -1, hlname = "f_sr_result_fence" } }
     )
 
-    local lnum_width = #tostring(maximum_lnum)
-    --local continous_line_padding = "¦ " .. string.rep(" ", lnum_width) .. "  "
+    local lnum_width = #tostring(maximum_lnum) ---@type integer
     local continous_line_padding = "│ " .. string.rep(" ", lnum_width) .. "  "
     local search_cwd = state.get_cwd() ---@type string
     for _, raw_filepath in ipairs(result.item_orders) do
       local file_item = result.items[raw_filepath]
       if file_item ~= nil then
-        local fileicon, fileicon_highlight = fml.util.calc_fileicon(raw_filepath)
+        local filename = fml.path.basename(raw_filepath)
+        local fileicon, fileicon_highlight = fml.util.calc_fileicon(filename)
         local filepath = fml.path.relative(search_cwd, raw_filepath)
 
         M.internal_print(fileicon .. " " .. filepath, {

@@ -9,8 +9,11 @@
 ---@field public character              integer
 
 ---@class fml.types.api.state.IBufItem
+---@field public fileicon               string
+---@field public fileicon_hl            string
 ---@field public filename               string
 ---@field public filepath               string
+---@field public filetype               string
 ---@field public real_paths             string[]
 ---@field public pinned                 boolean
 

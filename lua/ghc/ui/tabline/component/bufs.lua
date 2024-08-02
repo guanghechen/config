@@ -11,21 +11,16 @@ end) or ""
 ---@return string
 ---@return integer
 local function render_buf(bufnr, is_current, is_first)
-  if fml.api.state.bufs[bufnr] == nil then
-    fml.api.state.refresh_buf(bufnr)
-  end
-
   local buf = fml.api.state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
   if buf == nil then
     return "", 0
   end
 
-  local is_pinned = buf.pinned ---@type boolean
   local is_mod = vim.api.nvim_get_option_value("mod", { buf = bufnr }) ---@type boolean
-  local icon, icon_hl = fml.util.calc_fileicon(buf.filename)
+  local is_pinned = buf.pinned ---@type boolean
 
   local left_pad = is_current and "▎" or (is_first and " " or "▏") ---@type string
-  local text_icon = icon .. " " ---@type string
+  local text_icon = buf.fileicon .. " " ---@type string
   local text_title = buf.filename ---@type string
   local text_mod = is_pinned and (is_mod and "  " or "  ") or (is_mod and "  " or "  ") ---@type string
 
@@ -35,7 +30,7 @@ local function render_buf(bufnr, is_current, is_first)
   local mod_hl = is_current and "f_tl_buf_mod_cur" or "f_tl_buf_mod" ---@type string
 
   local hl_text_left_pad = fml.nvimbar.txt(left_pad, left_pad_hl)
-  local hl_text_icon = fml.nvimbar.txt(text_icon, icon_hl)
+  local hl_text_icon = fml.nvimbar.txt(text_icon, buf.fileicon_hl)
   local hl_text_title = fml.nvimbar.txt(text_title, title_hl)
   local hl_text_mod = is_mod and fml.nvimbar.txt(text_mod, mod_hl) or text_mod
 

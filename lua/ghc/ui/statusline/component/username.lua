@@ -13,15 +13,17 @@ end
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "username",
+  ---@diagnostic disable-next-line: unused-local
   will_change = function(context, prev_context)
     return prev_context == nil
   end,
   render = function()
-    local icon = get_os_icon()
-    local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
-    local text = " " .. icon .. " " .. username .. " "
+    local icon = get_os_icon() ---@type string
+    local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
+    local text = " " .. icon .. " " .. username .. " " ---@type string
+    local hl_text = fml.nvimbar.txt(text, "f_sl_username") ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
-    return fml.nvimbar.txt(text, "f_sl_username"), width
+    return hl_text, width
   end,
 }
 

@@ -9,9 +9,9 @@ local M = {
   render = function()
     local status = require("copilot.api").status.data.status
     local text = fml.ui.icons.cmp.copilot .. " " ---@type string
-    local hlname = (status == nil or #status < 1) and "f_sl_text" or ("f_sl_copilot_" .. status)
     local width = vim.fn.strwidth(text) ---@type integer
-    return fml.nvimbar.txt(text, hlname), width
+    local hl_text = fml.nvimbar.txt(text, (status == nil or #status < 1) and "f_sl_text" or ("f_sl_copilot_" .. status))
+    return hl_text, width
   end,
 }
 

@@ -35,8 +35,8 @@ local function strwidth()
   local filename_1 = fml.path.basename(filepath_1) ---@type string
   local filename_2 = fml.path.basename(filepath_2) ---@type string
 
-  local icon_1 = fml.util.calc_fileicon(filepath_1) ---@type string
-  local icon_2 = fml.util.calc_fileicon(filepath_2) ---@type string
+  local icon_1 = fml.util.calc_fileicon(filename_1) ---@type string
+  local icon_2 = fml.util.calc_fileicon(filename_1) ---@type string
   local icon_1_len = string.len(icon_1) ---@type integer
   local icon_2_len = string.len(icon_2) ---@type integer
 

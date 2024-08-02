@@ -9,9 +9,10 @@ local M = {
   end,
   render = function(context)
     local text = context.fileicon .. " " .. context.filetype ---@type string
+    local hl_text = fml.nvimbar.txt(text, "f_sl_text") ---@type string
     local width = vim.fn.strwidth(text)
-    return fml.nvimbar.txt(text, "f_sl_text"), width
-  end
+    return hl_text, width
+  end,
 }
 
 return M

@@ -5,6 +5,7 @@ local fs = require("fml.std.fs")
 local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
 local std_set = require("fml.std.set")
+local util = require("fml.std.util")
 
 ---@param data                          fml.types.api.state.ISerializedData
 ---@return table<integer, integer>
@@ -123,11 +124,18 @@ function M.load(filepath)
     local CWD_PIECES = path.get_cwd_pieces() ---@type string[]
     for _, item in ipairs(data.bufs) do
       local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
-      if real_bufnr ~= nil then
+      if real_bufnr ~= nil and vim.api.nvim_buf_is_valid(real_bufnr) then
+        local filename = item.filename ---@type string
+        local filetype = vim.bo[real_bufnr].filetype ---@type string
+        local fileicon, fileicon_hl = util.calc_fileicon(filename, filetype) ---@type string, string
+
         ---@type fml.types.api.state.IBufItem
         local buf = {
+          fileicon_hl = fileicon_hl,
+          fileicon = fileicon,
           filename = item.filename,
           filepath = item.filepath,
+          filetype = filetype,
           real_paths = path.split_prettier(CWD_PIECES, item.filepath),
           pinned = item.pinned,
         }

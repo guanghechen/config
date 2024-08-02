@@ -27,7 +27,7 @@ local M = {
   name = "filestatus",
   render = function()
     local text_filestatus = get_filestatus() ---@type string
-    local hl_text = fml.nvimbar.txt(text_filestatus, "f_sl_text")
+    local hl_text = fml.nvimbar.txt(text_filestatus, "f_sl_text") ---@type string
     local width = vim.fn.strwidth(text_filestatus)
     return hl_text, width
   end,

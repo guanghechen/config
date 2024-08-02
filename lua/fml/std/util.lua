@@ -22,25 +22,30 @@ function M.bind_keys(keymaps, keymap_override)
   end
 end
 
----@param filepath string
+---@param filename                      string
+---@param filetype                      string|nil
 ---@return string
 ---@return string
-function M.calc_fileicon(filepath)
-  local name = (not filepath or filepath == "") and constant.BUF_UNTITLED or filepath:match("([^/\\]+)[/\\]*$")
-  local icon = "󰈚"
-  local icon_hl = "DevIconDefault"
+function M.calc_fileicon(filename, filetype)
+  local name = (not filename or filename == "") and constant.BUF_UNTITLED or filename
+  local icons_present, icons = pcall(require, "mini.icons")
+  if not icons_present or name == constant.BUF_UNTITLED then
+    return "󰈚", "MiniIconsRed"
+  end
 
-  if name ~= constant.BUF_UNTITLED then
-    local devicons_present, devicons = pcall(require, "nvim-web-devicons")
-    if devicons_present then
-      ---@diagnostic disable-next-line: undefined-field
-      local fticon, fticon_hl = devicons.get_icon(name)
-      icon = fticon or icon
-      icon_hl = fticon_hl or icon_hl
+  if filetype ~= nil then
+    local icon, icon_hl, is_default = icons.get("filetype", filetype)
+    if not is_default then
+      return icon, icon_hl
     end
   end
 
-  return icon, icon_hl
+  local icon2, icon_hl2, is_default2 = icons.get("file", filename)
+  if not is_default2 then
+    return icon2, icon_hl2
+  end
+
+  return "󰈚", "MiniIconsRed"
 end
 
 ---@param ...                           any[]

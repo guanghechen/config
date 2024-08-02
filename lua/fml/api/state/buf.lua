@@ -1,5 +1,6 @@
 local constant = require("fml.constant")
 local path = require("fml.std.path")
+local util = require("fml.std.util")
 
 ---@class fml.api.state
 local M = require("fml.api.state.mod")
@@ -31,25 +32,38 @@ function M.refresh_buf(bufnr)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local filetype = vim.bo[bufnr].filetype ---@type string
 
   local buf = M.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
   if buf == nil then
     local filename = path.basename(filepath) ---@type string
     filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
+    local fileicon, fileicon_hl = util.calc_fileicon(filename, filetype) ---@type string, string
+    local real_paths = path.split_prettier(path.get_cwd_pieces(), filepath) ---@type string[]
 
     ---@type fml.types.api.state.IBufItem
     buf = {
-      filepath = filepath,
+      fileicon = fileicon,
+      fileicon_hl = fileicon_hl,
       filename = filename,
-      real_paths = path.split_prettier(path.get_cwd_pieces(), filepath),
+      filepath = filepath,
+      filetype = filetype,
+      real_paths = real_paths,
       pinned = false,
     }
     M.bufs[bufnr] = buf
-  elseif buf.filepath ~= filepath then
+  elseif buf.filepath ~= filepath or buf.filetype ~= filetype then
     local filename = path.basename(filepath) ---@type string
     filename = #filename > 0 and filename or constant.BUF_UNTITLED
-    buf.filepath = filepath
+    local fileicon, fileicon_hl = util.calc_fileicon(filename, filetype) ---@type string, string
+    local real_paths = path.split_prettier(path.get_cwd_pieces(), filepath) ---@type string[]
+
+    buf.fileicon = fileicon
+    buf.fileicon_hl = fileicon_hl
     buf.filename = filename
+    buf.filepath = filepath
+    buf.filetype = filetype
+    buf.real_paths = real_paths
   end
   return buf
 end

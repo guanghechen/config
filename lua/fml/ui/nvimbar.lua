@@ -75,8 +75,9 @@ local function build_context(preset_context)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local cwd = path.cwd() ---@type string
   local filepath = vim.fn.expand("%:p") ---@type string
-  local fileicon = util.calc_fileicon(filepath) ---@type string
+  local filename = vim.fn.expand("%:t") ---@type string
   local filetype = vim.bo.filetype ---@type string
+  local fileicon = util.calc_fileicon(filename, filetype) ---@type string
 
   ---@type fml.types.ui.nvimbar.IContext
   local context = {

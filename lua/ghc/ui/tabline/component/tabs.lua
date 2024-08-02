@@ -1,5 +1,5 @@
 local dirty = true ---@type boolean
-local last_folded = false ---@type boolean
+local folded = false ---@type boolean
 local last_tab_cur = 0 ---@type integer
 local last_tab_count = 0 ---@type integer
 
@@ -12,7 +12,7 @@ end) or ""
 
 ---@type string
 local fn_toggle_tabs_folded = fml.G.register_anonymous_fn(function()
-  last_folded = not last_folded
+  folded = not folded
   dirty = true
   vim.cmd("redrawtabline")
 end) or ""
@@ -23,10 +23,10 @@ local M = {
   will_change = function()
     local tab_cur = vim.fn.tabpagenr() ---@type integer
     local tab_count = vim.fn.tabpagenr("$") ---@type integer
-    local changed = last_tab_cur ~= tab_cur or last_tab_count ~= tab_count
+    local changed = last_tab_cur ~= tab_cur or last_tab_count ~= tab_count ---@type boolean
     last_tab_cur = tab_cur
     last_tab_count = tab_count
-    dirty = dirty or (not last_folded and changed)
+    dirty = dirty or changed
     return dirty
   end,
   render = function()
@@ -36,7 +36,7 @@ local M = {
       return "", 0
     end
 
-    if last_folded then
+    if folded then
       local text = " 󰅁 "
       local width = vim.fn.strwidth(text)
       local hl_text = fml.nvimbar.txt(text, "f_tl_tab_toggle")

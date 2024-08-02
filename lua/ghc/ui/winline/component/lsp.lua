@@ -27,30 +27,28 @@ local M = {
       return "", 0
     end
 
-    local symbols = win.lsp_symbols ---@type fml.types.api.state.ILspSymbol[]
+    local symbols = win.lsp_symbols ---@type fml.types.api.state.ILspSymbol[]|nil
     if symbols == nil or #symbols < 1 then
       return "", 0
     end
 
-    local text_hl = "" ---@type string
-    local width = 0
+    local hl_text = "" ---@type string
+    local width = 0 ---@type integer
     for _, symbol in ipairs(symbols) do
       local title = symbol.name or "" ---@type string
       local icon = (fml.ui.icons.kind[symbol.kind] or "") .. " " ---@type string
-      local icon_hln = symbol.kind and "f_wl_lsp_icon_" .. symbol.kind or "f_wl_lsp_icon"
-      local w = vim.fn.strwidth(sep .. icon .. title) ---@type integer
-
-      if width + w > remain_width then
+      local next_width = width + vim.fn.strwidth(sep .. icon .. title) ---@type integer
+      if next_width > remain_width then
         break
       end
 
-      width = width + w
-      local t_hl = fml.nvimbar.txt(sep, "f_wl_lsp_sep")
-        .. fml.nvimbar.txt(icon, icon_hln)
+      width = next_width
+      local hl_lsp_piece = fml.nvimbar.txt(sep, "f_wl_lsp_sep")
+        .. fml.nvimbar.txt(icon, symbol.kind and "f_wl_lsp_icon_" .. symbol.kind or "f_wl_lsp_icon")
         .. fml.nvimbar.txt(title, "f_wl_lsp_text")
-      text_hl = text_hl .. fml.nvimbar.btn(t_hl, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
+      hl_text = hl_text .. fml.nvimbar.btn(hl_lsp_piece, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
     end
-    return text_hl, width
+    return hl_text, width
   end,
 }
 

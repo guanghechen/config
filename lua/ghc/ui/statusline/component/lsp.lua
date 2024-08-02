@@ -5,12 +5,14 @@ local function get_text()
   local winnr = tab ~= nil and tab.winnr_cur:snapshot() or 0 ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
+  local client_names = {} ---@type string[]
   for _, client in ipairs(vim.lsp.get_clients()) do
     if client.attached_buffers[bufnr] and client.name ~= "null-ls" then
-      return "  " .. client.name
+      table.insert(client_names, client.name)
     end
   end
-  return ""
+
+  return #client_names > 0 and "  " .. table.concat(client_names, "|") or ""
 end
 
 ---@type fml.types.ui.nvimbar.IRawComponent
@@ -21,8 +23,9 @@ local M = {
   end,
   render = function()
     local text = get_text() ---@type string
+    local hl_text = fml.nvimbar.txt(text, "f_sl_text") ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
-    return fml.nvimbar.txt(text, "f_sl_text"), width
+    return hl_text, width
   end,
 }
 
