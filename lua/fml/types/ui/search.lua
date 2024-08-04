@@ -8,7 +8,8 @@
 ---| fun(): nil
 
 ---@alias fml.types.ui.search.IFetchItemsCallback
----| fun(ok: boolean, items: fml.types.ui.search.IItem[]|nil): nil
+---| fun(ok: true, items: fml.types.ui.search.IItem[]|nil): nil
+---| fun(ok: false, error: string|nil): nil
 
 ---@alias fml.types.ui.search.IFetchItems
 ---| fun(input: string, callback: fml.types.ui.search.IFetchItemsCallback): nil
@@ -17,7 +18,6 @@
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public highlights             fml.types.ui.printer.ILineHighlight[]
----@field public data                   any|nil
 
 ---@class fml.types.ui.search.IState
 ---@field public uuid                   string

@@ -1,9 +1,6 @@
 local Search = require("fml.ui.search.search")
 local defaults = require("fml.ui.select.defaults")
 
----@alias fm.types.ui.select.IItemData
----| integer
-
 ---@param cmp                           fml.types.ui.select.ILineMatchCmp
 ---@param frecency                      fml.types.collection.IFrecency|nil
 ---@param items                         fml.types.ui.select.IItem[]
@@ -179,13 +176,11 @@ function M:fetch_items(input)
   for _, match in ipairs(matches) do
     local item = item_map[match.uuid] ---@type fml.types.ui.select.IItem
     local line, highlights = self._render_line({ item = item, match = match }) ---@type string, fml.types.ui.printer.ILineHighlight[]
-    local data = match.order ---@type fm.types.ui.select.IItemData
     ---@type fml.types.ui.search.IItem
     local search_item = {
       uuid = item.uuid,
       text = line,
       highlights = highlights,
-      data = data,
     }
     table.insert(search_items, search_item)
   end

@@ -2,6 +2,7 @@ local Observable = require("fml.collection.observable")
 local Subscriber = require("fml.collection.subscriber")
 local navigate = require("fml.std.navigate")
 local oxi = require("fml.std.oxi")
+local reporter = require("fml.std.reporter")
 
 ---@class fml.ui.search.State : fml.types.ui.search.IState
 ---@field protected _item_lnum_cur      integer
@@ -75,6 +76,13 @@ function M.new(props)
         self.max_width = max_width
         self:locate(item_lnum_next)
         dirty_main:next(true)
+      else
+        reporter.error({
+          from = "fml.ui.search.state",
+          subject = "fetch_items",
+          message = "Failed to fetch items.",
+          details = { input = input_cur, error = items },
+        })
       end
 
       vim.schedule(fetch)
