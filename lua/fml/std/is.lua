@@ -1,3 +1,5 @@
+local typs = require("fml.std.typ")
+
 ---@class fml.std.is
 local M = {}
 
@@ -8,12 +10,17 @@ function M.array(value)
     return false
   end
 
+  local metatable = getmetatable(value)
+  if metatable ~= nil and metatable.json_type ~= "null" then
+    return metatable.json_type == typs.array.json_type
+  end
+
   if #value > 0 then
     return true
   end
 
-  for key, _ in pairs(table) do
-    if type(key) ~= "number" then
+  for key, val in pairs(table) do
+    if type(key) ~= "number" and type(val) ~= "function" then
       return false
     end
   end

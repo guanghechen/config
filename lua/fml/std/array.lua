@@ -1,4 +1,6 @@
+local oxi = require("fml.std.oxi")
 local std_string = require("fml.std.string")
+local typs = require("fml.std.typ")
 
 ---@class fml.std.array
 local M = {}
@@ -200,7 +202,16 @@ function M.parse_comma_list(str, separator_pattern)
       table.insert(result, v)
     end
   end
-  return result
+  return setmetatable(result, typs.array)
+end
+
+---@param lines                         string[]
+function M.flat_comma_list(lines)
+  local normalized_list = {}
+  for _, line in ipairs(lines) do
+    table.insert(normalized_list, oxi.normalize_comma_list(line))
+  end
+  return table.concat(normalized_list, ", ")
 end
 
 ---@generic T

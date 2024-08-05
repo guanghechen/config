@@ -57,6 +57,7 @@ local std = {
   set = require("fml.std.set"),
   statuscolumn = require("fml.std.statuscolumn"),
   string = require("fml.std.string"),
+  typ = require("fml.std.typ"),
   tmux = require("fml.std.tmux"),
   util = require("fml.std.util"),
 }

@@ -25,7 +25,6 @@ local function fetch_items(input_text, callback)
   local search_paths = session.search_paths:snapshot() ---@type string
   local include_patterns = session.search_include_patterns:snapshot() ---@type string
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
-  local scope = session.search_scope:snapshot() ---@type string
 
   ---@type fml.std.oxi.search.IResult
   local result = fml.oxi.search({
@@ -149,6 +148,75 @@ local function change_scope(scope)
   end
 end
 
+---@return nil
+local function edit_config()
+  ---@class ghc.command.search_files.IConfigData
+  ---@field public input                string
+  ---@field public search_paths         string[]
+  ---@field public include_patterns     string[]
+  ---@field public exclude_patterns     string[]
+
+  local search_pattern = session.search_pattern:snapshot() ---@type string
+  local s_search_paths = session.search_paths:snapshot() ---@type string
+  local s_include_patterns = session.search_include_patterns:snapshot() ---@type string)
+  local s_exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
+
+  ---@type ghc.command.search_files.IConfigData
+  local data = {
+    input = search_pattern,
+    search_paths = fml.array.parse_comma_list(s_search_paths),
+    include_patterns = fml.array.parse_comma_list(s_include_patterns),
+    exclude_patterns = fml.array.parse_comma_list(s_exclude_patterns),
+  }
+
+  local setting = fml.ui.Setting.new({
+    position = "center",
+    width = 100,
+    title = "Edit Configuration (search files)",
+    validate = function(raw_data)
+      if type(raw_data) ~= "table" then
+        return "Invalid search_files configuration, expect an object."
+      end
+      ---@cast raw_data ghc.command.search_files.IConfigData
+
+      if raw_data.input == nil or type(raw_data.input) ~= "string" then
+        return "Invalid data.input, expect an string."
+      end
+
+      if raw_data.search_paths == nil or not fml.is.array(raw_data.search_paths) then
+        return "Invalid data.search_paths, expect an array."
+      end
+
+      if raw_data.include_patterns == nil or not fml.is.array(raw_data.include_patterns) then
+        return "Invalid data.include_patterns, expect an array."
+      end
+
+      if raw_data.exclude_patterns == nil or not fml.is.array(raw_data.exclude_patterns) then
+        return "Invalid data.exclude_patterns, expect an array."
+      end
+    end,
+    on_confirm = function(raw_data)
+      ---@cast raw_data ghc.command.search_files.IConfigData
+      local raw = vim.tbl_extend("force", data, raw_data)
+      local input = raw.input ---@type string
+      local search_paths = table.concat(raw.search_paths, ",") ---@type string
+      local include_patterns = table.concat(raw.include_patterns, ",") ---@type string
+      local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
+
+      session.search_pattern:next(input)
+      session.search_paths:next(search_paths)
+      session.search_include_patterns:next(include_patterns)
+      session.search_exclude_patterns:next(exclude_patterns)
+      M.reload()
+    end,
+  })
+  setting:open({
+    initial_value = data,
+    text_cursor_row = 1,
+    text_cursor_col = 1,
+  })
+end
+
 ---@return fml.types.ui.search.ISearch
 local function get_search()
   if _search == nil then
@@ -172,6 +240,12 @@ local function get_search()
 
     ---@type fml.types.IKeymap[]
     local input_keymaps = {
+      {
+        modes = { "i", "n" },
+        key = "<C-a>c",
+        callback = edit_config,
+        desc = "search: edit configuration",
+      },
       {
         modes = { "n", "v" },
         key = "<leader>w",
