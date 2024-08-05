@@ -1,4 +1,4 @@
----@alias ghc.enums.context.FindScope
+---@alias ghc.enums.context.FindFilesScope
 ---|"W"
 ---|"C"
 ---|"D"

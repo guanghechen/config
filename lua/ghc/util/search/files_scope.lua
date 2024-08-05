@@ -20,7 +20,7 @@ function M.get_carousel_next(scope)
   return M.scopes[idx_next]
 end
 
----@param scope                         ghc.enums.context.FindScope
+---@param scope                         ghc.enums.context.FindFilesScope
 ---@param dirpath                       string
 ---@param bufpath                       string|nil
 ---@return string

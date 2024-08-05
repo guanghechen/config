@@ -172,10 +172,10 @@ local function fetch_items(input_text, callback)
   callback(true, items)
 end
 
----@param scope                         ghc.enums.context.FindScope
+---@param scope                         ghc.enums.context.FindFilesScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = session.find_scope:snapshot() ---@type ghc.enums.context.FindScope
+  local scope_current = session.find_scope:snapshot() ---@type ghc.enums.context.FindFilesScope
   if _search ~= nil and scope_current ~= scope then
     session.find_scope:next(scope)
     local dirpath = state_dirpath:snapshot() ---@type string
@@ -199,7 +199,7 @@ local function get_search()
         change_scope("D")
       end,
       change_scope_carousel = function()
-        ---@type ghc.enums.context.FindScope
+        ---@type ghc.enums.context.FindFilesScope
         local scope = session.find_scope:snapshot()
         local scope_next = util_search_files_scope.get_carousel_next(scope)
         change_scope(scope_next)

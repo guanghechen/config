@@ -2,56 +2,33 @@ local constant = require("fml.constant")
 local History = require("fml.collection.history")
 local statusline = require("ghc.ui.statusline")
 local session = require("ghc.context.session")
-local util_find_scope = require("ghc.util.find.scope")
-
----@class ghc.command.find.files.IConfigData
----@field public exclude_patterns       string[]
-
----@class ghc.command.find.files.IStateData
----@field frecency                      ?fml.types.collection.frecency.ISerializedData|nil
----@field input_history                 ?fml.types.collection.history.ISerializedData|nil
 
 ---@class ghc.command.find
 local M = require("ghc.command.find.mod")
 
----@type string
-local _filepath = fml.path.locate_session_filepath({ filename = "state.find_files.json" })
+---! Auto load/save state.
+---@param frecency                      fml.types.collection.IFrecency
+---@param input_history                 fml.types.collection.IHistory
+---@return nil
+local function auto_load_save(frecency, input_history)
+  ---@class ghc.command.find.files.IState
+  ---@field frecency                      ?fml.types.collection.frecency.ISerializedData|nil
+  ---@field input_history                 ?fml.types.collection.history.ISerializedData|nil
 
----@type fml.types.collection.IFrecency
-local _frecency = fml.collection.Frecency.new({
-  items = {},
-  normalize = function(key)
-    return fml.md5.sumhexa(key)
-  end,
-})
+  local filepath = fml.path.locate_session_filepath({ filename = "state.find_files.json" }) ---@type string
+  local state = fml.fs.read_json({ filepath = filepath, silent_on_bad_path = true, silent_on_bad_json = false })
+  if state ~= nil then
+    ---@cast state ghc.command.find.files.IState
+    frecency:load(state.frecency)
+    input_history:load(state.input_history)
+  end
 
----@type fml.types.collection.IHistory
-local _input_history = History.new({
-  name = "find_files",
-  capacity = 100,
-  validate = fml.string.is_non_blank_string,
-})
-
-local _state_data = fml.fs.read_json({ filepath = _filepath, silent_on_bad_path = true, silent_on_bad_json = false })
-if _state_data ~= nil then
-  ---@cast _state_data ghc.command.find.files.IStateData
-  _frecency:load(_state_data.frecency)
-  _input_history:load(_state_data.input_history)
-end
-local _select = nil ---@type fml.types.ui.select.ISelect|nil
-
-local state_dirpath = fml.collection.Observable.from_value(vim.fn.expand("%:p:h"))
-local state_find_cwd = fml.collection.Observable.from_value(
-  util_find_scope.get_cwd(session.find_scope:snapshot(), state_dirpath:snapshot()) ---@type string
-)
-
-fml.disposable:add_disposable(fml.collection.Disposable.new({
-  on_dispose = function()
-    if _select ~= nil then
+  fml.disposable:add_disposable(fml.collection.Disposable.new({
+    on_dispose = function()
       local ok, data = pcall(function()
-        local frecency = _frecency:dump() ---@type fml.types.collection.frecency.ISerializedData
-        local input_history = _input_history:dump() ---@type fml.types.collection.history.ISerializedData
-        local stack = input_history.stack ---@type fml.types.T[]
+        local data_frecency = frecency:dump() ---@type fml.types.collection.frecency.ISerializedData
+        local data_input_history = input_history:dump() ---@type fml.types.collection.history.ISerializedData
+        local stack = data_input_history.stack ---@type fml.types.T[]
         if #stack > 0 then
           local prefix = constant.EDITING_INPUT_PREFIX ---@type string
           local top = stack[#stack] ---@type string
@@ -59,32 +36,45 @@ fml.disposable:add_disposable(fml.collection.Disposable.new({
             stack[#stack] = string.sub(top, #prefix + 1)
           end
         end
-        return { frecency = frecency, input_history = input_history } ---@type ghc.command.find.files.IStateData
+        return { frecency = data_frecency, input_history = data_input_history } ---@type ghc.command.find.files.IState
       end)
       if ok then
-        fml.fs.write_json(_filepath, data, false)
+        fml.fs.write_json(filepath, data, false)
       else
-        fml.fs.write_json(_filepath, { error = data }, false)
+        fml.fs.write_json(filepath, { error = data }, false)
       end
-    end
-  end,
-}))
+    end,
+  }))
+end
 
----@param scope                         ghc.enums.context.FindScope
+local _select = nil ---@type fml.types.ui.select.ISelect|nil
+local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
+local state_dirpath = fml.collection.Observable.from_value(initial_dirpath)
+local state_find_cwd = fml.collection.Observable.from_value(session.get_find_scope_cwd(initial_dirpath))
+fml.fn.watch_observables({ session.find_scope }, function()
+  local current_find_cwd = state_find_cwd:snapshot() ---@type string
+  local dirpath = state_dirpath:snapshot() ---@type string
+  local next_find_cwd = session.get_find_scope_cwd(dirpath) ---@type string
+  if current_find_cwd ~= next_find_cwd then
+    state_find_cwd:next(next_find_cwd)
+    M.reload()
+  end
+end)
+
+---@param scope                         ghc.enums.context.FindFilesScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = session.find_scope:snapshot() ---@type ghc.enums.context.FindScope
+  local scope_current = session.find_scope:snapshot() ---@type ghc.enums.context.FindFilesScope
   if _select ~= nil and scope_current ~= scope then
     session.find_scope:next(scope)
-    local dirpath = state_dirpath:snapshot() ---@type string
-    local find_cwd = util_find_scope.get_cwd(scope, dirpath) ---@type string
-    state_find_cwd:next(find_cwd)
-    M.reload()
   end
 end
 
 ---@return nil
 local function edit_config()
+  ---@class ghc.command.find.files.IConfigData
+  ---@field public exclude_patterns       string[]
+
   ---@type ghc.command.find.files.IConfigData
   local data = {
     exclude_patterns = session.find_exclude_pattern:snapshot(),
@@ -131,12 +121,6 @@ local function get_select()
       change_scope_directory = function()
         change_scope("D")
       end,
-      change_scope_carousel = function()
-        ---@type ghc.enums.context.FindScope
-        local scope = session.find_scope:snapshot()
-        local scope_next = util_find_scope.get_carousel_next(scope)
-        change_scope(scope_next)
-      end,
     }
 
     ---@type fml.types.IKeymap[]
@@ -165,23 +149,37 @@ local function get_select()
         callback = actions.change_scope_directory,
         desc = "find: change scope (directory)",
       },
-      {
-        modes = { "n", "v" },
-        key = "<leader>s",
-        callback = actions.change_scope_carousel,
-        desc = "find: change scope (carousel)",
-      },
     }
 
     ---@type fml.types.IKeymap[]
     local main_keymaps = vim.tbl_deep_extend("force", {}, input_keymaps)
 
+    ---@type fml.types.collection.IFrecency
+    local frecency = fml.collection.Frecency.new({
+      items = {},
+      normalize = function(key)
+        return fml.md5.sumhexa(key)
+      end,
+    })
+
+    ---@type fml.types.collection.IHistory
+    local input_history = History.new({
+      name = "find_files",
+      capacity = 100,
+      validate = fml.string.is_non_blank_string,
+    })
+
+    auto_load_save(frecency, input_history)
+
+    local dirpath = state_dirpath:snapshot() ---@type string
+    local find_cwd = session.get_find_scope_cwd(dirpath) ---@type string
+    state_find_cwd:next(find_cwd)
     _select = fml.ui.select.Select.new({
       title = "Find files",
       items = {},
       input = session.find_file_pattern,
-      input_history = _input_history,
-      frecency = _frecency,
+      input_history = input_history,
+      frecency = frecency,
       width = 0.4,
       height = 0.5,
       render_line = fml.ui.select.defaults.render_filepath,
@@ -205,11 +203,7 @@ local function get_select()
     })
   end
 
-  local scope = session.find_scope:snapshot() ---@type ghc.enums.context.FindScope
-  local find_cwd = util_find_scope.get_cwd(scope, state_dirpath:snapshot()) ---@type string
-  state_find_cwd:next(find_cwd)
   M.reload()
-
   return _select
 end
 
