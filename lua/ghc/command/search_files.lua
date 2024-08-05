@@ -131,7 +131,7 @@ local function fetch_items(input_text, callback)
           local lnum = lnum0 + k - 1 ---@type integer
           local col_start = match.l - offset ---@type integer
           local colr_end = math.min(lwidth - 1, match.r - offset) ---@type integer
-          local text_prefix = "  " .. lnum .. ":" .. col_start ---@type string
+          local text_prefix = "  " .. lnum .. ":" .. col_start .. " " ---@type string
           local text = text_prefix .. lines[k] ---@type string
 
           local offset_prefix = string.len(text_prefix) ---@type integer

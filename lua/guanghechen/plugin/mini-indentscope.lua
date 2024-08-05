@@ -14,6 +14,8 @@ return {
   init = function()
     vim.api.nvim_create_autocmd("FileType", {
       pattern = {
+        fml.constant.FT_SEARCH_INPUT,
+        fml.constant.FT_SEARCH_MAIN,
         fml.constant.FT_SEARCH_REPLACE,
         fml.constant.FT_TERM,
         "help",
