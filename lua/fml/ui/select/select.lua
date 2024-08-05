@@ -178,6 +178,7 @@ function M:fetch_items(input)
     local line, highlights = self._render_line({ item = item, match = match }) ---@type string, fml.types.ui.printer.ILineHighlight[]
     ---@type fml.types.ui.search.IItem
     local search_item = {
+      group = item.group,
       uuid = item.uuid,
       text = line,
       highlights = highlights,

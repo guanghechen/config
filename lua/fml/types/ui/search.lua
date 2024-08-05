@@ -15,6 +15,7 @@
 ---| fun(input: string, callback: fml.types.ui.search.IFetchItemsCallback): nil
 
 ---@class fml.types.ui.search.IItem
+---@field public group                  string|nil
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public highlights             fml.types.ui.printer.ILineHighlight[]

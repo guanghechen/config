@@ -56,6 +56,7 @@ local function fetch_items(input_text, callback)
 
       ---@type fml.types.ui.search.IItem
       local file_item = {
+        group = filepath,
         uuid = filepath,
         text = icon .. " " .. filepath,
         highlights = file_highlights,
@@ -100,6 +101,7 @@ local function fetch_items(input_text, callback)
 
           ---@type fml.types.ui.search.IItem
           local match_item = {
+            group = filepath,
             uuid = filepath .. text_prefix,
             text = text,
             highlights = highlights,

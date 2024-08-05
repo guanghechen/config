@@ -1,4 +1,5 @@
 ---@class fml.types.ui.select.IItem
+---@field public group                  string|nil
 ---@field public uuid                   string
 ---@field public display                string
 ---@field public lower                  string
