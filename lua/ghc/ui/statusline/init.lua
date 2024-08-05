@@ -29,7 +29,7 @@ local c = {
   noice = "noice",
   pos = "pos",
   readonly = "readonly",
-  search = "search",
+  search_files = "search_files",
   username = "username",
 }
 for _, name in pairs(c) do
@@ -38,7 +38,7 @@ end
 statusline
   ---
   :disable(c.find_files)
-  :disable(c.search)
+  :disable(c.search_files)
 
 statusline
   :place(c.username, "left")
@@ -47,7 +47,7 @@ statusline
   :place(c.filetype, "left")
   :place(c.filestatus, "left")
   :place(c.readonly, "left")
-  :place(c.search, "center")
+  :place(c.search_files, "center")
   :place(c.find_files, "center")
   :place(c.cwd, "right")
   :place(c.lsp, "right")

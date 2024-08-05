@@ -303,11 +303,11 @@ local function search(opts)
         mapkey("n", "<leader>b", actions.change_scope_buffer)
         mapkey("n", "<leader>s", actions.change_scope_carousel)
 
-        statusline.enable(statusline.cnames.search)
+        statusline.enable(statusline.cnames.search_files)
         vim.api.nvim_create_autocmd({ "BufLeave", "BufUnload" }, {
           buffer = prompt_bufnr,
           callback = function()
-            statusline.disable(statusline.cnames.search)
+            statusline.disable(statusline.cnames.search_files)
           end,
         })
         return true

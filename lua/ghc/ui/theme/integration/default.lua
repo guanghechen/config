@@ -112,7 +112,7 @@ local function gen_hlgroup(params)
     f_wl_lsp_sep = { fg = c.darker_white, bg = t and "none" or c.bg_winline },
     f_wl_lsp_text = { fg = c.darker_white, bg = t and "none" or c.bg_winline },
 
-    ---select
+    ---search
     f_us_input_border = { fg = c.black2, bg = c.black2 },
     f_us_input_normal = { fg = c.white, bg = c.black2 },
     f_us_input_prompt = { fg = c.red, bg = c.black2 },
@@ -121,6 +121,7 @@ local function gen_hlgroup(params)
     f_us_main_border = { fg = c.darker_black, bg = c.darker_black },
     f_us_main_current = { bg = c.one_bg2 },
     f_us_main_match = { fg = c.blue },
+    f_us_main_match_lnum = { fg = c.grey },
     f_us_main_normal = { bg = c.darker_black },
 
     ---textarea

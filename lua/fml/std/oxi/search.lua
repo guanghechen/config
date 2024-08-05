@@ -5,21 +5,10 @@ local M = require("fml.std.oxi.mod")
 ---@field public l                      integer
 ---@field public r                      integer
 
----@class fml.std.oxi.search.ILineMatchPiece
----@field public i                      integer
----@field public l                      integer
----@field public r                      integer
-
----@class fml.std.oxi.search.ILineMatch
----@field public l                      integer
----@field public r                      integer
----@field public p                      fml.std.oxi.search.ILineMatchPiece[]
-
 ---@class fml.std.oxi.search.IBlockMatch
----@field public text                   string
 ---@field public lnum                   integer
+---@field public lines                  string[]
 ---@field public matches                fml.std.oxi.search.IMatchPoint[]
----@field public lines                  fml.std.oxi.search.ILineMatch[]
 
 ---@class fml.std.oxi.search.IFileMatch
 ---@field public matches                fml.std.oxi.search.IBlockMatch[]

@@ -153,6 +153,10 @@ mk({ "i", "n", "v" }, "<M-r>", ghc.command.refresh.refresh_all, "refresh: refres
 mk({ "i", "n", "v" }, "<F5>", ghc.command.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
 
+--#[s]earch-----------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>ss", ghc.command.search.files, "search: files")
+-----------------------------------------------------------------------------------------#[s]earch--
+
 --#[t]ab--------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>t1", fml.api.tab.focus_1, "tab: focus tab 1", true, true)
 mk({ "n", "v" }, "<leader>t2", fml.api.tab.focus_2, "tab: focus tab 2", true, true)

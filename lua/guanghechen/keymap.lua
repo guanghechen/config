@@ -60,7 +60,6 @@ mk({ "n", "v" }, "<leader>sw", A.search.grep_selected_text_workspace, "search: g
 mk({ "n", "v" }, "<leader>sc", A.search.grep_selected_text_cwd, "search: grep word (cwd)")
 mk({ "n", "v" }, "<leader>sd", A.search.grep_selected_text_directory, "search: grep word (directory)")
 mk({ "n", "v" }, "<leader>sb", A.search.grep_selected_text_buffer, "search: grep word (buffer)")
-mk({ "n", "v" }, "<leader>ss", A.search.grep_selected_text, "search: grep word")
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[u]i---------------------------------------------------------------------------------------------

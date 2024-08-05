@@ -42,6 +42,7 @@ M.__index = M
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public fetch_items            fml.types.ui.search.IFetchItems
+---@field public fetch_delay            ?integer
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public max_width              ?number
@@ -67,8 +68,9 @@ function M.new(props)
   local state = SearchState.new({
     title = props.title,
     input = props.input,
-    fetch_items = props.fetch_items,
     input_history = input_history,
+    fetch_items = props.fetch_items,
+    fetch_delay = props.fetch_delay,
   })
   local augroup_win_focus = util.augroup(state.uuid .. ":win_focus") ---@type integer
 

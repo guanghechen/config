@@ -1,6 +1,6 @@
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
-  name = "search",
+  name = "search_files",
   render = function()
     local text_scope = " " .. ghc.context.session.search_scope:snapshot() .. " " ---@type string
     local text_flag_regex = " " .. fml.ui.icons.symbols.flag_regex .. " " ---@type string

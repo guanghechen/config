@@ -118,24 +118,6 @@ local function edit_config()
   })
 end
 
----@return nil
-function M.reload()
-  if _select ~= nil then
-    local find_cwd = state_find_cwd:snapshot() ---@type string
-    local exclude_pattern = session.find_exclude_pattern:snapshot() ---@type string[]
-    local paths = fml.oxi.collect_file_paths(find_cwd, exclude_pattern)
-    local items = {} ---@type fml.types.ui.select.IItem[]
-    for _, path in ipairs(paths) do
-      local item = { uuid = path, display = path, lower = path:lower() } ---@type fml.types.ui.select.IItem
-      table.insert(items, item)
-    end
-    table.sort(items, function(a, b)
-      return a.display < b.display
-    end)
-    _select:update_items(items)
-  end
-end
-
 ---@return fml.types.ui.select.ISelect
 local function get_select()
   if _select == nil then
@@ -229,6 +211,24 @@ local function get_select()
   M.reload()
 
   return _select
+end
+
+---@return nil
+function M.reload()
+  if _select ~= nil then
+    local find_cwd = state_find_cwd:snapshot() ---@type string
+    local exclude_pattern = session.find_exclude_pattern:snapshot() ---@type string[]
+    local paths = fml.oxi.collect_file_paths(find_cwd, exclude_pattern)
+    local items = {} ---@type fml.types.ui.select.IItem[]
+    for _, path in ipairs(paths) do
+      local item = { uuid = path, display = path, lower = path:lower() } ---@type fml.types.ui.select.IItem
+      table.insert(items, item)
+    end
+    table.sort(items, function(a, b)
+      return a.display < b.display
+    end)
+    _select:update_items(items)
+  end
 end
 
 ---@return nil

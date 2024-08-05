@@ -1,4 +1,3 @@
-use super::r#match::{find_matches_per_line, LineMatch, MatchPoint};
 use super::string::parse_comma_list;
 use crate::types::ripgrep_result;
 use regex::Regex;
@@ -6,11 +5,18 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, process::Command, time::SystemTime};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MatchPoint {
+    #[serde(rename = "l")]
+    pub start: usize, // related to the parent.lines
+    #[serde(rename = "r")]
+    pub end: usize, // related to the parent.lines
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchBlockMatch {
-    pub text: String, // matched content lines
-    pub lnum: usize,  // start line number
+    pub lnum: usize,        // start line number
+    pub lines: Vec<String>, // block match lines.
     pub matches: Vec<MatchPoint>,
-    pub lines: Vec<LineMatch>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -142,53 +148,30 @@ pub fn search(
                     ripgrep_result::ResultItemData::Begin { .. } => {}
                     ripgrep_result::ResultItemData::Match {
                         path,
-                        lines: matched_lines,
-                        line_number,
+                        lines: ripgrep_result::Lines { text, .. },
+                        line_number: lnum,
                         submatches,
                         ..
                     } => {
-                        let text: String = matched_lines.text;
+                        let lines: Vec<String> =
+                            text.lines().map(|line| line.to_string()).collect();
+                        let mut matches: Vec<MatchPoint> = vec![];
+                        submatches.iter().enumerate().for_each(|(_, submatch)| {
+                            let match_point: MatchPoint = MatchPoint {
+                                start: submatch.start,
+                                end: submatch.end,
+                            };
+                            matches.push(match_point);
+                        });
+                        let block_match: SearchBlockMatch = SearchBlockMatch {
+                            lnum,
+                            lines,
+                            matches,
+                        };
                         let file_item: &mut SearchFileMatch = file_matches
                             .entry(path.text.clone())
                             .or_insert(SearchFileMatch { matches: vec![] });
-
-                        let mut lnum: usize = line_number;
-                        let mut offset: usize = 0;
-                        let mut submatch_start: usize = 0;
-                        let mut last_submatch_end: usize = 0;
-                        for (i, submatch) in submatches.iter().enumerate() {
-                            if let Some(middle_line_end_index) =
-                                text[last_submatch_end..submatch.start].find('\n')
-                            {
-                                let middle_line_end_index: usize =
-                                    middle_line_end_index + last_submatch_end;
-                                let block_match: SearchBlockMatch = process_block_match(
-                                    text[offset..=middle_line_end_index].to_string(),
-                                    &submatches[submatch_start..i],
-                                    lnum,
-                                    offset,
-                                );
-
-                                lnum += block_match.lines.len();
-                                offset = middle_line_end_index + 1;
-                                submatch_start = i;
-                                last_submatch_end = offset;
-                                file_item.matches.push(block_match);
-                            } else {
-                                // The last submatch could reach the end of the line.
-                                last_submatch_end = submatch.end - 1;
-                            }
-                        }
-
-                        if submatch_start < submatches.len() {
-                            let block_match: SearchBlockMatch = process_block_match(
-                                text[offset..].to_string(),
-                                &submatches[submatch_start..],
-                                lnum,
-                                offset,
-                            );
-                            file_item.matches.push(block_match);
-                        }
+                        file_item.matches.push(block_match);
                     }
                     ripgrep_result::ResultItemData::End { .. } => {}
                     ripgrep_result::ResultItemData::Summary { elapsed_total, .. } => {
@@ -224,29 +207,4 @@ pub fn search(
             ))
         }
     }
-}
-
-fn process_block_match(
-    text: String,
-    submatches: &[ripgrep_result::SubMatch],
-    lnum: usize,
-    offset: usize,
-) -> SearchBlockMatch {
-    let mut matches: Vec<MatchPoint> = vec![];
-    for submatch in submatches.iter() {
-        let item: MatchPoint = MatchPoint {
-            start: submatch.start - offset,
-            end: submatch.end - offset,
-        };
-        matches.push(item);
-    }
-
-    let lines: Vec<LineMatch> = find_matches_per_line(&text, &matches);
-    let block_match: SearchBlockMatch = SearchBlockMatch {
-        text,
-        lnum,
-        matches,
-        lines,
-    };
-    block_match
 }
