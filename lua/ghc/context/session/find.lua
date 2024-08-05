@@ -1,14 +1,7 @@
 local Observable = fml.collection.Observable
 
----@type ghc.enums.context.FindFilesScope[]
+---@type ghc.enums.context.FindScope[]
 local scopes = { "W", "C", "D" }
-
----@type table<ghc.enums.context.FindFilesScope, string>
-local scope_2_name = {
-  W = "workspace",
-  C = "cwd",
-  D = "directory",
-}
 
 local find_exclude_pattern = Observable.from_value({
   ".cache/**",
@@ -36,9 +29,9 @@ local M = require("ghc.context.session.mod")
   :register("find_file_pattern", find_file_pattern, true, true)
   :register("find_scope", find_scope, true, true)
 
----@return ghc.enums.context.FindFilesScope
+---@return ghc.enums.context.FindScope
 function M.get_find_scope_carousel_next()
-  local scope = find_scope:snapshot() ---@type ghc.enums.context.FindFilesScope
+  local scope = find_scope:snapshot() ---@type ghc.enums.context.FindScope
   local idx = fml.array.first(scopes, scope) or 1 ---@type integer
   local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
   return scopes[idx_next]
@@ -47,7 +40,7 @@ end
 ---@param dirpath                       string
 ---@return string
 function M.get_find_scope_cwd(dirpath)
-  local scope = find_scope:snapshot() ---@type ghc.enums.context.FindFilesScope
+  local scope = find_scope:snapshot() ---@type ghc.enums.context.FindScope
 
   if scope == "W" then
     return fml.path.workspace()
@@ -68,12 +61,6 @@ function M.get_find_scope_cwd(dirpath)
     details = { scope = scope, dirpath = dirpath },
   })
   return fml.path.cwd()
-end
-
----@return string
-function M.get_find_scope_name()
-  local scope = find_scope:snapshot() ---@type ghc.enums.context.FindFilesScope
-  return scope_2_name[scope]
 end
 
 --Auto refresh statusline

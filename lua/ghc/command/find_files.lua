@@ -3,22 +3,35 @@ local History = require("fml.collection.history")
 local statusline = require("ghc.ui.statusline")
 local session = require("ghc.context.session")
 
----@class ghc.command.find
-local M = require("ghc.command.find.mod")
+---@class ghc.command.find_files
+local M = {}
 
----! Auto load/save state.
----@param frecency                      fml.types.collection.IFrecency
----@param input_history                 fml.types.collection.IHistory
----@return nil
-local function auto_load_save(frecency, input_history)
-  ---@class ghc.command.find.files.IState
+---! load and autosave state.
+---@return fml.types.collection.IFrecency
+---@return fml.types.collection.IHistory
+local function load_and_autosave()
+  ---@class ghc.command.find_files.IState
   ---@field frecency                      ?fml.types.collection.frecency.ISerializedData|nil
   ---@field input_history                 ?fml.types.collection.history.ISerializedData|nil
+
+  ---@type fml.types.collection.IFrecency
+  local frecency = fml.collection.Frecency.new({
+    items = {},
+    normalize = function(key)
+      return fml.md5.sumhexa(key)
+    end,
+  })
+  ---@type fml.types.collection.IHistory
+  local input_history = History.new({
+    name = "find_files",
+    capacity = 100,
+    validate = fml.string.is_non_blank_string,
+  })
 
   local filepath = fml.path.locate_session_filepath({ filename = "state.find_files.json" }) ---@type string
   local state = fml.fs.read_json({ filepath = filepath, silent_on_bad_path = true, silent_on_bad_json = false })
   if state ~= nil then
-    ---@cast state ghc.command.find.files.IState
+    ---@cast state ghc.command.find_files.IState
     frecency:load(state.frecency)
     input_history:load(state.input_history)
   end
@@ -36,7 +49,7 @@ local function auto_load_save(frecency, input_history)
             stack[#stack] = string.sub(top, #prefix + 1)
           end
         end
-        return { frecency = data_frecency, input_history = data_input_history } ---@type ghc.command.find.files.IState
+        return { frecency = data_frecency, input_history = data_input_history } ---@type ghc.command.find_files.IState
       end)
       if ok then
         fml.fs.write_json(filepath, data, false)
@@ -45,6 +58,8 @@ local function auto_load_save(frecency, input_history)
       end
     end,
   }))
+
+  return frecency, input_history
 end
 
 local _select = nil ---@type fml.types.ui.select.ISelect|nil
@@ -59,12 +74,12 @@ fml.fn.watch_observables({ session.find_scope }, function()
     state_find_cwd:next(next_find_cwd)
     M.reload()
   end
-end)
+end, true)
 
----@param scope                         ghc.enums.context.FindFilesScope
+---@param scope                         ghc.enums.context.FindScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = session.find_scope:snapshot() ---@type ghc.enums.context.FindFilesScope
+  local scope_current = session.find_scope:snapshot() ---@type ghc.enums.context.FindScope
   if _select ~= nil and scope_current ~= scope then
     session.find_scope:next(scope)
   end
@@ -72,10 +87,10 @@ end
 
 ---@return nil
 local function edit_config()
-  ---@class ghc.command.find.files.IConfigData
+  ---@class ghc.command.find_files.IConfigData
   ---@field public exclude_patterns       string[]
 
-  ---@type ghc.command.find.files.IConfigData
+  ---@type ghc.command.find_files.IConfigData
   local data = {
     exclude_patterns = session.find_exclude_pattern:snapshot(),
   }
@@ -87,7 +102,7 @@ local function edit_config()
       if type(raw_data) ~= "table" then
         return "Invalid find_files configuration, expect an object."
       end
-      ---@cast raw_data ghc.command.find.files.IConfigData
+      ---@cast raw_data ghc.command.find_files.IConfigData
       if raw_data.exclude_patterns == nil or not fml.is.array(raw_data.exclude_patterns) then
         return "Invalid data.exclude_patterns, expect an array."
       end
@@ -154,26 +169,13 @@ local function get_select()
     ---@type fml.types.IKeymap[]
     local main_keymaps = vim.tbl_deep_extend("force", {}, input_keymaps)
 
-    ---@type fml.types.collection.IFrecency
-    local frecency = fml.collection.Frecency.new({
-      items = {},
-      normalize = function(key)
-        return fml.md5.sumhexa(key)
-      end,
-    })
-
-    ---@type fml.types.collection.IHistory
-    local input_history = History.new({
-      name = "find_files",
-      capacity = 100,
-      validate = fml.string.is_non_blank_string,
-    })
-
-    auto_load_save(frecency, input_history)
-
     local dirpath = state_dirpath:snapshot() ---@type string
     local find_cwd = session.get_find_scope_cwd(dirpath) ---@type string
     state_find_cwd:next(find_cwd)
+
+    ---@type fml.types.collection.IFrecency, fml.types.collection.IHistory
+    local frecency, input_history = load_and_autosave()
+
     _select = fml.ui.select.Select.new({
       title = "Find files",
       items = {},
@@ -226,9 +228,11 @@ function M.reload()
 end
 
 ---@return nil
-function M.files()
+function M.open()
   state_dirpath:next(vim.fn.expand("%:p:h"))
   local select = get_select() ---@type fml.types.ui.select.ISelect
   statusline.enable(statusline.cnames.find_files)
   select:open()
 end
+
+return M

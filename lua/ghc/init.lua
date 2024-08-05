@@ -5,7 +5,7 @@ local command = {
   context = require("ghc.command.context"),
   copy = require("ghc.command.copy"),
   debug = require("ghc.command.debug"),
-  find = require("ghc.command.find"),
+  find_files = require("ghc.command.find_files"),
   git = require("ghc.command.git"),
   refresh = require("ghc.command.refresh"),
   replace = require("ghc.command.replace"),
@@ -35,7 +35,6 @@ local ui = {
 ---@field public command                ghc.command
 ---@field public context                ghc.context
 ---@field public ui                     ghc.ui
----@field public util                   ghc.util
 local ghc = {
   command = command,
   context = context,

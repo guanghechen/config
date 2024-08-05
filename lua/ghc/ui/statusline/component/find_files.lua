@@ -1,7 +1,7 @@
 local session = require("ghc.context.session")
 
 local fn_toggle_find_files_scope = fml.G.register_anonymous_fn(function()
-  local next_scope = session.get_find_scope_carousel_next() ---@type ghc.enums.context.FindFilesScope
+  local next_scope = session.get_find_scope_carousel_next() ---@type ghc.enums.context.FindScope
   session.find_scope:next(next_scope)
 end) or ""
 
