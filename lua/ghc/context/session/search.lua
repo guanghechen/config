@@ -1,5 +1,8 @@
 local Observable = fml.collection.Observable
 
+---@type ghc.enums.context.SearchScope[]
+local scopes = { "W", "C", "D", "B" }
+
 ---@param paths                         string
 ---@return string
 local function normalize_paths(paths)
@@ -39,6 +42,45 @@ local M = require("ghc.context.session.mod")
   :register("search_paths", search_paths, true, true)
   :register("search_pattern", search_pattern, true, true)
   :register("search_scope", search_scope, true, true)
+
+---@return ghc.enums.context.SearchScope
+function M.get_search_scope_carousel_next()
+  local scope = search_scope:snapshot() ---@type ghc.enums.context.SearchScope
+  local idx = fml.array.first(scopes, scope) or 1 ---@type integer
+  local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
+  return scopes[idx_next]
+end
+
+---@param dirpath                       string
+---@param bufpath                       string|nil
+---@return string
+function M.get_search_scope_cwd(dirpath, bufpath)
+  local scope = search_scope:snapshot() ---@type ghc.enums.context.SearchScope
+
+  if scope == "W" then
+    return fml.path.workspace()
+  end
+
+  if scope == "C" then
+    return fml.path.cwd()
+  end
+
+  if scope == "D" then
+    return dirpath
+  end
+
+  if scope == "B" then
+    return bufpath or dirpath
+  end
+
+  fml.reporter.error({
+    from = "ghc.context.session.search",
+    subject = "get_search_scope_cwd",
+    message = "Unknown scope.",
+    details = { scope = scope, dirpath = dirpath, bufpath = bufpath },
+  })
+  return fml.path.cwd()
+end
 
 --Auto refresh statusline
 vim.schedule(function()
