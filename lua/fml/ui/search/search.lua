@@ -147,6 +147,16 @@ function M.new(props)
         self:sync_main_cursor()
       end
     end,
+    on_main_mouse_dbclick = function()
+      ---@diagnostic disable-next-line: invisible
+      local winnr_main = self._winnr_main ---@type integer|nil
+      if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
+        local lnum = vim.api.nvim_win_get_cursor(winnr_main)[1]
+        state:locate(lnum)
+        self:sync_main_cursor()
+        on_confirm()
+      end
+    end,
   }
 
   ---@type fml.types.IKeymap[]
@@ -163,10 +173,16 @@ function M.new(props)
   ---@type fml.types.IKeymap[]
   local main_keymaps = std_array.concat({
     {
-      modes = { "n", "v" },
+      modes = { "i", "n", "v" },
       key = "<LeftRelease>",
       callback = actions.on_main_mouse_click,
       desc = "search: mouse click (main)",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<2-LeftMouse>",
+      callback = actions.on_main_mouse_dbclick,
+      desc = "search: confirm",
     },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
