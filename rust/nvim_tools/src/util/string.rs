@@ -24,6 +24,11 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
     let pattern_chars = pattern.chars().collect::<Vec<char>>();
     let n_pattern_bytes: usize = pattern_bytes.len();
 
+    let score_exact: usize = 10;
+    let score_scalar: usize = 3;
+    let score_exact_bonus: f64 = 3.0;
+    let score_scalar_bonus: f64 = 3.0;
+
     let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
     let mut matches: Vec<LineMatch> = vec![];
     calc_fails(pattern_bytes, &mut fails);
@@ -31,16 +36,17 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
     for (idx, line) in lines.iter().enumerate() {
         let line = line.as_ref();
         let line_bytes = line.as_bytes();
+        let base: f64 = line.len() as f64;
         let points = find_all_matched_points(pattern_bytes, line_bytes, Some(&fails));
         if !points.is_empty() {
             let mut pieces: Vec<LineMatchPiece> = vec![];
             let mut score = 0;
-            for p in points {
-                pieces.push(LineMatchPiece {
-                    l: p,
-                    r: p + n_pattern_bytes,
-                });
-                score += 10;
+            for l in points {
+                let r: usize = l + n_pattern_bytes;
+                let delta: f64 = r as f64;
+                let bonus: usize = ((delta / base) * score_exact_bonus) as usize;
+                score += score_exact + bonus;
+                pieces.push(LineMatchPiece { l, r });
             }
             matches.push(LineMatch { idx, score, pieces });
             continue;
@@ -50,6 +56,7 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
         let mut score = 0;
         let mut i: usize = 0;
         let mut t: usize = 0;
+        let mut delta: f64 = 0.0;
         let mut continous: bool = false;
         let mut valid_piece_index: usize = 0;
         for c in line.chars() {
@@ -65,6 +72,13 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
                     last.r = t2;
                 }
             } else {
+                let d: usize = if let Some(last) = pieces.last_mut() {
+                    t - last.r
+                } else {
+                    t
+                };
+                delta += d as f64;
+
                 continous = true;
                 pieces.push(LineMatchPiece { l: t, r: t2 });
             }
@@ -72,8 +86,10 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
             i += 1;
             t = t2;
             if i == pattern_chars.len() {
-                score += 3;
+                let bonus: usize = ((1.0 - delta / base) * score_scalar_bonus) as usize;
+                score += score_scalar + bonus;
                 i = 0;
+                delta = 0.0;
                 continous = false;
                 valid_piece_index = pieces.len();
             }
