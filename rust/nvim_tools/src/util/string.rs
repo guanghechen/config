@@ -24,10 +24,10 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
     let pattern_chars = pattern.chars().collect::<Vec<char>>();
     let n_pattern_bytes: usize = pattern_bytes.len();
 
-    let score_exact: usize = 10;
-    let score_scalar: usize = 3;
-    let score_exact_bonus: f64 = 3.0;
-    let score_scalar_bonus: f64 = 3.0;
+    let score_exact: usize = 100;
+    let score_scalar: usize = 30;
+    let score_exact_bonus: f64 = 30.0;
+    let score_scalar_bonus: f64 = 30.0;
 
     let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
     let mut matches: Vec<LineMatch> = vec![];
