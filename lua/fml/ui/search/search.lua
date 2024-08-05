@@ -33,7 +33,6 @@ local MAIN_WIN_HIGHLIGHT = table.concat({
 ---@field protected _max_height         number
 ---@field protected _width              number|nil
 ---@field protected _height             number|nil
----@field protected _augroup_win_focus  integer
 local M = {}
 M.__index = M
 
@@ -72,7 +71,6 @@ function M.new(props)
     fetch_items = props.fetch_items,
     fetch_delay = props.fetch_delay,
   })
-  local augroup_win_focus = util.augroup(state.uuid .. ":win_focus") ---@type integer
 
   ---@return nil
   local function on_close()
@@ -115,6 +113,19 @@ function M.new(props)
   local actions = {
     on_close = function()
       on_close()
+    end,
+    on_esc = function()
+      local winnr_cur = vim.api.nvim_tabpage_get_win(0) ---@type integer
+      local winnr_main = self:get_winnr_main() ---@type integer|nil
+      if winnr_cur == winnr_main then
+        local winnr_input = self:get_winnr_input() ---@type integer|nil
+        if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+          vim.api.nvim_tabpage_set_win(0, winnr_input)
+          vim.schedule(function()
+            vim.cmd("stopinsert")
+          end)
+        end
+      end
     end,
     noop = util.noop,
     on_main_G = function()
@@ -176,14 +187,17 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "<LeftRelease>",
       callback = actions.on_main_mouse_click,
+      nowait = true,
       desc = "search: mouse click (main)",
     },
     {
       modes = { "i", "n", "v" },
       key = "<2-LeftMouse>",
       callback = actions.on_main_mouse_dbclick,
+      nowait = true,
       desc = "search: confirm",
     },
+    { modes = { "i", "n", "v" }, key = "<esc>", callback = actions.on_esc, desc = "search: esc" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
@@ -217,22 +231,6 @@ function M.new(props)
   self._max_height = max_height
   self._width = width
   self._height = height
-  self._augroup_win_focus = augroup_win_focus
-
-  -- Detect focus on the main window and move cursor back to input
-  vim.api.nvim_create_autocmd("WinEnter", {
-    group = augroup_win_focus,
-    callback = function()
-      local winnr_cur = vim.api.nvim_get_current_win()
-      local winnr_main = self:get_winnr_main() ---@type integer|nil
-      local winnr_input = self:get_winnr_input() ---@type integer|nil
-      if winnr_cur == winnr_main then
-        if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-          vim.api.nvim_tabpage_set_win(0, winnr_input)
-        end
-      end
-    end,
-  })
 
   state.dirty_main:subscribe(Subscriber.new({
     on_next = vim.schedule_wrap(function()
@@ -382,8 +380,6 @@ function M:close()
   if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
     vim.api.nvim_win_close(winnr_main, true)
   end
-
-  vim.api.nvim_clear_autocmds({ group = self._augroup_win_focus })
 end
 
 ---@return nil

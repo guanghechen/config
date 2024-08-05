@@ -46,15 +46,20 @@ function M:create_buf_as_needed()
   end
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  self._bufnr = bufnr
+
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nowrite"
   vim.bo[bufnr].filetype = constant.FT_SEARCH_MAIN
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
-
   util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
-  self._bufnr = bufnr
+
+  vim.schedule(function()
+    vim.cmd("stopinsert")
+  end)
+
   return bufnr
 end
 

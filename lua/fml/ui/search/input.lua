@@ -101,10 +101,13 @@ function M:create_buf_as_needed()
   end
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  self._bufnr = bufnr
+
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = constant.FT_SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
+  util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local queued = false ---@type boolean
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
@@ -137,9 +140,6 @@ function M:create_buf_as_needed()
 
   local input = self._input:snapshot() ---@type string
   vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, { input })
-  util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
-
-  self._bufnr = bufnr
   vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
   return bufnr
 end
