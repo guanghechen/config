@@ -18,7 +18,7 @@ vim.api.nvim_create_autocmd({ "TabClosed" }, {
 
     local tabnr_last = state.tab_history:present() ---@type integer|nil
     vim.schedule(function()
-      if tabnr_last ~= nil then
+      if tabnr_last ~= nil and vim.api.nvim_tabpage_is_valid(tabnr_last) then
         vim.api.nvim_set_current_tabpage(tabnr_last)
       end
     end)
