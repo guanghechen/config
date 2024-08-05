@@ -19,8 +19,8 @@ function M.array(value)
     return true
   end
 
-  for key, val in pairs(table) do
-    if type(key) ~= "number" and type(val) ~= "function" then
+  for key in pairs(value) do
+    if type(key) ~= "number" then
       return false
     end
   end
