@@ -129,7 +129,7 @@ local state_search_cwd = fml.collection.Observable.from_value(session.get_search
 fml.fn.watch_observables({ session.search_scope }, function()
   local current_search_cwd = state_search_cwd:snapshot() ---@type string
   local dirpath = state_dirpath:snapshot() ---@type string
-  local next_search_cwd = session.get_find_scope_cwd(dirpath) ---@type string
+  local next_search_cwd = session.get_search_scope_cwd(dirpath) ---@type string
   if current_search_cwd ~= next_search_cwd then
     state_search_cwd:next(next_search_cwd)
     M.reload()
@@ -140,12 +140,12 @@ fml.fn.watch_observables({ session.search_flag_case_sensitive, session.search_fl
   M.reload()
 end, true)
 
----@param scope                         ghc.enums.context.FindScope
+---@param scope                         ghc.enums.context.SearchScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = session.find_scope:snapshot() ---@type ghc.enums.context.FindScope
+  local scope_current = session.search_scope:snapshot() ---@type ghc.enums.context.SearchScope
   if _search ~= nil and scope_current ~= scope then
-    session.find_scope:next(scope)
+    session.search_scope:next(scope)
   end
 end
 
@@ -162,6 +162,12 @@ local function get_search()
       change_scope_directory = function()
         change_scope("D")
       end,
+      toggle_regex = function()
+        session.search_flag_regex:next(not session.search_flag_regex:snapshot())
+      end,
+      toggle_case_sensitive = function()
+        session.search_flag_case_sensitive:next(not session.search_flag_case_sensitive:snapshot())
+      end,
     }
 
     ---@type fml.types.IKeymap[]
@@ -170,19 +176,31 @@ local function get_search()
         modes = { "n", "v" },
         key = "<leader>w",
         callback = actions.change_scope_workspace,
-        desc = "find: change scope (workspace)",
+        desc = "search: change scope (workspace)",
       },
       {
         modes = { "n", "v" },
         key = "<leader>c",
         callback = actions.change_scope_cwd,
-        desc = "find: change scope (cwd)",
+        desc = "search: change scope (cwd)",
       },
       {
         modes = { "n", "v" },
         key = "<leader>d",
         callback = actions.change_scope_directory,
-        desc = "find: change scope (directory)",
+        desc = "search: change scope (directory)",
+      },
+      {
+        modes = { "n", "v" },
+        key = "<leader>r",
+        callback = actions.toggle_regex,
+        desc = "search: toggle regex",
+      },
+      {
+        modes = { "n", "v" },
+        key = "<leader>i",
+        callback = actions.toggle_case_sensitive,
+        desc = "search: toggle case sensitive",
       },
     }
 
