@@ -1,66 +1,10 @@
-local constant = require("fml.constant")
-local History = require("fml.collection.history")
 local statusline = require("ghc.ui.statusline")
 local session = require("ghc.context.session")
+local state_history = require("ghc.state.history")
+local state_frecency = require("ghc.state.frecency")
 
 ---@class ghc.command.find_files
 local M = {}
-
----! load and autosave state.
----@return fml.types.collection.IFrecency
----@return fml.types.collection.IHistory
-local function load_and_autosave()
-  ---@class ghc.command.find_files.IState
-  ---@field frecency                      ?fml.types.collection.frecency.ISerializedData|nil
-  ---@field input_history                 ?fml.types.collection.history.ISerializedData|nil
-
-  ---@type fml.types.collection.IFrecency
-  local frecency = fml.collection.Frecency.new({
-    items = {},
-    normalize = function(key)
-      return fml.md5.sumhexa(key)
-    end,
-  })
-  ---@type fml.types.collection.IHistory
-  local input_history = History.new({
-    name = "find_files",
-    capacity = 100,
-    validate = fml.string.is_non_blank_string,
-  })
-
-  local filepath = fml.path.locate_session_filepath({ filename = "state.find_files.json" }) ---@type string
-  local state = fml.fs.read_json({ filepath = filepath, silent_on_bad_path = true, silent_on_bad_json = false })
-  if state ~= nil then
-    ---@cast state ghc.command.find_files.IState
-    frecency:load(state.frecency)
-    input_history:load(state.input_history)
-  end
-
-  fml.disposable:add_disposable(fml.collection.Disposable.new({
-    on_dispose = function()
-      local ok, data = pcall(function()
-        local data_frecency = frecency:dump() ---@type fml.types.collection.frecency.ISerializedData
-        local data_input_history = input_history:dump() ---@type fml.types.collection.history.ISerializedData
-        local stack = data_input_history.stack ---@type fml.types.T[]
-        if #stack > 0 then
-          local prefix = constant.EDITING_INPUT_PREFIX ---@type string
-          local top = stack[#stack] ---@type string
-          if #top > #prefix and string.sub(top, 1, #prefix) == prefix then
-            stack[#stack] = string.sub(top, #prefix + 1)
-          end
-        end
-        return { frecency = data_frecency, input_history = data_input_history } ---@type ghc.command.find_files.IState
-      end)
-      if ok then
-        fml.fs.write_json(filepath, data, false)
-      else
-        fml.fs.write_json(filepath, { error = data }, false)
-      end
-    end,
-  }))
-
-  return frecency, input_history
-end
 
 local _select = nil ---@type fml.types.ui.select.ISelect|nil
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
@@ -173,20 +117,19 @@ local function get_select()
     local find_cwd = session.get_find_scope_cwd(dirpath) ---@type string
     state_find_cwd:next(find_cwd)
 
-    ---@type fml.types.collection.IFrecency, fml.types.collection.IHistory
-    local frecency, input_history = load_and_autosave()
-
+    local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
+    local input_history = state_history.load_and_autosave().find_files ---@type fml.types.collection.IHistory
     _select = fml.ui.select.Select.new({
       title = "Find files",
       items = {},
       input = session.find_file_pattern,
       input_history = input_history,
       frecency = frecency,
-      width = 0.4,
-      height = 0.5,
       render_line = fml.ui.select.defaults.render_filepath,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
+      width = 0.4,
+      height = 0.5,
       on_close = function()
         statusline.disable(statusline.cnames.find_files)
       end,
@@ -213,11 +156,14 @@ end
 function M.reload()
   if _select ~= nil then
     local find_cwd = state_find_cwd:snapshot() ---@type string
+    local workspace = fml.path.workspace() ---@type string
     local exclude_pattern = session.find_exclude_pattern:snapshot() ---@type string[]
-    local paths = fml.oxi.collect_file_paths(find_cwd, exclude_pattern)
+    local filepaths = fml.oxi.collect_file_paths(find_cwd, exclude_pattern)
     local items = {} ---@type fml.types.ui.select.IItem[]
-    for _, path in ipairs(paths) do
-      local item = { uuid = path, display = path, lower = path:lower() } ---@type fml.types.ui.select.IItem
+    for _, filepath in ipairs(filepaths) do
+      local absolute_filepath = fml.path.resolve(find_cwd, filepath) ---@type string
+      local relative_filepath = fml.path.relative(workspace, absolute_filepath) ---@type string
+      local item = { uuid = relative_filepath, display = filepath, lower = filepath:lower() } ---@type fml.types.ui.select.IItem
       table.insert(items, item)
     end
     table.sort(items, function(a, b)

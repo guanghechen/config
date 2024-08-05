@@ -23,6 +23,12 @@ local context = {
   transient = require("ghc.context.transient"),
 }
 
+---@class ghc.state
+local state = {
+  frecency = require("ghc.state.frecency"),
+  history = require("ghc.state.history"),
+}
+
 ---@class ghc.ui
 local ui = {
   statusline = require("ghc.ui.statusline"),
@@ -34,10 +40,12 @@ local ui = {
 ---@class ghc
 ---@field public command                ghc.command
 ---@field public context                ghc.context
+---@field public state                  ghc.state
 ---@field public ui                     ghc.ui
 local ghc = {
   command = command,
   context = context,
+  state = state,
   ui = ui,
 }
 

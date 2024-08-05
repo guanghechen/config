@@ -1,56 +1,11 @@
-local constant = require("fml.constant")
-local History = require("fml.collection.history")
 local Observable = require("fml.collection.observable")
 local session = require("ghc.context.session")
 local statusline = require("ghc.ui.statusline")
+local state_history = require("ghc.state.history")
+local state_frecency = require("ghc.state.frecency")
 
 ---@class ghc.command.search_files
 local M = {}
-
----! load and autosave state.
----@return fml.types.collection.IHistory
-local function load_and_autosave()
-  ---@class ghc.command.search_files.IState
-  ---@field input_history                 ?fml.types.collection.history.ISerializedData|nil
-
-  ---@type fml.types.collection.IHistory
-  local input_history = History.new({
-    name = "search_files",
-    capacity = 100,
-    validate = fml.string.is_non_blank_string,
-  })
-
-  local filepath = fml.path.locate_session_filepath({ filename = "state.search_files.json" }) ---@type string
-  local state = fml.fs.read_json({ filepath = filepath, silent_on_bad_path = true, silent_on_bad_json = false })
-  if state ~= nil then
-    ---@cast state ghc.command.search_files.IState
-    input_history:load(state.input_history)
-  end
-
-  fml.disposable:add_disposable(fml.collection.Disposable.new({
-    on_dispose = function()
-      local ok, data = pcall(function()
-        local data_input_history = input_history:dump() ---@type fml.types.collection.history.ISerializedData
-        local stack = data_input_history.stack ---@type fml.types.T[]
-        if #stack > 0 then
-          local prefix = constant.EDITING_INPUT_PREFIX ---@type string
-          local top = stack[#stack] ---@type string
-          if #top > #prefix and string.sub(top, 1, #prefix) == prefix then
-            stack[#stack] = string.sub(top, #prefix + 1)
-          end
-        end
-        return { input_history = data_input_history } ---@type ghc.command.search_files.IState
-      end)
-      if ok then
-        fml.fs.write_json(filepath, data, false)
-      else
-        fml.fs.write_json(filepath, { error = data }, false)
-      end
-    end,
-  }))
-
-  return input_history
-end
 
 ---@class ghc.command.search_files.IItemData
 ---@field public filepath               string
@@ -234,9 +189,8 @@ local function get_search()
     ---@type fml.types.IKeymap[]
     local main_keymaps = vim.tbl_deep_extend("force", {}, input_keymaps)
 
-    ---@type fml.types.collection.IHistory
-    local input_history = load_and_autosave()
-
+    local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
+    local input_history = state_history.load_and_autosave().search_in_files ---@type fml.types.collection.IHistory
     _search = fml.ui.search.Search.new({
       title = "Search in files",
       input = Observable.from_value(""),
@@ -254,12 +208,15 @@ local function get_search()
         local winnr = fml.api.state.win_history:present() ---@type integer
         if winnr ~= nil then
           local cwd = session.search_cwd:snapshot() ---@type string
+          local workspace = fml.path.workspace() ---@type string
           local data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
           if data ~= nil then
-            local filepath = fml.path.join(cwd, data.filepath) ---@type string
-            vim.schedule(function()
-              fml.api.buf.open(winnr, filepath)
+            local absolute_filepath = fml.path.join(cwd, data.filepath) ---@type string
+            local relative_filepath = fml.path.relative(workspace, absolute_filepath) ---@type string
+            frecency:access(relative_filepath)
 
+            vim.schedule(function()
+              fml.api.buf.open(winnr, absolute_filepath)
               local lnum = data.lnum ---@type integer|nil
               local col = data.col ---@type integer|nil
               if lnum ~= nil and col ~= nil then
