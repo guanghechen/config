@@ -26,32 +26,6 @@ local MAIN_WIN_HIGHLIGHT = table.concat({
 
 local _search_current = nil ---@type fml.ui.search.Search|nil
 
--- Detect focus on the main window and move cursor back to input
-vim.api.nvim_create_autocmd("WinEnter", {
-  group = util.augroup("fml.ui.search:win_focus"),
-  callback = function()
-    if _search_current == nil then
-      return
-    end
-
-    local visible = _search_current.state.visible:snapshot() ---@type boolean
-    if not visible then
-      return
-    end
-
-    local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-    local winnr_main = _search_current:get_winnr_main() ---@type integer|nil
-    local winnr_input = _search_current:get_winnr_input() ---@type integer|nil
-    if winnr_cur == winnr_main then
-      vim.schedule(function()
-        if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-          vim.api.nvim_tabpage_set_win(0, winnr_input)
-        end
-      end)
-    end
-  end,
-})
-
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
 ---@field protected _winnr_input        integer|nil
 ---@field protected _winnr_main         integer|nil
@@ -167,6 +141,13 @@ function M.new(props)
         local lnum = vim.api.nvim_win_get_cursor(winnr_main)[1]
         state:locate(lnum)
         self:sync_main_cursor()
+
+        vim.defer_fn(function()
+          local winnr_input = self:get_winnr_input() ---@type integer|nil
+          if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+            vim.api.nvim_tabpage_set_win(0, winnr_input)
+          end
+        end, 500)
       end
     end,
     on_main_mouse_dbclick = function()
@@ -176,7 +157,15 @@ function M.new(props)
         local lnum = vim.api.nvim_win_get_cursor(winnr_main)[1]
         state:locate(lnum)
         self:sync_main_cursor()
+
+        ---! To disable the unexpected which-key popup (the double click will enter visual mode, then the which-key will popup).
+        vim.api.nvim_input("<Esc>")
         on_confirm()
+
+        ---! To disable the unexpected which-key popup (the double click will enter visual mode, then the which-key will popup).
+        vim.schedule(function()
+          vim.api.nvim_input("<Esc>")
+        end)
       end
     end,
   }

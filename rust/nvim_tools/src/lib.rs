@@ -25,6 +25,7 @@ fn nvim_tools() -> Dictionary {
             "normalize_comma_list",
             Object::from(Function::from_fn(oxi::list::normalize_comma_list)),
         ),
+        ("now", Object::from(Function::from_fn(oxi::time::now))),
         (
             "replace_entire_file",
             Object::from(Function::from_fn(oxi::replace::replace_entire_file)),

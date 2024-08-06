@@ -107,6 +107,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = constant.FT_SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
+
   util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local queued = false ---@type boolean
