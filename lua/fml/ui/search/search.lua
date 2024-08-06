@@ -35,6 +35,7 @@ local _search_current = nil ---@type fml.ui.search.Search|nil
 ---@field protected _max_height         number
 ---@field protected _width              number|nil
 ---@field protected _height             number|nil
+---@field protected _destroy_on_close   boolean
 ---@field protected _on_close_callback  ?fml.types.ui.search.IOnClose
 local M = {}
 M.__index = M
@@ -51,6 +52,7 @@ M.__index = M
 ---@field public max_height             ?number
 ---@field public width                  ?number
 ---@field public height                 ?number
+---@field public destroy_on_close       ?boolean
 ---@field public on_confirm             fml.types.ui.search.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
 
@@ -64,6 +66,7 @@ function M.new(props)
   local max_height = props.max_height or 0.8 ---@type number
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
+  local destroy_on_close = not not props.destroy_on_close ---@type boolean
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
 
@@ -230,6 +233,7 @@ function M.new(props)
   self._max_height = max_height
   self._width = width
   self._height = height
+  self._destroy_on_close = destroy_on_close
   self._on_close_callback = on_close_from_props
 
   state.dirty_main:subscribe(Subscriber.new({
@@ -384,16 +388,14 @@ function M:close()
     vim.api.nvim_win_close(winnr_main, true)
   end
 
+  if self._destroy_on_close then
+    self._input:destroy()
+    self._main:destroy()
+  end
+
   if self._on_close_callback ~= nil then
     self._on_close_callback()
   end
-end
-
----@return nil
-function M:destroy()
-  self:close()
-  self._input:destroy()
-  self._main:destroy()
 end
 
 ---@return nil
