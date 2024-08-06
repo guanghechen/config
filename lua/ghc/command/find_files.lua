@@ -1,7 +1,7 @@
 local statusline = require("ghc.ui.statusline")
 local session = require("ghc.context.session")
-local state_history = require("ghc.state.history")
 local state_frecency = require("ghc.state.frecency")
+local state_input_history = require("ghc.state.input_history")
 
 ---@class ghc.command.find_files
 local M = {}
@@ -118,7 +118,7 @@ local function get_select()
     state_find_cwd:next(find_cwd)
 
     local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
-    local input_history = state_history.load_and_autosave().find_files ---@type fml.types.collection.IHistory
+    local input_history = state_input_history.load_and_autosave().find_files ---@type fml.types.collection.IHistory
     _select = fml.ui.select.Select.new({
       title = "Find files",
       items = {},

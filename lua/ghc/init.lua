@@ -26,7 +26,7 @@ local context = {
 ---@class ghc.state
 local state = {
   frecency = require("ghc.state.frecency"),
-  history = require("ghc.state.history"),
+  input_history = require("ghc.state.input_history"),
 }
 
 ---@class ghc.ui

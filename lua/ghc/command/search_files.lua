@@ -1,8 +1,8 @@
 local Observable = require("fml.collection.observable")
 local session = require("ghc.context.session")
 local statusline = require("ghc.ui.statusline")
-local state_history = require("ghc.state.history")
 local state_frecency = require("ghc.state.frecency")
+local state_input_history = require("ghc.state.input_history")
 
 ---@class ghc.command.search_files
 local M = {}
@@ -284,7 +284,7 @@ local function get_search()
     local main_keymaps = vim.tbl_deep_extend("force", {}, input_keymaps)
 
     local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
-    local input_history = state_history.load_and_autosave().search_in_files ---@type fml.types.collection.IHistory
+    local input_history = state_input_history.load_and_autosave().search_in_files ---@type fml.types.collection.IHistory
     _search = fml.ui.search.Search.new({
       title = "Search in files",
       input = Observable.from_value(""),

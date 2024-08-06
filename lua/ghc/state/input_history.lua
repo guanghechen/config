@@ -1,21 +1,21 @@
 local constant = require("fml.constant")
 local History = require("fml.collection.history")
 
----@class ghc.state.history.IData
+---@class ghc.state.input_history.IData
 ---@field public find_files                  fml.types.collection.history.ISerializedData|nil
 ---@field public search_in_files             fml.types.collection.history.ISerializedData|nil
 
----@class ghc.state.history.IState
+---@class ghc.state.input_history.IState
 ---@field public find_files                  fml.types.collection.IHistory
 ---@field public search_in_files             fml.types.collection.IHistory
 
-local FILEPATH = fml.path.locate_session_filepath({ filename = "state.history.json" }) ---@type string
-local state = nil ---@type ghc.state.history.IState|nil
+local FILEPATH = fml.path.locate_session_filepath({ filename = "state.input_history.json" }) ---@type string
+local state = nil ---@type ghc.state.input_history.IState|nil
 
 ---@class ghc.state.files_history
 local M = {}
 
----@return ghc.state.history.IState
+---@return ghc.state.input_history.IState
 function M.load_and_autosave()
   if state == nil then
     state = {
@@ -43,7 +43,7 @@ function M.load_and_autosave()
 
     fml.disposable:add_disposable(fml.collection.Disposable.new({
       on_dispose = function()
-        ---@type boolean, ghc.state.history.IData
+        ---@type boolean, ghc.state.input_history.IData
         local ok, json_data = pcall(function()
           local serialized_data = {} ---@type table<string, fml.types.collection.history.ISerializedData>
           for key, value in pairs(state) do
