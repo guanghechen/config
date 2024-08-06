@@ -61,6 +61,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
 ---@field protected _max_height         number
 ---@field protected _width              number|nil
 ---@field protected _height             number|nil
+---@field protected _on_close_callback  ?fml.types.ui.search.IOnClose
 local M = {}
 M.__index = M
 
@@ -102,11 +103,6 @@ function M.new(props)
 
   ---@return nil
   local function on_close()
-    if on_close_from_props ~= nil then
-      on_close_from_props()
-    end
-    local winnr = api_state.get_current_tab_winnr() ---@type integer
-    vim.api.nvim_tabpage_set_win(0, winnr)
     self:close()
   end
 
@@ -245,6 +241,7 @@ function M.new(props)
   self._max_height = max_height
   self._width = width
   self._height = height
+  self._on_close_callback = on_close_from_props
 
   state.dirty_main:subscribe(Subscriber.new({
     on_next = vim.schedule_wrap(function()
@@ -380,19 +377,26 @@ end
 
 ---@return nil
 function M:close()
-  self.state.visible:next(false)
+  local winnr = api_state.get_current_tab_winnr() ---@type integer
+  vim.api.nvim_tabpage_set_win(0, winnr)
 
   local winnr_input = self._winnr_input ---@type integer|nil
   local winnr_main = self._winnr_main ---@type integer|nil
 
   self._winnr_input = nil
+  self._winnr_main = nil
+  self.state.visible:next(false)
+
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
     vim.api.nvim_win_close(winnr_input, true)
   end
 
-  self._winnr_main = nil
   if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
     vim.api.nvim_win_close(winnr_main, true)
+  end
+
+  if self._on_close_callback ~= nil then
+    self._on_close_callback()
   end
 end
 
