@@ -39,11 +39,13 @@
 ---@class fml.types.ui.search.IMain
 ---@field public state                  fml.types.ui.search.IState
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IMain): integer
+---@field public destroy                fun(self: fml.types.ui.search.IMain): nil
 ---@field public place_lnum_sign        fun(self: fml.types.ui.search.IMain): integer|nil
 ---@field public render                 fun(self: fml.types.ui.search.IMain, force?: boolean): nil
 
 ---@class fml.types.ui.search.IInput
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IInput): integer
+---@field public destroy                fun(self: fml.types.ui.search.IInput): nil
 ---@field public reset_input            fun(self: fml.types.ui.search.IInput, input?: string): nil
 
 ---@class fml.types.ui.search.ISearch
@@ -51,6 +53,7 @@
 ---@field public get_winnr_input        fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public close                  fun(self: fml.types.ui.search.ISearch): nil
+---@field public destroy                fun(self: fml.types.ui.search.ISearch): nil
 ---@field public focus                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public open                   fun(self: fml.types.ui.search.ISearch): nil
 ---@field public toggle                 fun(self: fml.types.ui.search.ISearch): nil

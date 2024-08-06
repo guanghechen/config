@@ -144,6 +144,16 @@ function M:create_buf_as_needed()
   return bufnr
 end
 
+---@return nil
+function M:destroy()
+  local bufnr = self._bufnr ---@type integer|nil
+  self._bufnr = nil
+
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+end
+
 ---@param input                         string|nil
 ---@return nil
 function M:reset_input(input)

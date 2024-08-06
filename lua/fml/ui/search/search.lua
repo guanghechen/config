@@ -401,6 +401,13 @@ function M:close()
 end
 
 ---@return nil
+function M:destroy()
+  self:close()
+  self._input:destroy()
+  self._main:destroy()
+end
+
+---@return nil
 function M:focus()
   local state = self.state ---@type fml.types.ui.search.IState
   local visible = state.visible:snapshot() ---@type boolean
