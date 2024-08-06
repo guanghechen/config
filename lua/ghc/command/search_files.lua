@@ -332,7 +332,7 @@ end
 ---@return nil
 function M.reload()
   if _search ~= nil then
-    _search.state:mark_items_dirty()
+    _search.state:mark_dirty()
   end
 end
 

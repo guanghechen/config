@@ -4,6 +4,12 @@
 ---@field public display                string
 ---@field public lower                  string
 
+---@alias fml.types.ui.select.preview.IFetchData
+---| fun(item: fml.types.ui.select.IItem): fml.ui.search.preview.IData
+
+---@alias fml.types.ui.select.preview.IPatchData
+---| fun(item: fml.types.ui.select.IItem, last_item: fml.types.ui.select.IItem, last_data: fml.ui.search.preview.IData|nil): fml.ui.search.preview.IData
+
 ---@class fml.types.ui.select.IFileItem
 ---@field public display                string
 ---@field public filename               ?string

@@ -1,4 +1,3 @@
-local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
@@ -30,12 +29,6 @@ function M.new(props)
   self._keymaps = keymaps
   self._rendering = false
   self._on_rendered = on_rendered
-
-  state.dirty_main:subscribe(Subscriber.new({
-    on_next = vim.schedule_wrap(function()
-      self:render(false)
-    end),
-  }))
   return self
 end
 
@@ -137,7 +130,6 @@ function M:render(force)
       vim.bo[bufnr].readonly = true
 
       self._on_rendered()
-
       self._rendering = false
       self:render()
     end)

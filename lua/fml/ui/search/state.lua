@@ -99,7 +99,7 @@ function M.new(props)
 
   ---@return nil
   local function mark_dirty()
-    self:mark_items_dirty()
+    self:mark_dirty()
   end
 
   input:subscribe(Subscriber.new({ on_next = mark_dirty }))
@@ -135,7 +135,7 @@ function M:locate(lnum)
 end
 
 ---@return nil
-function M:mark_items_dirty()
+function M:mark_dirty()
   self.dirty_items:next(true)
 end
 

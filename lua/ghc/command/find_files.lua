@@ -129,9 +129,24 @@ local function get_select()
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
       width = 0.4,
-      height = 0.5,
+      height = 0.8,
+      width_preview = 0.45,
+      max_height = 1,
+      max_width = 1,
       on_close = function()
         statusline.disable(statusline.cnames.find_files)
+      end,
+      fetch_preview_data = function(item)
+        local cwd = state_find_cwd:snapshot() ---@type string
+        local filepath = fml.path.join(cwd, item.display) ---@type string
+        local filename = fml.path.basename(filepath) ---@type string
+        local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
+        return {
+          title = item.display,
+          filetype = filetype,
+          lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }),
+          highlights = {},
+        }
       end,
       on_confirm = function(item)
         local winnr = fml.api.state.win_history:present() ---@type integer
@@ -163,7 +178,12 @@ function M.reload()
     for _, filepath in ipairs(filepaths) do
       local absolute_filepath = fml.path.resolve(find_cwd, filepath) ---@type string
       local relative_filepath = fml.path.relative(workspace, absolute_filepath) ---@type string
-      local item = { uuid = relative_filepath, display = filepath, lower = filepath:lower() } ---@type fml.types.ui.select.IItem
+      local item = {
+        group = nil,
+        uuid = relative_filepath,
+        display = filepath,
+        lower = filepath:lower(),
+      } ---@type fml.types.ui.select.IItem
       table.insert(items, item)
     end
     table.sort(items, function(a, b)

@@ -49,6 +49,33 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
+---@param params                        fml.std.fs.IReadFileParams
+---@return string[]
+function M.read_file_as_lines(params)
+  local filepath = params.filepath ---@type string
+  local silent = not not params.silent ---@type boolean
+  local file = io.open(filepath, "r")
+  if not file then
+    if not silent then
+      reporter.error({
+        from = "fml.std.fs",
+        subject = "read_file",
+        message = "Failed to open filepath.",
+        details = { filepath = filepath },
+      })
+    end
+    return {}
+  end
+
+  local lines = {}
+  for line in file:lines() do
+    table.insert(lines, line)
+  end
+
+  file:close()
+  return lines
+end
+
 ---@param params                        fml.std.fs.IReadJsonParams
 ---@return any|nil
 function M.read_json(params)

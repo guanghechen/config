@@ -1,4 +1,3 @@
-local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local api_state = require("fml.api.state")
 local watch_observables = require("fml.fn.watch_observables")
@@ -6,6 +5,7 @@ local std_array = require("fml.std.array")
 local util = require("fml.std.util")
 local SearchInput = require("fml.ui.search.input")
 local SearchMain = require("fml.ui.search.main")
+local SearchPreview = require("fml.ui.search.preview")
 local SearchState = require("fml.ui.search.state")
 
 ---@type string
@@ -25,17 +25,30 @@ local MAIN_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_main_normal",
 }, ",")
 
+local PREVIEW_WIN_HIGHLIGHT = table.concat({
+  "Cursor:f_us_preview_current",
+  "CursorColumn:f_us_preview_current",
+  "CursorLine:f_us_preview_current",
+  "CursorLineNr:f_us_preview_current",
+  "FloatBorder:f_us_preview_border",
+  "FloatTitle:f_us_preview_title",
+  "Normal:f_us_preview_normal",
+}, ",")
+
 local _search_current = nil ---@type fml.ui.search.Search|nil
 
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
 ---@field protected _winnr_input        integer|nil
 ---@field protected _winnr_main         integer|nil
+---@field protected _winnr_preview      integer|nil
 ---@field protected _input              fml.types.ui.search.IInput
 ---@field protected _main               fml.types.ui.search.IMain
+---@field protected _preview            fml.types.ui.search.IPreview|nil
 ---@field protected _max_width          number
 ---@field protected _max_height         number
 ---@field protected _width              number|nil
 ---@field protected _height             number|nil
+---@field protected _width_preview      number|nil
 ---@field protected _destroy_on_close   boolean
 ---@field protected _on_close_callback  ?fml.types.ui.search.IOnClose
 local M = {}
@@ -47,15 +60,20 @@ M.__index = M
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public fetch_items            fml.types.ui.search.IFetchItems
 ---@field public fetch_delay            ?integer
+---@field public fetch_preview_data     ?fml.types.ui.search.preview.IFetchData
+---@field public patch_preview_data     ?fml.types.ui.search.preview.IPatchData
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
+---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public max_width              ?number
 ---@field public max_height             ?number
 ---@field public width                  ?number
 ---@field public height                 ?number
+---@field public width_preview          ?number
 ---@field public destroy_on_close       ?boolean
 ---@field public on_confirm             fml.types.ui.search.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
+---@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
 
 ---@param props                         fml.types.ui.search.IProps
 ---@return fml.ui.search.Search
@@ -67,6 +85,7 @@ function M.new(props)
   local max_height = props.max_height or 0.8 ---@type number
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
+  local width_preview = props.width_preview ---@type number|nil
   local destroy_on_close = not not props.destroy_on_close ---@type boolean
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
@@ -210,6 +229,12 @@ function M.new(props)
     { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
   }, props.main_keymaps or {})
 
+  ---@type fml.types.IKeymap[]
+  local preview_keymaps = std_array.concat({
+    { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
+    { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
+  }, props.preview_keymaps or {})
+
   ---@type fml.types.ui.search.IInput
   local input = SearchInput.new({
     uuid = state.uuid,
@@ -225,15 +250,32 @@ function M.new(props)
     on_rendered = on_main_renderered,
   })
 
+  ---@type fml.types.ui.search.IPreview|nil
+  local preview = nil
+  if props.fetch_preview_data then
+    preview = SearchPreview.new({
+      state = state,
+      keymaps = preview_keymaps,
+      fetch_data = props.fetch_preview_data,
+      patch_data = props.patch_preview_data,
+      on_rendered = props.on_preview_rendered,
+      get_winnr = function()
+        return self:get_winnr_preview()
+      end,
+    })
+  end
+
   self.state = state
   self._winnr_input = nil
   self._winnr_main = nil
   self._input = input
   self._main = main
+  self._preview = preview
   self._max_width = max_width
   self._max_height = max_height
   self._width = width
   self._height = height
+  self._width_preview = width_preview
   self._destroy_on_close = destroy_on_close
   self._on_close_callback = on_close_from_props
 
@@ -277,13 +319,20 @@ function M:create_wins_as_needed()
   end
   width = math.min(max_width, math.max(10, width)) ---@type integer
 
+  local width_preview = self._width_preview or width ---@type integer
+  if width_preview < 1 then
+    width_preview = math.floor(vim.o.columns * width_preview)
+  end
+  width_preview = self._preview and math.min(max_width - width, math.max(10, width_preview)) or 0
+
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
-  local col = math.floor((vim.o.columns - width) / 2) ---@type integer
+  local col = math.floor((vim.o.columns - width - width_preview) / 2) ---@type integer
   local winnr_input = self._winnr_input ---@type integer|nil
   local winnr_main = self._winnr_main ---@type integer|nil
+  local winnr_preview = self._winnr_preview ---@type integer|nil
 
   local match_count = #state.items ---@type integer
-  if match_count > 0 then
+  if match_count > 0 or self._preview ~= nil then
     ---@type vim.api.keyset.win_config
     local wincfg_main = {
       relative = "editor",
@@ -318,8 +367,40 @@ function M:create_wins_as_needed()
     end
   end
 
+  if self._preview then
+    ---@type vim.api.keyset.win_config
+    local wincfg_preview = {
+      relative = "editor",
+      anchor = "NW",
+      height = height,
+      width = width_preview,
+      row = row,
+      col = col + width,
+      focusable = true,
+      title = " preview ",
+      title_pos = "center",
+      border = "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+      style = "minimal",
+    }
+
+    local bufnr_preview = self._preview:create_buf_as_needed() ---@type integer
+    if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
+      vim.api.nvim_win_set_config(winnr_preview, wincfg_preview)
+      vim.api.nvim_win_set_buf(winnr_preview, bufnr_preview)
+    else
+      winnr_preview = vim.api.nvim_open_win(bufnr_preview, true, wincfg_preview)
+      self._winnr_preview = winnr_preview
+    end
+
+    vim.wo[winnr_preview].cursorline = true
+    vim.wo[winnr_preview].number = true
+    vim.wo[winnr_preview].relativenumber = true
+    vim.wo[winnr_preview].signcolumn = "yes"
+    vim.wo[winnr_preview].winhighlight = PREVIEW_WIN_HIGHLIGHT
+  end
+
   ---@type vim.api.keyset.win_config
-  local wincfg_config = {
+  local wincfg_input = {
     relative = "editor",
     anchor = "NW",
     height = 1,
@@ -333,10 +414,10 @@ function M:create_wins_as_needed()
     style = "minimal",
   }
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-    vim.api.nvim_win_set_config(winnr_input, wincfg_config)
+    vim.api.nvim_win_set_config(winnr_input, wincfg_input)
     vim.api.nvim_win_set_buf(winnr_input, bufnr_input)
   else
-    winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_config)
+    winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_input)
     self._winnr_input = winnr_input
   end
   vim.wo[winnr_input].number = false
@@ -358,6 +439,11 @@ function M:get_winnr_input()
   return self._winnr_input
 end
 
+---@return integer|nil
+function M:get_winnr_preview()
+  return self._winnr_preview
+end
+
 ---@param force                         ?boolean
 ---@return nil
 function M:draw(force)
@@ -366,6 +452,10 @@ function M:draw(force)
   if visible then
     self:create_wins_as_needed()
     self._main:render(force)
+
+    if self._preview ~= nil then
+      self._preview:render(force)
+    end
   end
 end
 
@@ -376,9 +466,11 @@ function M:close()
 
   local winnr_input = self._winnr_input ---@type integer|nil
   local winnr_main = self._winnr_main ---@type integer|nil
+  local winnr_preview = self._winnr_preview ---@type integer|nil
 
   self._winnr_input = nil
   self._winnr_main = nil
+  self._winnr_preview = nil
   self.state.visible:next(false)
 
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
@@ -389,9 +481,17 @@ function M:close()
     vim.api.nvim_win_close(winnr_main, true)
   end
 
+  if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
+    vim.api.nvim_win_close(winnr_preview, true)
+  end
+
   if self._destroy_on_close then
     self._input:destroy()
     self._main:destroy()
+
+    if self._preview ~= nil then
+      self._preview:destroy()
+    end
   end
 
   if self._on_close_callback ~= nil then

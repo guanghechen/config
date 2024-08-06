@@ -7,6 +7,15 @@
 ---@alias fml.types.ui.search.main.IOnRendered
 ---| fun(): nil
 
+---@alias fml.types.ui.search.preview.IOnRendered
+---| fun(): nil
+
+---@alias fml.types.ui.search.preview.IFetchData
+---| fun(item: fml.types.ui.search.IItem): fml.ui.search.preview.IData
+
+---@alias fml.types.ui.search.preview.IPatchData
+---| fun(item: fml.types.ui.search.IItem, last_item: fml.types.ui.search.IItem, last_data: fml.ui.search.preview.IData|nil): fml.ui.search.preview.IData
+
 ---@alias fml.types.ui.search.IFetchItemsCallback
 ---| fun(ok: true, items: fml.types.ui.search.IItem[]|nil): nil
 ---| fun(ok: false, error: string|nil): nil
@@ -20,8 +29,9 @@
 ---@field public text                   string
 ---@field public highlights             fml.types.ui.printer.ILineHighlight[]
 
----@class fml.ui.search.preview.IRenderData
+---@class fml.ui.search.preview.IData
 ---@field public filetype               string
+---@field public title                  string
 ---@field public lines                  string[]
 ---@field public highlights             table<integer, fml.types.ui.printer.ILineHighlight[]>
 
@@ -38,7 +48,7 @@
 ---@field public max_width              integer
 ---@field public get_current            fun(self: fml.types.ui.search.IState): fml.types.ui.search.IItem|nil, integer
 ---@field public locate                 fun(self: fml.types.ui.search.IState): integer
----@field public mark_items_dirty       fun(self: fml.types.ui.search.IState): nil
+---@field public mark_dirty             fun(self: fml.types.ui.search.IState): nil
 ---@field public moveup                 fun(self: fml.types.ui.search.IState): integer
 ---@field public movedown               fun(self: fml.types.ui.search.IState): integer
 
@@ -57,14 +67,14 @@
 ---@class fml.types.ui.search.IPreview
 ---@field public state                  fml.types.ui.search.IState
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IPreview): integer
----@field public destroy                fun(self: fml.types.ui.search.IMain): nil
----@field public render                 fun(self: fml.types.ui.search.IMain, force?: boolean): nil
----@field public update                 fun(self: fml.types.ui.search.IMain, force?: boolean): nil
+---@field public destroy                fun(self: fml.types.ui.search.IPreview): nil
+---@field public render                 fun(self: fml.types.ui.search.IPreview, force?: boolean): nil
 
 ---@class fml.types.ui.search.ISearch
 ---@field public state                  fml.types.ui.search.IState
 ---@field public get_winnr_input        fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.search.ISearch): integer|nil
+---@field public get_winnr_preview      fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public close                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public focus                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public open                   fun(self: fml.types.ui.search.ISearch): nil

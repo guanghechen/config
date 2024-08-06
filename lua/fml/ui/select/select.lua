@@ -43,12 +43,18 @@ M.__index = M
 ---@field public render_line            ?fml.types.ui.select.main.IRenderLine
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
+---@field public preview_keymaps        ?fml.types.IKeymap[]
+---@field public fetch_preview_data     ?fml.types.ui.select.preview.IFetchData
+---@field public patch_preview_data     ?fml.types.ui.select.preview.IPatchData
 ---@field public max_width              ?number
 ---@field public max_height             ?number
 ---@field public width                  ?number
 ---@field public height                 ?number
+---@field public width_preview          ?number
+---@field public destroy_on_close       ?boolean
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.select.IOnClose
+---@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
 
 ---@param props                         fml.types.ui.select.IProps
 ---@return fml.ui.select.Select
@@ -65,14 +71,42 @@ function M.new(props)
   local render_line = props.render_line or defaults.render_line ---@type fml.types.ui.select.main.IRenderLine
   local input_keymaps = props.input_keymaps or {} ---@type fml.types.IKeymap[]
   local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
+  local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
+  local fetch_preview_data_from_props = props.fetch_preview_data ---@type fml.types.ui.select.preview.IFetchData|nil
+  local patch_preview_data_from_props = props.patch_preview_data ---@type fml.types.ui.select.preview.IPatchData|nil
   local max_width = props.max_width or 0.8 ---@type number
   local max_height = props.max_height or 0.8 ---@type number
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
+  local width_preview = props.width_preview ---@type number|nil
+  local destroy_on_close = props.destroy_on_close ---@type boolean|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
+  local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.preview.IOnRendered|nil
 
   local item_map, full_matches = process_items(cmp, frecency, items)
+
+  ---@type fml.types.ui.search.preview.IFetchData|nil
+  local fetch_preview_data = nil
+  if fetch_preview_data_from_props ~= nil then
+    fetch_preview_data = function(item)
+      ---@diagnostic disable-next-line: invisible
+      local select_item = self._item_map[item.uuid] ---@type fml.types.ui.select.IItem
+      return fetch_preview_data_from_props(select_item)
+    end
+  end
+
+  ---@type fml.types.ui.search.preview.IPatchData|nil
+  local patch_preview_data = nil
+  if patch_preview_data_from_props ~= nil then
+    patch_preview_data = function(item, last_item, data)
+      ---@diagnostic disable-next-line: invisible
+      local select_item = self._item_map[item.uuid] ---@type fml.types.ui.select.IItem
+      ---@diagnostic disable-next-line: invisible
+      local last_select_item = self._item_map[last_item.uuid] ---@type fml.types.ui.select.IItem
+      return patch_preview_data_from_props(select_item, last_select_item, data)
+    end
+  end
 
   ---@param input_text                  string
   ---@param callback                    fml.types.ui.search.IFetchItemsCallback
@@ -105,12 +139,18 @@ function M.new(props)
     input_history = input_history,
     input_keymaps = input_keymaps,
     main_keymaps = main_keymaps,
+    preview_keymaps = preview_keymaps,
+    fetch_preview_data = fetch_preview_data,
+    patch_preview_data = patch_preview_data,
     max_width = max_width,
     max_height = max_height,
     width = width,
     height = height,
+    width_preview = width_preview,
+    destroy_on_close = destroy_on_close,
     on_confirm = on_confirm,
     on_close = on_close_from_props,
+    on_preview_rendered = on_preview_rendered,
   })
 
   self.state = search.state
@@ -197,7 +237,7 @@ function M:update_items(items)
   self._item_map = item_map
   self._full_matches = full_matches
   self._matches = full_matches
-  self._search.state:mark_items_dirty()
+  self._search.state:mark_dirty()
 end
 
 ---@return integer|nil
