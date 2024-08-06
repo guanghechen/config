@@ -29,6 +29,7 @@ function M.new(props)
   local visible = Observable.from_value(false)
   local dirty_items = Observable.from_value(true)
   local dirty_main = Observable.from_value(true)
+  local dirty_preview = Observable.from_value(true)
 
   self.uuid = uuid
   self.title = title
@@ -37,6 +38,7 @@ function M.new(props)
   self.visible = visible
   self.dirty_items = dirty_items
   self.dirty_main = dirty_main
+  self.dirty_preview = dirty_preview
   self.items = {} ---@type fml.types.ui.search.IItem[]
   self.max_width = 0 ---@type integer
   self._item_lnum_cur = 1 ---@type integer
@@ -76,6 +78,7 @@ function M.new(props)
         self.max_width = max_width
         self:locate(item_lnum_next)
         dirty_main:next(true)
+        dirty_preview:next(true)
       else
         reporter.error({
           from = "fml.ui.search.state",
@@ -110,6 +113,7 @@ end
 function M:dispose()
   self.dirty_items:dispose()
   self.dirty_main:dispose()
+  self.dirty_preview:dispose()
   self.visible:dispose()
 end
 

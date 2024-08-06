@@ -1,6 +1,7 @@
 local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local api_state = require("fml.api.state")
+local watch_observables = require("fml.fn.watch_observables")
 local std_array = require("fml.std.array")
 local util = require("fml.std.util")
 local SearchInput = require("fml.ui.search.input")
@@ -236,11 +237,11 @@ function M.new(props)
   self._destroy_on_close = destroy_on_close
   self._on_close_callback = on_close_from_props
 
-  state.dirty_main:subscribe(Subscriber.new({
-    on_next = vim.schedule_wrap(function()
+  watch_observables({ state.dirty_main, state.dirty_preview }, function()
+    vim.schedule(function()
       self:draw()
-    end),
-  }))
+    end)
+  end, true)
 
   return self
 end
