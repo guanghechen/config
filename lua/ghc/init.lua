@@ -12,6 +12,7 @@ local command = {
   search_files = require("ghc.command.search_files"),
   run = require("ghc.command.run"),
   session = require("ghc.command.session"),
+  scroll = require("ghc.command.scroll"),
   term = require("ghc.command.term"),
   toggle = require("ghc.command.toggle"),
 }
