@@ -8,7 +8,9 @@ local function get_text()
   local client_names = {} ---@type string[]
   for _, client in ipairs(vim.lsp.get_clients()) do
     if client.attached_buffers[bufnr] and client.name ~= "null-ls" then
-      table.insert(client_names, client.name)
+      if client.name ~= "copilot" then
+        table.insert(client_names, client.name)
+      end
     end
   end
 
