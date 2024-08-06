@@ -19,7 +19,7 @@ function M.swap_left(step)
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
 
   if bufid_cur ~= nil then
-    local bufid_next = navigate.limit(bufid_cur, -step, #tab.bufnrs)
+    local bufid_next = navigate.circular(bufid_cur, -step, #tab.bufnrs)
     if bufid_cur ~= bufid_next then
       local bufnr_next = tab.bufnrs[bufid_next]
       tab.bufnrs[bufid_next] = bufnr_cur
@@ -43,7 +43,7 @@ function M.swap_right(step)
   local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
 
   if bufid_cur ~= nil then
-    local bufid_next = navigate.limit(bufid_cur, step, #tab.bufnrs)
+    local bufid_next = navigate.circular(bufid_cur, step, #tab.bufnrs)
     if bufid_cur ~= bufid_next then
       local bufnr_next = tab.bufnrs[bufid_next]
       tab.bufnrs[bufid_next] = bufnr_cur
