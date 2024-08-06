@@ -216,6 +216,11 @@ function M:close()
 end
 
 ---@return nil
+function M:focus()
+  self._search:focus()
+end
+
+---@return nil
 function M:open()
   self._search:open()
 end

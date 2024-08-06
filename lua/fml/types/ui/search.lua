@@ -51,5 +51,6 @@
 ---@field public get_winnr_input        fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public close                  fun(self: fml.types.ui.search.ISearch): nil
+---@field public focus                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public open                   fun(self: fml.types.ui.search.ISearch): nil
 ---@field public toggle                 fun(self: fml.types.ui.search.ISearch): nil

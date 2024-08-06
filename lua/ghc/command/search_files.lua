@@ -337,11 +337,11 @@ function M.reload()
 end
 
 ---@return nil
-function M.open()
+function M.focus()
   state_dirpath:next(vim.fn.expand("%:p:h"))
   local search = get_search() ---@type fml.types.ui.search.ISearch
   statusline.enable(statusline.cnames.search_files)
-  search:open()
+  search:focus()
 end
 
 return M

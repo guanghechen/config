@@ -45,5 +45,6 @@
 ---@field public get_winnr_main         fun(self: fml.types.ui.select.ISelect): integer|nil
 ---@field public update_items           fun(self: fml.types.ui.select.ISelect, items: fml.types.ui.select.IItem[]): integer|nil
 ---@field public close                  fun(self: fml.types.ui.select.ISelect): nil
+---@field public focus                  fun(self: fml.types.ui.select.ISelect): nil
 ---@field public open                   fun(self: fml.types.ui.select.ISelect): nil
 ---@field public toggle                 fun(self: fml.types.ui.select.ISelect): nil

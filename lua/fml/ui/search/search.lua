@@ -24,6 +24,34 @@ local MAIN_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_main_normal",
 }, ",")
 
+local _search_current = nil ---@type fml.ui.search.Search|nil
+
+-- Detect focus on the main window and move cursor back to input
+vim.api.nvim_create_autocmd("WinEnter", {
+  group = util.augroup("fml.ui.search:win_focus"),
+  callback = function()
+    if _search_current == nil then
+      return
+    end
+
+    local visible = _search_current.state.visible:snapshot() ---@type boolean
+    if not visible then
+      return
+    end
+
+    local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+    local winnr_main = _search_current:get_winnr_main() ---@type integer|nil
+    local winnr_input = _search_current:get_winnr_input() ---@type integer|nil
+    if winnr_cur == winnr_main then
+      vim.schedule(function()
+        if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+          vim.api.nvim_tabpage_set_win(0, winnr_input)
+        end
+      end)
+    end
+  end,
+})
+
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
 ---@field protected _winnr_input        integer|nil
 ---@field protected _winnr_main         integer|nil
@@ -114,19 +142,6 @@ function M.new(props)
     on_close = function()
       on_close()
     end,
-    on_esc = function()
-      local winnr_cur = vim.api.nvim_tabpage_get_win(0) ---@type integer
-      local winnr_main = self:get_winnr_main() ---@type integer|nil
-      if winnr_cur == winnr_main then
-        local winnr_input = self:get_winnr_input() ---@type integer|nil
-        if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-          vim.api.nvim_tabpage_set_win(0, winnr_input)
-          vim.schedule(function()
-            vim.cmd("stopinsert")
-          end)
-        end
-      end
-    end,
     noop = util.noop,
     on_main_G = function()
       state:locate(math.huge)
@@ -197,7 +212,6 @@ function M.new(props)
       nowait = true,
       desc = "search: confirm",
     },
-    { modes = { "i", "n", "v" }, key = "<esc>", callback = actions.on_esc, desc = "search: esc" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
@@ -366,7 +380,7 @@ end
 
 ---@return nil
 function M:close()
-  self._visible = false
+  self.state.visible:next(false)
 
   local winnr_input = self._winnr_input ---@type integer|nil
   local winnr_main = self._winnr_main ---@type integer|nil
@@ -383,7 +397,43 @@ function M:close()
 end
 
 ---@return nil
+function M:focus()
+  local state = self.state ---@type fml.types.ui.search.IState
+  local visible = state.visible:snapshot() ---@type boolean
+
+  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+  local winnr_main = self:get_winnr_main() ---@type integer|nil
+  local winnr_input = self:get_winnr_input() ---@type integer|nil
+
+  if
+    not visible
+    or winnr_main == nil
+    or winnr_input == nil
+    or not vim.api.nvim_win_is_valid(winnr_main)
+    or not vim.api.nvim_win_is_valid(winnr_input)
+  then
+    self:open()
+    return
+  end
+
+  if winnr_cur ~= winnr_main and winnr_cur ~= winnr_input then
+    vim.schedule(function()
+      if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+        vim.api.nvim_tabpage_set_win(0, winnr_input)
+      end
+    end)
+  end
+end
+
+---@return nil
 function M:open()
+  if _search_current ~= self then
+    if _search_current ~= nil then
+      _search_current:close()
+    end
+    _search_current = self
+  end
+
   local state = self.state ---@type fml.types.ui.search.IState
   state.visible:next(true)
   self._input:reset_input()

@@ -174,11 +174,11 @@ function M.reload()
 end
 
 ---@return nil
-function M.open()
+function M.focus()
   state_dirpath:next(vim.fn.expand("%:p:h"))
   local select = get_select() ---@type fml.types.ui.select.ISelect
   statusline.enable(statusline.cnames.find_files)
-  select:open()
+  select:focus()
 end
 
 return M
