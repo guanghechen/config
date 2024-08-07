@@ -87,13 +87,13 @@ local function fetch_items(input_text, callback)
           end
 
           local lnum = lnum0 + k - 1 ---@type integer
-          local col_start = l - offset ---@type integer
+          local col = l - offset ---@type integer
           local col_end = math.min(lwidth - 1, r - offset) ---@type integer
-          local text_prefix = "  " .. lnum .. ":" .. col_start .. " " ---@type string
+          local text_prefix = "  " .. lnum .. ":" .. col .. " " ---@type string
           local text = text_prefix .. lines[k] ---@type string
 
           local offset_prefix = string.len(text_prefix) ---@type integer
-          local offset_start = offset_prefix + col_start ---@type integer
+          local offset_start = offset_prefix + col ---@type integer
           local offset_end = offset_prefix + col_end ---@type integer
 
           ---@type fml.types.ui.printer.ILineHighlight[]
@@ -116,7 +116,7 @@ local function fetch_items(input_text, callback)
             filepath = filepath,
             filematch = file_match,
             lnum = lnum,
-            col = col_start,
+            col = col,
           }
         end
       end
@@ -126,7 +126,7 @@ local function fetch_items(input_text, callback)
   callback(true, items)
 end
 
----@param item ghc.command.search_files.IItemData
+---@param item                          ghc.command.search_files.IItemData
 ---@return table<integer, fml.types.ui.printer.ILineHighlight[]>
 local function calc_search_highlights(item)
   local file_match = item.filematch ---@type fml.std.oxi.search.IFileMatch
@@ -151,17 +151,17 @@ local function calc_search_highlights(item)
         end
 
         local lnum = lnum0 + k - 1 ---@type integer
-        local col_start = l - offset ---@type integer
+        local col = l - offset ---@type integer
         local col_end = math.min(lwidth - 1, r - offset) ---@type integer
 
         if hlname == nil then
-          hlname = (lnum == item.lnum and col_start == item.col) and "f_us_match_cur" or "f_us_match"
+          hlname = (item.lnum == lnum and item.col == col) and "f_us_match_cur" or "f_us_match"
         end
 
         local hls = highlights[lnum] or {} ---@type fml.types.ui.printer.ILineHighlight[]
         highlights[lnum] = hls
 
-        table.insert(hls, { cstart = col_start, cend = col_end, hlname = hlname })
+        table.insert(hls, { cstart = col, cend = col_end, hlname = hlname })
 
         l = offset + lwidth ---@type integer
       end
@@ -405,10 +405,13 @@ local function get_search()
         local lnum = item_data ~= nil and item_data.lnum or nil ---@type integer|nil
         local col = item_data ~= nil and item_data.col or nil ---@type integer|nil
 
+        ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>|nil
+        local highlights = item_data and calc_search_highlights(item_data) or nil
+
         ---@type fml.ui.search.preview.IData
         local data = {
           lines = last_data.lines,
-          highlights = last_data.highlights,
+          highlights = highlights or last_data.highlights,
           filetype = last_data.filetype,
           show_numbers = last_data.show_numbers,
           title = last_data.title,

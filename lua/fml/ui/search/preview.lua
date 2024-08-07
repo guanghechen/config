@@ -116,46 +116,54 @@ function M:render(force)
         local data = self:fetch_data(item) ---@type fml.ui.search.preview.IData|nil
         local bufnr = self:create_buf_as_needed() ---@type integer
 
+        self._last_item = item
+        self._last_data = data
+
         ---@type boolean
-        local has_changed = data == nil
+        local has_content_changed = data == nil or last_data == nil or data.lines ~= last_data.lines
+
+        ---@type boolean
+        local has_highlights_changed = has_content_changed
+          or data == nil
           or last_data == nil
           or data.filetype ~= last_data.filetype
-          or data.lines ~= last_data.lines
           or data.highlights ~= last_data.highlights
 
-        if has_changed then
+        if has_content_changed then
           vim.bo[bufnr].modifiable = true
           vim.bo[bufnr].readonly = false
 
           vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, {})
 
           if data ~= nil then
-            self._last_data = data
-
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, data.lines)
-
-            local filetype = data and data.filetype or nil ---@type string|nil
-            if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-              local lang = vim.treesitter.language.get_lang(filetype) or filetype
-              if lang then
-                local has_ts_parser = pcall(vim.treesitter.language.add, lang)
-                if has_ts_parser then
-                  vim.treesitter.start(bufnr, lang)
-                end
-              end
-            end
-
-            for lnum, highlights in pairs(data.highlights) do
-              for _, hl in ipairs(highlights) do
-                if hl.hlname ~= nil then
-                  vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.cstart, hl.cend)
-                end
-              end
-            end
           end
 
           vim.bo[bufnr].modifiable = false
           vim.bo[bufnr].readonly = true
+        end
+
+        if has_highlights_changed and data ~= nil then
+          vim.api.nvim_buf_clear_namespace(bufnr, 0, 0, -1)
+
+          local filetype = data and data.filetype or nil ---@type string|nil
+          if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+            local lang = vim.treesitter.language.get_lang(filetype) or filetype
+            if lang then
+              local has_ts_parser = pcall(vim.treesitter.language.add, lang)
+              if has_ts_parser then
+                vim.treesitter.start(bufnr, lang)
+              end
+            end
+          end
+
+          for lnum, highlights in pairs(data.highlights) do
+            for _, hl in ipairs(highlights) do
+              if hl.hlname ~= nil then
+                vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.cstart, hl.cend)
+              end
+            end
+          end
         end
 
         local title = data and data.title or "preview" ---@type string

@@ -7,9 +7,18 @@ local M = {}
 
 ---@generic T
 ---@param arr                           T[]
----@param element                       T
+---@param element                       T|fun(v: T, i: integer, arr: T[]): boolean
 ---@return boolean
 function M.contains(arr, element)
+  if type(element) == "function" then
+    for i = 1, #arr, 1 do
+      if element(arr[i], i, arr) then
+        return true
+      end
+    end
+    return false
+  end
+
   for i = 1, #arr, 1 do
     if arr[i] == element then
       return true
