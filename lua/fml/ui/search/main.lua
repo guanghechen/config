@@ -71,10 +71,10 @@ end
 function M:place_lnum_sign()
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local _, lnum = self.state:get_current()
+    vim.fn.sign_unplace("", { buffer = bufnr, id = bufnr })
+    local _, lnum, uuid = self.state:get_current()
     local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-    if lnum <= linecount then
-      vim.fn.sign_unplace("*", { buffer = bufnr })
+    if uuid ~= nil and linecount > 0 and lnum > 0 and lnum <= linecount then
       vim.fn.sign_place(bufnr, "", signcolumn.names.search_main_current, bufnr, { lnum = lnum })
       return lnum
     end

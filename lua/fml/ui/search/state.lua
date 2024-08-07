@@ -119,9 +119,11 @@ end
 
 ---@return fml.types.ui.search.IItem|nil
 ---@return integer
+---@return string|nil
 function M:get_current()
   local lnum = self._item_lnum_cur ---@type integer
-  return self.items[lnum], lnum
+  local uuid = self._item_uuid_cur ---@type string|nil
+  return self.items[lnum], lnum, uuid
 end
 
 ---@param lnum                          integer

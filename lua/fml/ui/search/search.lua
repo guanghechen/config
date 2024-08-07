@@ -274,10 +274,16 @@ function M.new(props)
           local win_conf_cur = vim.api.nvim_win_get_config(winnr)
           win_conf_cur.title = " " .. new_title .. " "
           vim.api.nvim_win_set_config(winnr, win_conf_cur)
-          vim.wo[winnr].number = show_numbers
 
-          if lnum ~= nil and col ~= nil then
-            vim.api.nvim_win_set_cursor(winnr, { lnum, col })
+          local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+          local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+          if linecount > 0 then
+            vim.wo[winnr].number = show_numbers
+            if lnum ~= nil and col ~= nil then
+              vim.api.nvim_win_set_cursor(winnr, { lnum, col })
+            end
+          else
+            vim.wo[winnr].number = false
           end
         end
       end,
@@ -386,6 +392,8 @@ function M:create_wins_as_needed()
     vim.wo[winnr_main].signcolumn = "yes"
     vim.wo[winnr_main].winhighlight = MAIN_WIN_HIGHLIGHT
     vim.wo[winnr_main].wrap = false
+    vim.wo[winnr_main].cursorline = match_count > 0
+
     self:sync_main_cursor()
   else
     self._winnr_main = nil
@@ -420,11 +428,12 @@ function M:create_wins_as_needed()
     end
 
     vim.wo[winnr_preview].cursorline = true
-    vim.wo[winnr_preview].number = true
+    vim.wo[winnr_preview].number = false
     vim.wo[winnr_preview].relativenumber = false
     vim.wo[winnr_preview].signcolumn = "yes:1"
     vim.wo[winnr_preview].winhighlight = PREVIEW_WIN_HIGHLIGHT
     vim.wo[winnr_preview].wrap = false
+    vim.wo[winnr_preview].cursorline = match_count > 0
   end
 
   ---@type vim.api.keyset.win_config

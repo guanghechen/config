@@ -55,7 +55,7 @@
 ---@field public dirty_main             fml.types.collection.IObservable
 ---@field public dirty_preview          fml.types.collection.IObservable
 ---@field public max_width              integer
----@field public get_current            fun(self: fml.types.ui.search.IState): fml.types.ui.search.IItem|nil, integer
+---@field public get_current            fun(self: fml.types.ui.search.IState): fml.types.ui.search.IItem|nil, integer, string|nil
 ---@field public locate                 fun(self: fml.types.ui.search.IState): integer
 ---@field public mark_dirty             fun(self: fml.types.ui.search.IState): nil
 ---@field public moveup                 fun(self: fml.types.ui.search.IState): integer
