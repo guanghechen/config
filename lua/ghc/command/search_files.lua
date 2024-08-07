@@ -126,9 +126,10 @@ local function fetch_items(input_text, callback)
   callback(true, items)
 end
 
----@param file_match fml.std.oxi.search.IFileMatch
+---@param item ghc.command.search_files.IItemData
 ---@return table<integer, fml.types.ui.printer.ILineHighlight[]>
-local function calc_search_highlights(file_match)
+local function calc_search_highlights(item)
+  local file_match = item.filematch ---@type fml.std.oxi.search.IFileMatch
   local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
   for _, block_match in ipairs(file_match.matches) do
     local lines = block_match.lines ---@type string[]
@@ -140,6 +141,7 @@ local function calc_search_highlights(file_match)
     for _, match in ipairs(block_match.matches) do
       local l = match.l ---@type integer
       local r = match.r ---@type integer
+      local hlname = nil ---@type string|nil
 
       while l < r do
         while l >= offset + lwidth and k < #lines do
@@ -152,12 +154,14 @@ local function calc_search_highlights(file_match)
         local col_start = l - offset ---@type integer
         local col_end = math.min(lwidth - 1, r - offset) ---@type integer
 
-        local hls = highlights[lnum] ---@type fml.types.ui.printer.ILineHighlight[]|nil
-        if hls == nil then
-          hls = {}
-          highlights[lnum] = hls
+        if hlname == nil then
+          hlname = (lnum == item.lnum and col_start == item.col) and "f_us_match_cur" or "f_us_match"
         end
-        table.insert(hls, { cstart = col_start, cend = col_end, hlname = "f_us_match" })
+
+        local hls = highlights[lnum] or {} ---@type fml.types.ui.printer.ILineHighlight[]
+        highlights[lnum] = hls
+
+        table.insert(hls, { cstart = col_start, cend = col_end, hlname = hlname })
 
         l = offset + lwidth ---@type integer
       end
@@ -354,7 +358,7 @@ local function get_search()
           if is_text_file then
             local filename = fml.path.basename(filepath) ---@type string
             local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-            local highlights = calc_search_highlights(item_data.filematch) ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
+            local highlights = calc_search_highlights(item_data) ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
 
             ---@type fml.ui.search.preview.IData
             local data = {

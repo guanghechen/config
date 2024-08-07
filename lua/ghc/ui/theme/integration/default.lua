@@ -128,7 +128,8 @@ local function gen_hlgroup(params)
     f_us_preview_normal = { bg = c.darker_black },
     f_us_preview_title = { fg = c.black, bg = c.green },
     f_us_preview_error = { fg = c.red, bold = true },
-    f_us_match = { fg = c.black, bg = c.orange },
+    f_us_match = { fg = c.black, bg = c.yellow },
+    f_us_match_cur = { fg = c.black, bg = c.red },
 
     ---textarea
     f_ut_current = { bg = c.one_bg2 },
