@@ -293,10 +293,81 @@ local function get_search()
       main_keymaps = main_keymaps,
       fetch_items = fetch_items,
       fetch_delay = 32,
-      width = 80,
+      width = 0.4,
       height = 0.8,
+      width_preview = 0.45,
+      max_height = 1,
+      max_width = 1,
       on_close = function()
         statusline.disable(statusline.cnames.search_files)
+      end,
+      fetch_preview_data = function(item)
+        local item_data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
+        if item_data ~= nil then
+          local cwd = session.search_cwd:snapshot() ---@type string
+          local filepath = fml.path.join(cwd, item_data.filepath) ---@type string
+
+          local is_text_file = fml.fs.is_text_file(filepath) ---@type boolean
+          if is_text_file then
+            local filename = fml.path.basename(filepath) ---@type string
+            local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
+
+            ---@type fml.ui.search.preview.IData
+            local data = {
+              filetype = filetype,
+              show_numbers = true,
+              title = item_data.filepath,
+              lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }),
+              highlights = {},
+              lnum = item_data.lnum,
+              col = item_data.col,
+            }
+            return data
+          end
+
+          local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
+          highlights[1] = { { cstart = 0, cend = -1, hlname = "f_us_preview_error" } }
+
+          ---@type fml.ui.search.preview.IData
+          local data = {
+            lines = { "  Not a text file, cannot preview." },
+            highlights = highlights,
+            filetype = nil,
+            show_numbers = false,
+            title = item_data.filepath,
+          }
+          return data
+        end
+
+        local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
+        highlights[1] = { { cstart = 0, cend = -1, hlname = "f_us_preview_error" } }
+
+        ---@type fml.ui.search.preview.IData
+        local data = {
+          lines = { "  Cannot retrieve the item by uuid=" .. item.uuid },
+          highlights = highlights,
+          filetype = nil,
+          show_numbers = false,
+          title = item.text,
+        }
+        return data
+      end,
+      patch_preview_data = function(item, _, last_data)
+        local item_data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
+        local lnum = item_data ~= nil and item_data.lnum or nil ---@type integer|nil
+        local col = item_data ~= nil and item_data.col or nil ---@type integer|nil
+
+        ---@type fml.ui.search.preview.IData
+        local data = {
+          lines = last_data.lines,
+          highlights = last_data.highlights,
+          filetype = last_data.filetype,
+          show_numbers = last_data.show_numbers,
+          title = last_data.title,
+          lnum = lnum,
+          col = col,
+        }
+        return data
       end,
       on_confirm = function(item)
         local winnr = fml.api.state.win_history:present() ---@type integer
@@ -314,9 +385,7 @@ local function get_search()
               local lnum = data.lnum ---@type integer|nil
               local col = data.col ---@type integer|nil
               if lnum ~= nil and col ~= nil then
-                vim.schedule(function()
-                  vim.api.nvim_win_set_cursor(0, { data.lnum or 1, data.col or 0 })
-                end)
+                vim.api.nvim_win_set_cursor(0, { lnum, col })
               end
             end)
           end

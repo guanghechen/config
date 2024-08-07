@@ -14,7 +14,7 @@
 ---| fun(item: fml.types.ui.search.IItem): fml.ui.search.preview.IData
 
 ---@alias fml.types.ui.search.preview.IPatchData
----| fun(item: fml.types.ui.search.IItem, last_item: fml.types.ui.search.IItem, last_data: fml.ui.search.preview.IData|nil): fml.ui.search.preview.IData
+---| fun(item: fml.types.ui.search.IItem, last_item: fml.types.ui.search.IItem, last_data: fml.ui.search.preview.IData): fml.ui.search.preview.IData
 
 ---@alias fml.types.ui.search.IFetchItemsCallback
 ---| fun(ok: true, items: fml.types.ui.search.IItem[]|nil): nil
@@ -30,15 +30,19 @@
 ---@field public highlights             fml.types.ui.printer.ILineHighlight[]
 
 ---@class fml.ui.search.preview.IData
+---@field public lines                  string[]
+---@field public highlights             table<integer, fml.types.ui.printer.ILineHighlight[]>
 ---@field public filetype               string|nil
 ---@field public show_numbers           boolean
 ---@field public title                  string
----@field public lines                  string[]
----@field public highlights             table<integer, fml.types.ui.printer.ILineHighlight[]>
+---@field public lnum                   integer|nil
+---@field public col                    integer|nil
 
 ---@class fml.ui.search.preview.IWinOpts
 ---@field public title                  string
 ---@field public show_numbers           boolean
+---@field public lnum                   ?integer
+---@field public col                    ?integer
 
 ---@class fml.types.ui.search.IState
 ---@field public uuid                   string

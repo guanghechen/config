@@ -140,34 +140,32 @@ local function get_select()
       fetch_preview_data = function(item)
         local cwd = state_find_cwd:snapshot() ---@type string
         local filepath = fml.path.join(cwd, item.display) ---@type string
-        local data ---@type fml.ui.search.preview.IData
 
         local is_text_file = fml.fs.is_text_file(filepath) ---@type boolean
         if is_text_file then
           local filename = fml.path.basename(filepath) ---@type string
           local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
 
-          data = {
+          ---@type fml.ui.search.preview.IData
+          return {
+            lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }),
+            highlights = {},
             filetype = filetype,
             show_numbers = true,
             title = item.display,
-            lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }),
-            highlights = {},
-          }
-        else
-          local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
-          highlights[1] = { { cstart = 0, cend = -1, hlname = "f_us_preview_error" } }
-
-          data = {
-            title = item.display,
-            filetype = nil,
-            show_numbers = false,
-            lines = { "  Not a text file, cannot preview." },
-            highlights = highlights,
           }
         end
+        local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
+        highlights[1] = { { cstart = 0, cend = -1, hlname = "f_us_preview_error" } }
 
-        return data
+        ---@type fml.ui.search.preview.IData
+        return {
+          lines = { "  Not a text file, cannot preview." },
+          highlights = highlights,
+          filetype = nil,
+          show_numbers = false,
+          title = item.display,
+        }
       end,
       on_confirm = function(item)
         local winnr = fml.api.state.win_history:present() ---@type integer

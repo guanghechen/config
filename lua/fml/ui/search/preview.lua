@@ -112,47 +112,62 @@ function M:render(force)
 
       local item = state:get_current() ---@type fml.types.ui.search.IItem|nil
       local ok, error = pcall(function()
+        local last_data = self._last_data ---@type fml.ui.search.preview.IData|nil
         local data = self:fetch_data(item) ---@type fml.ui.search.preview.IData|nil
         local bufnr = self:create_buf_as_needed() ---@type integer
-        vim.bo[bufnr].modifiable = true
-        vim.bo[bufnr].readonly = false
 
-        if self._last_data ~= nil and self._last_data ~= data then
+        ---@type boolean
+        local has_changed = data == nil
+          or last_data == nil
+          or data.filetype ~= last_data.filetype
+          or data.lines ~= last_data.lines
+          or data.highlights ~= last_data.highlights
+
+        if has_changed then
+          vim.bo[bufnr].modifiable = true
+          vim.bo[bufnr].readonly = false
+
           vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, {})
-          vim.bo[bufnr].filetype = constant.FT_SEARCH_PREVIEW
-        end
 
-        if data ~= nil and self._last_data ~= data then
-          self._last_data = data
+          if data ~= nil then
+            self._last_data = data
 
-          vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, data.lines)
+            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, data.lines)
 
-          local filetype = data and data.filetype or nil ---@type string|nil
-          if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-            local lang = vim.treesitter.language.get_lang(filetype) or filetype
-            if lang then
-              local has_ts_parser = pcall(vim.treesitter.language.add, lang)
-              if has_ts_parser then
-                vim.treesitter.start(bufnr, lang)
+            local filetype = data and data.filetype or nil ---@type string|nil
+            if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+              local lang = vim.treesitter.language.get_lang(filetype) or filetype
+              if lang then
+                local has_ts_parser = pcall(vim.treesitter.language.add, lang)
+                if has_ts_parser then
+                  vim.treesitter.start(bufnr, lang)
+                end
+              end
+            end
+
+            for lnum, highlights in pairs(data.highlights) do
+              for _, hl in ipairs(highlights) do
+                if hl.hlname ~= nil then
+                  vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.cstart, hl.cend)
+                end
               end
             end
           end
 
-          for lnum, highlights in pairs(data.highlights) do
-            for _, hl in ipairs(highlights) do
-              if hl.hlname ~= nil then
-                vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.cstart, hl.cend)
-              end
-            end
-          end
+          vim.bo[bufnr].modifiable = false
+          vim.bo[bufnr].readonly = true
         end
-
-        vim.bo[bufnr].modifiable = false
-        vim.bo[bufnr].readonly = true
 
         local title = data and data.title or "preview" ---@type string
         local show_numbers = data and data.show_numbers or false ---@type boolean
-        self._update_win_config({ title = title, show_numbers = show_numbers })
+        local lnum = data and data.lnum or nil ---@type integer|nil
+        local col = data and data.col or nil ---@type integer|nil
+        self._update_win_config({
+          title = title,
+          show_numbers = show_numbers,
+          lnum = lnum,
+          col = col,
+        })
       end)
 
       if not ok then

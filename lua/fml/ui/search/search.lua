@@ -263,6 +263,8 @@ function M.new(props)
       update_win_config = function(opts)
         local new_title = opts.title ---@type string
         local show_numbers = opts.show_numbers ---@type boolean
+        local lnum = opts.lnum ---@type integer|nil
+        local col = opts.col ---@type integer|nil
 
         ---@diagnostic disable-next-line: invisible
         self._preview_title = new_title
@@ -273,6 +275,10 @@ function M.new(props)
           win_conf_cur.title = " " .. new_title .. " "
           vim.api.nvim_win_set_config(winnr, win_conf_cur)
           vim.wo[winnr].number = show_numbers
+
+          if lnum ~= nil and col ~= nil then
+            vim.api.nvim_win_set_cursor(winnr, { lnum, col })
+          end
         end
       end,
     })
