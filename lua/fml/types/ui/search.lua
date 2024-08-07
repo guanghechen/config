@@ -30,7 +30,7 @@
 ---@field public highlights             fml.types.ui.printer.ILineHighlight[]
 
 ---@class fml.ui.search.preview.IData
----@field public filetype               string
+---@field public filetype               string|nil
 ---@field public title                  string
 ---@field public lines                  string[]
 ---@field public highlights             table<integer, fml.types.ui.printer.ILineHighlight[]>

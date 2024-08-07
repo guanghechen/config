@@ -141,12 +141,15 @@ local function get_select()
         local filepath = fml.path.join(cwd, item.display) ---@type string
         local filename = fml.path.basename(filepath) ---@type string
         local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-        return {
+
+        ---@type fml.ui.search.preview.IData
+        local data = {
           title = item.display,
           filetype = filetype,
           lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }),
           highlights = {},
         }
+        return data
       end,
       on_confirm = function(item)
         local winnr = fml.api.state.win_history:present() ---@type integer

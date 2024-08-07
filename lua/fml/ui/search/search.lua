@@ -50,6 +50,7 @@ local _search_current = nil ---@type fml.ui.search.Search|nil
 ---@field protected _height             number|nil
 ---@field protected _width_preview      number|nil
 ---@field protected _destroy_on_close   boolean
+---@field protected _preview_title      string
 ---@field protected _on_close_callback  ?fml.types.ui.search.IOnClose
 local M = {}
 M.__index = M
@@ -259,8 +260,16 @@ function M.new(props)
       fetch_data = props.fetch_preview_data,
       patch_data = props.patch_preview_data,
       on_rendered = props.on_preview_rendered,
-      get_winnr = function()
-        return self:get_winnr_preview()
+      update_win_title = function(new_title)
+        ---@diagnostic disable-next-line: invisible
+        self._preview_title = new_title
+        local winnr = self:get_winnr_preview() ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          ---@type vim.api.keyset.win_config
+          local win_conf_cur = vim.api.nvim_win_get_config(winnr)
+          win_conf_cur.title = " " .. new_title .. " "
+          vim.api.nvim_win_set_config(winnr, win_conf_cur)
+        end
       end,
     })
   end
@@ -277,11 +286,16 @@ function M.new(props)
   self._height = height
   self._width_preview = width_preview
   self._destroy_on_close = destroy_on_close
+  self._preview_title = " preview "
   self._on_close_callback = on_close_from_props
 
   watch_observables({ state.dirty_main, state.dirty_preview }, function()
     vim.schedule(function()
-      self:draw()
+      local is_dirty_main = state.dirty_main:snapshot() ---@type boolean|nil
+      local is_dirty_preview = state.dirty_preview:snapshot() ---@type boolean|nil
+      if is_dirty_main or is_dirty_preview then
+        self:draw()
+      end
     end)
   end, true)
 
@@ -319,14 +333,16 @@ function M:create_wins_as_needed()
   end
   width = math.min(max_width, math.max(10, width)) ---@type integer
 
+  local has_preview = self._preview ~= nil ---@type boolean
+
   local width_preview = self._width_preview or width ---@type integer
   if width_preview < 1 then
     width_preview = math.floor(vim.o.columns * width_preview)
   end
-  width_preview = self._preview and math.min(max_width - width, math.max(10, width_preview)) or 0
+  width_preview = has_preview and math.min(max_width - width - 2, math.max(10, width_preview)) or 0
 
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
-  local col = math.floor((vim.o.columns - width - width_preview) / 2) ---@type integer
+  local col = math.floor((vim.o.columns - width - width_preview - 2) / 2) ---@type integer
   local winnr_input = self._winnr_input ---@type integer|nil
   local winnr_main = self._winnr_main ---@type integer|nil
   local winnr_preview = self._winnr_preview ---@type integer|nil
@@ -337,7 +353,7 @@ function M:create_wins_as_needed()
     local wincfg_main = {
       relative = "editor",
       anchor = "NW",
-      height = math.min(match_count + 1, height - 3),
+      height = has_preview and height - 3 or math.min(match_count + 1, height - 3),
       width = width,
       row = row + 3,
       col = col,
@@ -359,6 +375,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_main].relativenumber = false
     vim.wo[winnr_main].signcolumn = "yes"
     vim.wo[winnr_main].winhighlight = MAIN_WIN_HIGHLIGHT
+    vim.wo[winnr_main].wrap = false
     self:sync_main_cursor()
   else
     self._winnr_main = nil
@@ -375,9 +392,9 @@ function M:create_wins_as_needed()
       height = height,
       width = width_preview,
       row = row,
-      col = col + width,
+      col = col + width + 2,
       focusable = true,
-      title = " preview ",
+      title = " " .. self._preview_title .. " ",
       title_pos = "center",
       border = "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
       style = "minimal",
@@ -394,9 +411,10 @@ function M:create_wins_as_needed()
 
     vim.wo[winnr_preview].cursorline = true
     vim.wo[winnr_preview].number = true
-    vim.wo[winnr_preview].relativenumber = true
-    vim.wo[winnr_preview].signcolumn = "yes"
+    vim.wo[winnr_preview].relativenumber = false
+    vim.wo[winnr_preview].signcolumn = "yes:1"
     vim.wo[winnr_preview].winhighlight = PREVIEW_WIN_HIGHLIGHT
+    vim.wo[winnr_preview].wrap = false
   end
 
   ---@type vim.api.keyset.win_config
@@ -424,6 +442,7 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].relativenumber = false
   vim.wo[winnr_input].signcolumn = "yes:1"
   vim.wo[winnr_input].winhighlight = INPUT_WIN_HIGHLIGHT
+  vim.wo[winnr_input].wrap = false
 
   ---! Set the default focused window to the input window.
   vim.api.nvim_tabpage_set_win(0, winnr_input)

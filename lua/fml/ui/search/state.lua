@@ -128,10 +128,20 @@ end
 ---@return integer
 function M:locate(lnum)
   local items = self.items ---@type fml.types.ui.search.IItem[]
-  lnum = math.max(1, math.min(#items, lnum)) ---@type integer
-  self._item_lnum_cur = lnum ---@type integer
-  self._item_uuid_cur = items[lnum] and items[lnum].uuid or nil ---@type string|nil
-  return lnum
+  local next_lnum = math.max(1, math.min(#items, lnum)) ---@type integer
+  local next_uuid = items[next_lnum] and items[next_lnum].uuid or nil ---@type string|nil
+  local has_changed = self._item_lnum_cur ~= next_lnum or self._item_uuid_cur ~= next_uuid
+
+  self._item_lnum_cur = next_lnum
+  self._item_uuid_cur = next_uuid
+
+  if has_changed then
+    vim.schedule(function()
+      self.dirty_preview:next(true)
+    end)
+  end
+
+  return next_lnum
 end
 
 ---@return nil
@@ -143,20 +153,16 @@ end
 function M:moveup()
   local step = vim.v.count1 or 1 ---@type integer
   local items = self.items ---@type fml.types.ui.search.IItem[]
-  local lnum = math.max(1, navigate.circular(self._item_lnum_cur, -step, #items)) ---@type integer
-  self._item_lnum_cur = lnum ---@type integer
-  self._item_uuid_cur = items[lnum] and items[lnum].uuid or nil ---@type string|nil
-  return lnum
+  local lnum = navigate.circular(self._item_lnum_cur, -step, #items) ---@type integer
+  return self:locate(lnum)
 end
 
 ---@return integer
 function M:movedown()
   local step = vim.v.count1 or 1 ---@type integer
   local items = self.items ---@type fml.types.ui.search.IItem[]
-  local lnum = math.max(1, navigate.circular(self._item_lnum_cur, step, #items)) ---@type integer
-  self._item_lnum_cur = lnum ---@type integer
-  self._item_uuid_cur = items[lnum] and items[lnum].uuid or nil ---@type string|nil
-  return lnum
+  local lnum = navigate.circular(self._item_lnum_cur, step, #items) ---@type integer
+  return self:locate(lnum)
 end
 
 return M

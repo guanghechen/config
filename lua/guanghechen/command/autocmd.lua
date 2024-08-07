@@ -48,7 +48,10 @@ function M.autocmd_enable_wrap(opts)
     group = augroups.enable_wrap,
     pattern = pattern,
     callback = function()
-      vim.opt_local.wrap = true
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      if not fml.api.state.is_floating_win(winnr) then
+        vim.opt_local.wrap = true
+      end
     end,
   })
 end
