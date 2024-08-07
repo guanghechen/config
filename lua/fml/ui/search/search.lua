@@ -260,7 +260,10 @@ function M.new(props)
       fetch_data = props.fetch_preview_data,
       patch_data = props.patch_preview_data,
       on_rendered = props.on_preview_rendered,
-      update_win_title = function(new_title)
+      update_win_config = function(opts)
+        local new_title = opts.title ---@type string
+        local show_numbers = opts.show_numbers ---@type boolean
+
         ---@diagnostic disable-next-line: invisible
         self._preview_title = new_title
         local winnr = self:get_winnr_preview() ---@type integer|nil
@@ -269,6 +272,7 @@ function M.new(props)
           local win_conf_cur = vim.api.nvim_win_get_config(winnr)
           win_conf_cur.title = " " .. new_title .. " "
           vim.api.nvim_win_set_config(winnr, win_conf_cur)
+          vim.wo[winnr].number = show_numbers
         end
       end,
     })

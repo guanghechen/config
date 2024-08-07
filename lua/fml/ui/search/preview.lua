@@ -11,7 +11,7 @@ local util = require("fml.std.util")
 ---@field protected _on_rendered        fml.types.ui.search.preview.IOnRendered|nil
 ---@field protected _fetch_data         fml.types.ui.search.preview.IFetchData
 ---@field protected _patch_data         fml.types.ui.search.preview.IPatchData|nil
----@field protected _update_win_title   fun(new_title: string): nil
+---@field protected _update_win_config  fun(opts: fml.ui.search.preview.IWinOpts): nil
 local M = {}
 M.__index = M
 
@@ -21,7 +21,7 @@ M.__index = M
 ---@field public fetch_data             fml.types.ui.search.preview.IFetchData
 ---@field public patch_data             ?fml.types.ui.search.preview.IPatchData
 ---@field public on_rendered            ?fml.types.ui.search.preview.IOnRendered
----@field public update_win_title       fun(new_title: string): nil
+---@field public update_win_config      fun(opts: fml.ui.search.preview.IWinOpts): nil
 
 ---@param props                         fml.ui.search.preview.IProps
 ---@return fml.ui.search.Preview
@@ -33,7 +33,7 @@ function M.new(props)
   local fetch_data = props.fetch_data ---@type fml.types.ui.search.preview.IFetchData
   local patch_data = props.patch_data ---@type fml.types.ui.search.preview.IPatchData|nil
   local on_rendered = props.on_rendered ---@type fml.types.ui.search.main.IOnRendered|nil
-  local update_win_title = props.update_win_title ---@type fun(new_title: string): nil
+  local update_win_config = props.update_win_config ---@type fun(new_title: string): nil
 
   self.state = state
   self._bufnr = nil
@@ -44,7 +44,7 @@ function M.new(props)
   self._on_rendered = on_rendered
   self._fetch_data = fetch_data
   self._patch_data = patch_data
-  self._update_win_title = update_win_title
+  self._update_win_config = update_win_config
   return self
 end
 
@@ -141,7 +141,7 @@ function M:render(force)
           for lnum, highlights in pairs(data.highlights) do
             for _, hl in ipairs(highlights) do
               if hl.hlname ~= nil then
-                vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum, hl.cstart, hl.cend)
+                vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.cstart, hl.cend)
               end
             end
           end
@@ -151,7 +151,8 @@ function M:render(force)
         vim.bo[bufnr].readonly = true
 
         local title = data and data.title or "preview" ---@type string
-        self._update_win_title(title)
+        local show_numbers = data and data.show_numbers or false ---@type boolean
+        self._update_win_config({ title = title, show_numbers = show_numbers })
       end)
 
       if not ok then

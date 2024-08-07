@@ -1,3 +1,4 @@
+local constant = require("fml.constant")
 local statusline = require("ghc.ui.statusline")
 local session = require("ghc.context.session")
 local state_frecency = require("ghc.state.frecency")
@@ -139,16 +140,33 @@ local function get_select()
       fetch_preview_data = function(item)
         local cwd = state_find_cwd:snapshot() ---@type string
         local filepath = fml.path.join(cwd, item.display) ---@type string
-        local filename = fml.path.basename(filepath) ---@type string
-        local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
+        local data ---@type fml.ui.search.preview.IData
 
-        ---@type fml.ui.search.preview.IData
-        local data = {
-          title = item.display,
-          filetype = filetype,
-          lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }),
-          highlights = {},
-        }
+        local is_text_file = fml.fs.is_text_file(filepath) ---@type boolean
+        if is_text_file then
+          local filename = fml.path.basename(filepath) ---@type string
+          local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
+
+          data = {
+            filetype = filetype,
+            show_numbers = true,
+            title = item.display,
+            lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }),
+            highlights = {},
+          }
+        else
+          local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
+          highlights[1] = { { cstart = 0, cend = -1, hlname = "f_us_preview_error" } }
+
+          data = {
+            title = item.display,
+            filetype = nil,
+            show_numbers = false,
+            lines = { "  Not a text file, cannot preview." },
+            highlights = highlights,
+          }
+        end
+
         return data
       end,
       on_confirm = function(item)

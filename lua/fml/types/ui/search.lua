@@ -31,9 +31,14 @@
 
 ---@class fml.ui.search.preview.IData
 ---@field public filetype               string|nil
+---@field public show_numbers           boolean
 ---@field public title                  string
 ---@field public lines                  string[]
 ---@field public highlights             table<integer, fml.types.ui.printer.ILineHighlight[]>
+
+---@class fml.ui.search.preview.IWinOpts
+---@field public title                  string
+---@field public show_numbers           boolean
 
 ---@class fml.types.ui.search.IState
 ---@field public uuid                   string
