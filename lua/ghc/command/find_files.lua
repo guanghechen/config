@@ -140,15 +140,16 @@ local function get_select()
       fetch_preview_data = function(item)
         local cwd = state_find_cwd:snapshot() ---@type string
         local filepath = fml.path.join(cwd, item.display) ---@type string
+        local filename = fml.path.basename(filepath) ---@type string
 
-        local is_text_file = fml.fs.is_text_file(filepath) ---@type boolean
+        local is_text_file = fml.is.printable_file(filename) ---@type boolean
         if is_text_file then
-          local filename = fml.path.basename(filepath) ---@type string
           local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
+          local lines = fml.fs.read_file_as_lines({ filepath = filepath, max_lines = 300, silent = true }) ---@type string[]
 
           ---@type fml.ui.search.preview.IData
           return {
-            lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }),
+            lines = lines,
             highlights = {},
             filetype = filetype,
             show_numbers = true,

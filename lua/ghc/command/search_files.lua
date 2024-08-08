@@ -353,10 +353,10 @@ local function get_search()
         if item_data ~= nil then
           local cwd = session.search_cwd:snapshot() ---@type string
           local filepath = fml.path.join(cwd, item_data.filepath) ---@type string
+          local filename = fml.path.basename(filepath) ---@type string
 
-          local is_text_file = fml.fs.is_text_file(filepath) ---@type boolean
+          local is_text_file = fml.is.printable_file(filename) ---@type boolean
           if is_text_file then
-            local filename = fml.path.basename(filepath) ---@type string
             local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
             local highlights = calc_search_highlights(item_data) ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
 

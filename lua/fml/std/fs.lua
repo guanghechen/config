@@ -8,6 +8,11 @@ local M = {}
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
+---@class fml.std.fs.IReadFileAsLinesParams
+---@field public filepath               string
+---@field public max_lines              ?integer
+---@field public silent                 ?boolean
+
 ---@class fml.std.fs.IReadJsonParams
 ---@field public filepath               string
 ---@field public silent_on_bad_path     ?boolean
@@ -49,43 +54,7 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
----@param filepath                      string
----@return boolean
-function M.is_text_file(filepath)
-  -- Open the file in binary mode
-  local file = io.open(filepath, "rb")
-  if not file then
-    return false
-  end
-
-  -- Read a chunk of the file (e.g., 1024 bytes)
-  local chunk = file:read(1024)
-  file:close()
-
-  if not chunk then
-    return false
-  end
-
-  -- Check for non-printable characters
-  for i = 1, #chunk do
-    local byte = string.byte(chunk, i)
-    if byte == 0 then
-      -- Null byte found, likely a binary file
-      return false
-    elseif byte < 32 or byte > 126 then
-      -- Non-printable ASCII character found, likely a binary file
-      -- (excluding common whitespace characters: 9 (tab), 10 (line feed), 13 (carriage return))
-      if byte ~= 9 and byte ~= 10 and byte ~= 13 then
-        return false
-      end
-    end
-  end
-
-  -- No non-printable characters found, likely a text file
-  return true
-end
-
----@param params                        fml.std.fs.IReadFileParams
+---@param params                        fml.std.fs.IReadFileAsLinesParams
 ---@return string[]
 function M.read_file_as_lines(params)
   local filepath = params.filepath ---@type string
@@ -100,11 +69,15 @@ function M.read_file_as_lines(params)
         details = { filepath = filepath },
       })
     end
-    return false, {}
+    return {}
   end
 
-  local lines = {}
+  local lines = {} ---@type string[]
+  local max_lines = params.max_lines or math.huge ---@type integer
   for line in file:lines() do
+    if #lines > max_lines then
+      break
+    end
     table.insert(lines, line)
   end
 
