@@ -3,7 +3,6 @@ local A = {
   diagnostic = require("guanghechen.command.diagnostic"),
   explorer = require("guanghechen.command.explorer"),
   find = require("guanghechen.command.find"),
-  replace = require("guanghechen.command.replace"),
   search = require("guanghechen.command.search"),
   ui = require("guanghechen.command.ui"),
 }
@@ -49,11 +48,6 @@ mk({ "n", "v" }, "<leader>fv", A.find.find_vim_options, "find: vim options")
 mk({ "n", "v" }, "<leader>gG", ghc.command.git.open_diffview, "git: open diff view", true)
 mk({ "n", "v" }, "<leader>gf", ghc.command.git.open_diffview_filehistory, "git: open file history", true)
 -------------------------------------------------------------------------------------------#[g]it---
-
---#[r]eplace----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>rR", A.replace.replace_word_workspace, "replace: word (workspace)")
-mk({ "n", "v" }, "<leader>rr", A.replace.replace_word_current_file, "replace: word (current file)")
-----------------------------------------------------------------------------------------#[r]eplace--
 
 --#[s]earch-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>sw", A.search.grep_selected_text_workspace, "search: grep word (workspace)")

@@ -8,7 +8,6 @@ local command = {
   find_files = require("ghc.command.find_files"),
   git = require("ghc.command.git"),
   refresh = require("ghc.command.refresh"),
-  replace = require("ghc.command.replace"),
   search_files = require("ghc.command.search_files"),
   run = require("ghc.command.run"),
   session = require("ghc.command.session"),

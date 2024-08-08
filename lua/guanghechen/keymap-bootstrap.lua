@@ -9,8 +9,7 @@ local function mk(mode, key, action, desc, silent, nowait)
 end
 
 --#enhance------------------------------------------------------------------------------------------
----! Functional widgets.
-mk({ "n", "v" }, "<leader>2", ghc.command.replace.open, "replace: search/replace")
+mk({ "n", "v" }, "<leader>2", ghc.command.search_files.focus, "search: search/replace")
 
 ---! better indenting
 vim.keymap.set("v", "<", "<gv")

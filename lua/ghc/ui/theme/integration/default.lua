@@ -135,20 +135,6 @@ local function gen_hlgroup(params)
     f_ut_current = { bg = c.one_bg2 },
     f_ut_border = { fg = c.darker_pink },
     f_ut_normal = { bg = c.black2 },
-
-    ---replace
-    f_sr_filepath = { fg = c.blue, bg = "none" },
-    f_sr_flag = { fg = c.white, bg = c.grey },
-    f_sr_flag_enabled = { fg = c.black, bg = c.baby_pink },
-    f_sr_invisible = { fg = "none", bg = "none" },
-    f_sr_opt_name = { fg = c.blue, bg = "none", bold = true },
-    f_sr_opt_replace_pattern = { fg = c.diff_add_word, bg = "none" },
-    f_sr_opt_search_pattern = { fg = c.diff_del_word, bg = "none" },
-    f_sr_opt_value = { fg = c.yellow, bg = "none" },
-    f_sr_result_fence = { fg = c.grey, bg = "none" },
-    f_sr_text_added = { fg = c.diff_add_word, bg = "none" },
-    f_sr_text_deleted = { fg = c.diff_del_word, strikethrough = true },
-    f_sr_usage = { fg = c.grey_fg2, bg = "none" },
   }
 end
 

@@ -17,7 +17,6 @@ local tabline = fml.ui.Nvimbar.new({
 local c = {
   bufs = "bufs",
   neotree = "neotree",
-  search = "search",
   tabs = "tabs",
 }
 for _, name in pairs(c) do
@@ -28,7 +27,6 @@ tabline
   ---
   :place(c.tabs, "right")
   :place(c.neotree, "left")
-  :place(c.search, "left")
   :place(c.bufs, "left")
 
 ---@class ghc.ui.tabline
