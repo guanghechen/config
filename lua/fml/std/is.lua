@@ -80,7 +80,7 @@ end
 ---@return boolean
 function M.printable_file(filename)
   filename = filename:lower() ---@type string
-  local extname = filename:match("^.+(%..+)$") or ""
+  local extname = filename:match("%.[^.]+$") or ""
   if NON_TEXT_EXTNAME_SET[extname] then
     return false
   end

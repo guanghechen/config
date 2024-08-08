@@ -5,14 +5,14 @@ local PATH_SEP = std_os.path_sep() ---@type string
 ---@class fml.std.path
 local M = require("fml.std.path.mod")
 
----@param filepath string
+---@param filepath                      string
 ---@return string
 function M.basename(filepath)
   local pieces = M.split(filepath)
   return #pieces > 0 and pieces[#pieces] or ""
 end
 
----@param filepath string
+---@param filepath                      string
 ---@return string
 function M.dirname(filepath)
   local pieces = M.split(M.resolve(M.cwd(), filepath))
@@ -22,10 +22,10 @@ function M.dirname(filepath)
   return pieces > 0 and table.concat(pieces, PATH_SEP, 1, #pieces - 1) or ""
 end
 
----@param filepath string
+---@param filename                      string
 ---@return string
-function M.extname(filepath)
-  return filepath:match("^.+(%..+)$") or ""
+function M.extname(filename)
+  return filename:match("%.[^.]+$") or ""
 end
 
 ---@param filepath                      string
