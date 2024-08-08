@@ -17,6 +17,7 @@ fn nvim_tools() -> Dictionary {
             "collect_file_paths",
             Object::from(Function::from_fn(oxi::path::collect_file_paths)),
         ),
+        ("find", Object::from(Function::from_fn(oxi::find::find))),
         (
             "find_match_points",
             Object::from(Function::from_fn(oxi::string::find_match_points)),
