@@ -34,10 +34,13 @@ local function edit_config()
   ---@class ghc.command.find_files.IConfigData
   ---@field public exclude_patterns       string[]
 
+  local f_exclude_patterns = session.find_exclude_patterns:snapshot() ---@type string
+
   ---@type ghc.command.find_files.IConfigData
   local data = {
-    exclude_patterns = session.find_exclude_pattern:snapshot(),
+    exclude_patterns = fml.array.parse_comma_list(f_exclude_patterns),
   }
+
   local setting = fml.ui.Setting.new({
     position = "center",
     width = 100,
@@ -47,6 +50,7 @@ local function edit_config()
         return "Invalid find_files configuration, expect an object."
       end
       ---@cast raw_data ghc.command.find_files.IConfigData
+
       if raw_data.exclude_patterns == nil or not fml.is.array(raw_data.exclude_patterns) then
         return "Invalid data.exclude_patterns, expect an array."
       end
@@ -54,9 +58,9 @@ local function edit_config()
     on_confirm = function(raw_data)
       ---@cast raw_data ghc.command.find_files.IConfigData
       local raw = vim.tbl_extend("force", data, raw_data)
+      local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
 
-      local exclude_patterns = raw.exclude_patterns ---@type string[]
-      session.find_exclude_pattern:next(exclude_patterns)
+      session.find_exclude_patterns:next(exclude_patterns)
       M.reload()
     end,
   })
@@ -192,8 +196,16 @@ function M.reload()
   if _select ~= nil then
     local find_cwd = state_find_cwd:snapshot() ---@type string
     local workspace = fml.path.workspace() ---@type string
-    local exclude_pattern = session.find_exclude_pattern:snapshot() ---@type string[]
-    local filepaths = fml.oxi.collect_file_paths(find_cwd, exclude_pattern)
+    local exclude_patterns = session.find_exclude_patterns:snapshot() ---@type string
+    ---@type string[]
+    local filepaths = fml.oxi.find({
+      cwd = find_cwd,
+      use_regex = false,
+      case_sensitive = false,
+      search_pattern = "",
+      search_paths = "",
+      exclude_patterns = exclude_patterns,
+    })
     local items = {} ---@type fml.types.ui.select.IItem[]
     for _, filepath in ipairs(filepaths) do
       local absolute_filepath = fml.path.resolve(find_cwd, filepath) ---@type string

@@ -3,7 +3,7 @@ local Observable = fml.collection.Observable
 ---@type ghc.enums.context.FindScope[]
 local scopes = { "W", "C", "D" }
 
-local find_exclude_pattern = Observable.from_value({
+local find_exclude_patterns = Observable.from_value(table.concat({
   ".cache/**",
   ".git/**",
   ".yarn/**",
@@ -16,16 +16,16 @@ local find_exclude_pattern = Observable.from_value({
   "**/*.mkv",
   "**/*.mp4",
   "**/*.zip",
-})
+}, ","))
 local find_file_pattern = Observable.from_value("")
 local find_scope = Observable.from_value("C")
 
 ---@class ghc.context.session : fml.collection.Viewmodel
----@field public find_exclude_pattern       fml.types.collection.IObservable
+---@field public find_exclude_patterns       fml.types.collection.IObservable
 ---@field public find_file_pattern          fml.types.collection.IObservable
 ---@field public find_scope                 fml.types.collection.IObservable
 local M = require("ghc.context.session.mod")
-  :register("find_exclude_pattern", find_exclude_pattern, true, true)
+  :register("find_exclude_patterns", find_exclude_patterns, true, true)
   :register("find_file_pattern", find_file_pattern, true, true)
   :register("find_scope", find_scope, true, true)
 

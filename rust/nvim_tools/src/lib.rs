@@ -13,10 +13,6 @@ use nvim_oxi::Object;
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
     Dictionary::from_iter([
-        (
-            "collect_file_paths",
-            Object::from(Function::from_fn(oxi::path::collect_file_paths)),
-        ),
         ("find", Object::from(Function::from_fn(oxi::find::find))),
         (
             "find_match_points",

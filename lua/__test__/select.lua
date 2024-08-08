@@ -2,10 +2,14 @@ local oxi = require("fml.std.oxi")
 local Observable = require("fml.collection.observable")
 
 local cwd = fml.path.cwd() ---@type string
-local paths = fml.oxi.collect_file_paths(cwd, {
-  ".git/**",
-  "rust/*/target/**",
-  "rust/*/debug/**",
+---@type string[]
+local paths = fml.oxi.find({
+  cwd = fml.path.cwd(),
+  use_regex = false,
+  case_sensitive = false,
+  search_pattern = "",
+  search_paths = "",
+  exclude_patterns = "",
 })
 local items = {} ---@type fml.types.ui.select.IItem[]
 for _, path in ipairs(paths) do

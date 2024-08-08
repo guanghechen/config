@@ -1,6 +1,15 @@
 ---@diagnostic disable: unused-function, unused-local
 local function match()
-  local items = fml.oxi.collect_file_paths(fml.path.cwd(), { ".git/" })
+  ---@type string[]
+  local items = fml.oxi.find({
+    cwd = fml.path.cwd(),
+    use_regex = false,
+    case_sensitive = false,
+    search_pattern = "",
+    search_paths = "",
+    exclude_patterns = ".git/**",
+  })
+
   local matches = {} ---@type fml.types.ui.select.ILineMatch[]
   local input = "observable" ---@type string
   local N1 = #input ---@type integer
