@@ -66,7 +66,6 @@ local std = {
 local ui = {
   Input = require("fml.ui.input"),
   Nvimbar = require("fml.ui.nvimbar"),
-  Printer = require("fml.ui.printer"),
   Setting = require("fml.ui.setting"),
   Textarea = require("fml.ui.textarea"),
   Theme = require("fml.ui.theme"),
