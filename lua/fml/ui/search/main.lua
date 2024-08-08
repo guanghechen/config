@@ -114,13 +114,11 @@ function M:render(force)
       local items = state.items ---@type fml.types.ui.search.IItem[]
       for i, item in ipairs(items) do
         local row = i - 1 ---@type integer
-        local highlights = item.highlights ---@type fml.types.ui.printer.ILineHighlight[]
+        local highlights = item.highlights ---@type fml.types.ui.IInlineHighlight[]
         vim.api.nvim_buf_set_lines(bufnr, row, row, false, { item.text })
         if highlights ~= nil and #highlights > 0 then
           for _, hl in ipairs(highlights) do
-            if hl.hlname ~= nil then
-              vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, row, hl.cstart, hl.cend)
-            end
+            vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, row, hl.coll, hl.colr)
           end
         end
       end

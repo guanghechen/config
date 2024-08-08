@@ -43,7 +43,7 @@
 ---| fun(item: fml.types.ui.select.IItem): boolean
 
 ---@alias fml.types.ui.select.main.IRenderLine
----| fun(params: fml.types.ui.select.main.IRenderLineParams): string
+---| fun(params: fml.types.ui.select.main.IRenderLineParams): string, fml.types.ui.IInlineHighlight[]
 
 ---@class fml.types.ui.select.ISelect
 ---@field public state                  fml.types.ui.search.IState

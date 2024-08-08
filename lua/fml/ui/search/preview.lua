@@ -157,11 +157,9 @@ function M:render(force)
             end
           end
 
-          for lnum, highlights in pairs(data.highlights) do
-            for _, hl in ipairs(highlights) do
-              if hl.hlname ~= nil then
-                vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.cstart, hl.cend)
-              end
+          for _, hl in ipairs(data.highlights) do
+            if hl.hlname ~= nil then
+              vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, hl.lnum - 1, hl.coll, hl.colr)
             end
           end
         end

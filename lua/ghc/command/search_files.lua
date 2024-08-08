@@ -52,7 +52,7 @@ local function fetch_items(input_text, callback)
       local filepath = fml.path.relative(cwd, raw_filepath) ---@type string
       local icon, icon_hl = fml.util.calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
-      local file_highlights = { { cstart = 0, cend = icon_width, hlname = icon_hl } } ---@type fml.types.ui.printer.ILineHighlight[]
+      local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type fml.types.ui.IInlineHighlight[]
 
       ---@type fml.types.ui.search.IItem
       local file_item = {
@@ -96,10 +96,10 @@ local function fetch_items(input_text, callback)
           local offset_start = offset_prefix + col ---@type integer
           local offset_end = offset_prefix + col_end ---@type integer
 
-          ---@type fml.types.ui.printer.ILineHighlight[]
+          ---@type fml.types.ui.IInlineHighlight[]
           local highlights = {
-            { cstart = 0, cend = offset_prefix, hlname = "f_us_main_match_lnum" },
-            { cstart = offset_start, cend = offset_end, hlname = "f_us_main_match" },
+            { coll = 0, colr = offset_prefix, hlname = "f_us_main_match_lnum" },
+            { coll = offset_start, colr = offset_end, hlname = "f_us_main_match" },
           }
 
           ---@type fml.types.ui.search.IItem
@@ -127,10 +127,10 @@ local function fetch_items(input_text, callback)
 end
 
 ---@param item                          ghc.command.search_files.IItemData
----@return table<integer, fml.types.ui.printer.ILineHighlight[]>
+---@return fml.types.ui.IHighlight[]
 local function calc_search_highlights(item)
   local file_match = item.filematch ---@type fml.std.oxi.search.IFileMatch
-  local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
+  local highlights = {} ---@type fml.types.ui.IHighlight[]
   for _, block_match in ipairs(file_match.matches) do
     local lines = block_match.lines ---@type string[]
     local lnum0 = block_match.lnum ---@type integer
@@ -158,10 +158,9 @@ local function calc_search_highlights(item)
           hlname = (item.lnum == lnum and item.col == col) and "f_us_match_cur" or "f_us_match"
         end
 
-        local hls = highlights[lnum] or {} ---@type fml.types.ui.printer.ILineHighlight[]
-        highlights[lnum] = hls
-
-        table.insert(hls, { cstart = col, cend = col_end, hlname = hlname })
+        ---@type fml.types.ui.IHighlight
+        local highlight = { lnum = lnum, coll = col, colr = col_end, hlname = hlname }
+        table.insert(highlights, highlight)
 
         l = offset + lwidth ---@type integer
       end
@@ -358,7 +357,7 @@ local function get_search()
           local is_text_file = fml.is.printable_file(filename) ---@type boolean
           if is_text_file then
             local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-            local highlights = calc_search_highlights(item_data) ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
+            local highlights = calc_search_highlights(item_data) ---@type fml.types.ui.IHighlight[]
 
             ---@type fml.ui.search.preview.IData
             local data = {
@@ -373,8 +372,8 @@ local function get_search()
             return data
           end
 
-          local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
-          highlights[1] = { { cstart = 0, cend = -1, hlname = "f_us_preview_error" } }
+          ---@type fml.types.ui.IHighlight[]
+          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
 
           ---@type fml.ui.search.preview.IData
           local data = {
@@ -387,8 +386,8 @@ local function get_search()
           return data
         end
 
-        local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
-        highlights[1] = { { cstart = 0, cend = -1, hlname = "f_us_preview_error" } }
+        ---@type fml.types.ui.IHighlight[]
+        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
 
         ---@type fml.ui.search.preview.IData
         local data = {
@@ -405,7 +404,7 @@ local function get_search()
         local lnum = item_data ~= nil and item_data.lnum or nil ---@type integer|nil
         local col = item_data ~= nil and item_data.col or nil ---@type integer|nil
 
-        ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>|nil
+        ---@type fml.types.ui.IHighlight[]|nil
         local highlights = item_data and calc_search_highlights(item_data) or nil
 
         ---@type fml.ui.search.preview.IData

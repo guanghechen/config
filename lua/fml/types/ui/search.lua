@@ -27,11 +27,11 @@
 ---@field public group                  string|nil
 ---@field public uuid                   string
 ---@field public text                   string
----@field public highlights             fml.types.ui.printer.ILineHighlight[]
+---@field public highlights             fml.types.ui.IInlineHighlight[]
 
 ---@class fml.ui.search.preview.IData
 ---@field public lines                  string[]
----@field public highlights             table<integer, fml.types.ui.printer.ILineHighlight[]>
+---@field public highlights             fml.types.ui.IHighlight[]
 ---@field public filetype               string|nil
 ---@field public show_numbers           boolean
 ---@field public title                  string

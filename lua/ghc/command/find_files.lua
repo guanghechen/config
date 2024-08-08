@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local statusline = require("ghc.ui.statusline")
 local session = require("ghc.context.session")
 local state_frecency = require("ghc.state.frecency")
@@ -156,8 +155,9 @@ local function get_select()
             title = item.display,
           }
         end
-        local highlights = {} ---@type table<integer, fml.types.ui.printer.ILineHighlight[]>
-        highlights[1] = { { cstart = 0, cend = -1, hlname = "f_us_preview_error" } }
+
+        ---@type fml.types.ui.IHighlight[]
+        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
 
         ---@type fml.ui.search.preview.IData
         return {

@@ -215,7 +215,7 @@ function M:fetch_items(input)
   local search_items = {} ---@type fml.types.ui.search.IItem[]
   for _, match in ipairs(matches) do
     local item = item_map[match.uuid] ---@type fml.types.ui.select.IItem
-    local line, highlights = self._render_line({ item = item, match = match }) ---@type string, fml.types.ui.printer.ILineHighlight[]
+    local line, highlights = self._render_line({ item = item, match = match })
     ---@type fml.types.ui.search.IItem
     local search_item = {
       group = item.group,

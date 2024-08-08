@@ -47,20 +47,22 @@ end
 
 ---@param params                        fml.types.ui.select.main.IRenderLineParams
 ---@return string
----@return fml.types.ui.printer.ILineHighlight[]
+---@return fml.types.ui.IInlineHighlight[]
 function M.render_line(params)
   local match = params.match ---@type fml.types.ui.select.ILineMatch
   local item = params.item ---@type fml.types.ui.select.IItem
-  local highlights = {} ---@type fml.types.ui.printer.ILineHighlight[]
+  local highlights = {} ---@type fml.types.ui.IInlineHighlight[]
   for _, piece in ipairs(match.pieces) do
-    table.insert(highlights, { cstart = piece.l, cend = piece.r, hlname = "f_us_main_match" })
+    ---@type fml.types.ui.IInlineHighlight[]
+    local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
+    table.insert(highlights, highlight)
   end
   return item.display, highlights
 end
 
 ---@param params                        fml.types.ui.select.main.IRenderLineParams
 ---@return string
----@return fml.types.ui.printer.ILineHighlight[]
+---@return fml.types.ui.IInlineHighlight[]
 function M.render_filepath(params)
   local match = params.match ---@type fml.types.ui.select.ILineMatch
   local item = params.item ---@type fml.types.ui.select.IItem
@@ -84,9 +86,13 @@ function M.render_filepath(params)
 
   local icon_width = string.len(icon) ---@type integer
   local text = icon .. item.display ---@type string
-  local highlights = { { cstart = 0, cend = icon_width, hlname = icon_hl } } ---@type fml.types.ui.printer.ILineHighlight[]
+
+  ---@type fml.types.ui.IInlineHighlight[]
+  local highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } }
   for _, piece in ipairs(match.pieces) do
-    table.insert(highlights, { cstart = piece.l + icon_width, cend = piece.r + icon_width, hlname = "f_us_main_match" })
+    ---@type fml.types.ui.IInlineHighlight
+    local highlight = { coll = piece.l + icon_width, colr = piece.r + icon_width, hlname = "f_us_main_match" }
+    table.insert(highlights, highlight)
   end
   return text, highlights
 end
