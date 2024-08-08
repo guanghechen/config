@@ -158,6 +158,9 @@ function M.new(props)
       state:moveup()
       self:sync_main_cursor()
     end,
+    on_refresh = function()
+      state:mark_dirty()
+    end,
     on_main_mouse_click = function()
       ---@diagnostic disable-next-line: invisible
       local winnr_main = self._winnr_main ---@type integer|nil
@@ -196,6 +199,8 @@ function M.new(props)
 
   ---@type fml.types.IKeymap[]
   local input_keymaps = std_array.concat({
+    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.on_refresh, desc = "search: refresh" },
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
@@ -221,6 +226,8 @@ function M.new(props)
       nowait = true,
       desc = "search: confirm",
     },
+    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.on_refresh, desc = "search: refresh" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
@@ -232,6 +239,8 @@ function M.new(props)
 
   ---@type fml.types.IKeymap[]
   local preview_keymaps = std_array.concat({
+    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.on_refresh, desc = "search: refresh" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
   }, props.preview_keymaps or {})
