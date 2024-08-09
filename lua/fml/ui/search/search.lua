@@ -131,6 +131,8 @@ function M.new(props)
     self:sync_main_cursor()
   end
 
+  local reset_winnr_focus_tick = 0 ---@type integer
+
   ---@class fml.ui.search.search.actions
   local actions = {
     on_close = function()
@@ -169,10 +171,14 @@ function M.new(props)
         state:locate(lnum)
         self:sync_main_cursor()
 
+        reset_winnr_focus_tick = reset_winnr_focus_tick + 1
+        local tick = reset_winnr_focus_tick ---@type integer
         vim.defer_fn(function()
-          local winnr_input = self:get_winnr_input() ---@type integer|nil
-          if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-            vim.api.nvim_tabpage_set_win(0, winnr_input)
+          if tick == reset_winnr_focus_tick then
+            local winnr_input = self:get_winnr_input() ---@type integer|nil
+            if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+              vim.api.nvim_tabpage_set_win(0, winnr_input)
+            end
           end
         end, 500)
       end
