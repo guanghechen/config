@@ -1,4 +1,5 @@
 local constant = require("fml.constant")
+local async = require("fml.std.async")
 local api_state = require("fml.api.state")
 local watch_observables = require("fml.fn.watch_observables")
 local std_array = require("fml.std.array")
@@ -131,7 +132,15 @@ function M.new(props)
     self:sync_main_cursor()
   end
 
-  local reset_winnr_focus_tick = 0 ---@type integer
+  local reset_cursor_to_input_runner = async.debounce({
+    fn = function()
+      local winnr_input = self:get_winnr_input() ---@type integer|nil
+      if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+        vim.api.nvim_tabpage_set_win(0, winnr_input)
+      end
+    end,
+    delay = 500,
+  })
 
   ---@class fml.ui.search.search.actions
   local actions = {
@@ -168,19 +177,10 @@ function M.new(props)
       local winnr_main = self._winnr_main ---@type integer|nil
       if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
         local lnum = vim.api.nvim_win_get_cursor(winnr_main)[1]
-        state:locate(lnum)
-        self:sync_main_cursor()
+        lnum = state:locate(lnum)
+        vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
 
-        reset_winnr_focus_tick = reset_winnr_focus_tick + 1
-        local tick = reset_winnr_focus_tick ---@type integer
-        vim.defer_fn(function()
-          if tick == reset_winnr_focus_tick then
-            local winnr_input = self:get_winnr_input() ---@type integer|nil
-            if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-              vim.api.nvim_tabpage_set_win(0, winnr_input)
-            end
-          end
-        end, 500)
+        reset_cursor_to_input_runner.run()
       end
     end,
     on_main_mouse_dbclick = function()
@@ -188,17 +188,10 @@ function M.new(props)
       local winnr_main = self._winnr_main ---@type integer|nil
       if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
         local lnum = vim.api.nvim_win_get_cursor(winnr_main)[1]
-        state:locate(lnum)
-        self:sync_main_cursor()
+        lnum = state:locate(lnum)
+        vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
 
-        ---! To disable the unexpected which-key popup (the double click will enter visual mode, then the which-key will popup).
-        vim.api.nvim_input("<Esc>")
         on_confirm()
-
-        ---! To disable the unexpected which-key popup (the double click will enter visual mode, then the which-key will popup).
-        vim.schedule(function()
-          vim.api.nvim_input("<Esc>")
-        end)
       end
     end,
   }
@@ -219,17 +212,15 @@ function M.new(props)
   ---@type fml.types.IKeymap[]
   local main_keymaps = std_array.concat({
     {
-      modes = { "i", "n", "v" },
-      key = "<LeftRelease>",
+      modes = { "i", "n" },
+      key = "<LeftMouse>",
       callback = actions.on_main_mouse_click,
-      nowait = true,
       desc = "search: mouse click (main)",
     },
     {
       modes = { "i", "n", "v" },
       key = "<2-LeftMouse>",
       callback = actions.on_main_mouse_dbclick,
-      nowait = true,
       desc = "search: confirm",
     },
     { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
@@ -477,9 +468,6 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].signcolumn = "yes:1"
   vim.wo[winnr_input].winhighlight = INPUT_WIN_HIGHLIGHT
   vim.wo[winnr_input].wrap = false
-
-  ---! Set the default focused window to the input window.
-  vim.api.nvim_tabpage_set_win(0, winnr_input)
 end
 
 ---@return integer|nil
@@ -559,23 +547,23 @@ function M:focus()
 
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local winnr_main = self:get_winnr_main() ---@type integer|nil
-  local winnr_input = self:get_winnr_input() ---@type integer|nil
+  local winnr_preview = self:get_winnr_preview() ---@type integer|nil
 
   if
     not visible
     or winnr_main == nil
-    or winnr_input == nil
+    or winnr_preview == nil
     or not vim.api.nvim_win_is_valid(winnr_main)
-    or not vim.api.nvim_win_is_valid(winnr_input)
+    or not vim.api.nvim_win_is_valid(winnr_preview)
   then
     self:open()
     return
   end
 
-  if winnr_cur ~= winnr_main and winnr_cur ~= winnr_input then
+  if winnr_cur ~= winnr_preview and winnr_cur ~= winnr_preview then
     vim.schedule(function()
-      if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-        vim.api.nvim_tabpage_set_win(0, winnr_input)
+      if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
+        vim.api.nvim_tabpage_set_win(0, winnr_preview)
       end
     end)
   end
