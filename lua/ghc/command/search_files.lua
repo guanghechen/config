@@ -68,6 +68,7 @@ local function fetch_items(input_text, callback)
         filepath = filepath,
         filematch = file_match,
       }
+      local is_first_item = true ---@type boolean
 
       for _, block_match in ipairs(file_match.matches) do
         local lines = block_match.lines ---@type string[]
@@ -118,8 +119,26 @@ local function fetch_items(input_text, callback)
             lnum = lnum,
             col = col,
           }
+
+          if is_first_item then
+            is_first_item = false
+
+            ---@class ghc.command.search_files.IItemData
+            item_data_map[file_item.uuid] = {
+              filepath = filepath,
+              filematch = file_match,
+              lnum = lnum,
+              col = col,
+            }
+          end
         end
       end
+
+      ---@class ghc.command.search_files.IItemData
+      item_data_map[file_item.uuid] = {
+        filepath = filepath,
+        filematch = file_match,
+      }
     end
   end
   _item_data_map = item_data_map
