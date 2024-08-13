@@ -22,6 +22,7 @@ local function fetch_items(input_text, callback)
   local cwd = session.search_cwd:snapshot() ---@type string
   local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
   local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
+  local max_filesize = session.search_max_filesize:snapshot() ---@type string
   local search_paths = session.search_paths:snapshot() ---@type string
   local include_patterns = session.search_include_patterns:snapshot() ---@type string
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
@@ -31,6 +32,7 @@ local function fetch_items(input_text, callback)
     cwd = cwd,
     flag_case_sensitive = flag_case_sensitive,
     flag_regex = flag_regex,
+    max_filesize = max_filesize,
     search_pattern = input_text,
     search_paths = search_paths,
     include_patterns = include_patterns,
@@ -220,11 +222,13 @@ local function edit_config()
   ---@class ghc.command.search_files.IConfigData
   ---@field public input                string
   ---@field public search_paths         string[]
+  ---@field public max_filesize         string
   ---@field public include_patterns     string[]
   ---@field public exclude_patterns     string[]
 
   local search_pattern = session.search_pattern:snapshot() ---@type string
   local s_search_paths = session.search_paths:snapshot() ---@type string
+  local s_max_filesize = session.search_max_filesize:snapshot() ---@type string
   local s_include_patterns = session.search_include_patterns:snapshot() ---@type string)
   local s_exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
 
@@ -232,6 +236,7 @@ local function edit_config()
   local data = {
     input = search_pattern,
     search_paths = fml.array.parse_comma_list(s_search_paths),
+    max_filesize = s_max_filesize,
     include_patterns = fml.array.parse_comma_list(s_include_patterns),
     exclude_patterns = fml.array.parse_comma_list(s_exclude_patterns),
   }
@@ -254,6 +259,10 @@ local function edit_config()
         return "Invalid data.search_paths, expect an array."
       end
 
+      if type(raw_data.max_filesize) ~= "string" then
+        return "Invalid data.max_filesize, expect a string."
+      end
+
       if raw_data.include_patterns == nil or not fml.is.array(raw_data.include_patterns) then
         return "Invalid data.include_patterns, expect an array."
       end
@@ -266,12 +275,14 @@ local function edit_config()
       ---@cast raw_data ghc.command.search_files.IConfigData
       local raw = vim.tbl_extend("force", data, raw_data)
       local input = raw.input ---@type string
+      local max_filesize = raw.max_filesize ---@type string
       local search_paths = table.concat(raw.search_paths, ",") ---@type string
       local include_patterns = table.concat(raw.include_patterns, ",") ---@type string
       local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
 
       session.search_pattern:next(input)
       session.search_paths:next(search_paths)
+      session.search_max_filesize:next(max_filesize)
       session.search_include_patterns:next(include_patterns)
       session.search_exclude_patterns:next(exclude_patterns)
       M.reload()

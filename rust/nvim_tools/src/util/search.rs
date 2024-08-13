@@ -41,6 +41,7 @@ pub struct SearchOptions {
     pub cwd: Option<String>,
     pub flag_case_sensitive: bool,
     pub flag_regex: bool,
+    pub max_filesize: Option<String>,
     pub search_pattern: String,
     pub search_paths: String,
     pub include_patterns: String,
@@ -87,8 +88,15 @@ pub fn search(
             .arg("--no-heading")
             .arg("--no-filename")
             .arg("--json")
+            .arg("--json")
             // -
         ;
+
+        if let Some(max_filesize) = &options.max_filesize {
+            if !max_filesize.is_empty() {
+                cmd.args(["--max-filesize", max_filesize]);
+            }
+        }
 
         if flag_case_sensitive {
             cmd.arg("--case-sensitive");
