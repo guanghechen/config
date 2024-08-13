@@ -1,7 +1,5 @@
-use crate::{
-    algorithm::kmp::{calc_fails, find_all_matched_points},
-    types::string::{LineMatch, LineMatchPiece},
-};
+use crate::algorithm::kmp::{calc_fails, find_all_matched_points};
+use crate::types::r#match::{LineMatch, LineMatchPiece};
 
 pub fn parse_comma_list(input: &str) -> Vec<String> {
     let parts: Vec<String> = input

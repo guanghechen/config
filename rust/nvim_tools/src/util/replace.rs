@@ -1,6 +1,5 @@
 use crate::algorithm::kmp::find_all_matched_points;
-
-use super::r#match::{find_matches_per_line, LineMatch, MatchPoint};
+use crate::types::r#match::MatchPoint;
 use regex::{Captures, Regex};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -9,8 +8,8 @@ use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReplacePreview {
-    pub text: String,
-    pub lines: Vec<LineMatch>,
+    pub lines: Vec<String>,
+    pub matches: Vec<MatchPoint>,
 }
 
 // https://docs.rs/regex/latest/regex/index.html
@@ -138,11 +137,8 @@ pub fn replace_text_preview(
         next_text = pieces.join("");
     }
 
-    let lines: Vec<LineMatch> = find_matches_per_line(&next_text, &matches);
-    ReplacePreview {
-        text: next_text,
-        lines,
-    }
+    let lines: Vec<String> = next_text.lines().map(|line| line.to_string()).collect();
+    ReplacePreview { lines, matches }
 }
 
 /// Peform replacement on the entire file.

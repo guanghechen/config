@@ -14,6 +14,7 @@ fn test_rg() {
         cwd: Some(cwd),
         flag_regex: true,
         flag_case_sensitive: true,
+        max_filesize: Some("1M".to_string()),
         search_pattern: r#"Hello, (world|世界)!\n"#.to_string(),
         search_paths: "tests/fixtures".to_string(),
         include_patterns: "*.txt".to_string(),

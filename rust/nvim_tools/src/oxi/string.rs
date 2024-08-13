@@ -1,4 +1,5 @@
-use crate::{types::string::LineMatch, util};
+use crate::types::r#match::LineMatch;
+use crate::util;
 use uuid::Uuid;
 
 pub fn uuid((): ()) -> String {

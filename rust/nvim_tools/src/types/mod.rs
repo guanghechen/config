@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+pub mod r#match;
 pub mod replace;
 pub mod ripgrep_result;
-pub mod string;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CmdResult<T> {
