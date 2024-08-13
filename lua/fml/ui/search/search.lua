@@ -1,5 +1,5 @@
 local constant = require("fml.constant")
-local async = require("fml.std.async")
+local scheduler = require("fml.std.scheduler")
 local api_state = require("fml.api.state")
 local watch_observables = require("fml.fn.watch_observables")
 local std_array = require("fml.std.array")
@@ -132,7 +132,7 @@ function M.new(props)
     self:sync_main_cursor()
   end
 
-  local reset_cursor_to_input_runner = async.debounce({
+  local reset_cursor_to_input_runner = scheduler.debounce({
     fn = function()
       local winnr_input = self:get_winnr_input() ---@type integer|nil
       if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then

@@ -1,24 +1,24 @@
----@class fml.std.async
+---@class fml.std.scheduler
 local M = {}
 
----@alias fml.std.async.IRunCallback
+---@alias fml.std.scheduler.IRunCallback
 ---| fun(ok: boolean, result: fml.types.T|nil): nil
 
----@class fml.std.async.IRunnerProps
----@field public fn                    fun(callback: fml.std.async.IRunCallback): fml.types.T
----@field public callback              ?fml.std.async.IRunCallback
+---@class fml.std.scheduler.IRunnerProps
+---@field public fn                    fun(callback: fml.std.scheduler.IRunCallback): fml.types.T
+---@field public callback              ?fml.std.scheduler.IRunCallback
 ---@field public delay                 ?integer
 
----@class fml.std.async.IRunner
+---@class fml.std.scheduler.IRunner
 ---@field public schedule               fun(): nil
 ---@field public snapshot               fun(): fml.types.T
 ---@field public cancel                 fun(): nil
 
----@param params                        fml.std.async.IRunnerProps
----@return fml.std.async.IRunner
+---@param params                        fml.std.scheduler.IRunnerProps
+---@return fml.std.scheduler.IRunner
 function M.debounce(params)
-  local fn = params.fn ---@type fun(callback: fml.std.async.IRunCallback): fml.types.T
-  local callback = params.callback ---@type fml.std.async.IRunCallback|nil
+  local fn = params.fn ---@type fun(callback: fml.std.scheduler.IRunCallback): fml.types.T
+  local callback = params.callback ---@type fml.std.scheduler.IRunCallback|nil
   local delay = math.max(1, params.delay or 0) ---@type integer
 
   local _tick_call = 1 ---@type integer
@@ -58,7 +58,7 @@ function M.debounce(params)
     _tick_call = _tick_call + 1
   end
 
-  ---@type fml.std.async.IRunner
+  ---@type fml.std.scheduler.IRunner
   local runner = {
     schedule = schedule,
     snapshot = snapshot,
@@ -67,11 +67,11 @@ function M.debounce(params)
   return runner
 end
 
----@param params                        fml.std.async.IRunnerProps
----@return fml.std.async.IRunner
+---@param params                        fml.std.scheduler.IRunnerProps
+---@return fml.std.scheduler.IRunner
 function M.throttle(params)
-  local fn = params.fn ---@type fun(callback: fml.std.async.IRunCallback): fml.types.T
-  local callback = params.callback ---@type fml.std.async.IRunCallback|nil
+  local fn = params.fn ---@type fun(callback: fml.std.scheduler.IRunCallback): fml.types.T
+  local callback = params.callback ---@type fml.std.scheduler.IRunCallback|nil
   local delay = math.max(1, params.delay or 0) ---@type integer
 
   local _scheduling = false ---@type boolean
@@ -127,7 +127,7 @@ function M.throttle(params)
     _tick_alive = _tick_call + 1
   end
 
-  ---@type fml.std.async.IRunner
+  ---@type fml.std.scheduler.IRunner
   local runner = {
     schedule = schedule,
     snapshot = snapshot,

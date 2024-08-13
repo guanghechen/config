@@ -1,5 +1,6 @@
 local Observable = require("fml.collection.observable")
 local Subscriber = require("fml.collection.subscriber")
+local scheduler = require("fml.std.scheduler")
 local navigate = require("fml.std.navigate")
 local oxi = require("fml.std.oxi")
 local reporter = require("fml.std.reporter")
@@ -31,6 +32,65 @@ function M.new(props)
   local dirty_main = Observable.from_value(true)
   local dirty_preview = Observable.from_value(true)
 
+  local fetch_scheduler ---@type fml.std.scheduler.IRunner
+  fetch_scheduler = scheduler.debounce({
+    delay = fetch_delay,
+    fn = function(callback)
+      fetch_scheduler.cancel()
+      local input_cur = input:snapshot() ---@type string
+      fetch_items(input_cur, function(succeed, items)
+        local ok, ok2 = pcall(
+          ---@return boolean
+          function()
+            if succeed and items ~= nil then
+              local max_width = 0 ---@type integer
+              local item_lnum_next = 1 ---@type integer
+              ---@diagnostic disable-next-line: invisible
+              local item_uuid_cur = self._item_uuid_cur ---@type string|nil
+              for _, item in ipairs(items) do
+                local width = vim.fn.strwidth(item.text) ---@type integer
+                max_width = max_width < width and width or max_width
+
+                if item.uuid == item_uuid_cur then
+                  item_lnum_next = item_lnum_next
+                end
+              end
+
+              self.items = items
+              self.max_width = max_width
+              self:locate(item_lnum_next)
+
+              dirty_items:next(false)
+              dirty_main:next(true)
+              dirty_preview:next(true)
+              return true
+            else
+              reporter.error({
+                from = "fml.ui.search.state",
+                subject = "fetch_items",
+                message = "Failed to fetch items.",
+                details = { input = input_cur, error = items },
+              })
+              return false
+            end
+          end
+        )
+
+        callback(ok and ok2)
+      end)
+    end,
+  })
+
+  ---@return nil
+  local function fetch()
+    fetch_scheduler.schedule()
+  end
+
+  ---@return nil
+  local function mark_dirty()
+    self:mark_dirty()
+  end
+
   self.uuid = uuid
   self.title = title
   self.input = input
@@ -44,68 +104,9 @@ function M.new(props)
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
 
-  local fetching = false ---@type boolean
-  local function fetch()
-    local is_dirty = dirty_items:snapshot() ---@type boolean
-    local is_visible = visible:snapshot() ---@type boolean
-
-    if fetching or not is_dirty or not is_visible then
-      return
-    end
-
-    fetching = true
-    dirty_items:next(false)
-
-    local input_cur = input:snapshot() ---@type string
-    fetch_items(input_cur, function(succeed, items)
-      fetching = false
-
-      if succeed and items ~= nil then
-        local max_width = 0 ---@type integer
-        local item_lnum_next = 1 ---@type integer
-        ---@diagnostic disable-next-line: invisible
-        local item_uuid_cur = self._item_uuid_cur ---@type string|nil
-        for _, item in ipairs(items) do
-          local width = vim.fn.strwidth(item.text) ---@type integer
-          max_width = max_width < width and width or max_width
-
-          if item.uuid == item_uuid_cur then
-            item_lnum_next = item_lnum_next
-          end
-        end
-
-        self.items = items
-        self.max_width = max_width
-        self:locate(item_lnum_next)
-        dirty_main:next(true)
-        dirty_preview:next(true)
-      else
-        reporter.error({
-          from = "fml.ui.search.state",
-          subject = "fetch_items",
-          message = "Failed to fetch items.",
-          details = { input = input_cur, error = items },
-        })
-      end
-
-      vim.schedule(fetch)
-    end)
-  end
-
-  ---@return nil
-  local function fetch_deferred()
-    vim.defer_fn(fetch, fetch_delay)
-  end
-
-  ---@return nil
-  local function mark_dirty()
-    self:mark_dirty()
-  end
-
   input:subscribe(Subscriber.new({ on_next = mark_dirty }))
-  dirty_items:subscribe(Subscriber.new({ on_next = fetch_deferred }))
-  visible:subscribe(Subscriber.new({ on_next = fetch_deferred }))
-
+  dirty_items:subscribe(Subscriber.new({ on_next = fetch }))
+  visible:subscribe(Subscriber.new({ on_next = fetch }))
   return self
 end
 
