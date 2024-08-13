@@ -56,6 +56,7 @@
 ---@field public dirty_preview          fml.types.collection.IObservable
 ---@field public max_width              integer
 ---@field public get_current            fun(self: fml.types.ui.search.IState): fml.types.ui.search.IItem|nil, integer, string|nil
+---@field public get_current_lnum       fun(self: fml.types.ui.search.IState): integer
 ---@field public locate                 fun(self: fml.types.ui.search.IState, lnum: integer): integer
 ---@field public mark_dirty             fun(self: fml.types.ui.search.IState): nil
 ---@field public moveup                 fun(self: fml.types.ui.search.IState): integer
@@ -66,6 +67,7 @@
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IInput): integer
 ---@field public destroy                fun(self: fml.types.ui.search.IInput): nil
 ---@field public reset_input            fun(self: fml.types.ui.search.IInput, input?: string): nil
+---@field public set_virtual_text       fun(self: fml.types.ui.search.IInput): nil
 
 ---@class fml.types.ui.search.IMain
 ---@field public state                  fml.types.ui.search.IState

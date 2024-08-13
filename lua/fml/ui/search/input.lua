@@ -8,6 +8,8 @@ local signcolumn = require("fml.ui.signcolumn")
 ---@field protected _bufnr              integer|nil
 ---@field protected _rendering          boolean
 ---@field protected _keymaps            fml.types.IKeymap[]
+---@field protected _extmark_nsnr       integer
+---@field protected _extmark_nr         integer|nil
 local M = {}
 M.__index = M
 
@@ -23,6 +25,7 @@ function M.new(props)
   local state = props.state ---@type fml.types.ui.search.IState
   local input_history = state.input_history ---@type fml.types.collection.IHistory|nil
   local autocmd_group = util.augroup(state.uuid .. ":search_input") ---@type integer
+  local extmark_nsnr = vim.api.nvim_create_namespace(state.uuid .. ":search_input") ---@type integer
 
   local actions = {
     apply_prev_input = function()
@@ -84,6 +87,8 @@ function M.new(props)
 
   self.state = state
   self._autocmd_group = autocmd_group
+  self._extmark_nsnr = extmark_nsnr
+  self._extmark_nr = nil
   self._bufnr = nil
   self._rendering = false
   self._keymaps = keymaps
@@ -151,11 +156,34 @@ function M:destroy()
   end
 end
 
+---@return nil
+function M:set_virtual_text()
+  local state = self.state ---@type fml.types.ui.search.IState
+  local bufnr = self._bufnr ---@type integer|nil
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    local lnum = state:get_current_lnum() ---@type integer
+    local total = #state.items ---@type integer
+    local extmark_nsnr = self._extmark_nsnr ---@type integer
+
+    if self._extmark_nr then
+      vim.api.nvim_buf_del_extmark(bufnr, extmark_nsnr, self._extmark_nr)
+      self._extmark_nr = nil
+    end
+
+    -- Set the extmark with the right-aligned virtual text
+    self._extmark_nr = vim.api.nvim_buf_set_extmark(bufnr, extmark_nsnr, 0, 0, {
+      virt_text = { { "" .. lnum .. " / " .. total, "Comment" } },
+      virt_text_pos = "right_align",
+    })
+  end
+end
+
 ---@param input                         string|nil
 ---@return nil
 function M:reset_input(input)
-  local next_input = input or self.state.input:snapshot() ---@type string
-  self.state.input:next(next_input)
+  local state = self.state ---@type fml.types.ui.search.IState
+  local next_input = input or state.input:snapshot() ---@type string
+  state.input:next(next_input)
 
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then

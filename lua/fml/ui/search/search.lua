@@ -490,6 +490,7 @@ function M:draw(force)
   local visible = state.visible:snapshot() ---@type boolean
   if visible then
     self:create_wins_as_needed()
+    self._input:set_virtual_text()
     self._main:render(force)
 
     if self._preview ~= nil then

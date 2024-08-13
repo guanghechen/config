@@ -126,6 +126,11 @@ function M:get_current()
   return self.items[lnum], lnum, uuid
 end
 
+---@return integer
+function M:get_current_lnum()
+  return self._item_lnum_cur
+end
+
 ---@param lnum                          integer
 ---@return integer
 function M:locate(lnum)
