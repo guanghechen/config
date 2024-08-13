@@ -4,7 +4,6 @@ local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Input : fml.types.ui.search.IInput
----@field protected _input              fml.types.collection.IObservable
 ---@field protected _autocmd_group      integer
 ---@field protected _bufnr              integer|nil
 ---@field protected _rendering          boolean
@@ -13,9 +12,7 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.search.input.IProps
----@field public uuid                   string
----@field public input                  fml.types.collection.IObservable
----@field public input_history          fml.types.collection.IHistory|nil
+---@field public state                  fml.types.ui.search.IState
 ---@field public keymaps                fml.types.IKeymap[]
 
 ---@param props                         fml.ui.search.input.IProps
@@ -23,14 +20,13 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local uuid = props.uuid ---@type string
-  local input = props.input ---@type fml.types.collection.IObservable
-  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
-  local autocmd_group = util.augroup(uuid .. ":search_input") ---@type integer
+  local state = props.state ---@type fml.types.ui.search.IState
+  local input_history = state.input_history ---@type fml.types.collection.IHistory|nil
+  local autocmd_group = util.augroup(state.uuid .. ":search_input") ---@type integer
 
   local actions = {
     apply_prev_input = function()
-      local input_cur = input:snapshot() ---@type string
+      local input_cur = state.input:snapshot() ---@type string
       if input_history ~= nil then
         if input_history:is_top() then
           local present = input_history:present() ---@type string|nil
@@ -61,7 +57,7 @@ function M.new(props)
       end
     end,
     apply_next_input = function()
-      local input_cur = input:snapshot() ---@type string
+      local input_cur = state.input:snapshot() ---@type string
       if input_history ~= nil then
         local prefix = constant.EDITING_INPUT_PREFIX ---@type string
         local input_next = input_history:forward() ---@type string|nil
@@ -86,7 +82,7 @@ function M.new(props)
       }, props.keymaps)
     or props.keymaps
 
-  self._input = input
+  self.state = state
   self._autocmd_group = autocmd_group
   self._bufnr = nil
   self._rendering = false
@@ -123,7 +119,7 @@ function M:create_buf_as_needed()
           if vim.api.nvim_buf_is_valid(bufnr) then
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
             local next_input = table.concat(lines, "\n", 1, 1) ---@type string
-            self._input:next(next_input)
+            self.state.input:next(next_input)
           end
         end, 20)
       end
@@ -139,7 +135,7 @@ function M:create_buf_as_needed()
     end,
   })
 
-  local input = self._input:snapshot() ---@type string
+  local input = self.state.input:snapshot() ---@type string
   vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, { input })
   vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
   return bufnr
@@ -158,8 +154,8 @@ end
 ---@param input                         string|nil
 ---@return nil
 function M:reset_input(input)
-  local next_input = input or self._input:snapshot() ---@type string
-  self._input:next(next_input)
+  local next_input = input or self.state.input:snapshot() ---@type string
+  self.state.input:next(next_input)
 
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then

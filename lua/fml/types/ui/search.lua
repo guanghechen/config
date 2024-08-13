@@ -62,6 +62,7 @@
 ---@field public movedown               fun(self: fml.types.ui.search.IState): integer
 
 ---@class fml.types.ui.search.IInput
+---@field public state                  fml.types.ui.search.IState
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IInput): integer
 ---@field public destroy                fun(self: fml.types.ui.search.IInput): nil
 ---@field public reset_input            fun(self: fml.types.ui.search.IInput, input?: string): nil

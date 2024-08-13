@@ -244,9 +244,7 @@ function M.new(props)
 
   ---@type fml.types.ui.search.IInput
   local input = SearchInput.new({
-    uuid = state.uuid,
-    input = state.input,
-    input_history = state.input_history,
+    state = state,
     keymaps = input_keymaps,
   })
 
