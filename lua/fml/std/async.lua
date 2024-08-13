@@ -10,7 +10,7 @@ local M = {}
 ---@field public delay                 ?integer
 
 ---@class fml.std.async.IRunner
----@field public run                    fun(): nil
+---@field public schedule               fun(): nil
 ---@field public snapshot               fun(): fml.types.T
 ---@field public cancel                 fun(): nil
 
@@ -21,34 +21,30 @@ function M.debounce(params)
   local callback = params.callback ---@type fml.std.async.IRunCallback|nil
   local delay = math.max(1, params.delay or 0) ---@type integer
 
-  local _call_tick = 1 ---@type integer
-  local _resolved_tick = 0 ---@type integer
-  local _valid_tick = 0 ---@type integer
+  local _tick_call = 1 ---@type integer
+  local _tick_resolved = 0 ---@type integer
   local _result = nil ---@type fml.types.T
 
   ---@return nil
-  local function run()
-    _call_tick = _call_tick + 1
-    _valid_tick = _call_tick
+  local function schedule()
+    _tick_call = _tick_call + 1
+    local tick_snapshot = _tick_call ---@type integer
 
-    local tick_snapshot = _call_tick ---@type integer
     vim.defer_fn(function()
-      if tick_snapshot < _valid_tick then
-        return
+      if tick_snapshot == _tick_call then
+        fn(function(ok, result)
+          if _tick_resolved < tick_snapshot then
+            if ok then
+              _result = result
+              _tick_resolved = tick_snapshot
+            end
+
+            if callback ~= nil then
+              callback(ok, result)
+            end
+          end
+        end)
       end
-
-      fn(function(ok, result)
-        if _resolved_tick < tick_snapshot then
-          if ok then
-            _result = result
-            _resolved_tick = tick_snapshot
-          end
-
-          if callback ~= nil then
-            callback(ok, result)
-          end
-        end
-      end)
     end, delay)
   end
 
@@ -59,12 +55,12 @@ function M.debounce(params)
 
   ---@return nil
   local function cancel()
-    _valid_tick = _call_tick + 1
+    _tick_call = _tick_call + 1
   end
 
   ---@type fml.std.async.IRunner
   local runner = {
-    run = run,
+    schedule = schedule,
     snapshot = snapshot,
     cancel = cancel,
   }
@@ -78,47 +74,46 @@ function M.throttle(params)
   local callback = params.callback ---@type fml.std.async.IRunCallback|nil
   local delay = math.max(1, params.delay or 0) ---@type integer
 
-  local _running = false ---@type boolean
-  local _call_tick = 1 ---@type integer
-  local _resolved_tick = 0 ---@type integer
-  local _valid_tick = 0 ---@type integer
+  local _scheduling = false ---@type boolean
+
+  local _tick_call = 1 ---@type integer
+  local _tick_alive = 0 ---@type integer
+  local _tick_scheduled = 1 ---@type integer
+  local _tick_resolved = 0 ---@type integer
   local _result = nil ---@type fml.types.T
 
   ---@return nil
-  local function run()
-    _call_tick = _call_tick + 1
+  local function schedule()
+    _tick_call = _tick_call + 1
 
-    if _running then
+    if _scheduling then
       return
     end
 
-    _running = true
+    _scheduling = true
+    _tick_scheduled = _tick_call
+    local tick_snapshot = _tick_call ---@type integer
 
-    _valid_tick = _call_tick
-    local tick_snapshot = _valid_tick ---@type integer
     vim.defer_fn(function()
-      if tick_snapshot < _valid_tick then
-        _running = false
-        return
+      _scheduling = false
+      if _tick_call >= _tick_alive and _tick_call > _tick_scheduled then
+        schedule()
       end
 
-      fn(function(ok, result)
-        if _resolved_tick < tick_snapshot then
-          if ok then
-            _result = result
-            _resolved_tick = tick_snapshot
-          end
+      if tick_snapshot >= _tick_alive then
+        fn(function(ok, result)
+          if _tick_resolved < tick_snapshot then
+            if ok then
+              _result = result
+              _tick_resolved = tick_snapshot
+            end
 
-          if callback ~= nil then
-            callback(ok, result)
+            if callback ~= nil then
+              callback(ok, result)
+            end
           end
-        end
-
-        _running = false
-        if _valid_tick < _call_tick then
-          run()
-        end
-      end)
+        end)
+      end
     end, delay)
   end
 
@@ -129,12 +124,12 @@ function M.throttle(params)
 
   ---@return nil
   local function cancel()
-    _valid_tick = _call_tick + 1
+    _tick_alive = _tick_call + 1
   end
 
   ---@type fml.std.async.IRunner
   local runner = {
-    run = run,
+    schedule = schedule,
     snapshot = snapshot,
     cancel = cancel,
   }

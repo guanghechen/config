@@ -180,7 +180,7 @@ function M.new(props)
         lnum = state:locate(lnum)
         vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
 
-        reset_cursor_to_input_runner.run()
+        reset_cursor_to_input_runner.schedule()
       end
     end,
     on_main_mouse_dbclick = function()
