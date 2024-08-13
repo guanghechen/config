@@ -374,7 +374,7 @@ local function get_search()
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
       fetch_items = fetch_items,
-      fetch_delay = 32,
+      fetch_delay = 300,
       width = 0.4,
       height = 0.8,
       width_preview = 0.45,

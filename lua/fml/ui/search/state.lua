@@ -36,7 +36,6 @@ function M.new(props)
   fetch_scheduler = scheduler.debounce({
     delay = fetch_delay,
     fn = function(callback)
-      fetch_scheduler.cancel()
       local input_cur = input:snapshot() ---@type string
       fetch_items(input_cur, function(succeed, items)
         local ok, ok2 = pcall(
