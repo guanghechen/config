@@ -63,16 +63,15 @@ pub fn search(
             "".to_string(),
         ));
     }
-
-    let max_matches: i32 = match options.max_matches {
+    let max_matches: u32 = match options.max_matches {
         Some(value) => {
             if value < 0 {
-                i32::MAX
+                u32::MAX
             } else {
-                value
+                value as u32
             }
         }
-        None => i32::MAX,
+        None => u32::MAX,
     };
     let flag_case_sensitive: bool = options.flag_case_sensitive;
     let flag_regex: bool = options.flag_regex;
@@ -154,16 +153,16 @@ pub fn search(
     };
 
     if output.status.success() {
+        let mut matches_count: u32 = 0;
+        let mut result_elapsed_time: String = "0s".to_string();
+        let mut file_matches: HashMap<String, SearchFileMatch> = HashMap::new();
+
         let stdout = String::from_utf8_lossy(&output.stdout);
         let parts = line_separator_regex
             .split(&stdout)
             .filter(|&x| !x.is_empty());
-
-        let mut matches_count: i32 = 0;
-        let mut result_elapsed_time: String = "0s".to_string();
-        let mut file_matches: HashMap<String, SearchFileMatch> = HashMap::new();
         for part in parts {
-            if matches_count >= max_matches {
+            if matches_count == max_matches {
                 break;
             }
 
@@ -180,26 +179,29 @@ pub fn search(
                         let lines: Vec<String> =
                             text.lines().map(|line| line.to_string()).collect();
                         let mut matches: Vec<MatchPoint> = vec![];
+
+                        let file_item: &mut SearchFileMatch = file_matches
+                            .entry(path.text.to_string())
+                            .or_insert(SearchFileMatch { matches: vec![] });
+                        if file_item.matches.is_empty() {
+                            matches_count += 1;
+                        }
+
                         for submatch in submatches.iter() {
-                            if matches_count >= max_matches {
+                            if matches_count == max_matches {
                                 break;
                             }
-                            let match_point: MatchPoint = MatchPoint {
+                            matches_count += 1;
+                            matches.push(MatchPoint {
                                 start: submatch.start,
                                 end: submatch.end,
-                            };
-                            matches_count += 1;
-                            matches.push(match_point);
+                            });
                         }
-                        let block_match: SearchBlockMatch = SearchBlockMatch {
+                        file_item.matches.push(SearchBlockMatch {
                             lnum,
                             lines,
                             matches,
-                        };
-                        let file_item: &mut SearchFileMatch = file_matches
-                            .entry(path.text.clone())
-                            .or_insert(SearchFileMatch { matches: vec![] });
-                        file_item.matches.push(block_match);
+                        });
                     }
                     ripgrep_result::ResultItemData::End { .. } => {}
                     ripgrep_result::ResultItemData::Summary { elapsed_total, .. } => {

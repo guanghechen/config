@@ -16,7 +16,7 @@ local search_exclude_patterns =
 local search_flag_case_sensitive = Observable.from_value(true)
 local search_flag_regex = Observable.from_value(true)
 local search_include_patterns = Observable.new({ initial_value = "", normalize = normalize_paths })
-local search_max_matches = Observable.from_value(1000)
+local search_max_matches = Observable.from_value(500)
 local search_max_filesize = Observable.from_value("1M")
 local search_mode = Observable.from_value("search")
 local search_paths = Observable.new({ initial_value = "", normalize = normalize_paths })
