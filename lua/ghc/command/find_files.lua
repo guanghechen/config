@@ -95,6 +95,12 @@ local function get_select()
         desc = "find: edit configuration",
       },
       {
+        modes = { "i", "n" },
+        key = "<M-c>",
+        callback = edit_config,
+        desc = "find: edit configuration",
+      },
+      {
         modes = { "n", "v" },
         key = "<leader>w",
         callback = actions.change_scope_workspace,

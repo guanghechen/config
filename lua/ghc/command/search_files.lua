@@ -314,6 +314,12 @@ local function get_search()
         desc = "search: edit configuration",
       },
       {
+        modes = { "i", "n" },
+        key = "<M-c>",
+        callback = edit_config,
+        desc = "search: edit configuration",
+      },
+      {
         modes = { "n", "v" },
         key = "<leader>w",
         callback = actions.change_scope_workspace,
