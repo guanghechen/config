@@ -39,6 +39,7 @@ pub struct SearchFailedResult {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchOptions {
     pub cwd: Option<String>,
+    pub max_matches: Option<i32>,
     pub flag_case_sensitive: bool,
     pub flag_regex: bool,
     pub max_filesize: Option<String>,
@@ -63,6 +64,16 @@ pub fn search(
         ));
     }
 
+    let max_matches: i32 = match options.max_matches {
+        Some(value) => {
+            if value < 0 {
+                i32::MAX
+            } else {
+                value
+            }
+        }
+        None => i32::MAX,
+    };
     let flag_case_sensitive: bool = options.flag_case_sensitive;
     let flag_regex: bool = options.flag_regex;
     let search_pattern: &String = &options.search_pattern;
@@ -148,9 +159,14 @@ pub fn search(
             .split(&stdout)
             .filter(|&x| !x.is_empty());
 
+        let mut matches_count: i32 = 0;
         let mut result_elapsed_time: String = "0s".to_string();
         let mut file_matches: HashMap<String, SearchFileMatch> = HashMap::new();
         for part in parts {
+            if matches_count >= max_matches {
+                break;
+            }
+
             if let Ok(event) = serde_json::from_str::<ripgrep_result::ResultItem>(part) {
                 match event.data {
                     ripgrep_result::ResultItemData::Begin { .. } => {}
@@ -164,13 +180,17 @@ pub fn search(
                         let lines: Vec<String> =
                             text.lines().map(|line| line.to_string()).collect();
                         let mut matches: Vec<MatchPoint> = vec![];
-                        submatches.iter().enumerate().for_each(|(_, submatch)| {
+                        for submatch in submatches.iter() {
+                            if matches_count >= max_matches {
+                                break;
+                            }
                             let match_point: MatchPoint = MatchPoint {
                                 start: submatch.start,
                                 end: submatch.end,
                             };
+                            matches_count += 1;
                             matches.push(match_point);
-                        });
+                        }
                         let block_match: SearchBlockMatch = SearchBlockMatch {
                             lnum,
                             lines,

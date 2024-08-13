@@ -16,6 +16,7 @@ local search_exclude_patterns =
 local search_flag_case_sensitive = Observable.from_value(true)
 local search_flag_regex = Observable.from_value(true)
 local search_include_patterns = Observable.new({ initial_value = "", normalize = normalize_paths })
+local search_max_matches = Observable.from_value(1000)
 local search_max_filesize = Observable.from_value("1M")
 local search_mode = Observable.from_value("search")
 local search_paths = Observable.new({ initial_value = "", normalize = normalize_paths })
@@ -30,6 +31,7 @@ local search_scope = Observable.from_value("C")
 ---@field public search_flag_regex          fml.types.collection.IObservable
 ---@field public search_include_patterns    fml.types.collection.IObservable
 ---@field public search_max_filesize        fml.types.collection.IObservable
+---@field public search_max_matches         fml.types.collection.IObservable
 ---@field public search_mode                fml.types.collection.IObservable
 ---@field public search_paths               fml.types.collection.IObservable
 ---@field public search_pattern             fml.types.collection.IObservable
@@ -42,6 +44,7 @@ local M = require("ghc.context.session.mod")
   :register("search_flag_regex", search_flag_regex, true, true)
   :register("search_include_patterns", search_include_patterns, true, true)
   :register("search_max_filesize", search_max_filesize, true, true)
+  :register("search_max_matches", search_max_matches, true, true)
   :register("search_mode", search_mode, true, true)
   :register("search_paths", search_paths, true, true)
   :register("search_pattern", search_pattern, true, true)

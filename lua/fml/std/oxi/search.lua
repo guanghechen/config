@@ -24,6 +24,7 @@ local M = require("fml.std.oxi.mod")
 ---@field public flag_regex             boolean
 ---@field public flag_case_sensitive    boolean
 ---@field public max_filesize           string|nil
+---@field public max_matches            integer|nil
 ---@field public search_pattern         string
 ---@field public search_paths           string
 ---@field public include_patterns       string
