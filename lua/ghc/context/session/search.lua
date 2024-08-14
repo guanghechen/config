@@ -14,6 +14,7 @@ local search_cwd = Observable.from_value(fml.path.cwd())
 local search_exclude_patterns =
   Observable.new({ initial_value = ".git/**,**/.yarn/**,**/node_modules/**", normalize = normalize_paths })
 local search_flag_case_sensitive = Observable.from_value(true)
+local search_flag_gitignore = Observable.from_value(true)
 local search_flag_regex = Observable.from_value(true)
 local search_include_patterns = Observable.new({ initial_value = "", normalize = normalize_paths })
 local search_max_matches = Observable.from_value(500)
@@ -28,6 +29,7 @@ local search_scope = Observable.from_value("C")
 ---@field public search_cwd                 fml.types.collection.IObservable
 ---@field public search_exclude_patterns    fml.types.collection.IObservable
 ---@field public search_flag_case_sensitive fml.types.collection.IObservable
+---@field public search_flag_gitignore      fml.types.collection.IObservable
 ---@field public search_flag_regex          fml.types.collection.IObservable
 ---@field public search_include_patterns    fml.types.collection.IObservable
 ---@field public search_max_filesize        fml.types.collection.IObservable
@@ -41,6 +43,7 @@ local M = require("ghc.context.session.mod")
   :register("search_cwd", search_cwd, true, true)
   :register("search_exclude_patterns", search_exclude_patterns, true, true)
   :register("search_flag_case_sensitive", search_flag_case_sensitive, true, true)
+  :register("search_flag_gitignore", search_flag_gitignore, true, true)
   :register("search_flag_regex", search_flag_regex, true, true)
   :register("search_include_patterns", search_include_patterns, true, true)
   :register("search_max_filesize", search_max_filesize, true, true)
@@ -93,6 +96,7 @@ end
 vim.schedule(function()
   fml.fn.watch_observables({
     search_flag_case_sensitive,
+    search_flag_gitignore,
     search_flag_regex,
     search_scope,
   }, function()

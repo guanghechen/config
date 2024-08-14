@@ -22,6 +22,7 @@ local M = require("fml.std.oxi.mod")
 ---@class fml.std.oxi.search.IParams
 ---@field public cwd                    string
 ---@field public flag_regex             boolean
+---@field public flag_gitignore         boolean
 ---@field public flag_case_sensitive    boolean
 ---@field public max_filesize           string|nil
 ---@field public max_matches            integer|nil

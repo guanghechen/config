@@ -12,8 +12,9 @@ fn test_rg() {
 
     let replace_options = search::SearchOptions {
         cwd: Some(cwd),
-        flag_regex: true,
         flag_case_sensitive: true,
+        flag_gitignore: true,
+        flag_regex: true,
         max_matches: Some(300),
         max_filesize: Some("1M".to_string()),
         search_pattern: r#"Hello, (world|世界)!\n"#.to_string(),

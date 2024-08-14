@@ -41,6 +41,7 @@ pub struct SearchOptions {
     pub cwd: Option<String>,
     pub max_matches: Option<i32>,
     pub flag_case_sensitive: bool,
+    pub flag_gitignore: bool,
     pub flag_regex: bool,
     pub max_filesize: Option<String>,
     pub search_pattern: String,
@@ -74,6 +75,7 @@ pub fn search(
         None => u32::MAX,
     };
     let flag_case_sensitive: bool = options.flag_case_sensitive;
+    let flag_gitignore: bool = options.flag_gitignore;
     let flag_regex: bool = options.flag_regex;
     let search_pattern: &String = &options.search_pattern;
     let search_paths: Vec<String> = parse_comma_list(&options.search_paths);
@@ -101,6 +103,10 @@ pub fn search(
             .arg("--json")
             // -
         ;
+
+        if !flag_gitignore {
+            cmd.arg("--no-ignore-vcs");
+        }
 
         if let Some(max_filesize) = &options.max_filesize {
             if !max_filesize.is_empty() {

@@ -21,6 +21,7 @@ local _item_data_map = {} ---@type table<string, ghc.command.search_files.IItemD
 local function fetch_items(input_text, callback)
   local cwd = session.search_cwd:snapshot() ---@type string
   local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
+  local flag_gitignore = session.search_flag_gitignore:snapshot() ---@type boolean
   local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
   local max_filesize = session.search_max_filesize:snapshot() ---@type string
   local max_matches = session.search_max_matches:snapshot() ---@type integer
@@ -32,6 +33,7 @@ local function fetch_items(input_text, callback)
   local result = fml.oxi.search({
     cwd = cwd,
     flag_case_sensitive = flag_case_sensitive,
+    flag_gitignore = flag_gitignore,
     flag_regex = flag_regex,
     max_filesize = max_filesize,
     max_matches = max_matches,
@@ -208,6 +210,7 @@ end, true)
 
 fml.fn.watch_observables({
   session.search_flag_case_sensitive,
+  session.search_flag_gitignore,
   session.search_flag_regex,
   session.search_max_filesize,
   session.search_max_matches,
@@ -328,6 +331,10 @@ local function get_search()
         local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
         session.search_flag_regex:next(not flag_regex)
       end,
+      toggle_flag_gitignore = function()
+        local flag_gitignore = session.search_flag_gitignore:snapshot() ---@type boolean
+        session.search_flag_gitignore:next(not flag_gitignore)
+      end,
       toggle_case_sensitive = function()
         local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
         session.search_flag_case_sensitive:next(not flag_case_sensitive)
@@ -377,6 +384,12 @@ local function get_search()
         key = "<leader>i",
         callback = actions.toggle_case_sensitive,
         desc = "search: toggle case sensitive",
+      },
+      {
+        modes = { "n", "v" },
+        key = "<leader>g",
+        callback = actions.toggle_flag_gitignore,
+        desc = "search: toggle gitignore",
       },
     }
 
