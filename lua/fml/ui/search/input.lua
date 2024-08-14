@@ -1,14 +1,16 @@
 local constant = require("fml.constant")
 local std_array = require("fml.std.array")
+local scheduler = require("fml.std.scheduler")
 local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Input : fml.types.ui.search.IInput
 ---@field protected _autocmd_group      integer
 ---@field protected _bufnr              integer|nil
----@field protected _rendering          boolean
----@field protected _keymaps            fml.types.IKeymap[]
 ---@field protected _extmark_nr         integer|nil
+---@field protected _input_scheduler    fml.std.scheduler.IScheduler
+---@field protected _keymaps            fml.types.IKeymap[]
+---@field protected _rendering          boolean
 local M = {}
 M.__index = M
 
@@ -80,17 +82,34 @@ function M.new(props)
   ---@type fml.types.IKeymap[]
   local keymaps = input_history ~= nil
       and std_array.concat({
-        { modes = { "i", "n", "v" }, key = "<C-j>", callback = actions.apply_next_input, desc = "search: last input" },
-        { modes = { "i", "n", "v" }, key = "<C-k>", callback = actions.apply_prev_input, desc = "search: next input" },
+        { modes = { "i", "n", "v" }, key = "<C-j>", callback = actions.apply_prev_input, desc = "search: next input" },
+        { modes = { "i", "n", "v" }, key = "<C-k>", callback = actions.apply_next_input, desc = "search: last input" },
       }, props.keymaps)
     or props.keymaps
 
+  local input_scheduler = scheduler.throttle({
+    delay = 32,
+    fn = function(callback)
+      ---@diagnostic disable-next-line: invisible
+      local bufnr = self._bufnr ---@type integer|nil
+      if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+        if vim.api.nvim_buf_is_valid(bufnr) then
+          local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+          local next_input = table.concat(lines, "\n", 1, 1) ---@type string
+          self.state.input:next(next_input)
+        end
+      end
+      callback(true)
+    end,
+  })
+
   self.state = state
   self._autocmd_group = autocmd_group
-  self._extmark_nr = nil
   self._bufnr = nil
-  self._rendering = false
+  self._extmark_nr = nil
+  self._input_scheduler = input_scheduler
   self._keymaps = keymaps
+  self._rendering = false
   return self
 end
 
@@ -110,23 +129,16 @@ function M:create_buf_as_needed()
 
   util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-  local queued = false ---@type boolean
+  local input = self.state.input:snapshot() ---@type string
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { input })
+  vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
+
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     group = self._autocmd_group,
     buffer = bufnr,
     callback = function()
       vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
-      if not queued then
-        queued = true
-        vim.defer_fn(function()
-          queued = false
-          if vim.api.nvim_buf_is_valid(bufnr) then
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-            local next_input = table.concat(lines, "\n", 1, 1) ---@type string
-            self.state.input:next(next_input)
-          end
-        end, 20)
-      end
+      self._input_scheduler:schedule()
     end,
   })
   vim.api.nvim_create_autocmd({ "BufDelete" }, {
@@ -138,10 +150,6 @@ function M:create_buf_as_needed()
       vim.api.nvim_del_augroup_by_id(self._autocmd_group)
     end,
   })
-
-  local input = self.state.input:snapshot() ---@type string
-  vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, { input })
-  vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
   return bufnr
 end
 

@@ -133,11 +133,12 @@ function M.new(props)
   end
 
   local reset_cursor_scheduler = scheduler.debounce({
-    fn = function()
+    fn = function(callback)
       local winnr_input = self:get_winnr_input() ---@type integer|nil
       if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
         vim.api.nvim_tabpage_set_win(0, winnr_input)
       end
+      callback(true)
     end,
     delay = 500,
   })

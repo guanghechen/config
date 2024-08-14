@@ -144,8 +144,7 @@ function M:render(force)
           vim.bo[bufnr].modifiable = true
           vim.bo[bufnr].readonly = false
 
-          vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, {})
-
+          vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
           if data ~= nil then
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, data.lines)
           end

@@ -32,7 +32,7 @@ function M.new(props)
   local dirty_main = Observable.from_value(true)
   local dirty_preview = Observable.from_value(true)
 
-  local fetch_scheduler ---@type fml.std.scheduler.IRunner
+  local fetch_scheduler ---@type fml.std.scheduler.IScheduler
   fetch_scheduler = scheduler.debounce({
     delay = fetch_delay,
     fn = function(callback)

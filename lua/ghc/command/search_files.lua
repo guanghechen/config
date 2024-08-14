@@ -400,7 +400,7 @@ local function get_search()
     local input_history = state_input_history.load_and_autosave().search_in_files ---@type fml.types.collection.IHistory
     _search = fml.ui.search.Search.new({
       title = "Search in files",
-      input = Observable.from_value(""),
+      input = session.search_pattern,
       input_history = input_history,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
