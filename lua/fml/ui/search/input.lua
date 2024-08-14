@@ -88,6 +88,7 @@ function M.new(props)
     or props.keymaps
 
   local input_scheduler = scheduler.throttle({
+    name = "fml.ui.search.input.on_change",
     delay = 32,
     fn = function(callback)
       ---@diagnostic disable-next-line: invisible

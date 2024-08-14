@@ -137,6 +137,8 @@ function M.new(props)
   end
 
   local reset_cursor_scheduler = scheduler.debounce({
+    name = "fml.ui.search.search.reset_cursor",
+    delay = 500,
     fn = function(callback)
       local winnr_input = self:get_winnr_input() ---@type integer|nil
       if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
@@ -144,7 +146,6 @@ function M.new(props)
       end
       callback(true)
     end,
-    delay = 500,
   })
 
   ---@class fml.ui.search.search.actions

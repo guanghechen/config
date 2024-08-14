@@ -1,4 +1,3 @@
-local Observable = require("fml.collection.observable")
 local session = require("ghc.context.session")
 local statusline = require("ghc.ui.statusline")
 local state_frecency = require("ghc.state.frecency")

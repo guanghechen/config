@@ -29,6 +29,7 @@ function M.new(props)
 
   ---@type fml.std.scheduler.IScheduler
   local _render_scheduler = scheduler.debounce({
+    name = "fml.ui.search.main.render",
     delay = _render_delay,
     fn = function(callback)
       local ok, error = pcall(function()

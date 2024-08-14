@@ -1,3 +1,5 @@
+local reporter = require("fml.std.reporter")
+
 ---@class fml.std.scheduler
 local M = {}
 
@@ -5,6 +7,7 @@ local M = {}
 ---| fun(ok: boolean, result: fml.types.T|nil): nil
 
 ---@class fml.std.scheduler.ISchedulerProps
+---@field public name                  string
 ---@field public fn                    fun(callback: fml.std.scheduler.IScheduleCallback): fml.types.T
 ---@field public callback              ?fml.std.scheduler.IScheduleCallback
 ---@field public delay                 ?integer
@@ -17,6 +20,7 @@ local M = {}
 ---@param params                        fml.std.scheduler.ISchedulerProps
 ---@return fml.std.scheduler.IScheduler
 function M.debounce(params)
+  local name = params.name ---@type string
   local fn = params.fn ---@type fun(callback: fml.std.scheduler.IScheduleCallback): fml.types.T
   local callback = params.callback ---@type fml.std.scheduler.IScheduleCallback|nil
   local delay = math.max(1, params.delay or 0) ---@type integer
@@ -37,6 +41,13 @@ function M.debounce(params)
             if ok then
               _result = result
               _tick_resolved = tick_snapshot
+            else
+              reporter.error({
+                from = "fml.std.scheduler",
+                subject = "debounce.schedule",
+                message = "Failed to run.",
+                details = { name = name, result = result or "nil" },
+              })
             end
 
             if callback ~= nil then
@@ -59,12 +70,12 @@ function M.debounce(params)
   end
 
   ---@type fml.std.scheduler.IScheduler
-  local runner = {
+  local scheduler = {
     schedule = schedule,
     snapshot = snapshot,
     cancel = cancel,
   }
-  return runner
+  return scheduler
 end
 
 ---@param params                        fml.std.scheduler.ISchedulerProps
@@ -128,12 +139,12 @@ function M.throttle(params)
   end
 
   ---@type fml.std.scheduler.IScheduler
-  local runner = {
+  local scheduler = {
     schedule = schedule,
     snapshot = snapshot,
     cancel = cancel,
   }
-  return runner
+  return scheduler
 end
 
 return M

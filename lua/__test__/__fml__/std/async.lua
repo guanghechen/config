@@ -3,6 +3,7 @@ local function test_debounce()
   local run_count = 0 ---@type integer
 
   local a = fml.scheduler.debounce({
+    name = "__test__.fml.std.async",
     delay = 100,
     callback = function()
       callback_count = callback_count + 1

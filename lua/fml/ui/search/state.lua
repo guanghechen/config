@@ -3,7 +3,6 @@ local Subscriber = require("fml.collection.subscriber")
 local scheduler = require("fml.std.scheduler")
 local navigate = require("fml.std.navigate")
 local oxi = require("fml.std.oxi")
-local reporter = require("fml.std.reporter")
 
 ---@class fml.ui.search.State : fml.types.ui.search.IState
 ---@field protected _item_lnum_cur      integer
@@ -34,44 +33,32 @@ function M.new(props)
 
   local fetch_scheduler ---@type fml.std.scheduler.IScheduler
   fetch_scheduler = scheduler.debounce({
+    name = "fml.ui.search.state.fetch",
     delay = fetch_delay,
     fn = function(callback)
       local input_cur = input:snapshot() ---@type string
       fetch_items(input_cur, function(succeed, items)
-        local ok, ok2 = pcall(
-          ---@return boolean
-          function()
-            if succeed and items ~= nil then
-              local max_width = 0 ---@type integer
-              local item_lnum_next = 1 ---@type integer
-              ---@diagnostic disable-next-line: invisible
-              local item_uuid_cur = self._item_uuid_cur ---@type string|nil
-              for _, item in ipairs(items) do
-                local width = vim.fn.strwidth(item.text) ---@type integer
-                max_width = max_width < width and width or max_width
+        if succeed and items ~= nil then
+          local max_width = 0 ---@type integer
+          local item_lnum_next = 1 ---@type integer
+          ---@diagnostic disable-next-line: invisible
+          local item_uuid_cur = self._item_uuid_cur ---@type string|nil
+          for _, item in ipairs(items) do
+            local width = vim.fn.strwidth(item.text) ---@type integer
+            max_width = max_width < width and width or max_width
 
-                if item.uuid == item_uuid_cur then
-                  item_lnum_next = item_lnum_next
-                end
-              end
-
-              self.items = items
-              self.max_width = max_width
-              self:locate(item_lnum_next)
-              return true
-            else
-              reporter.error({
-                from = "fml.ui.search.state",
-                subject = "fetch_items",
-                message = "Failed to fetch items.",
-                details = { input = input_cur, error = items },
-              })
-              return false
+            if item.uuid == item_uuid_cur then
+              item_lnum_next = item_lnum_next
             end
           end
-        )
 
-        callback(ok and ok2)
+          self.items = items
+          self.max_width = max_width
+          self:locate(item_lnum_next)
+          callback(true)
+        else
+          callback(false, items)
+        end
       end)
     end,
     callback = function(ok)
