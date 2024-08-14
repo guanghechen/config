@@ -379,7 +379,7 @@ function M:create_wins_as_needed()
       col = col,
       focusable = true,
       title = "",
-      border = "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+      border = { " ", " ", " ", " ", " ", " ", " ", " " }, --- "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
       style = "minimal",
     }
     if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
@@ -394,6 +394,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_main].number = false
     vim.wo[winnr_main].relativenumber = false
     vim.wo[winnr_main].signcolumn = "yes"
+    vim.wo[winnr_main].winblend = 10
     vim.wo[winnr_main].winhighlight = MAIN_WIN_HIGHLIGHT
     vim.wo[winnr_main].wrap = false
     vim.wo[winnr_main].cursorline = match_count > 0
@@ -418,7 +419,7 @@ function M:create_wins_as_needed()
       focusable = true,
       title = " " .. self._preview_title .. " ",
       title_pos = "center",
-      border = "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+      border = { " ", " ", " ", " ", " ", " ", " ", " " }, --- "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
       style = "minimal",
     }
 
@@ -435,6 +436,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_preview].number = false
     vim.wo[winnr_preview].relativenumber = false
     vim.wo[winnr_preview].signcolumn = "yes:1"
+    vim.wo[winnr_preview].winblend = 10
     vim.wo[winnr_preview].winhighlight = PREVIEW_WIN_HIGHLIGHT
     vim.wo[winnr_preview].wrap = false
     vim.wo[winnr_preview].cursorline = match_count > 0
@@ -451,7 +453,7 @@ function M:create_wins_as_needed()
     focusable = true,
     title = " " .. state.title .. " ",
     title_pos = "center",
-    border = "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+    border = { " ", " ", " ", " ", " ", " ", " ", " " }, --- "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
     style = "minimal",
   }
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
@@ -464,6 +466,7 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].number = false
   vim.wo[winnr_input].relativenumber = false
   vim.wo[winnr_input].signcolumn = "yes:1"
+  vim.wo[winnr_input].winblend = 10
   vim.wo[winnr_input].winhighlight = INPUT_WIN_HIGHLIGHT
   vim.wo[winnr_input].wrap = false
 end

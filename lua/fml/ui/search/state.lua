@@ -105,7 +105,6 @@ function M.new(props)
 
   input:subscribe(Subscriber.new({ on_next = mark_dirty }))
   dirty_items:subscribe(Subscriber.new({ on_next = fetch }))
-  visible:subscribe(Subscriber.new({ on_next = fetch }))
   return self
 end
 
