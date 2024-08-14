@@ -17,6 +17,9 @@ M.FT_SELECT_INPUT = "select-input"
 M.FT_SELECT_MAIN = "select-main"
 M.FT_TERM = "term"
 
+---! sign_ids
+M.SIGN_NR_SEARCH_MAIN_CURRENT = 3333
+
 M.BUF_UNTITLED = "untitled"
 M.SESSION_SAVE_OPTION = "buffers,curdir,folds,help,resize,tabpages,unix,winpos,winsize"
 M.SESSION_AUTOSAVE_OPTION = "buffers,curdir,folds,help,resize,tabpages,unix,winpos,winsize"

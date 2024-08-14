@@ -311,12 +311,11 @@ function M.new(props)
   self._on_close_callback = on_close_from_props
 
   watch_observables({ state.dirty_main }, function()
-    vim.schedule(function()
-      local is_dirty_main = state.dirty_main:snapshot() ---@type boolean|nil
-      if is_dirty_main then
-        self:draw()
-      end
-    end)
+    local dirty = state.dirty_main:snapshot() ---@type boolean|nil
+    local visible = state.visible:snapshot() ---@type boolean
+    if dirty and visible then
+      self:draw()
+    end
   end, true)
 
   return self
@@ -495,7 +494,6 @@ function M:draw(force)
     self:create_wins_as_needed()
     self._input:set_virtual_text()
     self._main:render(force)
-
     if self._preview ~= nil then
       self._preview:render(force)
     end

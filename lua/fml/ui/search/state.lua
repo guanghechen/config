@@ -29,8 +29,8 @@ function M.new(props)
   local fetch_delay = math.max(0, props.fetch_delay or 32) ---@type integer
   local visible = Observable.from_value(false)
   local dirty_items = Observable.from_value(true)
-  local dirty_main = Observable.from_value(true)
-  local dirty_preview = Observable.from_value(true)
+  local dirty_main = Observable.from_value(false)
+  local dirty_preview = Observable.from_value(false)
 
   local fetch_scheduler ---@type fml.std.scheduler.IScheduler
   fetch_scheduler = scheduler.debounce({
@@ -58,10 +58,6 @@ function M.new(props)
               self.items = items
               self.max_width = max_width
               self:locate(item_lnum_next)
-
-              dirty_items:next(false)
-              dirty_main:next(true)
-              dirty_preview:next(true)
               return true
             else
               reporter.error({
@@ -77,6 +73,13 @@ function M.new(props)
 
         callback(ok and ok2)
       end)
+    end,
+    callback = function(ok)
+      if ok then
+        dirty_items:next(false)
+        dirty_main:next(true, { force = true })
+        dirty_preview:next(true, { force = true })
+      end
     end,
   })
 
@@ -136,7 +139,7 @@ function M:locate(lnum)
   local items = self.items ---@type fml.types.ui.search.IItem[]
   local next_lnum = math.max(1, math.min(#items, lnum)) ---@type integer
   local next_uuid = items[next_lnum] and items[next_lnum].uuid or nil ---@type string|nil
-  local has_changed = self._item_lnum_cur ~= next_lnum or self._item_uuid_cur ~= next_uuid
+  local has_changed = self._item_lnum_cur ~= next_lnum or self._item_uuid_cur ~= next_uuid ---@type boolean
 
   self._item_lnum_cur = next_lnum
   self._item_uuid_cur = next_uuid

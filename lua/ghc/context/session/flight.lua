@@ -15,8 +15,6 @@ vim.schedule(function()
   fml.fn.watch_observables({
     flight_copilot,
   }, function()
-    vim.schedule(function()
-      vim.cmd("redrawstatus")
-    end)
+    vim.cmd("redrawstatus")
   end)
 end)

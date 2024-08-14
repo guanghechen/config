@@ -13,10 +13,10 @@ local function watch_observables(observables, callback, ignore_initial)
         if first then
           first = false
           if not ignore_initial then
-            callback()
+            vim.schedule(callback)
           end
         else
-          callback()
+          vim.schedule(callback)
         end
       end,
     })

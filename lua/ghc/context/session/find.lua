@@ -70,8 +70,6 @@ end
 --Auto refresh statusline
 vim.schedule(function()
   fml.fn.watch_observables({ find_scope, find_flag_gitignore }, function()
-    vim.schedule(function()
-      vim.cmd("redrawstatus")
-    end)
+    vim.cmd("redrawstatus")
   end)
 end)

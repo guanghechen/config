@@ -2,6 +2,7 @@ local constant = require("fml.constant")
 local std_array = require("fml.std.array")
 local scheduler = require("fml.std.scheduler")
 local util = require("fml.std.util")
+local watch_observables = require("fml.fn.watch_observables")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Input : fml.types.ui.search.IInput
@@ -10,7 +11,6 @@ local signcolumn = require("fml.ui.signcolumn")
 ---@field protected _extmark_nr         integer|nil
 ---@field protected _input_scheduler    fml.std.scheduler.IScheduler
 ---@field protected _keymaps            fml.types.IKeymap[]
----@field protected _rendering          boolean
 local M = {}
 M.__index = M
 
@@ -109,7 +109,15 @@ function M.new(props)
   self._extmark_nr = nil
   self._input_scheduler = input_scheduler
   self._keymaps = keymaps
-  self._rendering = false
+
+  watch_observables({ state.dirty_preview }, function()
+    local dirty = state.dirty_preview:snapshot() ---@type boolean|nil
+    local visible = state.visible:snapshot() ---@type boolean
+    if visible and dirty then
+      self:set_virtual_text()
+    end
+  end, true)
+
   return self
 end
 
@@ -157,6 +165,7 @@ end
 function M:destroy()
   local bufnr = self._bufnr ---@type integer|nil
   self._bufnr = nil
+  self._input_scheduler.cancel()
 
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -177,7 +186,7 @@ function M:set_virtual_text()
       self._extmark_nr = nil
     end
 
-    -- Set the extmark with the right-aligned virtual text
+    ---! Set the extmark with the right-aligned virtual text
     self._extmark_nr = vim.api.nvim_buf_set_extmark(bufnr, extmark_nsnr, 0, 0, {
       virt_text = { { "" .. lnum .. " / " .. total, "Comment" } },
       virt_text_pos = "right_align",
@@ -194,10 +203,7 @@ function M:reset_input(input)
 
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-    if #lines ~= 1 or lines[1] ~= next_input then
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { next_input })
-    end
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { next_input })
   end
 end
 
