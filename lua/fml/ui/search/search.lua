@@ -132,7 +132,7 @@ function M.new(props)
     self:sync_main_cursor()
   end
 
-  local reset_cursor_to_input_runner = scheduler.debounce({
+  local reset_cursor_scheduler = scheduler.debounce({
     fn = function()
       local winnr_input = self:get_winnr_input() ---@type integer|nil
       if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
@@ -180,7 +180,7 @@ function M.new(props)
         lnum = state:locate(lnum)
         vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
 
-        reset_cursor_to_input_runner.schedule()
+        reset_cursor_scheduler.schedule()
       end
     end,
     on_main_mouse_dbclick = function()

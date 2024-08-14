@@ -8,10 +8,11 @@ local signcolumn = require("fml.ui.signcolumn")
 ---@field protected _bufnr              integer|nil
 ---@field protected _rendering          boolean
 ---@field protected _keymaps            fml.types.IKeymap[]
----@field protected _extmark_nsnr       integer
 ---@field protected _extmark_nr         integer|nil
 local M = {}
 M.__index = M
+
+local extmark_nsnr = vim.api.nvim_create_namespace("fml.ui.search.input") ---@type integer
 
 ---@class fml.ui.search.input.IProps
 ---@field public state                  fml.types.ui.search.IState
@@ -25,7 +26,6 @@ function M.new(props)
   local state = props.state ---@type fml.types.ui.search.IState
   local input_history = state.input_history ---@type fml.types.collection.IHistory|nil
   local autocmd_group = util.augroup(state.uuid .. ":search_input") ---@type integer
-  local extmark_nsnr = vim.api.nvim_create_namespace(state.uuid .. ":search_input") ---@type integer
 
   local actions = {
     apply_prev_input = function()
@@ -87,7 +87,6 @@ function M.new(props)
 
   self.state = state
   self._autocmd_group = autocmd_group
-  self._extmark_nsnr = extmark_nsnr
   self._extmark_nr = nil
   self._bufnr = nil
   self._rendering = false
@@ -161,9 +160,9 @@ function M:set_virtual_text()
   local state = self.state ---@type fml.types.ui.search.IState
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local lnum = state:get_current_lnum() ---@type integer
     local total = #state.items ---@type integer
-    local extmark_nsnr = self._extmark_nsnr ---@type integer
+    local lnum = state:get_current_lnum() ---@type integer
+    lnum = lnum > total and total or lnum
 
     if self._extmark_nr then
       vim.api.nvim_buf_del_extmark(bufnr, extmark_nsnr, self._extmark_nr)
