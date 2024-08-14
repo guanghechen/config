@@ -205,6 +205,7 @@ function M.reload()
     local exclude_patterns = session.find_exclude_patterns:snapshot() ---@type string
     ---@type string[]
     local filepaths = fml.oxi.find({
+      workspace = workspace,
       cwd = find_cwd,
       use_regex = false,
       case_sensitive = false,

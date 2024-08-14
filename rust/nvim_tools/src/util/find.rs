@@ -1,5 +1,6 @@
 use super::string::parse_comma_list;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use std::process::Command;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -22,7 +23,8 @@ pub struct FindFailedResult {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FindOptions {
-    pub cwd: Option<String>,
+    pub workspace: String,
+    pub cwd: String,
     pub case_sensitive: bool,
     pub use_regex: bool,
     pub search_pattern: String,
@@ -31,28 +33,32 @@ pub struct FindOptions {
 }
 
 pub fn find(options: &FindOptions) -> Result<FindSucceedResult, FindFailedResult> {
+    let workspace: &String = &options.workspace;
+    let cwd: &String = &options.cwd;
     let case_sensitive: bool = options.case_sensitive;
     let use_regex: bool = options.use_regex;
     let search_pattern: &String = &options.search_pattern;
     let search_paths: Vec<String> = parse_comma_list(&options.search_paths);
     let exclude_patterns: Vec<String> = parse_comma_list(&options.exclude_patterns);
 
+    let mut gitignore_path = PathBuf::from(workspace);
+    gitignore_path.push(".gitignore");
+
     let (cmd, output) = {
         let mut cmd = Command::new("fd");
-        if let Some(cwd) = &options.cwd {
-            cmd
-                //
-                .current_dir(cwd)
-                .args(["--base-directory", cwd]);
-        };
-
         cmd
             //
+            .current_dir(cwd)
+            .args(["--base-directory", cwd])
             .arg("--color=never")
             .arg("--hidden")
             .arg("--type=file")
             // -
         ;
+
+        if gitignore_path.exists() {
+            cmd.args(["--ignore-file", &gitignore_path.to_string_lossy()]);
+        }
 
         if case_sensitive {
             cmd.arg("--case-sensitive");

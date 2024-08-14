@@ -4,9 +4,10 @@ local Observable = fml.collection.Observable
 local scopes = { "W", "C", "D" }
 
 local find_exclude_patterns = Observable.from_value(table.concat({
-  ".cache/**",
   ".git/**",
-  ".yarn/**",
+  "**/.cache/**",
+  "**/.next/**",
+  "**/.yarn/**",
   "**/build/**",
   "**/debug/**",
   "**/node_modules/**",

@@ -4,6 +4,7 @@ local Observable = require("fml.collection.observable")
 local cwd = fml.path.cwd() ---@type string
 ---@type string[]
 local paths = fml.oxi.find({
+  workspace = fml.path.workspace(),
   cwd = fml.path.cwd(),
   use_regex = false,
   case_sensitive = false,

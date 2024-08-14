@@ -2,6 +2,7 @@
 local M = require("fml.std.oxi.mod")
 
 ---@class fml.std.oxi.find.IParams
+---@field public workspace              string
 ---@field public cwd                    string
 ---@field public use_regex              boolean
 ---@field public case_sensitive         boolean

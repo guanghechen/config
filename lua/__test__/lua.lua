@@ -2,6 +2,7 @@
 local function match()
   ---@type string[]
   local items = fml.oxi.find({
+    workspace = fml.path.workspace(),
     cwd = fml.path.cwd(),
     use_regex = false,
     case_sensitive = false,
