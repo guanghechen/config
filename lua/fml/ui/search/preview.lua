@@ -1,4 +1,5 @@
 local constant = require("fml.constant")
+local watch_observables = require("fml.fn.watch_observables")
 local reporter = require("fml.std.reporter")
 local util = require("fml.std.util")
 
@@ -45,6 +46,16 @@ function M.new(props)
   self._fetch_data = fetch_data
   self._patch_data = patch_data
   self._update_win_config = update_win_config
+
+  watch_observables({ state.dirty_preview }, function()
+    vim.schedule(function()
+      local is_dirty_preview = state.dirty_preview:snapshot() ---@type boolean|nil
+      if is_dirty_preview then
+        self:render()
+      end
+    end)
+  end, true)
+
   return self
 end
 

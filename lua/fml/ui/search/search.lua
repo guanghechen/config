@@ -309,11 +309,10 @@ function M.new(props)
   self._preview_title = " preview "
   self._on_close_callback = on_close_from_props
 
-  watch_observables({ state.dirty_main, state.dirty_preview }, function()
+  watch_observables({ state.dirty_main }, function()
     vim.schedule(function()
       local is_dirty_main = state.dirty_main:snapshot() ---@type boolean|nil
-      local is_dirty_preview = state.dirty_preview:snapshot() ---@type boolean|nil
-      if is_dirty_main or is_dirty_preview then
+      if is_dirty_main then
         self:draw()
       end
     end)
