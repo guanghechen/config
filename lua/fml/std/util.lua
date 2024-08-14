@@ -29,22 +29,19 @@ end
 function M.calc_fileicon(filename, filetype)
   local name = (not filename or filename == "") and constant.BUF_UNTITLED or filename
   local icons_present, icons = pcall(require, "mini.icons")
-  if not icons_present or name == constant.BUF_UNTITLED then
-    return "󰈚", "MiniIconsRed"
-  end
+  if icons_present and name ~= constant.BUF_UNTITLED then
+    if filetype ~= nil then
+      local icon, icon_hl, is_default = icons.get("filetype", filetype)
+      if not is_default then
+        return icon, icon_hl
+      end
+    end
 
-  if filetype ~= nil then
-    local icon, icon_hl, is_default = icons.get("filetype", filetype)
-    if not is_default then
-      return icon, icon_hl
+    local icon2, icon_hl2, is_default2 = icons.get("file", filename)
+    if not is_default2 then
+      return icon2, icon_hl2
     end
   end
-
-  local icon2, icon_hl2, is_default2 = icons.get("file", filename)
-  if not is_default2 then
-    return icon2, icon_hl2
-  end
-
   return "󰈚", "MiniIconsRed"
 end
 

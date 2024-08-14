@@ -19,23 +19,24 @@ local function render_buf(bufnr, is_current, is_first)
   local is_mod = vim.api.nvim_get_option_value("mod", { buf = bufnr }) ---@type boolean
   local is_pinned = buf.pinned ---@type boolean
 
-  local left_pad = is_current and "▎" or (is_first and " " or "▏") ---@type string
+  local text_left_pad = is_current and "▎" or (is_first and " " or "▏") ---@type string
   local text_icon = buf.fileicon .. " " ---@type string
   local text_title = buf.filename ---@type string
   local text_mod = is_pinned and (is_mod and "  " or "  ") or (is_mod and "  " or "  ") ---@type string
 
-  local left_pad_hl = is_current and "f_tl_buf_left_pad_cur" or "f_tl_buf_left_pad"
-  local buf_hl = is_current and "f_tl_buf_item_cur" or "f_tl_buf_item" ---@type string
-  local title_hl = is_current and "f_tl_buf_title_cur" or "f_tl_buf_title" ---@type string
-  local mod_hl = is_current and "f_tl_buf_mod_cur" or "f_tl_buf_mod" ---@type string
+  local hl_left_pad = is_current and "f_tl_buf_left_pad_cur" or "f_tl_buf_left_pad"
+  local hl_buf = is_current and "f_tl_buf_item_cur" or "f_tl_buf_item" ---@type string
+  local hl_title = is_current and "f_tl_buf_title_cur" or "f_tl_buf_title" ---@type string
+  local hl_mod = is_current and "f_tl_buf_mod_cur" or "f_tl_buf_mod" ---@type string
+  local hl_icon = fml.highlight.blend_color(buf.fileicon_hl, hl_buf)
 
-  local hl_text_left_pad = fml.nvimbar.txt(left_pad, left_pad_hl)
-  local hl_text_icon = fml.nvimbar.txt(text_icon, buf.fileicon_hl)
-  local hl_text_title = fml.nvimbar.txt(text_title, title_hl)
-  local hl_text_mod = is_mod and fml.nvimbar.txt(text_mod, mod_hl) or text_mod
+  local hl_text_left_pad = fml.nvimbar.txt(text_left_pad, hl_left_pad)
+  local hl_text_icon = fml.nvimbar.txt(text_icon, hl_icon)
+  local hl_text_title = fml.nvimbar.txt(text_title, hl_title)
+  local hl_text_mod = is_mod and fml.nvimbar.txt(text_mod, hl_mod) or text_mod
 
-  local hl_text = fml.nvimbar.txt(hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod, buf_hl)
-  local width = vim.fn.strwidth(left_pad .. text_icon .. text_title .. text_mod) ---@type integer
+  local hl_text = fml.nvimbar.txt(hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod, hl_buf)
+  local width = vim.fn.strwidth(text_left_pad .. text_icon .. text_title .. text_mod) ---@type integer
   return fml.nvimbar.btn(hl_text, fn_active_buf, bufnr), width
 end
 
