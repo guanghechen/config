@@ -84,11 +84,10 @@ function M.new(props)
 
           vim.bo[bufnr].modifiable = false
           vim.bo[bufnr].readonly = true
-        elseif has_highlights_changed then
-          vim.api.nvim_buf_clear_namespace(bufnr, 0, 0, -1)
         end
 
         if has_highlights_changed and data ~= nil then
+          vim.api.nvim_buf_clear_namespace(bufnr, 0, 0, -1)
           local filetype = data and data.filetype or nil ---@type string|nil
           if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
             local lang = vim.treesitter.language.get_lang(filetype) or filetype

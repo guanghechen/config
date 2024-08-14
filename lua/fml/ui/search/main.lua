@@ -76,6 +76,14 @@ function M.new(props)
     end
   end, true)
 
+  watch_observables({ state.dirty_preview }, function()
+    local dirty = state.dirty_preview:snapshot() ---@type boolean|nil
+    local visible = state.visible:snapshot() ---@type boolean
+    if visible and dirty then
+      self:place_lnum_sign()
+    end
+  end, true)
+
   return self
 end
 
