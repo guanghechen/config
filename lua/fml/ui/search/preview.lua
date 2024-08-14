@@ -16,6 +16,7 @@ M.__index = M
 ---@field public fetch_data             fml.types.ui.search.preview.IFetchData
 ---@field public patch_data             ?fml.types.ui.search.preview.IPatchData
 ---@field public on_rendered            ?fml.types.ui.search.preview.IOnRendered
+---@field public render_delay           integer
 ---@field public update_win_config      fun(opts: fml.ui.search.preview.IWinOpts): nil
 
 ---@param props                         fml.ui.search.preview.IProps
@@ -28,6 +29,7 @@ function M.new(props)
   local _fetch_data = props.fetch_data ---@type fml.types.ui.search.preview.IFetchData
   local _patch_data = props.patch_data ---@type fml.types.ui.search.preview.IPatchData|nil
   local _on_rendered = props.on_rendered ---@type fml.types.ui.search.main.IOnRendered|nil
+  local _render_delay = props.render_delay ---@type integer
   local _update_win_config = props.update_win_config ---@type fun(opts: fml.ui.search.preview.IWinOpts): nil
 
   local _last_item = nil ---@type fml.types.ui.search.IItem|nil
@@ -54,7 +56,7 @@ function M.new(props)
 
   ---@type fml.std.scheduler.IScheduler
   local _render_scheduler = scheduler.debounce({
-    delay = 48,
+    delay = _render_delay,
     fn = function(callback)
       local ok, error = pcall(function()
         local last_data = _last_data ---@type fml.ui.search.preview.IData|nil

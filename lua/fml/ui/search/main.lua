@@ -15,6 +15,7 @@ M.__index = M
 ---@field public state                  fml.types.ui.search.IState
 ---@field public keymaps                fml.types.IKeymap[]
 ---@field public on_rendered            fml.types.ui.search.main.IOnRendered
+---@field public render_delay           integer
 
 ---@param props                         fml.ui.search.main.IProps
 ---@return fml.ui.search.Main
@@ -24,10 +25,11 @@ function M.new(props)
   local state = props.state ---@type fml.types.ui.search.IState
   local _keymaps = props.keymaps ---@type fml.types.IKeymap[]
   local _on_rendered = props.on_rendered ---@type fml.types.ui.search.main.IOnRendered
+  local _render_delay = props.render_delay ---@type integer
 
   ---@type fml.std.scheduler.IScheduler
   local _render_scheduler = scheduler.debounce({
-    delay = 48,
+    delay = _render_delay,
     fn = function(callback)
       local ok, error = pcall(function()
         local bufnr = self:create_buf_as_needed() ---@type integer

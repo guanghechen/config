@@ -16,7 +16,7 @@ M.__index = M
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public fetch_items            fml.types.ui.search.IFetchItems
----@field public fetch_delay            ?integer
+---@field public fetch_delay            integer
 
 function M.new(props)
   local self = setmetatable({}, M)
@@ -26,7 +26,7 @@ function M.new(props)
   local input = props.input ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local fetch_items = props.fetch_items ---@type fml.types.ui.search.IFetchItems
-  local fetch_delay = math.max(0, props.fetch_delay or 32) ---@type integer
+  local fetch_delay = props.fetch_delay ---@type integer
   local visible = Observable.from_value(false)
   local dirty_items = Observable.from_value(true)
   local dirty_main = Observable.from_value(false)

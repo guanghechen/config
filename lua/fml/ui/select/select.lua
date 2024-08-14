@@ -138,6 +138,8 @@ function M.new(props)
     fetch_items = fetch_items,
     input_history = input_history,
     input_keymaps = input_keymaps,
+    fetch_delay = 32,
+    render_delay = 32,
     main_keymaps = main_keymaps,
     preview_keymaps = preview_keymaps,
     fetch_preview_data = fetch_preview_data,
