@@ -5,6 +5,7 @@ local M = {}
 M.symbols = {
   flag_regex = "󰑑",
   flag_case_sensitive = "",
+  flag_gitignore = "",
   flag_replace = "",
   win_indicator = " ",
   win_indicator_active = "▎",

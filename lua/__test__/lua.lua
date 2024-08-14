@@ -4,8 +4,9 @@ local function match()
   local items = fml.oxi.find({
     workspace = fml.path.workspace(),
     cwd = fml.path.cwd(),
-    use_regex = false,
-    case_sensitive = false,
+    flag_case_sensitive = false,
+    flag_gitignore = true,
+    flag_regex = false,
     search_pattern = "",
     search_paths = "",
     exclude_patterns = ".git/**",

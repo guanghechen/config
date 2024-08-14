@@ -11,7 +11,7 @@
 ---| fun(): nil
 
 ---@alias fml.types.ui.search.preview.IFetchData
----| fun(item: fml.types.ui.search.IItem): fml.ui.search.preview.IData
+---| fun(item: fml.types.ui.search.IItem): fml.ui.search.preview.IData|nil
 
 ---@alias fml.types.ui.search.preview.IPatchData
 ---| fun(item: fml.types.ui.search.IItem, last_item: fml.types.ui.search.IItem, last_data: fml.ui.search.preview.IData): fml.ui.search.preview.IData

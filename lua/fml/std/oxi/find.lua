@@ -4,8 +4,9 @@ local M = require("fml.std.oxi.mod")
 ---@class fml.std.oxi.find.IParams
 ---@field public workspace              string
 ---@field public cwd                    string
----@field public use_regex              boolean
----@field public case_sensitive         boolean
+---@field public flag_case_sensitive    boolean
+---@field public flag_gitignore         boolean
+---@field public flag_regex             boolean
 ---@field public search_pattern         string
 ---@field public search_paths           string
 ---@field public exclude_patterns       string

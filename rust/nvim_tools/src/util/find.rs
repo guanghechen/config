@@ -25,8 +25,9 @@ pub struct FindFailedResult {
 pub struct FindOptions {
     pub workspace: String,
     pub cwd: String,
-    pub case_sensitive: bool,
-    pub use_regex: bool,
+    pub flag_case_sensitive: bool,
+    pub flag_gitignore: bool,
+    pub flag_regex: bool,
     pub search_pattern: String,
     pub search_paths: String,
     pub exclude_patterns: String,
@@ -35,14 +36,12 @@ pub struct FindOptions {
 pub fn find(options: &FindOptions) -> Result<FindSucceedResult, FindFailedResult> {
     let workspace: &String = &options.workspace;
     let cwd: &String = &options.cwd;
-    let case_sensitive: bool = options.case_sensitive;
-    let use_regex: bool = options.use_regex;
+    let falg_case_sensitive: bool = options.flag_case_sensitive;
+    let flag_gitignore: bool = options.flag_gitignore;
+    let flag_regex: bool = options.flag_regex;
     let search_pattern: &String = &options.search_pattern;
     let search_paths: Vec<String> = parse_comma_list(&options.search_paths);
     let exclude_patterns: Vec<String> = parse_comma_list(&options.exclude_patterns);
-
-    let mut gitignore_path = PathBuf::from(workspace);
-    gitignore_path.push(".gitignore");
 
     let (cmd, output) = {
         let mut cmd = Command::new("fd");
@@ -56,11 +55,15 @@ pub fn find(options: &FindOptions) -> Result<FindSucceedResult, FindFailedResult
             // -
         ;
 
-        if gitignore_path.exists() {
-            cmd.args(["--ignore-file", &gitignore_path.to_string_lossy()]);
+        if flag_gitignore {
+            let mut gitignore_path = PathBuf::from(workspace);
+            gitignore_path.push(".gitignore");
+            if gitignore_path.exists() {
+                cmd.args(["--ignore-file", &gitignore_path.to_string_lossy()]);
+            }
         }
 
-        if case_sensitive {
+        if falg_case_sensitive {
             cmd.arg("--case-sensitive");
         } else {
             cmd.arg("--ignore-case");
@@ -75,7 +78,7 @@ pub fn find(options: &FindOptions) -> Result<FindSucceedResult, FindFailedResult
         }
 
         if !options.search_pattern.is_empty() {
-            if use_regex {
+            if flag_regex {
                 cmd.args(["--regex", search_pattern]);
             } else {
                 cmd.args(["--fixed-strings", search_pattern]);

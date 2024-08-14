@@ -91,8 +91,8 @@ function M.new(props)
   if fetch_preview_data_from_props ~= nil then
     fetch_preview_data = function(item)
       ---@diagnostic disable-next-line: invisible
-      local select_item = self._item_map[item.uuid] ---@type fml.types.ui.select.IItem
-      return fetch_preview_data_from_props(select_item)
+      local select_item = self._item_map[item.uuid] ---@type fml.types.ui.select.IItem|nil
+      return select_item ~= nil and fetch_preview_data_from_props(select_item) or nil
     end
   end
 

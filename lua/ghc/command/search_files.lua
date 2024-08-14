@@ -207,10 +207,10 @@ fml.fn.watch_observables({ session.search_scope }, function()
 end, true)
 
 fml.fn.watch_observables({
-  session.search_max_filesize,
-  session.search_max_matches,
   session.search_flag_case_sensitive,
   session.search_flag_regex,
+  session.search_max_filesize,
+  session.search_max_matches,
 }, function()
   M.reload()
 end, true)
@@ -325,10 +325,12 @@ local function get_search()
         change_scope("D")
       end,
       toggle_regex = function()
-        session.search_flag_regex:next(not session.search_flag_regex:snapshot())
+        local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
+        session.search_flag_regex:next(not flag_regex)
       end,
       toggle_case_sensitive = function()
-        session.search_flag_case_sensitive:next(not session.search_flag_case_sensitive:snapshot())
+        local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
+        session.search_flag_case_sensitive:next(not flag_case_sensitive)
       end,
     }
 

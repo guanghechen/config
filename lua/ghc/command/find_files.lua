@@ -19,6 +19,9 @@ fml.fn.watch_observables({ session.find_scope }, function()
     M.reload()
   end
 end, true)
+fml.fn.watch_observables({ session.find_flag_gitignore }, function()
+  M.reload()
+end, true)
 
 ---@param scope                         ghc.enums.context.FindScope
 ---@return nil
@@ -84,6 +87,10 @@ local function get_select()
       change_scope_directory = function()
         change_scope("D")
       end,
+      toggle_flag_gitignore = function()
+        local flag_gitignore = session.find_flag_gitignore:snapshot() ---@type boolean
+        session.find_flag_gitignore:next(not flag_gitignore)
+      end,
     }
 
     ---@type fml.types.IKeymap[]
@@ -117,6 +124,12 @@ local function get_select()
         key = "<leader>d",
         callback = actions.change_scope_directory,
         desc = "find: change scope (directory)",
+      },
+      {
+        modes = { "n", "v" },
+        key = "<leader>g",
+        callback = actions.toggle_flag_gitignore,
+        desc = "find: toggle gitignore",
       },
     }
 
@@ -203,12 +216,15 @@ function M.reload()
     local find_cwd = state_find_cwd:snapshot() ---@type string
     local workspace = fml.path.workspace() ---@type string
     local exclude_patterns = session.find_exclude_patterns:snapshot() ---@type string
+    local flag_gitignore = session.find_flag_gitignore:snapshot() ---@type boolean
+
     ---@type string[]
     local filepaths = fml.oxi.find({
       workspace = workspace,
       cwd = find_cwd,
-      use_regex = false,
-      case_sensitive = false,
+      flag_case_sensitive = false,
+      flag_gitignore = flag_gitignore,
+      flag_regex = false,
       search_pattern = "",
       search_paths = "",
       exclude_patterns = exclude_patterns,
