@@ -24,11 +24,11 @@ local function render_buf(bufnr, is_current, is_first)
   local text_title = buf.filename ---@type string
   local text_mod = is_pinned and (is_mod and "  " or "  ") or (is_mod and "  " or "  ") ---@type string
 
-  local hl_left_pad = is_current and "f_tl_buf_left_pad_cur" or "f_tl_buf_left_pad"
+  local hl_left_pad = is_current and "f_tl_buf_left_pad_cur" or "f_tl_buf_left_pad" ---@type string
   local hl_buf = is_current and "f_tl_buf_item_cur" or "f_tl_buf_item" ---@type string
   local hl_title = is_current and "f_tl_buf_title_cur" or "f_tl_buf_title" ---@type string
   local hl_mod = is_current and "f_tl_buf_mod_cur" or "f_tl_buf_mod" ---@type string
-  local hl_icon = buf.fileicon_hl --- fml.highlight.blend_color(buf.fileicon_hl, hl_buf)
+  local hl_icon = buf.fileicon_hl .. (is_current and "_tl_buf_cur" or "_tl_buf") ---@type string
 
   local hl_text_left_pad = fml.nvimbar.txt(text_left_pad, hl_left_pad)
   local hl_text_icon = fml.nvimbar.txt(text_icon, hl_icon)

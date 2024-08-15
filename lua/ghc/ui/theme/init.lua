@@ -1,3 +1,5 @@
+local gen_tabline_hlgroup_map = require("ghc.ui.theme.integration.tabline")
+
 ---@class ghc.ui.theme
 local M = {}
 
@@ -6,12 +8,16 @@ M.integrations = {
   --- orders as needed
   "basic",
   "default",
+  "statusline",
+  "tabline",
+  "winline",
+
+  --- plugins
   "treesitter",
   "mini-icons",
   "nvim-lspconfig",
   "lazy",
 
-  ---
   "flash",
   "gitsigns",
   "indent-blank-line",
@@ -103,9 +109,28 @@ function M.load_theme(params)
 
   local theme = fml.ui.Theme.new()
 
+  ---@type ghc.ui.theme.integration.tabline.hlgroups
+  local tabline_hlgroup_map = gen_tabline_hlgroup_map({ scheme = scheme, transparency = transparency })
+
   for _, integration in ipairs(M.integrations) do
     local gen_hlgroup_map = require("ghc.ui.theme.integration." .. integration)
+    ---@return table<string, fml.types.ui.theme.IHlgroup>
     local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
+
+    if integration == "mini-icons" then
+      ---@return table<string, fml.types.ui.theme.IHlgroup>
+      local additional = {}
+
+      for hlname, hlgroup in pairs(hlgroup_map) do
+        additional[hlname .. "_tl_buf"] = { fg = hlgroup.fg, bg = tabline_hlgroup_map.f_tl_buf_item.bg }
+        additional[hlname .. "_tl_buf_cur"] = { fg = hlgroup.fg, bg = tabline_hlgroup_map.f_tl_buf_item_cur.bg }
+      end
+
+      for hlname, hlgroup in pairs(additional) do
+        hlgroup_map[hlname] = hlgroup
+      end
+    end
+
     theme:registers(hlgroup_map)
   end
 

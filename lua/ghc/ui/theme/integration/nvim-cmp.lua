@@ -1,6 +1,6 @@
 ---@param params                        ghc.types.ui.theme.IGenHlgroupMapParams
----@return table<string, fml.types.ui.theme.IHlgroup|nil>
-local function gen_hlgroup(params)
+---@return table<string, fml.types.ui.theme.IHlgroup>
+local function gen_hlgroup_map(params)
   ---@diagnostic disable-next-line: unused-local
   local m = params.scheme.mode ---@type fml.enums.theme.Mode
   local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
@@ -55,4 +55,4 @@ local function gen_hlgroup(params)
   }
 end
 
-return gen_hlgroup
+return gen_hlgroup_map
