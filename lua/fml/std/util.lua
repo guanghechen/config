@@ -13,11 +13,32 @@ end
 ---@param keymap_override               fml.types.IKeymapOverridable
 function M.bind_keys(keymaps, keymap_override)
   for _, keymap in ipairs(keymaps) do
+    local bufnr = keymap_override.bufnr ---@type integer|nil
+    local nowait = keymap_override.nowait ---@type boolean|nil
+    local noremap = keymap_override.noremap ---@type boolean|nil
+    local silent = keymap_override.silent ---@type boolean|nil
+
+    if bufnr == nil then
+      bufnr = keymap.bufnr
+    end
+
+    if nowait == nil then
+      nowait = keymap.nowait
+    end
+
+    if noremap == nil then
+      noremap = keymap.noremap
+    end
+
+    if silent == nil then
+      silent = keymap.silent
+    end
+
     vim.keymap.set(keymap.modes, keymap.key, keymap.callback, {
-      buffer = keymap_override.bufnr or keymap.bufnr,
-      nowait = keymap_override.nowait or keymap.nowait,
-      noremap = keymap_override.noremap or keymap.noremap,
-      silent = keymap_override.silent or keymap.silent,
+      buffer = bufnr,
+      nowait = nowait,
+      noremap = noremap,
+      silent = silent,
     })
   end
 end

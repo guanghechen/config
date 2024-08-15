@@ -181,29 +181,53 @@ function M.new(props)
     on_main_mouse_click = function()
       ---@diagnostic disable-next-line: invisible
       local winnr_main = self._winnr_main ---@type integer|nil
-      if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-        local lnum = vim.api.nvim_win_get_cursor(winnr_main)[1]
-        lnum = state:locate(lnum)
-        vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
-
-        reset_cursor_scheduler.schedule()
+      if winnr_main ~= nil then
+        local cursor = vim.fn.getmousepos()
+        local winnr = cursor.winid ---@type integer
+        if winnr == winnr_main then
+          local lnum = cursor.line ---@type integer
+          lnum = state:locate(lnum)
+          vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
+          reset_cursor_scheduler.schedule()
+        end
       end
     end,
     on_main_mouse_dbclick = function()
       ---@diagnostic disable-next-line: invisible
       local winnr_main = self._winnr_main ---@type integer|nil
-      if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-        local lnum = vim.api.nvim_win_get_cursor(winnr_main)[1]
-        lnum = state:locate(lnum)
-        vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
-
-        on_confirm()
+      if winnr_main ~= nil then
+        local cursor = vim.fn.getmousepos()
+        local winnr = cursor.winid ---@type integer
+        if winnr == winnr_main then
+          local lnum = cursor.line ---@type integer
+          lnum = state:locate(lnum)
+          vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
+          on_confirm()
+        end
       end
     end,
   }
 
   ---@type fml.types.IKeymap[]
-  local input_keymaps = std_array.concat({
+  local common_keymaps = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<LeftMouse>",
+      callback = actions.on_main_mouse_click,
+      desc = "search: mouse click",
+      nowait = true,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<2-LeftMouse>",
+      callback = actions.on_main_mouse_dbclick,
+      desc = "search: confirm",
+      nowait = true,
+    },
+  }
+
+  ---@type fml.types.IKeymap[]
+  local input_keymaps = std_array.concat(common_keymaps, {
     { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
     { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.on_refresh, desc = "search: refresh" },
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
@@ -216,21 +240,7 @@ function M.new(props)
   }, props.input_keymaps or {})
 
   ---@type fml.types.IKeymap[]
-  local main_keymaps = std_array.concat({
-    {
-      modes = { "i", "n" },
-      key = "<LeftMouse>",
-      callback = actions.on_main_mouse_click,
-      desc = "search: mouse click (main)",
-      nowait = true,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<2-LeftMouse>",
-      callback = actions.on_main_mouse_dbclick,
-      desc = "search: confirm",
-      nowait = true,
-    },
+  local main_keymaps = std_array.concat(common_keymaps, {
     { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
     { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.on_refresh, desc = "search: refresh" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
@@ -243,7 +253,7 @@ function M.new(props)
   }, props.main_keymaps or {})
 
   ---@type fml.types.IKeymap[]
-  local preview_keymaps = std_array.concat({
+  local preview_keymaps = std_array.concat(common_keymaps, {
     { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
     { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.on_refresh, desc = "search: refresh" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
@@ -332,10 +342,10 @@ end
 
 ---@return nil
 function M:sync_main_cursor()
-  local lnum = self._main:place_lnum_sign() ---@type integer|nil
-  if lnum ~= nil then
-    local winnr_main = self._winnr_main ---@type integer|nil
-    if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
+  local winnr_main = self._winnr_main ---@type integer|nil
+  if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
+    local lnum = self._main:place_lnum_sign() ---@type integer|nil
+    if lnum ~= nil then
       vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
     end
   end
