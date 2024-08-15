@@ -32,7 +32,7 @@ local setup = {
     require("lspconfig").clangd.setup(require("guanghechen.lsp.lang.cpp"))
   end,
   eslint = function()
-    require("lspconfig").clangd.setup(require("guanghechen.lsp.lang.eslint"))
+    require("lspconfig").eslint.setup(require("guanghechen.lsp.lang.eslint"))
   end,
   html = function()
     require("lspconfig").html.setup(require("guanghechen.lsp.lang.html"))
