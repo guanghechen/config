@@ -39,6 +39,20 @@ fml.fn.watch_observables({
 }, function()
   _last_search_input = nil
   _last_search_result = nil
+end, true)
+fml.fn.watch_observables({
+  session.search_exclude_patterns,
+  session.search_flag_case_sensitive,
+  session.search_flag_gitignore,
+  session.search_flag_regex,
+  session.search_flag_replace,
+  session.search_include_patterns,
+  session.search_max_filesize,
+  session.search_max_matches,
+  session.search_paths,
+  session.search_replace_pattern,
+  state_search_cwd,
+}, function()
   M.reload()
 end, true)
 
@@ -52,6 +66,7 @@ local function fetch_items(input_text, callback)
   local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
   local flag_gitignore = session.search_flag_gitignore:snapshot() ---@type boolean
   local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
+  local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
   local max_filesize = session.search_max_filesize:snapshot() ---@type string
   local max_matches = session.search_max_matches:snapshot() ---@type integer
   local search_paths = session.search_paths:snapshot() ---@type string

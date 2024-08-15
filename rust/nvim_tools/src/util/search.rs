@@ -14,8 +14,8 @@ pub struct MatchPoint {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchBlockMatch {
-    pub lnum: usize,        // start line number
-    pub lines: Vec<String>, // block match lines.
+    pub lnum: usize,  // start line number
+    pub text: String, // block match lines.
     pub matches: Vec<MatchPoint>,
 }
 
@@ -182,10 +182,6 @@ pub fn search(
                         submatches,
                         ..
                     } => {
-                        let lines: Vec<String> =
-                            text.lines().map(|line| line.to_string()).collect();
-                        let mut matches: Vec<MatchPoint> = vec![];
-
                         let file_item: &mut SearchFileMatch = file_matches
                             .entry(path.text.to_string())
                             .or_insert(SearchFileMatch { matches: vec![] });
@@ -193,6 +189,7 @@ pub fn search(
                             matches_count += 1;
                         }
 
+                        let mut matches: Vec<MatchPoint> = vec![];
                         for submatch in submatches.iter() {
                             if matches_count == max_matches {
                                 break;
@@ -205,7 +202,7 @@ pub fn search(
                         }
                         file_item.matches.push(SearchBlockMatch {
                             lnum,
-                            lines,
+                            text,
                             matches,
                         });
                     }

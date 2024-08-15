@@ -40,7 +40,6 @@
 
 ---@class fml.ui.search.preview.IWinOpts
 ---@field public title                  string
----@field public show_numbers           boolean
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 

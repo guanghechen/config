@@ -286,7 +286,6 @@ function M.new(props)
       render_delay = render_delay,
       update_win_config = function(opts)
         local new_title = opts.title ---@type string
-        local show_numbers = opts.show_numbers ---@type boolean
         local lnum = opts.lnum ---@type integer|nil
         local col = opts.col ---@type integer|nil
 
@@ -299,15 +298,8 @@ function M.new(props)
           win_conf_cur.title = " " .. new_title .. " "
           vim.api.nvim_win_set_config(winnr, win_conf_cur)
 
-          local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-          if linecount > 0 then
-            vim.wo[winnr].number = show_numbers
-            if lnum ~= nil and col ~= nil then
-              vim.api.nvim_win_set_cursor(winnr, { lnum, col })
-            end
-          else
-            vim.wo[winnr].number = false
+          if lnum ~= nil and col ~= nil then
+            vim.api.nvim_win_set_cursor(winnr, { lnum, col })
           end
         end
       end,
@@ -451,7 +443,7 @@ function M:create_wins_as_needed()
     end
 
     vim.wo[winnr_preview].cursorline = true
-    vim.wo[winnr_preview].number = false
+    vim.wo[winnr_preview].number = true
     vim.wo[winnr_preview].relativenumber = false
     vim.wo[winnr_preview].signcolumn = "yes:1"
     vim.wo[winnr_preview].winblend = 10

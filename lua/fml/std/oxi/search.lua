@@ -7,6 +7,7 @@ local M = require("fml.std.oxi.mod")
 
 ---@class fml.std.oxi.search.IBlockMatch
 ---@field public lnum                   integer
+---@field public text                   string
 ---@field public lines                  string[]
 ---@field public matches                fml.std.oxi.search.IMatchPoint[]
 
@@ -47,6 +48,17 @@ function M.search(params)
     end
     table.sort(orders)
     result.item_orders = orders
+
+    for _, item in pairs(result.items) do
+      for _, block_match in ipairs(item.matches) do
+        local text = block_match.text ---@type string
+        local lines = {} ---@type string[]
+        for line in text:gmatch("([^\n]+)") do
+          table.insert(lines, line)
+        end
+        block_match.lines = lines
+      end
+    end
   end
 
   return result

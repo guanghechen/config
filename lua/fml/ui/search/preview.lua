@@ -105,15 +105,9 @@ function M.new(props)
         end
 
         local title = data and data.title or "preview" ---@type string
-        local show_numbers = data and data.show_numbers or false ---@type boolean
         local lnum = data and data.lnum or nil ---@type integer|nil
         local col = data and data.col or nil ---@type integer|nil
-        _update_win_config({
-          title = title,
-          show_numbers = show_numbers,
-          lnum = lnum,
-          col = col,
-        })
+        _update_win_config({ title = title, lnum = lnum, col = col })
       end)
       callback(ok, error)
     end,

@@ -200,6 +200,16 @@ function M.schedule(name, fn, timeout)
   return wrapped
 end
 
+---@param text                          string
+---@return string[]
+function M.split_lines(text)
+  local lines = {} ---@type string[]
+  for line in text:gmatch("([^\n]+)") do
+    table.insert(lines, line)
+  end
+  return lines
+end
+
 ---@param ...                           any[]
 ---@return boolean
 ---@diagnostic disable-next-line: unused-vararg
