@@ -2,7 +2,6 @@
 ---@return table<string, fml.types.ui.theme.IHlgroup>
 local function gen_hlgroup_map(params)
   local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
-  local t = params.transparency ---@type boolean
 
   return {
     ---common
@@ -29,6 +28,8 @@ local function gen_hlgroup_map(params)
     f_us_main_match = { fg = c.blue },
     f_us_main_match_lnum = { fg = c.grey },
     f_us_main_normal = { bg = c.darker_black },
+    f_us_main_replace = { fg = c.diff_add_word },
+    f_us_main_search = { fg = c.diff_del_word, strikethrough = true },
     f_us_preview_current = { bg = c.one_bg2 },
     f_us_preview_border = { fg = c.darker_black, bg = c.darker_black },
     f_us_preview_normal = { bg = c.darker_black },

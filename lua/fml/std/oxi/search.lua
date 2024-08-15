@@ -9,6 +9,7 @@ local M = require("fml.std.oxi.mod")
 ---@field public lnum                   integer
 ---@field public text                   string
 ---@field public lines                  string[]
+---@field public lwidths                integer[]
 ---@field public matches                fml.std.oxi.search.IMatchPoint[]
 
 ---@class fml.std.oxi.search.IFileMatch
@@ -36,12 +37,12 @@ local M = require("fml.std.oxi.mod")
 ---@param params                        fml.std.oxi.search.IParams
 ---@return fml.std.oxi.search.IResult
 function M.search(params)
-  local options_stringified = M.json.stringify(params)
-  local result_str = M.nvim_tools.search(options_stringified)
+  local payload = M.json.stringify(params) ---@type string
+  local result_str = M.nvim_tools.search(payload) ---@type string
   local result = M.json.parse(result_str)
   ---@cast result fml.std.oxi.search.IResult
 
-  if result.items ~= nil then
+  if result ~= nil and result.items ~= nil then
     local orders = {}
     for filepath in pairs(result.items) do
       table.insert(orders, filepath)
@@ -53,10 +54,14 @@ function M.search(params)
       for _, block_match in ipairs(item.matches) do
         local text = block_match.text ---@type string
         local lines = {} ---@type string[]
+        local lwidths = {} ---@type integer[]
         for line in text:gmatch("([^\n]+)") do
+          local lwidth = string.len(line) + 1 ---@type integer
           table.insert(lines, line)
+          table.insert(lwidths, lwidth)
         end
         block_match.lines = lines
+        block_match.lwidths = lwidths
       end
     end
   end

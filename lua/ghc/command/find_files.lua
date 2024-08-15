@@ -63,8 +63,9 @@ local function edit_config()
       end
     end,
     on_confirm = function(raw_data)
-      ---@cast raw_data ghc.command.find_files.IConfigData
       local raw = vim.tbl_extend("force", data, raw_data)
+      ---@cast raw ghc.command.find_files.IConfigData
+
       local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
 
       session.find_exclude_patterns:next(exclude_patterns)

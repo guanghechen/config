@@ -6,6 +6,7 @@ local M = require("fml.std.oxi.mod")
 
 ---@class fml.std.oxi.replace.IPreviewResult
 ---@field public lines                  string[]
+---@field public lwidths                integer[]
 ---@field public matches                fml.std.oxi.search.IMatchPoint[]
 
 ---@class fml.std.oxi.replace.IReplaceEntireFileResult
@@ -13,8 +14,8 @@ local M = require("fml.std.oxi.mod")
 ---@field public error                  ?string
 
 ---@class fml.std.oxi.replace.ITextPreviewParams
----@field public flag_regex             boolean
 ---@field public flag_case_sensitive    boolean
+---@field public flag_regex             boolean
 ---@field public keep_search_pieces     boolean
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
@@ -23,8 +24,8 @@ local M = require("fml.std.oxi.mod")
 ---@class fml.std.oxi.replace.IReplaceEntireFileParams
 ---@field public cwd                    string
 ---@field public filepath               string
----@field public flag_regex             boolean
 ---@field public flag_case_sensitive    boolean
+---@field public flag_regex             boolean
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
 
@@ -46,6 +47,16 @@ function M.replace_text_preview(params)
   )
   local result = M.json.parse(json_str)
   ---@cast result fml.std.oxi.replace.IPreviewResult
+
+  if result ~= nil and result.lines ~= nil then
+    local lwidths = {} ---@type integer[]
+    for _, line in ipairs(result.lines) do
+      local lwidth = string.len(line) + 1 ---@type integer
+      table.insert(lwidths, lwidth)
+    end
+    result.lwidths = lwidths
+  end
+
   return result
 end
 

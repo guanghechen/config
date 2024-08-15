@@ -11,6 +11,8 @@ local M = {}
 ---@field public filematch              fml.std.oxi.search.IFileMatch
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
+---@field public p_lnum                 ?integer
+---@field public p_col                  ?integer
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
 local state_dirpath = fml.collection.Observable.from_value(initial_dirpath)
@@ -18,6 +20,7 @@ local state_search_cwd = fml.collection.Observable.from_value(session.get_search
 
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type fml.std.oxi.search.IResult|nil
+local _item_data_map = {} ---@type table<string, ghc.command.search_files.IItemData>
 fml.fn.watch_observables({ session.search_scope }, function()
   local current_search_cwd = state_search_cwd:snapshot() ---@type string
   local dirpath = state_dirpath:snapshot() ---@type string
@@ -39,24 +42,35 @@ fml.fn.watch_observables({
 }, function()
   _last_search_input = nil
   _last_search_result = nil
+  M.reload()
 end, true)
 fml.fn.watch_observables({
-  session.search_exclude_patterns,
-  session.search_flag_case_sensitive,
-  session.search_flag_gitignore,
-  session.search_flag_regex,
   session.search_flag_replace,
-  session.search_include_patterns,
-  session.search_max_filesize,
-  session.search_max_matches,
-  session.search_paths,
   session.search_replace_pattern,
-  state_search_cwd,
 }, function()
   M.reload()
 end, true)
 
-local _item_data_map = {} ---@type table<string, ghc.command.search_files.IItemData>
+---@param lwidths                       integer[]
+---@param l                             integer
+---@param r                             integer
+---@return integer
+---@return integer
+---@return integer
+local function calc_same_line_pos(lwidths, l, r)
+  local lnum = 1 ---@type integer
+  local offset = 0 ---@type integer
+  local lwidth = lwidths[1] ---@type integer
+  while offset + lwidth <= l and lnum < #lwidths do
+    lnum = lnum + 1
+    offset = offset + lwidth
+    lwidth = lwidths[lnum]
+  end
+
+  local col_start = l - offset
+  local col_end = math.min(lwidth - 1, r - offset)
+  return lnum, col_start, col_end
+end
 
 ---@param input_text                  string
 ---@param callback                    fml.types.ui.search.IFetchItemsCallback
@@ -70,6 +84,7 @@ local function fetch_items(input_text, callback)
   local max_filesize = session.search_max_filesize:snapshot() ---@type string
   local max_matches = session.search_max_matches:snapshot() ---@type integer
   local search_paths = session.search_paths:snapshot() ---@type string
+  local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
   local include_patterns = session.search_include_patterns:snapshot() ---@type string
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
 
@@ -115,82 +130,116 @@ local function fetch_items(input_text, callback)
       }
       table.insert(items, file_item)
 
-      ---@class ghc.command.search_files.IItemData
-      item_data_map[file_item.uuid] = {
-        filepath = filepath,
-        filematch = file_match,
-      }
-      local is_first_item = true ---@type boolean
+      if flag_replace then
+        local lnum_delta = 0 ---@type integer
+        for _, block_match in ipairs(file_match.matches) do
+          ---@type fml.std.oxi.replace.IPreviewResult
+          local preview_result = fml.oxi.replace_text_preview({
+            flag_case_sensitive = flag_case_sensitive,
+            flag_regex = flag_regex,
+            keep_search_pieces = true,
+            search_pattern = input_text,
+            replace_pattern = replace_pattern,
+            text = block_match.text,
+            search_paths = search_paths,
+            include_patterns = include_patterns,
+            exclude_patterns = exclude_patterns,
+            specified_filepath = nil,
+          })
 
-      for _, block_match in ipairs(file_match.matches) do
-        local lines = block_match.lines ---@type string[]
-        local lnum0 = block_match.lnum ---@type integer
+          local lines = preview_result.lines ---@type string[]
+          local lwidths = preview_result.lwidths ---@type integer[]
+          local s_lwidths = block_match.lwidths ---@type integer[]
+          local matches = preview_result.matches ---@type fml.std.oxi.search.IMatchPoint[]
+          local offset_delta = 0 ---@type integer
+          for i = 1, #matches, 2 do
+            local search_match = matches[i]
+            local s_k, s_col_start =
+              calc_same_line_pos(s_lwidths, search_match.l - offset_delta, search_match.r - offset_delta)
+            local r_k, r_col_start, r_col_end = calc_same_line_pos(lwidths, search_match.l, search_match.r)
+            local r_lnum = block_match.lnum + r_k - 1 + lnum_delta ---@type integer
+            local s_lnum = block_match.lnum + s_k - 1 ---@type integer
+            local text_prefix = "  " .. s_lnum .. ":" .. s_col_start .. " " ---@type string
+            local text = text_prefix .. lines[r_k] ---@type string
+            local width_prefix = string.len(text_prefix) ---@type integer
 
-        local k = 1 ---@type integer
-        local offset = 0 ---@type integer
-        local lwidth = string.len(lines[1]) + 1 ---@type integer
-        for _, match in ipairs(block_match.matches) do
-          local l = match.l ---@type integer
-          local r = match.r ---@type integer
+            ---@type fml.types.ui.IInlineHighlight[]
+            local highlights = {
+              { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
+              { coll = width_prefix + r_col_start, colr = width_prefix + r_col_end, hlname = "f_us_main_search" },
+            }
 
-          while l >= offset + lwidth and k < #lines do
-            k = k + 1
-            offset = offset + lwidth
-            lwidth = string.len(lines[k]) + 1
+            if i + 1 <= #matches then
+              local replace_match = matches[i + 1] ---@type fml.std.oxi.search.IMatchPoint
+              offset_delta = offset_delta + replace_match.r - replace_match.l
+              local k, col_start, col_end = calc_same_line_pos(lwidths, replace_match.l, replace_match.r)
+              if k == r_k then
+                ---@type fml.types.ui.IInlineHighlight
+                local highlight =
+                  { coll = width_prefix + col_start, colr = width_prefix + col_end, hlname = "f_us_main_replace" }
+                table.insert(highlights, highlight)
+              end
+            end
+
+            ---@type fml.types.ui.search.IItem
+            local item = { group = filepath, uuid = filepath .. text_prefix, text = text, highlights = highlights }
+            table.insert(items, item)
+
+            ---@type ghc.command.search_files.IItemData
+            local item_data = {
+              filepath = filepath,
+              filematch = file_match,
+              lnum = s_lnum,
+              col = s_col_start,
+              p_lnum = r_lnum,
+              p_col = r_col_start,
+            }
+            item_data_map[item.uuid] = item_data
+            item_data_map[file_item.uuid] = item_data_map[file_item.uuid] or item_data
           end
 
-          local lnum = lnum0 + k - 1 ---@type integer
-          local col = l - offset ---@type integer
-          local col_end = math.min(lwidth - 1, r - offset) ---@type integer
-          local text_prefix = "  " .. lnum .. ":" .. col .. " " ---@type string
-          local text = text_prefix .. lines[k] ---@type string
+          lnum_delta = lnum_delta + #lwidths - #s_lwidths
+        end
+      else
+        for _, block_match in ipairs(file_match.matches) do
+          local lines = block_match.lines ---@type string[]
+          local lwidths = block_match.lwidths ---@type integer[]
+          local matches = block_match.matches ---@type fml.std.oxi.search.IMatchPoint[]
+          for _, search_match in ipairs(matches) do
+            local k, col_start, col_end = calc_same_line_pos(lwidths, search_match.l, search_match.r)
+            local lnum = block_match.lnum + k - 1 ---@type integer
+            local text_prefix = "  " .. lnum .. ":" .. col_start .. " " ---@type string
+            local text = text_prefix .. lines[k] ---@type string
+            local width_prefix = string.len(text_prefix) ---@type integer
 
-          local offset_prefix = string.len(text_prefix) ---@type integer
-          local offset_start = offset_prefix + col ---@type integer
-          local offset_end = offset_prefix + col_end ---@type integer
+            ---@type fml.types.ui.IInlineHighlight[]
+            local highlights = {
+              { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
+              { coll = width_prefix + col_start, colr = width_prefix + col_end, hlname = "f_us_main_match" },
+            }
 
-          ---@type fml.types.ui.IInlineHighlight[]
-          local highlights = {
-            { coll = 0, colr = offset_prefix, hlname = "f_us_main_match_lnum" },
-            { coll = offset_start, colr = offset_end, hlname = "f_us_main_match" },
-          }
+            ---@type fml.types.ui.search.IItem
+            local item = { group = filepath, uuid = filepath .. text_prefix, text = text, highlights = highlights }
+            table.insert(items, item)
 
-          ---@type fml.types.ui.search.IItem
-          local match_item = {
-            group = filepath,
-            uuid = filepath .. text_prefix,
-            text = text,
-            highlights = highlights,
-          }
-          table.insert(items, match_item)
-
-          ---@class ghc.command.search_files.IItemData
-          item_data_map[match_item.uuid] = {
-            filepath = filepath,
-            filematch = file_match,
-            lnum = lnum,
-            col = col,
-          }
-
-          if is_first_item then
-            is_first_item = false
-
-            ---@class ghc.command.search_files.IItemData
-            item_data_map[file_item.uuid] = {
+            ---@type ghc.command.search_files.IItemData
+            local item_data = {
               filepath = filepath,
               filematch = file_match,
               lnum = lnum,
-              col = col,
+              col = col_start,
             }
+            item_data_map[item.uuid] = item_data
+            item_data_map[file_item.uuid] = item_data_map[file_item.uuid] or item_data
           end
         end
       end
 
-      ---@class ghc.command.search_files.IItemData
-      item_data_map[file_item.uuid] = {
-        filepath = filepath,
-        filematch = file_match,
-      }
+      if item_data_map[file_item.uuid] == nil then
+        ---@type ghc.command.search_files.IItemData
+        local file_item_data = { filepath = filepath, filematch = file_match }
+        item_data_map[file_item.uuid] = file_item_data
+      end
     end
   end
   _item_data_map = item_data_map
@@ -292,11 +341,11 @@ local function edit_config()
       ---@cast raw_data ghc.command.search_files.IConfigData
 
       if raw_data.search_pattern == nil or type(raw_data.search_pattern) ~= "string" then
-        return "Invalid data.input, expect an string."
+        return "Invalid data.search_pattern, expect an string."
       end
 
       if raw_data.replace_pattern == nil or type(raw_data.replace_pattern) ~= "string" then
-        return "Invalid data.replace, expect an string."
+        return "Invalid data.replace_pattern, expect an string."
       end
 
       if raw_data.search_paths == nil or not fml.is.array(raw_data.search_paths) then
@@ -320,18 +369,19 @@ local function edit_config()
       end
     end,
     on_confirm = function(raw_data)
-      ---@cast raw_data ghc.command.search_files.IConfigData
       local raw = vim.tbl_extend("force", data, raw_data)
-      local input = raw.input ---@type string
-      local replace = raw.replace ---@type string
+      ---@cast raw ghc.command.search_files.IConfigData
+
+      local search_pattern = raw.search_pattern ---@type string
+      local replace_pattern = raw.replace_pattern ---@type string
       local max_filesize = raw.max_filesize ---@type string
       local max_matches = raw.max_matches ---@type integer
       local search_paths = table.concat(raw.search_paths, ",") ---@type string
       local include_patterns = table.concat(raw.include_patterns, ",") ---@type string
       local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
 
-      session.search_pattern:next(input)
-      session.search_replace_pattern:next(replace)
+      session.search_pattern:next(search_pattern)
+      session.search_replace_pattern:next(replace_pattern)
       session.search_paths:next(search_paths)
       session.search_max_filesize:next(max_filesize)
       session.search_max_matches:next(max_matches)
@@ -371,6 +421,10 @@ local function get_search()
       toggle_flag_gitignore = function()
         local flag = session.search_flag_gitignore:snapshot() ---@type boolean
         session.search_flag_gitignore:next(not flag)
+      end,
+      toggle_flag_replace = function()
+        local flag = session.search_flag_replace:snapshot() ---@type boolean
+        session.search_flag_replace:next(not flag)
       end,
     }
 
@@ -423,6 +477,12 @@ local function get_search()
         key = "<leader>g",
         callback = actions.toggle_flag_gitignore,
         desc = "search: toggle gitignore",
+      },
+      {
+        modes = { "n", "v" },
+        key = "<leader>R",
+        callback = actions.toggle_flag_replace,
+        desc = "search: toggle mode",
       },
     }
 
