@@ -15,19 +15,31 @@ function M.line_match_cmp(item1, item2)
   return item1.score > item2.score
 end
 
----@param lower_input                   string
----@param item_map                      table<string, fml.types.ui.select.IItem>
----@param old_matches                   fml.types.ui.select.ILineMatch[]
+---@param params                        fml.types.ui.select.IMatchParams
 ---@return fml.types.ui.select.ILineMatch[]
-function M.match(lower_input, item_map, old_matches)
+function M.match(params)
+  local input = params.input ---@type string
+  local case_sensitive = params.case_sensitive ---@type boolean
+  local item_map = params.item_map ---@type table<string, fml.types.ui.select.IItem>
+  local old_matches = params.old_matches ---@type fml.types.ui.select.ILineMatch[]
+
   local lines = {} ---@type string[]
-  for _, match in ipairs(old_matches) do
-    local uuid = match.uuid ---@type string
-    local text = item_map[uuid].lower ---@type string
-    table.insert(lines, text)
+  if case_sensitive then
+    for _, match in ipairs(old_matches) do
+      local uuid = match.uuid ---@type string
+      local text = item_map[uuid].display ---@type string
+      table.insert(lines, text)
+    end
+  else
+    input = input:lower()
+    for _, match in ipairs(old_matches) do
+      local uuid = match.uuid ---@type string
+      local text = item_map[uuid].lower ---@type string
+      table.insert(lines, text)
+    end
   end
 
-  local oxi_matches = oxi.find_match_points(lower_input, lines) ---@type fml.std.oxi.string.ILineMatch[]
+  local oxi_matches = oxi.find_match_points(input, lines) ---@type fml.std.oxi.string.ILineMatch[]
   local matches = {} ---@type fml.types.ui.select.ILineMatch[]
   for _, oxi_match in ipairs(oxi_matches) do
     ---! The index in lua is start from 1 but rust is start from 0.

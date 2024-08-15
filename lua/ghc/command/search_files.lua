@@ -327,16 +327,16 @@ local function get_search()
         change_scope("D")
       end,
       toggle_regex = function()
-        local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
-        session.search_flag_regex:next(not flag_regex)
-      end,
-      toggle_flag_gitignore = function()
-        local flag_gitignore = session.search_flag_gitignore:snapshot() ---@type boolean
-        session.search_flag_gitignore:next(not flag_gitignore)
+        local flag = session.search_flag_regex:snapshot() ---@type boolean
+        session.search_flag_regex:next(not flag)
       end,
       toggle_case_sensitive = function()
-        local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
-        session.search_flag_case_sensitive:next(not flag_case_sensitive)
+        local flag = session.search_flag_case_sensitive:snapshot() ---@type boolean
+        session.search_flag_case_sensitive:next(not flag)
+      end,
+      toggle_flag_gitignore = function()
+        local flag = session.search_flag_gitignore:snapshot() ---@type boolean
+        session.search_flag_gitignore:next(not flag)
       end,
     }
 

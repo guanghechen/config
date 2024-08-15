@@ -33,8 +33,14 @@
 ---@alias fml.types.ui.select.ILineMatchCmp
 ---| fun(item1: fml.types.ui.select.ILineMatch, item2: fml.types.ui.select.ILineMatch): boolean
 
+---@class fml.types.ui.select.IMatchParams
+---@field public input                  string
+---@field public case_sensitive         boolean
+---@field public item_map               table<string, fml.types.ui.select.IItem>
+---@field public old_matches            fml.types.ui.select.ILineMatch[]
+
 ---@alias fml.types.ui.select.IMatch
----| fun(lower_input: string, items: fml.types.ui.select.IItem[], old_matches: fml.types.ui.select.ILineMatch[]): fml.types.ui.select.ILineMatch[]
+---| fun(params: fml.types.ui.select.IMatchParams): fml.types.ui.select.ILineMatch[]
 
 ---@alias fml.types.ui.select.IOnClose
 ---| fun(): nil

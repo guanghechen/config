@@ -25,6 +25,7 @@ end)
 local select = fml.ui.select.Select.new({
   title = "Select file",
   items = items,
+  case_sensitive = Observable.from_value(false),
   input = Observable.from_value(""),
   visible = Observable.from_value(false),
   max_height = 25,

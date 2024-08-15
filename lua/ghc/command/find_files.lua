@@ -19,7 +19,10 @@ fml.fn.watch_observables({ session.find_scope }, function()
     M.reload()
   end
 end, true)
-fml.fn.watch_observables({ session.find_flag_gitignore }, function()
+fml.fn.watch_observables({
+  session.find_flag_case_sensitive,
+  session.find_flag_gitignore,
+}, function()
   M.reload()
 end, true)
 
@@ -87,9 +90,13 @@ local function get_select()
       change_scope_directory = function()
         change_scope("D")
       end,
+      toggle_case_sensitive = function()
+        local flag = session.find_flag_case_sensitive:snapshot() ---@type boolean
+        session.find_flag_case_sensitive:next(not flag)
+      end,
       toggle_flag_gitignore = function()
-        local flag_gitignore = session.find_flag_gitignore:snapshot() ---@type boolean
-        session.find_flag_gitignore:next(not flag_gitignore)
+        local flag = session.find_flag_gitignore:snapshot() ---@type boolean
+        session.find_flag_gitignore:next(not flag)
       end,
     }
 
@@ -127,6 +134,12 @@ local function get_select()
       },
       {
         modes = { "n", "v" },
+        key = "<leader>i",
+        callback = actions.toggle_case_sensitive,
+        desc = "search: toggle case sensitive",
+      },
+      {
+        modes = { "n", "v" },
         key = "<leader>g",
         callback = actions.toggle_flag_gitignore,
         desc = "find: toggle gitignore",
@@ -145,6 +158,7 @@ local function get_select()
     _select = fml.ui.select.Select.new({
       title = "Find files",
       items = {},
+      case_sensitive = session.find_flag_case_sensitive,
       input = session.find_file_pattern,
       input_history = input_history,
       frecency = frecency,

@@ -20,6 +20,7 @@ local function process_items(cmp, frecency, items)
 end
 
 ---@class fml.ui.select.Select : fml.types.ui.select.ISelect
+---@field protected _case_sensitive     fml.types.collection.IObservable
 ---@field protected _cmp                fml.types.ui.select.ILineMatchCmp
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
 ---@field protected _full_matches       fml.types.ui.select.ILineMatch[]
@@ -28,13 +29,15 @@ end
 ---@field protected _matches            fml.types.ui.select.ILineMatch[]
 ---@field protected _render_line        fml.types.ui.select.main.IRenderLine
 ---@field protected _search             fml.types.ui.search.ISearch
----@field protected _last_input_lower   string|nil
+---@field protected _last_case_sensitive boolean
+---@field protected _last_input         string|nil
 local M = {}
 M.__index = M
 
 ---@class fml.types.ui.select.IProps
 ---@field public title                  string
 ---@field public items                  fml.types.ui.select.IItem[]
+---@field public case_sensitive         fml.types.collection.IObservable
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public frecency               fml.types.collection.IFrecency|nil
@@ -63,6 +66,7 @@ function M.new(props)
 
   local title = props.title ---@type string
   local items = props.items ---@type fml.types.ui.select.IItem[]
+  local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable
   local input = props.input ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
@@ -156,6 +160,7 @@ function M.new(props)
   })
 
   self.state = search.state
+  self._case_sensitive = case_sensitive
   self._cmp = cmp
   self._frecency = frecency
   self._full_matches = full_matches
@@ -164,16 +169,16 @@ function M.new(props)
   self._matches = full_matches
   self._render_line = render_line
   self._search = search
-  self._last_input_lower = nil ---@type string|nil
+  self._last_case_sensitive = case_sensitive:snapshot() ---@type boolean
+  self._last_input = nil ---@type string|nil
   return self
 end
 
 ---@param input                         string
 ---@return fml.types.ui.select.ILineMatch[]
 function M:filter(input)
-  local input_lower = input:lower() ---@type string
   local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
-  local last_input_lower = self._last_input_lower ---@type string|nil
+  local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
 
   local matches = self._full_matches ---@type fml.types.ui.select.ILineMatch[]
   if #input < 1 then
@@ -184,17 +189,34 @@ function M:filter(input)
       end
     end
   else
-    ---@type fml.types.ui.select.ILineMatch[]
-    local old_matches = (
-      last_input_lower ~= nil
-      and #input_lower > #last_input_lower
-      and input_lower:sub(1, #last_input_lower) == last_input_lower
-    )
-        and self._matches
-      or self._full_matches
+    local old_matches = self._full_matches ---@type fml.types.ui.select.ILineMatch[]
+    local last_case_sensitive = self._last_case_sensitive ---@type boolean
+    local last_input = self._last_input ---@type string|nil
+    if last_input ~= nil and case_sensitive == last_case_sensitive or not last_case_sensitive then
+      if not last_case_sensitive then
+        local last_input_lower = last_input ~= nil and last_input:lower() or nil ---@type string|nil
+        local input_lower = input:lower() ---@type string
+        if
+          last_input_lower ~= nil
+          and #input_lower > #last_input_lower
+          and input_lower:sub(1, #last_input_lower) == last_input_lower
+        then
+          old_matches = self._matches
+        end
+      else
+        if last_input ~= nil and #input > #last_input and input:sub(1, #last_input) == last_input then
+          old_matches = self._matches
+        end
+      end
+    end
 
     ---@type fml.types.ui.select.ILineMatch[]
-    matches = self._match(input_lower, self._item_map, old_matches)
+    matches = self._match({
+      input = input,
+      case_sensitive = case_sensitive,
+      item_map = self._item_map,
+      old_matches = old_matches,
+    })
     if frecency ~= nil then
       for _, match in ipairs(matches) do
         local uuid = match.uuid ---@type string
@@ -204,7 +226,8 @@ function M:filter(input)
   end
 
   table.sort(matches, self._cmp)
-  self._last_input_lower = input_lower
+  self._last_case_sensitive = case_sensitive
+  self._last_input = input
   self._matches = matches
   return matches
 end
