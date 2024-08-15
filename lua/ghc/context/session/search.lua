@@ -9,7 +9,6 @@ local function normalize_paths(paths)
   return fml.oxi.normalize_comma_list(paths) ---@type string
 end
 
-local replace_pattern = Observable.from_value("")
 local search_exclude_patterns =
   Observable.new({ initial_value = ".git/**,**/.yarn/**,**/node_modules/**", normalize = normalize_paths })
 local search_flag_case_sensitive = Observable.from_value(true)
@@ -21,10 +20,10 @@ local search_max_matches = Observable.from_value(500)
 local search_max_filesize = Observable.from_value("1M")
 local search_paths = Observable.new({ initial_value = "", normalize = normalize_paths })
 local search_pattern = Observable.from_value("")
+local search_replace_pattern = Observable.from_value("")
 local search_scope = Observable.from_value("C")
 
 ---@class ghc.context.session : fml.collection.Viewmodel
----@field public replace_pattern            fml.types.collection.IObservable
 ---@field public search_exclude_patterns    fml.types.collection.IObservable
 ---@field public search_flag_case_sensitive fml.types.collection.IObservable
 ---@field public search_flag_gitignore      fml.types.collection.IObservable
@@ -35,9 +34,9 @@ local search_scope = Observable.from_value("C")
 ---@field public search_max_matches         fml.types.collection.IObservable
 ---@field public search_paths               fml.types.collection.IObservable
 ---@field public search_pattern             fml.types.collection.IObservable
+---@field public search_replace_pattern     fml.types.collection.IObservable
 ---@field public search_scope               fml.types.collection.IObservable
 local M = require("ghc.context.session.mod")
-  :register("replace_pattern", replace_pattern, true, true)
   :register("search_exclude_patterns", search_exclude_patterns, true, true)
   :register("search_flag_case_sensitive", search_flag_case_sensitive, true, true)
   :register("search_flag_gitignore", search_flag_gitignore, true, true)
@@ -48,6 +47,7 @@ local M = require("ghc.context.session.mod")
   :register("search_max_matches", search_max_matches, true, true)
   :register("search_paths", search_paths, true, true)
   :register("search_pattern", search_pattern, true, true)
+  :register("search_replace_pattern", search_replace_pattern, true, true)
   :register("search_scope", search_scope, true, true)
 
 ---@return ghc.enums.context.SearchScope

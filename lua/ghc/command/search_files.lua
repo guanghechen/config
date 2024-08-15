@@ -239,8 +239,8 @@ end
 ---@return nil
 local function edit_config()
   ---@class ghc.command.search_files.IConfigData
-  ---@field public input                string
-  ---@field public replace              string
+  ---@field public search_pattern       string
+  ---@field public replace_pattern      string
   ---@field public search_paths         string[]
   ---@field public max_filesize         string
   ---@field public max_matches          integer
@@ -248,7 +248,7 @@ local function edit_config()
   ---@field public exclude_patterns     string[]
 
   local search_pattern = session.search_pattern:snapshot() ---@type string
-  local replace_pattern = session.replace_pattern:snapshot() ---@type string
+  local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
   local s_search_paths = session.search_paths:snapshot() ---@type string
   local s_max_filesize = session.search_max_filesize:snapshot() ---@type string
   local s_max_matches = session.search_max_matches:snapshot() ---@type integer
@@ -257,8 +257,8 @@ local function edit_config()
 
   ---@type ghc.command.search_files.IConfigData
   local data = {
-    input = search_pattern,
-    replace = replace_pattern,
+    search_pattern = search_pattern,
+    replace_pattern = replace_pattern,
     search_paths = fml.array.parse_comma_list(s_search_paths),
     max_filesize = s_max_filesize,
     max_matches = s_max_matches,
@@ -276,11 +276,11 @@ local function edit_config()
       end
       ---@cast raw_data ghc.command.search_files.IConfigData
 
-      if raw_data.input == nil or type(raw_data.input) ~= "string" then
+      if raw_data.search_pattern == nil or type(raw_data.search_pattern) ~= "string" then
         return "Invalid data.input, expect an string."
       end
 
-      if raw_data.replace == nil or type(raw_data.replace) ~= "string" then
+      if raw_data.replace_pattern == nil or type(raw_data.replace_pattern) ~= "string" then
         return "Invalid data.replace, expect an string."
       end
 
@@ -316,7 +316,7 @@ local function edit_config()
       local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
 
       session.search_pattern:next(input)
-      session.replace_pattern:next(replace)
+      session.search_replace_pattern:next(replace)
       session.search_paths:next(search_paths)
       session.search_max_filesize:next(max_filesize)
       session.search_max_matches:next(max_matches)
