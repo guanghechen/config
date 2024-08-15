@@ -7,13 +7,6 @@ local fn_toggle_scope = fml.G.register_anonymous_fn(function()
 end) or ""
 
 ---@type string
-local fn_toggle_mode = fml.G.register_anonymous_fn(function()
-  local mode = session.search_mode:snapshot() ---@type ghc.enums.context.SearchMode
-  local next_mode = mode == "replace" and "search" or "replace" ---@type ghc.enums.context.SearchMode
-  session.search_mode:next(next_mode)
-end) or ""
-
----@type string
 local fn_toggle_flag_case_sensitive = fml.G.register_anonymous_fn(function()
   local flag = session.search_flag_case_sensitive:snapshot() ---@type boolean
   session.search_flag_case_sensitive:next(not flag)
@@ -31,15 +24,20 @@ local fn_toggle_flag_regex = fml.G.register_anonymous_fn(function()
   session.search_flag_regex:next(not flag)
 end) or ""
 
+---@type string
+local fn_toggle_flag_replace = fml.G.register_anonymous_fn(function()
+  local flag = session.search_flag_replace:snapshot() ---@type boolean
+  session.search_flag_replace:next(not flag)
+end) or ""
+
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "search_files",
   render = function()
-    local mode = session.search_mode:snapshot() ---@type ghc.enums.context.SearchMode
     local flag_case_sensitive_enabled = session.search_flag_case_sensitive:snapshot() ---@type boolean
     local flag_gitignore_enabled = session.search_flag_gitignore:snapshot() ---@type boolean
     local flag_regex_enabled = session.search_flag_regex:snapshot() ---@type boolean
-    local flag_replace = mode == "replace" ---@type boolean
+    local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
 
     local text_scope = " " .. session.search_scope:snapshot() .. " " ---@type string
     local text_flag_case_sensitive = " " .. fml.ui.icons.symbols.flag_case_sensitive .. " " ---@type string
@@ -63,7 +61,7 @@ local M = {
       .. fml.nvimbar.btn(hl_text_flag_gitignore, fn_toggle_flag_gitignore)
       .. fml.nvimbar.btn(hl_text_flag_regex, fn_toggle_flag_regex)
       .. fml.nvimbar.btn(hl_text_flag_case_sensitive, fn_toggle_flag_case_sensitive)
-      .. fml.nvimbar.btn(hl_text_mode, fn_toggle_mode)
+      .. fml.nvimbar.btn(hl_text_mode, fn_toggle_flag_replace)
     local width = vim.fn.strwidth(text_scope)
       + vim.fn.strwidth(text_flag_case_sensitive)
       + vim.fn.strwidth(text_flag_gitignore)

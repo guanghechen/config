@@ -1,7 +1,3 @@
----@alias ghc.enums.context.SearchMode
----| "replace"
----| "search"
-
 ---@alias ghc.enums.context.FindScope
 ---|"W"
 ---|"C"
