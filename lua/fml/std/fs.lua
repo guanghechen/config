@@ -75,7 +75,7 @@ function M.read_file_as_lines(params)
   local lines = {} ---@type string[]
   local max_lines = params.max_lines or math.huge ---@type integer
   for line in file:lines() do
-    if #lines > max_lines then
+    if #lines >= max_lines then
       break
     end
     table.insert(lines, line)

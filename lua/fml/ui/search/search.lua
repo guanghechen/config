@@ -140,8 +140,10 @@ function M.new(props)
     name = "fml.ui.search.search.reset_cursor",
     delay = 500,
     fn = function(callback)
+      local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
       local winnr_input = self:get_winnr_input() ---@type integer|nil
-      if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+      local winnr_main = self:get_winnr_main()
+      if winnr == winnr_main and winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
         vim.api.nvim_tabpage_set_win(0, winnr_input)
       end
       callback(true)
@@ -150,10 +152,27 @@ function M.new(props)
 
   ---@class fml.ui.search.search.actions
   local actions = {
-    on_close = function()
+    noop = util.noop,
+    close = function()
       on_close()
     end,
-    noop = util.noop,
+    focus_preview = function()
+      local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+      local winnr_preview = self:get_winnr_preview() ---@type integer|nil
+      if winnr_preview ~= nil and winnr ~= winnr_preview and vim.api.nvim_win_is_valid(winnr_preview) then
+        vim.api.nvim_tabpage_set_win(0, winnr_preview)
+      end
+    end,
+    focus_input = function()
+      local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+      local winnr_input = self:get_winnr_input() ---@type integer|nil
+      if winnr_input ~= nil and winnr ~= winnr_input and vim.api.nvim_win_is_valid(winnr_input) then
+        vim.api.nvim_tabpage_set_win(0, winnr_input)
+      end
+    end,
+    refresh = function()
+      state:mark_dirty()
+    end,
     on_main_G = function()
       state:locate(math.huge)
       self:sync_main_cursor()
@@ -174,9 +193,6 @@ function M.new(props)
     on_main_up = function()
       state:moveup()
       self:sync_main_cursor()
-    end,
-    on_refresh = function()
-      state:mark_dirty()
     end,
     on_main_mouse_click = function()
       ---@diagnostic disable-next-line: invisible
@@ -228,10 +244,18 @@ function M.new(props)
 
   ---@type fml.types.IKeymap[]
   local input_keymaps = std_array.concat(common_keymaps, {
-    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.on_refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-l>", callback = actions.focus_preview, desc = "search: focus preview" },
+    { modes = { "i", "n", "v" }, key = "<C-a>l", callback = actions.focus_preview, desc = "search: focus preview" },
+    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.refresh, desc = "search: refresh" },
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
-    { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
+    { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
     { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
     { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
@@ -241,10 +265,18 @@ function M.new(props)
 
   ---@type fml.types.IKeymap[]
   local main_keymaps = std_array.concat(common_keymaps, {
-    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.on_refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-l>", callback = actions.focus_preview, desc = "search: focus preview" },
+    { modes = { "i", "n", "v" }, key = "<C-a>l", callback = actions.focus_preview, desc = "search: focus preview" },
+    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.refresh, desc = "search: refresh" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
-    { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
+    { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
     { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
     { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
@@ -254,10 +286,18 @@ function M.new(props)
 
   ---@type fml.types.IKeymap[]
   local preview_keymaps = std_array.concat(common_keymaps, {
-    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.on_refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.on_refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.focus_input, desc = "search: focus input" },
+    { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.focus_input, desc = "search: focus input" },
+    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-l>", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<C-a>l", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.refresh, desc = "search: refresh" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
-    { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "search: close" },
+    { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
   }, props.preview_keymaps or {})
 
   ---@type fml.types.ui.search.IInput
