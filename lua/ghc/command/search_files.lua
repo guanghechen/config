@@ -12,13 +12,35 @@ local M = {}
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
+local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
+local state_dirpath = fml.collection.Observable.from_value(initial_dirpath)
+local state_search_cwd = fml.collection.Observable.from_value(session.get_search_scope_cwd(initial_dirpath))
+
+local _last_search_input = nil ---@type string|nil
+local _last_search_result = nil ---@type fml.std.oxi.search.IResult|nil
+fml.fn.watch_observables({
+  session.search_exclude_patterns,
+  session.search_flag_case_sensitive,
+  session.search_flag_gitignore,
+  session.search_flag_regex,
+  session.search_include_patterns,
+  session.search_max_filesize,
+  session.search_max_matches,
+  session.search_paths,
+  session.search_pattern,
+  state_search_cwd,
+}, function()
+  _last_search_input = nil
+  _last_search_result = nil
+end, true)
+
 local _item_data_map = {} ---@type table<string, ghc.command.search_files.IItemData>
 
 ---@param input_text                  string
 ---@param callback                    fml.types.ui.search.IFetchItemsCallback
 ---@return nil
 local function fetch_items(input_text, callback)
-  local cwd = session.search_cwd:snapshot() ---@type string
+  local cwd = state_search_cwd:snapshot() ---@type string
   local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
   local flag_gitignore = session.search_flag_gitignore:snapshot() ---@type boolean
   local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
@@ -29,19 +51,21 @@ local function fetch_items(input_text, callback)
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
 
   ---@type fml.std.oxi.search.IResult
-  local result = fml.oxi.search({
-    cwd = cwd,
-    flag_case_sensitive = flag_case_sensitive,
-    flag_gitignore = flag_gitignore,
-    flag_regex = flag_regex,
-    max_filesize = max_filesize,
-    max_matches = max_matches,
-    search_pattern = input_text,
-    search_paths = search_paths,
-    include_patterns = include_patterns,
-    exclude_patterns = exclude_patterns,
-    specified_filepath = nil,
-  })
+  local result = (_last_search_input ~= nil and _last_search_input == input_text and _last_search_result ~= nil)
+      and _last_search_result
+    or fml.oxi.search({
+      cwd = cwd,
+      flag_case_sensitive = flag_case_sensitive,
+      flag_gitignore = flag_gitignore,
+      flag_regex = flag_regex,
+      max_filesize = max_filesize,
+      max_matches = max_matches,
+      search_pattern = input_text,
+      search_paths = search_paths,
+      include_patterns = include_patterns,
+      exclude_patterns = exclude_patterns,
+      specified_filepath = nil,
+    })
 
   if result.error ~= nil or result.items == nil then
     callback(false, result.error)
@@ -194,9 +218,6 @@ local function calc_search_highlights(item)
 end
 
 local _search = nil ---@type fml.types.ui.search.ISearch|nil
-local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_dirpath = fml.collection.Observable.from_value(initial_dirpath)
-local state_search_cwd = fml.collection.Observable.from_value(session.get_search_scope_cwd(initial_dirpath))
 fml.fn.watch_observables({ session.search_scope }, function()
   local current_search_cwd = state_search_cwd:snapshot() ---@type string
   local dirpath = state_dirpath:snapshot() ---@type string
@@ -417,7 +438,7 @@ local function get_search()
       fetch_preview_data = function(item)
         local item_data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
         if item_data ~= nil then
-          local cwd = session.search_cwd:snapshot() ---@type string
+          local cwd = state_search_cwd:snapshot() ---@type string
           local filepath = fml.path.join(cwd, item_data.filepath) ---@type string
           local filename = fml.path.basename(filepath) ---@type string
 
@@ -489,7 +510,7 @@ local function get_search()
       on_confirm = function(item)
         local winnr = fml.api.state.win_history:present() ---@type integer
         if winnr ~= nil then
-          local cwd = session.search_cwd:snapshot() ---@type string
+          local cwd = state_search_cwd:snapshot() ---@type string
           local workspace = fml.path.workspace() ---@type string
           local data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
           if data ~= nil then
