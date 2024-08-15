@@ -18,6 +18,14 @@ local state_search_cwd = fml.collection.Observable.from_value(session.get_search
 
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type fml.std.oxi.search.IResult|nil
+fml.fn.watch_observables({ session.search_scope }, function()
+  local current_search_cwd = state_search_cwd:snapshot() ---@type string
+  local dirpath = state_dirpath:snapshot() ---@type string
+  local next_search_cwd = session.get_search_scope_cwd(dirpath) ---@type string
+  if current_search_cwd ~= next_search_cwd then
+    state_search_cwd:next(next_search_cwd)
+  end
+end, true)
 fml.fn.watch_observables({
   session.search_exclude_patterns,
   session.search_flag_case_sensitive,
@@ -27,11 +35,11 @@ fml.fn.watch_observables({
   session.search_max_filesize,
   session.search_max_matches,
   session.search_paths,
-  session.search_pattern,
   state_search_cwd,
 }, function()
   _last_search_input = nil
   _last_search_result = nil
+  M.reload()
 end, true)
 
 local _item_data_map = {} ---@type table<string, ghc.command.search_files.IItemData>
@@ -218,25 +226,6 @@ local function calc_search_highlights(item)
 end
 
 local _search = nil ---@type fml.types.ui.search.ISearch|nil
-fml.fn.watch_observables({ session.search_scope }, function()
-  local current_search_cwd = state_search_cwd:snapshot() ---@type string
-  local dirpath = state_dirpath:snapshot() ---@type string
-  local next_search_cwd = session.get_search_scope_cwd(dirpath) ---@type string
-  if current_search_cwd ~= next_search_cwd then
-    state_search_cwd:next(next_search_cwd)
-    M.reload()
-  end
-end, true)
-
-fml.fn.watch_observables({
-  session.search_flag_case_sensitive,
-  session.search_flag_gitignore,
-  session.search_flag_regex,
-  session.search_max_filesize,
-  session.search_max_matches,
-}, function()
-  M.reload()
-end, true)
 
 ---@param scope                         ghc.enums.context.SearchScope
 ---@return nil
@@ -251,6 +240,7 @@ end
 local function edit_config()
   ---@class ghc.command.search_files.IConfigData
   ---@field public input                string
+  ---@field public replace              string
   ---@field public search_paths         string[]
   ---@field public max_filesize         string
   ---@field public max_matches          integer
@@ -258,6 +248,7 @@ local function edit_config()
   ---@field public exclude_patterns     string[]
 
   local search_pattern = session.search_pattern:snapshot() ---@type string
+  local replace_pattern = session.replace_pattern:snapshot() ---@type string
   local s_search_paths = session.search_paths:snapshot() ---@type string
   local s_max_filesize = session.search_max_filesize:snapshot() ---@type string
   local s_max_matches = session.search_max_matches:snapshot() ---@type integer
@@ -267,6 +258,7 @@ local function edit_config()
   ---@type ghc.command.search_files.IConfigData
   local data = {
     input = search_pattern,
+    replace = replace_pattern,
     search_paths = fml.array.parse_comma_list(s_search_paths),
     max_filesize = s_max_filesize,
     max_matches = s_max_matches,
@@ -286,6 +278,10 @@ local function edit_config()
 
       if raw_data.input == nil or type(raw_data.input) ~= "string" then
         return "Invalid data.input, expect an string."
+      end
+
+      if raw_data.replace == nil or type(raw_data.replace) ~= "string" then
+        return "Invalid data.replace, expect an string."
       end
 
       if raw_data.search_paths == nil or not fml.is.array(raw_data.search_paths) then
@@ -312,6 +308,7 @@ local function edit_config()
       ---@cast raw_data ghc.command.search_files.IConfigData
       local raw = vim.tbl_extend("force", data, raw_data)
       local input = raw.input ---@type string
+      local replace = raw.replace ---@type string
       local max_filesize = raw.max_filesize ---@type string
       local max_matches = raw.max_matches ---@type integer
       local search_paths = table.concat(raw.search_paths, ",") ---@type string
@@ -319,6 +316,7 @@ local function edit_config()
       local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
 
       session.search_pattern:next(input)
+      session.replace_pattern:next(replace)
       session.search_paths:next(search_paths)
       session.search_max_filesize:next(max_filesize)
       session.search_max_matches:next(max_matches)
@@ -488,7 +486,7 @@ local function get_search()
         return data
       end,
       patch_preview_data = function(item, _, last_data)
-        local item_data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
+        local item_data = _item_data_map and _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
         local lnum = item_data ~= nil and item_data.lnum or nil ---@type integer|nil
         local col = item_data ~= nil and item_data.col or nil ---@type integer|nil
 
@@ -512,7 +510,7 @@ local function get_search()
         if winnr ~= nil then
           local cwd = state_search_cwd:snapshot() ---@type string
           local workspace = fml.path.workspace() ---@type string
-          local data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
+          local data = _item_data_map and _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
           if data ~= nil then
             local absolute_filepath = fml.path.join(cwd, data.filepath) ---@type string
             local relative_filepath = fml.path.relative(workspace, absolute_filepath) ---@type string

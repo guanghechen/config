@@ -16,12 +16,13 @@ fml.fn.watch_observables({ session.find_scope }, function()
   local next_find_cwd = session.get_find_scope_cwd(dirpath) ---@type string
   if current_find_cwd ~= next_find_cwd then
     state_find_cwd:next(next_find_cwd)
-    M.reload()
   end
 end, true)
 fml.fn.watch_observables({
+  session.find_exclude_patterns,
   session.find_flag_case_sensitive,
   session.find_flag_gitignore,
+  state_find_cwd,
 }, function()
   M.reload()
 end, true)
