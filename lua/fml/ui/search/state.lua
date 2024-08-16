@@ -62,8 +62,8 @@ function M.new(props)
       end)
     end,
     callback = function(ok)
+      dirty_items:next(false)
       if ok then
-        dirty_items:next(false)
         dirty_main:next(true, { force = true })
         dirty_preview:next(true, { force = true })
       end
