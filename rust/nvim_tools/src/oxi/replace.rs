@@ -54,7 +54,8 @@ pub fn replace_file_preview(
         &replace_pattern,
         keep_search_pieces,
         flag_regex,
-    );
+    )
+    .unwrap();
     serde_json::to_string(&result).unwrap()
 }
 

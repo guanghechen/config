@@ -123,7 +123,7 @@ function M.replace_file_preview(params)
   end
 
   ---@type string
-  local json_str = M.nvim_tools.replace_text_preview(
+  local json_str = M.nvim_tools.replace_file_preview(
     params.filepath,
     search_pattern,
     params.replace_pattern,

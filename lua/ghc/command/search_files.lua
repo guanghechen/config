@@ -252,42 +252,45 @@ end
 
 ---@param item                          ghc.command.search_files.IItemData
 ---@return fml.types.ui.IHighlight[]
-local function calc_search_highlights(item)
+local function calc_preview_highlights(item)
   local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
-  local file_match = item.filematch ---@type fml.std.oxi.search.IFileMatch
   local highlights = {} ---@type fml.types.ui.IHighlight[]
-  for _, block_match in ipairs(file_match.matches) do
-    local lines = block_match.lines ---@type string[]
-    local lnum0 = block_match.lnum ---@type integer
+  if flag_replace then
+  else
+    local file_match = item.filematch ---@type fml.std.oxi.search.IFileMatch
+    for _, block_match in ipairs(file_match.matches) do
+      local lines = block_match.lines ---@type string[]
+      local lnum0 = block_match.lnum ---@type integer
 
-    local k = 1 ---@type integer
-    local offset = 0 ---@type integer
-    local lwidth = string.len(lines[1]) + 1 ---@type integer
-    for _, match in ipairs(block_match.matches) do
-      local l = match.l ---@type integer
-      local r = match.r ---@type integer
-      local hlname = nil ---@type string|nil
+      local k = 1 ---@type integer
+      local offset = 0 ---@type integer
+      local lwidth = string.len(lines[1]) + 1 ---@type integer
+      for _, match in ipairs(block_match.matches) do
+        local l = match.l ---@type integer
+        local r = match.r ---@type integer
+        local hlname = nil ---@type string|nil
 
-      while l < r do
-        while l >= offset + lwidth and k < #lines do
-          k = k + 1
-          offset = offset + lwidth
-          lwidth = string.len(lines[k]) + 1
+        while l < r do
+          while l >= offset + lwidth and k < #lines do
+            k = k + 1
+            offset = offset + lwidth
+            lwidth = string.len(lines[k]) + 1
+          end
+
+          local lnum = lnum0 + k - 1 ---@type integer
+          local col = l - offset ---@type integer
+          local col_end = math.min(lwidth - 1, r - offset) ---@type integer
+
+          if hlname == nil then
+            hlname = (item.lnum == lnum and item.col == col) and "f_us_match_cur" or "f_us_match"
+          end
+
+          ---@type fml.types.ui.IHighlight
+          local highlight = { lnum = lnum, coll = col, colr = col_end, hlname = hlname }
+          table.insert(highlights, highlight)
+
+          l = offset + lwidth ---@type integer
         end
-
-        local lnum = lnum0 + k - 1 ---@type integer
-        local col = l - offset ---@type integer
-        local col_end = math.min(lwidth - 1, r - offset) ---@type integer
-
-        if hlname == nil then
-          hlname = (item.lnum == lnum and item.col == col) and "f_us_match_cur" or "f_us_match"
-        end
-
-        ---@type fml.types.ui.IHighlight
-        local highlight = { lnum = lnum, coll = col, colr = col_end, hlname = hlname }
-        table.insert(highlights, highlight)
-
-        l = offset + lwidth ---@type integer
       end
     end
   end
@@ -519,37 +522,53 @@ local function get_search()
           local cwd = state_search_cwd:snapshot() ---@type string
           local filepath = fml.path.join(cwd, item_data.filepath) ---@type string
           local filename = fml.path.basename(filepath) ---@type string
+          local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
+          local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
+          local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
+          local search_pattern = session.search_pattern:snapshot() ---@type string
+          local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
 
           local is_text_file = fml.is.printable_file(filename) ---@type boolean
           if is_text_file then
             local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-            local highlights = calc_search_highlights(item_data) ---@type fml.types.ui.IHighlight[]
+            local highlights = calc_preview_highlights(item_data) ---@type fml.types.ui.IHighlight[]
+            ---@type string[]
+            local lines = flag_replace
+                and fml.oxi.replace_file_preview({
+                  flag_case_sensitive = flag_case_sensitive,
+                  flag_regex = flag_regex,
+                  search_pattern = search_pattern,
+                  replace_pattern = replace_pattern,
+                  filepath = filepath,
+                  keep_search_pieces = true,
+                }).lines
+              or fml.fs.read_file_as_lines({ filepath = filepath, silent = true })
 
             ---@type fml.ui.search.preview.IData
             local data = {
               filetype = filetype,
               show_numbers = true,
               title = item_data.filepath,
-              lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }),
+              lines = lines,
               highlights = highlights,
-              lnum = item_data.lnum,
-              col = item_data.col,
+              lnum = item_data.p_lnum or item_data.lnum,
+              col = item_data.p_col or item_data.col,
+            }
+            return data
+          else
+            ---@type fml.types.ui.IHighlight[]
+            local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
+
+            ---@type fml.ui.search.preview.IData
+            local data = {
+              lines = { "  Not a text file, cannot preview." },
+              highlights = highlights,
+              filetype = nil,
+              show_numbers = false,
+              title = item_data.filepath,
             }
             return data
           end
-
-          ---@type fml.types.ui.IHighlight[]
-          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
-
-          ---@type fml.ui.search.preview.IData
-          local data = {
-            lines = { "  Not a text file, cannot preview." },
-            highlights = highlights,
-            filetype = nil,
-            show_numbers = false,
-            title = item_data.filepath,
-          }
-          return data
         end
 
         ---@type fml.types.ui.IHighlight[]
@@ -571,7 +590,7 @@ local function get_search()
         local col = item_data ~= nil and item_data.col or nil ---@type integer|nil
 
         ---@type fml.types.ui.IHighlight[]|nil
-        local highlights = item_data and calc_search_highlights(item_data) or nil
+        local highlights = item_data and calc_preview_highlights(item_data) or nil
 
         ---@type fml.ui.search.preview.IData
         local data = {
