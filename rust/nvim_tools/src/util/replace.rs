@@ -8,7 +8,7 @@ use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReplacePreview {
-    pub lines: Vec<String>,
+    pub text: String,
     pub matches: Vec<MatchPoint>,
 }
 
@@ -278,6 +278,8 @@ pub fn replace_text_preview_with_matches(
         next_text = pieces.join("");
     }
 
-    let lines: Vec<String> = next_text.lines().map(|line| line.to_string()).collect();
-    ReplacePreview { lines, matches }
+    ReplacePreview {
+        text: next_text,
+        matches,
+    }
 }

@@ -62,7 +62,7 @@ pub fn replace_file_preview_with_matches(
         Ok(data) => serde_json::to_string(&data).unwrap(),
         Err(error) => {
             let data: util::replace::ReplacePreview = util::replace::ReplacePreview {
-                lines: error.lines().map(|line| line.to_string()).collect(),
+                text: error,
                 matches: vec![],
             };
             serde_json::to_string(&data).unwrap()
