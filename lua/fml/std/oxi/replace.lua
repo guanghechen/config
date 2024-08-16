@@ -117,7 +117,7 @@ function M.replace_file_preview(params)
   if result ~= nil and type(result) == "string" then
     local lines = {} ---@type string[]
     local text = result ---@type string
-    for line in text:gmatch("([^\n]+)") do
+    for line in text:gmatch("([^\n]*)\n?") do
       table.insert(lines, line)
     end
     ---@type fml.std.oxi.replace.replace_file_preview.IResult
@@ -180,7 +180,7 @@ function M.replace_text_preview(params)
   if result ~= nil and type(result) == "string" then
     local lines = {} ---@type string[]
     local text = result ---@type string
-    for line in text:gmatch("([^\n]+)") do
+    for line in text:gmatch("([^\n]*)\n?") do
       table.insert(lines, line)
     end
     ---@type fml.std.oxi.replace.replace_text_preview.IResult

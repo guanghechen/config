@@ -55,7 +55,7 @@ function M.search(params)
         local text = block_match.text ---@type string
         local lines = {} ---@type string[]
         local lwidths = {} ---@type integer[]
-        for line in text:gmatch("([^\n]+)") do
+        for line in text:gmatch("([^\n]*)\n?") do
           local lwidth = string.len(line) + 1 ---@type integer
           table.insert(lines, line)
           table.insert(lwidths, lwidth)
