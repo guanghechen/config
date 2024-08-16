@@ -205,8 +205,12 @@ function M.new(props)
           lnum = state:locate(lnum)
           vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
           reset_cursor_scheduler.schedule()
+          return
         end
       end
+
+      ---! fallback
+      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<LeftMouse>", true, false, true), "n", false)
     end,
     on_main_mouse_dbclick = function()
       ---@diagnostic disable-next-line: invisible
@@ -219,8 +223,12 @@ function M.new(props)
           lnum = state:locate(lnum)
           vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
           on_confirm()
+          return
         end
       end
+
+      ---! fallback
+      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<2-LeftMouse>", true, false, true), "n", false)
     end,
   }
 
