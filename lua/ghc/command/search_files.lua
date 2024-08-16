@@ -315,8 +315,8 @@ local function edit_config()
   ---@field public include_patterns     string[]
   ---@field public exclude_patterns     string[]
 
-  local search_pattern = session.search_pattern:snapshot() ---@type string
-  local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
+  local s_search_pattern = session.search_pattern:snapshot() ---@type string
+  local s_replace_pattern = session.search_replace_pattern:snapshot() ---@type string
   local s_search_paths = session.search_paths:snapshot() ---@type string
   local s_max_filesize = session.search_max_filesize:snapshot() ---@type string
   local s_max_matches = session.search_max_matches:snapshot() ---@type integer
@@ -325,8 +325,8 @@ local function edit_config()
 
   ---@type ghc.command.search_files.IConfigData
   local data = {
-    search_pattern = search_pattern,
-    replace_pattern = replace_pattern,
+    search_pattern = s_search_pattern,
+    replace_pattern = s_replace_pattern,
     search_paths = fml.array.parse_comma_list(s_search_paths),
     max_filesize = s_max_filesize,
     max_matches = s_max_matches,
