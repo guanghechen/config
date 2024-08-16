@@ -9,10 +9,9 @@ local M = {}
 ---@class ghc.command.search_files.IItemData
 ---@field public filepath               string
 ---@field public filematch              fml.std.oxi.search.IFileMatch
+---@field public match_idx              integer
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
----@field public p_lnum                 ?integer
----@field public p_col                  ?integer
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
 local state_dirpath = fml.collection.Observable.from_value(initial_dirpath)
@@ -132,6 +131,7 @@ local function fetch_items(input_text, callback)
 
       if flag_replace then
         local lnum_delta = 0 ---@type integer
+        local match_idx = 0 ---@type integer
         for _, block_match in ipairs(file_match.matches) do
           ---@type fml.std.oxi.replace.replace_text_preview_with_matches.IResult
           local preview_result = fml.oxi.replace_text_preview_with_matches({
@@ -153,6 +153,7 @@ local function fetch_items(input_text, callback)
           local s_lwidths = block_match.lwidths ---@type integer[]
           local r_matches = preview_result.matches ---@type fml.std.oxi.search.IMatchPoint[]
           for i = 1, #r_matches, 2 do
+            match_idx = match_idx + 1
             local search_match = r_matches[i]
             local s_k, s_col =
               calc_same_line_pos(s_lwidths, search_match.l - offset_delta, search_match.r - offset_delta)
@@ -192,10 +193,9 @@ local function fetch_items(input_text, callback)
             local item_data = {
               filepath = filepath,
               filematch = file_match,
-              lnum = s_lnum,
-              col = s_col,
-              p_lnum = r_lnum,
-              p_col = r_col,
+              match_idx = match_idx,
+              lnum = r_lnum,
+              col = r_col,
             }
             item_data_map[item.uuid] = item_data
             item_data_map[file_item.uuid] = item_data_map[file_item.uuid] or item_data
@@ -204,11 +204,13 @@ local function fetch_items(input_text, callback)
           lnum_delta = lnum_delta + #r_lwidths - #s_lwidths
         end
       else
+        local match_idx = 0 ---@type integer
         for _, block_match in ipairs(file_match.matches) do
           local lines = block_match.lines ---@type string[]
           local lwidths = block_match.lwidths ---@type integer[]
           local matches = block_match.matches ---@type fml.std.oxi.search.IMatchPoint[]
           for _, search_match in ipairs(matches) do
+            match_idx = match_idx + 1
             local k, col, col_end = calc_same_line_pos(lwidths, search_match.l, search_match.r)
             local lnum = block_match.lnum + k - 1 ---@type integer
 
@@ -230,6 +232,7 @@ local function fetch_items(input_text, callback)
             local item_data = {
               filepath = filepath,
               filematch = file_match,
+              match_idx = match_idx,
               lnum = lnum,
               col = col,
             }
@@ -241,7 +244,7 @@ local function fetch_items(input_text, callback)
 
       if item_data_map[file_item.uuid] == nil then
         ---@type ghc.command.search_files.IItemData
-        local file_item_data = { filepath = filepath, filematch = file_match }
+        local file_item_data = { filepath = filepath, filematch = file_match, match_idx = 1 }
         item_data_map[file_item.uuid] = file_item_data
       end
     end
@@ -258,6 +261,7 @@ local function calc_preview_highlights(item)
   if flag_replace then
   else
     local file_match = item.filematch ---@type fml.std.oxi.search.IFileMatch
+    local match_idx = 0 ---@type integer
     for _, block_match in ipairs(file_match.matches) do
       local lines = block_match.lines ---@type string[]
       local lnum0 = block_match.lnum ---@type integer
@@ -266,9 +270,10 @@ local function calc_preview_highlights(item)
       local offset = 0 ---@type integer
       local lwidth = string.len(lines[1]) + 1 ---@type integer
       for _, match in ipairs(block_match.matches) do
+        match_idx = match_idx + 1
         local l = match.l ---@type integer
         local r = match.r ---@type integer
-        local hlname = nil ---@type string|nil
+        local hlname = item.match_idx == match_idx and "f_us_match_cur" or "f_us_match" ---@type string
 
         while l < r do
           while l >= offset + lwidth and k < #lines do
@@ -280,10 +285,6 @@ local function calc_preview_highlights(item)
           local lnum = lnum0 + k - 1 ---@type integer
           local col = l - offset ---@type integer
           local col_end = math.min(lwidth - 1, r - offset) ---@type integer
-
-          if hlname == nil then
-            hlname = (item.lnum == lnum and item.col == col) and "f_us_match_cur" or "f_us_match"
-          end
 
           ---@type fml.types.ui.IHighlight
           local highlight = { lnum = lnum, coll = col, colr = col_end, hlname = hlname }
@@ -551,8 +552,8 @@ local function get_search()
               title = item_data.filepath,
               lines = lines,
               highlights = highlights,
-              lnum = item_data.p_lnum or item_data.lnum,
-              col = item_data.p_col or item_data.col,
+              lnum = item_data.lnum,
+              col = item_data.col,
             }
             return data
           else
