@@ -37,7 +37,7 @@ function M.new(props)
 
   ---@param item                          fml.types.ui.search.IItem|nil
   ---@return fml.ui.search.preview.IData|nil
-  function M:fetch_data(item)
+  local function fetch_data(item)
     if item == nil then
       return nil
     end
@@ -62,7 +62,7 @@ function M.new(props)
       local ok, error = pcall(function()
         local last_data = _last_data ---@type fml.ui.search.preview.IData|nil
         local item = state:get_current() ---@type fml.types.ui.search.IItem|nil
-        local data = self:fetch_data(item) ---@type fml.ui.search.preview.IData|nil
+        local data = fetch_data(item) ---@type fml.ui.search.preview.IData|nil
 
         _last_item = item
         _last_data = data
