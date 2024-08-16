@@ -12,11 +12,23 @@ fn test_replace() {
         );
         println!(
             "{:?}",
-            replace::replace_text_preview(&text, &search_pattern, &replace_pattern, true, true)
+            replace::replace_text_preview_with_matches(
+                &text,
+                &search_pattern,
+                &replace_pattern,
+                true,
+                true
+            )
         );
         println!(
             "{:?}",
-            replace::replace_text_preview(&text, &search_pattern, &replace_pattern, false, true)
+            replace::replace_text_preview_with_matches(
+                &text,
+                &search_pattern,
+                &replace_pattern,
+                false,
+                true
+            )
         );
     }
 
@@ -29,11 +41,23 @@ fn test_replace() {
         );
         println!(
             "{:?}",
-            replace::replace_text_preview(&text, &search_pattern, &replace_pattern, true, false)
+            replace::replace_text_preview_with_matches(
+                &text,
+                &search_pattern,
+                &replace_pattern,
+                true,
+                false
+            )
         );
         println!(
             "{:?}",
-            replace::replace_text_preview(&text, &search_pattern, &replace_pattern, false, false)
+            replace::replace_text_preview_with_matches(
+                &text,
+                &search_pattern,
+                &replace_pattern,
+                false,
+                false
+            )
         );
     }
 }

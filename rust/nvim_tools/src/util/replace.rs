@@ -33,7 +33,7 @@ fn get_static_regex(pattern: &String) -> Result<&'static Mutex<Regex>, String> {
     Ok(&CACHE_REGEX)
 }
 
-pub fn replace_text_preview(
+pub fn replace_text_preview_with_matches(
     text: &str,
     search_pattern: &String,
     replace_pattern: &str,
@@ -139,6 +139,77 @@ pub fn replace_text_preview(
 
     let lines: Vec<String> = next_text.lines().map(|line| line.to_string()).collect();
     ReplacePreview { lines, matches }
+}
+
+pub fn replace_text_preview(
+    text: &str,
+    search_pattern: &String,
+    replace_pattern: &str,
+    keep_search_pieces: bool,
+    flag_regex: bool,
+) -> String {
+    if flag_regex {
+        if let Ok(r) = get_static_regex(search_pattern) {
+            let regex = r.lock().unwrap();
+            return regex
+                .replace_all(text, |caps: &Captures| {
+                    let mut replacement = replace_pattern.to_string();
+                    for i in 1..caps.len() {
+                        if let Some(cap) = caps.get(i) {
+                            let placeholder = format!("${}", i);
+                            replacement = replacement.replace(&placeholder, cap.as_str());
+                        }
+                    }
+
+                    let mat = caps.get(0).unwrap();
+                    if keep_search_pieces {
+                        format!("{}{}", mat.as_str(), replacement)
+                    } else {
+                        replacement
+                    }
+                })
+                .to_string();
+        }
+        return text.to_string();
+    }
+    let match_points: Vec<usize> =
+        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
+    let len_of_search: usize = search_pattern.len();
+    let mut pieces: Vec<&str> = vec![];
+    let mut i: usize = 0;
+    for m in match_points {
+        let j: usize = m + len_of_search;
+        if keep_search_pieces {
+            pieces.push(&text[i..j]);
+            pieces.push(replace_pattern);
+        } else {
+            pieces.push(&text[i..m]);
+            pieces.push(replace_pattern);
+        }
+        i = j;
+    }
+    pieces.push(&text[i..]);
+    pieces.join("")
+}
+
+pub fn replace_file_preview(
+    filepath: &str,
+    search_pattern: &String,
+    replace_pattern: &str,
+    keep_search_pieces: bool,
+    flag_regex: bool,
+) -> Result<String, String> {
+    let mut file = File::open(filepath).map_err(|e| e.to_string())?;
+    let mut text = String::new();
+    file.read_to_string(&mut text).map_err(|e| e.to_string())?;
+    let next_text: String = replace_text_preview(
+        &text,
+        search_pattern,
+        replace_pattern,
+        keep_search_pieces,
+        flag_regex,
+    );
+    Ok(next_text)
 }
 
 /// Peform replacement on the entire file.

@@ -28,8 +28,18 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::replace::replace_entire_file)),
         ),
         (
+            "replace_text_preview_with_matches",
+            Object::from(Function::from_fn(
+                oxi::replace::replace_text_preview_with_matches,
+            )),
+        ),
+        (
             "replace_text_preview",
             Object::from(Function::from_fn(oxi::replace::replace_text_preview)),
+        ),
+        (
+            "replace_file_preview",
+            Object::from(Function::from_fn(oxi::replace::replace_file_preview)),
         ),
         (
             "search",

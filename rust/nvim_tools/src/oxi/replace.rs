@@ -1,6 +1,25 @@
 use crate::types::replace::ReplaceEntireFileResult;
 use crate::util;
 
+pub fn replace_text_preview_with_matches(
+    (text, search_pattern, replace_pattern, keep_search_pieces, flag_regex): (
+        String,
+        String,
+        String,
+        bool,
+        bool,
+    ),
+) -> String {
+    let result = util::replace::replace_text_preview_with_matches(
+        &text,
+        &search_pattern,
+        &replace_pattern,
+        keep_search_pieces,
+        flag_regex,
+    );
+    serde_json::to_string(&result).unwrap()
+}
+
 pub fn replace_text_preview(
     (text, search_pattern, replace_pattern, keep_search_pieces, flag_regex): (
         String,
@@ -12,6 +31,25 @@ pub fn replace_text_preview(
 ) -> String {
     let result = util::replace::replace_text_preview(
         &text,
+        &search_pattern,
+        &replace_pattern,
+        keep_search_pieces,
+        flag_regex,
+    );
+    serde_json::to_string(&result).unwrap()
+}
+
+pub fn replace_file_preview(
+    (filepath, search_pattern, replace_pattern, keep_search_pieces, flag_regex): (
+        String,
+        String,
+        String,
+        bool,
+        bool,
+    ),
+) -> String {
+    let result = util::replace::replace_file_preview(
+        &filepath,
         &search_pattern,
         &replace_pattern,
         keep_search_pieces,

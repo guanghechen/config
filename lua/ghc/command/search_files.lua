@@ -133,8 +133,8 @@ local function fetch_items(input_text, callback)
       if flag_replace then
         local lnum_delta = 0 ---@type integer
         for _, block_match in ipairs(file_match.matches) do
-          ---@type fml.std.oxi.replace.IPreviewResult
-          local preview_result = fml.oxi.replace_text_preview({
+          ---@type fml.std.oxi.replace.IReplaceTextPreviewWithMatchesResult
+          local preview_result = fml.oxi.replace_text_preview_with_matches({
             flag_case_sensitive = flag_case_sensitive,
             flag_regex = flag_regex,
             keep_search_pieces = true,
@@ -253,6 +253,7 @@ end
 ---@param item                          ghc.command.search_files.IItemData
 ---@return fml.types.ui.IHighlight[]
 local function calc_search_highlights(item)
+  local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
   local file_match = item.filematch ---@type fml.std.oxi.search.IFileMatch
   local highlights = {} ---@type fml.types.ui.IHighlight[]
   for _, block_match in ipairs(file_match.matches) do
