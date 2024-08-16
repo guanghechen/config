@@ -133,7 +133,7 @@ local function fetch_items(input_text, callback)
       if flag_replace then
         local lnum_delta = 0 ---@type integer
         for _, block_match in ipairs(file_match.matches) do
-          ---@type fml.std.oxi.replace.IReplaceTextPreviewWithMatchesResult
+          ---@type fml.std.oxi.replace.replace_text_preview_with_matches.IResult
           local preview_result = fml.oxi.replace_text_preview_with_matches({
             flag_case_sensitive = flag_case_sensitive,
             flag_regex = flag_regex,
