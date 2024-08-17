@@ -32,11 +32,15 @@ local function gen_hlgroup_map(params)
     f_us_main_search = { fg = c.diff_del_word, strikethrough = true },
     f_us_preview_current = { bg = c.one_bg2 },
     f_us_preview_border = { fg = c.darker_black, bg = c.darker_black },
-    f_us_preview_normal = { bg = c.darker_black },
-    f_us_preview_title = { fg = c.black, bg = c.green },
     f_us_preview_error = { fg = c.red, bold = true },
+    f_us_preview_normal = { bg = c.darker_black },
+    f_us_preview_search = { fg = c.black, bg = c.diff_del, strikethrough = true },
+    f_us_preview_search_cur = { fg = c.black, bg = c.red, bold = true, strikethrough = true },
+    f_us_preview_replace = { fg = c.black, bg = c.diff_add },
+    f_us_preview_replace_cur = { fg = c.black, bg = c.green, bold = true },
+    f_us_preview_title = { fg = c.black, bg = c.green },
     f_us_match = { fg = c.black, bg = c.yellow },
-    f_us_match_cur = { fg = c.black, bg = c.red },
+    f_us_match_cur = { fg = c.black, bg = c.red, bold = true, underline = true },
 
     ---textarea
     f_ut_current = { bg = c.one_bg2 },

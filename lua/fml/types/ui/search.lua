@@ -33,7 +33,6 @@
 ---@field public lines                  string[]
 ---@field public highlights             fml.types.ui.IHighlight[]
 ---@field public filetype               string|nil
----@field public show_numbers           boolean
 ---@field public title                  string
 ---@field public lnum                   integer|nil
 ---@field public col                    integer|nil

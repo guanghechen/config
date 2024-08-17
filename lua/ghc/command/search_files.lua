@@ -13,10 +13,20 @@ local M = {}
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
+---@class ghc.command.search_files.IHighlight : fml.types.ui.IHighlight
+---@field public match_idx              integer
+
+---@class ghc.command.search_files.IPreviewData
+---@field public filetype               string|nil
+---@field public highlights             ghc.command.search_files.IHighlight[]
+---@field public lines                  string[]
+---@field public title                  string
+
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
 local state_dirpath = fml.collection.Observable.from_value(initial_dirpath)
 local state_search_cwd = fml.collection.Observable.from_value(session.get_search_scope_cwd(initial_dirpath))
 
+local _last_preview_data = nil ---@type ghc.command.search_files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type fml.std.oxi.search.IResult|nil
 local _item_data_map = {} ---@type table<string, ghc.command.search_files.IItemData>
@@ -39,6 +49,7 @@ fml.fn.watch_observables({
   session.search_paths,
   state_search_cwd,
 }, function()
+  _last_preview_data = nil
   _last_search_input = nil
   _last_search_result = nil
   M.reload()
@@ -47,6 +58,7 @@ fml.fn.watch_observables({
   session.search_flag_replace,
   session.search_replace_pattern,
 }, function()
+  _last_preview_data = nil
   M.reload()
 end, true)
 
@@ -59,11 +71,11 @@ end, true)
 local function calc_same_line_pos(lwidths, l, r)
   local lnum = 1 ---@type integer
   local offset = 0 ---@type integer
-  local lwidth = lwidths[1] ---@type integer
+  local lwidth = lwidths[1] + 1 ---@type integer
   while offset + lwidth <= l and lnum < #lwidths do
     lnum = lnum + 1
     offset = offset + lwidth
-    lwidth = lwidths[lnum]
+    lwidth = lwidths[lnum] + 1
   end
 
   local col = l - offset
@@ -253,49 +265,169 @@ local function fetch_items(input_text, callback)
   callback(true, items)
 end
 
----@param item                          ghc.command.search_files.IItemData
----@return fml.types.ui.IHighlight[]
-local function calc_preview_highlights(item)
+---@param item                          fml.types.ui.search.IItem
+---@return ghc.command.search_files.IPreviewData
+local function calc_preview_data(item)
+  local item_data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
+  if item_data == nil then
+    local lines = { "  Cannot retrieve the item by uuid=" .. item.uuid } ---@type string[]
+    ---@type ghc.command.search_files.IHighlight[]
+    local highlights = { { match_idx = 0, lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
+    ---@type ghc.command.search_files.IPreviewData
+    local result = {
+      filetype = nil,
+      highlights = highlights,
+      lines = lines,
+      title = item.uuid,
+    }
+    return result
+  end
+
+  local cwd = state_search_cwd:snapshot() ---@type string
+  local filepath = fml.path.join(cwd, item_data.filepath) ---@type string
+  local filename = fml.path.basename(filepath) ---@type string
+  if not fml.is.printable_file(filename) then
+    local lines = { "  Not a text file, cannot preview." } ---@type string[]
+    ---@type ghc.command.search_files.IHighlight[]
+    local highlights = { { match_idx = 0, lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
+    ---@type ghc.command.search_files.IPreviewData
+    local result = {
+      filetype = nil,
+      highlights = highlights,
+      lines = lines,
+      title = item_data.filepath,
+    }
+    return result
+  end
+
+  local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
+  local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
+  local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
   local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
-  local highlights = {} ---@type fml.types.ui.IHighlight[]
+  local search_pattern = session.search_pattern:snapshot() ---@type string
+  local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
+
   if flag_replace then
+    ---@type fml.std.oxi.replace.replace_file_preview_with_matches.IResult
+    local preview_result = fml.oxi.replace_file_preview_with_matches({
+      flag_case_sensitive = flag_case_sensitive,
+      flag_regex = flag_regex,
+      search_pattern = search_pattern,
+      replace_pattern = replace_pattern,
+      filepath = filepath,
+      keep_search_pieces = true,
+    })
+
+    local lines = preview_result.lines ---@type string[]
+    local lwidths = preview_result.lwidths ---@type integer[]
+    local matches = preview_result.matches ---@type fml.std.oxi.search.IMatchPoint[]
+    local highlights = {} ---@type ghc.command.search_files.IHighlight[]
+    local match_idx = 0 ---@type integer
+
+    local lnum0 = 1 ---@type integer
+    local k = 1 ---@type integer
+    local offset = 0 ---@type integer
+    local lwidth = lwidths[1] + 1 ---@type integer
+    for _, match in ipairs(matches) do
+      match_idx = match_idx + 1
+      local is_search_match = match_idx % 2 == 1 ---@type boolean
+      local midx = is_search_match and ((match_idx + 1) / 2) or (match_idx / 2) ---@type integer
+      local hlname = is_search_match and (midx == match_idx and "f_us_preview_search_cur" or "f_us_preview_search")
+        or (midx == match_idx and "f_us_preview_replace_cur" or "f_us_preview_replace")
+
+      local l = match.l ---@type integer
+      local r = match.r ---@type integer
+      while l < r do
+        while l >= offset + lwidth and k < #lwidths do
+          k = k + 1
+          offset = offset + lwidth
+          lwidth = lwidths[k] + 1
+        end
+
+        local lnum = lnum0 + k - 1 ---@type integer
+        local col = l - offset ---@type integer
+        local col_end = math.min(lwidth - 1, r - offset) ---@type integer
+        l = offset + lwidth ---@type integer
+
+        ---@type ghc.command.search_files.IHighlight
+        local highlight = { match_idx = match_idx, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
+        table.insert(highlights, highlight)
+      end
+    end
+
+    ---@type ghc.command.search_files.IPreviewData
+    local result = {
+      filetype = filetype,
+      highlights = highlights,
+      lines = lines,
+      title = item_data.filepath,
+    }
+    return result
   else
-    local file_match = item.filematch ---@type fml.std.oxi.search.IFileMatch
+    local file_match = item_data.filematch ---@type fml.std.oxi.search.IFileMatch
+    local lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    local highlights = {} ---@type ghc.command.search_files.IHighlight[]
     local match_idx = 0 ---@type integer
     for _, block_match in ipairs(file_match.matches) do
-      local lines = block_match.lines ---@type string[]
+      local lwidths = block_match.lwidths ---@type integer[]
       local lnum0 = block_match.lnum ---@type integer
 
       local k = 1 ---@type integer
       local offset = 0 ---@type integer
-      local lwidth = string.len(lines[1]) + 1 ---@type integer
+      local lwidth = lwidths[1] + 1 ---@type integer
       for _, match in ipairs(block_match.matches) do
         match_idx = match_idx + 1
+        local hlname = item_data.match_idx == match_idx and "f_us_match_cur" or "f_us_match" ---@type string
+
         local l = match.l ---@type integer
         local r = match.r ---@type integer
-        local hlname = item.match_idx == match_idx and "f_us_match_cur" or "f_us_match" ---@type string
-
         while l < r do
-          while l >= offset + lwidth and k < #lines do
+          while l >= offset + lwidth and k < #lwidths do
             k = k + 1
             offset = offset + lwidth
-            lwidth = string.len(lines[k]) + 1
+            lwidth = lwidths[k] + 1
           end
 
           local lnum = lnum0 + k - 1 ---@type integer
           local col = l - offset ---@type integer
           local col_end = math.min(lwidth - 1, r - offset) ---@type integer
-
-          ---@type fml.types.ui.IHighlight
-          local highlight = { lnum = lnum, coll = col, colr = col_end, hlname = hlname }
-          table.insert(highlights, highlight)
-
           l = offset + lwidth ---@type integer
+
+          ---@type ghc.command.search_files.IHighlight
+          local highlight = { match_idx = match_idx, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
+          table.insert(highlights, highlight)
         end
       end
     end
+
+    ---@type ghc.command.search_files.IPreviewData
+    local result = {
+      filetype = filetype,
+      highlights = highlights,
+      lines = lines,
+      title = item_data.filepath,
+    }
+    return result
   end
-  return highlights
+end
+
+---@param item                          fml.types.ui.search.IItem
+---@return fml.ui.search.preview.IData
+local function fetch_preview_data(item)
+  local preview_data = calc_preview_data(item) ---@type ghc.command.search_files.IPreviewData
+  _last_preview_data = preview_data
+
+  local item_data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
+  ---@type fml.ui.search.preview.IData
+  local data = {
+    filetype = preview_data.filetype,
+    title = preview_data.title,
+    lines = preview_data.lines,
+    highlights = preview_data.highlights,
+    lnum = item_data and item_data.lnum,
+    col = item_data and item_data.col,
+  }
+  return data
 end
 
 local _search = nil ---@type fml.types.ui.search.ISearch|nil
@@ -517,91 +649,43 @@ local function get_search()
       on_close = function()
         statusline.disable(statusline.cnames.search_files)
       end,
-      fetch_preview_data = function(item)
+      fetch_preview_data = fetch_preview_data,
+      patch_preview_data = function(item, _, last_data)
         local item_data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
-        if item_data ~= nil then
-          local cwd = state_search_cwd:snapshot() ---@type string
-          local filepath = fml.path.join(cwd, item_data.filepath) ---@type string
-          local filename = fml.path.basename(filepath) ---@type string
-          local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
-          local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
-          local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
-          local search_pattern = session.search_pattern:snapshot() ---@type string
-          local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
-
-          local is_text_file = fml.is.printable_file(filename) ---@type boolean
-          if is_text_file then
-            local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-            local highlights = calc_preview_highlights(item_data) ---@type fml.types.ui.IHighlight[]
-            ---@type string[]
-            local lines = flag_replace
-                and fml.oxi.replace_file_preview({
-                  flag_case_sensitive = flag_case_sensitive,
-                  flag_regex = flag_regex,
-                  search_pattern = search_pattern,
-                  replace_pattern = replace_pattern,
-                  filepath = filepath,
-                  keep_search_pieces = true,
-                }).lines
-              or fml.fs.read_file_as_lines({ filepath = filepath, silent = true })
-
-            ---@type fml.ui.search.preview.IData
-            local data = {
-              filetype = filetype,
-              show_numbers = true,
-              title = item_data.filepath,
-              lines = lines,
-              highlights = highlights,
-              lnum = item_data.lnum,
-              col = item_data.col,
-            }
-            return data
-          else
-            ---@type fml.types.ui.IHighlight[]
-            local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
-
-            ---@type fml.ui.search.preview.IData
-            local data = {
-              lines = { "  Not a text file, cannot preview." },
-              highlights = highlights,
-              filetype = nil,
-              show_numbers = false,
-              title = item_data.filepath,
-            }
-            return data
-          end
+        if _last_preview_data == nil or item_data == nil then
+          return fetch_preview_data(item)
         end
 
-        ---@type fml.types.ui.IHighlight[]
-        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
-
-        ---@type fml.ui.search.preview.IData
-        local data = {
-          lines = { "  Cannot retrieve the item by uuid=" .. item.uuid },
-          highlights = highlights,
-          filetype = nil,
-          show_numbers = false,
-          title = item.text,
-        }
-        return data
-      end,
-      patch_preview_data = function(item, _, last_data)
-        local item_data = _item_data_map and _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
-        local lnum = item_data ~= nil and item_data.lnum or nil ---@type integer|nil
-        local col = item_data ~= nil and item_data.col or nil ---@type integer|nil
-
-        ---@type fml.types.ui.IHighlight[]|nil
-        local highlights = item_data and calc_preview_highlights(item_data) or nil
+        local match_idx = item_data.match_idx ---@type integer
+        local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
+        local highlights = {} ---@type fml.types.ui.IHighlight[]
+        if flag_replace then
+          for _, hl in ipairs(_last_preview_data.highlights) do
+            local is_search_match = hl.match_idx % 2 == 1 ---@type boolean
+            local midx = is_search_match and ((hl.match_idx + 1) / 2) or (hl.match_idx / 2) ---@type integer
+            local hlname = is_search_match
+                and (midx == match_idx and "f_us_preview_search_cur" or "f_us_preview_search")
+              or (midx == match_idx and "f_us_preview_replace_cur" or "f_us_preview_replace")
+            local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
+            table.insert(highlights, highlight)
+          end
+        else
+          for _, hl in ipairs(_last_preview_data.highlights) do
+            local midx = hl.match_idx ---@type integer
+            local hlname = midx == match_idx and "f_us_match_cur" or "f_us_match" ---@type string
+            local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
+            table.insert(highlights, highlight)
+          end
+        end
 
         ---@type fml.ui.search.preview.IData
         local data = {
           lines = last_data.lines,
           highlights = highlights or last_data.highlights,
           filetype = last_data.filetype,
-          show_numbers = last_data.show_numbers,
           title = last_data.title,
-          lnum = lnum,
-          col = col,
+          lnum = item_data.lnum,
+          col = item_data.col,
         }
         return data
       end,
