@@ -32,6 +32,10 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::replace::replace_file)),
         ),
         (
+            "replace_file_by_matches",
+            Object::from(Function::from_fn(oxi::replace::replace_file_by_matches)),
+        ),
+        (
             "replace_file_preview",
             Object::from(Function::from_fn(oxi::replace::replace_file_preview)),
         ),

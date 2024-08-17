@@ -153,10 +153,6 @@ local function fetch_items(input_text, callback)
             search_pattern = input_text,
             replace_pattern = replace_pattern,
             text = block_match.text,
-            search_paths = search_paths,
-            include_patterns = include_patterns,
-            exclude_patterns = exclude_patterns,
-            specified_filepath = nil,
           })
 
           local r_lines = preview_result.lines ---@type string[]
@@ -225,7 +221,18 @@ local function fetch_items(input_text, callback)
               col = s_col,
             }
             item_data_map[item.uuid] = item_data
-            item_data_map[file_item.uuid] = item_data_map[file_item.uuid] or item_data
+
+            if item_data_map[file_item.uuid] == nil then
+              ---@type ghc.command.search_files.IItemData
+              local file_item_data = {
+                filepath = filepath,
+                filematch = file_match,
+                match_idx = 0,
+                lnum = s_lnum,
+                col = s_col,
+              }
+              item_data_map[file_item.uuid] = file_item_data
+            end
           end
 
           lnum_delta = lnum_delta + #r_lwidths - #s_lwidths
@@ -584,6 +591,88 @@ local function get_search()
         local flag = session.search_flag_replace:snapshot() ---@type boolean
         session.search_flag_replace:next(not flag)
       end,
+      replace_file = function()
+        if _search == nil then
+          return
+        end
+
+        local item = _search.state:get_current() ---@type fml.types.ui.search.IItem|nil
+        if item == nil then
+          return
+        end
+
+        local item_data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
+        if item_data == nil then
+          return
+        end
+
+        local cwd = state_search_cwd:snapshot() ---@type string
+        local filepath = item_data.filepath ---@type string
+        local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
+        local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
+        local search_pattern = session.search_pattern:snapshot() ---@type string
+        local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
+
+        local succeed = false ---@type boolean
+        if item_data.match_idx > 0 then
+          succeed = fml.oxi.replace_file_by_matches({
+            cwd = cwd,
+            filepath = filepath,
+            flag_case_sensitive = flag_case_sensitive,
+            flag_regex = flag_regex,
+            search_pattern = search_pattern,
+            replace_pattern = replace_pattern,
+            match_idxs = { item_data.match_idx },
+          })
+        else
+          succeed = fml.oxi.replace_file({
+            cwd = cwd,
+            filepath = filepath,
+            flag_case_sensitive = flag_case_sensitive,
+            flag_regex = flag_regex,
+            search_pattern = search_pattern,
+            replace_pattern = replace_pattern,
+          })
+        end
+
+        if succeed and _last_search_result ~= nil then
+          local flag_gitignore = session.search_flag_gitignore:snapshot() ---@type boolean
+          local max_filesize = session.search_max_filesize:snapshot() ---@type string
+          local max_matches = session.search_max_matches:snapshot() ---@type integer
+          local search_paths = session.search_paths:snapshot() ---@type string
+          local include_patterns = session.search_include_patterns:snapshot() ---@type string
+          local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
+          local specified_filepath = fml.path.join(cwd, filepath) ---@type string
+
+          ---@type fml.std.oxi.search.IResult
+          local partial_search_result = fml.oxi.search({
+            cwd = cwd,
+            flag_case_sensitive = flag_case_sensitive,
+            flag_gitignore = flag_gitignore,
+            flag_regex = flag_regex,
+            max_filesize = max_filesize,
+            max_matches = max_matches,
+            search_pattern = search_pattern,
+            search_paths = search_paths,
+            include_patterns = include_patterns,
+            exclude_patterns = exclude_patterns,
+            specified_filepath = specified_filepath,
+          })
+
+          if partial_search_result.error == nil and partial_search_result.items ~= nil then
+            _last_search_result.items[filepath] = nil
+            for _, raw_filepath in ipairs(partial_search_result.item_orders) do
+              local file_match = partial_search_result.items[raw_filepath] ---@type fml.std.oxi.search.IFileMatch|nil
+              if file_match ~= nil then
+                _last_search_result.items[raw_filepath] = file_match
+              end
+            end
+          end
+        end
+
+        _last_preview_data = nil
+        M.reload()
+      end,
     }
 
     ---@type fml.types.IKeymap[]
@@ -641,6 +730,12 @@ local function get_search()
         key = "<leader>R",
         callback = actions.toggle_flag_replace,
         desc = "search: toggle mode",
+      },
+      {
+        modes = { "n", "v" },
+        key = "<leader><cr>",
+        callback = actions.replace_file,
+        desc = "search: replace file",
       },
     }
 

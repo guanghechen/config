@@ -156,7 +156,7 @@ function M.replace_file_by_matches(params)
   }
 
   ---@type string
-  local json_str = M.nvim_tools.replace_file(M.json.stringify(resolved_params))
+  local json_str = M.nvim_tools.replace_file_by_matches(M.json.stringify(resolved_params))
   local result = M.json.parse(json_str)
   ---@cast result fml.std.oxi.replace.replace_file.IResult
 
