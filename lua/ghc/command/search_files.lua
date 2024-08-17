@@ -159,46 +159,61 @@ local function fetch_items(input_text, callback)
             specified_filepath = nil,
           })
 
-          local offset_delta = 0 ---@type integer
           local r_lines = preview_result.lines ---@type string[]
           local r_lwidths = preview_result.lwidths ---@type integer[]
-          local s_lwidths = block_match.lwidths ---@type integer[]
           local r_matches = preview_result.matches ---@type fml.std.oxi.search.IMatchPoint[]
-          for i = 1, #r_matches, 2 do
+          local s_lines = block_match.lines ---@type string[]
+          local s_lwidths = block_match.lwidths ---@type integer[]
+          local s_matches = block_match.matches ---@type fml.std.oxi.search.IMatchPoint[]
+          for i = 1, #s_matches, 1 do
             match_idx = match_idx + 1
-            local search_match = r_matches[i]
-            local s_k, s_col =
-              calc_same_line_pos(s_lwidths, search_match.l - offset_delta, search_match.r - offset_delta)
-            local s_lnum = block_match.lnum + s_k - 1 ---@type integer
+            local original_search_match = s_matches[i] ---@type fml.std.oxi.search.IMatchPoint
+            local k, col, col_end = calc_same_line_pos(s_lwidths, original_search_match.l, original_search_match.r)
+            local line = s_lines[k] ---@type string
+            local lnum = block_match.lnum + k - 1 ---@type integer
 
-            local r_k, r_col, r_col_end = calc_same_line_pos(r_lwidths, search_match.l, search_match.r)
-            local r_lnum = block_match.lnum + r_k - 1 + lnum_delta ---@type integer
+            local search_match = r_matches[i * 2 - 1] ---@type fml.std.oxi.search.IMatchPoint
+            local s_k, s_col = calc_same_line_pos(r_lwidths, search_match.l, search_match.r)
+            local s_lnum = block_match.lnum + s_k - 1 + lnum_delta ---@type integer
 
-            local text_prefix = "  " .. s_lnum .. ":" .. s_col .. " " ---@type string
-            local text = text_prefix .. r_lines[r_k] ---@type string
+            local replace_match = r_matches[i * 2] ---@type fml.std.oxi.search.IMatchPoint
+            local r_k, r_col, r_col_end = calc_same_line_pos(r_lwidths, replace_match.l, replace_match.r)
+            local r_line = r_lines[r_k] ---@type string
+
+            local text_prefix = "  " .. lnum .. ":" .. col .. " " ---@type string
             local width_prefix = string.len(text_prefix) ---@type integer
+            local item ---@type fml.types.ui.search.IItem
+            if s_k == r_k then
+              local prettier_line = line:sub(1, col_end) .. r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
+              local text = text_prefix .. prettier_line ---@type string
 
-            ---@type fml.types.ui.IInlineHighlight[]
-            local highlights = {
-              { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
-              { coll = width_prefix + r_col, colr = width_prefix + r_col_end, hlname = "f_us_main_search" },
-            }
+              ---@type fml.types.ui.IInlineHighlight[]
+              local highlights = {
+                { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
+                { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
+                {
+                  coll = width_prefix + col_end,
+                  colr = width_prefix + col_end + (r_col_end - r_col),
+                  hlname = "f_us_main_replace",
+                },
+              }
 
-            if i + 1 <= #r_matches then
-              local replace_match = r_matches[i + 1] ---@type fml.std.oxi.search.IMatchPoint
-              offset_delta = offset_delta + replace_match.r - replace_match.l
+              ---@type fml.types.ui.search.IItem
+              item = { group = filepath, uuid = filepath .. text_prefix, text = text, highlights = highlights }
+            else
+              local prettier_line = line ---@type string
+              local text = text_prefix .. prettier_line ---@type string
 
-              local k, col, col_end = calc_same_line_pos(r_lwidths, replace_match.l, replace_match.r)
-              if k == r_k then
-                ---@type fml.types.ui.IInlineHighlight
-                local highlight =
-                  { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_replace" }
-                table.insert(highlights, highlight)
-              end
+              ---@type fml.types.ui.IInlineHighlight[]
+              local highlights = {
+                { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
+                { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
+              }
+
+              ---@type fml.types.ui.search.IItem
+              item = { group = filepath, uuid = filepath .. text_prefix, text = text, highlights = highlights }
             end
 
-            ---@type fml.types.ui.search.IItem
-            local item = { group = filepath, uuid = filepath .. text_prefix, text = text, highlights = highlights }
             table.insert(items, item)
 
             ---@type ghc.command.search_files.IItemData
@@ -206,8 +221,8 @@ local function fetch_items(input_text, callback)
               filepath = filepath,
               filematch = file_match,
               match_idx = match_idx,
-              lnum = r_lnum,
-              col = r_col,
+              lnum = s_lnum,
+              col = s_col,
             }
             item_data_map[item.uuid] = item_data
             item_data_map[file_item.uuid] = item_data_map[file_item.uuid] or item_data
