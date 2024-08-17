@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ReplaceEntireFileResult {
+pub struct ReplaceFileResult {
     pub success: bool,
     pub error: Option<String>,
 }
