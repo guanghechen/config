@@ -53,13 +53,8 @@ function M.search(params)
     for _, item in pairs(result.items) do
       for _, block_match in ipairs(item.matches) do
         local text = block_match.text ---@type string
-        local lines = {} ---@type string[]
-        local lwidths = {} ---@type integer[]
-        for line in text:gmatch("([^\n]*)\n?") do
-          local lwidth = string.len(line) + 1 ---@type integer
-          table.insert(lines, line)
-          table.insert(lwidths, lwidth)
-        end
+        local lwidths = M.get_line_widths(text) ---@type integer[]
+        local lines = M.parse_lines(text, lwidths) ---@type string[]
         block_match.lines = lines
         block_match.lwidths = lwidths
       end

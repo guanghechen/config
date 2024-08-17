@@ -28,6 +28,7 @@ local M = require("fml.std.oxi.mod")
 
 ---@class fml.std.oxi.replace.replace_file_preview.IResult
 ---@field public lines                  string[]
+---@field public lwidths                integer[]
 
 ---@class fml.std.oxi.replace.replace_file_preview_with_matches.IResult
 ---@field public lines                  string[]
@@ -36,6 +37,7 @@ local M = require("fml.std.oxi.mod")
 
 ---@class fml.std.oxi.replace.replace_text_preview.IResult
 ---@field public lines                  string[]
+---@field public lwidths                integer[]
 
 ---@class fml.std.oxi.replace.replace_text_preview_with_matches.IResult
 ---@field public lines                  string[]
@@ -133,17 +135,16 @@ function M.replace_file_preview(params)
   ---@cast raw_result string
 
   if raw_result ~= nil and type(raw_result) == "string" then
-    local lines = {} ---@type string[]
     local text = raw_result ---@type string
-    for line in text:gmatch("([^\n]*)\n?") do
-      table.insert(lines, line)
-    end
+    local lwidths = M.get_line_widths(text) ---@type integer[]
+    local lines = M.parse_lines(text, lwidths) ---@type string[]
+
     ---@type fml.std.oxi.replace.replace_file_preview.IResult
-    local result = { lines = lines }
+    local result = { lines = lines, lwidths = lwidths }
     return result
   else
     ---@type fml.std.oxi.replace.replace_file_preview.IResult
-    local result = { lines = {} }
+    local result = { lines = {}, lwidths = {} }
     return result
   end
 end
@@ -168,13 +169,10 @@ function M.replace_file_preview_with_matches(params)
   ---@cast raw_result fml.std.oxi.replace.replace_file_preview_with_matches.IRawResult
 
   if raw_result ~= nil and type(raw_result.text) == "string" then
-    local lines = {} ---@type string[]
-    local lwidths = {} ---@type integer[]
-    for line in raw_result.text:gmatch("([^\n]*)\n?") do
-      local lwidth = string.len(line) + 1 ---@type integer
-      table.insert(lines, line)
-      table.insert(lwidths, lwidth)
-    end
+    local text = raw_result.text ---@type string
+    local lwidths = M.get_line_widths(text) ---@type integer[]
+    local lines = M.parse_lines(text, lwidths) ---@type string[]
+
     ---@type fml.std.oxi.replace.replace_file_preview_with_matches.IResult
     local result = {
       lines = lines,
@@ -213,17 +211,16 @@ function M.replace_text_preview(params)
   ---@cast raw_result string
 
   if raw_result ~= nil and type(raw_result) == "string" then
-    local lines = {} ---@type string[]
     local text = raw_result ---@type string
-    for line in text:gmatch("([^\n]*)\n?") do
-      table.insert(lines, line)
-    end
+    local lwidths = M.get_line_widths(text) ---@type integer[]
+    local lines = M.parse_lines(text, lwidths) ---@type string[]
+
     ---@type fml.std.oxi.replace.replace_text_preview.IResult
-    local result = { lines = lines }
+    local result = { lines = lines, lwidths = lwidths }
     return result
   else
     ---@type fml.std.oxi.replace.replace_text_preview.IResult
-    local result = { lines = {} }
+    local result = { lines = {}, lwidths = {} }
     return result
   end
 end
@@ -248,13 +245,10 @@ function M.replace_text_preview_with_matches(params)
   ---@cast raw_result fml.std.oxi.replace.replace_text_preview_with_matches.IRawResult
 
   if raw_result ~= nil and type(raw_result.text) == "string" then
-    local lines = {} ---@type string[]
-    local lwidths = {} ---@type integer[]
-    for line in raw_result.text:gmatch("([^\n]*)\n?") do
-      local lwidth = string.len(line) + 1 ---@type integer
-      table.insert(lines, line)
-      table.insert(lwidths, lwidth)
-    end
+    local text = raw_result.text ---@type string
+    local lwidths = M.get_line_widths(text) ---@type integer[]
+    local lines = M.parse_lines(text, lwidths) ---@type string[]
+
     ---@type fml.std.oxi.replace.replace_text_preview_with_matches.IResult
     local result = {
       lines = lines,
