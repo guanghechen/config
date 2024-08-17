@@ -306,6 +306,7 @@ local function calc_preview_data(item)
   local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
   local search_pattern = session.search_pattern:snapshot() ---@type string
   local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
+  local match_idx_cur = item_data.match_idx ---@type integer
 
   if flag_replace then
     ---@type fml.std.oxi.replace.replace_file_preview_with_matches.IResult
@@ -322,18 +323,19 @@ local function calc_preview_data(item)
     local lwidths = preview_result.lwidths ---@type integer[]
     local matches = preview_result.matches ---@type fml.std.oxi.search.IMatchPoint[]
     local highlights = {} ---@type ghc.command.search_files.IHighlight[]
-    local match_idx = 0 ---@type integer
 
     local lnum0 = 1 ---@type integer
     local k = 1 ---@type integer
     local offset = 0 ---@type integer
     local lwidth = lwidths[1] + 1 ---@type integer
-    for _, match in ipairs(matches) do
-      match_idx = match_idx + 1
-      local is_search_match = match_idx % 2 == 1 ---@type boolean
-      local midx = is_search_match and ((match_idx + 1) / 2) or (match_idx / 2) ---@type integer
-      local hlname = is_search_match and (midx == match_idx and "f_us_preview_search_cur" or "f_us_preview_search")
-        or (midx == match_idx and "f_us_preview_replace_cur" or "f_us_preview_replace")
+    local is_search_match = false ---@type boolean
+    local match_idx = 0.5 ---@type number
+    for p_match_idx, match in ipairs(matches) do
+      is_search_match = not is_search_match
+      match_idx = match_idx + 0.5
+      local hlname = is_search_match
+          and (match_idx == match_idx_cur and "f_us_preview_search_cur" or "f_us_preview_search")
+        or (match_idx == match_idx_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
 
       local l = match.l ---@type integer
       local r = match.r ---@type integer
@@ -350,7 +352,7 @@ local function calc_preview_data(item)
         l = offset + lwidth ---@type integer
 
         ---@type ghc.command.search_files.IHighlight
-        local highlight = { match_idx = match_idx, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
+        local highlight = { match_idx = p_match_idx, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
         table.insert(highlights, highlight)
       end
     end
@@ -377,7 +379,7 @@ local function calc_preview_data(item)
       local lwidth = lwidths[1] + 1 ---@type integer
       for _, match in ipairs(block_match.matches) do
         match_idx = match_idx + 1
-        local hlname = item_data.match_idx == match_idx and "f_us_match_cur" or "f_us_match" ---@type string
+        local hlname = match_idx == match_idx_cur and "f_us_match_cur" or "f_us_match" ---@type string
 
         local l = match.l ---@type integer
         local r = match.r ---@type integer
