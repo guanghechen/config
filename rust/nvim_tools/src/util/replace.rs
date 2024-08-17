@@ -33,7 +33,7 @@ fn get_static_regex(pattern: &String) -> Result<&'static Mutex<Regex>, String> {
     Ok(&CACHE_REGEX)
 }
 /// Peform replacement on the entire file.
-pub fn replace_entire_file(
+pub fn replace_file(
     filepath: &str,
     search_pattern: &String,
     replace_pattern: &str,

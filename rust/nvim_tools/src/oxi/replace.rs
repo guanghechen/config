@@ -1,10 +1,10 @@
 use crate::types::replace::ReplaceEntireFileResult;
 use crate::util;
 
-pub fn replace_entire_file(
+pub fn replace_file(
     (file_path, search_pattern, replace_pattern, flag_regex): (String, String, String, bool),
 ) -> String {
-    let result = match util::replace::replace_entire_file(
+    let result = match util::replace::replace_file(
         &file_path,
         &search_pattern,
         &replace_pattern,

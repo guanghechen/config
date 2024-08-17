@@ -28,8 +28,8 @@ fn nvim_tools() -> Dictionary {
         ),
         ("now", Object::from(Function::from_fn(oxi::time::now))),
         (
-            "replace_entire_file",
-            Object::from(Function::from_fn(oxi::replace::replace_entire_file)),
+            "replace_file",
+            Object::from(Function::from_fn(oxi::replace::replace_file)),
         ),
         (
             "replace_file_preview",

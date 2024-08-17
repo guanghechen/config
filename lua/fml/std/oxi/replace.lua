@@ -4,7 +4,7 @@ local reporter = require("fml.std.reporter")
 ---@class fml.std.oxi
 local M = require("fml.std.oxi.mod")
 
----@class fml.std.oxi.replace.replace_entire_file.IRawResult
+---@class fml.std.oxi.replace.replace_file.IRawResult
 ---@field public success                boolean
 ---@field public error                  ?string
 
@@ -22,7 +22,7 @@ local M = require("fml.std.oxi.mod")
 ---@field public text                   string
 ---@field public matches                fml.std.oxi.search.IMatchPoint[]
 
----@class fml.std.oxi.replace.replace_entire_file.IResult
+---@class fml.std.oxi.replace.replace_file.IResult
 ---@field public success                boolean
 ---@field public error                  ?string
 
@@ -44,7 +44,7 @@ local M = require("fml.std.oxi.mod")
 ---@field public lwidths                integer[]
 ---@field public matches                fml.std.oxi.search.IMatchPoint[]
 
----@class fml.std.oxi.replace.replace_entire_file.IParams
+---@class fml.std.oxi.replace.replace_file.IParams
 ---@field public cwd                    string
 ---@field public filepath               string
 ---@field public flag_case_sensitive    boolean
@@ -84,9 +84,9 @@ local M = require("fml.std.oxi.mod")
 ---@field public replace_pattern        string
 ---@field public text                   string
 
----@param params                        fml.std.oxi.replace.replace_entire_file.IParams
+---@param params                        fml.std.oxi.replace.replace_file.IParams
 ---@return boolean
-function M.replace_entire_file(params)
+function M.replace_file(params)
   local search_pattern = params.search_pattern
   if params.flag_regex and not params.flag_case_sensitive then
     search_pattern = "(?i)" .. search_pattern:lower()
@@ -95,19 +95,19 @@ function M.replace_entire_file(params)
   local filepath = path.resolve(params.cwd, params.filepath) ---@type string
 
   ---@type string
-  local json_str = M.nvim_tools.replace_entire_file( ---
+  local json_str = M.nvim_tools.replace_file( ---
     filepath,
     search_pattern,
     params.replace_pattern,
     params.flag_regex
   )
   local result = M.json.parse(json_str)
-  ---@cast result fml.std.oxi.replace.replace_entire_file.IResult
+  ---@cast result fml.std.oxi.replace.replace_file.IResult
 
   if result.error and result.error ~= vim.NIL then
     reporter.error({
       from = "fml.std.oxi",
-      subject = "replace_entire_file",
+      subject = "replace_file",
       message = "Failed to replace entire file.",
       details = { result = result, params = params, search_pattern = search_pattern },
     })
