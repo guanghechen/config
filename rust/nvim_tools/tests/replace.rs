@@ -61,3 +61,71 @@ fn test_replace() {
         );
     }
 }
+
+#[test]
+fn test_replace_text_preview_with_matches() {
+    let text: &str = r#"
+### Requirements
+
+* fd: https://github.com/sharkdp/fd?tab=readme-ov-file#installation
+  - homebrew
+    ```zsh
+    brew install fd
+    ```
+
+* fzf: https://github.com/junegunn/fzf#installation
+  - homebrew
+    ```zsh
+    brew install fzf
+    ```
+
+* lazygit: https://github.com/jesseduffield/lazygit#installation
+  - homebrew
+    ```zsh
+    brew install lazygit
+    ```
+
+* rg: https://github.com/BurntSushi/ripgrep?tab=readme-ov-file#installation
+  - homebrew
+    ```zsh
+    brew install ripgrep
+    ```
+
+* rust: **install use rustup instead of homebrew**
+  
+  https://doc.rust-lang.org/book/ch01-01-installation.html#installing-rustup-on-linux-or-macos
+
+  - macos
+    ```zsh
+    curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+    ```
+
+### FAQ
+
+* multiple configs
+
+  ```zsh
+  alias nvchad='NVIM_APPNAME=nvim-nvchad nvim'
+  ```
+    "#;
+
+    let search_pattern: &str = "lazygit";
+    let replace_pattern: &str = "__waw__";
+    let result_with_regex = replace::replace_text_preview_with_matches(
+        text,
+        search_pattern,
+        replace_pattern,
+        true,
+        true,
+    );
+    let result_without_regex = replace::replace_text_preview_with_matches(
+        text,
+        search_pattern,
+        replace_pattern,
+        true,
+        false,
+    );
+
+    assert_eq!(result_with_regex.text, result_without_regex.text);
+    assert_eq!(result_with_regex.matches, result_without_regex.matches);
+}

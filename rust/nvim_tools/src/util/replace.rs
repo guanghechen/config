@@ -20,9 +20,12 @@ lazy_static! {
     static ref CACHE_REGEX: Mutex<Regex> = Mutex::new(Regex::new(r"").unwrap());
 }
 
-fn get_static_regex(pattern: &String) -> Result<&'static Mutex<Regex>, String> {
+fn get_static_regex(pattern: &str) -> Result<&'static Mutex<Regex>, String> {
     if *pattern != *CACHE_PATTERN.lock().unwrap() {
-        CACHE_PATTERN.lock().unwrap().clone_from(pattern);
+        CACHE_PATTERN
+            .lock()
+            .unwrap()
+            .clone_from(&pattern.to_string());
         let regex = Regex::new(pattern);
         return if let Ok(r) = regex {
             *CACHE_REGEX.lock().unwrap() = r;
@@ -169,7 +172,7 @@ pub fn replace_file_preview(
 
 pub fn replace_file_preview_with_matches(
     filepath: &str,
-    search_pattern: &String,
+    search_pattern: &str,
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
@@ -240,7 +243,7 @@ pub fn replace_text_preview(
 
 pub fn replace_text_preview_with_matches(
     text: &str,
-    search_pattern: &String,
+    search_pattern: &str,
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,

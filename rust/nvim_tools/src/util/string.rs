@@ -43,7 +43,7 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
         let line = line.as_ref();
         let line_bytes = line.as_bytes();
         let base: f64 = line.len() as f64;
-        let points = find_all_matched_points(pattern_bytes, line_bytes, Some(&fails));
+        let points = find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
         if !points.is_empty() {
             let mut pieces: Vec<LineMatchPiece> = vec![];
             let mut score = 0;
