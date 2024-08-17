@@ -17,6 +17,14 @@ pub fn normalize_comma_list(input: &str) -> String {
     parts.join(", ")
 }
 
+pub fn get_line_widths(text: &str) -> Vec<u32> {
+    let mut lwidths: Vec<u32> = vec![];
+    for line in text.lines() {
+        lwidths.push(line.len() as u32);
+    }
+    lwidths
+}
+
 pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineMatch> {
     let pattern_bytes = pattern.as_bytes();
     let pattern_chars = pattern.chars().collect::<Vec<char>>();

@@ -2,13 +2,18 @@ use crate::types::r#match::LineMatch;
 use crate::util;
 use uuid::Uuid;
 
-pub fn uuid((): ()) -> String {
-    let uuid = Uuid::new_v4();
-    uuid.to_string()
-}
-
 pub fn find_match_points((pattern, text): (String, String)) -> String {
     let lines: Vec<String> = text.lines().map(|s| s.to_string()).collect();
     let matches: Vec<LineMatch> = util::string::find_match_points(&pattern, &lines);
     serde_json::to_string(&matches).unwrap()
+}
+
+pub fn get_line_widths(text: String) -> String {
+    let widths: Vec<u32> = util::string::get_line_widths(&text);
+    serde_json::to_string(&widths).unwrap()
+}
+
+pub fn uuid((): ()) -> String {
+    let uuid = Uuid::new_v4();
+    uuid.to_string()
 }
