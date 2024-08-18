@@ -67,6 +67,7 @@ M.__index = M
 ---@field public fetch_items            fml.types.ui.search.IFetchItems
 ---@field public fetch_delay            ?integer
 ---@field public render_delay           ?integer
+---@field public enable_multiline_input ?boolean
 ---@field public fetch_preview_data     ?fml.types.ui.search.preview.IFetchData
 ---@field public patch_preview_data     ?fml.types.ui.search.preview.IPatchData
 ---@field public input_keymaps          ?fml.types.IKeymap[]
@@ -123,6 +124,7 @@ function M.new(props)
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local fetch_delay = math.max(0, props.fetch_delay or 100) ---@type integer
   local render_delay = math.max(0, props.render_delay or 100) ---@type integer
+  local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
 
   ---@type fml.types.ui.search.IState
   local state = SearchState.new({
@@ -131,6 +133,7 @@ function M.new(props)
     input_history = input_history,
     fetch_items = props.fetch_items,
     fetch_delay = fetch_delay,
+    enable_multiline_input = enable_multiline_input,
   })
 
   ---@return nil
@@ -261,8 +264,7 @@ function M.new(props)
     end,
   }
 
-  ---@type fml.types.IKeymap[]
-  std_array.concat(common_keymaps, {
+  std_array.extend(common_keymaps, {
     {
       modes = { "i", "n", "v" },
       key = "<LeftMouse>",
@@ -277,65 +279,95 @@ function M.new(props)
       desc = "search: confirm",
       nowait = true,
     },
+    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.refresh, desc = "search: refresh" },
+    { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
   })
 
   ---@type fml.types.IKeymap[]
-  local input_keymaps = std_array.concat(common_keymaps, {
+  local left_common_keymaps = {
     { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.noop },
     { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.on_main_down, desc = "search: focus next item" },
+    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.on_main_down, desc = "search: focus next item" },
+    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.on_main_up, desc = "search: focus prev item" },
+    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.on_main_up, desc = "search: focus prev item" },
     { modes = { "i", "n", "v" }, key = "<M-l>", callback = actions.focus_preview, desc = "search: focus preview" },
     { modes = { "i", "n", "v" }, key = "<C-a>l", callback = actions.focus_preview, desc = "search: focus preview" },
-    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
-    { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
-    { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
-    { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
-    { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
-    { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
-    { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
-  }, props.input_keymaps or {})
+  }
 
   ---@type fml.types.IKeymap[]
-  local main_keymaps = std_array.concat(common_keymaps, {
-    { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<M-l>", callback = actions.focus_preview, desc = "search: focus preview" },
-    { modes = { "i", "n", "v" }, key = "<C-a>l", callback = actions.focus_preview, desc = "search: focus preview" },
-    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.refresh, desc = "search: refresh" },
-    { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
-    { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
+  local input_keymaps = std_array.concat(common_keymaps, left_common_keymaps, props.input_keymaps or {})
+
+  ---@type fml.types.IKeymap[]
+  local main_keymaps = std_array.concat(common_keymaps, left_common_keymaps, {
+    { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
+    { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
+    { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
     { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
     { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
-    { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
-    { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
   }, props.main_keymaps or {})
 
   ---@type fml.types.IKeymap[]
   local preview_keymaps = std_array.concat(common_keymaps, {
     { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.focus_input, desc = "search: focus input" },
     { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.focus_input, desc = "search: focus input" },
-    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.noop },
+    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.on_main_down, desc = "search: focus next item" },
+    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.on_main_down, desc = "search: focus next item" },
+    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.on_main_up, desc = "search: focus prev item" },
+    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.on_main_up, desc = "search: focus prev item" },
     { modes = { "i", "n", "v" }, key = "<M-l>", callback = actions.noop },
     { modes = { "i", "n", "v" }, key = "<C-a>l", callback = actions.noop },
-    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.refresh, desc = "search: refresh" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
   }, props.preview_keymaps or {})
+
+  if not enable_multiline_input then
+    ---@type fml.types.IKeymap[]
+    local additional_input_keymaps = {
+      { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
+      { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
+      { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
+      { modes = { "n", "v" }, key = "o", callback = actions.noop },
+      { modes = { "n", "v" }, key = "O", callback = actions.noop },
+      { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
+      { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
+      { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
+    }
+    std_array.extend(input_keymaps, additional_input_keymaps)
+  else
+    ---@param key                       string
+    ---@param action                    fun(): nil
+    ---@return fun(): nil
+    local function create_fallback(key, action)
+      return function()
+        local line_count = vim.api.nvim_buf_line_count(0) ---@type integer
+        if line_count <= 1 then
+          action()
+        else
+          vim.cmd("normal! " .. key)
+        end
+      end
+    end
+
+    local on_input_move_down = create_fallback("j", actions.on_main_down)
+    local on_input_move_up = create_fallback("k", actions.on_main_up)
+    local on_input_G = create_fallback("G", actions.on_main_G)
+    local on_input_g = create_fallback("g", actions.on_main_g)
+    local on_input_gg = create_fallback("gg", actions.on_main_gg)
+
+    ---@type fml.types.IKeymap[]
+    local additional_input_keymaps = {
+      { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
+      { modes = { "n", "v" }, key = "j", callback = on_input_move_down, desc = "search: focus next item" },
+      { modes = { "n", "v" }, key = "k", callback = on_input_move_up, desc = "search: focus prev item" },
+      { modes = { "n", "v" }, key = "G", callback = on_input_G, desc = "search: goto last line" },
+      { modes = { "n", "v" }, key = "g", callback = on_input_g, desc = "search: locate" },
+      { modes = { "n", "v" }, key = "gg", callback = on_input_gg, desc = "search: goto first line" },
+    }
+    std_array.extend(input_keymaps, additional_input_keymaps)
+  end
 
   ---@type fml.types.ui.search.IInput
   local input = SearchInput.new({
@@ -407,6 +439,12 @@ function M.new(props)
     end
   end, true)
 
+  if enable_multiline_input then
+    watch_observables({ state.input_line_count }, function()
+      self:draw()
+    end, true)
+  end
+
   return self
 end
 
@@ -429,11 +467,14 @@ function M:create_wins_as_needed()
   local max_height = self._max_height <= 1 and math.floor(vim.o.lines * self._max_height) or self._max_height ---@type number
   local max_width = self._max_width <= 1 and math.floor(vim.o.columns * self._max_width) or self._max_width ---@type number
 
-  local height = self._height or (#state.items + 3) ---@type number
+  local input_height = state.enable_multiline_input and math.max(1, math.min(3, state.input_line_count:snapshot())) or 1
+  local input_height_with_borders = input_height + 2 ---@type integer
+
+  local height = self._height or (#state.items + input_height_with_borders) ---@type number
   if height < 1 then
     height = math.floor(vim.o.lines * height)
   end
-  height = math.min(max_height, math.max(3, height)) ---@type integer
+  height = math.min(max_height, math.max(input_height_with_borders, height)) ---@type integer
 
   local width = self._width or state.max_width + 10 ---@type number
   if width < 1 then
@@ -461,9 +502,10 @@ function M:create_wins_as_needed()
     local wincfg_main = {
       relative = "editor",
       anchor = "NW",
-      height = has_preview and height - 3 or math.min(match_count + 1, height - 3),
+      height = has_preview and height - input_height_with_borders
+        or math.min(match_count + 1, height - input_height_with_borders),
       width = width,
-      row = row + 3,
+      row = row + input_height_with_borders,
       col = col,
       focusable = true,
       title = "",
@@ -534,7 +576,7 @@ function M:create_wins_as_needed()
   local wincfg_input = {
     relative = "editor",
     anchor = "NW",
-    height = 1,
+    height = input_height,
     width = width,
     row = row,
     col = col,

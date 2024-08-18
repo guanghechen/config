@@ -12,16 +12,20 @@ M.__index = M
 
 ---@class fml.ui.search.state.IProps
 ---@field public title                  string
+---@field public enable_multiline_input boolean
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public fetch_items            fml.types.ui.search.IFetchItems
 ---@field public fetch_delay            integer
 
+---@param props                         fml.ui.search.state.IProps
+---@return fml.ui.search.State
 function M.new(props)
   local self = setmetatable({}, M)
 
   local uuid = oxi.uuid() ---@type string
   local title = props.title ---@type string
+  local enable_multiline_input = props.enable_multiline_input ---@type boolean
   local input = props.input ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local fetch_items = props.fetch_items ---@type fml.types.ui.search.IFetchItems
@@ -30,6 +34,8 @@ function M.new(props)
   local dirty_items = Observable.from_value(true)
   local dirty_main = Observable.from_value(false)
   local dirty_preview = Observable.from_value(false)
+
+  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type fml.types.collection.IObservable
 
   local fetch_scheduler ---@type fml.std.scheduler.IScheduler
   fetch_scheduler = scheduler.debounce({
@@ -71,18 +77,24 @@ function M.new(props)
   })
 
   ---@return nil
-  local function fetch()
-    fetch_scheduler.schedule()
+  local function on_input_change()
+    if enable_multiline_input then
+      local line_count = oxi.count_lines(input:snapshot())
+      input_line_count:next(line_count)
+    end
+    self:mark_dirty()
   end
 
   ---@return nil
-  local function mark_dirty()
-    self:mark_dirty()
+  local function on_items_dirty()
+    fetch_scheduler.schedule()
   end
 
   self.uuid = uuid
   self.title = title
+  self.enable_multiline_input = enable_multiline_input
   self.input = input
+  self.input_line_count = input_line_count
   self.input_history = input_history
   self.visible = visible
   self.dirty_items = dirty_items
@@ -93,8 +105,8 @@ function M.new(props)
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
 
-  input:subscribe(Subscriber.new({ on_next = mark_dirty }))
-  dirty_items:subscribe(Subscriber.new({ on_next = fetch }))
+  input:subscribe(Subscriber.new({ on_next = on_input_change }))
+  dirty_items:subscribe(Subscriber.new({ on_next = on_items_dirty }))
   return self
 end
 

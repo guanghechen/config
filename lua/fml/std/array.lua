@@ -198,6 +198,18 @@ function M.concat(...)
   return result
 end
 
+---@param base                          any[]
+---@param ...                           any[][]
+---@return nil
+function M.extend(base, ...)
+  local result = base
+  for _, tbl in ipairs({ ... }) do
+    for _, v in ipairs(tbl) do
+      table.insert(result, v)
+    end
+  end
+end
+
 ---@param str                           string
 ---@param separator_pattern             ?string
 ---@return string[]

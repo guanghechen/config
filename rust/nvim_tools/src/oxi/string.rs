@@ -2,6 +2,10 @@ use crate::types::r#match::LineMatch;
 use crate::util;
 use uuid::Uuid;
 
+pub fn count_lines(text: String) -> u32 {
+    return text.lines().count() as u32;
+}
+
 pub fn find_match_points((pattern, text): (String, String)) -> String {
     let lines: Vec<String> = text.lines().map(|s| s.to_string()).collect();
     let matches: Vec<LineMatch> = util::string::find_match_points(&pattern, &lines);

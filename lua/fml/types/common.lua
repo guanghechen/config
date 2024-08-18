@@ -22,4 +22,4 @@
 ---@field public modes                  fml.enums.VimMode[]
 ---@field public key                    string
 ---@field public callback               fun(): nil
----@field public desc                   string
+---@field public desc                   string|nil

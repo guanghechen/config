@@ -1,5 +1,6 @@
 local constant = require("fml.constant")
 local std_array = require("fml.std.array")
+local oxi = require("fml.std.oxi")
 local scheduler = require("fml.std.scheduler")
 local util = require("fml.std.util")
 local watch_observables = require("fml.fn.watch_observables")
@@ -96,7 +97,7 @@ function M.new(props)
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         if vim.api.nvim_buf_is_valid(bufnr) then
           local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-          local next_input = table.concat(lines, "\n", 1, 1) ---@type string
+          local next_input = table.concat(lines, "\n") ---@type string
           self.state.input:next(next_input)
         end
       end
@@ -138,8 +139,10 @@ function M:create_buf_as_needed()
 
   util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-  local input = self.state.input:snapshot() ---@type string
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { input })
+  local state = self.state ---@type fml.types.ui.search.IState
+  local input = state.input:snapshot() ---@type string
+  local lines = oxi.parse_lines(input) ---@type string[]
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
   vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
@@ -204,7 +207,8 @@ function M:reset_input(input)
 
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { next_input })
+    local lines = oxi.parse_lines(next_input) ---@type string[]
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
   end
 end
 

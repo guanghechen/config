@@ -10,6 +10,12 @@ local M = require("fml.std.oxi.mod")
 ---@field public score                  integer
 ---@field public pieces                 fml.std.oxi.string.ILineMatchPiece[]
 
+---@param text                          string
+---@return integer
+function M.count_lines(text)
+  return M.nvim_tools.count_lines(text)
+end
+
 ---@param pattern                       string
 ---@param lines                         string[]
 ---@return fml.std.oxi.string.ILineMatch[]
@@ -18,6 +24,32 @@ function M.find_match_points(pattern, lines)
   local matches = M.json.parse(json_str)
   ---@cast matches fml.std.oxi.string.ILineMatch[]
   return matches
+end
+
+---@param text                          string
+---@return integer[]
+function M.get_line_widths(text)
+  local str = M.nvim_tools.get_line_widths(text)
+  local raw_result = M.json.parse(str)
+  ---@cast raw_result integer[]
+
+  local result = raw_result ---@type integer[]
+  return result
+end
+
+---@param text                          string
+---@param lwidths                       ?integer[]
+---@return string[]
+function M.parse_lines(text, lwidths)
+  lwidths = lwidths or M.get_line_widths(text) ---@type integer[]
+  local offset = 0
+  local lines = {} ---@type string[]
+  for _, lwidth in ipairs(lwidths) do
+    local line = string.sub(text, offset + 1, offset + lwidth)
+    table.insert(lines, line)
+    offset = offset + lwidth + 1
+  end
+  return lines
 end
 
 ---@return string

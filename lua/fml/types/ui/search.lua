@@ -58,8 +58,10 @@
 ---@class fml.types.ui.search.IState
 ---@field public uuid                   string
 ---@field public title                  string
+---@field public enable_multiline_input boolean
 ---@field public items                  fml.types.ui.search.IItem[]
 ---@field public input                  fml.types.collection.IObservable
+---@field public input_line_count       fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public visible                fml.types.collection.IObservable
 ---@field public dirty_items            fml.types.collection.IObservable

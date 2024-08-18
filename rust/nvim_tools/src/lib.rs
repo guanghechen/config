@@ -13,6 +13,10 @@ use nvim_oxi::Object;
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
     Dictionary::from_iter([
+        (
+            "count_lines",
+            Object::from(Function::from_fn(oxi::string::count_lines)),
+        ),
         ("find", Object::from(Function::from_fn(oxi::find::find))),
         (
             "find_match_points",

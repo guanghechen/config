@@ -34,6 +34,7 @@ function M.get_search()
 
     _search = fml.ui.search.Search.new({
       title = "Search in files",
+      enable_multiline_input = true,
       statusline_items = keybindings.statusline_items,
       input = session.search_pattern,
       input_history = input_history,

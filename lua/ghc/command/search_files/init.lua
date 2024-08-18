@@ -8,7 +8,7 @@ local M = {}
 function M.open()
   local selected_text = fml.util.get_selected_text()
   if selected_text and #selected_text > 1 then
-    local next_search_pattern = selected_text:gsub("\n", " ") ---@type string
+    local next_search_pattern = selected_text ---@type string
     session.search_flag_regex:next(false)
     session.search_pattern:next(next_search_pattern)
   end

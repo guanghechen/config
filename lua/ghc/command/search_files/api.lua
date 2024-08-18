@@ -110,7 +110,7 @@ function M.calc_preview_data(item)
   local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
   local search_pattern = session.search_pattern:snapshot() ---@type string
   local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
-  local match_idx_cur = item_data.match_idx ---@type integer
+  local match_idx_cur = item_data.match_idx == 0 and 1 or item_data.match_idx ---@type integer
 
   if flag_replace then
     ---@type fml.std.oxi.replace.replace_file_preview_with_matches.IResult
@@ -504,22 +504,23 @@ function M.patch_preview_data(item, last_item, last_data)
     return M.fetch_preview_data(item)
   end
 
-  local match_idx = item_data.match_idx ---@type integer
+  local match_idx_cur = item_data.match_idx == 0 and 1 or item_data.match_idx ---@type integer
   local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
   local highlights = {} ---@type fml.types.ui.IHighlight[]
   if flag_replace then
     for _, hl in ipairs(_last_preview_data.highlights) do
       local is_search_match = hl.match_idx % 2 == 1 ---@type boolean
-      local midx = is_search_match and ((hl.match_idx + 1) / 2) or (hl.match_idx / 2) ---@type integer
-      local hlname = is_search_match and (midx == match_idx and "f_us_preview_search_cur" or "f_us_preview_search")
-        or (midx == match_idx and "f_us_preview_replace_cur" or "f_us_preview_replace")
+      local match_idx = is_search_match and ((hl.match_idx + 1) / 2) or (hl.match_idx / 2) ---@type integer
+      local hlname = is_search_match
+          and (match_idx == match_idx_cur and "f_us_preview_search_cur" or "f_us_preview_search")
+        or (match_idx == match_idx_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
       local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
       table.insert(highlights, highlight)
     end
   else
     for _, hl in ipairs(_last_preview_data.highlights) do
-      local midx = hl.match_idx ---@type integer
-      local hlname = midx == match_idx and "f_us_match_cur" or "f_us_match" ---@type string
+      local match_idx = hl.match_idx ---@type integer
+      local hlname = match_idx == match_idx_cur and "f_us_match_cur" or "f_us_match" ---@type string
       local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
       table.insert(highlights, highlight)
     end
