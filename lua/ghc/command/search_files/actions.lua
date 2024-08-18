@@ -1,0 +1,207 @@
+local session = require("ghc.context.session")
+local api = require("ghc.command.search_files.api")
+local state = require("ghc.command.search_files.state")
+
+---@param scope                         ghc.enums.context.SearchScope
+---@return nil
+local function change_scope(scope)
+  local scope_current = session.search_scope:snapshot() ---@type ghc.enums.context.SearchScope
+  if scope_current ~= scope then
+    session.search_scope:next(scope)
+  end
+end
+
+---@class ghc.command.search_files.actions
+local M = {}
+
+---@return nil
+function M.change_scope_cwd()
+  change_scope("C")
+end
+
+---@return nil
+function M.change_scope_directory()
+  change_scope("D")
+end
+
+---@return nil
+function M.change_scope_workspace()
+  change_scope("W")
+end
+
+---@return nil
+function M.edit_config()
+  ---@class ghc.command.search_files.IConfigData
+  ---@field public search_pattern       string
+  ---@field public replace_pattern      string
+  ---@field public search_paths         string[]
+  ---@field public max_filesize         string
+  ---@field public max_matches          integer
+  ---@field public include_patterns     string[]
+  ---@field public exclude_patterns     string[]
+
+  local s_search_pattern = session.search_pattern:snapshot() ---@type string
+  local s_replace_pattern = session.search_replace_pattern:snapshot() ---@type string
+  local s_search_paths = session.search_paths:snapshot() ---@type string
+  local s_max_filesize = session.search_max_filesize:snapshot() ---@type string
+  local s_max_matches = session.search_max_matches:snapshot() ---@type integer
+  local s_include_patterns = session.search_include_patterns:snapshot() ---@type string)
+  local s_exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
+
+  ---@type ghc.command.search_files.IConfigData
+  local data = {
+    search_pattern = s_search_pattern,
+    replace_pattern = s_replace_pattern,
+    search_paths = fml.array.parse_comma_list(s_search_paths),
+    max_filesize = s_max_filesize,
+    max_matches = s_max_matches,
+    include_patterns = fml.array.parse_comma_list(s_include_patterns),
+    exclude_patterns = fml.array.parse_comma_list(s_exclude_patterns),
+  }
+
+  local setting = fml.ui.Setting.new({
+    position = "center",
+    width = 100,
+    title = "Edit Configuration (search files)",
+    validate = function(raw_data)
+      if type(raw_data) ~= "table" then
+        return "Invalid search_files configuration, expect an object."
+      end
+      ---@cast raw_data ghc.command.search_files.IConfigData
+
+      if raw_data.search_pattern == nil or type(raw_data.search_pattern) ~= "string" then
+        return "Invalid data.search_pattern, expect an string."
+      end
+
+      if raw_data.replace_pattern == nil or type(raw_data.replace_pattern) ~= "string" then
+        return "Invalid data.replace_pattern, expect an string."
+      end
+
+      if raw_data.search_paths == nil or not fml.is.array(raw_data.search_paths) then
+        return "Invalid data.search_paths, expect an array."
+      end
+
+      if type(raw_data.max_filesize) ~= "string" then
+        return "Invalid data.max_filesize, expect a string."
+      end
+
+      if type(raw_data.max_matches) ~= "number" then
+        return "Invalid data.max_matches, expect a number."
+      end
+
+      if raw_data.include_patterns == nil or not fml.is.array(raw_data.include_patterns) then
+        return "Invalid data.include_patterns, expect an array."
+      end
+
+      if raw_data.exclude_patterns == nil or not fml.is.array(raw_data.exclude_patterns) then
+        return "Invalid data.exclude_patterns, expect an array."
+      end
+    end,
+    on_confirm = function(raw_data)
+      local raw = vim.tbl_extend("force", data, raw_data)
+      ---@cast raw ghc.command.search_files.IConfigData
+
+      local search_pattern = raw.search_pattern ---@type string
+      local replace_pattern = raw.replace_pattern ---@type string
+      local max_filesize = raw.max_filesize ---@type string
+      local max_matches = raw.max_matches ---@type integer
+      local search_paths = table.concat(raw.search_paths, ",") ---@type string
+      local include_patterns = table.concat(raw.include_patterns, ",") ---@type string
+      local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
+
+      session.search_pattern:next(search_pattern)
+      session.search_replace_pattern:next(replace_pattern)
+      session.search_paths:next(search_paths)
+      session.search_max_filesize:next(max_filesize)
+      session.search_max_matches:next(max_matches)
+      session.search_include_patterns:next(include_patterns)
+      session.search_exclude_patterns:next(exclude_patterns)
+      state.reload()
+    end,
+  })
+  setting:open({
+    initial_value = data,
+    text_cursor_row = 1,
+    text_cursor_col = 1,
+  })
+end
+
+---@return nil
+function M.replace_file()
+  local search = state.get_search() ---@type fml.types.ui.search.ISearch
+  local item = search.state:get_current() ---@type fml.types.ui.search.IItem|nil
+  if item == nil then
+    return
+  end
+
+  local item_data = api.get_item_data(item.uuid) ---@type ghc.command.search_files.IItemData|nil
+  if item_data == nil then
+    return
+  end
+
+  local cwd = state.search_cwd:snapshot() ---@type string
+  local filepath = item_data.filepath ---@type string
+  local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
+  local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
+  local search_pattern = session.search_pattern:snapshot() ---@type string
+  local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
+
+  local succeed = false ---@type boolean
+  if item_data.match_idx > 0 then
+    succeed = fml.oxi.replace_file_by_matches({
+      cwd = cwd,
+      filepath = filepath,
+      flag_case_sensitive = flag_case_sensitive,
+      flag_regex = flag_regex,
+      search_pattern = search_pattern,
+      replace_pattern = replace_pattern,
+      match_idxs = { item_data.match_idx },
+    })
+  else
+    succeed = fml.oxi.replace_file({
+      cwd = cwd,
+      filepath = filepath,
+      flag_case_sensitive = flag_case_sensitive,
+      flag_regex = flag_regex,
+      search_pattern = search_pattern,
+      replace_pattern = replace_pattern,
+    })
+  end
+
+  if succeed then
+    api.refresh_file_item(filepath)
+  end
+  state.reload()
+end
+
+---@return nil
+function M.toggle_case_sensitive()
+  local flag = session.search_flag_case_sensitive:snapshot() ---@type boolean
+  session.search_flag_case_sensitive:next(not flag)
+end
+
+---@return nil
+function M.toggle_gitignore()
+  local flag = session.search_flag_gitignore:snapshot() ---@type boolean
+  session.search_flag_gitignore:next(not flag)
+end
+
+---@return nil
+function M.toggle_mode()
+  local flag = session.search_flag_replace:snapshot() ---@type boolean
+  session.search_flag_replace:next(not flag)
+end
+
+---@return nil
+function M.toggle_regex()
+  local flag = session.search_flag_regex:snapshot() ---@type boolean
+  session.search_flag_regex:next(not flag)
+end
+
+---@return nil
+function M.toggle_scope()
+  local next_scope = session.get_search_scope_carousel_next() ---@type ghc.enums.context.SearchScope
+  change_scope(next_scope)
+end
+
+return M
