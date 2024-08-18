@@ -52,6 +52,12 @@ local common_keymaps = {
     callback = actions.edit_config,
     desc = "find: edit config",
   },
+  {
+    modes = { "n", "v" },
+    key = "<leader>i",
+    callback = actions.toggle_case_sensitive,
+    desc = "find: toggle case sensitive",
+  },
 }
 
 ---@class ghc.command.find_files.keybindings

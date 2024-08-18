@@ -72,6 +72,18 @@ local common_keymaps = {
     callback = actions.edit_config,
     desc = "search: edit config",
   },
+  {
+    modes = { "n", "v" },
+    key = "<leader>i",
+    callback = actions.toggle_case_sensitive,
+    desc = "search: toggle case sensitive",
+  },
+  {
+    modes = { "n", "v" },
+    key = "<leader>r",
+    callback = actions.toggle_regex,
+    desc = "search: toggle regex",
+  },
 }
 
 ---@type fml.types.IKeymap[]
