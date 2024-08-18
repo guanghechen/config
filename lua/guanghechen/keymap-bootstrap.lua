@@ -9,7 +9,7 @@ local function mk(mode, key, action, desc, silent, nowait)
 end
 
 --#enhance------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>2", ghc.command.search_files.focus, "search: search/replace")
+mk({ "n", "v" }, "<leader>2", ghc.command.search_files.open, "search: search/replace")
 
 ---! better indenting
 vim.keymap.set("v", "<", "<gv")
@@ -126,7 +126,8 @@ mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window his
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[f]ind-------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader><leader>", ghc.command.find_files.focus, "find: files")
+mk({ "n", "v" }, "<leader><leader>", ghc.command.find_files.open, "find: files")
+mk({ "n", "v" }, "<leader>ff", ghc.command.find_files.open, "find: files")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
@@ -153,7 +154,11 @@ mk({ "i", "n", "v" }, "<F5>", ghc.command.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
 
 --#[s]earch-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>ss", ghc.command.search_files.focus, "search: files")
+mk({ "n", "v" }, "<leader>ss", ghc.command.search_files.open, "search: files")
+mk({ "n", "v" }, "<leader>sw", ghc.command.search_files.open_workspace, "search: files (workspace)")
+mk({ "n", "v" }, "<leader>sc", ghc.command.search_files.open_cwd, "search: files (cwd)")
+mk({ "n", "v" }, "<leader>sd", ghc.command.search_files.open_directory, "search: files (directory)")
+mk({ "n", "v" }, "<leader>sb", ghc.command.search_files.open_buffer, "search: files (buffer)")
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[s]croll-----------------------------------------------------------------------------------------
