@@ -1,37 +1,47 @@
+local session = require("ghc.context.session")
 local actions = require("ghc.command.search_files.actions")
 
----@type fml.types.IKeymap[]
-local statusline_keymaps = {
+---@type fml.types.ui.search.IRawStatuslineItem[]
+local statusline_items = {
   {
-    modes = { "n", "v" },
-    key = "<leader>1",
-    callback = actions.toggle_scope,
+    type = "enum",
     desc = "search: toggle scope",
+    symbol = "",
+    state = session.search_scope,
+    callback = actions.toggle_scope,
   },
   {
-    modes = { "n", "v" },
-    key = "<leader>2",
-    callback = actions.toggle_gitignore,
+    type = "flag",
     desc = "search: toggle gitignore",
+    symbol = fml.ui.icons.symbols.flag_gitignore,
+    state = session.search_flag_gitignore,
+    callback = actions.toggle_gitignore,
   },
   {
-    modes = { "n", "v" },
-    key = "<leader>3",
-    callback = actions.toggle_regex,
+    type = "flag",
     desc = "search: toggle regex",
+    symbol = fml.ui.icons.symbols.flag_regex,
+    state = session.search_flag_regex,
+    callback = actions.toggle_regex,
   },
   {
-    modes = { "n", "v" },
-    key = "<leader>4",
-    callback = actions.toggle_case_sensitive,
+    type = "flag",
     desc = "search: toggle case sensitive",
+    symbol = fml.ui.icons.symbols.flag_case_sensitive,
+    state = session.search_flag_case_sensitive,
+    callback = actions.toggle_case_sensitive,
   },
   {
-    modes = { "n", "v" },
-    key = "<leader>5",
-    callback = actions.toggle_mode,
+    type = "flag",
     desc = "search: toggle mode",
+    symbol = fml.ui.icons.symbols.flag_replace,
+    state = session.search_flag_replace,
+    callback = actions.toggle_mode,
   },
+}
+
+---@type fml.types.IKeymap[]
+local common_keymaps = {
   {
     modes = { "n", "v" },
     key = "<leader>W",
@@ -56,10 +66,6 @@ local statusline_keymaps = {
     callback = actions.change_scope_buffer,
     desc = "search: change scope (buffer)",
   },
-}
-
----@type fml.types.IKeymap[]
-local common_keymaps = {
   {
     modes = { "n", "v" },
     key = "<leader>c",
@@ -81,13 +87,16 @@ local input_keymaps = {
 ---@class ghc.command.search_files.keybindings
 local M = {}
 
----@type fml.types.IKeymap[]
-M.input_keymaps = fml.array.concat({}, statusline_keymaps, common_keymaps, input_keymaps)
+---@type fml.types.ui.search.IRawStatuslineItem[]
+M.statusline_items = fml.array.concat({}, statusline_items)
 
 ---@type fml.types.IKeymap[]
-M.main_keymaps = fml.array.concat({}, statusline_keymaps, common_keymaps, input_keymaps)
+M.input_keymaps = fml.array.concat({}, common_keymaps, input_keymaps)
 
 ---@type fml.types.IKeymap[]
-M.preview_keymaps = fml.array.concat({}, statusline_keymaps, common_keymaps)
+M.main_keymaps = fml.array.concat({}, common_keymaps, input_keymaps)
+
+---@type fml.types.IKeymap[]
+M.preview_keymaps = fml.array.concat({}, common_keymaps)
 
 return M

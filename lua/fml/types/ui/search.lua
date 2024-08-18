@@ -37,6 +37,19 @@
 ---@field public lnum                   integer|nil
 ---@field public col                    integer|nil
 
+---@class fml.types.ui.search.IRawStatuslineItem
+---@field public type                   "flag"|"enum"
+---@field public desc                   string
+---@field public state                  fml.types.collection.IObservable
+---@field public symbol                 string
+---@field public callback               fun(): nil
+
+---@class fml.types.ui.search.IStatuslineItem
+---@field public type                   "flag"|"enum"
+---@field public state                  fml.types.collection.IObservable
+---@field public symbol                 string
+---@field public callback_fn            string
+
 ---@class fml.ui.search.preview.IWinOpts
 ---@field public title                  string
 ---@field public lnum                   ?integer
@@ -82,6 +95,7 @@
 
 ---@class fml.types.ui.search.ISearch
 ---@field public state                  fml.types.ui.search.IState
+---@field public statusline_items       fml.types.ui.search.IStatuslineItem[]
 ---@field public get_winnr_input        fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.types.ui.search.ISearch): integer|nil

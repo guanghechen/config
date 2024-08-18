@@ -36,6 +36,7 @@ M.__index = M
 
 ---@class fml.types.ui.select.IProps
 ---@field public title                  string
+---@field public statusline_items       fml.types.ui.search.IRawStatuslineItem[]
 ---@field public items                  fml.types.ui.select.IItem[]
 ---@field public case_sensitive         fml.types.collection.IObservable
 ---@field public input                  fml.types.collection.IObservable
@@ -65,6 +66,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local title = props.title ---@type string
+  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
   local items = props.items ---@type fml.types.ui.select.IItem[]
   local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable
   local input = props.input ---@type fml.types.collection.IObservable
@@ -141,6 +143,7 @@ function M.new(props)
     input = input,
     fetch_items = fetch_items,
     input_history = input_history,
+    statusline_items = statusline_items,
     input_keymaps = input_keymaps,
     fetch_delay = 32,
     render_delay = 32,

@@ -7,6 +7,11 @@ M.Preview = require("fml.ui.search.preview")
 M.Search = require("fml.ui.search.search")
 M.State = require("fml.ui.search.state")
 
+---@return fml.types.ui.search.ISearch|nil
+function M.get_current_instance()
+  return M.Search.get_current_instance()
+end
+
 ---@return string
 ---@return string|nil
 function M.get_current_path()

@@ -1,5 +1,4 @@
 local session = require("ghc.context.session")
-local statusline = require("ghc.ui.statusline")
 
 local _initial_dirpath = vim.fn.expand("%:p:h") ---@type string
 local state_search_cwd = fml.collection.Observable.from_value(session.get_search_scope_cwd(_initial_dirpath))
@@ -35,6 +34,7 @@ function M.get_search()
 
     _search = fml.ui.search.Search.new({
       title = "Search in files",
+      statusline_items = keybindings.statusline_items,
       input = session.search_pattern,
       input_history = input_history,
       input_keymaps = keybindings.input_keymaps,
@@ -48,9 +48,7 @@ function M.get_search()
       width_preview = 0.45,
       max_height = 1,
       max_width = 1,
-      on_close = function()
-        statusline.disable(statusline.cnames.search_files)
-      end,
+      on_close = function() end,
       fetch_preview_data = api.fetch_preview_data,
       patch_preview_data = api.patch_preview_data,
       on_confirm = function(item)

@@ -1,3 +1,4 @@
+local G = require("fml.std.G")
 local constant = require("fml.constant")
 local scheduler = require("fml.std.scheduler")
 local api_state = require("fml.api.state")
@@ -62,6 +63,7 @@ M.__index = M
 ---@field public title                  string
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
+---@field public statusline_items       fml.types.ui.search.IRawStatuslineItem[]
 ---@field public fetch_items            fml.types.ui.search.IFetchItems
 ---@field public fetch_delay            ?integer
 ---@field public render_delay           ?integer
@@ -84,6 +86,31 @@ M.__index = M
 ---@return fml.ui.search.Search
 function M.new(props)
   local self = setmetatable({}, M)
+
+  local common_keymaps = {} ---@type fml.types.IKeymap[]
+  local statusline_items = {} ---@type fml.types.ui.search.IStatuslineItem[]
+
+  local raw_statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
+  for idx, item in ipairs(raw_statusline_items) do
+    local state = item.state ---@type fml.types.collection.IObservable
+    local symbol = item.symbol ---@type string
+    local callback = item.callback ---@type fun(): nil
+    local callback_fn = G.register_anonymous_fn(callback) or "" ---@type string
+
+    ---@type fml.types.ui.search.IStatuslineItem
+    local statusline_item = { type = item.type, state = state, symbol = symbol, callback_fn = callback_fn }
+    table.insert(statusline_items, statusline_item)
+
+    ---@type fml.types.IKeymap
+    local keymap = {
+      modes = { "n", "v" },
+      key = "<leader>" .. idx,
+      callback = callback,
+      desc = item.desc,
+      nowait = true,
+    }
+    table.insert(common_keymaps, keymap)
+  end
 
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local max_width = props.max_width or 0.8 ---@type number
@@ -235,7 +262,7 @@ function M.new(props)
   }
 
   ---@type fml.types.IKeymap[]
-  local common_keymaps = {
+  std_array.concat(common_keymaps, {
     {
       modes = { "i", "n", "v" },
       key = "<LeftMouse>",
@@ -250,7 +277,7 @@ function M.new(props)
       desc = "search: confirm",
       nowait = true,
     },
-  }
+  })
 
   ---@type fml.types.IKeymap[]
   local input_keymaps = std_array.concat(common_keymaps, {
@@ -357,6 +384,7 @@ function M.new(props)
   end
 
   self.state = state
+  self.statusline_items = statusline_items
   self._winnr_input = nil
   self._winnr_main = nil
   self._input = input
@@ -529,6 +557,11 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].winblend = 10
   vim.wo[winnr_input].winhighlight = INPUT_WIN_HIGHLIGHT
   vim.wo[winnr_input].wrap = false
+end
+
+---@return fml.types.ui.search.ISearch|nil
+function M.get_current_instance()
+  return _search_current
 end
 
 ---@return string

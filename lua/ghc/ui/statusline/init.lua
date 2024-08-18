@@ -22,23 +22,18 @@ local c = {
   filepath = "filepath",
   filestatus = "filestatus",
   filetype = "filetype",
-  find_files = "find_files",
   git = "git",
   lsp = "lsp",
   mode = "mode",
   noice = "noice",
   pos = "pos",
   readonly = "readonly",
-  search_files = "search_files",
+  search = "search",
   username = "username",
 }
 for _, name in pairs(c) do
   statusline:register(name, require("ghc.ui.statusline.component." .. name))
 end
-statusline
-  ---
-  :disable(c.find_files)
-  :disable(c.search_files)
 
 statusline
   :place(c.username, "left")
@@ -47,8 +42,7 @@ statusline
   :place(c.filetype, "left")
   :place(c.filestatus, "left")
   :place(c.readonly, "left")
-  :place(c.search_files, "center")
-  :place(c.find_files, "center")
+  :place(c.search, "center")
   :place(c.cwd, "right")
   :place(c.lsp, "right")
   :place(c.copilot, "right")
