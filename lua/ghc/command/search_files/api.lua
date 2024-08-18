@@ -222,6 +222,8 @@ end
 ---@return nil
 function M.fetch_items(input_text, callback)
   local cwd = state.search_cwd:snapshot() ---@type string
+  local scope = session.search_scope:snapshot() ---@type ghc.enums.context.SearchScope
+  local _, current_buf_path = fml.ui.search.get_current_path() ---@type string, string|nil
   local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
   local flag_gitignore = session.search_flag_gitignore:snapshot() ---@type boolean
   local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
@@ -247,7 +249,7 @@ function M.fetch_items(input_text, callback)
       search_paths = search_paths,
       include_patterns = include_patterns,
       exclude_patterns = exclude_patterns,
-      specified_filepath = nil,
+      specified_filepath = scope == "B" and current_buf_path or nil,
     })
 
   if result.error ~= nil or result.items == nil then
@@ -266,14 +268,17 @@ function M.fetch_items(input_text, callback)
       local icon_width = string.len(icon) ---@type integer
       local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type fml.types.ui.IInlineHighlight[]
 
-      ---@type fml.types.ui.search.IItem
-      local file_item = {
-        group = filepath,
-        uuid = filepath,
-        text = icon .. " " .. filepath,
-        highlights = file_highlights,
-      }
-      table.insert(items, file_item)
+      local file_item_uuid = filepath ---@type string
+      if scope ~= "B" then
+        ---@type fml.types.ui.search.IItem
+        local file_item = {
+          group = filepath,
+          uuid = file_item_uuid,
+          text = icon .. " " .. filepath,
+          highlights = file_highlights,
+        }
+        table.insert(items, file_item)
+      end
 
       if flag_replace then
         local lnum_delta = 0 ---@type integer
@@ -356,16 +361,18 @@ function M.fetch_items(input_text, callback)
             }
             item_data_map[item.uuid] = item_data
 
-            if item_data_map[file_item.uuid] == nil then
-              ---@type ghc.command.search_files.IItemData
-              local file_item_data = {
-                filepath = filepath,
-                filematch = file_match,
-                match_idx = 0,
-                lnum = s_lnum,
-                col = s_col,
-              }
-              item_data_map[file_item.uuid] = file_item_data
+            if scope ~= "B" then
+              if item_data_map[file_item_uuid] == nil then
+                ---@type ghc.command.search_files.IItemData
+                local file_item_data = {
+                  filepath = filepath,
+                  filematch = file_match,
+                  match_idx = 0,
+                  lnum = s_lnum,
+                  col = s_col,
+                }
+                item_data_map[file_item_uuid] = file_item_data
+              end
             end
           end
 
@@ -405,15 +412,28 @@ function M.fetch_items(input_text, callback)
               col = col,
             }
             item_data_map[item.uuid] = item_data
-            item_data_map[file_item.uuid] = item_data_map[file_item.uuid] or item_data
+
+            if scope ~= "B" then
+              if item_data_map[file_item_uuid] == nil then
+                ---@type ghc.command.search_files.IItemData
+                local file_item_data = {
+                  filepath = filepath,
+                  filematch = file_match,
+                  match_idx = 0,
+                  lnum = lnum,
+                  col = col,
+                }
+                item_data_map[file_item_uuid] = file_item_data
+              end
+            end
           end
         end
       end
 
-      if item_data_map[file_item.uuid] == nil then
+      if item_data_map[file_item_uuid] == nil then
         ---@type ghc.command.search_files.IItemData
-        local file_item_data = { filepath = filepath, filematch = file_match, match_idx = 1 }
-        item_data_map[file_item.uuid] = file_item_data
+        local file_item_data = { filepath = filepath, filematch = file_match, match_idx = 0 }
+        item_data_map[file_item_uuid] = file_item_data
       end
     end
   end

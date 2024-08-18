@@ -2,14 +2,16 @@ local session = require("ghc.context.session")
 local statusline = require("ghc.ui.statusline")
 
 local _initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_dirpath = fml.collection.Observable.from_value(_initial_dirpath)
 local state_search_cwd = fml.collection.Observable.from_value(session.get_search_scope_cwd(_initial_dirpath))
 fml.fn.watch_observables({ session.search_scope }, function()
   local current_search_cwd = state_search_cwd:snapshot() ---@type string
-  local dirpath = state_dirpath:snapshot() ---@type string
+  local dirpath = fml.ui.search.get_current_path() ---@type string
   local next_search_cwd = session.get_search_scope_cwd(dirpath) ---@type string
   if current_search_cwd ~= next_search_cwd then
     state_search_cwd:next(next_search_cwd)
+  end
+  if session.search_scope == "B" then
+    state_search_cwd:next(next_search_cwd, { force = true })
   end
 end, true)
 
@@ -18,7 +20,6 @@ local _search = nil ---@type fml.types.ui.search.ISearch|nil
 ---@class ghc.command.search_files.state
 local M = {}
 
-M.dirpath = state_dirpath
 M.search_cwd = state_search_cwd
 
 ---@return fml.types.ui.search.ISearch

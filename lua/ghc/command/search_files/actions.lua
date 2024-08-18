@@ -15,6 +15,11 @@ end
 local M = {}
 
 ---@return nil
+function M.change_scope_buffer()
+  change_scope("B")
+end
+
+---@return nil
 function M.change_scope_cwd()
   change_scope("C")
 end

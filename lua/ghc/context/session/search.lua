@@ -59,9 +59,8 @@ function M.get_search_scope_carousel_next()
 end
 
 ---@param dirpath                       string
----@param bufpath                       string|nil
 ---@return string
-function M.get_search_scope_cwd(dirpath, bufpath)
+function M.get_search_scope_cwd(dirpath)
   local scope = search_scope:snapshot() ---@type ghc.enums.context.SearchScope
 
   if scope == "W" then
@@ -77,14 +76,14 @@ function M.get_search_scope_cwd(dirpath, bufpath)
   end
 
   if scope == "B" then
-    return bufpath or dirpath
+    return dirpath
   end
 
   fml.reporter.error({
     from = "ghc.context.session.search",
     subject = "get_search_scope_cwd",
     message = "Unknown scope.",
-    details = { scope = scope, dirpath = dirpath, bufpath = bufpath },
+    details = { scope = scope, dirpath = dirpath },
   })
   return fml.path.cwd()
 end

@@ -100,7 +100,6 @@ pub fn search(
             .arg("--no-heading")
             .arg("--no-filename")
             .arg("--json")
-            .arg("--json")
             // -
         ;
 
@@ -134,19 +133,22 @@ pub fn search(
             cmd.args(["--fixed-strings", search_pattern]);
         }
 
+        let mut search_in_single_file: bool = false;
         if let Some(specified_filepath) = &options.specified_filepath {
             if !specified_filepath.is_empty() {
+                search_in_single_file = true;
                 cmd.arg(specified_filepath);
             }
+        }
+
+        if !search_in_single_file {
+            cmd.args(&search_paths);
         }
 
         let start_time = SystemTime::now();
 
         // return the output of the cmd
-        let output = cmd
-            .args(&search_paths)
-            .output()
-            .expect("failed to execute ripgrep");
+        let output = cmd.output().expect("failed to execute ripgrep");
 
         let end_time = SystemTime::now();
         elapsed_time = end_time

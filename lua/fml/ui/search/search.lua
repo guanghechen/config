@@ -36,6 +36,8 @@ local PREVIEW_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_preview_normal",
 }, ",")
 
+local _current_buf_dir = vim.fn.expand("%:p:h") ---@type string
+local _current_buf_path = nil ---@type string|nil
 local _search_current = nil ---@type fml.ui.search.Search|nil
 
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
@@ -529,6 +531,12 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].wrap = false
 end
 
+---@return string
+---@return string|nil
+function M.get_current_path()
+  return _current_buf_dir, _current_buf_path
+end
+
 ---@return integer|nil
 function M:get_winnr_main()
   return self._winnr_main
@@ -592,6 +600,7 @@ function M:close()
     if self._preview ~= nil then
       self._preview:destroy()
     end
+    _search_current = nil
   end
 
   if self._on_close_callback ~= nil then
@@ -630,6 +639,13 @@ end
 
 ---@return nil
 function M:open()
+  if _search_current == nil then
+    local filepath = vim.api.nvim_buf_get_name(0) ---@type string
+    local dirpath = vim.fn.expand("%:p:h") ---@type string
+    _current_buf_dir = dirpath ---@type string
+    _current_buf_path = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
+  end
+
   if _search_current ~= self then
     if _search_current ~= nil then
       _search_current:close()

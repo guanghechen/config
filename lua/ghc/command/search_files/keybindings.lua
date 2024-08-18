@@ -50,6 +50,12 @@ local statusline_keymaps = {
     callback = actions.change_scope_directory,
     desc = "search: change scope (directory)",
   },
+  {
+    modes = { "n", "v" },
+    key = "<leader>B",
+    callback = actions.change_scope_buffer,
+    desc = "search: change scope (buffer)",
+  },
 }
 
 ---@type fml.types.IKeymap[]
