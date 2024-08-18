@@ -159,6 +159,8 @@ mk({ "n", "v" }, "<leader>sw", ghc.command.search_files.open_workspace, "search:
 mk({ "n", "v" }, "<leader>sc", ghc.command.search_files.open_cwd, "search: files (cwd)")
 mk({ "n", "v" }, "<leader>sd", ghc.command.search_files.open_directory, "search: files (directory)")
 mk({ "n", "v" }, "<leader>sb", ghc.command.search_files.open_buffer, "search: files (buffer)")
+mk({ "i", "n", "v" }, "<C-a>f", ghc.command.search_files.open_buffer, "search: files (buffer)")
+mk({ "i", "n", "v" }, "<M-f>", ghc.command.search_files.open_buffer, "search: files (buffer)")
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[s]croll-----------------------------------------------------------------------------------------
