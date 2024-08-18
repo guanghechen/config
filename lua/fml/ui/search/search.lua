@@ -639,7 +639,7 @@ end
 
 ---@return nil
 function M:open()
-  if _search_current == nil then
+  if _search_current == nil or not _search_current.state.visible:snapshot() then
     local filepath = vim.api.nvim_buf_get_name(0) ---@type string
     local dirpath = vim.fn.expand("%:p:h") ---@type string
     _current_buf_dir = dirpath ---@type string
@@ -661,14 +661,11 @@ end
 
 ---@return nil
 function M:toggle()
-  local state = self.state ---@type fml.types.ui.search.IState
-  local visible = state.visible:snapshot() ---@type boolean
+  local visible = self.state.visible:snapshot() ---@type boolean
   if visible then
     self:close()
-    state.visible:next(false)
   else
     self:open()
-    state.visible:next(true)
   end
 end
 

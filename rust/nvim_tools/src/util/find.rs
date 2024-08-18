@@ -6,9 +6,9 @@ use std::process::Command;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FindSucceedResult {
     #[serde(skip_serializing)]
-    pub stdout: String,
-    #[serde(skip_serializing)]
     pub cmd: String,
+    #[serde(skip_serializing)]
+    pub stdout: String,
 
     pub filepaths: Vec<String>,
 }

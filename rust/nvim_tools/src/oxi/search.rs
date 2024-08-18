@@ -1,13 +1,29 @@
+use crate::types::CmdResult;
 use crate::util;
 
-pub fn search(options_json_str: String) -> (String, String) {
-    if let Ok(options) = serde_json::from_str::<util::search::SearchOptions>(&options_json_str) {
+pub fn search(options_json_str: String) -> String {
+    let cmd_result: CmdResult<util::search::SearchSucceedResult> = if let Ok(options) =
+        serde_json::from_str::<util::search::SearchOptions>(&options_json_str)
+    {
         let result = util::search::search(&options);
         match result {
-            Ok((data, _, cmd)) => (serde_json::to_string(&data).unwrap(), cmd),
-            Err((err, cmd)) => (serde_json::to_string(&err).unwrap(), format!("\n{:?}", cmd)),
+            Ok(data) => CmdResult {
+                cmd: data.cmd.to_owned(),
+                error: None,
+                data: Some(data),
+            },
+            Err(data) => CmdResult {
+                cmd: data.cmd.to_owned(),
+                error: Some(data.error),
+                data: None,
+            },
         }
     } else {
-        ("null".to_string(), "null".to_string())
-    }
+        CmdResult {
+            cmd: "null".to_string(),
+            error: Some("null".to_string()),
+            data: None,
+        }
+    };
+    serde_json::to_string(&cmd_result).unwrap()
 }

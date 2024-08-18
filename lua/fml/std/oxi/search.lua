@@ -39,18 +39,17 @@ local M = require("fml.std.oxi.mod")
 function M.search(params)
   local payload = M.json.stringify(params) ---@type string
   local result_str = M.nvim_tools.search(payload) ---@type string
-  local result = M.json.parse(result_str)
-  ---@cast result fml.std.oxi.search.IResult
+  local ok, data = M.resolve_cmd_result("fml.std.oxi.saerch", result_str)
 
-  if result ~= nil and result.items ~= nil then
+  if ok and data ~= nil and data.items ~= nil then
     local orders = {}
-    for filepath in pairs(result.items) do
+    for filepath in pairs(data.items) do
       table.insert(orders, filepath)
     end
     table.sort(orders)
-    result.item_orders = orders
+    data.item_orders = orders
 
-    for _, item in pairs(result.items) do
+    for _, item in pairs(data.items) do
       for _, block_match in ipairs(item.matches) do
         local text = block_match.text ---@type string
         local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -61,5 +60,5 @@ function M.search(params)
     end
   end
 
-  return result
+  return data
 end

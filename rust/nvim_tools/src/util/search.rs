@@ -26,12 +26,20 @@ pub struct SearchFileMatch {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchSucceedResult {
+    #[serde(skip_serializing)]
+    pub cmd: String,
+    #[serde(skip_serializing)]
+    pub stdout: String,
+
     pub items: HashMap<String, SearchFileMatch>,
     pub elapsed_time: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchFailedResult {
+    #[serde(skip_serializing)]
+    pub cmd: String,
+
     pub elapsed_time: String,
     pub error: String,
 }
@@ -51,18 +59,14 @@ pub struct SearchOptions {
     pub specified_filepath: Option<String>,
 }
 
-pub fn search(
-    options: &SearchOptions,
-) -> Result<(SearchSucceedResult, String, String), (SearchFailedResult, String)> {
+pub fn search(options: &SearchOptions) -> Result<SearchSucceedResult, SearchFailedResult> {
     if options.search_pattern.is_empty() {
-        return Ok((
-            SearchSucceedResult {
-                elapsed_time: "0s".to_string(),
-                items: HashMap::new(),
-            },
-            "".to_string(),
-            "".to_string(),
-        ));
+        return Ok(SearchSucceedResult {
+            stdout: "".to_string(),
+            cmd: "".to_string(),
+            elapsed_time: "0s".to_string(),
+            items: HashMap::new(),
+        });
     }
     let max_matches: u32 = match options.max_matches {
         Some(value) => {
@@ -217,29 +221,27 @@ pub fn search(
         }
 
         let result: SearchSucceedResult = SearchSucceedResult {
+            cmd,
+            stdout: stdout.to_string(),
             elapsed_time: result_elapsed_time,
             items: file_matches,
         };
-        Ok((result, stdout.to_string(), cmd))
+        Ok(result)
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.is_empty() {
-            Ok((
-                SearchSucceedResult {
-                    elapsed_time: format!("{}s", elapsed_time),
-                    items: HashMap::new(),
-                },
-                "".to_string(),
+            Ok(SearchSucceedResult {
                 cmd,
-            ))
+                stdout: "".to_string(),
+                elapsed_time: format!("{}s", elapsed_time),
+                items: HashMap::new(),
+            })
         } else {
-            Err((
-                SearchFailedResult {
-                    elapsed_time: format!("{}s", elapsed_time),
-                    error: stderr.to_string(),
-                },
+            Err(SearchFailedResult {
                 cmd,
-            ))
+                elapsed_time: format!("{}s", elapsed_time),
+                error: stderr.to_string(),
+            })
         }
     }
 }

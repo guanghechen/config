@@ -2,7 +2,7 @@ use crate::types::CmdResult;
 use crate::util;
 
 pub fn find(options_json_str: String) -> String {
-    let oxi_result: CmdResult<util::find::FindSucceedResult> =
+    let cmd_result: CmdResult<util::find::FindSucceedResult> =
         if let Ok(options) = serde_json::from_str::<util::find::FindOptions>(&options_json_str) {
             let result = util::find::find(&options);
             match result {
@@ -25,5 +25,5 @@ pub fn find(options_json_str: String) -> String {
             }
         };
 
-    serde_json::to_string(&oxi_result).unwrap()
+    serde_json::to_string(&cmd_result).unwrap()
 }
