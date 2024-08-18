@@ -107,12 +107,6 @@ return {
     },
     extensions = {
       file_browser = {},
-      fzf = {
-        fuzzy = false,
-        override_generic_sorter = true,
-        override_file_sorter = true,
-        case_mode = "respect_case",
-      },
     },
   },
   config = function(_, opts)
@@ -121,6 +115,5 @@ return {
   dependencies = {
     "echasnovski/mini.icons",
     "nvim-lua/plenary.nvim",
-    "nvim-telescope/telescope-fzf-native.nvim",
   },
 }

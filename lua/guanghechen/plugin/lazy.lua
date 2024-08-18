@@ -37,7 +37,6 @@ local opts = {
     --find
     require("guanghechen.plugin.telescope"),
     require("guanghechen.plugin.telescope-file-browser"),
-    require("guanghechen.plugin.telescope-fzf-native"),
 
     --format
     require("guanghechen.plugin.conform"),
