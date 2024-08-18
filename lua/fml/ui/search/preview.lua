@@ -124,6 +124,10 @@ function M.new(props)
   self._keymaps = _keymaps
   self._render_scheduler = _render_scheduler
 
+  watch_observables({ state.dirty_items }, function()
+    _last_data = nil
+  end, true)
+
   watch_observables({ state.dirty_preview }, function()
     local dirty = state.dirty_preview:snapshot() ---@type boolean|nil
     local visible = state.visible:snapshot() ---@type boolean
