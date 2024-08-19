@@ -49,7 +49,23 @@ return {
       end
 
       -- Disable autoformat for files in a certain path
-      local ignore_filepaths = { "/node_modules", "/.git/", "/.yarn/" }
+      local ignore_filepaths = {
+        ".git/",
+        ".cache/",
+        ".next/",
+        ".yarn/",
+        "build/",
+        "debug/",
+        "node_modules/",
+        "target/",
+        "yarn.lock",
+        "npm-package.lock",
+        "*.log",
+        "*.pdf",
+        "*.mkv",
+        "*.mp4",
+        "*.zip",
+      }
       local bufname = vim.api.nvim_buf_get_name(bufnr)
       for _, ignore_filepath in ipairs(ignore_filepaths) do
         if bufname:match(ignore_filepath) then

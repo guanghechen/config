@@ -9,8 +9,20 @@ local function normalize_paths(paths)
   return fml.oxi.normalize_comma_list(paths) ---@type string
 end
 
-local search_exclude_patterns =
-  Observable.new({ initial_value = ".git/**,**/.yarn/**,**/node_modules/**", normalize = normalize_paths })
+local search_exclude_patterns = Observable.new({
+  initial_value = table.concat({
+    ".git/**",
+    "**/.cache/**",
+    "**/.next/**",
+    "**/.yarn/**",
+    "**/node_modules/**",
+    "*.pdf",
+    "*.mkv",
+    "*.mp4",
+    "*.zip",
+  }, ","),
+  normalize = normalize_paths,
+})
 local search_flag_case_sensitive = Observable.from_value(true)
 local search_flag_gitignore = Observable.from_value(true)
 local search_flag_regex = Observable.from_value(true)
