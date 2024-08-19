@@ -3,7 +3,7 @@ local M = {
   name = "fml.ui.search",
   condition = function()
     local search = fml.ui.search.get_current_instance() ---@type fml.types.ui.search.ISearch|nil
-    return search ~= nil
+    return search ~= nil and search.state.visible:snapshot()
   end,
   render = function()
     local search = fml.ui.search.get_current_instance() ---@type fml.types.ui.search.ISearch|nil
