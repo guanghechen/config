@@ -23,8 +23,16 @@ load_config("keymap-bootstrap")
 local function load_plugins()
   local lazypath = fml.path.locate_data_filepath("/lazy/lazy.nvim")
   if not fml.path.is_exist(lazypath) then
-    local repo = "https://github.com/folke/lazy.nvim.git"
-    vim.fn.system({ "git", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath })
+    local repo = "https://github.com/guanghechen/mirror"
+    vim.fn.system({
+      "git",
+      "clone",
+      "--filter=blob:none",
+      repo,
+      "--single-branch",
+      "--branch=nvim@ghc-lazy.nvim",
+      lazypath,
+    })
   end
   vim.opt.rtp:prepend(lazypath)
   require("lazy").setup(require("guanghechen.plugin.lazy"))
