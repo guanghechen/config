@@ -1,5 +1,8 @@
 return {
-  "sindrets/diffview.nvim",
+  "guanghechen/mirror",
+  branch = "nvim@diffview.nvim",
+  name = "diffview.nvim",
+  main = "diffview",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },
   opts = function()
     local actions = require("diffview.actions")

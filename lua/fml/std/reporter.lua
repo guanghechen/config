@@ -1,4 +1,3 @@
--- https://github.com/folke/lazy.nvim/blob/3f13f080434ac942b150679223d54f5ca91e0d52/lua/lazy/core/util.lua#L1
 local std_json = require("fml.std.json")
 
 ---@class fml.std.reporter
