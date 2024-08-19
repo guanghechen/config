@@ -29,7 +29,7 @@ local M = {}
 ---@param winnr                         number
 ---@return boolean
 function M.is_floating_win(winnr)
-  local config = vim.api.nvim_win_get_config(winnr)
+  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   return config.relative ~= nil and config.relative ~= ""
 end
 

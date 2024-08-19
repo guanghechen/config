@@ -37,17 +37,24 @@ local function navigate_tmux(direction)
   else
     -- save the current window number to check later whether we're in the same
     -- window after issuing a vim navigation command
-    local winnr = vim.fn.winnr()
+    local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+    local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+    local should_by_tmux = config.relative ~= nil and config.relative ~= "" ---@type boolean
 
-    -- try to navigate normally
-    navigate_vim(direction)
+    if not should_by_tmux then
+      -- try to navigate normally
+      navigate_vim(direction)
 
-    -- if we're in the same window after navigating
-    local is_same_winnr = (winnr == vim.fn.winnr())
+      -- if we're in the same window after navigating
+      local winnr_next = vim.api.nvim_tabpage_get_win(0) ---@type integer
+      if winnr == winnr_next then
+        should_by_tmux = true
+      end
+    end
 
     -- if we're in the same window and zoom is not disabled, tmux should take control
-    -- if is_same_winnr and not tmux.is_tmux_pane_corner(direction) and tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
-    if is_same_winnr and tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
+    -- if should_by_tmux and not tmux.is_tmux_pane_corner(direction) and tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
+    if should_by_tmux and tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
       tmux.change_pane(direction)
       tmux_control = true
     else
