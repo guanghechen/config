@@ -1,6 +1,9 @@
 -- Better `vim.notify()`
 return {
-  "rcarriga/nvim-notify",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@nvim-notify",
+  name = "nvim-notify",
+  main = "notify",
   init = function()
     vim.schedule(function()
       vim.notify = require("notify")

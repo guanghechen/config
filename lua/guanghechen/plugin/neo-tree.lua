@@ -15,8 +15,10 @@ local function sort_function(a, b)
 end
 
 return {
-  "nvim-neo-tree/neo-tree.nvim",
-  branch = "v3.x",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@neo-tree.nvim",
+  name = "neo-tree.nvim",
+  main = "neo-tree",
   cmd = "Neotree",
   deactivate = function()
     vim.cmd([[Neotree close]])
@@ -75,8 +77,8 @@ return {
       git_status = {
         symbols = {
           -- Change type
-          added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
-          modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
+          added = "",                        -- or "✚", but this is redundant info if you use git_status_colors on the name
+          modified = "",                     -- or "", but this is redundant info if you use git_status_colors on the name
           deleted = fml.ui.icons.git.Remove, -- this can only be used in the git_status source
           renamed = fml.ui.icons.git.Rename, -- this can only be used in the git_status source
           -- Status type
@@ -149,7 +151,7 @@ return {
 
         -- Add / Copy / Move
         ["a"] = {
-          "add", -- this command supports BASH style brace expansion ("x{a,b,c}" -> xa,xb,xc). see `:h neo-tree-file-actions` for details
+          "add",                    -- this command supports BASH style brace expansion ("x{a,b,c}" -> xa,xb,xc). see `:h neo-tree-file-actions` for details
           config = {
             show_path = "relative", -- "none", "relative", "absolute"
           },
@@ -327,7 +329,7 @@ return {
 
     opts.event_handlers = opts.event_handlers or {}
     vim.list_extend(opts.event_handlers, {
-      { event = events.FILE_MOVED, handler = on_move },
+      { event = events.FILE_MOVED,   handler = on_move },
       { event = events.FILE_RENAMED, handler = on_move },
     })
     require("neo-tree").setup(opts)
@@ -341,9 +343,9 @@ return {
     })
   end,
   dependencies = {
-    "echasnovski/mini.icons",
-    "MunifTanjim/nui.nvim",
-    "nvim-lua/plenary.nvim",
+    "mini.icons",
+    "nui.nvim",
+    "plenary.nvim",
     "nvim-window-picker",
   },
 }

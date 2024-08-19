@@ -18,6 +18,6 @@ return {
     end)
   end,
   dependencies = {
-    "zbirenbaum/copilot.lua",
+    "copilot.lua",
   },
 }

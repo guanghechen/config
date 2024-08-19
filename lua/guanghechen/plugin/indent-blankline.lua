@@ -1,8 +1,10 @@
 -- indent guides for Neovim
 return {
-  "lukas-reineke/indent-blankline.nvim",
-  event = { "BufReadPost" },
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@indent-blankline.nvim",
+  name = "indent-blankline.nvim",
   main = "ibl",
+  event = { "BufReadPost" },
   opts = {
     indent = {
       char = "│",

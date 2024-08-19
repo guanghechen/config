@@ -1,5 +1,8 @@
 return {
-  "zbirenbaum/copilot.lua",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@copilot.lua",
+  name = "copilot.lua",
+  main = "copilot",
   cmd = "Copilot",
   build = ":Copilot auth signin",
   event = { "InsertEnter" },

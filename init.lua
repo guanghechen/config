@@ -36,7 +36,62 @@ local function load_plugins()
   end
   vim.opt.rtp:prepend(lazypath)
   vim.env.LAZY_PATH = lazypath
-  require("lazy").setup(require("guanghechen.plugin.lazy"))
+  require("lazy").setup({
+    spec = { { import = "guanghechen.plugin" } },
+    defaults = {
+      lazy = true,
+    },
+    install = {
+      colorscheme = {},
+    },
+    checker = {
+      enabled = false, -- set true to automatically check for plugin updates
+    },
+    performance = {
+      rtp = {
+        -- disable some rtp plugins
+        disabled_plugins = {
+          "2html_plugin",
+          "bugreport",
+          "compiler",
+          "ftplugin",
+          "getscript",
+          "getscriptPlugin",
+          "gzip",
+          "logipat",
+          "matchit",
+          "matchparen",
+          "netrw",
+          "netrwFileHandlers",
+          "netrwPlugin",
+          "netrwSettings",
+          "optwin",
+          "rplugin",
+          "rrhelper",
+          "spellfile_plugin",
+          "synmenu",
+          "syntax",
+          "tar",
+          "tarPlugin",
+          "tohtml",
+          "tutor",
+          "vimball",
+          "vimballPlugin",
+          "zip",
+          "zipPlugin",
+        },
+      },
+    },
+    ui = {
+      icons = {
+        ft = "",
+        lazy = "󰂠 ",
+        loaded = "",
+        not_loaded = "",
+      },
+    },
+
+  })
 end
 
 local ok = pcall(load_plugins)

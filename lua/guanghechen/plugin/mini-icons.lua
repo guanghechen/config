@@ -1,5 +1,8 @@
 return {
-  "echasnovski/mini.icons",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@mini.icons",
+  name = "mini.icons",
+  main = "mini.icons",
   lazy = true,
   opts = {
     file = {

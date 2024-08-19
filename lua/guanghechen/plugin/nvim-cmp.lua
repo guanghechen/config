@@ -1,7 +1,10 @@
 local util_cmp = require("guanghechen.util.cmp")
 
 return {
-  "hrsh7th/nvim-cmp",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@nvim-cmp",
+  name = "nvim-cmp",
+  main = "nvim-cmp",
   event = { "InsertEnter" },
   opts = function()
     local function border(hl_name)
@@ -121,11 +124,11 @@ return {
         },
       },
       sources = {
-        { name = "copilot", group_index = 1, priority = 100 },
+        { name = "copilot",  group_index = 1, priority = 100 },
         { name = "nvim_lsp", group_index = 1, priority = 100 },
         { name = "snippets", group_index = 1, priority = 90 },
-        { name = "path", group_index = 2, priority = 60 },
-        { name = "buffer", group_index = 2, priority = 60 },
+        { name = "path",     group_index = 2, priority = 60 },
+        { name = "buffer",   group_index = 2, priority = 60 },
       },
       window = {
         completion = {
@@ -165,10 +168,10 @@ return {
     end)
   end,
   dependencies = {
-    "hrsh7th/cmp-buffer",
-    "hrsh7th/cmp-nvim-lsp",
-    "hrsh7th/cmp-path",
+    "cmp-buffer",
+    "cmp-nvim-lsp",
+    "cmp-path",
     "copilot-cmp",
-    "garymjr/nvim-snippets",
+    "nvim-snippets",
   },
 }

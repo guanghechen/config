@@ -1,5 +1,8 @@
 return {
-  "garymjr/nvim-snippets",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@nvim-snippets",
+  name = "nvim-snippets",
+  main = "nvim-snippets",
   opts = {
     create_cmp_source = true,
     friendly_snippets = true,
@@ -8,5 +11,7 @@ return {
       fml.path.locate_config_filepath("_editor/snippets"),
     },
   },
-  dependencies = { "rafamadriz/friendly-snippets" },
+  dependencies = {
+    "friendly-snippets"
+  },
 }

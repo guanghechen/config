@@ -1,5 +1,8 @@
 return {
-  "folke/which-key.nvim",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@which-key.nvim",
+  name = "which-key.nvim",
+  main = "which-key",
   event = { "VeryLazy" },
   init = function()
     vim.o.timeout = true
@@ -17,11 +20,11 @@ return {
     spec = {
       {
         mode = { "n", "v" },
-        { "g", group = "goto" },
-        { "gs", group = "surround" },
-        { "z", group = "fold" },
-        { "]", group = "next" },
-        { "[", group = "prev" },
+        { "g",         group = "goto" },
+        { "gs",        group = "surround" },
+        { "z",         group = "fold" },
+        { "]",         group = "next" },
+        { "[",         group = "prev" },
         { "<leader>b", group = "buffer" },
         { "<leader>c", group = "code" },
         { "<leader>d", group = "debug" },

@@ -1,5 +1,8 @@
 return {
-  "nvim-treesitter/nvim-treesitter-textobjects",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@nvim-treesitter-textobjects",
+  name = "nvim-treesitter-textobjects",
+  main = "nvim-treesitter-textobjects",
   config = function()
     -- When in diff mode, we want to use the default
     -- vim text objects c & C instead of the treesitter ones.

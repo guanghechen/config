@@ -4,7 +4,10 @@ for key, val in pairs(fml.ui.icons.kind) do
 end
 
 return {
-  "folke/trouble.nvim",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@trouble.nvim",
+  name = "trouble.nvim",
+  main = "trouble",
   cmd = { "TroubleToggle", "Trouble" },
   keys = {},
   opts = {

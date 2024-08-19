@@ -1,5 +1,8 @@
 return {
-  "stevearc/conform.nvim",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@conform.nvim",
+  name = "conform.nvim",
+  main = "conform",
   cmd = "ConformInfo",
   event = { "VeryLazy" },
   opts = {

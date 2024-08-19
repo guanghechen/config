@@ -1,9 +1,12 @@
 -- https://www.lazyvim.org/configuration/recipes#change-surround-mappings
 -- Change surround mappings
 return {
-  "echasnovski/mini.surround",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@mini.surround",
+  name = "mini.surround",
+  main = "mini.surround",
   keys = {
-    { "gsa", mode = { "n", "v" }, desc = "surrounding: add" },
+    { "gsa", mode = { "n", "v" },                 desc = "surrounding: add" },
     { "gsd", desc = "surrounding: delete" },
     { "gsf", desc = "surrounding: find right" },
     { "gsF", desc = "surrounding: find left" },
@@ -13,12 +16,12 @@ return {
   },
   opts = {
     mappings = {
-      add = "gsa", -- Add surrounding in Normal and Visual modes
-      delete = "gsd", -- Delete surrounding
-      find = "gsf", -- Find surrounding (to the right)
-      find_left = "gsF", -- Find surrounding (to the left)
-      highlight = "gsh", -- Highlight surrounding
-      replace = "gsr", -- Replace surrounding
+      add = "gsa",            -- Add surrounding in Normal and Visual modes
+      delete = "gsd",         -- Delete surrounding
+      find = "gsf",           -- Find surrounding (to the right)
+      find_left = "gsF",      -- Find surrounding (to the left)
+      highlight = "gsh",      -- Highlight surrounding
+      replace = "gsr",        -- Replace surrounding
       update_n_lines = "gsn", -- Update `n_lines`
     },
     n_lines = 300,

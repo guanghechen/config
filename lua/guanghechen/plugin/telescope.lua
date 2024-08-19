@@ -42,7 +42,10 @@ local function preview_scrolling_down(...)
 end
 
 return {
-  "nvim-telescope/telescope.nvim",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@telescope.nvim",
+  name = "telescope.nvim",
+  main = "telescope",
   opts = {
     defaults = {
       prompt_prefix = fml.ui.icons.ui.Telescope .. "  ",
@@ -113,7 +116,7 @@ return {
     require("telescope").setup(opts)
   end,
   dependencies = {
-    "echasnovski/mini.icons",
-    "nvim-lua/plenary.nvim",
+    "mini.icons",
+    "plenary.nvim",
   },
 }
