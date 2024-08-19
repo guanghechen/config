@@ -1,5 +1,5 @@
 return {
-  "guanghechen/mirror",
+  url = "https://github.com/guanghechen/mirror.git",
   branch = "nvim@nvim-window-picker",
   name = "nvim-window-picker",
   main = "window-picker",

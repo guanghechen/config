@@ -1,7 +1,10 @@
 local util_lsp = require("guanghechen.util.lsp")
 
 return {
-  "zbirenbaum/copilot-cmp",
+  url = "https://github.com/guanghechen/mirror.git",
+  branch = "nvim@copilot-cmp",
+  name = "copilot-cmp",
+  main = "copilot-cmp",
   opts = {},
   config = function(_, opts)
     local copilot_cmp = require("copilot_cmp")
