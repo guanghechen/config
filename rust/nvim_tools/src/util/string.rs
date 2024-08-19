@@ -26,9 +26,14 @@ pub fn get_line_widths(text: &str) -> Vec<u32> {
 }
 
 pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineMatch> {
+    if pattern.is_empty() {
+        return vec![];
+    }
+
     let pattern_bytes = pattern.as_bytes();
     let pattern_chars = pattern.chars().collect::<Vec<char>>();
     let n_pattern_bytes: usize = pattern_bytes.len();
+    let n_pattern_chars: usize = pattern_chars.len();
 
     let score_exact: usize = 100;
     let score_scalar: usize = 30;
@@ -41,6 +46,10 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
 
     for (idx, line) in lines.iter().enumerate() {
         let line = line.as_ref();
+        if line.is_empty() {
+            continue;
+        }
+
         let line_bytes = line.as_bytes();
         let base: f64 = line.len() as f64;
         let points = find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
@@ -58,51 +67,79 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
             continue;
         }
 
-        let mut pieces: Vec<LineMatchPiece> = vec![];
+        let line_chars = line.chars().collect::<Vec<char>>();
+        let n_line_chars: usize = line_chars.len();
         let mut score = 0;
-        let mut i: usize = 0;
-        let mut t: usize = 0;
-        let mut delta: f64 = 0.0;
-        let mut continous: bool = false;
-        let mut valid_piece_index: usize = 0;
-        for c in line.chars() {
-            let t2: usize = t + c.len_utf8();
-            if c != pattern_chars[i] {
-                t = t2;
-                continous = false;
+        let mut all_match_pieces: Vec<LineMatchPiece> = vec![];
+        let mut last_ti: usize = 0;
+        let mut len: usize = 0;
+        let mut pi: usize = 0;
+        for ti in 0..n_line_chars {
+            let c: char = line_chars[ti];
+            if c != pattern_chars[pi] {
                 continue;
             }
 
-            if continous {
-                if let Some(last) = pieces.last_mut() {
-                    last.r = t2;
-                }
-            } else {
-                let d: usize = if let Some(last) = pieces.last_mut() {
-                    t - last.r
-                } else {
-                    t
+            pi += 1;
+            if pi == n_pattern_chars {
+                pi = 0;
+                let mut one_match_pieces: Vec<LineMatchPiece> = {
+                    let mut i: usize = ti;
+                    let mut last_piece: LineMatchPiece = LineMatchPiece { l: ti, r: ti + 1 };
+                    let mut pieces: Vec<LineMatchPiece> = vec![];
+                    for j in (0..n_pattern_chars).rev() {
+                        while i > 0 && line_chars[i] != pattern_chars[j] {
+                            i -= 1;
+                        }
+
+                        if i + 1 == last_piece.l {
+                            last_piece.l = i;
+                        } else {
+                            pieces.push(last_piece);
+                            last_piece = LineMatchPiece { l: i, r: i + 1 };
+                        }
+
+                        i -= 1;
+                    }
+                    pieces.push(last_piece);
+                    pieces.reverse();
+                    pieces
                 };
-                delta += d as f64;
 
-                continous = true;
-                pieces.push(LineMatchPiece { l: t, r: t2 });
-            }
+                let mut i: usize = last_ti;
+                last_ti = ti;
 
-            i += 1;
-            t = t2;
-            if i == pattern_chars.len() {
-                let bonus: usize = ((1.0 - delta / base) * score_scalar_bonus) as usize;
+                let mut max_weight: usize = 0;
+                for piece in &mut one_match_pieces {
+                    let weight: usize = piece.r - piece.l;
+                    max_weight = max_weight.max(weight);
+
+                    while i < piece.l {
+                        len += line_chars[i].len_utf8();
+                        i += 1;
+                    }
+                    piece.l = len;
+
+                    while i < piece.r {
+                        len += line_chars[i].len_utf8();
+                        i += 1;
+                    }
+                    piece.r = len;
+                }
+                all_match_pieces.extend(one_match_pieces);
+
+                let bonus: usize = (max_weight as f64 / n_pattern_chars as f64 * score_scalar_bonus)
+                    .round() as usize;
                 score += score_scalar + bonus;
-                i = 0;
-                delta = 0.0;
-                continous = false;
-                valid_piece_index = pieces.len();
             }
         }
+
         if score > 0 {
-            pieces.truncate(valid_piece_index);
-            matches.push(LineMatch { idx, score, pieces });
+            matches.push(LineMatch {
+                idx,
+                score,
+                pieces: all_match_pieces,
+            });
         }
     }
 
