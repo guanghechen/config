@@ -215,6 +215,7 @@ local function get_select()
     _select = fml.ui.FileSelect.new({
       cwd = find_cwd,
       title = "Find files",
+      destroy_on_close = false,
       statusline_items = statusline_items,
       items = {},
       case_sensitive = session.find_flag_case_sensitive,

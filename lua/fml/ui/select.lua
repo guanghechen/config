@@ -106,6 +106,7 @@ M.__index = M
 
 ---@class fml.types.ui.select.IProps
 ---@field public title                  string
+---@field public destroy_on_close       boolean
 ---@field public items                  fml.types.ui.select.IItem[]
 ---@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
 ---@field public case_sensitive         ?fml.types.collection.IObservable
@@ -125,7 +126,6 @@ M.__index = M
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public width_preview          ?number
----@field public destroy_on_close       ?boolean
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.select.IOnClose
 ---@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
@@ -136,8 +136,9 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local title = props.title ---@type string
-  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
+  local destroy_on_close = props.destroy_on_close ---@type boolean
   local items = props.items ---@type fml.types.ui.select.IItem[]
+  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
   local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type fml.types.collection.IObservable
   local input = props.input or Observable.from_value("") ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
@@ -155,7 +156,6 @@ function M.new(props)
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local width_preview = props.width_preview ---@type number|nil
-  local destroy_on_close = props.destroy_on_close ---@type boolean|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.preview.IOnRendered|nil

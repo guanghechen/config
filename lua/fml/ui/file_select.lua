@@ -47,6 +47,7 @@ M.__index = M
 ---@class fml.ui.file_select.IProps
 ---@field public cwd                    string
 ---@field public title                  string
+---@field public destroy_on_close       boolean
 ---@field public items                  fml.types.ui.file_select.IRawItem[]
 ---@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
 ---@field public case_sensitive         ?fml.types.collection.IObservable
@@ -67,6 +68,8 @@ function M.new(props)
   local select_items, item_map = cook_items(props.items)
 
   local cwd = props.cwd ---@type string
+  local title = props.title ---@type string
+  local destroy_on_close = props.destroy_on_close ---@type boolean
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
   local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
   local input = props.input ---@type fml.types.collection.IObservable|nil
@@ -77,7 +80,8 @@ function M.new(props)
   local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
 
   local select = Select.new({
-    title = "Find files",
+    title = title,
+    destroy_on_close = destroy_on_close,
     items = select_items,
     statusline_items = statusline_items,
     case_sensitive = case_sensitive,
