@@ -8,8 +8,18 @@ local function mk(mode, key, action, desc, silent, nowait)
   vim.keymap.set(mode, key, action, { noremap = true, silent = silent, nowait = nowait, desc = desc })
 end
 
+---@return nil
+local function resume_or_find_files()
+  local instance = fml.ui.search.get_current_instance() ---@return fml.types.ui.search.ISearch|nil
+  if instance ~= nil then
+    instance:focus()
+  else
+    ghc.command.find_files.open()
+  end
+end
+
 --#enhance------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>2", ghc.command.search_files.open, "search: search/replace")
+mk({ "n", "v" }, "<leader>2", ghc.command.search_files.open_search, "search: search/replace")
 
 ---! better indenting
 vim.keymap.set("v", "<", "<gv")
@@ -126,8 +136,10 @@ mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window his
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[f]ind-------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader><leader>", ghc.command.find_files.open, "find: files")
 mk({ "n", "v" }, "<leader>ff", ghc.command.find_files.open, "find: files")
+mk({ "n", "v" }, "<leader>fw", ghc.command.find_files.open_workspace, "find: files (workspace)")
+mk({ "n", "v" }, "<leader>fc", ghc.command.find_files.open_cwd, "find: files (cwd)")
+mk({ "n", "v" }, "<leader>fd", ghc.command.find_files.open_directory, "find: files (directory)")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
@@ -142,25 +154,34 @@ mk({ "n", "v" }, "<leader>qo", ghc.command.context.edit_session, "context: edit 
 mk({ "n", "v" }, "<leader>qs", ghc.command.session.save, "session: save session", true)
 mk({ "n", "v" }, "<leader>qc", ghc.command.session.clear_current, "session: clear", true)
 mk({ "n", "v" }, "<leader>qC", ghc.command.session.clear_all, "session: clear all", true)
---------------------------------------------------------------------------#[q]uit/session/context--
+--------------------------------------------------------------------------#[q]uit/session/context---
 
---#[r]efresh---------------------------------------------------------------------------------------
+--#[r]efresh----------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<C-a>r", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
 mk({ "i", "n", "v" }, "<M-r>", ghc.command.refresh.refresh_all, "refresh: refresh all", true)
----------------------------------------------------------------------------------------#[r]efresh--
+---------------------------------------------------------------------------------------#[r]efresh---
+
+--#[r]eplace----------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>rr", ghc.command.search_files.open_replace, "replace: files")
+mk({ "n", "v" }, "<leader>rw", ghc.command.search_files.open_replace_workspace, "replace: files (workspace)")
+mk({ "n", "v" }, "<leader>rc", ghc.command.search_files.open_replace_cwd, "replace: files (cwd)")
+mk({ "n", "v" }, "<leader>rd", ghc.command.search_files.open_replace_directory, "replace: files (directory)")
+mk({ "n", "v" }, "<leader>rb", ghc.command.search_files.open_replace_buffer, "replace: files (buffer)")
+---------------------------------------------------------------------------------------#[r]eplace---
 
 --#[r]un--------------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<F5>", ghc.command.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
 
 --#[s]earch-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>ss", ghc.command.search_files.open, "search: files")
-mk({ "n", "v" }, "<leader>sw", ghc.command.search_files.open_workspace, "search: files (workspace)")
-mk({ "n", "v" }, "<leader>sc", ghc.command.search_files.open_cwd, "search: files (cwd)")
-mk({ "n", "v" }, "<leader>sd", ghc.command.search_files.open_directory, "search: files (directory)")
-mk({ "n", "v" }, "<leader>sb", ghc.command.search_files.open_buffer, "search: files (buffer)")
-mk({ "i", "n", "v" }, "<C-a>f", ghc.command.search_files.open_buffer, "search: files (buffer)")
-mk({ "i", "n", "v" }, "<M-f>", ghc.command.search_files.open_buffer, "search: files (buffer)")
+mk({ "n", "v" }, "<leader><leader>", resume_or_find_files, "search: resume or find files")
+mk({ "n", "v" }, "<leader>ss", ghc.command.search_files.open_search, "search: files")
+mk({ "n", "v" }, "<leader>sw", ghc.command.search_files.open_search_workspace, "search: files (workspace)")
+mk({ "n", "v" }, "<leader>sc", ghc.command.search_files.open_search_cwd, "search: files (cwd)")
+mk({ "n", "v" }, "<leader>sd", ghc.command.search_files.open_search_directory, "search: files (directory)")
+mk({ "n", "v" }, "<leader>sb", ghc.command.search_files.open_search_buffer, "search: files (buffer)")
+mk({ "i", "n", "v" }, "<C-a>f", ghc.command.search_files.open_search_buffer, "search: files (buffer)")
+mk({ "i", "n", "v" }, "<M-f>", ghc.command.search_files.open_search_buffer, "search: files (buffer)")
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[s]croll-----------------------------------------------------------------------------------------
