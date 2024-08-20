@@ -13,8 +13,9 @@ local function cook_items(raw_items)
   local select_items = {} ---@type fml.types.ui.select.IItem[]
   local item_map = {} ---@type table<string, fml.types.ui.file_select.IItem>
   for _, raw_item in ipairs(raw_items) do
+    local filepath = raw_item.filepath ---@type string
     ---@type fml.types.ui.select.IItem
-    local select_item = { group = raw_item.group, uuid = raw_item.uuid, text = raw_item.filepath }
+    local select_item = { group = filepath, uuid = filepath, text = filepath }
     table.insert(select_items, select_item)
 
     local filename = path.basename(raw_item.filepath)
@@ -22,9 +23,9 @@ local function cook_items(raw_items)
 
     ---@type fml.types.ui.file_select.IItem
     local item = {
-      group = raw_item.group,
-      uuid = raw_item.uuid,
-      filepath = raw_item.filepath,
+      group = filepath,
+      uuid = filepath,
+      filepath = filepath,
       filename = filename,
       icon = icon .. " ",
       icon_hl = icon_hl,
@@ -113,6 +114,19 @@ function M.new(props)
   self._select = select
 
   return self
+end
+
+---@param filepaths                     string[]
+---@return fml.types.ui.file_select.IRawItem[]
+function M.calc_items_from_filepaths(filepaths)
+  ---@type fml.types.ui.file_select.IRawItem[]
+  local items = {}
+  for _, filepath in ipairs(filepaths) do
+    ---@type fml.types.ui.file_select.IRawItem
+    local item = { filepath = filepath }
+    table.insert(items, item)
+  end
+  return items
 end
 
 ---@param item                         fml.types.ui.select.IItem

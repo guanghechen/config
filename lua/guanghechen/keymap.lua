@@ -34,7 +34,6 @@ mk({ "n", "v" }, "<leader>et", A.explorer.toggle_explorers, "explorer: toggle")
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ind-------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>fb", A.find.find_buffers, "find: buffers")
 mk({ "n", "v" }, "<leader>fE", A.find.find_explorer_workspace, "find: file explorer (from workspace)")
 mk({ "n", "v" }, "<leader>fe", A.find.find_explorer_current, "find: file explorer (from current directory)")
 mk({ "n", "v" }, "<leader>fg", A.find.find_file_git, "find: files (git)")

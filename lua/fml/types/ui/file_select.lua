@@ -1,6 +1,4 @@
 ---@class fml.types.ui.file_select.IRawItem
----@field public group                  string|nil
----@field public uuid                   string
 ---@field public filepath               string
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer

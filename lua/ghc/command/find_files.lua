@@ -23,15 +23,10 @@ local function reload()
       search_paths = "",
       exclude_patterns = exclude_patterns,
     })
-    local items = {} ---@type fml.types.ui.file_select.IRawItem[]
-    for _, filepath in ipairs(filepaths) do
-      ---@type fml.types.ui.file_select.IRawItem
-      local item = { group = nil, uuid = filepath, filepath = filepath }
-      table.insert(items, item)
-    end
-    table.sort(items, function(a, b)
-      return a.filepath < b.filepath
-    end)
+    table.sort(filepaths)
+
+    ---@type fml.types.ui.file_select.IRawItem[]
+    local items = fml.ui.FileSelect.calc_items_from_filepaths(filepaths)
     _select:update_data(find_cwd, items)
   end
 end

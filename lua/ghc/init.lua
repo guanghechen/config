@@ -5,6 +5,7 @@ local command = {
   context = require("ghc.command.context"),
   copy = require("ghc.command.copy"),
   debug = require("ghc.command.debug"),
+  find_buffers = require("ghc.command.find_buffers"),
   find_files = require("ghc.command.find_files"),
   git = require("ghc.command.git"),
   refresh = require("ghc.command.refresh"),
