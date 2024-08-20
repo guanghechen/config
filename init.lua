@@ -1,11 +1,5 @@
-_G.fml = require("fml")
-_G.ghc = require("ghc")
-
----load theme
-ghc.context.client.reload_theme({ force = false })
-
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
-local function load_config(name)
+local function _load_config(name)
   require("guanghechen." .. name)
 
   if vim.g.neovide then
@@ -15,11 +9,26 @@ local function load_config(name)
   pcall(require, "local." .. name)
 end
 
-load_config("option-bootstrap")
-load_config("autocmd-bootstrap")
-load_config("keymap-bootstrap")
+---@return nil
+local function bootstrap()
+  _G.fml = require("fml")
+  _G.ghc = require("ghc")
 
--- bootstrap lazy and all plugins
+  ---! Load options
+  _load_config("option-bootstrap")
+
+  ---! Load theme
+  ghc.context.client.reload_theme({ force = false })
+
+  ---! Load autocmd
+  _load_config("autocmd-bootstrap")
+
+  ---! Load keymap
+  _load_config("keymap-bootstrap")
+end
+
+---! bootstrap lazy and all plugins
+---@return nil
 local function load_plugins()
   local lazypath = fml.path.locate_data_filepath("/lazy/lazy.nvim")
   if not fml.path.is_exist(lazypath) then
@@ -90,28 +99,31 @@ local function load_plugins()
         not_loaded = "",
       },
     },
-
   })
+
+  _load_config("option")
+  _load_config("keymap")
+  _load_config("autocmd")
 end
 
-local ok = pcall(load_plugins)
-if ok then
-  load_config("option")
-  load_config("keymap")
-  load_config("autocmd")
+---@return nil
+local function load_autosave_session()
+  ---! Reload session if not specify file and current directory is a git repository.
+  if ghc.context.session.flight_autoload_session:snapshot() and vim.fn.argc() < 1 and fml.path.is_git_repo() then
+    vim.schedule(function()
+      local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
+      if not ok_load_session then
+        fml.reporter.error({
+          from = "init",
+          subject = "auto reload session",
+          message = "Failed to load autosaved session",
+          details = { error = error_load_session },
+        })
+      end
+    end)
+  end
 end
 
----! Reload session if not specify file and current directory is a git repository.
-if ghc.context.session.flight_autoload_session:snapshot() and vim.fn.argc() < 1 and fml.path.is_git_repo() then
-  vim.schedule(function()
-    local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
-    if not ok_load_session then
-      fml.reporter.error({
-        from = "init",
-        subject = "auto reload session",
-        message = "Failed to load autosaved session",
-        details = { error = error_load_session },
-      })
-    end
-  end)
-end
+bootstrap()
+pcall(load_plugins)
+pcall(load_autosave_session)
