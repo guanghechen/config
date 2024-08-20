@@ -235,7 +235,7 @@ function M.fetch_items(input_text, callback)
   local include_patterns = session.search_include_patterns:snapshot() ---@type string
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
 
-  ---@type fml.std.oxi.search.IResult
+  ---@type fml.std.oxi.search.IResult|nil
   local result = (_last_search_input ~= nil and _last_search_input == input_text and _last_search_result ~= nil)
       and _last_search_result
     or fml.oxi.search({
@@ -251,6 +251,11 @@ function M.fetch_items(input_text, callback)
       exclude_patterns = exclude_patterns,
       specified_filepath = scope == "B" and current_buf_path or nil,
     })
+
+  if result == nil then
+    callback(false, "Failed to run search command.")
+    return
+  end
 
   if result.error ~= nil or result.items == nil then
     callback(false, result.error)
@@ -554,7 +559,7 @@ function M.refresh_file_item(filepath)
     local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
     local specified_filepath = fml.path.join(cwd, filepath) ---@type string
 
-    ---@type fml.std.oxi.search.IResult
+    ---@type fml.std.oxi.search.IResult|nil
     local partial_search_result = fml.oxi.search({
       cwd = cwd,
       flag_case_sensitive = flag_case_sensitive,
@@ -569,7 +574,7 @@ function M.refresh_file_item(filepath)
       specified_filepath = specified_filepath,
     })
 
-    if partial_search_result.error == nil and partial_search_result.items ~= nil then
+    if partial_search_result ~= nil and partial_search_result.error == nil and partial_search_result.items ~= nil then
       _last_search_result.items[filepath] = nil
       for _, raw_filepath in ipairs(partial_search_result.item_orders) do
         local file_match = partial_search_result.items[raw_filepath] ---@type fml.std.oxi.search.IFileMatch|nil
