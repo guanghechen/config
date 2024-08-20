@@ -115,7 +115,6 @@ M.__index = M
 ---@field public frecency               ?fml.types.collection.IFrecency|nil
 ---@field public cmp                    ?fml.types.ui.select.ILineMatchCmp
 ---@field public match                  ?fml.types.ui.select.IMatch
----@field public render_item            ?fml.types.ui.select.IRenderItem
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
@@ -129,6 +128,7 @@ M.__index = M
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.select.IOnClose
 ---@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
+---@field public render_item            ?fml.types.ui.select.IRenderItem
 
 ---@param props                         fml.types.ui.select.IProps
 ---@return fml.ui.Select
@@ -145,7 +145,6 @@ function M.new(props)
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local cmp = props.cmp or default_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
   local match = props.match or default_match ---@type fml.types.ui.select.IMatch
-  local render_item = props.render_item or default_render_item ---@type fml.types.ui.select.IRenderItem
   local input_keymaps = props.input_keymaps or {} ---@type fml.types.IKeymap[]
   local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
   local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
@@ -159,6 +158,7 @@ function M.new(props)
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.preview.IOnRendered|nil
+  local render_item = props.render_item or default_render_item ---@type fml.types.ui.select.IRenderItem
 
   local item_map, full_matches = process_items(cmp, frecency, items)
 

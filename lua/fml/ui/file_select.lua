@@ -69,6 +69,7 @@ function M.new(props)
 
   local cwd = props.cwd ---@type string
   local title = props.title ---@type string
+  local preview = not not props.preview ---@type boolean
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
   local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
@@ -88,22 +89,22 @@ function M.new(props)
     input = input,
     input_history = input_history,
     frecency = frecency,
-    render_item = function(select_item, match)
-      return self:render_item(select_item, match)
-    end,
     input_keymaps = input_keymaps,
     main_keymaps = main_keymaps,
     preview_keymaps = preview_keymaps,
-    width = 0.4,
+    width = preview and 0.4 or 0.5,
     height = 0.8,
-    width_preview = 0.45,
+    width_preview = preview and 0.45 or 0,
     max_height = 1,
     max_width = 1,
-    fetch_preview_data = function(item)
+    fetch_preview_data = preview and function(item)
       return self:fetch_preview_data(item)
-    end,
+    end or nil,
     on_confirm = function(item)
       return self:open_filepath(item)
+    end,
+    render_item = function(select_item, match)
+      return self:render_item(select_item, match)
     end,
   })
 
