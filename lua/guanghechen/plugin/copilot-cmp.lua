@@ -1,11 +1,11 @@
 local util_lsp = require("guanghechen.util.lsp")
 
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@copilot-cmp",
   name = "copilot-cmp",
-  main = "copilot-cmp",
   opts = {},
+  cond = function()
+    return ghc.context.session.flight_copilot:snapshot()
+  end,
   config = function(_, opts)
     local copilot_cmp = require("copilot_cmp")
     copilot_cmp.setup(opts)

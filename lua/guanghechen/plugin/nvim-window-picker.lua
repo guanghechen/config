@@ -1,8 +1,5 @@
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@nvim-window-picker",
   name = "nvim-window-picker",
-  main = "window-picker",
   opts = {
     hint = "floating-big-letter",
     show_prompt = false,

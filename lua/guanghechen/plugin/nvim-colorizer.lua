@@ -1,8 +1,5 @@
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@nvim-colorizer.lua",
   name = "nvim-colorizer.lua",
-  main = "nvim-colorizer",
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   opts = {
     filetypes = {

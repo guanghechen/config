@@ -1,10 +1,7 @@
 local util_cmp = require("guanghechen.util.cmp")
 
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@nvim-cmp",
   name = "nvim-cmp",
-  main = "nvim-cmp",
   event = { "InsertEnter" },
   opts = function()
     local function border(hl_name)

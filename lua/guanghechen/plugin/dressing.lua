@@ -1,9 +1,6 @@
 -- better vim.ui input/select
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@dressing.nvim",
   name = "dressing.nvim",
-  main = "dressing",
   event = { "VeryLazy" },
   opts = {
     input = {

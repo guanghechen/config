@@ -33,10 +33,7 @@ end
 -- git commit, and also lets you interactively stage & unstage
 -- hunks in a commit.
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@gitsigns.nvim",
   name = "gitsigns.nvim",
-  main = "gitsigns",
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   opts = {
     current_line_blame = true,

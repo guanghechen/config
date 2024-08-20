@@ -1,8 +1,5 @@
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@nvim-treesitter-context",
   name = "nvim-treesitter-context",
-  main = "nvim-treesitter-context",
   enabled = false,
   event = { "VeryLazy" },
   opts = {

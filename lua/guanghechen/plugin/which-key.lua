@@ -1,8 +1,5 @@
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@which-key.nvim",
   name = "which-key.nvim",
-  main = "which-key",
   event = { "VeryLazy" },
   init = function()
     vim.o.timeout = true

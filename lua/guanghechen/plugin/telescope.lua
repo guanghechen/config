@@ -42,10 +42,7 @@ local function preview_scrolling_down(...)
 end
 
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@telescope.nvim",
   name = "telescope.nvim",
-  main = "telescope",
   opts = {
     defaults = {
       prompt_prefix = fml.ui.icons.ui.Telescope .. "  ",

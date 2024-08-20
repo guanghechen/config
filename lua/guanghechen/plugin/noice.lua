@@ -1,8 +1,5 @@
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@noice.nvim",
   name = "noice.nvim",
-  main = "noice",
   lazy = false,
   opts = {
     lsp = {

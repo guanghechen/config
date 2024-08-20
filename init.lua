@@ -37,7 +37,7 @@ local function load_plugins()
   vim.opt.rtp:prepend(lazypath)
   vim.env.LAZY_PATH = lazypath
   require("lazy").setup({
-    spec = { { import = "guanghechen.plugin" } },
+    spec = require("guanghechen.plugin.bootstrap"),
     defaults = {
       lazy = true,
     },

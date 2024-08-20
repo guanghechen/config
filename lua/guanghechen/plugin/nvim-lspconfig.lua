@@ -6,10 +6,7 @@ local function register_lsp_symbol(name, icon)
 end
 
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@nvim-lspconfig",
   name = "nvim-lspconfig",
-  main = "nvim-lspconfig",
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   config = function()
     register_lsp_symbol("Error", fml.ui.icons.diagnostics.Error)

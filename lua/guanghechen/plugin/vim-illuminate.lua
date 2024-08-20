@@ -9,10 +9,7 @@ end
 -- Automatically highlights other instances of the word under your cursor.
 -- This works with LSP, Treesitter, and regexp matching to find the other instances.
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@vim-illuminate",
   name = "vim-illuminate",
-  main = "vim-illuminate",
   event = { "VeryLazy" },
   keys = {
     { "]]", desc = "Next Reference" },

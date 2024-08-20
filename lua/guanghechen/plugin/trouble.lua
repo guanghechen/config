@@ -4,10 +4,7 @@ for key, val in pairs(fml.ui.icons.kind) do
 end
 
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@trouble.nvim",
   name = "trouble.nvim",
-  main = "trouble",
   cmd = { "TroubleToggle", "Trouble" },
   keys = {},
   opts = {
@@ -23,7 +20,7 @@ return {
       },
       folder_closed = fml.ui.icons.ui.Folder .. " ",
       folder_open = fml.ui.icons.ui.FolderOpen .. " ",
-      fold_open = fml.ui.icons.ui.ArrowOpen .. " ", -- icon used for open folds
+      fold_open = fml.ui.icons.ui.ArrowOpen .. " ",     -- icon used for open folds
       fold_closed = fml.ui.icons.ui.ArrowClosed .. " ", -- icon used for closed folds
       kinds = kinds,
     },

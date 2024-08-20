@@ -15,10 +15,7 @@ local function sort_function(a, b)
 end
 
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@neo-tree.nvim",
   name = "neo-tree.nvim",
-  main = "neo-tree",
   cmd = "Neotree",
   deactivate = function()
     vim.cmd([[Neotree close]])

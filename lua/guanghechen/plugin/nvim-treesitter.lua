@@ -2,18 +2,18 @@
 -- use in Neovim to power faster and more accurate
 -- syntax highlighting.
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@nvim-treesitter",
   name = "nvim-treesitter",
-  main = "nvim-treesitter",
-  version = false,             -- last release is way too old and doesn't work on Windows
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline
-  build = ":TSUpdate",
+  build = function()
+    vim.defer_fn(function()
+      vim.cmd("TSUpdate")
+    end, 1000)
+  end,
   cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
   keys = {
     { "<C-space>", desc = "Increment Selection" },
-    { "<bs>",      desc = "Decrement Selection", mode = "x" },
+    { "<bs>", desc = "Decrement Selection", mode = "x" },
   },
   init = function(plugin)
     -- add nvim-treesitter queries to the rtp and it's custom query predicates early

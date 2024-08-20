@@ -1,10 +1,7 @@
 -- https://www.lazyvim.org/configuration/recipes#change-surround-mappings
 -- Change surround mappings
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@mini.surround",
   name = "mini.surround",
-  main = "mini.surround",
   keys = {
     { "gsa", mode = { "n", "v" },                 desc = "surrounding: add" },
     { "gsd", desc = "surrounding: delete" },

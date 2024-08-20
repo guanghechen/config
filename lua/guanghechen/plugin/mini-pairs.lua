@@ -1,9 +1,6 @@
 -- auto pairs
 return {
-  url = "https://github.com/guanghechen/mirror.git",
-  branch = "nvim@mini.pairs",
   name = "mini.pairs",
-  main = "mini.pairs",
   event = "VeryLazy",
   opts = {
     mappings = {
