@@ -95,6 +95,17 @@ pub fn search(options: &SearchOptions) -> Result<SearchSucceedResult, SearchFail
             cmd.current_dir(cwd);
         };
 
+        let mut search_in_single_file: bool = false;
+        if let Some(specified_filepath) = &options.specified_filepath {
+            if !specified_filepath.is_empty() {
+                search_in_single_file = true;
+                cmd.arg(specified_filepath);
+            }
+        }
+        if !search_in_single_file {
+            cmd.args(&search_paths);
+        }
+
         cmd
             .arg("--multiline")
             .arg("--hidden")
@@ -132,21 +143,9 @@ pub fn search(options: &SearchOptions) -> Result<SearchSucceedResult, SearchFail
         }
 
         if flag_regex {
-            cmd.args(["--regexp", search_pattern]);
+            cmd.args(["--regexp", "--", search_pattern]);
         } else {
-            cmd.args(["--fixed-strings", search_pattern]);
-        }
-
-        let mut search_in_single_file: bool = false;
-        if let Some(specified_filepath) = &options.specified_filepath {
-            if !specified_filepath.is_empty() {
-                search_in_single_file = true;
-                cmd.arg(specified_filepath);
-            }
-        }
-
-        if !search_in_single_file {
-            cmd.args(&search_paths);
+            cmd.args(["--fixed-strings", "--", search_pattern]);
         }
 
         let start_time = SystemTime::now();
