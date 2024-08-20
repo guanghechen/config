@@ -235,6 +235,8 @@ function M.fetch_items(input_text, callback)
   local include_patterns = session.search_include_patterns:snapshot() ---@type string
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
 
+  local is_searching_current_buf = scope == "B" and current_buf_path ~= nil ---@type boolean
+
   ---@type fml.std.oxi.search.IResult|nil
   local result = (_last_search_input ~= nil and _last_search_input == input_text and _last_search_result ~= nil)
       and _last_search_result
@@ -274,7 +276,7 @@ function M.fetch_items(input_text, callback)
       local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type fml.types.ui.IInlineHighlight[]
 
       local file_item_uuid = filepath ---@type string
-      if scope ~= "B" then
+      if not is_searching_current_buf then
         ---@type fml.types.ui.search.IItem
         local file_item = {
           group = filepath,
@@ -366,7 +368,7 @@ function M.fetch_items(input_text, callback)
             }
             item_data_map[item.uuid] = item_data
 
-            if scope ~= "B" then
+            if not is_searching_current_buf then
               if item_data_map[file_item_uuid] == nil then
                 ---@type ghc.command.search_files.IItemData
                 local file_item_data = {
@@ -418,7 +420,7 @@ function M.fetch_items(input_text, callback)
             }
             item_data_map[item.uuid] = item_data
 
-            if scope ~= "B" then
+            if not is_searching_current_buf then
               if item_data_map[file_item_uuid] == nil then
                 ---@type ghc.command.search_files.IItemData
                 local file_item_data = {
