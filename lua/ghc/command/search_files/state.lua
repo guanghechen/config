@@ -49,7 +49,9 @@ function M.get_search()
       width_preview = 0.45,
       max_height = 1,
       max_width = 1,
-      on_close = function() end,
+      on_close = function()
+        vim.cmd("checktime")
+      end,
       fetch_preview_data = api.fetch_preview_data,
       patch_preview_data = api.patch_preview_data,
       on_confirm = function(item)

@@ -1,14 +1,10 @@
 ---@class fml.std.oxi
 local M = require("fml.std.oxi.mod")
 
----@class fml.std.oxi.string.ILineMatchPiece
----@field public l                      integer
----@field public r                      integer
-
 ---@class fml.std.oxi.string.ILineMatch
 ---@field public idx                    integer
 ---@field public score                  integer
----@field public pieces                 fml.std.oxi.string.ILineMatchPiece[]
+---@field public pieces                 fml.std.oxi.search.IMatchPoint[]
 
 ---@param text                          string
 ---@return integer

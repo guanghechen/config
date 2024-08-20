@@ -16,15 +16,11 @@
 ---@field public icon                   ?string
 ---@field public icon_hl                ?string
 
----@class fml.types.ui.select.ILineMatchPiece
----@field public l                      integer
----@field public r                      integer
-
 ---@class fml.types.ui.select.ILineMatch
 ---@field public order                  integer
 ---@field public uuid                   string
 ---@field public score                  integer
----@field public pieces                 fml.types.ui.select.ILineMatchPiece[]
+---@field public pieces                 fml.std.oxi.search.IMatchPoint[]
 
 ---@class fml.types.ui.select.main.IRenderLineParams
 ---@field public item                   fml.types.ui.select.IItem
