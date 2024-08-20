@@ -2,19 +2,18 @@ local Observable = require("fml.collection.observable")
 local oxi = require("fml.std.oxi")
 local Search = require("fml.ui.search.search")
 
----@param params                        fml.types.ui.select.main.IRenderLineParams
+---@param item                          fml.types.ui.select.IItem
+---@param match                         fml.types.ui.select.ILineMatch
 ---@return string
 ---@return fml.types.ui.IInlineHighlight[]
-local function default_render_line(params)
-  local match = params.match ---@type fml.types.ui.select.ILineMatch
-  local item = params.item ---@type fml.types.ui.select.IItem
+local function default_render_item(item, match)
   local highlights = {} ---@type fml.types.ui.IInlineHighlight[]
   for _, piece in ipairs(match.pieces) do
     ---@type fml.types.ui.IInlineHighlight[]
     local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
     table.insert(highlights, highlight)
   end
-  return item.display, highlights
+  return item.text, highlights
 end
 
 ---@param params                        fml.types.ui.select.IMatchParams
@@ -29,15 +28,18 @@ local function default_match(params)
   if case_sensitive then
     for _, match in ipairs(old_matches) do
       local uuid = match.uuid ---@type string
-      local text = item_map[uuid].display ---@type string
+      local text = item_map[uuid].text ---@type string
       table.insert(lines, text)
     end
   else
     input = input:lower()
     for _, match in ipairs(old_matches) do
       local uuid = match.uuid ---@type string
-      local text = item_map[uuid].lower ---@type string
-      table.insert(lines, text)
+      local item = item_map[uuid] ---@type fml.types.ui.select.IItem|nil
+      if item ~= nil then
+        item.text_lower = item.text_lower or item.text:lower()
+        table.insert(lines, item.text_lower)
+      end
     end
   end
 
@@ -95,7 +97,7 @@ end
 ---@field protected _item_map           table<string, fml.types.ui.select.IItem>
 ---@field protected _match              fml.types.ui.select.IMatch
 ---@field protected _matches            fml.types.ui.select.ILineMatch[]
----@field protected _render_line        fml.types.ui.select.main.IRenderLine
+---@field protected _render_item        fml.types.ui.select.IRenderItem
 ---@field protected _search             fml.types.ui.search.ISearch
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
@@ -112,7 +114,7 @@ M.__index = M
 ---@field public frecency               ?fml.types.collection.IFrecency|nil
 ---@field public cmp                    ?fml.types.ui.select.ILineMatchCmp
 ---@field public match                  ?fml.types.ui.select.IMatch
----@field public render_line            fml.types.ui.select.main.IRenderLine
+---@field public render_item            ?fml.types.ui.select.IRenderItem
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
@@ -142,7 +144,7 @@ function M.new(props)
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local cmp = props.cmp or default_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
   local match = props.match or default_match ---@type fml.types.ui.select.IMatch
-  local render_line = props.render_line or default_render_line ---@type fml.types.ui.select.main.IRenderLine
+  local render_item = props.render_item or default_render_item ---@type fml.types.ui.select.IRenderItem
   local input_keymaps = props.input_keymaps or {} ---@type fml.types.IKeymap[]
   local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
   local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
@@ -254,7 +256,7 @@ function M.new(props)
   self._item_map = item_map
   self._match = match
   self._matches = full_matches
-  self._render_line = render_line
+  self._render_item = render_item
   self._search = search
   self._last_case_sensitive = case_sensitive:snapshot() ---@type boolean
   self._last_input = nil ---@type string|nil
@@ -327,7 +329,7 @@ function M:fetch_items(input)
   local search_items = {} ---@type fml.types.ui.search.IItem[]
   for _, match in ipairs(matches) do
     local item = item_map[match.uuid] ---@type fml.types.ui.select.IItem
-    local line, highlights = self._render_line({ item = item, match = match })
+    local line, highlights = self._render_item(item, match)
     ---@type fml.types.ui.search.IItem
     local search_item = {
       group = item.group,

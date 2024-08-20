@@ -1,7 +1,17 @@
+---@class fml.types.ui.file_select.IRawItem
+---@field public group                  string|nil
+---@field public uuid                   string
+---@field public filepath               string
+---@field public lnum                   ?integer
+---@field public col                    ?integer
+
 ---@class fml.types.ui.file_select.IItem
 ---@field public group                  string|nil
 ---@field public uuid                   string
 ---@field public filepath               string
+---@field public filename               string
+---@field public icon                   string
+---@field public icon_hl                string
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
@@ -10,7 +20,7 @@
 ---@field public get_winnr_input        fun(self: fml.types.ui.IFileSelect): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.IFileSelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.types.ui.IFileSelect): integer|nil
----@field public update_data            fun(self: fml.types.ui.IFileSelect, cwd: string, items: fml.types.ui.file_select.IItem[]): nil
+---@field public update_data            fun(self: fml.types.ui.IFileSelect, cwd: string, items: fml.types.ui.file_select.IRawItem[]): nil
 ---@field public close                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public focus                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public open                   fun(self: fml.types.ui.IFileSelect): nil

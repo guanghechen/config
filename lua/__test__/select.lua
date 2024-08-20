@@ -19,7 +19,7 @@ for _, path in ipairs(paths) do
   table.insert(items, item)
 end
 table.sort(items, function(a, b)
-  return a.display < b.display
+  return a.text < b.text
 end)
 
 local select = fml.ui.select.Select.new({

@@ -23,9 +23,9 @@ local function reload()
       search_paths = "",
       exclude_patterns = exclude_patterns,
     })
-    local items = {} ---@type fml.types.ui.file_select.IItem[]
+    local items = {} ---@type fml.types.ui.file_select.IRawItem[]
     for _, filepath in ipairs(filepaths) do
-      ---@type fml.types.ui.file_select.IItem
+      ---@type fml.types.ui.file_select.IRawItem
       local item = { group = nil, uuid = filepath, filepath = filepath }
       table.insert(items, item)
     end

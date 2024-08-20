@@ -6,63 +6,40 @@ local api_state = require("fml.api.state")
 local api_buf = require("fml.api.buf")
 local Select = require("fml.ui.select")
 
----@param items                         fml.types.ui.file_select.IItem[]
+---@param raw_items                         fml.types.ui.file_select.IRawItem[]
 ---@return fml.types.ui.select.IItem[]
-local function resolve_select_items(items)
+---@return table<string, fml.types.ui.file_select.IItem>
+local function cook_items(raw_items)
   local select_items = {} ---@type fml.types.ui.select.IItem[]
-  for _, item in ipairs(items) do
+  local item_map = {} ---@type table<string, fml.types.ui.file_select.IItem>
+  for _, raw_item in ipairs(raw_items) do
     ---@type fml.types.ui.select.IItem
-    local select_item = {
-      group = item.group,
-      uuid = item.uuid,
-      display = item.filepath,
-      lower = item.filepath:lower(),
-    }
+    local select_item = { group = raw_item.group, uuid = raw_item.uuid, text = raw_item.filepath }
     table.insert(select_items, select_item)
+
+    local filename = path.basename(raw_item.filepath)
+    local icon, icon_hl = util.calc_fileicon(filename)
+
+    ---@type fml.types.ui.file_select.IItem
+    local item = {
+      group = raw_item.group,
+      uuid = raw_item.uuid,
+      filepath = raw_item.filepath,
+      filename = filename,
+      icon = icon .. " ",
+      icon_hl = icon_hl,
+      lnum = raw_item.lnum,
+      col = raw_item.col,
+    }
+
+    item_map[item.uuid] = item
   end
-  return select_items
-end
-
----@param params                        fml.types.ui.select.main.IRenderLineParams
----@return string
----@return fml.types.ui.IInlineHighlight[]
-local function render_filepath(params)
-  local match = params.match ---@type fml.types.ui.select.ILineMatch
-  local item = params.item ---@type fml.types.ui.select.IItem
-
-  ---@diagnostic disable-next-line: cast-type-mismatch
-  ---@cast item fml.types.ui.select.IFileItem
-
-  local filename = item.filename ---@type string|nil
-  local icon = item.icon ---@type string|nil
-  local icon_hl = item.icon_hl ---@type string|nil
-
-  if filename == nil or icon == nil or icon_hl == nil then
-    filename = path.basename(item.display)
-    icon, icon_hl = util.calc_fileicon(filename)
-    icon = icon .. " "
-
-    item.filename = filename
-    item.icon = icon
-    item.icon_hl = icon_hl
-  end
-
-  local icon_width = string.len(icon) ---@type integer
-  local text = icon .. item.display ---@type string
-
-  ---@type fml.types.ui.IInlineHighlight[]
-  local highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } }
-  for _, piece in ipairs(match.pieces) do
-    ---@type fml.types.ui.IInlineHighlight
-    local highlight = { coll = piece.l + icon_width, colr = piece.r + icon_width, hlname = "f_us_main_match" }
-    table.insert(highlights, highlight)
-  end
-  return text, highlights
+  return select_items, item_map
 end
 
 ---@class fml.ui.FileSelect : fml.types.ui.IFileSelect
----@field public cwd                    string
----@field public item_map               table<string, fml.types.ui.file_select.IItem>
+---@field protected cwd                 string
+---@field protected item_map            table<string, fml.types.ui.file_select.IItem>
 ---@field protected _select             fml.types.ui.ISelect
 local M = {}
 M.__index = M
@@ -70,7 +47,7 @@ M.__index = M
 ---@class fml.ui.file_select.IProps
 ---@field public cwd                    string
 ---@field public title                  string
----@field public items                  fml.types.ui.file_select.IItem[]
+---@field public items                  fml.types.ui.file_select.IRawItem[]
 ---@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
 ---@field public case_sensitive         ?fml.types.collection.IObservable
 ---@field public input                  ?fml.types.collection.IObservable
@@ -86,13 +63,10 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local _cwd = props.cwd ---@type string
-  local _items = props.items ---@type fml.types.ui.file_select.IItem[]
-  local _item_map = {} ---@type table<string, fml.types.ui.file_select.IItem>
-  for _, item in ipairs(_items) do
-    _item_map[item.uuid] = item
-  end
+  ---@type fml.types.ui.select.IItem[], table<string, fml.types.ui.file_select.IItem>
+  local select_items, item_map = cook_items(props.items)
 
+  local cwd = props.cwd ---@type string
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
   local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
   local input = props.input ---@type fml.types.collection.IObservable|nil
@@ -104,13 +78,15 @@ function M.new(props)
 
   local select = Select.new({
     title = "Find files",
-    items = resolve_select_items(_items),
+    items = select_items,
     statusline_items = statusline_items,
     case_sensitive = case_sensitive,
     input = input,
     input_history = input_history,
     frecency = frecency,
-    render_line = render_filepath,
+    render_item = function(select_item, match)
+      return self:render_item(select_item, match)
+    end,
     input_keymaps = input_keymaps,
     main_keymaps = main_keymaps,
     preview_keymaps = preview_keymaps,
@@ -120,68 +96,92 @@ function M.new(props)
     max_height = 1,
     max_width = 1,
     fetch_preview_data = function(item)
-      local item_data = self.item_map[item.uuid] ---@type fml.types.ui.file_select.IItem|nil
-      if item_data == nil then
-        local lines = { "  Cannot retrieve the item by uuid=" .. item.uuid } ---@type string[]
-        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fml.types.ui.IHighlight[]
-
-        ---@type fml.ui.search.preview.IData
-        return {
-          lines = lines,
-          highlights = highlights,
-          filetype = nil,
-          title = item.display,
-        }
-      end
-
-      local filepath = path.join(self.cwd, item_data.filepath) ---@type string
-      local filename = path.basename(filepath) ---@type string
-      local is_text_file = is.printable_file(filename) ---@type boolean
-      if is_text_file then
-        local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-        local lines = fs.read_file_as_lines({ filepath = filepath, max_lines = 300, silent = true }) ---@type string[]
-
-        ---@type fml.ui.search.preview.IData
-        return {
-          lines = lines,
-          highlights = {},
-          filetype = filetype,
-          title = item_data.filepath,
-          lnum = item_data.lnum,
-          col = item_data.col,
-        }
-      end
-
-      local lines = { "  Not a text file, cannot preview." } ---@type string[]
-      local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fml.types.ui.IHighlight[]
-
-      ---@type fml.ui.search.preview.IData
-      return {
-        lines = lines,
-        highlights = highlights,
-        filetype = nil,
-        title = item.display,
-      }
+      return self:fetch_preview_data(item)
     end,
     on_confirm = function(item)
-      local item_data = self.item_map[item.uuid] ---@type fml.types.ui.file_select.IItem|nil
-      local winnr = api_state.win_history:present() ---@type integer
-      if item_data ~= nil and winnr ~= nil then
-        local filepath = path.join(self.cwd, item_data.filepath) ---@type string
-        vim.schedule(function()
-          api_buf.open(winnr, filepath)
-        end)
-        return true
-      end
-      return false
+      return self:open_filepath(item)
     end,
   })
 
-  self.cwd = _cwd
-  self.item_map = _item_map
+  self.cwd = cwd
+  self.item_map = item_map
   self._select = select
 
   return self
+end
+
+---@param item                         fml.types.ui.select.IItem
+---@return fml.ui.search.preview.IData
+function M:fetch_preview_data(item)
+  local item_data = self.item_map[item.uuid] ---@type fml.types.ui.file_select.IItem|nil
+  if item_data == nil then
+    local lines = { "  Cannot retrieve the item by uuid=" .. item.uuid } ---@type string[]
+    local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fml.types.ui.IHighlight[]
+
+    ---@type fml.ui.search.preview.IData
+    return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
+  end
+
+  local filepath = path.join(self.cwd, item_data.filepath) ---@type string
+  local filename = path.basename(filepath) ---@type string
+  local is_text_file = is.printable_file(filename) ---@type boolean
+  if is_text_file then
+    local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
+    local lines = fs.read_file_as_lines({ filepath = filepath, max_lines = 300, silent = true }) ---@type string[]
+
+    ---@type fml.ui.search.preview.IData
+    return {
+      lines = lines,
+      highlights = {},
+      filetype = filetype,
+      title = item_data.filepath,
+      lnum = item_data.lnum,
+      col = item_data.col,
+    }
+  end
+
+  local lines = { "  Not a text file, cannot preview." } ---@type string[]
+  local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fml.types.ui.IHighlight[]
+
+  ---@type fml.ui.search.preview.IData
+  return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
+end
+
+---@param item                         fml.types.ui.select.IItem
+---@return boolean
+function M:open_filepath(item)
+  local item_data = self.item_map[item.uuid] ---@type fml.types.ui.file_select.IItem|nil
+  local winnr = api_state.win_history:present() ---@type integer
+  if item_data ~= nil and winnr ~= nil then
+    local filepath = path.join(self.cwd, item_data.filepath) ---@type string
+    vim.schedule(function()
+      api_buf.open(winnr, filepath)
+    end)
+    return true
+  end
+  return false
+end
+
+---@param select_item                   fml.types.ui.select.IItem
+---@param match                         fml.types.ui.select.ILineMatch
+---@return string
+---@return fml.types.ui.IInlineHighlight[]
+function M:render_item(select_item, match)
+  local item = self.item_map[select_item.uuid] ---@type fml.types.ui.file_select.IItem|nil
+  if item ~= nil then
+    local icon_width = string.len(item.icon) ---@type integer
+    local text = item.icon .. item.filepath ---@type string
+
+    ---@type fml.types.ui.IInlineHighlight[]
+    local highlights = { { coll = 0, colr = icon_width, hlname = item.icon_hl } }
+    for _, piece in ipairs(match.pieces) do
+      ---@type fml.types.ui.IInlineHighlight
+      local highlight = { coll = piece.l + icon_width, colr = piece.r + icon_width, hlname = "f_us_main_match" }
+      table.insert(highlights, highlight)
+    end
+    return text, highlights
+  end
+  return select_item.text, {}
 end
 
 ---@return integer|nil
@@ -200,15 +200,11 @@ function M:get_winnr_preview()
 end
 
 ---@param cwd                           string
----@param items                         fml.types.ui.file_select.IItem[]
+---@param items                         fml.types.ui.file_select.IRawItem[]
 ---@return nil
 function M:update_data(cwd, items)
-  local item_map = {} ---@type table<string, fml.types.ui.file_select.IItem>
-  for _, item in ipairs(items) do
-    item_map[item.uuid] = item
-  end
-
-  local select_items = resolve_select_items(items) ---@type fml.types.ui.select.IItem[]
+  ---@type fml.types.ui.select.IItem[], table<string, fml.types.ui.file_select.IItem>
+  local select_items, item_map = cook_items(items)
 
   self.cwd = cwd
   self.item_map = item_map
