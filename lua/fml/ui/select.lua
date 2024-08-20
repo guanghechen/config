@@ -1,5 +1,73 @@
+local Observable = require("fml.collection.observable")
+local oxi = require("fml.std.oxi")
 local Search = require("fml.ui.search.search")
-local defaults = require("fml.ui.select.defaults")
+
+---@param params                        fml.types.ui.select.main.IRenderLineParams
+---@return string
+---@return fml.types.ui.IInlineHighlight[]
+local function default_render_line(params)
+  local match = params.match ---@type fml.types.ui.select.ILineMatch
+  local item = params.item ---@type fml.types.ui.select.IItem
+  local highlights = {} ---@type fml.types.ui.IInlineHighlight[]
+  for _, piece in ipairs(match.pieces) do
+    ---@type fml.types.ui.IInlineHighlight[]
+    local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
+    table.insert(highlights, highlight)
+  end
+  return item.display, highlights
+end
+
+---@param params                        fml.types.ui.select.IMatchParams
+---@return fml.types.ui.select.ILineMatch[]
+local function default_match(params)
+  local input = params.input ---@type string
+  local case_sensitive = params.case_sensitive ---@type boolean
+  local item_map = params.item_map ---@type table<string, fml.types.ui.select.IItem>
+  local old_matches = params.old_matches ---@type fml.types.ui.select.ILineMatch[]
+
+  local lines = {} ---@type string[]
+  if case_sensitive then
+    for _, match in ipairs(old_matches) do
+      local uuid = match.uuid ---@type string
+      local text = item_map[uuid].display ---@type string
+      table.insert(lines, text)
+    end
+  else
+    input = input:lower()
+    for _, match in ipairs(old_matches) do
+      local uuid = match.uuid ---@type string
+      local text = item_map[uuid].lower ---@type string
+      table.insert(lines, text)
+    end
+  end
+
+  local oxi_matches = oxi.find_match_points(input, lines) ---@type fml.std.oxi.string.ILineMatch[]
+  local matches = {} ---@type fml.types.ui.select.ILineMatch[]
+  for _, oxi_match in ipairs(oxi_matches) do
+    ---! The index in lua is start from 1 but rust is start from 0.
+    local old_match = old_matches[oxi_match.idx + 1] ---@type fml.types.ui.select.ILineMatch
+
+    ---@type fml.types.ui.select.ILineMatch
+    local match = {
+      order = old_match.order,
+      uuid = old_match.uuid,
+      score = oxi_match.score,
+      pieces = oxi_match.pieces,
+    }
+    table.insert(matches, match)
+  end
+  return matches
+end
+
+---@param item1                         fml.types.ui.select.ILineMatch
+---@param item2                         fml.types.ui.select.ILineMatch
+---@return boolean
+local function default_match_cmp(item1, item2)
+  if item1.score == item2.score then
+    return item1.order < item2.order
+  end
+  return item1.score > item2.score
+end
 
 ---@param cmp                           fml.types.ui.select.ILineMatchCmp
 ---@param frecency                      fml.types.collection.IFrecency|nil
@@ -19,7 +87,7 @@ local function process_items(cmp, frecency, items)
   return item_map, full_matches
 end
 
----@class fml.ui.select.Select : fml.types.ui.select.ISelect
+---@class fml.ui.Select : fml.types.ui.ISelect
 ---@field protected _case_sensitive     fml.types.collection.IObservable
 ---@field protected _cmp                fml.types.ui.select.ILineMatchCmp
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
@@ -36,15 +104,15 @@ M.__index = M
 
 ---@class fml.types.ui.select.IProps
 ---@field public title                  string
----@field public statusline_items       fml.types.ui.search.IRawStatuslineItem[]
 ---@field public items                  fml.types.ui.select.IItem[]
----@field public case_sensitive         fml.types.collection.IObservable
----@field public input                  fml.types.collection.IObservable
----@field public input_history          fml.types.collection.IHistory|nil
----@field public frecency               fml.types.collection.IFrecency|nil
+---@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
+---@field public case_sensitive         ?fml.types.collection.IObservable
+---@field public input                  ?fml.types.collection.IObservable
+---@field public input_history          ?fml.types.collection.IHistory|nil
+---@field public frecency               ?fml.types.collection.IFrecency|nil
 ---@field public cmp                    ?fml.types.ui.select.ILineMatchCmp
 ---@field public match                  ?fml.types.ui.select.IMatch
----@field public render_line            ?fml.types.ui.select.main.IRenderLine
+---@field public render_line            fml.types.ui.select.main.IRenderLine
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
@@ -61,20 +129,20 @@ M.__index = M
 ---@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
 
 ---@param props                         fml.types.ui.select.IProps
----@return fml.ui.select.Select
+---@return fml.ui.Select
 function M.new(props)
   local self = setmetatable({}, M)
 
   local title = props.title ---@type string
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
   local items = props.items ---@type fml.types.ui.select.IItem[]
-  local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable
-  local input = props.input ---@type fml.types.collection.IObservable
+  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type fml.types.collection.IObservable
+  local input = props.input or Observable.from_value("") ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
-  local cmp = props.cmp or defaults.line_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
-  local match = props.match or defaults.match ---@type fml.types.ui.select.IMatch
-  local render_line = props.render_line or defaults.render_line ---@type fml.types.ui.select.main.IRenderLine
+  local cmp = props.cmp or default_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
+  local match = props.match or default_match ---@type fml.types.ui.select.IMatch
+  local render_line = props.render_line or default_render_line ---@type fml.types.ui.select.main.IRenderLine
   local input_keymaps = props.input_keymaps or {} ---@type fml.types.IKeymap[]
   local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
   local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
@@ -91,6 +159,22 @@ function M.new(props)
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.preview.IOnRendered|nil
 
   local item_map, full_matches = process_items(cmp, frecency, items)
+
+  if statusline_items == nil then
+    ---@type fml.types.ui.search.IRawStatuslineItem[]
+    statusline_items = {
+      {
+        type = "flag",
+        desc = "find: toggle case sensitive",
+        symbol = fml.ui.icons.symbols.flag_case_sensitive,
+        state = case_sensitive,
+        callback = function()
+          local flag = case_sensitive:snapshot() ---@type boolean
+          case_sensitive:next(not flag)
+        end,
+      },
+    }
+  end
 
   ---@type fml.types.ui.search.preview.IFetchData|nil
   local fetch_preview_data = nil
@@ -256,18 +340,6 @@ function M:fetch_items(input)
   return search_items
 end
 
----@param items                         fml.types.ui.select.IItem[]
----@return nil
-function M:update_items(items)
-  local cmp = self._cmp ---@type fml.types.ui.select.ILineMatchCmp
-  local frecency = self._frecency ---@type fml.types.collection.IFrecency
-  local item_map, full_matches = process_items(cmp, frecency, items)
-  self._item_map = item_map
-  self._full_matches = full_matches
-  self._matches = full_matches
-  self._search.state:mark_dirty()
-end
-
 ---@return integer|nil
 function M:get_winnr_main()
   return self._search:get_winnr_main()
@@ -276,6 +348,23 @@ end
 ---@return integer|nil
 function M:get_winnr_input()
   return self._search:get_winnr_input()
+end
+
+---@return integer|nil
+function M:get_winnr_preview()
+  return self._search:get_winnr_preview()
+end
+
+---@param items                         fml.types.ui.select.IItem[]
+---@return nil
+function M:update_data(items)
+  local cmp = self._cmp ---@type fml.types.ui.select.ILineMatchCmp
+  local frecency = self._frecency ---@type fml.types.collection.IFrecency
+  local item_map, full_matches = process_items(cmp, frecency, items)
+  self._item_map = item_map
+  self._full_matches = full_matches
+  self._matches = full_matches
+  self._search.state:mark_dirty()
 end
 
 ---@return nil

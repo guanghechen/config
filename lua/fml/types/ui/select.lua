@@ -47,12 +47,13 @@
 ---@alias fml.types.ui.select.main.IRenderLine
 ---| fun(params: fml.types.ui.select.main.IRenderLineParams): string, fml.types.ui.IInlineHighlight[]
 
----@class fml.types.ui.select.ISelect
+---@class fml.types.ui.ISelect
 ---@field public state                  fml.types.ui.search.IState
----@field public get_winnr_input        fun(self: fml.types.ui.select.ISelect): integer|nil
----@field public get_winnr_main         fun(self: fml.types.ui.select.ISelect): integer|nil
----@field public update_items           fun(self: fml.types.ui.select.ISelect, items: fml.types.ui.select.IItem[]): integer|nil
----@field public close                  fun(self: fml.types.ui.select.ISelect): nil
----@field public focus                  fun(self: fml.types.ui.select.ISelect): nil
----@field public open                   fun(self: fml.types.ui.select.ISelect): nil
----@field public toggle                 fun(self: fml.types.ui.select.ISelect): nil
+---@field public get_winnr_input        fun(self: fml.types.ui.ISelect): integer|nil
+---@field public get_winnr_main         fun(self: fml.types.ui.ISelect): integer|nil
+---@field public get_winnr_preview      fun(self: fml.types.ui.ISelect): integer|nil
+---@field public update_data            fun(self: fml.types.ui.ISelect, items: fml.types.ui.select.IItem[]): nil
+---@field public close                  fun(self: fml.types.ui.ISelect): nil
+---@field public focus                  fun(self: fml.types.ui.ISelect): nil
+---@field public open                   fun(self: fml.types.ui.ISelect): nil
+---@field public toggle                 fun(self: fml.types.ui.ISelect): nil

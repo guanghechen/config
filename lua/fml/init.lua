@@ -65,15 +65,16 @@ local std = {
 
 ---@class fml.ui
 local ui = {
+  FileSelect = require("fml.ui.file_select"),
   Input = require("fml.ui.input"),
   Nvimbar = require("fml.ui.nvimbar"),
   Setting = require("fml.ui.setting"),
+  Select = require("fml.ui.select"),
   Textarea = require("fml.ui.textarea"),
   Theme = require("fml.ui.theme"),
   icons = require("fml.ui.icons"),
   signcolumn = require("fml.ui.signcolumn"),
   search = require("fml.ui.search"),
-  select = require("fml.ui.select"),
 }
 
 ---@class fml : fml.std
