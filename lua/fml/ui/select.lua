@@ -128,8 +128,9 @@ M.__index = M
 ---@field public height                 ?number
 ---@field public width_preview          ?number
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
----@field public on_close               ?fml.types.ui.select.IOnClose
+---@field public on_close               ?fml.types.ui.search.IOnClose
 ---@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
+---@field public on_resume              ?fml.types.ui.search.IOnResume
 ---@field public render_item            ?fml.types.ui.select.IRenderItem
 
 ---@param props                         fml.types.ui.select.IProps
@@ -160,6 +161,7 @@ function M.new(props)
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.preview.IOnRendered|nil
+  local on_resume = props.on_resume ---@type fml.types.ui.search.IOnResume|nil
   local render_item = props.render_item or default_render_item ---@type fml.types.ui.select.IRenderItem
 
   local item_map, full_matches = process_items(cmp, frecency, items)
@@ -266,6 +268,7 @@ function M.new(props)
     on_confirm = on_confirm,
     on_close = on_close_from_props,
     on_preview_rendered = on_preview_rendered,
+    on_resume = on_resume,
   })
 
   self.state = search.state
@@ -306,9 +309,9 @@ function M:filter(input)
         local last_input_lower = last_input ~= nil and last_input:lower() or nil ---@type string|nil
         local input_lower = input:lower() ---@type string
         if
-            last_input_lower ~= nil
-            and #input_lower > #last_input_lower
-            and input_lower:sub(1, #last_input_lower) == last_input_lower
+          last_input_lower ~= nil
+          and #input_lower > #last_input_lower
+          and input_lower:sub(1, #last_input_lower) == last_input_lower
         then
           old_matches = self._matches
         end
@@ -391,6 +394,7 @@ function M:update_data(items)
   self._item_map = item_map
   self._full_matches = full_matches
   self._matches = full_matches
+  self:refresh()
 end
 
 ---@return nil
@@ -406,6 +410,11 @@ end
 ---@return nil
 function M:open()
   self._search:open()
+end
+
+---@return nil
+function M:resume()
+  self._search:resume()
 end
 
 ---@return nil

@@ -22,4 +22,5 @@
 ---@field public close                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public focus                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public open                   fun(self: fml.types.ui.IFileSelect): nil
+---@field public resume                 fun(self: fml.types.ui.IFileSelect): nil
 ---@field public toggle                 fun(self: fml.types.ui.IFileSelect): nil

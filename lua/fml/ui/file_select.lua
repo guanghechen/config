@@ -59,6 +59,9 @@ M.__index = M
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public preview                ?boolean
+---@field public on_close               ?fml.types.ui.search.IOnClose
+---@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
+---@field public on_resume              ?fml.types.ui.search.IOnResume
 
 ---@param props fml.ui.file_select.IProps
 ---@return fml.ui.FileSelect
@@ -80,6 +83,9 @@ function M.new(props)
   local input_keymaps = props.input_keymaps or {} ---@type fml.types.IKeymap[]
   local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
   local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
+  local on_close = props.on_close ---@type fml.types.ui.search.IOnClose|nil
+  local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.preview.IOnRendered|nil
+  local on_resume = props.on_resume ---@type fml.types.ui.search.IOnResume|nil
 
   local select = Select.new({
     title = title,
@@ -104,6 +110,9 @@ function M.new(props)
     on_confirm = function(item)
       return self:open_filepath(item)
     end,
+    on_close = on_close,
+    on_preview_rendered = on_preview_rendered,
+    on_resume = on_resume,
     render_item = function(select_item, match)
       return self:render_item(select_item, match)
     end,
@@ -243,6 +252,11 @@ end
 ---@return nil
 function M:open()
   self._select:open()
+end
+
+---@return nil
+function M:resume()
+  self._select:resume()
 end
 
 ---@return nil

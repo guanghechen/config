@@ -10,10 +10,7 @@ end
 
 ---@return nil
 local function resume_or_find_files()
-  local instance = fml.ui.search.get_current_instance() ---@return fml.types.ui.search.ISearch|nil
-  if instance ~= nil then
-    instance:focus()
-  else
+  if not fml.ui.search.resume() then
     ghc.command.find_files.open()
   end
 end
@@ -140,7 +137,7 @@ mk({ "n", "v" }, "<leader>ff", ghc.command.find_files.open, "find: files")
 mk({ "n", "v" }, "<leader>fw", ghc.command.find_files.open_workspace, "find: files (workspace)")
 mk({ "n", "v" }, "<leader>fc", ghc.command.find_files.open_cwd, "find: files (cwd)")
 mk({ "n", "v" }, "<leader>fd", ghc.command.find_files.open_directory, "find: files (directory)")
-mk({ "n", "v" }, "<leader>fb", ghc.command.find_buffers.open_current_tab, "find: buffers (current tab)")
+mk({ "n", "v" }, "<leader>fb", ghc.command.find_buffers.list_current_tab_bufs, "find: buffers (current tab)")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------

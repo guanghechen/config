@@ -18,4 +18,15 @@ function M.get_current_path()
   return M.Search.get_current_path()
 end
 
+---@return boolean
+function M.resume()
+  local instance = M.get_current_instance() ---@return fml.types.ui.search.ISearch|nil
+  if instance ~= nil then
+    instance:resume()
+    return true
+  else
+    return false
+  end
+end
+
 return M

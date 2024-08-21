@@ -28,9 +28,6 @@
 ---@alias fml.types.ui.select.IMatch
 ---| fun(params: fml.types.ui.select.IMatchParams): fml.types.ui.select.ILineMatch[]
 
----@alias fml.types.ui.select.IOnClose
----| fun(): nil
-
 ---@alias fml.types.ui.select.IOnConfirm
 ---| fun(item: fml.types.ui.select.IItem): boolean
 
@@ -46,4 +43,5 @@
 ---@field public close                  fun(self: fml.types.ui.ISelect): nil
 ---@field public focus                  fun(self: fml.types.ui.ISelect): nil
 ---@field public open                   fun(self: fml.types.ui.ISelect): nil
+---@field public resume                 fun(self: fml.types.ui.ISelect): nil
 ---@field public toggle                 fun(self: fml.types.ui.ISelect): nil

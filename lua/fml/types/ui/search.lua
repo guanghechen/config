@@ -10,6 +10,9 @@
 ---@alias fml.types.ui.search.preview.IOnRendered
 ---| fun(): nil
 
+---@alias fml.types.ui.search.IOnResume
+---| fun(): nil
+
 ---@alias fml.types.ui.search.preview.IFetchData
 ---| fun(item: fml.types.ui.search.IItem): fml.ui.search.preview.IData|nil
 
@@ -104,4 +107,5 @@
 ---@field public close                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public focus                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public open                   fun(self: fml.types.ui.search.ISearch): nil
+---@field public resume                 fun(self: fml.types.ui.search.ISearch): nil
 ---@field public toggle                 fun(self: fml.types.ui.search.ISearch): nil
