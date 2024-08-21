@@ -1,7 +1,7 @@
 local state_frecency = require("ghc.state.frecency")
 local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
 
----@return fml.types.ui.fast_file_select.IData
+---@return fml.types.ui.simple_file_select.IData
 local function provide()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tab = fml.api.state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
@@ -20,17 +20,17 @@ local function provide()
     end
   end
 
-  ---@type fml.types.ui.fast_file_select.IData
+  ---@type fml.types.ui.simple_file_select.IData
   local data = { cwd = cwd, filepaths = filepaths }
   return data
 end
 
-local select = fml.ui.FastFileSelect.new({
+local select = fml.ui.SimpleFileSelect.new({
   title = "Find buffers (current tab)",
   provider = { provide = provide },
   frecency = frecency,
-  preview = true,
   destroy_on_close = false,
+  enable_preview = true,
 })
 
 ---@class ghc.command.find_buffers

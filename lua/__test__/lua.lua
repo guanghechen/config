@@ -12,7 +12,7 @@ local function match()
     exclude_patterns = ".git/**",
   })
 
-  local matches = {} ---@type fml.types.ui.select.ILineMatch[]
+  local matches = {} ---@type fml.types.ui.select.IMatchedItem[]
   local input = "observable" ---@type string
   local N1 = #input ---@type integer
   for lnum, text in ipairs(items) do

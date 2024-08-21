@@ -7,27 +7,7 @@ local _select = nil ---@type fml.types.ui.IFileSelect|nil
 ---@return nil
 local function reload()
   if _select ~= nil then
-    local find_cwd = state_find_cwd:snapshot() ---@type string
-    local workspace = fml.path.workspace() ---@type string
-    local exclude_patterns = session.find_exclude_patterns:snapshot() ---@type string
-    local flag_gitignore = session.find_flag_gitignore:snapshot() ---@type boolean
-
-    ---@type string[]
-    local filepaths = fml.oxi.find({
-      workspace = workspace,
-      cwd = find_cwd,
-      flag_case_sensitive = false,
-      flag_gitignore = flag_gitignore,
-      flag_regex = false,
-      search_pattern = "",
-      search_paths = "",
-      exclude_patterns = exclude_patterns,
-    })
-    table.sort(filepaths)
-
-    ---@type fml.types.ui.file_select.IRawItem[]
-    local items = fml.ui.FileSelect.calc_items_from_filepaths(filepaths)
-    _select:update_data(find_cwd, items)
+    _select:mark_data_dirty()
   end
 end
 
@@ -133,7 +113,6 @@ local actions = {
 ---@return fml.types.ui.IFileSelect
 local function get_select()
   if _select == nil then
-    local find_cwd = state_find_cwd:snapshot() ---@type string
     local state_frecency = require("ghc.state.frecency")
     local state_input_history = require("ghc.state.input_history")
     local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
@@ -207,20 +186,51 @@ local function get_select()
     ---@type fml.types.IKeymap[]
     local preview_keymaps = fml.array.concat({}, common_keymaps)
 
+    ---@type fml.types.ui.file_select.IProvider
+    local provider = {
+      fetch_data = function()
+        local cwd = state_find_cwd:snapshot() ---@type string
+        local workspace = fml.path.workspace() ---@type string
+        local exclude_patterns = session.find_exclude_patterns:snapshot() ---@type string
+        local flag_gitignore = session.find_flag_gitignore:snapshot() ---@type boolean
+
+        ---@type string[]
+        local filepaths = fml.oxi.find({
+          workspace = workspace,
+          cwd = cwd,
+          flag_case_sensitive = false,
+          flag_gitignore = flag_gitignore,
+          flag_regex = false,
+          search_pattern = "",
+          search_paths = "",
+          exclude_patterns = exclude_patterns,
+        })
+        table.sort(filepaths)
+
+        local items = fml.ui.FileSelect.calc_items_from_filepaths(filepaths) ---@type fml.types.ui.file_select.IRawItem[]
+        local data = { cwd = cwd, items = items }
+        return data
+      end,
+    }
+
     _select = fml.ui.FileSelect.new({
-      cwd = find_cwd,
       title = "Find files",
+      provider = provider,
+      frecency = frecency,
       destroy_on_close = false,
+      enable_preview = true,
       statusline_items = statusline_items,
-      items = {},
       case_sensitive = session.find_flag_case_sensitive,
       input = session.find_file_pattern,
       input_history = input_history,
-      frecency = frecency,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
       preview_keymaps = preview_keymaps,
-      preview = true,
+      on_close = function()
+        if _select ~= nil then
+          _select:mark_data_dirty()
+        end
+      end,
     })
   end
 

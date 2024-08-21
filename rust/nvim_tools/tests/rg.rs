@@ -26,17 +26,17 @@ fn test_rg() {
     let result = search::search(&replace_options);
 
     match result {
-        Ok((data, stdout, cmd)) => {
-            let serialized_result: String = serde_json::to_string_pretty(&data).unwrap();
-            let formated_output: String = stdout.trim().to_string();
+        Ok(data) => {
+            let serialized_result: String = serde_json::to_string_pretty(&data.items).unwrap();
+            let formated_output: String = data.stdout.trim().to_string();
 
             println!(
                 "\n{}\n-----stdout-----\n{}\n----------------\n{}\n----------------",
-                cmd, serialized_result, formated_output,
+                data.cmd, serialized_result, formated_output,
             );
         }
-        Err((stderr, cmd)) => {
-            eprintln!("\n{}\nstderr:\n{}", cmd, stderr.error);
+        Err(data) => {
+            eprintln!("\n{}\nstderr:\n{}", data.cmd, data.error);
         }
     };
 }

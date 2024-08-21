@@ -56,7 +56,6 @@ local _search_current = nil ---@type fml.ui.search.Search|nil
 ---@field protected _destroy_on_close   boolean
 ---@field protected _preview_title      string
 ---@field protected _on_close           ?fml.types.ui.search.IOnClose
----@field protected _on_resume          ?fml.types.ui.search.IOnResume
 local M = {}
 M.__index = M
 
@@ -83,7 +82,6 @@ M.__index = M
 ---@field public on_confirm             fml.types.ui.search.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
 ---@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
----@field public on_resume              ?fml.types.ui.search.IOnResume
 
 ---@param props                         fml.types.ui.search.IProps
 ---@return fml.ui.search.Search
@@ -124,7 +122,6 @@ function M.new(props)
   local destroy_on_close = not not props.destroy_on_close ---@type boolean
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
-  local on_resume_from_props = props.on_resume ---@type fml.types.ui.search.IOnResume|nil
   local fetch_delay = math.max(0, props.fetch_delay or 100) ---@type integer
   local render_delay = math.max(0, props.render_delay or 100) ---@type integer
   local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
@@ -423,7 +420,6 @@ function M.new(props)
   self._destroy_on_close = destroy_on_close
   self._preview_title = " preview "
   self._on_close = on_close_from_props
-  self._on_resume = on_resume_from_props
 
   watch_observables({ state.dirty_main }, function()
     local dirty = state.dirty_main:snapshot() ---@type boolean|nil
@@ -758,7 +754,6 @@ function M:resume()
   local visible = self.state.visible:snapshot() ---@type boolean
   if not visible then
     self:open()
-    self._on_resume()
   end
 end
 

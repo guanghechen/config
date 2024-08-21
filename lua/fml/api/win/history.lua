@@ -1,6 +1,7 @@
 local path = require("fml.std.path")
 local reporter = require("fml.std.reporter")
 local state = require("fml.api.state")
+local icons = require("fml.ui.icons")
 
 ---@class fml.api.win
 local M = require("fml.api.win.mod")
@@ -80,7 +81,7 @@ function M.find_history(opts)
 
           local display_text ---@type string
           if present_filepath == buf.filepath then
-            display_text = fml.ui.icons.ui.Separator .. " " .. relative_filepath
+            display_text = icons.ui.Separator .. " " .. relative_filepath
             default_lnum = #entries + 1
           else
             display_text = "  " .. relative_filepath
@@ -107,7 +108,7 @@ function M.find_history(opts)
 
         local display_text ---@type string
         if present_index == index then
-          display_text = fml.ui.icons.ui.Separator .. " " .. tostring(index) .. " " .. relative_filepath
+          display_text = icons.ui.Separator .. " " .. tostring(index) .. " " .. relative_filepath
           default_lnum = #entries + 1
         else
           display_text = "  " .. tostring(index) .. " " .. relative_filepath

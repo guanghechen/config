@@ -1,38 +1,42 @@
+---@alias fml.types.ui.select.IFetchData
+---| fun(): fml.types.ui.select.IData
+
+---@alias fml.types.ui.select.IFetchPreviewData
+---| fun(item: fml.types.ui.select.IItem): fml.ui.search.preview.IData|nil
+
+---@alias fml.types.ui.select.IPatchPreviewData
+---| fun(item: fml.types.ui.select.IItem, last_item: fml.types.ui.select.IItem, last_data: fml.ui.search.preview.IData): fml.ui.search.preview.IData
+
+---@alias fml.types.ui.select.IMatchedItemCmp
+---| fun(item1: fml.types.ui.select.IMatchedItem, item2: fml.types.ui.select.IMatchedItem): boolean
+
+---@alias fml.types.ui.select.IRenderItem
+---| fun(item: fml.types.ui.select.IItem, match: fml.types.ui.select.IMatchedItem): string, fml.types.ui.IInlineHighlight[]
+
+---@alias fml.types.ui.select.IOnConfirm
+---| fun(item: fml.types.ui.select.IItem): boolean
+
+---@class fml.types.ui.select.IData
+---@field public items                  fml.types.ui.select.IItem[]
+
 ---@class fml.types.ui.select.IItem
 ---@field public group                  string|nil
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public text_lower             string|nil
+---@field public data                   any|nil
 
----@alias fml.types.ui.select.preview.IFetchData
----| fun(item: fml.types.ui.select.IItem): fml.ui.search.preview.IData
-
----@alias fml.types.ui.select.preview.IPatchData
----| fun(item: fml.types.ui.select.IItem, last_item: fml.types.ui.select.IItem, last_data: fml.ui.search.preview.IData|nil): fml.ui.search.preview.IData
-
----@class fml.types.ui.select.ILineMatch
+---@class fml.types.ui.select.IMatchedItem
 ---@field public order                  integer
 ---@field public uuid                   string
 ---@field public score                  integer
----@field public pieces                 fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.std.oxi.search.IMatchPoint[]
 
----@alias fml.types.ui.select.ILineMatchCmp
----| fun(item1: fml.types.ui.select.ILineMatch, item2: fml.types.ui.select.ILineMatch): boolean
-
----@class fml.types.ui.select.IMatchParams
----@field public input                  string
----@field public case_sensitive         boolean
----@field public item_map               table<string, fml.types.ui.select.IItem>
----@field public old_matches            fml.types.ui.select.ILineMatch[]
-
----@alias fml.types.ui.select.IMatch
----| fun(params: fml.types.ui.select.IMatchParams): fml.types.ui.select.ILineMatch[]
-
----@alias fml.types.ui.select.IOnConfirm
----| fun(item: fml.types.ui.select.IItem): boolean
-
----@alias fml.types.ui.select.IRenderItem
----| fun(item: fml.types.ui.select.IItem, match: fml.types.ui.select.ILineMatch): string, fml.types.ui.IInlineHighlight[]
+---@class fml.types.ui.select.IProvider
+---@field public fetch_data             fml.types.ui.select.IFetchData
+---@field public fetch_preview_data     ?fml.types.ui.select.IFetchPreviewData
+---@field public patch_preview_data     ?fml.types.ui.select.IPatchPreviewData
+---@field public render_item            ?fml.types.ui.select.IRenderItem
 
 ---@class fml.types.ui.ISelect
 ---@field public state                  fml.types.ui.search.IState
@@ -41,7 +45,7 @@
 ---@field public get_winnr_preview      fun(self: fml.types.ui.ISelect): integer|nil
 ---@field public change_input_title     fun(self: fml.types.ui.ISelect, title: string): nil
 ---@field public change_preview_title   fun(self: fml.types.ui.ISelect, title: string): nil
----@field public update_data            fun(self: fml.types.ui.ISelect, items: fml.types.ui.select.IItem[]): nil
+---@field public mark_data_dirty        fun(self: fml.types.ui.ISelect): nil
 ---@field public close                  fun(self: fml.types.ui.ISelect): nil
 ---@field public focus                  fun(self: fml.types.ui.ISelect): nil
 ---@field public open                   fun(self: fml.types.ui.ISelect): nil
