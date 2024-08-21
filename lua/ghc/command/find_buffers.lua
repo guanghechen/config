@@ -1,8 +1,8 @@
-local _select = nil ---@type fml.types.ui.IFileSelect|nil
+local state_frecency = require("ghc.state.frecency")
+local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
 
----@return string
----@return string[]
-local function get_buf_filepaths()
+---@return fml.types.ui.fast_file_select.IData
+local function provide()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tab = fml.api.state.get_tab(tabnr) ---@type fml.types.api.state.ITabItem|nil
   local workspace = fml.path.workspace() ---@type string
@@ -20,51 +20,25 @@ local function get_buf_filepaths()
     end
   end
 
-  return cwd, filepaths
+  ---@type fml.types.ui.fast_file_select.IData
+  local data = { cwd = cwd, filepaths = filepaths }
+  return data
 end
 
----@return fml.types.ui.IFileSelect
-local function get_select()
-  if _select == nil then
-    local state_frecency = require("ghc.state.frecency")
-    local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
-
-    _select = fml.ui.FileSelect.new({
-      cwd = fml.path.cwd(),
-      title = "Find buffers (current tab)",
-      items = {},
-      frecency = frecency,
-      preview = true,
-      destroy_on_close = false,
-      on_resume = function()
-        if _select ~= nil then
-          local cwd, filepaths = get_buf_filepaths()
-
-          ---@type fml.types.ui.file_select.IRawItem[]
-          local items = fml.ui.FileSelect.calc_items_from_filepaths(filepaths)
-
-          _select:update_data(cwd, items)
-        end
-      end,
-    })
-  end
-  return _select
-end
+local select = fml.ui.FastFileSelect.new({
+  title = "Find buffers (current tab)",
+  provider = { provide = provide },
+  frecency = frecency,
+  preview = true,
+  destroy_on_close = false,
+})
 
 ---@class ghc.command.find_buffers
 local M = {}
 
 ---@return nil
 function M.list_current_tab_bufs()
-  ---@type string, string[]
-  local cwd, filepaths = get_buf_filepaths()
-
-  ---@type fml.types.ui.file_select.IRawItem[]
-  local items = fml.ui.FileSelect.calc_items_from_filepaths(filepaths)
-
-  local select = get_select() ---@type fml.types.ui.IFileSelect
-  select:update_data(cwd, items)
-  select:focus()
+  select:list()
 end
 
 return M

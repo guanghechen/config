@@ -1,8 +1,8 @@
-local _select = nil ---@type fml.types.ui.IFileSelect|nil
+local state_frecency = require("ghc.state.frecency")
+local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
 
----@return string
----@return string[]
-local function get_git_filepaths()
+---@return fml.types.ui.fast_file_select.IData
+local function provide()
   local result = vim.fn.system("git diff HEAD --name-only") ---@type string
   local lines = fml.oxi.parse_lines(result) ---@type string[]
 
@@ -20,51 +20,25 @@ local function get_git_filepaths()
     end
   end
 
-  return cwd, filepaths
+  ---@type fml.types.ui.fast_file_select.IData
+  local data = { cwd = cwd, filepaths = filepaths }
+  return data
 end
 
----@return fml.types.ui.IFileSelect
-local function get_select()
-  if _select == nil then
-    local state_frecency = require("ghc.state.frecency")
-    local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
-
-    _select = fml.ui.FileSelect.new({
-      cwd = fml.path.cwd(),
-      title = "Find git files (Not committed)",
-      items = {},
-      frecency = frecency,
-      preview = true,
-      destroy_on_close = false,
-      on_resume = function()
-        if _select ~= nil then
-          local cwd, filepaths = get_git_filepaths()
-
-          ---@type fml.types.ui.file_select.IRawItem[]
-          local items = fml.ui.FileSelect.calc_items_from_filepaths(filepaths)
-
-          _select:update_data(cwd, items)
-        end
-      end,
-    })
-  end
-  return _select
-end
+local select = fml.ui.FastFileSelect.new({
+  title = "Find git files (Not committed)",
+  provider = { provide = provide },
+  frecency = frecency,
+  preview = true,
+  destroy_on_close = false,
+})
 
 ---@class ghc.command.find_git
 local M = {}
 
 ---@return nil
 function M.list_uncommited_git_files()
-  ---@type string, string[]
-  local cwd, filepaths = get_git_filepaths()
-
-  ---@type fml.types.ui.file_select.IRawItem[]
-  local items = fml.ui.FileSelect.calc_items_from_filepaths(filepaths)
-
-  local select = get_select() ---@type fml.types.ui.IFileSelect
-  select:update_data(cwd, items)
-  select:focus()
+  select:list()
 end
 
 return M

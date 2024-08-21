@@ -239,6 +239,18 @@ function M:update_data(cwd, items)
   self._select:update_data(select_items)
 end
 
+---@param title                         string
+---@return nil
+function M:change_input_title(title)
+  self._select:change_input_title(title)
+end
+
+---@param title                         string
+---@return nil
+function M:change_preview_title(title)
+  self._select:change_preview_title(title)
+end
+
 ---@return nil
 function M:close()
   self._select:close()

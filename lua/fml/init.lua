@@ -65,6 +65,7 @@ local std = {
 
 ---@class fml.ui
 local ui = {
+  FastFileSelect = require("fml.ui.fast_file_select"),
   FileSelect = require("fml.ui.file_select"),
   Input = require("fml.ui.input"),
   Nvimbar = require("fml.ui.nvimbar"),

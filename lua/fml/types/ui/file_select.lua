@@ -18,6 +18,8 @@
 ---@field public get_winnr_input        fun(self: fml.types.ui.IFileSelect): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.IFileSelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.types.ui.IFileSelect): integer|nil
+---@field public change_input_title     fun(self: fml.types.ui.IFileSelect, title: string): nil
+---@field public change_preview_title   fun(self: fml.types.ui.IFileSelect, title: string): nil
 ---@field public update_data            fun(self: fml.types.ui.IFileSelect, cwd: string, items: fml.types.ui.file_select.IRawItem[]): nil
 ---@field public close                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public focus                  fun(self: fml.types.ui.IFileSelect): nil

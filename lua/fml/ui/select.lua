@@ -397,6 +397,18 @@ function M:update_data(items)
   self:refresh()
 end
 
+---@param title                         string
+---@return nil
+function M:change_input_title(title)
+  self._search:change_input_title(title)
+end
+
+---@param title                         string
+---@return nil
+function M:change_preview_title(title)
+  self._search:change_preview_title(title)
+end
+
 ---@return nil
 function M:close()
   self._search:close()
