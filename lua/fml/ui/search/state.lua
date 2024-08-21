@@ -34,7 +34,6 @@ function M.new(props)
   local dirty_items = Observable.from_value(true)
   local dirty_main = Observable.from_value(false)
   local dirty_preview = Observable.from_value(false)
-
   local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type fml.types.collection.IObservable
 
   local fetch_scheduler ---@type fml.std.scheduler.IScheduler
@@ -87,7 +86,19 @@ function M.new(props)
 
   ---@return nil
   local function on_items_dirty()
-    fetch_scheduler.schedule()
+    local is_visible = visible:snapshot() ---@type boolean
+    if is_visible then
+      self:mark_dirty()
+    end
+  end
+
+  ---@return nil
+  local function on_visible_change()
+    local is_visible = visible:snapshot() ---@type boolean
+    local is_item_dirty = dirty_items:snapshot() ---@type boolean
+    if is_visible and is_item_dirty then
+      fetch_scheduler.schedule()
+    end
   end
 
   self.uuid = uuid
@@ -105,8 +116,9 @@ function M.new(props)
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
 
-  input:subscribe(Subscriber.new({ on_next = on_input_change }))
   dirty_items:subscribe(Subscriber.new({ on_next = on_items_dirty }))
+  input:subscribe(Subscriber.new({ on_next = on_input_change }))
+  visible:subscribe(Subscriber.new({ on_next = on_visible_change }))
   return self
 end
 
