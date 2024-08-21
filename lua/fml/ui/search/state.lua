@@ -85,15 +85,7 @@ function M.new(props)
   end
 
   ---@return nil
-  local function on_items_dirty()
-    local is_visible = visible:snapshot() ---@type boolean
-    if is_visible then
-      self:mark_dirty()
-    end
-  end
-
-  ---@return nil
-  local function on_visible_change()
+  local function on_visible_or_items_change()
     local is_visible = visible:snapshot() ---@type boolean
     local is_item_dirty = dirty_items:snapshot() ---@type boolean
     if is_visible and is_item_dirty then
@@ -116,9 +108,9 @@ function M.new(props)
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
 
-  dirty_items:subscribe(Subscriber.new({ on_next = on_items_dirty }))
   input:subscribe(Subscriber.new({ on_next = on_input_change }))
-  visible:subscribe(Subscriber.new({ on_next = on_visible_change }))
+  visible:subscribe(Subscriber.new({ on_next = on_visible_or_items_change }))
+  dirty_items:subscribe(Subscriber.new({ on_next = on_visible_or_items_change }))
   return self
 end
 
