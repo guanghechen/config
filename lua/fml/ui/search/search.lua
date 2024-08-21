@@ -394,18 +394,12 @@ function M.new(props)
       render_delay = render_delay,
       update_win_config = function(opts)
         local new_title = opts.title ---@type string
-        local lnum = opts.lnum ---@type integer|nil
-        local col = opts.col ---@type integer|nil
+        self:change_preview_title(new_title)
 
-        ---@diagnostic disable-next-line: invisible
-        self._preview_title = new_title
         local winnr = self:get_winnr_preview() ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          ---@type vim.api.keyset.win_config
-          local win_conf_cur = vim.api.nvim_win_get_config(winnr)
-          win_conf_cur.title = " " .. new_title .. " "
-          vim.api.nvim_win_set_config(winnr, win_conf_cur)
-
+          local lnum = opts.lnum ---@type integer|nil
+          local col = opts.col ---@type integer|nil
           if lnum ~= nil and col ~= nil then
             vim.api.nvim_win_set_cursor(winnr, { lnum, col })
           end
@@ -639,6 +633,32 @@ function M:draw(force)
     if self._preview ~= nil then
       self._preview:render(force)
     end
+  end
+end
+
+---@param title                         string
+---@return nil
+function M:change_input_title(title)
+  self._input_title = title
+  local winnr = self:get_winnr_input() ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    ---@type vim.api.keyset.win_config
+    local win_conf_cur = vim.api.nvim_win_get_config(winnr)
+    win_conf_cur.title = " " .. title .. " "
+    vim.api.nvim_win_set_config(winnr, win_conf_cur)
+  end
+end
+
+---@param title                         string
+---@return nil
+function M:change_preview_title(title)
+  self._preview_title = title
+  local winnr = self:get_winnr_preview() ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    ---@type vim.api.keyset.win_config
+    local win_conf_cur = vim.api.nvim_win_get_config(winnr)
+    win_conf_cur.title = " " .. title .. " "
+    vim.api.nvim_win_set_config(winnr, win_conf_cur)
   end
 end
 

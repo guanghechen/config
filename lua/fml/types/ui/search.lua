@@ -104,6 +104,8 @@
 ---@field public get_winnr_input        fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.types.ui.search.ISearch): integer|nil
+---@field public change_input_title     fun(self: fml.types.ui.search.ISearch, title: string): nil
+---@field public change_preview_title   fun(self: fml.types.ui.search.ISearch, title: string): nil
 ---@field public close                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public focus                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public open                   fun(self: fml.types.ui.search.ISearch): nil
