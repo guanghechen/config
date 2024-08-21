@@ -1,5 +1,7 @@
 local Observable = require("fml.collection.observable")
+local std_array = require("fml.std.array")
 local oxi = require("fml.std.oxi")
+local icons = require("fml.ui.icons")
 local Search = require("fml.ui.search.search")
 
 ---@param item                          fml.types.ui.select.IItem
@@ -145,9 +147,9 @@ function M.new(props)
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local cmp = props.cmp or default_match_cmp ---@type fml.types.ui.select.ILineMatchCmp
   local match = props.match or default_match ---@type fml.types.ui.select.IMatch
-  local input_keymaps = props.input_keymaps or {} ---@type fml.types.IKeymap[]
-  local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
-  local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
+  local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
+  local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
+  local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local fetch_preview_data_from_props = props.fetch_preview_data ---@type fml.types.ui.select.preview.IFetchData|nil
   local patch_preview_data_from_props = props.patch_preview_data ---@type fml.types.ui.select.preview.IPatchData|nil
   local max_width = props.max_width or 0.8 ---@type number
@@ -163,22 +165,40 @@ function M.new(props)
   local item_map, full_matches = process_items(cmp, frecency, items)
 
   if statusline_items == nil then
+    ---@return nil
+    local function toggle_case_sensitive()
+      local flag = case_sensitive:snapshot() ---@type boolean
+      case_sensitive:next(not flag)
+      vim.cmd("redrawstatus")
+      self:refresh()
+    end
+
     ---@type fml.types.ui.search.IRawStatuslineItem[]
     statusline_items = {
       {
         type = "flag",
-        desc = "find: toggle case sensitive",
-        symbol = fml.ui.icons.symbols.flag_case_sensitive,
+        desc = "select: toggle case sensitive",
+        symbol = icons.symbols.flag_case_sensitive,
         state = case_sensitive,
-        callback = function()
-          local flag = case_sensitive:snapshot() ---@type boolean
-          case_sensitive:next(not flag)
-        end,
+        callback = toggle_case_sensitive,
       },
     }
-  end
 
-  ---@type fml.types.ui.search.preview.IFetchData|nil
+    ---@type fml.types.IKeymap[]
+    local default_keymaps = {
+      {
+        modes = { "n", "v" },
+        key = "<leader>i",
+        callback = toggle_case_sensitive,
+        desc = "select: toggle case sensitive",
+      },
+    }
+
+    input_keymaps = std_array.concat(input_keymaps or {}, default_keymaps)
+    main_keymaps = std_array.concat(main_keymaps or {}, default_keymaps)
+    preview_keymaps = std_array.concat(preview_keymaps or {}, default_keymaps)
+  end ---@type fml.types.ui.search.preview.IFetchData|nil
+
   local fetch_preview_data = nil
   if fetch_preview_data_from_props ~= nil then
     fetch_preview_data = function(item)
@@ -231,10 +251,10 @@ function M.new(props)
     input_history = input_history,
     statusline_items = statusline_items,
     input_keymaps = input_keymaps,
-    fetch_delay = 32,
-    render_delay = 32,
     main_keymaps = main_keymaps,
     preview_keymaps = preview_keymaps,
+    fetch_delay = 32,
+    render_delay = 32,
     fetch_preview_data = fetch_preview_data,
     patch_preview_data = patch_preview_data,
     max_width = max_width,
@@ -286,9 +306,9 @@ function M:filter(input)
         local last_input_lower = last_input ~= nil and last_input:lower() or nil ---@type string|nil
         local input_lower = input:lower() ---@type string
         if
-          last_input_lower ~= nil
-          and #input_lower > #last_input_lower
-          and input_lower:sub(1, #last_input_lower) == last_input_lower
+            last_input_lower ~= nil
+            and #input_lower > #last_input_lower
+            and input_lower:sub(1, #last_input_lower) == last_input_lower
         then
           old_matches = self._matches
         end
@@ -357,6 +377,11 @@ function M:get_winnr_preview()
   return self._search:get_winnr_preview()
 end
 
+---@return nil
+function M:refresh()
+  self._search.state:mark_dirty()
+end
+
 ---@param items                         fml.types.ui.select.IItem[]
 ---@return nil
 function M:update_data(items)
@@ -366,7 +391,6 @@ function M:update_data(items)
   self._item_map = item_map
   self._full_matches = full_matches
   self._matches = full_matches
-  self._search.state:mark_dirty()
 end
 
 ---@return nil
