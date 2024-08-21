@@ -138,6 +138,7 @@ mk({ "n", "v" }, "<leader>fw", ghc.command.find_files.open_workspace, "find: fil
 mk({ "n", "v" }, "<leader>fc", ghc.command.find_files.open_cwd, "find: files (cwd)")
 mk({ "n", "v" }, "<leader>fd", ghc.command.find_files.open_directory, "find: files (directory)")
 mk({ "n", "v" }, "<leader>fb", ghc.command.find_buffers.list_current_tab_bufs, "find: buffers (current tab)")
+mk({ "n", "v" }, "<leader>fg", ghc.command.find_git.list_uncommited_git_files, "find: git files (Not committed)")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
