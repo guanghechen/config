@@ -77,9 +77,10 @@
 ---@field public col                    ?integer
 
 ---@class fml.types.ui.search.IState
----@field public dirty_items            fml.types.collection.IObservable
----@field public dirty_main             fml.types.collection.IObservable
----@field public dirty_preview          fml.types.collection.IObservable
+---@field public dirtier_dimension      fml.types.collection.IDirtier
+---@field public dirtier_data           fml.types.collection.IDirtier
+---@field public dirtier_main           fml.types.collection.IDirtier
+---@field public dirtier_preview        fml.types.collection.IDirtier
 ---@field public enable_multiline_input boolean
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
@@ -92,8 +93,11 @@
 ---@field public visible                fml.types.collection.IObservable
 ---@field public get_current            fun(self: fml.types.ui.search.IState): fml.types.ui.search.IItem|nil, integer, string|nil
 ---@field public get_current_lnum       fun(self: fml.types.ui.search.IState): integer
+---@field public is_dimension_dirty     fun(self: fml.types.ui.search.IState): boolean
+---@field public is_data_dirty          fun(self: fml.types.ui.search.IState): boolean
+---@field public is_main_dirty          fun(self: fml.types.ui.search.IState): boolean
+---@field public is_preview_dirty       fun(self: fml.types.ui.search.IState): boolean
 ---@field public locate                 fun(self: fml.types.ui.search.IState, lnum: integer): integer
----@field public mark_dirty             fun(self: fml.types.ui.search.IState): nil
 ---@field public moveup                 fun(self: fml.types.ui.search.IState): integer
 ---@field public movedown               fun(self: fml.types.ui.search.IState): integer
 
@@ -109,13 +113,11 @@
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IMain): integer
 ---@field public destroy                fun(self: fml.types.ui.search.IMain): nil
 ---@field public place_lnum_sign        fun(self: fml.types.ui.search.IMain): integer|nil
----@field public render                 fun(self: fml.types.ui.search.IMain, force?: boolean): nil
 
 ---@class fml.types.ui.search.IPreview
 ---@field public state                  fml.types.ui.search.IState
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IPreview): integer
 ---@field public destroy                fun(self: fml.types.ui.search.IPreview): nil
----@field public render                 fun(self: fml.types.ui.search.IPreview, force?: boolean): nil
 
 ---@class fml.types.ui.search.ISearch
 ---@field public state                  fml.types.ui.search.IState

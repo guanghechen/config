@@ -1,3 +1,4 @@
+local Dirtier = require("fml.collection.dirtier")
 local Observable = require("fml.collection.observable")
 local Subscriber = require("fml.collection.subscriber")
 local scheduler = require("fml.std.scheduler")
@@ -23,18 +24,19 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local uuid = oxi.uuid() ---@type string
-  local title = props.title ---@type string
+  local dirtier_dimension = Dirtier.new() ---@type fml.types.collection.IDirtier
+  local dirtier_data = Dirtier.new() ---@type fml.types.collection.IDirtier
+  local dirtier_main = Dirtier.new() ---@type fml.types.collection.IDirtier
+  local dirtier_preview = Dirtier.new() ---@type fml.types.collection.IDirtier
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
-  local input = props.input ---@type fml.types.collection.IObservable
-  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchData
   local fetch_delay = props.fetch_delay ---@type integer
-  local visible = Observable.from_value(false)
-  local dirty_items = Observable.from_value(true)
-  local dirty_main = Observable.from_value(false)
-  local dirty_preview = Observable.from_value(false)
+  local input = props.input ---@type fml.types.collection.IObservable
+  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type fml.types.collection.IObservable
+  local title = props.title ---@type string
+  local uuid = oxi.uuid() ---@type string
+  local visible = Observable.from_value(false)
 
   local fetch_scheduler ---@type fml.std.scheduler.IScheduler
   fetch_scheduler = scheduler.debounce({
@@ -71,10 +73,10 @@ function M.new(props)
       end)
     end,
     callback = function(ok)
-      dirty_items:next(false)
+      self.dirtier_data:mark_clean()
       if ok then
-        dirty_main:next(true, { force = true })
-        dirty_preview:next(true, { force = true })
+        self.dirtier_main:mark_dirty()
+        self.dirtier_preview:mark_dirty()
       end
     end,
   })
@@ -85,25 +87,26 @@ function M.new(props)
       local line_count = oxi.count_lines(input:snapshot())
       input_line_count:next(line_count)
     end
-    self:mark_dirty()
+    self.dirtier_data:mark_dirty()
   end
 
   ---@return nil
-  local function on_visible_or_items_change()
+  local function on_visible_or_data_change()
     local is_visible = visible:snapshot() ---@type boolean
-    local is_item_dirty = dirty_items:snapshot() ---@type boolean
-    if is_visible and is_item_dirty then
+    local is_data_dirty = self.dirtier_data:is_dirty() ---@type boolean
+    if is_visible and is_data_dirty then
       fetch_scheduler.schedule()
     end
   end
 
-  self.dirty_items = dirty_items
-  self.dirty_main = dirty_main
-  self.dirty_preview = dirty_preview
+  self.dirtier_dimension = dirtier_dimension
+  self.dirtier_data = dirtier_data
+  self.dirtier_main = dirtier_main
+  self.dirtier_preview = dirtier_preview
   self.enable_multiline_input = enable_multiline_input
   self.input = input
-  self.input_line_count = input_line_count
   self.input_history = input_history
+  self.input_line_count = input_line_count
   self.item_present_uuid = nil
   self.items = {} ---@type fml.types.ui.search.IItem[]
   self.max_width = 0 ---@type integer
@@ -114,16 +117,17 @@ function M.new(props)
   self._item_uuid_cur = nil ---@type string|nil
 
   input:subscribe(Subscriber.new({ on_next = on_input_change }))
-  visible:subscribe(Subscriber.new({ on_next = on_visible_or_items_change }))
-  dirty_items:subscribe(Subscriber.new({ on_next = on_visible_or_items_change }))
+  visible:subscribe(Subscriber.new({ on_next = on_visible_or_data_change }))
+  dirtier_data:subscribe(Subscriber.new({ on_next = on_visible_or_data_change }))
   return self
 end
 
 ---@return nil
 function M:dispose()
-  self.dirty_items:dispose()
-  self.dirty_main:dispose()
-  self.dirty_preview:dispose()
+  self.dirtier_dimension:dispose()
+  self.dirtier_data:dispose()
+  self.dirtier_main:dispose()
+  self.dirtier_preview:dispose()
   self.visible:dispose()
 end
 
@@ -149,17 +153,12 @@ function M:locate(lnum)
   local next_uuid = items[next_lnum] and items[next_lnum].uuid or nil ---@type string|nil
   local has_changed = self._item_lnum_cur ~= next_lnum or self._item_uuid_cur ~= next_uuid ---@type boolean
   if has_changed then
-    self.dirty_preview:next(true)
+    self.dirtier_preview:mark_dirty()
   end
 
   self._item_lnum_cur = next_lnum
   self._item_uuid_cur = next_uuid
   return next_lnum
-end
-
----@return nil
-function M:mark_dirty()
-  self.dirty_items:next(true)
 end
 
 ---@return integer

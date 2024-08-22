@@ -1,7 +1,7 @@
+local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local scheduler = require("fml.std.scheduler")
 local util = require("fml.std.util")
-local watch_observables = require("fml.fn.watch_observables")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Main : fml.types.ui.search.IMain
@@ -14,8 +14,8 @@ M.__index = M
 ---@class fml.ui.search.main.IProps
 ---@field public state                  fml.types.ui.search.IState
 ---@field public keymaps                fml.types.IKeymap[]
----@field public on_rendered            fml.types.ui.search.IOnMainRendered
 ---@field public render_delay           integer
+---@field public on_rendered            ?fml.types.ui.search.IOnMainRendered
 
 ---@param props                         fml.ui.search.main.IProps
 ---@return fml.ui.search.Main
@@ -23,14 +23,14 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local state = props.state ---@type fml.types.ui.search.IState
-  local _keymaps = props.keymaps ---@type fml.types.IKeymap[]
-  local _on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered
-  local _render_delay = props.render_delay ---@type integer
+  local keymaps = props.keymaps ---@type fml.types.IKeymap[]
+  local render_delay = props.render_delay ---@type integer
+  local on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
 
   ---@type fml.std.scheduler.IScheduler
   local _render_scheduler = scheduler.debounce({
     name = "fml.ui.search.main.render",
-    delay = _render_delay,
+    delay = render_delay,
     fn = function(callback)
       local ok, error = pcall(function()
         local bufnr = self:create_buf_as_needed() ---@type integer
@@ -59,23 +59,27 @@ function M.new(props)
       callback(ok, error)
     end,
     callback = function()
-      state.dirty_main:next(false)
-      _on_rendered()
+      state.dirtier_main:mark_clean()
+      if on_rendered then
+        on_rendered()
+      end
     end,
   })
 
   self.state = state
   self._bufnr = nil
-  self._keymaps = _keymaps
+  self._keymaps = keymaps
   self._render_scheduler = _render_scheduler
 
-  watch_observables({ state.dirty_main }, function()
-    local dirty = state.dirty_main:snapshot() ---@type boolean|nil
-    local visible = state.visible:snapshot() ---@type boolean
-    if visible and dirty then
-      _render_scheduler.schedule()
-    end
-  end, true)
+  state.dirtier_main:subscribe(Subscriber.new({
+    on_next = function()
+      local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
+      local visible = state.visible:snapshot() ---@type boolean
+      if visible and is_main_dirty then
+        _render_scheduler.schedule()
+      end
+    end,
+  }))
 
   return self
 end
@@ -107,6 +111,7 @@ function M:destroy()
   local bufnr = self._bufnr ---@type integer|nil
   self._bufnr = nil
   self._render_scheduler.cancel()
+  self.state.dirtier_main:mark_clean()
 
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -167,19 +172,6 @@ function M:place_lnum_sign()
     end
   end
   return nil
-end
-
----@param force                         ?boolean
----@return nil
-function M:render(force)
-  local state = self.state ---@type fml.types.ui.search.IState
-  if self._bufnr ~= nil and not vim.api.nvim_buf_is_valid(self._bufnr) then
-    self._bufnr = nil
-  end
-
-  if force or self._bufnr == nil then
-    state.dirty_main:next(true, { force = true })
-  end
 end
 
 return M

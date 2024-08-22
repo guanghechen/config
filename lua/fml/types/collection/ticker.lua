@@ -1,2 +1,2 @@
 ---@class fml.types.collection.ITicker: fml.types.collection.IObservable
----@field public tick                   fun(self: fml.types.collection.IObservable): nil
+---@field public tick                   fun(self: fml.types.collection.ITicker): nil

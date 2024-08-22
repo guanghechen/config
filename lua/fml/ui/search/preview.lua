@@ -1,7 +1,7 @@
+local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local scheduler = require("fml.std.scheduler")
 local util = require("fml.std.util")
-local watch_observables = require("fml.fn.watch_observables")
 
 ---@class fml.ui.search.Preview : fml.types.ui.search.IPreview
 ---@field protected _bufnr              integer|nil
@@ -15,8 +15,8 @@ M.__index = M
 ---@field public keymaps                fml.types.IKeymap[]
 ---@field public fetch_data             fml.types.ui.search.IFetchPreviewData
 ---@field public patch_data             ?fml.types.ui.search.IPatchPreviewData
----@field public on_rendered            ?fml.types.ui.search.IOnPreviewRendered
 ---@field public render_delay           integer
+---@field public on_rendered            ?fml.types.ui.search.IOnPreviewRendered
 ---@field public update_win_config      fun(opts: fml.types.ui.search.preview.IWinOpts): nil
 
 ---@param props                         fml.ui.search.preview.IProps
@@ -28,8 +28,8 @@ function M.new(props)
   local _keymaps = props.keymaps ---@type fml.types.IKeymap[]
   local _fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchPreviewData
   local _patch_data = props.patch_data ---@type fml.types.ui.search.IPatchPreviewData|nil
-  local _on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
-  local _render_delay = props.render_delay ---@type integer
+  local on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
+  local render_delay = props.render_delay ---@type integer
   local _update_win_config = props.update_win_config ---@type fun(opts: fml.types.ui.search.preview.IWinOpts): nil
 
   local _last_item = nil ---@type fml.types.ui.search.IItem|nil
@@ -57,7 +57,7 @@ function M.new(props)
   ---@type fml.std.scheduler.IScheduler
   local _render_scheduler = scheduler.debounce({
     name = "fml.ui.search.preview.render",
-    delay = _render_delay,
+    delay = render_delay,
     fn = function(callback)
       local ok, error = pcall(function()
         local last_data = _last_data ---@type fml.ui.search.preview.IData|nil
@@ -112,9 +112,9 @@ function M.new(props)
       callback(ok, error)
     end,
     callback = function()
-      state.dirty_preview:next(false)
-      if _on_rendered then
-        _on_rendered()
+      state.dirtier_preview:mark_clean()
+      if on_rendered then
+        on_rendered()
       end
     end,
   })
@@ -124,17 +124,21 @@ function M.new(props)
   self._keymaps = _keymaps
   self._render_scheduler = _render_scheduler
 
-  watch_observables({ state.dirty_items }, function()
-    _last_data = nil
-  end, true)
+  state.dirtier_data:subscribe(Subscriber.new({
+    on_next = function()
+      _last_data = nil
+    end,
+  }))
 
-  watch_observables({ state.dirty_preview }, function()
-    local dirty = state.dirty_preview:snapshot() ---@type boolean|nil
-    local visible = state.visible:snapshot() ---@type boolean
-    if visible and dirty then
-      _render_scheduler.schedule()
-    end
-  end, true)
+  state.dirtier_preview:subscribe(Subscriber.new({
+    on_next = function()
+      local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
+      local visible = state.visible:snapshot() ---@type boolean
+      if visible and is_preview_dirty then
+        _render_scheduler.schedule()
+      end
+    end,
+  }))
 
   return self
 end
@@ -169,19 +173,6 @@ function M:destroy()
 
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
-  end
-end
-
----@param force                         ?boolean
----@return nil
-function M:render(force)
-  local state = self.state ---@type fml.types.ui.search.IState
-  if self._bufnr ~= nil and not vim.api.nvim_buf_is_valid(self._bufnr) then
-    self._bufnr = nil
-  end
-
-  if force or self._bufnr == nil then
-    state.dirty_preview:next(true, { force = true })
   end
 end
 

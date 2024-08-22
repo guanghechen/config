@@ -76,6 +76,16 @@ local function get_select(initial_title)
         end
       end
 
+      local width = 0 ---@type integer
+      for _, item in ipairs(items) do
+        local w = vim.fn.strwidth(item.filepath) ---@type integer
+        width = width < w and w or width
+      end
+
+      if _select ~= nil then
+        _select:change_dimension({ height = #items + 3, width = width + 16 })
+      end
+
       ---@type fml.types.ui.file_select.IData
       return { cwd = cwd, items = items, present_uuid = present_uuid }
     end,

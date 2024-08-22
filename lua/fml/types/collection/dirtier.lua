@@ -1,0 +1,4 @@
+---@class fml.types.collection.IDirtier : fml.types.collection.IObservable
+---@field public is_dirty               fun(self: fml.types.collection.IDirtier): boolean
+---@field public mark_clean             fun(self: fml.types.collection.IDirtier): nil
+---@field public mark_dirty             fun(self: fml.types.collection.IDirtier): nil

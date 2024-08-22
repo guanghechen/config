@@ -33,27 +33,30 @@ function M.get_search()
     local input_history = state_input_history.load_and_autosave().search_in_files ---@type fml.types.collection.IHistory
 
     _search = fml.ui.search.Search.new({
-      title = "Search in files",
+      destroy_on_close = false,
+      dimension = {
+        height = 0.8,
+        max_height = 1,
+        max_width = 1,
+        width = 0.4,
+        width_preview = 0.45,
+      },
       enable_multiline_input = true,
-      statusline_items = keybindings.statusline_items,
+      fetch_data = api.fetch_data,
+      fetch_delay = 512,
+      fetch_preview_data = api.fetch_preview_data,
       input = session.search_pattern,
       input_history = input_history,
       input_keymaps = keybindings.input_keymaps,
       main_keymaps = keybindings.main_keymaps,
+      patch_preview_data = api.patch_preview_data,
       preview_keymaps = keybindings.preview_keymaps,
-      fetch_data = api.fetch_data,
-      fetch_delay = 512,
       render_delay = 64,
-      width = 0.4,
-      height = 0.8,
-      width_preview = 0.45,
-      max_height = 1,
-      max_width = 1,
+      statusline_items = keybindings.statusline_items,
+      title = "Search in files",
       on_close = function()
         vim.cmd("checktime")
       end,
-      fetch_preview_data = api.fetch_preview_data,
-      patch_preview_data = api.patch_preview_data,
       on_confirm = function(item)
         return api.open_file(item, frecency)
       end,
@@ -65,7 +68,7 @@ end
 ---@return nil
 function M.reload()
   if _search ~= nil then
-    _search.state:mark_dirty()
+    _search.state:mark_data_dirty()
   end
 end
 

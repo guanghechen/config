@@ -1,9 +1,9 @@
+local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local std_array = require("fml.std.array")
 local oxi = require("fml.std.oxi")
 local scheduler = require("fml.std.scheduler")
 local util = require("fml.std.util")
-local watch_observables = require("fml.fn.watch_observables")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Input : fml.types.ui.search.IInput
@@ -112,13 +112,15 @@ function M.new(props)
   self._input_scheduler = input_scheduler
   self._keymaps = keymaps
 
-  watch_observables({ state.dirty_preview }, function()
-    local dirty = state.dirty_preview:snapshot() ---@type boolean|nil
-    local visible = state.visible:snapshot() ---@type boolean
-    if visible and dirty then
-      self:set_virtual_text()
-    end
-  end, true)
+  state.dirtier_preview:subscribe(Subscriber.new({
+    on_next = function()
+      local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
+      local visible = state.visible:snapshot() ---@type boolean
+      if visible and is_preview_dirty then
+        self:set_virtual_text()
+      end
+    end,
+  }))
 
   return self
 end

@@ -394,12 +394,12 @@ end
 ---@return nil
 function M:mark_data_dirty()
   self._data_dirty:next(true)
-  self._search.state:mark_dirty()
+  self._search.state.dirtier_data:mark_dirty()
 end
 
 ---@return nil
 function M:mark_search_state_dirty()
-  self._search.state:mark_dirty()
+  self._search.state.dirtier_data:mark_dirty()
 end
 
 ---@return nil

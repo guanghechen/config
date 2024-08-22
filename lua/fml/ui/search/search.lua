@@ -1,4 +1,5 @@
 local G = require("fml.std.G")
+local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local scheduler = require("fml.std.scheduler")
 local api_state = require("fml.api.state")
@@ -71,8 +72,8 @@ M.__index = M
 ---@field public render_delay           ?integer
 ---@field public statusline_items       fml.types.ui.search.IRawStatuslineItem[]
 ---@field public title                  string
----@field public on_confirm             fml.types.ui.search.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
+---@field public on_confirm             fml.types.ui.search.IOnConfirm
 ---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
 
 ---@param props                         fml.types.ui.search.IProps
@@ -200,8 +201,8 @@ function M.new(props)
         vim.api.nvim_tabpage_set_win(0, winnr_input)
       end
     end,
-    refresh = function()
-      state:mark_dirty()
+    force_refresh = function()
+      state.dirtier_data:mark_dirty()
     end,
     on_main_G = function()
       state:locate(math.huge)
@@ -277,8 +278,8 @@ function M.new(props)
       desc = "search: confirm",
       nowait = true,
     },
-    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.force_refresh, desc = "search: refresh" },
+    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.force_refresh, desc = "search: refresh" },
     { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
   })
 
@@ -416,30 +417,68 @@ function M.new(props)
   self._winnr_preview = nil
   self._on_close = on_close_from_props
 
-  watch_observables({ state.dirty_main }, function()
-    local dirty = state.dirty_main:snapshot() ---@type boolean|nil
-    local visible = state.visible:snapshot() ---@type boolean
-    if dirty and visible then
-      self:draw()
-    end
-  end, true)
+  local draw_scheduler ---@type fml.std.scheduler.IScheduler
+  draw_scheduler = scheduler.debounce({
+    name = "fml.ui.search.search.draw",
+    delay = 48,
+    fn = function(callback)
+      local visible = state.visible:snapshot() ---@type boolean
+      if visible then
+        self:create_wins_as_needed()
+        self.state.dirtier_dimension:mark_clean()
+      end
+      callback(true)
+    end,
+  })
+
+  state.visible:subscribe(Subscriber.new({
+    on_next = function()
+      local visible = state.visible:snapshot() ---@type boolean
+      if visible then
+        draw_scheduler:schedule()
+      end
+    end,
+  }))
+
+  state.dirtier_dimension:subscribe(Subscriber.new({
+    on_next = function()
+      local is_dimension_dirty = state.dirtier_dimension:is_dirty() ---@type boolean
+      local visible = state.visible:snapshot() ---@type boolean
+      if visible and is_dimension_dirty then
+        draw_scheduler:schedule()
+      end
+    end,
+  }))
+
+  state.dirtier_main:subscribe(Subscriber.new({
+    on_next = function()
+      local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
+      local visible = state.visible:snapshot() ---@type boolean
+      if visible and is_main_dirty then
+        draw_scheduler:schedule()
+      end
+    end,
+  }))
 
   ---! Trigger the preview dirty change when the preview not exist.
   if preview == nil then
-    watch_observables({ state.dirty_preview }, function()
-      local dirty = state.dirty_preview:snapshot() ---@type boolean|nil
-      local visible = state.visible:snapshot() ---@type boolean
-      if visible and dirty then
-        vim.schedule(function()
-          state.dirty_preview:next(false)
-        end)
-      end
-    end, true)
+    state.dirtier_preview:subscribe(Subscriber.new({
+      on_next = function()
+        local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
+        local visible = state.visible:snapshot() ---@type boolean
+        if visible and is_preview_dirty then
+          draw_scheduler:schedule()
+        end
+      end,
+    }))
   end
 
   if enable_multiline_input then
     watch_observables({ state.input_line_count }, function()
-      self:draw()
+      local visible = state.visible:snapshot() ---@type boolean
+      if visible then
+        draw_scheduler:schedule()
+      end
     end, true)
   end
 
@@ -604,21 +643,6 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].wrap = false
 end
 
----@param force                         ?boolean
----@return nil
-function M:draw(force)
-  local state = self.state ---@type fml.types.ui.search.IState
-  local visible = state.visible:snapshot() ---@type boolean
-  if visible then
-    self:create_wins_as_needed()
-    self._input:set_virtual_text()
-    self._main:render(force)
-    if self._preview ~= nil then
-      self._preview:render(force)
-    end
-  end
-end
-
 ---@param raw_dimension                 fml.types.ui.search.IRawDimension
 ---@return nil
 function M:change_dimension(raw_dimension)
@@ -641,7 +665,7 @@ function M:change_dimension(raw_dimension)
     or dimension.width ~= old_dimension.width
     or dimension.width_preview ~= old_dimension.width_preview
   then
-    self:draw()
+    self.state.dirtier_dimension:mark_dirty()
   end
 end
 
@@ -783,9 +807,8 @@ function M:open()
   end
 
   local state = self.state ---@type fml.types.ui.search.IState
-  state.visible:next(true)
   self._input:reset_input()
-  self:draw()
+  state.visible:next(true)
 end
 
 ---@return nil
