@@ -101,25 +101,31 @@ function M.new(props)
     end,
   }
 
+  ---@type fml.types.ui.search.IRawDimension
+
+  local dimension = {
+    height = 0.8,
+    max_height = 1,
+    max_width = 1,
+    width = enable_preview and 0.4 or 0.5,
+    width_preview = enable_preview and 0.45 or 0,
+  }
+
   local select = Select.new({
-    title = title,
-    provider = file_select_provider,
-    destroy_on_close = destroy_on_close,
-    enable_preview = enable_preview,
-    statusline_items = statusline_items,
     case_sensitive = case_sensitive,
+    cmp = cmp,
+    destroy_on_close = destroy_on_close,
+    dimension = dimension,
+    enable_preview = enable_preview,
+    frecency = frecency,
     input = input,
     input_history = input_history,
-    frecency = frecency,
-    cmp = cmp,
     input_keymaps = input_keymaps,
     main_keymaps = main_keymaps,
     preview_keymaps = preview_keymaps,
-    width = enable_preview and 0.4 or 0.5,
-    height = 0.8,
-    width_preview = enable_preview and 0.45 or 0,
-    max_height = 1,
-    max_width = 1,
+    provider = file_select_provider,
+    statusline_items = statusline_items,
+    title = title,
     on_close = on_close_from_props,
     on_confirm = on_confirm_from_props or function(item)
       return self:open_filepath(item.data.filepath)
@@ -223,24 +229,15 @@ function M:render_item(item, match)
   return text, highlights
 end
 
----@return integer|nil
-function M:get_winnr_main()
-  return self._select:get_winnr_main()
-end
-
----@return integer|nil
-function M:get_winnr_input()
-  return self._select:get_winnr_input()
-end
-
----@return integer|nil
-function M:get_winnr_preview()
-  return self._select:get_winnr_preview()
-end
-
 ---@return nil
 function M:mark_data_dirty()
   self._select:mark_data_dirty()
+end
+
+---@param dimension                     fml.types.ui.search.IRawDimension
+---@return nil
+function M:change_dimension(dimension)
+  self._select:change_dimension(dimension)
 end
 
 ---@param title                         string
@@ -263,6 +260,21 @@ end
 ---@return nil
 function M:focus()
   self._select:focus()
+end
+
+---@return integer|nil
+function M:get_winnr_main()
+  return self._select:get_winnr_main()
+end
+
+---@return integer|nil
+function M:get_winnr_input()
+  return self._select:get_winnr_input()
+end
+
+---@return integer|nil
+function M:get_winnr_preview()
+  return self._select:get_winnr_preview()
 end
 
 ---@return nil

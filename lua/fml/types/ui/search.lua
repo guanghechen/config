@@ -57,7 +57,21 @@
 ---@field public symbol                 string
 ---@field public callback_fn            string
 
----@class fml.ui.search.preview.IWinOpts
+---@class fml.types.ui.search.IRawDimension
+---@field public height                 ?number
+---@field public max_width              ?number
+---@field public max_height             ?number
+---@field public width                  ?number
+---@field public width_preview          ?number
+
+---@class fml.types.ui.search.IDimension
+---@field public height                 ?number
+---@field public max_width              number
+---@field public max_height             number
+---@field public width                  ?number
+---@field public width_preview          ?number
+
+---@class fml.types.ui.search.preview.IWinOpts
 ---@field public title                  string
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
@@ -106,12 +120,13 @@
 ---@class fml.types.ui.search.ISearch
 ---@field public state                  fml.types.ui.search.IState
 ---@field public statusline_items       fml.types.ui.search.IStatuslineItem[]
----@field public get_winnr_input        fun(self: fml.types.ui.search.ISearch): integer|nil
----@field public get_winnr_main         fun(self: fml.types.ui.search.ISearch): integer|nil
----@field public get_winnr_preview      fun(self: fml.types.ui.search.ISearch): integer|nil
+---@field public change_dimension       fun(self: fml.types.ui.search.ISearch, dimension: fml.types.ui.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.types.ui.search.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: fml.types.ui.search.ISearch, title: string): nil
 ---@field public close                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public focus                  fun(self: fml.types.ui.search.ISearch): nil
+---@field public get_winnr_input        fun(self: fml.types.ui.search.ISearch): integer|nil
+---@field public get_winnr_main         fun(self: fml.types.ui.search.ISearch): integer|nil
+---@field public get_winnr_preview      fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public open                   fun(self: fml.types.ui.search.ISearch): nil
 ---@field public toggle                 fun(self: fml.types.ui.search.ISearch): nil

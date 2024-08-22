@@ -17,7 +17,7 @@ M.__index = M
 ---@field public patch_data             ?fml.types.ui.search.IPatchPreviewData
 ---@field public on_rendered            ?fml.types.ui.search.IOnPreviewRendered
 ---@field public render_delay           integer
----@field public update_win_config      fun(opts: fml.ui.search.preview.IWinOpts): nil
+---@field public update_win_config      fun(opts: fml.types.ui.search.preview.IWinOpts): nil
 
 ---@param props                         fml.ui.search.preview.IProps
 ---@return fml.ui.search.Preview
@@ -30,7 +30,7 @@ function M.new(props)
   local _patch_data = props.patch_data ---@type fml.types.ui.search.IPatchPreviewData|nil
   local _on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
   local _render_delay = props.render_delay ---@type integer
-  local _update_win_config = props.update_win_config ---@type fun(opts: fml.ui.search.preview.IWinOpts): nil
+  local _update_win_config = props.update_win_config ---@type fun(opts: fml.types.ui.search.preview.IWinOpts): nil
 
   local _last_item = nil ---@type fml.types.ui.search.IItem|nil
   local _last_data = nil ---@type fml.ui.search.preview.IData|nil

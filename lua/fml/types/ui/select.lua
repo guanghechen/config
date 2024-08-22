@@ -41,13 +41,14 @@
 
 ---@class fml.types.ui.ISelect
 ---@field public state                  fml.types.ui.search.IState
+---@field public change_dimension       fun(self: fml.types.ui.ISelect, dimension: fml.types.ui.search.IRawDimension): nil
+---@field public change_input_title     fun(self: fml.types.ui.ISelect, title: string): nil
+---@field public change_preview_title   fun(self: fml.types.ui.ISelect, title: string): nil
+---@field public close                  fun(self: fml.types.ui.ISelect): nil
+---@field public focus                  fun(self: fml.types.ui.ISelect): nil
 ---@field public get_winnr_input        fun(self: fml.types.ui.ISelect): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.ISelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.types.ui.ISelect): integer|nil
----@field public change_input_title     fun(self: fml.types.ui.ISelect, title: string): nil
----@field public change_preview_title   fun(self: fml.types.ui.ISelect, title: string): nil
 ---@field public mark_data_dirty        fun(self: fml.types.ui.ISelect): nil
----@field public close                  fun(self: fml.types.ui.ISelect): nil
----@field public focus                  fun(self: fml.types.ui.ISelect): nil
 ---@field public open                   fun(self: fml.types.ui.ISelect): nil
 ---@field public toggle                 fun(self: fml.types.ui.ISelect): nil

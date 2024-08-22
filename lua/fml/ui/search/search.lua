@@ -43,15 +43,11 @@ local _search_current = nil ---@type fml.ui.search.Search|nil
 
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
 ---@field protected _destroy_on_close   boolean
----@field protected _height             number|nil
+---@field protected _dimension          fml.types.ui.search.IDimension
 ---@field protected _input              fml.types.ui.search.IInput
 ---@field protected _main               fml.types.ui.search.IMain
----@field protected _max_height         number
----@field protected _max_width          number
 ---@field protected _preview            fml.types.ui.search.IPreview|nil
 ---@field protected _preview_title      string
----@field protected _width              number|nil
----@field protected _width_preview      number|nil
 ---@field protected _winnr_input        integer|nil
 ---@field protected _winnr_main         integer|nil
 ---@field protected _winnr_preview      integer|nil
@@ -60,25 +56,21 @@ local M = {}
 M.__index = M
 
 ---@class fml.types.ui.search.IProps
----@field public title                  string
----@field public input                  fml.types.collection.IObservable
----@field public input_history          fml.types.collection.IHistory|nil
----@field public statusline_items       fml.types.ui.search.IRawStatuslineItem[]
+---@field public destroy_on_close       ?boolean
+---@field public dimension              ?fml.types.ui.search.IRawDimension
+---@field public enable_multiline_input ?boolean
 ---@field public fetch_data             fml.types.ui.search.IFetchData
 ---@field public fetch_delay            ?integer
----@field public render_delay           ?integer
----@field public enable_multiline_input ?boolean
 ---@field public fetch_preview_data     ?fml.types.ui.search.IFetchPreviewData
----@field public patch_preview_data     ?fml.types.ui.search.IPatchPreviewData
+---@field public input                  fml.types.collection.IObservable
+---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
+---@field public patch_preview_data     ?fml.types.ui.search.IPatchPreviewData
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
----@field public max_width              ?number
----@field public max_height             ?number
----@field public width                  ?number
----@field public height                 ?number
----@field public width_preview          ?number
----@field public destroy_on_close       ?boolean
+---@field public render_delay           ?integer
+---@field public statusline_items       fml.types.ui.search.IRawStatuslineItem[]
+---@field public title                  string
 ---@field public on_confirm             fml.types.ui.search.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
 ---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
@@ -113,18 +105,24 @@ function M.new(props)
     table.insert(common_keymaps, keymap)
   end
 
-  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
-  local max_width = props.max_width or 0.8 ---@type number
-  local max_height = props.max_height or 0.8 ---@type number
-  local width = props.width ---@type number|nil
-  local height = props.height ---@type number|nil
-  local width_preview = props.width_preview ---@type number|nil
+  local raw_dimension = props.dimension or {} ---@type fml.types.ui.search.IRawDimension
+  ---@type fml.types.ui.search.IDimension
+  local dimension = {
+    height = raw_dimension.height,
+    max_width = raw_dimension.max_width or 0.8,
+    max_height = raw_dimension.max_height or 0.8,
+    width = raw_dimension.width,
+    width_preview = raw_dimension.width_preview,
+  }
+
   local destroy_on_close = not not props.destroy_on_close ---@type boolean
+  local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
+  local fetch_delay = math.max(0, props.fetch_delay or 100) ---@type integer
+  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
+  local render_delay = math.max(0, props.render_delay or 100) ---@type integer
+
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
-  local fetch_delay = math.max(0, props.fetch_delay or 100) ---@type integer
-  local render_delay = math.max(0, props.render_delay or 100) ---@type integer
-  local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
 
   ---@type fml.types.ui.search.IState
   local state = SearchState.new({
@@ -407,18 +405,15 @@ function M.new(props)
 
   self.state = state
   self.statusline_items = statusline_items
-  self._winnr_input = nil
-  self._winnr_main = nil
+  self._destroy_on_close = destroy_on_close
+  self._dimension = dimension
   self._input = input
   self._main = main
   self._preview = preview
-  self._max_width = max_width
-  self._max_height = max_height
-  self._width = width
-  self._height = height
-  self._width_preview = width_preview
-  self._destroy_on_close = destroy_on_close
   self._preview_title = " preview "
+  self._winnr_input = nil
+  self._winnr_main = nil
+  self._winnr_preview = nil
   self._on_close = on_close_from_props
 
   watch_observables({ state.dirty_main }, function()
@@ -467,19 +462,24 @@ function M:create_wins_as_needed()
   local state = self.state ---@type fml.types.ui.search.IState
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
-  local max_height = self._max_height <= 1 and math.floor(vim.o.lines * self._max_height) or self._max_height ---@type number
-  local max_width = self._max_width <= 1 and math.floor(vim.o.columns * self._max_width) or self._max_width ---@type number
+  local dimension = self._dimension ---@type fml.types.ui.search.IDimension
+
+  ---@type number
+  local max_height = dimension.max_height <= 1 and math.floor(vim.o.lines * dimension.max_height)
+    or dimension.max_height
+  ---@type number
+  local max_width = dimension.max_width <= 1 and math.floor(vim.o.columns * dimension.max_width) or dimension.max_width
 
   local input_height = state.enable_multiline_input and math.max(1, math.min(3, state.input_line_count:snapshot())) or 1
   local input_height_with_borders = input_height + 2 ---@type integer
 
-  local height = self._height or (#state.items + input_height_with_borders) ---@type number
+  local height = dimension.height or (#state.items + input_height_with_borders) ---@type number
   if height < 1 then
     height = math.floor(vim.o.lines * height)
   end
   height = math.min(max_height, math.max(input_height_with_borders, height)) ---@type integer
 
-  local width = self._width or state.max_width + 10 ---@type number
+  local width = dimension.width or state.max_width + 10 ---@type number
   if width < 1 then
     width = math.floor(vim.o.columns * width)
   end
@@ -487,7 +487,7 @@ function M:create_wins_as_needed()
 
   local has_preview = self._preview ~= nil ---@type boolean
 
-  local width_preview = self._width_preview or width ---@type integer
+  local width_preview = dimension.width_preview or width ---@type integer
   if width_preview < 1 then
     width_preview = math.floor(vim.o.columns * width_preview)
   end
@@ -604,32 +604,6 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].wrap = false
 end
 
----@return fml.types.ui.search.ISearch|nil
-function M.get_current_instance()
-  return _search_current
-end
-
----@return string
----@return string|nil
-function M.get_current_path()
-  return _current_buf_dir, _current_buf_path
-end
-
----@return integer|nil
-function M:get_winnr_main()
-  return self._winnr_main
-end
-
----@return integer|nil
-function M:get_winnr_input()
-  return self._winnr_input
-end
-
----@return integer|nil
-function M:get_winnr_preview()
-  return self._winnr_preview
-end
-
 ---@param force                         ?boolean
 ---@return nil
 function M:draw(force)
@@ -642,6 +616,32 @@ function M:draw(force)
     if self._preview ~= nil then
       self._preview:render(force)
     end
+  end
+end
+
+---@param raw_dimension                 fml.types.ui.search.IRawDimension
+---@return nil
+function M:change_dimension(raw_dimension)
+  local old_dimension = self._dimension
+
+  ---@type fml.types.ui.search.IDimension
+  local dimension = {
+    height = raw_dimension.height,
+    max_width = raw_dimension.max_width or 0.8,
+    max_height = raw_dimension.max_height or 0.8,
+    width = raw_dimension.width,
+    width_preview = raw_dimension.width_preview,
+  }
+  self._dimension = dimension
+
+  if
+    dimension.height ~= old_dimension.height
+    or dimension.max_width ~= old_dimension.max_width
+    or dimension.max_height ~= old_dimension.max_height
+    or dimension.width ~= old_dimension.width
+    or dimension.width_preview ~= old_dimension.width_preview
+  then
+    self:draw()
   end
 end
 
@@ -738,6 +738,32 @@ function M:focus()
       end
     end)
   end
+end
+
+---@return fml.types.ui.search.ISearch|nil
+function M.get_current_instance()
+  return _search_current
+end
+
+---@return string
+---@return string|nil
+function M.get_current_path()
+  return _current_buf_dir, _current_buf_path
+end
+
+---@return integer|nil
+function M:get_winnr_main()
+  return self._winnr_main
+end
+
+---@return integer|nil
+function M:get_winnr_input()
+  return self._winnr_input
+end
+
+---@return integer|nil
+function M:get_winnr_preview()
+  return self._winnr_preview
 end
 
 ---@return nil

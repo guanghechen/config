@@ -40,14 +40,15 @@
 
 ---@class fml.types.ui.IFileSelect
 ---@field public state                  fml.types.ui.search.IState
+---@field public change_dimension       fun(self: fml.types.ui.IFileSelect, dimension: fml.types.ui.search.IRawDimension): nil
+---@field public change_input_title     fun(self: fml.types.ui.IFileSelect, title: string): nil
+---@field public change_preview_title   fun(self: fml.types.ui.IFileSelect, title: string): nil
+---@field public close                  fun(self: fml.types.ui.IFileSelect): nil
+---@field public focus                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public get_winnr_input        fun(self: fml.types.ui.IFileSelect): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.IFileSelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.types.ui.IFileSelect): integer|nil
----@field public change_input_title     fun(self: fml.types.ui.IFileSelect, title: string): nil
----@field public change_preview_title   fun(self: fml.types.ui.IFileSelect, title: string): nil
 ---@field public mark_data_dirty        fun(self: fml.types.ui.IFileSelect): nil
----@field public open_filepath          fun(self: fml.types.ui.IFileSelect, filepath: string): nil
----@field public close                  fun(self: fml.types.ui.IFileSelect): nil
----@field public focus                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public open                   fun(self: fml.types.ui.IFileSelect): nil
+---@field public open_filepath          fun(self: fml.types.ui.IFileSelect, filepath: string): nil
 ---@field public toggle                 fun(self: fml.types.ui.IFileSelect): nil

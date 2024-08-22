@@ -108,9 +108,9 @@ local function get_select(initial_title)
 
   if _select == nil then
     _select = fml.ui.FileSelect.new({
-      frecency = frecency,
       destroy_on_close = true,
       enable_preview = false,
+      frecency = frecency,
       provider = provider,
       title = initial_title,
       on_close = function()

@@ -78,6 +78,14 @@ function M:get_file_select()
   return self.file_select
 end
 
+---@param dimension                     fml.types.ui.search.IRawDimension
+---@return nil
+function M:change_dimension(dimension)
+  if self.file_select ~= nil then
+    self.file_select:change_dimension(dimension)
+  end
+end
+
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
@@ -93,6 +101,27 @@ function M:change_preview_title(title)
   self._title = title
   if self.file_select ~= nil then
     self.file_select:change_preview_title(title)
+  end
+end
+
+---@return integer|nil
+function M:get_winnr_main()
+  if self.file_select ~= nil then
+    return self.file_select:get_winnr_main()
+  end
+end
+
+---@return integer|nil
+function M:get_winnr_input()
+  if self.file_select ~= nil then
+    return self.file_select:get_winnr_input()
+  end
+end
+
+---@return integer|nil
+function M:get_winnr_preview()
+  if self.file_select ~= nil then
+    return self.file_select:get_winnr_preview()
   end
 end
 

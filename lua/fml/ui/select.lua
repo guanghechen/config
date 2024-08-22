@@ -21,24 +21,20 @@ local M = {}
 M.__index = M
 
 ---@class fml.types.ui.select.IProps
----@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public case_sensitive         ?fml.types.collection.IObservable
+---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public destroy_on_close       boolean
+---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_preview         boolean
 ---@field public frecency               ?fml.types.collection.IFrecency
----@field public height                 ?number
 ---@field public input                  ?fml.types.collection.IObservable
 ---@field public input_history          ?fml.types.collection.IHistory
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
----@field public max_height             ?number
----@field public max_width              ?number
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public provider               fml.types.ui.select.IProvider
 ---@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
 ---@field public title                  string
----@field public width                  ?number
----@field public width_preview          ?number
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
 ---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
@@ -52,21 +48,17 @@ function M.new(props)
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local data_dirty = Observable.from_value(true) ---@type fml.types.collection.IObservable
   local destroy_on_close = props.destroy_on_close ---@type boolean
+  local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local enable_preview = props.enable_preview ---@type boolean
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
-  local height = props.height ---@type number|nil
   local input = props.input or Observable.from_value("") ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
-  local max_height = props.max_height or 0.8 ---@type number
-  local max_width = props.max_width or 0.8 ---@type number
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.select.IProvider
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
   local title = props.title ---@type string
-  local width = props.width ---@type number|nil
-  local width_preview = props.width_preview ---@type number|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
@@ -152,24 +144,21 @@ function M.new(props)
 
   ---@type fml.types.ui.search.ISearch
   local search = Search.new({
-    title = title,
-    input = input,
+    destroy_on_close = destroy_on_close,
+    dimension = dimension,
+    enable_multiline_input = false,
     fetch_data = fetch_data,
+    fetch_delay = 32,
+    fetch_preview_data = fetch_preview_data,
+    input = input,
     input_history = input_history,
-    statusline_items = statusline_items,
     input_keymaps = input_keymaps,
     main_keymaps = main_keymaps,
-    preview_keymaps = preview_keymaps,
-    fetch_delay = 32,
-    render_delay = 32,
-    fetch_preview_data = fetch_preview_data,
     patch_preview_data = patch_preview_data,
-    max_width = max_width,
-    max_height = max_height,
-    width = width,
-    height = height,
-    width_preview = width_preview,
-    destroy_on_close = destroy_on_close,
+    preview_keymaps = preview_keymaps,
+    render_delay = 32,
+    statusline_items = statusline_items,
+    title = title,
     on_confirm = on_confirm,
     on_close = on_close_from_props,
     on_preview_rendered = on_preview_rendered,
@@ -359,21 +348,6 @@ function M:find_matched_items(input, old_matches)
   return matches
 end
 
----@return integer|nil
-function M:get_winnr_main()
-  return self._search:get_winnr_main()
-end
-
----@return integer|nil
-function M:get_winnr_input()
-  return self._search:get_winnr_input()
-end
-
----@return integer|nil
-function M:get_winnr_preview()
-  return self._search:get_winnr_preview()
-end
-
 ---@return nil
 function M:mark_data_dirty()
   self._data_dirty:next(true)
@@ -383,6 +357,12 @@ end
 ---@return nil
 function M:refresh()
   self._search.state:mark_dirty()
+end
+
+---@param dimension                     fml.types.ui.search.IRawDimension
+---@return nil
+function M:change_dimension(dimension)
+  self._search:change_dimension(dimension)
 end
 
 ---@param title                         string
@@ -405,6 +385,21 @@ end
 ---@return nil
 function M:focus()
   self._search:focus()
+end
+
+---@return integer|nil
+function M:get_winnr_main()
+  return self._search:get_winnr_main()
+end
+
+---@return integer|nil
+function M:get_winnr_input()
+  return self._search:get_winnr_input()
+end
+
+---@return integer|nil
+function M:get_winnr_preview()
+  return self._search:get_winnr_preview()
 end
 
 ---@return nil
