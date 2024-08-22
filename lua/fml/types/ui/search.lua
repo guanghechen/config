@@ -28,6 +28,7 @@
 
 ---@class fml.types.ui.search.IData
 ---@field public items                  fml.types.ui.search.IItem[]
+---@field public present_uuid           ?string
 
 ---@class fml.types.ui.search.IItem
 ---@field public group                  string|nil
@@ -62,18 +63,19 @@
 ---@field public col                    ?integer
 
 ---@class fml.types.ui.search.IState
----@field public uuid                   string
----@field public title                  string
----@field public enable_multiline_input boolean
----@field public items                  fml.types.ui.search.IItem[]
----@field public input                  fml.types.collection.IObservable
----@field public input_line_count       fml.types.collection.IObservable
----@field public input_history          fml.types.collection.IHistory|nil
----@field public visible                fml.types.collection.IObservable
 ---@field public dirty_items            fml.types.collection.IObservable
 ---@field public dirty_main             fml.types.collection.IObservable
 ---@field public dirty_preview          fml.types.collection.IObservable
+---@field public enable_multiline_input boolean
+---@field public input                  fml.types.collection.IObservable
+---@field public input_history          fml.types.collection.IHistory|nil
+---@field public input_line_count       fml.types.collection.IObservable
+---@field public item_present_uuid      string|nil
+---@field public items                  fml.types.ui.search.IItem[]
 ---@field public max_width              integer
+---@field public title                  string
+---@field public uuid                   string
+---@field public visible                fml.types.collection.IObservable
 ---@field public get_current            fun(self: fml.types.ui.search.IState): fml.types.ui.search.IItem|nil, integer, string|nil
 ---@field public get_current_lnum       fun(self: fml.types.ui.search.IState): integer
 ---@field public locate                 fun(self: fml.types.ui.search.IState, lnum: integer): integer

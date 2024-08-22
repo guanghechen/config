@@ -13,6 +13,7 @@
 ---@class fml.types.ui.file_select.IData
 ---@field public cwd                    string
 ---@field public items                  fml.types.ui.file_select.IRawItem[]
+---@field public present_uuid           ?string
 
 ---@class fml.types.ui.file_select.IRawItem
 ---@field public filepath               string
@@ -45,6 +46,7 @@
 ---@field public change_input_title     fun(self: fml.types.ui.IFileSelect, title: string): nil
 ---@field public change_preview_title   fun(self: fml.types.ui.IFileSelect, title: string): nil
 ---@field public mark_data_dirty        fun(self: fml.types.ui.IFileSelect): nil
+---@field public open_filepath          fun(self: fml.types.ui.IFileSelect, filepath: string): nil
 ---@field public close                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public focus                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public open                   fun(self: fml.types.ui.IFileSelect): nil

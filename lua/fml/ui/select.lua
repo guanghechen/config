@@ -11,6 +11,7 @@ local Search = require("fml.ui.search.search")
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
 ---@field protected _full_matches       fml.types.ui.select.IMatchedItem[]
 ---@field protected _item_map           table<string, fml.types.ui.select.IItem>
+---@field protected _item_present_uuid  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
 ---@field protected _matches            fml.types.ui.select.IMatchedItem[]
@@ -131,8 +132,7 @@ function M.new(props)
   ---@return nil
   local function fetch_data(input_text, callback)
     vim.schedule(function()
-      local ok, search_items = pcall(self.fetch_items, self, input_text)
-      local data = { items = search_items } ---@type fml.types.ui.search.IData
+      local ok, data = pcall(self.fetch_items, self, input_text)
       callback(ok, data)
     end)
   end
@@ -182,6 +182,7 @@ function M.new(props)
   self._frecency = frecency
   self._full_matches = {}
   self._item_map = {}
+  self._item_present_uuid = nil
   self._last_input = nil ---@type string|nil
   self._last_case_sensitive = case_sensitive:snapshot()
   self._matches = {}
@@ -216,7 +217,7 @@ function M.default_render_item(item, match)
 end
 
 ---@param input                       string
----@return fml.types.ui.search.IItem[]
+---@return fml.types.ui.search.IData
 function M:fetch_items(input)
   local is_data_dirty = self._data_dirty:snapshot() ---@type boolean
   if is_data_dirty then
@@ -235,6 +236,7 @@ function M:fetch_items(input)
       table.sort(full_matches, self._cmp)
     end
 
+    self._item_present_uuid = data.present_uuid
     self._item_map = item_map
     self._full_matches = full_matches
     self._matches = full_matches
@@ -243,16 +245,18 @@ function M:fetch_items(input)
 
   local item_map = self._item_map ---@type table<string, fml.types.ui.select.IItem>
   local matches = self:filter(input) ---@type fml.types.ui.select.IMatchedItem[]
-  local search_items = {} ---@type fml.types.ui.search.IItem[]
+  local items = {} ---@type fml.types.ui.search.IItem[]
   local render_item = self._provider.render_item or M.default_render_item ---@type fml.types.ui.select.IRenderItem
   for _, match in ipairs(matches) do
     local item = item_map[match.uuid] ---@type fml.types.ui.select.IItem
     local line, highlights = render_item(item, match)
     ---@type fml.types.ui.search.IItem
     local search_item = { group = item.group, uuid = item.uuid, text = line, highlights = highlights }
-    table.insert(search_items, search_item)
+    table.insert(items, search_item)
   end
-  return search_items
+
+  ---@type fml.types.ui.search.IData
+  return { items = items, present_uuid = self._item_present_uuid }
 end
 
 ---@param input                         string

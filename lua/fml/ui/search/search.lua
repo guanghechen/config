@@ -42,19 +42,19 @@ local _current_buf_path = nil ---@type string|nil
 local _search_current = nil ---@type fml.ui.search.Search|nil
 
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
+---@field protected _destroy_on_close   boolean
+---@field protected _height             number|nil
+---@field protected _input              fml.types.ui.search.IInput
+---@field protected _main               fml.types.ui.search.IMain
+---@field protected _max_height         number
+---@field protected _max_width          number
+---@field protected _preview            fml.types.ui.search.IPreview|nil
+---@field protected _preview_title      string
+---@field protected _width              number|nil
+---@field protected _width_preview      number|nil
 ---@field protected _winnr_input        integer|nil
 ---@field protected _winnr_main         integer|nil
 ---@field protected _winnr_preview      integer|nil
----@field protected _input              fml.types.ui.search.IInput
----@field protected _main               fml.types.ui.search.IMain
----@field protected _preview            fml.types.ui.search.IPreview|nil
----@field protected _max_width          number
----@field protected _max_height         number
----@field protected _width              number|nil
----@field protected _height             number|nil
----@field protected _width_preview      number|nil
----@field protected _destroy_on_close   boolean
----@field protected _preview_title      string
 ---@field protected _on_close           ?fml.types.ui.search.IOnClose
 local M = {}
 M.__index = M

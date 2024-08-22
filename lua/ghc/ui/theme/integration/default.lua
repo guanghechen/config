@@ -27,6 +27,8 @@ local function gen_hlgroup_map(params)
     f_us_main_current = { bg = c.one_bg2 },
     f_us_main_match = { fg = c.blue },
     f_us_main_match_lnum = { fg = c.grey },
+    f_us_main_present = { fg = c.blue, bg = c.darker_black },
+    f_us_main_present_cur = { fg = c.blue, bg = c.one_bg2 },
     f_us_main_normal = { bg = c.darker_black },
     f_us_main_replace = { fg = c.diff_add_word },
     f_us_main_search = { fg = c.diff_del_word, strikethrough = true },

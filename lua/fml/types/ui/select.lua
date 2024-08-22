@@ -18,6 +18,7 @@
 
 ---@class fml.types.ui.select.IData
 ---@field public items                  fml.types.ui.select.IItem[]
+---@field public present_uuid           ?string
 
 ---@class fml.types.ui.select.IItem
 ---@field public group                  string|nil

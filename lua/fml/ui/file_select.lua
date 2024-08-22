@@ -28,6 +28,7 @@ M.__index = M
 ---@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?fml.types.ui.search.IOnClose
+---@field public on_confirm             ?fml.types.ui.select.IOnConfirm
 ---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
 
 ---@param props fml.ui.file_select.IProps
@@ -49,6 +50,7 @@ function M.new(props)
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
+  local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
 
   ---@type fml.types.ui.select.IProvider
@@ -57,6 +59,7 @@ function M.new(props)
       local raw_data = provider.fetch_data() ---@type fml.types.ui.file_select.IData
       local next_cwd = raw_data.cwd ---@type string
       local raw_items = raw_data.items ---@type fml.types.ui.file_select.IRawItem[]
+      local present_uuid = raw_data.present_uuid ---@type string|nil
 
       local items = {} ---@type fml.types.ui.file_select.IItem[]
       for _, raw_item in ipairs(raw_items) do
@@ -82,8 +85,9 @@ function M.new(props)
       end
 
       self.cwd = next_cwd
-      local data = { items = items } ---@type fml.types.ui.select.IData
-      return data
+
+      ---@type fml.types.ui.select.IData
+      return { items = items, present_uuid = present_uuid }
     end,
     fetch_preview_data = enable_preview and function(item)
       return self:fetch_preview_data(item)
@@ -117,9 +121,8 @@ function M.new(props)
     max_height = 1,
     max_width = 1,
     on_close = on_close_from_props,
-    on_confirm = function(item)
-      ---@cast item fml.types.ui.file_select.IItem
-      return self:open_filepath(item)
+    on_confirm = on_confirm_from_props or function(item)
+      return self:open_filepath(item.data.filepath)
     end,
     on_preview_rendered = on_preview_rendered,
   })
@@ -188,12 +191,12 @@ function M:patch_preview_data(item, last_item, last_data)
   }
 end
 
----@param item                          fml.types.ui.file_select.IItem
+---@param filepath                      string
 ---@return boolean
-function M:open_filepath(item)
+function M:open_filepath(filepath)
   local winnr = api_state.win_history:present() ---@type integer
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    local filepath = path.join(self.cwd, item.data.filepath) ---@type string
+    filepath = path.join(self.cwd, filepath) ---@type string
     vim.schedule(function()
       api_buf.open(winnr, filepath)
     end)

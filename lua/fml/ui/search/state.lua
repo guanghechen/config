@@ -47,6 +47,7 @@ function M.new(props)
           local max_width = 0 ---@type integer
           local item_lnum_next = 1 ---@type integer
           local items = data.items ---@type fml.types.ui.search.IItem[]
+          local present_uuid = data.present_uuid ---@type string|nil
 
           ---@diagnostic disable-next-line: invisible
           local item_uuid_cur = self._item_uuid_cur ---@type string|nil
@@ -59,6 +60,7 @@ function M.new(props)
             end
           end
 
+          self.item_present_uuid = present_uuid
           self.items = items
           self.max_width = max_width
           self:locate(item_lnum_next)
@@ -95,18 +97,19 @@ function M.new(props)
     end
   end
 
-  self.uuid = uuid
-  self.title = title
+  self.dirty_items = dirty_items
+  self.dirty_main = dirty_main
+  self.dirty_preview = dirty_preview
   self.enable_multiline_input = enable_multiline_input
   self.input = input
   self.input_line_count = input_line_count
   self.input_history = input_history
-  self.visible = visible
-  self.dirty_items = dirty_items
-  self.dirty_main = dirty_main
-  self.dirty_preview = dirty_preview
+  self.item_present_uuid = nil
   self.items = {} ---@type fml.types.ui.search.IItem[]
   self.max_width = 0 ---@type integer
+  self.title = title
+  self.uuid = uuid
+  self.visible = visible
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
 

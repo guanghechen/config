@@ -18,7 +18,8 @@ M.FT_SELECT_MAIN = "select-main"
 M.FT_TERM = "term"
 
 ---! sign_ids
-M.SIGN_NR_SEARCH_MAIN_CURRENT = 3333
+M.SIGN_NR_SEARCH_MAIN_CURRENT = 2333
+M.SIGN_NR_SEARCH_MAIN_PRESENT = 2334
 
 M.BUF_UNTITLED = "untitled"
 M.SESSION_SAVE_OPTION = "buffers,curdir,folds,help,resize,tabpages,unix,winpos,winsize"

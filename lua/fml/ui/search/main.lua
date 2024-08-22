@@ -42,7 +42,8 @@ function M.new(props)
           lines[i] = item.text
         end
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-        self:place_lnum_sign()
+        vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_CURRENT })
+        vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_PRESENT })
 
         vim.bo[bufnr].modifiable = false
         vim.bo[bufnr].readonly = true
@@ -73,14 +74,6 @@ function M.new(props)
     local visible = state.visible:snapshot() ---@type boolean
     if visible and dirty then
       _render_scheduler.schedule()
-    end
-  end, true)
-
-  watch_observables({ state.dirty_preview }, function()
-    local dirty = state.dirty_preview:snapshot() ---@type boolean|nil
-    local visible = state.visible:snapshot() ---@type boolean
-    if visible and dirty then
-      self:place_lnum_sign()
     end
   end, true)
 
@@ -125,17 +118,52 @@ function M:place_lnum_sign()
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_CURRENT })
-    local _, lnum, uuid = self.state:get_current()
-    local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-    if uuid ~= nil and linecount > 0 and lnum > 0 and lnum <= linecount then
+    vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_PRESENT })
+
+    local present_lnum = 0 ---@type integer
+    do
+      local item_present_uuid = self.state.item_present_uuid ---@type string|nil
+      if item_present_uuid ~= nil then
+        for lnum, item in ipairs(self.state.items) do
+          if item.uuid == item_present_uuid then
+            present_lnum = lnum
+            break
+          end
+        end
+      end
+    end
+
+    local current_lnum = 0 ---@type integer
+    do
+      local _, lnum, uuid = self.state:get_current()
+      local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+      if uuid ~= nil and linecount > 0 and lnum > 0 and lnum <= linecount then
+        current_lnum = lnum
+      end
+    end
+
+    if present_lnum > 0 then
       vim.fn.sign_place(
-        constant.SIGN_NR_SEARCH_MAIN_CURRENT,
+        constant.SIGN_NR_SEARCH_MAIN_PRESENT,
         "",
-        signcolumn.names.search_main_current,
+        present_lnum == current_lnum and signcolumn.names.search_main_present_cur
+          or signcolumn.names.search_main_present,
         bufnr,
-        { lnum = lnum }
+        { lnum = present_lnum }
       )
-      return lnum
+    end
+
+    if current_lnum > 0 then
+      if current_lnum ~= present_lnum then
+        vim.fn.sign_place(
+          constant.SIGN_NR_SEARCH_MAIN_CURRENT,
+          "",
+          signcolumn.names.search_main_current,
+          bufnr,
+          { lnum = current_lnum }
+        )
+      end
+      return current_lnum
     end
   end
   return nil

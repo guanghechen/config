@@ -119,6 +119,7 @@ M.ui = {
   Accepted = "",
   ArrowClosed = "",
   ArrowOpen = "",
+  ArrowPresent = "",
   BigCircle = "",
   BigUnfilledCircle = "",
   BookMark = "󰃃",

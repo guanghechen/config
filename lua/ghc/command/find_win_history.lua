@@ -77,7 +77,7 @@ local function get_select(initial_title)
       end
 
       ---@type fml.types.ui.file_select.IData
-      return { cwd = cwd, items = items }
+      return { cwd = cwd, items = items, present_uuid = present_uuid }
     end,
     render_item = function(item, match)
       local text_prefix = item.uuid .. " " ---@type string
@@ -117,6 +117,21 @@ local function get_select(initial_title)
         if _select ~= nil then
           _select:mark_data_dirty()
         end
+      end,
+      on_confirm = function(item)
+        local item_index = tonumber(item.uuid) ---@type integer|nil
+        if item_index ~= nil then
+          local winnr = fml.api.state.win_history:present() ---@type integer|nil
+          local win = winnr ~= nil and fml.api.state.wins[winnr] or nil ---@type fml.types.api.state.IWinItem|nil
+          if win ~= nil then
+            win.buf_history:go(item_index)
+          end
+        end
+
+        if _select ~= nil then
+          return _select:open_filepath(item.data.filepath)
+        end
+        return false
       end,
     })
   end
