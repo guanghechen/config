@@ -9,8 +9,8 @@ local function mk(mode, key, action, desc, silent, nowait)
 end
 
 ---@return nil
-local function resume_or_find_files()
-  if not fml.ui.search.resume() then
+local function resume_or_close()
+  if not fml.ui.search.resume_or_close() then
     ghc.command.find_files.open()
   end
 end
@@ -133,6 +133,7 @@ mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window his
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[f]ind-------------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader><leader>", ghc.command.find_files.open, "find: files")
 mk({ "n", "v" }, "<leader>ff", ghc.command.find_files.open, "find: files")
 mk({ "n", "v" }, "<leader>fw", ghc.command.find_files.open_workspace, "find: files (workspace)")
 mk({ "n", "v" }, "<leader>fc", ghc.command.find_files.open_cwd, "find: files (cwd)")
@@ -173,7 +174,7 @@ mk({ "i", "n", "v" }, "<F5>", ghc.command.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
 
 --#[s]earch-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader><leader>", resume_or_find_files, "search: resume or find files")
+mk({ "n", "v" }, "<leader>`", resume_or_close, "search: resume or find files")
 mk({ "n", "v" }, "<leader>ss", ghc.command.search_files.open_search, "search: files")
 mk({ "n", "v" }, "<leader>sw", ghc.command.search_files.open_search_workspace, "search: files (workspace)")
 mk({ "n", "v" }, "<leader>sc", ghc.command.search_files.open_search_cwd, "search: files (cwd)")

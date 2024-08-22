@@ -763,14 +763,6 @@ function M:open()
 end
 
 ---@return nil
-function M:resume()
-  local visible = self.state.visible:snapshot() ---@type boolean
-  if not visible then
-    self:open()
-  end
-end
-
----@return nil
 function M:toggle()
   local visible = self.state.visible:snapshot() ---@type boolean
   if visible then

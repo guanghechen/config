@@ -49,5 +49,4 @@
 ---@field public close                  fun(self: fml.types.ui.ISelect): nil
 ---@field public focus                  fun(self: fml.types.ui.ISelect): nil
 ---@field public open                   fun(self: fml.types.ui.ISelect): nil
----@field public resume                 fun(self: fml.types.ui.ISelect): nil
 ---@field public toggle                 fun(self: fml.types.ui.ISelect): nil

@@ -268,11 +268,6 @@ function M:open()
 end
 
 ---@return nil
-function M:resume()
-  self._select:resume()
-end
-
----@return nil
 function M:toggle()
   self._select:toggle()
 end

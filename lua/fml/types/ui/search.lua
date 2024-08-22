@@ -112,5 +112,4 @@
 ---@field public close                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public focus                  fun(self: fml.types.ui.search.ISearch): nil
 ---@field public open                   fun(self: fml.types.ui.search.ISearch): nil
----@field public resume                 fun(self: fml.types.ui.search.ISearch): nil
 ---@field public toggle                 fun(self: fml.types.ui.search.ISearch): nil

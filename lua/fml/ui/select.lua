@@ -409,11 +409,6 @@ function M:open()
 end
 
 ---@return nil
-function M:resume()
-  self._search:resume()
-end
-
----@return nil
 function M:toggle()
   self._search:toggle()
 end
