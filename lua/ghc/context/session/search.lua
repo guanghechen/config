@@ -16,6 +16,7 @@ local search_exclude_patterns = Observable.new({
     "**/.next/**",
     "**/.yarn/**",
     "**/node_modules/**",
+    "*.jar",
     "*.pdf",
     "*.mkv",
     "*.mp4",

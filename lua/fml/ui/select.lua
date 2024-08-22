@@ -64,7 +64,7 @@ M.__index = M
 ---@field public width_preview          ?number
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
----@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
+---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
 
 ---@param props                         fml.types.ui.select.IProps
 ---@return fml.ui.Select
@@ -92,7 +92,7 @@ function M.new(props)
   local width_preview = props.width_preview ---@type number|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
-  local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.preview.IOnRendered|nil
+  local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
 
   if statusline_items == nil then
     ---@return nil
@@ -127,7 +127,7 @@ function M.new(props)
     input_keymaps = std_array.concat(input_keymaps or {}, default_keymaps)
     main_keymaps = std_array.concat(main_keymaps or {}, default_keymaps)
     preview_keymaps = std_array.concat(preview_keymaps or {}, default_keymaps)
-  end ---@type fml.types.ui.search.preview.IFetchData|nil
+  end ---@type fml.types.ui.search.IFetchPreviewData|nil
 
   local fetch_preview_data = nil
   if enable_preview and provider.fetch_preview_data ~= nil then
@@ -138,7 +138,7 @@ function M.new(props)
     end
   end
 
-  ---@type fml.types.ui.search.preview.IPatchData|nil
+  ---@type fml.types.ui.search.IPatchPreviewData|nil
   local patch_preview_data = nil
   if enable_preview and provider.patch_preview_data ~= nil then
     patch_preview_data = function(item, last_item, data)
@@ -151,12 +151,13 @@ function M.new(props)
   end
 
   ---@param input_text                  string
-  ---@param callback                    fml.types.ui.search.IFetchItemsCallback
+  ---@param callback                    fml.types.ui.search.IFetchDataCallback
   ---@return nil
-  local function fetch_items(input_text, callback)
+  local function fetch_data(input_text, callback)
     vim.schedule(function()
       local ok, search_items = pcall(self.fetch_items, self, input_text)
-      callback(ok, search_items)
+      local data = { items = search_items } ---@type fml.types.ui.search.IData
+      callback(ok, data)
     end)
   end
 
@@ -177,7 +178,7 @@ function M.new(props)
   local search = Search.new({
     title = title,
     input = input,
-    fetch_items = fetch_items,
+    fetch_data = fetch_data,
     input_history = input_history,
     statusline_items = statusline_items,
     input_keymaps = input_keymaps,

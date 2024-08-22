@@ -28,7 +28,7 @@ M.__index = M
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public on_close               ?fml.types.ui.search.IOnClose
----@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
+---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
 
 ---@param props fml.ui.file_select.IProps
 ---@return fml.ui.FileSelect
@@ -49,7 +49,7 @@ function M.new(props)
   local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
   local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
-  local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.preview.IOnRendered|nil
+  local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
 
   ---@type fml.types.ui.select.IProvider
   local file_select_provider = {

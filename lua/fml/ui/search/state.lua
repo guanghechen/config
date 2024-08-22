@@ -15,7 +15,7 @@ M.__index = M
 ---@field public enable_multiline_input boolean
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
----@field public fetch_items            fml.types.ui.search.IFetchItems
+---@field public fetch_data             fml.types.ui.search.IFetchData
 ---@field public fetch_delay            integer
 
 ---@param props                         fml.ui.search.state.IProps
@@ -28,7 +28,7 @@ function M.new(props)
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
   local input = props.input ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
-  local fetch_items = props.fetch_items ---@type fml.types.ui.search.IFetchItems
+  local fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchData
   local fetch_delay = props.fetch_delay ---@type integer
   local visible = Observable.from_value(false)
   local dirty_items = Observable.from_value(true)
@@ -42,10 +42,12 @@ function M.new(props)
     delay = fetch_delay,
     fn = function(callback)
       local input_cur = input:snapshot() ---@type string
-      fetch_items(input_cur, function(succeed, items)
-        if succeed and items ~= nil then
+      fetch_data(input_cur, function(succeed, data)
+        if succeed and data ~= nil then
           local max_width = 0 ---@type integer
           local item_lnum_next = 1 ---@type integer
+          local items = data.items ---@type fml.types.ui.search.IItem[]
+
           ---@diagnostic disable-next-line: invisible
           local item_uuid_cur = self._item_uuid_cur ---@type string|nil
           for lnum, item in ipairs(items) do
@@ -62,7 +64,7 @@ function M.new(props)
           self:locate(item_lnum_next)
           callback(true)
         else
-          callback(false, items)
+          callback(false, data)
         end
       end)
     end,

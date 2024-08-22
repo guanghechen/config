@@ -64,12 +64,12 @@ M.__index = M
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public statusline_items       fml.types.ui.search.IRawStatuslineItem[]
----@field public fetch_items            fml.types.ui.search.IFetchItems
+---@field public fetch_data             fml.types.ui.search.IFetchData
 ---@field public fetch_delay            ?integer
 ---@field public render_delay           ?integer
 ---@field public enable_multiline_input ?boolean
----@field public fetch_preview_data     ?fml.types.ui.search.preview.IFetchData
----@field public patch_preview_data     ?fml.types.ui.search.preview.IPatchData
+---@field public fetch_preview_data     ?fml.types.ui.search.IFetchPreviewData
+---@field public patch_preview_data     ?fml.types.ui.search.IPatchPreviewData
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
@@ -81,7 +81,7 @@ M.__index = M
 ---@field public destroy_on_close       ?boolean
 ---@field public on_confirm             fml.types.ui.search.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
----@field public on_preview_rendered    ?fml.types.ui.search.preview.IOnRendered
+---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
 
 ---@param props                         fml.types.ui.search.IProps
 ---@return fml.ui.search.Search
@@ -131,7 +131,7 @@ function M.new(props)
     title = props.title,
     input = props.input,
     input_history = input_history,
-    fetch_items = props.fetch_items,
+    fetch_data = props.fetch_data,
     fetch_delay = fetch_delay,
     enable_multiline_input = enable_multiline_input,
   })

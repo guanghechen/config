@@ -41,7 +41,7 @@ function M.get_search()
       input_keymaps = keybindings.input_keymaps,
       main_keymaps = keybindings.main_keymaps,
       preview_keymaps = keybindings.preview_keymaps,
-      fetch_items = api.fetch_items,
+      fetch_data = api.fetch_data,
       fetch_delay = 512,
       render_delay = 64,
       width = 0.4,

@@ -4,27 +4,30 @@
 ---@alias fml.types.ui.search.IOnConfirm
 ---| fun(item: fml.types.ui.search.IItem): boolean
 
----@alias fml.types.ui.search.main.IOnRendered
+---@alias fml.types.ui.search.IOnMainRendered
 ---| fun(): nil
 
----@alias fml.types.ui.search.preview.IOnRendered
+---@alias fml.types.ui.search.IOnPreviewRendered
 ---| fun(): nil
 
 ---@alias fml.types.ui.search.IOnResume
 ---| fun(): nil
 
----@alias fml.types.ui.search.preview.IFetchData
+---@alias fml.types.ui.search.IFetchPreviewData
 ---| fun(item: fml.types.ui.search.IItem): fml.ui.search.preview.IData|nil
 
----@alias fml.types.ui.search.preview.IPatchData
+---@alias fml.types.ui.search.IPatchPreviewData
 ---| fun(item: fml.types.ui.search.IItem, last_item: fml.types.ui.search.IItem, last_data: fml.ui.search.preview.IData): fml.ui.search.preview.IData
 
----@alias fml.types.ui.search.IFetchItemsCallback
----| fun(ok: true, items: fml.types.ui.search.IItem[]|nil): nil
+---@alias fml.types.ui.search.IFetchDataCallback
+---| fun(ok: true, data: fml.types.ui.search.IData|nil): nil
 ---| fun(ok: false, error: string|nil): nil
 
----@alias fml.types.ui.search.IFetchItems
----| fun(input: string, callback: fml.types.ui.search.IFetchItemsCallback): nil
+---@alias fml.types.ui.search.IFetchData
+---| fun(input: string, callback: fml.types.ui.search.IFetchDataCallback): nil
+
+---@class fml.types.ui.search.IData
+---@field public items                  fml.types.ui.search.IItem[]
 
 ---@class fml.types.ui.search.IItem
 ---@field public group                  string|nil

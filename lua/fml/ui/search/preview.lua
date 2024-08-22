@@ -13,9 +13,9 @@ M.__index = M
 ---@class fml.ui.search.preview.IProps
 ---@field public state                  fml.types.ui.search.IState
 ---@field public keymaps                fml.types.IKeymap[]
----@field public fetch_data             fml.types.ui.search.preview.IFetchData
----@field public patch_data             ?fml.types.ui.search.preview.IPatchData
----@field public on_rendered            ?fml.types.ui.search.preview.IOnRendered
+---@field public fetch_data             fml.types.ui.search.IFetchPreviewData
+---@field public patch_data             ?fml.types.ui.search.IPatchPreviewData
+---@field public on_rendered            ?fml.types.ui.search.IOnPreviewRendered
 ---@field public render_delay           integer
 ---@field public update_win_config      fun(opts: fml.ui.search.preview.IWinOpts): nil
 
@@ -26,9 +26,9 @@ function M.new(props)
 
   local state = props.state ---@type fml.types.ui.search.IState
   local _keymaps = props.keymaps ---@type fml.types.IKeymap[]
-  local _fetch_data = props.fetch_data ---@type fml.types.ui.search.preview.IFetchData
-  local _patch_data = props.patch_data ---@type fml.types.ui.search.preview.IPatchData|nil
-  local _on_rendered = props.on_rendered ---@type fml.types.ui.search.main.IOnRendered|nil
+  local _fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchPreviewData
+  local _patch_data = props.patch_data ---@type fml.types.ui.search.IPatchPreviewData|nil
+  local _on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
   local _render_delay = props.render_delay ---@type integer
   local _update_win_config = props.update_win_config ---@type fun(opts: fml.ui.search.preview.IWinOpts): nil
 

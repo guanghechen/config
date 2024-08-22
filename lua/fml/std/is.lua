@@ -17,6 +17,7 @@ local NON_TEXT_EXTNAME_SET = build_set({
   ".jpeg",
   ".jpg",
   ".gz",
+  ".jar",
   ".mkv",
   ".mp3",
   ".mp4",

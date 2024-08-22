@@ -218,9 +218,9 @@ function M.calc_preview_data(item)
 end
 
 ---@param input_text                  string
----@param callback                    fml.types.ui.search.IFetchItemsCallback
+---@param callback                    fml.types.ui.search.IFetchDataCallback
 ---@return nil
-function M.fetch_items(input_text, callback)
+function M.fetch_data(input_text, callback)
   local cwd = state.search_cwd:snapshot() ---@type string
   local scope = session.search_scope:snapshot() ---@type ghc.enums.context.SearchScope
   local _, current_buf_path = fml.ui.search.get_current_path() ---@type string, string|nil
@@ -445,7 +445,9 @@ function M.fetch_items(input_text, callback)
     end
   end
   _item_data_map = item_data_map
-  callback(true, items)
+
+  local data = { items = items } ---@type fml.types.ui.search.IData
+  callback(true, data)
 end
 
 ---@param item                          fml.types.ui.search.IItem
