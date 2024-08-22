@@ -14,19 +14,19 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.file_select.IProps
----@field public title                  string
----@field public provider               fml.types.ui.file_select.IProvider
+---@field public case_sensitive         ?fml.types.collection.IObservable
+---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public destroy_on_close       boolean
 ---@field public enable_preview         boolean
----@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
----@field public case_sensitive         ?fml.types.collection.IObservable
+---@field public frecency               ?fml.types.collection.IFrecency
 ---@field public input                  ?fml.types.collection.IObservable
 ---@field public input_history          ?fml.types.collection.IHistory
----@field public frecency               ?fml.types.collection.IFrecency
----@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
+---@field public provider               fml.types.ui.file_select.IProvider
+---@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
+---@field public title                  string
 ---@field public on_close               ?fml.types.ui.search.IOnClose
 ---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
 
@@ -35,19 +35,19 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local title = props.title ---@type string
-  local provider = props.provider ---@type fml.types.ui.file_select.IProvider
+  local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
+  local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local enable_preview = props.enable_preview ---@type boolean
-  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
-  local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
+  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local input = props.input ---@type fml.types.collection.IObservable|nil
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
-  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
-  local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local input_keymaps = props.input_keymaps or {} ---@type fml.types.IKeymap[]
   local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
   local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
+  local provider = props.provider ---@type fml.types.ui.file_select.IProvider
+  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
+  local title = props.title ---@type string
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
 

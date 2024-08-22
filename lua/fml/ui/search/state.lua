@@ -11,12 +11,12 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.search.state.IProps
----@field public title                  string
 ---@field public enable_multiline_input boolean
----@field public input                  fml.types.collection.IObservable
----@field public input_history          fml.types.collection.IHistory|nil
 ---@field public fetch_data             fml.types.ui.search.IFetchData
 ---@field public fetch_delay            integer
+---@field public input                  fml.types.collection.IObservable
+---@field public input_history          fml.types.collection.IHistory|nil
+---@field public title                  string
 
 ---@param props                         fml.ui.search.state.IProps
 ---@return fml.ui.search.State

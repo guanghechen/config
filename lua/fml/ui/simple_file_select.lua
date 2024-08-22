@@ -2,6 +2,7 @@ local FileSelect = require("fml.ui.file_select")
 
 ---@class fml.ui.SimpleFileSelect : fml.types.ui.ISimpleFileSelect
 ---@field public file_select            fml.types.ui.IFileSelect|nil
+---@field protected _cmp                fml.types.ui.select.IMatchedItemCmp|nil
 ---@field protected _destroy_on_close   boolean|nil
 ---@field protected _enable_preview     boolean|nil
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
@@ -11,24 +12,27 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.simple_file_select.IProps
----@field public title                  string
----@field public provider               fml.types.ui.simple_file_select.IProvider
+---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public destroy_on_close       boolean
 ---@field public enable_preview         boolean
 ---@field public frecency               ?fml.types.collection.IFrecency
+---@field public provider               fml.types.ui.simple_file_select.IProvider
+---@field public title                  string
 
 ---@param props                         fml.ui.simple_file_select.IProps
 ---@return fml.ui.SimpleFileSelect
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local title = props.title ---@type string
-  local provider = props.provider ---@type fml.types.ui.simple_file_select.IProvider
+  local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local enable_preview = props.enable_preview ---@type boolean
+  local provider = props.provider ---@type fml.types.ui.simple_file_select.IProvider
+  local title = props.title ---@type string
 
   self.file_select = nil
+  self._cmp = cmp
   self._destroy_on_close = destroy_on_close
   self._enable_preview = enable_preview
   self._frecency = frecency
@@ -41,6 +45,7 @@ end
 ---@return fml.types.ui.IFileSelect
 function M:get_file_select()
   if self.file_select == nil then
+    local cmp = self._cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
     local title = self._title ---@type string
     local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
 
@@ -57,11 +62,12 @@ function M:get_file_select()
     }
 
     self.file_select = FileSelect.new({
-      title = title,
-      provider = provider,
+      cmp = cmp,
       frecency = frecency,
-      enable_preview = self._enable_preview,
       destroy_on_close = self._destroy_on_close,
+      enable_preview = self._enable_preview,
+      provider = provider,
+      title = title,
       on_close = function()
         if self.file_select ~= nil then
           self.file_select:mark_data_dirty()

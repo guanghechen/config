@@ -214,18 +214,19 @@ local function get_select()
     }
 
     _select = fml.ui.FileSelect.new({
-      title = "Find files",
-      provider = provider,
-      frecency = frecency,
+      case_sensitive = session.find_flag_case_sensitive,
+      cmp = fml.ui.Select.cmp_by_score,
       destroy_on_close = false,
       enable_preview = true,
-      statusline_items = statusline_items,
-      case_sensitive = session.find_flag_case_sensitive,
+      frecency = frecency,
       input = session.find_file_pattern,
       input_history = input_history,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
       preview_keymaps = preview_keymaps,
+      provider = provider,
+      statusline_items = statusline_items,
+      title = "Find files",
       on_close = function()
         if _select ~= nil then
           _select:mark_data_dirty()

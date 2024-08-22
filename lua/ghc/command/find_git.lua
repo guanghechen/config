@@ -19,6 +19,7 @@ local function provide()
       table.insert(filepaths, filepath)
     end
   end
+  table.sort(filepaths)
 
   ---@type fml.types.ui.simple_file_select.IData
   local data = { cwd = cwd, filepaths = filepaths }
@@ -26,11 +27,11 @@ local function provide()
 end
 
 local select = fml.ui.SimpleFileSelect.new({
-  title = "Find git files (Not committed)",
-  provider = { provide = provide },
-  frecency = frecency,
   destroy_on_close = false,
   enable_preview = true,
+  frecency = frecency,
+  provider = { provide = provide },
+  title = "Find git files (Not committed)",
 })
 
 ---@class ghc.command.find_git

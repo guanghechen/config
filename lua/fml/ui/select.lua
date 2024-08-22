@@ -4,63 +4,39 @@ local oxi = require("fml.std.oxi")
 local icons = require("fml.ui.icons")
 local Search = require("fml.ui.search.search")
 
----@param item                          fml.types.ui.select.IItem
----@param match                         fml.types.ui.select.IMatchedItem
----@return string
----@return fml.types.ui.IInlineHighlight[]
-local function default_render_item(item, match)
-  local highlights = {} ---@type fml.types.ui.IInlineHighlight[]
-  for _, piece in ipairs(match.matches) do
-    ---@type fml.types.ui.IInlineHighlight[]
-    local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-    table.insert(highlights, highlight)
-  end
-  return item.text, highlights
-end
-
----@param item1                         fml.types.ui.select.IMatchedItem
----@param item2                         fml.types.ui.select.IMatchedItem
----@return boolean
-local function default_match_cmp(item1, item2)
-  if item1.score == item2.score then
-    return item1.order < item2.order
-  end
-  return item1.score > item2.score
-end
-
 ---@class fml.ui.Select : fml.types.ui.ISelect
----@field protected _search             fml.types.ui.search.ISearch
----@field protected _provider           fml.types.ui.select.IProvider
 ---@field protected _case_sensitive     fml.types.collection.IObservable
+---@field protected _cmp                fml.types.ui.select.IMatchedItemCmp|nil
 ---@field protected _data_dirty         fml.types.collection.IObservable
----@field protected _item_map           table<string, fml.types.ui.select.IItem>
----@field protected _full_matches       fml.types.ui.select.IMatchedItem[]
----@field protected _matches            fml.types.ui.select.IMatchedItem[]
----@field protected _cmp                fml.types.ui.select.IMatchedItemCmp
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
----@field protected _last_input         string|nil
+---@field protected _full_matches       fml.types.ui.select.IMatchedItem[]
+---@field protected _item_map           table<string, fml.types.ui.select.IItem>
 ---@field protected _last_case_sensitive boolean
+---@field protected _last_input         string|nil
+---@field protected _matches            fml.types.ui.select.IMatchedItem[]
+---@field protected _provider           fml.types.ui.select.IProvider
+---@field protected _search             fml.types.ui.search.ISearch
 local M = {}
 M.__index = M
 
 ---@class fml.types.ui.select.IProps
----@field public title                  string
----@field public provider               fml.types.ui.select.IProvider
+---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
+---@field public case_sensitive         ?fml.types.collection.IObservable
 ---@field public destroy_on_close       boolean
 ---@field public enable_preview         boolean
----@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
----@field public case_sensitive         ?fml.types.collection.IObservable
+---@field public frecency               ?fml.types.collection.IFrecency
+---@field public height                 ?number
 ---@field public input                  ?fml.types.collection.IObservable
 ---@field public input_history          ?fml.types.collection.IHistory
----@field public frecency               ?fml.types.collection.IFrecency
----@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
----@field public preview_keymaps        ?fml.types.IKeymap[]
----@field public max_width              ?number
 ---@field public max_height             ?number
+---@field public max_width              ?number
+---@field public preview_keymaps        ?fml.types.IKeymap[]
+---@field public provider               fml.types.ui.select.IProvider
+---@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
+---@field public title                  string
 ---@field public width                  ?number
----@field public height                 ?number
 ---@field public width_preview          ?number
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
@@ -71,24 +47,24 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local title = props.title ---@type string
-  local provider = props.provider ---@type fml.types.ui.select.IProvider
+  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type fml.types.collection.IObservable
+  local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
+  local data_dirty = Observable.from_value(true) ---@type fml.types.collection.IObservable
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local enable_preview = props.enable_preview ---@type boolean
-  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
-  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type fml.types.collection.IObservable
-  local data_dirty = Observable.from_value(true) ---@type fml.types.collection.IObservable
+  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
+  local height = props.height ---@type number|nil
   local input = props.input or Observable.from_value("") ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
-  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
-  local cmp = props.cmp or default_match_cmp ---@type fml.types.ui.select.IMatchedItemCmp
   local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
-  local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
-  local max_width = props.max_width or 0.8 ---@type number
   local max_height = props.max_height or 0.8 ---@type number
+  local max_width = props.max_width or 0.8 ---@type number
+  local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
+  local provider = props.provider ---@type fml.types.ui.select.IProvider
+  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
+  local title = props.title ---@type string
   local width = props.width ---@type number|nil
-  local height = props.height ---@type number|nil
   local width_preview = props.width_preview ---@type number|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
@@ -200,19 +176,43 @@ function M.new(props)
   })
 
   self.state = search.state
-  self._search = search
-  self._provider = provider
   self._case_sensitive = case_sensitive
-  self._data_dirty = data_dirty
-  self._item_map = {}
-  self._full_matches = {}
-  self._matches = {}
   self._cmp = cmp
+  self._data_dirty = data_dirty
   self._frecency = frecency
+  self._full_matches = {}
+  self._item_map = {}
   self._last_input = nil ---@type string|nil
   self._last_case_sensitive = case_sensitive:snapshot()
+  self._matches = {}
+  self._provider = provider
+  self._search = search
 
   return self
+end
+
+---@param item1                         fml.types.ui.select.IMatchedItem
+---@param item2                         fml.types.ui.select.IMatchedItem
+---@return boolean
+function M.cmp_by_score(item1, item2)
+  if item1.score == item2.score then
+    return item1.order < item2.order
+  end
+  return item1.score > item2.score
+end
+
+---@param item                          fml.types.ui.select.IItem
+---@param match                         fml.types.ui.select.IMatchedItem
+---@return string
+---@return fml.types.ui.IInlineHighlight[]
+function M.default_render_item(item, match)
+  local highlights = {} ---@type fml.types.ui.IInlineHighlight[]
+  for _, piece in ipairs(match.matches) do
+    ---@type fml.types.ui.IInlineHighlight[]
+    local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
+    table.insert(highlights, highlight)
+  end
+  return item.text, highlights
 end
 
 ---@param input                       string
@@ -220,7 +220,6 @@ end
 function M:fetch_items(input)
   local is_data_dirty = self._data_dirty:snapshot() ---@type boolean
   if is_data_dirty then
-    local cmp = self._cmp ---@type fml.types.ui.select.IMatchedItemCmp
     local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
     local data = self._provider.fetch_data() ---@type fml.types.ui.select.IData
     local item_map = {} ---@type table<string, fml.types.ui.select.IItem>
@@ -231,7 +230,10 @@ function M:fetch_items(input)
       item_map[item.uuid] = item
       table.insert(full_matches, match_item)
     end
-    table.sort(full_matches, cmp)
+
+    if self._cmp then
+      table.sort(full_matches, self._cmp)
+    end
 
     self._item_map = item_map
     self._full_matches = full_matches
@@ -242,7 +244,7 @@ function M:fetch_items(input)
   local item_map = self._item_map ---@type table<string, fml.types.ui.select.IItem>
   local matches = self:filter(input) ---@type fml.types.ui.select.IMatchedItem[]
   local search_items = {} ---@type fml.types.ui.search.IItem[]
-  local render_item = self._provider.render_item or default_render_item ---@type fml.types.ui.select.IRenderItem
+  local render_item = self._provider.render_item or M.default_render_item ---@type fml.types.ui.select.IRenderItem
   for _, match in ipairs(matches) do
     local item = item_map[match.uuid] ---@type fml.types.ui.select.IItem
     local line, highlights = render_item(item, match)
@@ -299,7 +301,10 @@ function M:filter(input)
     end
   end
 
-  table.sort(matches, self._cmp)
+  if self._cmp then
+    table.sort(matches, self._cmp)
+  end
+
   self._last_case_sensitive = case_sensitive
   self._last_input = input
   self._matches = matches

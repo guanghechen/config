@@ -26,11 +26,12 @@ local function provide()
 end
 
 local select = fml.ui.SimpleFileSelect.new({
-  title = "Find buffers (current tab)",
-  provider = { provide = provide },
-  frecency = frecency,
+  cmp = fml.ui.Select.cmp_by_score,
   destroy_on_close = false,
   enable_preview = true,
+  frecency = frecency,
+  provider = { provide = provide },
+  title = "Find buffers (current tab)",
 })
 
 ---@class ghc.command.find_buffers
