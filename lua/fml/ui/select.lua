@@ -69,7 +69,7 @@ function M.new(props)
       local flag = case_sensitive:snapshot() ---@type boolean
       case_sensitive:next(not flag)
       vim.cmd("redrawstatus")
-      self:refresh()
+      self:mark_search_state_dirty()
     end
 
     ---@type fml.types.ui.search.IRawStatuslineItem[]
@@ -179,6 +179,29 @@ function M.new(props)
   self._search = search
 
   return self
+end
+
+---@param dimension                     fml.types.ui.search.IRawDimension
+---@return nil
+function M:change_dimension(dimension)
+  self._search:change_dimension(dimension)
+end
+
+---@param title                         string
+---@return nil
+function M:change_input_title(title)
+  self._search:change_input_title(title)
+end
+
+---@param title                         string
+---@return nil
+function M:change_preview_title(title)
+  self._search:change_preview_title(title)
+end
+
+---@return nil
+function M:close()
+  self._search:close()
 end
 
 ---@param item1                         fml.types.ui.select.IMatchedItem
@@ -349,40 +372,6 @@ function M:find_matched_items(input, old_matches)
 end
 
 ---@return nil
-function M:mark_data_dirty()
-  self._data_dirty:next(true)
-  self._search.state:mark_dirty()
-end
-
----@return nil
-function M:refresh()
-  self._search.state:mark_dirty()
-end
-
----@param dimension                     fml.types.ui.search.IRawDimension
----@return nil
-function M:change_dimension(dimension)
-  self._search:change_dimension(dimension)
-end
-
----@param title                         string
----@return nil
-function M:change_input_title(title)
-  self._search:change_input_title(title)
-end
-
----@param title                         string
----@return nil
-function M:change_preview_title(title)
-  self._search:change_preview_title(title)
-end
-
----@return nil
-function M:close()
-  self._search:close()
-end
-
----@return nil
 function M:focus()
   self._search:focus()
 end
@@ -400,6 +389,17 @@ end
 ---@return integer|nil
 function M:get_winnr_preview()
   return self._search:get_winnr_preview()
+end
+
+---@return nil
+function M:mark_data_dirty()
+  self._data_dirty:next(true)
+  self._search.state:mark_dirty()
+end
+
+---@return nil
+function M:mark_search_state_dirty()
+  self._search.state:mark_dirty()
 end
 
 ---@return nil

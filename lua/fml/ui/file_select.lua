@@ -17,6 +17,7 @@ M.__index = M
 ---@field public case_sensitive         ?fml.types.collection.IObservable
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public destroy_on_close       boolean
+---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_preview         boolean
 ---@field public frecency               ?fml.types.collection.IFrecency
 ---@field public input                  ?fml.types.collection.IObservable
@@ -90,25 +91,21 @@ function M.new(props)
       return { items = items, present_uuid = present_uuid }
     end,
     fetch_preview_data = enable_preview and function(item)
-      return self:fetch_preview_data(item)
+      return self.fetch_preview_data(self.cwd, item)
     end or nil,
-    patch_preview_data = enable_preview and function(item, last_item, last_data)
-      return self:patch_preview_data(item, last_item, last_data)
-    end or nil,
-    render_item = provider.render_item or function(item, match)
-      ---@cast item fml.types.ui.file_select.IItem
-      return self:render_item(item, match)
-    end,
+    patch_preview_data = enable_preview and M.patch_preview_data or nil,
+    render_item = provider.render_item or M.render_item,
   }
 
-  ---@type fml.types.ui.search.IRawDimension
+  local dimension_from_props = props.dimension or {} ---@type fml.types.ui.search.IRawDimension
 
+  ---@type fml.types.ui.search.IRawDimension
   local dimension = {
-    height = 0.8,
-    max_height = 1,
-    max_width = 1,
-    width = enable_preview and 0.4 or 0.5,
-    width_preview = enable_preview and 0.45 or 0,
+    height = dimension_from_props.height or 0.8,
+    max_height = dimension_from_props.max_height or 1,
+    max_width = dimension_from_props.max_width or 1,
+    width = dimension_from_props.width or (enable_preview and 0.4 or 0.5),
+    width_preview = dimension_from_props.width_preview or (enable_preview and 0.45 or 0),
   }
 
   local select = Select.new({
@@ -140,23 +137,11 @@ function M.new(props)
   return self
 end
 
----@param filepaths                     string[]
----@return fml.types.ui.file_select.IRawItem[]
-function M.mark_items_by_filepaths(filepaths)
-  ---@type fml.types.ui.file_select.IRawItem[]
-  local items = {}
-  for _, filepath in ipairs(filepaths) do
-    ---@type fml.types.ui.file_select.IRawItem
-    local item = { filepath = filepath }
-    table.insert(items, item)
-  end
-  return items
-end
-
+---@param cwd                           string
 ---@param item                          fml.types.ui.file_select.IItem
 ---@return fml.ui.search.preview.IData
-function M:fetch_preview_data(item)
-  local filepath = path.join(self.cwd, item.data.filepath) ---@type string
+function M.fetch_preview_data(cwd, item)
+  local filepath = path.join(cwd, item.data.filepath) ---@type string
   local filename = path.basename(filepath) ---@type string
   local is_text_file = is.printable_file(filename) ---@type boolean
   if is_text_file then
@@ -185,7 +170,7 @@ end
 ---@param last_item                     fml.types.ui.file_select.IItem
 ---@param last_data                     fml.ui.search.preview.IData
 ---@diagnostic disable-next-line: unused-local
-function M:patch_preview_data(item, last_item, last_data)
+function M.patch_preview_data(item, last_item, last_data)
   ---@type fml.ui.search.preview.IData
   return {
     lines = last_data.lines,
@@ -197,25 +182,11 @@ function M:patch_preview_data(item, last_item, last_data)
   }
 end
 
----@param filepath                      string
----@return boolean
-function M:open_filepath(filepath)
-  local winnr = api_state.win_history:present() ---@type integer
-  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    filepath = path.join(self.cwd, filepath) ---@type string
-    vim.schedule(function()
-      api_buf.open(winnr, filepath)
-    end)
-    return true
-  end
-  return false
-end
-
 ---@param item                          fml.types.ui.file_select.IItem
 ---@param match                         fml.types.ui.select.IMatchedItem
 ---@return string
 ---@return fml.types.ui.IInlineHighlight[]
-function M:render_item(item, match)
+function M.render_item(item, match)
   local icon_width = string.len(item.data.icon) ---@type integer
   local text = item.data.icon .. item.data.filepath ---@type string
 
@@ -227,11 +198,6 @@ function M:render_item(item, match)
     table.insert(highlights, highlight)
   end
   return text, highlights
-end
-
----@return nil
-function M:mark_data_dirty()
-  self._select:mark_data_dirty()
 end
 
 ---@param dimension                     fml.types.ui.search.IRawDimension
@@ -278,8 +244,40 @@ function M:get_winnr_preview()
 end
 
 ---@return nil
+function M:mark_data_dirty()
+  self._select:mark_data_dirty()
+end
+
+---@param filepaths                     string[]
+---@return fml.types.ui.file_select.IRawItem[]
+function M.make_items_by_filepaths(filepaths)
+  ---@type fml.types.ui.file_select.IRawItem[]
+  local items = {}
+  for _, filepath in ipairs(filepaths) do
+    ---@type fml.types.ui.file_select.IRawItem
+    local item = { filepath = filepath }
+    table.insert(items, item)
+  end
+  return items
+end
+
+---@return nil
 function M:open()
   self._select:open()
+end
+
+---@param filepath                      string
+---@return boolean
+function M:open_filepath(filepath)
+  local winnr = api_state.win_history:present() ---@type integer
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    filepath = path.join(self.cwd, filepath) ---@type string
+    vim.schedule(function()
+      api_buf.open(winnr, filepath)
+    end)
+    return true
+  end
+  return false
 end
 
 ---@return nil
