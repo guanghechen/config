@@ -67,7 +67,7 @@ function M.new(props)
         ---@type fml.types.ui.file_select.IItem
         local item = {
           group = filepath,
-          uuid = filepath,
+          uuid = raw_item.uuid or filepath,
           text = filepath,
           data = {
             filepath = filepath,
@@ -87,6 +87,9 @@ function M.new(props)
     end,
     fetch_preview_data = enable_preview and function(item)
       return self:fetch_preview_data(item)
+    end or nil,
+    patch_preview_data = enable_preview and function(item, last_item, last_data)
+      return self:patch_preview_data(item, last_item, last_data)
     end or nil,
     render_item = provider.render_item or function(item, match)
       ---@cast item fml.types.ui.file_select.IItem
@@ -130,7 +133,7 @@ end
 
 ---@param filepaths                     string[]
 ---@return fml.types.ui.file_select.IRawItem[]
-function M.calc_items_from_filepaths(filepaths)
+function M.mark_items_by_filepaths(filepaths)
   ---@type fml.types.ui.file_select.IRawItem[]
   local items = {}
   for _, filepath in ipairs(filepaths) do
@@ -167,6 +170,22 @@ function M:fetch_preview_data(item)
 
   ---@type fml.ui.search.preview.IData
   return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
+end
+
+---@param item                          fml.types.ui.file_select.IItem
+---@param last_item                     fml.types.ui.file_select.IItem
+---@param last_data                     fml.ui.search.preview.IData
+---@diagnostic disable-next-line: unused-local
+function M:patch_preview_data(item, last_item, last_data)
+  ---@type fml.ui.search.preview.IData
+  return {
+    lines = last_data.lines,
+    highlights = {},
+    filetype = last_data.filetype,
+    title = item.data.filepath,
+    lnum = item.data.lnum,
+    col = item.data.col,
+  }
 end
 
 ---@param item                          fml.types.ui.file_select.IItem

@@ -55,7 +55,7 @@ function M:get_file_select()
         local raw_data = self._provider.provide() ---@type fml.types.ui.simple_file_select.IData
         local cwd = raw_data.cwd ---@type string
         local filepaths = raw_data.filepaths ---@type string[]
-        local items = FileSelect.calc_items_from_filepaths(filepaths) ---@type fml.types.ui.file_select.IRawItem[]
+        local items = FileSelect.mark_items_by_filepaths(filepaths) ---@type fml.types.ui.file_select.IRawItem[]
         local data = { cwd = cwd, items = items }
         return data
       end,

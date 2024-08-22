@@ -429,6 +429,19 @@ function M.new(props)
     end
   end, true)
 
+  ---! Trigger the preview dirty change when the preview not exist.
+  if preview == nil then
+    watch_observables({ state.dirty_preview }, function()
+      local dirty = state.dirty_preview:snapshot() ---@type boolean|nil
+      local visible = state.visible:snapshot() ---@type boolean
+      if visible and dirty then
+        vim.schedule(function()
+          state.dirty_preview:next(false)
+        end)
+      end
+    end, true)
+  end
+
   if enable_multiline_input then
     watch_observables({ state.input_line_count }, function()
       self:draw()

@@ -8,6 +8,7 @@ local command = {
   find_buffers = require("ghc.command.find_buffers"),
   find_files = require("ghc.command.find_files"),
   find_git = require("ghc.command.find_git"),
+  find_win_history = require("ghc.command.find_win_history"),
   git = require("ghc.command.git"),
   refresh = require("ghc.command.refresh"),
   search_files = require("ghc.command.search_files"),

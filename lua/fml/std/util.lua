@@ -44,23 +44,15 @@ function M.bind_keys(keymaps, keymap_override)
 end
 
 ---@param filename                      string
----@param filetype                      string|nil
 ---@return string
 ---@return string
-function M.calc_fileicon(filename, filetype)
+function M.calc_fileicon(filename)
   local name = (not filename or filename == "") and constant.BUF_UNTITLED or filename
   local icons_present, icons = pcall(require, "mini.icons")
   if icons_present and name ~= constant.BUF_UNTITLED then
-    if filetype ~= nil then
-      local icon, icon_hl, is_default = icons.get("filetype", filetype)
-      if not is_default then
-        return icon, icon_hl
-      end
-    end
-
-    local icon2, icon_hl2, is_default2 = icons.get("file", filename)
-    if not is_default2 then
-      return icon2, icon_hl2
+    local icon, icon_hl, is_default = icons.get("file", filename)
+    if not is_default then
+      return icon, icon_hl
     end
   end
   return "󰈚", "MiniIconsRed"

@@ -224,7 +224,7 @@ mk({ "n", "v" }, "<leader>tuw", ghc.command.toggle.wrap, "toggle: wrap")
 -----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[w]indow-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>wh", fml.api.win.find_history_all, "window: history", true)
+mk({ "n", "v" }, "<leader>wh", ghc.command.find_win_history.list_history, "window: history", true)
 mk({ "n", "v" }, "<leader>wp", fml.api.win.project_with_picker, "window: project (with picker)", true)
 mk({ "n", "v" }, "<leader>ws", fml.api.win.swap_with_picker, "window: swap (with picker)", true)
 mk({ "n", "v" }, "<leader>ww", fml.api.win.focus_with_picker, "window: focus (with picker)", true)

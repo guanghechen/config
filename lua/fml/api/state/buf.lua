@@ -38,7 +38,7 @@ function M.refresh_buf(bufnr)
   if buf == nil then
     local filename = path.basename(filepath) ---@type string
     filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
-    local fileicon, fileicon_hl = util.calc_fileicon(filename, filetype) ---@type string, string
+    local fileicon, fileicon_hl = util.calc_fileicon(filename) ---@type string, string
     local real_paths = path.split_prettier(path.get_cwd_pieces(), filepath) ---@type string[]
 
     ---@type fml.types.api.state.IBufItem
@@ -55,7 +55,7 @@ function M.refresh_buf(bufnr)
   elseif buf.filepath ~= filepath or buf.filetype ~= filetype then
     local filename = path.basename(filepath) ---@type string
     filename = #filename > 0 and filename or constant.BUF_UNTITLED
-    local fileicon, fileicon_hl = util.calc_fileicon(filename, filetype) ---@type string, string
+    local fileicon, fileicon_hl = util.calc_fileicon(filename) ---@type string, string
     local real_paths = path.split_prettier(path.get_cwd_pieces(), filepath) ---@type string[]
 
     buf.fileicon = fileicon

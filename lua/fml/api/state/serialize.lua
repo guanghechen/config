@@ -127,7 +127,7 @@ function M.load(filepath)
       if real_bufnr ~= nil and vim.api.nvim_buf_is_valid(real_bufnr) then
         local filename = item.filename ---@type string
         local filetype = vim.bo[real_bufnr].filetype ---@type string
-        local fileicon, fileicon_hl = util.calc_fileicon(filename, filetype) ---@type string, string
+        local fileicon, fileicon_hl = util.calc_fileicon(filename) ---@type string, string
 
         ---@type fml.types.api.state.IBufItem
         local buf = {

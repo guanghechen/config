@@ -207,7 +207,7 @@ local function get_select()
         })
         table.sort(filepaths)
 
-        local items = fml.ui.FileSelect.calc_items_from_filepaths(filepaths) ---@type fml.types.ui.file_select.IRawItem[]
+        local items = fml.ui.FileSelect.mark_items_by_filepaths(filepaths) ---@type fml.types.ui.file_select.IRawItem[]
         local data = { cwd = cwd, items = items }
         return data
       end,
