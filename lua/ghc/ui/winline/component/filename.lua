@@ -11,7 +11,7 @@ local M = {
 
     local text_icon = buf.fileicon .. " " ---@type string
     local text_filename = buf.filename ---@type string
-    local hl_text_icon = fml.nvimbar.txt(text_icon, buf.fileicon_hl) ---@type string
+    local hl_text_icon = fml.nvimbar.txt(text_icon, buf.fileicon_hl .. "_wl") ---@type string
     local hl_text_title = fml.nvimbar.txt(text_filename, "f_wl_filename_text") ---@type string
 
     local hl_text = hl_text_icon .. hl_text_title

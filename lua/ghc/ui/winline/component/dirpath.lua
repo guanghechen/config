@@ -1,4 +1,4 @@
-local sep = "  "
+local sep = " / "
 
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
@@ -11,15 +11,16 @@ local M = {
       return "", 0
     end
 
-    local text = "" ---@type string
+    local hl_text = "" ---@type string
+    local width = 0 ---@type integer
     local N = #buf.real_paths - 1 ---@type integer
     for i = 1, N, 1 do
       local piece = buf.real_paths[i] ---@type string
-      text = text .. piece .. sep
+      local hl_text_piece = fml.nvimbar.txt(piece, "f_wl_dirpath_text") ---@type string
+      local hl_text_sep = fml.nvimbar.txt(sep, "f_wl_dirpath_sep") ---@type string
+      hl_text = hl_text .. hl_text_piece .. hl_text_sep
+      width = width + vim.fn.strwidth(piece .. sep)
     end
-
-    local hl_text = fml.nvimbar.txt(text, "f_wl_dirpath_text") ---@type string
-    local width = vim.fn.strwidth(text) ---@type integer
     return hl_text, width
   end,
 }

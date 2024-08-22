@@ -1,14 +1,15 @@
 ---@param params                        ghc.types.ui.theme.IGenHlgroupMapParams
----@return ghc.ui.theme.integration.tabline.hlgroups
+---@return ghc.ui.theme.integration.winline.hlgroups
 local function gen_hlgroup_map(params)
   local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
   local t = params.transparency ---@type boolean
 
-  ---@class ghc.ui.theme.integration.tabline.hlgroups : table<string, fml.types.ui.theme.IHlgroup>
+  ---@class ghc.ui.theme.integration.winline.hlgroups : table<string, fml.types.ui.theme.IHlgroup>
   local hlgroup_map = {
     f_wl_bg = { fg = t and "none" or c.bg_winline, bg = t and "none" or c.bg_winline },
-    f_wl_dirpath_text = { fg = c.darker_white, bg = t and "none" or c.bg_winline },
-    f_wl_filename_text = { fg = c.darker_white, bg = t and "none" or c.bg_winline },
+    f_wl_dirpath_sep = { fg = c.white, bg = t and "none" or c.bg_winline },
+    f_wl_dirpath_text = { fg = c.blue, bg = t and "none" or c.bg_winline },
+    f_wl_filename_text = { fg = c.baby_pink, bg = t and "none" or c.bg_winline },
     f_wl_indicator = { fg = c.pink, bg = t and "none" or c.bg_winline },
     f_wl_lsp_icon = { fg = c.darker_purple, bg = t and "none" or c.bg_winline },
     f_wl_lsp_icon_Array = { fg = c.blue, bg = t and "none" or c.bg_winline },

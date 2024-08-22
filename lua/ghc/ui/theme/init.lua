@@ -1,4 +1,5 @@
 local gen_tabline_hlgroup_map = require("ghc.ui.theme.integration.tabline")
+local gen_winline_hlgroup_map = require("ghc.ui.theme.integration.winline")
 
 ---@class ghc.ui.theme
 local M = {}
@@ -111,6 +112,7 @@ function M.load_theme(params)
 
   ---@type ghc.ui.theme.integration.tabline.hlgroups
   local tabline_hlgroup_map = gen_tabline_hlgroup_map({ scheme = scheme, transparency = transparency })
+  local winline_hlgroup_map = gen_winline_hlgroup_map({ scheme = scheme, transparency = transparency })
 
   for _, integration in ipairs(M.integrations) do
     local gen_hlgroup_map = require("ghc.ui.theme.integration." .. integration)
@@ -122,8 +124,12 @@ function M.load_theme(params)
       local additional = {}
 
       for hlname, hlgroup in pairs(hlgroup_map) do
+        ---! Integrated  with tabline
         additional[hlname .. "_tl_buf"] = { fg = hlgroup.fg, bg = tabline_hlgroup_map.f_tl_buf_item.bg }
         additional[hlname .. "_tl_buf_cur"] = { fg = hlgroup.fg, bg = tabline_hlgroup_map.f_tl_buf_item_cur.bg }
+
+        ---! Integrated  with winline
+        additional[hlname .. "_wl"] = { fg = hlgroup.fg, bg = winline_hlgroup_map.f_wl_bg.bg }
       end
 
       for hlname, hlgroup in pairs(additional) do
