@@ -1,7 +1,7 @@
 ---! https://github.com/nvim-treesitter/nvim-treesitter-context
 return {
   name = "nvim-treesitter-context",
-  enabled = true,
+  enabled = false,
   event = { "VeryLazy" },
   opts = {
     enable = true,
