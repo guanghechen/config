@@ -180,6 +180,23 @@ function M.replace_file()
 end
 
 ---@return nil
+function M.send_to_qflist()
+  local quickfix_items = api.gen_quickfix_items() ---@type fml.types.IQuickFixItem[]
+  if #quickfix_items > 0 then
+    vim.fn.setqflist(quickfix_items, "r")
+    state.close()
+
+    local ok = pcall(function()
+      vim.cmd("Trouble qflist toggle")
+    end)
+
+    if not ok then
+      vim.cmd("copen")
+    end
+  end
+end
+
+---@return nil
 function M.toggle_case_sensitive()
   local flag = session.search_flag_case_sensitive:snapshot() ---@type boolean
   session.search_flag_case_sensitive:next(not flag)

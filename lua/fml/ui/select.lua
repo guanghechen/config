@@ -376,6 +376,17 @@ function M:focus()
   self._search:focus()
 end
 
+---@param uuid                          string
+---@return                              fml.types.ui.select.IItem|nil
+function M:get_item(uuid)
+  return self._item_map[uuid]
+end
+
+---@return                              fml.types.ui.select.IMatchedItem[]
+function M:get_matched_items()
+  return self._matches
+end
+
 ---@return integer|nil
 function M:get_winnr_main()
   return self._search:get_winnr_main()

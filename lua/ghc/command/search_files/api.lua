@@ -7,6 +7,7 @@ local state = require("ghc.command.search_files.state")
 ---@field public match_idx              integer
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
+---@field public content                ?string
 
 ---@class ghc.command.search_files.IHighlight : fml.types.ui.IHighlight
 ---@field public match_idx              integer
@@ -365,6 +366,7 @@ function M.fetch_data(input_text, callback)
               match_idx = match_idx,
               lnum = s_lnum,
               col = s_col,
+              content = s_lines[s_k],
             }
             item_data_map[item.uuid] = item_data
 
@@ -417,6 +419,7 @@ function M.fetch_data(input_text, callback)
               match_idx = match_idx,
               lnum = lnum,
               col = col,
+              content = lines[k],
             }
             item_data_map[item.uuid] = item_data
 
@@ -467,6 +470,26 @@ function M.fetch_preview_data(item)
     col = item_data and item_data.col,
   }
   return data
+end
+
+---@return fml.types.IQuickFixItem[]
+function M.gen_quickfix_items()
+  local cwd = fml.path.cwd() ---@type string
+  local search_cwd = state.search_cwd:snapshot() ---@type string
+  local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
+  for _, item in pairs(_item_data_map) do
+    if item.match_idx > 0 then
+      local absolute_filepath = fml.path.join(search_cwd, item.filepath) ---@type string
+      local relative_filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+      table.insert(quickfix_items, {
+        filename = relative_filepath,
+        lnum = item.lnum,
+        col = item.col,
+        text = item.content,
+      })
+    end
+  end
+  return quickfix_items
 end
 
 ---@param uuid                          string

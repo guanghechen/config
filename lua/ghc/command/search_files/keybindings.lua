@@ -43,6 +43,12 @@ local statusline_items = {
 ---@type fml.types.IKeymap[]
 local common_keymaps = {
   {
+    modes = { "i", "n", "v" },
+    key = "<C-q>",
+    callback = actions.send_to_qflist,
+    desc = "search: send to qflist",
+  },
+  {
     modes = { "n", "v" },
     key = "<leader>W",
     callback = actions.change_scope_workspace,

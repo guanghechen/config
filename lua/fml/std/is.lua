@@ -32,6 +32,7 @@ local NON_TEXT_EXTNAME_SET = build_set({
 
 local TEXT_FILENAME_SET = build_set({
   "license",
+  "sshd_config",
 })
 
 ---@class fml.std.is

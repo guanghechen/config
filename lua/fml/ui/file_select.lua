@@ -1,3 +1,4 @@
+local std_array = require("fml.std.array")
 local fs = require("fml.std.fs")
 local is = require("fml.std.is")
 local path = require("fml.std.path")
@@ -37,6 +38,21 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
+  ---@type fml.types.IKeymap[]
+  local common_keymaps = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-q>",
+      callback = function()
+        self:send_to_qflist()
+      end,
+      desc = "search: send to qflist",
+    },
+  }
+  local input_keymaps = std_array.concat(common_keymaps, props.input_keymaps or {}) ---@type fml.types.IKeymap[]
+  local main_keymaps = std_array.concat(common_keymaps, props.main_keymaps or {}) ---@type fml.types.IKeymap[]
+  local preview_keymaps = std_array.concat(common_keymaps, props.preview_keymaps or {}) ---@type fml.types.IKeymap[]
+
   local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
@@ -44,9 +60,6 @@ function M.new(props)
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local input = props.input ---@type fml.types.collection.IObservable|nil
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
-  local input_keymaps = props.input_keymaps or {} ---@type fml.types.IKeymap[]
-  local main_keymaps = props.main_keymaps or {} ---@type fml.types.IKeymap[]
-  local preview_keymaps = props.preview_keymaps or {} ---@type fml.types.IKeymap[]
   local provider = props.provider ---@type fml.types.ui.file_select.IProvider
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
@@ -278,6 +291,35 @@ function M:open_filepath(filepath)
     return true
   end
   return false
+end
+
+---@return nil
+function M:send_to_qflist()
+  local cwd = fml.path.cwd() ---@type string
+  local select_cwd = self.cwd ---@type string
+  local select = self._select ---@type fml.types.ui.ISelect
+  local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
+  local matched_items = select:get_matched_items() ---@type fml.types.ui.select.IMatchedItem[]
+  for _, matched_item in ipairs(matched_items) do
+    local item = select:get_item(matched_item.uuid) ---@type fml.types.ui.select.IItem|nil
+    ---@cast item fml.types.ui.file_select.IItem
+
+    if item ~= nil then
+      local absolute_filepath = fml.path.join(select_cwd, item.data.filepath) ---@type string
+      local relative_filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+      table.insert(quickfix_items, {
+        filename = relative_filepath,
+        lnum = item.data.lnum or 1,
+        col = item.data.col or 0,
+      })
+    end
+  end
+
+  if #quickfix_items > 0 then
+    vim.fn.setqflist(quickfix_items, "r")
+    select:close()
+    vim.cmd("copen")
+  end
 end
 
 ---@return nil

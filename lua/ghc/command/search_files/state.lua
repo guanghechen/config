@@ -72,4 +72,11 @@ function M.reload()
   end
 end
 
+---@return nil
+function M.close()
+  if _search ~= nil then
+    _search:close()
+  end
+end
+
 return M
