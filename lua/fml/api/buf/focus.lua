@@ -1,7 +1,6 @@
 local state = require("fml.api.state")
 local navigate = require("fml.std.navigate")
 local std_array = require("fml.std.array")
-local reporter = require("fml.std.reporter")
 
 ---@class fml.api.buf
 ---@field public focus_1                fun(): nil
