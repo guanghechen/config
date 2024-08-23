@@ -73,10 +73,10 @@ function M.refresh_win(winnr)
       lsp_symbols = {},
     }
     M.wins[winnr] = win
-  end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  win.filepath_history:push(filepath)
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    win.filepath_history:push(filepath)
+  end
   return win
 end
