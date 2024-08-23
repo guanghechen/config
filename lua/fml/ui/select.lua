@@ -7,13 +7,13 @@ local Search = require("fml.ui.search.search")
 ---@class fml.ui.Select : fml.types.ui.ISelect
 ---@field protected _case_sensitive     fml.types.collection.IObservable
 ---@field protected _cmp                fml.types.ui.select.IMatchedItemCmp|nil
----@field protected _data_dirty         fml.types.collection.IObservable
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
 ---@field protected _full_matches       fml.types.ui.select.IMatchedItem[]
 ---@field protected _item_map           table<string, fml.types.ui.select.IItem>
 ---@field protected _item_present_uuid  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
+---@field protected _live_data_dirty    fml.types.collection.IObservable
 ---@field protected _matches            fml.types.ui.select.IMatchedItem[]
 ---@field protected _provider           fml.types.ui.select.IProvider
 ---@field protected _search             fml.types.ui.search.ISearch
@@ -46,7 +46,6 @@ function M.new(props)
 
   local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type fml.types.collection.IObservable
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
-  local data_dirty = Observable.from_value(true) ---@type fml.types.collection.IObservable
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local enable_preview = props.enable_preview ---@type boolean
@@ -54,6 +53,7 @@ function M.new(props)
   local input = props.input or Observable.from_value("") ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
+  local live_data_dirty = Observable.from_value(true) ---@type fml.types.collection.IObservable
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.select.IProvider
@@ -167,7 +167,7 @@ function M.new(props)
   self.state = search.state
   self._case_sensitive = case_sensitive
   self._cmp = cmp
-  self._data_dirty = data_dirty
+  self._live_data_dirty = live_data_dirty
   self._frecency = frecency
   self._full_matches = {}
   self._item_map = {}
@@ -231,7 +231,7 @@ end
 ---@param input                       string
 ---@return fml.types.ui.search.IData
 function M:fetch_items(input)
-  local is_data_dirty = self._data_dirty:snapshot() ---@type boolean
+  local is_data_dirty = self._live_data_dirty:snapshot() ---@type boolean
   if is_data_dirty then
     local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
     local data = self._provider.fetch_data() ---@type fml.types.ui.select.IData
@@ -252,7 +252,7 @@ function M:fetch_items(input)
     self._item_map = item_map
     self._full_matches = full_matches
     self._matches = full_matches
-    self._data_dirty:next(false)
+    self._live_data_dirty:next(false)
   end
 
   local item_map = self._item_map ---@type table<string, fml.types.ui.select.IItem>
@@ -393,7 +393,7 @@ end
 
 ---@return nil
 function M:mark_data_dirty()
-  self._data_dirty:next(true)
+  self._live_data_dirty:next(true)
   self._search.state.dirtier_data:mark_dirty()
 end
 

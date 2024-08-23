@@ -68,7 +68,7 @@ end
 ---@return nil
 function M.reload()
   if _search ~= nil then
-    _search.state:mark_data_dirty()
+    _search.state.dirtier_data:mark_dirty()
   end
 end
 
