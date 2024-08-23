@@ -23,6 +23,7 @@ fml.fn.watch_observables({
   session.find_exclude_patterns,
   session.find_flag_case_sensitive,
   session.find_flag_gitignore,
+  session.find_flag_fuzzy,
   state_find_cwd,
 }, function()
   reload()
@@ -98,6 +99,10 @@ local actions = {
     local flag = session.find_flag_case_sensitive:snapshot() ---@type boolean
     session.find_flag_case_sensitive:next(not flag)
   end,
+  toggle_flag_fuzzy = function()
+    local flag = session.find_flag_fuzzy:snapshot() ---@type boolean
+    session.find_flag_fuzzy:next(not flag)
+  end,
   ---@return nil
   toggle_gitignore = function()
     local flag = session.find_flag_gitignore:snapshot() ---@type boolean
@@ -141,6 +146,13 @@ local function get_select()
         state = session.find_flag_case_sensitive,
         callback = actions.toggle_case_sensitive,
       },
+      {
+        type = "flag",
+        desc = "select: toggle fuzzy mode",
+        symbol = fml.ui.icons.symbols.flag_fuzzy,
+        state = session.find_flag_fuzzy,
+        callback = actions.toggle_flag_fuzzy,
+      },
     }
 
     ---@type fml.types.IKeymap[]
@@ -174,6 +186,12 @@ local function get_select()
         key = "<leader>i",
         callback = actions.toggle_case_sensitive,
         desc = "find: toggle case sensitive",
+      },
+      {
+        modes = { "n", "v" },
+        key = "<leader>f",
+        callback = actions.toggle_flag_fuzzy,
+        desc = "find: toggle fuzzy mode",
       },
     }
 
@@ -219,6 +237,7 @@ local function get_select()
       destroy_on_close = false,
       enable_preview = true,
       frecency = frecency,
+      fuzzy = session.find_flag_fuzzy,
       input = session.find_file_pattern,
       input_history = input_history,
       input_keymaps = input_keymaps,

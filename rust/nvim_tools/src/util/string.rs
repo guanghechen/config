@@ -25,7 +25,11 @@ pub fn get_line_widths(text: &str) -> Vec<u32> {
     lwidths
 }
 
-pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineMatch> {
+pub fn find_match_points<S: AsRef<str>>(
+    pattern: &str,
+    lines: &[S],
+    flag_fuzzy: bool,
+) -> Vec<LineMatch> {
     if pattern.is_empty() {
         return vec![];
     }
@@ -68,6 +72,10 @@ pub fn find_match_points<S: AsRef<str>>(pattern: &str, lines: &[S]) -> Vec<LineM
                 score,
                 matches: pieces,
             });
+            continue;
+        }
+
+        if !flag_fuzzy {
             continue;
         }
 

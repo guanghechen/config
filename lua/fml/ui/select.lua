@@ -9,6 +9,7 @@ local Search = require("fml.ui.search.search")
 ---@field protected _cmp                fml.types.ui.select.IMatchedItemCmp|nil
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
 ---@field protected _full_matches       fml.types.ui.select.IMatchedItem[]
+---@field protected _fuzzy              fml.types.collection.IObservable
 ---@field protected _item_map           table<string, fml.types.ui.select.IItem>
 ---@field protected _item_present_uuid  string|nil
 ---@field protected _last_case_sensitive boolean
@@ -27,6 +28,7 @@ M.__index = M
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_preview         boolean
 ---@field public frecency               ?fml.types.collection.IFrecency
+---@field public fuzzy                  ?fml.types.collection.IObservable
 ---@field public input                  ?fml.types.collection.IObservable
 ---@field public input_history          ?fml.types.collection.IHistory
 ---@field public input_keymaps          ?fml.types.IKeymap[]
@@ -50,6 +52,7 @@ function M.new(props)
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local enable_preview = props.enable_preview ---@type boolean
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
+  local fuzzy = props.fuzzy or Observable.from_value(true) ---@type fml.types.collection.IObservable
   local input = props.input or Observable.from_value("") ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
@@ -72,6 +75,14 @@ function M.new(props)
       self:mark_search_state_dirty()
     end
 
+    ---@return nil
+    local function toggle_fuzzy_mode()
+      local flag = fuzzy:snapshot() ---@type boolean
+      fuzzy:next(not flag)
+      vim.cmd("redrawstatus")
+      self:mark_search_state_dirty()
+    end
+
     ---@type fml.types.ui.search.IRawStatuslineItem[]
     statusline_items = {
       {
@@ -80,6 +91,13 @@ function M.new(props)
         symbol = icons.symbols.flag_case_sensitive,
         state = case_sensitive,
         callback = toggle_case_sensitive,
+      },
+      {
+        type = "flag",
+        desc = "select: toggle fuzzy mode",
+        symbol = icons.symbols.flag_fuzzy,
+        state = fuzzy,
+        callback = toggle_fuzzy_mode,
       },
     }
 
@@ -90,6 +108,12 @@ function M.new(props)
         key = "<leader>i",
         callback = toggle_case_sensitive,
         desc = "select: toggle case sensitive",
+      },
+      {
+        modes = { "n", "v" },
+        key = "<leader>f",
+        callback = toggle_fuzzy_mode,
+        desc = "select: toggle fuzzy mode",
       },
     }
 
@@ -170,6 +194,7 @@ function M.new(props)
   self._live_data_dirty = live_data_dirty
   self._frecency = frecency
   self._full_matches = {}
+  self._fuzzy = fuzzy
   self._item_map = {}
   self._item_present_uuid = nil
   self._last_input = nil ---@type string|nil
@@ -332,6 +357,7 @@ end
 ---@return fml.types.ui.select.IMatchedItem[]
 function M:find_matched_items(input, old_matches)
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
+  local fuzzy = self._fuzzy:snapshot() ---@type boolean
   local item_map = self._item_map ---@type table<string, fml.types.ui.select.IItem>
 
   local lines = {} ---@type string[]
@@ -353,7 +379,7 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  local oxi_matches = oxi.find_match_points(input, lines) ---@type fml.std.oxi.string.ILineMatch[]
+  local oxi_matches = oxi.find_match_points(input, lines, fuzzy) ---@type fml.std.oxi.string.ILineMatch[]
   local matches = {} ---@type fml.types.ui.select.IMatchedItem[]
   for _, oxi_match in ipairs(oxi_matches) do
     ---! The index in lua is start from 1 but rust is start from 0.

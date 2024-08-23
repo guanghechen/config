@@ -3,9 +3,10 @@ local M = {}
 
 ---@class fml.ui.icons.symbols
 M.symbols = {
-  flag_regex = "󰑑",
+  flag_fuzzy = "󰫳",
   flag_case_sensitive = "",
   flag_gitignore = "",
+  flag_regex = "󰑑",
   flag_replace = "",
   win_indicator = " ",
   win_indicator_active = "▎",

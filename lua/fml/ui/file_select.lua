@@ -20,6 +20,7 @@ M.__index = M
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_preview         boolean
 ---@field public frecency               ?fml.types.collection.IFrecency
+---@field public fuzzy                  ?fml.types.collection.IObservable
 ---@field public input                  ?fml.types.collection.IObservable
 ---@field public input_history          ?fml.types.collection.IHistory
 ---@field public input_keymaps          ?fml.types.IKeymap[]
@@ -57,6 +58,7 @@ function M.new(props)
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local enable_preview = props.enable_preview ---@type boolean
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
+  local fuzzy = props.fuzzy ---@type fml.types.collection.IObservable|nil
   local input = props.input ---@type fml.types.collection.IObservable|nil
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local provider = props.provider ---@type fml.types.ui.file_select.IProvider
@@ -127,6 +129,7 @@ function M.new(props)
     dimension = dimension,
     enable_preview = enable_preview,
     frecency = frecency,
+    fuzzy = fuzzy,
     input = input,
     input_history = input_history,
     input_keymaps = input_keymaps,

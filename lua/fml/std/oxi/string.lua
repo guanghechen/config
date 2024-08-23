@@ -14,9 +14,10 @@ end
 
 ---@param pattern                       string
 ---@param lines                         string[]
+---@param flag_fuzzy                    boolean
 ---@return fml.std.oxi.string.ILineMatch[]
-function M.find_match_points(pattern, lines)
-  local json_str = M.nvim_tools.find_match_points(pattern, table.concat(lines, "\n")) ---@type string
+function M.find_match_points(pattern, lines, flag_fuzzy)
+  local json_str = M.nvim_tools.find_match_points(pattern, table.concat(lines, "\n"), flag_fuzzy) ---@type string
   local matches = M.json.parse(json_str)
   ---@cast matches fml.std.oxi.string.ILineMatch[]
   return matches
