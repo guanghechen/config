@@ -1,6 +1,7 @@
 ---@class fml.types.ui.simple_file_select.IData
 ---@field public cwd                    string
 ---@field public filepaths              string[]
+---@field public present_filepath       ?string
 
 ---@class fml.types.ui.simple_file_select.IProvider
 ---@field public provide                fun(): fml.types.ui.simple_file_select.IData

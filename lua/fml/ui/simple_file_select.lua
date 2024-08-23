@@ -85,9 +85,10 @@ function M:get_file_select()
         local raw_data = self._provider.provide() ---@type fml.types.ui.simple_file_select.IData
         local cwd = raw_data.cwd ---@type string
         local filepaths = raw_data.filepaths ---@type string[]
+        local present_filepath = raw_data.present_filepath ---@type string|nil
         local items = FileSelect.make_items_by_filepaths(filepaths) ---@type fml.types.ui.file_select.IRawItem[]
-        local data = { cwd = cwd, items = items }
-        return data
+        ---@type fml.types.ui.file_select.IData
+        return { cwd = cwd, items = items, present_uuid = present_filepath }
       end,
     }
 
