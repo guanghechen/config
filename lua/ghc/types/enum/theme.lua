@@ -11,6 +11,7 @@
 ---| "nvim-dap"
 ---| "nvim-dap-ui"
 ---| "nvim-lspconfig"
+---| "nvim-treesitter-context"
 ---| "statusline"
 ---| "tabline"
 ---| "telescope"
