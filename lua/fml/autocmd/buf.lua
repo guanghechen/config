@@ -17,7 +17,8 @@ vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
       state.refresh_tab(tabnr)
       local win = state.wins[winnr]
       if win ~= nil then
-        win.buf_history:push(bufnr)
+        local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        win.filepath_history:push(filepath)
       end
     end)
   end,

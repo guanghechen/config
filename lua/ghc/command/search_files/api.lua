@@ -502,26 +502,25 @@ end
 ---@param frecency                      fml.types.collection.IFrecency
 ---@return boolean
 function M.open_file(item, frecency)
-  local winnr = fml.api.state.win_history:present() ---@type integer
-  if winnr ~= nil then
-    local cwd = state.search_cwd:snapshot() ---@type string
-    local workspace = fml.path.workspace() ---@type string
-    local data = _item_data_map and _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
-    if data ~= nil then
-      local absolute_filepath = fml.path.join(cwd, data.filepath) ---@type string
-      local relative_filepath = fml.path.relative(workspace, absolute_filepath) ---@type string
-      frecency:access(relative_filepath)
+  local cwd = state.search_cwd:snapshot() ---@type string
+  local workspace = fml.path.workspace() ---@type string
+  local data = _item_data_map and _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
+  if data ~= nil then
+    local absolute_filepath = fml.path.join(cwd, data.filepath) ---@type string
+    local relative_filepath = fml.path.relative(workspace, absolute_filepath) ---@type string
+    frecency:access(relative_filepath)
+    local opened = fml.api.buf.open_in_current_valid_win(absolute_filepath) ---@type boolean
 
+    if opened then
       vim.schedule(function()
-        fml.api.buf.open(winnr, absolute_filepath)
         local lnum = data.lnum ---@type integer|nil
         local col = data.col ---@type integer|nil
         if lnum ~= nil and col ~= nil then
           vim.api.nvim_win_set_cursor(0, { lnum, col })
         end
       end)
+      return true
     end
-    return true
   end
   return false
 end

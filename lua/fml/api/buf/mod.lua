@@ -1,8 +1,5 @@
 local state = require("fml.api.state")
 local std_array = require("fml.std.array")
-local fs = require("fml.std.fs")
-local path = require("fml.std.path")
-local reporter = require("fml.std.reporter")
 
 ---@class fml.api.buf
 local M = {}
@@ -27,39 +24,6 @@ function M.is_visible(bufnr)
     local win_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     return win_bufnr == bufnr
   end)
-end
-
----@param filepath                      string
----@return integer|nil
-function M.locate_by_filepath(filepath)
-  local target_filepath = vim.fn.fnamemodify(filepath, ":p") ---@type string
-  for bufnr, buf in pairs(state.bufs) do
-    if buf.filepath == target_filepath then
-      return bufnr
-    end
-  end
-
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(bufnr) then
-      local bufname = vim.api.nvim_buf_get_name(bufnr)
-      local buf_filepath = vim.fn.fnamemodify(bufname, ":p")
-      if buf_filepath == target_filepath then
-        state.schedule_refresh_bufs()
-        return bufnr
-      end
-    end
-  end
-  return nil
-end
-
----@return integer
-function M.open_filepath(filepath)
-  local bufnr = M.locate_by_filepath(filepath) ---@type integer|nil
-  if bufnr == nil then
-    vim.cmd("edit " .. vim.fn.fnameescape(filepath))
-    bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  end
-  return bufnr
 end
 
 ---@return nil

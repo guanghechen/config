@@ -63,10 +63,12 @@ function M.refresh_win(winnr)
   if win == nil then
     ---@type fml.types.api.state.IWinItem
     win = {
-      buf_history = History.new({
+      filepath_history = History.new({
         name = "win#bufs",
         capacity = constant.WIN_BUF_HISTORY_CAPACITY,
-        validate = M.validate_buf,
+        validate = function(filepath)
+          return type(filepath) == "string" and #filepath > 0
+        end,
       }),
       lsp_symbols = {},
     }
@@ -74,6 +76,7 @@ function M.refresh_win(winnr)
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  win.buf_history:push(bufnr)
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  win.filepath_history:push(filepath)
   return win
 end

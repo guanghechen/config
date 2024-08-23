@@ -55,7 +55,7 @@ function M.show_state()
     ---@type fml.types.api.state.IWinItemData
     local item = {
       winnr = winnr,
-      buf_history = win.buf_history:dump(),
+      filepath_history = win.filepath_history:dump(),
     }
     wins[winnr] = item
   end

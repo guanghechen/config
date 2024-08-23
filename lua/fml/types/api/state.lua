@@ -35,12 +35,12 @@
 ---@field public bufnrs                 integer[]
 
 ---@class fml.types.api.state.IWinItem
----@field public buf_history            fml.types.collection.IHistory
+---@field public filepath_history       fml.types.collection.IHistory
 ---@field public lsp_symbols            fml.types.api.state.ILspSymbol[]
 
 ---@class fml.types.api.state.IWinItemData
 ---@field public winnr                  integer
----@field public buf_history            fml.types.collection.history.ISerializedData
+---@field public filepath_history       fml.types.collection.history.ISerializedData
 
 ---@class fml.types.api.state.ISerializedData
 ---@field public bufs                   fml.types.api.state.IBufItemData[]

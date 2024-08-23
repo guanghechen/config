@@ -5,6 +5,32 @@ local util = require("fml.std.util")
 ---@class fml.api.state
 local M = require("fml.api.state.mod")
 
+---@param filepath                      string|nil
+---@return integer|nil
+function M.locate_bufnr_by_filepath(filepath)
+  if filepath == nil or #filepath < 1 then
+    return nil
+  end
+
+  for bufnr, buf in pairs(M.bufs) do
+    if buf.filepath == filepath then
+      return bufnr
+    end
+  end
+
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then
+      local bufname = vim.api.nvim_buf_get_name(bufnr)
+      local buf_filepath = vim.fn.fnamemodify(bufname, ":p")
+      if buf_filepath == filepath then
+        M.schedule_refresh_bufs()
+        return bufnr
+      end
+    end
+  end
+  return nil
+end
+
 ---@return nil
 function M.refresh_bufs()
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]

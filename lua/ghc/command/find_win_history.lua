@@ -38,41 +38,33 @@ local function get_select(initial_title)
       local present_uuid = "0" ---@type string
 
       if unique then
-        local present_bufnr = win.buf_history:present() ---@type integer|nil
-        local present_buf = fml.api.state.bufs[present_bufnr]
-        local present_filepath = present_buf and present_buf.filepath or "" ---@type string
+        local present_filepath = win.filepath_history:present() ---@type string|nil
         local visited = {} ---@type table<string, boolean>
-        for bufnr, ordinal in win.buf_history:iterator_reverse() do
-          local buf = fml.api.state.bufs[bufnr]
-          if buf ~= nil then
-            local filepath = fml.path.relative(cwd, buf.filepath) ---@type string
-            if not visited[filepath] then
-              visited[filepath] = true
+        for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
+          local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+          if not visited[filepath] then
+            visited[filepath] = true
 
-              local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-              if present_filepath == buf.filepath then
-                present_uuid = uuid
-              end
-
-              local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
-              table.insert(items, item)
+            local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
+            if present_filepath == absolute_filepath then
+              present_uuid = uuid
             end
+
+            local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
+            table.insert(items, item)
           end
         end
       else
-        local present_ordinal = win.buf_history:present_index() ---@type integer
+        local present_ordinal = win.filepath_history:present_index() ---@type integer
         if present_ordinal ~= nil then
           present_uuid = gen_uuid_from_ordinal(present_ordinal)
         end
 
-        for bufnr, ordinal in win.buf_history:iterator_reverse() do
-          local buf = fml.api.state.bufs[bufnr]
-          if buf ~= nil then
-            local filepath = fml.path.relative(cwd, buf.filepath) ---@type string
-            local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-            local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
-            table.insert(items, item)
-          end
+        for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
+          local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+          local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
+          local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
+          table.insert(items, item)
         end
       end
 
@@ -134,7 +126,7 @@ local function get_select(initial_title)
           local winnr = fml.api.state.win_history:present() ---@type integer|nil
           local win = winnr ~= nil and fml.api.state.wins[winnr] or nil ---@type fml.types.api.state.IWinItem|nil
           if win ~= nil then
-            win.buf_history:go(item_index)
+            win.filepath_history:go(item_index)
           end
         end
 

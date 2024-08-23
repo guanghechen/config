@@ -19,7 +19,8 @@ function M.back()
   end
 
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr_last = win.buf_history:back(1) ---@type integer
+  local last_filepath = win.filepath_history:back() ---@type string|nil
+  local bufnr_last = state.locate_bufnr_by_filepath(last_filepath) ---@type integer|nil
   if bufnr_cur ~= bufnr_last and bufnr_last ~= nil then
     vim.api.nvim_win_set_buf(winnr, bufnr_last)
   end
@@ -39,7 +40,8 @@ function M.forward()
   end
 
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr_next = win.buf_history:forward(1) ---@type integer
+  local next_filepath = win.filepath_history:forward() ---@type string|nil
+  local bufnr_next = state.locate_bufnr_by_filepath(next_filepath) ---@type integer|nil
   if bufnr_cur ~= bufnr_next and bufnr_next ~= nil then
     vim.api.nvim_win_set_buf(winnr, bufnr_next)
   end
@@ -57,5 +59,5 @@ function M.show_history()
     })
     return
   end
-  win.buf_history:print()
+  win.filepath_history:print()
 end
