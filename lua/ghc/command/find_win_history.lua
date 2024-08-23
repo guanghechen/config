@@ -139,7 +139,9 @@ local function get_select(initial_title)
         end
 
         if _select ~= nil then
-          return _select:open_filepath(item.data.filepath)
+          local cwd = fml.path.cwd() ---@type string
+          local filepath = fml.path.join(cwd, item.data.filepath) ---@type string
+          return fml.api.buf.open_in_current_valid_win(filepath)
         end
         return false
       end,

@@ -6,11 +6,9 @@ local function get_text()
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
   local client_names = {} ---@type string[]
-  for _, client in ipairs(vim.lsp.get_clients()) do
-    if client.attached_buffers[bufnr] and client.name ~= "null-ls" then
-      if client.name ~= "copilot" then
-        table.insert(client_names, client.name)
-      end
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
+    if client.attached_buffers[bufnr] and client.name ~= "null-ls" and client.name ~= "copilot" then
+      table.insert(client_names, client.name)
     end
   end
 

@@ -1,5 +1,8 @@
 local state = require("fml.api.state")
 local std_array = require("fml.std.array")
+local fs = require("fml.std.fs")
+local path = require("fml.std.path")
+local reporter = require("fml.std.reporter")
 
 ---@class fml.api.buf
 local M = {}
@@ -47,6 +50,16 @@ function M.locate_by_filepath(filepath)
     end
   end
   return nil
+end
+
+---@return integer
+function M.open_filepath(filepath)
+  local bufnr = M.locate_by_filepath(filepath) ---@type integer|nil
+  if bufnr == nil then
+    vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+    bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  end
+  return bufnr
 end
 
 ---@return nil

@@ -1,3 +1,4 @@
+local state = require("fml.api.state")
 local fs = require("fml.std.fs")
 
 ---@class fml.api.buf
@@ -24,14 +25,29 @@ end
 
 ---@param winnr                         integer
 ---@param filepath                      string
----@return nil
+---@return boolean
 function M.open(winnr, filepath)
-  filepath = vim.fn.fnameescape(filepath)
   if vim.api.nvim_win_is_valid(winnr) then
-    vim.api.nvim_set_current_win(winnr)
-    vim.cmd("edit " .. filepath)
-    vim.schedule(function()
-      vim.cmd("stopinsert")
-    end)
+    local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+    if winnr_cur ~= winnr then
+      vim.api.nvim_set_current_win(winnr)
+
+      local bufnr = M.open_filepath(filepath) ---@type integer
+      vim.api.nvim_win_set_buf(winnr, bufnr)
+
+      vim.api.nvim_set_current_win(winnr_cur)
+    else
+      local bufnr = M.open_filepath(filepath) ---@type integer
+      vim.api.nvim_win_set_buf(winnr, bufnr)
+    end
+    return true
   end
+  return false
+end
+
+---@param filepath                      string
+---@return boolean
+function M.open_in_current_valid_win(filepath)
+  local winnr = state.win_history:present() ---@type integer
+  return M.open(winnr, filepath)
 end

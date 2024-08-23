@@ -50,5 +50,4 @@
 ---@field public get_winnr_preview      fun(self: fml.types.ui.IFileSelect): integer|nil
 ---@field public mark_data_dirty        fun(self: fml.types.ui.IFileSelect): nil
 ---@field public open                   fun(self: fml.types.ui.IFileSelect): nil
----@field public open_filepath          fun(self: fml.types.ui.IFileSelect, filepath: string): nil
 ---@field public toggle                 fun(self: fml.types.ui.IFileSelect): nil

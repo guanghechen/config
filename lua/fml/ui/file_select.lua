@@ -3,7 +3,6 @@ local fs = require("fml.std.fs")
 local is = require("fml.std.is")
 local path = require("fml.std.path")
 local util = require("fml.std.util")
-local api_state = require("fml.api.state")
 local api_buf = require("fml.api.buf")
 local Select = require("fml.ui.select")
 
@@ -138,7 +137,8 @@ function M.new(props)
     title = title,
     on_close = on_close_from_props,
     on_confirm = on_confirm_from_props or function(item)
-      return self:open_filepath(item.data.filepath)
+      local filepath = path.join(self.cwd, item.data.filepath) ---@type string
+      return api_buf.open_in_current_valid_win(filepath)
     end,
     on_preview_rendered = on_preview_rendered,
   })
@@ -277,20 +277,6 @@ end
 ---@return nil
 function M:open()
   self._select:open()
-end
-
----@param filepath                      string
----@return boolean
-function M:open_filepath(filepath)
-  local winnr = api_state.win_history:present() ---@type integer
-  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    filepath = path.join(self.cwd, filepath) ---@type string
-    vim.schedule(function()
-      api_buf.open(winnr, filepath)
-    end)
-    return true
-  end
-  return false
 end
 
 ---@return nil
