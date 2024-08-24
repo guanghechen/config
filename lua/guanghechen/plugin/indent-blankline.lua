@@ -16,7 +16,11 @@ return {
     exclude = {
       filetypes = {
         fml.constant.FT_SEARCH_INPUT,
+        fml.constant.FT_SEARCH_INPUT,
         fml.constant.FT_SEARCH_MAIN,
+        fml.constant.FT_SEARCH_PREVIEW,
+        fml.constant.FT_SELECT_INPUT,
+        fml.constant.FT_SELECT_MAIN,
         fml.constant.FT_TERM,
         "help",
         "alpha",

@@ -29,6 +29,7 @@
 ---@class fml.types.ui.search.IData
 ---@field public items                  fml.types.ui.search.IItem[]
 ---@field public present_uuid           ?string
+---@field public cursor_uuid            ?string
 
 ---@class fml.types.ui.search.IItem
 ---@field public group                  string|nil

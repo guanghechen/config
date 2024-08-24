@@ -1,7 +1,5 @@
 local std_os = require("fml.std.os")
 
-local PATH_SEP = std_os.path_sep() ---@type string
-
 ---@class fml.std.path
 local M = require("fml.std.path.mod")
 
@@ -15,11 +13,12 @@ end
 ---@param filepath                      string
 ---@return string
 function M.dirname(filepath)
-  local pieces = M.split(M.resolve(M.cwd(), filepath))
+  local pieces = M.split(filepath)
   if #pieces == 1 then
     return pieces[1]
   end
-  return pieces > 0 and table.concat(pieces, PATH_SEP, 1, #pieces - 1) or ""
+
+  return #pieces > 0 and table.concat(pieces, M.SEP, 1, #pieces - 1) or ""
 end
 
 ---@param filename                      string
@@ -34,7 +33,7 @@ function M.is_absolute(filepath)
   if std_os.is_win() then
     return string.match(filepath, "^[%a]:[\\/].*$") ~= nil
   end
-  return string.sub(filepath, 1, 1) == PATH_SEP
+  return string.sub(filepath, 1, 1) == M.SEP
 end
 
 ---@param filepath                      string
@@ -79,7 +78,7 @@ end
 ---@param to                            string
 ---@return string
 function M.join(from, to)
-  return M.normalize(from .. PATH_SEP .. to)
+  return M.normalize(from .. M.SEP .. to)
 end
 
 function M.mkdir_if_nonexist(dirpath)
@@ -91,7 +90,7 @@ end
 ---@param filepath                      string
 ---@return string
 function M.normalize(filepath)
-  return table.concat(M.split(filepath), PATH_SEP)
+  return table.concat(M.split(filepath), M.SEP)
 end
 
 ---@param from                          string
@@ -128,13 +127,13 @@ function M.relative(from, to)
   for j = i, #to_pieces do
     table.insert(pieces, to_pieces[j])
   end
-  return table.concat(pieces, PATH_SEP)
+  return table.concat(pieces, M.SEP)
 end
 
 ---@param cwd                           string
 ---@param to                            string
 function M.resolve(cwd, to)
-  return M.is_absolute(to) and M.normalize(to) or M.normalize(cwd .. PATH_SEP .. to)
+  return M.is_absolute(to) and M.normalize(to) or M.normalize(cwd .. M.SEP .. to)
 end
 
 ---@param filepath                      string
@@ -142,7 +141,7 @@ end
 function M.split(filepath)
   local pieces = {} ---@type string[]
   local pattern = "([^/\\]+)" ---@type string
-  local has_prefix_sep = PATH_SEP == "/" and string.sub(filepath, 1, 1) == PATH_SEP ---@type boolean
+  local has_prefix_sep = M.SEP == "/" and string.sub(filepath, 1, 1) == M.SEP ---@type boolean
 
   for piece in string.gmatch(filepath, pattern) do
     if #piece > 0 and piece ~= "." then

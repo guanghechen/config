@@ -9,6 +9,7 @@ use crate::types::file::{FileItemWithStatus, FileType};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReaddirSucceedResult {
+    pub itself: FileItemWithStatus,
     pub items: Vec<FileItemWithStatus>,
 }
 
@@ -18,58 +19,30 @@ pub struct ReaddirFailedResult {
 }
 
 pub fn readdir<P: AsRef<Path>>(dirpath: P) -> Result<ReaddirSucceedResult, ReaddirFailedResult> {
+    let itself: FileItemWithStatus = match flat_filestatus(dirpath.as_ref()) {
+        Ok(item) => item,
+        Err(e) => {
+            return Err(ReaddirFailedResult {
+                error: format!("[readdir] Failed to flat filestatus: {}", e),
+            });
+        }
+    };
+
     match fs::read_dir(dirpath) {
         Ok(entries) => {
             let mut items: Vec<FileItemWithStatus> = Vec::new();
             for entry in entries {
                 match entry {
-                    Ok(entry) => {
-                        let path = entry.path();
-                        let metadata = match fs::metadata(&path) {
-                            Ok(metadata) => metadata,
-                            Err(e) => {
-                                return Err(ReaddirFailedResult {
-                                    error: format!(
-                                        "[readdir] Failed to get metadata for {}: {}",
-                                        path.display(),
-                                        e
-                                    ),
-                                });
-                            }
-                        };
-
-                        let filetype: FileType = if entry.file_type().unwrap().is_dir() {
-                            FileType::Directory
-                        } else {
-                            FileType::File
-                        };
-                        let filename: String = entry.file_name().to_string_lossy().into_owned();
-                        let permission: String = format_permissions(&filetype, metadata.mode());
-                        let filesize: String = format_filesize(metadata.len());
-                        let owner: String =
-                            get_username_from_uid(metadata.uid()).unwrap_or("unknown".to_owned());
-                        let group: String =
-                            get_groupname_from_gid(metadata.gid()).unwrap_or("unknown".to_owned());
-                        let modify_time = match metadata.modified() {
-                            Ok(modified) => format_time(modified),
-                            Err(e) => {
-                                return Err(ReaddirFailedResult {
-                                    error: format!("Error getting date: {}", e),
-                                })
-                            }
-                        };
-
-                        let item: FileItemWithStatus = FileItemWithStatus {
-                            filetype,
-                            filename,
-                            permission,
-                            filesize,
-                            owner,
-                            group,
-                            modify_time,
-                        };
-                        items.push(item);
-                    }
+                    Ok(entry) => match flat_filestatus(&entry.path()) {
+                        Ok(item) => {
+                            items.push(item);
+                        }
+                        Err(e) => {
+                            return Err(ReaddirFailedResult {
+                                error: format!("[readdir] Failed to flat filestatus: {}", e),
+                            });
+                        }
+                    },
                     Err(e) => {
                         return Err(ReaddirFailedResult {
                             error: format!("[readdir] Failed to resolve entry: {}", e),
@@ -92,12 +65,56 @@ pub fn readdir<P: AsRef<Path>>(dirpath: P) -> Result<ReaddirSucceedResult, Readd
                 }
             });
 
-            Ok(ReaddirSucceedResult { items })
+            Ok(ReaddirSucceedResult { itself, items })
         }
         Err(e) => Err(ReaddirFailedResult {
             error: format!("[readdir] Failed to read directory: {}", e),
         }),
     }
+}
+
+pub fn flat_filestatus(path: &Path) -> Result<FileItemWithStatus, String> {
+    let metadata = match fs::metadata(path) {
+        Ok(metadata) => metadata,
+        Err(e) => {
+            return Err(format!(
+                "Failed to get metadata for {}: {}",
+                path.display(),
+                e
+            ));
+        }
+    };
+
+    let filetype: FileType = if metadata.is_dir() {
+        FileType::Directory
+    } else {
+        FileType::File
+    };
+
+    let filename: String = path
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .into_owned();
+    let permission: String = format_permissions(&filetype, metadata.mode());
+    let filesize: String = format_filesize(metadata.len());
+    let owner: String = get_username_from_uid(metadata.uid()).unwrap_or("unknown".to_owned());
+    let group: String = get_groupname_from_gid(metadata.gid()).unwrap_or("unknown".to_owned());
+    let modify_time = match metadata.modified() {
+        Ok(modified) => format_time(modified),
+        Err(e) => return Err(format!("Failed to get date: {}", e)),
+    };
+
+    let item: FileItemWithStatus = FileItemWithStatus {
+        filetype,
+        filename,
+        permission,
+        filesize,
+        owner,
+        group,
+        modify_time,
+    };
+    Ok(item)
 }
 
 // Convert the permission bits to a string like `ls -l`

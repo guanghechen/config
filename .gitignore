@@ -3,5 +3,6 @@ config/local/
 lua/local/
 lua/nvim_tools.so
 lua/nvim_tools.dll
+lua/__test__/__tmp__.lua
 tmp/
 rust/**/target/

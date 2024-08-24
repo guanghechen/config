@@ -1,8 +1,5 @@
 local md5 = require("fml.std.md5")
-local std_os = require("fml.std.os")
 local reporter = require("fml.std.reporter")
-
-local PATH_SEP = std_os.path_sep() ---@type string
 
 ---@class fml.std.path
 local M = require("fml.std.path.mod")
@@ -11,8 +8,8 @@ local M = require("fml.std.path.mod")
 function M.locate_git_repo(filepath)
   local path_pieces = M.split(filepath) ---@type string[]
   while #path_pieces > 0 do
-    local current_path = table.concat(path_pieces, PATH_SEP) ---@type string
-    local git_dir_path = current_path .. PATH_SEP .. ".git" ---@type string
+    local current_path = table.concat(path_pieces, M.SEP) ---@type string
+    local git_dir_path = current_path .. M.SEP .. ".git" ---@type string
     if vim.fn.isdirectory(git_dir_path) ~= 0 then
       return current_path
     end
@@ -38,7 +35,7 @@ function M.locate_config_filepath(...)
   end
 
   ---@cast config_path string
-  return M.normalize(table.concat({ config_path, "config", ... }, PATH_SEP))
+  return M.normalize(table.concat({ config_path, "config", ... }, M.SEP))
 end
 
 ---@param opts {filename: string}
@@ -65,7 +62,7 @@ function M.locate_data_filepath(...)
   end
 
   ---@cast data_path string
-  return M.normalize(table.concat({ data_path, ... }, PATH_SEP))
+  return M.normalize(table.concat({ data_path, ... }, M.SEP))
 end
 
 ---@type ... string[]
@@ -85,7 +82,7 @@ function M.locate_script_filepath(...)
   end
 
   ---@cast config_path string
-  return M.normalize(table.concat({ config_path, "script", ... }, PATH_SEP))
+  return M.normalize(table.concat({ config_path, "script", ... }, M.SEP))
 end
 
 ---@param opts                          { filename: string }
@@ -118,7 +115,7 @@ function M.locate_state_filepath(...)
   end
 
   ---@cast state_path string
-  return M.normalize(table.concat({ state_path, ... }, PATH_SEP))
+  return M.normalize(table.concat({ state_path, ... }, M.SEP))
 end
 
 ---@param opts {filenames: string[]}
@@ -129,7 +126,7 @@ function M.remove_session_filepaths(opts)
   local hash = md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   for _, filename in ipairs(opts.filenames) do
-    local session_filepath = session_dir .. PATH_SEP .. filename
+    local session_filepath = session_dir .. M.SEP .. filename
     if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
       os.remove(session_filepath)
       reporter.info({
@@ -150,7 +147,7 @@ function M.remove_session_filepaths_all(opts)
     for dirname in pfile:lines() do
       if dirname then
         for _, filename in ipairs(opts.filenames) do
-          local session_filepath = session_root_dir .. PATH_SEP .. dirname .. PATH_SEP .. filename
+          local session_filepath = session_root_dir .. M.SEP .. dirname .. M.SEP .. filename
           if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
             os.remove(session_filepath)
             reporter.info({

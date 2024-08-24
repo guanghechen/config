@@ -34,8 +34,6 @@ mk({ "n", "v" }, "<leader>et", A.explorer.toggle_explorers, "explorer: toggle")
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ind-------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>fE", A.find.find_explorer_workspace, "find: file explorer (from workspace)")
-mk({ "n", "v" }, "<leader>fe", A.find.find_explorer_current, "find: file explorer (from current directory)")
 mk({ "n", "v" }, "<leader>fh", A.find.find_highlights, "find: highlights")
 mk({ "n", "v" }, "<leader>fq", A.find.find_quickfix_history, "find: quickfix history")
 mk({ "n", "v" }, "<leader>fv", A.find.find_vim_options, "find: vim options")

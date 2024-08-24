@@ -50,9 +50,10 @@ function M.new(props)
           local item_lnum_next = 1 ---@type integer
           local items = data.items ---@type fml.types.ui.search.IItem[]
           local present_uuid = data.present_uuid ---@type string|nil
+          local cursor_uuid = data.cursor_uuid or data.present_uuid ---@type string|nil
 
           ---@diagnostic disable-next-line: invisible
-          local item_uuid_cur = self._item_uuid_cur ---@type string|nil
+          local item_uuid_cur = cursor_uuid or self._item_uuid_cur ---@type string|nil
           for lnum, item in ipairs(items) do
             local width = vim.fn.strwidth(item.text) ---@type integer
             max_width = max_width < width and width or max_width

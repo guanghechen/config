@@ -134,6 +134,7 @@ mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window his
 
 --#[f]ind-------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader><leader>", ghc.command.find_files.open, "find: files")
+mk({ "n", "v" }, "<leader>fe", ghc.command.file_explorer.open, "find: file explorer")
 mk({ "n", "v" }, "<leader>ff", ghc.command.find_files.open, "find: files")
 mk({ "n", "v" }, "<leader>fw", ghc.command.find_files.open_workspace, "find: files (workspace)")
 mk({ "n", "v" }, "<leader>fc", ghc.command.find_files.open_cwd, "find: files (cwd)")

@@ -31,6 +31,25 @@ local function default_watch_on_error(filepath, err, unwatch)
   unwatch()
 end
 
+---@param filepath                      string
+---@return fml.enums.FileType|nil
+function M.is_file_or_dir(filepath)
+  local stat = vim.uv.fs_stat(filepath)
+  if stat == nil then
+    return nil
+  end
+
+  if stat.type == "directory" then
+    return "directory"
+  end
+
+  if stat.type == "file" then
+    return "file"
+  end
+
+  return "other"
+end
+
 ---@param params                        fml.std.fs.IReadFileParams
 ---@return string|nil
 function M.read_file(params)

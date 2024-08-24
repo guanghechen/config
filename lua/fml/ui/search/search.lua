@@ -672,7 +672,7 @@ end
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  self._input_title = title
+  self.state.title = title
   local winnr = self:get_winnr_input() ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     ---@type vim.api.keyset.win_config

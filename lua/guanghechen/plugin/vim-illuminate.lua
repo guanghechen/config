@@ -18,10 +18,13 @@ return {
   opts = {
     delay = 200,
     filetypes_denylist = {
-      fml.constant.FT_TERM,
+      fml.constant.FT_NEOTREE,
+      fml.constant.FT_SEARCH_INPUT,
+      fml.constant.FT_SEARCH_MAIN,
+      fml.constant.FT_SEARCH_PREVIEW,
       fml.constant.FT_SELECT_INPUT,
       fml.constant.FT_SELECT_MAIN,
-      fml.constant.FT_NEOTREE,
+      fml.constant.FT_TERM,
       "noice",
       "notify",
       "quickfix",

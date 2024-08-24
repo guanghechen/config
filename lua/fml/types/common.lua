@@ -9,6 +9,11 @@
 ---@generic T
 ---@alias fml.types.IEquals fun(x: T, y: T): boolean
 
+---@alias fml.enums.FileType
+---| "file"
+---| "directory"
+---| "other"
+
 ---@generic T
 ---@alias fml.types.INormalize fun(x: T): T
 

@@ -17,6 +17,18 @@ local function gen_hlgroup_map(params)
     f_diff_word_left = { bg = c.diff_del_word, fg = "none" },
     f_diff_word_right = { bg = c.diff_add_word, fg = "none" },
 
+    ---file explorer
+    f_fe_date = { fg = c.grey_fg2 },
+    f_fe_group = { fg = c.red },
+    f_fe_match = { fg = c.red },
+    f_fe_name_dir = { fg = c.blue },
+    f_fe_name_file = { fg = c.white },
+    f_fe_owner = { fg = c.red },
+    f_fe_perm_dir = { fg = c.blue },
+    f_fe_perm_file = { fg = c.white },
+    f_fe_perm = { fg = c.white },
+    f_fe_size = { fg = c.vibrant_green },
+
     ---search
     f_us_input_border = { fg = c.black2, bg = c.black2 },
     f_us_input_normal = { fg = c.white, bg = c.black2 },

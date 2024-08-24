@@ -11,7 +11,8 @@ local Search = require("fml.ui.search.search")
 ---@field protected _full_matches       fml.types.ui.select.IMatchedItem[]
 ---@field protected _fuzzy              fml.types.collection.IObservable
 ---@field protected _item_map           table<string, fml.types.ui.select.IItem>
----@field protected _item_present_uuid  string|nil
+---@field protected _item_uuid_cursor   string|nil
+---@field protected _item_uuid_present  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
 ---@field protected _live_data_dirty    fml.types.collection.IObservable
@@ -148,7 +149,7 @@ function M.new(props)
   ---@return nil
   local function fetch_data(input_text, callback)
     vim.schedule(function()
-      local ok, data = pcall(self.fetch_items, self, input_text)
+      local ok, data = pcall(self.fetch_data, self, input_text)
       callback(ok, data)
     end)
   end
@@ -196,7 +197,8 @@ function M.new(props)
   self._full_matches = {}
   self._fuzzy = fuzzy
   self._item_map = {}
-  self._item_present_uuid = nil
+  self._item_uuid_present = nil
+  self._item_uuid_cursor = nil
   self._last_input = nil ---@type string|nil
   self._last_case_sensitive = case_sensitive:snapshot()
   self._matches = {}
@@ -255,7 +257,7 @@ end
 
 ---@param input                       string
 ---@return fml.types.ui.search.IData
-function M:fetch_items(input)
+function M:fetch_data(input)
   local is_data_dirty = self._live_data_dirty:snapshot() ---@type boolean
   if is_data_dirty then
     local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
@@ -273,7 +275,8 @@ function M:fetch_items(input)
       table.sort(full_matches, self._cmp)
     end
 
-    self._item_present_uuid = data.present_uuid
+    self._item_uuid_present = data.present_uuid
+    self._item_uuid_cursor = data.cursor_uuid
     self._item_map = item_map
     self._full_matches = full_matches
     self._matches = full_matches
@@ -293,7 +296,7 @@ function M:fetch_items(input)
   end
 
   ---@type fml.types.ui.search.IData
-  return { items = items, present_uuid = self._item_present_uuid }
+  return { items = items, present_uuid = self._item_uuid_present, cursor_uuid = self._item_uuid_cursor }
 end
 
 ---@param input                         string
