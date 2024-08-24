@@ -74,8 +74,8 @@ return {
       git_status = {
         symbols = {
           -- Change type
-          added = "",                        -- or "✚", but this is redundant info if you use git_status_colors on the name
-          modified = "",                     -- or "", but this is redundant info if you use git_status_colors on the name
+          added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
+          modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
           deleted = fml.ui.icons.git.Remove, -- this can only be used in the git_status source
           renamed = fml.ui.icons.git.Rename, -- this can only be used in the git_status source
           -- Status type
@@ -86,7 +86,6 @@ return {
           conflict = fml.ui.icons.git.Conflict,
         },
       },
-      -- If you don't want to use these columns, you can set `enabled = false` for each of them individually
       file_size = {
         enabled = false,
       },
@@ -148,7 +147,7 @@ return {
 
         -- Add / Copy / Move
         ["a"] = {
-          "add",                    -- this command supports BASH style brace expansion ("x{a,b,c}" -> xa,xb,xc). see `:h neo-tree-file-actions` for details
+          "add", -- this command supports BASH style brace expansion ("x{a,b,c}" -> xa,xb,xc). see `:h neo-tree-file-actions` for details
           config = {
             show_path = "relative", -- "none", "relative", "absolute"
           },
@@ -232,8 +231,8 @@ return {
           ["<bs>"] = "navigate_up",
           ["."] = "set_root",
           ["H"] = "toggle_hidden",
-          ["/"] = "fuzzy_finder",
-          ["D"] = "fuzzy_finder_directory",
+          ["/"] = "none",
+          ["D"] = "none",
           ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
           ["oc"] = { "order_by_created", nowait = false },
           ["od"] = { "order_by_diagnostics", nowait = false },
@@ -326,7 +325,7 @@ return {
 
     opts.event_handlers = opts.event_handlers or {}
     vim.list_extend(opts.event_handlers, {
-      { event = events.FILE_MOVED,   handler = on_move },
+      { event = events.FILE_MOVED, handler = on_move },
       { event = events.FILE_RENAMED, handler = on_move },
     })
     require("neo-tree").setup(opts)
