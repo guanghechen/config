@@ -1,3 +1,4 @@
+pub mod file;
 pub mod find;
 pub mod list;
 pub mod replace;

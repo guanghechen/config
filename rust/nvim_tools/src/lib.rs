@@ -60,6 +60,10 @@ fn nvim_tools() -> Dictionary {
             )),
         ),
         (
+            "readdir",
+            Object::from(Function::from_fn(oxi::file::readdir)),
+        ),
+        (
             "search",
             Object::from(Function::from_fn(oxi::search::search)),
         ),
