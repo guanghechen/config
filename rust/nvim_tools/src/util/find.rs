@@ -61,6 +61,8 @@ pub fn find(options: &FindOptions) -> Result<FindSucceedResult, FindFailedResult
             if gitignore_path.exists() {
                 cmd.args(["--ignore-file", &gitignore_path.to_string_lossy()]);
             }
+        } else {
+            cmd.arg("--no-ignore-vcs");
         }
 
         if falg_case_sensitive {
