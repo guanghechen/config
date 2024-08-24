@@ -23,7 +23,6 @@ local raw_specs = {
   { name = "copilot-cmp" },
   { name = "friendly-snippets" },
   { name = "nvim-treesitter-textobjects" },
-  { name = "telescope-file-browser.nvim" },
 
   ------------------------------------------------------------------------------------------------
 
