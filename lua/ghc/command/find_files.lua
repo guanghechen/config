@@ -235,6 +235,7 @@ local function get_select()
       case_sensitive = session.find_flag_case_sensitive,
       cmp = fml.ui.Select.cmp_by_score,
       destroy_on_close = false,
+      dirty_on_close = false,
       enable_preview = true,
       frecency = frecency,
       fuzzy = session.find_flag_fuzzy,
@@ -246,15 +247,8 @@ local function get_select()
       provider = provider,
       statusline_items = statusline_items,
       title = "Find files",
-      on_close = function()
-        if _select ~= nil then
-          _select:mark_data_dirty()
-        end
-      end,
     })
   end
-
-  reload()
   return _select
 end
 

@@ -18,6 +18,7 @@ M.__index = M
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public destroy_on_close       boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
+---@field public dirty_on_close         ?boolean
 ---@field public enable_preview         boolean
 ---@field public frecency               ?fml.types.collection.IFrecency
 ---@field public fuzzy                  ?fml.types.collection.IObservable
@@ -56,6 +57,7 @@ function M.new(props)
   local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
+  local dirty_on_close = not not props.dirty_on_close ---@type boolean
   local enable_preview = props.enable_preview ---@type boolean
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local fuzzy = props.fuzzy ---@type fml.types.collection.IObservable|nil
@@ -68,10 +70,21 @@ function M.new(props)
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
 
+  ---@return nil
+  local function on_close()
+    if dirty_on_close then
+      self:mark_data_dirty()
+    end
+
+    if on_close_from_props ~= nil then
+      on_close_from_props()
+    end
+  end
+
   ---@type fml.types.ui.select.IProvider
   local file_select_provider = {
-    fetch_data = function()
-      local raw_data = provider.fetch_data() ---@type fml.types.ui.file_select.IData
+    fetch_data = function(force)
+      local raw_data = provider.fetch_data(force) ---@type fml.types.ui.file_select.IData
       local next_cwd = raw_data.cwd ---@type string
       local raw_items = raw_data.items ---@type fml.types.ui.file_select.IRawItem[]
       local present_uuid = raw_data.present_uuid ---@type string|nil
@@ -138,7 +151,7 @@ function M.new(props)
     provider = file_select_provider,
     statusline_items = statusline_items,
     title = title,
-    on_close = on_close_from_props,
+    on_close = on_close,
     on_confirm = on_confirm_from_props or function(item)
       local filepath = path.join(self.cwd, item.data.filepath) ---@type string
       return api_buf.open_in_current_valid_win(filepath)

@@ -4,7 +4,7 @@
 ---@field public present_filepath       ?string
 
 ---@class fml.types.ui.simple_file_select.IProvider
----@field public provide                fun(): fml.types.ui.simple_file_select.IData
+---@field public provide                fun(force: boolean): fml.types.ui.simple_file_select.IData
 
 ---@class fml.types.ui.ISimpleFileSelect
 ---@field public change_dimension       fun(self: fml.types.ui.ISimpleFileSelect, dimension: fml.types.ui.search.IRawDimension): nil

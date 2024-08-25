@@ -1,5 +1,5 @@
 ---@alias fml.types.ui.file_select.IFetchData
----| fun(): fml.types.ui.file_select.IData
+---| fun(force: boolean): fml.types.ui.file_select.IData
 
 ---@alias fml.types.ui.file_select.IFetchPreviewData
 ---| fun(item: fml.types.ui.file_select.IItem): fml.ui.search.preview.IData|nil

@@ -25,7 +25,7 @@ local dir_datamap = {} ---@type table<string, ghc.command.file_explorer.IDirItem
 local file_datamap = {} ---@type table<string, ghc.command.file_explorer.IFileItem>
 
 ---@param dirpath                       string
----@param force                         ?boolean
+---@param force                         boolean
 ---@return ghc.command.file_explorer.IDirItem
 local function fetch_diritem(dirpath, force)
   local diritem = (not force) and dir_datamap[dirpath] or nil ---@type ghc.command.file_explorer.IDirItem|nil
@@ -147,11 +147,11 @@ local function get_select()
 
     ---@type fml.types.ui.select.IProvider
     local provider = {
-      fetch_data = function()
+      fetch_data = function(force)
         local dirpath = fml.path.normalize(state_cwd:snapshot()) ---@type string
         local parent_dirpath = fml.path.dirname(dirpath) ---@type string
-        local diritem = fetch_diritem(dirpath) ---@type ghc.command.file_explorer.IDirItem
-        fetch_diritem(parent_dirpath)
+        local diritem = fetch_diritem(dirpath, force) ---@type ghc.command.file_explorer.IDirItem
+        fetch_diritem(parent_dirpath, force)
 
         ---@type fml.types.ui.select.IItem[]
         local items = {
@@ -207,7 +207,7 @@ local function get_select()
         elseif fileitem.type == "directory" then
           local lines = {} ---@type string[]
           local highlights = {} ---@type fml.types.ui.IHighlight[]
-          local c_diritem = fetch_diritem(fileitem.path) ---@type ghc.command.file_explorer.IDirItem
+          local c_diritem = fetch_diritem(fileitem.path, false) ---@type ghc.command.file_explorer.IDirItem
           for lnum, c_fileitem in ipairs(c_diritem.items) do
             local width = 0 ---@type integer
             local text = "" ---@type string
@@ -367,6 +367,7 @@ local function get_select()
     _select = fml.ui.Select.new({
       destroy_on_close = false,
       dimension = dimension,
+      dirty_on_close = true,
       enable_preview = true,
       frecency = frecency,
       input_history = input_history,
@@ -390,13 +391,6 @@ local function get_select()
         end
 
         return false
-      end,
-      on_close = function()
-        if _select ~= nil then
-          dir_datamap = {}
-          file_datamap = {}
-          _select:mark_data_dirty()
-        end
       end,
     })
   end

@@ -24,7 +24,7 @@
 ---| fun(ok: false, error: string|nil): nil
 
 ---@alias fml.types.ui.search.IFetchData
----| fun(input: string, callback: fml.types.ui.search.IFetchDataCallback): nil
+---| fun(input: string, force: boolean, callback: fml.types.ui.search.IFetchDataCallback): nil
 
 ---@class fml.types.ui.search.IData
 ---@field public items                  fml.types.ui.search.IItem[]
@@ -83,6 +83,7 @@
 ---@field public dirtier_main           fml.types.collection.IDirtier
 ---@field public dirtier_preview        fml.types.collection.IDirtier
 ---@field public enable_multiline_input boolean
+---@field public force_on_fetch_data    fml.types.collection.IObservable
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public input_line_count       fml.types.collection.IObservable

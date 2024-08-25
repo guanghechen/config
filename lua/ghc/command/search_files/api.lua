@@ -219,9 +219,10 @@ function M.calc_preview_data(item)
 end
 
 ---@param input_text                  string
+---@param force                       boolean
 ---@param callback                    fml.types.ui.search.IFetchDataCallback
 ---@return nil
-function M.fetch_data(input_text, callback)
+function M.fetch_data(input_text, force, callback)
   local cwd = state.search_cwd:snapshot() ---@type string
   local scope = session.search_scope:snapshot() ---@type ghc.enums.context.SearchScope
   local _, current_buf_path = fml.ui.search.get_current_path() ---@type string, string|nil
@@ -239,7 +240,12 @@ function M.fetch_data(input_text, callback)
   local is_searching_current_buf = scope == "B" and current_buf_path ~= nil ---@type boolean
 
   ---@type fml.std.oxi.search.IResult|nil
-  local result = (_last_search_input ~= nil and _last_search_input == input_text and _last_search_result ~= nil)
+  local result = (
+    not force
+    and _last_search_input ~= nil
+    and _last_search_input == input_text
+    and _last_search_result ~= nil
+  )
       and _last_search_result
     or fml.oxi.search({
       cwd = cwd,

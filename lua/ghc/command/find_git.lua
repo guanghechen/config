@@ -28,6 +28,7 @@ end
 
 local select = fml.ui.SimpleFileSelect.new({
   destroy_on_close = false,
+  dirty_on_close = true,
   enable_preview = true,
   frecency = frecency,
   provider = { provide = provide },

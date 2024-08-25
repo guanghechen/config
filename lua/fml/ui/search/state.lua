@@ -29,6 +29,7 @@ function M.new(props)
   local dirtier_main = Dirtier.new() ---@type fml.types.collection.IDirtier
   local dirtier_preview = Dirtier.new() ---@type fml.types.collection.IDirtier
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
+  local force_on_fetch_data = Observable.from_value(false) ---@type fml.types.collection.IObservable
   local fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchData
   local fetch_delay = props.fetch_delay ---@type integer
   local input = props.input ---@type fml.types.collection.IObservable
@@ -44,7 +45,9 @@ function M.new(props)
     delay = fetch_delay,
     fn = function(callback)
       local input_cur = input:snapshot() ---@type string
-      fetch_data(input_cur, function(succeed, data)
+      local force = force_on_fetch_data:snapshot() ---@type boolean
+      force_on_fetch_data:next(false)
+      fetch_data(input_cur, force, function(succeed, data)
         if succeed and data ~= nil then
           local max_width = 0 ---@type integer
           local item_lnum_next = 1 ---@type integer
@@ -105,6 +108,7 @@ function M.new(props)
   self.dirtier_main = dirtier_main
   self.dirtier_preview = dirtier_preview
   self.enable_multiline_input = enable_multiline_input
+  self.force_on_fetch_data = force_on_fetch_data
   self.input = input
   self.input_history = input_history
   self.input_line_count = input_line_count

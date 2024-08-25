@@ -18,6 +18,7 @@ local function provide()
       table.insert(filepaths, relative_path)
     end
   end
+  width = math.max(width + 16, 60)
 
   select:change_dimension({ height = #filepaths + 3, width = width + 16 })
 
@@ -38,6 +39,7 @@ end
 select = fml.ui.SimpleFileSelect.new({
   cmp = fml.ui.Select.cmp_by_score,
   destroy_on_close = false,
+  dirty_on_close = true,
   enable_preview = false,
   frecency = frecency,
   provider = { provide = provide },

@@ -202,6 +202,7 @@ function M.new(props)
       end
     end,
     force_refresh = function()
+      state.force_on_fetch_data:next(true)
       state.dirtier_data:mark_dirty()
     end,
     on_main_G = function()

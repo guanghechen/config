@@ -145,11 +145,12 @@ function M.new(props)
   end
 
   ---@param input_text                  string
+  ---@param force                       boolean
   ---@param callback                    fml.types.ui.search.IFetchDataCallback
   ---@return nil
-  local function fetch_data(input_text, callback)
+  local function fetch_data(input_text, force, callback)
     vim.schedule(function()
-      local ok, data = pcall(self.fetch_data, self, input_text)
+      local ok, data = pcall(self.fetch_data, self, input_text, force)
       callback(ok, data)
     end)
   end
@@ -255,13 +256,16 @@ function M.default_render_item(item, match)
   return item.text, highlights
 end
 
----@param input                       string
+---@param input                         string
+---@param force                         boolean
 ---@return fml.types.ui.search.IData
-function M:fetch_data(input)
-  local is_data_dirty = self._live_data_dirty:snapshot() ---@type boolean
+function M:fetch_data(input, force)
+  local is_data_dirty = force or self._live_data_dirty:snapshot() ---@type boolean
+  self._live_data_dirty:next(false)
+
   if is_data_dirty then
     local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
-    local data = self._provider.fetch_data() ---@type fml.types.ui.select.IData
+    local data = self._provider.fetch_data(force) ---@type fml.types.ui.select.IData
     local item_map = {} ---@type table<string, fml.types.ui.select.IItem>
     local full_matches = {} ---@type fml.types.ui.select.IMatchedItem[]
     for order, item in ipairs(data.items) do
@@ -280,7 +284,6 @@ function M:fetch_data(input)
     self._item_map = item_map
     self._full_matches = full_matches
     self._matches = full_matches
-    self._live_data_dirty:next(false)
   end
 
   local item_map = self._item_map ---@type table<string, fml.types.ui.select.IItem>
