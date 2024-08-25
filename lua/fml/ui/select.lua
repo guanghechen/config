@@ -28,6 +28,7 @@ M.__index = M
 ---@field public destroy_on_close       boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_preview         boolean
+---@field public extend_preset_keymaps  ?boolean
 ---@field public frecency               ?fml.types.collection.IFrecency
 ---@field public fuzzy                  ?fml.types.collection.IObservable
 ---@field public input                  ?fml.types.collection.IObservable
@@ -52,6 +53,7 @@ function M.new(props)
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local enable_preview = props.enable_preview ---@type boolean
+  local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local fuzzy = props.fuzzy or Observable.from_value(true) ---@type fml.types.collection.IObservable
   local input = props.input or Observable.from_value("") ---@type fml.types.collection.IObservable
@@ -67,7 +69,7 @@ function M.new(props)
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
 
-  if statusline_items == nil then
+  if statusline_items == nil or extend_preset_keymaps then
     ---@return nil
     local function toggle_case_sensitive()
       local flag = case_sensitive:snapshot() ---@type boolean
@@ -85,7 +87,7 @@ function M.new(props)
     end
 
     ---@type fml.types.ui.search.IRawStatuslineItem[]
-    statusline_items = {
+    statusline_items = std_array.concat(statusline_items or {}, {
       {
         type = "flag",
         desc = "select: toggle case sensitive",
@@ -100,10 +102,10 @@ function M.new(props)
         state = fuzzy,
         callback = toggle_fuzzy_mode,
       },
-    }
+    })
 
     ---@type fml.types.IKeymap[]
-    local default_keymaps = {
+    local preset_keymaps = {
       {
         modes = { "n", "v" },
         key = "<leader>i",
@@ -118,9 +120,9 @@ function M.new(props)
       },
     }
 
-    input_keymaps = std_array.concat(input_keymaps or {}, default_keymaps)
-    main_keymaps = std_array.concat(main_keymaps or {}, default_keymaps)
-    preview_keymaps = std_array.concat(preview_keymaps or {}, default_keymaps)
+    input_keymaps = std_array.concat(input_keymaps or {}, preset_keymaps)
+    main_keymaps = std_array.concat(main_keymaps or {}, preset_keymaps)
+    preview_keymaps = std_array.concat(preview_keymaps or {}, preset_keymaps)
   end ---@type fml.types.ui.search.IFetchPreviewData|nil
 
   local fetch_preview_data = nil

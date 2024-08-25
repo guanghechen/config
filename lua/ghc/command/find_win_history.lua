@@ -112,6 +112,7 @@ local function get_select(initial_title)
     _select = fml.ui.FileSelect.new({
       destroy_on_close = true,
       enable_preview = false,
+      extend_preset_keymaps = true,
       frecency = frecency,
       provider = provider,
       title = initial_title,

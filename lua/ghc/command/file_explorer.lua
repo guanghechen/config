@@ -121,9 +121,12 @@ local _select = nil ---@type fml.types.ui.ISelect|nil
 local function gen_title()
   local dirpath = state_cwd:snapshot() ---@type string
   local relative_dirpath = fml.path.relative(fml.path.cwd(), dirpath)
-  dirpath = (#relative_dirpath > 0 and relative_dirpath:sub(1, 1) ~= ".") and relative_dirpath or dirpath
-  local title = "File explorer (from " .. dirpath .. ")" ---@type string
-  return title
+  if #relative_dirpath < 1 or relative_dirpath == "." then
+    return "File explorer" ---@type string
+  end
+
+  dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
+  return "File explorer (from " .. dirpath .. ")" ---@type string
 end
 
 fml.fn.watch_observables({
@@ -374,13 +377,39 @@ local function get_select()
       end,
     }
 
+    ---@type fml.types.IKeymap[]
+    local common_keymaps = {
+      {
+        modes = { "n", "v" },
+        key = "<Backspace>",
+        callback = function()
+          local next_cwd = fml.path.dirname(state_cwd:snapshot())
+          state_cwd:next(next_cwd)
+        end,
+        desc = "file explorer: goto the parent dir",
+      },
+    }
+
+    ---@type fml.types.IKeymap[]
+    local input_keymaps = fml.array.concat({}, common_keymaps)
+
+    ---@type fml.types.IKeymap[]
+    local main_keymaps = fml.array.concat({}, common_keymaps)
+
+    ---@type fml.types.IKeymap[]
+    local preview_keymaps = fml.array.concat({}, common_keymaps)
+
     _select = fml.ui.Select.new({
       destroy_on_close = false,
       dimension = dimension,
       dirty_on_close = true,
       enable_preview = true,
+      extend_preset_keymaps = true,
       frecency = frecency,
       input_history = input_history,
+      input_keymaps = input_keymaps,
+      main_keymaps = main_keymaps,
+      preview_keymaps = preview_keymaps,
       provider = provider,
       title = gen_title(),
       on_confirm = function(item)

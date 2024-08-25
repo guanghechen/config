@@ -20,6 +20,7 @@ M.__index = M
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public dirty_on_close         ?boolean
 ---@field public enable_preview         boolean
+---@field public extend_preset_keymaps  ?boolean
 ---@field public frecency               ?fml.types.collection.IFrecency
 ---@field public fuzzy                  ?fml.types.collection.IObservable
 ---@field public input                  ?fml.types.collection.IObservable
@@ -57,8 +58,9 @@ function M.new(props)
   local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
-  local dirty_on_close = not not props.dirty_on_close ---@type boolean
+  local dirty_on_close = not not props.dirty_on_close ---@type boolean|nil
   local enable_preview = props.enable_preview ---@type boolean
+  local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local fuzzy = props.fuzzy ---@type fml.types.collection.IObservable|nil
   local input = props.input ---@type fml.types.collection.IObservable|nil
@@ -141,6 +143,7 @@ function M.new(props)
     destroy_on_close = destroy_on_close,
     dimension = dimension,
     enable_preview = enable_preview,
+    extend_preset_keymaps = extend_preset_keymaps,
     frecency = frecency,
     fuzzy = fuzzy,
     input = input,

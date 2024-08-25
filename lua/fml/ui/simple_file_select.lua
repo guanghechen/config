@@ -1,15 +1,7 @@
 local FileSelect = require("fml.ui.file_select")
 
 ---@class fml.ui.SimpleFileSelect : fml.types.ui.ISimpleFileSelect
----@field public file_select            fml.types.ui.IFileSelect|nil
----@field protected _cmp                fml.types.ui.select.IMatchedItemCmp|nil
----@field protected _destroy_on_close   boolean|nil
----@field protected _dimension          fml.types.ui.search.IRawDimension|nil
----@field protected _dirty_on_close     boolean
----@field protected _enable_preview     boolean|nil
----@field protected _frecency           fml.types.collection.IFrecency|nil
----@field protected _provider           fml.types.ui.simple_file_select.IProvider
----@field protected _title              string
+---@field public get_file_select        fun(): fml.types.ui.IFileSelect
 local M = {}
 M.__index = M
 
@@ -19,6 +11,7 @@ M.__index = M
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public dirty_on_close         ?boolean
 ---@field public enable_preview         boolean
+---@field public extend_preset_keymaps  ?boolean
 ---@field public frecency               ?fml.types.collection.IFrecency
 ---@field public provider               fml.types.ui.simple_file_select.IProvider
 ---@field public title                  string
@@ -31,117 +24,99 @@ function M.new(props)
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
-  local enable_preview = props.enable_preview ---@type boolean
-  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local dirty_on_close = not not props.dirty_on_close ---@type boolean
+  local enable_preview = props.enable_preview ---@type boolean
+  local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean|nil
+  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
   local provider = props.provider ---@type fml.types.ui.simple_file_select.IProvider
   local title = props.title ---@type string
 
-  self.file_select = nil
-  self._cmp = cmp
-  self._destroy_on_close = destroy_on_close
-  self._dimension = dimension
-  self._dirty_on_close = dirty_on_close
-  self._enable_preview = enable_preview
-  self._frecency = frecency
-  self._provider = provider
-  self._title = title
+  local _file_select = nil ---@type fml.types.ui.IFileSelect|nil
 
+  ---@return fml.types.ui.IFileSelect
+  local function get_file_select()
+    if _file_select == nil then
+      ---@type fml.types.ui.file_select.IProvider
+      local provider = {
+        fetch_data = function(force)
+          local raw_data = provider.provide(force) ---@type fml.types.ui.simple_file_select.IData
+          local cwd = raw_data.cwd ---@type string
+          local filepaths = raw_data.filepaths ---@type string[]
+          local present_filepath = raw_data.present_filepath ---@type string|nil
+          local items = FileSelect.make_items_by_filepaths(filepaths) ---@type fml.types.ui.file_select.IRawItem[]
+          ---@type fml.types.ui.file_select.IData
+          return { cwd = cwd, items = items, present_uuid = present_filepath }
+        end,
+      }
+
+      _file_select = FileSelect.new({
+        cmp = cmp,
+        frecency = frecency,
+        destroy_on_close = destroy_on_close,
+        dimension = dimension,
+        dirty_on_close = dirty_on_close,
+        enable_preview = enable_preview,
+        extend_preset_keymaps = extend_preset_keymaps,
+        provider = provider,
+        title = title,
+      })
+    end
+    return _file_select
+  end
+
+  self.get_file_select = get_file_select
   return self
 end
 
 ---@param dimension                     fml.types.ui.search.IRawDimension
 ---@return nil
 function M:change_dimension(dimension)
-  if self.file_select ~= nil then
-    self.file_select:change_dimension(dimension)
-  end
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  file_select:change_dimension(dimension)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  self._title = title
-  if self.file_select ~= nil then
-    self.file_select:change_input_title(title)
-  end
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  file_select:change_input_title(title)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
-  self._title = title
-  if self.file_select ~= nil then
-    self.file_select:change_preview_title(title)
-  end
-end
-
----@return fml.types.ui.IFileSelect
-function M:get_file_select()
-  if self.file_select == nil then
-    local cmp = self._cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
-    local title = self._title ---@type string
-    local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
-    local dirty_on_close = self._dirty_on_close ---@type boolean
-
-    ---@type fml.types.ui.file_select.IProvider
-    local provider = {
-      fetch_data = function(force)
-        local raw_data = self._provider.provide(force) ---@type fml.types.ui.simple_file_select.IData
-        local cwd = raw_data.cwd ---@type string
-        local filepaths = raw_data.filepaths ---@type string[]
-        local present_filepath = raw_data.present_filepath ---@type string|nil
-        local items = FileSelect.make_items_by_filepaths(filepaths) ---@type fml.types.ui.file_select.IRawItem[]
-        ---@type fml.types.ui.file_select.IData
-        return { cwd = cwd, items = items, present_uuid = present_filepath }
-      end,
-    }
-
-    self.file_select = FileSelect.new({
-      cmp = cmp,
-      frecency = frecency,
-      destroy_on_close = self._destroy_on_close,
-      dirty_on_close = dirty_on_close,
-      enable_preview = self._enable_preview,
-      provider = provider,
-      title = title,
-    })
-  end
-  return self.file_select
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  file_select:change_preview_title(title)
 end
 
 ---@return integer|nil
 function M:get_winnr_main()
-  if self.file_select ~= nil then
-    return self.file_select:get_winnr_main()
-  end
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  return file_select:get_winnr_main()
 end
 
 ---@return integer|nil
 function M:get_winnr_input()
-  if self.file_select ~= nil then
-    return self.file_select:get_winnr_input()
-  end
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  return file_select:get_winnr_input()
 end
 
 ---@return integer|nil
 function M:get_winnr_preview()
-  if self.file_select ~= nil then
-    return self.file_select:get_winnr_preview()
-  end
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  return file_select:get_winnr_preview()
 end
 
 ---@return nil
 function M:list()
-  local select = self:get_file_select() ---@type fml.types.ui.IFileSelect
-  select:focus()
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  file_select:focus()
 end
 
 ---@return nil
 function M:mark_data_dirty()
-  if self.file_select ~= nil then
-    self.file_select:mark_data_dirty()
-  end
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  file_select:mark_data_dirty()
 end
 
 return M

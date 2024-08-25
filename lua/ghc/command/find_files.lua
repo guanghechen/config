@@ -236,6 +236,7 @@ local function get_select()
       destroy_on_close = false,
       dirty_on_close = false,
       enable_preview = true,
+      extend_preset_keymaps = false,
       frecency = frecency,
       fuzzy = session.find_flag_fuzzy,
       input = session.find_file_pattern,
