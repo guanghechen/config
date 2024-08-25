@@ -127,12 +127,6 @@ function M.new(props)
   self._keymaps = keymaps
   self._render_scheduler = _render_scheduler
 
-  state.dirtier_data:subscribe(Subscriber.new({
-    on_next = function()
-      _last_data = nil
-    end,
-  }))
-
   state.dirtier_preview:subscribe(Subscriber.new({
     on_next = function()
       local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
