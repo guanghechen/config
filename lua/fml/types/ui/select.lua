@@ -41,7 +41,6 @@
 ---@field public render_item            ?fml.types.ui.select.IRenderItem
 
 ---@class fml.types.ui.ISelect
----@field public state                  fml.types.ui.search.IState
 ---@field public change_dimension       fun(self: fml.types.ui.ISelect, dimension: fml.types.ui.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.types.ui.ISelect, title: string): nil
 ---@field public change_preview_title   fun(self: fml.types.ui.ISelect, title: string): nil

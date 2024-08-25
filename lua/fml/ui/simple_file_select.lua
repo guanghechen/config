@@ -28,7 +28,7 @@ function M.new(props)
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean|nil
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
-  local provider = props.provider ---@type fml.types.ui.simple_file_select.IProvider
+  local simple_provider = props.provider ---@type fml.types.ui.simple_file_select.IProvider
   local title = props.title ---@type string
 
   local _file_select = nil ---@type fml.types.ui.IFileSelect|nil
@@ -39,7 +39,7 @@ function M.new(props)
       ---@type fml.types.ui.file_select.IProvider
       local provider = {
         fetch_data = function(force)
-          local raw_data = provider.provide(force) ---@type fml.types.ui.simple_file_select.IData
+          local raw_data = simple_provider.provide(force) ---@type fml.types.ui.simple_file_select.IData
           local cwd = raw_data.cwd ---@type string
           local filepaths = raw_data.filepaths ---@type string[]
           local present_filepath = raw_data.present_filepath ---@type string|nil
@@ -89,6 +89,18 @@ function M:change_preview_title(title)
   file_select:change_preview_title(title)
 end
 
+---@return nil
+function M:close()
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  file_select:close()
+end
+
+---@return nil
+function M:focus()
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  file_select:focus()
+end
+
 ---@return integer|nil
 function M:get_winnr_main()
   local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
@@ -108,15 +120,15 @@ function M:get_winnr_preview()
 end
 
 ---@return nil
-function M:list()
-  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
-  file_select:focus()
-end
-
----@return nil
 function M:mark_data_dirty()
   local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
   file_select:mark_data_dirty()
+end
+
+---@return nil
+function M:open()
+  local file_select = self.get_file_select() ---@type fml.types.ui.IFileSelect
+  file_select:open()
 end
 
 return M

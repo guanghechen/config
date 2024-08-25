@@ -41,7 +41,7 @@ local M = {}
 
 ---@return nil
 function M.list_uncommited_git_files()
-  select:list()
+  select:focus()
 end
 
 return M

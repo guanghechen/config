@@ -139,7 +139,7 @@ mk({ "n", "v" }, "<leader>ff", ghc.command.find_files.open, "find: files")
 mk({ "n", "v" }, "<leader>fw", ghc.command.find_files.open_workspace, "find: files (workspace)")
 mk({ "n", "v" }, "<leader>fc", ghc.command.find_files.open_cwd, "find: files (cwd)")
 mk({ "n", "v" }, "<leader>fd", ghc.command.find_files.open_directory, "find: files (directory)")
-mk({ "n", "v" }, "<leader>fb", ghc.command.find_buffers.list, "find: buffers")
+mk({ "n", "v" }, "<leader>fb", ghc.command.find_buffers.focus, "find: buffers")
 mk({ "n", "v" }, "<leader>fg", ghc.command.find_git.list_uncommited_git_files, "find: git files (Not committed)")
 -------------------------------------------------------------------------------------------#[f]ind--
 

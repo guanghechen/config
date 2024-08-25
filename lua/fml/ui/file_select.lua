@@ -8,8 +8,7 @@ local Select = require("fml.ui.select")
 
 ---@class fml.ui.FileSelect : fml.types.ui.IFileSelect
 ---@field public cwd                    string
----@field protected _provider           fml.types.ui.select.IProvider
----@field protected _select             fml.types.ui.ISelect
+---@field protected _get_select         fun(): fml.types.ui.ISelect
 local M = {}
 M.__index = M
 
@@ -40,21 +39,6 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  ---@type fml.types.IKeymap[]
-  local common_keymaps = {
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-q>",
-      callback = function()
-        self:send_to_qflist()
-      end,
-      desc = "search: send to qflist",
-    },
-  }
-  local input_keymaps = std_array.concat(common_keymaps, props.input_keymaps or {}) ---@type fml.types.IKeymap[]
-  local main_keymaps = std_array.concat(common_keymaps, props.main_keymaps or {}) ---@type fml.types.IKeymap[]
-  local preview_keymaps = std_array.concat(common_keymaps, props.preview_keymaps or {}) ---@type fml.types.IKeymap[]
-
   local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
@@ -65,12 +49,62 @@ function M.new(props)
   local fuzzy = props.fuzzy ---@type fml.types.collection.IObservable|nil
   local input = props.input ---@type fml.types.collection.IObservable|nil
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
+  local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
+  local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
+  local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.file_select.IProvider
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
+
+  local _select = nil ---@type fml.types.ui.ISelect|nil
+
+  if extend_preset_keymaps then
+    ---@return nil
+    local function send_to_qflist()
+      if _select ~= nil then
+        local cwd = fml.path.cwd() ---@type string
+        local select_cwd = self.cwd ---@type string
+        local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
+        local matched_items = _select:get_matched_items() ---@type fml.types.ui.select.IMatchedItem[]
+        for _, matched_item in ipairs(matched_items) do
+          local item = _select:get_item(matched_item.uuid) ---@type fml.types.ui.select.IItem|nil
+          ---@cast item fml.types.ui.file_select.IItem
+
+          if item ~= nil then
+            local absolute_filepath = fml.path.join(select_cwd, item.data.filepath) ---@type string
+            local relative_filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+            table.insert(quickfix_items, {
+              filename = relative_filepath,
+              lnum = item.data.lnum or 1,
+              col = item.data.col or 0,
+            })
+          end
+        end
+
+        if #quickfix_items > 0 then
+          vim.fn.setqflist(quickfix_items, "r")
+          _select:close()
+          vim.cmd("copen")
+        end
+      end
+    end
+
+    ---@type fml.types.IKeymap[]
+    local common_keymaps = {
+      {
+        modes = { "i", "n", "v" },
+        key = "<C-q>",
+        callback = send_to_qflist,
+        desc = "search: send to qflist",
+      },
+    }
+    input_keymaps = std_array.concat(common_keymaps, input_keymaps or {}) ---@type fml.types.IKeymap[]
+    main_keymaps = std_array.concat(common_keymaps, main_keymaps or {}) ---@type fml.types.IKeymap[]
+    preview_keymaps = std_array.concat(common_keymaps, preview_keymaps or {}) ---@type fml.types.IKeymap[]
+  end
 
   ---@return nil
   local function on_close()
@@ -137,35 +171,39 @@ function M.new(props)
     width_preview = dimension_from_props.width_preview or (enable_preview and 0.45 or 0),
   }
 
-  local select = Select.new({
-    case_sensitive = case_sensitive,
-    cmp = cmp,
-    destroy_on_close = destroy_on_close,
-    dimension = dimension,
-    enable_preview = enable_preview,
-    extend_preset_keymaps = extend_preset_keymaps,
-    frecency = frecency,
-    fuzzy = fuzzy,
-    input = input,
-    input_history = input_history,
-    input_keymaps = input_keymaps,
-    main_keymaps = main_keymaps,
-    preview_keymaps = preview_keymaps,
-    provider = file_select_provider,
-    statusline_items = statusline_items,
-    title = title,
-    on_close = on_close,
-    on_confirm = on_confirm_from_props or function(item)
-      local filepath = path.join(self.cwd, item.data.filepath) ---@type string
-      return api_buf.open_in_current_valid_win(filepath)
-    end,
-    on_preview_rendered = on_preview_rendered,
-  })
+  ---@return fml.types.ui.ISelect
+  local function get_select()
+    if _select == nil then
+      _select = Select.new({
+        case_sensitive = case_sensitive,
+        cmp = cmp,
+        destroy_on_close = destroy_on_close,
+        dimension = dimension,
+        enable_preview = enable_preview,
+        extend_preset_keymaps = extend_preset_keymaps,
+        frecency = frecency,
+        fuzzy = fuzzy,
+        input = input,
+        input_history = input_history,
+        input_keymaps = input_keymaps,
+        main_keymaps = main_keymaps,
+        preview_keymaps = preview_keymaps,
+        provider = file_select_provider,
+        statusline_items = statusline_items,
+        title = title,
+        on_close = on_close,
+        on_confirm = on_confirm_from_props or function(item)
+          local filepath = path.join(self.cwd, item.data.filepath) ---@type string
+          return api_buf.open_in_current_valid_win(filepath)
+        end,
+        on_preview_rendered = on_preview_rendered,
+      })
+    end
+    return _select
+  end
 
   self.cwd = path.cwd() ---! initial cwd
-  self._provider = file_select_provider
-  self._select = select
-
+  self._get_select = get_select
   return self
 end
 
@@ -235,49 +273,58 @@ end
 ---@param dimension                     fml.types.ui.search.IRawDimension
 ---@return nil
 function M:change_dimension(dimension)
-  self._select:change_dimension(dimension)
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  select:change_dimension(dimension)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  self._select:change_input_title(title)
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  select:change_input_title(title)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
-  self._select:change_preview_title(title)
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  select:change_preview_title(title)
 end
 
 ---@return nil
 function M:close()
-  self._select:close()
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  select:close()
 end
 
 ---@return nil
 function M:focus()
-  self._select:focus()
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  select:focus()
 end
 
 ---@return integer|nil
 function M:get_winnr_main()
-  return self._select:get_winnr_main()
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  return select:get_winnr_main()
 end
 
 ---@return integer|nil
 function M:get_winnr_input()
-  return self._select:get_winnr_input()
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  return select:get_winnr_input()
 end
 
 ---@return integer|nil
 function M:get_winnr_preview()
-  return self._select:get_winnr_preview()
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  return select:get_winnr_preview()
 end
 
 ---@return nil
 function M:mark_data_dirty()
-  self._select:mark_data_dirty()
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  select:mark_data_dirty()
 end
 
 ---@param filepaths                     string[]
@@ -295,41 +342,14 @@ end
 
 ---@return nil
 function M:open()
-  self._select:open()
-end
-
----@return nil
-function M:send_to_qflist()
-  local cwd = fml.path.cwd() ---@type string
-  local select_cwd = self.cwd ---@type string
-  local select = self._select ---@type fml.types.ui.ISelect
-  local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
-  local matched_items = select:get_matched_items() ---@type fml.types.ui.select.IMatchedItem[]
-  for _, matched_item in ipairs(matched_items) do
-    local item = select:get_item(matched_item.uuid) ---@type fml.types.ui.select.IItem|nil
-    ---@cast item fml.types.ui.file_select.IItem
-
-    if item ~= nil then
-      local absolute_filepath = fml.path.join(select_cwd, item.data.filepath) ---@type string
-      local relative_filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
-      table.insert(quickfix_items, {
-        filename = relative_filepath,
-        lnum = item.data.lnum or 1,
-        col = item.data.col or 0,
-      })
-    end
-  end
-
-  if #quickfix_items > 0 then
-    vim.fn.setqflist(quickfix_items, "r")
-    select:close()
-    vim.cmd("copen")
-  end
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  select:open()
 end
 
 ---@return nil
 function M:toggle()
-  self._select:toggle()
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  select:toggle()
 end
 
 return M

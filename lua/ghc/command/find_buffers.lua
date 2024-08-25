@@ -51,8 +51,8 @@ select = fml.ui.SimpleFileSelect.new({
 local M = {}
 
 ---@return nil
-function M.list()
-  select:list()
+function M.focus()
+  select:focus()
 end
 
 return M
