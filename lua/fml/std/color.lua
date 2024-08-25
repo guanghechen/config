@@ -20,6 +20,18 @@ function M.hex2rgb(hex)
   return r, g, b
 end
 
+---@param val                           integer
+---@return string
+function M.int2hex(val)
+  local b = val % 256 ---@type integer
+  val = (val - b) / 256 ---@type integer
+
+  local g = val % 256 ---@type integer
+  val = (val - g) / 256 ---@type integer
+
+  return string.format("#%02x%02x%02x", val, g, b)
+end
+
 -- Convert an RGB color value to hex
 -- @param r: Red (0-255)
 -- @param g: Green (0-255)

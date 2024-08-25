@@ -206,7 +206,7 @@ function M.new(props)
       state.dirtier_data:mark_dirty()
     end,
     on_main_G = function()
-      state:locate(math.huge)
+      state:locate(vim.v.count or math.huge)
       self:sync_main_cursor()
     end,
     on_main_g = function()

@@ -54,7 +54,12 @@ local provider = {
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info
         for key, val in pairs(hlgroup) do
-          line = line .. " " .. key .. "=" .. fml.json.stringify(val)
+          if type(val) == "number" then
+            val = fml.std.color.int2hex(val)
+          else
+            val = fml.json.stringify(val)
+          end
+          line = line .. " " .. key .. "=" .. val
         end
 
         table.insert(lines, line)
