@@ -183,8 +183,8 @@ function M:set_virtual_text()
   local state = self.state ---@type fml.types.ui.search.IState
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local total = #state.items ---@type integer
-    local lnum = state:get_current_lnum() ---@type integer
+    local total = #state.items or 0 ---@type integer
+    local lnum = state:get_current_lnum() or 1 ---@type integer
     lnum = lnum > total and total or lnum
 
     if self._extmark_nr then
