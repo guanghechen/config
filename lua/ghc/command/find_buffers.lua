@@ -7,13 +7,11 @@ local select ---@type fml.types.ui.ISimpleFileSelect
 local function provide()
   local workspace = fml.path.workspace() ---@type string
   local cwd = fml.path.cwd() ---@type string
-  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   local filepaths = {} ---@type string[]
   local width = 0 ---@type integer
 
-  for _, bufnr in ipairs(bufnrs) do
-    local buf = fml.api.state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
-    if buf ~= nil and buf.filename ~= fml.constant.BUF_UNTITLED and fml.path.is_under(workspace, buf.filepath) then
+  for _, buf in pairs(fml.api.state.bufs) do
+    if buf.filename ~= fml.constant.BUF_UNTITLED and fml.path.is_under(workspace, buf.filepath) then
       local relative_path = fml.path.relative(cwd, buf.filepath) ---@type string
       local w = vim.fn.strwidth(relative_path) ---@type integer
       width = width < w and w or width

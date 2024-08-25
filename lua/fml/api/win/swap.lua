@@ -3,6 +3,7 @@ local state = require("fml.api.state")
 ---@class fml.api.win
 local M = require("fml.api.win.mod")
 
+---@return nil
 function M.swap_with_picker()
   local winnr_current = vim.api.nvim_get_current_win()
   local winnr_target = M.pick("swap")

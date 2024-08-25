@@ -135,6 +135,16 @@ local function get_select()
     local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
     local input_history = state_input_history.load_and_autosave().find_files ---@type fml.types.collection.IHistory
 
+    local main_width = 0.4 ---@type number
+    ---@type fml.types.ui.search.IRawDimension
+    local dimension = {
+      height = 0.8,
+      max_height = 1,
+      max_width = 1,
+      width = main_width,
+      width_preview = 0.45,
+    }
+
     ---@type fml.types.ui.select.IProvider
     local provider = {
       fetch_data = function()
@@ -292,6 +302,15 @@ local function get_select()
           or fileitem.type == "directory" and fileitem.name .. "/"
           or fileitem.name ---@type string
 
+        local max_width = math.floor(main_width * vim.o.columns) - 2 ---@type integer
+        ---@type integer
+        local filename_sep_width = max_width
+          - (diritem.icon_width + 2)
+          - (diritem.name_width + 1)
+          - (diritem.perm_width + 2)
+          - (diritem.size_width + 2)
+          - (diritem.date_width + 2)
+
         local sep_icon = string.rep(" ", 2) ---@type string
         local text_icon = fml.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. sep_icon ---@type string
         local width_icon = string.len(text_icon) ---@type integer
@@ -299,7 +318,7 @@ local function get_select()
         text = text .. text_icon
         width = width + width_icon
 
-        local sep_name = string.rep(" ", 9) ---@type string
+        local sep_name = string.rep(" ", filename_sep_width) ---@type string
         local text_name = fml.string.pad_end(filename, diritem.name_width + 1, " ") .. sep_name ---@type string
         local width_name = string.len(text_name) ---@type integer
         table.insert(highlights, {
@@ -347,13 +366,7 @@ local function get_select()
 
     _select = fml.ui.Select.new({
       destroy_on_close = false,
-      dimension = {
-        height = 0.8,
-        max_height = 1,
-        max_width = 1,
-        width = 0.4,
-        width_preview = 0.45,
-      },
+      dimension = dimension,
       enable_preview = true,
       frecency = frecency,
       input_history = input_history,
