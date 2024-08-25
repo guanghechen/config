@@ -31,6 +31,35 @@ function M.locate_bufnr_by_filepath(filepath)
   return nil
 end
 
+---@param winnr                         integer
+---@param filepath                      string
+---@return boolean
+function M.open_filepath(winnr, filepath)
+  if vim.api.nvim_win_is_valid(winnr) then
+    local bufnr = M.locate_bufnr_by_filepath(filepath) ---@type integer|nil
+    if bufnr ~= nil then
+      vim.api.nvim_win_set_buf(winnr, bufnr)
+      return true
+    end
+
+    local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+    if winnr_cur == winnr then
+      vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+    else
+      vim.api.nvim_set_current_win(winnr)
+      vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+      vim.api.nvim_set_current_win(winnr_cur)
+    end
+
+    vim.schedule(function()
+      vim.cmd("stopinsert")
+    end)
+
+    return true
+  end
+  return false
+end
+
 ---@return nil
 function M.refresh_bufs()
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
