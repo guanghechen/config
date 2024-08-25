@@ -141,6 +141,7 @@ mk({ "n", "v" }, "<leader>fc", ghc.command.find_files.open_cwd, "find: files (cw
 mk({ "n", "v" }, "<leader>fd", ghc.command.find_files.open_directory, "find: files (directory)")
 mk({ "n", "v" }, "<leader>fb", ghc.command.find_buffers.focus, "find: buffers")
 mk({ "n", "v" }, "<leader>fg", ghc.command.find_git.list_uncommited_git_files, "find: git files (Not committed)")
+mk({ "n", "v" }, "<leader>fh", ghc.command.find_highlights.focus, "find: highlights")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------

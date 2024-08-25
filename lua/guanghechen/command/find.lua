@@ -23,15 +23,4 @@ function M.find_vim_options()
   })
 end
 
----@return nil
-function M.find_highlights()
-  require("telescope.builtin").highlights({
-    cwd = fml.path.workspace(),
-    workspace = "CWD",
-    prompt_title = "Find vim options",
-    show_untracked = true,
-    initial_mode = "normal",
-  })
-end
-
 return M
