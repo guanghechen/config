@@ -1,11 +1,8 @@
-local constant = require("fml.constant")
-
 return {
   name = "nvim-colorizer.lua",
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   opts = {
     filetypes = {
-      [constant.FT_SEARCH_PREVIEW] = {},
       css = {
         rgb_fn = true,
         hsl_fn = true,

@@ -23,17 +23,14 @@ local provider = {
       _preview_data = nil
     end
 
-    ---@type fml.types.ui.select.IData
-    local data = {
-      items = {},
-    }
-
+    local items = {} ---@type fml.types.ui.select.IItem[]
     for lnum, hlname in ipairs(_hlnames) do
       ---@type ghc.command.find_highlights.IItem
       local item = { group = "H", uuid = hlname, text = hlname, data = lnum }
-      table.insert(data.items, item)
+      table.insert(items, item)
     end
-    return data
+    ---@type fml.types.ui.select.IData
+    return { items = items }
   end,
   fetch_preview_data = function(item)
     if _preview_data == nil then
@@ -120,8 +117,9 @@ _select = fml.ui.Select.new({
   extend_preset_keymaps = true,
   provider = provider,
   title = "Find highlights",
-  on_confirm = function()
-    return false
+  on_confirm = function(item)
+    vim.fn.setreg("+", item.text)
+    return true
   end,
 })
 

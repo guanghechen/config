@@ -807,8 +807,11 @@ function M:open()
     _search_current = self
   end
 
-  self._input:create_buf_as_needed() ---@type integer
-  self._main:create_buf_as_needed() ---@type integer
+  self._input:create_buf_as_needed()
+  self._main:render()
+  if self._preview ~= nil then
+    self._preview:render()
+  end
 
   local state = self.state ---@type fml.types.ui.search.IState
   self._input:reset_input()

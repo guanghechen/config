@@ -27,35 +27,47 @@ function M.new(props)
   local render_delay = props.render_delay ---@type integer
   local on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
 
+  local _last_items = nil ---@type fml.types.ui.search.IItem[]|nil
+
+  ---@return nil
+  local function render()
+    local bufnr, new_created = self:create_buf_as_needed() ---@type integer, boolean
+    local last_items = _last_items ---@type fml.types.ui.search.IItem[]|nil
+    _last_items = state.items
+
+    ---@type boolean
+    local has_content_changed = new_created or last_items == nil or last_items ~= state.items
+    if has_content_changed then
+      vim.bo[bufnr].modifiable = true
+      vim.bo[bufnr].readonly = false
+
+      local lines = {} ---@type string[]
+      for i, item in ipairs(state.items) do
+        lines[i] = item.text
+      end
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      vim.bo[bufnr].modifiable = false
+      vim.bo[bufnr].readonly = true
+
+      local items = state.items ---@type fml.types.ui.search.IItem[]
+      for lnum, item in ipairs(items) do
+        local highlights = item.highlights ---@type fml.types.ui.IInlineHighlight[]
+        for _, hl in ipairs(highlights) do
+          vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.coll, hl.colr)
+        end
+      end
+    end
+
+    self:place_lnum_sign()
+  end
+
   ---@type fml.std.scheduler.IScheduler
-  local _render_scheduler = scheduler.debounce({
+  local render_scheduler = scheduler.debounce({
     name = "fml.ui.search.main.render",
     delay = render_delay,
     fn = function(callback)
-      local ok, error = pcall(function()
-        local bufnr = self:create_buf_as_needed() ---@type integer
-        vim.bo[bufnr].modifiable = true
-        vim.bo[bufnr].readonly = false
-
-        local lines = {} ---@type string[]
-        for i, item in ipairs(state.items) do
-          lines[i] = item.text
-        end
-        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-        vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_CURRENT })
-        vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_PRESENT })
-
-        vim.bo[bufnr].modifiable = false
-        vim.bo[bufnr].readonly = true
-
-        local items = state.items ---@type fml.types.ui.search.IItem[]
-        for lnum, item in ipairs(items) do
-          local highlights = item.highlights ---@type fml.types.ui.IInlineHighlight[]
-          for _, hl in ipairs(highlights) do
-            vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.coll, hl.colr)
-          end
-        end
-      end)
+      local ok, error = pcall(render)
       callback(ok, error)
     end,
     callback = function()
@@ -69,14 +81,14 @@ function M.new(props)
   self.state = state
   self._bufnr = nil
   self._keymaps = keymaps
-  self._render_scheduler = _render_scheduler
+  self._render_scheduler = render_scheduler
 
   state.dirtier_main:subscribe(Subscriber.new({
     on_next = function()
       local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
       local visible = state.visible:snapshot() ---@type boolean
       if visible and is_main_dirty then
-        _render_scheduler.schedule()
+        render_scheduler.schedule()
       end
     end,
   }))
@@ -85,25 +97,28 @@ function M.new(props)
 end
 
 ---@return integer
+---@return boolean
 function M:create_buf_as_needed()
   local bufnr = self._bufnr ---@type integer|nil
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-    bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    self._bufnr = bufnr
-
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].buftype = "nowrite"
-    vim.bo[bufnr].filetype = constant.FT_SEARCH_MAIN
-    vim.bo[bufnr].swapfile = false
-    vim.bo[bufnr].modifiable = false
-    vim.bo[bufnr].readonly = true
-    util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
-
-    vim.schedule(function()
-      vim.cmd("stopinsert")
-    end)
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    return bufnr, false
   end
-  return bufnr
+
+  bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  self._bufnr = bufnr
+
+  vim.bo[bufnr].buflisted = false
+  vim.bo[bufnr].buftype = "nowrite"
+  vim.bo[bufnr].filetype = constant.FT_SEARCH_MAIN
+  vim.bo[bufnr].swapfile = false
+  vim.bo[bufnr].modifiable = false
+  vim.bo[bufnr].readonly = true
+  util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+
+  vim.schedule(function()
+    vim.cmd("stopinsert")
+  end)
+  return bufnr, true
 end
 
 ---@return nil
@@ -172,6 +187,11 @@ function M:place_lnum_sign()
     end
   end
   return nil
+end
+
+---@return nil
+function M:render()
+  self.state.dirtier_main:mark_dirty()
 end
 
 return M
