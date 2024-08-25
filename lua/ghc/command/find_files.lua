@@ -1,7 +1,6 @@
 local session = require("ghc.context.session")
 
-local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_find_cwd = fml.collection.Observable.from_value(session.get_find_scope_cwd(initial_dirpath))
+local state_find_cwd = fml.collection.Observable.from_value(session.get_find_scope_cwd(fml.path.cwd()))
 local _select = nil ---@type fml.types.ui.IFileSelect|nil
 
 ---@return nil

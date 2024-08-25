@@ -120,12 +120,22 @@ local _select = nil ---@type fml.types.ui.ISelect|nil
 ---@return string
 local function gen_title()
   local dirpath = state_cwd:snapshot() ---@type string
+  local relative_dirpath = fml.path.relative(fml.path.cwd(), dirpath)
+  dirpath = (#relative_dirpath > 0 and relative_dirpath:sub(1, 1) ~= ".") and relative_dirpath or dirpath
   local title = "File explorer (from " .. dirpath .. ")" ---@type string
   return title
 end
 
----@class ghc.command.find_explorer
-local M = {}
+fml.fn.watch_observables({
+  state_cwd,
+}, function()
+  if _select ~= nil then
+    _select:mark_data_dirty()
+
+    local title = gen_title() ---@type string
+    _select:change_input_title(title)
+  end
+end, true)
 
 ---@return fml.types.ui.ISelect
 local function get_select()
@@ -302,7 +312,7 @@ local function get_select()
           or fileitem.type == "directory" and fileitem.name .. "/"
           or fileitem.name ---@type string
 
-        local max_width = math.floor(main_width * vim.o.columns) - 2 ---@type integer
+        local max_width = math.floor(main_width * vim.o.columns) - 1 ---@type integer
         ---@type integer
         local filename_sep_width = max_width
           - (diritem.icon_width + 2)
@@ -382,7 +392,6 @@ local function get_select()
         if fileitem.type == "directory" then
           local dirpath = fileitem.path ---@type string
           state_cwd:next(dirpath)
-          M.refresh()
           return false
         end
 
@@ -398,34 +407,18 @@ local function get_select()
   return _select
 end
 
+---@class ghc.command.find_explorer
+local M = {}
+
 ---@return nil
 function M.open()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  if fml.api.state.validate_win(winnr) then
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filetype = fml.fs.is_file_or_dir(filepath) ---@type fml.enums.FileType|nil
-    if filetype == "file" or filetype == "directory" then
-      local dirpath = filetype == "file" and fml.path.dirname(filepath) or filepath ---@type string
-      state_cwd:next(fml.path.normalize(dirpath))
-    end
+  local win_detail = fml.api.win.get_cur_win_details_if_valid() ---@type fml.api.win.IDetails|nil
+  if win_detail ~= nil and win_detail.dirpath ~= nil then
+    state_cwd:next(win_detail.dirpath)
   end
 
   local select = get_select() ---@type fml.types.ui.ISelect
   select:open()
-
-  local title = gen_title() ---@type string
-  select:change_input_title(title)
-end
-
----@return nil
-function M.refresh()
-  if _select ~= nil then
-    _select:mark_data_dirty()
-
-    local title = gen_title() ---@type string
-    _select:change_input_title(title)
-  end
 end
 
 return M
