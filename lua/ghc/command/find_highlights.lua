@@ -45,23 +45,61 @@ local provider = {
         max_hlname_width = math.max(max_hlname_width, vim.fn.strwidth(hlname))
       end
 
+      local preview_colors = {} ---@type table<string, string>
       for lnum, hlname in ipairs(hlnames) do
         local line = "xxx   " .. fml.string.pad_end(hlname, max_hlname_width, " ") ---@type string
         local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type fml.types.ui.IHighlight
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info
-        for key, val in pairs(hlgroup) do
-          if type(val) == "number" then
-            val = fml.std.color.int2hex(val)
-          else
-            val = fml.json.stringify(val)
+        if hlgroup.fg ~= nil then
+          local offset = string.len(line) ---@type integer
+          local color_name = fml.std.color.int2hex(hlgroup.fg) ---@type string
+          local t_hlname = "f_tc_" .. tostring(hlgroup.fg)
+          local t_highlight = { lnum = lnum, coll = offset + 4, colr = offset + 11, hlname = t_hlname } ---@type fml.types.ui.IHighlight
+          line = line .. " fg=" .. color_name
+          table.insert(highlights, t_highlight)
+
+          preview_colors[t_hlname] = color_name
+        end
+        if hlgroup.bg ~= nil then
+          local offset = string.len(line) ---@type integer
+          local color_name = fml.std.color.int2hex(hlgroup.bg) ---@type string
+          local t_hlname = "f_tc_" .. tostring(hlgroup.bg)
+          local t_highlight = { lnum = lnum, coll = offset + 4, colr = offset + 11, hlname = t_hlname } ---@type fml.types.ui.IHighlight
+          line = line .. " bg=" .. color_name
+          table.insert(highlights, t_highlight)
+
+          preview_colors[t_hlname] = color_name
+        end
+        if hlgroup.link ~= nil then
+          line = line .. " link=" .. hlgroup.link
+        end
+        if hlgroup.cterm ~= nil then
+          local flags = {} ---@type string[]
+          for flag in pairs(hlgroup.cterm) do
+            table.insert(flags, flag)
           end
-          line = line .. " " .. key .. "=" .. val
+          line = line .. " cterm=" .. table.concat(flags, ",")
+        end
+
+        for key, val in pairs(hlgroup) do
+          if key ~= "fg" and key ~= "bg" and key ~= "link" and key ~= "cterm" then
+            if type(val) ~= "string" then
+              val = fml.json.stringify(val)
+            end
+            line = line .. " " .. key .. "=" .. val
+          end
         end
 
         table.insert(lines, line)
         table.insert(highlights, highlight)
       end
+
+      vim.schedule(function()
+        for hlname, colorname in pairs(preview_colors) do
+          vim.api.nvim_set_hl(0, hlname, { bg = colorname })
+        end
+      end)
 
       ---@type fml.ui.search.preview.IData
       _preview_data = {
