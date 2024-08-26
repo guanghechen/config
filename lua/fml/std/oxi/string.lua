@@ -2,7 +2,7 @@
 local M = require("fml.std.oxi.mod")
 
 ---@class fml.std.oxi.string.ILineMatch
----@field public idx                    integer
+---@field public lnum                   integer
 ---@field public score                  integer
 ---@field public matches                fml.std.oxi.search.IMatchPoint[]
 
@@ -15,12 +15,23 @@ end
 ---@param pattern                       string
 ---@param lines                         string[]
 ---@param flag_fuzzy                    boolean
+---@param flag_regex                    boolean
 ---@return fml.std.oxi.string.ILineMatch[]
-function M.find_match_points(pattern, lines, flag_fuzzy)
-  local json_str = M.nvim_tools.find_match_points(pattern, table.concat(lines, "\n"), flag_fuzzy) ---@type string
-  local matches = M.json.parse(json_str)
-  ---@cast matches fml.std.oxi.string.ILineMatch[]
-  return matches
+function M.find_match_points_line_by_line(pattern, lines, flag_fuzzy, flag_regex)
+  local text = table.concat(lines, "\n") ---@type string
+
+  local ok, data = M.resolve_fun_result(
+    "fml.std.oxi.find_match_points_line_by_line",
+    M.nvim_tools.find_match_points_line_by_line(pattern, text, flag_fuzzy, flag_regex)
+  )
+
+  if ok then
+    ---@cast data fml.std.oxi.string.ILineMatch[]
+    return data
+  end
+
+  ---@type fml.std.oxi.string.ILineMatch[]
+  return {}
 end
 
 ---@param text                          string

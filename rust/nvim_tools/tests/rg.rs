@@ -10,7 +10,7 @@ fn test_rg() {
         }
     };
 
-    let replace_options = search::SearchOptions {
+    let replace_options = search::SearchFilesOptions {
         cwd: Some(cwd),
         flag_case_sensitive: true,
         flag_gitignore: true,
@@ -23,7 +23,7 @@ fn test_rg() {
         exclude_patterns: ".git, c.txt".to_string(),
         specified_filepath: None,
     };
-    let result = search::search(&replace_options);
+    let result = search::search_files(&replace_options);
 
     match result {
         Ok(data) => {

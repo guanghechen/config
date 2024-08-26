@@ -19,8 +19,10 @@ fn nvim_tools() -> Dictionary {
         ),
         ("find", Object::from(Function::from_fn(oxi::find::find))),
         (
-            "find_match_points",
-            Object::from(Function::from_fn(oxi::string::find_match_points)),
+            "find_match_points_line_by_line",
+            Object::from(Function::from_fn(
+                oxi::string::find_match_points_line_by_line,
+            )),
         ),
         (
             "get_line_widths",
@@ -28,7 +30,7 @@ fn nvim_tools() -> Dictionary {
         ),
         (
             "normalize_comma_list",
-            Object::from(Function::from_fn(oxi::list::normalize_comma_list)),
+            Object::from(Function::from_fn(oxi::string::normalize_comma_list)),
         ),
         ("now", Object::from(Function::from_fn(oxi::time::now))),
         (

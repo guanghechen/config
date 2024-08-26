@@ -2,10 +2,10 @@ use crate::types::CmdResult;
 use crate::util;
 
 pub fn search(options_json_str: String) -> String {
-    let cmd_result: CmdResult<util::search::SearchSucceedResult> = if let Ok(options) =
-        serde_json::from_str::<util::search::SearchOptions>(&options_json_str)
+    let cmd_result: CmdResult<util::search::SearchFilesSucceedResult> = if let Ok(options) =
+        serde_json::from_str::<util::search::SearchFilesOptions>(&options_json_str)
     {
-        let result = util::search::search(&options);
+        let result = util::search::search_files(&options);
         match result {
             Ok(data) => CmdResult {
                 cmd: data.cmd.to_owned(),

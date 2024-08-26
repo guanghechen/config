@@ -118,7 +118,7 @@ pub fn flat_filestatus(path: &Path) -> Result<FileItemWithStatus, String> {
 }
 
 // Convert the permission bits to a string like `ls -l`
-pub fn format_permissions(filetype: &FileType, mode: u32) -> String {
+fn format_permissions(filetype: &FileType, mode: u32) -> String {
     let mut perm = String::with_capacity(10);
     match filetype {
         FileType::File => perm.push('-'),
@@ -141,7 +141,7 @@ const KB: u64 = 1024;
 const MB: u64 = KB * 1024;
 const GB: u64 = MB * 1024;
 const TB: u64 = GB * 1024;
-pub fn format_filesize(size_bytes: u64) -> String {
+fn format_filesize(size_bytes: u64) -> String {
     let (value, unit) = if size_bytes >= TB {
         (size_bytes as f64 / TB as f64, "TB")
     } else if size_bytes >= GB {

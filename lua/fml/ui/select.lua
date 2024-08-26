@@ -337,9 +337,9 @@ function M:filter(input)
         local last_input_lower = last_input ~= nil and last_input:lower() or nil ---@type string|nil
         local input_lower = input:lower() ---@type string
         if
-          last_input_lower ~= nil
-          and #input_lower > #last_input_lower
-          and input_lower:sub(1, #last_input_lower) == last_input_lower
+            last_input_lower ~= nil
+            and #input_lower > #last_input_lower
+            and input_lower:sub(1, #last_input_lower) == last_input_lower
         then
           old_matches = self._matches
         end
@@ -397,11 +397,10 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  local oxi_matches = oxi.find_match_points(input, lines, fuzzy) ---@type fml.std.oxi.string.ILineMatch[]
+  local oxi_matches = oxi.find_match_points_line_by_line(input, lines, fuzzy, false) ---@type fml.std.oxi.string.ILineMatch[]
   local matches = {} ---@type fml.types.ui.select.IMatchedItem[]
   for _, oxi_match in ipairs(oxi_matches) do
-    ---! The index in lua is start from 1 but rust is start from 0.
-    local old_match = old_matches[oxi_match.idx + 1] ---@type fml.types.ui.select.IMatchedItem
+    local old_match = old_matches[oxi_match.lnum] ---@type fml.types.ui.select.IMatchedItem
 
     ---@type fml.types.ui.select.IMatchedItem
     local match = {

@@ -1,10 +1,10 @@
-use super::string::parse_comma_list;
+use crate::util::string;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::Command;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FindSucceedResult {
+pub struct FindFilesSucceedResult {
     #[serde(skip_serializing)]
     pub cmd: String,
     #[serde(skip_serializing)]
@@ -14,7 +14,7 @@ pub struct FindSucceedResult {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FindFailedResult {
+pub struct FindFilesFailedResult {
     #[serde(skip_serializing)]
     pub cmd: String,
 
@@ -22,7 +22,7 @@ pub struct FindFailedResult {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FindOptions {
+pub struct FindFilesOptions {
     pub workspace: String,
     pub cwd: String,
     pub flag_case_sensitive: bool,
@@ -33,15 +33,17 @@ pub struct FindOptions {
     pub exclude_patterns: String,
 }
 
-pub fn find(options: &FindOptions) -> Result<FindSucceedResult, FindFailedResult> {
+pub fn find_files(
+    options: &FindFilesOptions,
+) -> Result<FindFilesSucceedResult, FindFilesFailedResult> {
     let workspace: &String = &options.workspace;
     let cwd: &String = &options.cwd;
     let falg_case_sensitive: bool = options.flag_case_sensitive;
     let flag_gitignore: bool = options.flag_gitignore;
     let flag_regex: bool = options.flag_regex;
     let search_pattern: &String = &options.search_pattern;
-    let search_paths: Vec<String> = parse_comma_list(&options.search_paths);
-    let exclude_patterns: Vec<String> = parse_comma_list(&options.exclude_patterns);
+    let search_paths: Vec<String> = string::parse_comma_list(&options.search_paths);
+    let exclude_patterns: Vec<String> = string::parse_comma_list(&options.exclude_patterns);
 
     let (cmd, output) = {
         let mut cmd = Command::new("fd");
@@ -99,7 +101,7 @@ pub fn find(options: &FindOptions) -> Result<FindSucceedResult, FindFailedResult
             .map(|x| x.to_owned())
             .filter(|x| !x.is_empty())
             .collect();
-        Ok(FindSucceedResult {
+        Ok(FindFilesSucceedResult {
             cmd,
             stdout: stdout.to_string(),
             filepaths,
@@ -107,13 +109,13 @@ pub fn find(options: &FindOptions) -> Result<FindSucceedResult, FindFailedResult
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.is_empty() {
-            Ok(FindSucceedResult {
+            Ok(FindFilesSucceedResult {
                 cmd,
                 stdout: "".to_string(),
                 filepaths: vec![],
             })
         } else {
-            Err(FindFailedResult {
+            Err(FindFilesFailedResult {
                 cmd,
                 error: stderr.to_string(),
             })

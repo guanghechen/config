@@ -126,6 +126,11 @@ fn test_replace_text_preview_with_matches() {
         false,
     );
 
+    assert!(result_with_regex.is_ok());
+    assert!(result_without_regex.is_ok());
+
+    let result_with_regex = result_with_regex.unwrap();
+    let result_without_regex = result_without_regex.unwrap();
     assert_eq!(result_with_regex.text, result_without_regex.text);
     assert_eq!(result_with_regex.matches, result_without_regex.matches);
 }

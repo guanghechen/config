@@ -20,6 +20,9 @@ local function get_select(initial_title)
     fetch_data = function()
       local cwd = fml.path.cwd() ---@type string
       local unique = unique_:snapshot() ---@type boolean
+      local items = {} ---@type fml.types.ui.file_select.IRawItem[]
+      local present_uuid = "0" ---@type string
+      local width = 0 ---@type integer
       local winnr = fml.api.state.win_history:present() ---@type integer|nil
       local win = winnr ~= nil and fml.api.state.wins[winnr] or nil ---@type fml.types.api.state.IWinItem|nil
       if win == nil then
@@ -32,49 +35,46 @@ local function get_select(initial_title)
 
         ---@type fml.types.ui.file_select.IData
         return { cwd = cwd, items = {} }
-      end
+      else
+        if unique then
+          local present_filepath = win.filepath_history:present() ---@type string|nil
+          local visited = {} ---@type table<string, boolean>
+          for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
+            local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+            if not visited[filepath] then
+              visited[filepath] = true
 
-      local items = {} ---@type fml.types.ui.file_select.IRawItem[]
-      local present_uuid = "0" ---@type string
+              local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
+              if present_filepath == absolute_filepath then
+                present_uuid = uuid
+              end
 
-      if unique then
-        local present_filepath = win.filepath_history:present() ---@type string|nil
-        local visited = {} ---@type table<string, boolean>
-        for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
-          local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
-          if not visited[filepath] then
-            visited[filepath] = true
-
-            local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-            if present_filepath == absolute_filepath then
-              present_uuid = uuid
+              local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
+              table.insert(items, item)
             end
+          end
+        else
+          local present_ordinal = win.filepath_history:present_index() ---@type integer
+          if present_ordinal ~= nil then
+            present_uuid = gen_uuid_from_ordinal(present_ordinal)
+          end
 
+          for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
+            local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+            local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
             local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
             table.insert(items, item)
           end
         end
-      else
-        local present_ordinal = win.filepath_history:present_index() ---@type integer
-        if present_ordinal ~= nil then
-          present_uuid = gen_uuid_from_ordinal(present_ordinal)
-        end
 
-        for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
-          local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
-          local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-          local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
-          table.insert(items, item)
+        for _, item in ipairs(items) do
+          local w = vim.fn.strwidth(item.filepath) ---@type integer
+          width = width < w and w or width
         end
-      end
-
-      local width = 0 ---@type integer
-      for _, item in ipairs(items) do
-        local w = vim.fn.strwidth(item.filepath) ---@type integer
-        width = width < w and w or width
       end
 
       if _select ~= nil then
+        width = math.max(width + 16, 60)
         _select:change_dimension({ height = #items + 3, width = width + 16 })
       end
 

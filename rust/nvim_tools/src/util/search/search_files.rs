@@ -1,16 +1,8 @@
-use super::string::parse_comma_list;
-use crate::types::ripgrep_result;
+use crate::types::{r#match::MatchPoint, third_party::ripgrep};
+use crate::util::string;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, process::Command, time::SystemTime};
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MatchPoint {
-    #[serde(rename = "l")]
-    pub start: usize, // related to the parent.lines
-    #[serde(rename = "r")]
-    pub end: usize, // related to the parent.lines
-}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchBlockMatch {
@@ -25,7 +17,7 @@ pub struct SearchFileMatch {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchSucceedResult {
+pub struct SearchFilesSucceedResult {
     #[serde(skip_serializing)]
     pub cmd: String,
     #[serde(skip_serializing)]
@@ -36,7 +28,7 @@ pub struct SearchSucceedResult {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchFailedResult {
+pub struct SearchFilesFailedResult {
     #[serde(skip_serializing)]
     pub cmd: String,
 
@@ -45,7 +37,7 @@ pub struct SearchFailedResult {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchOptions {
+pub struct SearchFilesOptions {
     pub cwd: Option<String>,
     pub max_matches: Option<i32>,
     pub flag_case_sensitive: bool,
@@ -59,9 +51,11 @@ pub struct SearchOptions {
     pub specified_filepath: Option<String>,
 }
 
-pub fn search(options: &SearchOptions) -> Result<SearchSucceedResult, SearchFailedResult> {
+pub fn search_files(
+    options: &SearchFilesOptions,
+) -> Result<SearchFilesSucceedResult, SearchFilesFailedResult> {
     if options.search_pattern.is_empty() {
-        return Ok(SearchSucceedResult {
+        return Ok(SearchFilesSucceedResult {
             stdout: "".to_string(),
             cmd: "".to_string(),
             elapsed_time: "0s".to_string(),
@@ -82,9 +76,9 @@ pub fn search(options: &SearchOptions) -> Result<SearchSucceedResult, SearchFail
     let flag_gitignore: bool = options.flag_gitignore;
     let flag_regex: bool = options.flag_regex;
     let search_pattern: &String = &options.search_pattern;
-    let search_paths: Vec<String> = parse_comma_list(&options.search_paths);
-    let include_patterns: Vec<String> = parse_comma_list(&options.include_patterns);
-    let exclude_patterns: Vec<String> = parse_comma_list(&options.exclude_patterns);
+    let search_paths: Vec<String> = string::parse_comma_list(&options.search_paths);
+    let include_patterns: Vec<String> = string::parse_comma_list(&options.include_patterns);
+    let exclude_patterns: Vec<String> = string::parse_comma_list(&options.exclude_patterns);
 
     let line_separator_regex = Regex::new(r"\s*(?:\r|\r\n|\n)\s*").unwrap();
     let elapsed_time: String;
@@ -177,12 +171,12 @@ pub fn search(options: &SearchOptions) -> Result<SearchSucceedResult, SearchFail
                 break;
             }
 
-            if let Ok(event) = serde_json::from_str::<ripgrep_result::ResultItem>(part) {
+            if let Ok(event) = serde_json::from_str::<ripgrep::ResultItem>(part) {
                 match event.data {
-                    ripgrep_result::ResultItemData::Begin { .. } => {}
-                    ripgrep_result::ResultItemData::Match {
+                    ripgrep::ResultItemData::Begin { .. } => {}
+                    ripgrep::ResultItemData::Match {
                         path,
-                        lines: ripgrep_result::Lines { text, .. },
+                        lines: ripgrep::Lines { text, .. },
                         line_number: lnum,
                         submatches,
                         ..
@@ -211,15 +205,15 @@ pub fn search(options: &SearchOptions) -> Result<SearchSucceedResult, SearchFail
                             matches,
                         });
                     }
-                    ripgrep_result::ResultItemData::End { .. } => {}
-                    ripgrep_result::ResultItemData::Summary { elapsed_total, .. } => {
+                    ripgrep::ResultItemData::End { .. } => {}
+                    ripgrep::ResultItemData::Summary { elapsed_total, .. } => {
                         result_elapsed_time = elapsed_total.human;
                     }
                 }
             }
         }
 
-        let result: SearchSucceedResult = SearchSucceedResult {
+        let result: SearchFilesSucceedResult = SearchFilesSucceedResult {
             cmd,
             stdout: stdout.to_string(),
             elapsed_time: result_elapsed_time,
@@ -229,14 +223,14 @@ pub fn search(options: &SearchOptions) -> Result<SearchSucceedResult, SearchFail
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.is_empty() {
-            Ok(SearchSucceedResult {
+            Ok(SearchFilesSucceedResult {
                 cmd,
                 stdout: "".to_string(),
                 elapsed_time: format!("{}s", elapsed_time),
                 items: HashMap::new(),
             })
         } else {
-            Err(SearchFailedResult {
+            Err(SearchFilesFailedResult {
                 cmd,
                 elapsed_time: format!("{}s", elapsed_time),
                 error: stderr.to_string(),

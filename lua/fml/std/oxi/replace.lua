@@ -1,5 +1,4 @@
 local path = require("fml.std.path")
-local reporter = require("fml.std.reporter")
 
 ---@class fml.std.oxi
 local M = require("fml.std.oxi.mod")
@@ -103,45 +102,34 @@ local M = require("fml.std.oxi.mod")
 ---@param params                        fml.std.oxi.replace.replace_file.IParams
 ---@return boolean
 function M.replace_file(params)
-  local search_pattern = params.search_pattern
+  local search_pattern = params.search_pattern ---@type string
+  local filepath = path.resolve(params.cwd, params.filepath) ---@type string
   if params.flag_regex and not params.flag_case_sensitive then
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  local filepath = path.resolve(params.cwd, params.filepath) ---@type string
-
-  ---@type string
-  local json_str = M.nvim_tools.replace_file( ---
-    filepath,
-    search_pattern,
-    params.replace_pattern,
-    params.flag_regex
+  local ok, data = M.resolve_fun_result(
+    "fml.std.oxi.replace_file",
+    M.nvim_tools.replace_file( ---
+      filepath,
+      search_pattern,
+      params.replace_pattern,
+      params.flag_regex
+    )
   )
-  local result = M.json.parse(json_str)
-  ---@cast result fml.std.oxi.replace.replace_file.IResult
-
-  if result.error and result.error ~= vim.NIL then
-    reporter.error({
-      from = "fml.std.oxi",
-      subject = "replace_file",
-      message = "Failed to replace entire file.",
-      details = { result = result, params = params, search_pattern = search_pattern },
-    })
-  end
-  return result.success
+  return ok and data
 end
 
 ---@param params                        fml.std.oxi.replace.replace_file_by_matches.IParams
 ---@return boolean
 function M.replace_file_by_matches(params)
-  local search_pattern = params.search_pattern
+  local search_pattern = params.search_pattern ---@type string
+  local filepath = path.resolve(params.cwd, params.filepath) ---@type string
   if params.flag_regex and not params.flag_case_sensitive then
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  local filepath = path.resolve(params.cwd, params.filepath) ---@type string
   local match_idxs = {} ---@type integer[]
-
   for _, match_idx in ipairs(params.match_idxs) do
     table.insert(match_idxs, match_idx - 1)
   end
@@ -154,21 +142,8 @@ function M.replace_file_by_matches(params)
     flag_regex = params.flag_regex,
     match_idxs = match_idxs,
   }
-
-  ---@type string
-  local json_str = M.nvim_tools.replace_file_by_matches(M.json.stringify(resolved_params))
-  local result = M.json.parse(json_str)
-  ---@cast result fml.std.oxi.replace.replace_file.IResult
-
-  if result.error and result.error ~= vim.NIL then
-    reporter.error({
-      from = "fml.std.oxi",
-      subject = "replace_file",
-      message = "Failed to replace entire file.",
-      details = { result = result, params = params, search_pattern = search_pattern },
-    })
-  end
-  return result.success
+  local ok, data = M.run_fun("fml.std.oxi.replace_file_by_matches", M.nvim_tools.replace_file_by_matches, resolved_params)
+  return ok and data
 end
 
 ---@param params                        fml.std.oxi.replace.replace_file_preview.IParams
@@ -179,30 +154,32 @@ function M.replace_file_preview(params)
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  ---@type string
-  local json_str = M.nvim_tools.replace_file_preview(
-    params.filepath,
-    search_pattern,
-    params.replace_pattern,
-    params.keep_search_pieces,
-    params.flag_regex
+  local ok, data = M.resolve_fun_result(
+    "fml.std.oxi.replace_file_preview",
+    M.nvim_tools.replace_file_preview(
+      params.filepath,
+      search_pattern,
+      params.replace_pattern,
+      params.keep_search_pieces,
+      params.flag_regex
+    )
   )
-  local raw_result = M.json.parse(json_str)
-  ---@cast raw_result string
 
-  if raw_result ~= nil and type(raw_result) == "string" then
-    local text = raw_result ---@type string
+  if ok then
+    ---@cast data string
+
+    local text = data ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
     local lines = M.parse_lines(text, lwidths) ---@type string[]
 
     ---@type fml.std.oxi.replace.replace_file_preview.IResult
     local result = { lines = lines, lwidths = lwidths }
     return result
-  else
-    ---@type fml.std.oxi.replace.replace_file_preview.IResult
-    local result = { lines = {}, lwidths = {} }
-    return result
   end
+
+  ---@type fml.std.oxi.replace.replace_file_preview.IResult
+  local result = { lines = {}, lwidths = {} }
+  return result
 end
 
 ---@param params                        fml.std.oxi.replace.replace_file_preview_with_matches.IParams
@@ -213,38 +190,32 @@ function M.replace_file_preview_with_matches(params)
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  ---@type string
-  local json_str = M.nvim_tools.replace_file_preview_with_matches(
-    params.filepath,
-    search_pattern,
-    params.replace_pattern,
-    params.keep_search_pieces,
-    params.flag_regex
+  local ok, data = M.resolve_fun_result(
+    "fml.std.oxi.replace_file_preview_with_matches",
+    M.nvim_tools.replace_file_preview_with_matches(
+      params.filepath,
+      search_pattern,
+      params.replace_pattern,
+      params.keep_search_pieces,
+      params.flag_regex
+    )
   )
-  local raw_result = M.json.parse(json_str)
-  ---@cast raw_result fml.std.oxi.replace.replace_file_preview_with_matches.IRawResult
 
-  if raw_result ~= nil and type(raw_result.text) == "string" then
-    local text = raw_result.text ---@type string
+  if ok then
+    ---@cast data fml.std.oxi.replace.replace_file_preview_with_matches.IRawResult
+
+    local text = data.text ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
     local lines = M.parse_lines(text, lwidths) ---@type string[]
 
     ---@type fml.std.oxi.replace.replace_file_preview_with_matches.IResult
-    local result = {
-      lines = lines,
-      lwidths = lwidths,
-      matches = raw_result.matches,
-    }
-    return result
-  else
-    ---@type fml.std.oxi.replace.replace_file_preview_with_matches.IResult
-    local result = {
-      lines = {},
-      lwidths = {},
-      matches = raw_result.matches,
-    }
+    local result = { lines = lines, lwidths = lwidths, matches = data.matches }
     return result
   end
+
+  ---@type fml.std.oxi.replace.replace_file_preview_with_matches.IResult
+  local result = { lines = {}, lwidths = {}, matches = {} }
+  return result
 end
 
 ---@param params                        fml.std.oxi.replace.replace_text_preview.IParams
@@ -255,30 +226,32 @@ function M.replace_text_preview(params)
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  ---@type string
-  local json_str = M.nvim_tools.replace_text_preview(
-    params.text,
-    search_pattern,
-    params.replace_pattern,
-    params.keep_search_pieces,
-    params.flag_regex
+  local ok, data = M.resolve_fun_result(
+    "fml.std.oxi.replace_text_preview",
+    M.nvim_tools.replace_text_preview(
+      params.text,
+      search_pattern,
+      params.replace_pattern,
+      params.keep_search_pieces,
+      params.flag_regex
+    )
   )
-  local raw_result = M.json.parse(json_str)
-  ---@cast raw_result string
 
-  if raw_result ~= nil and type(raw_result) == "string" then
-    local text = raw_result ---@type string
+  if ok then
+    ---@cast data string
+
+    local text = data ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
     local lines = M.parse_lines(text, lwidths) ---@type string[]
 
     ---@type fml.std.oxi.replace.replace_text_preview.IResult
     local result = { lines = lines, lwidths = lwidths }
     return result
-  else
-    ---@type fml.std.oxi.replace.replace_text_preview.IResult
-    local result = { lines = {}, lwidths = {} }
-    return result
   end
+
+  ---@type fml.std.oxi.replace.replace_text_preview.IResult
+  local result = { lines = {}, lwidths = {} }
+  return result
 end
 
 ---@param params                        fml.std.oxi.replace.replace_text_preview_with_matches.IParams
@@ -289,19 +262,21 @@ function M.replace_text_preview_with_matches(params)
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  ---@type string
-  local json_str = M.nvim_tools.replace_text_preview_with_matches(
-    params.text,
-    search_pattern,
-    params.replace_pattern,
-    params.keep_search_pieces,
-    params.flag_regex
+  local ok, data = M.resolve_fun_result(
+    "fml.std.oxi.replace_text_preview_with_matches",
+    M.nvim_tools.replace_text_preview_with_matches(
+      params.text,
+      search_pattern,
+      params.replace_pattern,
+      params.keep_search_pieces,
+      params.flag_regex
+    )
   )
-  local raw_result = M.json.parse(json_str)
-  ---@cast raw_result fml.std.oxi.replace.replace_text_preview_with_matches.IRawResult
 
-  if raw_result ~= nil and type(raw_result.text) == "string" then
-    local text = raw_result.text ---@type string
+  if ok then
+    ---@cast data fml.std.oxi.replace.replace_text_preview_with_matches.IRawResult
+
+    local text = data.text ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
     local lines = M.parse_lines(text, lwidths) ---@type string[]
 
@@ -309,16 +284,12 @@ function M.replace_text_preview_with_matches(params)
     local result = {
       lines = lines,
       lwidths = lwidths,
-      matches = raw_result.matches,
-    }
-    return result
-  else
-    ---@type fml.std.oxi.replace.replace_text_preview_with_matches.IResult
-    local result = {
-      lines = {},
-      lwidths = {},
-      matches = raw_result.matches,
+      matches = data.matches,
     }
     return result
   end
+
+  ---@type fml.std.oxi.replace.replace_text_preview_with_matches.IResult
+  local result = { lines = {}, lwidths = {}, matches = {} }
+  return result
 end

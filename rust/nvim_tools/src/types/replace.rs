@@ -1,7 +1,8 @@
+use crate::types::r#match::MatchPoint;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ReplaceFileResult {
-    pub success: bool,
-    pub error: Option<String>,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReplacePreview {
+    pub text: String,
+    pub matches: Vec<MatchPoint>,
 }

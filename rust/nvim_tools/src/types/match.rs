@@ -10,7 +10,7 @@ pub struct MatchPoint {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LineMatch {
-    pub idx: usize,
-    pub score: usize,
+    pub lnum: usize,
+    pub score: u32,
     pub matches: Vec<MatchPoint>,
 }
