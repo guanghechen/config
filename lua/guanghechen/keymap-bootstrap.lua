@@ -129,7 +129,6 @@ mk({ "n", "v" }, "<leader>dC", ghc.command.debug.show_context_all, "debug: show 
 mk({ "n", "v" }, "<leader>dc", ghc.command.debug.show_context, "debug: show context (persistentable)", true)
 mk({ "n", "v" }, "<leader>dd", ghc.command.debug.inspect, "debug: inspect", true)
 mk({ "n", "v" }, "<leader>ds", ghc.command.debug.show_state, "debug: show state", true)
-mk({ "n", "v" }, "<leader>dw", fml.api.win.show_history, "debug: show window history", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[f]ind-------------------------------------------------------------------------------------------

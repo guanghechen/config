@@ -43,18 +43,3 @@ function M.forward()
     return
   end
 end
-
-function M.show_history()
-  local winnr = vim.api.nvim_get_current_win()
-  local win = state.wins[winnr]
-  if win == nil then
-    reporter.error({
-      from = "fml.api.win",
-      subject = "show_history",
-      message = "Cannot find window.",
-      details = { winnr = winnr },
-    })
-    return
-  end
-  win.filepath_history:print()
-end

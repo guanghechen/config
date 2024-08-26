@@ -42,3 +42,6 @@ history:print()
 
 history:forward()
 history:print()
+
+history:push("A")
+history:print()
