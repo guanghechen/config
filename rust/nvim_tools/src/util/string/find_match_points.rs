@@ -19,30 +19,35 @@ pub fn find_match_points_line_by_line(
     let mut matches: Vec<LineMatch> = vec![];
 
     if flag_regex {
-        let regex = Regex::new(pattern).unwrap();
-        for (i, line) in text.lines().enumerate() {
-            if line.is_empty() {
-                continue;
-            }
+        let regex = Regex::new(pattern);
+        match regex {
+            Ok(regex) => {
+                for (i, line) in text.lines().enumerate() {
+                    if line.is_empty() {
+                        continue;
+                    }
 
-            let mut score: u32 = 0;
-            let mut pieces: Vec<MatchPoint> = vec![];
-            for mat in regex.find_iter(line) {
-                score += score_exact;
-                pieces.push(MatchPoint {
-                    start: mat.start(),
-                    end: mat.end(),
-                })
-            }
+                    let mut score: u32 = 0;
+                    let mut pieces: Vec<MatchPoint> = vec![];
+                    for mat in regex.find_iter(line) {
+                        score += score_exact;
+                        pieces.push(MatchPoint {
+                            start: mat.start(),
+                            end: mat.end(),
+                        })
+                    }
 
-            if score > 0 {
-                matches.push(LineMatch {
-                    lnum: i + 1,
-                    score,
-                    matches: pieces,
-                });
+                    if score > 0 {
+                        matches.push(LineMatch {
+                            lnum: i + 1,
+                            score,
+                            matches: pieces,
+                        });
+                    }
+                }
             }
-        }
+            Err(e) => return Err(format!("Bad regex, error: {}", e)),
+        };
     } else {
         let pattern_bytes = pattern.as_bytes();
         let pattern_chars = pattern.chars().collect::<Vec<char>>();

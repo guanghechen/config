@@ -423,7 +423,12 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  local oxi_matches = oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex) ---@type fml.std.oxi.string.ILineMatch[]
+  ---@type fml.std.oxi.string.ILineMatch[]|nil
+  local oxi_matches = oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
+  if oxi_matches == nil then
+    return old_matches
+  end
+
   local matches = {} ---@type fml.types.ui.select.IMatchedItem[]
   for _, oxi_match in ipairs(oxi_matches) do
     local old_match = old_matches[oxi_match.lnum] ---@type fml.types.ui.select.IMatchedItem

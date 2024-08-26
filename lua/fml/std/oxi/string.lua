@@ -16,7 +16,7 @@ end
 ---@param lines                         string[]
 ---@param flag_fuzzy                    boolean
 ---@param flag_regex                    boolean
----@return fml.std.oxi.string.ILineMatch[]
+---@return fml.std.oxi.string.ILineMatch[]|nil
 function M.find_match_points_line_by_line(pattern, lines, flag_fuzzy, flag_regex)
   local text = table.concat(lines, "\n") ---@type string
 
@@ -29,9 +29,7 @@ function M.find_match_points_line_by_line(pattern, lines, flag_fuzzy, flag_regex
     ---@cast data fml.std.oxi.string.ILineMatch[]
     return data
   end
-
-  ---@type fml.std.oxi.string.ILineMatch[]
-  return {}
+  return nil
 end
 
 ---@param text                          string

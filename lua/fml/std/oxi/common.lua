@@ -33,7 +33,7 @@ function M.resolve_cmd_result(from, result_str)
     reporter.error({
       from = from,
       message = "Failed to run command.",
-      details = result,
+      details = (result or {}).error or result,
     })
     return false, nil
   end
@@ -52,7 +52,7 @@ function M.resolve_fun_result(from, result_str)
     reporter.error({
       from = from,
       message = "Failed to run function",
-      details = result,
+      details = (result or {}).error or result,
     })
     return false, nil
   end
