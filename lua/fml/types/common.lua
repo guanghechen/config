@@ -1,3 +1,9 @@
+
+---@alias fml.enums.FileType
+---| "file"
+---| "directory"
+---| "other"
+
 ---@alias fml.enums.VimMode
 ---| "i"
 ---| "n"
@@ -9,10 +15,9 @@
 ---@generic T
 ---@alias fml.types.IEquals fun(x: T, y: T): boolean
 
----@alias fml.enums.FileType
----| "file"
----| "directory"
----| "other"
+---@generic T
+---@alias fml.types.IFilter
+---| fun(element: T, index: integer): boolean
 
 ---@generic T
 ---@alias fml.types.INormalize fun(x: T): T

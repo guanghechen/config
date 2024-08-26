@@ -1,14 +1,16 @@
 ---@class fml.collection.CircularQueue : fml.types.collection.ICircularQueue
 ---@field private _elements             fml.types.T[]
----@field private _capacity             number
----@field private _size                 number
----@field private _start                number
----@field private _end                  number
+---@field private _capacity             integer
+---@field private _size                 integer
+---@field private _start                integer
+---@field private _end                  integer
 local M = {}
 M.__index = M
 
 ---@class fml.collection.CircularQueue.IProps
----@field public capacity               number
+---@field public capacity               integer
+
+local _tmp_array = {} ---@type fml.types.T[]
 
 ---@param props fml.collection.CircularQueue.IProps
 ---@return fml.collection.CircularQueue
@@ -27,15 +29,19 @@ end
 ---@param queue                         fml.types.collection.ICircularQueue
 ---@return fml.collection.CircularQueue
 function M.from(queue)
-  local self = setmetatable({}, M)
-  self._elements = {}
-  self._capacity = queue:capacity()
-  self._size = queue:size()
-  self._start = 1
-  self._end = queue:size()
-  for element, index in queue:iterator() do
-    self._elements[index] = element
+  local elements = {} ---@type fml.types.T[]
+  local size = 0 ---@type integer
+  for element in queue:iterator() do
+    size = size + 1
+    elements[size] = element
   end
+
+  local self = setmetatable({}, M)
+  self._elements = elements
+  self._capacity = queue:capacity()
+  self._size = size
+  self._start = 1
+  self._end = size
   return self
 end
 
@@ -43,18 +49,20 @@ end
 ---@param capacity                     integer
 ---@return fml.collection.CircularQueue
 function M.from_array(arr, capacity)
-  local start = #arr > capacity and #arr - capacity + 1 or 1 ---@type integer
-  local size = #arr - start + 1 ---@type integer
+  local elements = {} ---@type fml.types.T[]
+  local size = 0 ---@type integer
+  local arr_start = #arr <= capacity and 1 or #arr - capacity + 1 ---@type integer
+  for idx = arr_start, #arr, 1 do
+    size = size + 1
+    elements[size] = arr[idx]
+  end
 
   local self = setmetatable({}, M)
-  self._elements = {}
+  self._elements = elements
   self._capacity = capacity
   self._size = size
   self._start = 1
   self._end = size
-  for i = 1, #arr, 1 do
-    self._elements[i] = arr[start + i - 1]
-  end
   return self
 end
 
@@ -68,17 +76,15 @@ function M:size()
   return self._size
 end
 
----@param index number
+---@param index                         integer
 ---@return fml.types.T|nil
 function M:at(index)
   if index < 1 or index > self._size then
-    return nil
+    return
   end
 
-  local idx = self._start + index - 1 ---@type number
-  if idx > self._capacity then
-    idx = idx - self._capacity
-  end
+  local idx = self._start + index - 1 ---@type integer
+  idx = idx <= self._capacity and idx or idx - self._capacity ---@type integer
   return self._elements[idx]
 end
 
@@ -89,7 +95,6 @@ end
 
 ---@return nil
 function M:clear()
-  self._elements = {}
   self._size = 0
   self._start = 1
   self._end = 0
@@ -97,37 +102,33 @@ end
 
 ---@return fml.types.T[]
 function M:collect()
-  local _capacity = self._capacity
-  local _elements = self._elements
-  local _start = self._start
-  local _size = self._size
-  local id = _start - 1
-  local result = {}
+  local elements = self._elements ---@type fml.types.T[]
+  local capacity = self._capacity ---@type integer
+  local size = self._size ---@type integer
 
-  ---@diagnostic disable-next-line: unused-local
-  for i = 1, _size do
-    id = id + 1
-    if id > _capacity then
-      id = 1
-    end
-    table.insert(result, _elements[id])
+  local results = {} ---@type fml.types.T[]
+  local idx = self._start - 1 ---@type integer
+
+  for index = 1, size, 1 do
+    idx = idx == capacity and 1 or idx + 1 ---@type integer
+    results[index] = elements[idx]
   end
-  return result
+  return results
 end
 
----@param filter                        fun(element: fml.types.T, index: integer): boolean
+---@param filter                        fml.types.IFilter
 ---@return integer
 function M:count(filter)
-  local _capacity = self._capacity ---@type integer
-  local _elements = self._elements ---@type fml.types.T[]
-  local _start = self._start ---@type integer
-  local _size = self._size ---@type integer
-  local id = _start - 1 ---@type integer
-  local count = 0 ---@type integer
+  local elements = self._elements ---@type fml.types.T[]
+  local capacity = self._capacity ---@type integer
+  local size = self._size ---@type integer
 
-  for i = 1, _size do
-    id = id == _capacity and 1 or id + 1
-    if filter(_elements[id], i) then
+  local count = 0 ---@type integer
+  local idx = self._start - 1 ---@type integer
+
+  for index = 1, size, 1 do
+    idx = idx == capacity and 1 or idx + 1
+    if filter(elements[idx], index) then
       count = count + 1
     end
   end
@@ -140,17 +141,14 @@ function M:dequeue()
     return nil
   end
 
-  local target = self._elements[self._start]
+  local target = self._elements[self._start] ---@type fml.types.T|nil
   if self._size == 1 then
     self._size = 0
     self._start = 1
     self._end = 0
   else
     self._size = self._size - 1
-    self._start = self._start + 1
-    if self._start > self._capacity then
-      self._start = 1
-    end
+    self._start = self._start == self._capacity and 1 or self._start + 1
   end
   return target
 end
@@ -161,22 +159,19 @@ function M:dequeue_back()
     return nil
   end
 
-  local target = self._elements[self._start]
+  local target = self._elements[self._end] ---@type fml.types.T|nil
   if self._size == 1 then
     self._size = 0
     self._start = 1
     self._end = 0
   else
     self._size = self._size - 1
-    self._end = self._end - 1
-    if self._end < 1 then
-      self._end = self._capacity
-    end
+    self._end = self._end == 1 and self._capacity or self._end - 1
   end
   return target
 end
 
----@param element fml.types.T
+---@param element                       fml.types.T
 ---@return nil
 function M:enqueue(element)
   self._end = self._end == self._capacity and 1 or self._end + 1
@@ -193,17 +188,7 @@ end
 ---@return fml.collection.CircularQueue
 function M:fork(filter)
   self:rearrange(filter)
-
-  local instance = setmetatable({}, M)
-  instance._elements = {}
-  instance._capacity = self._capacity
-  instance._size = self._size
-  instance._start = 1
-  instance._end = self._size
-  for i = 1, self._size, 1 do
-    instance._elements[i] = self._elements[i]
-  end
-  return instance
+  return M.from(self)
 end
 
 ---@return fml.types.T|nil
@@ -212,93 +197,111 @@ function M:front()
 end
 
 function M:iterator()
-  local _capacity = self._capacity
-  local _elements = self._elements
-  local _start = self._start
-  local _size = self._size
-  local i = 0
-  local id = _start - 1
+  local elements = self._elements ---@type fml.types.T[]
+  local capacity = self._capacity ---@type integer
+  local size = self._size ---@type integer
 
+  local index = 0 ---@type integer
+  local idx = self._start - 1 ---@type integer
+
+  ---@return fml.types.T|nil
+  ---@return integer|nil
   return function()
-    i = i + 1
-    if i <= _size then
-      id = id == _capacity and 1 or id + 1
-      return _elements[id], i
+    index = index + 1
+    if index <= size then
+      idx = idx == capacity and 1 or idx + 1
+      return elements[idx], index
     end
   end
 end
 
----@return nil
 function M:iterator_reverse()
-  local _capacity = self._capacity
-  local _elements = self._elements
-  local _end = self._end
-  local _size = self._size
-  local i = _size + 1
-  local id = _end + 1
+  local elements = self._elements ---@type fml.types.T[]
+  local capacity = self._capacity ---@type integer
+  local size = self._size ---@type integer
 
+  local index = size + 1 ---@type integer
+  local idx = self._end + 1 ---@type integer
+
+  ---@return fml.types.T|nil
+  ---@return integer|nil
   return function()
-    i = i - 1
-    if i > 0 then
-      id = id == 1 and _capacity or id - 1
-      return _elements[id], i
+    index = index - 1
+    if index > 0 then
+      idx = idx == 1 and capacity or idx - 1
+      return elements[idx], index
     end
   end
 end
 
----@param filter                        fun(element: fml.types.T, index: integer): boolean
+---@param filter                        fml.types.IFilter
 ---@return nil
 function M:rearrange(filter)
-  local k = 0 ---@type integer
-  if self._size > 0 then
-    if self._start <= self._end then
-      local index = 0 ---@type integer
-      for i = self._start, self._end, 1 do
-        index = index + 1
-        local value = self._elements[i]
-        if filter(value, index) then
-          k = k + 1
-          self._elements[k] = value
-        end
-      end
-    else
-      local tmp_array = {}
-      for i = 1, self._end, 1 do
-        table.insert(tmp_array, self._elements[i])
-      end
+  if self._size < 1 then
+    self._size = 0
+    self._start = 1
+    self._end = 0
+    return
+  end
 
-      local index = 0 ---@type integer
-      for i = self._start, self._capacity, 1 do
-        index = index + 1
-        local value = self._elements[i]
-        if filter(value, index) then
-          k = k + 1
-          self._elements[k] = value
-        end
-      end
-      for i = 1, self._end, 1 do
-        index = index + 1
-        local value = tmp_array[i]
-        if filter(value, index) then
-          k = k + 1
-          self._elements[k] = value
-        end
+  if self._start <= self._end then
+    local size = 0 ---@type integer
+    local idx = self._start - 1 ---@type integer
+    for index = 1, self._size, 1 do
+      idx = idx + 1
+      local element = self._elements[idx] ---@type fml.types.T
+      if filter(element, index) then
+        size = size + 1
+        self._elements[size] = element
       end
     end
+    self._size = size
+    self._start = 1
+    self._end = size
+    return
   end
 
-  self._size = k
+  local size = 0 ---@type integer
+  local index = 0 ---@type integer
+  for idx = 1, self._end, 1 do
+    _tmp_array[idx] = self._elements[idx]
+  end
+  for idx = self._start, self._capacity, 1 do
+    index = index + 1
+    local element = self._elements[idx] ---@type fml.types.T
+    if filter(element, index) then
+      size = size + 1
+      self._elements[size] = element
+    end
+  end
+  for idx = 1, self._end, 1 do
+    index = index + 1
+    local element = _tmp_array[idx] ---@type fml.types.T
+    if filter(element, index) then
+      size = size + 1
+      self._elements[size] = element
+    end
+  end
+  self._size = size
   self._start = 1
-  self._end = k
+  self._end = size
 end
 
----@param elements                      fml.types.T[]
+---@param arr                           fml.types.T[]
 ---@return nil
-function M:reset(elements)
-  self:clear()
-  for _, element in ipairs(elements) do
-    self:enqueue(element)
+function M:reset(arr)
+  local capacity = self._capacity ---@type integer
+  local elements = self._elements ---@type fml.types.T[]
+  local size = 0 ---@type integer
+  local arr_start = #arr <= capacity and 1 or #arr - capacity + 1 ---@type integer
+  for idx = arr_start, #arr, 1 do
+    size = size + 1
+    elements[size] = arr[idx]
   end
+
+  self._size = size
+  self._start = 1
+  self._end = size
 end
 
 ---@param index                         integer
@@ -310,10 +313,7 @@ function M:update(index, value)
   end
 
   local idx = self._start + index - 1 ---@type number
-  if idx > self._capacity then
-    idx = idx - self._capacity
-  end
-
+  idx = idx <= self._capacity and idx or idx - self._capacity ---@type integer
   self._elements[idx] = value
 end
 
