@@ -204,6 +204,13 @@ function M:size()
   return self._stack:size()
 end
 
+---@return fml.types.T|nil
+---@return integer
+function M:top()
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  return stack:back(), stack:size()
+end
+
 ---@param element                       fml.types.T
 ---@return nil
 function M:update_top(element)

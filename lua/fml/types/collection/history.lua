@@ -18,6 +18,7 @@
 ---@field public print                  fun(self: fml.types.collection.IHistory): nil
 ---@field public push                   fun(self: fml.types.collection.IHistory, element: fml.types.T): nil
 ---@field public size                   fun(self: fml.types.collection.IHistory): integer
+---@field public top                    fun(self: fml.types.collection.IHistory): fml.types.T|nil, integer
 ---@field public update_top             fun(self: fml.types.collection.IHistory, element: fml.types.T): nil
 
 ---@class fml.types.collection.IAdvanceHistory

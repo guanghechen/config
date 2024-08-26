@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local History = require("fml.collection.history")
 
 ---@class ghc.state.input_history.IData
@@ -40,14 +39,6 @@ function M.load_and_autosave()
           local serialized_data = {} ---@type table<string, fml.types.collection.history.ISerializedData>
           for key, value in pairs(state) do
             local history_data = value:dump() ---@type fml.types.collection.history.ISerializedData
-            local stack = history_data.stack ---@type fml.types.T[]
-            if #stack > 0 then
-              local prefix = constant.EDITING_INPUT_PREFIX ---@type string
-              local top = stack[#stack] ---@type string
-              if #top > #prefix and string.sub(top, 1, #prefix) == prefix then
-                stack[#stack] = string.sub(top, #prefix + 1)
-              end
-            end
             serialized_data[key] = history_data
           end
           return serialized_data

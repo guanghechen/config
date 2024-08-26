@@ -1,4 +1,5 @@
 local constant = require("fml.constant")
+local EDITING_PREFIX = constant.EDITING_INPUT_PREFIX ---@type string
 
 ---@class fml.std.util
 local M = {}
@@ -79,6 +80,12 @@ end
 ---@return any
 function M.identity(value)
   return value
+end
+
+---@param text                          string
+---@return boolean
+function M.is_editing_text(text)
+  return #text > #EDITING_PREFIX and text:sub(1, #EDITING_PREFIX) == EDITING_PREFIX
 end
 
 ---@param ...                           any[]
@@ -207,6 +214,15 @@ end
 ---@diagnostic disable-next-line: unused-vararg
 function M.truthy(...)
   return true
+end
+
+---@param text                          string
+---@return string
+function M.unwrap_editing_prefix(text)
+  if #text > #EDITING_PREFIX and text:sub(1, #EDITING_PREFIX) == EDITING_PREFIX then
+    return text:sub(#EDITING_PREFIX + 1)
+  end
+  return text
 end
 
 return M

@@ -146,15 +146,10 @@ function M.new(props)
     if item ~= nil then
       if on_confirm_from_props(item) then
         if input_history ~= nil then
-          local input_cur = state.input:snapshot() ---@type string
-
-          input_history:go(math.huge)
-          local top = input_history:present() ---@type string|nil
-          local prefix = constant.EDITING_INPUT_PREFIX ---@type string
-          if top == nil or #top < #prefix or string.sub(top, 1, #prefix) ~= prefix then
-            input_history:push(input_cur)
-          else
-            input_history:update_top(input_cur)
+          local top = input_history:top() ---@type string|nil
+          if top ~= nil then
+            top = util.unwrap_editing_prefix(top)
+            input_history:update_top(top)
           end
         end
         on_close()

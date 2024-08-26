@@ -15,7 +15,8 @@ local signcolumn = require("fml.ui.signcolumn")
 local M = {}
 M.__index = M
 
-local extmark_nsnr = vim.api.nvim_create_namespace("fml.ui.search.input") ---@type integer
+local EDITING_PREFIX = constant.EDITING_INPUT_PREFIX ---@type string
+local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ui.search.input") ---@type integer
 
 ---@class fml.ui.search.input.IProps
 ---@field public state                  fml.types.ui.search.IState
@@ -32,50 +33,35 @@ function M.new(props)
 
   local actions = {
     apply_prev_input = function()
+      if input_history == nil then
+        return
+      end
+
       local input_cur = state.input:snapshot() ---@type string
-      if input_history ~= nil then
-        if input_history:is_top() then
-          local present = input_history:present() ---@type string|nil
-          local prefix = constant.EDITING_INPUT_PREFIX ---@type string
-          local input_cur_with_prefix = prefix .. input_cur ---@type string
-          if present == nil or #present < #prefix or string.sub(present, 1, #prefix) ~= prefix then
-            input_history:push(input_cur_with_prefix)
-          else
-            input_history:update_top(input_cur_with_prefix)
-          end
+      local input_present = input_history:present() ---@type string|nil, integer
+      if input_present ~= input_cur then
+        local input_top = input_history:top() ---@type string|nil
+        if input_top == nil or util.is_editing_text(input_top) then
+          input_history:go(math.huge)
+          input_history:push(EDITING_PREFIX .. input_cur)
+        else
+          input_history:update_top(EDITING_PREFIX .. input_cur)
         end
+      end
 
-        while true do
-          local input_next = input_history:backward() ---@type string|nil
-          if input_next == nil then
-            break
-          end
-
-          if input_next ~= input_cur then
-            self:reset_input(input_next)
-            return
-          end
-
-          if input_history:is_bottom() then
-            break
-          end
-        end
+      local text = input_history:backward() ---@type string|nil
+      if text ~= nil then
+        self:reset_input(text)
       end
     end,
     apply_next_input = function()
-      local input_cur = state.input:snapshot() ---@type string
-      if input_history ~= nil then
-        local prefix = constant.EDITING_INPUT_PREFIX ---@type string
-        local input_next = input_history:forward() ---@type string|nil
-        if input_history:is_top() and input_next ~= nil then
-          if #input_next >= #prefix and string.sub(input_next, 1, #prefix) == prefix then
-            input_next = string.sub(input_next, #prefix + 1)
-          end
-        end
+      if input_history == nil or input_history:is_top() then
+        return
+      end
 
-        if input_next ~= nil and input_next ~= input_cur then
-          self:reset_input(input_next)
-        end
+      local text = input_history:forward() ---@type string|nil
+      if text ~= nil then
+        self:reset_input(text)
       end
     end,
   }
@@ -188,28 +174,28 @@ function M:set_virtual_text()
     lnum = lnum > total and total or lnum
 
     if self._extmark_nr then
-      vim.api.nvim_buf_del_extmark(bufnr, extmark_nsnr, self._extmark_nr)
+      vim.api.nvim_buf_del_extmark(bufnr, EXTMARK_NSNR, self._extmark_nr)
       self._extmark_nr = nil
     end
 
     ---! Set the extmark with the right-aligned virtual text
-    self._extmark_nr = vim.api.nvim_buf_set_extmark(bufnr, extmark_nsnr, 0, 0, {
+    self._extmark_nr = vim.api.nvim_buf_set_extmark(bufnr, EXTMARK_NSNR, 0, 0, {
       virt_text = { { "" .. lnum .. " / " .. total, "Comment" } },
       virt_text_pos = "right_align",
     })
   end
 end
 
----@param input                         string|nil
+---@param text                          string|nil
 ---@return nil
-function M:reset_input(input)
+function M:reset_input(text)
   local state = self.state ---@type fml.types.ui.search.IState
-  local next_input = input or state.input:snapshot() ---@type string
-  state.input:next(next_input)
+  local next_text = util.unwrap_editing_prefix(text or state.input:snapshot()) ---@type string
+  state.input:next(next_text)
 
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local lines = oxi.parse_lines(next_input) ---@type string[]
+    local lines = oxi.parse_lines(next_text) ---@type string[]
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
   end
 end
