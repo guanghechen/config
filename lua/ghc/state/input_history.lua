@@ -19,16 +19,8 @@ local M = {}
 function M.load_and_autosave()
   if state == nil then
     state = {
-      find_files = History.new({
-        name = "find_files",
-        capacity = 100,
-        validate = fml.string.is_non_blank_string,
-      }),
-      search_in_files = History.new({
-        name = "search_in_files",
-        capacity = 300,
-        validate = fml.string.is_non_blank_string,
-      }),
+      find_files = History.new({ name = "find_files", capacity = 100 }),
+      search_in_files = History.new({ name = "search_in_files", capacity = 300 }),
     }
 
     local data = fml.fs.read_json({ filepath = FILEPATH, silent_on_bad_path = true, silent_on_bad_json = false })

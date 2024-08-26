@@ -15,7 +15,7 @@ function M.split_horizontal()
     local win_cur = state.wins[winnr_cur]
     if win_cur ~= nil then
       state.wins[winnr_new] = {
-        filepath_history = win_cur.filepath_history:fork(),
+        filepath_history = win_cur.filepath_history:fork({ name = "win_filepath" }),
         lsp_symbols = std_array.slice(win_cur.lsp_symbols),
       }
     end
@@ -33,7 +33,7 @@ function M.split_vertical()
     local win_cur = state.wins[winnr_cur]
     if win_cur ~= nil then
       state.wins[winnr_new] = {
-        filepath_history = win_cur.filepath_history:fork(),
+        filepath_history = win_cur.filepath_history:fork({ name = "win_filepath" }),
         lsp_symbols = std_array.slice(win_cur.lsp_symbols),
       }
     end

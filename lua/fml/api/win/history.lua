@@ -18,7 +18,7 @@ function M.back()
     return
   end
 
-  local last_filepath = win.filepath_history:back() ---@type string|nil
+  local last_filepath = win.filepath_history:backward() ---@type string|nil
   if last_filepath ~= nil then
     state.open_filepath(winnr, last_filepath)
   end

@@ -116,11 +116,11 @@ function M.new(props)
     width_preview = raw_dimension.width_preview,
   }
 
+  local delay_fetch = math.max(0, props.delay_fetch or 128) ---@type integer
+  local delay_render = math.max(0, props.delay_render or 48) ---@type integer
   local destroy_on_close = not not props.destroy_on_close ---@type boolean
   local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
-  local delay_fetch = math.max(0, props.delay_fetch or 100) ---@type integer
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
-  local delay_render = math.max(0, props.delay_render or 100) ---@type integer
 
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil

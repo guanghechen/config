@@ -46,7 +46,7 @@ function M.new(props)
         end
 
         while true do
-          local input_next = input_history:back() ---@type string|nil
+          local input_next = input_history:backward() ---@type string|nil
           if input_next == nil then
             break
           end

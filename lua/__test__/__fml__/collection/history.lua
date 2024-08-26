@@ -1,4 +1,4 @@
-local history = fml.collection.History.new({
+local history = fml.collection.AdvanceHistory.new({
   name = "haha",
   capacity = 5,
   validate = function(v)
@@ -10,16 +10,16 @@ history:push("A")
 history:push("B")
 history:print()
 
-history:back()
+history:backward()
 history:print()
 
 history:push("C")
 history:print()
 
-history:back()
-history:back()
-history:back()
-history:back()
+history:backward()
+history:backward()
+history:backward()
+history:backward()
 history:print()
 
 history:push("_A")
@@ -37,7 +37,7 @@ history:push("B")
 history:push("B")
 history:print()
 
-history:back(2)
+history:backward(2)
 history:print()
 
 history:forward()

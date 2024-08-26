@@ -13,6 +13,7 @@ local api = {
 
 ---@class fml.collection
 local collection = {
+  AdvanceHistory = require("fml.collection.history_advance"),
   BatchHandler = require("fml.collection.batch_handler"),
   BatchDisposable = require("fml.collection.batch_disposable"),
   CircularQueue = require("fml.collection.circular_queue"),
@@ -79,19 +80,17 @@ local ui = {
   search = require("fml.ui.search"),
 }
 
----@class fml : fml.std
+---@class fml : fml.global, fml.std
 ---@field public api                    fml.api
 ---@field public constant               fml.constant
 ---@field public collection             fml.collection
----@field public disposable             fml.types.collection.IBatchDisposable
 ---@field public fn                     fml.fn
 ---@field public std                    fml.std
 ---@field public ui                     fml.ui
-local fml = vim.tbl_extend("force", std, {
+local fml = vim.tbl_extend("force", std, require("fml.global"), {
   api = api,
   constant = require("fml.constant"),
   collection = collection,
-  disposable = require("fml.autocmd.disposable"),
   fn = fn,
   std = std,
   ui = ui,

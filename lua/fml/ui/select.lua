@@ -69,7 +69,7 @@ function M.new(props)
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.select.IProvider
-  local delay_render = props.delay_render or 64 ---@type integer
+  local delay_render = props.delay_render or 48 ---@type integer
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
   local title = props.title ---@type string
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
@@ -366,9 +366,9 @@ function M:filter(input)
         local last_input_lower = last_input ~= nil and last_input:lower() or nil ---@type string|nil
         local input_lower = input:lower() ---@type string
         if
-            last_input_lower ~= nil
-            and #input_lower > #last_input_lower
-            and input_lower:sub(1, #last_input_lower) == last_input_lower
+          last_input_lower ~= nil
+          and #input_lower > #last_input_lower
+          and input_lower:sub(1, #last_input_lower) == last_input_lower
         then
           old_matches = self._matches
         end

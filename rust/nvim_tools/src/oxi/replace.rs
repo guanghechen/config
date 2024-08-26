@@ -12,23 +12,20 @@ pub struct ReplaceFileByMatchesParams {
 }
 
 pub fn replace_file(
-    (file_path, search_pattern, replace_pattern, flag_regex): (String, String, String, bool),
+    (filepath, search_pattern, replace_pattern, flag_regex): (String, String, String, bool),
 ) -> String {
-    let result: FunResult<bool> = match util::replace::replace_file(
-        &file_path,
-        &search_pattern,
-        &replace_pattern,
-        flag_regex,
-    ) {
-        Ok(succeed) => FunResult {
-            error: None,
-            data: Some(succeed),
-        },
-        Err(error) => FunResult {
-            error: Some(error),
-            data: None,
-        },
-    };
+    let result: FunResult<bool> =
+        match util::replace::replace_file(&filepath, &search_pattern, &replace_pattern, flag_regex)
+        {
+            Ok(succeed) => FunResult {
+                error: None,
+                data: Some(succeed),
+            },
+            Err(error) => FunResult {
+                error: Some(error),
+                data: None,
+            },
+        };
     serde_json::to_string(&result).unwrap()
 }
 

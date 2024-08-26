@@ -1,12 +1,6 @@
 local CircularQueue = require("fml.collection.circular_queue")
 local reporter = require("fml.std.reporter")
 
----@class fml.collection.History : fml.types.collection.IHistory
----@field private _present_idx          integer
----@field private _stack                fml.types.collection.ICircularQueue
-local M = {}
-M.__index = M
-
 ---@param x                             fml.types.T
 ---@param y                             fml.types.T
 ---@return boolean
@@ -14,37 +8,36 @@ local function default_equals(x, y)
   return x == y
 end
 
----@param x                             fml.types.T
----@return boolean
----@diagnostic disable-next-line: unused-local
-local function default_validate(x)
-  return true
-end
-
----@class fml.collection.history.IProps
+---@class fml.collection.History : fml.types.collection.IHistory
 ---@field public name                   string
----@field public capacity               integer
----@field public equals                 ?fun(x: fml.types.T, y: fml.types.T): boolean
----@field public validate               ?fun(v: fml.types.T): boolean
+---@field public equals                 fml.types.IEquals
+---@field public _present               integer
+---@field public _stack                 fml.types.collection.ICircularQueue
+local M = {}
+M.__index = M
 
 ---@class fml.collection.history.IDeserializeProps
 ---@field public data                   fml.types.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?fun(x: fml.types.T, y: fml.types.T): boolean
----@field public validate               ?fun(v: fml.types.T): boolean
+
+---@class fml.collection.history.IProps
+---@field public name                   string
+---@field public capacity               integer
+---@field public equals                 ?fml.types.IEquals
 
 ---@param props                         fml.collection.history.IProps
 ---@return fml.collection.History
 function M.new(props)
-  local capacity = math.max(1, props.capacity) ---@type integer
+  local name = props.name ---@type string
+  local capacity = props.capacity ---@type integer
+  local equals = props.equals or default_equals ---@type fml.types.IEquals
 
   local self = setmetatable({}, M)
-  self.name = props.name
-  self.capacity = capacity
-  self.equals = props.equals or default_equals
-  self.validate = props.validate or default_validate
-  self._present_idx = 0
+  self.name = name
+  self.equals = equals
+  self._present = 0
   self._stack = CircularQueue.new({ capacity = capacity })
   return self
 end
@@ -52,258 +45,172 @@ end
 ---@param props                         fml.collection.history.IDeserializeProps
 ---@return fml.collection.History
 function M.deserialize(props)
-  local capacity = math.max(1, props.capacity) ---@type integer
   local data = props.data ---@type fml.types.collection.history.ISerializedData
 
   local self = setmetatable({}, M)
   self.name = props.name
-  self.capacity = capacity
   self.equals = props.equals or default_equals
-  self.validate = props.validate or default_validate
-  self._present_idx = data.present_index
-  self._stack = CircularQueue.from_array(data.stack, capacity)
+  self._stack = CircularQueue.from_array(data.stack, props.capacity)
+  self:go(data.present or math.huge)
   return self
 end
 
 ---@param step                          ?integer
 ---@return fml.types.T|nil
-function M:back(step)
-  step = math.max(1, step or 1)
-  local idx = self._present_idx ---@type integer
+---@return boolean
+function M:backward(step)
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local present = self._present - math.max(1, step or 1) ---@type integer
+  present = present > 0 and present or math.min(1, stack:size()) ---@type integer
+  self._present = present
 
-  for _ = 1, step, 1 do
-    while idx > 0 do
-      local present = self._stack:at(idx) ---@type fml.types.T|nil
-      if self.validate(present) then
-        break
-      end
-      idx = idx - 1
-    end
-    idx = idx - 1
-  end
-
-  self._present_idx = math.max(idx, 0)
-  return self:present()
+  local is_bottom = present <= 1 ---@type boolean
+  return stack:at(present), is_bottom
 end
 
----@return nil
-function M:clear()
-  self._present_idx = 0
-  self._stack:clear()
+---@return integer
+function M:capacity()
+  return self._stack:capacity()
+end
+
+---@return fml.types.T[]
+function M:collect()
+  return self._stack:collect()
 end
 
 ---@return fml.types.collection.history.ISerializedData
 function M:dump()
-  self:rearrange()
+  ---@type fml.types.collection.history.ISerializedData
   return {
-    present_index = self._present_idx,
+    present = self._present,
     stack = self._stack:collect(),
   }
 end
 
----@return boolean
-function M:empty()
-  self:rearrange()
-  return self._stack:size() == 0
-end
-
----@param params                        ?fml.types.collection.history.IForkParams
+---@param params                        fml.types.collection.history.IForkParams
 ---@return fml.collection.History
 function M:fork(params)
-  self:rearrange()
-
-  local new_name = params and params.name or self.name
   local instance = setmetatable({}, M)
-  instance.name = new_name
+  instance.name = params.name
   instance.equals = self.equals
-  instance.validate = self.validate
-  instance._present_idx = self._present_idx
-  instance._stack = self._stack:fork(function()
-    return true
-  end)
-
+  instance._present = self._present
+  instance._stack = CircularQueue.from(self._stack)
   return instance
 end
 
----@param step                          ?number
+---@param step                          ?integer
 ---@return fml.types.T|nil
+---@return boolean
 function M:forward(step)
-  step = math.max(1, step or 1)
-  local idx = self._present_idx ---@type integer
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local present = self._present + math.max(1, step or 1) ---@type integer
+  present = math.min(present, stack:size()) ---@type integer
+  self._present = present
 
-  for _ = 1, step, 1 do
-    idx = idx + 1
-    while idx <= self._stack:size() do
-      local present = self._stack:at(idx) ---@type fml.types.T|nil
-      if self.validate(present) then
-        break
-      end
-      idx = idx + 1
-    end
-  end
-
-  self._present_idx = math.min(idx, self._stack:size())
-  return self:present()
+  local is_top = present == stack:size() ---@type boolean
+  return self._stack:at(present), is_top
 end
 
----@param idx                           integer
+---@param index                         integer
 ---@return fml.types.T|nil
-function M:go(idx)
-  idx = math.min(idx, self._stack:size())
-  idx = math.max(idx, self._stack:size() > 0 and 1 or 0)
-  self._present_idx = idx
-  return self:present()
+---@return integer
+function M:go(index)
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local present = math.min(stack:size(), math.max(1, index)) ---@type integer
+  self._present = present
+  return stack:at(present), present
 end
 
+---@return fun(): fml.types.T, integer
 function M:iterator()
-  self:rearrange()
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  return stack:iterator()
+end
 
-  local i = 0 ---@type integer
-  return function()
-    i = i + 1
-    if i <= self._stack:size() then
-      return self._stack:at(i), i
-    end
-  end
+---@return fun(): fml.types.T, integer
+function M:iterator_reverse()
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  return stack:iterator_reverse()
 end
 
 ---@return boolean
 function M:is_bottom()
-  return self._present_idx <= 1
+  return self._present <= 1
+end
+
+---@return boolean
+function M:is_empty()
+  return self._stack:size() == 0
 end
 
 ---@return boolean
 function M:is_top()
-  return self._present_idx == self._stack:size()
-end
-
-function M:iterator_reverse()
-  self:rearrange()
-
-  local i = self._stack:size() + 1 ---@type integer
-  return function()
-    i = i - 1
-    if i > 0 then
-      return self._stack:at(i), i
-    end
-  end
+  return self._present == self._stack:size()
 end
 
 ---@param data                          fml.types.collection.history.ISerializedData
 ---@return nil
 function M:load(data)
   local stack = data.stack ---@type fml.types.T[]
-  local present_index = data.present_index ---@type integer
-  self._present_index = present_index
+  local present = data.present ---@type integer
   self._stack:reset(stack)
+  self:go(present or math.huge)
 end
 
 ---@return fml.types.T|nil
+---@return integer|nil
 function M:present()
-  local idx = self._present_idx
-  while idx > 0 do
-    local present = self._stack:at(idx) ---@type fml.types.T|nil
-    if self.validate(present) then
-      break
-    end
-    idx = idx - 1
-  end
-
-  if idx > 0 then
-    self._present_idx = idx
-    return self._stack:at(idx)
-  end
-
-  self:rearrange()
-  self._present_idx = self._stack:size() > 0 and 1 or 0
-  return self._stack:at(self._present_idx)
-end
-
-function M:present_index()
-  self:rearrange()
-  return self._present_idx
+  return self._stack:at(self._present), self._present
 end
 
 ---@return nil
 function M:print()
-  self:rearrange()
-
-  local present_index = self._present_idx ---@type integer
-  local present = self._stack:at(self._present_idx) ---@type fml.types.T|nil
-  local history = self._stack:collect()
-
+  local present = self._present ---@type integer
+  local stack = self._stack:collect() ---@type fml.types.T
   reporter.info({
     from = "fml.collection.history",
     subject = "print",
-    message = "History",
-    details = { present_index = present_index, present = present, history = history },
+    details = { present = present, stack = stack },
   })
 end
 
 ---@param element                       fml.types.T
 ---@return nil
 function M:push(element)
-  if not self.validate(element) then
+  local present = self._present ---@type integer
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local el_present = stack:at(present) ---@type fml.types.T
+  if self.equals(el_present, element) then
     return
   end
 
-  self:rearrange()
-  if self._stack:size() < 1 then
-    self._stack:enqueue(element)
-    self._present_idx = 1
-    return
+  if present < stack:size() then
+    local el_next = stack:at(present + 1) ---@type fml.types.T
+    if self.equals(el_next, element) then
+      self._present = present + 1
+      return
+    end
   end
 
-  if self.equals(self._stack:at(self._present_idx), element) then
-    return
+  while present < stack:size() do
+    stack:dequeue_back()
   end
-
-  while self._stack:size() > self._present_idx do
-    self._stack:dequeue_back()
-  end
-  self._stack:enqueue(element)
-  self._present_idx = self._stack:size()
+  stack:enqueue(element)
+  self._present = stack:size()
 end
 
----@return nil
-function M:rearrange()
-  local old_present_index = self._present_idx ---@type integer
-  local new_present_index = 0 ---@type integer
-  local not_matched = true ---@type boolean
-  local idx = 0 ---@type integer
-
-  self._stack:rearrange(function(element, index)
-    if self.validate(element) then
-      idx = idx + 1
-      if index < old_present_index then
-        new_present_index = idx
-      elseif not_matched then
-        not_matched = false
-        new_present_index = index == old_present_index and idx or idx - 1
-      end
-      return true
-    end
-    return false
-  end)
-
-  if new_present_index == 0 and self._stack:size() > 0 then
-    new_present_index = 1
-  end
-  self._present_idx = math.max(new_present_index, self._stack:size() > 0 and 1 or 0)
+---@return integer
+function M:size()
+  return self._stack:size()
 end
 
----@param input                         string
+---@param element                       fml.types.T
 ---@return nil
-function M:update_top(input)
-  local idx = self._stack:size() ---@type integer
-  while idx > 0 do
-    local value = self._stack:at(idx) ---@type string|nil
-    if self.validate(value) then
-      self._stack:update(idx, input)
-      break
-    end
-    idx = idx - 1
-  end
+function M:update_top(element)
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local present = stack:size()
+  stack:update(present, element)
+  self._present = present
 end
 
 return M

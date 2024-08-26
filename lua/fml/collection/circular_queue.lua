@@ -15,7 +15,7 @@ local _tmp_array = {} ---@type fml.types.T[]
 ---@param props fml.collection.CircularQueue.IProps
 ---@return fml.collection.CircularQueue
 function M.new(props)
-  local capacity = math.max(1, props.capacity)
+  local capacity = math.max(1, props.capacity) ---@type integer
 
   local self = setmetatable({}, M)
   self._elements = {}
@@ -49,6 +49,7 @@ end
 ---@param capacity                     integer
 ---@return fml.collection.CircularQueue
 function M.from_array(arr, capacity)
+  capacity = math.max(1, capacity) ---@type integer
   local elements = {} ---@type fml.types.T[]
   local size = 0 ---@type integer
   local arr_start = #arr <= capacity and 1 or #arr - capacity + 1 ---@type integer
@@ -196,6 +197,7 @@ function M:front()
   return self._size > 0 and self._elements[self._start] or nil
 end
 
+---@return fun(): fml.types.T|nil, integer|nil
 function M:iterator()
   local elements = self._elements ---@type fml.types.T[]
   local capacity = self._capacity ---@type integer
@@ -215,6 +217,7 @@ function M:iterator()
   end
 end
 
+---@return fun(): fml.types.T|nil, integer|nil
 function M:iterator_reverse()
   local elements = self._elements ---@type fml.types.T[]
   local capacity = self._capacity ---@type integer

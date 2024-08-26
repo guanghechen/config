@@ -50,7 +50,6 @@ function M.refresh_tabs()
   end
 
   M.tabs = tabs
-  M.tab_history:rearrange()
 end
 
 ---@param tabnr                         integer|nil

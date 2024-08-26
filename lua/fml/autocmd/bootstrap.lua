@@ -1,4 +1,5 @@
 local constant = require("fml.constant")
+local global = require("fml.global")
 local path = require("fml.std.path")
 local util = require("fml.std.util")
 
@@ -10,6 +11,13 @@ local augroups = {
   resize_splits = util.augroup("resize_splits"),
   startup = util.augroup("startup"),
 }
+
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  once = true,
+  callback = function()
+    global.disposable:dispose()
+  end,
+})
 
 ---! Auto cd the directory:
 ---! 1. the opend file is under a git repo, let's remember the the git repo path as A,

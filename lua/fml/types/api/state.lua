@@ -35,7 +35,7 @@
 ---@field public bufnrs                 integer[]
 
 ---@class fml.types.api.state.IWinItem
----@field public filepath_history       fml.types.collection.IHistory
+---@field public filepath_history       fml.types.collection.IAdvanceHistory
 ---@field public lsp_symbols            fml.types.api.state.ILspSymbol[]
 
 ---@class fml.types.api.state.IWinItemData

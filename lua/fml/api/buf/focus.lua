@@ -32,11 +32,6 @@ function M.go(bufnr)
   end
 
   vim.api.nvim_win_set_buf(winnr, bufnr)
-  local win = state.get_win(winnr) ---@type fml.types.api.state.IWinItem|nil
-  if win ~= nil then
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    win.filepath_history:push(filepath)
-  end
 end
 
 ---@param bufid                         integer the index of buffer list

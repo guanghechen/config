@@ -44,7 +44,7 @@ function M.close_current()
 
   ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.
   if win ~= nil then
-    local last_filepath = win.filepath_history:back() ---@type string|nil
+    local last_filepath = win.filepath_history:backward() ---@type string|nil
     local bufnr_last = state.locate_bufnr_by_filepath(last_filepath) ---@type integer|nil
     if bufnr_last ~= nil and vim.api.nvim_buf_is_valid(bufnr_last) then
       vim.api.nvim_win_set_buf(winnr_cur, bufnr_last)

@@ -1,5 +1,3 @@
-local state = require("fml.api.state")
-
 ---@class fml.api.win
 local M = require("fml.api.win.mod")
 
@@ -18,10 +16,4 @@ function M.project_with_picker()
   vim.api.nvim_win_set_buf(winnr_target, bufnr_cur)
   vim.api.nvim_win_set_cursor(winnr_target, cursor_current)
   vim.api.nvim_set_current_win(winnr_target)
-
-  local win = state.wins[winnr_target]
-  if win ~= nil then
-    local filepath = vim.api.nvim_buf_get_name(bufnr_cur) ---@type string
-    win.filepath_history:push(filepath)
-  end
 end

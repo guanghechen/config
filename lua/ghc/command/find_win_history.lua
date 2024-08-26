@@ -54,7 +54,7 @@ local function get_select(initial_title)
             end
           end
         else
-          local present_ordinal = win.filepath_history:present_index() ---@type integer
+          local _, present_ordinal = win.filepath_history:present() ---@type string|nil, integer|nil
           if present_ordinal ~= nil then
             present_uuid = gen_uuid_from_ordinal(present_ordinal)
           end

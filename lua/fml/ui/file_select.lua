@@ -38,30 +38,30 @@ M.__index = M
 ---@param props fml.ui.file_select.IProps
 ---@return fml.ui.FileSelect
 function M.new(props)
-  local self                  = setmetatable({}, M)
+  local self = setmetatable({}, M)
 
-  local case_sensitive        = props.case_sensitive ---@type fml.types.collection.IObservable|nil
-  local cmp                   = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
-  local destroy_on_close      = props.destroy_on_close ---@type boolean
-  local dirty_on_close        = not not props.dirty_on_close ---@type boolean|nil
-  local enable_preview        = props.enable_preview ---@type boolean
+  local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
+  local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
+  local destroy_on_close = props.destroy_on_close ---@type boolean
+  local dirty_on_close = not not props.dirty_on_close ---@type boolean|nil
+  local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
-  local flag_fuzzy            = props.flag_fuzzy ---@type fml.types.collection.IObservable|nil
-  local flag_regex            = props.flag_regex ---@type fml.types.collection.IObservable|nil
-  local frecency              = props.frecency ---@type fml.types.collection.IFrecency|nil
-  local input                 = props.input ---@type fml.types.collection.IObservable|nil
-  local input_history         = props.input_history ---@type fml.types.collection.IHistory|nil
-  local input_keymaps         = props.input_keymaps ---@type fml.types.IKeymap[]|nil
-  local main_keymaps          = props.main_keymaps ---@type fml.types.IKeymap[]|nil
-  local preview_keymaps       = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
-  local provider              = props.provider ---@type fml.types.ui.file_select.IProvider
-  local statusline_items      = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
-  local title                 = props.title ---@type string
-  local on_close_from_props   = props.on_close ---@type fml.types.ui.search.IOnClose|nil
+  local flag_fuzzy = props.flag_fuzzy ---@type fml.types.collection.IObservable|nil
+  local flag_regex = props.flag_regex ---@type fml.types.collection.IObservable|nil
+  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
+  local input = props.input ---@type fml.types.collection.IObservable|nil
+  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
+  local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
+  local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
+  local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
+  local provider = props.provider ---@type fml.types.ui.file_select.IProvider
+  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
+  local title = props.title ---@type string
+  local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm|nil
-  local on_preview_rendered   = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
+  local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
 
-  local _select               = nil ---@type fml.types.ui.ISelect|nil
+  local _select = nil ---@type fml.types.ui.ISelect|nil
 
   if extend_preset_keymaps then
     ---@return nil

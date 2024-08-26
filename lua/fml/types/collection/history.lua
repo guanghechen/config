@@ -1,30 +1,50 @@
 ---@class fml.types.collection.IHistory
 ---@field public name                   string
----@field public capacity               integer
----@field public equals                 fun(x: fml.types.T, y: fml.types.T): boolean
----@field public validate               fun(v: fml.types.T): boolean
----@field public back                   fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil
----@field public clear                  fun(self: fml.types.collection.IHistory): nil
+---@field public equals                 fml.types.IEquals
+---@field public backward               fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil, boolean
+---@field public capacity               fun(self: fml.types.collection.IHistory): integer
+---@field public collect                fun(self: fml.types.collection.IHistory): fml.types.T[]
 ---@field public dump                   fun(self: fml.types.collection.IHistory): fml.types.collection.history.ISerializedData
----@field public empty                  fun(self: fml.types.collection.IHistory): boolean
----@field public fork                   fun(self: fml.types.collection.IHistory, params?: fml.types.collection.history.IForkParams): fml.types.collection.IHistory
----@field public forward                fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil
+---@field public fork                   fun(self: fml.types.collection.IHistory, params: fml.types.collection.history.IForkParams): fml.types.collection.IHistory
+---@field public forward                fun(self: fml.types.collection.IHistory, step?: integer): fml.types.T|nil, boolean
+---@field public go                     fun(self: fml.types.collection.IHistory, index: integer): fml.types.T|nil, integer
+---@field public iterator               fun(self: fml.types.collection.IHistory): fun(): fml.types.T, integer
+---@field public iterator_reverse       fun(self: fml.types.collection.IHistory): fun(): fml.types.T, integer
 ---@field public is_bottom              fun(self: fml.types.collection.IHistory): boolean
+---@field public is_empty               fun(self: fml.types.collection.IHistory): boolean
 ---@field public is_top                 fun(self: fml.types.collection.IHistory): boolean
----@field public iterator               fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
----@field public iterator_reverse       fun(self: fml.types.collection.IHistory): fun(): fml.types.T|nil
 ---@field public load                   fun(self: fml.types.collection.IHistory, data: fml.types.collection.history.ISerializedData): nil
----@field public go                     fun(self: fml.types.collection.IHistory, idx: integer): fml.types.T|nil
----@field public present                fun(self: fml.types.collection.IHistory): fml.types.T|nil
----@field public present_index          fun(self: fml.types.collection.IHistory): integer
+---@field public present                fun(self: fml.types.collection.IHistory): fml.types.T|nil, integer
 ---@field public print                  fun(self: fml.types.collection.IHistory): nil
----@field public push                   fun(self: fml.types.collection.IHistory, element: fml.types.T|nil): nil
----@field public rearrange              fun(self: fml.types.collection.IHistory): nil
----@field public update_top             fun(self: fml.types.collection.IHistory, input: string): nil
+---@field public push                   fun(self: fml.types.collection.IHistory, element: fml.types.T): nil
+---@field public size                   fun(self: fml.types.collection.IHistory): integer
+---@field public update_top             fun(self: fml.types.collection.IHistory, element: fml.types.T): nil
+
+---@class fml.types.collection.IAdvanceHistory
+---@field public name                   string
+---@field public equals                 fml.types.IEquals
+---@field public backward               fun(self: fml.types.collection.IAdvanceHistory, step?: integer): fml.types.T|nil, boolean
+---@field public capacity               fun(self: fml.types.collection.IAdvanceHistory): integer
+---@field public validate               fun(element: fml.types.T): boolean
+---@field public dump                   fun(self: fml.types.collection.IAdvanceHistory): fml.types.collection.history.ISerializedData
+---@field public fork                   fun(self: fml.types.collection.IAdvanceHistory, params?: fml.types.collection.history.IForkParams): fml.types.collection.IAdvanceHistory
+---@field public forward                fun(self: fml.types.collection.IAdvanceHistory, step?: integer): fml.types.T|nil, boolean
+---@field public go                     fun(self: fml.types.collection.IAdvanceHistory, index: integer): fml.types.T|nil
+---@field public iterator               fun(self: fml.types.collection.IAdvanceHistory): fun(): fml.types.T|nil
+---@field public iterator_reverse       fun(self: fml.types.collection.IAdvanceHistory): fun(): fml.types.T|nil
+---@field public is_bottom              fun(self: fml.types.collection.IAdvanceHistory): boolean
+---@field public is_empty               fun(self: fml.types.collection.IAdvanceHistory): boolean
+---@field public is_top                 fun(self: fml.types.collection.IAdvanceHistory): boolean
+---@field public load                   fun(self: fml.types.collection.IAdvanceHistory, data: fml.types.collection.history.ISerializedData): nil
+---@field public present                fun(self: fml.types.collection.IAdvanceHistory): fml.types.T|nil, integer
+---@field public print                  fun(self: fml.types.collection.IAdvanceHistory): nil
+---@field public push                   fun(self: fml.types.collection.IAdvanceHistory, element: fml.types.T|nil): nil
+---@field public size                   fun(self: fml.types.collection.IAdvanceHistory): integer
+---@field public update_top             fun(self: fml.types.collection.IAdvanceHistory, input: string): nil
 
 ---@class fml.types.collection.history.IForkParams
 ---@field public name                   ?string
 
 ---@class fml.types.collection.history.ISerializedData
+---@field public present                integer
 ---@field public stack                  fml.types.T[]
----@field public present_index          integer

@@ -1,6 +1,7 @@
 local constant = require("fml.constant")
 local Observable = require("fml.collection.observable")
-local History = require("fml.collection.history")
+local AdvanceHistory = require("fml.collection.history_advance")
+local fs = require("fml.std.fs")
 local util = require("fml.std.util")
 
 ---@type table<string, boolean>
@@ -19,10 +20,10 @@ local BUF_IGNORED_FILETYPES = {
 ---@class fml.api.state
 ---@field public bufs                   table<integer, fml.types.api.state.IBufItem>
 ---@field public tabs                   table<integer, fml.types.api.state.ITabItem>
----@field public tab_history            fml.types.collection.IHistory
+---@field public tab_history            fml.types.collection.IAdvanceHistory
 ---@field public term_map               table<string, fml.types.api.state.ITerm>
 ---@field public wins                   table<integer, fml.types.api.state.IWinItem>
----@field public win_history            fml.types.collection.IHistory
+---@field public win_history            fml.types.collection.IAdvanceHistory
 ---@field public winline_dirty_nr       fml.types.collection.IObservable
 local M = {}
 
@@ -39,9 +40,13 @@ function M.is_ignored_filetype(filetype)
   return not not BUF_IGNORED_FILETYPES[filetype]
 end
 
----@param bufnr                         integer
+---@param bufnr                         integer|nil
 ---@return boolean
 function M.validate_buf(bufnr)
+  if bufnr == nil or bufnr == 0 then
+    return false
+  end
+
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
@@ -54,18 +59,35 @@ function M.validate_buf(bufnr)
   return not BUF_IGNORED_FILETYPES[filetype]
 end
 
----@param tabnr                         integer
+---@param filepath                      string|nil
+---@return boolean
+function M.validate_filepath(filepath)
+  if filepath == nil or filepath == "" or filepath == constant.BUF_UNTITLED then
+    return false
+  end
+  return fs.is_file_or_dir(filepath) == "file"
+end
+
+---@param tabnr                         integer|nil
 ---@return boolean
 function M.validate_tab(tabnr)
+  if tabnr == nil or tabnr == 0 then
+    return false
+  end
+
   if not vim.api.nvim_tabpage_is_valid(tabnr) then
     return false
   end
   return true
 end
 
----@param winnr                         integer
+---@param winnr                         integer|nil
 ---@return boolean
 function M.validate_win(winnr)
+  if winnr == nil or winnr == 0 then
+    return false
+  end
+
   if not vim.api.nvim_win_is_valid(winnr) then
     return false
   end
@@ -74,14 +96,14 @@ end
 
 M.bufs = {}
 M.tabs = {}
-M.tab_history = History.new({
+M.tab_history = AdvanceHistory.new({
   name = "tabs",
   capacity = constant.TAB_HISTORY_CAPACITY,
   validate = M.validate_tab,
 })
 M.term_map = {}
 M.wins = {}
-M.win_history = History.new({
+M.win_history = AdvanceHistory.new({
   name = "wins",
   capacity = constant.WIN_HISTORY_CAPACITY,
   validate = M.validate_win,

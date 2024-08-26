@@ -1,5 +1,5 @@
 local constant = require("fml.constant")
-local History = require("fml.collection.history")
+local AdvanceHistory = require("fml.collection.history_advance")
 local reporter = require("fml.std.reporter")
 
 ---@class fml.api.state
@@ -61,22 +61,18 @@ function M.refresh_win(winnr)
 
   local win = M.wins[winnr] ---@type fml.types.api.state.IWinItem|nil
   if win == nil then
-    ---@type fml.types.api.state.IWinItem
-    win = {
-      filepath_history = History.new({
-        name = "win#bufs",
-        capacity = constant.WIN_BUF_HISTORY_CAPACITY,
-        validate = function(filepath)
-          return type(filepath) == "string" and #filepath > 0
-        end,
-      }),
-      lsp_symbols = {},
-    }
-    M.wins[winnr] = win
-
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    win.filepath_history:push(filepath)
+    local filepath_history = AdvanceHistory.new({
+      name = "win#bufs",
+      capacity = constant.WIN_BUF_HISTORY_CAPACITY,
+      validate = M.validate_filepath,
+    })
+    filepath_history:push(filepath)
+
+    ---@type fml.types.api.state.IWinItem
+    win = { filepath_history = filepath_history, lsp_symbols = {} }
+    M.wins[winnr] = win
   end
   return win
 end

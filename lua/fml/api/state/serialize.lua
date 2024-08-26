@@ -1,5 +1,3 @@
-local constant = require("fml.constant")
-local History = require("fml.collection.history")
 local Observable = require("fml.collection.observable")
 local fs = require("fml.std.fs")
 local path = require("fml.std.path")
@@ -176,25 +174,18 @@ function M.load(filepath)
 
   if type(data.tab_history) == "table" and type(data.tab_history.stack) == "table" then
     local stack = {} ---@type integer[]
-    local present_index = data.tab_history.present_index ---@type integer
+    local present = data.tab_history.present ---@type integer
     for i, tabnr in ipairs(data.tab_history.stack) do
       local real_tabnr = tabnr_2_real_tabnr[tabnr]
       if real_tabnr ~= nil then
         table.insert(stack, real_tabnr)
-      elseif present_index > i then
-        present_index = present_index - 1
+      elseif present > i then
+        present = present - 1
       end
-      if present_index == i then
-        present_index = #stack
+      if present == i then
+        present = #stack
       end
     end
-
-    M.tab_history:clear()
-    M.tab_history = History.deserialize({
-      data = { stack = stack, present_index = present_index },
-      name = M.tab_history.name,
-      capacity = constant.TAB_HISTORY_CAPACITY,
-      validate = M.validate_tab,
-    })
+    M.tab_history:load({ present = present, stack = stack })
   end
 end
