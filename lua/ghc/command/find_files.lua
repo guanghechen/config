@@ -23,6 +23,7 @@ fml.fn.watch_observables({
   session.find_flag_case_sensitive,
   session.find_flag_gitignore,
   session.find_flag_fuzzy,
+  session.find_flag_regex,
   state_find_cwd,
 }, function()
   reload()
@@ -102,6 +103,10 @@ local actions = {
     local flag = session.find_flag_fuzzy:snapshot() ---@type boolean
     session.find_flag_fuzzy:next(not flag)
   end,
+  toggle_flag_regex = function()
+    local flag = session.find_flag_regex:snapshot() ---@type boolean
+    session.find_flag_regex:next(not flag)
+  end,
   ---@return nil
   toggle_gitignore = function()
     local flag = session.find_flag_gitignore:snapshot() ---@type boolean
@@ -147,6 +152,13 @@ local function get_select()
       },
       {
         type = "flag",
+        desc = "select: toggle flag regex",
+        symbol = fml.ui.icons.symbols.flag_regex,
+        state = session.find_flag_regex,
+        callback = actions.toggle_flag_regex,
+      },
+      {
+        type = "flag",
         desc = "select: toggle fuzzy mode",
         symbol = fml.ui.icons.symbols.flag_fuzzy,
         state = session.find_flag_fuzzy,
@@ -185,6 +197,12 @@ local function get_select()
         key = "<leader>i",
         callback = actions.toggle_case_sensitive,
         desc = "find: toggle case sensitive",
+      },
+      {
+        modes = { "n", "v" },
+        key = "<leader>r",
+        callback = actions.toggle_flag_regex,
+        desc = "find: toggle flag regex",
       },
       {
         modes = { "n", "v" },
@@ -237,8 +255,9 @@ local function get_select()
       dirty_on_close = false,
       enable_preview = true,
       extend_preset_keymaps = false,
+      flag_fuzzy = session.find_flag_fuzzy,
+      flag_regex = session.find_flag_regex,
       frecency = frecency,
-      fuzzy = session.find_flag_fuzzy,
       input = session.find_file_pattern,
       input_history = input_history,
       input_keymaps = input_keymaps,

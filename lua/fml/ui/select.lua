@@ -7,9 +7,10 @@ local Search = require("fml.ui.search.search")
 ---@class fml.ui.Select : fml.types.ui.ISelect
 ---@field protected _case_sensitive     fml.types.collection.IObservable
 ---@field protected _cmp                fml.types.ui.select.IMatchedItemCmp|nil
+---@field protected _flag_fuzzy         fml.types.collection.IObservable
+---@field protected _flag_regex         fml.types.collection.IObservable
 ---@field protected _frecency           fml.types.collection.IFrecency|nil
 ---@field protected _full_matches       fml.types.ui.select.IMatchedItem[]
----@field protected _fuzzy              fml.types.collection.IObservable
 ---@field protected _item_map           table<string, fml.types.ui.select.IItem>
 ---@field protected _item_uuid_cursor   string|nil
 ---@field protected _item_uuid_present  string|nil
@@ -29,8 +30,9 @@ M.__index = M
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
+---@field public flag_fuzzy             ?fml.types.collection.IObservable
+---@field public flag_regex             ?fml.types.collection.IObservable
 ---@field public frecency               ?fml.types.collection.IFrecency
----@field public fuzzy                  ?fml.types.collection.IObservable
 ---@field public input                  ?fml.types.collection.IObservable
 ---@field public input_history          ?fml.types.collection.IHistory
 ---@field public input_keymaps          ?fml.types.IKeymap[]
@@ -54,8 +56,9 @@ function M.new(props)
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
+  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(true) ---@type fml.types.collection.IObservable
+  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type fml.types.collection.IObservable
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
-  local fuzzy = props.fuzzy or Observable.from_value(true) ---@type fml.types.collection.IObservable
   local input = props.input or Observable.from_value("") ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
@@ -79,9 +82,17 @@ function M.new(props)
     end
 
     ---@return nil
-    local function toggle_fuzzy_mode()
-      local flag = fuzzy:snapshot() ---@type boolean
-      fuzzy:next(not flag)
+    local function toggle_flag_fuzzy()
+      local flag = flag_fuzzy:snapshot() ---@type boolean
+      flag_fuzzy:next(not flag)
+      vim.cmd("redrawstatus")
+      self:mark_search_state_dirty()
+    end
+
+    ---@return nil
+    local function toggle_flag_regex()
+      local flag = flag_regex:snapshot() ---@type boolean
+      flag_regex:next(not flag)
       vim.cmd("redrawstatus")
       self:mark_search_state_dirty()
     end
@@ -97,10 +108,17 @@ function M.new(props)
       },
       {
         type = "flag",
-        desc = "select: toggle fuzzy mode",
+        desc = "select: toggle flag regex",
+        symbol = icons.symbols.flag_regex,
+        state = flag_regex,
+        callback = toggle_flag_regex,
+      },
+      {
+        type = "flag",
+        desc = "select: toggle flag fuzzy",
         symbol = icons.symbols.flag_fuzzy,
-        state = fuzzy,
-        callback = toggle_fuzzy_mode,
+        state = flag_fuzzy,
+        callback = toggle_flag_fuzzy,
       },
     })
 
@@ -114,9 +132,15 @@ function M.new(props)
       },
       {
         modes = { "n", "v" },
+        key = "<leader>r",
+        callback = toggle_flag_regex,
+        desc = "select: toggle flag regex",
+      },
+      {
+        modes = { "n", "v" },
         key = "<leader>f",
-        callback = toggle_fuzzy_mode,
-        desc = "select: toggle fuzzy mode",
+        callback = toggle_flag_fuzzy,
+        desc = "select: toggle flag fuzzy",
       },
     }
 
@@ -202,9 +226,10 @@ function M.new(props)
   self._case_sensitive = case_sensitive
   self._cmp = cmp
   self._live_data_dirty = live_data_dirty
+  self._flag_fuzzy = flag_fuzzy
+  self._flag_regex = flag_regex
   self._frecency = frecency
   self._full_matches = {}
-  self._fuzzy = fuzzy
   self._item_map = {}
   self._item_uuid_present = nil
   self._item_uuid_cursor = nil
@@ -375,7 +400,8 @@ end
 ---@return fml.types.ui.select.IMatchedItem[]
 function M:find_matched_items(input, old_matches)
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
-  local fuzzy = self._fuzzy:snapshot() ---@type boolean
+  local flag_fuzzy = self._flag_fuzzy:snapshot() ---@type boolean
+  local flag_regex = self._flag_regex:snapshot() ---@type boolean
   local item_map = self._item_map ---@type table<string, fml.types.ui.select.IItem>
 
   local lines = {} ---@type string[]
@@ -397,7 +423,7 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  local oxi_matches = oxi.find_match_points_line_by_line(input, lines, fuzzy, false) ---@type fml.std.oxi.string.ILineMatch[]
+  local oxi_matches = oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex) ---@type fml.std.oxi.string.ILineMatch[]
   local matches = {} ---@type fml.types.ui.select.IMatchedItem[]
   for _, oxi_match in ipairs(oxi_matches) do
     local old_match = old_matches[oxi_match.lnum] ---@type fml.types.ui.select.IMatchedItem

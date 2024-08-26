@@ -21,6 +21,7 @@ local find_exclude_patterns = Observable.from_value(table.concat({
 local find_flag_case_sensitive = Observable.from_value(false)
 local find_flag_gitignore = Observable.from_value(true)
 local find_flag_fuzzy = Observable.from_value(false)
+local find_flag_regex = Observable.from_value(false)
 local find_file_pattern = Observable.from_value("")
 local find_scope = Observable.from_value("C")
 
@@ -29,15 +30,17 @@ local find_scope = Observable.from_value("C")
 ---@field public find_flag_case_sensitive fml.types.collection.IObservable
 ---@field public find_flag_gitignore    fml.types.collection.IObservable
 ---@field public find_flag_fuzzy        fml.types.collection.IObservable
+---@field public find_flag_regex        fml.types.collection.IObservable
 ---@field public find_file_pattern      fml.types.collection.IObservable
 ---@field public find_scope             fml.types.collection.IObservable
 local M = require("ghc.context.session.mod")
-  :register("find_exclude_patterns", find_exclude_patterns, true, true)
-  :register("find_flag_case_sensitive", find_flag_case_sensitive, true, true)
-  :register("find_flag_gitignore", find_flag_gitignore, true, true)
-  :register("find_flag_fuzzy", find_flag_fuzzy, true, true)
-  :register("find_file_pattern", find_file_pattern, true, true)
-  :register("find_scope", find_scope, true, true)
+    :register("find_exclude_patterns", find_exclude_patterns, true, true)
+    :register("find_flag_case_sensitive", find_flag_case_sensitive, true, true)
+    :register("find_flag_gitignore", find_flag_gitignore, true, true)
+    :register("find_flag_fuzzy", find_flag_fuzzy, true, true)
+    :register("find_flag_regex", find_flag_regex, true, true)
+    :register("find_file_pattern", find_file_pattern, true, true)
+    :register("find_scope", find_scope, true, true)
 
 ---@return ghc.enums.context.FindScope
 function M.get_find_scope_carousel_next()
@@ -80,6 +83,7 @@ vim.schedule(function()
     find_flag_case_sensitive,
     find_flag_gitignore,
     find_flag_fuzzy,
+    find_flag_regex,
   }, function()
     vim.cmd("redrawstatus")
   end)
