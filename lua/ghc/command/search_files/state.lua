@@ -42,7 +42,7 @@ function M.get_search()
       },
       enable_multiline_input = true,
       fetch_data = api.fetch_data,
-      fetch_delay = 512,
+      delay_fetch = 512,
       fetch_preview_data = api.fetch_preview_data,
       input = session.search_pattern,
       input_history = input_history,
@@ -50,7 +50,7 @@ function M.get_search()
       main_keymaps = keybindings.main_keymaps,
       patch_preview_data = api.patch_preview_data,
       preview_keymaps = keybindings.preview_keymaps,
-      render_delay = 64,
+      delay_render = 64,
       statusline_items = keybindings.statusline_items,
       title = "Search in files",
       on_close = function()

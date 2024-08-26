@@ -14,7 +14,7 @@ M.__index = M
 ---@class fml.ui.search.state.IProps
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             fml.types.ui.search.IFetchData
----@field public fetch_delay            integer
+---@field public delay_fetch            integer
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
 ---@field public title                  string
@@ -31,7 +31,7 @@ function M.new(props)
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
   local force_on_fetch_data = Observable.from_value(false) ---@type fml.types.collection.IObservable
   local fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchData
-  local fetch_delay = props.fetch_delay ---@type integer
+  local delay_fetch = props.delay_fetch ---@type integer
   local input = props.input ---@type fml.types.collection.IObservable
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
   local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type fml.types.collection.IObservable
@@ -42,7 +42,7 @@ function M.new(props)
   local fetch_scheduler ---@type fml.std.scheduler.IScheduler
   fetch_scheduler = scheduler.debounce({
     name = "fml.ui.search.state.fetch",
-    delay = fetch_delay,
+    delay = delay_fetch,
     fn = function(callback)
       local input_cur = input:snapshot() ---@type string
       local force = force_on_fetch_data:snapshot() ---@type boolean

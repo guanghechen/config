@@ -61,7 +61,7 @@ M.__index = M
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_multiline_input ?boolean
 ---@field public fetch_data             fml.types.ui.search.IFetchData
----@field public fetch_delay            ?integer
+---@field public delay_fetch            ?integer
 ---@field public fetch_preview_data     ?fml.types.ui.search.IFetchPreviewData
 ---@field public input                  fml.types.collection.IObservable
 ---@field public input_history          fml.types.collection.IHistory|nil
@@ -69,7 +69,7 @@ M.__index = M
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public patch_preview_data     ?fml.types.ui.search.IPatchPreviewData
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
----@field public render_delay           ?integer
+---@field public delay_render           ?integer
 ---@field public statusline_items       fml.types.ui.search.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?fml.types.ui.search.IOnClose
@@ -118,9 +118,9 @@ function M.new(props)
 
   local destroy_on_close = not not props.destroy_on_close ---@type boolean
   local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
-  local fetch_delay = math.max(0, props.fetch_delay or 100) ---@type integer
+  local delay_fetch = math.max(0, props.delay_fetch or 100) ---@type integer
   local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
-  local render_delay = math.max(0, props.render_delay or 100) ---@type integer
+  local delay_render = math.max(0, props.delay_render or 100) ---@type integer
 
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
@@ -131,7 +131,7 @@ function M.new(props)
     input = props.input,
     input_history = input_history,
     fetch_data = props.fetch_data,
-    fetch_delay = fetch_delay,
+    delay_fetch = delay_fetch,
     enable_multiline_input = enable_multiline_input,
   })
 
@@ -376,7 +376,7 @@ function M.new(props)
     state = state,
     keymaps = main_keymaps,
     on_rendered = on_main_renderered,
-    render_delay = render_delay,
+    delay_render = delay_render,
   })
 
   ---@type fml.types.ui.search.IPreview|nil
@@ -388,7 +388,7 @@ function M.new(props)
       fetch_data = props.fetch_preview_data,
       patch_data = props.patch_preview_data,
       on_rendered = props.on_preview_rendered,
-      render_delay = render_delay,
+      delay_render = delay_render,
       update_win_config = function(opts)
         local new_title = opts.title ---@type string
         self:change_preview_title(new_title)

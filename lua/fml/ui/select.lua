@@ -30,6 +30,7 @@ M.__index = M
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
+---@field public delay_fetch            ?integer
 ---@field public flag_fuzzy             ?fml.types.collection.IObservable
 ---@field public flag_regex             ?fml.types.collection.IObservable
 ---@field public frecency               ?fml.types.collection.IFrecency
@@ -39,6 +40,7 @@ M.__index = M
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public provider               fml.types.ui.select.IProvider
+---@field public delay_render           ?integer
 ---@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
@@ -56,6 +58,7 @@ function M.new(props)
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
+  local delay_fetch = props.delay_fetch or 128 ---@type integer
   local flag_fuzzy = props.flag_fuzzy or Observable.from_value(true) ---@type fml.types.collection.IObservable
   local flag_regex = props.flag_regex or Observable.from_value(false) ---@type fml.types.collection.IObservable
   local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
@@ -66,6 +69,7 @@ function M.new(props)
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.select.IProvider
+  local delay_render = props.delay_render or 64 ---@type integer
   local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
   local title = props.title ---@type string
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
@@ -200,11 +204,12 @@ function M.new(props)
   local function get_search()
     if _search == nil then
       _search = Search.new({
+        delay_fetch = delay_fetch,
+        delay_render = delay_render,
         destroy_on_close = destroy_on_close,
         dimension = dimension,
         enable_multiline_input = false,
         fetch_data = fetch_data,
-        fetch_delay = 32,
         fetch_preview_data = fetch_preview_data,
         input = input,
         input_history = input_history,
@@ -212,7 +217,6 @@ function M.new(props)
         main_keymaps = main_keymaps,
         patch_preview_data = patch_preview_data,
         preview_keymaps = preview_keymaps,
-        render_delay = 32,
         statusline_items = statusline_items,
         title = title,
         on_confirm = on_confirm,

@@ -14,7 +14,7 @@ local function test_window_mouse_click()
   local lines = {
     "  local _render_scheduler = scheduler.debounce({",
     '    name = "fml.ui.search.main.render",',
-    "    delay = _render_delay,",
+    "    delay = _delay_render,",
     "    fn = function(callback)",
     "      local ok, error = pcall(function()",
     "        local bufnr = self:create_buf_as_needed() ---@type integer",

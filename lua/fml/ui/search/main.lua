@@ -12,9 +12,9 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.search.main.IProps
----@field public state                  fml.types.ui.search.IState
+---@field public delay_render           integer
 ---@field public keymaps                fml.types.IKeymap[]
----@field public render_delay           integer
+---@field public state                  fml.types.ui.search.IState
 ---@field public on_rendered            ?fml.types.ui.search.IOnMainRendered
 
 ---@param props                         fml.ui.search.main.IProps
@@ -22,9 +22,9 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local state = props.state ---@type fml.types.ui.search.IState
+  local delay_render = props.delay_render ---@type integer
   local keymaps = props.keymaps ---@type fml.types.IKeymap[]
-  local render_delay = props.render_delay ---@type integer
+  local state = props.state ---@type fml.types.ui.search.IState
   local on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
 
   local _last_items = nil ---@type fml.types.ui.search.IItem[]|nil
@@ -65,7 +65,7 @@ function M.new(props)
   ---@type fml.std.scheduler.IScheduler
   local render_scheduler = scheduler.debounce({
     name = "fml.ui.search.main.render",
-    delay = render_delay,
+    delay = delay_render,
     fn = function(callback)
       local ok, error = pcall(render)
       callback(ok, error)
@@ -167,7 +167,7 @@ function M:place_lnum_sign()
         constant.SIGN_NR_SEARCH_MAIN_PRESENT,
         "",
         present_lnum == current_lnum and signcolumn.names.search_main_present_cur
-          or signcolumn.names.search_main_present,
+        or signcolumn.names.search_main_present,
         bufnr,
         { lnum = present_lnum }
       )

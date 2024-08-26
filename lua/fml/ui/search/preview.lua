@@ -11,11 +11,11 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.search.preview.IProps
----@field public state                  fml.types.ui.search.IState
----@field public keymaps                fml.types.IKeymap[]
+---@field public delay_render           integer
 ---@field public fetch_data             fml.types.ui.search.IFetchPreviewData
+---@field public keymaps                fml.types.IKeymap[]
 ---@field public patch_data             ?fml.types.ui.search.IPatchPreviewData
----@field public render_delay           integer
+---@field public state                  fml.types.ui.search.IState
 ---@field public on_rendered            ?fml.types.ui.search.IOnPreviewRendered
 ---@field public update_win_config      fun(opts: fml.types.ui.search.preview.IWinOpts): nil
 
@@ -24,12 +24,12 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local state = props.state ---@type fml.types.ui.search.IState
-  local keymaps = props.keymaps ---@type fml.types.IKeymap[]
+  local delay_render = props.delay_render ---@type integer
   local _fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchPreviewData
   local _patch_data = props.patch_data ---@type fml.types.ui.search.IPatchPreviewData|nil
+  local keymaps = props.keymaps ---@type fml.types.IKeymap[]
+  local state = props.state ---@type fml.types.ui.search.IState
   local on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
-  local render_delay = props.render_delay ---@type integer
   local _update_win_config = props.update_win_config ---@type fun(opts: fml.types.ui.search.preview.IWinOpts): nil
 
   local _last_item = nil ---@type fml.types.ui.search.IItem|nil
@@ -43,11 +43,11 @@ function M.new(props)
     end
 
     if
-      _patch_data ~= nil
-      and _last_item ~= nil
-      and _last_data ~= nil
-      and _last_item.group == item.group
-      and item.group ~= nil
+        _patch_data ~= nil
+        and _last_item ~= nil
+        and _last_data ~= nil
+        and _last_item.group == item.group
+        and item.group ~= nil
     then
       return _patch_data(item, _last_item, _last_data)
     end
@@ -78,10 +78,10 @@ function M.new(props)
 
     ---@type boolean
     local has_highlights_changed = has_content_changed
-      or data == nil
-      or last_data == nil
-      or data.filetype ~= last_data.filetype
-      or data.highlights ~= last_data.highlights
+        or data == nil
+        or last_data == nil
+        or data.filetype ~= last_data.filetype
+        or data.highlights ~= last_data.highlights
     if has_highlights_changed and data ~= nil then
       vim.api.nvim_buf_clear_namespace(bufnr, 0, 0, -1)
       local filetype = data and data.filetype or nil ---@type string|nil
@@ -109,7 +109,7 @@ function M.new(props)
   ---@type fml.std.scheduler.IScheduler
   local _render_scheduler = scheduler.debounce({
     name = "fml.ui.search.preview.render",
-    delay = render_delay,
+    delay = delay_render,
     fn = function(callback)
       local ok, error = pcall(render)
       callback(ok, error)
