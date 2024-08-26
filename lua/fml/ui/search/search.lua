@@ -206,7 +206,8 @@ function M.new(props)
       state.dirtier_data:mark_dirty()
     end,
     on_main_G = function()
-      state:locate(vim.v.count or math.huge)
+      local lnum = vim.v.count > 0 and vim.v.count or math.huge ---@type integer
+      state:locate(lnum)
       self:sync_main_cursor()
     end,
     on_main_g = function()
