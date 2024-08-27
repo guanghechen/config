@@ -35,6 +35,8 @@ local function on_attach(client, bufnr)
   vim.keymap.set("n", "gK", action_lsp.show_signature_help, opts("lsp: Show signature help"))
   vim.keymap.set("n", "gr", action_lsp.show_references, opts("lsp: Show references"))
   vim.keymap.set("n", "gt", action_lsp.goto_type_definitions, opts("lsp: Goto type definition"))
+  vim.keymap.set("n", "gwa", vim.lsp.buf.add_workspace_folder, opts("lsp: Goto type definition"))
+  vim.keymap.set("n", "gwr", vim.lsp.buf.remove_workspace_folder, opts("lsp: Goto type definition"))
 
   -- code actions
   if fml.lsp.has_support_method(bufnr, "codeLens") then

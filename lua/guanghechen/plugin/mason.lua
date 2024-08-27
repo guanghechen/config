@@ -1,59 +1,62 @@
+---@type string[]
+local ensure_installed = {
+  -- lsp
+  "bash-language-server", -- bashls
+  "clangd", -- clangd
+  "css-lsp", -- cssls
+  "dockerfile-language-server", -- docker
+  "docker-compose-language-service", -- docker_compose_language_service
+  "eslint-lsp", -- eslint
+  "html-lsp", -- html
+  "json-lsp", -- jsonls
+  "lua-language-server", -- lua_ls
+  "pyright", -- pyright
+  "rust-analyzer", -- rust_analyzer
+  -- "sqls", -- sqls
+  "tailwindcss-language-server", --  tailwindcss
+  "taplo", -- taplo
+  "typescript-language-server", -- tsserver
+  "vetur-vls", -- vuels
+  "yaml-language-server", -- yamlls
+
+  -- formatter
+  "codespell",
+  "prettier",
+  "shfmt",
+  "stylua",
+}
+
+---@return nil
+local function install_all()
+  vim.cmd("Mason")
+  local mr = require("mason-registry")
+  for _, pkgName in ipairs(ensure_installed) do
+    local p = mr.get_package(pkgName)
+    if not p:is_installed() then
+      p:install()
+    end
+  end
+end
+
 return {
   name = "mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonUpdate" },
   build = function()
     vim.defer_fn(function()
       vim.cmd("MasonUpdate")
+      install_all()
     end, 1000)
   end,
   opts = {
-    ensure_installed = {
-      -- lsp
-      "bash-language-server", -- bashls
-      "clangd", -- clangd
-      "codespell",
-      "css-lsp", -- cssls
-      "dockerfile-language-server", -- docker
-      "docker-compose-language-service", -- docker_compose_language_service
-      "eslint-lsp", -- eslint
-      "html-lsp", -- html
-      "json-lsp", -- jsonls
-      "lua-language-server", -- lua_ls
-      "pyright", -- pyright
-      "rust-analyzer", -- rust_analyzer
-      -- "sqls", -- sqls
-      "tailwindcss-language-server", --  tailwindcss
-      "taplo", -- taplo
-      "typescript-language-server", -- tsserver
-      "vetur-vls", -- vuels
-      "yaml-language-server", -- yamlls
-
-      -- formatter
-      "prettier",
-      "shfmt",
-      "stylua",
-    },
     PATH = "prepend",
     log_level = vim.log.levels.INFO,
     max_concurrent_installers = 10,
     ui = {
       check_outdated_packages_on_open = false,
       icons = {
-        package_pending = " ",
-        package_installed = "󰄳 ",
-        package_uninstalled = " 󰚌",
-      },
-      keymaps = {
-        toggle_help = "g?",
-        toggle_package_install_log = "<CR>",
-        toggle_server_expand = "<CR>",
-        install_server = "i",
-        update_server = "u",
-        check_server_version = "c",
-        update_all_servers = "U",
-        check_outdated_servers = "C",
-        uninstall_server = "X",
-        cancel_installation = "<C-c>",
+        package_pending = " ",
+        package_installed = " ",
+        package_uninstalled = " ",
       },
     },
   },
@@ -84,11 +87,7 @@ return {
     })
 
     -- custom cmd to install all mason binaries listed
-    vim.api.nvim_create_user_command("MasonInstallAll", function()
-      if opts.ensure_installed and #opts.ensure_installed > 0 then
-        vim.cmd("MasonInstall " .. table.concat(opts.ensure_installed, " "))
-      end
-    end, {})
+    vim.api.nvim_create_user_command("MasonInstallAll", install_all, {})
   end,
   dependencies = {
     "mason-lspconfig.nvim",

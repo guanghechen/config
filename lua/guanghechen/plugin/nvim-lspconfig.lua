@@ -1,26 +1,30 @@
 local util_lsp = require("guanghechen.util.lsp")
 
-local function register_lsp_symbol(name, icon)
-  local hl = "DiagnosticSign" .. name
-  vim.fn.sign_define(hl, { text = icon, numhl = hl, texthl = hl })
-end
-
 return {
   name = "nvim-lspconfig",
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   config = function()
-    register_lsp_symbol("Error", fml.ui.icons.diagnostics.Error)
-    register_lsp_symbol("Info", fml.ui.icons.diagnostics.Information)
-    register_lsp_symbol("Hint", fml.ui.icons.diagnostics.Hint)
-    register_lsp_symbol("Warn", fml.ui.icons.diagnostics.Warning)
-
+    local severity = vim.diagnostic.severity
+    local icons = fml.ui.icons.diagnostics
     vim.diagnostic.config({
       virtual_text = {
         prefix = "",
       },
-      signs = true,
+      signs = {
+        text = {
+          [severity.ERROR] = icons.Error,
+          [severity.WARN] = icons.Warning,
+          [severity.INFO] = icons.Information,
+          [severity.HINT] = icons.Hint,
+        },
+        numhl = {
+          [severity.ERROR] = "f_lnum_error",
+          [severity.WARN] = "f_lnum_warn",
+          [severity.INFO] = "f_lnum_info",
+          [severity.HINT] = "f_lnum_hint",
+        },
+      },
       underline = true,
-      -- update_in_insert = false,
       float = {
         border = "single",
       },

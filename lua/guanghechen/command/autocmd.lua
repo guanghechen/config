@@ -77,26 +77,6 @@ function M.autocmd_goto_last_location(opts)
   })
 end
 
----@param prompt_bufnr number
----@param callback fun(prompt:string):nil
-function M.autocmd_remember_telescope_prompt(prompt_bufnr, callback)
-  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
-    buffer = prompt_bufnr,
-    group = augroups.remember_telescope_prompt,
-    callback = function()
-      local action_state = require("telescope.actions.state")
-      local picker = action_state.get_current_picker(prompt_bufnr or 0)
-
-      if picker then
-        local prompt = picker:_get_prompt()
-        if prompt then
-          callback(prompt)
-        end
-      end
-    end,
-  })
-end
-
 ---@param opts {pattern:string[], format?: "unix" | "dos"}
 function M.autocmd_set_fileformat(opts)
   local pattern = opts.pattern

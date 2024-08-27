@@ -155,7 +155,10 @@ function M.watch_file(opts)
   }
 
   local unwatch = function()
-    vim.uv.fs_event_stop(handle)
+    if handle ~= nil then
+      vim.uv.fs_event_stop(handle)
+      handle = nil
+    end
   end
 
   ---@diagnostic disable-next-line: unused-local
@@ -168,7 +171,9 @@ function M.watch_file(opts)
   end
 
   ---attacher handler
-  vim.uv.fs_event_start(handle, filepath, flags, callback)
+  if handle ~= nil then
+    vim.uv.fs_event_start(handle, filepath, flags, callback)
+  end
   return unwatch
 end
 

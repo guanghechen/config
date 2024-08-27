@@ -5,6 +5,10 @@ local function gen_hlgroup_map(params)
 
   return {
     ---common
+    f_lnum_error = { fg = c.red },
+    f_lnum_warn = { fg = c.yellow },
+    f_lnum_info = { fg = c.green },
+    f_lnum_hint = { fg = c.purple },
     f_transparent = { bg = "none" },
 
     ---diff
