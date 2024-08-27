@@ -1,9 +1,12 @@
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use std::ffi::CStr;
+#[cfg(unix)]
 use std::os::unix::fs::MetadataExt; // Import for Unix-specific metadata extensions
+#[cfg(windows)]
+use std::os::windows::fs::MetadataExt;
 use std::path::Path;
-use std::{fs, time::SystemTime};
+use std::{fs, time::SystemTime}; // Import for Windows-specific metadata extensions
 
 use crate::types::file::{FileItemWithStatus, FileType};
 
@@ -46,7 +49,7 @@ pub fn readdir<P: AsRef<Path>>(dirpath: P) -> Result<ReaddirSucceedResult, Readd
                     Err(e) => {
                         return Err(ReaddirFailedResult {
                             error: format!("[readdir] Failed to resolve entry: {}", e),
-                        })
+                        });
                     }
                 }
             }
@@ -96,7 +99,13 @@ pub fn flat_filestatus(path: &Path) -> Result<FileItemWithStatus, String> {
         .unwrap_or_default()
         .to_string_lossy()
         .into_owned();
+
+    #[cfg(unix)]
     let permission: String = format_permissions(&filetype, metadata.mode());
+
+    #[cfg(windows)]
+    let permission: String = format_permissions_windows(&filetype, metadata.file_attributes());
+
     let filesize: String = format_filesize(metadata.len());
     let owner: String = get_username_from_uid(metadata.uid()).unwrap_or("unknown".to_owned());
     let group: String = get_groupname_from_gid(metadata.gid()).unwrap_or("unknown".to_owned());
@@ -117,7 +126,8 @@ pub fn flat_filestatus(path: &Path) -> Result<FileItemWithStatus, String> {
     Ok(item)
 }
 
-// Convert the permission bits to a string like `ls -l`
+// Convert the permission bits to a string like `ls -l` (Unix-specific)
+#[cfg(unix)]
 fn format_permissions(filetype: &FileType, mode: u32) -> String {
     let mut perm = String::with_capacity(10);
     match filetype {
@@ -134,6 +144,34 @@ fn format_permissions(filetype: &FileType, mode: u32) -> String {
     perm.push(if mode & 0o004 != 0 { 'r' } else { '-' });
     perm.push(if mode & 0o002 != 0 { 'w' } else { '-' });
     perm.push(if mode & 0o001 != 0 { 'x' } else { '-' });
+    perm
+}
+
+// Convert the permission bits to a string for Windows (stub implementation)
+#[cfg(windows)]
+fn format_permissions_windows(filetype: &FileType, attributes: u32) -> String {
+    let mut perm = String::with_capacity(10);
+    match filetype {
+        FileType::File => perm.push('-'),
+        FileType::Directory => perm.push('d'),
+    };
+
+    perm.push(if attributes & 0x00000001 != 0 {
+        'r'
+    } else {
+        '-'
+    }); // Read-only
+    perm.push(if attributes & 0x00000010 != 0 {
+        'w'
+    } else {
+        '-'
+    }); // Write-only (stub)
+    perm.push(if attributes & 0x00000020 != 0 {
+        'x'
+    } else {
+        '-'
+    }); // Executable (stub)
+        // Additional Windows-specific attributes handling could be added here
     perm
 }
 
@@ -161,6 +199,7 @@ pub fn format_time(timestamp: SystemTime) -> String {
     datetime.format("%b %d %H:%M").to_string()
 }
 
+#[cfg(unix)]
 fn get_username_from_uid(uid: u32) -> Option<String> {
     unsafe {
         let pw = libc::getpwuid(uid as libc::uid_t);
@@ -173,6 +212,13 @@ fn get_username_from_uid(uid: u32) -> Option<String> {
     }
 }
 
+#[cfg(windows)]
+fn get_username_from_uid(_uid: u32) -> Option<String> {
+    // Windows implementation placeholder
+    Some("unknown".to_owned())
+}
+
+#[cfg(unix)]
 fn get_groupname_from_gid(gid: u32) -> Option<String> {
     unsafe {
         let gr = libc::getgrgid(gid as libc::gid_t);
@@ -183,4 +229,10 @@ fn get_groupname_from_gid(gid: u32) -> Option<String> {
             Some(CStr::from_ptr(gr.gr_name).to_string_lossy().into_owned())
         }
     }
+}
+
+#[cfg(windows)]
+fn get_groupname_from_gid(_gid: u32) -> Option<String> {
+    // Windows implementation placeholder
+    Some("unknown".to_owned())
 }
