@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
+#[cfg(unix)]
 use std::ffi::CStr;
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt; // Import for Unix-specific metadata extensions
@@ -102,13 +103,20 @@ pub fn flat_filestatus(path: &Path) -> Result<FileItemWithStatus, String> {
 
     #[cfg(unix)]
     let permission: String = format_permissions(&filetype, metadata.mode());
-
     #[cfg(windows)]
     let permission: String = format_permissions_windows(&filetype, metadata.file_attributes());
 
-    let filesize: String = format_filesize(metadata.len());
+    #[cfg(unix)]
     let owner: String = get_username_from_uid(metadata.uid()).unwrap_or("unknown".to_owned());
+    #[cfg(windows)]
+    let owner: String = "unknown".to_owned();
+
+    #[cfg(unix)]
     let group: String = get_groupname_from_gid(metadata.gid()).unwrap_or("unknown".to_owned());
+    #[cfg(windows)]
+    let group: String = "unknown".to_owned();
+
+    let filesize: String = format_filesize(metadata.len());
     let modify_time = match metadata.modified() {
         Ok(modified) => format_time(modified),
         Err(e) => return Err(format!("Failed to get date: {}", e)),
@@ -156,22 +164,16 @@ fn format_permissions_windows(filetype: &FileType, attributes: u32) -> String {
         FileType::Directory => perm.push('d'),
     };
 
-    perm.push(if attributes & 0x00000001 != 0 {
-        'r'
+    if attributes & 0x00000001 != 0 {
+        perm.push('r');
+        perm.push('-');
+        perm.push('-');
     } else {
-        '-'
-    }); // Read-only
-    perm.push(if attributes & 0x00000010 != 0 {
-        'w'
-    } else {
-        '-'
-    }); // Write-only (stub)
-    perm.push(if attributes & 0x00000020 != 0 {
-        'x'
-    } else {
-        '-'
-    }); // Executable (stub)
-        // Additional Windows-specific attributes handling could be added here
+        perm.push('r');
+        perm.push('w');
+        perm.push('-');
+    }
+
     perm
 }
 
@@ -212,12 +214,6 @@ fn get_username_from_uid(uid: u32) -> Option<String> {
     }
 }
 
-#[cfg(windows)]
-fn get_username_from_uid(_uid: u32) -> Option<String> {
-    // Windows implementation placeholder
-    Some("unknown".to_owned())
-}
-
 #[cfg(unix)]
 fn get_groupname_from_gid(gid: u32) -> Option<String> {
     unsafe {
@@ -231,8 +227,3 @@ fn get_groupname_from_gid(gid: u32) -> Option<String> {
     }
 }
 
-#[cfg(windows)]
-fn get_groupname_from_gid(_gid: u32) -> Option<String> {
-    // Windows implementation placeholder
-    Some("unknown".to_owned())
-}
