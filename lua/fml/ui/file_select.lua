@@ -77,7 +77,7 @@ function M.new(props)
 
           if item ~= nil then
             local absolute_filepath = fml.path.join(select_cwd, item.data.filepath) ---@type string
-            local relative_filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+            local relative_filepath = fml.path.relative(cwd, absolute_filepath, false) ---@type string
             table.insert(quickfix_items, {
               filename = relative_filepath,
               lnum = item.data.lnum or 1,

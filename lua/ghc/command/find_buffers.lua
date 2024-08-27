@@ -12,7 +12,7 @@ local function provide()
 
   for _, buf in pairs(fml.api.state.bufs) do
     if buf.filename ~= fml.constant.BUF_UNTITLED and fml.path.is_under(workspace, buf.filepath) then
-      local relative_path = fml.path.relative(cwd, buf.filepath) ---@type string
+      local relative_path = fml.path.relative(cwd, buf.filepath, true) ---@type string
       local w = vim.fn.strwidth(relative_path) ---@type integer
       width = width < w and w or width
       table.insert(filepaths, relative_path)
@@ -27,7 +27,7 @@ local function provide()
   if winnr_cur ~= nil and vim.api.nvim_win_is_valid(winnr_cur) then
     local bufnr = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
     local absolute_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local relative_path = fml.path.relative(cwd, absolute_filepath) ---@type string
+    local relative_path = fml.path.relative(cwd, absolute_filepath, true) ---@type string
     present_filepath = relative_path
   end
 

@@ -35,6 +35,7 @@ end
 ---@param filepath                      string
 ---@return boolean
 function M.open_filepath(winnr, filepath)
+  filepath = path.normalize(filepath) ---! normalize the filepath
   if vim.api.nvim_win_is_valid(winnr) then
     local bufnr = M.locate_bufnr_by_filepath(filepath) ---@type integer|nil
     if bufnr ~= nil then

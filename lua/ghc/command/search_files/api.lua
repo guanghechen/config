@@ -140,7 +140,7 @@ function M.calc_preview_data(item)
       match_idx = match_idx + 0.5
       local hlname = is_search_match
           and (match_idx == match_idx_cur and "f_us_preview_search_cur" or "f_us_preview_search")
-        or (match_idx == match_idx_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
+          or (match_idx == match_idx_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
 
       local l = match.l ---@type integer
       local r = match.r ---@type integer
@@ -241,25 +241,25 @@ function M.fetch_data(input_text, force, callback)
 
   ---@type fml.std.oxi.search.IResult|nil
   local result = (
-    not force
-    and _last_search_input ~= nil
-    and _last_search_input == input_text
-    and _last_search_result ~= nil
-  )
+        not force
+        and _last_search_input ~= nil
+        and _last_search_input == input_text
+        and _last_search_result ~= nil
+      )
       and _last_search_result
-    or fml.oxi.search({
-      cwd = cwd,
-      flag_case_sensitive = flag_case_sensitive,
-      flag_gitignore = flag_gitignore,
-      flag_regex = flag_regex,
-      max_filesize = max_filesize,
-      max_matches = max_matches,
-      search_pattern = input_text,
-      search_paths = search_paths,
-      include_patterns = include_patterns,
-      exclude_patterns = exclude_patterns,
-      specified_filepath = scope == "B" and current_buf_path or nil,
-    })
+      or fml.oxi.search({
+        cwd = cwd,
+        flag_case_sensitive = flag_case_sensitive,
+        flag_gitignore = flag_gitignore,
+        flag_regex = flag_regex,
+        max_filesize = max_filesize,
+        max_matches = max_matches,
+        search_pattern = input_text,
+        search_paths = search_paths,
+        include_patterns = include_patterns,
+        exclude_patterns = exclude_patterns,
+        specified_filepath = scope == "B" and current_buf_path or nil,
+      })
 
   if result == nil then
     callback(false, "Failed to run search command.")
@@ -273,11 +273,10 @@ function M.fetch_data(input_text, force, callback)
 
   local items = {} ---@type fml.types.ui.search.IItem[]
   local item_data_map = {} ---@type table<string, ghc.command.search_files.IItemData>
-  for _, raw_filepath in ipairs(result.item_orders) do
-    local file_match = result.items[raw_filepath] ---@type fml.std.oxi.search.IFileMatch|nil
+  for _, filepath in ipairs(result.item_orders) do
+    local file_match = result.items[filepath] ---@type fml.std.oxi.search.IFileMatch|nil
     if file_match ~= nil then
-      local filename = fml.path.basename(raw_filepath) ---@type string
-      local filepath = fml.path.relative(cwd, raw_filepath) ---@type string
+      local filename = fml.path.basename(filepath) ---@type string
       local icon, icon_hl = fml.util.calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
       local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type fml.types.ui.IInlineHighlight[]
@@ -333,12 +332,13 @@ function M.fetch_data(input_text, force, callback)
             local width_prefix = string.len(text_prefix) ---@type integer
             local item ---@type fml.types.ui.search.IItem
             if s_k == r_k then
-              local prettier_line = line:sub(1, col_end) .. r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
+              local prettier_line = line:sub(1, col_end) ..
+                  r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
               local text = text_prefix .. prettier_line ---@type string
 
               ---@type fml.types.ui.IInlineHighlight[]
               local highlights = {
-                { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
+                { coll = 0,                  colr = width_prefix,           hlname = "f_us_main_match_lnum" },
                 { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
                 {
                   coll = width_prefix + col_end,
@@ -355,7 +355,7 @@ function M.fetch_data(input_text, force, callback)
 
               ---@type fml.types.ui.IInlineHighlight[]
               local highlights = {
-                { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
+                { coll = 0,                  colr = width_prefix,           hlname = "f_us_main_match_lnum" },
                 { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
               }
 
@@ -410,7 +410,7 @@ function M.fetch_data(input_text, force, callback)
 
             ---@type fml.types.ui.IInlineHighlight[]
             local highlights = {
-              { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
+              { coll = 0,                  colr = width_prefix,           hlname = "f_us_main_match_lnum" },
               { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_match" },
             }
 
@@ -486,7 +486,7 @@ function M.gen_quickfix_items()
   for _, item in pairs(_item_data_map) do
     if item.match_idx > 0 then
       local absolute_filepath = fml.path.join(search_cwd, item.filepath) ---@type string
-      local relative_filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+      local relative_filepath = fml.path.relative(cwd, absolute_filepath, false) ---@type string
       table.insert(quickfix_items, {
         filename = relative_filepath,
         lnum = item.lnum,
@@ -513,7 +513,7 @@ function M.open_file(item, frecency)
   local data = _item_data_map and _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
   if data ~= nil then
     local absolute_filepath = fml.path.join(cwd, data.filepath) ---@type string
-    local relative_filepath = fml.path.relative(workspace, absolute_filepath) ---@type string
+    local relative_filepath = fml.path.relative(workspace, absolute_filepath, true) ---@type string
     frecency:access(relative_filepath)
     local opened = fml.api.buf.open_in_current_valid_win(absolute_filepath) ---@type boolean
 
@@ -550,7 +550,7 @@ function M.patch_preview_data(item, last_item, last_data)
       local match_idx = is_search_match and ((hl.match_idx + 1) / 2) or (hl.match_idx / 2) ---@type integer
       local hlname = is_search_match
           and (match_idx == match_idx_cur and "f_us_preview_search_cur" or "f_us_preview_search")
-        or (match_idx == match_idx_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
+          or (match_idx == match_idx_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
       local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
       table.insert(highlights, highlight)
     end

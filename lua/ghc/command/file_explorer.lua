@@ -60,7 +60,7 @@ local function fetch_diritem(dirpath, force)
       file_datamap[dirpath] = itself
 
       for _, raw_item in ipairs(raw_data.items) do
-        local filepath = dirpath .. fml.path.SEP .. raw_item.name ---@type string
+        local filepath = dirpath .. "/" .. raw_item.name ---@type string
         local icon ---@type string
         local icon_hl ---@type string
         if raw_item.type == "directory" then
@@ -120,7 +120,7 @@ local _select = nil ---@type fml.types.ui.ISelect|nil
 ---@return string
 local function gen_title()
   local dirpath = state_cwd:snapshot() ---@type string
-  local relative_dirpath = fml.path.relative(fml.path.cwd(), dirpath)
+  local relative_dirpath = fml.path.relative(fml.path.cwd(), dirpath, false)
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "File explorer" ---@type string
   end
@@ -168,11 +168,11 @@ local function get_select()
 
         ---@type fml.types.ui.select.IItem[]
         local items = {
-          --- { group = nil, uuid = dirpath, text = "." .. fml.path.SEP " },
-          { group = nil, uuid = parent_dirpath, text = ".." .. fml.path.SEP },
+          --- { group = nil, uuid = dirpath, text = "./" },
+          { group = nil, uuid = parent_dirpath, text = "../" },
         }
         for _, fileitem in ipairs(diritem.items) do
-          local filename = fileitem.type == "directory" and fileitem.name .. fml.path.SEP or fileitem.name ---@type string
+          local filename = fileitem.type == "directory" and fileitem.name .. "/" or fileitem.name ---@type string
           local item = { group = nil, uuid = fileitem.path, text = filename } ---@type fml.types.ui.select.IItem
           table.insert(items, item)
         end
@@ -205,7 +205,7 @@ local function get_select()
           if is_text_file then
             local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
             local lines = fml.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
-            local title = fml.path.relative(fml.path.cwd(), item.uuid) ---@type string
+            local title = fml.path.relative(fml.path.cwd(), item.uuid, false) ---@type string
 
             ---@type fml.ui.search.preview.IData
             return {
@@ -226,7 +226,7 @@ local function get_select()
             local text = "" ---@type string
 
             local sep_perm = string.rep(" ", 2) ---@type string
-            local text_perm = fml.string.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. sep_perm ---@type string
+            local text_perm = fml.string.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. sep_perm
             local width_perm = string.len(text_perm) ---@type integer
             table.insert(highlights, {
               lnum = lnum,
@@ -239,7 +239,7 @@ local function get_select()
             width = width + width_perm
 
             local sep_size = string.rep(" ", 2) ---@type string
-            local text_size = fml.string.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. sep_size ---@type string
+            local text_size = fml.string.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. sep_size
             local width_size = string.len(text_size) ---@type integer
             table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_size, hlname = "f_fe_size" })
             text = text .. text_size
@@ -247,14 +247,14 @@ local function get_select()
 
             if not fml.os.is_win() then
               local sep_owner = string.rep(" ", 1) ---@type string
-              local text_owner = fml.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner ---@type string
+              local text_owner = fml.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
               local width_owner = string.len(text_owner) ---@type integer
               table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_owner, hlname = "f_fe_owner" })
               text = text .. text_owner
               width = width + width_owner
 
               local sep_group = string.rep(" ", 2) ---@type string
-              local text_group = fml.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group ---@type string
+              local text_group = fml.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group
               local width_group = string.len(text_group) ---@type integer
               table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_group, hlname = "f_fe_group" })
               text = text .. text_group
@@ -262,14 +262,14 @@ local function get_select()
             end
 
             local sep_date = string.rep(" ", 2) ---@type string
-            local text_date = fml.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. sep_date ---@type string
+            local text_date = fml.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. sep_date
             local width_date = string.len(text_date) ---@type integer
             table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_date, hlname = "f_fe_date" })
             text = text .. text_date
             width = width + width_date
 
             local sep_name = string.rep(" ", 10) ---@type string
-            local text_name = fml.string.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. sep_name ---@type string
+            local text_name = fml.string.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. sep_name
             local width_name = string.len(text_name) ---@type integer
             table.insert(highlights, {
               lnum = lnum,
@@ -283,9 +283,9 @@ local function get_select()
             table.insert(lines, text)
           end
 
-          local title = fml.path.relative(fml.path.cwd(), item.uuid) ---@type string
+          local title = fml.path.relative(fml.path.cwd(), item.uuid, false) ---@type string
           if #title < 1 or title:sub(1, 1) == "." then
-            title = item.uuid
+            title = fml.path.normalize(item.uuid)
           end
 
           ---@type fml.ui.search.preview.IData
@@ -313,18 +313,18 @@ local function get_select()
         local highlights = {} ---@type fml.types.ui.IInlineHighlight[]
         local width = 0 ---@type integer
         local text = "" ---@type string
-        local filename = ((item.text == ".." .. fml.path.SEP) or (item.text == "." .. fml.path.SEP)) and item.text
-          or fileitem.type == "directory" and fileitem.name .. fml.path.SEP
-          or fileitem.name ---@type string
+        local filename = ((item.text == "../") or (item.text == "./")) and item.text
+            or fileitem.type == "directory" and fileitem.name .. "/"
+            or fileitem.name ---@type string
 
         local max_width = math.floor(main_width * vim.o.columns) - 1 ---@type integer
         ---@type integer
         local filename_sep_width = max_width
-          - (diritem.icon_width + 2)
-          - (diritem.name_width + 1)
-          - (diritem.perm_width + 2)
-          - (diritem.size_width + 2)
-          - (diritem.date_width + 2)
+            - (diritem.icon_width + 2)
+            - (diritem.name_width + 1)
+            - (diritem.perm_width + 2)
+            - (diritem.size_width + 2)
+            - (diritem.date_width + 2)
 
         local sep_icon = string.rep(" ", 2) ---@type string
         local text_icon = fml.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. sep_icon ---@type string

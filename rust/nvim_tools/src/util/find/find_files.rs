@@ -96,11 +96,21 @@ pub fn find_files(
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
+
+        #[cfg(not(windows))]
         let filepaths: Vec<String> = stdout
             .lines()
             .map(|x| x.to_owned())
             .filter(|x| !x.is_empty())
             .collect();
+
+        #[cfg(windows)]
+        let filepaths: Vec<String> = stdout
+            .lines()
+            .map(|x| x.replace('\\', "/"))
+            .filter(|x| !x.is_empty())
+            .collect();
+
         Ok(FindFilesSucceedResult {
             cmd,
             stdout: stdout.to_string(),

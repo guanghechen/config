@@ -95,8 +95,9 @@ end
 
 ---@param from                          string
 ---@param to                            string
+---@param prefer_slash                  boolean
 ---@return string
-function M.relative(from, to)
+function M.relative(from, to, prefer_slash)
   local is_from_absolute = M.is_absolute(from) ---@type boolean
   local is_to_absolute = M.is_absolute(to) ---@type boolean
 
@@ -127,7 +128,9 @@ function M.relative(from, to)
   for j = i, #to_pieces do
     table.insert(pieces, to_pieces[j])
   end
-  return table.concat(pieces, M.SEP)
+
+  local sep = prefer_slash and "/" or M.SEP
+  return table.concat(pieces, sep)
 end
 
 ---@param cwd                           string

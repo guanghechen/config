@@ -181,8 +181,14 @@ pub fn search_files(
                         submatches,
                         ..
                     } => {
+                        #[cfg(windows)]
+                        let filepath: String = path.text.replace('\\', "/");
+
+                        #[cfg(not(windows))]
+                        let filepath: String = path.text.to_string();
+
                         let file_item: &mut SearchFileMatch = file_matches
-                            .entry(path.text.to_string())
+                            .entry(filepath)
                             .or_insert(SearchFileMatch { matches: vec![] });
                         if file_item.matches.is_empty() {
                             matches_count += 1;

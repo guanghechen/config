@@ -12,7 +12,7 @@ local function provide()
 
   for _, line in ipairs(lines) do
     local absolute_filepath = fml.path.join(workspace, line) ---@type string
-    local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+    local filepath = fml.path.relative(cwd, absolute_filepath, true) ---@type string
     local filename = fml.path.basename(filepath) ---@type string
     local is_text_file = fml.is.printable_file(filename) ---@type boolean
     if is_text_file then

@@ -40,7 +40,7 @@ local function get_select()
           end
 
           for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
-            local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+            local filepath = fml.path.relative(cwd, absolute_filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
             local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
             table.insert(items, item)
