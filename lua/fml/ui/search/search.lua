@@ -161,20 +161,6 @@ function M.new(props)
     self:sync_main_cursor()
   end
 
-  local reset_cursor_scheduler = scheduler.debounce({
-    name = "fml.ui.search.search.reset_cursor",
-    delay = 500,
-    fn = function(callback)
-      local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
-      local winnr_input = self:get_winnr_input() ---@type integer|nil
-      local winnr_main = self:get_winnr_main()
-      if winnr == winnr_main and winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-        vim.api.nvim_tabpage_set_win(0, winnr_input)
-      end
-      callback(true)
-    end,
-  })
-
   ---@class fml.ui.search.search.actions
   local actions = {
     noop = util.noop,
@@ -230,8 +216,7 @@ function M.new(props)
         if winnr == winnr_main then
           local lnum = cursor.line ---@type integer
           lnum = state:locate(lnum)
-          vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
-          reset_cursor_scheduler.schedule()
+          self:sync_main_cursor()
           return
         end
       end
@@ -498,6 +483,7 @@ function M:create_wins_as_needed()
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
   local dimension = self._dimension ---@type fml.types.ui.search.IDimension
+  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
 
   ---@type number
   local max_height = dimension.max_height <= 1 and math.floor(vim.o.lines * dimension.max_height)
@@ -637,6 +623,10 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].winblend = 10
   vim.wo[winnr_input].winhighlight = INPUT_WIN_HIGHLIGHT
   vim.wo[winnr_input].wrap = false
+
+  if winnr_cur ~= winnr_input and winnr_cur ~= winnr_preview then
+    vim.api.nvim_tabpage_set_win(0, winnr_input)
+  end
 end
 
 ---@param raw_dimension                 fml.types.ui.search.IRawDimension
