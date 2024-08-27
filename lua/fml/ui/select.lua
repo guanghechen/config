@@ -105,6 +105,13 @@ function M.new(props)
     statusline_items = std_array.concat(statusline_items or {}, {
       {
         type = "flag",
+        desc = "select: toggle flag fuzzy",
+        symbol = icons.symbols.flag_fuzzy,
+        state = flag_fuzzy,
+        callback = toggle_flag_fuzzy,
+      },
+      {
+        type = "flag",
         desc = "select: toggle case sensitive",
         symbol = icons.symbols.flag_case_sensitive,
         state = case_sensitive,
@@ -116,13 +123,6 @@ function M.new(props)
         symbol = icons.symbols.flag_regex,
         state = flag_regex,
         callback = toggle_flag_regex,
-      },
-      {
-        type = "flag",
-        desc = "select: toggle flag fuzzy",
-        symbol = icons.symbols.flag_fuzzy,
-        state = flag_fuzzy,
-        callback = toggle_flag_fuzzy,
       },
     })
 
@@ -139,12 +139,6 @@ function M.new(props)
         key = "<leader>r",
         callback = toggle_flag_regex,
         desc = "select: toggle flag regex",
-      },
-      {
-        modes = { "n", "v" },
-        key = "<leader>f",
-        callback = toggle_flag_fuzzy,
-        desc = "select: toggle flag fuzzy",
       },
     }
 

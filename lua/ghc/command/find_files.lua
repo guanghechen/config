@@ -145,6 +145,13 @@ local function get_select()
       },
       {
         type = "flag",
+        desc = "select: toggle flag fuzzy",
+        symbol = fml.ui.icons.symbols.flag_fuzzy,
+        state = session.find_flag_fuzzy,
+        callback = actions.toggle_flag_fuzzy,
+      },
+      {
+        type = "flag",
         desc = "find: toggle case sensitive",
         symbol = fml.ui.icons.symbols.flag_case_sensitive,
         state = session.find_flag_case_sensitive,
@@ -156,13 +163,6 @@ local function get_select()
         symbol = fml.ui.icons.symbols.flag_regex,
         state = session.find_flag_regex,
         callback = actions.toggle_flag_regex,
-      },
-      {
-        type = "flag",
-        desc = "select: toggle fuzzy mode",
-        symbol = fml.ui.icons.symbols.flag_fuzzy,
-        state = session.find_flag_fuzzy,
-        callback = actions.toggle_flag_fuzzy,
       },
     }
 
@@ -203,12 +203,6 @@ local function get_select()
         key = "<leader>r",
         callback = actions.toggle_flag_regex,
         desc = "find: toggle flag regex",
-      },
-      {
-        modes = { "n", "v" },
-        key = "<leader>f",
-        callback = actions.toggle_flag_fuzzy,
-        desc = "find: toggle fuzzy mode",
       },
     }
 
