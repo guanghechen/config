@@ -9,11 +9,11 @@ local M = {
     local hl_text = "" ---@type string
     local width = 0 ---@type integer
 
-    local text_noice_command = status.command.get() ---@type string | nil
-    if text_noice_command ~= nil and #text_noice_command > 0 then
-      hl_text = fml.nvimbar.txt(text_noice_command, "f_sl_noice_command")
-      width = vim.fn.strwidth(text_noice_command)
-    end
+    --    local text_noice_command = status.command.get() ---@type string | nil
+    --    if text_noice_command ~= nil and #text_noice_command > 0 then
+    --      hl_text = fml.nvimbar.txt(text_noice_command, "f_sl_noice_command")
+    --      width = vim.fn.strwidth(text_noice_command)
+    --    end
 
     local text_noice_mode = status.mode.get() or ""
     if text_noice_mode ~= nil and #text_noice_mode > 0 then
