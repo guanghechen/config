@@ -51,12 +51,12 @@ function M.new(props)
 
       _file_select = FileSelect.new({
         cmp = cmp,
-        frecency = frecency,
         destroy_on_close = destroy_on_close,
         dimension = dimension,
         dirty_on_close = dirty_on_close,
         enable_preview = enable_preview,
         extend_preset_keymaps = extend_preset_keymaps,
+        frecency = frecency,
         provider = provider,
         title = title,
       })
