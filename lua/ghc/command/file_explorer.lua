@@ -245,19 +245,21 @@ local function get_select()
             text = text .. text_size
             width = width + width_size
 
-            local sep_owner = string.rep(" ", 1) ---@type string
-            local text_owner = fml.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner ---@type string
-            local width_owner = string.len(text_owner) ---@type integer
-            table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_owner, hlname = "f_fe_owner" })
-            text = text .. text_owner
-            width = width + width_owner
+            if not fml.os.is_win() then
+              local sep_owner = string.rep(" ", 1) ---@type string
+              local text_owner = fml.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner ---@type string
+              local width_owner = string.len(text_owner) ---@type integer
+              table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_owner, hlname = "f_fe_owner" })
+              text = text .. text_owner
+              width = width + width_owner
 
-            local sep_group = string.rep(" ", 2) ---@type string
-            local text_group = fml.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group ---@type string
-            local width_group = string.len(text_group) ---@type integer
-            table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_group, hlname = "f_fe_group" })
-            text = text .. text_group
-            width = width + width_group
+              local sep_group = string.rep(" ", 2) ---@type string
+              local text_group = fml.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group ---@type string
+              local width_group = string.len(text_group) ---@type integer
+              table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_group, hlname = "f_fe_group" })
+              text = text .. text_group
+              width = width + width_group
+            end
 
             local sep_date = string.rep(" ", 2) ---@type string
             local text_date = fml.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. sep_date ---@type string
