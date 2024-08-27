@@ -138,7 +138,7 @@ function M:iterator()
   ---@return integer|nil
   return function()
     local element, index = iterator()
-    if self.validate(element) then
+    if element ~= nil and self.validate(element) then
       return element, index
     end
   end
@@ -152,7 +152,7 @@ function M:iterator_reverse()
   ---@return integer|nil
   return function()
     local element, index = iterator()
-    if self.validate(element) then
+    if element ~= nil and self.validate(element) then
       return element, index
     end
   end
@@ -185,7 +185,7 @@ function M:present()
   local history = self._history ---@type fml.types.collection.IHistory
   while true do
     local element, index = history:present()
-    if self.validate(element) then
+    if element ~= nil and self.validate(element) then
       return element, index
     end
 
