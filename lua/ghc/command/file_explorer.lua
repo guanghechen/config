@@ -168,11 +168,11 @@ local function get_select()
 
         ---@type fml.types.ui.select.IItem[]
         local items = {
-          --- { group = nil, uuid = dirpath, text = "./" },
-          { group = nil, uuid = parent_dirpath, text = "../" },
+          --- { group = nil, uuid = dirpath, text = "." .. fml.path.SEP " },
+          { group = nil, uuid = parent_dirpath, text = ".." .. fml.path.SEP },
         }
         for _, fileitem in ipairs(diritem.items) do
-          local filename = fileitem.type == "directory" and fileitem.name .. "/" or fileitem.name ---@type string
+          local filename = fileitem.type == "directory" and fileitem.name .. fml.path.SEP or fileitem.name ---@type string
           local item = { group = nil, uuid = fileitem.path, text = filename } ---@type fml.types.ui.select.IItem
           table.insert(items, item)
         end
@@ -311,8 +311,8 @@ local function get_select()
         local highlights = {} ---@type fml.types.ui.IInlineHighlight[]
         local width = 0 ---@type integer
         local text = "" ---@type string
-        local filename = (item.text == "../" or item.text == "./") and item.text
-          or fileitem.type == "directory" and fileitem.name .. "/"
+        local filename = ((item.text == ".." .. fml.path.SEP) or (item.text == "." .. fml.path.SEP)) and item.text
+          or fileitem.type == "directory" and fileitem.name .. fml.path.SEP
           or fileitem.name ---@type string
 
         local max_width = math.floor(main_width * vim.o.columns) - 1 ---@type integer
