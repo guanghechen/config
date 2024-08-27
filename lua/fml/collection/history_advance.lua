@@ -144,7 +144,7 @@ function M:iterator()
   ---@return integer|nil
   return function()
     local element, index = iterator()
-    if element ~= nil and self.validate(element) then
+    if self.validate(element) then
       return element, index
     end
   end
@@ -158,7 +158,7 @@ function M:iterator_reverse()
   ---@return integer|nil
   return function()
     local element, index = iterator()
-    if element ~= nil and self.validate(element) then
+    if self.validate(element) then
       return element, index
     end
   end
@@ -180,7 +180,7 @@ function M:present()
       return element, index
     end
 
-    if index == 1 then
+    if index <= 1 then
       return nil, 0
     end
 
