@@ -1,5 +1,4 @@
 local ORIDINAL_WIDTH = vim.fn.strwidth(tostring(fml.constant.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
-local unique_ = fml.collection.Observable.from_value(false) ---@type fml.types.collection.IObservable
 
 local _select = nil ---@type fml.ui.FileSelect|nil
 
@@ -9,9 +8,8 @@ local function gen_uuid_from_ordinal(ordinal)
   return fml.string.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
 end
 
----@param initial_title                 string
 ---@return fml.ui.FileSelect
-local function get_select(initial_title)
+local function get_select()
   local state_frecency = require("ghc.state.frecency")
   local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
 
@@ -19,7 +17,6 @@ local function get_select(initial_title)
   local provider = {
     fetch_data = function()
       local cwd = fml.path.cwd() ---@type string
-      local unique = unique_:snapshot() ---@type boolean
       local items = {} ---@type fml.types.ui.file_select.IRawItem[]
       local present_uuid = "0" ---@type string
       local width = 0 ---@type integer
@@ -30,41 +27,22 @@ local function get_select(initial_title)
           from = "fml.api.win",
           subject = "find_history",
           message = "Cannot find window.",
-          details = { winnr = winnr, unique = unique },
+          details = { winnr = winnr },
         })
 
         ---@type fml.types.ui.file_select.IData
         return { cwd = cwd, items = {} }
       else
-        if unique then
-          local present_filepath = win.filepath_history:present() ---@type string|nil
-          local visited = {} ---@type table<string, boolean>
-          for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
-            local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
-            if not visited[filepath] then
-              visited[filepath] = true
+        local _, present_ordinal = win.filepath_history:present() ---@type string|nil, integer|nil
+        if present_ordinal ~= nil then
+          present_uuid = gen_uuid_from_ordinal(present_ordinal)
+        end
 
-              local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-              if present_filepath == absolute_filepath then
-                present_uuid = uuid
-              end
-
-              local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
-              table.insert(items, item)
-            end
-          end
-        else
-          local _, present_ordinal = win.filepath_history:present() ---@type string|nil, integer|nil
-          if present_ordinal ~= nil then
-            present_uuid = gen_uuid_from_ordinal(present_ordinal)
-          end
-
-          for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
-            local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
-            local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-            local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
-            table.insert(items, item)
-          end
+        for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
+          local filepath = fml.path.relative(cwd, absolute_filepath) ---@type string
+          local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
+          local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
+          table.insert(items, item)
         end
 
         for _, item in ipairs(items) do
@@ -115,7 +93,7 @@ local function get_select(initial_title)
       extend_preset_keymaps = true,
       frecency = frecency,
       provider = provider,
-      title = initial_title,
+      title = "Find Window History",
       on_close = function()
         if _select ~= nil then
           _select:mark_data_dirty()
@@ -147,20 +125,8 @@ end
 local M = {}
 
 ---@return nil
-function M.list_history()
-  unique_:next(false)
-  local title = "window history" ---@type string
-  local select = get_select(title) ---@type fml.ui.FileSelect
-  select:change_input_title(title)
-  select:focus()
-end
-
----@return nil
-function M.list_history_unique()
-  local title = "window history (unique)" ---@type string
-  local select = get_select(title) ---@type fml.ui.FileSelect
-  unique_:next(true)
-  select:change_input_title(title)
+function M.focus()
+  local select = get_select() ---@type fml.ui.FileSelect
   select:focus()
 end
 
