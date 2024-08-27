@@ -29,4 +29,12 @@ function M.resume_or_close()
   end
 end
 
+---@return nil
+function M.resize()
+  local instance = M.get_current_instance() ---@return fml.types.ui.search.ISearch|nil
+  if instance ~= nil then
+    instance.state.dirtier_dimension:mark_dirty()
+  end
+end
+
 return M

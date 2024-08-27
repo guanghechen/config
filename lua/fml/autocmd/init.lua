@@ -5,3 +5,5 @@ require("fml.api.state").refresh_all()
 
 require("fml.autocmd.state")
 require("fml.autocmd.lsp")
+
+require("fml.autocmd.resize")

@@ -398,8 +398,8 @@ function M.new(props)
   self._winnr_preview = nil
   self._on_close = on_close_from_props
 
-  local draw_scheduler ---@type fml.std.scheduler.IScheduler
-  draw_scheduler = scheduler.throttle({
+  ---@type fml.std.scheduler.IScheduler
+  local draw_scheduler = scheduler.throttle({
     name = "fml.ui.search.search.draw",
     delay = 48,
     fn = function(callback)
