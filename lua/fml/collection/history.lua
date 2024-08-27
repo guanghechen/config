@@ -216,8 +216,8 @@ end
 function M:update_top(element)
   local stack = self._stack ---@type fml.types.collection.ICircularQueue
   local present = stack:size()
-  stack:update(present, element)
   self._present = present
+  stack:update(present, element)
 end
 
 return M

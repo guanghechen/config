@@ -37,18 +37,6 @@ function M.new(props)
         return
       end
 
-      local input_cur = state.input:snapshot() ---@type string
-      local input_present = input_history:present() ---@type string|nil, integer
-      if input_present ~= input_cur then
-        local input_top = input_history:top() ---@type string|nil
-        if input_top == nil or util.is_editing_text(input_top) then
-          input_history:go(math.huge)
-          input_history:push(EDITING_PREFIX .. input_cur)
-        else
-          input_history:update_top(EDITING_PREFIX .. input_cur)
-        end
-      end
-
       local text = input_history:backward() ---@type string|nil
       if text ~= nil then
         self:reset_input(text)
@@ -104,6 +92,24 @@ function M.new(props)
       local visible = state.visible:snapshot() ---@type boolean
       if visible and is_preview_dirty then
         self:set_virtual_text()
+      end
+    end,
+  }))
+
+  state.input:subscribe(Subscriber.new({
+    on_next = function()
+      if input_history ~= nil then
+        local input_cur = state.input:snapshot() ---@type string
+        local input_present = input_history:present() ---@type string|nil, integer
+        if input_present ~= input_cur then
+          local input_top = input_history:top() ---@type string|nil
+          if input_top ~= nil and util.is_editing_text(input_top) then
+            input_history:update_top(EDITING_PREFIX .. input_cur)
+          else
+            input_history:go(math.huge)
+            input_history:push(EDITING_PREFIX .. input_cur)
+          end
+        end
       end
     end,
   }))

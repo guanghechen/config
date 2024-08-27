@@ -1,6 +1,5 @@
 local G = require("fml.std.G")
 local Subscriber = require("fml.collection.subscriber")
-local constant = require("fml.constant")
 local scheduler = require("fml.std.scheduler")
 local api_state = require("fml.api.state")
 local watch_observables = require("fml.fn.watch_observables")

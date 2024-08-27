@@ -128,7 +128,8 @@ mk({ "n", "v" }, "<leader>bp", fml.api.buf.toggle_pin_cur, "buffer: toggle pin",
 mk({ "n", "v" }, "<leader>dC", ghc.command.debug.show_context_all, "debug: show context (all)", true)
 mk({ "n", "v" }, "<leader>dc", ghc.command.debug.show_context, "debug: show context (persistentable)", true)
 mk({ "n", "v" }, "<leader>dd", ghc.command.debug.inspect, "debug: inspect", true)
-mk({ "n", "v" }, "<leader>ds", ghc.command.debug.show_state, "debug: show state", true)
+mk({ "n", "v" }, "<leader>dse", ghc.command.debug.show_editor_state, "debug: show editor state", true)
+mk({ "n", "v" }, "<leader>dsi", ghc.command.debug.show_input_state, "debug: show input state", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[f]ind-------------------------------------------------------------------------------------------

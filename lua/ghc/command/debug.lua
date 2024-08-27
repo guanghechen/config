@@ -49,7 +49,8 @@ function M.show_context_all()
   })
 end
 
-function M.show_state()
+---@return nil
+function M.show_editor_state()
   local wins = {}
   for winnr, win in pairs(fml.api.state.wins) do
     ---@type fml.types.api.state.IWinItemData
@@ -62,7 +63,7 @@ function M.show_state()
 
   fml.reporter.info({
     from = "ghc.command.debug",
-    subject = "show_state",
+    subject = "show_editor_state",
     details = {
       tabnrs = vim.api.nvim_list_tabpages(),
       bufnrs = vim.api.nvim_list_bufs(),
@@ -71,6 +72,20 @@ function M.show_state()
       win_history = fml.api.state.win_history,
       wins = wins,
     },
+  })
+end
+
+---@return nil
+function M:show_input_state()
+  local state = require("ghc.state.input_history").load_and_autosave()
+  local data = {
+    find_files = state.find_files:dump(),
+    search_in_files = state.search_in_files:dump(),
+  }
+  fml.reporter.info({
+    from = "ghc.command.debug",
+    subject = "show_input_state",
+    details = data,
   })
 end
 
