@@ -13,7 +13,12 @@
 ---@alias fml.types.T any
 
 ---@generic T
----@alias fml.types.IEquals fun(x: T, y: T): boolean
+---@alias fml.types.IEquals
+---| fun(x: T, y: T): boolean
+
+---@generic T
+---@alias fml.types.Validate
+---| fun(element: T): boolean
 
 ---@generic T
 ---@alias fml.types.IFilter

@@ -3,7 +3,7 @@ local History = require("fml.collection.history")
 ---@class fml.collection.AdvanceHistory : fml.types.collection.IAdvanceHistory
 ---@field public name                   string
 ---@field public equals                 fml.types.IEquals
----@field public validate               fun(element: fml.types.T): boolean
+---@field public validate               fml.types.Validate
 ---@field private _history              fml.types.collection.IHistory
 local M = {}
 M.__index = M
@@ -18,15 +18,15 @@ end
 ---@class fml.collection.history_advance.IProps
 ---@field public name                   string
 ---@field public capacity               integer
----@field public equals                 ?fun(x: fml.types.T, y: fml.types.T): boolean
----@field public validate               ?fun(element: fml.types.T): boolean
+---@field public equals                 ?fml.types.IEquals
+---@field public validate               ?fml.types.Validate
 
 ---@class fml.collection.history_advance.IDeserializeProps
 ---@field public data                   fml.types.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
----@field public equals                 ?fun(x: fml.types.T, y: fml.types.T): boolean
----@field public validate               ?fun(v: fml.types.T): boolean
+---@field public equals                 ?fml.types.IEquals
+---@field public validate               ?fml.types.Validate
 
 ---@param props                         fml.collection.history_advance.IProps
 ---@return fml.collection.AdvanceHistory
@@ -85,6 +85,11 @@ function M:capacity()
   return self._history:capacity()
 end
 
+---@return nil
+function M:clear()
+  self._history:clear()
+end
+
 ---@return fml.types.T[]
 function M:collect()
   local results = {} ---@type fml.types.T[]
@@ -117,9 +122,10 @@ end
 ---@return fml.types.T|nil
 ---@return boolean
 function M:forward(step)
-  self._history:forward(step)
-  local element, index = self:present()
-  return element, index == self._history:size()
+  local history = self._history ---@type fml.types.collection.IHistory
+  local _, should_be_top = history:forward(step) ---@type fml.types.T|nil, boolean
+  local element = self:present()
+  return element, should_be_top
 end
 
 ---@param index                         integer
@@ -156,21 +162,6 @@ function M:iterator_reverse()
       return element, index
     end
   end
-end
-
----@return boolean
-function M:is_bottom()
-  return self._history:is_bottom()
-end
-
----@return boolean
-function M:is_empty()
-  return self._history:is_empty()
-end
-
----@return boolean
-function M:is_top()
-  return self._history:is_top()
 end
 
 ---@param data                          fml.types.collection.history.ISerializedData
@@ -210,15 +201,15 @@ function M:push(element)
   end
 end
 
+---@return nil
+function M:rearrange()
+  local validate = self.validate ---@type fml.types.Validate
+  self._history:rearrange(validate)
+end
+
 ---@return integer
 function M:size()
   return self._history:size()
-end
-
----@param element                       fml.types.T
----@return nil
-function M:update_top(element)
-  self._history:update_top(element)
 end
 
 return M

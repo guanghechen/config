@@ -11,8 +11,8 @@ end
 ---@class fml.collection.History : fml.types.collection.IHistory
 ---@field public name                   string
 ---@field public equals                 fml.types.IEquals
----@field public _present               integer
----@field public _stack                 fml.types.collection.ICircularQueue
+---@field protected _present            integer
+---@field protected _stack              fml.types.collection.ICircularQueue
 local M = {}
 M.__index = M
 
@@ -20,7 +20,7 @@ M.__index = M
 ---@field public data                   fml.types.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
----@field public equals                 ?fun(x: fml.types.T, y: fml.types.T): boolean
+---@field public equals                 ?fml.types.IEquals
 
 ---@class fml.collection.history.IProps
 ---@field public name                   string
@@ -59,18 +59,20 @@ end
 ---@return fml.types.T|nil
 ---@return boolean
 function M:backward(step)
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
-  local present = self._present - math.max(1, step or 1) ---@type integer
-  present = present > 0 and present or math.min(1, stack:size()) ---@type integer
-  self._present = present
-
-  local is_bottom = present <= 1 ---@type boolean
-  return stack:at(present), is_bottom
+  local index = self._present - math.max(1, step or 1) ---@type integer
+  local element, present = self:go(index) ---@type fml.types.T|nil, integer
+  return element, present <= 1
 end
 
 ---@return integer
 function M:capacity()
   return self._stack:capacity()
+end
+
+---@return nil
+function M:clear()
+  self._present = 0
+  self._stack:clear()
 end
 
 ---@return fml.types.T[]
@@ -102,13 +104,9 @@ end
 ---@return fml.types.T|nil
 ---@return boolean
 function M:forward(step)
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
-  local present = self._present + math.max(1, step or 1) ---@type integer
-  present = math.min(present, stack:size()) ---@type integer
-  self._present = present
-
-  local is_top = present == stack:size() ---@type boolean
-  return self._stack:at(present), is_top
+  local index = self._present + math.max(1, step or 1) ---@type integer
+  local element, present = self:go(index) ---@type fml.types.T|nil, integer
+  return element, present == self._stack:size()
 end
 
 ---@param index                         integer
@@ -119,18 +117,6 @@ function M:go(index)
   local present = math.min(stack:size(), math.max(1, index)) ---@type integer
   self._present = present
   return stack:at(present), present
-end
-
----@return fun(): fml.types.T, integer
-function M:iterator()
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
-  return stack:iterator()
-end
-
----@return fun(): fml.types.T, integer
-function M:iterator_reverse()
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
-  return stack:iterator_reverse()
 end
 
 ---@return boolean
@@ -146,6 +132,18 @@ end
 ---@return boolean
 function M:is_top()
   return self._present == self._stack:size()
+end
+
+---@return fun(): fml.types.T, integer
+function M:iterator()
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  return stack:iterator()
+end
+
+---@return fun(): fml.types.T, integer
+function M:iterator_reverse()
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  return stack:iterator_reverse()
 end
 
 ---@param data                          fml.types.collection.history.ISerializedData
@@ -197,6 +195,29 @@ function M:push(element)
   end
   stack:enqueue(element)
   self._present = stack:size()
+end
+
+---@param filter                        fml.types.IFilter
+---@return nil
+function M:rearrange(filter)
+  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local old_present = self._present ---@type integer
+  local new_present = 0 ---@type integer
+  local idx = 0 ---@type integer
+
+  stack:rearrange(function(element, index)
+    if filter(element, index) then
+      idx = idx + 1
+      if index < old_present then
+        new_present = idx
+      end
+      return true
+    end
+    return false
+  end)
+
+  local present = math.min(stack:size(), math.max(1, new_present)) ---@type integer
+  self._present = present
 end
 
 ---@return integer
