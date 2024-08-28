@@ -14,6 +14,8 @@ local WIN_HIGHLIGHT = table.concat({
 }, ",")
 
 ---@class fml.ui.Textarea : fml.types.ui.ITextarea
+---@field protected _bufnr              integer|nil
+---@field protected _winnr              integer|nil
 ---@field protected position            fml.enums.BoxPosition
 ---@field protected width               number
 ---@field protected height              number
@@ -86,17 +88,17 @@ function M.new(props)
 
   ---@return nil
   local function on_confirm()
-    if self.bufnr == nil or not vim.api.nvim_buf_is_valid(self.bufnr) then
+    if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then
       reporter.warn({
         from = "fml.ui.textarea",
         subject = "confirm",
         message = "The buffer is not valid.",
-        details = { bufnr = self.bufnr, self = self },
+        details = { bufnr = self._bufnr, self = self },
       })
       return
     end
 
-    local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false) ---@type string[]
+    local lines = vim.api.nvim_buf_get_lines(self._bufnr, 0, -1, false) ---@type string[]
     local err_msg = type(validate) == "function" and validate(lines) or nil ---@type string|nil
     if err_msg ~= nil then
       reporter.warn({
@@ -119,8 +121,8 @@ function M.new(props)
   }
   local keymaps = std_array.concat(builtin_keymaps, props.keymaps) ---@type fml.types.IKeymap[]
 
-  self.bufnr = nil
-  self.winnr = nil
+  self._bufnr = nil
+  self._winnr = nil
   self.on_close = on_close
   self.on_confirm = on_confirm
 
@@ -139,11 +141,21 @@ function M.new(props)
   return self
 end
 
+---@return integer|nil
+function M:get_bufnr()
+  return self._bufnr
+end
+
+---@return integer|nil
+function M:get_winnr()
+  return self._winnr
+end
+
 ---@param params                        fml.types.ui.textarea.IOpenParams
 ---@return nil
 function M:open(params)
-  ---@type fml.ui.types.IBoxDimension
-  local rect = box.measure(params.width or self.width, params.height or self.height, {
+  ---@type fml.types.ui.IBoxRestriction
+  local restriction = {
     position = self.position,
     rows = vim.o.lines,
     cols = vim.o.columns,
@@ -155,11 +167,15 @@ function M:open(params)
     max_height = params.max_height or self.max_height,
     min_width = params.min_width or self.min_width,
     min_height = params.min_height or self.min_height,
-  })
+  }
 
-  if self.bufnr == nil or not vim.api.nvim_buf_is_valid(self.bufnr) then
+  local width = params.width or self.width ---@type number
+  local height = box.flat(params.height or self.height, restriction.rows) + 2 ---@type integer
+  local rect = box.measure(width, height, restriction) ---@type fml.ui.types.IBoxDimension
+
+  if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then
     local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    self.bufnr = bufnr
+    self._bufnr = bufnr
 
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nofile"
@@ -171,7 +187,7 @@ function M:open(params)
       once = true,
       buffer = bufnr,
       callback = function()
-        self.bufnr = nil
+        self._bufnr = nil
         self:close()
       end,
     })
@@ -184,11 +200,11 @@ function M:open(params)
   local lines = params.initial_lines ---@type string[]
   local text_cursor_row = params.text_cursor_row or #lines ---@type integer
   local text_cursor_col = params.text_cursor_col or string.len(lines[#lines]) ---@type integer
-  vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, lines)
+  vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, lines)
 
-  if self.winnr == nil or not vim.api.nvim_win_is_valid(self.winnr) then
+  if self._winnr == nil or not vim.api.nvim_win_is_valid(self._winnr) then
     ---@type integer
-    self.winnr = vim.api.nvim_open_win(self.bufnr, true, {
+    self._winnr = vim.api.nvim_open_win(self._bufnr, true, {
       relative = "editor",
       anchor = "NW",
       row = rect.row,
@@ -201,26 +217,26 @@ function M:open(params)
       border = "rounded",
       style = "minimal",
     })
-    vim.api.nvim_win_set_cursor(self.winnr, { text_cursor_row, text_cursor_col })
+    vim.api.nvim_win_set_cursor(self._winnr, { text_cursor_row, text_cursor_col })
   end
 
   for key, value in pairs(self.win_opts) do
-    vim.wo[self.winnr][key] = value
+    vim.wo[self._winnr][key] = value
   end
 end
 
 ---@return nil
 function M:close()
-  if self.winnr ~= nil and vim.api.nvim_win_is_valid(self.winnr) then
-    vim.api.nvim_win_close(self.winnr, true)
+  if self._winnr ~= nil and vim.api.nvim_win_is_valid(self._winnr) then
+    vim.api.nvim_win_close(self._winnr, true)
   end
 
-  if self.bufnr ~= nil and vim.api.nvim_buf_is_valid(self.bufnr) then
-    vim.api.nvim_buf_delete(self.bufnr, { force = true })
+  if self._bufnr ~= nil and vim.api.nvim_buf_is_valid(self._bufnr) then
+    vim.api.nvim_buf_delete(self._bufnr, { force = true })
   end
 
-  self.bufnr = nil
-  self.winnr = nil
+  self._bufnr = nil
+  self._winnr = nil
 end
 
 return M

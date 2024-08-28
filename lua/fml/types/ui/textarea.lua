@@ -1,6 +1,6 @@
 ---@class fml.types.ui.ITextarea
----@field public bufnr                  integer|nil
----@field public winnr                  integer|nil
+---@field public get_bufnr              fun(): integer|nil
+---@field public get_winnr              fun(): integer|nil
 ---@field public on_close               fun(): nil
 ---@field public on_confirm             fun(): nil
 ---@field public open                   fun(self: fml.types.ui.ITextarea, params: fml.types.ui.textarea.IOpenParams): nil
