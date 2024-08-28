@@ -44,7 +44,7 @@ M.__index = M
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(lines: string[]): string|nil
 ---@field public on_close               ?fun(): nil
----@field public on_confirm             fun(lines: string[]): nil
+---@field public on_confirm             fun(lines: string[]): boolean
 
 ---@param props                         fml.ui.textarea.IProps
 ---@return fml.ui.Textarea
@@ -76,7 +76,7 @@ function M.new(props)
 
   local validate = props.validate ---@type (fun(lines: string[]): string|nil)|nil
   local on_close_from_props = props.on_close ---@type (fun(): nil)
-  local on_confirm_from_props = props.on_confirm ---@type fun(lines: string[]): nil
+  local on_confirm_from_props = props.on_confirm ---@type fun(lines: string[]): boolean
 
   ---@return nil
   local function on_close()
@@ -88,17 +88,18 @@ function M.new(props)
 
   ---@return nil
   local function on_confirm()
-    if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then
+    local bufnr = self:get_bufnr() ---@type integer|nil
+    if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
       reporter.warn({
         from = "fml.ui.textarea",
         subject = "confirm",
         message = "The buffer is not valid.",
-        details = { bufnr = self._bufnr, self = self },
+        details = { bufnr = bufnr, self = self },
       })
       return
     end
 
-    local lines = vim.api.nvim_buf_get_lines(self._bufnr, 0, -1, false) ---@type string[]
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
     local err_msg = type(validate) == "function" and validate(lines) or nil ---@type string|nil
     if err_msg ~= nil then
       reporter.warn({
@@ -110,8 +111,9 @@ function M.new(props)
       return
     end
 
-    self:close()
-    on_confirm_from_props(lines)
+    if on_confirm_from_props(lines) then
+      self:close()
+    end
   end
 
   ---@type fml.types.IKeymap[]
@@ -168,9 +170,8 @@ function M:open(params)
     min_width = params.min_width or self.min_width,
     min_height = params.min_height or self.min_height,
   }
-
   local width = params.width or self.width ---@type number
-  local height = box.flat(params.height or self.height, restriction.rows) + 2 ---@type integer
+  local height = box.flat(params.height or self.height, restriction.rows) ---@type integer
   local rect = box.measure(width, height, restriction) ---@type fml.ui.types.IBoxDimension
 
   if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then

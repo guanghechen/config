@@ -56,8 +56,8 @@ mk("v", "<C-a>c", '"+y', "system: copy to clipboard")
 mk("v", "<M-c>", '"+y', "system: copy to clipboard")
 mk("v", "<C-a>x", '"+x', "system: cut to clipboard")
 mk("v", "<M-x>", '"+x', "system: cut to clipboard")
-mk({ "i", "n", "v" }, "<C-a>s", "<cmd>wa<cr>", "system: save changes")
-mk({ "i", "n", "v" }, "<M-s>", "<cmd>wa<cr>", "system: save changes")
+mk({ "i", "n", "v" }, "<C-a>s", fml.api.buf.save, "system: save changes")
+mk({ "i", "n", "v" }, "<M-s>", fml.api.buf.save, "system: save changes")
 mk({ "i", "n", "v" }, "<C-a>a", "<esc>gg0vG$", "system: select all")
 mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "system: select all")
 mk({ "i", "n", "v" }, "<C-a>v", '<esc>"+p', "system: paste from clipboard")
@@ -131,6 +131,10 @@ mk({ "n", "v" }, "<leader>dd", ghc.command.debug.inspect, "debug: inspect", true
 mk({ "n", "v" }, "<leader>dse", ghc.command.debug.show_editor_state, "debug: show editor state", true)
 mk({ "n", "v" }, "<leader>dsi", ghc.command.debug.show_input_state, "debug: show input state", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
+
+--#[f]ile-------------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>fn", fml.api.buf.create, "file: new", true)
+-------------------------------------------------------------------------------------------#[f]ile--
 
 --#[f]ind-------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader><leader>", ghc.command.find_files.open, "find: files")

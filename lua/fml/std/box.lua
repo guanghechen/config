@@ -29,8 +29,8 @@ function M.measure(width, height, restriction)
   local min_height = M.flat(restriction.min_height or 0, rows) ---@type integer
 
   max_width = math.max(10, math.min(cols, max_width)) ---@type integer
-  max_height = math.max(10, math.min(rows, max_height)) ---@type integer
-  min_width = math.max(1, math.min(max_width, min_width)) ---@type integer
+  max_height = math.max(1, math.min(rows, max_height)) ---@type integer
+  min_width = math.max(10, math.min(max_width, min_width)) ---@type integer
   min_height = math.max(1, math.min(max_height, min_height)) ---@type integer
   width = math.max(min_width, math.min(max_width, M.flat(width, cols))) ---@type integer
   height = math.max(min_height, math.min(max_height, M.flat(height, rows))) ---@type integer

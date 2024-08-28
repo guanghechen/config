@@ -33,7 +33,7 @@ return {
       -- app --
       tmux = { "shfmt" },
 
-      ["*"] = { "codespell" },
+      --      ["*"] = { "codespell" },
       ["_"] = { "trim_whitespace" },
     },
     format_on_save = function(bufnr)

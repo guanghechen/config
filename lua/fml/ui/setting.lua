@@ -20,7 +20,7 @@ setmetatable(M, { __index = Textarea })
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(value: fml.types.T): string|nil
 ---@field public on_close               ?fun(): nil
----@field public on_confirm             fun(value: fml.types.T): nil
+---@field public on_confirm             fun(value: fml.types.T): boolean
 
 ---@param props                         fml.ui.setting.IProps
 ---@return fml.ui.Setting
@@ -38,7 +38,7 @@ function M.new(props)
 
   local validate_from_props = props.validate ---@type (fun(value: fml.types.T): string)|nil
   local on_close_from_props = props.on_close ---@type (fun(): nil)
-  local on_confirm_from_props = props.on_confirm ---@type fun(text: fml.types.T): nil
+  local on_confirm_from_props = props.on_confirm ---@type fun(text: fml.types.T): boolean
 
   ---@param lines                       string[]
   ---@return string|nil
@@ -58,6 +58,7 @@ function M.new(props)
   end
 
   ---@param lines                       string[]
+  ---@return boolean
   local function on_confirm(lines)
     local text = table.concat(lines, "\n") ---@type string
     local ok, data = pcall(function()
@@ -71,10 +72,10 @@ function M.new(props)
         message = "Failed to parse json string.",
         details = { text = text, data = data },
       })
-      return
+      return false
     end
 
-    on_confirm_from_props(data)
+    return on_confirm_from_props(data)
   end
 
   local textarea = Textarea.new({

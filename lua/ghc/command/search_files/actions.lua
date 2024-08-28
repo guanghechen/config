@@ -103,25 +103,28 @@ function M.edit_config()
       end
     end,
     on_confirm = function(raw_data)
-      local raw = vim.tbl_extend("force", data, raw_data)
-      ---@cast raw ghc.command.search_files.IConfigData
+      vim.schedule(function()
+        local raw = vim.tbl_extend("force", data, raw_data)
+        ---@cast raw ghc.command.search_files.IConfigData
 
-      local search_pattern = raw.search_pattern ---@type string
-      local replace_pattern = raw.replace_pattern ---@type string
-      local max_filesize = raw.max_filesize ---@type string
-      local max_matches = raw.max_matches ---@type integer
-      local search_paths = table.concat(raw.search_paths, ",") ---@type string
-      local include_patterns = table.concat(raw.include_patterns, ",") ---@type string
-      local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
+        local search_pattern = raw.search_pattern ---@type string
+        local replace_pattern = raw.replace_pattern ---@type string
+        local max_filesize = raw.max_filesize ---@type string
+        local max_matches = raw.max_matches ---@type integer
+        local search_paths = table.concat(raw.search_paths, ",") ---@type string
+        local include_patterns = table.concat(raw.include_patterns, ",") ---@type string
+        local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
 
-      session.search_pattern:next(search_pattern)
-      session.search_replace_pattern:next(replace_pattern)
-      session.search_paths:next(search_paths)
-      session.search_max_filesize:next(max_filesize)
-      session.search_max_matches:next(max_matches)
-      session.search_include_patterns:next(include_patterns)
-      session.search_exclude_patterns:next(exclude_patterns)
-      state.reload()
+        session.search_pattern:next(search_pattern)
+        session.search_replace_pattern:next(replace_pattern)
+        session.search_paths:next(search_paths)
+        session.search_max_filesize:next(max_filesize)
+        session.search_max_matches:next(max_matches)
+        session.search_include_patterns:next(include_patterns)
+        session.search_exclude_patterns:next(exclude_patterns)
+        state.reload()
+      end)
+      return true
     end,
   })
   setting:open({

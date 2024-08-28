@@ -12,6 +12,7 @@ function test_textarea()
     end,
     on_confirm = function(text)
       fml.debug.log("on confirm:", { text = text or "nil" })
+      return true
     end,
   })
   textarea:open({ initial_lines = { "haha" } })
@@ -28,6 +29,7 @@ function test_input()
     end,
     on_confirm = function(text)
       fml.debug.log("on confirm:", { text = text or "nil" })
+      return true
     end,
   })
   input:open({ initial_value = "haha" })
