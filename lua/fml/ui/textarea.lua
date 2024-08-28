@@ -15,8 +15,8 @@ local WIN_HIGHLIGHT = table.concat({
 
 ---@class fml.ui.Textarea : fml.types.ui.ITextarea
 ---@field protected position            fml.enums.BoxPosition
----@field protected width               number|nil
----@field protected height              number|nil
+---@field protected width               number
+---@field protected height              number
 ---@field protected max_width           number|nil
 ---@field protected max_height          number|nil
 ---@field protected min_width           number|nil
@@ -125,8 +125,8 @@ function M.new(props)
   self.on_confirm = on_confirm
 
   self.position = position
-  self.height = height
-  self.width = width
+  self.height = height or 0.5
+  self.width = width or 0.5
   self.max_width = max_width
   self.max_height = max_height
   self.min_width = min_width
@@ -142,18 +142,19 @@ end
 ---@param params                        fml.types.ui.textarea.IOpenParams
 ---@return nil
 function M:open(params)
-  local rect = box.measure({
+  ---@type fml.ui.types.IBoxDimension
+  local rect = box.measure(params.width or self.width, params.height or self.height, {
     position = self.position,
-    width = params.width or self.width or 0.5,
-    height = params.height or self.height or 0.5,
+    rows = vim.o.lines,
+    cols = vim.o.columns,
     row = params.row,
     col = params.col,
     cursor_row = params.win_cursor_row,
     cursor_col = params.win_cursor_col,
-    max_width = self.max_width,
-    max_height = self.max_height,
-    min_width = self.min_width,
-    min_height = self.min_height,
+    max_width = params.max_width or self.max_width,
+    max_height = params.max_height or self.max_height,
+    min_width = params.min_width or self.min_width,
+    min_height = params.min_height or self.min_height,
   })
 
   if self.bufnr == nil or not vim.api.nvim_buf_is_valid(self.bufnr) then
