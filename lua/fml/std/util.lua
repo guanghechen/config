@@ -109,51 +109,23 @@ function M.run_async(name, fn, callback)
         callback(ok, result)
       end
     end
-    handle:close() -- Close the handle when done
+    if handle ~= nil then
+      handle:close() -- Close the handle when done
+      handle = nil
+    end
   end
 
   ---@diagnostic disable-next-line: undefined-field
   handle = vim.uv.new_async(vim.schedule_wrap(wrapped_fn))
-  handle:send()
+  if handle ~= nil then
+    handle:send()
+  end
 
   return function()
     cancelled = true
-    handle:send() -- Ensure the async function checks the cancelled flag
-  end
-end
-
----@param name                          string
----@param fn                            fun(): any
----@param callback                      ?fun(ok: boolean, result: any|nil): nil
----@return fun(): nil
-function M.run_async_by_thread(name, fn, callback)
-  local cancelled = false ---@type boolean
-
-  ---@param ok                          boolean
-  ---@param result                      boolean
-  local function wrapped(ok, result)
-    if not cancelled then
-      if type(callback) == "function" then
-        callback(ok, result)
-      end
-    else
-      vim.notify('[fml.std.util] run_async_by_thread: The "' .. name .. '" was cancelled.')
+    if handle ~= nil then
+      handle:send() -- Ensure the async function checks the cancelled flag
     end
-  end
-
-  ---@diagnostic disable-next-line: undefined-field
-  local work_handle = vim.uv.new_work(function()
-    if cancelled then
-      return false, "Cancelled"
-    end
-    return pcall(fn)
-  end, vim.schedule_wrap(wrapped))
-  work_handle:queue()
-
-  return function()
-    cancelled = true
-    ---@diagnostic disable-next-line: undefined-field
-    vim.uv.cancel(work_handle)
   end
 end
 

@@ -34,7 +34,6 @@ function M.snippet_fix(snippet)
   end)
 end
 
----@param entry cmp.Entry
 function M.auto_brackets(entry)
   local cmp = require("cmp")
   local Kind = cmp.lsp.CompletionItemKind
@@ -51,7 +50,6 @@ end
 
 -- This function adds missing documentation to snippets.
 -- The documentation is a preview of the snippet.
----@param window cmp.CustomEntriesView|cmp.NativeEntriesView
 function M.add_missing_snippet_docs(window)
   local cmp = require("cmp")
   local Kind = cmp.lsp.CompletionItemKind
