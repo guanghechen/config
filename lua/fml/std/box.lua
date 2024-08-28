@@ -58,8 +58,8 @@ function M.measure(width, height, restriction)
     end
   end
 
-  local row = math.floor((rows - height) / 2) - 1 ---@type integer
-  local col = math.floor((cols - width) / 2) ---@type integer
+  local row = restriction.row and M.flat(restriction.row, rows) or math.floor((rows - height) / 2) - 1 ---@type integer
+  local col = restriction.col and M.flat(restriction.col, cols) or math.floor((cols - width) / 2) ---@type integer
   row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
   col = math.max(0, math.min(cols - width, col)) ---@type integer
 

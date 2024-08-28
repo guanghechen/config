@@ -109,7 +109,11 @@ function M.save(bufnr)
         return true
       end,
     })
-    input:open({ initial_value = initial_text, text_cursor_col = string.len(initial_text) })
+    input:open({
+      initial_value = initial_text,
+      row = 3,
+      text_cursor_col = string.len(initial_text),
+    })
   else
     vim.cmd("wa")
   end

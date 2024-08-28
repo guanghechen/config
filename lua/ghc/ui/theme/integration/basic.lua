@@ -57,7 +57,7 @@ local function gen_hlgroup_map(params)
     Error = { fg = c.base00, bg = c.base08 },
     ErrorMsg = { fg = c.base08, bg = c.base00 },
     Exception = { fg = c.base08 },
-    FloatTitle = { fg = c.white, bg = c.grey },
+    FloatTitle = { fg = c.white, bg = "none" },
     FloatBorder = { fg = c.darker_pink },
     FoldColumn = { fg = c.base0C, bg = c.base01 },
     Folded = { fg = c.light_grey, bg = c.black2 },
