@@ -181,6 +181,7 @@ function M:register(name, raw_component, enabled)
     enabled = enabled == nil and true or enabled,
     last_result_text = "",
     last_result_width = 0,
+    tight = not not raw_component.tight,
     render = raw_component.render,
     will_change = raw_component.will_change or util.truthy,
     condition = raw_component.condition or util.truthy,
@@ -224,29 +225,30 @@ function M:render(force)
           local text = component.last_result_text ---@type string
           local width = component.last_result_width ---@type integer
           if width > 0 then
+            local tight = component.tight ---@type boolean
             if position == "left" then
-              if #lc > 0 then
+              if #lc < 1 or tight then
+                lc = lc .. text
+                remain_width = remain_width - width - sep_width
+              else
                 lc = lc .. sep .. text
                 remain_width = remain_width - width - sep_width - sep_width
-              else
-                lc = text
-                remain_width = remain_width - width - sep_width
               end
             elseif position == "center" then
-              if #cc > 0 then
+              if #cc < 1 or tight then
+                cc = cc .. text
+                remain_width = remain_width - width - sep_width
+              else
                 cc = cc .. sep .. text
                 remain_width = remain_width - width - sep_width - sep_width
-              else
-                cc = text
-                remain_width = remain_width - width - sep_width
               end
             elseif position == "right" then
-              if #rc > 0 then
+              if #rc < 1 or tight then
+                rc = text .. rc
+                remain_width = remain_width - width - sep_width
+              else
                 rc = text .. sep .. rc
                 remain_width = remain_width - width - sep_width - sep_width
-              else
-                rc = text
-                remain_width = remain_width - width - sep_width
               end
             else
               reporter.error({

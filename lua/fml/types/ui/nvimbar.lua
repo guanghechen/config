@@ -15,6 +15,7 @@
 ---@class fml.types.ui.nvimbar.IRawComponent
 ---@field public name                   string
 ---@field public render                 fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): string, integer
+---@field public tight                  ?boolean
 ---@field public condition              ?fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): boolean
 ---@field public will_change            ?fun(context: fml.types.ui.nvimbar.IContext, prev_context: fml.types.ui.nvimbar.IContext|nil, remain_width: integer): boolean
 
@@ -22,6 +23,7 @@
 ---@field public enabled                boolean
 ---@field public last_result_text       string
 ---@field public last_result_width      integer
+---@field public tight                  boolean
 ---@field public render                 fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): string, integer
 ---@field public condition              fun(context: fml.types.ui.nvimbar.IContext, remain_width: integer): boolean
 ---@field public will_change            fun(context: fml.types.ui.nvimbar.IContext, prev_context: fml.types.ui.nvimbar.IContext|nil, remain_width: integer): boolean

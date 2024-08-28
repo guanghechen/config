@@ -37,17 +37,17 @@ end
 
 statusline
   :place(c.username, "left")
+  :place(c.cwd, "left")
   :place(c.mode, "left")
   :place(c.git, "left")
   :place(c.filetype, "left")
   :place(c.filestatus, "left")
   :place(c.readonly, "left")
   :place(c.search, "center")
-  :place(c.cwd, "right")
+  :place(c.pos, "right")
+  :place(c.fileformat, "right")
   :place(c.lsp, "right")
   :place(c.copilot, "right")
-  :place(c.fileformat, "right")
-  :place(c.pos, "right")
   :place(c.noice, "right")
   :place(c.diagnostics, "right")
 
