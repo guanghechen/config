@@ -12,7 +12,6 @@ local function gen_hlgroup_map(params)
     f_sl_copilot_InProgress = { fg = c.cyan, bg = t and "none" or c.bg_statusline },
     f_sl_copilot_Normal = { fg = c.blue, bg = t and "none" or c.bg_statusline },
     f_sl_copilot_Warning = { fg = c.yellow, bg = t and "none" or c.bg_statusline },
-    f_sl_cwd = { fg = c.cyan, bg = c.one_bg3 },
     f_sl_diagnostics_error = { fg = c.red, bg = t and "none" or c.bg_statusline },
     f_sl_diagnostics_hint = { fg = c.purple, bg = t and "none" or c.bg_statusline },
     f_sl_diagnostics_info = { fg = c.green, bg = t and "none" or c.bg_statusline },

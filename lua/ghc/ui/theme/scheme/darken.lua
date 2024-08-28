@@ -51,6 +51,7 @@ local M = {
     one_bg3 = "#373B43",
     orange = "#FCA2AA",
     pink = "#FF75A0",
+    pink_bg = "#B57CA5",
     pmenu_bg = "#61AFEF",
     purple = "#DE98FD",
     red = "#E06C75",
@@ -58,6 +59,7 @@ local M = {
     teal = "#519ABA",
     vibrant_green = "#7ECA9C",
     white = "#ABB2BF",
+    white_fg = "#DDDDDD",
     yellow = "#E7C787",
   },
 }

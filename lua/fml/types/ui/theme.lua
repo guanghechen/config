@@ -46,6 +46,7 @@
 ---@field public one_bg3                string
 ---@field public orange                 string
 ---@field public pink                   string
+---@field public pink_bg                string
 ---@field public pmenu_bg               string
 ---@field public purple                 string
 ---@field public red                    string
@@ -53,6 +54,7 @@
 ---@field public teal                   string
 ---@field public vibrant_green          string
 ---@field public white                  string
+---@field public white_fg               string
 ---@field public yellow                 string
 
 ---@class fml.types.ui.theme.IScheme

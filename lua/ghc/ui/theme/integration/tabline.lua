@@ -15,6 +15,7 @@ local function gen_hlgroup_map(params)
     f_tl_buf_mod_cur = { fg = c.green, bg = t and "none" or c.black },
     f_tl_buf_title = { fg = c.light_grey, bg = t and "none" or c.black2 },
     f_tl_buf_title_cur = { fg = c.white, bg = t and "none" or c.black },
+    f_tl_cwd = { fg = c.white_fg, bg = c.pink_bg },
     f_tl_neotree_blank = { fg = c.white, bg = t and "none" or c.black2 },
     f_tl_neotree_text = { fg = c.blue, bg = t and "none" or c.black2 },
     f_tl_neotree_split = { fg = c.line, bg = t and "none" or c.black2 },

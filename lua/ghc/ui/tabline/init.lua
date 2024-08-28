@@ -16,6 +16,7 @@ local tabline = fml.ui.Nvimbar.new({
 
 local c = {
   bufs = "bufs",
+  cwd = "cwd",
   neotree = "neotree",
   tabs = "tabs",
 }
@@ -25,6 +26,7 @@ end
 
 tabline
   ---
+  :place(c.cwd, "right")
   :place(c.tabs, "right")
   :place(c.neotree, "left")
   :place(c.bufs, "left")

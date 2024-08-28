@@ -16,7 +16,6 @@ local statusline = fml.ui.Nvimbar.new({
 
 local c = {
   copilot = "copilot",
-  cwd = "cwd",
   diagnostics = "diagnostics",
   fileformat = "fileformat",
   filepath = "filepath",
@@ -37,7 +36,6 @@ end
 
 statusline
   :place(c.username, "left")
-  :place(c.cwd, "left")
   :place(c.mode, "left")
   :place(c.git, "left")
   :place(c.filetype, "left")
