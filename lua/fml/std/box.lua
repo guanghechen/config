@@ -14,12 +14,6 @@ local M = {}
 ---@field public min_width               ?number
 ---@field public min_height              ?number
 
----@class fml.types.IRect
----@field public row                    integer
----@field public col                    integer
----@field public width                  integer
----@field public height                 integer
-
 ---@param size                          number
 ---@param full_size                     integer
 ---@return integer
@@ -31,7 +25,7 @@ function M.flat(size, full_size)
 end
 
 ---@param params                        fml.std.box.IMeasureParams
----@return fml.types.IRect
+---@return fml.ui.types.IRect
 function M.measure(params)
   local full_width = vim.o.columns ---@type integer
   local full_height = vim.o.lines ---@type integer
@@ -71,7 +65,7 @@ function M.measure(params)
 
   row = M.flat(params.row or row, full_height)
   col = M.flat(params.col or col, full_width)
-  local rect = { row = row, col = col, width = width, height = height } ---@type fml.types.IRect
+  local rect = { row = row, col = col, width = width, height = height } ---@type fml.ui.types.IRect
   return rect
 end
 
