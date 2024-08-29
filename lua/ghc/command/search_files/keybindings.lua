@@ -100,6 +100,12 @@ local input_keymaps = {
     callback = actions.replace_file,
     desc = "search: replace file",
   },
+  {
+    modes = { "n", "v" },
+    key = "<leader><S-cr>",
+    callback = actions.replace_file_all,
+    desc = "search: replace all files",
+  },
 }
 
 ---@class ghc.command.search_files.keybindings

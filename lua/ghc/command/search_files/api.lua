@@ -5,6 +5,8 @@ local state = require("ghc.command.search_files.state")
 ---@field public filepath               string
 ---@field public filematch              fml.std.oxi.search.IFileMatch
 ---@field public match_idx              integer
+---@field public children               ?string[]
+---@field public fragmentary            ?boolean
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 ---@field public content                ?string
@@ -276,6 +278,7 @@ function M.fetch_data(input_text, force, callback)
   for _, filepath in ipairs(result.item_orders) do
     local file_match = result.items[filepath] ---@type fml.std.oxi.search.IFileMatch|nil
     if file_match ~= nil then
+      local children = {} ---@type string[]
       local filename = fml.path.basename(filepath) ---@type string
       local icon, icon_hl = fml.util.calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
@@ -375,6 +378,7 @@ function M.fetch_data(input_text, force, callback)
             end
 
             table.insert(items, item)
+            table.insert(children, item.uuid)
 
             ---@type ghc.command.search_files.IItemData
             local item_data = {
@@ -394,6 +398,7 @@ function M.fetch_data(input_text, force, callback)
                   filepath = filepath,
                   filematch = file_match,
                   match_idx = 0,
+                  children = children,
                   lnum = s_lnum,
                   col = s_col,
                 }
@@ -434,6 +439,7 @@ function M.fetch_data(input_text, force, callback)
               highlights = highlights,
             }
             table.insert(items, item)
+            table.insert(children, item.uuid)
 
             ---@type ghc.command.search_files.IItemData
             local item_data = {
@@ -453,6 +459,7 @@ function M.fetch_data(input_text, force, callback)
                   filepath = filepath,
                   filematch = file_match,
                   match_idx = 0,
+                  children = children,
                   lnum = lnum,
                   col = col,
                 }
@@ -465,7 +472,12 @@ function M.fetch_data(input_text, force, callback)
 
       if item_data_map[file_item_uuid] == nil then
         ---@type ghc.command.search_files.IItemData
-        local file_item_data = { filepath = filepath, filematch = file_match, match_idx = 0 }
+        local file_item_data = {
+          filepath = filepath,
+          filematch = file_match,
+          match_idx = 0,
+          children = {},
+        }
         item_data_map[file_item_uuid] = file_item_data
       end
     end
@@ -635,6 +647,143 @@ function M.refresh_file_item(filepath)
   end
 
   _last_preview_data = nil
+end
+
+---@param uuid                          string
+---@param parent_uuid                   ?string
+---@return nil
+function M.replace_file(uuid, parent_uuid)
+  if _item_data_map == nil then
+    return nil
+  end
+
+  local item_data = _item_data_map[uuid] ---@type ghc.command.search_files.IItemData|nil
+  if item_data == nil then
+    return
+  end
+
+  local cwd = state.search_cwd:snapshot() ---@type string
+  local filepath = item_data.filepath ---@type string
+  local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
+  local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
+  local search_pattern = session.search_pattern:snapshot() ---@type string
+  local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
+
+  if item_data.match_idx > 0 then
+    local succeed = fml.oxi.replace_file_by_matches({
+      cwd = cwd,
+      filepath = filepath,
+      flag_case_sensitive = flag_case_sensitive,
+      flag_regex = flag_regex,
+      search_pattern = search_pattern,
+      replace_pattern = replace_pattern,
+      match_idxs = { item_data.match_idx },
+    })
+    if succeed then
+      local parent_item_data = parent_uuid ~= nil and _item_data_map[parent_uuid] or nil
+      if parent_item_data and parent_item_data.children ~= nil then
+        local children = parent_item_data.children ---@type string[]
+        local N = #children ---@type integer
+        local lnum = 0 ---@type integer
+        for i = 1, N, 1 do
+          local child_uuid = children[i] ---@type string
+          if child_uuid == uuid then
+            lnum = i
+            break
+          end
+        end
+
+        for i = lnum + 1, N, 1 do
+          local child_uuid = children[i] ---@type string
+          local child_item = _item_data_map[child_uuid] ---@type ghc.command.search_files.IItemData
+          children[i - 1] = child_uuid
+          child_item.match_idx = child_item.match_idx - 1
+        end
+        children[N] = nil
+        parent_item_data.fragmentary = true
+      end
+      _item_data_map[uuid] = nil
+      state.mark_item_deleted(uuid)
+    end
+    return
+  end
+
+  local children = item_data.children ---@type string[] | nil
+  if children == nil or #children < 1 then
+    return
+  end
+
+  local fragmentary = not not item_data.fragmentary ---@type boolean
+  if not fragmentary then
+    for _, child_uuid in ipairs(children) do
+      if state.has_item_deleted(child_uuid) then
+        fragmentary = true
+        break
+      end
+    end
+  end
+  if not fragmentary then
+    local succeed = fml.oxi.replace_file({
+      cwd = cwd,
+      filepath = filepath,
+      flag_case_sensitive = flag_case_sensitive,
+      flag_regex = flag_regex,
+      search_pattern = search_pattern,
+      replace_pattern = replace_pattern,
+    })
+    if succeed then
+      if item_data.children ~= nil and #item_data.children > 0 then
+        for _, child_uuid in ipairs(item_data.children) do
+          _item_data_map[child_uuid] = nil
+        end
+      end
+      _item_data_map[uuid] = nil
+      state.mark_item_deleted(uuid)
+    end
+    return
+  end
+
+  local match_idxs = {} ---@type string[]
+  for _, child_uuid in ipairs(children) do
+    if not state.has_item_deleted(child_uuid) then
+      local child_item = _item_data_map[child_uuid]
+      table.insert(match_idxs, child_item.match_idx)
+    end
+  end
+  local succeed = fml.oxi.replace_file_by_matches({
+    cwd = cwd,
+    filepath = filepath,
+    flag_case_sensitive = flag_case_sensitive,
+    flag_regex = flag_regex,
+    search_pattern = search_pattern,
+    replace_pattern = replace_pattern,
+    match_idxs = match_idxs,
+  })
+  if succeed then
+    for _, child_uuid in ipairs(children) do
+      _item_data_map[child_uuid] = nil
+    end
+    _item_data_map[uuid] = nil
+    state.mark_item_deleted(uuid)
+  end
+end
+
+---@return nil
+function M.replace_file_all()
+  if _item_data_map == nil then
+    return nil
+  end
+
+  local file_uuids = {} ---@type string[]
+  for uuid, item in pairs(_item_data_map) do
+    if item.match_idx == 0 and item.children ~= nil and #item.children > 0 then
+      table.insert(file_uuids, uuid)
+    end
+  end
+
+  for _, uuid in ipairs(file_uuids) do
+    M.replace_file(uuid, nil)
+  end
 end
 
 return M

@@ -64,6 +64,20 @@ function M.get_search()
   return _search
 end
 
+---@param uuid                          string
+---@return boolean
+function M.has_item_deleted(uuid)
+  return _search ~= nil and _search.state:has_item_deleted(uuid)
+end
+
+---@param uuid                          string
+---@return nil
+function M.mark_item_deleted(uuid)
+  if _search ~= nil then
+    _search.state:mark_item_deleted(uuid)
+  end
+end
+
 ---@return nil
 function M.reload()
   if _search ~= nil then

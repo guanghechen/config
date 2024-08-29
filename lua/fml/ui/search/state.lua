@@ -229,8 +229,10 @@ function M:mark_item_deleted(uuid)
     self._item_uuid_cur = items[lnum] and items[lnum].uuid or nil
   end
 
-  self.dirtier_main:mark_dirty()
-  self.dirtier_preview:mark_dirty()
+  vim.schedule(function()
+    self.dirtier_main:mark_dirty()
+    self.dirtier_preview:mark_dirty()
+  end)
 end
 
 ---@return integer

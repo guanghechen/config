@@ -138,48 +138,15 @@ end
 function M.replace_file()
   local search = state.get_search() ---@type fml.types.ui.search.ISearch
   local item = search.state:get_current() ---@type fml.types.ui.search.IItem|nil
-  if item == nil then
+  if item ~= nil then
+    api.replace_file(item.uuid, item.parent)
     return
   end
+end
 
-  local item_data = api.get_item_data(item.uuid) ---@type ghc.command.search_files.IItemData|nil
-  if item_data == nil then
-    return
-  end
-
-  local cwd = state.search_cwd:snapshot() ---@type string
-  local filepath = item_data.filepath ---@type string
-  local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
-  local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
-  local search_pattern = session.search_pattern:snapshot() ---@type string
-  local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
-
-  local succeed = false ---@type boolean
-  if item_data.match_idx > 0 then
-    succeed = fml.oxi.replace_file_by_matches({
-      cwd = cwd,
-      filepath = filepath,
-      flag_case_sensitive = flag_case_sensitive,
-      flag_regex = flag_regex,
-      search_pattern = search_pattern,
-      replace_pattern = replace_pattern,
-      match_idxs = { item_data.match_idx },
-    })
-  else
-    succeed = fml.oxi.replace_file({
-      cwd = cwd,
-      filepath = filepath,
-      flag_case_sensitive = flag_case_sensitive,
-      flag_regex = flag_regex,
-      search_pattern = search_pattern,
-      replace_pattern = replace_pattern,
-    })
-  end
-
-  if succeed then
-    api.refresh_file_item(filepath)
-  end
-  state.reload()
+---@return nil
+function M.replace_file_all()
+  api.replace_file_all()
 end
 
 ---@return nil
