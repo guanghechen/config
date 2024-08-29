@@ -6,7 +6,6 @@ local augroups = {
   enable_spell = fml.util.augroup("enable_spell"),
   enable_wrap = fml.util.augroup("enable_wrap"),
   goto_last_loction = fml.util.augroup("goto_last_loction"),
-  remember_telescope_prompt = fml.util.augroup("remember_telescope_prompt"),
   session_autosave = fml.util.augroup("session_autosave"),
   set_fileformat = fml.util.augroup("set_fileformat"),
   set_filetype = fml.util.augroup("set_filetype"),
