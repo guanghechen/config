@@ -38,8 +38,7 @@ local M = require("fml.std.oxi.mod")
 ---@return fml.std.oxi.search.IResult|nil
 function M.search(params)
   local payload = M.json.stringify(params) ---@type string
-  local result_str = M.nvim_tools.search(payload) ---@type string
-  local ok, data = M.resolve_cmd_result("fml.std.oxi.search", result_str)
+  local ok, data = M.run_cmd("fml.std.oxi.search", M.nvim_tools.search, payload)
 
   if ok and data ~= nil and data.items ~= nil then
     local orders = {}

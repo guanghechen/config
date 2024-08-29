@@ -110,12 +110,7 @@ function M.replace_file(params)
 
   local ok, data = M.resolve_fun_result(
     "fml.std.oxi.replace_file",
-    M.nvim_tools.replace_file( ---
-      filepath,
-      search_pattern,
-      params.replace_pattern,
-      params.flag_regex
-    )
+    M.nvim_tools.replace_file(filepath, search_pattern, params.replace_pattern, params.flag_regex)
   )
   return ok and data
 end
@@ -142,7 +137,8 @@ function M.replace_file_by_matches(params)
     flag_regex = params.flag_regex,
     match_idxs = match_idxs,
   }
-  local ok, data = M.run_fun("fml.std.oxi.replace_file_by_matches", M.nvim_tools.replace_file_by_matches, resolved_params)
+  local payload = M.json.stringify(resolved_params)
+  local ok, data = M.run_fun("fml.std.oxi.replace_file_by_matches", M.nvim_tools.replace_file_by_matches, payload)
   return ok and data
 end
 
