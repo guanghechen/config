@@ -6,6 +6,7 @@ local navigate = require("fml.std.navigate")
 local oxi = require("fml.std.oxi")
 
 ---@class fml.ui.search.State : fml.types.ui.search.IState
+---@field protected _deleted_uuids      table<string, boolean>
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
 local M = {}
@@ -79,6 +80,8 @@ function M.new(props)
     callback = function(ok)
       self.dirtier_data:mark_clean()
       if ok then
+        ---@diagnostic disable-next-line: invisible
+        self._deleted_uuids = {} ---@type table<string, boolean>
         self.dirtier_main:mark_dirty()
         self.dirtier_preview:mark_dirty()
       end
@@ -118,6 +121,7 @@ function M.new(props)
   self.title = title
   self.uuid = uuid
   self.visible = visible
+  self._deleted_uuids = {} ---@type table<string, boolean>
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
 
@@ -150,6 +154,17 @@ function M:get_current_lnum()
   return self._item_lnum_cur
 end
 
+---@return string|nil
+function M:get_current_uuid()
+  return self._item_uuid_cur
+end
+
+---@param uuid                          string
+---@return boolean
+function M:has_item_deleted(uuid)
+  return self._deleted_uuids[uuid] ~= nil
+end
+
 ---@param lnum                          integer
 ---@return integer
 function M:locate(lnum)
@@ -164,6 +179,58 @@ function M:locate(lnum)
   self._item_lnum_cur = next_lnum
   self._item_uuid_cur = next_uuid
   return next_lnum
+end
+
+---@param uuid                          string
+---@return nil
+function M:mark_item_deleted(uuid)
+  local deleted_uuids = self._deleted_uuids ---@type table<string, boolean>
+  local lnum = 0 ---@type integer
+  local items = self.items ---@type fml.types.ui.search.IItem[]
+
+  for i, item in ipairs(self.items) do
+    if item.uuid == uuid then
+      lnum = i
+      break
+    end
+  end
+
+  if lnum < 1 then
+    return
+  end
+
+  deleted_uuids[uuid] = true
+  local parent_cur = items[lnum].parent ---@type string|nil
+  if parent_cur ~= nil and lnum > 1 and items[lnum - 1].uuid == parent_cur then
+    if lnum == #items or items[lnum + 1].parent ~= parent_cur then
+      lnum = lnum - 1
+      deleted_uuids[parent_cur] = true
+    end
+  end
+
+  local k = lnum ---@type integer
+  local N = #items ---@type integer
+  for i = lnum + 1, N, 1 do
+    local item = items[i] ---@type fml.types.ui.search.IItem
+    if deleted_uuids[item.parent] then
+      deleted_uuids[item.uuid] = true
+    else
+      items[k] = items[i]
+      k = k + 1
+    end
+  end
+  for i = k, N, 1 do
+    items[i] = nil
+  end
+
+  if self._item_uuid_cur == uuid then
+    lnum = math.max(1, math.min(lnum, #items)) ---@type integer
+    self._item_lnum_cur = lnum
+    self._item_uuid_cur = items[lnum] and items[lnum].uuid or nil
+  end
+
+  self.dirtier_main:mark_dirty()
+  self.dirtier_preview:mark_dirty()
 end
 
 ---@return integer

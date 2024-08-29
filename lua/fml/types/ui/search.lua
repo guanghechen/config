@@ -33,6 +33,7 @@
 
 ---@class fml.types.ui.search.IItem
 ---@field public group                  string|nil
+---@field public parent                 string|nil
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public highlights             fml.types.ui.IInlineHighlight[]
@@ -95,11 +96,10 @@
 ---@field public visible                fml.types.collection.IObservable
 ---@field public get_current            fun(self: fml.types.ui.search.IState): fml.types.ui.search.IItem|nil, integer, string|nil
 ---@field public get_current_lnum       fun(self: fml.types.ui.search.IState): integer
----@field public is_dimension_dirty     fun(self: fml.types.ui.search.IState): boolean
----@field public is_data_dirty          fun(self: fml.types.ui.search.IState): boolean
----@field public is_main_dirty          fun(self: fml.types.ui.search.IState): boolean
----@field public is_preview_dirty       fun(self: fml.types.ui.search.IState): boolean
+---@field public get_current_uuid       fun(self: fml.types.ui.search.IState): string|nil
+---@field public has_item_deleted       fun(self: fml.types.ui.search.IState, uuid: string): boolean
 ---@field public locate                 fun(self: fml.types.ui.search.IState, lnum: integer): integer
+---@field public mark_item_deleted      fun(self: fml.types.ui.search.IState, uuid: string): nil
 ---@field public moveup                 fun(self: fml.types.ui.search.IState): integer
 ---@field public movedown               fun(self: fml.types.ui.search.IState): integer
 

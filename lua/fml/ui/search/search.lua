@@ -207,6 +207,12 @@ function M.new(props)
       state:moveup()
       self:sync_main_cursor()
     end,
+    on_delete_item = function()
+      local uuid = state:get_current_uuid() ---@type string|nil
+      if uuid ~= nil then
+        state:mark_item_deleted(uuid)
+      end
+    end,
     on_main_mouse_click = function()
       ---@diagnostic disable-next-line: invisible
       local winnr_main = self._winnr_main ---@type integer|nil
@@ -272,6 +278,12 @@ function M.new(props)
     { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.on_main_up, desc = "search: focus prev item" },
     { modes = { "i", "n", "v" }, key = "<M-l>", callback = actions.focus_preview, desc = "search: focus preview" },
     { modes = { "i", "n", "v" }, key = "<C-a>l", callback = actions.focus_preview, desc = "search: focus preview" },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>dd",
+      callback = actions.on_delete_item,
+      desc = "search: delete current item",
+    },
   }
 
   ---@type fml.types.IKeymap[]

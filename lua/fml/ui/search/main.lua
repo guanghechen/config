@@ -28,15 +28,22 @@ function M.new(props)
   local on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
 
   local _last_items = nil ---@type fml.types.ui.search.IItem[]|nil
+  local _last_items_count = 0 ---@type integer
 
   ---@return nil
   local function render()
     local bufnr, new_created = self:create_buf_as_needed() ---@type integer, boolean
     local last_items = _last_items ---@type fml.types.ui.search.IItem[]|nil
+    local last_items_count = _last_items_count ---@type integer
     _last_items = state.items
+    _last_items_count = #state.items
 
     ---@type boolean
-    local has_content_changed = new_created or last_items == nil or last_items ~= state.items
+    local has_content_changed = new_created
+      or last_items == nil
+      or last_items ~= state.items
+      or last_items_count ~= #state.items
+
     if has_content_changed then
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
@@ -167,7 +174,7 @@ function M:place_lnum_sign()
         constant.SIGN_NR_SEARCH_MAIN_PRESENT,
         "",
         present_lnum == current_lnum and signcolumn.names.search_main_present_cur
-        or signcolumn.names.search_main_present,
+          or signcolumn.names.search_main_present,
         bufnr,
         { lnum = present_lnum }
       )
