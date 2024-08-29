@@ -8,6 +8,7 @@ use std::{collections::HashMap, process::Command, time::SystemTime};
 pub struct SearchBlockMatch {
     pub lnum: usize,  // start line number
     pub text: String, // block match lines.
+    pub offset: usize,
     pub matches: Vec<MatchPoint>,
 }
 
@@ -178,6 +179,7 @@ pub fn search_files(
                         path,
                         lines: ripgrep::Lines { text, .. },
                         line_number: lnum,
+                        absolute_offset: offset,
                         submatches,
                         ..
                     } => {
@@ -208,6 +210,7 @@ pub fn search_files(
                         file_item.matches.push(SearchBlockMatch {
                             lnum,
                             text,
+                            offset,
                             matches,
                         });
                     }
