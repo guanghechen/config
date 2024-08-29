@@ -1,5 +1,6 @@
 use crate::types::{replace::ReplacePreview, FunResult};
 use crate::util;
+use crate::util::replace::ReplaceFileByMatchesSucceedResult;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -8,7 +9,7 @@ pub struct ReplaceFileByMatchesParams {
     pub search_pattern: String,
     pub replace_pattern: String,
     pub flag_regex: bool,
-    pub match_idxs: Vec<usize>,
+    pub match_offsets: Vec<usize>,
 }
 
 pub fn replace_file(
@@ -31,22 +32,23 @@ pub fn replace_file(
 
 pub fn replace_file_by_matches(params: String) -> String {
     let params = serde_json::from_str::<ReplaceFileByMatchesParams>(&params).unwrap();
-    let result: FunResult<bool> = match util::replace::replace_file_by_matches(
-        &params.filepath,
-        &params.search_pattern,
-        &params.replace_pattern,
-        params.flag_regex,
-        &params.match_idxs,
-    ) {
-        Ok(succeed) => FunResult {
-            error: None,
-            data: Some(succeed),
-        },
-        Err(error) => FunResult {
-            error: Some(error),
-            data: None,
-        },
-    };
+    let result: FunResult<ReplaceFileByMatchesSucceedResult> =
+        match util::replace::replace_file_by_matches(
+            &params.filepath,
+            &params.search_pattern,
+            &params.replace_pattern,
+            params.flag_regex,
+            &params.match_offsets,
+        ) {
+            Ok(data) => FunResult {
+                error: None,
+                data: Some(data),
+            },
+            Err(error) => FunResult {
+                error: Some(error),
+                data: None,
+            },
+        };
     serde_json::to_string(&result).unwrap()
 }
 

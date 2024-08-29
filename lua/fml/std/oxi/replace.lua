@@ -8,7 +8,7 @@ local M = require("fml.std.oxi.mod")
 ---@field public flag_regex             boolean
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
----@field public match_idxs             integer[]
+---@field public match_offsets          integer[]
 
 ---@class fml.std.oxi.replace.replace_file.IRawResult
 ---@field public success                boolean
@@ -31,6 +31,9 @@ local M = require("fml.std.oxi.mod")
 ---@class fml.std.oxi.replace.replace_file.IResult
 ---@field public success                boolean
 ---@field public error                  ?string
+
+---@class fml.std.oxi.replace.replace_file_by_matches.IResult
+---@field public offset_deltas          integer[]
 
 ---@class fml.std.oxi.replace.replace_file_preview.IResult
 ---@field public lines                  string[]
@@ -65,7 +68,7 @@ local M = require("fml.std.oxi.mod")
 ---@field public flag_regex             boolean
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
----@field public match_idxs             integer[]
+---@field public match_offsets          integer[]
 
 ---@class fml.std.oxi.replace.replace_file_preview.IParams
 ---@field public flag_case_sensitive    boolean
@@ -117,16 +120,13 @@ end
 
 ---@param params                        fml.std.oxi.replace.replace_file_by_matches.IParams
 ---@return boolean
+---@return integer[]
 function M.replace_file_by_matches(params)
   local search_pattern = params.search_pattern ---@type string
   local filepath = path.resolve(params.cwd, params.filepath) ---@type string
+  local match_offsets = params.match_offsets ---@type integer[]
   if params.flag_regex and not params.flag_case_sensitive then
     search_pattern = "(?i)" .. search_pattern:lower()
-  end
-
-  local match_idxs = {} ---@type integer[]
-  for _, match_idx in ipairs(params.match_idxs) do
-    table.insert(match_idxs, match_idx - 1)
   end
 
   ---@type fml.std.oxi.replace.replace_file_by_matches.IRawParams
@@ -135,11 +135,13 @@ function M.replace_file_by_matches(params)
     search_pattern = search_pattern,
     replace_pattern = params.replace_pattern,
     flag_regex = params.flag_regex,
-    match_idxs = match_idxs,
+    match_offsets = match_offsets,
   }
   local payload = M.json.stringify(resolved_params)
   local ok, data = M.run_fun("fml.std.oxi.replace_file_by_matches", M.nvim_tools.replace_file_by_matches, payload)
-  return ok and data
+  ---@cast data fml.std.oxi.replace.replace_file_by_matches.IResult
+
+  return ok, ok and data.offset_deltas or {}
 end
 
 ---@param params                        fml.std.oxi.replace.replace_file_preview.IParams

@@ -2,11 +2,17 @@ use crate::algorithm::kmp::find_all_matched_points;
 use crate::types::replace::ReplacePreview;
 use crate::util::regex::get_static_regex;
 use regex::Captures;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{Read, Write};
 
 use super::{replace_text_preview, replace_text_preview_with_matches};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReplaceFileByMatchesSucceedResult {
+    pub offset_deltas: Vec<i32>,
+}
 
 /// Peform replacement on the entire file.
 pub fn replace_file(
@@ -64,22 +70,23 @@ pub fn replace_file_by_matches(
     search_pattern: &String,
     replace_pattern: &str,
     flag_regex: bool,
-    match_idxs: &[usize],
-) -> Result<bool, String> {
+    match_offsets: &[usize],
+) -> Result<ReplaceFileByMatchesSucceedResult, String> {
     let mut file = File::open(filepath).map_err(|e| e.to_string())?;
     let mut text = String::new();
     file.read_to_string(&mut text).map_err(|e| e.to_string())?;
 
-    let match_idxs: HashSet<usize> = match_idxs.iter().cloned().collect();
+    let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
+    let len_of_search: usize = search_pattern.len();
     let mut next_text: String = text.to_string();
+    let mut offset_deltas: Vec<i32> = vec![];
     if flag_regex {
         if let Ok(r) = get_static_regex(search_pattern) {
             let regex = r.lock().unwrap();
-            let mut match_idx: usize = 0;
             next_text = regex
                 .replace_all(&text, |caps: &Captures| {
-                    let should_replace: bool = match_idxs.contains(&match_idx);
-                    match_idx += 1;
+                    let m = caps.get(0).unwrap();
+                    let should_replace: bool = match_offsets.contains(&m.start());
                     if should_replace {
                         let mut replacement: String = replace_pattern.to_string();
                         for i in 1..caps.len() {
@@ -88,6 +95,8 @@ pub fn replace_file_by_matches(
                                 replacement = replacement.replace(&placeholder, cap.as_str());
                             }
                         }
+                        let offset_delta: i32 = (replacement.len() as i32) - (len_of_search as i32);
+                        offset_deltas.push(offset_delta);
                         replacement
                     } else {
                         search_pattern.to_string()
@@ -98,14 +107,16 @@ pub fn replace_file_by_matches(
     } else {
         let match_points: Vec<usize> =
             find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
-        let len_of_search: usize = search_pattern.len();
+        let len_of_replace: usize = replace_pattern.len();
+        let offset_delta: i32 = (len_of_replace as i32) - (len_of_search as i32);
         let mut pieces: Vec<&str> = vec![];
         let mut i: usize = 0;
-        for (match_idx, m) in match_points.into_iter().enumerate() {
+        for m in match_points {
             let j: usize = m + len_of_search;
-            if match_idxs.contains(&match_idx) {
+            if match_offsets.contains(&m) {
                 pieces.push(&text[i..m]);
                 pieces.push(replace_pattern);
+                offset_deltas.push(offset_delta);
             } else {
                 pieces.push(&text[i..j]);
             }
@@ -119,7 +130,7 @@ pub fn replace_file_by_matches(
         let mut new_file = File::create(filepath).unwrap();
         new_file.write_all(next_text.as_bytes()).unwrap();
     }
-    Ok(true)
+    Ok(ReplaceFileByMatchesSucceedResult { offset_deltas })
 }
 
 pub fn replace_file_preview(

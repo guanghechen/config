@@ -8,6 +8,7 @@ local M = require("fml.std.oxi.mod")
 ---@class fml.std.oxi.search.IBlockMatch
 ---@field public lnum                   integer
 ---@field public text                   string
+---@field public offset                 integer
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
 ---@field public matches                fml.std.oxi.search.IMatchPoint[]

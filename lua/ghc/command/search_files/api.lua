@@ -4,15 +4,15 @@ local state = require("ghc.command.search_files.state")
 ---@class ghc.command.search_files.IItemData
 ---@field public filepath               string
 ---@field public filematch              fml.std.oxi.search.IFileMatch
----@field public match_idx              integer
+---@field public offset                 integer
+---@field public lnum                   integer
+---@field public col                    integer
+---@field public content                string
 ---@field public children               ?string[]
 ---@field public fragmentary            ?boolean
----@field public lnum                   ?integer
----@field public col                    ?integer
----@field public content                ?string
 
 ---@class ghc.command.search_files.IHighlight : fml.types.ui.IHighlight
----@field public match_idx              integer
+---@field public offset                 integer
 
 ---@class ghc.command.search_files.IPreviewData
 ---@field public filetype               string|nil
@@ -78,15 +78,12 @@ function M.calc_preview_data(item)
   local item_data = _item_data_map[item.uuid] ---@type ghc.command.search_files.IItemData|nil
   if item_data == nil then
     local lines = { "  Cannot retrieve the item by uuid=" .. item.uuid } ---@type string[]
+
     ---@type ghc.command.search_files.IHighlight[]
-    local highlights = { { match_idx = 0, lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
+    local highlights = { { offset = -1, lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
+
     ---@type ghc.command.search_files.IPreviewData
-    local result = {
-      filetype = nil,
-      highlights = highlights,
-      lines = lines,
-      title = item.uuid,
-    }
+    local result = { filetype = nil, highlights = highlights, lines = lines, title = item.uuid }
     return result
   end
 
@@ -95,15 +92,12 @@ function M.calc_preview_data(item)
   local filename = fml.path.basename(filepath) ---@type string
   if not fml.is.printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
+
     ---@type ghc.command.search_files.IHighlight[]
-    local highlights = { { match_idx = 0, lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
+    local highlights = { { offset = -1, lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
+
     ---@type ghc.command.search_files.IPreviewData
-    local result = {
-      filetype = nil,
-      highlights = highlights,
-      lines = lines,
-      title = item_data.filepath,
-    }
+    local result = { filetype = nil, highlights = highlights, lines = lines, title = item_data.filepath }
     return result
   end
 
@@ -113,7 +107,7 @@ function M.calc_preview_data(item)
   local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
   local search_pattern = session.search_pattern:snapshot() ---@type string
   local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
-  local match_idx_cur = item_data.match_idx == 0 and 1 or item_data.match_idx ---@type integer
+  local match_offset_cur = item_data.offset ---@type integer
 
   if flag_replace then
     ---@type fml.std.oxi.replace.replace_file_preview_with_matches.IResult
@@ -135,14 +129,23 @@ function M.calc_preview_data(item)
     local k = 1 ---@type integer
     local offset = 0 ---@type integer
     local lwidth = lwidths[1] + 1 ---@type integer
+
+    local order = 0 ---@type integer
+    local offset_delta = 0 ---@type integer
+    local match_offset = 0 ---@type integer
     local is_search_match = false ---@type boolean
-    local match_idx = 0.5 ---@type number
-    for p_match_idx, match in ipairs(matches) do
+    for _, match in ipairs(matches) do
       is_search_match = not is_search_match
-      match_idx = match_idx + 0.5
-      local hlname = is_search_match
-          and (match_idx == match_idx_cur and "f_us_preview_search_cur" or "f_us_preview_search")
-        or (match_idx == match_idx_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
+      if is_search_match then
+        order = order + 1
+        match_offset = match.l - offset_delta ---@type integer
+      else
+        offset_delta = offset_delta + (match.r - match.l)
+      end
+
+      local is_match_cur = match_offset_cur == match_offset or (match_offset_cur < 0 and order == 1) ---@type boolean
+      local hlname = is_search_match and (is_match_cur and "f_us_preview_search_cur" or "f_us_preview_search")
+        or (is_match_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
 
       local l = match.l ---@type integer
       local r = match.r ---@type integer
@@ -159,7 +162,7 @@ function M.calc_preview_data(item)
         l = offset + lwidth ---@type integer
 
         ---@type ghc.command.search_files.IHighlight
-        local highlight = { match_idx = p_match_idx, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
+        local highlight = { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
         table.insert(highlights, highlight)
       end
     end
@@ -176,7 +179,8 @@ function M.calc_preview_data(item)
     local file_match = item_data.filematch ---@type fml.std.oxi.search.IFileMatch
     local lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
     local highlights = {} ---@type ghc.command.search_files.IHighlight[]
-    local match_idx = 0 ---@type integer
+
+    local order = 0 ---@type integer
     for _, block_match in ipairs(file_match.matches) do
       local lwidths = block_match.lwidths ---@type integer[]
       local lnum0 = block_match.lnum ---@type integer
@@ -185,8 +189,10 @@ function M.calc_preview_data(item)
       local offset = 0 ---@type integer
       local lwidth = lwidths[1] + 1 ---@type integer
       for _, match in ipairs(block_match.matches) do
-        match_idx = match_idx + 1
-        local hlname = match_idx == match_idx_cur and "f_us_match_cur" or "f_us_match" ---@type string
+        order = order + 1 ---@type integer
+        local match_offset = block_match.offset + match.l ---@type integer
+        local is_match_cur = match_offset_cur == match_offset or (match_offset_cur < 0 and order == 1) ---@type boolean
+        local hlname = is_match_cur and "f_us_match_cur" or "f_us_match" ---@type string
 
         local l = match.l ---@type integer
         local r = match.r ---@type integer
@@ -203,7 +209,7 @@ function M.calc_preview_data(item)
           l = offset + lwidth ---@type integer
 
           ---@type ghc.command.search_files.IHighlight
-          local highlight = { match_idx = match_idx, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
+          local highlight = { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
           table.insert(highlights, highlight)
         end
       end
@@ -384,6 +390,7 @@ function M.fetch_data(input_text, force, callback)
             local item_data = {
               filepath = filepath,
               filematch = file_match,
+              offset = block_match.offset + original_search_match.l,
               match_idx = match_idx,
               lnum = s_lnum,
               col = s_col,
@@ -397,10 +404,11 @@ function M.fetch_data(input_text, force, callback)
                 local file_item_data = {
                   filepath = filepath,
                   filematch = file_match,
-                  match_idx = 0,
+                  offset = -1,
                   children = children,
                   lnum = s_lnum,
                   col = s_col,
+                  content = s_lines[s_k],
                 }
                 item_data_map[file_item_uuid] = file_item_data
               end
@@ -445,7 +453,7 @@ function M.fetch_data(input_text, force, callback)
             local item_data = {
               filepath = filepath,
               filematch = file_match,
-              match_idx = match_idx,
+              offset = block_match.offset + search_match.l,
               lnum = lnum,
               col = col,
               content = lines[k],
@@ -458,10 +466,11 @@ function M.fetch_data(input_text, force, callback)
                 local file_item_data = {
                   filepath = filepath,
                   filematch = file_match,
-                  match_idx = 0,
-                  children = children,
+                  offset = -1,
                   lnum = lnum,
                   col = col,
+                  content = lines[k],
+                  children = children,
                 }
                 item_data_map[file_item_uuid] = file_item_data
               end
@@ -475,7 +484,10 @@ function M.fetch_data(input_text, force, callback)
         local file_item_data = {
           filepath = filepath,
           filematch = file_match,
-          match_idx = 0,
+          offset = -1,
+          lnum = 1,
+          col = 0,
+          content = "",
           children = {},
         }
         item_data_map[file_item_uuid] = file_item_data
@@ -513,7 +525,7 @@ function M.gen_quickfix_items()
   local search_cwd = state.search_cwd:snapshot() ---@type string
   local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
   for _, item in pairs(_item_data_map) do
-    if item.match_idx > 0 then
+    if item.offset >= 0 then
       local absolute_filepath = fml.path.join(search_cwd, item.filepath) ---@type string
       local relative_filepath = fml.path.relative(cwd, absolute_filepath, false) ---@type string
       table.insert(quickfix_items, {
@@ -525,12 +537,6 @@ function M.gen_quickfix_items()
     end
   end
   return quickfix_items
-end
-
----@param uuid                          string
----@return ghc.command.search_files.IItemData|nil
-function M.get_item_data(uuid)
-  return _item_data_map and _item_data_map[uuid]
 end
 
 ---@param item                          fml.types.ui.search.IItem
@@ -570,23 +576,38 @@ function M.patch_preview_data(item, last_item, last_data)
     return M.fetch_preview_data(item)
   end
 
-  local match_idx_cur = item_data.match_idx == 0 and 1 or item_data.match_idx ---@type integer
-  local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
   local highlights = {} ---@type fml.types.ui.IHighlight[]
+  local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
+  local match_offset_cur = item_data.offset ---@type integer
+
   if flag_replace then
+    local order = 0 ---@type integer
+    local offset = -1 ---@type integer
     for _, hl in ipairs(_last_preview_data.highlights) do
-      local is_search_match = hl.match_idx % 2 == 1 ---@type boolean
-      local match_idx = is_search_match and ((hl.match_idx + 1) / 2) or (hl.match_idx / 2) ---@type integer
-      local hlname = is_search_match
-          and (match_idx == match_idx_cur and "f_us_preview_search_cur" or "f_us_preview_search")
-        or (match_idx == match_idx_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
+      if hl.offset ~= offset then
+        offset = hl.offset
+        order = order + 1
+      end
+
+      local is_match_cur = match_offset_cur == hl.offset or (match_offset_cur < 0 and order == 1) ---@type boolean
+      local is_search_match = hl.hlname == "f_us_preview_search_cur" or hl.hlname == "f_us_preview_search"
+      local hlname = is_search_match and (is_match_cur and "f_us_preview_search_cur" or "f_us_preview_search")
+        or (is_match_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
+
       local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
       table.insert(highlights, highlight)
     end
   else
+    local order = 0 ---@type integer
+    local offset = -1 ---@type integer
     for _, hl in ipairs(_last_preview_data.highlights) do
-      local match_idx = hl.match_idx ---@type integer
-      local hlname = match_idx == match_idx_cur and "f_us_match_cur" or "f_us_match" ---@type string
+      if hl.offset ~= offset then
+        offset = hl.offset
+        order = order + 1
+      end
+
+      local is_match_cur = match_offset_cur == hl.offset or (match_offset_cur < 0 and order == 1) ---@type boolean
+      local hlname = is_match_cur and "f_us_match_cur" or "f_us_match" ---@type string
       local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
       table.insert(highlights, highlight)
     end
@@ -669,21 +690,23 @@ function M.replace_file(uuid, parent_uuid)
   local search_pattern = session.search_pattern:snapshot() ---@type string
   local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
 
-  if item_data.match_idx > 0 then
-    local succeed = fml.oxi.replace_file_by_matches({
+  if item_data.offset >= 0 then
+    local succeed, offset_deltas = fml.oxi.replace_file_by_matches({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
       flag_regex = flag_regex,
       search_pattern = search_pattern,
       replace_pattern = replace_pattern,
-      match_idxs = { item_data.match_idx },
+      match_offsets = { item_data.offset },
     })
     if succeed then
       local parent_item_data = parent_uuid ~= nil and _item_data_map[parent_uuid] or nil
       if parent_item_data and parent_item_data.children ~= nil then
         local children = parent_item_data.children ---@type string[]
         local N = #children ---@type integer
+        local offset_delta = offset_deltas[1] or 0 ---@type integer
+
         local lnum = 0 ---@type integer
         for i = 1, N, 1 do
           local child_uuid = children[i] ---@type string
@@ -692,12 +715,11 @@ function M.replace_file(uuid, parent_uuid)
             break
           end
         end
-
         for i = lnum + 1, N, 1 do
           local child_uuid = children[i] ---@type string
-          local child_item = _item_data_map[child_uuid] ---@type ghc.command.search_files.IItemData
+          local child_item_data = _item_data_map[child_uuid] ---@type ghc.command.search_files.IItemData
+          child_item_data.offset = child_item_data.offset + offset_delta
           children[i - 1] = child_uuid
-          child_item.match_idx = child_item.match_idx - 1
         end
         children[N] = nil
         parent_item_data.fragmentary = true
@@ -722,8 +744,30 @@ function M.replace_file(uuid, parent_uuid)
       end
     end
   end
-  if not fragmentary then
-    local succeed = fml.oxi.replace_file({
+
+  local succeed = false ---@type boolean
+  if fragmentary then
+    local match_offsets = {} ---@type string[]
+    for _, child_uuid in ipairs(children) do
+      if not state.has_item_deleted(child_uuid) then
+        local child_item = _item_data_map[child_uuid]
+        table.insert(match_offsets, child_item.offset)
+      end
+    end
+
+    ---@type boolean
+    succeed = fml.oxi.replace_file_by_matches({
+      cwd = cwd,
+      filepath = filepath,
+      flag_case_sensitive = flag_case_sensitive,
+      flag_regex = flag_regex,
+      search_pattern = search_pattern,
+      replace_pattern = replace_pattern,
+      match_offsets = match_offsets,
+    })
+  else
+    ---@type boolean
+    succeed = fml.oxi.replace_file({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -731,34 +775,8 @@ function M.replace_file(uuid, parent_uuid)
       search_pattern = search_pattern,
       replace_pattern = replace_pattern,
     })
-    if succeed then
-      if item_data.children ~= nil and #item_data.children > 0 then
-        for _, child_uuid in ipairs(item_data.children) do
-          _item_data_map[child_uuid] = nil
-        end
-      end
-      _item_data_map[uuid] = nil
-      state.mark_item_deleted(uuid)
-    end
-    return
   end
 
-  local match_idxs = {} ---@type string[]
-  for _, child_uuid in ipairs(children) do
-    if not state.has_item_deleted(child_uuid) then
-      local child_item = _item_data_map[child_uuid]
-      table.insert(match_idxs, child_item.match_idx)
-    end
-  end
-  local succeed = fml.oxi.replace_file_by_matches({
-    cwd = cwd,
-    filepath = filepath,
-    flag_case_sensitive = flag_case_sensitive,
-    flag_regex = flag_regex,
-    search_pattern = search_pattern,
-    replace_pattern = replace_pattern,
-    match_idxs = match_idxs,
-  })
   if succeed then
     for _, child_uuid in ipairs(children) do
       _item_data_map[child_uuid] = nil
@@ -776,7 +794,7 @@ function M.replace_file_all()
 
   local file_uuids = {} ---@type string[]
   for uuid, item in pairs(_item_data_map) do
-    if item.match_idx == 0 and item.children ~= nil and #item.children > 0 then
+    if item.offset < 0 and item.children ~= nil and #item.children > 0 then
       table.insert(file_uuids, uuid)
     end
   end
