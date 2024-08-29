@@ -1,14 +1,18 @@
+---@return integer
+---@return integer
 ---@return string
 local function calc_row_percentage()
-  local current_line = vim.fn.line(".")
   local total_lines = vim.fn.line("$")
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local row = cursor[1] ---@type integer
+  local col = cursor[2] + 1 ---@type integer
 
-  if current_line == 1 then
-    return "Top"
-  elseif current_line == total_lines then
-    return "Bot"
+  if row == 1 then
+    return row, col, "Top"
+  elseif row == total_lines then
+    return row, col, "Bot"
   else
-    return fml.string.pad_start(tostring(math.floor(100 * current_line / total_lines)), 2, " ") .. "%%"
+    return row, col, fml.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%"
   end
 end
 
@@ -16,8 +20,9 @@ end
 local M = {
   name = "pos",
   render = function()
-    local text_anchor = "%l·%c " ---@type string
-    local text_pos = " " .. calc_row_percentage() .. " " ---@type string
+    local row, col, percentage = calc_row_percentage() ---@type integer, integer, string
+    local text_anchor = "" .. row .. "·" .. col .. " " ---@type string
+    local text_pos = " " .. percentage .. " " ---@type string
     local hl_text = fml.nvimbar.txt(text_anchor, "f_sl_text") .. fml.nvimbar.txt(text_pos, "f_sl_pos") ---@type string
     local width = vim.fn.strwidth(text_anchor .. text_pos) ---@type integer
     return hl_text, width

@@ -25,8 +25,14 @@ end
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
   name = "filestatus",
+  tight = true,
   render = function()
-    local text_filestatus = get_filestatus() ---@type string
+    local status = get_filestatus() ---@type string
+    if #status < 1 then
+      return "", 0
+    end
+
+    local text_filestatus = " " .. status ---@type string
     local hl_text = fml.nvimbar.txt(text_filestatus, "f_sl_text") ---@type string
     local width = vim.fn.strwidth(text_filestatus)
     return hl_text, width

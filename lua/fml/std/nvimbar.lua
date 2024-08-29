@@ -46,7 +46,7 @@ end
 ---@param hlname                        string
 ---@return string
 function M.txt(text, hlname)
-  return "%#" .. hlname .. "#" .. text
+  return "%#" .. hlname .. "#" .. text:gsub("%%", "%%%%")
 end
 
 ---@param text                          string

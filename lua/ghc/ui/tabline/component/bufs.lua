@@ -35,7 +35,7 @@ local function render_buf(bufnr, is_current, is_first)
   local hl_text_title = fml.nvimbar.txt(text_title, hl_title)
   local hl_text_mod = is_mod and fml.nvimbar.txt(text_mod, hl_mod) or text_mod
 
-  local hl_text = fml.nvimbar.txt(hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod, hl_buf)
+  local hl_text = "%#" .. hl_buf .. "#" .. hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod ---@type string
   local width = vim.fn.strwidth(text_left_pad .. text_icon .. text_title .. text_mod) ---@type integer
   return fml.nvimbar.btn(hl_text, fn_active_buf, bufnr), width
 end

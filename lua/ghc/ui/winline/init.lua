@@ -81,7 +81,17 @@ function M.update(winnr, force)
   if vim.api.nvim_win_is_valid(winnr) then
     local result = M.render(winnr, force) ---@type string
     if #result > 0 then
-      vim.wo[winnr].winbar = result
+      local ok, err = pcall(function()
+        vim.wo[winnr].winbar = result
+      end)
+      if not ok then
+        fml.reporter.error({
+          from = "ghc.ui.winline",
+          subject = "update",
+          message = "Failed to update winbar.",
+          details = { winnr = winnr, result = result, err = err },
+        })
+      end
     end
   end
 end
