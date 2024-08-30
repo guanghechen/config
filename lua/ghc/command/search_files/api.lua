@@ -77,6 +77,8 @@ local M = {}
 
 ---@param uuid                          string
 ---@return ghc.command.search_files.IPreviewData
+---@return integer
+---@return integer
 function M.calc_preview_data(uuid)
   local item = _item_map[uuid] ---@type ghc.command.search_files.IItem|nil
   if item == nil then
@@ -87,7 +89,7 @@ function M.calc_preview_data(uuid)
 
     ---@type ghc.command.search_files.IPreviewData
     local result = { filetype = nil, highlights = highlights, lines = lines, title = uuid }
-    return result
+    return result, 1, 0
   end
 
   local cwd = state.search_cwd:snapshot() ---@type string
@@ -101,7 +103,7 @@ function M.calc_preview_data(uuid)
 
     ---@type ghc.command.search_files.IPreviewData
     local result = { filetype = nil, highlights = highlights, lines = lines, title = item.filepath }
-    return result
+    return result, 1, 0
   end
 
   local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
@@ -114,6 +116,8 @@ function M.calc_preview_data(uuid)
   local match_offsets = M.collect_valid_match_offsets(uuid) ---@type integer[]
   local lines = {} ---@type string[]
   local highlights = {} ---@type ghc.command.search_files.IHighlight[]
+  local cur_lnum = -1 ---@type integer
+  local cur_col = 0 ---@type integer
 
   if flag_replace then
     ---@type fml.std.oxi.replace.replace_file_preview_advance_by_matches.IResult
@@ -171,6 +175,11 @@ function M.calc_preview_data(uuid)
         ---@type ghc.command.search_files.IHighlight
         local highlight = { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
         table.insert(highlights, highlight)
+
+        if is_match_cur and cur_lnum < 0 then
+          cur_lnum = lnum
+          cur_col = col
+        end
       end
     end
   else
@@ -211,6 +220,11 @@ function M.calc_preview_data(uuid)
               ---@type ghc.command.search_files.IHighlight
               local highlight = { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
               table.insert(highlights, highlight)
+
+              if is_match_cur and cur_lnum < 0 then
+                cur_lnum = lnum
+                cur_col = col
+              end
             end
           end
         end
@@ -219,12 +233,13 @@ function M.calc_preview_data(uuid)
   end
 
   ---@type ghc.command.search_files.IPreviewData
-  return {
+  local data = {
     filetype = filetype,
     highlights = highlights,
     lines = lines,
     title = item.filepath,
   }
+  return data, cur_lnum < 0 and 1 or cur_lnum, cur_col
 end
 
 ---@param uuid                          string
@@ -493,10 +508,8 @@ end
 ---@param search_item                   fml.types.ui.search.IItem
 ---@return fml.ui.search.preview.IData
 function M.fetch_preview_data(search_item)
-  local preview_data = M.calc_preview_data(search_item.uuid) ---@type ghc.command.search_files.IPreviewData
+  local preview_data, lnum, col = M.calc_preview_data(search_item.uuid) ---@type ghc.command.search_files.IPreviewData
   _last_preview_data = preview_data
-
-  local item = _item_map[search_item.uuid] ---@type ghc.command.search_files.IItem
 
   ---@type fml.ui.search.preview.IData
   return {
@@ -504,8 +517,8 @@ function M.fetch_preview_data(search_item)
     title = preview_data.title,
     lines = preview_data.lines,
     highlights = preview_data.highlights,
-    lnum = item.lnum,
-    col = item.col,
+    lnum = lnum,
+    col = col,
   }
 end
 
@@ -581,6 +594,8 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
   end
 
   local highlights = {} ---@type fml.types.ui.IHighlight[]
+  local cur_lnum = -1 ---@type integer
+  local cur_col = 0 ---@type integer
   local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
   local match_offset_cur = item.offset ---@type integer
 
@@ -600,6 +615,11 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
 
       local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
       table.insert(highlights, highlight)
+
+      if is_match_cur and cur_lnum < 0 then
+        cur_lnum = hl.lnum
+        cur_col = hl.coll
+      end
     end
   else
     local order = 0 ---@type integer
@@ -614,6 +634,11 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
       local hlname = is_match_cur and "f_us_match_cur" or "f_us_match" ---@type string
       local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
       table.insert(highlights, highlight)
+
+      if is_match_cur and cur_lnum < 0 then
+        cur_lnum = hl.lnum
+        cur_col = hl.coll
+      end
     end
   end
 
@@ -623,8 +648,8 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
     highlights = highlights or last_data.highlights,
     filetype = last_data.filetype,
     title = last_data.title,
-    lnum = item.lnum,
-    col = item.col,
+    lnum = cur_lnum < 0 and 1 or cur_lnum,
+    col = cur_col,
   }
   return data
 end
