@@ -108,8 +108,9 @@ pub fn replace_text_preview(
                             }
                         }
 
+                        let m = caps.get(0).unwrap();
                         if keep_search_pieces {
-                            format!("{}{}", search_pattern, replacement)
+                            format!("{}{}", m.as_str(), replacement)
                         } else {
                             replacement
                         }
@@ -169,12 +170,12 @@ pub fn replace_text_preview_by_matches(
                         let should_replace: bool = match_offsets.contains(&m.start());
                         if should_replace {
                             if keep_search_pieces {
-                                format!("{}{}", search_pattern, replacement)
+                                format!("{}{}", m.as_str(), replacement)
                             } else {
                                 replacement
                             }
                         } else {
-                            search_pattern.to_string()
+                            m.as_str().to_string()
                         }
                     })
                     .to_string();
@@ -250,7 +251,7 @@ pub fn replace_text_preview_advance(
                                 start: replace_start,
                                 end: replace_end,
                             });
-                            format!("{}{}", search_pattern, replacement)
+                            format!("{}{}", m.as_str(), replacement)
                         } else {
                             let replace_start: usize =
                                 m.start() + total_replace_len - total_search_len;
@@ -368,7 +369,7 @@ pub fn replace_text_preview_advance_by_matches(
                                     start: replace_start,
                                     end: replace_end,
                                 });
-                                format!("{}{}", search_pattern, replacement)
+                                format!("{}{}", m.as_str(), replacement)
                             } else {
                                 let replace_start: usize =
                                     m.start() + total_replace_len - total_search_len;
@@ -382,7 +383,7 @@ pub fn replace_text_preview_advance_by_matches(
                                 replacement
                             }
                         } else {
-                            search_pattern.to_string()
+                            m.as_str().to_string()
                         }
                     })
                     .to_string();

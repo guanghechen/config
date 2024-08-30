@@ -92,11 +92,12 @@ pub fn replace_file_by_matches(
                                 replacement = replacement.replace(&placeholder, cap.as_str());
                             }
                         }
-                        let offset_delta: i32 = (replacement.len() as i32) - (len_of_search as i32);
+                        let offset_delta: i32 =
+                            (replacement.len() as i32) - (m.end() as i32 - m.start() as i32);
                         offset_deltas.push(offset_delta);
                         replacement
                     } else {
-                        search_pattern.to_string()
+                        m.as_str().to_string()
                     }
                 })
                 .to_string();
