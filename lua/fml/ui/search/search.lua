@@ -5,6 +5,7 @@ local api_state = require("fml.api.state")
 local watch_observables = require("fml.fn.watch_observables")
 local std_array = require("fml.std.array")
 local util = require("fml.std.util")
+local icons = require("fml.ui.icons")
 local SearchInput = require("fml.ui.search.input")
 local SearchMain = require("fml.ui.search.main")
 local SearchPreview = require("fml.ui.search.preview")
@@ -556,15 +557,13 @@ function M:create_wins_as_needed()
       self._winnr_main = winnr_main
     end
 
-    vim.wo[winnr_main].cursorline = true
+    vim.wo[winnr_main].cursorline = match_count > 0
     vim.wo[winnr_main].number = false
     vim.wo[winnr_main].relativenumber = false
     vim.wo[winnr_main].signcolumn = "yes"
     vim.wo[winnr_main].winblend = 10
     vim.wo[winnr_main].winhighlight = MAIN_WIN_HIGHLIGHT
     vim.wo[winnr_main].wrap = false
-    vim.wo[winnr_main].cursorline = match_count > 0
-
     self:sync_main_cursor()
   else
     self._winnr_main = nil
@@ -598,14 +597,22 @@ function M:create_wins_as_needed()
       self._winnr_preview = winnr_preview
     end
 
-    vim.wo[winnr_preview].cursorline = true
+    vim.wo[winnr_preview].cursorline = match_count > 0
     vim.wo[winnr_preview].number = true
     vim.wo[winnr_preview].relativenumber = false
     vim.wo[winnr_preview].signcolumn = "yes:1"
     vim.wo[winnr_preview].winblend = 10
     vim.wo[winnr_preview].winhighlight = PREVIEW_WIN_HIGHLIGHT
     vim.wo[winnr_preview].wrap = false
-    vim.wo[winnr_preview].cursorline = match_count > 0
+    vim.wo[winnr_preview].list = true
+    vim.wo[winnr_preview].listchars = string.format(
+      "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
+      icons.listchars.eol,
+      icons.listchars.lead,
+      icons.listchars.nbsp,
+      icons.listchars.space,
+      icons.listchars.trail
+    )
   end
 
   ---@type vim.api.keyset.win_config

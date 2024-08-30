@@ -1,6 +1,30 @@
 ---@class fml.ui.icons
 local M = {}
 
+---@class fml.ui.icosn.fillchars
+M.fillchars = {
+  diff = "╱",
+  eob = " ",
+  foldopen = "",
+  foldclose = "",
+  fold = " ",
+  foldsep = " ",
+  msgsep = "─",
+  vert = "│",
+}
+
+---@class fml.ui.icons.listchars
+M.listchars = {
+  eol = "↲",
+  extends = "»",
+  lead = "·",
+  nbsp = "·",
+  precedes = "«",
+  space = "·",
+  tab = " ",
+  trail = "•",
+}
+
 ---@class fml.ui.icons.symbols
 M.symbols = {
   flag_fuzzy = "󰫳",

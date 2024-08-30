@@ -68,7 +68,7 @@ local function calc_same_line_pos(lwidths, l, r)
   end
 
   local col = l - offset
-  local col_end = math.min(lwidth - 1, r - offset)
+  local col_end = math.min(lwidth, r - offset)
   return lnum, col, col_end
 end
 
@@ -112,6 +112,8 @@ function M.calc_preview_data(uuid)
   local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
   local match_offset_cur = item.offset ---@type integer
   local match_offsets = M.collect_valid_match_offsets(uuid) ---@type integer[]
+  local lines = {} ---@type string[]
+  local highlights = {} ---@type ghc.command.search_files.IHighlight[]
 
   if flag_replace then
     ---@type fml.std.oxi.replace.replace_file_preview_advance_by_matches.IResult
@@ -125,10 +127,10 @@ function M.calc_preview_data(uuid)
       match_offsets = match_offsets,
     })
 
-    local lines = preview_result.lines ---@type string[]
+    lines = preview_result.lines ---@type string[]
+    highlights = {} ---@type ghc.command.search_files.IHighlight[]
     local lwidths = preview_result.lwidths ---@type integer[]
     local matches = preview_result.matches ---@type fml.types.IMatchPoint[]
-    local highlights = {} ---@type ghc.command.search_files.IHighlight[]
 
     local lnum0 = 1 ---@type integer
     local k = 1 ---@type integer
@@ -163,7 +165,7 @@ function M.calc_preview_data(uuid)
 
         local lnum = lnum0 + k - 1 ---@type integer
         local col = l - offset ---@type integer
-        local col_end = math.min(lwidth - 1, r - offset) ---@type integer
+        local col_end = math.min(lwidth, r - offset) ---@type integer
         l = offset + lwidth ---@type integer
 
         ---@type ghc.command.search_files.IHighlight
@@ -171,18 +173,9 @@ function M.calc_preview_data(uuid)
         table.insert(highlights, highlight)
       end
     end
-
-    ---@type ghc.command.search_files.IPreviewData
-    local result = {
-      filetype = filetype,
-      highlights = highlights,
-      lines = lines,
-      title = item.filepath,
-    }
-    return result
   else
-    local lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
-    local highlights = {} ---@type ghc.command.search_files.IHighlight[]
+    lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    highlights = {} ---@type ghc.command.search_files.IHighlight[]
 
     local filematch = M.get_filematch(item.filepath) ---@type fml.std.oxi.search.IFileMatch|nil
     if filematch ~= nil then
@@ -212,7 +205,7 @@ function M.calc_preview_data(uuid)
 
               local lnum = lnum0 + k - 1 ---@type integer
               local col = l - offset ---@type integer
-              local col_end = math.min(lwidth - 1, r - offset) ---@type integer
+              local col_end = math.min(lwidth, r - offset) ---@type integer
               l = offset + lwidth ---@type integer
 
               ---@type ghc.command.search_files.IHighlight
@@ -223,16 +216,15 @@ function M.calc_preview_data(uuid)
         end
       end
     end
-
-    ---@type ghc.command.search_files.IPreviewData
-    local result = {
-      filetype = filetype,
-      highlights = highlights,
-      lines = lines,
-      title = item.filepath,
-    }
-    return result
   end
+
+  ---@type ghc.command.search_files.IPreviewData
+  return {
+    filetype = filetype,
+    highlights = highlights,
+    lines = lines,
+    title = item.filepath,
+  }
 end
 
 ---@param uuid                          string
@@ -272,7 +264,6 @@ function M.fetch_data(input_text, force, callback)
   local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
   local include_patterns = session.search_include_patterns:snapshot() ---@type string
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
-
   local is_searching_current_buf = scope == "B" and current_buf_path ~= nil ---@type boolean
 
   ---@type fml.std.oxi.search.IResult|nil
@@ -328,11 +319,13 @@ function M.fetch_data(input_text, force, callback)
 
       local file_item_uuid = filepath ---@type string
       if not is_searching_current_buf then
+        local text = icon .. " " .. filepath ---@type string
+
         ---@type fml.types.ui.search.IItem
         local search_item = {
           group = filepath,
           uuid = file_item_uuid,
-          text = icon .. " " .. filepath,
+          text = text,
           highlights = file_highlights,
         }
         table.insert(search_items, search_item)
@@ -386,7 +379,7 @@ function M.fetch_data(input_text, force, callback)
             local search_item ---@type fml.types.ui.search.IItem
             if s_k == r_k then
               local prettier_line = line:sub(1, col_end) .. r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
-              local text = text_prefix .. prettier_line ---@type string
+              local text = text_prefix .. prettier_line .. fml.ui.icons.listchars.eol ---@type string
 
               ---@type fml.types.ui.IInlineHighlight[]
               local highlights = {
@@ -409,7 +402,7 @@ function M.fetch_data(input_text, force, callback)
               }
             else
               local prettier_line = line ---@type string
-              local text = text_prefix .. prettier_line ---@type string
+              local text = text_prefix .. prettier_line .. fml.ui.icons.listchars.eol ---@type string
 
               ---@type fml.types.ui.IInlineHighlight[]
               local highlights = {
@@ -453,7 +446,7 @@ function M.fetch_data(input_text, force, callback)
             local lnum = block_match.lnum + k - 1 ---@type integer
 
             local text_prefix = "  " .. lnum .. ":" .. col .. " " ---@type string
-            local text = text_prefix .. lines[k] ---@type string
+            local text = text_prefix .. lines[k] .. fml.ui.icons.listchars.eol ---@type string
             local width_prefix = string.len(text_prefix) ---@type integer
 
             ---@type fml.types.ui.IInlineHighlight[]
