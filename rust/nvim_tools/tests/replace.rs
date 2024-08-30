@@ -12,7 +12,7 @@ fn test_replace() {
         );
         println!(
             "{:?}",
-            replace::replace_text_preview_with_matches(
+            replace::replace_text_preview_advance(
                 &text,
                 &search_pattern,
                 &replace_pattern,
@@ -22,7 +22,7 @@ fn test_replace() {
         );
         println!(
             "{:?}",
-            replace::replace_text_preview_with_matches(
+            replace::replace_text_preview_advance(
                 &text,
                 &search_pattern,
                 &replace_pattern,
@@ -41,7 +41,7 @@ fn test_replace() {
         );
         println!(
             "{:?}",
-            replace::replace_text_preview_with_matches(
+            replace::replace_text_preview_advance(
                 &text,
                 &search_pattern,
                 &replace_pattern,
@@ -51,7 +51,7 @@ fn test_replace() {
         );
         println!(
             "{:?}",
-            replace::replace_text_preview_with_matches(
+            replace::replace_text_preview_advance(
                 &text,
                 &search_pattern,
                 &replace_pattern,
@@ -111,14 +111,14 @@ fn test_replace_text_preview_with_matches() {
 
     let search_pattern: &str = "lazygit";
     let replace_pattern: &str = "__waw__";
-    let result_with_regex = replace::replace_text_preview_with_matches(
+    let result_with_regex = replace::replace_text_preview_advance(
         text,
         search_pattern,
         replace_pattern,
         true,
         true,
     );
-    let result_without_regex = replace::replace_text_preview_with_matches(
+    let result_without_regex = replace::replace_text_preview_advance(
         text,
         search_pattern,
         replace_pattern,

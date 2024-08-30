@@ -1,13 +1,10 @@
 use crate::algorithm::kmp::find_all_matched_points;
-use crate::types::replace::ReplacePreview;
 use crate::util::regex::get_static_regex;
 use regex::Captures;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{Read, Write};
-
-use super::{replace_text_preview, replace_text_preview_with_matches};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReplaceFileByMatchesSucceedResult {
@@ -131,42 +128,4 @@ pub fn replace_file_by_matches(
         new_file.write_all(next_text.as_bytes()).unwrap();
     }
     Ok(ReplaceFileByMatchesSucceedResult { offset_deltas })
-}
-
-pub fn replace_file_preview(
-    filepath: &str,
-    search_pattern: &String,
-    replace_pattern: &str,
-    keep_search_pieces: bool,
-    flag_regex: bool,
-) -> Result<String, String> {
-    let mut file = File::open(filepath).map_err(|e| e.to_string())?;
-    let mut text = String::new();
-    file.read_to_string(&mut text).map_err(|e| e.to_string())?;
-    replace_text_preview(
-        &text,
-        search_pattern,
-        replace_pattern,
-        keep_search_pieces,
-        flag_regex,
-    )
-}
-
-pub fn replace_file_preview_with_matches(
-    filepath: &str,
-    search_pattern: &str,
-    replace_pattern: &str,
-    keep_search_pieces: bool,
-    flag_regex: bool,
-) -> Result<ReplacePreview, String> {
-    let mut file = File::open(filepath).map_err(|e| e.to_string())?;
-    let mut text = String::new();
-    file.read_to_string(&mut text).map_err(|e| e.to_string())?;
-    replace_text_preview_with_matches(
-        &text,
-        search_pattern,
-        replace_pattern,
-        keep_search_pieces,
-        flag_regex,
-    )
 }

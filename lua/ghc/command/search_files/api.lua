@@ -110,8 +110,8 @@ function M.calc_preview_data(item)
   local match_offset_cur = item_data.offset ---@type integer
 
   if flag_replace then
-    ---@type fml.std.oxi.replace.replace_file_preview_with_matches.IResult
-    local preview_result = fml.oxi.replace_file_preview_with_matches({
+    ---@type fml.std.oxi.replace.replace_file_preview_advance.IResult
+    local preview_result = fml.oxi.replace_file_preview_advance({
       flag_case_sensitive = flag_case_sensitive,
       flag_regex = flag_regex,
       search_pattern = search_pattern,
@@ -306,8 +306,8 @@ function M.fetch_data(input_text, force, callback)
         local lnum_delta = 0 ---@type integer
         local match_idx = 0 ---@type integer
         for _, block_match in ipairs(file_match.matches) do
-          ---@type fml.std.oxi.replace.replace_text_preview_with_matches.IResult
-          local preview_result = fml.oxi.replace_text_preview_with_matches({
+          ---@type fml.std.oxi.replace.replace_text_preview_advance.IResult
+          local preview_result = fml.oxi.replace_text_preview_advance({
             flag_case_sensitive = flag_case_sensitive,
             flag_regex = flag_regex,
             keep_search_pieces = true,

@@ -46,9 +46,21 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::replace::replace_file_preview)),
         ),
         (
-            "replace_file_preview_with_matches",
+            "replace_file_preview_by_matches",
             Object::from(Function::from_fn(
-                oxi::replace::replace_file_preview_with_matches,
+                oxi::replace::replace_file_preview_by_matches,
+            )),
+        ),
+        (
+            "replace_file_preview_advance",
+            Object::from(Function::from_fn(
+                oxi::replace::replace_file_preview_advance,
+            )),
+        ),
+        (
+            "replace_file_preview_advance_by_matches",
+            Object::from(Function::from_fn(
+                oxi::replace::replace_file_preview_advance_by_matches,
             )),
         ),
         (
@@ -56,9 +68,21 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::replace::replace_text_preview)),
         ),
         (
-            "replace_text_preview_with_matches",
+            "replace_text_preview_by_matches",
             Object::from(Function::from_fn(
-                oxi::replace::replace_text_preview_with_matches,
+                oxi::replace::replace_text_preview_by_matches,
+            )),
+        ),
+        (
+            "replace_text_preview_advance",
+            Object::from(Function::from_fn(
+                oxi::replace::replace_text_preview_advance,
+            )),
+        ),
+        (
+            "replace_text_preview_advance_by_matches",
+            Object::from(Function::from_fn(
+                oxi::replace::replace_text_preview_advance_by_matches,
             )),
         ),
         (
