@@ -1,4 +1,4 @@
-use crate::types::r#match::LineMatch;
+use crate::types::r#match::{LineMatch, MatchLocation};
 use crate::types::FunResult;
 use crate::util;
 use uuid::Uuid;
@@ -28,6 +28,21 @@ pub fn find_match_points_line_by_line(
 pub fn get_line_widths(text: String) -> String {
     let widths: Vec<u32> = util::string::get_line_widths(&text);
     serde_json::to_string(&widths).unwrap()
+}
+
+pub fn get_locations((text, offsets): (String, String)) -> String {
+    let offsets = util::string::parse_comma_list_as_nums::<usize>(&offsets);
+    let result: FunResult<Vec<MatchLocation>> = match offsets {
+        Ok(offsets) => FunResult {
+            error: None,
+            data: Some(util::string::get_locations(&text, &offsets)),
+        },
+        Err(error) => FunResult {
+            error: Some(error),
+            data: None,
+        },
+    };
+    serde_json::to_string(&result).unwrap()
 }
 
 pub fn normalize_comma_list(input: String) -> String {

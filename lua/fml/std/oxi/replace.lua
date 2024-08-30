@@ -54,11 +54,11 @@ local M = require("fml.std.oxi.mod")
 
 ---@class fml.std.oxi.replace.replace_file_preview_advance.IRawResult
 ---@field public text                   string
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@class fml.std.oxi.replace.replace_file_preview_advance_by_matches.IRawResult
 ---@field public text                   string
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@class fml.std.oxi.replace.replace_text_preview.IRawResult
 ---@field public text                   string
@@ -68,11 +68,11 @@ local M = require("fml.std.oxi.mod")
 
 ---@class fml.std.oxi.replace.replace_text_preview_advance.IRawResult
 ---@field public text                   string
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@class fml.std.oxi.replace.replace_text_preview_advance_by_matches.IRawResult
 ---@field public text                   string
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@class fml.std.oxi.replace.replace_file.IResult
 ---@field public success                boolean
@@ -92,12 +92,12 @@ local M = require("fml.std.oxi.mod")
 ---@class fml.std.oxi.replace.replace_file_preview_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@class fml.std.oxi.replace.replace_file_preview_advance_by_matches.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@class fml.std.oxi.replace.replace_text_preview.IResult
 ---@field public lines                  string[]
@@ -110,12 +110,12 @@ local M = require("fml.std.oxi.mod")
 ---@class fml.std.oxi.replace.replace_text_preview_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@class fml.std.oxi.replace.replace_text_preview_advance_by_matches.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@class fml.std.oxi.replace.replace_file.IParams
 ---@field public cwd                    string

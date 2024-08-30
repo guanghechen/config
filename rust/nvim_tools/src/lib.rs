@@ -29,6 +29,10 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::string::get_line_widths)),
         ),
         (
+            "get_locations",
+            Object::from(Function::from_fn(oxi::string::get_locations)),
+        ),
+        (
             "normalize_comma_list",
             Object::from(Function::from_fn(oxi::string::normalize_comma_list)),
         ),

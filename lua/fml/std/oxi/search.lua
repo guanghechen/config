@@ -1,17 +1,13 @@
 ---@class fml.std.oxi
 local M = require("fml.std.oxi.mod")
 
----@class fml.std.oxi.search.IMatchPoint
----@field public l                      integer
----@field public r                      integer
-
 ---@class fml.std.oxi.search.IBlockMatch
 ---@field public lnum                   integer
 ---@field public text                   string
 ---@field public offset                 integer
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@class fml.std.oxi.search.IFileMatch
 ---@field public matches                fml.std.oxi.search.IBlockMatch[]

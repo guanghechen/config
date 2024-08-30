@@ -4,7 +4,7 @@ local M = require("fml.std.oxi.mod")
 ---@class fml.std.oxi.string.ILineMatch
 ---@field public lnum                   integer
 ---@field public score                  integer
----@field public matches                fml.std.oxi.search.IMatchPoint[]
+---@field public matches                fml.types.IMatchPoint[]
 
 ---@param text                          string
 ---@return integer
@@ -41,6 +41,15 @@ function M.get_line_widths(text)
 
   local result = raw_result ---@type integer[]
   return result
+end
+
+---@param text                          string
+---@param offsets                       integer[]
+---@return fml.types.IMatchLocation[]
+function M.get_locations(text, offsets)
+  local ok, data =
+    M.resolve_fun_result("fml.std.oxi.get_locations", M.nvim_tools.get_locations(text, table.concat(offsets, ",")))
+  return ok and data or {}
 end
 
 ---@param text                          string

@@ -26,7 +26,7 @@
 ---@class fml.types.collection.IAdvanceHistory
 ---@field public name                   string
 ---@field public equals                 fml.types.IEquals
----@field public validate               fml.types.Validate
+---@field public validate               fml.types.IValidate
 ---@field public backward               fun(self: fml.types.collection.IAdvanceHistory, step?: integer): fml.types.T|nil, boolean
 ---@field public capacity               fun(self: fml.types.collection.IAdvanceHistory): integer
 ---@field public clear                  fun(self: fml.types.collection.IAdvanceHistory): nil

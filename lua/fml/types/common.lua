@@ -17,15 +17,25 @@
 ---| fun(x: T, y: T): boolean
 
 ---@generic T
----@alias fml.types.Validate
----| fun(element: T): boolean
-
----@generic T
 ---@alias fml.types.IFilter
 ---| fun(element: T, index: integer): boolean
 
+---@class fml.types.IMatchLocation
+---@field public offset                 integer
+---@field public lnum                   integer
+---@field public col                    integer
+
+---@class fml.types.IMatchPoint
+---@field public l                      integer
+---@field public r                      integer
+
 ---@generic T
----@alias fml.types.INormalize fun(x: T): T
+---@alias fml.types.INormalize
+---| fun(x: T): T
+
+---@generic T
+---@alias fml.types.IValidate
+---| fun(element: T): boolean
 
 ---@class fml.types.IKeymapOverridable
 ---@field public bufnr                  ?integer

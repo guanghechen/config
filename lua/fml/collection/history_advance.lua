@@ -3,7 +3,7 @@ local History = require("fml.collection.history")
 ---@class fml.collection.AdvanceHistory : fml.types.collection.IAdvanceHistory
 ---@field public name                   string
 ---@field public equals                 fml.types.IEquals
----@field public validate               fml.types.Validate
+---@field public validate               fml.types.IValidate
 ---@field private _history              fml.types.collection.IHistory
 local M = {}
 M.__index = M
@@ -19,14 +19,14 @@ end
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?fml.types.IEquals
----@field public validate               ?fml.types.Validate
+---@field public validate               ?fml.types.IValidate
 
 ---@class fml.collection.history_advance.IDeserializeProps
 ---@field public data                   fml.types.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?fml.types.IEquals
----@field public validate               ?fml.types.Validate
+---@field public validate               ?fml.types.IValidate
 
 ---@param props                         fml.collection.history_advance.IProps
 ---@return fml.collection.AdvanceHistory
@@ -203,7 +203,7 @@ end
 
 ---@return nil
 function M:rearrange()
-  local validate = self.validate ---@type fml.types.Validate
+  local validate = self.validate ---@type fml.types.IValidate
   self._history:rearrange(validate)
 end
 
