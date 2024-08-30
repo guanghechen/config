@@ -43,11 +43,12 @@ function M.new(props)
     end
 
     if
-        _patch_data ~= nil
-        and _last_item ~= nil
-        and _last_data ~= nil
-        and _last_item.group == item.group
-        and item.group ~= nil
+      _patch_data ~= nil
+      and _last_item ~= nil
+      and _last_data ~= nil
+      and _last_item.group == item.group
+      and not state:has_item_deleted(_last_item.uuid)
+      and item.group ~= nil
     then
       return _patch_data(item, _last_item, _last_data)
     end
@@ -78,10 +79,10 @@ function M.new(props)
 
     ---@type boolean
     local has_highlights_changed = has_content_changed
-        or data == nil
-        or last_data == nil
-        or data.filetype ~= last_data.filetype
-        or data.highlights ~= last_data.highlights
+      or data == nil
+      or last_data == nil
+      or data.filetype ~= last_data.filetype
+      or data.highlights ~= last_data.highlights
     if has_highlights_changed and data ~= nil then
       vim.api.nvim_buf_clear_namespace(bufnr, 0, 0, -1)
       local filetype = data and data.filetype or nil ---@type string|nil

@@ -79,6 +79,13 @@ function M.mark_item_deleted(uuid)
 end
 
 ---@return nil
+function M:mark_all_items_deleted()
+  if _search ~= nil then
+    _search.state:mark_all_items_deleted()
+  end
+end
+
+---@return nil
 function M.reload()
   if _search ~= nil then
     _search.state.dirtier_data:mark_dirty()

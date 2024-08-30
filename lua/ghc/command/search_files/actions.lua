@@ -139,7 +139,7 @@ function M.replace_file()
   local search = state.get_search() ---@type fml.types.ui.search.ISearch
   local item = search.state:get_current() ---@type fml.types.ui.search.IItem|nil
   if item ~= nil then
-    api.replace_file(item.uuid, item.parent)
+    api.replace_file(item.uuid)
     return
   end
 end

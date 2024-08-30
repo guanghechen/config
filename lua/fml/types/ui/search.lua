@@ -100,6 +100,7 @@
 ---@field public has_item_deleted       fun(self: fml.types.ui.search.IState, uuid: string): boolean
 ---@field public locate                 fun(self: fml.types.ui.search.IState, lnum: integer): integer
 ---@field public mark_item_deleted      fun(self: fml.types.ui.search.IState, uuid: string): nil
+---@field public mark_all_items_deleted fun(self: fml.types.ui.search.IState): nil
 ---@field public moveup                 fun(self: fml.types.ui.search.IState): integer
 ---@field public movedown               fun(self: fml.types.ui.search.IState): integer
 

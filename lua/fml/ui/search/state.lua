@@ -224,11 +224,23 @@ function M:mark_item_deleted(uuid)
   end
 
   if self._item_uuid_cur == uuid then
-    lnum = math.max(1, math.min(lnum, #items)) ---@type integer
+    lnum = math.max(1, math.min(lnum - 1, #items)) ---@type integer
     self._item_lnum_cur = lnum
     self._item_uuid_cur = items[lnum] and items[lnum].uuid or nil
   end
 
+  vim.schedule(function()
+    self.dirtier_main:mark_dirty()
+    self.dirtier_preview:mark_dirty()
+  end)
+end
+
+---@return nil
+function M:mark_all_items_deleted()
+  self.items = {}
+  self._deleted_uuids = {}
+  self._item_lnum_cur = 1
+  self._item_uuid_cur = nil
   vim.schedule(function()
     self.dirtier_main:mark_dirty()
     self.dirtier_preview:mark_dirty()
