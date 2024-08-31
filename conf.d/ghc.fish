@@ -5,6 +5,9 @@ fish_vi_key_bindings
 set -gx LC_CTYPE                        en_US.UTF-8
 set -gx LC_ALL                          en_US.UTF-8
 
+# Enable true color
+set -gx TERM xterm-256color
+
 # Configure environment variables
 set -gx FZF_DEFAULT_COMMAND             "fd --type f"
 set -gx XDG_CONFIG_HOME                 "$HOME/.config"
