@@ -1,0 +1,11 @@
+# Ignore history and temporary files
+fish_history
+fishd.*.sock
+fishd.*.log
+fish_variables
+
+# Ignore any other automatically generated files
+*.tmp
+
+conf.d/omf.fish
+conf.d/rustup.fish
