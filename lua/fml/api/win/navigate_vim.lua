@@ -1,3 +1,5 @@
+local reporter = require("fml.std.reporter")
+
 local function navigate_window_prev()
   vim.cmd("wincmd p")
 end
@@ -25,10 +27,14 @@ local function navigate_vim(direction)
 
   local ok = pcall(navigate_window, direction)
   if not ok then
-    -- error, cannot wincmd from the command-line window
-    vim.cmd(
-      [[ echohl ErrorMsg | echo 'E11: Invalid in command-line window; <CR> executes, CTRL-C quits' | echohl None ]]
-    )
+    reporter.error({
+      from = "fml.api.win",
+      subject = "navigate_vim",
+      message = "E11: Invalid in command-line window; <CR> executes, CTRL-C quits",
+      details = {
+        direction = direction,
+      },
+    })
   end
 end
 
