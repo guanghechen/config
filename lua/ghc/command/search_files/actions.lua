@@ -115,6 +115,8 @@ function M.edit_config()
         local include_patterns = table.concat(raw.include_patterns, ",") ---@type string
         local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
 
+        local last_search_pattern = session.search_pattern:snapshot() ---@type string
+
         session.search_pattern:next(search_pattern)
         session.search_replace_pattern:next(replace_pattern)
         session.search_paths:next(search_paths)
@@ -122,7 +124,12 @@ function M.edit_config()
         session.search_max_matches:next(max_matches)
         session.search_include_patterns:next(include_patterns)
         session.search_exclude_patterns:next(exclude_patterns)
-        state.reload()
+
+        if search_pattern ~= last_search_pattern then
+          state.reload()
+        else
+          state.reload()
+        end
       end)
       return true
     end,

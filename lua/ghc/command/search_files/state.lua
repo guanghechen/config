@@ -92,6 +92,14 @@ function M.reload()
   end
 end
 
+---@param text                          string
+---@return nil
+function M.reset_input(text)
+  if _search ~= nil then
+    _search:reset_input(text)
+  end
+end
+
 ---@return nil
 function M.close()
   if _search ~= nil then

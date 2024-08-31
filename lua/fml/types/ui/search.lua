@@ -136,4 +136,5 @@
 ---@field public get_winnr_main         fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.types.ui.search.ISearch): integer|nil
 ---@field public open                   fun(self: fml.types.ui.search.ISearch): nil
+---@field public reset_input            fun(self: fml.types.ui.search.ISearch, text: string): nil
 ---@field public toggle                 fun(self: fml.types.ui.search.ISearch): nil

@@ -823,6 +823,11 @@ function M:open()
 end
 
 ---@return nil
+function M:reset_input(text)
+  self._input:reset_input(text)
+end
+
+---@return nil
 function M:toggle()
   local visible = self.state.visible:snapshot() ---@type boolean
   if visible then
