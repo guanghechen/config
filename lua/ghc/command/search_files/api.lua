@@ -726,7 +726,21 @@ function M.replace_file(uuid)
   local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
 
   if item.offset >= 0 then
-    local succeed, offset_deltas = fml.oxi.replace_file_by_matches({
+    local children = fileitem.children ---@type string[]
+    local remain_child_uuids = {} ---@type string[]
+    local remain_offsets = {} ---@type integer[]
+    local N = #children ---@type integer
+    local k = 1 ---@type integer
+    for i = 1, N, 1 do
+      local child_uuid = children[i] ---@type string
+      if child_uuid ~= uuid and not state.has_item_deleted(child_uuid) then
+        remain_child_uuids[k] = child_uuid
+        remain_offsets[k] = _item_map[child_uuid].offset
+        k = k + 1
+      end
+    end
+
+    local succeed, locations = fml.oxi.replace_file_advance_by_matches({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -734,39 +748,49 @@ function M.replace_file(uuid)
       search_pattern = search_pattern,
       replace_pattern = replace_pattern,
       match_offsets = { item.offset },
+      remain_offsets = remain_offsets,
     })
-    if succeed then
-      local children = fileitem.children ---@type string[]
-      local N = #children ---@type integer
-      local offset_delta = offset_deltas[1] or 0 ---@type integer
 
-      local lnum = 0 ---@type integer
-      for i = 1, N, 1 do
-        local child_uuid = children[i] ---@type string
-        if child_uuid == uuid then
-          lnum = i
-          break
-        end
-      end
-      for i = lnum + 1, N, 1 do
-        local child_uuid = children[i] ---@type string
-        local child_item = _item_map[child_uuid] ---@type ghc.command.search_files.IItem
-        child_item.offset = child_item.offset + offset_delta
-        children[i - 1] = child_uuid
-      end
-      children[N] = nil
-
-      _item_map[uuid] = nil
-      fileitem.fragmentary = true
-      fileitem.filematch = nil
-      if _last_search_result ~= nil then
-        _last_search_result.items[item.filepath] = nil
-      end
-
-      ---! Refresh the filematch and preview data and lnum/cols
-      _last_preview_data = M.calc_preview_data(uuid)
-      state.mark_item_deleted(uuid)
+    if not succeed then
+      return
     end
+
+    if #locations ~= #remain_offsets then
+      fml.reporter.error({
+        from = "ghc.command.search_files.api",
+        subject = "replace_file",
+        mesage = "Bad locations, the size of locations should match the given remain_offsets.",
+        details = {
+          cwd = cwd,
+          item = item,
+          locations = locations,
+          remain_offsets = remain_offsets,
+          remain_child_uuids = remain_child_uuids,
+        },
+      })
+      return
+    end
+
+    _item_map[uuid] = nil
+    fileitem.children = remain_child_uuids
+    fileitem.filematch = nil
+    fileitem.fragmentary = true
+    if _last_search_result ~= nil then
+      _last_search_result.items[item.filepath] = nil
+    end
+
+    for i = 1, #locations, 1 do
+      local child_uuid = remain_child_uuids[i] ---@type string
+      local child_item = _item_map[child_uuid] ---@type ghc.command.search_files.IItem
+      local location = locations[i] ---@type fml.types.IMatchLocation
+      child_item.offset = location.offset
+      child_item.lnum = location.lnum
+      child_item.col = location.col
+    end
+
+    ---! Refresh the filematch and preview data and lnum/cols
+    _last_preview_data = M.calc_preview_data(uuid)
+    state.mark_item_deleted(uuid)
     return
   end
 
@@ -848,7 +872,6 @@ function M.replace_file_all()
         end
       end
 
-      ---@type boolean
       fml.oxi.replace_file_by_matches({
         cwd = cwd,
         filepath = filepath,

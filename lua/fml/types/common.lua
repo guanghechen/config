@@ -24,6 +24,7 @@
 ---@field public offset                 integer
 ---@field public lnum                   integer
 ---@field public col                    integer
+---@field public line                   string
 
 ---@class fml.types.IMatchPoint
 ---@field public l                      integer

@@ -13,28 +13,29 @@ pub fn get_locations(text: &str, offsets: &[usize]) -> Vec<MatchLocation> {
 
     let n: usize = offsets.len();
     let mut k: usize = 0;
-    let mut offset: usize = 0;
+    let mut pos: usize = 0;
     for (lnum, line) in text.lines().enumerate() {
         if k == n {
             break;
         }
 
-        let next_offset: usize = offset + line.len() + 1;
+        let next_pos: usize = pos + line.len() + 1;
         while k < n {
-            let p: usize = offsets[k];
-            if p >= next_offset {
+            let offset: usize = offsets[k];
+            if offset >= next_pos {
                 break;
             }
 
             locations.push(MatchLocation {
-                offset: p,
+                offset,
                 lnum: lnum + 1,
-                col: p - offset,
+                col: offset - pos,
+                line: line[0..line.len().min(200)].to_string(),
             });
 
             k += 1;
         }
-        offset = next_offset;
+        pos = next_pos;
     }
 
     locations

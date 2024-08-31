@@ -12,6 +12,7 @@ pub struct MatchLocation {
     pub offset: usize,
     pub lnum: usize,
     pub col: usize,
+    pub line: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

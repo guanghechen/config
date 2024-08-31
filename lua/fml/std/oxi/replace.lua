@@ -10,6 +10,14 @@ local M = require("fml.std.oxi.mod")
 ---@field public replace_pattern        string
 ---@field public match_offsets          integer[]
 
+---@class fml.std.oxi.replace.replace_file_advance_by_matches.IRawParams
+---@field public filepath               string
+---@field public flag_regex             boolean
+---@field public search_pattern         string
+---@field public replace_pattern        string
+---@field public match_offsets          integer[]
+---@field public remain_offsets         integer[]
+
 ---@class fml.std.oxi.replace.replace_file_preview_by_matches.IRawParams
 ---@field public filepath               string
 ---@field public search_pattern         string
@@ -78,8 +86,11 @@ local M = require("fml.std.oxi.mod")
 ---@field public success                boolean
 ---@field public error                  ?string
 
----@class fml.std.oxi.replace.replace_file_by_matches.IResult
----@field public offset_deltas          integer[]
+---@alias fml.std.oxi.replace.replace_file_by_matches.IResult
+---| boolean
+
+---@class fml.std.oxi.replace.replace_file_advance_by_matches.IResult
+---@field public locations              fml.types.IMatchLocation[]
 
 ---@class fml.std.oxi.replace.replace_file_preview.IResult
 ---@field public lines                  string[]
@@ -133,6 +144,16 @@ local M = require("fml.std.oxi.mod")
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
 ---@field public match_offsets          integer[]
+
+---@class fml.std.oxi.replace.replace_file_advance_by_matches.IParams
+---@field public cwd                    string
+---@field public filepath               string
+---@field public flag_case_sensitive    boolean
+---@field public flag_regex             boolean
+---@field public search_pattern         string
+---@field public replace_pattern        string
+---@field public match_offsets          integer[]
+---@field public remain_offsets         integer[]
 
 ---@class fml.std.oxi.replace.replace_file_preview.IParams
 ---@field public flag_case_sensitive    boolean
@@ -220,7 +241,7 @@ end
 
 ---@param params                        fml.std.oxi.replace.replace_file_by_matches.IParams
 ---@return boolean
----@return integer[]
+---@return boolean
 function M.replace_file_by_matches(params)
   local search_pattern = params.search_pattern ---@type string
   local filepath = path.resolve(params.cwd, params.filepath) ---@type string
@@ -238,10 +259,40 @@ function M.replace_file_by_matches(params)
     match_offsets = match_offsets,
   }
   local payload = M.json.stringify(resolved_params)
-  local ok, data = M.run_fun("fml.std.oxi.replace_file_by_matches", M.nvim_tools.replace_file_by_matches, payload)
+  local ok, data =
+    M.run_fun("fml.std.oxi.replace_file_by_matches", M.nvim_tools.replace_file_advance_by_matches, payload)
   ---@cast data fml.std.oxi.replace.replace_file_by_matches.IResult
 
-  return ok, ok and data.offset_deltas or {}
+  return ok, data
+end
+
+---@param params                        fml.std.oxi.replace.replace_file_advance_by_matches.IParams
+---@return boolean
+---@return fml.types.IMatchLocation[]
+function M.replace_file_advance_by_matches(params)
+  local search_pattern = params.search_pattern ---@type string
+  local filepath = path.resolve(params.cwd, params.filepath) ---@type string
+  local match_offsets = params.match_offsets ---@type integer[]
+  local remain_offsets = params.remain_offsets ---@type integer[]
+  if params.flag_regex and not params.flag_case_sensitive then
+    search_pattern = "(?i)" .. search_pattern:lower()
+  end
+
+  ---@type fml.std.oxi.replace.replace_file_advance_by_matches.IRawParams
+  local resolved_params = {
+    filepath = filepath,
+    search_pattern = search_pattern,
+    replace_pattern = params.replace_pattern,
+    flag_regex = params.flag_regex,
+    match_offsets = match_offsets,
+    remain_offsets = remain_offsets,
+  }
+  local payload = M.json.stringify(resolved_params)
+  local ok, data =
+    M.run_fun("fml.std.oxi.replace_file_advance_by_matches", M.nvim_tools.replace_file_advance_by_matches, payload)
+  ---@cast data fml.std.oxi.replace.replace_file_advance_by_matches.IResult
+
+  return ok, ok and data.locations or {}
 end
 
 ---@param params                        fml.std.oxi.replace.replace_file_preview.IParams
