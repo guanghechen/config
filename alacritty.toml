@@ -2,6 +2,9 @@
 
 import = [
   "~/.config/alacritty/basic.toml",
+  "~/.config/alacritty/local/linux.toml",
+  "~/.config/alacritty/local/macos.toml",
+  "~/.config/alacritty/local/windows.toml",
   "~/.config/alacritty/font.toml",
   "~/.config/alacritty/keymap.toml",
   "~/.config/alacritty/theme/one-half-dark.toml",
