@@ -16,13 +16,6 @@ local function tmux_command(command)
   return vim.fn.system("tmux -S " .. tmux_socket .. " " .. command)
 end
 
--- check whether the current tmux pane is zoomed
----@return boolean
-local function is_tmux_pane_zoomed()
-  -- the output of the tmux command is "1\n", so we have to test against that
-  return tonumber(tmux_command("display-message -p '#{window_zoomed_flag}'")) == 1
-end
-
 ---@return boolean
 local function is_tmux_pane_leftest()
   return tonumber(tmux_command("display-message -p '#{pane_at_left}'")) == 1
@@ -61,11 +54,18 @@ function M.is_tmux_pane_corner(direction)
   return false
 end
 
+-- check whether the current tmux pane is zoomed
+---@return boolean
+function M.is_tmux_pane_zoomed()
+  -- the output of the tmux command is "1\n", so we have to test against that
+  return tonumber(tmux_command("display-message -p '#{window_zoomed_flag}'")) == 1
+end
+
 -- whether tmux should take control over the navigation
 ---@param disable_nav_when_zoomed       boolean
 ---@return boolean
 function M.should_tmux_control(disable_nav_when_zoomed)
-  if is_tmux_pane_zoomed() and disable_nav_when_zoomed then
+  if disable_nav_when_zoomed and M.is_tmux_pane_zoomed() then
     return false
   end
   return true
