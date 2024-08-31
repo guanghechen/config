@@ -11,6 +11,13 @@ end
 
 ---@return nil
 local function bootstrap()
+  local os_name = vim.uv.os_uname().sysname ---@type string|nil
+  if os_name == "Windows_NT" then
+    vim.opt.shell = vim.env.SHELL
+  else
+    vim.opt.shell = "/bin/bash"
+  end
+
   _G.fml = require("fml")
   _G.ghc = require("ghc")
 

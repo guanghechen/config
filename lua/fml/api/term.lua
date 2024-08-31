@@ -93,7 +93,7 @@ end
 ---@return integer|nil
 function M.create(params)
   local name = params.name ---@type string
-  local command = params.command or vim.o.shell ---@type string
+  local command = params.command or vim.env.SHELL or vim.o.shell ---@type string
   local position = params.position ---@type fml.enums.api.TermPosition
 
   local term = state.term_map[name] ---@type fml.types.api.state.ITerm|nil
