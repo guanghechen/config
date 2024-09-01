@@ -15,6 +15,9 @@ local collection = {
   Viewmodel = require("fc.collection.viewmodel"),
 }
 
+---@type fc.oxi
+local oxi = require("fc.oxi")
+
 ---@class fc.std
 local std = {
   array = require("fc.std.array"),
@@ -30,7 +33,6 @@ local std = {
   navigate = require("fc.std.navigate"),
   object = require("fc.std.object"),
   os = require("fc.std.os"),
-  oxi = require("fc.std.oxi"),
   path = require("fc.std.path"),
   reporter = require("fc.std.reporter"),
   scheduler = require("fc.std.scheduler"),
@@ -39,13 +41,15 @@ local std = {
   util = require("fc.std.util"),
 }
 
----@class fc : fc.std
+---@class fc : fc.oxi, fc.std
 ---@field public c                      fc.collection
 ---@field public collection             fc.collection
+---@field public oxi                    fc.oxi
 ---@field public std                    fc.std
-local fc = vim.tbl_extend("force", std, {
+local fc = vim.tbl_extend("force", oxi, std, {
   c = collection,
   collection = collection,
+  oxi = oxi,
   std = std,
 })
 

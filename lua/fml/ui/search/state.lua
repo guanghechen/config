@@ -3,7 +3,6 @@ local Observable = require("fc.collection.observable")
 local Subscriber = require("fc.collection.subscriber")
 local scheduler = require("fc.std.scheduler")
 local navigate = require("fc.std.navigate")
-local oxi = require("fc.std.oxi")
 
 ---@class fml.ui.search.State : fml.types.ui.search.IState
 ---@field protected _deleted_uuids      table<string, boolean>
@@ -35,9 +34,9 @@ function M.new(props)
   local delay_fetch = props.delay_fetch ---@type integer
   local input = props.input ---@type fc.types.collection.IObservable
   local input_history = props.input_history ---@type fc.types.collection.IHistory|nil
-  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type fc.types.collection.IObservable
+  local input_line_count = Observable.from_value(fc.oxi.count_lines(input:snapshot())) ---@type fc.types.collection.IObservable
   local title = props.title ---@type string
-  local uuid = oxi.uuid() ---@type string
+  local uuid = fc.oxi.uuid() ---@type string
   local visible = Observable.from_value(false)
 
   local fetch_scheduler ---@type fc.std.scheduler.IScheduler
@@ -91,7 +90,7 @@ function M.new(props)
   ---@return nil
   local function on_input_change()
     if enable_multiline_input then
-      local line_count = oxi.count_lines(input:snapshot())
+      local line_count = fc.oxi.count_lines(input:snapshot())
       input_line_count:next(line_count)
     end
     self.dirtier_data:mark_dirty()

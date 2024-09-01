@@ -1,4 +1,3 @@
-local oxi = require("fc.std.oxi")
 local icons = require("fml.ui.icons")
 
 ---@class fml.ui.signcolumn
@@ -6,12 +5,12 @@ local M = {}
 
 ---@class fml.ui.signcolumn.names
 M.names = {
-  search_input_cursor = oxi.uuid(),
-  search_main_current = oxi.uuid(),
-  search_main_present = oxi.uuid(),
-  search_main_present_cur = oxi.uuid(),
-  select_input_cursor = oxi.uuid(),
-  select_main_current = oxi.uuid(),
+  search_input_cursor = fc.oxi.uuid(),
+  search_main_current = fc.oxi.uuid(),
+  search_main_present = fc.oxi.uuid(),
+  search_main_present_cur = fc.oxi.uuid(),
+  select_input_cursor = fc.oxi.uuid(),
+  select_main_current = fc.oxi.uuid(),
 }
 
 vim.fn.sign_define(M.names.search_input_cursor, { text = icons.ui.Telescope, texthl = "f_us_input_prompt" })

@@ -1,7 +1,6 @@
 local Subscriber = require("fc.collection.subscriber")
 local constant = require("fml.constant")
 local std_array = require("fc.std.array")
-local oxi = require("fc.std.oxi")
 local scheduler = require("fc.std.scheduler")
 local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
@@ -135,7 +134,7 @@ function M:create_buf_as_needed()
 
   local state = self.state ---@type fml.types.ui.search.IState
   local input = state.input:snapshot() ---@type string
-  local lines = oxi.parse_lines(input) ---@type string[]
+  local lines = fc.oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
   vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
 
@@ -201,7 +200,7 @@ function M:reset_input(text)
 
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local lines = oxi.parse_lines(next_text) ---@type string[]
+    local lines = fc.oxi.parse_lines(next_text) ---@type string[]
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
   end
 end

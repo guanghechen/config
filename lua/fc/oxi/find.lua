@@ -1,7 +1,7 @@
----@class fc.std.oxi
-local M = require("fc.std.oxi.mod")
+---@class fc.oxi
+local M = require("fc.oxi.mod")
 
----@class fc.std.oxi.find.IParams
+---@class fc.oxi.find.IParams
 ---@field public workspace              string
 ---@field public cwd                    string
 ---@field public flag_case_sensitive    boolean
@@ -11,17 +11,17 @@ local M = require("fc.std.oxi.mod")
 ---@field public search_paths           string
 ---@field public exclude_patterns       string
 
----@class fc.std.oxi.find.IResult
+---@class fc.oxi.find.IResult
 ---@field public filepaths              string[]
 
----@param params                        fc.std.oxi.find.IParams
+---@param params                        fc.oxi.find.IParams
 ---@return string[]
 function M.find(params)
   local options_stringified = M.json.stringify(params)
   local result_str = M.nvim_tools.find(options_stringified)
-  local ok, data = M.resolve_cmd_result("fc.std.oxi.find", result_str)
+  local ok, data = M.resolve_cmd_result("fc.oxi.find", result_str)
   if ok and data ~= nil then
-    ---@cast data fc.std.oxi.find.IResult
+    ---@cast data fc.oxi.find.IResult
     return data.filepaths
   end
   return {}
