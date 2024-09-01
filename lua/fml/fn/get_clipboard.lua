@@ -22,8 +22,8 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
     local file = io.open(clipboard_file, "w")
     if file == nil then
       fc.reporter.error({
-        from = "fml.std.clipboard",
-        subject = "write_to_fake_clipboard",
+        from = "fml.fn.get_clipboard",
+        subject = "macos_fake_clipborad",
         message = "Unable to open fake clipboard file for writing.",
         details = {
           filepath = fake_clipboard_filepath,
@@ -48,8 +48,8 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
     local file = io.open(clipboard_file, "r")
     if file == nil then
       fc.reporter.error({
-        from = "fml.std.clipboard",
-        subject = "read_from_fake_clipboard",
+        from = "fml.fn.get_clipboard",
+        subject = "macos_fake_clipborad",
         message = "Unable to open fake clipboard file for reading.",
         details = {
           filepath = fake_clipboard_filepath,
@@ -86,8 +86,7 @@ local function get_clipboard()
       local fake_clipboard_filepath = fc.tmux.get_tmux_env_value("ghc_use_fake_clipboard")
       if fake_clipboard_filepath ~= nil and fc.path.is_exist(fake_clipboard_filepath) then
         fc.reporter.info({
-          from = "fml.std.clipboard",
-          subject = "get_clipboard",
+          from = "fml.fn.get_clipboard",
           message = "Using fake clipboard:" .. fake_clipboard_filepath,
         })
         return macos_fake_clipborad(fake_clipboard_filepath)

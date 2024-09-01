@@ -2,7 +2,7 @@ local Subscriber = require("fc.collection.subscriber")
 local constant = require("fml.constant")
 local std_array = require("fc.std.array")
 local scheduler = require("fc.std.scheduler")
-local util = require("fml.std.util")
+local util = require("fml.util")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Input : fml.types.ui.search.IInput

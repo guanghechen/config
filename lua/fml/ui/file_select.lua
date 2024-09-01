@@ -2,7 +2,7 @@ local std_array = require("fc.std.array")
 local fs = require("fc.std.fs")
 local is = require("fc.std.is")
 local path = require("fc.std.path")
-local util = require("fml.std.util")
+local util = require("fml.util")
 local api_buf = require("fml.api.buf")
 local Select = require("fml.ui.select")
 

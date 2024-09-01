@@ -19,10 +19,8 @@ local fn = {
   watch_observables = require("fml.fn.watch_observables"),
 }
 
----@class fml.std
-local std = {
-  util = require("fml.std.util"),
-}
+---@type fml.util
+local util = require("fml.util")
 
 ---@class fml.ui
 local ui = {
@@ -39,18 +37,18 @@ local ui = {
   search = require("fml.ui.search"),
 }
 
----@class fml : fml.global, fml.std
+---@class fml : fml.global
 ---@field public api                    fml.api
 ---@field public constant               fml.constant
 ---@field public fn                     fml.fn
----@field public std                    fml.std
 ---@field public ui                     fml.ui
-local fml = vim.tbl_extend("force", std, require("fml.global"), {
+---@field public util                   fml.util
+local fml = vim.tbl_extend("force", require("fml.global"), {
   api = api,
   constant = require("fml.constant"),
   fn = fn,
-  std = std,
   ui = ui,
+  util = util,
 })
 
 return fml

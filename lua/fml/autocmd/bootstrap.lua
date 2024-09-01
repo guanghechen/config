@@ -1,6 +1,6 @@
 local constant = require("fml.constant")
 local global = require("fml.global")
-local util = require("fml.std.util")
+local util = require("fml.util")
 
 local augroups = {
   checktime = util.augroup("checktime"),

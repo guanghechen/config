@@ -1,7 +1,7 @@
 local Subscriber = require("fc.collection.subscriber")
 local constant = require("fml.constant")
 local scheduler = require("fc.std.scheduler")
-local util = require("fml.std.util")
+local util = require("fml.util")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Main : fml.types.ui.search.IMain

@@ -3,7 +3,7 @@ local Observable = require("fc.collection.observable")
 local fs = require("fc.std.fs")
 local path = require("fc.std.path")
 local reporter = require("fc.std.reporter")
-local util = require("fml.std.util")
+local util = require("fml.util")
 
 ---@param data                          fml.types.api.state.ISerializedData
 ---@return table<integer, integer>

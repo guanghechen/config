@@ -1,7 +1,7 @@
 local Subscriber = require("fc.collection.subscriber")
 local constant = require("fml.constant")
 local scheduler = require("fc.std.scheduler")
-local util = require("fml.std.util")
+local util = require("fml.util")
 
 ---@class fml.ui.search.Preview : fml.types.ui.search.IPreview
 ---@field protected _bufnr              integer|nil

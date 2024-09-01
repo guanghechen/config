@@ -1,7 +1,7 @@
 local std_array = require("fc.std.array")
 local box = require("fc.std.box")
 local reporter = require("fc.std.reporter")
-local util = require("fml.std.util")
+local util = require("fml.util")
 
 ---@type string
 local WIN_HIGHLIGHT = table.concat({

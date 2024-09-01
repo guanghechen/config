@@ -1,7 +1,7 @@
 local constant = require("fml.constant")
 local EDITING_PREFIX = constant.EDITING_INPUT_PREFIX ---@type string
 
----@class fml.std.util
+---@class fml.util
 local M = {}
 
 ---@param name                          string
@@ -85,7 +85,7 @@ function M.run_async(name, fn, callback)
 
   local function wrapped_fn()
     if cancelled then
-      vim.notify('[fml.std.util] run_async: The "' .. name .. '" was cancelled.')
+      vim.notify('[fml.util] run_async: The "' .. name .. '" was cancelled.')
     else
       local ok, result = pcall(fn)
       if type(callback) == "function" then
@@ -134,7 +134,7 @@ function M.schedule(name, fn, timeout)
       local ok, result = pcall(fn)
       if not ok then
         vim.notify(
-          '[fml.std.util] schedule: Failed to run "' .. name .. '".\n' .. vim.inspect({ result = result or "nil" })
+          '[fml.util] schedule: Failed to run "' .. name .. '".\n' .. vim.inspect({ result = result or "nil" })
         )
       end
 
