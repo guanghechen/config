@@ -5,7 +5,7 @@ local function gen_hlgroup_map(params)
   local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
 
   return {
-    LazyButton = { bg = c.one_bg, fg = fml.color.change_hex_lightness(c.light_grey, m == "darken" and 10 or -20) },
+    LazyButton = { bg = c.one_bg, fg = fc.color.change_hex_lightness(c.light_grey, m == "darken" and 10 or -20) },
     LazyCommit = { fg = c.green },
     LazyCommitIssue = { fg = c.pink },
     LazyDir = { fg = c.base05 },

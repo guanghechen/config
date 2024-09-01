@@ -27,7 +27,7 @@ local function gen_hlgroup_map(params)
     DiagnosticError = { fg = c.red },
     DiagnosticInfo = { fg = c.green },
     DiagnosticWarn = { fg = c.yellow },
-    LspInlayHint = { bg = fml.color.change_hex_lightness(c.black2, m == "darken" and 0 or 3), fg = c.light_grey },
+    LspInlayHint = { bg = fc.color.change_hex_lightness(c.black2, m == "darken" and 0 or 3), fg = c.light_grey },
     LspReferenceRead = { fg = c.darker_black, bg = c.white },
     LspReferenceText = { fg = c.darker_black, bg = c.white },
     LspReferenceWrite = { fg = c.darker_black, bg = c.white },
