@@ -1,4 +1,4 @@
-local util = require("fml.std.util")
+local util = require("fc.std.util")
 
 ---@class fml.collection.Subscriber : fml.types.collection.ISubscriber
 ---@field private _on_next              fun(value: any, value_prev: any|nil):nil

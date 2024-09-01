@@ -4,7 +4,7 @@ local Subscriber = require("fml.collection.subscriber")
 local fs = require("fc.std.fs")
 local is = require("fc.std.is")
 local path = require("fml.std.path")
-local util = require("fml.std.util")
+local util = require("fc.std.util")
 local reporter = require("fc.std.reporter")
 
 ---@class fml.collection.Viewmodel : fml.types.collection.IViewmodel

@@ -2,7 +2,6 @@ local constant = require("fml.constant")
 local Observable = require("fml.collection.observable")
 local AdvanceHistory = require("fml.collection.history_advance")
 local fs = require("fc.std.fs")
-local util = require("fml.std.util")
 
 ---@type table<string, boolean>
 local BUF_IGNORED_FILETYPES = {
@@ -108,6 +107,6 @@ M.win_history = AdvanceHistory.new({
   capacity = constant.WIN_HISTORY_CAPACITY,
   validate = M.validate_win,
 })
-M.winline_dirty_nr = Observable.from_value(0, util.falsy)
+M.winline_dirty_nr = Observable.from_value(0, fc.util.falsy)
 
 return M

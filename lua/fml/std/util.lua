@@ -59,13 +59,6 @@ function M.calc_fileicon(filename)
   return "󰈚", "MiniIconsRed"
 end
 
----@param ...                           any[]
----@return boolean
----@diagnostic disable-next-line: unused-vararg
-function M.falsy(...)
-  return false
-end
-
 ---@return string
 function M.get_selected_text()
   local saved_reg = vim.fn.getreg("v")
@@ -76,21 +69,11 @@ function M.get_selected_text()
   return selected_text or ""
 end
 
----@param value                         any
----@return any
-function M.identity(value)
-  return value
-end
-
 ---@param text                          string
 ---@return boolean
 function M.is_editing_text(text)
   return #text >= #EDITING_PREFIX and text:sub(1, #EDITING_PREFIX) == EDITING_PREFIX
 end
-
----@param ...                           any[]
----@return any
-function M.noop(...) end
 
 ---@param name                          string
 ---@param fn                            fun(): any
@@ -179,13 +162,6 @@ function M.split_lines(text)
     table.insert(lines, line)
   end
   return lines
-end
-
----@param ...                           any[]
----@return boolean
----@diagnostic disable-next-line: unused-vararg
-function M.truthy(...)
-  return true
 end
 
 ---@param text                          string

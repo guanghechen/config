@@ -2,6 +2,7 @@ local BatchDisposable = require("fml.collection.batch_disposable")
 local Subscribers = require("fml.collection.subscribers")
 local reporter = require("fc.std.reporter")
 local std_boolean = require("fc.std.boolean")
+local util = require("fc.std.util")
 
 ---@class fml.collection.Observable : fml.types.collection.IObservable
 ---@field private _value                fml.types.T
@@ -24,13 +25,6 @@ local function shallow_equals(x, y)
   return x == y
 end
 
----@generic T
----@param x T
----@return T
-local function identity(x)
-  return x
-end
-
 ---@class fml.collection.observable.IProps
 ---@field public initial_value          fml.types.T           Initial value of the observable
 ---@field public equals                 ?fml.types.IEquals    Determine whether the two values are equal.
@@ -40,7 +34,7 @@ end
 ---@return fml.collection.Observable
 function M.new(props)
   local equals = props.equals or shallow_equals ---@type fml.types.IEquals
-  local normalize = props.normalize or identity ---@type fml.types.INormalize
+  local normalize = props.normalize or util.identity ---@type fml.types.INormalize
   local initial_value = props.initial_value ---@type fml.types.T
 
   local self = setmetatable(BatchDisposable.new(), M)

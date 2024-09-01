@@ -164,7 +164,7 @@ function M.new(props)
 
   ---@class fml.ui.search.search.actions
   local actions = {
-    noop = util.noop,
+    noop = fc.util.noop,
     close = function()
       on_close()
     end,

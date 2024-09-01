@@ -183,8 +183,8 @@ function M:register(name, raw_component, enabled)
     last_result_width = 0,
     tight = not not raw_component.tight,
     render = raw_component.render,
-    will_change = raw_component.will_change or util.truthy,
-    condition = raw_component.condition or util.truthy,
+    will_change = raw_component.will_change or fc.util.truthy,
+    condition = raw_component.condition or fc.util.truthy,
   }
   self._components[name] = component
   return self

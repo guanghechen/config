@@ -1,4 +1,4 @@
-local util = require("fml.std.util")
+local util = require("fc.std.util")
 
 ---@class fml.collection.Frecency : fml.types.collection.IFrecency
 ---@field public MAX_TIMESTAMPS         integer

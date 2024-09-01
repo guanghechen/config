@@ -15,6 +15,7 @@ local std = {
   scheduler = require("fc.std.scheduler"),
   string = require("fc.std.string"),
   tmux = require("fc.std.tmux"),
+  util = require("fc.std.util"),
 }
 
 ---@class fc : fc.std
