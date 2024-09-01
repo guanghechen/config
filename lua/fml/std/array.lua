@@ -1,6 +1,5 @@
 local oxi = require("fml.std.oxi")
 local std_string = require("fml.std.string")
-local typs = require("fml.std.typ")
 
 ---@class fml.std.array
 local M = {}
@@ -215,7 +214,7 @@ end
 ---@return string[]
 function M.parse_comma_list(str, separator_pattern)
   separator_pattern = separator_pattern or ","
-  local result = {}
+  local result = {} ---@type string[]
   local items = std_string.split(str, separator_pattern)
   for _, item in ipairs(items) do
     local v = item:match("^%s*(.-)%s*$")
@@ -223,7 +222,7 @@ function M.parse_comma_list(str, separator_pattern)
       table.insert(result, v)
     end
   end
-  return setmetatable(result, typs.array)
+  return result
 end
 
 ---@param lines                         string[]

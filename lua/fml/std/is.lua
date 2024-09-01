@@ -1,5 +1,3 @@
-local typs = require("fml.std.typ")
-
 ---@param keys                          string[]
 ---@return table<string, boolean>
 local function build_set(keys)
@@ -43,11 +41,6 @@ local M = {}
 function M.array(value)
   if type(value) ~= "table" then
     return false
-  end
-
-  local metatable = getmetatable(value)
-  if metatable ~= nil and metatable.json_type ~= "null" then
-    return metatable.json_type == typs.array.json_type
   end
 
   if #value > 0 then
