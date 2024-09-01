@@ -24,7 +24,7 @@ function M.load_and_autosave()
       }),
     }
 
-    local data = fml.fs.read_json({ filepath = FILEPATH, silent_on_bad_path = true, silent_on_bad_json = false })
+    local data = fc.fs.read_json({ filepath = FILEPATH, silent_on_bad_path = true, silent_on_bad_json = false })
     if data ~= nil and type(data) == "table" then
       for key, value in pairs(data) do
         if state[key] ~= nil and type(value) == "table" then
@@ -46,9 +46,9 @@ function M.load_and_autosave()
           return serialized_data
         end)
         if ok then
-          fml.fs.write_json(FILEPATH, json_data, false)
+          fc.fs.write_json(FILEPATH, json_data, false)
         else
-          fml.fs.write_json(FILEPATH, { error = json_data }, false)
+          fc.fs.write_json(FILEPATH, { error = json_data }, false)
         end
       end,
     }))

@@ -1,6 +1,6 @@
 local std_array = require("fc.std.array")
 local Observable = require("fml.collection.observable")
-local fs = require("fml.std.fs")
+local fs = require("fc.std.fs")
 local path = require("fml.std.path")
 local reporter = require("fc.std.reporter")
 local util = require("fml.std.util")

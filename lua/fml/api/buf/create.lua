@@ -1,6 +1,6 @@
 local constant = require("fml.constant")
 local state = require("fml.api.state")
-local fs = require("fml.std.fs")
+local fs = require("fc.std.fs")
 local path = require("fml.std.path")
 local reporter = require("fc.std.reporter")
 

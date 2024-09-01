@@ -1,4 +1,4 @@
-local fs = require("fml.std.fs")
+local fs = require("fc.std.fs")
 local path = require("fml.std.path")
 local state = require("fml.api.state")
 

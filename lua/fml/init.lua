@@ -40,7 +40,6 @@ local std = {
   clipboard = require("fml.std.clipboard"),
   debug = require("fml.std.debug"),
   highlight = require("fml.std.highlight"),
-  fs = require("fml.std.fs"),
   lsp = require("fml.std.lsp"),
   nvimbar = require("fml.std.nvimbar"),
   oxi = require("fml.std.oxi"),

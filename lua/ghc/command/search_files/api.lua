@@ -183,7 +183,7 @@ function M.calc_preview_data(uuid)
       end
     end
   else
-    lines = fml.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    lines = fc.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
     highlights = {} ---@type ghc.command.search_files.IHighlight[]
 
     local filematch = M.get_filematch(item.filepath) ---@type fml.std.oxi.search.IFileMatch|nil

@@ -1,19 +1,19 @@
 local std_json = require("fc.std.json")
 local reporter = require("fc.std.reporter")
 
----@class fml.std.fs
+---@class fc.std.fs
 local M = {}
 
----@class fml.std.fs.IReadFileParams
+---@class fc.std.fs.IReadFileParams
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class fml.std.fs.IReadFileAsLinesParams
+---@class fc.std.fs.IReadFileAsLinesParams
 ---@field public filepath               string
 ---@field public max_lines              ?integer
 ---@field public silent                 ?boolean
 
----@class fml.std.fs.IReadJsonParams
+---@class fc.std.fs.IReadJsonParams
 ---@field public filepath               string
 ---@field public silent_on_bad_path     ?boolean
 ---@field public silent_on_bad_json     ?boolean
@@ -23,7 +23,7 @@ local M = {}
 ---@param unwatch                       fun():nil
 local function default_watch_on_error(filepath, err, unwatch)
   reporter.error({
-    from = "fml.std.fs",
+    from = "fc.std.fs",
     subject = "watch_file",
     message = "Failed to watch file.",
     details = { filepath = filepath, err = err },
@@ -50,7 +50,7 @@ function M.is_file_or_dir(filepath)
   return "other"
 end
 
----@param params                        fml.std.fs.IReadFileParams
+---@param params                        fc.std.fs.IReadFileParams
 ---@return string|nil
 function M.read_file(params)
   local filepath = params.filepath ---@type string
@@ -59,7 +59,7 @@ function M.read_file(params)
   if not file then
     if not silent then
       reporter.error({
-        from = "fml.std.fs",
+        from = "fc.std.fs",
         subject = "read_file",
         message = "Failed to open filepath.",
         details = { filepath = filepath },
@@ -73,7 +73,7 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
----@param params                        fml.std.fs.IReadFileAsLinesParams
+---@param params                        fc.std.fs.IReadFileAsLinesParams
 ---@return string[]
 function M.read_file_as_lines(params)
   local filepath = params.filepath ---@type string
@@ -82,7 +82,7 @@ function M.read_file_as_lines(params)
   if not file then
     if not silent then
       reporter.error({
-        from = "fml.std.fs",
+        from = "fc.std.fs",
         subject = "read_file",
         message = "Failed to open filepath.",
         details = { filepath = filepath },
@@ -104,7 +104,7 @@ function M.read_file_as_lines(params)
   return lines
 end
 
----@param params                        fml.std.fs.IReadJsonParams
+---@param params                        fc.std.fs.IReadJsonParams
 ---@return any|nil
 function M.read_json(params)
   local filepath = params.filepath ---@type string
@@ -123,7 +123,7 @@ function M.read_json(params)
   if not ok_to_decode_json then
     if not silent_on_bad_json then
       reporter.warn({
-        from = "fml.std.fs",
+        from = "fc.std.fs",
         subject = "read_json",
         message = "Failed to decode json",
         details = { filepath = filepath, json_text = json_text },
@@ -135,12 +135,12 @@ function M.read_json(params)
   return data
 end
 
----@class fml.std.fs.IWatchFileOptions
+---@class fc.std.fs.IWatchFileOptions
 ---@field filepath string
 ---@field on_event fun(filepath:string, events: any, unwatch:fun():nil):nil
 ---@field on_error? fun(filepath:string, err: any, unwatch:fun():nil):nil
 
----@param opts fml.std.fs.IWatchFileOptions
+---@param opts fc.std.fs.IWatchFileOptions
 ---@return fun():nil
 function M.watch_file(opts)
   local filepath = opts.filepath
@@ -186,7 +186,7 @@ function M.write_file(filepath, content)
   local file = io.open(filepath, "w")
   if not file then
     reporter.error({
-      from = "fml.std.fs",
+      from = "fc.std.fs",
       subject = "write_file",
       message = "Failed to open filepath.",
       details = { filepath = filepath },
@@ -197,7 +197,7 @@ function M.write_file(filepath, content)
   local ok, err = pcall(file.write, file, content)
   if not ok then
     reporter.error({
-      from = "fml.std.fs",
+      from = "fc.std.fs",
       subject = "write_file",
       message = "Failed to write content.",
       details = { filepath = filepath, content = content, err = err },
@@ -215,7 +215,7 @@ function M.write_json(filepath, data, prettier)
   local ok_to_encode_json, json_text = pcall(prettier and std_json.stringify_prettier or std_json.stringify, data)
   if not ok_to_encode_json then
     reporter.warn({
-      from = "fml.std.fs",
+      from = "fc.std.fs",
       subject = "write_json",
       message = "Failed to encode json data.",
       details = { filepath = filepath, data = data },

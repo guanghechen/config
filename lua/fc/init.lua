@@ -4,6 +4,7 @@ local std = {
   boolean = require("fc.std.boolean"),
   box = require("fc.std.box"),
   color = require("fc.std.color"),
+  fs = require("fc.std.fs"),
   is = require("fc.std.is"),
   json = require("fc.std.json"),
   md5 = require("fc.std.md5"),
