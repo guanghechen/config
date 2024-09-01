@@ -1,13 +1,13 @@
 local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
-local scheduler = require("fml.std.scheduler")
+local scheduler = require("fc.std.scheduler")
 local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Main : fml.types.ui.search.IMain
 ---@field protected _bufnr              integer|nil
 ---@field protected _keymaps            fml.types.IKeymap[]
----@field protected _render_scheduler   fml.std.scheduler.IScheduler
+---@field protected _render_scheduler   fc.std.scheduler.IScheduler
 local M = {}
 M.__index = M
 
@@ -69,7 +69,7 @@ function M.new(props)
     self:place_lnum_sign()
   end
 
-  ---@type fml.std.scheduler.IScheduler
+  ---@type fc.std.scheduler.IScheduler
   local render_scheduler = scheduler.debounce({
     name = "fml.ui.search.main.render",
     delay = delay_render,

@@ -2,7 +2,7 @@ local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
 local std_array = require("fc.std.array")
 local oxi = require("fml.std.oxi")
-local scheduler = require("fml.std.scheduler")
+local scheduler = require("fc.std.scheduler")
 local util = require("fml.std.util")
 local signcolumn = require("fml.ui.signcolumn")
 
@@ -10,7 +10,7 @@ local signcolumn = require("fml.ui.signcolumn")
 ---@field protected _autocmd_group      integer
 ---@field protected _bufnr              integer|nil
 ---@field protected _extmark_nr         integer|nil
----@field protected _input_scheduler    fml.std.scheduler.IScheduler
+---@field protected _input_scheduler    fc.std.scheduler.IScheduler
 ---@field protected _keymaps            fml.types.IKeymap[]
 local M = {}
 M.__index = M

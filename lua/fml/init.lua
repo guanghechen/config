@@ -47,7 +47,6 @@ local std = {
   object = require("fml.std.object"),
   oxi = require("fml.std.oxi"),
   path = require("fml.std.path"),
-  scheduler = require("fml.std.scheduler"),
   set = require("fml.std.set"),
   statuscolumn = require("fml.std.statuscolumn"),
   util = require("fml.std.util"),

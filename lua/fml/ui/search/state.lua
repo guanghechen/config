@@ -1,7 +1,7 @@
 local Dirtier = require("fml.collection.dirtier")
 local Observable = require("fml.collection.observable")
 local Subscriber = require("fml.collection.subscriber")
-local scheduler = require("fml.std.scheduler")
+local scheduler = require("fc.std.scheduler")
 local navigate = require("fc.std.navigate")
 local oxi = require("fml.std.oxi")
 
@@ -40,7 +40,7 @@ function M.new(props)
   local uuid = oxi.uuid() ---@type string
   local visible = Observable.from_value(false)
 
-  local fetch_scheduler ---@type fml.std.scheduler.IScheduler
+  local fetch_scheduler ---@type fc.std.scheduler.IScheduler
   fetch_scheduler = scheduler.debounce({
     name = "fml.ui.search.state.fetch",
     delay = delay_fetch,

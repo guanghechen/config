@@ -1,6 +1,6 @@
 local G = require("fml.std.G")
 local Subscriber = require("fml.collection.subscriber")
-local scheduler = require("fml.std.scheduler")
+local scheduler = require("fc.std.scheduler")
 local api_state = require("fml.api.state")
 local watch_observables = require("fml.fn.watch_observables")
 local std_array = require("fc.std.array")
@@ -411,7 +411,7 @@ function M.new(props)
   self._winnr_preview = nil
   self._on_close = on_close_from_props
 
-  ---@type fml.std.scheduler.IScheduler
+  ---@type fc.std.scheduler.IScheduler
   local draw_scheduler = scheduler.throttle({
     name = "fml.ui.search.search.draw",
     delay = 48,

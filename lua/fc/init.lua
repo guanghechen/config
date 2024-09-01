@@ -9,6 +9,7 @@ local std = {
   navigate = require("fc.std.navigate"),
   os = require("fc.std.os"),
   reporter = require("fc.std.reporter"),
+  scheduler = require("fc.std.scheduler"),
   string = require("fc.std.string"),
   tmux = require("fc.std.tmux"),
 }
