@@ -1,5 +1,5 @@
 vim.g.mapleader = " "
-vim.g.clipboard = fml.clipboard.get_clipboard()
+vim.g.clipboard = fml.fn.get_clipboard()
 
 vim.opt.mouse:append("a")
 vim.opt.shortmess:append({ W = true, I = true, c = true, C = true }) --Don't show the intro message when starting nvim
@@ -45,7 +45,7 @@ vim.opt.smartindent = true -- Insert indents automatically
 vim.opt.smarttab = true
 vim.opt.smoothscroll = true
 vim.opt.softtabstop = 2 -- set the tab width
-vim.opt.statuscolumn = "%!v:lua._G.fml.statuscolumn.statuscolumn()"
+vim.opt.statuscolumn = "%!v:lua._G.fml.fn.statuscolumn()"
 vim.opt.tabstop = 2 -- set the tab width
 vim.opt.termguicolors = true
 vim.opt.timeoutlen = vim.g.vscode and 1000 and 300 -- Lower than default (1000) to quickly trigger which-key

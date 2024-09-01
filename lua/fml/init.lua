@@ -14,16 +14,16 @@ local api = {
 ---@class fml.fn
 local fn = {
   foldexpr = require("fml.fn.foldexpr"),
+  get_clipboard = require("fml.fn.get_clipboard"),
+  statuscolumn = require("fml.fn.statuscolumn"),
   watch_observables = require("fml.fn.watch_observables"),
 }
 
 ---@class fml.std
 local std = {
   G = require("fml.std.G"),
-  clipboard = require("fml.std.clipboard"),
   lsp = require("fml.std.lsp"),
   nvimbar = require("fml.std.nvimbar"),
-  statuscolumn = require("fml.std.statuscolumn"),
   util = require("fml.std.util"),
 }
 

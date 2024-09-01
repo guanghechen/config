@@ -1,11 +1,3 @@
-local std_os = require("fc.std.os")
-local path = require("fc.std.path")
-local tmux = require("fc.std.tmux")
-local reporter = require("fc.std.reporter")
-
----@class fml.std.clipboard
-local M = {}
-
 local function wsl_clipboard()
   return {
     name = "WslClipboard",
@@ -29,7 +21,7 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   local function write_to_fake_clipboard(data)
     local file = io.open(clipboard_file, "w")
     if file == nil then
-      reporter.error({
+      fc.reporter.error({
         from = "fml.std.clipboard",
         subject = "write_to_fake_clipboard",
         message = "Unable to open fake clipboard file for writing.",
@@ -55,7 +47,7 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   local function read_from_fake_clipboard()
     local file = io.open(clipboard_file, "r")
     if file == nil then
-      reporter.error({
+      fc.reporter.error({
         from = "fml.std.clipboard",
         subject = "read_from_fake_clipboard",
         message = "Unable to open fake clipboard file for reading.",
@@ -85,15 +77,15 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   }
 end
 
-function M.get_clipboard()
-  if std_os.is_wsl() then
+local function get_clipboard()
+  if fc.os.is_wsl() then
     return wsl_clipboard()
   end
-  if std_os.is_mac() then
+  if fc.os.is_mac() then
     if vim.env.TMUX ~= nil then
-      local fake_clipboard_filepath = tmux.get_tmux_env_value("ghc_use_fake_clipboard")
-      if fake_clipboard_filepath ~= nil and path.is_exist(fake_clipboard_filepath) then
-        reporter.info({
+      local fake_clipboard_filepath = fc.tmux.get_tmux_env_value("ghc_use_fake_clipboard")
+      if fake_clipboard_filepath ~= nil and fc.path.is_exist(fake_clipboard_filepath) then
+        fc.reporter.info({
           from = "fml.std.clipboard",
           subject = "get_clipboard",
           message = "Using fake clipboard:" .. fake_clipboard_filepath,
@@ -106,4 +98,4 @@ function M.get_clipboard()
   return nil
 end
 
-return M
+return get_clipboard

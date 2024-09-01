@@ -1,11 +1,34 @@
----@class guanghechen.core.action.ui_statucolumn
-local M = {}
+---@alias Sign {name:string, text:string, texthl:string, priority:number}
+
+---@param sign                          ?Sign
+---@param len                           ?number
+---@return string
+local function get_icon(sign, len)
+  sign = sign or {}
+  len = len or 2
+  local text = vim.fn.strcharpart(sign.text or "", 0, len) ---@type string
+  text = text .. string.rep(" ", len - vim.fn.strchars(text))
+  return sign.texthl and ("%#" .. sign.texthl .. "#" .. text .. "%*") or text
+end
+
+---@param bufnr                         integer
+---@param lnum                          integer
+---@return Sign|nil
+local function get_mark(bufnr, lnum)
+  local marks = vim.fn.getmarklist(bufnr)
+  vim.list_extend(marks, vim.fn.getmarklist())
+  for _, mark in ipairs(marks) do
+    if mark.pos[1] == bufnr and mark.pos[2] == lnum and mark.mark:match("[a-zA-Z]") then
+      return { text = mark.mark:sub(2), texthl = "DiagnosticHint" }
+    end
+  end
+end
 
 -- Returns a list of regular and extmark signs sorted by priority (low to high)
 ---@param bufnr                         integer
 ---@param lnum                          integer
 ---@return Sign[]
-function M.get_signs(bufnr, lnum)
+local function get_signs(bufnr, lnum)
   -- Get regular signs
   local signs = {} ---@type Sign[]
 
@@ -33,23 +56,8 @@ function M.get_signs(bufnr, lnum)
   return signs
 end
 
----@param bufnr                         integer
----@param lnum                          integer
----@return Sign|nil
-function M.get_mark(bufnr, lnum)
-  local marks = vim.fn.getmarklist(bufnr)
-  vim.list_extend(marks, vim.fn.getmarklist())
-  for _, mark in ipairs(marks) do
-    if mark.pos[1] == bufnr and mark.pos[2] == lnum and mark.mark:match("[a-zA-Z]") then
-      return { text = mark.mark:sub(2), texthl = "DiagnosticHint" }
-    end
-  end
-end
-
----@alias Sign {name:string, text:string, texthl:string, priority:number}
-
 ---@return string
-function M.statuscolumn()
+local function statuscolumn()
   local win = vim.g.statusline_winid
   local buf = vim.api.nvim_win_get_buf(win)
   local is_file = vim.bo[buf].buftype == ""
@@ -60,7 +68,7 @@ function M.statuscolumn()
   if show_signs then
     ---@type Sign?,Sign?,Sign?
     local left, right, fold
-    for _, s in ipairs(M.get_signs(buf, vim.v.lnum)) do
+    for _, s in ipairs(get_signs(buf, vim.v.lnum)) do
       if s.name and (s.name:find("GitSign") or s.name:find("MiniDiffSign")) then
         right = s
       else
@@ -76,9 +84,9 @@ function M.statuscolumn()
       end
     end)
     -- Left: mark or non-git sign
-    components[1] = M.icon(M.get_mark(buf, vim.v.lnum) or left)
+    components[1] = get_icon(get_mark(buf, vim.v.lnum) or left)
     -- Right: fold icon or git sign (only if file)
-    components[3] = is_file and M.icon(fold or right) or ""
+    components[3] = is_file and get_icon(fold or right) or ""
   end
 
   -- Numbers in Neovim are weird
@@ -101,14 +109,4 @@ function M.statuscolumn()
   return table.concat(components, "")
 end
 
----@param sign                          ?Sign
----@param len                           ?number
-function M.icon(sign, len)
-  sign = sign or {}
-  len = len or 2
-  local text = vim.fn.strcharpart(sign.text or "", 0, len) ---@type string
-  text = text .. string.rep(" ", len - vim.fn.strchars(text))
-  return sign.texthl and ("%#" .. sign.texthl .. "#" .. text .. "%*") or text
-end
-
-return M
+return statuscolumn

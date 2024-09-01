@@ -1,6 +1,5 @@
 local constant = require("fml.constant")
 local global = require("fml.global")
-local path = require("fc.std.path")
 local util = require("fml.std.util")
 
 local augroups = {
@@ -28,8 +27,8 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 if vim.fn.expand("%") ~= "" then
   local cwd = vim.fn.getcwd()
   local p = vim.fn.expand("%:p:h")
-  local A = path.locate_git_repo(p)
-  local B = path.locate_git_repo(cwd)
+  local A = fc.path.locate_git_repo(p)
+  local B = fc.path.locate_git_repo(cwd)
 
   if A == nil then
     vim.cmd("cd " .. p .. "")

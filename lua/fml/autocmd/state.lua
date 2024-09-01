@@ -1,5 +1,4 @@
 local state = require("fml.api.state")
-local std_array = require("fc.std.array")
 
 vim.api.nvim_create_autocmd({ "BufAdd", "BufWinEnter" }, {
   callback = function(args)
@@ -39,7 +38,7 @@ vim.api.nvim_create_autocmd({ "BufDelete" }, {
     for _, tab in pairs(state.tabs) do
       if tab.bufnr_set[bufnr] then
         tab.bufnr_set[bufnr] = nil
-        std_array.filter_inline(tab.bufnrs, function(nr)
+        fc.array.filter_inline(tab.bufnrs, function(nr)
           return nr ~= bufnr
         end)
       end
