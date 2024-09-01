@@ -1,5 +1,5 @@
 local Observable = require("fml.collection.observable")
-local std_array = require("fml.std.array")
+local std_array = require("fc.std.array")
 local oxi = require("fml.std.oxi")
 local icons = require("fml.ui.icons")
 local Search = require("fml.ui.search.search")

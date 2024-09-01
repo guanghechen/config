@@ -393,13 +393,13 @@ local function get_select()
     }
 
     ---@type fml.types.IKeymap[]
-    local input_keymaps = fml.array.concat({}, common_keymaps)
+    local input_keymaps = fc.array.concat({}, common_keymaps)
 
     ---@type fml.types.IKeymap[]
-    local main_keymaps = fml.array.concat({}, common_keymaps)
+    local main_keymaps = fc.array.concat({}, common_keymaps)
 
     ---@type fml.types.IKeymap[]
-    local preview_keymaps = fml.array.concat({}, common_keymaps)
+    local preview_keymaps = fc.array.concat({}, common_keymaps)
 
     _select = fml.ui.Select.new({
       destroy_on_close = false,

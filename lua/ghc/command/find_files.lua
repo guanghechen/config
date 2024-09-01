@@ -49,7 +49,7 @@ local actions = {
 
     ---@type ghc.command.find_files.IConfigData
     local data = {
-      exclude_patterns = fml.array.parse_comma_list(f_exclude_patterns),
+      exclude_patterns = fc.array.parse_comma_list(f_exclude_patterns),
     }
 
     local setting = fml.ui.Setting.new({
@@ -210,13 +210,13 @@ local function get_select()
     }
 
     ---@type fml.types.IKeymap[]
-    local input_keymaps = fml.array.concat({}, common_keymaps)
+    local input_keymaps = fc.array.concat({}, common_keymaps)
 
     ---@type fml.types.IKeymap[]
-    local main_keymaps = fml.array.concat({}, common_keymaps)
+    local main_keymaps = fc.array.concat({}, common_keymaps)
 
     ---@type fml.types.IKeymap[]
-    local preview_keymaps = fml.array.concat({}, common_keymaps)
+    local preview_keymaps = fc.array.concat({}, common_keymaps)
 
     ---@type fml.types.ui.file_select.IProvider
     local provider = {

@@ -198,7 +198,7 @@ function M.calc_preview_data(uuid)
         local lwidth = lwidths[1] + 1 ---@type integer
         for _, search_match in ipairs(block_match.matches) do
           local match_offset = block_match.offset + search_match.l ---@type integer
-          if fml.array.contains(match_offsets, match_offset) then
+          if fc.array.contains(match_offsets, match_offset) then
             order = order + 1 ---@type integer
             local is_match_cur = match_offset_cur == match_offset or (match_offset_cur < 0 and order == 1) ---@type boolean
             local hlname = is_match_cur and "f_us_match_cur" or "f_us_match" ---@type string

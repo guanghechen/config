@@ -45,7 +45,7 @@ local M = require("ghc.context.session.mod")
 ---@return ghc.enums.context.FindScope
 function M.get_find_scope_carousel_next()
   local scope = find_scope:snapshot() ---@type ghc.enums.context.FindScope
-  local idx = fml.array.first(scopes, scope) or 1 ---@type integer
+  local idx = fc.array.first(scopes, scope) or 1 ---@type integer
   local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
   return scopes[idx_next]
 end

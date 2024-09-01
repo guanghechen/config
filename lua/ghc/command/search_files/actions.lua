@@ -57,11 +57,11 @@ function M.edit_config()
   local data = {
     search_pattern = s_search_pattern,
     replace_pattern = s_replace_pattern,
-    search_paths = fml.array.parse_comma_list(s_search_paths),
+    search_paths = fc.array.parse_comma_list(s_search_paths),
     max_filesize = s_max_filesize,
     max_matches = s_max_matches,
-    include_patterns = fml.array.parse_comma_list(s_include_patterns),
-    exclude_patterns = fml.array.parse_comma_list(s_exclude_patterns),
+    include_patterns = fc.array.parse_comma_list(s_include_patterns),
+    exclude_patterns = fc.array.parse_comma_list(s_exclude_patterns),
   }
 
   local setting = fml.ui.Setting.new({

@@ -65,7 +65,7 @@ end
 
 ---@return nil
 function M.autosave()
-  if fml.array.some(vim.api.nvim_list_bufs(), does_buf_savable) then
+  if fc.array.some(vim.api.nvim_list_bufs(), does_buf_savable) then
     return
   end
 

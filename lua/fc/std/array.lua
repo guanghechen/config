@@ -1,7 +1,7 @@
 local oxi = require("fml.std.oxi")
 local std_string = require("fc.std.string")
 
----@class fml.std.array
+---@class fc.std.array
 local M = {}
 
 ---@generic T

@@ -1,6 +1,6 @@
 local Subscriber = require("fml.collection.subscriber")
 local constant = require("fml.constant")
-local std_array = require("fml.std.array")
+local std_array = require("fc.std.array")
 local oxi = require("fml.std.oxi")
 local scheduler = require("fml.std.scheduler")
 local util = require("fml.std.util")

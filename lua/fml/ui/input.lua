@@ -1,4 +1,4 @@
-local std_array = require("fml.std.array")
+local std_array = require("fc.std.array")
 local Textarea = require("fml.ui.textarea")
 
 ---@class fml.ui.Input : fml.types.ui.IInput, fml.ui.Textarea

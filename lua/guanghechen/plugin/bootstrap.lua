@@ -102,7 +102,7 @@ for index = 1, #specs, 1 do
     spec_details.url = spec_basic.url
     spec_details.branch = spec_basic.branch
     spec_details.main = spec_basic.main
-  elseif not fml.array.contains(no_details_module_names, spec_basic.name) then
+  elseif not fc.array.contains(no_details_module_names, spec_basic.name) then
     fml.reporter.error({
       from = "guanghechen.plugin.bootstrap",
       subject = "resolve plugin details",

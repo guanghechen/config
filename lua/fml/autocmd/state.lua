@@ -1,5 +1,5 @@
 local state = require("fml.api.state")
-local std_array = require("fml.std.array")
+local std_array = require("fc.std.array")
 
 vim.api.nvim_create_autocmd({ "BufAdd", "BufWinEnter" }, {
   callback = function(args)
