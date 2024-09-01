@@ -1,6 +1,6 @@
 local session = require("ghc.context.session")
 
-local state_find_cwd = fml.collection.Observable.from_value(session.get_find_scope_cwd(fc.path.cwd()))
+local state_find_cwd = fc.c.Observable.from_value(session.get_find_scope_cwd(fc.path.cwd()))
 local _select = nil ---@type fml.types.ui.IFileSelect|nil
 
 ---@return nil
@@ -127,8 +127,8 @@ local function get_select()
   if _select == nil then
     local state_frecency = require("ghc.state.frecency")
     local state_input_history = require("ghc.state.input_history")
-    local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
-    local input_history = state_input_history.load_and_autosave().find_files ---@type fml.types.collection.IHistory
+    local frecency = state_frecency.load_and_autosave().files ---@type fc.types.collection.IFrecency
+    local input_history = state_input_history.load_and_autosave().find_files ---@type fc.types.collection.IHistory
 
     ---@type fml.types.ui.search.IRawStatuslineItem[]
     local statusline_items = {

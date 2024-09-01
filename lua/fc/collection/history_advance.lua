@@ -1,10 +1,10 @@
-local History = require("fml.collection.history")
+local History = require("fc.collection.history")
 
----@class fml.collection.AdvanceHistory : fml.types.collection.IAdvanceHistory
+---@class fc.collection.AdvanceHistory : fc.types.collection.IAdvanceHistory
 ---@field public name                   string
 ---@field public equals                 fml.types.IEquals
 ---@field public validate               fml.types.IValidate
----@field private _history              fml.types.collection.IHistory
+---@field private _history              fc.types.collection.IHistory
 local M = {}
 M.__index = M
 
@@ -15,21 +15,21 @@ local function default_validate(element)
   return true
 end
 
----@class fml.collection.history_advance.IProps
+---@class fc.collection.history_advance.IProps
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?fml.types.IEquals
 ---@field public validate               ?fml.types.IValidate
 
----@class fml.collection.history_advance.IDeserializeProps
----@field public data                   fml.types.collection.history.ISerializedData
+---@class fc.collection.history_advance.IDeserializeProps
+---@field public data                   fc.types.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?fml.types.IEquals
 ---@field public validate               ?fml.types.IValidate
 
----@param props                         fml.collection.history_advance.IProps
----@return fml.collection.AdvanceHistory
+---@param props                         fc.collection.history_advance.IProps
+---@return fc.collection.AdvanceHistory
 function M.new(props)
   local name = props.name ---@type string
   local capacity = props.capacity ---@type integer
@@ -49,12 +49,12 @@ function M.new(props)
   return self
 end
 
----@param props                         fml.collection.history_advance.IDeserializeProps
----@return fml.collection.AdvanceHistory
+---@param props                         fc.collection.history_advance.IDeserializeProps
+---@return fc.collection.AdvanceHistory
 function M.deserialize(props)
-  local data = props.data ---@type fml.types.collection.history.ISerializedData
+  local data = props.data ---@type fc.types.collection.history.ISerializedData
 
-  ---@type fml.types.collection.IHistory
+  ---@type fc.types.collection.IHistory
   local history = History.deserialize({
     data = data,
     name = props.name,
@@ -101,15 +101,15 @@ function M:collect()
   return results
 end
 
----@return fml.types.collection.history.ISerializedData
+---@return fc.types.collection.history.ISerializedData
 function M:dump()
   return self._history:dump()
 end
 
----@param params                        fml.types.collection.history.IForkParams
----@return fml.collection.AdvanceHistory
+---@param params                        fc.types.collection.history.IForkParams
+---@return fc.collection.AdvanceHistory
 function M:fork(params)
-  local history = self._history:fork(params) ---@type fml.types.collection.IHistory
+  local history = self._history:fork(params) ---@type fc.types.collection.IHistory
   local instance = setmetatable({}, M)
   instance.name = history.name
   instance.equals = history.equals
@@ -122,7 +122,7 @@ end
 ---@return fml.types.T|nil
 ---@return boolean
 function M:forward(step)
-  local history = self._history ---@type fml.types.collection.IHistory
+  local history = self._history ---@type fc.types.collection.IHistory
   local _, should_be_top = history:forward(step) ---@type fml.types.T|nil, boolean
   local element = self:present()
   return element, should_be_top
@@ -164,7 +164,7 @@ function M:iterator_reverse()
   end
 end
 
----@param data                          fml.types.collection.history.ISerializedData
+---@param data                          fc.types.collection.history.ISerializedData
 ---@return nil
 function M:load(data)
   self._history:load(data)
@@ -173,7 +173,7 @@ end
 ---@return fml.types.T|nil
 ---@return integer
 function M:present()
-  local history = self._history ---@type fml.types.collection.IHistory
+  local history = self._history ---@type fc.types.collection.IHistory
   while true do
     local element, index = history:present()
     if element ~= nil and self.validate(element) then

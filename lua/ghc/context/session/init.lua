@@ -1,4 +1,4 @@
----@class ghc.context.session : fml.collection.Viewmodel
+---@class ghc.context.session : fc.collection.Viewmodel
 local M = require("ghc.context.session.mod")
 
 require("ghc.context.session.find")

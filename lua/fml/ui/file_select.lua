@@ -13,18 +13,18 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.file_select.IProps
----@field public case_sensitive         ?fml.types.collection.IObservable
+---@field public case_sensitive         ?fc.types.collection.IObservable
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public destroy_on_close       boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public dirty_on_close         ?boolean
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?fml.types.collection.IObservable
----@field public flag_regex             ?fml.types.collection.IObservable
----@field public frecency               ?fml.types.collection.IFrecency
----@field public input                  ?fml.types.collection.IObservable
----@field public input_history          ?fml.types.collection.IHistory
+---@field public flag_fuzzy             ?fc.types.collection.IObservable
+---@field public flag_regex             ?fc.types.collection.IObservable
+---@field public frecency               ?fc.types.collection.IFrecency
+---@field public input                  ?fc.types.collection.IObservable
+---@field public input_history          ?fc.types.collection.IHistory
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
@@ -40,17 +40,17 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive ---@type fml.types.collection.IObservable|nil
+  local case_sensitive = props.case_sensitive ---@type fc.types.collection.IObservable|nil
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local dirty_on_close = not not props.dirty_on_close ---@type boolean|nil
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
-  local flag_fuzzy = props.flag_fuzzy ---@type fml.types.collection.IObservable|nil
-  local flag_regex = props.flag_regex ---@type fml.types.collection.IObservable|nil
-  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
-  local input = props.input ---@type fml.types.collection.IObservable|nil
-  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
+  local flag_fuzzy = props.flag_fuzzy ---@type fc.types.collection.IObservable|nil
+  local flag_regex = props.flag_regex ---@type fc.types.collection.IObservable|nil
+  local frecency = props.frecency ---@type fc.types.collection.IFrecency|nil
+  local input = props.input ---@type fc.types.collection.IObservable|nil
+  local input_history = props.input_history ---@type fc.types.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil

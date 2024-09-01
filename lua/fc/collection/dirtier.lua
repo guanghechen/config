@@ -1,16 +1,16 @@
-local Observable = require("fml.collection.observable")
+local Observable = require("fc.collection.observable")
 
----@class fml.collection.Dirtier : fml.types.collection.IDirtier
+---@class fc.collection.Dirtier : fc.types.collection.IDirtier
 ---@field protected _clean_tick         integer
 local M = {}
 M.__index = M
 
 setmetatable(M, { __index = Observable })
 
----@return fml.collection.Dirtier
+---@return fc.collection.Dirtier
 function M.new()
   local self = setmetatable(Observable.from_value(0), M)
-  ---@cast self fml.collection.Dirtier
+  ---@cast self fc.collection.Dirtier
 
   self._clean_tick = 0
   return self

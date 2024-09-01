@@ -1,4 +1,4 @@
----@class fml.collection.CircularQueue : fml.types.collection.ICircularQueue
+---@class fc.collection.CircularQueue : fc.types.collection.ICircularQueue
 ---@field private _elements             fml.types.T[]
 ---@field private _capacity             integer
 ---@field private _size                 integer
@@ -7,13 +7,13 @@
 local M = {}
 M.__index = M
 
----@class fml.collection.CircularQueue.IProps
+---@class fc.collection.CircularQueue.IProps
 ---@field public capacity               integer
 
 local _tmp_array = {} ---@type fml.types.T[]
 
----@param props fml.collection.CircularQueue.IProps
----@return fml.collection.CircularQueue
+---@param props fc.collection.CircularQueue.IProps
+---@return fc.collection.CircularQueue
 function M.new(props)
   local capacity = math.max(1, props.capacity) ---@type integer
 
@@ -26,8 +26,8 @@ function M.new(props)
   return self
 end
 
----@param queue                         fml.types.collection.ICircularQueue
----@return fml.collection.CircularQueue
+---@param queue                         fc.types.collection.ICircularQueue
+---@return fc.collection.CircularQueue
 function M.from(queue)
   local elements = {} ---@type fml.types.T[]
   local size = 0 ---@type integer
@@ -47,7 +47,7 @@ end
 
 ---@param arr                          fml.types.T[]
 ---@param capacity                     integer
----@return fml.collection.CircularQueue
+---@return fc.collection.CircularQueue
 function M.from_array(arr, capacity)
   capacity = math.max(1, capacity) ---@type integer
   local elements = {} ---@type fml.types.T[]
@@ -186,7 +186,7 @@ function M:enqueue(element)
 end
 
 ---@param filter                        fun(element: fml.types.T, index: integer): boolean
----@return fml.collection.CircularQueue
+---@return fc.collection.CircularQueue
 function M:fork(filter)
   self:rearrange(filter)
   return M.from(self)

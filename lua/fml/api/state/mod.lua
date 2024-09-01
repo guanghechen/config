@@ -1,6 +1,6 @@
 local constant = require("fml.constant")
-local Observable = require("fml.collection.observable")
-local AdvanceHistory = require("fml.collection.history_advance")
+local Observable = require("fc.collection.observable")
+local AdvanceHistory = require("fc.collection.history_advance")
 local fs = require("fc.std.fs")
 
 ---@type table<string, boolean>
@@ -19,11 +19,11 @@ local BUF_IGNORED_FILETYPES = {
 ---@class fml.api.state
 ---@field public bufs                   table<integer, fml.types.api.state.IBufItem>
 ---@field public tabs                   table<integer, fml.types.api.state.ITabItem>
----@field public tab_history            fml.types.collection.IAdvanceHistory
+---@field public tab_history            fc.types.collection.IAdvanceHistory
 ---@field public term_map               table<string, fml.types.api.state.ITerm>
 ---@field public wins                   table<integer, fml.types.api.state.IWinItem>
----@field public win_history            fml.types.collection.IAdvanceHistory
----@field public winline_dirty_nr       fml.types.collection.IObservable
+---@field public win_history            fc.types.collection.IAdvanceHistory
+---@field public winline_dirty_nr       fc.types.collection.IObservable
 local M = {}
 
 ---@param winnr                         number

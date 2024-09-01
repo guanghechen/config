@@ -1,5 +1,5 @@
 local function circular_queue()
-  local circular = fml.collection.CircularQueue.new({ capacity = 3 })
+  local circular = fc.c.CircularQueue.new({ capacity = 3 })
   circular:enqueue("A")
   circular:enqueue("B")
   circular:enqueue("C")

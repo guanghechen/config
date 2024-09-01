@@ -11,23 +11,6 @@ local api = {
   win = require("fml.api.win"),
 }
 
----@class fml.collection
-local collection = {
-  AdvanceHistory = require("fml.collection.history_advance"),
-  BatchHandler = require("fml.collection.batch_handler"),
-  BatchDisposable = require("fml.collection.batch_disposable"),
-  CircularQueue = require("fml.collection.circular_queue"),
-  Dirtier = require("fml.collection.dirtier"),
-  Disposable = require("fml.collection.disposable"),
-  Frecency = require("fml.collection.frecency"),
-  History = require("fml.collection.history"),
-  Observable = require("fml.collection.observable"),
-  Subscriber = require("fml.collection.subscriber"),
-  Subscribers = require("fml.collection.subscribers"),
-  Ticker = require("fml.collection.ticker"),
-  Viewmodel = require("fml.collection.viewmodel"),
-}
-
 ---@class fml.fn
 local fn = {
   foldexpr = require("fml.fn.foldexpr"),
@@ -65,14 +48,12 @@ local ui = {
 ---@class fml : fml.global, fml.std
 ---@field public api                    fml.api
 ---@field public constant               fml.constant
----@field public collection             fml.collection
 ---@field public fn                     fml.fn
 ---@field public std                    fml.std
 ---@field public ui                     fml.ui
 local fml = vim.tbl_extend("force", std, require("fml.global"), {
   api = api,
   constant = require("fml.constant"),
-  collection = collection,
   fn = fn,
   std = std,
   ui = ui,

@@ -12,7 +12,7 @@ M.__index = M
 ---@field public dirty_on_close         ?boolean
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public frecency               ?fml.types.collection.IFrecency
+---@field public frecency               ?fc.types.collection.IFrecency
 ---@field public provider               fml.types.ui.simple_file_select.IProvider
 ---@field public title                  string
 
@@ -27,7 +27,7 @@ function M.new(props)
   local dirty_on_close = not not props.dirty_on_close ---@type boolean
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean|nil
-  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
+  local frecency = props.frecency ---@type fc.types.collection.IFrecency|nil
   local simple_provider = props.provider ---@type fml.types.ui.simple_file_select.IProvider
   local title = props.title ---@type string
 

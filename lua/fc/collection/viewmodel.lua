@@ -1,43 +1,43 @@
-local BatchDisposable = require("fml.collection.batch_disposable")
-local Disposable = require("fml.collection.disposable")
-local Subscriber = require("fml.collection.subscriber")
+local BatchDisposable = require("fc.collection.batch_disposable")
+local Disposable = require("fc.collection.disposable")
+local Subscriber = require("fc.collection.subscriber")
 local fs = require("fc.std.fs")
 local is = require("fc.std.is")
 local path = require("fc.std.path")
 local util = require("fc.std.util")
 local reporter = require("fc.std.reporter")
 
----@class fml.collection.Viewmodel : fml.types.collection.IViewmodel
+---@class fc.collection.Viewmodel : fc.types.collection.IViewmodel
 ---@field private _name                 string
 ---@field private _filepath             string|nil
 ---@field private _initial_values       table<string, any>
 ---@field private _unwatch              (fun():nil)|nil
 ---@field private _verbose              boolean
----@field private _persistables         table<string, fml.types.collection.IObservable>
----@field private _all_observables      table<string, fml.types.collection.IObservable>
+---@field private _persistables         table<string, fc.types.collection.IObservable>
+---@field private _all_observables      table<string, fc.types.collection.IObservable>
 local Viewmodel = {}
 Viewmodel.__index = Viewmodel
 setmetatable(Viewmodel, { __index = BatchDisposable })
 
----@class fml.collection.Viewmodel.IProps
+---@class fc.collection.Viewmodel.IProps
 ---@field public name                   string
 ---@field public filepath               ?string
 ---@field public verbose                ?boolean
 
----@param props                         fml.collection.Viewmodel.IProps
----@return fml.collection.Viewmodel
+---@param props                         fc.collection.Viewmodel.IProps
+---@return fc.collection.Viewmodel
 function Viewmodel.new(props)
   local self = setmetatable(BatchDisposable.new(), Viewmodel)
   ---@diagnostic disable-next-line: cast-type-mismatch
-  ---@cast self fml.collection.Viewmodel
+  ---@cast self fc.collection.Viewmodel
 
   self._name = props.name ---@type string
   self._filepath = props.filepath ---@type string
   self._initial_values = {} ---@type table<string, any>
   self._unwatch = nil ---@type (fun():nil)|nil
-  self._persistables = {} ---@type table<string, fml.types.collection.IObservable>
+  self._persistables = {} ---@type table<string, fc.types.collection.IObservable>
   self._verbose = not not props.verbose ---@type boolean
-  self._all_observables = {} ---@type table<string, fml.types.collection.IObservable>
+  self._all_observables = {} ---@type table<string, fc.types.collection.IObservable>
 
   return self
 end
@@ -50,11 +50,11 @@ function Viewmodel:dispose()
 
   BatchDisposable.dispose(self)
 
-  ---@type fml.types.collection.IDisposable[]
+  ---@type fc.types.collection.IDisposable[]
   local disposables = {}
   for _, disposable in pairs(self) do
     if is.disposable(disposable) then
-      ---@cast disposable fml.types.collection.IDisposable
+      ---@cast disposable fc.types.collection.IDisposable
       table.insert(disposables, disposable)
     end
   end
@@ -80,7 +80,7 @@ function Viewmodel:snapshot()
   local data = {}
   for key, observable in pairs(self._persistables) do
     if is.observable(observable) then
-      ---@cast observable fml.types.collection.IObservable
+      ---@cast observable fc.types.collection.IObservable
       data[key] = observable:snapshot()
     end
   end
@@ -92,7 +92,7 @@ function Viewmodel:snapshot_all()
   local data = {}
   for key, observable in pairs(self._all_observables) do
     if is.observable(observable) then
-      ---@cast observable fml.types.collection.IObservable
+      ---@cast observable fc.types.collection.IObservable
       data[key] = observable:snapshot()
     end
   end
@@ -100,7 +100,7 @@ function Viewmodel:snapshot_all()
 end
 
 ---@param name string
----@param observable fml.types.collection.IObservable
+---@param observable fc.types.collection.IObservable
 ---@param persistable boolean
 ---@param auto_save boolean
 function Viewmodel:register(name, observable, persistable, auto_save)
@@ -136,7 +136,7 @@ function Viewmodel:save()
   local filepath = self._filepath ---@type string|nil
   if filepath == nil then
     reporter.error({
-      from = "fml.collection.viewmodel",
+      from = "fc.collection.viewmodel",
       subject = "save",
       message = "The filepath not specified",
       details = { name = self._name },
@@ -158,7 +158,7 @@ function Viewmodel:load(opts)
   if filepath == nil then
     if not silent_on_notfound then
       reporter.error({
-        from = "fml.collection.viewmodel",
+        from = "fc.collection.viewmodel",
         subject = "load",
         message = "The filepath not specified",
         details = { name = self._name, filepath = filepath },
@@ -170,7 +170,7 @@ function Viewmodel:load(opts)
   if not path.is_exist(filepath) then
     if not silent_on_notfound then
       reporter.error({
-        from = "fml.collection.viewmodel",
+        from = "fc.collection.viewmodel",
         subject = "load",
         message = "The filepath not exist",
         details = { name = self._name, filepath = filepath },
@@ -183,7 +183,7 @@ function Viewmodel:load(opts)
   if type(data) ~= "table" then
     if data ~= nil then
       reporter.warn({
-        from = "fml.collection.viewmodel",
+        from = "fc.collection.viewmodel",
         subject = "load",
         message = "Bad json, not a table",
         details = { name = self._name, data = data },
@@ -203,11 +203,11 @@ function Viewmodel:load(opts)
   return has_changed
 end
 
----@param params                        ?fml.types.collection.viewmodel.IAutoReloadParams
+---@param params                        ?fc.types.collection.viewmodel.IAutoReloadParams
 ---@return nil
 function Viewmodel:auto_reload(params)
   params = params or {}
-  ---@cast params fml.types.collection.viewmodel.IAutoReloadParams
+  ---@cast params fc.types.collection.viewmodel.IAutoReloadParams
 
   local on_changed = params.on_changed or util.noop ---@type fun(): nil
 
@@ -218,7 +218,7 @@ function Viewmodel:auto_reload(params)
   local filepath = self._filepath ---@type string|nil
   if filepath == nil then
     reporter.error({
-      from = "fml.collection.viewmodel",
+      from = "fc.collection.viewmodel",
       subject = "auto_reload",
       message = "The filepath not specified",
       details = { name = self._name, params, params },
@@ -235,7 +235,7 @@ function Viewmodel:auto_reload(params)
           vim.schedule(on_changed)
           if self._verbose then
             reporter.info({
-              from = "fml.collection.viewmodel",
+              from = "fc.collection.viewmodel",
               subject = "auto_reload",
               message = "auto reloaded.",
               details = { name = self._name, filepath = p },
@@ -247,7 +247,7 @@ function Viewmodel:auto_reload(params)
     end,
     on_error = function(p, err)
       reporter.error({
-        from = "fml.collection.viewmodel",
+        from = "fc.collection.viewmodel",
         subject = "auto_reload",
         message = "Failed!",
         details = { err = err, name = self._name, filepath = p },

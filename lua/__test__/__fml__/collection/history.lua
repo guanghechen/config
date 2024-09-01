@@ -1,4 +1,4 @@
-local history = fml.collection.AdvanceHistory.new({
+local history = fc.c.AdvanceHistory.new({
   name = "haha",
   capacity = 5,
   validate = function(v)

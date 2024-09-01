@@ -1,5 +1,3 @@
-local Observable = fml.collection.Observable
-
 ---@type ghc.enums.context.SearchScope[]
 local scopes = { "W", "C", "D", "B" }
 
@@ -9,7 +7,7 @@ local function normalize_paths(paths)
   return fml.oxi.normalize_comma_list(paths) ---@type string
 end
 
-local search_exclude_patterns = Observable.new({
+local search_exclude_patterns = fc.c.Observable.new({
   initial_value = table.concat({
     ".git/**",
     "**/.cache/**",
@@ -24,31 +22,31 @@ local search_exclude_patterns = Observable.new({
   }, ","),
   normalize = normalize_paths,
 })
-local search_flag_case_sensitive = Observable.from_value(true)
-local search_flag_gitignore = Observable.from_value(true)
-local search_flag_regex = Observable.from_value(true)
-local search_flag_replace = Observable.from_value(false)
-local search_include_patterns = Observable.new({ initial_value = "", normalize = normalize_paths })
-local search_max_matches = Observable.from_value(500)
-local search_max_filesize = Observable.from_value("1M")
-local search_paths = Observable.new({ initial_value = "", normalize = normalize_paths })
-local search_pattern = Observable.from_value("")
-local search_replace_pattern = Observable.from_value("")
-local search_scope = Observable.from_value("C")
+local search_flag_case_sensitive = fc.c.Observable.from_value(true)
+local search_flag_gitignore = fc.c.Observable.from_value(true)
+local search_flag_regex = fc.c.Observable.from_value(true)
+local search_flag_replace = fc.c.Observable.from_value(false)
+local search_include_patterns = fc.c.Observable.new({ initial_value = "", normalize = normalize_paths })
+local search_max_matches = fc.c.Observable.from_value(500)
+local search_max_filesize = fc.c.Observable.from_value("1M")
+local search_paths = fc.c.Observable.new({ initial_value = "", normalize = normalize_paths })
+local search_pattern = fc.c.Observable.from_value("")
+local search_replace_pattern = fc.c.Observable.from_value("")
+local search_scope = fc.c.Observable.from_value("C")
 
----@class ghc.context.session : fml.collection.Viewmodel
----@field public search_exclude_patterns    fml.types.collection.IObservable
----@field public search_flag_case_sensitive fml.types.collection.IObservable
----@field public search_flag_gitignore      fml.types.collection.IObservable
----@field public search_flag_regex          fml.types.collection.IObservable
----@field public search_flag_replace        fml.types.collection.IObservable
----@field public search_include_patterns    fml.types.collection.IObservable
----@field public search_max_filesize        fml.types.collection.IObservable
----@field public search_max_matches         fml.types.collection.IObservable
----@field public search_paths               fml.types.collection.IObservable
----@field public search_pattern             fml.types.collection.IObservable
----@field public search_replace_pattern     fml.types.collection.IObservable
----@field public search_scope               fml.types.collection.IObservable
+---@class ghc.context.session : fc.collection.Viewmodel
+---@field public search_exclude_patterns    fc.types.collection.IObservable
+---@field public search_flag_case_sensitive fc.types.collection.IObservable
+---@field public search_flag_gitignore      fc.types.collection.IObservable
+---@field public search_flag_regex          fc.types.collection.IObservable
+---@field public search_flag_replace        fc.types.collection.IObservable
+---@field public search_include_patterns    fc.types.collection.IObservable
+---@field public search_max_filesize        fc.types.collection.IObservable
+---@field public search_max_matches         fc.types.collection.IObservable
+---@field public search_paths               fc.types.collection.IObservable
+---@field public search_pattern             fc.types.collection.IObservable
+---@field public search_replace_pattern     fc.types.collection.IObservable
+---@field public search_scope               fc.types.collection.IObservable
 local M = require("ghc.context.session.mod")
   :register("search_exclude_patterns", search_exclude_patterns, true, true)
   :register("search_flag_case_sensitive", search_flag_case_sensitive, true, true)

@@ -1,27 +1,27 @@
-local BatchHandler = require("fml.collection.batch_handler")
+local BatchHandler = require("fc.collection.batch_handler")
 
----@class fml.collection.Subscribers : fml.types.collection.ISubscribers
+---@class fc.collection.Subscribers : fc.types.collection.ISubscribers
 ---@field private ARRANGE_THRESHOLD     number
 ---@field private _disposed             boolean
----@field private _items                fml.collection.Subscribers.ISubscriberItem[]
+---@field private _items                fc.collection.Subscribers.ISubscriberItem[]
 ---@field private _subscribing_count    integer
 local M = {}
 M.__index = M
 
----@type fml.types.collection.IUnsubscribable
+---@type fc.types.collection.IUnsubscribable
 local noop_unsubscribable = {
   unsubscribe = function(...) end,
 }
 
----@class fml.collection.Subscribers.IProps
+---@class fc.collection.Subscribers.IProps
 ---@field public ARRANGE_THRESHOLD      ?number
 
----@class fml.collection.Subscribers.ISubscriberItem
----@field subscriber                    fml.types.collection.ISubscriber
+---@class fc.collection.Subscribers.ISubscriberItem
+---@field subscriber                    fc.types.collection.ISubscriber
 ---@field unsubscribed                  boolean
 
----@param props                         ?fml.collection.Subscribers.IProps
----@return fml.collection.Subscribers
+---@param props                         ?fc.collection.Subscribers.IProps
+---@return fc.collection.Subscribers
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -31,7 +31,7 @@ function M.new(props)
   ---@type boolean
   self._disposed = false
 
-  ---@type fml.collection.Subscribers.ISubscriberItem[]
+  ---@type fc.collection.Subscribers.ISubscriberItem[]
   self._items = {}
 
   ---@type number
@@ -114,8 +114,8 @@ function M:notify(value, value_prev)
   handler:cleanup()
 end
 
----@param subscriber fml.types.collection.ISubscriber
----@return fml.types.collection.IUnsubscribable
+---@param subscriber fc.types.collection.ISubscriber
+---@return fc.types.collection.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:is_disposed() then
     return noop_unsubscribable
@@ -126,13 +126,13 @@ function M:subscribe(subscriber)
     return noop_unsubscribable
   end
 
-  ---@type fml.collection.Subscribers.ISubscriberItem
+  ---@type fc.collection.Subscribers.ISubscriberItem
   local item = { subscriber = subscriber, unsubscribed = false }
 
   table.insert(self._items, item)
   self._subscribing_count = self._subscribing_count + 1
 
-  ---@type fml.types.collection.IUnsubscribable
+  ---@type fc.types.collection.IUnsubscribable
   local unsubscribe = {
     unsubscribe = function()
       if item.unsubscribed then
@@ -151,7 +151,7 @@ end
 function M:_arrange()
   local items = self._items
   if #items >= self.ARRANGE_THRESHOLD and self._subscribing_count * 2 <= #items then
-    ---@type fml.collection.Subscribers.ISubscriberItem[]
+    ---@type fc.collection.Subscribers.ISubscriberItem[]
     local next_items = {}
 
     local i = 1

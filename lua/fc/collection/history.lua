@@ -1,4 +1,4 @@
-local CircularQueue = require("fml.collection.circular_queue")
+local CircularQueue = require("fc.collection.circular_queue")
 local reporter = require("fc.std.reporter")
 
 ---@param x                             fml.types.T
@@ -8,27 +8,27 @@ local function default_equals(x, y)
   return x == y
 end
 
----@class fml.collection.History : fml.types.collection.IHistory
+---@class fc.collection.History : fc.types.collection.IHistory
 ---@field public name                   string
 ---@field public equals                 fml.types.IEquals
 ---@field protected _present            integer
----@field protected _stack              fml.types.collection.ICircularQueue
+---@field protected _stack              fc.types.collection.ICircularQueue
 local M = {}
 M.__index = M
 
----@class fml.collection.history.IDeserializeProps
----@field public data                   fml.types.collection.history.ISerializedData
+---@class fc.collection.history.IDeserializeProps
+---@field public data                   fc.types.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?fml.types.IEquals
 
----@class fml.collection.history.IProps
+---@class fc.collection.history.IProps
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?fml.types.IEquals
 
----@param props                         fml.collection.history.IProps
----@return fml.collection.History
+---@param props                         fc.collection.history.IProps
+---@return fc.collection.History
 function M.new(props)
   local name = props.name ---@type string
   local capacity = props.capacity ---@type integer
@@ -42,10 +42,10 @@ function M.new(props)
   return self
 end
 
----@param props                         fml.collection.history.IDeserializeProps
----@return fml.collection.History
+---@param props                         fc.collection.history.IDeserializeProps
+---@return fc.collection.History
 function M.deserialize(props)
-  local data = props.data ---@type fml.types.collection.history.ISerializedData
+  local data = props.data ---@type fc.types.collection.history.ISerializedData
 
   local self = setmetatable({}, M)
   self.name = props.name
@@ -80,17 +80,17 @@ function M:collect()
   return self._stack:collect()
 end
 
----@return fml.types.collection.history.ISerializedData
+---@return fc.types.collection.history.ISerializedData
 function M:dump()
-  ---@type fml.types.collection.history.ISerializedData
+  ---@type fc.types.collection.history.ISerializedData
   return {
     present = self._present,
     stack = self._stack:collect(),
   }
 end
 
----@param params                        fml.types.collection.history.IForkParams
----@return fml.collection.History
+---@param params                        fc.types.collection.history.IForkParams
+---@return fc.collection.History
 function M:fork(params)
   local instance = setmetatable({}, M)
   instance.name = params.name
@@ -113,7 +113,7 @@ end
 ---@return fml.types.T|nil
 ---@return integer
 function M:go(index)
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local stack = self._stack ---@type fc.types.collection.ICircularQueue
   local present = math.min(stack:size(), math.max(1, index)) ---@type integer
   self._present = present
   return stack:at(present), present
@@ -136,17 +136,17 @@ end
 
 ---@return fun(): fml.types.T, integer
 function M:iterator()
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local stack = self._stack ---@type fc.types.collection.ICircularQueue
   return stack:iterator()
 end
 
 ---@return fun(): fml.types.T, integer
 function M:iterator_reverse()
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local stack = self._stack ---@type fc.types.collection.ICircularQueue
   return stack:iterator_reverse()
 end
 
----@param data                          fml.types.collection.history.ISerializedData
+---@param data                          fc.types.collection.history.ISerializedData
 ---@return nil
 function M:load(data)
   local stack = data.stack ---@type fml.types.T[]
@@ -166,7 +166,7 @@ function M:print()
   local present = self._present ---@type integer
   local stack = self._stack:collect() ---@type fml.types.T
   reporter.info({
-    from = "fml.collection.history",
+    from = "fc.collection.history",
     subject = "print",
     details = { present = present, stack = stack },
   })
@@ -176,7 +176,7 @@ end
 ---@return nil
 function M:push(element)
   local present = self._present ---@type integer
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local stack = self._stack ---@type fc.types.collection.ICircularQueue
   local el_present = stack:at(present) ---@type fml.types.T
   if self.equals(el_present, element) then
     return
@@ -200,7 +200,7 @@ end
 ---@param filter                        fml.types.IFilter
 ---@return nil
 function M:rearrange(filter)
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local stack = self._stack ---@type fc.types.collection.ICircularQueue
   local old_present = self._present ---@type integer
   local new_present = 0 ---@type integer
   local idx = 0 ---@type integer
@@ -228,14 +228,14 @@ end
 ---@return fml.types.T|nil
 ---@return integer
 function M:top()
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local stack = self._stack ---@type fc.types.collection.ICircularQueue
   return stack:back(), stack:size()
 end
 
 ---@param element                       fml.types.T
 ---@return nil
 function M:update_top(element)
-  local stack = self._stack ---@type fml.types.collection.ICircularQueue
+  local stack = self._stack ---@type fc.types.collection.ICircularQueue
   local present = stack:size()
   self._present = present
   stack:update(present, element)

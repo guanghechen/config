@@ -1,5 +1,5 @@
 local G = require("fml.std.G")
-local Subscriber = require("fml.collection.subscriber")
+local Subscriber = require("fc.collection.subscriber")
 local scheduler = require("fc.std.scheduler")
 local api_state = require("fml.api.state")
 local watch_observables = require("fml.fn.watch_observables")
@@ -63,8 +63,8 @@ M.__index = M
 ---@field public fetch_data             fml.types.ui.search.IFetchData
 ---@field public delay_fetch            ?integer
 ---@field public fetch_preview_data     ?fml.types.ui.search.IFetchPreviewData
----@field public input                  fml.types.collection.IObservable
----@field public input_history          fml.types.collection.IHistory|nil
+---@field public input                  fc.types.collection.IObservable
+---@field public input_history          fc.types.collection.IHistory|nil
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public patch_preview_data     ?fml.types.ui.search.IPatchPreviewData
@@ -86,7 +86,7 @@ function M.new(props)
 
   local raw_statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
   for idx, item in ipairs(raw_statusline_items) do
-    local state = item.state ---@type fml.types.collection.IObservable
+    local state = item.state ---@type fc.types.collection.IObservable
     local symbol = item.symbol ---@type string
     local callback = item.callback ---@type fun(): nil
     local callback_fn = G.register_anonymous_fn(callback) or "" ---@type string
@@ -120,7 +120,7 @@ function M.new(props)
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
   local destroy_on_close = not not props.destroy_on_close ---@type boolean
   local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
-  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
+  local input_history = props.input_history ---@type fc.types.collection.IHistory|nil
 
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil

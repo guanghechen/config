@@ -1,5 +1,5 @@
 local constant = require("fml.constant")
-local AdvanceHistory = require("fml.collection.history_advance")
+local AdvanceHistory = require("fc.collection.history_advance")
 local reporter = require("fc.std.reporter")
 
 ---@class fml.api.state

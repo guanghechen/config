@@ -1,23 +1,23 @@
-local BatchHandler = require("fml.collection.batch_handler")
+local BatchHandler = require("fc.collection.batch_handler")
 local reporter = require("fc.std.reporter")
 
----@class fml.collection.BatchDisposable : fml.types.collection.IBatchDisposable
+---@class fc.collection.BatchDisposable : fc.types.collection.IBatchDisposable
 local M = {}
 M.__index = M
 
----@return fml.collection.BatchDisposable
+---@return fc.collection.BatchDisposable
 function M.new()
   local self = setmetatable({}, M)
 
   ---@type boolean
   self._disposed = false
 
-  ---@type fml.types.collection.IDisposable[]
+  ---@type fc.types.collection.IDisposable[]
   self._disposables = {}
   return self
 end
 
----@param disposables                   fml.types.collection.IDisposable[]
+---@param disposables                   fc.types.collection.IDisposable[]
 ---@return nil
 function M.dispose_all(disposables)
   if #disposables <= 0 then
@@ -30,7 +30,7 @@ function M.dispose_all(disposables)
       disposable:dispose()
     end)
   end
-  handler:summary("[fml.collection.batch_disposable.dispose_all] Encountered error(s) while disposing.")
+  handler:summary("[fc.collection.batch_disposable.dispose_all] Encountered error(s) while disposing.")
 end
 
 ---@return boolean
@@ -56,7 +56,7 @@ function M:dispose()
 
   if not ok then
     reporter.error({
-      from = "fml.collection.BatchDisposable",
+      from = "fc.collection.BatchDisposable",
       subject = "dispose",
       message = "Failed to dispose all registered disposables.",
       details = { result = result },
@@ -65,7 +65,7 @@ function M:dispose()
   end
 end
 
----@param disposable fml.types.collection.IDisposable
+---@param disposable fc.types.collection.IDisposable
 ---@return nil
 function M:add_disposable(disposable)
   if disposable:is_disposed() then

@@ -1,10 +1,8 @@
-local Frecency = require("fml.collection.frecency")
-
 ---@class ghc.state.frecency.IData
----@field public files                  fml.types.collection.frecency.ISerializedData|nil
+---@field public files                  fc.types.collection.frecency.ISerializedData|nil
 
 ---@class ghc.state.frecency.IState
----@field public files                  fml.types.collection.IFrecency
+---@field public files                  fc.types.collection.IFrecency
 
 local FILEPATH = fc.path.locate_session_filepath({ filename = "state.frecency.json" }) ---@type string
 local state = nil ---@type ghc.state.frecency.IState|nil
@@ -16,7 +14,7 @@ local M = {}
 function M.load_and_autosave()
   if state == nil then
     state = {
-      files = Frecency.new({
+      files = fc.c.Frecency.new({
         items = {},
         normalize = function(key)
           return fc.md5.sumhexa(key)
@@ -28,19 +26,19 @@ function M.load_and_autosave()
     if data ~= nil and type(data) == "table" then
       for key, value in pairs(data) do
         if state[key] ~= nil and type(value) == "table" then
-          ---@cast value fml.types.collection.frecency.ISerializedData
+          ---@cast value fc.types.collection.frecency.ISerializedData
           state[key]:load(value)
         end
       end
     end
 
-    fml.disposable:add_disposable(fml.collection.Disposable.new({
+    fml.disposable:add_disposable(fc.c.Disposable.new({
       on_dispose = function()
         ---@type boolean, ghc.state.frecency.IData
         local ok, json_data = pcall(function()
-          local serialized_data = {} ---@type table<string, fml.types.collection.frecency.ISerializedData>
+          local serialized_data = {} ---@type table<string, fc.types.collection.frecency.ISerializedData>
           for key, value in pairs(state) do
-            local frecency_data = value:dump() ---@type fml.types.collection.frecency.ISerializedData
+            local frecency_data = value:dump() ---@type fc.types.collection.frecency.ISerializedData
             serialized_data[key] = frecency_data
           end
           return serialized_data

@@ -1,9 +1,7 @@
-local Observable = fml.collection.Observable
-
 ---@type ghc.enums.context.FindScope[]
 local scopes = { "W", "C", "D" }
 
-local find_exclude_patterns = Observable.from_value(table.concat({
+local find_exclude_patterns = fc.c.Observable.from_value(table.concat({
   ".git/",
   ".cache/",
   ".next/",
@@ -18,21 +16,21 @@ local find_exclude_patterns = Observable.from_value(table.concat({
   "*.mp4",
   "*.zip",
 }, ","))
-local find_flag_case_sensitive = Observable.from_value(false)
-local find_flag_gitignore = Observable.from_value(true)
-local find_flag_fuzzy = Observable.from_value(true)
-local find_flag_regex = Observable.from_value(false)
-local find_file_pattern = Observable.from_value("")
-local find_scope = Observable.from_value("C")
+local find_flag_case_sensitive = fc.c.Observable.from_value(false)
+local find_flag_gitignore = fc.c.Observable.from_value(true)
+local find_flag_fuzzy = fc.c.Observable.from_value(true)
+local find_flag_regex = fc.c.Observable.from_value(false)
+local find_file_pattern = fc.c.Observable.from_value("")
+local find_scope = fc.c.Observable.from_value("C")
 
----@class ghc.context.session : fml.collection.Viewmodel
----@field public find_exclude_patterns  fml.types.collection.IObservable
----@field public find_flag_case_sensitive fml.types.collection.IObservable
----@field public find_flag_gitignore    fml.types.collection.IObservable
----@field public find_flag_fuzzy        fml.types.collection.IObservable
----@field public find_flag_regex        fml.types.collection.IObservable
----@field public find_file_pattern      fml.types.collection.IObservable
----@field public find_scope             fml.types.collection.IObservable
+---@class ghc.context.session : fc.collection.Viewmodel
+---@field public find_exclude_patterns  fc.types.collection.IObservable
+---@field public find_flag_case_sensitive fc.types.collection.IObservable
+---@field public find_flag_gitignore    fc.types.collection.IObservable
+---@field public find_flag_fuzzy        fc.types.collection.IObservable
+---@field public find_flag_regex        fc.types.collection.IObservable
+---@field public find_file_pattern      fc.types.collection.IObservable
+---@field public find_scope             fc.types.collection.IObservable
 local M = require("ghc.context.session.mod")
   :register("find_exclude_patterns", find_exclude_patterns, true, true)
   :register("find_flag_case_sensitive", find_flag_case_sensitive, true, true)

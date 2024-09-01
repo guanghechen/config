@@ -1,20 +1,20 @@
-local Observable = require("fml.collection.observable")
+local Observable = require("fc.collection.observable")
 
----@class fml.collection.Ticker : fml.types.collection.ITicker
+---@class fc.collection.Ticker : fc.types.collection.ITicker
 local M = {}
 M.__index = M
 
 setmetatable(M, { __index = Observable })
 
----@class fml.collection.ticker.IProps
+---@class fc.collection.ticker.IProps
 ---@field public start                  ?integer
 
----@param props                         ?fml.collection.ticker.IProps
----@return fml.collection.Ticker
+---@param props                         ?fc.collection.ticker.IProps
+---@return fc.collection.Ticker
 function M.new(props)
   local start = props and props.start or 0 ---@type integer
   local self = setmetatable(Observable.from_value(start), M)
-  ---@cast self fml.collection.Ticker
+  ---@cast self fc.collection.Ticker
   return self
 end
 

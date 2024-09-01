@@ -114,7 +114,7 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = fml.collection.Observable.from_value(fc.path.normalize(initial_dirpath)) ---@type fml.types.collection.IObservable
+local state_cwd = fc.c.Observable.from_value(fc.path.normalize(initial_dirpath)) ---@type fc.types.collection.IObservable
 local _select = nil ---@type fml.types.ui.ISelect|nil
 
 ---@return string
@@ -145,8 +145,8 @@ local function get_select()
   if _select == nil then
     local state_frecency = require("ghc.state.frecency")
     local state_input_history = require("ghc.state.input_history")
-    local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
-    local input_history = state_input_history.load_and_autosave().find_files ---@type fml.types.collection.IHistory
+    local frecency = state_frecency.load_and_autosave().files ---@type fc.types.collection.IFrecency
+    local input_history = state_input_history.load_and_autosave().find_files ---@type fc.types.collection.IHistory
 
     local main_width = 0.4 ---@type number
     ---@type fml.types.ui.search.IRawDimension

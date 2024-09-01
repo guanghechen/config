@@ -1,5 +1,5 @@
 local state_frecency = require("ghc.state.frecency")
-local frecency = state_frecency.load_and_autosave().files ---@type fml.types.collection.IFrecency
+local frecency = state_frecency.load_and_autosave().files ---@type fc.types.collection.IFrecency
 
 local select ---@type fml.types.ui.ISimpleFileSelect
 

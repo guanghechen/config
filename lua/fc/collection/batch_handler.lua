@@ -1,8 +1,8 @@
----@class fml.collection.BatchHandler : fml.types.collection.IBatchHandler
+---@class fc.collection.BatchHandler : fc.types.collection.IBatchHandler
 local M = {}
 M.__index = M
 
----@return fml.collection.BatchHandler
+---@return fc.collection.BatchHandler
 function M.new()
   local self = setmetatable({}, M)
 

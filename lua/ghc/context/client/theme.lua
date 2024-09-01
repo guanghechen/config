@@ -1,15 +1,14 @@
 local theme = require("ghc.ui.theme")
-local Observable = fml.collection.Observable
 
 local theme_cache_path = fc.path.locate_context_filepath({ filename = "theme" }) ---@type string
 
 ---@class ghc.context.client
----@field public mode                   fml.types.collection.IObservable
----@field public transparency           fml.types.collection.IObservable
+---@field public mode                   fc.types.collection.IObservable
+---@field public transparency           fc.types.collection.IObservable
 local M = require("ghc.context.client.mod")
   ---
-  :register("mode", Observable.from_value("darken"), true, true)
-  :register("transparency", Observable.from_value(false), true, true)
+  :register("mode", fc.c.Observable.from_value("darken"), true, true)
+  :register("transparency", fc.c.Observable.from_value(false), true, true)
 
 ---@param params                        ghc.types.context.client.IToggleSchemeParams
 ---@return nil

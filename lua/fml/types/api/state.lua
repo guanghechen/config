@@ -27,7 +27,7 @@
 ---@field public name                   string
 ---@field public bufnrs                 integer[]
 ---@field public bufnr_set              table<integer, boolean>
----@field public winnr_cur              fml.types.collection.IObservable
+---@field public winnr_cur              fc.types.collection.IObservable
 
 ---@class fml.types.api.state.ITabItemData
 ---@field public tabnr                  integer
@@ -35,19 +35,19 @@
 ---@field public bufnrs                 integer[]
 
 ---@class fml.types.api.state.IWinItem
----@field public filepath_history       fml.types.collection.IAdvanceHistory
+---@field public filepath_history       fc.types.collection.IAdvanceHistory
 ---@field public lsp_symbols            fml.types.api.state.ILspSymbol[]
 
 ---@class fml.types.api.state.IWinItemData
 ---@field public winnr                  integer
----@field public filepath_history       fml.types.collection.history.ISerializedData
+---@field public filepath_history       fc.types.collection.history.ISerializedData
 
 ---@class fml.types.api.state.ISerializedData
 ---@field public bufs                   fml.types.api.state.IBufItemData[]
 ---@field public tabs                   fml.types.api.state.ITabItemData[]
 ---@field public wins                   fml.types.api.state.IWinItemData[]
----@field public tab_history            fml.types.collection.history.ISerializedData
----@field public win_history            fml.types.collection.history.ISerializedData
+---@field public tab_history            fc.types.collection.history.ISerializedData
+---@field public win_history            fc.types.collection.history.ISerializedData
 
 ---@class fml.types.api.state.ITerm
 ---@field public name                   string

@@ -1,12 +1,12 @@
----@class fml.types.collection.IViewmodel : fml.types.collection.IBatchDisposable
+---@class fc.types.collection.IViewmodel : fc.types.collection.IBatchDisposable
 ---@field public get_name               fun(): string
 ---@field public get_filepath           fun(): string|nil
 ---@field public snapshot               fun(): table
 ---@field public snapshot_all           fun(): table
----@field public register               fun(name: string, observable: fml.types.collection.IObservable):nil
+---@field public register               fun(name: string, observable: fc.types.collection.IObservable):nil
 ---@field public save                   fun(): nil
 ---@field public load                   fun(): nil
 ---@field public reload                 fun(): nil
 
----@class fml.types.collection.viewmodel.IAutoReloadParams
+---@class fc.types.collection.viewmodel.IAutoReloadParams
 ---@field public on_changed             ?fun(): nil

@@ -1,4 +1,4 @@
-local Subscriber = require("fml.collection.subscriber")
+local Subscriber = require("fc.collection.subscriber")
 local constant = require("fml.constant")
 local scheduler = require("fc.std.scheduler")
 local util = require("fml.std.util")

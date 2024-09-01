@@ -1,6 +1,6 @@
-local Subscriber = require("fml.collection.subscriber")
+local Subscriber = require("fc.collection.subscriber")
 
----@param observables                   fml.types.collection.IObservable[]
+---@param observables                   fc.types.collection.IObservable[]
 ---@param callback                      fun():nil
 ---@param ignore_initial                ?boolean
 ---@return nil

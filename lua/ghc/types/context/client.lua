@@ -15,9 +15,9 @@
 ---@class ghc.types.context.client.IReloadPartialThemeParams
 ---@field public integration            ghc.enum.ui.theme.HighlightIntegration
 
----@class ghc.types.context.client : fml.collection.Viewmodel
----@field public mode                   fml.types.collection.IObservable
----@field public relativenumber         fml.types.collection.IObservable
----@field public transparency           fml.types.collection.IObservable
+---@class ghc.types.context.client : fc.collection.Viewmodel
+---@field public mode                   fc.types.collection.IObservable
+---@field public relativenumber         fc.types.collection.IObservable
+---@field public transparency           fc.types.collection.IObservable
 ---@field public toggle_scheme          fun(params: ghc.types.context.client.IToggleSchemeParams):nil
 ---@field public reload_theme           fun(params: ghc.types.context.client.IReloadThemeParams):nil

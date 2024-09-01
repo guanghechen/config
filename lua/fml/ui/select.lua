@@ -1,22 +1,22 @@
-local Observable = require("fml.collection.observable")
+local Observable = require("fc.collection.observable")
 local std_array = require("fc.std.array")
 local oxi = require("fml.std.oxi")
 local icons = require("fml.ui.icons")
 local Search = require("fml.ui.search.search")
 
 ---@class fml.ui.Select : fml.types.ui.ISelect
----@field protected _case_sensitive     fml.types.collection.IObservable
+---@field protected _case_sensitive     fc.types.collection.IObservable
 ---@field protected _cmp                fml.types.ui.select.IMatchedItemCmp|nil
----@field protected _flag_fuzzy         fml.types.collection.IObservable
----@field protected _flag_regex         fml.types.collection.IObservable
----@field protected _frecency           fml.types.collection.IFrecency|nil
+---@field protected _flag_fuzzy         fc.types.collection.IObservable
+---@field protected _flag_regex         fc.types.collection.IObservable
+---@field protected _frecency           fc.types.collection.IFrecency|nil
 ---@field protected _full_matches       fml.types.ui.select.IMatchedItem[]
 ---@field protected _item_map           table<string, fml.types.ui.select.IItem>
 ---@field protected _item_uuid_cursor   string|nil
 ---@field protected _item_uuid_present  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
----@field protected _live_data_dirty    fml.types.collection.IObservable
+---@field protected _live_data_dirty    fc.types.collection.IObservable
 ---@field protected _matches            fml.types.ui.select.IMatchedItem[]
 ---@field protected _provider           fml.types.ui.select.IProvider
 ---@field protected _get_search         fun(): fml.types.ui.search.ISearch
@@ -24,18 +24,18 @@ local M = {}
 M.__index = M
 
 ---@class fml.types.ui.select.IProps
----@field public case_sensitive         ?fml.types.collection.IObservable
+---@field public case_sensitive         ?fc.types.collection.IObservable
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public destroy_on_close       boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public delay_fetch            ?integer
----@field public flag_fuzzy             ?fml.types.collection.IObservable
----@field public flag_regex             ?fml.types.collection.IObservable
----@field public frecency               ?fml.types.collection.IFrecency
----@field public input                  ?fml.types.collection.IObservable
----@field public input_history          ?fml.types.collection.IHistory
+---@field public flag_fuzzy             ?fc.types.collection.IObservable
+---@field public flag_regex             ?fc.types.collection.IObservable
+---@field public frecency               ?fc.types.collection.IFrecency
+---@field public input                  ?fc.types.collection.IObservable
+---@field public input_history          ?fc.types.collection.IHistory
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
@@ -52,20 +52,20 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type fml.types.collection.IObservable
+  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type fc.types.collection.IObservable
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
   local delay_fetch = props.delay_fetch or 128 ---@type integer
-  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(true) ---@type fml.types.collection.IObservable
-  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type fml.types.collection.IObservable
-  local frecency = props.frecency ---@type fml.types.collection.IFrecency|nil
-  local input = props.input or Observable.from_value("") ---@type fml.types.collection.IObservable
-  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
+  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(true) ---@type fc.types.collection.IObservable
+  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type fc.types.collection.IObservable
+  local frecency = props.frecency ---@type fc.types.collection.IFrecency|nil
+  local input = props.input or Observable.from_value("") ---@type fc.types.collection.IObservable
+  local input_history = props.input_history ---@type fc.types.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
-  local live_data_dirty = Observable.from_value(true) ---@type fml.types.collection.IObservable
+  local live_data_dirty = Observable.from_value(true) ---@type fc.types.collection.IObservable
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.select.IProvider
@@ -299,7 +299,7 @@ function M:fetch_data(input, force)
   self._live_data_dirty:next(false)
 
   if is_data_dirty then
-    local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
+    local frecency = self._frecency ---@type fc.types.collection.IFrecency|nil
     local data = self._provider.fetch_data(force) ---@type fml.types.ui.select.IData
     local item_map = {} ---@type table<string, fml.types.ui.select.IItem>
     local full_matches = {} ---@type fml.types.ui.select.IMatchedItem[]
@@ -340,7 +340,7 @@ end
 ---@param input                         string
 ---@return fml.types.ui.select.IMatchedItem[]
 function M:filter(input)
-  local frecency = self._frecency ---@type fml.types.collection.IFrecency|nil
+  local frecency = self._frecency ---@type fc.types.collection.IFrecency|nil
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
 
   local matches = self._full_matches ---@type fml.types.ui.select.IMatchedItem[]

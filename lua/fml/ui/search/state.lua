@@ -1,6 +1,6 @@
-local Dirtier = require("fml.collection.dirtier")
-local Observable = require("fml.collection.observable")
-local Subscriber = require("fml.collection.subscriber")
+local Dirtier = require("fc.collection.dirtier")
+local Observable = require("fc.collection.observable")
+local Subscriber = require("fc.collection.subscriber")
 local scheduler = require("fc.std.scheduler")
 local navigate = require("fc.std.navigate")
 local oxi = require("fml.std.oxi")
@@ -16,8 +16,8 @@ M.__index = M
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             fml.types.ui.search.IFetchData
 ---@field public delay_fetch            integer
----@field public input                  fml.types.collection.IObservable
----@field public input_history          fml.types.collection.IHistory|nil
+---@field public input                  fc.types.collection.IObservable
+---@field public input_history          fc.types.collection.IHistory|nil
 ---@field public title                  string
 
 ---@param props                         fml.ui.search.state.IProps
@@ -25,17 +25,17 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local dirtier_dimension = Dirtier.new() ---@type fml.types.collection.IDirtier
-  local dirtier_data = Dirtier.new() ---@type fml.types.collection.IDirtier
-  local dirtier_main = Dirtier.new() ---@type fml.types.collection.IDirtier
-  local dirtier_preview = Dirtier.new() ---@type fml.types.collection.IDirtier
+  local dirtier_dimension = Dirtier.new() ---@type fc.types.collection.IDirtier
+  local dirtier_data = Dirtier.new() ---@type fc.types.collection.IDirtier
+  local dirtier_main = Dirtier.new() ---@type fc.types.collection.IDirtier
+  local dirtier_preview = Dirtier.new() ---@type fc.types.collection.IDirtier
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
-  local force_on_fetch_data = Observable.from_value(false) ---@type fml.types.collection.IObservable
+  local force_on_fetch_data = Observable.from_value(false) ---@type fc.types.collection.IObservable
   local fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchData
   local delay_fetch = props.delay_fetch ---@type integer
-  local input = props.input ---@type fml.types.collection.IObservable
-  local input_history = props.input_history ---@type fml.types.collection.IHistory|nil
-  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type fml.types.collection.IObservable
+  local input = props.input ---@type fc.types.collection.IObservable
+  local input_history = props.input_history ---@type fc.types.collection.IHistory|nil
+  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type fc.types.collection.IObservable
   local title = props.title ---@type string
   local uuid = oxi.uuid() ---@type string
   local visible = Observable.from_value(false)

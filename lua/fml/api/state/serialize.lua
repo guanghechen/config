@@ -1,5 +1,5 @@
 local std_array = require("fc.std.array")
-local Observable = require("fml.collection.observable")
+local Observable = require("fc.collection.observable")
 local fs = require("fc.std.fs")
 local path = require("fc.std.path")
 local reporter = require("fc.std.reporter")

@@ -1,4 +1,4 @@
-local Subscriber = require("fml.collection.subscriber")
+local Subscriber = require("fc.collection.subscriber")
 local constant = require("fml.constant")
 local std_array = require("fc.std.array")
 local oxi = require("fml.std.oxi")
@@ -28,7 +28,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local state = props.state ---@type fml.types.ui.search.IState
-  local input_history = state.input_history ---@type fml.types.collection.IHistory|nil
+  local input_history = state.input_history ---@type fc.types.collection.IHistory|nil
   local autocmd_group = util.augroup(state.uuid .. ":search_input") ---@type integer
 
   local actions = {

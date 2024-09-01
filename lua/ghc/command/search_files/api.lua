@@ -557,7 +557,7 @@ function M.get_filematch(filepath)
 end
 
 ---@param item                          fml.types.ui.search.IItem
----@param frecency                      fml.types.collection.IFrecency
+---@param frecency                      fc.types.collection.IFrecency
 ---@return boolean
 function M.open_file(item, frecency)
   local cwd = state.search_cwd:snapshot() ---@type string

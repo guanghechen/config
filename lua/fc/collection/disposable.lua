@@ -1,13 +1,13 @@
----@class fml.collection.Disposable : fml.types.collection.IDisposable
+---@class fc.collection.Disposable : fc.types.collection.IDisposable
 ---@field private _on_dispose           fun():nil
 local M = {}
 M.__index = M
 
----@class fml.collection.Disposable.IProps
+---@class fc.collection.Disposable.IProps
 ---@field public on_dispose             fun():nil
 
----@param props fml.collection.Disposable.IProps
----@return fml.collection.Disposable
+---@param props fc.collection.Disposable.IProps
+---@return fc.collection.Disposable
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -19,7 +19,7 @@ function M.new(props)
   return self
 end
 
----@param unsubscribable                fml.types.collection.IUnsubscribable
+---@param unsubscribable                fc.types.collection.IUnsubscribable
 function M.from_unsubscribable(unsubscribable)
   return M.new({
     on_dispose = function()

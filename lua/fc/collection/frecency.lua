@@ -1,28 +1,28 @@
 local util = require("fc.std.util")
 
----@class fml.collection.Frecency : fml.types.collection.IFrecency
+---@class fc.collection.Frecency : fc.types.collection.IFrecency
 ---@field public MAX_TIMESTAMPS         integer
----@field protected _items              table<string, fml.types.collection.frecency.IItem>
+---@field protected _items              table<string, fc.types.collection.frecency.IItem>
 ---@field protected _normalize          fun(key: string): string
 local M = {}
 M.__index = M
 
----@class fml.collection.frecency.IProps
+---@class fc.collection.frecency.IProps
 ---@field public MAX_TIMESTAMPS         ?integer
----@field public items                  table<string, fml.types.collection.frecency.IItem>
+---@field public items                  table<string, fc.types.collection.frecency.IItem>
 ---@field public normalize              ?fun(key: string): string
 
----@class fml.collection.frecency.IDeserializeProps
----@field public data                   fml.types.collection.frecency.ISerializedData
+---@class fc.collection.frecency.IDeserializeProps
+---@field public data                   fc.types.collection.frecency.ISerializedData
 ---@field public MAX_TIMESTAMPS         ?integer
 
----@param props                         fml.collection.frecency.IProps
----@return fml.collection.Frecency
+---@param props                         fc.collection.frecency.IProps
+---@return fc.collection.Frecency
 function M.new(props)
   local self = setmetatable({}, M)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
-  local items = props.items ---@type table<string, fml.types.collection.frecency.IItem>
+  local items = props.items ---@type table<string, fc.types.collection.frecency.IItem>
   local normalize = props.normalize or util.identity ---@type fun(key: string): string
 
   self.MAX_TIMESTAMPS = MAX_TIMESTAMPS
@@ -32,10 +32,10 @@ function M.new(props)
   return self
 end
 
----@param props                         fml.collection.frecency.IDeserializeProps
----@return fml.collection.Frecency
+---@param props                         fc.collection.frecency.IDeserializeProps
+---@return fc.collection.Frecency
 function M.deserialize(props)
-  local data = props.data ---@type fml.types.collection.frecency.ISerializedData
+  local data = props.data ---@type fc.types.collection.frecency.ISerializedData
   return M.new({ items = data.items })
 end
 
@@ -44,9 +44,9 @@ end
 function M:access(key)
   key = self._normalize(key)
   local timestamp = os.time() ---@type integer
-  local item = self._items[key] ---@type fml.types.collection.frecency.IItem|nil
+  local item = self._items[key] ---@type fc.types.collection.frecency.IItem|nil
   if item == nil then
-    item = { timestamps = { timestamp }, idx = 1 } ---@type fml.types.collection.frecency.IItem
+    item = { timestamps = { timestamp }, idx = 1 } ---@type fc.types.collection.frecency.IItem
     self._items[key] = item
   else
     local idx = item.idx == self.MAX_TIMESTAMPS and 1 or item.idx + 1 ---@type integer
@@ -55,17 +55,17 @@ function M:access(key)
   end
 end
 
----@return fml.types.collection.frecency.ISerializedData
+---@return fc.types.collection.frecency.ISerializedData
 function M:dump()
-  ---@type fml.types.collection.frecency.ISerializedData
+  ---@type fc.types.collection.frecency.ISerializedData
   local data = { items = self._items }
   return data
 end
 
----@param data                          fml.types.collection.frecency.ISerializedData
+---@param data                          fc.types.collection.frecency.ISerializedData
 ---@return nil
 function M:load(data)
-  local items = data.items ---@type fml.types.collection.frecency.IItem[]
+  local items = data.items ---@type fc.types.collection.frecency.IItem[]
   self._items = items
 end
 
@@ -74,7 +74,7 @@ end
 function M:score(key)
   key = self._normalize(key)
   local timestamp_cur = os.time() ---@type integer
-  local item = self._items[key] ---@type fml.types.collection.frecency.IItem|nil
+  local item = self._items[key] ---@type fc.types.collection.frecency.IItem|nil
   local score = 0 ---@type number
   if item ~= nil then
     for _, timestamp in ipairs(item.timestamps) do

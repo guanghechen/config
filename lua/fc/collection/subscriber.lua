@@ -1,17 +1,17 @@
 local util = require("fc.std.util")
 
----@class fml.collection.Subscriber : fml.types.collection.ISubscriber
+---@class fc.collection.Subscriber : fc.types.collection.ISubscriber
 ---@field private _on_next              fun(value: any, value_prev: any|nil):nil
 ---@field private _on_dispose           fun():nil
 local M = {}
 M.__index = M
 
----@class fml.collection.Subscriber.IProps
+---@class fc.collection.Subscriber.IProps
 ---@field on_next                       fun(value: any, value_prev: any|nil):nil
 ---@field on_dispose                    ?fun():nil
 
----@param props fml.collection.Subscriber.IProps
----@return fml.collection.Subscriber
+---@param props fc.collection.Subscriber.IProps
+---@return fc.collection.Subscriber
 function M.new(props)
   local self = setmetatable({}, M)
 
