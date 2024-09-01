@@ -1,4 +1,4 @@
----@class fml.std.box
+---@class fc.std.box
 local M = {}
 
 ---@param size                          number
