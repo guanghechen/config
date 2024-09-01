@@ -13,7 +13,7 @@ local state = require("ghc.command.search_files.state")
 ---@field public col                    integer
 ---@field public content                string
 
----@class ghc.command.search_files.IHighlight : fml.types.ui.IHighlight
+---@class ghc.command.search_files.IHighlight : fc.types.ux.IHighlight
 ---@field public offset                 integer
 
 ---@class ghc.command.search_files.IPreviewData
@@ -330,7 +330,7 @@ function M.fetch_data(input_text, force, callback)
       local filename = fc.path.basename(filepath) ---@type string
       local icon, icon_hl = fml.util.calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
-      local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type fml.types.ui.IInlineHighlight[]
+      local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type fc.types.ux.IInlineHighlight[]
 
       local file_item_uuid = filepath ---@type string
       if not is_searching_current_buf then
@@ -396,7 +396,7 @@ function M.fetch_data(input_text, force, callback)
               local prettier_line = line:sub(1, col_end) .. r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
               local text = text_prefix .. prettier_line .. fml.ui.icons.listchars.eol ---@type string
 
-              ---@type fml.types.ui.IInlineHighlight[]
+              ---@type fc.types.ux.IInlineHighlight[]
               local highlights = {
                 { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
                 { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
@@ -419,7 +419,7 @@ function M.fetch_data(input_text, force, callback)
               local prettier_line = line ---@type string
               local text = text_prefix .. prettier_line .. fml.ui.icons.listchars.eol ---@type string
 
-              ---@type fml.types.ui.IInlineHighlight[]
+              ---@type fc.types.ux.IInlineHighlight[]
               local highlights = {
                 { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
                 { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
@@ -464,7 +464,7 @@ function M.fetch_data(input_text, force, callback)
             local text = text_prefix .. lines[k] .. fml.ui.icons.listchars.eol ---@type string
             local width_prefix = string.len(text_prefix) ---@type integer
 
-            ---@type fml.types.ui.IInlineHighlight[]
+            ---@type fc.types.ux.IInlineHighlight[]
             local highlights = {
               { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
               { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_match" },
@@ -593,7 +593,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
     return M.fetch_preview_data(search_item)
   end
 
-  local highlights = {} ---@type fml.types.ui.IHighlight[]
+  local highlights = {} ---@type fc.types.ux.IHighlight[]
   local cur_lnum = -1 ---@type integer
   local cur_col = 0 ---@type integer
   local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
@@ -613,7 +613,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
       local hlname = is_search_match and (is_match_cur and "f_us_preview_search_cur" or "f_us_preview_search")
         or (is_match_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
 
-      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
+      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fc.types.ux.IHighlight
       table.insert(highlights, highlight)
 
       if is_match_cur and cur_lnum < 0 then
@@ -632,7 +632,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
 
       local is_match_cur = match_offset_cur == hl.offset or (match_offset_cur < 0 and order == 1) ---@type boolean
       local hlname = is_match_cur and "f_us_match_cur" or "f_us_match" ---@type string
-      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fml.types.ui.IHighlight
+      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fc.types.ux.IHighlight
       table.insert(highlights, highlight)
 
       if is_match_cur and cur_lnum < 0 then

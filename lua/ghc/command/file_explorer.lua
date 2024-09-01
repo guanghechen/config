@@ -184,7 +184,7 @@ local function get_select()
         local fileitem = file_datamap[item.uuid] ---@type ghc.command.file_explorer.IFileItem|nil
         if fileitem == nil then
           local lines = { "  Cannot found the file.  " } ---@type string[]
-          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fml.types.ui.IHighlight[]
+          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fc.types.ux.IHighlight[]
 
           ---@type fml.ui.search.preview.IData
           return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
@@ -194,7 +194,7 @@ local function get_select()
         local diritem = dir_datamap[dirpath] ---@type ghc.command.file_explorer.IDirItem|nil
         if diritem == nil then
           local lines = { "  Cannot found the parent directory.  " } ---@type string[]
-          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fml.types.ui.IHighlight[]
+          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fc.types.ux.IHighlight[]
 
           ---@type fml.ui.search.preview.IData
           return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
@@ -219,7 +219,7 @@ local function get_select()
           end
         elseif fileitem.type == "directory" then
           local lines = {} ---@type string[]
-          local highlights = {} ---@type fml.types.ui.IHighlight[]
+          local highlights = {} ---@type fc.types.ux.IHighlight[]
           local c_diritem = fetch_diritem(fileitem.path, false) ---@type ghc.command.file_explorer.IDirItem
           for lnum, c_fileitem in ipairs(c_diritem.items) do
             local width = 0 ---@type integer
@@ -293,7 +293,7 @@ local function get_select()
         end
 
         local lines = { "  Not a text file, cannot preview." } ---@type string[]
-        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fml.types.ui.IHighlight[]
+        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fc.types.ux.IHighlight[]
 
         ---@type fml.ui.search.preview.IData
         return { lines = lines, highlights = highlights, filetype = nil, title = item.text, lnum = 1, col = 0 }
@@ -310,7 +310,7 @@ local function get_select()
           return item.text, {}
         end
 
-        local highlights = {} ---@type fml.types.ui.IInlineHighlight[]
+        local highlights = {} ---@type fc.types.ux.IInlineHighlight[]
         local width = 0 ---@type integer
         local text = "" ---@type string
         local filename = ((item.text == "../") or (item.text == "./")) and item.text
@@ -342,7 +342,7 @@ local function get_select()
           hlname = fileitem.type == "directory" and "f_fe_name_dir" or "f_fe_name_file",
         })
         for _, piece in ipairs(match.matches) do
-          ---@type fml.types.ui.IInlineHighlight
+          ---@type fc.types.ux.IInlineHighlight
           local highlight = { coll = width + piece.l, colr = width + piece.r, hlname = "f_fe_match" }
           table.insert(highlights, highlight)
         end

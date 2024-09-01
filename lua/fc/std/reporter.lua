@@ -17,7 +17,7 @@ local ReporterLevelEnum = {
   ERROR = vim.log.levels.ERROR,
 }
 
----@param level                         fml.enums.reporter.Level|nil
+---@param level                         fc.enums.ReportLevel|nil
 ---@return number
 local function resolve_level(level)
   if level == nil then
@@ -53,7 +53,7 @@ local function log(options, level)
 end
 
 ---@param options                       fc.std.reporter.IReporterOptions
----@param level                         ?fml.enums.reporter.Level
+---@param level                         ?fc.enums.ReportLevel
 function M.log(options, level)
   local level_value = resolve_level(level) ---@type number
   log(options, level_value)

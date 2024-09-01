@@ -36,11 +36,11 @@
 ---@field public parent                 string|nil
 ---@field public uuid                   string
 ---@field public text                   string
----@field public highlights             fml.types.ui.IInlineHighlight[]
+---@field public highlights             fc.types.ux.IInlineHighlight[]
 
 ---@class fml.ui.search.preview.IData
 ---@field public lines                  string[]
----@field public highlights             fml.types.ui.IHighlight[]
+---@field public highlights             fc.types.ux.IHighlight[]
 ---@field public filetype               string|nil
 ---@field public title                  string
 ---@field public lnum                   integer|nil

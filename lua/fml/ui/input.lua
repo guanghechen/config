@@ -7,7 +7,7 @@ M.__index = M
 setmetatable(M, { __index = Textarea })
 
 ---@class fml.ui.input.IProps
----@field public position               fml.enums.BoxPosition
+---@field public position               fc.enums.BoxPosition
 ---@field public width                  ?number
 ---@field public title                  ?string
 ---@field public max_width              ?number
@@ -21,7 +21,7 @@ setmetatable(M, { __index = Textarea })
 ---@param props                         fml.ui.input.IProps
 ---@return fml.ui.Input
 function M.new(props)
-  local position = props.position ---@type fml.enums.BoxPosition
+  local position = props.position ---@type fc.enums.BoxPosition
   local width = props.width ---@type number|nil
   local max_width = props.max_width ---@type number|nil
   local min_width = props.min_width ---@type number|nil

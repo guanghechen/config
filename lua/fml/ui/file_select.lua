@@ -233,7 +233,7 @@ function M.fetch_preview_data(cwd, item)
   end
 
   local lines = { "  Not a text file, cannot preview." } ---@type string[]
-  local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fml.types.ui.IHighlight[]
+  local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fc.types.ux.IHighlight[]
 
   ---@type fml.ui.search.preview.IData
   return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
@@ -258,15 +258,15 @@ end
 ---@param item                          fml.types.ui.file_select.IItem
 ---@param match                         fml.types.ui.select.IMatchedItem
 ---@return string
----@return fml.types.ui.IInlineHighlight[]
+---@return fc.types.ux.IInlineHighlight[]
 function M.render_item(item, match)
   local icon_width = string.len(item.data.icon) ---@type integer
   local text = item.data.icon .. item.data.filepath ---@type string
 
-  ---@type fml.types.ui.IInlineHighlight[]
+  ---@type fc.types.ux.IInlineHighlight[]
   local highlights = { { coll = 0, colr = icon_width, hlname = item.data.icon_hl } }
   for _, piece in ipairs(match.matches) do
-    ---@type fml.types.ui.IInlineHighlight
+    ---@type fc.types.ux.IInlineHighlight
     local highlight = { coll = piece.l + icon_width, colr = piece.r + icon_width, hlname = "f_us_main_match" }
     table.insert(highlights, highlight)
   end

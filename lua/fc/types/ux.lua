@@ -1,11 +1,11 @@
----@class fml.ui.types.IBoxDimension
+---@class fc.types.ux.IBoxDimension
 ---@field public row                    integer
 ---@field public col                    integer
 ---@field public width                  integer
 ---@field public height                 integer
 
----@class fml.types.ui.IBoxRestriction
----@field public position               fml.enums.BoxPosition
+---@class fc.types.ux.IBoxRestriction
+---@field public position               fc.enums.BoxPosition
 ---@field public rows                   integer
 ---@field public cols                   integer
 ---@field public row                    ?number
@@ -17,13 +17,13 @@
 ---@field public min_width              ?number
 ---@field public min_height             ?number
 
----@class fml.types.ui.IHighlight
+---@class fc.types.ux.IHighlight
 ---@field public lnum                   integer
 ---@field public coll                   integer
 ---@field public colr                   integer
 ---@field public hlname                 string
 
----@class fml.types.ui.IInlineHighlight
+---@class fc.types.ux.IInlineHighlight
 ---@field public coll                   integer
 ---@field public colr                   integer
 ---@field public hlname                 string

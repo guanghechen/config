@@ -2,13 +2,13 @@ local History = require("fc.collection.history")
 
 ---@class fc.collection.AdvanceHistory : fc.types.collection.IAdvanceHistory
 ---@field public name                   string
----@field public equals                 fml.types.IEquals
----@field public validate               fml.types.IValidate
+---@field public equals                 fc.types.IEquals
+---@field public validate               fc.types.IValidate
 ---@field private _history              fc.types.collection.IHistory
 local M = {}
 M.__index = M
 
----@param element                       fml.types.T
+---@param element                       fc.types.T
 ---@return boolean
 ---@diagnostic disable-next-line: unused-local
 local function default_validate(element)
@@ -18,23 +18,23 @@ end
 ---@class fc.collection.history_advance.IProps
 ---@field public name                   string
 ---@field public capacity               integer
----@field public equals                 ?fml.types.IEquals
----@field public validate               ?fml.types.IValidate
+---@field public equals                 ?fc.types.IEquals
+---@field public validate               ?fc.types.IValidate
 
 ---@class fc.collection.history_advance.IDeserializeProps
 ---@field public data                   fc.types.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
----@field public equals                 ?fml.types.IEquals
----@field public validate               ?fml.types.IValidate
+---@field public equals                 ?fc.types.IEquals
+---@field public validate               ?fc.types.IValidate
 
 ---@param props                         fc.collection.history_advance.IProps
 ---@return fc.collection.AdvanceHistory
 function M.new(props)
   local name = props.name ---@type string
   local capacity = props.capacity ---@type integer
-  local equals = props.equals ---@type fml.types.IEquals|nil
-  local validate = props.validate or default_validate ---@type fun(element: fml.types.T): boolean
+  local equals = props.equals ---@type fc.types.IEquals|nil
+  local validate = props.validate or default_validate ---@type fun(element: fc.types.T): boolean
   local history = History.new({
     name = name,
     capacity = capacity,
@@ -61,7 +61,7 @@ function M.deserialize(props)
     capacity = props.capacity,
     equals = props.equals,
   })
-  local validate = props.validate or default_validate ---@type fun(element: fml.types.T): boolean
+  local validate = props.validate or default_validate ---@type fun(element: fc.types.T): boolean
 
   local self = setmetatable({}, M)
   self.name = history.name
@@ -72,7 +72,7 @@ function M.deserialize(props)
 end
 
 ---@param step                          ?integer
----@return fml.types.T|nil
+---@return fc.types.T|nil
 ---@return boolean
 function M:backward(step)
   self._history:backward(step)
@@ -90,9 +90,9 @@ function M:clear()
   self._history:clear()
 end
 
----@return fml.types.T[]
+---@return fc.types.T[]
 function M:collect()
-  local results = {} ---@type fml.types.T[]
+  local results = {} ---@type fc.types.T[]
   for element in self:iterator() do
     if self.validate(element) then
       table.insert(results, element)
@@ -119,28 +119,28 @@ function M:fork(params)
 end
 
 ---@param step                          ?number
----@return fml.types.T|nil
+---@return fc.types.T|nil
 ---@return boolean
 function M:forward(step)
   local history = self._history ---@type fc.types.collection.IHistory
-  local _, should_be_top = history:forward(step) ---@type fml.types.T|nil, boolean
+  local _, should_be_top = history:forward(step) ---@type fc.types.T|nil, boolean
   local element = self:present()
   return element, should_be_top
 end
 
 ---@param index                         integer
----@return fml.types.T|nil
+---@return fc.types.T|nil
 ---@return integer
 function M:go(index)
   self._history:go(index)
   return self:present()
 end
 
----@return fun(): fml.types.T|nil, integer|nil
+---@return fun(): fc.types.T|nil, integer|nil
 function M:iterator()
-  local iterator = self._history:iterator() ---@type fun(): fml.types.T|nil, integer|nil
+  local iterator = self._history:iterator() ---@type fun(): fc.types.T|nil, integer|nil
 
-  ---@return fml.types.T|nil
+  ---@return fc.types.T|nil
   ---@return integer|nil
   return function()
     local element, index = iterator()
@@ -150,11 +150,11 @@ function M:iterator()
   end
 end
 
----@return fun(): fml.types.T|nil, integer|nil
+---@return fun(): fc.types.T|nil, integer|nil
 function M:iterator_reverse()
-  local iterator = self._history:iterator_reverse() ---@type fun(): fml.types.T|nil, integer|nil
+  local iterator = self._history:iterator_reverse() ---@type fun(): fc.types.T|nil, integer|nil
 
-  ---@return fml.types.T|nil
+  ---@return fc.types.T|nil
   ---@return integer|nil
   return function()
     local element, index = iterator()
@@ -170,7 +170,7 @@ function M:load(data)
   self._history:load(data)
 end
 
----@return fml.types.T|nil
+---@return fc.types.T|nil
 ---@return integer
 function M:present()
   local history = self._history ---@type fc.types.collection.IHistory
@@ -193,7 +193,7 @@ function M:print()
   self._history:print()
 end
 
----@param element                       fml.types.T
+---@param element                       fc.types.T
 ---@return nil
 function M:push(element)
   if self.validate(element) then
@@ -203,7 +203,7 @@ end
 
 ---@return nil
 function M:rearrange()
-  local validate = self.validate ---@type fml.types.IValidate
+  local validate = self.validate ---@type fc.types.IValidate
   self._history:rearrange(validate)
 end
 

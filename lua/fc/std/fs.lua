@@ -32,7 +32,7 @@ local function default_watch_on_error(filepath, err, unwatch)
 end
 
 ---@param filepath                      string
----@return fml.enums.FileType|nil
+---@return fc.enums.FileType|nil
 function M.is_file_or_dir(filepath)
   local stat = vim.uv.fs_stat(filepath)
   if stat == nil then

@@ -4,30 +4,30 @@ local reporter = require("fc.std.reporter")
 local M = {}
 
 ---@alias fc.std.scheduler.IScheduleCallback
----| fun(ok: boolean, result: fml.types.T|nil): nil
+---| fun(ok: boolean, result: fc.types.T|nil): nil
 
 ---@class fc.std.scheduler.ISchedulerProps
 ---@field public name                  string
----@field public fn                    fun(callback: fc.std.scheduler.IScheduleCallback): fml.types.T
+---@field public fn                    fun(callback: fc.std.scheduler.IScheduleCallback): fc.types.T
 ---@field public callback              ?fc.std.scheduler.IScheduleCallback
 ---@field public delay                 ?integer
 
 ---@class fc.std.scheduler.IScheduler
 ---@field public schedule               fun(): nil
----@field public snapshot               fun(): fml.types.T
+---@field public snapshot               fun(): fc.types.T
 ---@field public cancel                 fun(): nil
 
 ---@param params                        fc.std.scheduler.ISchedulerProps
 ---@return fc.std.scheduler.IScheduler
 function M.debounce(params)
   local name = params.name ---@type string
-  local fn = params.fn ---@type fun(callback: fc.std.scheduler.IScheduleCallback): fml.types.T
+  local fn = params.fn ---@type fun(callback: fc.std.scheduler.IScheduleCallback): fc.types.T
   local callback = params.callback ---@type fc.std.scheduler.IScheduleCallback|nil
   local delay = math.max(1, params.delay or 0) ---@type integer
 
   local _tick_call = 1 ---@type integer
   local _tick_resolved = 0 ---@type integer
-  local _result = nil ---@type fml.types.T
+  local _result = nil ---@type fc.types.T
 
   ---@return nil
   local function schedule()
@@ -59,7 +59,7 @@ function M.debounce(params)
     end, delay)
   end
 
-  ---@return fml.types.T|nil
+  ---@return fc.types.T|nil
   local function snapshot()
     return _result
   end
@@ -81,7 +81,7 @@ end
 ---@param params                        fc.std.scheduler.ISchedulerProps
 ---@return fc.std.scheduler.IScheduler
 function M.throttle(params)
-  local fn = params.fn ---@type fun(callback: fc.std.scheduler.IScheduleCallback): fml.types.T
+  local fn = params.fn ---@type fun(callback: fc.std.scheduler.IScheduleCallback): fc.types.T
   local callback = params.callback ---@type fc.std.scheduler.IScheduleCallback|nil
   local delay = math.max(1, params.delay or 0) ---@type integer
 
@@ -91,7 +91,7 @@ function M.throttle(params)
   local _tick_alive = 0 ---@type integer
   local _tick_scheduled = 1 ---@type integer
   local _tick_resolved = 0 ---@type integer
-  local _result = nil ---@type fml.types.T
+  local _result = nil ---@type fc.types.T
 
   ---@return nil
   local function schedule()
@@ -128,7 +128,7 @@ function M.throttle(params)
     end, delay)
   end
 
-  ---@return fml.types.T|nil
+  ---@return fc.types.T|nil
   local function snapshot()
     return _result
   end

@@ -66,7 +66,7 @@ local function get_select()
         local width_icon = string.len(item.data.icon) ---@type integer
         local text = text_prefix .. item.data.icon .. item.data.filepath ---@type string
 
-        ---@type fml.types.ui.IInlineHighlight[]
+        ---@type fc.types.ux.IInlineHighlight[]
         local highlights = {
           {
             coll = width_prefix,
@@ -75,7 +75,7 @@ local function get_select()
           },
         }
         for _, piece in ipairs(match.matches) do
-          ---@type fml.types.ui.IInlineHighlight
+          ---@type fc.types.ux.IInlineHighlight
           local highlight = {
             coll = width_prefix + width_icon + piece.l,
             colr = width_prefix + width_icon + piece.r,

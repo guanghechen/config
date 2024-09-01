@@ -38,7 +38,7 @@ local provider = {
       local hlgroups = _hlgroups or {} ---@type table<string, vim.api.keyset.hl_info>
 
       local lines = {} ---@type string[]
-      local highlights = {} ---@type fml.types.ui.IHighlight[]
+      local highlights = {} ---@type fc.types.ux.IHighlight[]
 
       local max_hlname_width = 0 ---@type integer
       for _, hlname in ipairs(hlnames) do
@@ -47,7 +47,7 @@ local provider = {
 
       for lnum, hlname in ipairs(hlnames) do
         local line = "xxx   " .. fc.string.pad_end(hlname, max_hlname_width, " ") ---@type string
-        local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type fml.types.ui.IHighlight
+        local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type fc.types.ux.IHighlight
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info
         if hlgroup.fg ~= nil then
@@ -112,9 +112,9 @@ local provider = {
     local text_prefix = "xxx   " ---@type string
     local width_prefix = string.len(text_prefix) ---@type integer
     local text = text_prefix .. item.text
-    local highlights = { { coll = 0, colr = 3, hlname = item.text } } ---@type fml.types.ui.IInlineHighlight[]
+    local highlights = { { coll = 0, colr = 3, hlname = item.text } } ---@type fc.types.ux.IInlineHighlight[]
     for _, piece in ipairs(match.matches) do
-      ---@type fml.types.ui.IInlineHighlight[]
+      ---@type fc.types.ux.IInlineHighlight[]
       local highlight = { coll = width_prefix + piece.l, colr = width_prefix + piece.r, hlname = "f_us_main_match" }
       table.insert(highlights, highlight)
     end

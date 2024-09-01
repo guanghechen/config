@@ -26,7 +26,7 @@ local M = {}
 function M.get_win_details(winnr)
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local filetype = fs.is_file_or_dir(filepath) ---@type fml.enums.FileType|nil
+  local filetype = fs.is_file_or_dir(filepath) ---@type fc.enums.FileType|nil
   if filetype == "file" or filetype == "directory" then
     local dirpath = filetype == "file" and path.dirname(filepath) or filepath ---@type string
     dirpath = path.normalize(dirpath)

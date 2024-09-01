@@ -1,45 +1,45 @@
 ---@class fc.types.collection.IHistory
 ---@field public name                   string
----@field public equals                 fml.types.IEquals
----@field public backward               fun(self: fc.types.collection.IHistory, step?: integer): fml.types.T|nil, boolean
+---@field public equals                 fc.types.IEquals
+---@field public backward               fun(self: fc.types.collection.IHistory, step?: integer): fc.types.T|nil, boolean
 ---@field public capacity               fun(self: fc.types.collection.IHistory): integer
 ---@field public clear                  fun(self: fc.types.collection.IHistory): nil
----@field public collect                fun(self: fc.types.collection.IHistory): fml.types.T[]
+---@field public collect                fun(self: fc.types.collection.IHistory): fc.types.T[]
 ---@field public dump                   fun(self: fc.types.collection.IHistory): fc.types.collection.history.ISerializedData
 ---@field public fork                   fun(self: fc.types.collection.IHistory, params: fc.types.collection.history.IForkParams): fc.types.collection.IHistory
----@field public forward                fun(self: fc.types.collection.IHistory, step?: integer): fml.types.T|nil, boolean
----@field public go                     fun(self: fc.types.collection.IHistory, index: integer): fml.types.T|nil, integer
+---@field public forward                fun(self: fc.types.collection.IHistory, step?: integer): fc.types.T|nil, boolean
+---@field public go                     fun(self: fc.types.collection.IHistory, index: integer): fc.types.T|nil, integer
 ---@field public is_bottom              fun(self: fc.types.collection.IHistory): boolean
 ---@field public is_empty               fun(self: fc.types.collection.IHistory): boolean
 ---@field public is_top                 fun(self: fc.types.collection.IHistory): boolean
----@field public iterator               fun(self: fc.types.collection.IHistory): fun(): fml.types.T|nil, integer|nil
----@field public iterator_reverse       fun(self: fc.types.collection.IHistory): fun(): fml.types.T|nil, integer|nil
+---@field public iterator               fun(self: fc.types.collection.IHistory): fun(): fc.types.T|nil, integer|nil
+---@field public iterator_reverse       fun(self: fc.types.collection.IHistory): fun(): fc.types.T|nil, integer|nil
 ---@field public load                   fun(self: fc.types.collection.IHistory, data: fc.types.collection.history.ISerializedData): nil
----@field public present                fun(self: fc.types.collection.IHistory): fml.types.T|nil, integer
+---@field public present                fun(self: fc.types.collection.IHistory): fc.types.T|nil, integer
 ---@field public print                  fun(self: fc.types.collection.IHistory): nil
----@field public push                   fun(self: fc.types.collection.IHistory, element: fml.types.T): nil
----@field public rearrange              fun(self: fc.types.collection.IHistory, filter: fml.types.IFilter): nil
+---@field public push                   fun(self: fc.types.collection.IHistory, element: fc.types.T): nil
+---@field public rearrange              fun(self: fc.types.collection.IHistory, filter: fc.types.IFilter): nil
 ---@field public size                   fun(self: fc.types.collection.IHistory): integer
----@field public top                    fun(self: fc.types.collection.IHistory): fml.types.T|nil, integer
----@field public update_top             fun(self: fc.types.collection.IHistory, element: fml.types.T): nil
+---@field public top                    fun(self: fc.types.collection.IHistory): fc.types.T|nil, integer
+---@field public update_top             fun(self: fc.types.collection.IHistory, element: fc.types.T): nil
 
 ---@class fc.types.collection.IAdvanceHistory
 ---@field public name                   string
----@field public equals                 fml.types.IEquals
----@field public validate               fml.types.IValidate
----@field public backward               fun(self: fc.types.collection.IAdvanceHistory, step?: integer): fml.types.T|nil, boolean
+---@field public equals                 fc.types.IEquals
+---@field public validate               fc.types.IValidate
+---@field public backward               fun(self: fc.types.collection.IAdvanceHistory, step?: integer): fc.types.T|nil, boolean
 ---@field public capacity               fun(self: fc.types.collection.IAdvanceHistory): integer
 ---@field public clear                  fun(self: fc.types.collection.IAdvanceHistory): nil
 ---@field public dump                   fun(self: fc.types.collection.IAdvanceHistory): fc.types.collection.history.ISerializedData
 ---@field public fork                   fun(self: fc.types.collection.IAdvanceHistory, params?: fc.types.collection.history.IForkParams): fc.types.collection.IAdvanceHistory
----@field public forward                fun(self: fc.types.collection.IAdvanceHistory, step?: integer): fml.types.T|nil, boolean
----@field public go                     fun(self: fc.types.collection.IAdvanceHistory, index: integer): fml.types.T|nil
----@field public iterator               fun(self: fc.types.collection.IAdvanceHistory): fun(): fml.types.T|nil, integer|nil
----@field public iterator_reverse       fun(self: fc.types.collection.IAdvanceHistory): fun(): fml.types.T|nil, integer|nil
+---@field public forward                fun(self: fc.types.collection.IAdvanceHistory, step?: integer): fc.types.T|nil, boolean
+---@field public go                     fun(self: fc.types.collection.IAdvanceHistory, index: integer): fc.types.T|nil
+---@field public iterator               fun(self: fc.types.collection.IAdvanceHistory): fun(): fc.types.T|nil, integer|nil
+---@field public iterator_reverse       fun(self: fc.types.collection.IAdvanceHistory): fun(): fc.types.T|nil, integer|nil
 ---@field public load                   fun(self: fc.types.collection.IAdvanceHistory, data: fc.types.collection.history.ISerializedData): nil
----@field public present                fun(self: fc.types.collection.IAdvanceHistory): fml.types.T|nil, integer
+---@field public present                fun(self: fc.types.collection.IAdvanceHistory): fc.types.T|nil, integer
 ---@field public print                  fun(self: fc.types.collection.IAdvanceHistory): nil
----@field public push                   fun(self: fc.types.collection.IAdvanceHistory, element: fml.types.T|nil): nil
+---@field public push                   fun(self: fc.types.collection.IAdvanceHistory, element: fc.types.T|nil): nil
 ---@field public rearrange              fun(self: fc.types.collection.IAdvanceHistory): nil
 ---@field public size                   fun(self: fc.types.collection.IAdvanceHistory): integer
 
@@ -48,4 +48,4 @@
 
 ---@class fc.types.collection.history.ISerializedData
 ---@field public present                integer
----@field public stack                  fml.types.T[]
+---@field public stack                  fc.types.T[]

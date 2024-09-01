@@ -8,7 +8,7 @@ M.__index = M
 setmetatable(M, { __index = Textarea })
 
 ---@class fml.ui.setting.IProps
----@field public position               fml.enums.BoxPosition
+---@field public position               fc.enums.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -18,14 +18,14 @@ setmetatable(M, { __index = Textarea })
 ---@field public min_height             ?number
 ---@field public keymaps                ?fml.types.IKeymap[]
 ---@field public win_opts               ?table<string, any>
----@field public validate               ?fun(value: fml.types.T): string|nil
+---@field public validate               ?fun(value: fc.types.T): string|nil
 ---@field public on_close               ?fun(): nil
----@field public on_confirm             fun(value: fml.types.T): boolean
+---@field public on_confirm             fun(value: fc.types.T): boolean
 
 ---@param props                         fml.ui.setting.IProps
 ---@return fml.ui.Setting
 function M.new(props)
-  local position = props.position ---@type fml.enums.BoxPosition
+  local position = props.position ---@type fc.enums.BoxPosition
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil
@@ -36,9 +36,9 @@ function M.new(props)
   local title = props.title ---@type string|nil
   local win_opts = props.win_opts or {} ---@type table<string, any>
 
-  local validate_from_props = props.validate ---@type (fun(value: fml.types.T): string)|nil
+  local validate_from_props = props.validate ---@type (fun(value: fc.types.T): string)|nil
   local on_close_from_props = props.on_close ---@type (fun(): nil)
-  local on_confirm_from_props = props.on_confirm ---@type fun(text: fml.types.T): boolean
+  local on_confirm_from_props = props.on_confirm ---@type fun(text: fc.types.T): boolean
 
   ---@param lines                       string[]
   ---@return string|nil

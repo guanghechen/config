@@ -5,8 +5,8 @@ local std_boolean = require("fc.std.boolean")
 local util = require("fc.std.util")
 
 ---@class fc.collection.Observable : fc.types.collection.IObservable
----@field private _value                fml.types.T
----@field private _value_last_notified  fml.types.T|nil
+---@field private _value                fc.types.T
+---@field private _value_last_notified  fc.types.T|nil
 ---@field private _subscribers          fc.types.collection.ISubscribers
 local M = {}
 M.__index = M
@@ -26,16 +26,16 @@ local function shallow_equals(x, y)
 end
 
 ---@class fc.collection.observable.IProps
----@field public initial_value          fml.types.T           Initial value of the observable
----@field public equals                 ?fml.types.IEquals    Determine whether the two values are equal.
----@field public normalize              ?fml.types.INormalize Normalize the value before compare or update
+---@field public initial_value          fc.types.T           Initial value of the observable
+---@field public equals                 ?fc.types.IEquals    Determine whether the two values are equal.
+---@field public normalize              ?fc.types.INormalize Normalize the value before compare or update
 
 ---@param props                         fc.collection.observable.IProps
 ---@return fc.collection.Observable
 function M.new(props)
-  local equals = props.equals or shallow_equals ---@type fml.types.IEquals
-  local normalize = props.normalize or util.identity ---@type fml.types.INormalize
-  local initial_value = props.initial_value ---@type fml.types.T
+  local equals = props.equals or shallow_equals ---@type fc.types.IEquals
+  local normalize = props.normalize or util.identity ---@type fc.types.INormalize
+  local initial_value = props.initial_value ---@type fc.types.T
 
   local self = setmetatable(BatchDisposable.new(), M)
   ---@cast self fc.collection.Observable
@@ -49,9 +49,9 @@ function M.new(props)
   return self
 end
 
----@param value                         fml.types.T         Initial value of the observable
----@param equals                        ?fml.types.IEquals  Determine whether the two values are equal.
----@param normalize                     ?fml.types.INormalize Normalize the value before compare or update
+---@param value                         fc.types.T         Initial value of the observable
+---@param equals                        ?fc.types.IEquals  Determine whether the two values are equal.
+---@param normalize                     ?fc.types.INormalize Normalize the value before compare or update
 ---@return fc.collection.Observable
 function M.from_value(value, equals, normalize)
   return M.new({ initial_value = value, equals = equals, normalize = normalize })
@@ -73,7 +73,7 @@ function M:dispose()
   self._subscribers:dispose()
 end
 
----@param value fml.types.T
+---@param value fc.types.T
 ---@param options? fc.types.collection.IObservableNextOptions
 ---@return boolean Indicate whether if the value changed.
 function M:next(value, options)
@@ -113,10 +113,10 @@ function M:subscribe(subscriber)
     return noop_unsubscribable
   end
 
-  ---@type fml.types.T | nil
+  ---@type fc.types.T | nil
   local value_prev = self._value_last_notified
 
-  ---@type fml.types.T
+  ---@type fc.types.T
   local value = self._value
 
   if self:is_disposed() then
@@ -131,10 +131,10 @@ end
 
 ---@return nil
 function M:_notify()
-  ---@type fml.types.T | nil
+  ---@type fc.types.T | nil
   local value_prev = self._value_last_notified
 
-  ---@type fml.types.T
+  ---@type fc.types.T
   local value = self._value
 
   self._value_last_notified = value

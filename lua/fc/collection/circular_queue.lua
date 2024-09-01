@@ -1,5 +1,5 @@
 ---@class fc.collection.CircularQueue : fc.types.collection.ICircularQueue
----@field private _elements             fml.types.T[]
+---@field private _elements             fc.types.T[]
 ---@field private _capacity             integer
 ---@field private _size                 integer
 ---@field private _start                integer
@@ -10,7 +10,7 @@ M.__index = M
 ---@class fc.collection.CircularQueue.IProps
 ---@field public capacity               integer
 
-local _tmp_array = {} ---@type fml.types.T[]
+local _tmp_array = {} ---@type fc.types.T[]
 
 ---@param props fc.collection.CircularQueue.IProps
 ---@return fc.collection.CircularQueue
@@ -29,7 +29,7 @@ end
 ---@param queue                         fc.types.collection.ICircularQueue
 ---@return fc.collection.CircularQueue
 function M.from(queue)
-  local elements = {} ---@type fml.types.T[]
+  local elements = {} ---@type fc.types.T[]
   local size = 0 ---@type integer
   for element in queue:iterator() do
     size = size + 1
@@ -45,12 +45,12 @@ function M.from(queue)
   return self
 end
 
----@param arr                          fml.types.T[]
+---@param arr                          fc.types.T[]
 ---@param capacity                     integer
 ---@return fc.collection.CircularQueue
 function M.from_array(arr, capacity)
   capacity = math.max(1, capacity) ---@type integer
-  local elements = {} ---@type fml.types.T[]
+  local elements = {} ---@type fc.types.T[]
   local size = 0 ---@type integer
   local arr_start = #arr <= capacity and 1 or #arr - capacity + 1 ---@type integer
   for idx = arr_start, #arr, 1 do
@@ -78,7 +78,7 @@ function M:size()
 end
 
 ---@param index                         integer
----@return fml.types.T|nil
+---@return fc.types.T|nil
 function M:at(index)
   if index < 1 or index > self._size then
     return
@@ -89,7 +89,7 @@ function M:at(index)
   return self._elements[idx]
 end
 
----@return fml.types.T|nil
+---@return fc.types.T|nil
 function M:back()
   return self._size > 0 and self._elements[self._end] or nil
 end
@@ -101,13 +101,13 @@ function M:clear()
   self._end = 0
 end
 
----@return fml.types.T[]
+---@return fc.types.T[]
 function M:collect()
-  local elements = self._elements ---@type fml.types.T[]
+  local elements = self._elements ---@type fc.types.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
-  local results = {} ---@type fml.types.T[]
+  local results = {} ---@type fc.types.T[]
   local idx = self._start - 1 ---@type integer
 
   for index = 1, size, 1 do
@@ -117,10 +117,10 @@ function M:collect()
   return results
 end
 
----@param filter                        fml.types.IFilter
+---@param filter                        fc.types.IFilter
 ---@return integer
 function M:count(filter)
-  local elements = self._elements ---@type fml.types.T[]
+  local elements = self._elements ---@type fc.types.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
@@ -136,13 +136,13 @@ function M:count(filter)
   return count
 end
 
----@return fml.types.T|nil
+---@return fc.types.T|nil
 function M:dequeue()
   if self._size < 1 then
     return nil
   end
 
-  local target = self._elements[self._start] ---@type fml.types.T|nil
+  local target = self._elements[self._start] ---@type fc.types.T|nil
   if self._size == 1 then
     self._size = 0
     self._start = 1
@@ -154,13 +154,13 @@ function M:dequeue()
   return target
 end
 
----@return fml.types.T|nil
+---@return fc.types.T|nil
 function M:dequeue_back()
   if self._size < 1 then
     return nil
   end
 
-  local target = self._elements[self._end] ---@type fml.types.T|nil
+  local target = self._elements[self._end] ---@type fc.types.T|nil
   if self._size == 1 then
     self._size = 0
     self._start = 1
@@ -172,7 +172,7 @@ function M:dequeue_back()
   return target
 end
 
----@param element                       fml.types.T
+---@param element                       fc.types.T
 ---@return nil
 function M:enqueue(element)
   self._end = self._end == self._capacity and 1 or self._end + 1
@@ -185,28 +185,28 @@ function M:enqueue(element)
   end
 end
 
----@param filter                        fun(element: fml.types.T, index: integer): boolean
+---@param filter                        fun(element: fc.types.T, index: integer): boolean
 ---@return fc.collection.CircularQueue
 function M:fork(filter)
   self:rearrange(filter)
   return M.from(self)
 end
 
----@return fml.types.T|nil
+---@return fc.types.T|nil
 function M:front()
   return self._size > 0 and self._elements[self._start] or nil
 end
 
----@return fun(): fml.types.T|nil, integer|nil
+---@return fun(): fc.types.T|nil, integer|nil
 function M:iterator()
-  local elements = self._elements ---@type fml.types.T[]
+  local elements = self._elements ---@type fc.types.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
   local index = 0 ---@type integer
   local idx = self._start - 1 ---@type integer
 
-  ---@return fml.types.T|nil
+  ---@return fc.types.T|nil
   ---@return integer|nil
   return function()
     index = index + 1
@@ -217,16 +217,16 @@ function M:iterator()
   end
 end
 
----@return fun(): fml.types.T|nil, integer|nil
+---@return fun(): fc.types.T|nil, integer|nil
 function M:iterator_reverse()
-  local elements = self._elements ---@type fml.types.T[]
+  local elements = self._elements ---@type fc.types.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
   local index = size + 1 ---@type integer
   local idx = self._end + 1 ---@type integer
 
-  ---@return fml.types.T|nil
+  ---@return fc.types.T|nil
   ---@return integer|nil
   return function()
     index = index - 1
@@ -237,7 +237,7 @@ function M:iterator_reverse()
   end
 end
 
----@param filter                        fml.types.IFilter
+---@param filter                        fc.types.IFilter
 ---@return nil
 function M:rearrange(filter)
   if self._size < 1 then
@@ -252,7 +252,7 @@ function M:rearrange(filter)
     local idx = self._start - 1 ---@type integer
     for index = 1, self._size, 1 do
       idx = idx + 1
-      local element = self._elements[idx] ---@type fml.types.T
+      local element = self._elements[idx] ---@type fc.types.T
       if filter(element, index) then
         size = size + 1
         self._elements[size] = element
@@ -271,7 +271,7 @@ function M:rearrange(filter)
   end
   for idx = self._start, self._capacity, 1 do
     index = index + 1
-    local element = self._elements[idx] ---@type fml.types.T
+    local element = self._elements[idx] ---@type fc.types.T
     if filter(element, index) then
       size = size + 1
       self._elements[size] = element
@@ -279,7 +279,7 @@ function M:rearrange(filter)
   end
   for idx = 1, self._end, 1 do
     index = index + 1
-    local element = _tmp_array[idx] ---@type fml.types.T
+    local element = _tmp_array[idx] ---@type fc.types.T
     if filter(element, index) then
       size = size + 1
       self._elements[size] = element
@@ -290,11 +290,11 @@ function M:rearrange(filter)
   self._end = size
 end
 
----@param arr                           fml.types.T[]
+---@param arr                           fc.types.T[]
 ---@return nil
 function M:reset(arr)
   local capacity = self._capacity ---@type integer
-  local elements = self._elements ---@type fml.types.T[]
+  local elements = self._elements ---@type fc.types.T[]
   local size = 0 ---@type integer
   local arr_start = #arr <= capacity and 1 or #arr - capacity + 1 ---@type integer
   for idx = arr_start, #arr, 1 do
@@ -308,7 +308,7 @@ function M:reset(arr)
 end
 
 ---@param index                         integer
----@param value                         fml.types.T
+---@param value                         fc.types.T
 ---@return nil
 function M:update(index, value)
   if index < 1 or index > self._size then

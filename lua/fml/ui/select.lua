@@ -280,11 +280,11 @@ end
 ---@param item                          fml.types.ui.select.IItem
 ---@param match                         fml.types.ui.select.IMatchedItem
 ---@return string
----@return fml.types.ui.IInlineHighlight[]
+---@return fc.types.ux.IInlineHighlight[]
 function M.default_render_item(item, match)
-  local highlights = {} ---@type fml.types.ui.IInlineHighlight[]
+  local highlights = {} ---@type fc.types.ux.IInlineHighlight[]
   for _, piece in ipairs(match.matches) do
-    ---@type fml.types.ui.IInlineHighlight[]
+    ---@type fc.types.ux.IInlineHighlight[]
     local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
     table.insert(highlights, highlight)
   end

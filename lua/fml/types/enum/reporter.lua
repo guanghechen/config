@@ -1,5 +1,0 @@
----@alias fml.enums.reporter.Level
----| "DEBUG"
----| "INFO"
----| "WARN"
----| "ERROR"
