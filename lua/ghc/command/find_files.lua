@@ -62,7 +62,7 @@ local actions = {
         end
         ---@cast raw_data ghc.command.find_files.IConfigData
 
-        if raw_data.exclude_patterns == nil or not fml.is.array(raw_data.exclude_patterns) then
+        if raw_data.exclude_patterns == nil or not fc.is.array(raw_data.exclude_patterns) then
           return "Invalid data.exclude_patterns, expect an array."
         end
       end,

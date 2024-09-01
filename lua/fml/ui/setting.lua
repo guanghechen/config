@@ -1,5 +1,5 @@
 local Textarea = require("fml.ui.textarea")
-local json = require("fml.std.json")
+local json = require("fc.std.json")
 local reporter = require("fml.std.reporter")
 
 ---@class fml.ui.Setting : fml.types.ui.ISetting, fml.ui.Textarea

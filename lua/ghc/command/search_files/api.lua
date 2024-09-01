@@ -95,7 +95,7 @@ function M.calc_preview_data(uuid)
   local cwd = state.search_cwd:snapshot() ---@type string
   local filepath = fml.path.join(cwd, item.filepath) ---@type string
   local filename = fml.path.basename(filepath) ---@type string
-  if not fml.is.printable_file(filename) then
+  if not fc.is.printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
     ---@type ghc.command.search_files.IHighlight[]

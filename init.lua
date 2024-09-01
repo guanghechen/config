@@ -18,6 +18,7 @@ local function bootstrap()
     vim.opt.shell = "/bin/bash"
   end
 
+  _G.fc = require("fc")
   _G.fml = require("fml")
   _G.ghc = require("ghc")
 

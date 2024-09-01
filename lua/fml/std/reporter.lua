@@ -1,4 +1,4 @@
-local std_json = require("fml.std.json")
+local std_json = require("fc.std.json")
 
 ---@class fml.std.reporter
 local M = {}

@@ -1,6 +1,6 @@
 local std_array = require("fml.std.array")
 local fs = require("fml.std.fs")
-local is = require("fml.std.is")
+local is = require("fc.std.is")
 local path = require("fml.std.path")
 local util = require("fml.std.util")
 local api_buf = require("fml.api.buf")

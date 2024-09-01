@@ -201,7 +201,7 @@ local function get_select()
         end
 
         if fileitem.type == "file" then
-          local is_text_file = fml.is.printable_file(fileitem.name) ---@type boolean
+          local is_text_file = fc.is.printable_file(fileitem.name) ---@type boolean
           if is_text_file then
             local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
             local lines = fml.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]

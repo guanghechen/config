@@ -72,7 +72,7 @@ local provider = {
         for key, val in pairs(hlgroup) do
           if key ~= "fg" and key ~= "bg" and key ~= "link" and key ~= "cterm" then
             if type(val) ~= "string" then
-              val = fml.json.stringify(val)
+              val = fc.json.stringify(val)
             end
             line = line .. " " .. key .. "=" .. val
           end

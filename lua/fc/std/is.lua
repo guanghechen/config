@@ -33,7 +33,7 @@ local TEXT_FILENAME_SET = build_set({
   "sshd_config",
 })
 
----@class fml.std.is
+---@class fc.std.is
 local M = {}
 
 ---@param value                         any
