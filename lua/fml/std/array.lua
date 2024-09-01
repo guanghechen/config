@@ -1,5 +1,5 @@
 local oxi = require("fml.std.oxi")
-local std_string = require("fml.std.string")
+local std_string = require("fc.std.string")
 
 ---@class fml.std.array
 local M = {}

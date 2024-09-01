@@ -12,7 +12,7 @@ local function calc_row_percentage()
   elseif row == total_lines then
     return row, col, "Bot"
   else
-    return row, col, fml.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%"
+    return row, col, fc.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%"
   end
 end
 

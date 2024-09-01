@@ -55,7 +55,6 @@ local std = {
   scheduler = require("fml.std.scheduler"),
   set = require("fml.std.set"),
   statuscolumn = require("fml.std.statuscolumn"),
-  string = require("fml.std.string"),
   tmux = require("fml.std.tmux"),
   util = require("fml.std.util"),
 }

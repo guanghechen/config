@@ -4,6 +4,7 @@ local std = {
   json = require("fc.std.json"),
   md5 = require("fc.std.md5"),
   os = require("fc.std.os"),
+  string = require("fc.std.string"),
 }
 
 ---@class fc : fc.std

@@ -5,7 +5,7 @@ local _select = nil ---@type fml.ui.FileSelect|nil
 ---@param ordinal                       integer
 ---@return string
 local function gen_uuid_from_ordinal(ordinal)
-  return fml.string.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
+  return fc.string.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
 end
 
 ---@return fml.ui.FileSelect

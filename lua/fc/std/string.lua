@@ -1,4 +1,4 @@
----@class fml.std.string
+---@class fc.std.string
 local M = {}
 
 ---@param text                          string
