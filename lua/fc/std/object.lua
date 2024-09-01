@@ -1,6 +1,6 @@
 local std_string = require("fc.std.string")
 
----@class fml.std.object
+---@class fc.std.object
 local M = {}
 
 ---@param object                        table|nil

@@ -1,6 +1,6 @@
 local state = require("fml.api.state")
 local navigate = require("fc.std.navigate")
-local std_object = require("fml.std.object")
+local std_object = require("fc.std.object")
 local reporter = require("fc.std.reporter")
 
 ---@class fml.api.tab

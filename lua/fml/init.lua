@@ -44,7 +44,6 @@ local std = {
   fs = require("fml.std.fs"),
   lsp = require("fml.std.lsp"),
   nvimbar = require("fml.std.nvimbar"),
-  object = require("fml.std.object"),
   oxi = require("fml.std.oxi"),
   path = require("fml.std.path"),
   set = require("fml.std.set"),
