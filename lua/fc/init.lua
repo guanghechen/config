@@ -1,6 +1,7 @@
 ---@class fc.std
 local std = {
   array = require("fc.std.array"),
+  boolean = require("fc.std.boolean"),
   box = require("fc.std.box"),
   color = require("fc.std.color"),
   is = require("fc.std.is"),

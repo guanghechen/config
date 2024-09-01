@@ -15,9 +15,9 @@ local M = require("ghc.context.client.mod")
 ---@return nil
 function M.toggle_scheme(params)
   local mode = params.mode or M.mode:snapshot() ---@type fml.enums.theme.Mode
-  local transparency = fml.boolean.cover(params.transparency, M.transparency:snapshot()) ---@type boolean
-  local persistent = fml.boolean.cover(params.persistent, false) ---@type boolean
-  local force = fml.boolean.cover(params.force, false) ---@type boolean
+  local transparency = fc.boolean.cover(params.transparency, M.transparency:snapshot()) ---@type boolean
+  local persistent = fc.boolean.cover(params.persistent, false) ---@type boolean
+  local force = fc.boolean.cover(params.force, false) ---@type boolean
 
   ---@type boolean
   local has_changed = M.mode:snapshot() ~= mode or M.transparency:snapshot() ~= transparency

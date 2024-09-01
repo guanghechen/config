@@ -37,7 +37,6 @@ local fn = {
 ---@class fml.std
 local std = {
   G = require("fml.std.G"),
-  boolean = require("fml.std.boolean"),
   clipboard = require("fml.std.clipboard"),
   debug = require("fml.std.debug"),
   highlight = require("fml.std.highlight"),
