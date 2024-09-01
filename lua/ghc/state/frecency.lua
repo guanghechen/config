@@ -19,7 +19,7 @@ function M.load_and_autosave()
       files = Frecency.new({
         items = {},
         normalize = function(key)
-          return fml.md5.sumhexa(key)
+          return fc.md5.sumhexa(key)
         end,
       }),
     }
