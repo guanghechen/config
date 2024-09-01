@@ -1,6 +1,6 @@
 local is = require("fc.std.is")
 
----@class fml.std.json
+---@class fc.std.json
 local M = {}
 
 ---@param json any

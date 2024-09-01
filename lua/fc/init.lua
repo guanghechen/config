@@ -15,8 +15,8 @@ local std = {
 
 ---@class fc : fc.std
 ---@field public std                    fc.std
-local fml = vim.tbl_extend("force", std, {
+local fc = vim.tbl_extend("force", std, {
   std = std,
 })
 
-return fml
+return fc
