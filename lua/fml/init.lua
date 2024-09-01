@@ -21,7 +21,6 @@ local fn = {
 local std = {
   G = require("fml.std.G"),
   clipboard = require("fml.std.clipboard"),
-  debug = require("fml.std.debug"),
   lsp = require("fml.std.lsp"),
   nvimbar = require("fml.std.nvimbar"),
   statuscolumn = require("fml.std.statuscolumn"),

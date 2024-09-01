@@ -21,6 +21,7 @@ local std = {
   boolean = require("fc.std.boolean"),
   box = require("fc.std.box"),
   color = require("fc.std.color"),
+  debug = require("fc.std.debug"),
   fs = require("fc.std.fs"),
   highlight = require("fc.std.highlight"),
   is = require("fc.std.is"),

@@ -1,4 +1,4 @@
----@class fml.std.debug
+---@class fc.std.debug
 local M = {}
 
 ---@param value any|nil
