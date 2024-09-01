@@ -125,14 +125,15 @@ return {
         ["[g"] = "none",
         ["]g"] = "none",
         ["A"] = "none",
+        ["B"] = "none",
         ["C"] = "none",
         ["D"] = "none",
-        ["B"] = "none",
         ["q"] = "none",
+        ["R"] = "none",
         ["S"] = "none",
+        ["Z"] = "none",
         ["s"] = "none",
         ["t"] = "none",
-        ["Z"] = "none",
 
         -- Open file
         ["L"] = "vsplit_with_window_picker",
@@ -180,7 +181,8 @@ return {
             use_image_nvim = true,
           },
         },
-        ["R"] = "refresh",
+        ["<M-r>"] = "refresh",
+        ["<C-a>r"] = "refresh",
         ["Y"] = {
           function(state)
             local node = state.tree:get_node()
