@@ -3,7 +3,7 @@ local Disposable = require("fml.collection.disposable")
 local Subscriber = require("fml.collection.subscriber")
 local fs = require("fc.std.fs")
 local is = require("fc.std.is")
-local path = require("fml.std.path")
+local path = require("fc.std.path")
 local util = require("fc.std.util")
 local reporter = require("fc.std.reporter")
 

@@ -1,5 +1,5 @@
 local std_os = require("fc.std.os")
-local path = require("fml.std.path")
+local path = require("fc.std.path")
 local tmux = require("fc.std.tmux")
 local reporter = require("fc.std.reporter")
 

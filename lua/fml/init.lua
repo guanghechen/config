@@ -43,7 +43,6 @@ local std = {
   lsp = require("fml.std.lsp"),
   nvimbar = require("fml.std.nvimbar"),
   oxi = require("fml.std.oxi"),
-  path = require("fml.std.path"),
   statuscolumn = require("fml.std.statuscolumn"),
   util = require("fml.std.util"),
 }

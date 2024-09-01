@@ -2,8 +2,8 @@
 local function match()
   ---@type string[]
   local items = fml.oxi.find({
-    workspace = fml.path.workspace(),
-    cwd = fml.path.cwd(),
+    workspace = fc.path.workspace(),
+    cwd = fc.path.cwd(),
     flag_case_sensitive = false,
     flag_gitignore = true,
     flag_regex = false,
@@ -43,8 +43,8 @@ local function strwidth()
   local filepath_1 = "rust/中文/tests/fixtures/a.txt"
   local filepath_2 = "rust/中文/tests/fixtures/aa.rs"
 
-  local filename_1 = fml.path.basename(filepath_1) ---@type string
-  local filename_2 = fml.path.basename(filepath_2) ---@type string
+  local filename_1 = fc.path.basename(filepath_1) ---@type string
+  local filename_2 = fc.path.basename(filepath_2) ---@type string
 
   local icon_1 = fml.util.calc_fileicon(filename_1) ---@type string
   local icon_2 = fml.util.calc_fileicon(filename_1) ---@type string

@@ -3,7 +3,7 @@ local M = {}
 
 ---@return nil
 function M.current_buffer_filepath()
-  local content = fml.path.current_filepath() ---@type string
+  local content = fc.path.current_filepath() ---@type string
   vim.fn.setreg("+", content)
   fc.reporter.info({
     from = "ghc.command.copy",

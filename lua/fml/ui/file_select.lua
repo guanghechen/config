@@ -1,7 +1,7 @@
 local std_array = require("fc.std.array")
 local fs = require("fc.std.fs")
 local is = require("fc.std.is")
-local path = require("fml.std.path")
+local path = require("fc.std.path")
 local util = require("fml.std.util")
 local api_buf = require("fml.api.buf")
 local Select = require("fml.ui.select")
@@ -67,7 +67,7 @@ function M.new(props)
     ---@return nil
     local function send_to_qflist()
       if _select ~= nil then
-        local cwd = fml.path.cwd() ---@type string
+        local cwd = fc.path.cwd() ---@type string
         local select_cwd = self.cwd ---@type string
         local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
         local matched_items = _select:get_matched_items() ---@type fml.types.ui.select.IMatchedItem[]
@@ -76,8 +76,8 @@ function M.new(props)
           ---@cast item fml.types.ui.file_select.IItem
 
           if item ~= nil then
-            local absolute_filepath = fml.path.join(select_cwd, item.data.filepath) ---@type string
-            local relative_filepath = fml.path.relative(cwd, absolute_filepath, false) ---@type string
+            local absolute_filepath = fc.path.join(select_cwd, item.data.filepath) ---@type string
+            local relative_filepath = fc.path.relative(cwd, absolute_filepath, false) ---@type string
             table.insert(quickfix_items, {
               filename = relative_filepath,
               lnum = item.data.lnum or 1,

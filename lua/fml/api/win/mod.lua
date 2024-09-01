@@ -1,5 +1,5 @@
 local fs = require("fc.std.fs")
-local path = require("fml.std.path")
+local path = require("fc.std.path")
 local state = require("fml.api.state")
 
 ---@class fml.api.win.IHistoryItem

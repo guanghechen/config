@@ -1,4 +1,4 @@
-local cwd = fml.path.cwd() ---@type string
+local cwd = fc.path.cwd() ---@type string
 
 ---@param sources ("buffers"|"filesystem"|"git_status")[]
 ---@return nil
@@ -24,15 +24,15 @@ end
 
 ---@return boolean
 local function check_could_reveal()
-  local filepath = fml.path.current_filepath() ---@type string
-  return fml.path.is_under(cwd, filepath)
+  local filepath = fc.path.current_filepath() ---@type string
+  return fc.path.is_under(cwd, filepath)
 end
 
 ---@class guanghechen.command.explorer
 local M = {}
 
 function M.toggle_explorer_file_workspace()
-  cwd = fml.path.workspace()
+  cwd = fc.path.workspace()
   close_explorer_sources({ "git_status", "buffers" })
   local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
   local toggle = ft_current == "neo-tree" ---@type boolean
@@ -47,7 +47,7 @@ function M.toggle_explorer_file_workspace()
 end
 
 function M.toggle_explorer_file_cwd()
-  cwd = fml.path.cwd()
+  cwd = fc.path.cwd()
 
   close_explorer_sources({ "git_status", "buffers" })
   local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
@@ -63,7 +63,7 @@ function M.toggle_explorer_file_cwd()
 end
 
 function M.toggle_explorer_buffer_workspace()
-  cwd = fml.path.workspace()
+  cwd = fc.path.workspace()
   close_explorer_sources({ "git_status" })
   require("neo-tree.command").execute({
     action = "focus",
@@ -76,7 +76,7 @@ function M.toggle_explorer_buffer_workspace()
 end
 
 function M.toggle_explorer_buffer_cwd()
-  cwd = fml.path.cwd()
+  cwd = fc.path.cwd()
   close_explorer_sources({ "git_status" })
   require("neo-tree.command").execute({
     action = "focus",
@@ -89,7 +89,7 @@ function M.toggle_explorer_buffer_cwd()
 end
 
 function M.toggle_explorer_git_workspace()
-  cwd = fml.path.workspace()
+  cwd = fc.path.workspace()
   close_explorer_sources({ "buffers" })
   require("neo-tree.command").execute({
     action = "focus",
@@ -102,7 +102,7 @@ function M.toggle_explorer_git_workspace()
 end
 
 function M.toggle_explorer_git_cwd()
-  cwd = fml.path.cwd()
+  cwd = fc.path.cwd()
   close_explorer_sources({ "buffers" })
   require("neo-tree.command").execute({
     action = "focus",

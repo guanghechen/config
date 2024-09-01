@@ -93,8 +93,8 @@ function M.calc_preview_data(uuid)
   end
 
   local cwd = state.search_cwd:snapshot() ---@type string
-  local filepath = fml.path.join(cwd, item.filepath) ---@type string
-  local filename = fml.path.basename(filepath) ---@type string
+  local filepath = fc.path.join(cwd, item.filepath) ---@type string
+  local filename = fc.path.basename(filepath) ---@type string
   if not fc.is.printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
@@ -327,7 +327,7 @@ function M.fetch_data(input_text, force, callback)
       }
       fileitem_map[filepath] = fileitem
 
-      local filename = fml.path.basename(filepath) ---@type string
+      local filename = fc.path.basename(filepath) ---@type string
       local icon, icon_hl = fml.util.calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
       local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type fml.types.ui.IInlineHighlight[]
@@ -524,13 +524,13 @@ end
 
 ---@return fml.types.IQuickFixItem[]
 function M.gen_quickfix_items()
-  local cwd = fml.path.cwd() ---@type string
+  local cwd = fc.path.cwd() ---@type string
   local search_cwd = state.search_cwd:snapshot() ---@type string
   local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
   for _, item in pairs(_item_map) do
     if item.offset >= 0 then
-      local absolute_filepath = fml.path.join(search_cwd, item.filepath) ---@type string
-      local relative_filepath = fml.path.relative(cwd, absolute_filepath, false) ---@type string
+      local absolute_filepath = fc.path.join(search_cwd, item.filepath) ---@type string
+      local relative_filepath = fc.path.relative(cwd, absolute_filepath, false) ---@type string
       table.insert(quickfix_items, {
         filename = relative_filepath,
         lnum = item.lnum,
@@ -561,11 +561,11 @@ end
 ---@return boolean
 function M.open_file(item, frecency)
   local cwd = state.search_cwd:snapshot() ---@type string
-  local workspace = fml.path.workspace() ---@type string
+  local workspace = fc.path.workspace() ---@type string
   local data = _item_map and _item_map[item.uuid] ---@type ghc.command.search_files.IItem|nil
   if data ~= nil then
-    local absolute_filepath = fml.path.join(cwd, data.filepath) ---@type string
-    local relative_filepath = fml.path.relative(workspace, absolute_filepath, true) ---@type string
+    local absolute_filepath = fc.path.join(cwd, data.filepath) ---@type string
+    local relative_filepath = fc.path.relative(workspace, absolute_filepath, true) ---@type string
     frecency:access(relative_filepath)
     local opened = fml.api.buf.open_in_current_valid_win(absolute_filepath) ---@type boolean
 
@@ -668,7 +668,7 @@ function M.refresh_file_item(filepath)
     local search_pattern = session.search_pattern:snapshot() ---@type string
     local include_patterns = session.search_include_patterns:snapshot() ---@type string
     local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
-    local specified_filepath = fml.path.join(cwd, filepath) ---@type string
+    local specified_filepath = fc.path.join(cwd, filepath) ---@type string
 
     ---@type fml.std.oxi.search.IResult|nil
     local partial_search_result = fml.oxi.search({

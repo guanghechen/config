@@ -37,7 +37,7 @@ local function test_compile_highlights()
     .. "vim.api.nvim_set_hl(0,k,v)\n"
     .. "end\nend, true)\n"
 
-  local file = io.open(fml.path.cwd() .. "/a.lua", "wb")
+  local file = io.open(fc.path.cwd() .. "/a.lua", "wb")
   if file then
     --file:write(loadstring(lines)())
     file:write(lines)
@@ -46,4 +46,4 @@ local function test_compile_highlights()
 end
 
 test_compile_highlights()
---dofile(fml.path.cwd() .. "/a.lua")
+--dofile(fc.path.cwd() .. "/a.lua")

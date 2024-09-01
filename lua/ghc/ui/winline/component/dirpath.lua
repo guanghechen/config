@@ -1,4 +1,4 @@
-local sep = " " .. fml.path.SEP .. " "
+local sep = " " .. fc.path.SEP .. " "
 
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {

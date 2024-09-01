@@ -1,6 +1,6 @@
 local session = require("ghc.context.session")
 
-local state_find_cwd = fml.collection.Observable.from_value(session.get_find_scope_cwd(fml.path.cwd()))
+local state_find_cwd = fml.collection.Observable.from_value(session.get_find_scope_cwd(fc.path.cwd()))
 local _select = nil ---@type fml.types.ui.IFileSelect|nil
 
 ---@return nil
@@ -222,7 +222,7 @@ local function get_select()
     local provider = {
       fetch_data = function()
         local cwd = state_find_cwd:snapshot() ---@type string
-        local workspace = fml.path.workspace() ---@type string
+        local workspace = fc.path.workspace() ---@type string
         local exclude_patterns = session.find_exclude_patterns:snapshot() ---@type string
         local flag_gitignore = session.find_flag_gitignore:snapshot() ---@type boolean
 

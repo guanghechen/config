@@ -1,7 +1,7 @@
 local theme = require("ghc.ui.theme")
 local Observable = fml.collection.Observable
 
-local theme_cache_path = fml.path.locate_context_filepath({ filename = "theme" }) ---@type string
+local theme_cache_path = fc.path.locate_context_filepath({ filename = "theme" }) ---@type string
 
 ---@class ghc.context.client
 ---@field public mode                   fml.types.collection.IObservable
@@ -47,7 +47,7 @@ function M.reload_theme(params)
   local mode = M.mode:snapshot() ---@type fml.enums.theme.Mode
   local transparency = M.transparency:snapshot() ---@type boolean
 
-  if force or not fml.path.is_exist(theme_cache_path) then
+  if force or not fc.path.is_exist(theme_cache_path) then
     M.toggle_scheme({ mode = mode, transparency = transparency, persistent = true, force = true })
   else
     dofile(theme_cache_path)

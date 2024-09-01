@@ -3,13 +3,13 @@
 local function get_filepath(context)
   local cwd = context.cwd ---@type string
   local filepath = context.filepath ---@type string
-  local relative_to_cwd = fml.path.relative(cwd, filepath, false) ---@type string
-  if string.sub(relative_to_cwd, 1, 1) == "." and fml.path.is_absolute(filepath) then
-    local workspace = fml.path.workspace() ---@type string
+  local relative_to_cwd = fc.path.relative(cwd, filepath, false) ---@type string
+  if string.sub(relative_to_cwd, 1, 1) == "." and fc.path.is_absolute(filepath) then
+    local workspace = fc.path.workspace() ---@type string
     if cwd ~= workspace then
-      local relative_to_workspace = fml.path.relative(workspace, filepath, false)
+      local relative_to_workspace = fc.path.relative(workspace, filepath, false)
       if string.sub(relative_to_workspace, 1, 1) == "." then
-        relative_to_cwd = fml.path.normalize(filepath)
+        relative_to_cwd = fc.path.normalize(filepath)
       end
     end
   end

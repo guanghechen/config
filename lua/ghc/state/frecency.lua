@@ -6,7 +6,7 @@ local Frecency = require("fml.collection.frecency")
 ---@class ghc.state.frecency.IState
 ---@field public files                  fml.types.collection.IFrecency
 
-local FILEPATH = fml.path.locate_session_filepath({ filename = "state.frecency.json" }) ---@type string
+local FILEPATH = fc.path.locate_session_filepath({ filename = "state.frecency.json" }) ---@type string
 local state = nil ---@type ghc.state.frecency.IState|nil
 
 ---@class ghc.state.files_frecency

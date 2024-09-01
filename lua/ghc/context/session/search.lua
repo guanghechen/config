@@ -77,11 +77,11 @@ function M.get_search_scope_cwd(dirpath)
   local scope = search_scope:snapshot() ---@type ghc.enums.context.SearchScope
 
   if scope == "W" then
-    return fml.path.workspace()
+    return fc.path.workspace()
   end
 
   if scope == "C" then
-    return fml.path.cwd()
+    return fc.path.cwd()
   end
 
   if scope == "D" then
@@ -98,7 +98,7 @@ function M.get_search_scope_cwd(dirpath)
     message = "Unknown scope.",
     details = { scope = scope, dirpath = dirpath },
   })
-  return fml.path.cwd()
+  return fc.path.cwd()
 end
 
 --Auto refresh statusline

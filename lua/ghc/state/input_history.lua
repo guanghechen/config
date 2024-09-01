@@ -8,7 +8,7 @@ local History = require("fml.collection.history")
 ---@field public find_files                  fml.types.collection.IHistory
 ---@field public search_in_files             fml.types.collection.IHistory
 
-local FILEPATH = fml.path.locate_session_filepath({ filename = "state.input_history.json" }) ---@type string
+local FILEPATH = fc.path.locate_session_filepath({ filename = "state.input_history.json" }) ---@type string
 local state = nil ---@type ghc.state.input_history.IState|nil
 
 ---@class ghc.state.files_history

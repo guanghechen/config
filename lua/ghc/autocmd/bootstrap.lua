@@ -5,7 +5,7 @@ local augroups = {
 
 fml.disposable:add_disposable(fml.collection.Disposable.new({
   on_dispose = function()
-    if vim.fn.argc() < 1 and fml.path.is_git_repo() then
+    if vim.fn.argc() < 1 and fc.path.is_git_repo() then
       ghc.command.session.autosave()
     end
   end,

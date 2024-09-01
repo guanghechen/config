@@ -6,7 +6,7 @@ function M.toggle_workspace()
   fml.api.term.toggle_or_create({
     name = "workspace",
     position = "float",
-    cwd = fml.path.workspace(),
+    cwd = fc.path.workspace(),
   })
 end
 
@@ -15,7 +15,7 @@ function M.toggle_cwd()
   fml.api.term.toggle_or_create({
     name = "workspace",
     position = "float",
-    cwd = fml.path.cwd(),
+    cwd = fc.path.cwd(),
   })
 end
 
@@ -24,7 +24,7 @@ function M.toggle_current()
   fml.api.term.toggle_or_create({
     name = "workspace",
     position = "float",
-    cwd = fml.path.current_directory(),
+    cwd = fc.path.current_directory(),
   })
 end
 
@@ -36,8 +36,8 @@ function M.toggle_tmux()
     fml.api.term.toggle_or_create({
       name = "tmux",
       position = "float",
-      command = "bash '" .. fml.path.locate_script_filepath("tmux.sh") .. "'",
-      cwd = fml.path.workspace(),
+      command = "bash '" .. fc.path.locate_script_filepath("tmux.sh") .. "'",
+      cwd = fc.path.workspace(),
     })
   end
 end

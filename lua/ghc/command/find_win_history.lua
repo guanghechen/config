@@ -17,7 +17,7 @@ local function get_select()
     ---@type fml.types.ui.file_select.IProvider
     local provider = {
       fetch_data = function()
-        local cwd = fml.path.cwd() ---@type string
+        local cwd = fc.path.cwd() ---@type string
         local items = {} ---@type fml.types.ui.file_select.IRawItem[]
         local present_uuid = "0" ---@type string
         local width = 0 ---@type integer
@@ -40,7 +40,7 @@ local function get_select()
           end
 
           for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
-            local filepath = fml.path.relative(cwd, absolute_filepath, true) ---@type string
+            local filepath = fc.path.relative(cwd, absolute_filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
             local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
             table.insert(items, item)
@@ -107,8 +107,8 @@ local function get_select()
         end
 
         if _select ~= nil then
-          local cwd = fml.path.cwd() ---@type string
-          local filepath = fml.path.join(cwd, item.data.filepath) ---@type string
+          local cwd = fc.path.cwd() ---@type string
+          local filepath = fc.path.join(cwd, item.data.filepath) ---@type string
           return fml.api.buf.open_in_current_valid_win(filepath)
         end
         return false

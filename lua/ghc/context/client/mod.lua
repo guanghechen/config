@@ -1,4 +1,4 @@
-local context_filepath = fml.path.locate_context_filepath({ filename = "client.json" }) ---@type string
+local context_filepath = fc.path.locate_context_filepath({ filename = "client.json" }) ---@type string
 
 ---@class ghc.context.client : ghc.types.context.client
 local M = fml.collection.Viewmodel.new({

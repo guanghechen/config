@@ -114,13 +114,13 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = fml.collection.Observable.from_value(fml.path.normalize(initial_dirpath)) ---@type fml.types.collection.IObservable
+local state_cwd = fml.collection.Observable.from_value(fc.path.normalize(initial_dirpath)) ---@type fml.types.collection.IObservable
 local _select = nil ---@type fml.types.ui.ISelect|nil
 
 ---@return string
 local function gen_title()
   local dirpath = state_cwd:snapshot() ---@type string
-  local relative_dirpath = fml.path.relative(fml.path.cwd(), dirpath, false)
+  local relative_dirpath = fc.path.relative(fc.path.cwd(), dirpath, false)
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "File explorer" ---@type string
   end
@@ -161,8 +161,8 @@ local function get_select()
     ---@type fml.types.ui.select.IProvider
     local provider = {
       fetch_data = function(force)
-        local dirpath = fml.path.normalize(state_cwd:snapshot()) ---@type string
-        local parent_dirpath = fml.path.dirname(dirpath) ---@type string
+        local dirpath = fc.path.normalize(state_cwd:snapshot()) ---@type string
+        local parent_dirpath = fc.path.dirname(dirpath) ---@type string
         local diritem = fetch_diritem(dirpath, force) ---@type ghc.command.file_explorer.IDirItem
         fetch_diritem(parent_dirpath, force)
 
@@ -205,7 +205,7 @@ local function get_select()
           if is_text_file then
             local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
             local lines = fc.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
-            local title = fml.path.relative(fml.path.cwd(), item.uuid, false) ---@type string
+            local title = fc.path.relative(fc.path.cwd(), item.uuid, false) ---@type string
 
             ---@type fml.ui.search.preview.IData
             return {
@@ -283,9 +283,9 @@ local function get_select()
             table.insert(lines, text)
           end
 
-          local title = fml.path.relative(fml.path.cwd(), item.uuid, false) ---@type string
+          local title = fc.path.relative(fc.path.cwd(), item.uuid, false) ---@type string
           if #title < 1 or title:sub(1, 1) == "." then
-            title = fml.path.normalize(item.uuid)
+            title = fc.path.normalize(item.uuid)
           end
 
           ---@type fml.ui.search.preview.IData
@@ -385,7 +385,7 @@ local function get_select()
         modes = { "n", "v" },
         key = "<Backspace>",
         callback = function()
-          local next_cwd = fml.path.dirname(state_cwd:snapshot())
+          local next_cwd = fc.path.dirname(state_cwd:snapshot())
           state_cwd:next(next_cwd)
         end,
         desc = "file explorer: goto the parent dir",

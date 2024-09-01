@@ -1,6 +1,6 @@
 local session = require("ghc.context.session")
 
-local state_search_cwd = fml.collection.Observable.from_value(session.get_search_scope_cwd(fml.path.cwd()))
+local state_search_cwd = fml.collection.Observable.from_value(session.get_search_scope_cwd(fc.path.cwd()))
 fml.fn.watch_observables({ session.search_scope }, function()
   local current_search_cwd = state_search_cwd:snapshot() ---@type string
   local dirpath = fml.ui.search.get_current_path() ---@type string

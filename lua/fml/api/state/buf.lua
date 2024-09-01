@@ -1,5 +1,5 @@
 local constant = require("fml.constant")
-local path = require("fml.std.path")
+local path = require("fc.std.path")
 local util = require("fml.std.util")
 
 ---@class fml.api.state

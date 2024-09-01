@@ -4,7 +4,7 @@ local M = {}
 ---@return nil
 function M.find_vim_options()
   require("telescope.builtin").vim_options({
-    cwd = fml.path.workspace(),
+    cwd = fc.path.workspace(),
     workspace = "CWD",
     prompt_title = "Find vim options",
     show_untracked = true,

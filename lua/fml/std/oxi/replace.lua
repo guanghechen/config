@@ -1,4 +1,4 @@
-local path = require("fml.std.path")
+local path = require("fc.std.path")
 
 ---@class fml.std.oxi
 local M = require("fml.std.oxi.mod")

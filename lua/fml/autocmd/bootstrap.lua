@@ -1,6 +1,6 @@
 local constant = require("fml.constant")
 local global = require("fml.global")
-local path = require("fml.std.path")
+local path = require("fc.std.path")
 local util = require("fml.std.util")
 
 local augroups = {

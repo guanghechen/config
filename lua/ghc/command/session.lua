@@ -10,25 +10,25 @@ end
 ---@return string
 local function get_filepath(pathtype)
   if pathtype == "session" then
-    local filepath = fml.path.locate_session_filepath({ filename = "session.vim" })
+    local filepath = fc.path.locate_session_filepath({ filename = "session.vim" })
     vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
     return filepath
   end
 
   if pathtype == "state" then
-    local filepath = fml.path.locate_session_filepath({ filename = "state.json" })
+    local filepath = fc.path.locate_session_filepath({ filename = "state.json" })
     vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
     return filepath
   end
 
   if pathtype == "session_autosaved" then
-    local filepath = fml.path.locate_session_filepath({ filename = "session.autosave.vim" })
+    local filepath = fc.path.locate_session_filepath({ filename = "session.autosave.vim" })
     vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
     return filepath
   end
 
   if pathtype == "state_autosaved" then
-    local filepath = fml.path.locate_session_filepath({ filename = "state.autosave.json" })
+    local filepath = fc.path.locate_session_filepath({ filename = "state.autosave.json" })
     vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
     return filepath
   end
@@ -39,7 +39,7 @@ local function get_filepath(pathtype)
     message = "Unexpected pathtype.",
     details = { pathtype = pathtype }
   })
-  return fml.path.locate_session_filepath({ filename = "session.tmp.txt" })
+  return fc.path.locate_session_filepath({ filename = "session.tmp.txt" })
 end
 
 
@@ -49,13 +49,13 @@ local M = {}
 ---@return nil
 function M.clear_current()
   local filenames = { "session.vim", "state.vim", "session.autosave.nvim", "state.autosave.json" }
-  fml.path.remove_session_filepaths({ filenames = filenames })
+  fc.path.remove_session_filepaths({ filenames = filenames })
 end
 
 ---@return nil
 function M.clear_all()
   local filenames = { "session.vim", "state.vim", "session.autosave.nvim", "state.autosave.json" }
-  fml.path.remove_session_filepaths_all({ filenames = filenames })
+  fc.path.remove_session_filepaths_all({ filenames = filenames })
 end
 
 ---@return nil

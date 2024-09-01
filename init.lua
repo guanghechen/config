@@ -35,8 +35,8 @@ end
 ---! bootstrap lazy and all plugins
 ---@return nil
 local function load_plugins()
-  local lazypath = fml.path.locate_data_filepath("/lazy/lazy.nvim")
-  if not fml.path.is_exist(lazypath) then
+  local lazypath = fc.path.locate_data_filepath("/lazy/lazy.nvim")
+  if not fc.path.is_exist(lazypath) then
     local repo = "https://github.com/guanghechen/mirror"
     vim.fn.system({
       "git",
@@ -114,7 +114,7 @@ end
 ---@return nil
 local function load_autosave_session()
   ---! Reload session if not specify file and current directory is a git repository.
-  if ghc.context.session.flight_autoload_session:snapshot() and vim.fn.argc() < 1 and fml.path.is_git_repo() then
+  if ghc.context.session.flight_autoload_session:snapshot() and vim.fn.argc() < 1 and fc.path.is_git_repo() then
     vim.schedule(function()
       local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
       if not ok_load_session then
