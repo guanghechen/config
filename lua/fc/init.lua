@@ -6,6 +6,7 @@ local std = {
   is = require("fc.std.is"),
   json = require("fc.std.json"),
   md5 = require("fc.std.md5"),
+  navigate = require("fc.std.navigate"),
   os = require("fc.std.os"),
   reporter = require("fc.std.reporter"),
   string = require("fc.std.string"),

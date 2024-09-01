@@ -2,7 +2,7 @@ local Dirtier = require("fml.collection.dirtier")
 local Observable = require("fml.collection.observable")
 local Subscriber = require("fml.collection.subscriber")
 local scheduler = require("fml.std.scheduler")
-local navigate = require("fml.std.navigate")
+local navigate = require("fc.std.navigate")
 local oxi = require("fml.std.oxi")
 
 ---@class fml.ui.search.State : fml.types.ui.search.IState

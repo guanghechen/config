@@ -1,5 +1,5 @@
 local state = require("fml.api.state")
-local navigate = require("fml.std.navigate")
+local navigate = require("fc.std.navigate")
 local std_array = require("fc.std.array")
 
 ---@class fml.api.buf

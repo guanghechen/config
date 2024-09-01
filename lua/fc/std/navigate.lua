@@ -1,4 +1,4 @@
----@class fml.std.navigate
+---@class fc.std.navigate
 local M = {}
 
 ---@param current                       integer  current index

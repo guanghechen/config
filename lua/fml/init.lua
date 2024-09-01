@@ -43,7 +43,6 @@ local std = {
   highlight = require("fml.std.highlight"),
   fs = require("fml.std.fs"),
   lsp = require("fml.std.lsp"),
-  navigate = require("fml.std.navigate"),
   nvimbar = require("fml.std.nvimbar"),
   object = require("fml.std.object"),
   oxi = require("fml.std.oxi"),
