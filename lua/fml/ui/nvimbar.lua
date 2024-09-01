@@ -161,7 +161,7 @@ function M:enable(name)
 end
 
 ---@param name                          string
----@param position                      fml.enums.nvimbar.ComponentPosition
+---@param position                      fc.enums.NvimbarCompPosition
 ---@return fml.ui.Nvimbar
 function M:place(name, position)
   ---@type fml.types.ui.nvimbar.IItem
@@ -216,7 +216,7 @@ function M:render(force)
     for i = 1, #positions, 1 do
       local item = positions[i] ---@type fml.types.ui.nvimbar.IItem
       local name = item.name ---@type string
-      local position = item.position ---@type fml.enums.nvimbar.ComponentPosition
+      local position = item.position ---@type fc.enums.NvimbarCompPosition
 
       local component = components[name] ---@type fml.types.ui.nvimbar.IComponent|nil
       if component ~= nil and component.enabled then

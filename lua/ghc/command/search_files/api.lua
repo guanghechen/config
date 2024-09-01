@@ -134,7 +134,7 @@ function M.calc_preview_data(uuid)
     lines = preview_result.lines ---@type string[]
     highlights = {} ---@type ghc.command.search_files.IHighlight[]
     local lwidths = preview_result.lwidths ---@type integer[]
-    local matches = preview_result.matches ---@type fml.types.IMatchPoint[]
+    local matches = preview_result.matches ---@type fc.types.IMatchPoint[]
 
     local lnum0 = 1 ---@type integer
     local k = 1 ---@type integer
@@ -371,21 +371,21 @@ function M.fetch_data(input_text, force, callback)
 
           local r_lines = preview_result.lines ---@type string[]
           local r_lwidths = preview_result.lwidths ---@type integer[]
-          local r_matches = preview_result.matches ---@type fml.types.IMatchPoint[]
+          local r_matches = preview_result.matches ---@type fc.types.IMatchPoint[]
           local s_lines = block_match.lines ---@type string[]
           local s_lwidths = block_match.lwidths ---@type integer[]
-          local s_matches = block_match.matches ---@type fml.types.IMatchPoint[]
+          local s_matches = block_match.matches ---@type fc.types.IMatchPoint[]
           for i = 1, #s_matches, 1 do
-            local original_search_match = s_matches[i] ---@type fml.types.IMatchPoint
+            local original_search_match = s_matches[i] ---@type fc.types.IMatchPoint
             local k, col, col_end = calc_same_line_pos(s_lwidths, original_search_match.l, original_search_match.r)
             local line = s_lines[k] ---@type string
             local lnum = block_match.lnum + k - 1 ---@type integer
 
-            local search_match = r_matches[i * 2 - 1] ---@type fml.types.IMatchPoint
+            local search_match = r_matches[i * 2 - 1] ---@type fc.types.IMatchPoint
             local s_k, s_col = calc_same_line_pos(r_lwidths, search_match.l, search_match.r)
             local s_lnum = block_match.lnum + s_k - 1 + lnum_delta ---@type integer
 
-            local replace_match = r_matches[i * 2] ---@type fml.types.IMatchPoint
+            local replace_match = r_matches[i * 2] ---@type fc.types.IMatchPoint
             local r_k, r_col, r_col_end = calc_same_line_pos(r_lwidths, replace_match.l, replace_match.r)
             local r_line = r_lines[r_k] ---@type string
 
@@ -455,7 +455,7 @@ function M.fetch_data(input_text, force, callback)
         for _, block_match in ipairs(filematch.matches) do
           local lines = block_match.lines ---@type string[]
           local lwidths = block_match.lwidths ---@type integer[]
-          local matches = block_match.matches ---@type fml.types.IMatchPoint[]
+          local matches = block_match.matches ---@type fc.types.IMatchPoint[]
           for _, search_match in ipairs(matches) do
             local k, col, col_end = calc_same_line_pos(lwidths, search_match.l, search_match.r)
             local lnum = block_match.lnum + k - 1 ---@type integer
@@ -782,7 +782,7 @@ function M.replace_file(uuid)
     for i = 1, #locations, 1 do
       local child_uuid = remain_child_uuids[i] ---@type string
       local child_item = _item_map[child_uuid] ---@type ghc.command.search_files.IItem
-      local location = locations[i] ---@type fml.types.IMatchLocation
+      local location = locations[i] ---@type fc.types.IMatchLocation
       child_item.offset = location.offset
       child_item.lnum = location.lnum
       child_item.col = location.col

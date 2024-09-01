@@ -4,7 +4,7 @@ local M = require("fc.std.oxi.mod")
 ---@class fc.std.oxi.string.ILineMatch
 ---@field public lnum                   integer
 ---@field public score                  integer
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@param text                          string
 ---@return integer
@@ -45,7 +45,7 @@ end
 
 ---@param text                          string
 ---@param offsets                       integer[]
----@return fml.types.IMatchLocation[]
+---@return fc.types.IMatchLocation[]
 function M.get_locations(text, offsets)
   local ok, data =
     M.resolve_fun_result("fc.std.oxi.get_locations", M.nvim_tools.get_locations(text, table.concat(offsets, ",")))

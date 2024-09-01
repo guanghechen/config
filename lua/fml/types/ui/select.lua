@@ -32,7 +32,7 @@
 ---@field public order                  integer
 ---@field public uuid                   string
 ---@field public score                  integer
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fml.types.ui.select.IProvider
 ---@field public fetch_data             fml.types.ui.select.IFetchData

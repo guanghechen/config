@@ -9,7 +9,7 @@
 ---@field public filepath               string
 ---@field public fileicon               string
 ---@field public filetype               string
----@field public mode                   fml.enums.nvimbar.VimMode
+---@field public mode                   fc.enums.VimModeName
 ---@field public mode_name              string
 
 ---@class fml.types.ui.nvimbar.IRawComponent
@@ -30,11 +30,11 @@
 
 ---@class fml.types.ui.nvimbar.IItem
 ---@field public name                   string
----@field public position               fml.enums.nvimbar.ComponentPosition
+---@field public position               fc.enums.NvimbarCompPosition
 
 ---@class fml.types.ui.INvimbar
 ---@field public disable                fun(self: fml.types.ui.INvimbar, name: string): fml.types.ui.INvimbar
 ---@field public enable                 fun(self: fml.types.ui.INvimbar, name: string): fml.types.ui.INvimbar
----@field public place                  fun(self: fml.types.ui.INvimbar, name: string, position: fml.enums.nvimbar.ComponentPosition): fml.types.ui.INvimbar
+---@field public place                  fun(self: fml.types.ui.INvimbar, name: string, position: fc.enums.NvimbarCompPosition): fml.types.ui.INvimbar
 ---@field public register               fun(self: fml.types.ui.INvimbar, name: string, component: fml.types.ui.nvimbar.IRawComponent, enabled?: boolean): fml.types.ui.INvimbar
 ---@field public render                 fun(self: fml.types.ui.INvimbar, force: boolean): string

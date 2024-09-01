@@ -62,11 +62,11 @@ local M = require("fc.std.oxi.mod")
 
 ---@class fc.std.oxi.replace.replace_file_preview_advance.IRawResult
 ---@field public text                   string
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fc.std.oxi.replace.replace_file_preview_advance_by_matches.IRawResult
 ---@field public text                   string
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fc.std.oxi.replace.replace_text_preview.IRawResult
 ---@field public text                   string
@@ -76,11 +76,11 @@ local M = require("fc.std.oxi.mod")
 
 ---@class fc.std.oxi.replace.replace_text_preview_advance.IRawResult
 ---@field public text                   string
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fc.std.oxi.replace.replace_text_preview_advance_by_matches.IRawResult
 ---@field public text                   string
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fc.std.oxi.replace.replace_file.IResult
 ---@field public success                boolean
@@ -90,7 +90,7 @@ local M = require("fc.std.oxi.mod")
 ---| boolean
 
 ---@class fc.std.oxi.replace.replace_file_advance_by_matches.IResult
----@field public locations              fml.types.IMatchLocation[]
+---@field public locations              fc.types.IMatchLocation[]
 
 ---@class fc.std.oxi.replace.replace_file_preview.IResult
 ---@field public lines                  string[]
@@ -103,12 +103,12 @@ local M = require("fc.std.oxi.mod")
 ---@class fc.std.oxi.replace.replace_file_preview_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fc.std.oxi.replace.replace_file_preview_advance_by_matches.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fc.std.oxi.replace.replace_text_preview.IResult
 ---@field public lines                  string[]
@@ -121,12 +121,12 @@ local M = require("fc.std.oxi.mod")
 ---@class fc.std.oxi.replace.replace_text_preview_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fc.std.oxi.replace.replace_text_preview_advance_by_matches.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fc.std.oxi.replace.replace_file.IParams
 ---@field public cwd                    string
@@ -268,7 +268,7 @@ end
 
 ---@param params                        fc.std.oxi.replace.replace_file_advance_by_matches.IParams
 ---@return boolean
----@return fml.types.IMatchLocation[]
+---@return fc.types.IMatchLocation[]
 function M.replace_file_advance_by_matches(params)
   local search_pattern = params.search_pattern ---@type string
   local filepath = path.resolve(params.cwd, params.filepath) ---@type string

@@ -1,4 +1,0 @@
----@alias fml.enums.api.TermPosition
----| "bottom"
----| "right"
----| "float"

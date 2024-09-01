@@ -51,6 +51,6 @@
 
 ---@class fml.types.api.state.ITerm
 ---@field public name                   string
----@field public position               fml.enums.api.TermPosition
+---@field public position               fc.enums.TermPosition
 ---@field public bufnr                  integer
 ---@field public winnr                  integer|nil

@@ -19,7 +19,7 @@ local function match()
     local l = 1 ---@type integer
     local r = N1 ---@type integer
     local score = 0 ---@type integer
-    local pieces = {} ---@type fml.types.IMatchPoint[]
+    local pieces = {} ---@type fc.types.IMatchPoint[]
     local N2 = #text ---@type integer
     while r <= N2 do
       if string.sub(text, l, r) == input then

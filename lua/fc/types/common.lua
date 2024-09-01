@@ -16,3 +16,13 @@
 ---@generic T
 ---@alias fc.types.IValidate
 ---| fun(element: T): boolean
+
+---@class fc.types.IMatchLocation
+---@field public offset                 integer
+---@field public lnum                   integer
+---@field public col                    integer
+---@field public line                   string
+
+---@class fc.types.IMatchPoint
+---@field public l                      integer
+---@field public r                      integer

@@ -7,7 +7,7 @@ local M = require("fc.std.oxi.mod")
 ---@field public offset                 integer
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                fml.types.IMatchPoint[]
+---@field public matches                fc.types.IMatchPoint[]
 
 ---@class fc.std.oxi.search.IFileMatch
 ---@field public matches                fc.std.oxi.search.IBlockMatch[]
