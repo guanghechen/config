@@ -1,5 +1,5 @@
 local CircularQueue = require("fml.collection.circular_queue")
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 ---@param x                             fml.types.T
 ---@param y                             fml.types.T

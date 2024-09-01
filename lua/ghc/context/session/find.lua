@@ -67,7 +67,7 @@ function M.get_find_scope_cwd(dirpath)
     return dirpath
   end
 
-  fml.reporter.error({
+  fc.reporter.error({
     from = "ghc.context.session.find",
     subject = "get_find_scope_cwd",
     message = "Unknown scope.",

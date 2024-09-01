@@ -1,4 +1,4 @@
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 ---@class fml.std.scheduler
 local M = {}

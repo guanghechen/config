@@ -1,15 +1,15 @@
 local std_json = require("fc.std.json")
 
----@class fml.std.reporter
+---@class fc.std.reporter
 local M = {}
 
----@class fml.std.reporter.IReporterOptions
+---@class fc.std.reporter.IReporterOptions
 ---@field from string
 ---@field subject                       ?string
 ---@field message                       ?string
 ---@field details                       ?any
 
----@class fml.std.reporter.ReporterLevelEnum
+---@class fc.std.reporter.ReporterLevelEnum
 local ReporterLevelEnum = {
   DEBUG = vim.log.levels.DEBUG,
   INFO = vim.log.levels.INFO,
@@ -31,7 +31,7 @@ local function resolve_level(level)
   return result
 end
 
----@param options                       fml.std.reporter.IReporterOptions
+---@param options                       fc.std.reporter.IReporterOptions
 ---@param level                         integer
 ---@return nil
 local function log(options, level)
@@ -52,29 +52,29 @@ local function log(options, level)
   end)
 end
 
----@param options                       fml.std.reporter.IReporterOptions
+---@param options                       fc.std.reporter.IReporterOptions
 ---@param level                         ?fml.enums.reporter.Level
 function M.log(options, level)
   local level_value = resolve_level(level) ---@type number
   log(options, level_value)
 end
 
----@param options                       fml.std.reporter.IReporterOptions
+---@param options                       fc.std.reporter.IReporterOptions
 function M.debug(options)
   log(options, ReporterLevelEnum.DEBUG)
 end
 
----@param options                       fml.std.reporter.IReporterOptions
+---@param options                       fc.std.reporter.IReporterOptions
 function M.info(options)
   log(options, ReporterLevelEnum.INFO)
 end
 
----@param options                       fml.std.reporter.IReporterOptions
+---@param options                       fc.std.reporter.IReporterOptions
 function M.warn(options)
   log(options, ReporterLevelEnum.WARN)
 end
 
----@param options                       fml.std.reporter.IReporterOptions
+---@param options                       fc.std.reporter.IReporterOptions
 function M.error(options)
   log(options, ReporterLevelEnum.ERROR)
 end

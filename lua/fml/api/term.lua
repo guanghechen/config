@@ -1,6 +1,6 @@
 local constant = require("fml.constant")
 local state = require("fml.api.state")
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 ---@class fml.api.term
 local M = {}

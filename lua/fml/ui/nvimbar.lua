@@ -1,6 +1,6 @@
 local nvimbar = require("fml.std.nvimbar")
 local path = require("fml.std.path")
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 local util = require("fml.std.util")
 
 ---@class fml.ui.Nvimbar : fml.types.ui.INvimbar

@@ -24,7 +24,7 @@ local function get_select()
         local winnr = fml.api.state.win_history:present() ---@type integer|nil
         local win = winnr ~= nil and fml.api.state.wins[winnr] or nil ---@type fml.types.api.state.IWinItem|nil
         if win == nil then
-          fml.reporter.error({
+          fc.reporter.error({
             from = "fml.api.win",
             subject = "find_history",
             message = "Cannot find window.",

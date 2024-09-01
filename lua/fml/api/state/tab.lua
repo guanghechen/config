@@ -1,7 +1,7 @@
 local constant = require("fml.constant")
 local Observable = require("fml.collection.observable")
 local std_array = require("fc.std.array")
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 ---@class fml.api.state
 local M = require("fml.api.state.mod")

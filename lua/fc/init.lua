@@ -6,6 +6,7 @@ local std = {
   json = require("fc.std.json"),
   md5 = require("fc.std.md5"),
   os = require("fc.std.os"),
+  reporter = require("fc.std.reporter"),
   string = require("fc.std.string"),
   tmux = require("fc.std.tmux"),
 }

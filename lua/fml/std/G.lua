@@ -1,4 +1,4 @@
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 local id = 0 ---@type integer
 local gfn = {} ---@type table<string, fun(...): nil>

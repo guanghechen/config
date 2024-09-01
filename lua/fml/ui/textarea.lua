@@ -1,6 +1,6 @@
 local std_array = require("fc.std.array")
 local box = require("fc.std.box")
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 local util = require("fml.std.util")
 
 ---@type string

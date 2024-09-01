@@ -33,7 +33,7 @@ local function get_filepath(pathtype)
     return filepath
   end
 
-  fml.reporter.error({
+  fc.reporter.error({
     from = "ghc.command.session",
     subject = "get_filepath",
     message = "Unexpected pathtype.",
@@ -89,7 +89,7 @@ function M.save()
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 
-  fml.reporter.info({
+  fc.reporter.info({
     from = "ghc.command.sesession",
     subject = "save",
     message = "Session saved successfully!",
@@ -121,7 +121,7 @@ function M.load_autosaved()
       fml.api.state.load(state_fliepath)
     end
   else
-    fml.reporter.warn({
+    fc.reporter.warn({
       from = "ghc.command.session",
       subject = "load_autosaved",
       message = "Cannot find session filepath" .. session_filepath,

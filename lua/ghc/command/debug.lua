@@ -6,7 +6,7 @@ local transient = require("ghc.context.transient")
 local M = {}
 
 function M.inspect()
-  fml.reporter.info({
+  fc.reporter.info({
     from = "ghc.command.debug",
     subject = "inspect",
     details = {
@@ -27,7 +27,7 @@ function M.show_context()
     transient = transient:snapshot(),
   }
 
-  fml.reporter.info({
+  fc.reporter.info({
     from = "ghc.command.debug",
     subject = "show_context",
     details = context,
@@ -42,7 +42,7 @@ function M.show_context_all()
     transient = vim.tbl_deep_extend("force", {}, transient:snapshot_all()),
   }
 
-  fml.reporter.info({
+  fc.reporter.info({
     from = "ghc.command.debug",
     subject = "show_context_all",
     details = context,
@@ -61,7 +61,7 @@ function M.show_editor_state()
     wins[winnr] = item
   end
 
-  fml.reporter.info({
+  fc.reporter.info({
     from = "ghc.command.debug",
     subject = "show_editor_state",
     details = {
@@ -82,7 +82,7 @@ function M:show_input_state()
     find_files = state.find_files:dump(),
     search_in_files = state.search_in_files:dump(),
   }
-  fml.reporter.info({
+  fc.reporter.info({
     from = "ghc.command.debug",
     subject = "show_input_state",
     details = data,

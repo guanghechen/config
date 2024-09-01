@@ -118,7 +118,7 @@ local function load_autosave_session()
     vim.schedule(function()
       local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
       if not ok_load_session then
-        fml.reporter.error({
+        fc.reporter.error({
           from = "init",
           subject = "auto reload session",
           message = "Failed to load autosaved session",

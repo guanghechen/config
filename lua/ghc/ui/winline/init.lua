@@ -85,7 +85,7 @@ function M.update(winnr, force)
         vim.wo[winnr].winbar = result
       end)
       if not ok then
-        fml.reporter.error({
+        fc.reporter.error({
           from = "ghc.ui.winline",
           subject = "update",
           message = "Failed to update winbar.",

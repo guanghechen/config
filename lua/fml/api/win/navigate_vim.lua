@@ -1,4 +1,4 @@
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 local function navigate_window_prev()
   vim.cmd("wincmd p")

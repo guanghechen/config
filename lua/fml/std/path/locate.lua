@@ -1,5 +1,5 @@
 local md5 = require("fc.std.md5")
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 ---@class fml.std.path
 local M = require("fml.std.path.mod")

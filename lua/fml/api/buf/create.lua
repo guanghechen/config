@@ -2,7 +2,7 @@ local constant = require("fml.constant")
 local state = require("fml.api.state")
 local fs = require("fml.std.fs")
 local path = require("fml.std.path")
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 ---@class fml.api.buf
 local M = require("fml.api.buf.mod")

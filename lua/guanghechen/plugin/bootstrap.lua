@@ -103,7 +103,7 @@ for index = 1, #specs, 1 do
     spec_details.branch = spec_basic.branch
     spec_details.main = spec_basic.main
   elseif not fc.array.contains(no_details_module_names, spec_basic.name) then
-    fml.reporter.error({
+    fc.reporter.error({
       from = "guanghechen.plugin.bootstrap",
       subject = "resolve plugin details",
       message = "Failed to resolve the details of plugin: " .. spec_basic.name,

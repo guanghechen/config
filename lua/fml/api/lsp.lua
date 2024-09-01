@@ -1,6 +1,6 @@
 local state = require("fml.api.state")
 local lsp = require("fml.std.lsp")
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 local locating_set = {} ---@type table<integer, boolean>
 local dirty_set = {} ---@type table<integer, boolean>

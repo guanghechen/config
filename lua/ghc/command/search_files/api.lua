@@ -756,7 +756,7 @@ function M.replace_file(uuid)
     end
 
     if #locations ~= #remain_offsets then
-      fml.reporter.error({
+      fc.reporter.error({
         from = "ghc.command.search_files.api",
         subject = "replace_file",
         mesage = "Bad locations, the size of locations should match the given remain_offsets.",

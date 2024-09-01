@@ -1,5 +1,5 @@
 local BatchHandler = require("fml.collection.batch_handler")
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 ---@class fml.collection.BatchDisposable : fml.types.collection.IBatchDisposable
 local M = {}

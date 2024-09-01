@@ -1,4 +1,4 @@
-local reporter = require("fml.std.reporter")
+local reporter = require("fc.std.reporter")
 
 ---@class fml.std.oxi
 local M = require("fml.std.oxi.mod")
