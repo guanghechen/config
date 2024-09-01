@@ -21,7 +21,6 @@ local fn = {
 
 ---@class fml.std
 local std = {
-  lsp = require("fml.std.lsp"),
   util = require("fml.std.util"),
 }
 

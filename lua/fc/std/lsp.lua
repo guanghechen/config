@@ -1,4 +1,4 @@
----@class fml.std.lsp
+---@class fc.std.lsp
 local M = {}
 
 ---@param bufnr                         integer

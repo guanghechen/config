@@ -39,16 +39,16 @@ local function on_attach(client, bufnr)
   vim.keymap.set("n", "gwr", vim.lsp.buf.remove_workspace_folder, opts("lsp: Goto type definition"))
 
   -- code actions
-  if fml.lsp.has_support_method(bufnr, "codeLens") then
+  if fc.lsp.has_support_method(bufnr, "codeLens") then
     vim.keymap.set({ "n", "v" }, "<leader>cc", action_lsp.codelens_run, opts("lsp: CodeLens"))
     vim.keymap.set("n", "<leader>cC", action_lsp.codelens_refresh, opts("lsp: Refresh & Display Codelens"))
   end
-  if fml.lsp.has_support_method(bufnr, "codeAction") then
+  if fc.lsp.has_support_method(bufnr, "codeAction") then
     vim.keymap.set({ "n", "v" }, "<leader>ca", action_lsp.show_code_action, opts("lsp: Code action"))
     vim.keymap.set({ "n", "v" }, "<M-cr>", action_lsp.show_code_action, opts("lsp: Code action"))
     vim.keymap.set("n", "<leader>cA", action_lsp.show_code_action_source, opts("lsp: Source action"))
   end
-  if fml.lsp.has_support_method(bufnr, "rename") then
+  if fc.lsp.has_support_method(bufnr, "rename") then
     vim.keymap.set("n", "<leader>cr", action_lsp.rename, opts("lsp: Rename"))
   end
 end

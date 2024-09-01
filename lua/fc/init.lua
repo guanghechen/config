@@ -30,6 +30,7 @@ local std = {
   highlight = require("fc.std.highlight"),
   is = require("fc.std.is"),
   json = require("fc.std.json"),
+  lsp = require("fc.std.lsp"),
   md5 = require("fc.std.md5"),
   navigate = require("fc.std.navigate"),
   nvimbar = require("fc.std.nvimbar"),

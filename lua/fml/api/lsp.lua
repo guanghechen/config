@@ -1,6 +1,4 @@
 local state = require("fml.api.state")
-local lsp = require("fml.std.lsp")
-local reporter = require("fc.std.reporter")
 
 local locating_set = {} ---@type table<integer, boolean>
 local dirty_set = {} ---@type table<integer, boolean>
@@ -64,7 +62,7 @@ function M.locate_symbols(winnr, force)
 
   ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  if not lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
+  if not fc.lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
     return
   end
 
@@ -83,7 +81,7 @@ function M.locate_symbols(winnr, force)
     locating_set[winnr] = nil
 
     if err then
-      reporter.error({
+      fc.reporter.error({
         from = "fml.api.lsp",
         subject = "locate_symbols",
         message = "Failed to request document symbols",
