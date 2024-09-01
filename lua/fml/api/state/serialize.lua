@@ -1,8 +1,8 @@
+local std_array = require("fc.std.array")
 local Observable = require("fml.collection.observable")
 local fs = require("fml.std.fs")
 local path = require("fml.std.path")
 local reporter = require("fc.std.reporter")
-local std_set = require("fml.std.set")
 local util = require("fml.std.util")
 
 ---@param data                          fml.types.api.state.ISerializedData
@@ -163,7 +163,7 @@ function M.load(filepath)
         local tab = {
           name = item.name,
           bufnrs = bufnrs,
-          bufnr_set = std_set.from_integer_array(bufnrs),
+          bufnr_set = std_array.to_set(bufnrs),
           winnr_cur = Observable.from_value(winnr_cur),
         }
         tabs[real_tabnr] = tab

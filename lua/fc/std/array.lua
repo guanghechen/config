@@ -262,6 +262,17 @@ function M.to_comma_list(items, sep)
   return table.concat(items, sep or ",")
 end
 
+---@generic T
+---@param elements                      T[]
+---@return table<T, boolean>
+function M.to_set(elements)
+  local set = {}
+  for i = 1, #elements, 1 do
+    set[elements[i]] = true
+  end
+  return set
+end
+
 ---@param strs                                         string[]
 ---@return string[]
 function M.trim_and_filter(strs)
