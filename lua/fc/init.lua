@@ -2,6 +2,7 @@
 local std = {
   is = require("fc.std.is"),
   json = require("fc.std.json"),
+  os = require("fc.std.os"),
 }
 
 ---@class fc : fc.std

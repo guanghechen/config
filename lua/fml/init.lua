@@ -50,7 +50,6 @@ local std = {
   navigate = require("fml.std.navigate"),
   nvimbar = require("fml.std.nvimbar"),
   object = require("fml.std.object"),
-  os = require("fml.std.os"),
   oxi = require("fml.std.oxi"),
   path = require("fml.std.path"),
   reporter = require("fml.std.reporter"),

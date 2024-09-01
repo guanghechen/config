@@ -1,3 +1,8 @@
+_G.fc = require("fc")
+if fc.os.is_mac() or fc.os.is_nix() or fc.os.is_wsl() then
+  vim.opt.shell = "/bin/bash"
+end
+
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
 local function _load_config(name)
   require("guanghechen." .. name)
@@ -11,14 +16,6 @@ end
 
 ---@return nil
 local function bootstrap()
-  local os_name = vim.uv.os_uname().sysname ---@type string|nil
-  if os_name == "Windows_NT" then
-    vim.opt.shell = vim.env.SHELL
-  else
-    vim.opt.shell = "/bin/bash"
-  end
-
-  _G.fc = require("fc")
   _G.fml = require("fml")
   _G.ghc = require("ghc")
 

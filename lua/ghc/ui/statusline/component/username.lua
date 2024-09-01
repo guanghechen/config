@@ -1,9 +1,9 @@
 local function get_os_icon()
-  if fml.os.is_mac() then
+  if fc.os.is_mac() then
     return fml.ui.icons.os.mac
-  elseif fml.os.is_win() then
+  elseif fc.os.is_win() then
     return fml.ui.icons.os.dos
-  elseif fml.os.is_nix() or fml.os.is_wsl() then
+  elseif fc.os.is_nix() or fc.os.is_wsl() then
     return fml.ui.icons.os.unix
   else
     return fml.ui.icons.os.unknown

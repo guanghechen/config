@@ -5,7 +5,7 @@ local is_win = os_name == "Windows_NT" ---@type boolean
 local is_wsl = vim.fn.has("wsl") == 1 ---@type boolean
 local PATH_SEP = is_win and "\\" or "/" ---@type string
 
----@class fml.std.os
+---@class fc.std.os
 local M = {}
 
 ---@return boolean

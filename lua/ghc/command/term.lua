@@ -30,7 +30,7 @@ end
 
 ---@return nil
 function M.toggle_tmux()
-  if fml.os.is_win() then
+  if fc.os.is_win() then
     M.toggle_workspace()
   else
     fml.api.term.toggle_or_create({

@@ -245,7 +245,7 @@ local function get_select()
             text = text .. text_size
             width = width + width_size
 
-            if not fml.os.is_win() then
+            if not fc.os.is_win() then
               local sep_owner = string.rep(" ", 1) ---@type string
               local text_owner = fml.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
               local width_owner = string.len(text_owner) ---@type integer

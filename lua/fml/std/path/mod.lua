@@ -1,4 +1,4 @@
-local std_os = require("fml.std.os")
+local std_os = require("fc.std.os")
 
 local PATH_SEP = std_os.path_sep() ---@type string
 

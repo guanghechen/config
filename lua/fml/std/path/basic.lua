@@ -1,4 +1,4 @@
-local std_os = require("fml.std.os")
+local std_os = require("fc.std.os")
 
 ---@class fml.std.path
 local M = require("fml.std.path.mod")
