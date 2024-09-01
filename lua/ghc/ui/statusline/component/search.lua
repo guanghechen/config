@@ -22,13 +22,13 @@ local M = {
         local text = " " .. item.symbol .. " " ---@type string
         local hlname = flag and "f_sl_flag_enabled" or "f_sl_flag" ---@type string
         width = width + vim.fn.strwidth(text)
-        hl_text = hl_text .. fml.nvimbar.btn(fml.nvimbar.txt(text, hlname), fn)
+        hl_text = hl_text .. fc.nvimbar.btn(fc.nvimbar.txt(text, hlname), fn)
       elseif item.type == "enum" then
         local flag = item.state:snapshot() ---@type boolean
         local text = " " .. flag .. " " ---@type string
         local hlname = "f_sl_flag_scope"
         width = width + vim.fn.strwidth(text)
-        hl_text = hl_text .. fml.nvimbar.btn(fml.nvimbar.txt(text, hlname), fn)
+        hl_text = hl_text .. fc.nvimbar.btn(fc.nvimbar.txt(text, hlname), fn)
       end
     end
 

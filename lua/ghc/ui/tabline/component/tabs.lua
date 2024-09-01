@@ -4,14 +4,14 @@ local last_tab_cur = 0 ---@type integer
 local last_tab_count = 0 ---@type integer
 
 ---@type string
-local fn_active_tab = fml.G.register_anonymous_fn(function(tabnr)
+local fn_active_tab = fc.G.register_anonymous_fn(function(tabnr)
   if type(tabnr) == "number" and vim.api.nvim_tabpage_is_valid(tabnr) then
     fml.api.tab.go(tabnr)
   end
 end) or ""
 
 ---@type string
-local fn_toggle_tabs_folded = fml.G.register_anonymous_fn(function()
+local fn_toggle_tabs_folded = fc.G.register_anonymous_fn(function()
   folded = not folded
   dirty = true
   vim.cmd("redrawtabline")
@@ -39,23 +39,23 @@ local M = {
     if folded then
       local text = " 󰅁 "
       local width = vim.fn.strwidth(text)
-      local hl_text = fml.nvimbar.txt(text, "f_tl_tab_toggle")
-      hl_text = fml.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
+      local hl_text = fc.nvimbar.txt(text, "f_tl_tab_toggle")
+      hl_text = fc.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
       return hl_text, width
     end
 
     local text = " 󰅂 " ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
-    local hl_text = fml.nvimbar.txt(text, "f_tl_tab_toggle")
-    hl_text = fml.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
+    local hl_text = fc.nvimbar.txt(text, "f_tl_tab_toggle")
+    hl_text = fc.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
 
     local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
     for tabid = 1, last_tab_count, 1 do
       local hlname = last_tab_cur == tabid and "f_tl_tab_item_cur" or "f_tl_tab_item"
       text = " " .. tabid .. " "
       width = width + vim.fn.strwidth(text)
-      local hl_text_inner = fml.nvimbar.txt(text, hlname)
-      hl_text = hl_text .. fml.nvimbar.btn(hl_text_inner, fn_active_tab, tabnrs[tabid])
+      local hl_text_inner = fc.nvimbar.txt(text, hlname)
+      hl_text = hl_text .. fc.nvimbar.btn(hl_text_inner, fn_active_tab, tabnrs[tabid])
     end
     return hl_text, width
   end,

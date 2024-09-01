@@ -1,4 +1,4 @@
-local nvimbar = require("fml.std.nvimbar")
+local nvimbar = require("fc.std.nvimbar")
 local path = require("fc.std.path")
 local reporter = require("fc.std.reporter")
 local util = require("fml.std.util")

@@ -24,7 +24,7 @@ local M = {
   end,
   render = function(context)
     local text = get_filepath(context) ---@type string
-    local hl_text = fml.nvimbar.txt(text, "f_sl_text")
+    local hl_text = fc.nvimbar.txt(text, "f_sl_text")
     local width = vim.fn.strwidth(text)
     return hl_text, width
   end,

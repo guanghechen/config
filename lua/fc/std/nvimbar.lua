@@ -1,4 +1,4 @@
----@class fml.std.nvimbar
+---@class fc.std.nvimbar
 local M = {}
 
 ---@param num                           integer
@@ -57,12 +57,7 @@ function M.btn(text, callback, args)
   if type(args) == "table" then
     args_str = M.encode_btn_args(args)
   end
-  ---@cast args_str integer|string
-
-  if callback.sub(callback, 1, 3) == "fml" then
-    return "%" .. args_str .. "@v:lua." .. callback .. "@" .. text .. "%T"
-  end
-  return "%" .. args_str .. "@v:lua.fml.G." .. callback .. "@" .. text .. "%T"
+  return "%" .. args_str .. "@v:lua." .. callback .. "@" .. text .. "%T"
 end
 
 return M

@@ -10,7 +10,7 @@ local M = {
     local status = require("copilot.api").status.data.status
     local text = fml.ui.icons.cmp.copilot .. " " ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
-    local hl_text = fml.nvimbar.txt(text, (status == nil or #status < 1) and "f_sl_text" or ("f_sl_copilot_" .. status))
+    local hl_text = fc.nvimbar.txt(text, (status == nil or #status < 1) and "f_sl_text" or ("f_sl_copilot_" .. status))
     return hl_text, width
   end,
 }

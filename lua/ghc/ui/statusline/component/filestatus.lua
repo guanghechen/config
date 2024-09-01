@@ -33,7 +33,7 @@ local M = {
     end
 
     local text_filestatus = " " .. status ---@type string
-    local hl_text = fml.nvimbar.txt(text_filestatus, "f_sl_text") ---@type string
+    local hl_text = fc.nvimbar.txt(text_filestatus, "f_sl_text") ---@type string
     local width = vim.fn.strwidth(text_filestatus)
     return hl_text, width
   end,

@@ -23,7 +23,7 @@ local M = {
     local row, col, percentage = calc_row_percentage() ---@type integer, integer, string
     local text_anchor = "" .. row .. "·" .. col .. " " ---@type string
     local text_pos = " " .. percentage .. " " ---@type string
-    local hl_text = fml.nvimbar.txt(text_anchor, "f_sl_text") .. fml.nvimbar.txt(text_pos, "f_sl_pos") ---@type string
+    local hl_text = fc.nvimbar.txt(text_anchor, "f_sl_text") .. fc.nvimbar.txt(text_pos, "f_sl_pos") ---@type string
     local width = vim.fn.strwidth(text_anchor .. text_pos) ---@type integer
     return hl_text, width
   end,

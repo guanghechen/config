@@ -20,6 +20,7 @@ local oxi = require("fc.oxi")
 
 ---@class fc.std
 local std = {
+  G = require("fc.std.G"),
   array = require("fc.std.array"),
   boolean = require("fc.std.boolean"),
   box = require("fc.std.box"),
@@ -31,6 +32,7 @@ local std = {
   json = require("fc.std.json"),
   md5 = require("fc.std.md5"),
   navigate = require("fc.std.navigate"),
+  nvimbar = require("fc.std.nvimbar"),
   object = require("fc.std.object"),
   os = require("fc.std.os"),
   path = require("fc.std.path"),

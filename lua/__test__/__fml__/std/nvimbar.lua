@@ -2,8 +2,8 @@ fml.debug.log({
   a = vim.o.columns,
   b = #" ",
   c = vim.fn.strwidth(" "),
-  d = #fml.nvimbar.txt(" ", "Number"),
-  e = vim.fn.strwidth(fml.nvimbar.txt(" ", "Comment")),
+  d = #fc.nvimbar.txt(" ", "Number"),
+  e = vim.fn.strwidth(fc.nvimbar.txt(" ", "Comment")),
   f = vim.api.nvim_win_get_width(0),
 })
 

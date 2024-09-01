@@ -1,5 +1,5 @@
 ---@type string
-local fn_active_buf = fml.G.register_anonymous_fn(function(bufnr)
+local fn_active_buf = fc.G.register_anonymous_fn(function(bufnr)
   if type(bufnr) == "number" and vim.api.nvim_buf_is_valid(bufnr) then
     fml.api.buf.go(bufnr)
   end
@@ -30,14 +30,14 @@ local function render_buf(bufnr, is_current, is_first)
   local hl_mod = is_current and "f_tl_buf_mod_cur" or "f_tl_buf_mod" ---@type string
   local hl_icon = buf.fileicon_hl .. (is_current and "_tl_buf_cur" or "_tl_buf") ---@type string
 
-  local hl_text_left_pad = fml.nvimbar.txt(text_left_pad, hl_left_pad)
-  local hl_text_icon = fml.nvimbar.txt(text_icon, hl_icon)
-  local hl_text_title = fml.nvimbar.txt(text_title, hl_title)
-  local hl_text_mod = is_mod and fml.nvimbar.txt(text_mod, hl_mod) or text_mod
+  local hl_text_left_pad = fc.nvimbar.txt(text_left_pad, hl_left_pad)
+  local hl_text_icon = fc.nvimbar.txt(text_icon, hl_icon)
+  local hl_text_title = fc.nvimbar.txt(text_title, hl_title)
+  local hl_text_mod = is_mod and fc.nvimbar.txt(text_mod, hl_mod) or text_mod
 
   local hl_text = "%#" .. hl_buf .. "#" .. hl_text_left_pad .. hl_text_icon .. hl_text_title .. hl_text_mod ---@type string
   local width = vim.fn.strwidth(text_left_pad .. text_icon .. text_title .. text_mod) ---@type integer
-  return fml.nvimbar.btn(hl_text, fn_active_buf, bufnr), width
+  return fc.nvimbar.btn(hl_text, fn_active_buf, bufnr), width
 end
 
 ---@type fml.types.ui.nvimbar.IRawComponent

@@ -7,7 +7,7 @@ local M = {
   render = function(context)
     local cwd_name = (context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd)
     local text = " 󰉋 " .. cwd_name .. " " ---@type string
-    local hl_text = fml.nvimbar.txt(text, "f_tl_cwd") ---@type string
+    local hl_text = fc.nvimbar.txt(text, "f_tl_cwd") ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
     return hl_text, width
   end,
