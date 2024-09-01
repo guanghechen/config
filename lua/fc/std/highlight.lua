@@ -1,4 +1,4 @@
----@class fml.std.highlight
+---@class fc.std.highlight
 local M = {}
 
 ---@param fg_hlname                     string
