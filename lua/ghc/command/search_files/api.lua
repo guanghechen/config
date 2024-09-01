@@ -4,7 +4,7 @@ local state = require("ghc.command.search_files.state")
 ---@class ghc.command.search_files.IFileItem
 ---@field public children               string[]
 ---@field public fragmentary            boolean
----@field public filematch              ?fml.std.oxi.search.IFileMatch|nil
+---@field public filematch              ?fc.std.oxi.search.IFileMatch|nil
 
 ---@class ghc.command.search_files.IItem
 ---@field public filepath               string
@@ -26,7 +26,7 @@ local _fileitem_map = {} ---@type table<string, ghc.command.search_files.IFileIt
 local _item_map = {} ---@type table<string, ghc.command.search_files.IItem>
 local _last_preview_data = nil ---@type ghc.command.search_files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
-local _last_search_result = nil ---@type fml.std.oxi.search.IResult|nil
+local _last_search_result = nil ---@type fc.std.oxi.search.IResult|nil
 fml.fn.watch_observables({
   session.search_exclude_patterns,
   session.search_flag_case_sensitive,
@@ -120,8 +120,8 @@ function M.calc_preview_data(uuid)
   local cur_col = 0 ---@type integer
 
   if flag_replace then
-    ---@type fml.std.oxi.replace.replace_file_preview_advance_by_matches.IResult
-    local preview_result = fml.oxi.replace_file_preview_advance_by_matches({
+    ---@type fc.std.oxi.replace.replace_file_preview_advance_by_matches.IResult
+    local preview_result = fc.oxi.replace_file_preview_advance_by_matches({
       flag_case_sensitive = flag_case_sensitive,
       flag_regex = flag_regex,
       search_pattern = search_pattern,
@@ -186,7 +186,7 @@ function M.calc_preview_data(uuid)
     lines = fc.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
     highlights = {} ---@type ghc.command.search_files.IHighlight[]
 
-    local filematch = M.get_filematch(item.filepath) ---@type fml.std.oxi.search.IFileMatch|nil
+    local filematch = M.get_filematch(item.filepath) ---@type fc.std.oxi.search.IFileMatch|nil
     if filematch ~= nil then
       local order = 0 ---@type integer
       for _, block_match in ipairs(filematch.matches) do
@@ -281,7 +281,7 @@ function M.fetch_data(input_text, force, callback)
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
   local is_searching_current_buf = scope == "B" and current_buf_path ~= nil ---@type boolean
 
-  ---@type fml.std.oxi.search.IResult|nil
+  ---@type fc.std.oxi.search.IResult|nil
   local result = (
     not force
     and _last_search_input ~= nil
@@ -289,7 +289,7 @@ function M.fetch_data(input_text, force, callback)
     and _last_search_result ~= nil
   )
       and _last_search_result
-    or fml.oxi.search({
+    or fc.oxi.search({
       cwd = cwd,
       flag_case_sensitive = flag_case_sensitive,
       flag_gitignore = flag_gitignore,
@@ -317,7 +317,7 @@ function M.fetch_data(input_text, force, callback)
   local fileitem_map = {} ---@type table<string, ghc.command.search_files.IFileItem>
   local item_map = {} ---@type table<string, ghc.command.search_files.IItem>
   for _, filepath in ipairs(result.item_orders) do
-    local filematch = result.items[filepath] ---@type fml.std.oxi.search.IFileMatch|nil
+    local filematch = result.items[filepath] ---@type fc.std.oxi.search.IFileMatch|nil
     if filematch ~= nil then
       ---@type ghc.command.search_files.IFileItem
       local fileitem = {
@@ -359,8 +359,8 @@ function M.fetch_data(input_text, force, callback)
       if flag_replace then
         local lnum_delta = 0 ---@type integer
         for _, block_match in ipairs(filematch.matches) do
-          ---@type fml.std.oxi.replace.replace_text_preview_advance.IResult
-          local preview_result = fml.oxi.replace_text_preview_advance({
+          ---@type fc.std.oxi.replace.replace_text_preview_advance.IResult
+          local preview_result = fc.oxi.replace_text_preview_advance({
             flag_case_sensitive = flag_case_sensitive,
             flag_regex = flag_regex,
             keep_search_pieces = true,
@@ -543,7 +543,7 @@ function M.gen_quickfix_items()
 end
 
 ---@param filepath                      string
----@return fml.std.oxi.search.IFileMatch|nil
+---@return fc.std.oxi.search.IFileMatch|nil
 function M.get_filematch(filepath)
   local fileitem = _fileitem_map[filepath] ---@type ghc.command.search_files.IFileItem|nil
   if fileitem == nil then
@@ -670,8 +670,8 @@ function M.refresh_file_item(filepath)
     local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
     local specified_filepath = fc.path.join(cwd, filepath) ---@type string
 
-    ---@type fml.std.oxi.search.IResult|nil
-    local partial_search_result = fml.oxi.search({
+    ---@type fc.std.oxi.search.IResult|nil
+    local partial_search_result = fc.oxi.search({
       cwd = cwd,
       flag_case_sensitive = flag_case_sensitive,
       flag_gitignore = flag_gitignore,
@@ -688,7 +688,7 @@ function M.refresh_file_item(filepath)
     if partial_search_result ~= nil and partial_search_result.error == nil and partial_search_result.items ~= nil then
       _last_search_result.items[filepath] = nil
       for _, raw_filepath in ipairs(partial_search_result.item_orders) do
-        local filematch = partial_search_result.items[raw_filepath] ---@type fml.std.oxi.search.IFileMatch|nil
+        local filematch = partial_search_result.items[raw_filepath] ---@type fc.std.oxi.search.IFileMatch|nil
         if filematch ~= nil then
           _last_search_result.items[raw_filepath] = filematch
         end
@@ -740,7 +740,7 @@ function M.replace_file(uuid)
       end
     end
 
-    local succeed, locations = fml.oxi.replace_file_advance_by_matches({
+    local succeed, locations = fc.oxi.replace_file_advance_by_matches({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -814,7 +814,7 @@ function M.replace_file(uuid)
     end
 
     ---@type boolean
-    succeed = fml.oxi.replace_file_by_matches({
+    succeed = fc.oxi.replace_file_by_matches({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -825,7 +825,7 @@ function M.replace_file(uuid)
     })
   else
     ---@type boolean
-    succeed = fml.oxi.replace_file({
+    succeed = fc.oxi.replace_file({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -872,7 +872,7 @@ function M.replace_file_all()
         end
       end
 
-      fml.oxi.replace_file_by_matches({
+      fc.oxi.replace_file_by_matches({
         cwd = cwd,
         filepath = filepath,
         flag_case_sensitive = flag_case_sensitive,
@@ -883,7 +883,7 @@ function M.replace_file_all()
       })
     else
       ---@type boolean
-      fml.oxi.replace_file({
+      fc.oxi.replace_file({
         cwd = cwd,
         filepath = filepath,
         flag_case_sensitive = flag_case_sensitive,

@@ -17,7 +17,7 @@ end
 
 local function test_2()
   fml.debug.log({
-    fml.oxi.search({
+    fc.oxi.search({
       cwd = fc.path.cwd(),
       flag_case_sensitive = true,
       flag_gitignore = true,

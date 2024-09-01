@@ -39,9 +39,9 @@ local function fetch_diritem(dirpath, force)
     local owner_width = 0 ---@type integer
     local group_width = 0 ---@type integer
 
-    local raw_data = fml.oxi.readdir(dirpath) ---@type fml.std.oxi.IReaddirResult|nil
+    local raw_data = fc.oxi.readdir(dirpath) ---@type fc.std.oxi.IReaddirResult|nil
     if raw_data ~= nil then
-      local raw_itself = raw_data.itself ---@type fml.std.oxi.IFileItemWithStatus
+      local raw_itself = raw_data.itself ---@type fc.std.oxi.IFileItemWithStatus
 
       ---@type ghc.command.file_explorer.IFileItem
       local itself = {

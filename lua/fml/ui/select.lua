@@ -1,6 +1,6 @@
 local Observable = require("fc.collection.observable")
 local std_array = require("fc.std.array")
-local oxi = require("fml.std.oxi")
+local oxi = require("fc.std.oxi")
 local icons = require("fml.ui.icons")
 local Search = require("fml.ui.search.search")
 
@@ -421,7 +421,7 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  ---@type fml.std.oxi.string.ILineMatch[]|nil
+  ---@type fc.std.oxi.string.ILineMatch[]|nil
   local oxi_matches = oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
   if oxi_matches == nil then
     return old_matches

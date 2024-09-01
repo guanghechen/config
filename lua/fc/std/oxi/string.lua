@@ -1,7 +1,7 @@
----@class fml.std.oxi
-local M = require("fml.std.oxi.mod")
+---@class fc.std.oxi
+local M = require("fc.std.oxi.mod")
 
----@class fml.std.oxi.string.ILineMatch
+---@class fc.std.oxi.string.ILineMatch
 ---@field public lnum                   integer
 ---@field public score                  integer
 ---@field public matches                fml.types.IMatchPoint[]
@@ -16,17 +16,17 @@ end
 ---@param lines                         string[]
 ---@param flag_fuzzy                    boolean
 ---@param flag_regex                    boolean
----@return fml.std.oxi.string.ILineMatch[]|nil
+---@return fc.std.oxi.string.ILineMatch[]|nil
 function M.find_match_points_line_by_line(pattern, lines, flag_fuzzy, flag_regex)
   local text = table.concat(lines, "\n") ---@type string
 
   local ok, data = M.resolve_fun_result(
-    "fml.std.oxi.find_match_points_line_by_line",
+    "fc.std.oxi.find_match_points_line_by_line",
     M.nvim_tools.find_match_points_line_by_line(pattern, text, flag_fuzzy, flag_regex)
   )
 
   if ok then
-    ---@cast data fml.std.oxi.string.ILineMatch[]
+    ---@cast data fc.std.oxi.string.ILineMatch[]
     return data
   end
   return nil
@@ -48,7 +48,7 @@ end
 ---@return fml.types.IMatchLocation[]
 function M.get_locations(text, offsets)
   local ok, data =
-    M.resolve_fun_result("fml.std.oxi.get_locations", M.nvim_tools.get_locations(text, table.concat(offsets, ",")))
+    M.resolve_fun_result("fc.std.oxi.get_locations", M.nvim_tools.get_locations(text, table.concat(offsets, ",")))
   return ok and data or {}
 end
 

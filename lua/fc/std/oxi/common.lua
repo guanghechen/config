@@ -1,14 +1,14 @@
 local reporter = require("fc.std.reporter")
 
----@class fml.std.oxi
-local M = require("fml.std.oxi.mod")
+---@class fc.std.oxi
+local M = require("fc.std.oxi.mod")
 
----@class fml.std.oxi.ICmdResult
+---@class fc.std.oxi.ICmdResult
 ---@field public cmd                    string
 ---@field public error                  ?string
 ---@field public data                   ?any
 
----@class fml.std.oxi.IFunResult
+---@class fc.std.oxi.IFunResult
 ---@field public error                  ?string
 ---@field public data                   ?any
 
@@ -38,7 +38,7 @@ function M.resolve_cmd_result(from, result_str)
     return false, nil
   end
 
-  ---@cast result fml.std.oxi.ICmdResult
+  ---@cast result fc.std.oxi.ICmdResult
   return true, result.data
 end
 
@@ -57,7 +57,7 @@ function M.resolve_fun_result(from, result_str)
     return false, nil
   end
 
-  ---@cast result fml.std.oxi.IFunResult
+  ---@cast result fc.std.oxi.IFunResult
   return true, result.data
 end
 

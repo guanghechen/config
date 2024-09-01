@@ -1,7 +1,7 @@
 ---@diagnostic disable: unused-function, unused-local
 local function match()
   ---@type string[]
-  local items = fml.oxi.find({
+  local items = fc.oxi.find({
     workspace = fc.path.workspace(),
     cwd = fc.path.cwd(),
     flag_case_sensitive = false,

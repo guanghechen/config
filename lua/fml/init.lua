@@ -25,7 +25,6 @@ local std = {
   highlight = require("fml.std.highlight"),
   lsp = require("fml.std.lsp"),
   nvimbar = require("fml.std.nvimbar"),
-  oxi = require("fml.std.oxi"),
   statuscolumn = require("fml.std.statuscolumn"),
   util = require("fml.std.util"),
 }

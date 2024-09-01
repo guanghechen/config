@@ -1,7 +1,7 @@
----@class fml.std.oxi
-local M = require("fml.std.oxi.mod")
+---@class fc.std.oxi
+local M = require("fc.std.oxi.mod")
 
----@class fml.std.oxi.search.IBlockMatch
+---@class fc.std.oxi.search.IBlockMatch
 ---@field public lnum                   integer
 ---@field public text                   string
 ---@field public offset                 integer
@@ -9,16 +9,16 @@ local M = require("fml.std.oxi.mod")
 ---@field public lwidths                integer[]
 ---@field public matches                fml.types.IMatchPoint[]
 
----@class fml.std.oxi.search.IFileMatch
----@field public matches                fml.std.oxi.search.IBlockMatch[]
+---@class fc.std.oxi.search.IFileMatch
+---@field public matches                fc.std.oxi.search.IBlockMatch[]
 
----@class fml.std.oxi.search.IResult
+---@class fc.std.oxi.search.IResult
 ---@field public elapsed_time           string
----@field public items                  ?table<string, fml.std.oxi.search.IFileMatch>
+---@field public items                  ?table<string, fc.std.oxi.search.IFileMatch>
 ---@field public item_orders            ?string[]
 ---@field public error                  ?string
 
----@class fml.std.oxi.search.IParams
+---@class fc.std.oxi.search.IParams
 ---@field public cwd                    string
 ---@field public flag_regex             boolean
 ---@field public flag_gitignore         boolean
@@ -31,11 +31,11 @@ local M = require("fml.std.oxi.mod")
 ---@field public exclude_patterns       string
 ---@field public specified_filepath     ?string
 
----@param params                        fml.std.oxi.search.IParams
----@return fml.std.oxi.search.IResult|nil
+---@param params                        fc.std.oxi.search.IParams
+---@return fc.std.oxi.search.IResult|nil
 function M.search(params)
   local payload = M.json.stringify(params) ---@type string
-  local ok, data = M.run_cmd("fml.std.oxi.search", M.nvim_tools.search, payload)
+  local ok, data = M.run_cmd("fc.std.oxi.search", M.nvim_tools.search, payload)
 
   if ok and data ~= nil and data.items ~= nil then
     local orders = {}

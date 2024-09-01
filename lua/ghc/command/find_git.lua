@@ -4,7 +4,7 @@ local frecency = state_frecency.load_and_autosave().files ---@type fc.types.coll
 ---@return fml.types.ui.simple_file_select.IData
 local function provide()
   local result = vim.fn.system("git diff HEAD --name-only") ---@type string
-  local lines = fml.oxi.parse_lines(result) ---@type string[]
+  local lines = fc.oxi.parse_lines(result) ---@type string[]
 
   local workspace = fc.path.workspace() ---@type string
   local cwd = fc.path.cwd() ---@type string

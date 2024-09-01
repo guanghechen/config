@@ -3,7 +3,7 @@ local Observable = require("fc.collection.observable")
 local Subscriber = require("fc.collection.subscriber")
 local scheduler = require("fc.std.scheduler")
 local navigate = require("fc.std.navigate")
-local oxi = require("fml.std.oxi")
+local oxi = require("fc.std.oxi")
 
 ---@class fml.ui.search.State : fml.types.ui.search.IState
 ---@field protected _deleted_uuids      table<string, boolean>

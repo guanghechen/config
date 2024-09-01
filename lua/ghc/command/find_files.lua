@@ -227,7 +227,7 @@ local function get_select()
         local flag_gitignore = session.find_flag_gitignore:snapshot() ---@type boolean
 
         ---@type string[]
-        local filepaths = fml.oxi.find({
+        local filepaths = fc.oxi.find({
           workspace = workspace,
           cwd = cwd,
           flag_case_sensitive = false,

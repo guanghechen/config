@@ -1,4 +1,4 @@
-local oxi = require("fml.std.oxi")
+local oxi = require("fc.std.oxi")
 local icons = require("fml.ui.icons")
 
 ---@class fml.ui.signcolumn

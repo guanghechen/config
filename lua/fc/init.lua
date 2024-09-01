@@ -28,6 +28,7 @@ local std = {
   navigate = require("fc.std.navigate"),
   object = require("fc.std.object"),
   os = require("fc.std.os"),
+  oxi = require("fc.std.oxi"),
   path = require("fc.std.path"),
   reporter = require("fc.std.reporter"),
   scheduler = require("fc.std.scheduler"),

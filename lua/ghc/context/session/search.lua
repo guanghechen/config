@@ -4,7 +4,7 @@ local scopes = { "W", "C", "D", "B" }
 ---@param paths                         string
 ---@return string
 local function normalize_paths(paths)
-  return fml.oxi.normalize_comma_list(paths) ---@type string
+  return fc.oxi.normalize_comma_list(paths) ---@type string
 end
 
 local search_exclude_patterns = fc.c.Observable.new({
