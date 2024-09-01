@@ -1,6 +1,6 @@
 local std_os = require("fc.std.os")
 local path = require("fml.std.path")
-local tmux = require("fml.std.tmux")
+local tmux = require("fc.std.tmux")
 local reporter = require("fml.std.reporter")
 
 ---@class fml.std.clipboard

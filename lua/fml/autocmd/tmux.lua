@@ -1,4 +1,4 @@
-local std_tmux = require("fml.std.tmux")
+local std_tmux = require("fc.std.tmux")
 local global = require("fml.global")
 
 if vim.env.TMUX then

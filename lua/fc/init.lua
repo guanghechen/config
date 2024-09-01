@@ -6,6 +6,7 @@ local std = {
   md5 = require("fc.std.md5"),
   os = require("fc.std.os"),
   string = require("fc.std.string"),
+  tmux = require("fc.std.tmux"),
 }
 
 ---@class fc : fc.std
