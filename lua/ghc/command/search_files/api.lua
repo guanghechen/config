@@ -93,7 +93,7 @@ function M.calc_preview_data(uuid)
   end
 
   local cwd = state.search_cwd:snapshot() ---@type string
-  local filepath = eve.path.join(cwd, item.filepath) ---@type string
+  local filepath = eve.path.resolve(cwd, item.filepath) ---@type string
   local filename = eve.path.basename(filepath) ---@type string
   if not eve.is.printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
@@ -529,7 +529,7 @@ function M.gen_quickfix_items()
   local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
   for _, item in pairs(_item_map) do
     if item.offset >= 0 then
-      local absolute_filepath = eve.path.join(search_cwd, item.filepath) ---@type string
+      local absolute_filepath = eve.path.resolve(search_cwd, item.filepath) ---@type string
       local relative_filepath = eve.path.relative(cwd, absolute_filepath, false) ---@type string
       table.insert(quickfix_items, {
         filename = relative_filepath,
@@ -564,7 +564,7 @@ function M.open_file(item, frecency)
   local workspace = eve.path.workspace() ---@type string
   local data = _item_map and _item_map[item.uuid] ---@type ghc.command.search_files.IItem|nil
   if data ~= nil then
-    local absolute_filepath = eve.path.join(cwd, data.filepath) ---@type string
+    local absolute_filepath = eve.path.resolve(cwd, data.filepath) ---@type string
     local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string
     frecency:access(relative_filepath)
     local opened = fml.api.buf.open_in_current_valid_win(absolute_filepath) ---@type boolean
@@ -668,7 +668,7 @@ function M.refresh_file_item(filepath)
     local search_pattern = session.search_pattern:snapshot() ---@type string
     local include_patterns = session.search_include_patterns:snapshot() ---@type string
     local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
-    local specified_filepath = eve.path.join(cwd, filepath) ---@type string
+    local specified_filepath = eve.path.resolve(cwd, filepath) ---@type string
 
     ---@type eve.oxi.search.IResult|nil
     local partial_search_result = eve.oxi.search({
