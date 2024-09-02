@@ -1,9 +1,16 @@
 # Enable vi mode
 fish_vi_key_bindings
 
+set -gx XDG_CONFIG_HOME                 "$HOME/.config"
+
 # Set encoding
 set -gx LC_CTYPE                        en_US.UTF-8
 set -gx LC_ALL                          en_US.UTF-8
+set -gx PYTHONIOENCODING                utf8
+set -gx PYTHONUTF8                      1
+
+# Timezone
+set -gx TZ                              'Asia/Shanghai'
 
 # Enable true color
 set -gx TERM xterm-256color
@@ -77,9 +84,14 @@ alias ln='ln -i'
 alias ls='ls --color=auto'
 alias mkdir='mkdir -pv'
 alias mv='mv -i'
-alias rm='rm -i -I'
+alias rm='rm -i -I --preserve-root'
 alias tree-list='tree --dirsfirst -aCF'
 alias vdir='vdir --color=auto'
+
+### Parenting changing perms on /
+alias chown='chown --preserve-root'
+alias chmod='chmod --preserve-root'
+alias chgrp='chgrp --preserve-root'
 
 # Others
 alias ghc-ports='netstat -tulanp'
