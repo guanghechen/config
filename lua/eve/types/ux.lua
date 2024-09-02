@@ -27,3 +27,8 @@
 ---@field public coll                   integer
 ---@field public colr                   integer
 ---@field public hlname                 string
+
+---@class eve.types.ux.IWidget
+---@field public show                   fun(self: eve.types.ux.IWidget): nil
+---@field public hidden                 fun(self: eve.types.ux.IWidget): nil
+---@field public resize                 fun(self: eve.types.ux.IWidget): nil

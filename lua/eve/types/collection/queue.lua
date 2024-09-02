@@ -1,6 +1,4 @@
 ---@class eve.types.collection.ICircularQueue
-
----@class eve.types.collection.ICircularQueue
 ---@field public capacity               fun(self: eve.types.collection.ICircularQueue): integer
 ---@field public size                   fun(self: eve.types.collection.ICircularQueue): integer
 ---@field public at                     fun(self: eve.types.collection.ICircularQueue, index: integer): eve.types.T|nil

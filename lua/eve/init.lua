@@ -4,6 +4,7 @@ local collection = {
   BatchHandler = require("eve.collection.batch_handler"),
   BatchDisposable = require("eve.collection.batch_disposable"),
   CircularQueue = require("eve.collection.circular_queue"),
+  CircularStack = require("eve.collection.circular_stack"),
   Dirtier = require("eve.collection.dirtier"),
   Disposable = require("eve.collection.disposable"),
   Frecency = require("eve.collection.frecency"),

@@ -1,4 +1,4 @@
-local CircularQueue = require("eve.collection.circular_queue")
+local CircularStack = require("eve.collection.circular_stack")
 local reporter = require("eve.std.reporter")
 
 ---@param x                             eve.types.T
@@ -12,7 +12,7 @@ end
 ---@field public name                   string
 ---@field public equals                 eve.types.IEquals
 ---@field protected _present            integer
----@field protected _stack              eve.types.collection.ICircularQueue
+---@field protected _stack              eve.types.collection.ICircularStack
 local M = {}
 M.__index = M
 
@@ -38,7 +38,7 @@ function M.new(props)
   self.name = name
   self.equals = equals
   self._present = 0
-  self._stack = CircularQueue.new({ capacity = capacity })
+  self._stack = CircularStack.new({ capacity = capacity })
   return self
 end
 
@@ -50,7 +50,7 @@ function M.deserialize(props)
   local self = setmetatable({}, M)
   self.name = props.name
   self.equals = props.equals or default_equals
-  self._stack = CircularQueue.from_array(data.stack, props.capacity)
+  self._stack = CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
 end
@@ -96,7 +96,7 @@ function M:fork(params)
   instance.name = params.name
   instance.equals = self.equals
   instance._present = self._present
-  instance._stack = CircularQueue.from(self._stack)
+  instance._stack = CircularStack.from(self._stack)
   return instance
 end
 
@@ -113,7 +113,7 @@ end
 ---@return eve.types.T|nil
 ---@return integer
 function M:go(index)
-  local stack = self._stack ---@type eve.types.collection.ICircularQueue
+  local stack = self._stack ---@type eve.types.collection.ICircularStack
   local present = math.min(stack:size(), math.max(1, index)) ---@type integer
   self._present = present
   return stack:at(present), present
@@ -136,13 +136,13 @@ end
 
 ---@return fun(): eve.types.T, integer
 function M:iterator()
-  local stack = self._stack ---@type eve.types.collection.ICircularQueue
+  local stack = self._stack ---@type eve.types.collection.ICircularStack
   return stack:iterator()
 end
 
 ---@return fun(): eve.types.T, integer
 function M:iterator_reverse()
-  local stack = self._stack ---@type eve.types.collection.ICircularQueue
+  local stack = self._stack ---@type eve.types.collection.ICircularStack
   return stack:iterator_reverse()
 end
 
@@ -176,7 +176,7 @@ end
 ---@return nil
 function M:push(element)
   local present = self._present ---@type integer
-  local stack = self._stack ---@type eve.types.collection.ICircularQueue
+  local stack = self._stack ---@type eve.types.collection.ICircularStack
   local el_present = stack:at(present) ---@type eve.types.T
   if self.equals(el_present, element) then
     return
@@ -191,16 +191,16 @@ function M:push(element)
   end
 
   while present < stack:size() do
-    stack:dequeue_back()
+    stack:pop()
   end
-  stack:enqueue(element)
+  stack:push(element)
   self._present = stack:size()
 end
 
 ---@param filter                        eve.types.IFilter
 ---@return nil
 function M:rearrange(filter)
-  local stack = self._stack ---@type eve.types.collection.ICircularQueue
+  local stack = self._stack ---@type eve.types.collection.ICircularStack
   local old_present = self._present ---@type integer
   local new_present = 0 ---@type integer
   local idx = 0 ---@type integer
@@ -228,14 +228,14 @@ end
 ---@return eve.types.T|nil
 ---@return integer
 function M:top()
-  local stack = self._stack ---@type eve.types.collection.ICircularQueue
-  return stack:back(), stack:size()
+  local stack = self._stack ---@type eve.types.collection.ICircularStack
+  return stack:top(), stack:size()
 end
 
 ---@param element                       eve.types.T
 ---@return nil
 function M:update_top(element)
-  local stack = self._stack ---@type eve.types.collection.ICircularQueue
+  local stack = self._stack ---@type eve.types.collection.ICircularStack
   local present = stack:size()
   self._present = present
   stack:update(present, element)
