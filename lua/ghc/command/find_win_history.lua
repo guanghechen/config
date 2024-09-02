@@ -5,26 +5,26 @@ local _select = nil ---@type fml.ui.FileSelect|nil
 ---@param ordinal                       integer
 ---@return string
 local function gen_uuid_from_ordinal(ordinal)
-  return fc.string.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
+  return eve.string.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
 end
 
 ---@return fml.ui.FileSelect
 local function get_select()
   if _select == nil then
     local state_frecency = require("ghc.state.frecency")
-    local frecency = state_frecency.load_and_autosave().files ---@type fc.types.collection.IFrecency
+    local frecency = state_frecency.load_and_autosave().files ---@type eve.types.collection.IFrecency
 
     ---@type fml.types.ui.file_select.IProvider
     local provider = {
       fetch_data = function()
-        local cwd = fc.path.cwd() ---@type string
+        local cwd = eve.path.cwd() ---@type string
         local items = {} ---@type fml.types.ui.file_select.IRawItem[]
         local present_uuid = "0" ---@type string
         local width = 0 ---@type integer
         local winnr = fml.api.state.win_history:present() ---@type integer|nil
         local win = winnr ~= nil and fml.api.state.wins[winnr] or nil ---@type fml.types.api.state.IWinItem|nil
         if win == nil then
-          fc.reporter.error({
+          eve.reporter.error({
             from = "fml.api.win",
             subject = "find_history",
             message = "Cannot find window.",
@@ -40,7 +40,7 @@ local function get_select()
           end
 
           for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
-            local filepath = fc.path.relative(cwd, absolute_filepath, true) ---@type string
+            local filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
             local item = { uuid = uuid, filepath = filepath } ---@type fml.types.ui.file_select.IRawItem
             table.insert(items, item)
@@ -66,7 +66,7 @@ local function get_select()
         local width_icon = string.len(item.data.icon) ---@type integer
         local text = text_prefix .. item.data.icon .. item.data.filepath ---@type string
 
-        ---@type fc.types.ux.IInlineHighlight[]
+        ---@type eve.types.ux.IInlineHighlight[]
         local highlights = {
           {
             coll = width_prefix,
@@ -75,7 +75,7 @@ local function get_select()
           },
         }
         for _, piece in ipairs(match.matches) do
-          ---@type fc.types.ux.IInlineHighlight
+          ---@type eve.types.ux.IInlineHighlight
           local highlight = {
             coll = width_prefix + width_icon + piece.l,
             colr = width_prefix + width_icon + piece.r,
@@ -107,8 +107,8 @@ local function get_select()
         end
 
         if _select ~= nil then
-          local cwd = fc.path.cwd() ---@type string
-          local filepath = fc.path.join(cwd, item.data.filepath) ---@type string
+          local cwd = eve.path.cwd() ---@type string
+          local filepath = eve.path.join(cwd, item.data.filepath) ---@type string
           return fml.api.buf.open_in_current_valid_win(filepath)
         end
         return false

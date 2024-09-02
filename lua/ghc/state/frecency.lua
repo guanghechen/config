@@ -1,10 +1,10 @@
 ---@class ghc.state.frecency.IData
----@field public files                  fc.types.collection.frecency.ISerializedData|nil
+---@field public files                  eve.types.collection.frecency.ISerializedData|nil
 
 ---@class ghc.state.frecency.IState
----@field public files                  fc.types.collection.IFrecency
+---@field public files                  eve.types.collection.IFrecency
 
-local FILEPATH = fc.path.locate_session_filepath({ filename = "state.frecency.json" }) ---@type string
+local FILEPATH = eve.path.locate_session_filepath({ filename = "state.frecency.json" }) ---@type string
 local state = nil ---@type ghc.state.frecency.IState|nil
 
 ---@class ghc.state.files_frecency
@@ -14,39 +14,39 @@ local M = {}
 function M.load_and_autosave()
   if state == nil then
     state = {
-      files = fc.c.Frecency.new({
+      files = eve.c.Frecency.new({
         items = {},
         normalize = function(key)
-          return fc.md5.sumhexa(key)
+          return eve.md5.sumhexa(key)
         end,
       }),
     }
 
-    local data = fc.fs.read_json({ filepath = FILEPATH, silent_on_bad_path = true, silent_on_bad_json = false })
+    local data = eve.fs.read_json({ filepath = FILEPATH, silent_on_bad_path = true, silent_on_bad_json = false })
     if data ~= nil and type(data) == "table" then
       for key, value in pairs(data) do
         if state[key] ~= nil and type(value) == "table" then
-          ---@cast value fc.types.collection.frecency.ISerializedData
+          ---@cast value eve.types.collection.frecency.ISerializedData
           state[key]:load(value)
         end
       end
     end
 
-    fml.disposable:add_disposable(fc.c.Disposable.new({
+    fml.disposable:add_disposable(eve.c.Disposable.new({
       on_dispose = function()
         ---@type boolean, ghc.state.frecency.IData
         local ok, json_data = pcall(function()
-          local serialized_data = {} ---@type table<string, fc.types.collection.frecency.ISerializedData>
+          local serialized_data = {} ---@type table<string, eve.types.collection.frecency.ISerializedData>
           for key, value in pairs(state) do
-            local frecency_data = value:dump() ---@type fc.types.collection.frecency.ISerializedData
+            local frecency_data = value:dump() ---@type eve.types.collection.frecency.ISerializedData
             serialized_data[key] = frecency_data
           end
           return serialized_data
         end)
         if ok then
-          fc.fs.write_json(FILEPATH, json_data, false)
+          eve.fs.write_json(FILEPATH, json_data, false)
         else
-          fc.fs.write_json(FILEPATH, { error = json_data }, false)
+          eve.fs.write_json(FILEPATH, { error = json_data }, false)
         end
       end,
     }))

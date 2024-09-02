@@ -7,8 +7,8 @@ local function gen_hlgroup_map(params)
 
   ---@type string
   local item_kind_bg =
-    --(m == "darken" and fc.color.change_hex_lightness(c.black2, 6)) or
-    --(m == "lighten" and fc.color.change_hex_lightness(c.black2, -6)) or
+    --(m == "darken" and eve.color.change_hex_lightness(c.black2, 6)) or
+    --(m == "lighten" and eve.color.change_hex_lightness(c.black2, -6)) or
     "none"
 
   return {

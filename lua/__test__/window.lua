@@ -33,7 +33,7 @@ local function test_window_mouse_click()
     "",
     "        local items = state.items ---@type fml.types.ui.search.IItem[]",
     "        for lnum, item in ipairs(items) do",
-    "          local highlights = item.highlights ---@type fc.types.ux.IInlineHighlight[]",
+    "          local highlights = item.highlights ---@type eve.types.ux.IInlineHighlight[]",
     "          for _, hl in ipairs(highlights) do",
     "            vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.coll, hl.colr)",
     "          end",

@@ -1,9 +1,9 @@
 ---@diagnostic disable: unused-function, unused-local
 local function match()
   ---@type string[]
-  local items = fc.oxi.find({
-    workspace = fc.path.workspace(),
-    cwd = fc.path.cwd(),
+  local items = eve.oxi.find({
+    workspace = eve.path.workspace(),
+    cwd = eve.path.cwd(),
     flag_case_sensitive = false,
     flag_gitignore = true,
     flag_regex = false,
@@ -19,7 +19,7 @@ local function match()
     local l = 1 ---@type integer
     local r = N1 ---@type integer
     local score = 0 ---@type integer
-    local pieces = {} ---@type fc.types.IMatchPoint[]
+    local pieces = {} ---@type eve.types.IMatchPoint[]
     local N2 = #text ---@type integer
     while r <= N2 do
       if string.sub(text, l, r) == input then
@@ -43,8 +43,8 @@ local function strwidth()
   local filepath_1 = "rust/中文/tests/fixtures/a.txt"
   local filepath_2 = "rust/中文/tests/fixtures/aa.rs"
 
-  local filename_1 = fc.path.basename(filepath_1) ---@type string
-  local filename_2 = fc.path.basename(filepath_2) ---@type string
+  local filename_1 = eve.path.basename(filepath_1) ---@type string
+  local filename_2 = eve.path.basename(filepath_2) ---@type string
 
   local icon_1 = fml.util.calc_fileicon(filename_1) ---@type string
   local icon_2 = fml.util.calc_fileicon(filename_1) ---@type string

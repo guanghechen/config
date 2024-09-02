@@ -27,8 +27,8 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 if vim.fn.expand("%") ~= "" then
   local cwd = vim.fn.getcwd()
   local p = vim.fn.expand("%:p:h")
-  local A = fc.path.locate_git_repo(p)
-  local B = fc.path.locate_git_repo(cwd)
+  local A = eve.path.locate_git_repo(p)
+  local B = eve.path.locate_git_repo(cwd)
 
   if A == nil then
     vim.cmd("cd " .. p .. "")

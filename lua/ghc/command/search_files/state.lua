@@ -1,6 +1,6 @@
 local session = require("ghc.context.session")
 
-local state_search_cwd = fc.c.Observable.from_value(session.get_search_scope_cwd(fc.path.cwd()))
+local state_search_cwd = eve.c.Observable.from_value(session.get_search_scope_cwd(eve.path.cwd()))
 fml.fn.watch_observables({ session.search_scope }, function()
   local current_search_cwd = state_search_cwd:snapshot() ---@type string
   local dirpath = fml.ui.search.get_current_path() ---@type string
@@ -28,8 +28,8 @@ function M.get_search()
     local api = require("ghc.command.search_files.api")
     local keybindings = require("ghc.command.search_files.keybindings")
 
-    local frecency = state_frecency.load_and_autosave().files ---@type fc.types.collection.IFrecency
-    local input_history = state_input_history.load_and_autosave().search_in_files ---@type fc.types.collection.IHistory
+    local frecency = state_frecency.load_and_autosave().files ---@type eve.types.collection.IFrecency
+    local input_history = state_input_history.load_and_autosave().search_in_files ---@type eve.types.collection.IHistory
 
     _search = fml.ui.search.Search.new({
       destroy_on_close = false,

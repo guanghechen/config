@@ -1,5 +1,5 @@
 local navigate_vim = require("fml.api.win.navigate_vim")
-local tmux = require("fc.std.tmux")
+local tmux = require("eve.std.tmux")
 local global = require("fml.global")
 
 local DISABLE_WHEN_ZOOMED = true ---@type boolean

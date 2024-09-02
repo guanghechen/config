@@ -23,7 +23,7 @@ local M = {
   end,
   render = function()
     local text = get_text() ---@type string
-    local hl_text = fc.nvimbar.txt(text, "f_sl_text") ---@type string
+    local hl_text = eve.nvimbar.txt(text, "f_sl_text") ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
     return hl_text, width
   end,

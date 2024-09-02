@@ -12,7 +12,7 @@ local function calc_row_percentage()
   elseif row == total_lines then
     return row, col, "Bot"
   else
-    return row, col, fc.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%"
+    return row, col, eve.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%"
   end
 end
 
@@ -23,7 +23,7 @@ local M = {
     local row, col, percentage = calc_row_percentage() ---@type integer, integer, string
     local text_anchor = "" .. row .. "·" .. col .. " " ---@type string
     local text_pos = " " .. percentage .. " " ---@type string
-    local hl_text = fc.nvimbar.txt(text_anchor, "f_sl_text") .. fc.nvimbar.txt(text_pos, "f_sl_pos") ---@type string
+    local hl_text = eve.nvimbar.txt(text_anchor, "f_sl_text") .. eve.nvimbar.txt(text_pos, "f_sl_pos") ---@type string
     local width = vim.fn.strwidth(text_anchor .. text_pos) ---@type integer
     return hl_text, width
   end,

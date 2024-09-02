@@ -39,9 +39,9 @@ local function fetch_diritem(dirpath, force)
     local owner_width = 0 ---@type integer
     local group_width = 0 ---@type integer
 
-    local raw_data = fc.oxi.readdir(dirpath) ---@type fc.oxi.IReaddirResult|nil
+    local raw_data = eve.oxi.readdir(dirpath) ---@type eve.oxi.IReaddirResult|nil
     if raw_data ~= nil then
-      local raw_itself = raw_data.itself ---@type fc.oxi.IFileItemWithStatus
+      local raw_itself = raw_data.itself ---@type eve.oxi.IFileItemWithStatus
 
       ---@type ghc.command.file_explorer.IFileItem
       local itself = {
@@ -114,13 +114,13 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = fc.c.Observable.from_value(fc.path.normalize(initial_dirpath)) ---@type fc.types.collection.IObservable
+local state_cwd = eve.c.Observable.from_value(eve.path.normalize(initial_dirpath)) ---@type eve.types.collection.IObservable
 local _select = nil ---@type fml.types.ui.ISelect|nil
 
 ---@return string
 local function gen_title()
   local dirpath = state_cwd:snapshot() ---@type string
-  local relative_dirpath = fc.path.relative(fc.path.cwd(), dirpath, false)
+  local relative_dirpath = eve.path.relative(eve.path.cwd(), dirpath, false)
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "File explorer" ---@type string
   end
@@ -145,8 +145,8 @@ local function get_select()
   if _select == nil then
     local state_frecency = require("ghc.state.frecency")
     local state_input_history = require("ghc.state.input_history")
-    local frecency = state_frecency.load_and_autosave().files ---@type fc.types.collection.IFrecency
-    local input_history = state_input_history.load_and_autosave().find_files ---@type fc.types.collection.IHistory
+    local frecency = state_frecency.load_and_autosave().files ---@type eve.types.collection.IFrecency
+    local input_history = state_input_history.load_and_autosave().find_files ---@type eve.types.collection.IHistory
 
     local main_width = 0.4 ---@type number
     ---@type fml.types.ui.search.IRawDimension
@@ -161,8 +161,8 @@ local function get_select()
     ---@type fml.types.ui.select.IProvider
     local provider = {
       fetch_data = function(force)
-        local dirpath = fc.path.normalize(state_cwd:snapshot()) ---@type string
-        local parent_dirpath = fc.path.dirname(dirpath) ---@type string
+        local dirpath = eve.path.normalize(state_cwd:snapshot()) ---@type string
+        local parent_dirpath = eve.path.dirname(dirpath) ---@type string
         local diritem = fetch_diritem(dirpath, force) ---@type ghc.command.file_explorer.IDirItem
         fetch_diritem(parent_dirpath, force)
 
@@ -184,7 +184,7 @@ local function get_select()
         local fileitem = file_datamap[item.uuid] ---@type ghc.command.file_explorer.IFileItem|nil
         if fileitem == nil then
           local lines = { "  Cannot found the file.  " } ---@type string[]
-          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fc.types.ux.IHighlight[]
+          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.types.ux.IHighlight[]
 
           ---@type fml.ui.search.preview.IData
           return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
@@ -194,18 +194,18 @@ local function get_select()
         local diritem = dir_datamap[dirpath] ---@type ghc.command.file_explorer.IDirItem|nil
         if diritem == nil then
           local lines = { "  Cannot found the parent directory.  " } ---@type string[]
-          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fc.types.ux.IHighlight[]
+          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.types.ux.IHighlight[]
 
           ---@type fml.ui.search.preview.IData
           return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
         end
 
         if fileitem.type == "file" then
-          local is_text_file = fc.is.printable_file(fileitem.name) ---@type boolean
+          local is_text_file = eve.is.printable_file(fileitem.name) ---@type boolean
           if is_text_file then
             local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
-            local lines = fc.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
-            local title = fc.path.relative(fc.path.cwd(), item.uuid, false) ---@type string
+            local lines = eve.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
+            local title = eve.path.relative(eve.path.cwd(), item.uuid, false) ---@type string
 
             ---@type fml.ui.search.preview.IData
             return {
@@ -219,14 +219,14 @@ local function get_select()
           end
         elseif fileitem.type == "directory" then
           local lines = {} ---@type string[]
-          local highlights = {} ---@type fc.types.ux.IHighlight[]
+          local highlights = {} ---@type eve.types.ux.IHighlight[]
           local c_diritem = fetch_diritem(fileitem.path, false) ---@type ghc.command.file_explorer.IDirItem
           for lnum, c_fileitem in ipairs(c_diritem.items) do
             local width = 0 ---@type integer
             local text = "" ---@type string
 
             local sep_perm = string.rep(" ", 2) ---@type string
-            local text_perm = fc.string.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. sep_perm
+            local text_perm = eve.string.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. sep_perm
             local width_perm = string.len(text_perm) ---@type integer
             table.insert(highlights, {
               lnum = lnum,
@@ -239,22 +239,22 @@ local function get_select()
             width = width + width_perm
 
             local sep_size = string.rep(" ", 2) ---@type string
-            local text_size = fc.string.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. sep_size
+            local text_size = eve.string.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. sep_size
             local width_size = string.len(text_size) ---@type integer
             table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_size, hlname = "f_fe_size" })
             text = text .. text_size
             width = width + width_size
 
-            if not fc.os.is_win() then
+            if not eve.os.is_win() then
               local sep_owner = string.rep(" ", 1) ---@type string
-              local text_owner = fc.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
+              local text_owner = eve.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
               local width_owner = string.len(text_owner) ---@type integer
               table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_owner, hlname = "f_fe_owner" })
               text = text .. text_owner
               width = width + width_owner
 
               local sep_group = string.rep(" ", 2) ---@type string
-              local text_group = fc.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group
+              local text_group = eve.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group
               local width_group = string.len(text_group) ---@type integer
               table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_group, hlname = "f_fe_group" })
               text = text .. text_group
@@ -262,14 +262,14 @@ local function get_select()
             end
 
             local sep_date = string.rep(" ", 2) ---@type string
-            local text_date = fc.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. sep_date
+            local text_date = eve.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. sep_date
             local width_date = string.len(text_date) ---@type integer
             table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_date, hlname = "f_fe_date" })
             text = text .. text_date
             width = width + width_date
 
             local sep_name = string.rep(" ", 10) ---@type string
-            local text_name = fc.string.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. sep_name
+            local text_name = eve.string.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. sep_name
             local width_name = string.len(text_name) ---@type integer
             table.insert(highlights, {
               lnum = lnum,
@@ -283,9 +283,9 @@ local function get_select()
             table.insert(lines, text)
           end
 
-          local title = fc.path.relative(fc.path.cwd(), item.uuid, false) ---@type string
+          local title = eve.path.relative(eve.path.cwd(), item.uuid, false) ---@type string
           if #title < 1 or title:sub(1, 1) == "." then
-            title = fc.path.normalize(item.uuid)
+            title = eve.path.normalize(item.uuid)
           end
 
           ---@type fml.ui.search.preview.IData
@@ -293,7 +293,7 @@ local function get_select()
         end
 
         local lines = { "  Not a text file, cannot preview." } ---@type string[]
-        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fc.types.ux.IHighlight[]
+        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.types.ux.IHighlight[]
 
         ---@type fml.ui.search.preview.IData
         return { lines = lines, highlights = highlights, filetype = nil, title = item.text, lnum = 1, col = 0 }
@@ -310,7 +310,7 @@ local function get_select()
           return item.text, {}
         end
 
-        local highlights = {} ---@type fc.types.ux.IInlineHighlight[]
+        local highlights = {} ---@type eve.types.ux.IInlineHighlight[]
         local width = 0 ---@type integer
         local text = "" ---@type string
         local filename = ((item.text == "../") or (item.text == "./")) and item.text
@@ -327,14 +327,14 @@ local function get_select()
             - (diritem.date_width + 2)
 
         local sep_icon = string.rep(" ", 2) ---@type string
-        local text_icon = fc.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. sep_icon ---@type string
+        local text_icon = eve.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. sep_icon ---@type string
         local width_icon = string.len(text_icon) ---@type integer
         table.insert(highlights, { coll = width, colr = width + width_icon, hlname = fileitem.icon_hl })
         text = text .. text_icon
         width = width + width_icon
 
         local sep_name = string.rep(" ", filename_sep_width) ---@type string
-        local text_name = fc.string.pad_end(filename, diritem.name_width + 1, " ") .. sep_name ---@type string
+        local text_name = eve.string.pad_end(filename, diritem.name_width + 1, " ") .. sep_name ---@type string
         local width_name = string.len(text_name) ---@type integer
         table.insert(highlights, {
           coll = width,
@@ -342,7 +342,7 @@ local function get_select()
           hlname = fileitem.type == "directory" and "f_fe_name_dir" or "f_fe_name_file",
         })
         for _, piece in ipairs(match.matches) do
-          ---@type fc.types.ux.IInlineHighlight
+          ---@type eve.types.ux.IInlineHighlight
           local highlight = { coll = width + piece.l, colr = width + piece.r, hlname = "f_fe_match" }
           table.insert(highlights, highlight)
         end
@@ -350,7 +350,7 @@ local function get_select()
         width = width + width_name
 
         local sep_perm = string.rep(" ", 2) ---@type string
-        local text_perm = fc.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. sep_perm ---@type string
+        local text_perm = eve.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. sep_perm ---@type string
         local width_perm = string.len(text_perm) ---@type integer
         table.insert(highlights, {
           coll = width,
@@ -362,14 +362,14 @@ local function get_select()
         width = width + width_perm
 
         local sep_size = string.rep(" ", 2) ---@type string
-        local text_size = fc.string.pad_start(fileitem.size, diritem.size_width, " ") .. sep_size ---@type string
+        local text_size = eve.string.pad_start(fileitem.size, diritem.size_width, " ") .. sep_size ---@type string
         local width_size = string.len(text_size) ---@type integer
         table.insert(highlights, { coll = width, colr = width + width_size, hlname = "f_fe_size" })
         text = text .. text_size
         width = width + width_size
 
         local sep_date = string.rep(" ", 2) ---@type string
-        local text_date = fc.string.pad_end(fileitem.date, diritem.date_width, " ") .. sep_date ---@type string
+        local text_date = eve.string.pad_end(fileitem.date, diritem.date_width, " ") .. sep_date ---@type string
         local width_date = string.len(text_date) ---@type integer
         table.insert(highlights, { coll = width, colr = width + width_date, hlname = "f_fe_date" })
         text = text .. text_date
@@ -385,7 +385,7 @@ local function get_select()
         modes = { "n", "v" },
         key = "<Backspace>",
         callback = function()
-          local next_cwd = fc.path.dirname(state_cwd:snapshot())
+          local next_cwd = eve.path.dirname(state_cwd:snapshot())
           state_cwd:next(next_cwd)
         end,
         desc = "file explorer: goto the parent dir",
@@ -393,13 +393,13 @@ local function get_select()
     }
 
     ---@type fml.types.IKeymap[]
-    local input_keymaps = fc.array.concat({}, common_keymaps)
+    local input_keymaps = eve.array.concat({}, common_keymaps)
 
     ---@type fml.types.IKeymap[]
-    local main_keymaps = fc.array.concat({}, common_keymaps)
+    local main_keymaps = eve.array.concat({}, common_keymaps)
 
     ---@type fml.types.IKeymap[]
-    local preview_keymaps = fc.array.concat({}, common_keymaps)
+    local preview_keymaps = eve.array.concat({}, common_keymaps)
 
     _select = fml.ui.Select.new({
       destroy_on_close = false,

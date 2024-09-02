@@ -1,8 +1,8 @@
 local sep = "  "
 
 ---@type string
-local fn_goto_lsp_pos = fc.G.register_anonymous_fn(function(num)
-  local args = fc.nvimbar.decode_btn_args(tostring(num)) ---@type integer[]
+local fn_goto_lsp_pos = eve.G.register_anonymous_fn(function(num)
+  local args = eve.nvimbar.decode_btn_args(tostring(num)) ---@type integer[]
   if #args == 3 then
     local winnr = args[1] ---@type integer|nil
     local row = args[2] ---@type integer|nil
@@ -43,10 +43,10 @@ local M = {
       end
 
       width = next_width
-      local hl_lsp_piece = fc.nvimbar.txt(sep, "f_wl_lsp_sep")
-        .. fc.nvimbar.txt(icon, symbol.kind and "f_wl_lsp_icon_" .. symbol.kind or "f_wl_lsp_icon")
-        .. fc.nvimbar.txt(title, "f_wl_lsp_text")
-      hl_text = hl_text .. fc.nvimbar.btn(hl_lsp_piece, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
+      local hl_lsp_piece = eve.nvimbar.txt(sep, "f_wl_lsp_sep")
+        .. eve.nvimbar.txt(icon, symbol.kind and "f_wl_lsp_icon_" .. symbol.kind or "f_wl_lsp_icon")
+        .. eve.nvimbar.txt(title, "f_wl_lsp_text")
+      hl_text = hl_text .. eve.nvimbar.btn(hl_lsp_piece, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
     end
     return hl_text, width
   end,

@@ -3,13 +3,13 @@
 local function get_filepath(context)
   local cwd = context.cwd ---@type string
   local filepath = context.filepath ---@type string
-  local relative_to_cwd = fc.path.relative(cwd, filepath, false) ---@type string
-  if string.sub(relative_to_cwd, 1, 1) == "." and fc.path.is_absolute(filepath) then
-    local workspace = fc.path.workspace() ---@type string
+  local relative_to_cwd = eve.path.relative(cwd, filepath, false) ---@type string
+  if string.sub(relative_to_cwd, 1, 1) == "." and eve.path.is_absolute(filepath) then
+    local workspace = eve.path.workspace() ---@type string
     if cwd ~= workspace then
-      local relative_to_workspace = fc.path.relative(workspace, filepath, false)
+      local relative_to_workspace = eve.path.relative(workspace, filepath, false)
       if string.sub(relative_to_workspace, 1, 1) == "." then
-        relative_to_cwd = fc.path.normalize(filepath)
+        relative_to_cwd = eve.path.normalize(filepath)
       end
     end
   end
@@ -24,7 +24,7 @@ local M = {
   end,
   render = function(context)
     local text = get_filepath(context) ---@type string
-    local hl_text = fc.nvimbar.txt(text, "f_sl_text")
+    local hl_text = eve.nvimbar.txt(text, "f_sl_text")
     local width = vim.fn.strwidth(text)
     return hl_text, width
   end,

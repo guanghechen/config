@@ -1,7 +1,7 @@
-local std_array = require("fc.std.array")
-local fs = require("fc.std.fs")
-local is = require("fc.std.is")
-local path = require("fc.std.path")
+local std_array = require("eve.std.array")
+local fs = require("eve.std.fs")
+local is = require("eve.std.is")
+local path = require("eve.std.path")
 local util = require("fml.util")
 local api_buf = require("fml.api.buf")
 local Select = require("fml.ui.select")
@@ -13,18 +13,18 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.file_select.IProps
----@field public case_sensitive         ?fc.types.collection.IObservable
+---@field public case_sensitive         ?eve.types.collection.IObservable
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public destroy_on_close       boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public dirty_on_close         ?boolean
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?fc.types.collection.IObservable
----@field public flag_regex             ?fc.types.collection.IObservable
----@field public frecency               ?fc.types.collection.IFrecency
----@field public input                  ?fc.types.collection.IObservable
----@field public input_history          ?fc.types.collection.IHistory
+---@field public flag_fuzzy             ?eve.types.collection.IObservable
+---@field public flag_regex             ?eve.types.collection.IObservable
+---@field public frecency               ?eve.types.collection.IFrecency
+---@field public input                  ?eve.types.collection.IObservable
+---@field public input_history          ?eve.types.collection.IHistory
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
@@ -40,17 +40,17 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive ---@type fc.types.collection.IObservable|nil
+  local case_sensitive = props.case_sensitive ---@type eve.types.collection.IObservable|nil
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local dirty_on_close = not not props.dirty_on_close ---@type boolean|nil
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
-  local flag_fuzzy = props.flag_fuzzy ---@type fc.types.collection.IObservable|nil
-  local flag_regex = props.flag_regex ---@type fc.types.collection.IObservable|nil
-  local frecency = props.frecency ---@type fc.types.collection.IFrecency|nil
-  local input = props.input ---@type fc.types.collection.IObservable|nil
-  local input_history = props.input_history ---@type fc.types.collection.IHistory|nil
+  local flag_fuzzy = props.flag_fuzzy ---@type eve.types.collection.IObservable|nil
+  local flag_regex = props.flag_regex ---@type eve.types.collection.IObservable|nil
+  local frecency = props.frecency ---@type eve.types.collection.IFrecency|nil
+  local input = props.input ---@type eve.types.collection.IObservable|nil
+  local input_history = props.input_history ---@type eve.types.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
@@ -67,7 +67,7 @@ function M.new(props)
     ---@return nil
     local function send_to_qflist()
       if _select ~= nil then
-        local cwd = fc.path.cwd() ---@type string
+        local cwd = eve.path.cwd() ---@type string
         local select_cwd = self.cwd ---@type string
         local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
         local matched_items = _select:get_matched_items() ---@type fml.types.ui.select.IMatchedItem[]
@@ -76,8 +76,8 @@ function M.new(props)
           ---@cast item fml.types.ui.file_select.IItem
 
           if item ~= nil then
-            local absolute_filepath = fc.path.join(select_cwd, item.data.filepath) ---@type string
-            local relative_filepath = fc.path.relative(cwd, absolute_filepath, false) ---@type string
+            local absolute_filepath = eve.path.join(select_cwd, item.data.filepath) ---@type string
+            local relative_filepath = eve.path.relative(cwd, absolute_filepath, false) ---@type string
             table.insert(quickfix_items, {
               filename = relative_filepath,
               lnum = item.data.lnum or 1,
@@ -233,7 +233,7 @@ function M.fetch_preview_data(cwd, item)
   end
 
   local lines = { "  Not a text file, cannot preview." } ---@type string[]
-  local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type fc.types.ux.IHighlight[]
+  local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.types.ux.IHighlight[]
 
   ---@type fml.ui.search.preview.IData
   return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
@@ -258,15 +258,15 @@ end
 ---@param item                          fml.types.ui.file_select.IItem
 ---@param match                         fml.types.ui.select.IMatchedItem
 ---@return string
----@return fc.types.ux.IInlineHighlight[]
+---@return eve.types.ux.IInlineHighlight[]
 function M.render_item(item, match)
   local icon_width = string.len(item.data.icon) ---@type integer
   local text = item.data.icon .. item.data.filepath ---@type string
 
-  ---@type fc.types.ux.IInlineHighlight[]
+  ---@type eve.types.ux.IInlineHighlight[]
   local highlights = { { coll = 0, colr = icon_width, hlname = item.data.icon_hl } }
   for _, piece in ipairs(match.matches) do
-    ---@type fc.types.ux.IInlineHighlight
+    ---@type eve.types.ux.IInlineHighlight
     local highlight = { coll = piece.l + icon_width, colr = piece.r + icon_width, hlname = "f_us_main_match" }
     table.insert(highlights, highlight)
   end

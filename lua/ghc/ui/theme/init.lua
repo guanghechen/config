@@ -62,7 +62,7 @@ end
 function M.get_scheme(mode)
   local present_scheme, scheme = pcall(require, "ghc.ui.theme.scheme." .. mode)
   if not present_scheme then
-    fc.reporter.error({
+    eve.reporter.error({
       from = "ghc.ui.theme",
       subject = "get_scheme",
       message = "Cannot find scheme",

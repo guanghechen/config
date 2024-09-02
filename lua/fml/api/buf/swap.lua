@@ -1,6 +1,6 @@
 local state = require("fml.api.state")
-local navigate = require("fc.std.navigate")
-local std_array = require("fc.std.array")
+local navigate = require("eve.std.navigate")
+local std_array = require("eve.std.array")
 
 ---@class fml.api.buf
 local M = require("fml.api.buf.mod")

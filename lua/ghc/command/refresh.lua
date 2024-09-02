@@ -9,7 +9,7 @@ function M.refresh_all()
   vim.cmd("LspRestart")
   vim.cmd("redraw")
 
-  fc.reporter.info({
+  eve.reporter.info({
     from = "ghc.command.refresh",
     subject = "refresh_all",
     message = "Refreshed all.",

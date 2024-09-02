@@ -1,0 +1,12 @@
+---@class eve.types.collection.IViewmodel : eve.types.collection.IBatchDisposable
+---@field public get_name               fun(): string
+---@field public get_filepath           fun(): string|nil
+---@field public snapshot               fun(): table
+---@field public snapshot_all           fun(): table
+---@field public register               fun(name: string, observable: eve.types.collection.IObservable):nil
+---@field public save                   fun(): nil
+---@field public load                   fun(): nil
+---@field public reload                 fun(): nil
+
+---@class eve.types.collection.viewmodel.IAutoReloadParams
+---@field public on_changed             ?fun(): nil

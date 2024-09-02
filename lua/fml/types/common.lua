@@ -5,7 +5,7 @@
 ---@field public silent                 ?boolean
 
 ---@class fml.types.IKeymap : fml.types.IKeymapOverridable
----@field public modes                  fc.enums.VimMode[]
+---@field public modes                  eve.enums.VimMode[]
 ---@field public key                    string
 ---@field public callback               fun(): nil
 ---@field public desc                   string|nil

@@ -1,0 +1,20 @@
+---@class eve.types.collection.ICircularQueue
+
+---@class eve.types.collection.ICircularQueue
+---@field public capacity               fun(self: eve.types.collection.ICircularQueue): integer
+---@field public size                   fun(self: eve.types.collection.ICircularQueue): integer
+---@field public at                     fun(self: eve.types.collection.ICircularQueue, index: integer): eve.types.T|nil
+---@field public back                   fun(self: eve.types.collection.ICircularQueue): eve.types.T|nil
+---@field public clear                  fun(self: eve.types.collection.ICircularQueue): nil
+---@field public collect                fun(self: eve.types.collection.ICircularQueue): eve.types.T[]
+---@field public count                  fun(self: eve.types.collection.ICircularQueue, filter: eve.types.IFilter): integer
+---@field public dequeue                fun(self: eve.types.collection.ICircularQueue): eve.types.T|nil
+---@field public dequeue_back           fun(self: eve.types.collection.ICircularQueue): eve.types.T|nil
+---@field public enqueue                fun(self: eve.types.collection.ICircularQueue, element: eve.types.T): nil
+---@field public fork                   fun(self: eve.types.collection.ICircularQueue, filter: eve.types.IFilter): eve.types.collection.ICircularQueue
+---@field public front                  fun(self: eve.types.collection.ICircularQueue): eve.types.T|nil
+---@field public iterator               fun(self: eve.types.collection.ICircularQueue): fun(): eve.types.T|nil
+---@field public iterator_reverse       fun(self: eve.types.collection.ICircularQueue): fun(): eve.types.T|nil
+---@field public rearrange              fun(self: eve.types.collection.ICircularQueue, filter: eve.types.IFilter): fun(): eve.types.T|nil
+---@field public reset                  fun(self: eve.types.collection.ICircularQueue, elements: eve.types.T[]): boolean): fun(): eve.types.T|nil
+---@field public update                 fun(self: eve.types.collection.ICircularQueue, index: integer, value: eve.types.T): nil

@@ -1,4 +1,4 @@
-local path = require("fc.std.path")
+local path = require("eve.std.path")
 
 ---@class fml.ui.Theme : fml.types.ui.ITheme
 ---@field private hlgroup_map          table<string, fml.types.ui.theme.IHlgroup>

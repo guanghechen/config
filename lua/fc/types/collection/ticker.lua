@@ -1,2 +1,0 @@
----@class fc.types.collection.ITicker: fc.types.collection.IObservable
----@field public tick                   fun(self: fc.types.collection.ITicker): nil

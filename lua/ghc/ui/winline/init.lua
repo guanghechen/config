@@ -85,7 +85,7 @@ function M.update(winnr, force)
         vim.wo[winnr].winbar = result
       end)
       if not ok then
-        fc.reporter.error({
+        eve.reporter.error({
           from = "ghc.ui.winline",
           subject = "update",
           message = "Failed to update winbar.",
@@ -96,7 +96,7 @@ function M.update(winnr, force)
   end
 end
 
-fml.api.state.winline_dirty_nr:subscribe(fc.c.Subscriber.new({
+fml.api.state.winline_dirty_nr:subscribe(eve.c.Subscriber.new({
   on_next = function(winnr)
     if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
       M.update(winnr, true)

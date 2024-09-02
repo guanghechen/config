@@ -5,7 +5,7 @@
 ---@field public close                  fun(self: fml.types.ui.ISetting): nil
 
 ---@class fml.types.ui.setting.IOpenParams
----@field public initial_value          fc.types.T
+---@field public initial_value          eve.types.T
 ---@field public row                    ?number
 ---@field public col                    ?number
 ---@field public width                  ?number

@@ -1,4 +1,0 @@
----@class fc.types.collection.IDirtier : fc.types.collection.IObservable
----@field public is_dirty               fun(self: fc.types.collection.IDirtier): boolean
----@field public mark_clean             fun(self: fc.types.collection.IDirtier): nil
----@field public mark_dirty             fun(self: fc.types.collection.IDirtier): nil

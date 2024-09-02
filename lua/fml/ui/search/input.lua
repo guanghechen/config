@@ -1,7 +1,7 @@
-local Subscriber = require("fc.collection.subscriber")
+local Subscriber = require("eve.collection.subscriber")
 local constant = require("fml.constant")
-local std_array = require("fc.std.array")
-local scheduler = require("fc.std.scheduler")
+local std_array = require("eve.std.array")
+local scheduler = require("eve.std.scheduler")
 local util = require("fml.util")
 local signcolumn = require("fml.ui.signcolumn")
 
@@ -9,7 +9,7 @@ local signcolumn = require("fml.ui.signcolumn")
 ---@field protected _autocmd_group      integer
 ---@field protected _bufnr              integer|nil
 ---@field protected _extmark_nr         integer|nil
----@field protected _input_scheduler    fc.std.scheduler.IScheduler
+---@field protected _input_scheduler    eve.std.scheduler.IScheduler
 ---@field protected _keymaps            fml.types.IKeymap[]
 local M = {}
 M.__index = M
@@ -27,7 +27,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local state = props.state ---@type fml.types.ui.search.IState
-  local input_history = state.input_history ---@type fc.types.collection.IHistory|nil
+  local input_history = state.input_history ---@type eve.types.collection.IHistory|nil
   local autocmd_group = util.augroup(state.uuid .. ":search_input") ---@type integer
 
   local actions = {
@@ -134,7 +134,7 @@ function M:create_buf_as_needed()
 
   local state = self.state ---@type fml.types.ui.search.IState
   local input = state.input:snapshot() ---@type string
-  local lines = fc.oxi.parse_lines(input) ---@type string[]
+  local lines = eve.oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
   vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
 
@@ -200,7 +200,7 @@ function M:reset_input(text)
 
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local lines = fc.oxi.parse_lines(next_text) ---@type string[]
+    local lines = eve.oxi.parse_lines(next_text) ---@type string[]
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
   end
 end

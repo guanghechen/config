@@ -1,18 +1,18 @@
 local constant = require("fml.constant")
 local state = require("fml.api.state")
-local reporter = require("fc.std.reporter")
+local reporter = require("eve.std.reporter")
 
 ---@class fml.api.term
 local M = {}
 
 ---@class fml.api.term.ICreateParams
 ---@field public name                   string
----@field public position               fc.enums.TermPosition
+---@field public position               eve.enums.TermPosition
 ---@field public command                ?string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 
----@param position                      fc.enums.TermPosition
+---@param position                      eve.enums.TermPosition
 ---@param subject                       string
 ---@return boolean
 local function validate_position(position, subject)
@@ -47,7 +47,7 @@ function M.create_term_buf()
   return bufnr
 end
 
----@param position                      fc.enums.TermPosition
+---@param position                      eve.enums.TermPosition
 ---@param bufnr                         integer|nil
 ---@return integer|nil
 ---@return integer|nil
@@ -94,7 +94,7 @@ end
 function M.create(params)
   local name = params.name ---@type string
   local command = params.command or vim.env.SHELL or vim.o.shell ---@type string
-  local position = params.position ---@type fc.enums.TermPosition
+  local position = params.position ---@type eve.enums.TermPosition
 
   local term = state.term_map[name] ---@type fml.types.api.state.ITerm|nil
   if term ~= nil then

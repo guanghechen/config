@@ -1,22 +1,22 @@
 local theme = require("ghc.ui.theme")
 
-local theme_cache_path = fc.path.locate_context_filepath({ filename = "theme" }) ---@type string
+local theme_cache_path = eve.path.locate_context_filepath({ filename = "theme" }) ---@type string
 
 ---@class ghc.context.client
----@field public mode                   fc.types.collection.IObservable
----@field public transparency           fc.types.collection.IObservable
+---@field public mode                   eve.types.collection.IObservable
+---@field public transparency           eve.types.collection.IObservable
 local M = require("ghc.context.client.mod")
   ---
-  :register("mode", fc.c.Observable.from_value("darken"), true, true)
-  :register("transparency", fc.c.Observable.from_value(false), true, true)
+  :register("mode", eve.c.Observable.from_value("darken"), true, true)
+  :register("transparency", eve.c.Observable.from_value(false), true, true)
 
 ---@param params                        ghc.types.context.client.IToggleSchemeParams
 ---@return nil
 function M.toggle_scheme(params)
   local mode = params.mode or M.mode:snapshot() ---@type fml.enums.theme.Mode
-  local transparency = fc.boolean.cover(params.transparency, M.transparency:snapshot()) ---@type boolean
-  local persistent = fc.boolean.cover(params.persistent, false) ---@type boolean
-  local force = fc.boolean.cover(params.force, false) ---@type boolean
+  local transparency = eve.boolean.cover(params.transparency, M.transparency:snapshot()) ---@type boolean
+  local persistent = eve.boolean.cover(params.persistent, false) ---@type boolean
+  local force = eve.boolean.cover(params.force, false) ---@type boolean
 
   ---@type boolean
   local has_changed = M.mode:snapshot() ~= mode or M.transparency:snapshot() ~= transparency
@@ -46,7 +46,7 @@ function M.reload_theme(params)
   local mode = M.mode:snapshot() ---@type fml.enums.theme.Mode
   local transparency = M.transparency:snapshot() ---@type boolean
 
-  if force or not fc.path.is_exist(theme_cache_path) then
+  if force or not eve.path.is_exist(theme_cache_path) then
     M.toggle_scheme({ mode = mode, transparency = transparency, persistent = true, force = true })
   else
     dofile(theme_cache_path)

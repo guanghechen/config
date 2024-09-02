@@ -1,6 +1,6 @@
 local state = require("fml.api.state")
-local std_array = require("fc.std.array")
-local std_object = require("fc.std.object")
+local std_array = require("eve.std.array")
+local std_object = require("eve.std.object")
 
 ---@class fml.api.tab
 local M = require("fml.api.tab.mod")

@@ -1,8 +1,8 @@
-local Dirtier = require("fc.collection.dirtier")
-local Observable = require("fc.collection.observable")
-local Subscriber = require("fc.collection.subscriber")
-local scheduler = require("fc.std.scheduler")
-local navigate = require("fc.std.navigate")
+local Dirtier = require("eve.collection.dirtier")
+local Observable = require("eve.collection.observable")
+local Subscriber = require("eve.collection.subscriber")
+local scheduler = require("eve.std.scheduler")
+local navigate = require("eve.std.navigate")
 
 ---@class fml.ui.search.State : fml.types.ui.search.IState
 ---@field protected _deleted_uuids      table<string, boolean>
@@ -15,8 +15,8 @@ M.__index = M
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             fml.types.ui.search.IFetchData
 ---@field public delay_fetch            integer
----@field public input                  fc.types.collection.IObservable
----@field public input_history          fc.types.collection.IHistory|nil
+---@field public input                  eve.types.collection.IObservable
+---@field public input_history          eve.types.collection.IHistory|nil
 ---@field public title                  string
 
 ---@param props                         fml.ui.search.state.IProps
@@ -24,22 +24,22 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local dirtier_dimension = Dirtier.new() ---@type fc.types.collection.IDirtier
-  local dirtier_data = Dirtier.new() ---@type fc.types.collection.IDirtier
-  local dirtier_main = Dirtier.new() ---@type fc.types.collection.IDirtier
-  local dirtier_preview = Dirtier.new() ---@type fc.types.collection.IDirtier
+  local dirtier_dimension = Dirtier.new() ---@type eve.types.collection.IDirtier
+  local dirtier_data = Dirtier.new() ---@type eve.types.collection.IDirtier
+  local dirtier_main = Dirtier.new() ---@type eve.types.collection.IDirtier
+  local dirtier_preview = Dirtier.new() ---@type eve.types.collection.IDirtier
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
-  local force_on_fetch_data = Observable.from_value(false) ---@type fc.types.collection.IObservable
+  local force_on_fetch_data = Observable.from_value(false) ---@type eve.types.collection.IObservable
   local fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchData
   local delay_fetch = props.delay_fetch ---@type integer
-  local input = props.input ---@type fc.types.collection.IObservable
-  local input_history = props.input_history ---@type fc.types.collection.IHistory|nil
-  local input_line_count = Observable.from_value(fc.oxi.count_lines(input:snapshot())) ---@type fc.types.collection.IObservable
+  local input = props.input ---@type eve.types.collection.IObservable
+  local input_history = props.input_history ---@type eve.types.collection.IHistory|nil
+  local input_line_count = Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.types.collection.IObservable
   local title = props.title ---@type string
-  local uuid = fc.oxi.uuid() ---@type string
+  local uuid = eve.oxi.uuid() ---@type string
   local visible = Observable.from_value(false)
 
-  local fetch_scheduler ---@type fc.std.scheduler.IScheduler
+  local fetch_scheduler ---@type eve.std.scheduler.IScheduler
   fetch_scheduler = scheduler.debounce({
     name = "fml.ui.search.state.fetch",
     delay = delay_fetch,
@@ -90,7 +90,7 @@ function M.new(props)
   ---@return nil
   local function on_input_change()
     if enable_multiline_input then
-      local line_count = fc.oxi.count_lines(input:snapshot())
+      local line_count = eve.oxi.count_lines(input:snapshot())
       input_line_count:next(line_count)
     end
     self.dirtier_data:mark_dirty()

@@ -1,9 +1,9 @@
 local function get_os_icon()
-  if fc.os.is_mac() then
+  if eve.os.is_mac() then
     return fml.ui.icons.os.mac
-  elseif fc.os.is_win() then
+  elseif eve.os.is_win() then
     return fml.ui.icons.os.dos
-  elseif fc.os.is_nix() or fc.os.is_wsl() then
+  elseif eve.os.is_nix() or eve.os.is_wsl() then
     return fml.ui.icons.os.unix
   else
     return fml.ui.icons.os.unknown
@@ -21,7 +21,7 @@ local M = {
     local icon = get_os_icon() ---@type string
     local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
     local text = " " .. icon .. " " .. username .. " " ---@type string
-    local hl_text = fc.nvimbar.txt(text, "f_sl_username") ---@type string
+    local hl_text = eve.nvimbar.txt(text, "f_sl_username") ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
     return hl_text, width
   end,

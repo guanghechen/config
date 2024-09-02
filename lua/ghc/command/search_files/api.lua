@@ -4,7 +4,7 @@ local state = require("ghc.command.search_files.state")
 ---@class ghc.command.search_files.IFileItem
 ---@field public children               string[]
 ---@field public fragmentary            boolean
----@field public filematch              ?fc.oxi.search.IFileMatch|nil
+---@field public filematch              ?eve.oxi.search.IFileMatch|nil
 
 ---@class ghc.command.search_files.IItem
 ---@field public filepath               string
@@ -13,7 +13,7 @@ local state = require("ghc.command.search_files.state")
 ---@field public col                    integer
 ---@field public content                string
 
----@class ghc.command.search_files.IHighlight : fc.types.ux.IHighlight
+---@class ghc.command.search_files.IHighlight : eve.types.ux.IHighlight
 ---@field public offset                 integer
 
 ---@class ghc.command.search_files.IPreviewData
@@ -26,7 +26,7 @@ local _fileitem_map = {} ---@type table<string, ghc.command.search_files.IFileIt
 local _item_map = {} ---@type table<string, ghc.command.search_files.IItem>
 local _last_preview_data = nil ---@type ghc.command.search_files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
-local _last_search_result = nil ---@type fc.oxi.search.IResult|nil
+local _last_search_result = nil ---@type eve.oxi.search.IResult|nil
 fml.fn.watch_observables({
   session.search_exclude_patterns,
   session.search_flag_case_sensitive,
@@ -93,9 +93,9 @@ function M.calc_preview_data(uuid)
   end
 
   local cwd = state.search_cwd:snapshot() ---@type string
-  local filepath = fc.path.join(cwd, item.filepath) ---@type string
-  local filename = fc.path.basename(filepath) ---@type string
-  if not fc.is.printable_file(filename) then
+  local filepath = eve.path.join(cwd, item.filepath) ---@type string
+  local filename = eve.path.basename(filepath) ---@type string
+  if not eve.is.printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
     ---@type ghc.command.search_files.IHighlight[]
@@ -120,8 +120,8 @@ function M.calc_preview_data(uuid)
   local cur_col = 0 ---@type integer
 
   if flag_replace then
-    ---@type fc.oxi.replace.replace_file_preview_advance_by_matches.IResult
-    local preview_result = fc.oxi.replace_file_preview_advance_by_matches({
+    ---@type eve.oxi.replace.replace_file_preview_advance_by_matches.IResult
+    local preview_result = eve.oxi.replace_file_preview_advance_by_matches({
       flag_case_sensitive = flag_case_sensitive,
       flag_regex = flag_regex,
       search_pattern = search_pattern,
@@ -134,7 +134,7 @@ function M.calc_preview_data(uuid)
     lines = preview_result.lines ---@type string[]
     highlights = {} ---@type ghc.command.search_files.IHighlight[]
     local lwidths = preview_result.lwidths ---@type integer[]
-    local matches = preview_result.matches ---@type fc.types.IMatchPoint[]
+    local matches = preview_result.matches ---@type eve.types.IMatchPoint[]
 
     local lnum0 = 1 ---@type integer
     local k = 1 ---@type integer
@@ -183,10 +183,10 @@ function M.calc_preview_data(uuid)
       end
     end
   else
-    lines = fc.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
     highlights = {} ---@type ghc.command.search_files.IHighlight[]
 
-    local filematch = M.get_filematch(item.filepath) ---@type fc.oxi.search.IFileMatch|nil
+    local filematch = M.get_filematch(item.filepath) ---@type eve.oxi.search.IFileMatch|nil
     if filematch ~= nil then
       local order = 0 ---@type integer
       for _, block_match in ipairs(filematch.matches) do
@@ -198,7 +198,7 @@ function M.calc_preview_data(uuid)
         local lwidth = lwidths[1] + 1 ---@type integer
         for _, search_match in ipairs(block_match.matches) do
           local match_offset = block_match.offset + search_match.l ---@type integer
-          if fc.array.contains(match_offsets, match_offset) then
+          if eve.array.contains(match_offsets, match_offset) then
             order = order + 1 ---@type integer
             local is_match_cur = match_offset_cur == match_offset or (match_offset_cur < 0 and order == 1) ---@type boolean
             local hlname = is_match_cur and "f_us_match_cur" or "f_us_match" ---@type string
@@ -281,7 +281,7 @@ function M.fetch_data(input_text, force, callback)
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
   local is_searching_current_buf = scope == "B" and current_buf_path ~= nil ---@type boolean
 
-  ---@type fc.oxi.search.IResult|nil
+  ---@type eve.oxi.search.IResult|nil
   local result = (
     not force
     and _last_search_input ~= nil
@@ -289,7 +289,7 @@ function M.fetch_data(input_text, force, callback)
     and _last_search_result ~= nil
   )
       and _last_search_result
-    or fc.oxi.search({
+    or eve.oxi.search({
       cwd = cwd,
       flag_case_sensitive = flag_case_sensitive,
       flag_gitignore = flag_gitignore,
@@ -317,7 +317,7 @@ function M.fetch_data(input_text, force, callback)
   local fileitem_map = {} ---@type table<string, ghc.command.search_files.IFileItem>
   local item_map = {} ---@type table<string, ghc.command.search_files.IItem>
   for _, filepath in ipairs(result.item_orders) do
-    local filematch = result.items[filepath] ---@type fc.oxi.search.IFileMatch|nil
+    local filematch = result.items[filepath] ---@type eve.oxi.search.IFileMatch|nil
     if filematch ~= nil then
       ---@type ghc.command.search_files.IFileItem
       local fileitem = {
@@ -327,10 +327,10 @@ function M.fetch_data(input_text, force, callback)
       }
       fileitem_map[filepath] = fileitem
 
-      local filename = fc.path.basename(filepath) ---@type string
+      local filename = eve.path.basename(filepath) ---@type string
       local icon, icon_hl = fml.util.calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
-      local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type fc.types.ux.IInlineHighlight[]
+      local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type eve.types.ux.IInlineHighlight[]
 
       local file_item_uuid = filepath ---@type string
       if not is_searching_current_buf then
@@ -359,8 +359,8 @@ function M.fetch_data(input_text, force, callback)
       if flag_replace then
         local lnum_delta = 0 ---@type integer
         for _, block_match in ipairs(filematch.matches) do
-          ---@type fc.oxi.replace.replace_text_preview_advance.IResult
-          local preview_result = fc.oxi.replace_text_preview_advance({
+          ---@type eve.oxi.replace.replace_text_preview_advance.IResult
+          local preview_result = eve.oxi.replace_text_preview_advance({
             flag_case_sensitive = flag_case_sensitive,
             flag_regex = flag_regex,
             keep_search_pieces = true,
@@ -371,21 +371,21 @@ function M.fetch_data(input_text, force, callback)
 
           local r_lines = preview_result.lines ---@type string[]
           local r_lwidths = preview_result.lwidths ---@type integer[]
-          local r_matches = preview_result.matches ---@type fc.types.IMatchPoint[]
+          local r_matches = preview_result.matches ---@type eve.types.IMatchPoint[]
           local s_lines = block_match.lines ---@type string[]
           local s_lwidths = block_match.lwidths ---@type integer[]
-          local s_matches = block_match.matches ---@type fc.types.IMatchPoint[]
+          local s_matches = block_match.matches ---@type eve.types.IMatchPoint[]
           for i = 1, #s_matches, 1 do
-            local original_search_match = s_matches[i] ---@type fc.types.IMatchPoint
+            local original_search_match = s_matches[i] ---@type eve.types.IMatchPoint
             local k, col, col_end = calc_same_line_pos(s_lwidths, original_search_match.l, original_search_match.r)
             local line = s_lines[k] ---@type string
             local lnum = block_match.lnum + k - 1 ---@type integer
 
-            local search_match = r_matches[i * 2 - 1] ---@type fc.types.IMatchPoint
+            local search_match = r_matches[i * 2 - 1] ---@type eve.types.IMatchPoint
             local s_k, s_col = calc_same_line_pos(r_lwidths, search_match.l, search_match.r)
             local s_lnum = block_match.lnum + s_k - 1 + lnum_delta ---@type integer
 
-            local replace_match = r_matches[i * 2] ---@type fc.types.IMatchPoint
+            local replace_match = r_matches[i * 2] ---@type eve.types.IMatchPoint
             local r_k, r_col, r_col_end = calc_same_line_pos(r_lwidths, replace_match.l, replace_match.r)
             local r_line = r_lines[r_k] ---@type string
 
@@ -396,7 +396,7 @@ function M.fetch_data(input_text, force, callback)
               local prettier_line = line:sub(1, col_end) .. r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
               local text = text_prefix .. prettier_line .. fml.ui.icons.listchars.eol ---@type string
 
-              ---@type fc.types.ux.IInlineHighlight[]
+              ---@type eve.types.ux.IInlineHighlight[]
               local highlights = {
                 { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
                 { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
@@ -419,7 +419,7 @@ function M.fetch_data(input_text, force, callback)
               local prettier_line = line ---@type string
               local text = text_prefix .. prettier_line .. fml.ui.icons.listchars.eol ---@type string
 
-              ---@type fc.types.ux.IInlineHighlight[]
+              ---@type eve.types.ux.IInlineHighlight[]
               local highlights = {
                 { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
                 { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
@@ -455,7 +455,7 @@ function M.fetch_data(input_text, force, callback)
         for _, block_match in ipairs(filematch.matches) do
           local lines = block_match.lines ---@type string[]
           local lwidths = block_match.lwidths ---@type integer[]
-          local matches = block_match.matches ---@type fc.types.IMatchPoint[]
+          local matches = block_match.matches ---@type eve.types.IMatchPoint[]
           for _, search_match in ipairs(matches) do
             local k, col, col_end = calc_same_line_pos(lwidths, search_match.l, search_match.r)
             local lnum = block_match.lnum + k - 1 ---@type integer
@@ -464,7 +464,7 @@ function M.fetch_data(input_text, force, callback)
             local text = text_prefix .. lines[k] .. fml.ui.icons.listchars.eol ---@type string
             local width_prefix = string.len(text_prefix) ---@type integer
 
-            ---@type fc.types.ux.IInlineHighlight[]
+            ---@type eve.types.ux.IInlineHighlight[]
             local highlights = {
               { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
               { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_match" },
@@ -524,13 +524,13 @@ end
 
 ---@return fml.types.IQuickFixItem[]
 function M.gen_quickfix_items()
-  local cwd = fc.path.cwd() ---@type string
+  local cwd = eve.path.cwd() ---@type string
   local search_cwd = state.search_cwd:snapshot() ---@type string
   local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
   for _, item in pairs(_item_map) do
     if item.offset >= 0 then
-      local absolute_filepath = fc.path.join(search_cwd, item.filepath) ---@type string
-      local relative_filepath = fc.path.relative(cwd, absolute_filepath, false) ---@type string
+      local absolute_filepath = eve.path.join(search_cwd, item.filepath) ---@type string
+      local relative_filepath = eve.path.relative(cwd, absolute_filepath, false) ---@type string
       table.insert(quickfix_items, {
         filename = relative_filepath,
         lnum = item.lnum,
@@ -543,7 +543,7 @@ function M.gen_quickfix_items()
 end
 
 ---@param filepath                      string
----@return fc.oxi.search.IFileMatch|nil
+---@return eve.oxi.search.IFileMatch|nil
 function M.get_filematch(filepath)
   local fileitem = _fileitem_map[filepath] ---@type ghc.command.search_files.IFileItem|nil
   if fileitem == nil then
@@ -557,15 +557,15 @@ function M.get_filematch(filepath)
 end
 
 ---@param item                          fml.types.ui.search.IItem
----@param frecency                      fc.types.collection.IFrecency
+---@param frecency                      eve.types.collection.IFrecency
 ---@return boolean
 function M.open_file(item, frecency)
   local cwd = state.search_cwd:snapshot() ---@type string
-  local workspace = fc.path.workspace() ---@type string
+  local workspace = eve.path.workspace() ---@type string
   local data = _item_map and _item_map[item.uuid] ---@type ghc.command.search_files.IItem|nil
   if data ~= nil then
-    local absolute_filepath = fc.path.join(cwd, data.filepath) ---@type string
-    local relative_filepath = fc.path.relative(workspace, absolute_filepath, true) ---@type string
+    local absolute_filepath = eve.path.join(cwd, data.filepath) ---@type string
+    local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string
     frecency:access(relative_filepath)
     local opened = fml.api.buf.open_in_current_valid_win(absolute_filepath) ---@type boolean
 
@@ -593,7 +593,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
     return M.fetch_preview_data(search_item)
   end
 
-  local highlights = {} ---@type fc.types.ux.IHighlight[]
+  local highlights = {} ---@type eve.types.ux.IHighlight[]
   local cur_lnum = -1 ---@type integer
   local cur_col = 0 ---@type integer
   local flag_replace = session.search_flag_replace:snapshot() ---@type boolean
@@ -613,7 +613,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
       local hlname = is_search_match and (is_match_cur and "f_us_preview_search_cur" or "f_us_preview_search")
         or (is_match_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
 
-      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fc.types.ux.IHighlight
+      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type eve.types.ux.IHighlight
       table.insert(highlights, highlight)
 
       if is_match_cur and cur_lnum < 0 then
@@ -632,7 +632,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
 
       local is_match_cur = match_offset_cur == hl.offset or (match_offset_cur < 0 and order == 1) ---@type boolean
       local hlname = is_match_cur and "f_us_match_cur" or "f_us_match" ---@type string
-      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type fc.types.ux.IHighlight
+      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type eve.types.ux.IHighlight
       table.insert(highlights, highlight)
 
       if is_match_cur and cur_lnum < 0 then
@@ -668,10 +668,10 @@ function M.refresh_file_item(filepath)
     local search_pattern = session.search_pattern:snapshot() ---@type string
     local include_patterns = session.search_include_patterns:snapshot() ---@type string
     local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
-    local specified_filepath = fc.path.join(cwd, filepath) ---@type string
+    local specified_filepath = eve.path.join(cwd, filepath) ---@type string
 
-    ---@type fc.oxi.search.IResult|nil
-    local partial_search_result = fc.oxi.search({
+    ---@type eve.oxi.search.IResult|nil
+    local partial_search_result = eve.oxi.search({
       cwd = cwd,
       flag_case_sensitive = flag_case_sensitive,
       flag_gitignore = flag_gitignore,
@@ -688,7 +688,7 @@ function M.refresh_file_item(filepath)
     if partial_search_result ~= nil and partial_search_result.error == nil and partial_search_result.items ~= nil then
       _last_search_result.items[filepath] = nil
       for _, raw_filepath in ipairs(partial_search_result.item_orders) do
-        local filematch = partial_search_result.items[raw_filepath] ---@type fc.oxi.search.IFileMatch|nil
+        local filematch = partial_search_result.items[raw_filepath] ---@type eve.oxi.search.IFileMatch|nil
         if filematch ~= nil then
           _last_search_result.items[raw_filepath] = filematch
         end
@@ -740,7 +740,7 @@ function M.replace_file(uuid)
       end
     end
 
-    local succeed, locations = fc.oxi.replace_file_advance_by_matches({
+    local succeed, locations = eve.oxi.replace_file_advance_by_matches({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -756,7 +756,7 @@ function M.replace_file(uuid)
     end
 
     if #locations ~= #remain_offsets then
-      fc.reporter.error({
+      eve.reporter.error({
         from = "ghc.command.search_files.api",
         subject = "replace_file",
         mesage = "Bad locations, the size of locations should match the given remain_offsets.",
@@ -782,7 +782,7 @@ function M.replace_file(uuid)
     for i = 1, #locations, 1 do
       local child_uuid = remain_child_uuids[i] ---@type string
       local child_item = _item_map[child_uuid] ---@type ghc.command.search_files.IItem
-      local location = locations[i] ---@type fc.types.IMatchLocation
+      local location = locations[i] ---@type eve.types.IMatchLocation
       child_item.offset = location.offset
       child_item.lnum = location.lnum
       child_item.col = location.col
@@ -814,7 +814,7 @@ function M.replace_file(uuid)
     end
 
     ---@type boolean
-    succeed = fc.oxi.replace_file_by_matches({
+    succeed = eve.oxi.replace_file_by_matches({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -825,7 +825,7 @@ function M.replace_file(uuid)
     })
   else
     ---@type boolean
-    succeed = fc.oxi.replace_file({
+    succeed = eve.oxi.replace_file({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -872,7 +872,7 @@ function M.replace_file_all()
         end
       end
 
-      fc.oxi.replace_file_by_matches({
+      eve.oxi.replace_file_by_matches({
         cwd = cwd,
         filepath = filepath,
         flag_case_sensitive = flag_case_sensitive,
@@ -883,7 +883,7 @@ function M.replace_file_all()
       })
     else
       ---@type boolean
-      fc.oxi.replace_file({
+      eve.oxi.replace_file({
         cwd = cwd,
         filepath = filepath,
         flag_case_sensitive = flag_case_sensitive,

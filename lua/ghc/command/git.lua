@@ -11,7 +11,7 @@ local function get_filepath_from_lazygit(cwd)
   for i = 1, 5 do
     local relative_filepath = vim.fn.getreg("+")
     if relative_filepath ~= "" then
-      return fc.path.join(cwd, relative_filepath)
+      return eve.path.join(cwd, relative_filepath)
     end
     vim.uv.sleep(30)
   end
@@ -19,11 +19,11 @@ end
 
 ---@return string
 local function get_lazygit_config_filepath()
-  local lazygit_config_dir = fc.path.locate_config_filepath("lazygit")
+  local lazygit_config_dir = eve.path.locate_config_filepath("lazygit")
   local darken = client.mode:snapshot() == "darken" ---@type boolean
   local config_filepaths = {
-    fc.path.join(lazygit_config_dir, "config.yaml"),
-    fc.path.join(lazygit_config_dir, darken and "theme.darken.yaml" or "theme.lighten.yaml"),
+    eve.path.join(lazygit_config_dir, "config.yaml"),
+    eve.path.join(lazygit_config_dir, darken and "theme.darken.yaml" or "theme.lighten.yaml"),
   }
   local lazygit_theme_config_filepath = table.concat(config_filepaths, ",")
   return lazygit_theme_config_filepath
@@ -37,7 +37,7 @@ local function edit_lazygit_file_in_buffer(cwd)
   local channel_id = vim.fn.getbufvar(bufnr_cur, "terminal_job_id")
 
   if not channel_id then
-    fc.reporter.error({
+    eve.reporter.error({
       from = "guanghechen.command.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "No terminal job ID found.",
@@ -50,7 +50,7 @@ local function edit_lazygit_file_in_buffer(cwd)
 
   local relative_filepath = get_filepath_from_lazygit(cwd)
   if not relative_filepath then
-    fc.reporter.error({
+    eve.reporter.error({
       from = "guanghechen.command.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "Clipboard is empty or invalid.",
@@ -60,7 +60,7 @@ local function edit_lazygit_file_in_buffer(cwd)
 
   local winnr = fml.api.state.win_history:present()
   if winnr == nil then
-    fc.reporter.error({
+    eve.reporter.error({
       from = "guanghechen.command.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "Could not find the original window.",
@@ -97,18 +97,18 @@ end
 
 ---@return nil
 function M.toggle_lazygit_workspace()
-  open_lazygit("lazygit_workspace", fc.path.workspace())
+  open_lazygit("lazygit_workspace", eve.path.workspace())
 end
 
 ---@return nil
 function M.toggle_lazygit_cwd()
-  open_lazygit("lazygit_cwd", fc.path.cwd())
+  open_lazygit("lazygit_cwd", eve.path.cwd())
 end
 
 ---@return nil
 function M.toggle_lazygit_file_history()
   local filepath = vim.api.nvim_buf_get_name(0)
-  open_lazygit("lazygit_file_history", fc.path.cwd(), { "-f", vim.fn.fnameescape(filepath) })
+  open_lazygit("lazygit_file_history", eve.path.cwd(), { "-f", vim.fn.fnameescape(filepath) })
 end
 
 ---@return nil
@@ -120,7 +120,7 @@ end
 ---@return nil
 function M.open_diffview_filehistory()
   local diffview = require("diffview")
-  local filepath = fc.path.current_filepath()
+  local filepath = eve.path.current_filepath()
   diffview.file_history(nil, filepath)
 end
 

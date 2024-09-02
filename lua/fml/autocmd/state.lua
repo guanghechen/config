@@ -38,7 +38,7 @@ vim.api.nvim_create_autocmd({ "BufDelete" }, {
     for _, tab in pairs(state.tabs) do
       if tab.bufnr_set[bufnr] then
         tab.bufnr_set[bufnr] = nil
-        fc.array.filter_inline(tab.bufnrs, function(nr)
+        eve.array.filter_inline(tab.bufnrs, function(nr)
           return nr ~= bufnr
         end)
       end

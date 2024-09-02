@@ -1,7 +1,7 @@
 local state = require("fml.api.state")
-local navigate = require("fc.std.navigate")
-local std_object = require("fc.std.object")
-local reporter = require("fc.std.reporter")
+local navigate = require("eve.std.navigate")
+local std_object = require("eve.std.object")
+local reporter = require("eve.std.reporter")
 
 ---@class fml.api.tab
 local M = require("fml.api.tab.mod")

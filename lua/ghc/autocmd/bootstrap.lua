@@ -3,9 +3,9 @@ local augroups = {
   redraw_when_mode_changes = fml.util.augroup("redraw_when_mode_changes"),
 }
 
-fml.disposable:add_disposable(fc.c.Disposable.new({
+fml.disposable:add_disposable(eve.c.Disposable.new({
   on_dispose = function()
-    if vim.fn.argc() < 1 and fc.path.is_git_repo() then
+    if vim.fn.argc() < 1 and eve.path.is_git_repo() then
       ghc.command.session.autosave()
     end
   end,

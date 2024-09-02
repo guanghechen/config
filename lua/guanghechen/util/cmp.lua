@@ -79,7 +79,7 @@ function M.expand(snippet)
 %s
 ```]]):format(msg, vim.bo.filetype, snippet)
 
-    local log = ok and fc.reporter.warn or fc.reporter.error
+    local log = ok and eve.reporter.warn or eve.reporter.error
     log({
       from = "guanghechen.util.cmp.expand",
       subject = "vim.snippet",

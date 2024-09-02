@@ -62,7 +62,7 @@ function M.locate_symbols(winnr, force)
 
   ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  if not fc.lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
+  if not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
     return
   end
 
@@ -81,7 +81,7 @@ function M.locate_symbols(winnr, force)
     locating_set[winnr] = nil
 
     if err then
-      fc.reporter.error({
+      eve.reporter.error({
         from = "fml.api.lsp",
         subject = "locate_symbols",
         message = "Failed to request document symbols",

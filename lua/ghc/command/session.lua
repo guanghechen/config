@@ -10,36 +10,36 @@ end
 ---@return string
 local function get_filepath(pathtype)
   if pathtype == "session" then
-    local filepath = fc.path.locate_session_filepath({ filename = "session.vim" })
+    local filepath = eve.path.locate_session_filepath({ filename = "session.vim" })
     vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
     return filepath
   end
 
   if pathtype == "state" then
-    local filepath = fc.path.locate_session_filepath({ filename = "state.json" })
+    local filepath = eve.path.locate_session_filepath({ filename = "state.json" })
     vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
     return filepath
   end
 
   if pathtype == "session_autosaved" then
-    local filepath = fc.path.locate_session_filepath({ filename = "session.autosave.vim" })
+    local filepath = eve.path.locate_session_filepath({ filename = "session.autosave.vim" })
     vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
     return filepath
   end
 
   if pathtype == "state_autosaved" then
-    local filepath = fc.path.locate_session_filepath({ filename = "state.autosave.json" })
+    local filepath = eve.path.locate_session_filepath({ filename = "state.autosave.json" })
     vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
     return filepath
   end
 
-  fc.reporter.error({
+  eve.reporter.error({
     from = "ghc.command.session",
     subject = "get_filepath",
     message = "Unexpected pathtype.",
     details = { pathtype = pathtype }
   })
-  return fc.path.locate_session_filepath({ filename = "session.tmp.txt" })
+  return eve.path.locate_session_filepath({ filename = "session.tmp.txt" })
 end
 
 
@@ -49,13 +49,13 @@ local M = {}
 ---@return nil
 function M.clear_current()
   local filenames = { "session.vim", "state.vim", "session.autosave.nvim", "state.autosave.json" }
-  fc.path.remove_session_filepaths({ filenames = filenames })
+  eve.path.remove_session_filepaths({ filenames = filenames })
 end
 
 ---@return nil
 function M.clear_all()
   local filenames = { "session.vim", "state.vim", "session.autosave.nvim", "state.autosave.json" }
-  fc.path.remove_session_filepaths_all({ filenames = filenames })
+  eve.path.remove_session_filepaths_all({ filenames = filenames })
 end
 
 ---@return nil
@@ -65,7 +65,7 @@ end
 
 ---@return nil
 function M.autosave()
-  if fc.array.some(vim.api.nvim_list_bufs(), does_buf_savable) then
+  if eve.array.some(vim.api.nvim_list_bufs(), does_buf_savable) then
     return
   end
 
@@ -89,7 +89,7 @@ function M.save()
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 
-  fc.reporter.info({
+  eve.reporter.info({
     from = "ghc.command.sesession",
     subject = "save",
     message = "Session saved successfully!",
@@ -121,7 +121,7 @@ function M.load_autosaved()
       fml.api.state.load(state_fliepath)
     end
   else
-    fc.reporter.warn({
+    eve.reporter.warn({
       from = "ghc.command.session",
       subject = "load_autosaved",
       message = "Cannot find session filepath" .. session_filepath,

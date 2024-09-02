@@ -1,6 +1,6 @@
-local nvimbar = require("fc.std.nvimbar")
-local path = require("fc.std.path")
-local reporter = require("fc.std.reporter")
+local nvimbar = require("eve.std.nvimbar")
+local path = require("eve.std.path")
+local reporter = require("eve.std.reporter")
 local util = require("fml.util")
 
 ---@class fml.ui.Nvimbar : fml.types.ui.INvimbar
@@ -161,7 +161,7 @@ function M:enable(name)
 end
 
 ---@param name                          string
----@param position                      fc.enums.NvimbarCompPosition
+---@param position                      eve.enums.NvimbarCompPosition
 ---@return fml.ui.Nvimbar
 function M:place(name, position)
   ---@type fml.types.ui.nvimbar.IItem
@@ -183,8 +183,8 @@ function M:register(name, raw_component, enabled)
     last_result_width = 0,
     tight = not not raw_component.tight,
     render = raw_component.render,
-    will_change = raw_component.will_change or fc.util.truthy,
-    condition = raw_component.condition or fc.util.truthy,
+    will_change = raw_component.will_change or eve.util.truthy,
+    condition = raw_component.condition or eve.util.truthy,
   }
   self._components[name] = component
   return self
@@ -216,7 +216,7 @@ function M:render(force)
     for i = 1, #positions, 1 do
       local item = positions[i] ---@type fml.types.ui.nvimbar.IItem
       local name = item.name ---@type string
-      local position = item.position ---@type fc.enums.NvimbarCompPosition
+      local position = item.position ---@type eve.enums.NvimbarCompPosition
 
       local component = components[name] ---@type fml.types.ui.nvimbar.IComponent|nil
       if component ~= nil and component.enabled then

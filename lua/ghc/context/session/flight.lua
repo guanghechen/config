@@ -1,9 +1,9 @@
-local flight_autoload_session = fc.c.Observable.from_value(false)
-local flight_copilot = fc.c.Observable.from_value(false)
+local flight_autoload_session = eve.c.Observable.from_value(false)
+local flight_copilot = eve.c.Observable.from_value(false)
 
----@class ghc.context.session : fc.collection.Viewmodel
----@field public flight_autoload_session    fc.types.collection.IObservable
----@field public flight_copilot             fc.types.collection.IObservable
+---@class ghc.context.session : eve.collection.Viewmodel
+---@field public flight_autoload_session    eve.types.collection.IObservable
+---@field public flight_copilot             eve.types.collection.IObservable
 local M = require("ghc.context.session.mod")
   :register("flight_autoload_session", flight_autoload_session, true, true)
   :register("flight_copilot", flight_copilot, true, true)

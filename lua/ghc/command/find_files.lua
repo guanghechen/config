@@ -1,6 +1,6 @@
 local session = require("ghc.context.session")
 
-local state_find_cwd = fc.c.Observable.from_value(session.get_find_scope_cwd(fc.path.cwd()))
+local state_find_cwd = eve.c.Observable.from_value(session.get_find_scope_cwd(eve.path.cwd()))
 local _select = nil ---@type fml.types.ui.IFileSelect|nil
 
 ---@return nil
@@ -49,7 +49,7 @@ local actions = {
 
     ---@type ghc.command.find_files.IConfigData
     local data = {
-      exclude_patterns = fc.array.parse_comma_list(f_exclude_patterns),
+      exclude_patterns = eve.array.parse_comma_list(f_exclude_patterns),
     }
 
     local setting = fml.ui.Setting.new({
@@ -62,7 +62,7 @@ local actions = {
         end
         ---@cast raw_data ghc.command.find_files.IConfigData
 
-        if raw_data.exclude_patterns == nil or not fc.is.array(raw_data.exclude_patterns) then
+        if raw_data.exclude_patterns == nil or not eve.is.array(raw_data.exclude_patterns) then
           return "Invalid data.exclude_patterns, expect an array."
         end
       end,
@@ -127,8 +127,8 @@ local function get_select()
   if _select == nil then
     local state_frecency = require("ghc.state.frecency")
     local state_input_history = require("ghc.state.input_history")
-    local frecency = state_frecency.load_and_autosave().files ---@type fc.types.collection.IFrecency
-    local input_history = state_input_history.load_and_autosave().find_files ---@type fc.types.collection.IHistory
+    local frecency = state_frecency.load_and_autosave().files ---@type eve.types.collection.IFrecency
+    local input_history = state_input_history.load_and_autosave().find_files ---@type eve.types.collection.IHistory
 
     ---@type fml.types.ui.search.IRawStatuslineItem[]
     local statusline_items = {
@@ -210,24 +210,24 @@ local function get_select()
     }
 
     ---@type fml.types.IKeymap[]
-    local input_keymaps = fc.array.concat({}, common_keymaps)
+    local input_keymaps = eve.array.concat({}, common_keymaps)
 
     ---@type fml.types.IKeymap[]
-    local main_keymaps = fc.array.concat({}, common_keymaps)
+    local main_keymaps = eve.array.concat({}, common_keymaps)
 
     ---@type fml.types.IKeymap[]
-    local preview_keymaps = fc.array.concat({}, common_keymaps)
+    local preview_keymaps = eve.array.concat({}, common_keymaps)
 
     ---@type fml.types.ui.file_select.IProvider
     local provider = {
       fetch_data = function()
         local cwd = state_find_cwd:snapshot() ---@type string
-        local workspace = fc.path.workspace() ---@type string
+        local workspace = eve.path.workspace() ---@type string
         local exclude_patterns = session.find_exclude_patterns:snapshot() ---@type string
         local flag_gitignore = session.find_flag_gitignore:snapshot() ---@type boolean
 
         ---@type string[]
-        local filepaths = fc.oxi.find({
+        local filepaths = eve.oxi.find({
           workspace = workspace,
           cwd = cwd,
           flag_case_sensitive = false,

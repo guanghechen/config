@@ -1,20 +1,20 @@
 local state_frecency = require("ghc.state.frecency")
-local frecency = state_frecency.load_and_autosave().files ---@type fc.types.collection.IFrecency
+local frecency = state_frecency.load_and_autosave().files ---@type eve.types.collection.IFrecency
 
 ---@return fml.types.ui.simple_file_select.IData
 local function provide()
   local result = vim.fn.system("git diff HEAD --name-only") ---@type string
-  local lines = fc.oxi.parse_lines(result) ---@type string[]
+  local lines = eve.oxi.parse_lines(result) ---@type string[]
 
-  local workspace = fc.path.workspace() ---@type string
-  local cwd = fc.path.cwd() ---@type string
+  local workspace = eve.path.workspace() ---@type string
+  local cwd = eve.path.cwd() ---@type string
   local filepaths = {} ---@type string[]
 
   for _, line in ipairs(lines) do
-    local absolute_filepath = fc.path.join(workspace, line) ---@type string
-    local filepath = fc.path.relative(cwd, absolute_filepath, true) ---@type string
-    local filename = fc.path.basename(filepath) ---@type string
-    local is_text_file = fc.is.printable_file(filename) ---@type boolean
+    local absolute_filepath = eve.path.join(workspace, line) ---@type string
+    local filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string
+    local filename = eve.path.basename(filepath) ---@type string
+    local is_text_file = eve.is.printable_file(filename) ---@type boolean
     if is_text_file then
       table.insert(filepaths, filepath)
     end

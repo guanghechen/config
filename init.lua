@@ -1,5 +1,5 @@
-_G.fc = require("fc")
-if fc.os.is_mac() or fc.os.is_nix() or fc.os.is_wsl() then
+_G.eve = require("eve")
+if eve.os.is_mac() or eve.os.is_nix() or eve.os.is_wsl() then
   vim.opt.shell = "/bin/bash"
 end
 
@@ -35,8 +35,8 @@ end
 ---! bootstrap lazy and all plugins
 ---@return nil
 local function load_plugins()
-  local lazypath = fc.path.locate_data_filepath("/lazy/lazy.nvim")
-  if not fc.path.is_exist(lazypath) then
+  local lazypath = eve.path.locate_data_filepath("/lazy/lazy.nvim")
+  if not eve.path.is_exist(lazypath) then
     local repo = "https://github.com/guanghechen/mirror"
     vim.fn.system({
       "git",
@@ -114,11 +114,11 @@ end
 ---@return nil
 local function load_autosave_session()
   ---! Reload session if not specify file and current directory is a git repository.
-  if ghc.context.session.flight_autoload_session:snapshot() and vim.fn.argc() < 1 and fc.path.is_git_repo() then
+  if ghc.context.session.flight_autoload_session:snapshot() and vim.fn.argc() < 1 and eve.path.is_git_repo() then
     vim.schedule(function()
       local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
       if not ok_load_session then
-        fc.reporter.error({
+        eve.reporter.error({
           from = "init",
           subject = "auto reload session",
           message = "Failed to load autosaved session",

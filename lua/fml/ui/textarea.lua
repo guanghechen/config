@@ -1,6 +1,6 @@
-local std_array = require("fc.std.array")
-local box = require("fc.std.box")
-local reporter = require("fc.std.reporter")
+local std_array = require("eve.std.array")
+local box = require("eve.std.box")
+local reporter = require("eve.std.reporter")
 local util = require("fml.util")
 
 ---@type string
@@ -16,7 +16,7 @@ local WIN_HIGHLIGHT = table.concat({
 ---@class fml.ui.Textarea : fml.types.ui.ITextarea
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected position            fc.enums.BoxPosition
+---@field protected position            eve.enums.BoxPosition
 ---@field protected width               number
 ---@field protected height              number
 ---@field protected max_width           number|nil
@@ -31,7 +31,7 @@ local M = {}
 M.__index = M
 
 ---@class fml.ui.textarea.IProps
----@field public position               fc.enums.BoxPosition
+---@field public position               eve.enums.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -51,7 +51,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local position = props.position ---@type fc.enums.BoxPosition
+  local position = props.position ---@type eve.enums.BoxPosition
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil
@@ -156,7 +156,7 @@ end
 ---@param params                        fml.types.ui.textarea.IOpenParams
 ---@return nil
 function M:open(params)
-  ---@type fc.types.ux.IBoxRestriction
+  ---@type eve.types.ux.IBoxRestriction
   local restriction = {
     position = self.position,
     rows = vim.o.lines,
@@ -172,7 +172,7 @@ function M:open(params)
   }
   local width = params.width or self.width ---@type number
   local height = box.flat(params.height or self.height, restriction.rows) ---@type integer
-  local rect = box.measure(width, height, restriction) ---@type fc.types.ux.IBoxDimension
+  local rect = box.measure(width, height, restriction) ---@type eve.types.ux.IBoxDimension
 
   if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then
     local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer

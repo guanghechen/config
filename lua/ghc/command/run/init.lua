@@ -7,8 +7,8 @@ local M = {}
 
 ---@return nil
 function M.run()
-  local filepath = fc.path.current_filepath()
-  local extname = fc.path.extname(filepath)
+  local filepath = eve.path.current_filepath()
+  local extname = eve.path.extname(filepath)
 
   local runner = runners[extname]
   if runner ~= nil then

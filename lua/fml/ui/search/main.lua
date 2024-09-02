@@ -1,13 +1,13 @@
-local Subscriber = require("fc.collection.subscriber")
+local Subscriber = require("eve.collection.subscriber")
 local constant = require("fml.constant")
-local scheduler = require("fc.std.scheduler")
+local scheduler = require("eve.std.scheduler")
 local util = require("fml.util")
 local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Main : fml.types.ui.search.IMain
 ---@field protected _bufnr              integer|nil
 ---@field protected _keymaps            fml.types.IKeymap[]
----@field protected _render_scheduler   fc.std.scheduler.IScheduler
+---@field protected _render_scheduler   eve.std.scheduler.IScheduler
 local M = {}
 M.__index = M
 
@@ -59,7 +59,7 @@ function M.new(props)
 
       local items = state.items ---@type fml.types.ui.search.IItem[]
       for lnum, item in ipairs(items) do
-        local highlights = item.highlights ---@type fc.types.ux.IInlineHighlight[]
+        local highlights = item.highlights ---@type eve.types.ux.IInlineHighlight[]
         for _, hl in ipairs(highlights) do
           vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.coll, hl.colr)
         end
@@ -69,7 +69,7 @@ function M.new(props)
     self:place_lnum_sign()
   end
 
-  ---@type fc.std.scheduler.IScheduler
+  ---@type eve.std.scheduler.IScheduler
   local render_scheduler = scheduler.debounce({
     name = "fml.ui.search.main.render",
     delay = delay_render,

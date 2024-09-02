@@ -112,15 +112,15 @@ local input_keymaps = {
 local M = {}
 
 ---@type fml.types.ui.search.IRawStatuslineItem[]
-M.statusline_items = fc.array.concat({}, statusline_items)
+M.statusline_items = eve.array.concat({}, statusline_items)
 
 ---@type fml.types.IKeymap[]
-M.input_keymaps = fc.array.concat({}, common_keymaps, input_keymaps)
+M.input_keymaps = eve.array.concat({}, common_keymaps, input_keymaps)
 
 ---@type fml.types.IKeymap[]
-M.main_keymaps = fc.array.concat({}, common_keymaps, input_keymaps)
+M.main_keymaps = eve.array.concat({}, common_keymaps, input_keymaps)
 
 ---@type fml.types.IKeymap[]
-M.preview_keymaps = fc.array.concat({}, common_keymaps)
+M.preview_keymaps = eve.array.concat({}, common_keymaps)
 
 return M

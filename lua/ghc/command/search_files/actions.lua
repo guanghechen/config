@@ -57,11 +57,11 @@ function M.edit_config()
   local data = {
     search_pattern = s_search_pattern,
     replace_pattern = s_replace_pattern,
-    search_paths = fc.array.parse_comma_list(s_search_paths),
+    search_paths = eve.array.parse_comma_list(s_search_paths),
     max_filesize = s_max_filesize,
     max_matches = s_max_matches,
-    include_patterns = fc.array.parse_comma_list(s_include_patterns),
-    exclude_patterns = fc.array.parse_comma_list(s_exclude_patterns),
+    include_patterns = eve.array.parse_comma_list(s_include_patterns),
+    exclude_patterns = eve.array.parse_comma_list(s_exclude_patterns),
   }
 
   local setting = fml.ui.Setting.new({
@@ -82,7 +82,7 @@ function M.edit_config()
         return "Invalid data.replace_pattern, expect an string."
       end
 
-      if raw_data.search_paths == nil or not fc.is.array(raw_data.search_paths) then
+      if raw_data.search_paths == nil or not eve.is.array(raw_data.search_paths) then
         return "Invalid data.search_paths, expect an array."
       end
 
@@ -94,11 +94,11 @@ function M.edit_config()
         return "Invalid data.max_matches, expect a number."
       end
 
-      if raw_data.include_patterns == nil or not fc.is.array(raw_data.include_patterns) then
+      if raw_data.include_patterns == nil or not eve.is.array(raw_data.include_patterns) then
         return "Invalid data.include_patterns, expect an array."
       end
 
-      if raw_data.exclude_patterns == nil or not fc.is.array(raw_data.exclude_patterns) then
+      if raw_data.exclude_patterns == nil or not eve.is.array(raw_data.exclude_patterns) then
         return "Invalid data.exclude_patterns, expect an array."
       end
     end,

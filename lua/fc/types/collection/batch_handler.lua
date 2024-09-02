@@ -1,4 +1,0 @@
----@class fc.types.collection.IBatchHandler
----@field public cleanup                fun(self: fc.types.collection.IBatchHandler): nil
----@field public run                    fun(self: fc.types.collection.IBatchHandler, action: fun(): nil): nil
----@field public summary                fun(self: fc.types.collection.IBatchHandler, title: string): nil): nil

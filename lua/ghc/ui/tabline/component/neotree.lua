@@ -38,11 +38,11 @@ local M = {
     local right_blank = string.rep(" ", right_width)
     local right_split = "│"
 
-    local hl_text = fc.nvimbar.txt(indicator, "f_wl_indicator")
-      .. fc.nvimbar.txt(left_blank, "f_tl_neotree_blank")
-      .. fc.nvimbar.txt(text, "f_tl_neotree_text")
-      .. fc.nvimbar.txt(right_blank, "f_tl_neotree_blank")
-      .. fc.nvimbar.txt(right_split, "f_tl_neotree_split")
+    local hl_text = eve.nvimbar.txt(indicator, "f_wl_indicator")
+      .. eve.nvimbar.txt(left_blank, "f_tl_neotree_blank")
+      .. eve.nvimbar.txt(text, "f_tl_neotree_text")
+      .. eve.nvimbar.txt(right_blank, "f_tl_neotree_blank")
+      .. eve.nvimbar.txt(right_split, "f_tl_neotree_split")
     return hl_text, width + 1
   end,
 }

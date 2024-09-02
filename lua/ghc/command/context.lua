@@ -7,7 +7,7 @@ local M = {}
 function M.edit_client()
   local filepath = client:get_filepath() ---@type string|nil
   if filepath == nil then
-    fc.reporter.error({
+    eve.reporter.error({
       from = "ghc.command.context",
       subject = "edit_client",
       message = "Cannot locate the client context filepath.",
@@ -27,7 +27,7 @@ end
 function M.edit_session()
   local filepath = session:get_filepath() ---@type string|nil
   if filepath == nil then
-    fc.reporter.error({
+    eve.reporter.error({
       from = "ghc.command.context",
       subject = "edit_session",
       message = "Cannot locate the session context filepath.",

@@ -5,7 +5,7 @@ return {
     friendly_snippets = true,
     global_snippets = { "all", "global" },
     search_paths = {
-      fc.path.locate_config_filepath("_editor/snippets"),
+      eve.path.locate_config_filepath("_editor/snippets"),
     },
   },
   dependencies = {

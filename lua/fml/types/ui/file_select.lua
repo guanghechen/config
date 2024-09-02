@@ -8,7 +8,7 @@
 ---| fun(item: fml.types.ui.file_select.IItem, last_item: fml.types.ui.file_select.IItem, last_data: fml.ui.search.preview.IData): fml.ui.search.preview.IData
 
 ---@alias fml.types.ui.file_select.IRenderItem
----| fun(item: fml.types.ui.file_select.IItem, match: fml.types.ui.select.IMatchedItem): string, fc.types.ux.IInlineHighlight[]
+---| fun(item: fml.types.ui.file_select.IItem, match: fml.types.ui.select.IMatchedItem): string, eve.types.ux.IInlineHighlight[]
 
 ---@class fml.types.ui.file_select.IData
 ---@field public cwd                    string

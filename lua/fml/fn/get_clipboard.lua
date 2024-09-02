@@ -21,7 +21,7 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   local function write_to_fake_clipboard(data)
     local file = io.open(clipboard_file, "w")
     if file == nil then
-      fc.reporter.error({
+      eve.reporter.error({
         from = "fml.fn.get_clipboard",
         subject = "macos_fake_clipborad",
         message = "Unable to open fake clipboard file for writing.",
@@ -47,7 +47,7 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   local function read_from_fake_clipboard()
     local file = io.open(clipboard_file, "r")
     if file == nil then
-      fc.reporter.error({
+      eve.reporter.error({
         from = "fml.fn.get_clipboard",
         subject = "macos_fake_clipborad",
         message = "Unable to open fake clipboard file for reading.",
@@ -78,14 +78,14 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
 end
 
 local function get_clipboard()
-  if fc.os.is_wsl() then
+  if eve.os.is_wsl() then
     return wsl_clipboard()
   end
-  if fc.os.is_mac() then
+  if eve.os.is_mac() then
     if vim.env.TMUX ~= nil then
-      local fake_clipboard_filepath = fc.tmux.get_tmux_env_value("ghc_use_fake_clipboard")
-      if fake_clipboard_filepath ~= nil and fc.path.is_exist(fake_clipboard_filepath) then
-        fc.reporter.info({
+      local fake_clipboard_filepath = eve.tmux.get_tmux_env_value("ghc_use_fake_clipboard")
+      if fake_clipboard_filepath ~= nil and eve.path.is_exist(fake_clipboard_filepath) then
+        eve.reporter.info({
           from = "fml.fn.get_clipboard",
           message = "Using fake clipboard:" .. fake_clipboard_filepath,
         })

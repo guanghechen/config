@@ -1,5 +1,5 @@
 local state = require("fml.api.state")
-local navigate = require("fc.std.navigate")
+local navigate = require("eve.std.navigate")
 
 ---@class fml.api.tab
 ---@field public focus_1                fun(): nil

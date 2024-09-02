@@ -1,12 +1,12 @@
-local Subscriber = require("fc.collection.subscriber")
+local Subscriber = require("eve.collection.subscriber")
 local constant = require("fml.constant")
-local scheduler = require("fc.std.scheduler")
+local scheduler = require("eve.std.scheduler")
 local util = require("fml.util")
 
 ---@class fml.ui.search.Preview : fml.types.ui.search.IPreview
 ---@field protected _bufnr              integer|nil
 ---@field protected _keymaps            fml.types.IKeymap[]
----@field protected _render_scheduler   fc.std.scheduler.IScheduler
+---@field protected _render_scheduler   eve.std.scheduler.IScheduler
 local M = {}
 M.__index = M
 
@@ -107,7 +107,7 @@ function M.new(props)
     _update_win_config({ title = title, lnum = lnum, col = col })
   end
 
-  ---@type fc.std.scheduler.IScheduler
+  ---@type eve.std.scheduler.IScheduler
   local _render_scheduler = scheduler.debounce({
     name = "fml.ui.search.preview.render",
     delay = delay_render,

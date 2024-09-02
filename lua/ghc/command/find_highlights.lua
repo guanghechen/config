@@ -38,7 +38,7 @@ local provider = {
       local hlgroups = _hlgroups or {} ---@type table<string, vim.api.keyset.hl_info>
 
       local lines = {} ---@type string[]
-      local highlights = {} ---@type fc.types.ux.IHighlight[]
+      local highlights = {} ---@type eve.types.ux.IHighlight[]
 
       local max_hlname_width = 0 ---@type integer
       for _, hlname in ipairs(hlnames) do
@@ -46,16 +46,16 @@ local provider = {
       end
 
       for lnum, hlname in ipairs(hlnames) do
-        local line = "xxx   " .. fc.string.pad_end(hlname, max_hlname_width, " ") ---@type string
-        local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type fc.types.ux.IHighlight
+        local line = "xxx   " .. eve.string.pad_end(hlname, max_hlname_width, " ") ---@type string
+        local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.types.ux.IHighlight
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info
         if hlgroup.fg ~= nil then
-          local color_name = fc.std.color.int2hex(hlgroup.fg) ---@type string
+          local color_name = eve.std.color.int2hex(hlgroup.fg) ---@type string
           line = line .. " fg=" .. color_name
         end
         if hlgroup.bg ~= nil then
-          local color_name = fc.std.color.int2hex(hlgroup.bg) ---@type string
+          local color_name = eve.std.color.int2hex(hlgroup.bg) ---@type string
           line = line .. " bg=" .. color_name
         end
         if hlgroup.link ~= nil then
@@ -72,7 +72,7 @@ local provider = {
         for key, val in pairs(hlgroup) do
           if key ~= "fg" and key ~= "bg" and key ~= "link" and key ~= "cterm" then
             if type(val) ~= "string" then
-              val = fc.json.stringify(val)
+              val = eve.json.stringify(val)
             end
             line = line .. " " .. key .. "=" .. val
           end
@@ -112,9 +112,9 @@ local provider = {
     local text_prefix = "xxx   " ---@type string
     local width_prefix = string.len(text_prefix) ---@type integer
     local text = text_prefix .. item.text
-    local highlights = { { coll = 0, colr = 3, hlname = item.text } } ---@type fc.types.ux.IInlineHighlight[]
+    local highlights = { { coll = 0, colr = 3, hlname = item.text } } ---@type eve.types.ux.IInlineHighlight[]
     for _, piece in ipairs(match.matches) do
-      ---@type fc.types.ux.IInlineHighlight[]
+      ---@type eve.types.ux.IInlineHighlight[]
       local highlight = { coll = width_prefix + piece.l, colr = width_prefix + piece.r, hlname = "f_us_main_match" }
       table.insert(highlights, highlight)
     end

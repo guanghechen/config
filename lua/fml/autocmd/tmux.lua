@@ -2,7 +2,7 @@ local global = require("fml.global")
 
 if vim.env.TMUX then
   local function on_resize()
-    local is_tmux_pane_zoomed = fc.tmux.is_tmux_pane_zoomed() ---@type boolean
+    local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
     global.observable_zen_mode:next(is_tmux_pane_zoomed)
   end
 

@@ -11,7 +11,7 @@
 ---| fun(item1: fml.types.ui.select.IMatchedItem, item2: fml.types.ui.select.IMatchedItem): boolean
 
 ---@alias fml.types.ui.select.IRenderItem
----| fun(item: fml.types.ui.select.IItem, match: fml.types.ui.select.IMatchedItem): string, fc.types.ux.IInlineHighlight[]
+---| fun(item: fml.types.ui.select.IItem, match: fml.types.ui.select.IMatchedItem): string, eve.types.ux.IInlineHighlight[]
 
 ---@alias fml.types.ui.select.IOnConfirm
 ---| fun(item: fml.types.ui.select.IItem): boolean
@@ -32,7 +32,7 @@
 ---@field public order                  integer
 ---@field public uuid                   string
 ---@field public score                  integer
----@field public matches                fc.types.IMatchPoint[]
+---@field public matches                eve.types.IMatchPoint[]
 
 ---@class fml.types.ui.select.IProvider
 ---@field public fetch_data             fml.types.ui.select.IFetchData
