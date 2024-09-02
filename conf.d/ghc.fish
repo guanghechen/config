@@ -84,7 +84,7 @@ alias ln='ln -i'
 alias ls='ls --color=auto'
 alias mkdir='mkdir -pv'
 alias mv='mv -i'
-alias rm='rm -i -I --preserve-root'
+alias rm='rm -i -I'
 alias tree-list='tree --dirsfirst -aCF'
 alias vdir='vdir --color=auto'
 
