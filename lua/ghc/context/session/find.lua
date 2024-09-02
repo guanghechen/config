@@ -76,7 +76,7 @@ end
 
 --Auto refresh statusline
 vim.schedule(function()
-  fml.fn.watch_observables({
+  eve.observables.observe({
     find_scope,
     find_flag_case_sensitive,
     find_flag_gitignore,
@@ -84,5 +84,5 @@ vim.schedule(function()
     find_flag_regex,
   }, function()
     vim.cmd("redrawstatus")
-  end)
+  end, true)
 end)

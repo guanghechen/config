@@ -2,7 +2,6 @@ local G = require("eve.std.G")
 local Subscriber = require("eve.collection.subscriber")
 local scheduler = require("eve.std.scheduler")
 local api_state = require("fml.api.state")
-local watch_observables = require("fml.fn.watch_observables")
 local std_array = require("eve.std.array")
 local util = require("fml.util")
 local icons = require("eve.globals.icons")
@@ -465,24 +464,32 @@ function M.new(props)
 
   ---! Trigger the preview dirty change when the preview not exist.
   if preview == nil then
-    state.dirtier_preview:subscribe(Subscriber.new({
-      on_next = function()
-        local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-        local visible = state.visible:snapshot() ---@type boolean
-        if visible and is_preview_dirty then
-          draw_scheduler:schedule()
-        end
-      end,
-    }))
+    state.dirtier_preview:subscribe(
+      Subscriber.new({
+        on_next = function()
+          local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
+          local visible = state.visible:snapshot() ---@type boolean
+          if visible and is_preview_dirty then
+            draw_scheduler:schedule()
+          end
+        end,
+      }),
+      true
+    )
   end
 
   if enable_multiline_input then
-    watch_observables({ state.input_line_count }, function()
-      local visible = state.visible:snapshot() ---@type boolean
-      if visible then
-        draw_scheduler:schedule()
-      end
-    end, true)
+    state.input_line_count:subscribe(
+      Subscriber.new({
+        on_next = function()
+          local visible = state.visible:snapshot() ---@type boolean
+          if visible then
+            draw_scheduler:schedule()
+          end
+        end,
+      }),
+      true
+    )
   end
 
   return self

@@ -1,17 +1,22 @@
 local session = require("ghc.context.session")
 
 local state_search_cwd = eve.c.Observable.from_value(session.get_search_scope_cwd(eve.path.cwd()))
-fml.fn.watch_observables({ session.search_scope }, function()
-  local current_search_cwd = state_search_cwd:snapshot() ---@type string
-  local dirpath = fml.ui.search.get_current_path() ---@type string
-  local next_search_cwd = session.get_search_scope_cwd(dirpath) ---@type string
-  if current_search_cwd ~= next_search_cwd then
-    state_search_cwd:next(next_search_cwd)
-  end
-  if session.search_scope == "B" then
-    state_search_cwd:next(next_search_cwd, { force = true })
-  end
-end, true)
+session.search_scope:subscribe(
+  eve.c.Subscriber.new({
+    on_next = function()
+      local current_search_cwd = state_search_cwd:snapshot() ---@type string
+      local dirpath = fml.ui.search.get_current_path() ---@type string
+      local next_search_cwd = session.get_search_scope_cwd(dirpath) ---@type string
+      if current_search_cwd ~= next_search_cwd then
+        state_search_cwd:next(next_search_cwd)
+      end
+      if session.search_scope == "B" then
+        state_search_cwd:next(next_search_cwd, { force = true })
+      end
+    end,
+  }),
+  true
+)
 
 local _search = nil ---@type fml.types.ui.search.ISearch|nil
 

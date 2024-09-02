@@ -13,7 +13,6 @@ local fn = {
   foldexpr = require("fml.fn.foldexpr"),
   get_clipboard = require("fml.fn.get_clipboard"),
   statuscolumn = require("fml.fn.statuscolumn"),
-  watch_observables = require("fml.fn.watch_observables"),
 }
 
 ---@type fml.util

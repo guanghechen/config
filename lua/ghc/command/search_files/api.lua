@@ -27,7 +27,7 @@ local _item_map = {} ---@type table<string, ghc.command.search_files.IItem>
 local _last_preview_data = nil ---@type ghc.command.search_files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.oxi.search.IResult|nil
-fml.fn.watch_observables({
+eve.observables.observe({
   session.search_exclude_patterns,
   session.search_flag_case_sensitive,
   session.search_flag_gitignore,
@@ -43,7 +43,7 @@ fml.fn.watch_observables({
   _last_search_result = nil
   state.reload()
 end, true)
-fml.fn.watch_observables({
+eve.observables.observe({
   session.search_flag_replace,
   session.search_replace_pattern,
 }, function()

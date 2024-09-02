@@ -129,16 +129,19 @@ local function gen_title()
   return "File explorer (from " .. dirpath .. ")" ---@type string
 end
 
-fml.fn.watch_observables({
-  state_cwd,
-}, function()
-  if _select ~= nil then
-    _select:mark_data_dirty()
+state_cwd:subscribe(
+  eve.c.Subscriber.new({
+    on_next = function()
+      if _select ~= nil then
+        _select:mark_data_dirty()
 
-    local title = gen_title() ---@type string
-    _select:change_input_title(title)
-  end
-end, true)
+        local title = gen_title() ---@type string
+        _select:change_input_title(title)
+      end
+    end,
+  }),
+  true
+)
 
 ---@return fml.types.ui.ISelect
 local function get_select()
@@ -314,17 +317,17 @@ local function get_select()
         local width = 0 ---@type integer
         local text = "" ---@type string
         local filename = ((item.text == "../") or (item.text == "./")) and item.text
-            or fileitem.type == "directory" and fileitem.name .. "/"
-            or fileitem.name ---@type string
+          or fileitem.type == "directory" and fileitem.name .. "/"
+          or fileitem.name ---@type string
 
         local max_width = math.floor(main_width * vim.o.columns) - 1 ---@type integer
         ---@type integer
         local filename_sep_width = max_width
-            - (diritem.icon_width + 2)
-            - (diritem.name_width + 1)
-            - (diritem.perm_width + 2)
-            - (diritem.size_width + 2)
-            - (diritem.date_width + 2)
+          - (diritem.icon_width + 2)
+          - (diritem.name_width + 1)
+          - (diritem.perm_width + 2)
+          - (diritem.size_width + 2)
+          - (diritem.date_width + 2)
 
         local sep_icon = string.rep(" ", 2) ---@type string
         local text_icon = eve.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. sep_icon ---@type string

@@ -60,10 +60,10 @@ end
 
 ---Auto refresh statusline
 vim.schedule(function()
-  fml.fn.watch_observables({
+  eve.observables.observe({
     M.mode,
     M.transparency,
   }, function()
     vim.cmd("redrawstatus")
-  end)
+  end, true)
 end)

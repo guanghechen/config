@@ -10,15 +10,20 @@ local function reload()
   end
 end
 
-fml.fn.watch_observables({ session.find_scope }, function()
-  local current_find_cwd = state_find_cwd:snapshot() ---@type string
-  local dirpath = fml.ui.search.get_current_path() ---@type string
-  local next_find_cwd = session.get_find_scope_cwd(dirpath) ---@type string
-  if current_find_cwd ~= next_find_cwd then
-    state_find_cwd:next(next_find_cwd)
-  end
-end, true)
-fml.fn.watch_observables({
+session.find_scope:subscribe(
+  eve.c.Subscriber.new({
+    on_next = function()
+      local current_find_cwd = state_find_cwd:snapshot() ---@type string
+      local dirpath = fml.ui.search.get_current_path() ---@type string
+      local next_find_cwd = session.get_find_scope_cwd(dirpath) ---@type string
+      if current_find_cwd ~= next_find_cwd then
+        state_find_cwd:next(next_find_cwd)
+      end
+    end,
+  }),
+  true
+)
+eve.observables.observe({
   session.find_exclude_patterns,
   session.find_flag_case_sensitive,
   session.find_flag_gitignore,

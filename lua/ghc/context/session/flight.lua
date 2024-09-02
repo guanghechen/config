@@ -10,9 +10,9 @@ local M = require("ghc.context.session.mod")
 
 --Auto refresh statusline
 vim.schedule(function()
-  fml.fn.watch_observables({
+  eve.observables.observe({
     flight_copilot,
   }, function()
     vim.cmd("redrawstatus")
-  end)
+  end, true)
 end)
