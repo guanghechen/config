@@ -96,12 +96,15 @@ function M.update(winnr, force)
   end
 end
 
-fml.api.state.winline_dirty_nr:subscribe(eve.c.Subscriber.new({
-  on_next = function(winnr)
-    if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-      M.update(winnr, true)
-    end
-  end,
-}))
+fml.api.state.winline_dirty_nr:subscribe(
+  eve.c.Subscriber.new({
+    on_next = function(winnr)
+      if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+        M.update(winnr, true)
+      end
+    end,
+  }),
+  true
+)
 
 return M

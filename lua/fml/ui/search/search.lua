@@ -425,34 +425,43 @@ function M.new(props)
     end,
   })
 
-  state.visible:subscribe(Subscriber.new({
-    on_next = function()
-      local visible = state.visible:snapshot() ---@type boolean
-      if visible then
-        draw_scheduler:schedule()
-      end
-    end,
-  }))
+  state.visible:subscribe(
+    Subscriber.new({
+      on_next = function()
+        local visible = state.visible:snapshot() ---@type boolean
+        if visible then
+          draw_scheduler:schedule()
+        end
+      end,
+    }),
+    true
+  )
 
-  state.dirtier_dimension:subscribe(Subscriber.new({
-    on_next = function()
-      local is_dimension_dirty = state.dirtier_dimension:is_dirty() ---@type boolean
-      local visible = state.visible:snapshot() ---@type boolean
-      if visible and is_dimension_dirty then
-        draw_scheduler:schedule()
-      end
-    end,
-  }))
+  state.dirtier_dimension:subscribe(
+    Subscriber.new({
+      on_next = function()
+        local is_dimension_dirty = state.dirtier_dimension:is_dirty() ---@type boolean
+        local visible = state.visible:snapshot() ---@type boolean
+        if visible and is_dimension_dirty then
+          draw_scheduler:schedule()
+        end
+      end,
+    }),
+    true
+  )
 
-  state.dirtier_main:subscribe(Subscriber.new({
-    on_next = function()
-      local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
-      local visible = state.visible:snapshot() ---@type boolean
-      if visible and is_main_dirty then
-        draw_scheduler:schedule()
-      end
-    end,
-  }))
+  state.dirtier_main:subscribe(
+    Subscriber.new({
+      on_next = function()
+        local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
+        local visible = state.visible:snapshot() ---@type boolean
+        if visible and is_main_dirty then
+          draw_scheduler:schedule()
+        end
+      end,
+    }),
+    true
+  )
 
   ---! Trigger the preview dirty change when the preview not exist.
   if preview == nil then

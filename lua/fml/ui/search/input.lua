@@ -84,33 +84,39 @@ function M.new(props)
   self._input_scheduler = input_scheduler
   self._keymaps = keymaps
 
-  state.dirtier_preview:subscribe(Subscriber.new({
-    on_next = function()
-      local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-      local visible = state.visible:snapshot() ---@type boolean
-      if visible and is_preview_dirty then
-        self:set_virtual_text()
-      end
-    end,
-  }))
+  state.dirtier_preview:subscribe(
+    Subscriber.new({
+      on_next = function()
+        local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
+        local visible = state.visible:snapshot() ---@type boolean
+        if visible and is_preview_dirty then
+          self:set_virtual_text()
+        end
+      end,
+    }),
+    true
+  )
 
-  state.input:subscribe(Subscriber.new({
-    on_next = function()
-      if input_history ~= nil then
-        local input_cur = state.input:snapshot() ---@type string
-        local input_present = input_history:present() ---@type string|nil, integer
-        if input_present ~= input_cur then
-          local input_top = input_history:top() ---@type string|nil
-          if input_top ~= nil and util.is_editing_text(input_top) then
-            input_history:update_top(EDITING_PREFIX .. input_cur)
-          else
-            input_history:go(math.huge)
-            input_history:push(EDITING_PREFIX .. input_cur)
+  state.input:subscribe(
+    Subscriber.new({
+      on_next = function()
+        if input_history ~= nil then
+          local input_cur = state.input:snapshot() ---@type string
+          local input_present = input_history:present() ---@type string|nil, integer
+          if input_present ~= input_cur then
+            local input_top = input_history:top() ---@type string|nil
+            if input_top ~= nil and util.is_editing_text(input_top) then
+              input_history:update_top(EDITING_PREFIX .. input_cur)
+            else
+              input_history:go(math.huge)
+              input_history:push(EDITING_PREFIX .. input_cur)
+            end
           end
         end
-      end
-    end,
-  }))
+      end,
+    }),
+    true
+  )
 
   return self
 end

@@ -89,15 +89,18 @@ function M.new(props)
   self._keymaps = keymaps
   self._render_scheduler = render_scheduler
 
-  state.dirtier_main:subscribe(Subscriber.new({
-    on_next = function()
-      local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
-      local visible = state.visible:snapshot() ---@type boolean
-      if visible and is_main_dirty then
-        render_scheduler.schedule()
-      end
-    end,
-  }))
+  state.dirtier_main:subscribe(
+    Subscriber.new({
+      on_next = function()
+        local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
+        local visible = state.visible:snapshot() ---@type boolean
+        if visible and is_main_dirty then
+          render_scheduler.schedule()
+        end
+      end,
+    }),
+    true
+  )
 
   return self
 end

@@ -106,27 +106,26 @@ function M:next(value, options)
   return false
 end
 
----@param subscriber eve.types.collection.ISubscriber
+---@param subscriber                    eve.types.collection.ISubscriber
+---@param ignoreInitial                 boolean
 ---@return eve.types.collection.IUnsubscribable
-function M:subscribe(subscriber)
+function M:subscribe(subscriber, ignoreInitial)
   if subscriber:is_disposed() then
     return noop_unsubscribable
   end
 
-  ---@type eve.types.T | nil
-  local value_prev = self._value_last_notified
-
-  ---@type eve.types.T
-  local value = self._value
+  if not ignoreInitial then
+    local value_prev = self._value_last_notified ---@type eve.types.T | nil
+    local value = self._value ---@type eve.types.T
+    subscriber:next(value, value_prev)
+  end
 
   if self:is_disposed() then
-    subscriber:next(value, value_prev)
     subscriber:dispose()
     return noop_unsubscribable
   end
 
-  subscriber:next(value, value_prev)
-  return self._subscribers:subscribe(subscriber)
+  return self._subscribers:subscribe(subscriber, ignoreInitial)
 end
 
 ---@return nil

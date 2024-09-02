@@ -114,7 +114,7 @@ function M:notify(value, value_prev)
   handler:cleanup()
 end
 
----@param subscriber eve.types.collection.ISubscriber
+---@param subscriber                    eve.types.collection.ISubscriber
 ---@return eve.types.collection.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:is_disposed() then

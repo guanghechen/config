@@ -5,7 +5,7 @@
 ---@field public unsubscribe            fun(self: eve.types.collection.IUnsubscribable):nil
 
 ---@class eve.types.collection.ISubscribable
----@field public subscribe              fun(self: eve.types.collection.ISubscribable, subscriber: eve.types.collection.ISubscriber): eve.types.collection.IUnsubscribable
+---@field public subscribe              fun(self: eve.types.collection.ISubscribable, subscriber: eve.types.collection.ISubscriber, ignoreInitial?: boolean): eve.types.collection.IUnsubscribable
 
 ---@class eve.types.collection.ISubscribers : eve.types.collection.ISubscribable, eve.types.collection.IDisposable
 ---@field public count                  fun(self: eve.types.collection.ISubscribers): nil

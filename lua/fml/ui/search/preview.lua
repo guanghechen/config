@@ -127,15 +127,18 @@ function M.new(props)
   self._keymaps = keymaps
   self._render_scheduler = _render_scheduler
 
-  state.dirtier_preview:subscribe(Subscriber.new({
-    on_next = function()
-      local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-      local visible = state.visible:snapshot() ---@type boolean
-      if visible and is_preview_dirty then
-        _render_scheduler.schedule()
-      end
-    end,
-  }))
+  state.dirtier_preview:subscribe(
+    Subscriber.new({
+      on_next = function()
+        local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
+        local visible = state.visible:snapshot() ---@type boolean
+        if visible and is_preview_dirty then
+          _render_scheduler.schedule()
+        end
+      end,
+    }),
+    true
+  )
   return self
 end
 

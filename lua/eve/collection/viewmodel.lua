@@ -10,7 +10,6 @@ local reporter = require("eve.std.reporter")
 ---@class eve.collection.Viewmodel : eve.types.collection.IViewmodel
 ---@field private _name                 string
 ---@field private _filepath             string|nil
----@field private _initial_values       table<string, any>
 ---@field private _unwatch              (fun():nil)|nil
 ---@field private _verbose              boolean
 ---@field private _persistables         table<string, eve.types.collection.IObservable>
@@ -33,7 +32,6 @@ function Viewmodel.new(props)
 
   self._name = props.name ---@type string
   self._filepath = props.filepath ---@type string
-  self._initial_values = {} ---@type table<string, any>
   self._unwatch = nil ---@type (fun():nil)|nil
   self._persistables = {} ---@type table<string, eve.types.collection.IObservable>
   self._verbose = not not props.verbose ---@type boolean
@@ -112,16 +110,12 @@ function Viewmodel:register(name, observable, persistable, auto_save)
   self._all_observables[name] = observable
 
   if auto_save then
-    self._initial_values[name] = observable:snapshot()
     local subscriber = Subscriber.new({
-      on_next = function(next_value)
-        if not observable.equals(self._initial_values[name], next_value) then
-          self._initial_values[name] = next_value
-          self:save()
-        end
+      on_next = function()
+        self:save()
       end,
     })
-    local unsubscribable = observable:subscribe(subscriber)
+    local unsubscribable = observable:subscribe(subscriber, true)
     self:add_disposable(Disposable.new({
       on_dispose = function()
         unsubscribable:unsubscribe()
@@ -194,9 +188,12 @@ function Viewmodel:load(opts)
 
   local has_changed = false ---@type boolean
   for key, value in pairs(data) do
+    if has_changed then
+      break
+    end
+
     local observable = self[key]
     if value ~= nil and is.observable(observable) then
-      self._initial_values[key] = value
       has_changed = observable:next(value) or has_changed
     end
   end

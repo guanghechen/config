@@ -3,22 +3,13 @@
 ---@param ignore_initial                ?boolean
 ---@return nil
 local function watch_observables(observables, callback, ignore_initial)
-  ignore_initial = not not ignore_initial
   for _, observable in ipairs(observables) do
-    local first = true ---@type boolean
     local subscriber = eve.c.Subscriber.new({
       on_next = function()
-        if first then
-          first = false
-          if not ignore_initial then
-            vim.schedule(callback)
-          end
-        else
-          vim.schedule(callback)
-        end
+        vim.schedule(callback)
       end,
     })
-    observable:subscribe(subscriber)
+    observable:subscribe(subscriber, ignore_initial)
   end
 end
 
