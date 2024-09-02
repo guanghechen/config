@@ -1,6 +1,12 @@
 require("eve.autocmd")
 _G.eve = require("eve")
 
+require("fml.autocmd")
+_G.fml = require("fml")
+
+require("ghc.autocmd")
+_G.ghc = require("ghc")
+
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
 local function _load_config(name)
   require("guanghechen." .. name)
@@ -14,9 +20,6 @@ end
 
 ---@return nil
 local function bootstrap()
-  _G.fml = require("fml")
-  _G.ghc = require("ghc")
-
   ---! Load options
   _load_config("option-bootstrap")
 

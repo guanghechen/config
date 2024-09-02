@@ -1,5 +1,3 @@
-require("ghc.autocmd")
-
 ---@class ghc.command
 local command = {
   context = require("ghc.command.context"),

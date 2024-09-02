@@ -1,6 +1,3 @@
----autocmd
-require("fml.autocmd")
-
 ---@class fml.api
 local api = {
   buf = require("fml.api.buf"),
@@ -36,7 +33,7 @@ local ui = {
   search = require("fml.ui.search"),
 }
 
----@class fml 
+---@class fml
 ---@field public api                    fml.api
 ---@field public fn                     fml.fn
 ---@field public ui                     fml.ui
