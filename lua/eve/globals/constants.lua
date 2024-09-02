@@ -1,8 +1,8 @@
----@class fml.constant
+---@class eve.constants
 local M = {}
 
 ---! special symbols.
-M.EDITING_INPUT_PREFIX = "@#!fml!#@"
+M.EDITING_INPUT_PREFIX = "@#!eve!#@"
 
 ---! buftypes
 M.BT_NOWRITE = "nowrite"

@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local state = require("fml.api.state")
 local fs = require("eve.std.fs")
 local path = require("eve.std.path")
@@ -46,7 +45,7 @@ end
 function M.save(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf() ---@type integer
   local current_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  if #current_filepath < 1 or current_filepath == constant.BUF_UNTITLED then
+  if #current_filepath < 1 or current_filepath == eve.constants.BUF_UNTITLED then
     local cwd = eve.path.cwd() ---@type string
     local workspace = path.workspace() ---@type string
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string

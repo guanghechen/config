@@ -1,5 +1,4 @@
-local constant = require("fml.constant")
-local EDITING_PREFIX = constant.EDITING_INPUT_PREFIX ---@type string
+local EDITING_PREFIX = eve.constants.EDITING_INPUT_PREFIX ---@type string
 
 ---@class fml.util
 local M = {}
@@ -48,9 +47,9 @@ end
 ---@return string
 ---@return string
 function M.calc_fileicon(filename)
-  local name = (not filename or filename == "") and constant.BUF_UNTITLED or filename
+  local name = (not filename or filename == "") and eve.constants.BUF_UNTITLED or filename
   local icons_present, icons = pcall(require, "mini.icons")
-  if icons_present and name ~= constant.BUF_UNTITLED then
+  if icons_present and name ~= eve.constants.BUF_UNTITLED then
     local icon, icon_hl, is_default = icons.get("file", filename)
     if not is_default then
       return icon, icon_hl

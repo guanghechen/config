@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local Observable = require("eve.collection.observable")
 local std_array = require("eve.std.array")
 local reporter = require("eve.std.reporter")
@@ -75,7 +74,7 @@ function M.refresh_tab(tabnr)
 
     ---@type fml.types.api.state.ITabItem
     tab = {
-      name = constant.TAB_UNNAMED,
+      name = eve.constants.TAB_UNNAMED,
       bufnrs = {},
       bufnr_set = {},
       winnr_cur = Observable.from_value(winnr_cur),

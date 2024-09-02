@@ -17,6 +17,7 @@ local collection = {
 
 ---@class eve.globals
 local globals = {
+  constants = require("eve.globals.constants"),
   icons = require("eve.globals.icons"),
 }
 

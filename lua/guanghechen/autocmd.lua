@@ -3,8 +3,8 @@ vim.cmd([[autocmd User TelescopePreviewerLoaded setlocal number]]) -- enable num
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = {
-    fml.constant.FT_SELECT_INPUT,
-    fml.constant.FT_SELECT_MAIN,
+    eve.constants.FT_SELECT_INPUT,
+    eve.constants.FT_SELECT_MAIN,
   },
   callback = function()
     pcall(function()

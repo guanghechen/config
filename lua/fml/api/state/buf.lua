@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local path = require("eve.std.path")
 local util = require("fml.util")
 
@@ -93,7 +92,7 @@ function M.refresh_buf(bufnr)
   local buf = M.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
   if buf == nil then
     local filename = path.basename(filepath) ---@type string
-    filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
+    filename = (not filename or filename == "") and eve.constants.BUF_UNTITLED or filename
     local fileicon, fileicon_hl = util.calc_fileicon(filename) ---@type string, string
     local real_paths = path.split_prettier(path.get_cwd_pieces(), filepath) ---@type string[]
 
@@ -110,7 +109,7 @@ function M.refresh_buf(bufnr)
     M.bufs[bufnr] = buf
   elseif buf.filepath ~= filepath or buf.filetype ~= filetype then
     local filename = path.basename(filepath) ---@type string
-    filename = #filename > 0 and filename or constant.BUF_UNTITLED
+    filename = #filename > 0 and filename or eve.constants.BUF_UNTITLED
     local fileicon, fileicon_hl = util.calc_fileicon(filename) ---@type string, string
     local real_paths = path.split_prettier(path.get_cwd_pieces(), filepath) ---@type string[]
 

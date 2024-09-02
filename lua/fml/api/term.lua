@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local state = require("fml.api.state")
 local reporter = require("eve.std.reporter")
 
@@ -33,7 +32,7 @@ end
 function M.create_term_buf()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].filetype = constant.FT_TERM
+  vim.bo[bufnr].filetype = eve.constants.FT_TERM
   vim.bo[bufnr].swapfile = false
 
   ---@return nil

@@ -1,4 +1,4 @@
-local ORIDINAL_WIDTH = vim.fn.strwidth(tostring(fml.constant.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
+local ORIDINAL_WIDTH = vim.fn.strwidth(tostring(eve.constants.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
 
 local _select = nil ---@type fml.ui.FileSelect|nil
 

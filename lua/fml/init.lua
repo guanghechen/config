@@ -38,13 +38,11 @@ local ui = {
 
 ---@class fml : fml.global
 ---@field public api                    fml.api
----@field public constant               fml.constant
 ---@field public fn                     fml.fn
 ---@field public ui                     fml.ui
 ---@field public util                   fml.util
 local fml = vim.tbl_extend("force", require("fml.global"), {
   api = api,
-  constant = require("fml.constant"),
   fn = fn,
   ui = ui,
   util = util,

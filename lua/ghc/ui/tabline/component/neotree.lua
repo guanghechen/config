@@ -4,7 +4,7 @@ local indicator_symbol_width = vim.fn.strwidth(eve.icons.symbols.win_indicator_a
 local function get_pane_width()
   for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type number
-    if vim.bo[bufnr].ft == fml.constant.FT_NEOTREE then
+    if vim.bo[bufnr].ft == eve.constants.FT_NEOTREE then
       if not fml.api.state.is_floating_win(winnr) then
         return vim.api.nvim_win_get_width(winnr) + 1
       end
@@ -25,7 +25,7 @@ local M = {
 
     local winnr_cur = fml.api.state.get_current_tab_winnr() ---@type integer
     local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
-    local is_win_active = vim.bo[bufnr_cur].ft == fml.constant.FT_NEOTREE
+    local is_win_active = vim.bo[bufnr_cur].ft == eve.constants.FT_NEOTREE
     local indicator = is_win_active and eve.icons.symbols.win_indicator_active or eve.icons.symbols.win_indicator
 
     local text = " Explorer" ---@type string

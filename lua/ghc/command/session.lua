@@ -74,7 +74,7 @@ function M.autosave()
   fml.api.state.save(state_fliepath)
 
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = fml.constant.SESSION_AUTOSAVE_OPTION
+  vim.o.sessionoptions = eve.constants.SESSION_AUTOSAVE_OPTION
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 end
@@ -85,7 +85,7 @@ function M.save()
   fml.api.state.save(state_fliepath)
 
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = fml.constant.SESSION_SAVE_OPTION
+  vim.o.sessionoptions = eve.constants.SESSION_SAVE_OPTION
   vim.cmd("mks! " .. vim.fn.fnameescape(session_filepath))
   vim.o.sessionoptions = tmp
 

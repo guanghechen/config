@@ -13,13 +13,13 @@ return {
   init = function()
     vim.api.nvim_create_autocmd("FileType", {
       pattern = {
-        fml.constant.FT_NEOTREE,
-        fml.constant.FT_SEARCH_INPUT,
-        fml.constant.FT_SEARCH_MAIN,
-        fml.constant.FT_SEARCH_PREVIEW,
-        fml.constant.FT_SELECT_INPUT,
-        fml.constant.FT_SELECT_MAIN,
-        fml.constant.FT_TERM,
+        eve.constants.FT_NEOTREE,
+        eve.constants.FT_SEARCH_INPUT,
+        eve.constants.FT_SEARCH_MAIN,
+        eve.constants.FT_SEARCH_PREVIEW,
+        eve.constants.FT_SELECT_INPUT,
+        eve.constants.FT_SELECT_MAIN,
+        eve.constants.FT_TERM,
         "help",
         "alpha",
         "dashboard",

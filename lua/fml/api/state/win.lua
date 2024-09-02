@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local AdvanceHistory = require("eve.collection.history_advance")
 local reporter = require("eve.std.reporter")
 
@@ -65,7 +64,7 @@ function M.refresh_win(winnr)
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local filepath_history = AdvanceHistory.new({
       name = "win#bufs",
-      capacity = constant.WIN_BUF_HISTORY_CAPACITY,
+      capacity = eve.constants.WIN_BUF_HISTORY_CAPACITY,
       validate = M.validate_filepath,
     })
     filepath_history:push(filepath)

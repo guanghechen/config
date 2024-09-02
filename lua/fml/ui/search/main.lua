@@ -1,5 +1,4 @@
 local Subscriber = require("eve.collection.subscriber")
-local constant = require("fml.constant")
 local scheduler = require("eve.std.scheduler")
 local util = require("fml.util")
 local signcolumn = require("fml.ui.signcolumn")
@@ -116,7 +115,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nowrite"
-  vim.bo[bufnr].filetype = constant.FT_SEARCH_MAIN
+  vim.bo[bufnr].filetype = eve.constants.FT_SEARCH_MAIN
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
@@ -144,8 +143,8 @@ end
 function M:place_lnum_sign()
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_CURRENT })
-    vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_PRESENT })
+    vim.fn.sign_unplace("", { buffer = bufnr, id = eve.constants.SIGN_NR_SEARCH_MAIN_CURRENT })
+    vim.fn.sign_unplace("", { buffer = bufnr, id = eve.constants.SIGN_NR_SEARCH_MAIN_PRESENT })
 
     local present_lnum = 0 ---@type integer
     do
@@ -171,7 +170,7 @@ function M:place_lnum_sign()
 
     if present_lnum > 0 then
       vim.fn.sign_place(
-        constant.SIGN_NR_SEARCH_MAIN_PRESENT,
+        eve.constants.SIGN_NR_SEARCH_MAIN_PRESENT,
         "",
         present_lnum == current_lnum and signcolumn.names.search_main_present_cur
           or signcolumn.names.search_main_present,
@@ -183,7 +182,7 @@ function M:place_lnum_sign()
     if current_lnum > 0 then
       if current_lnum ~= present_lnum then
         vim.fn.sign_place(
-          constant.SIGN_NR_SEARCH_MAIN_CURRENT,
+          eve.constants.SIGN_NR_SEARCH_MAIN_CURRENT,
           "",
           signcolumn.names.search_main_current,
           bufnr,

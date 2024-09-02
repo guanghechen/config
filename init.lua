@@ -1,7 +1,5 @@
 _G.eve = require("eve")
-if eve.os.is_mac() or eve.os.is_nix() or eve.os.is_wsl() then
-  vim.opt.shell = "/bin/bash"
-end
+require("autocmd-eve")
 
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
 local function _load_config(name)

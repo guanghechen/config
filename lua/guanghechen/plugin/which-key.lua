@@ -9,9 +9,9 @@ return {
   opts = {
     disable = {
       ft = {
-        fml.constant.FT_TERM,
-        fml.constant.FT_SELECT_INPUT,
-        fml.constant.FT_SELECT_MAIN,
+        eve.constants.FT_TERM,
+        eve.constants.FT_SELECT_INPUT,
+        eve.constants.FT_SELECT_MAIN,
       },
     },
     spec = {

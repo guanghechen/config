@@ -1,4 +1,3 @@
-local constant = require("fml.constant")
 local Observable = require("eve.collection.observable")
 local AdvanceHistory = require("eve.collection.history_advance")
 local fs = require("eve.std.fs")
@@ -13,7 +12,7 @@ local BUF_IGNORED_FILETYPES = {
   ["neo-tree"] = true,
   ["notify"] = true,
   ["startuptime"] = true,
-  [constant.FT_TERM] = true,
+  [eve.constants.FT_TERM] = true,
 }
 
 ---@class fml.api.state
@@ -61,7 +60,7 @@ end
 ---@param filepath                      string|nil
 ---@return boolean
 function M.validate_filepath(filepath)
-  if filepath == nil or filepath == "" or filepath == constant.BUF_UNTITLED then
+  if filepath == nil or filepath == "" or filepath == eve.constants.BUF_UNTITLED then
     return false
   end
   return fs.is_file_or_dir(filepath) == "file"
@@ -97,14 +96,14 @@ M.bufs = {}
 M.tabs = {}
 M.tab_history = AdvanceHistory.new({
   name = "tabs",
-  capacity = constant.TAB_HISTORY_CAPACITY,
+  capacity = eve.constants.TAB_HISTORY_CAPACITY,
   validate = M.validate_tab,
 })
 M.term_map = {}
 M.wins = {}
 M.win_history = AdvanceHistory.new({
   name = "wins",
-  capacity = constant.WIN_HISTORY_CAPACITY,
+  capacity = eve.constants.WIN_HISTORY_CAPACITY,
   validate = M.validate_win,
 })
 M.winline_dirty_nr = Observable.from_value(0, eve.util.falsy)
