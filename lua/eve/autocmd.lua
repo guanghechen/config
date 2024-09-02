@@ -1,4 +1,9 @@
-if eve.os.is_mac() or eve.os.is_nix() or eve.os.is_wsl() then
+local observables = require("eve.globals.observables")
+local os = require("eve.std.os")
+local path = require("eve.std.path")
+local tmux = require("eve.std.tmux")
+
+if os.is_mac() or os.is_nix() or os.is_wsl() then
   vim.opt.shell = "/bin/bash"
 end
 
@@ -11,8 +16,8 @@ end
 if vim.fn.expand("%") ~= "" then
   local cwd = vim.fn.getcwd()
   local p = vim.fn.expand("%:p:h")
-  local A = eve.path.locate_git_repo(p)
-  local B = eve.path.locate_git_repo(cwd)
+  local A = path.locate_git_repo(p)
+  local B = path.locate_git_repo(cwd)
 
   if A == nil then
     vim.cmd("cd " .. p .. "")
@@ -25,6 +30,26 @@ end
 vim.schedule(function()
   vim.cmd("clearjumps")
 end)
+
+---! Watch the zen mode change on tmux.
+if vim.env.TMUX then
+  local function on_resize()
+    local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
+    observables.tmux_zen_mode:next(is_tmux_pane_zoomed)
+  end
+
+  on_resize()
+  vim.api.nvim_create_autocmd({ "VimResized" }, {
+    callback = on_resize,
+  })
+end
+
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  once = true,
+  callback = function()
+    observables.dispose()
+  end,
+})
 
 ---! Auto create dirs when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {

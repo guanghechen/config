@@ -1,5 +1,5 @@
+require("eve.autocmd")
 _G.eve = require("eve")
-require("autocmd-eve")
 
 ---@param name "keymap"|"option"|"autocmd"|"keymap-bootstrap"|"option-bootstrap"|"autocmd-bootstrap"
 local function _load_config(name)

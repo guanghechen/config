@@ -32,7 +32,7 @@ function M.load_and_autosave()
       end
     end
 
-    fml.disposable:add_disposable(eve.c.Disposable.new({
+    eve.observables.add_disposable(eve.c.Disposable.new({
       on_dispose = function()
         ---@type boolean, ghc.state.frecency.IData
         local ok, json_data = pcall(function()

@@ -36,16 +36,16 @@ local ui = {
   search = require("fml.ui.search"),
 }
 
----@class fml : fml.global
+---@class fml 
 ---@field public api                    fml.api
 ---@field public fn                     fml.fn
 ---@field public ui                     fml.ui
 ---@field public util                   fml.util
-local fml = vim.tbl_extend("force", require("fml.global"), {
+local fml = {
   api = api,
   fn = fn,
   ui = ui,
   util = util,
-})
+}
 
 return fml
