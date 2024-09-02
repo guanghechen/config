@@ -7,4 +7,6 @@ local M = eve.c.Viewmodel.new({
   verbose = true,
 })
 
+eve.observables.add_disposable(M)
+
 return M

@@ -8,12 +8,13 @@ local util = require("eve.std.util")
 local reporter = require("eve.std.reporter")
 
 ---@class eve.collection.Viewmodel : eve.types.collection.IViewmodel
+---@field private _all_observables      table<string, eve.types.collection.IObservable>
 ---@field private _name                 string
 ---@field private _filepath             string|nil
+---@field private _persistables         table<string, eve.types.collection.IObservable>
+---@field private _save_on_dispose      boolean
 ---@field private _unwatch              (fun():nil)|nil
 ---@field private _verbose              boolean
----@field private _persistables         table<string, eve.types.collection.IObservable>
----@field private _all_observables      table<string, eve.types.collection.IObservable>
 local Viewmodel = {}
 Viewmodel.__index = Viewmodel
 setmetatable(Viewmodel, { __index = BatchDisposable })
@@ -21,6 +22,7 @@ setmetatable(Viewmodel, { __index = BatchDisposable })
 ---@class eve.collection.Viewmodel.IProps
 ---@field public name                   string
 ---@field public filepath               ?string
+---@field public save_on_dispose        ?boolean
 ---@field public verbose                ?boolean
 
 ---@param props                         eve.collection.Viewmodel.IProps
@@ -30,12 +32,18 @@ function Viewmodel.new(props)
   ---@diagnostic disable-next-line: cast-type-mismatch
   ---@cast self eve.collection.Viewmodel
 
-  self._name = props.name ---@type string
-  self._filepath = props.filepath ---@type string
-  self._unwatch = nil ---@type (fun():nil)|nil
-  self._persistables = {} ---@type table<string, eve.types.collection.IObservable>
-  self._verbose = not not props.verbose ---@type boolean
+  local name = props.name ---@type string
+  local filepath = props.filepath ---@type string|nil
+  local save_on_dispose = not not props.save_on_dispose ---@type boolean
+  local verbose = not not props.verbose ---@type boolean
+
   self._all_observables = {} ---@type table<string, eve.types.collection.IObservable>
+  self._name = name
+  self._filepath = filepath
+  self._persistables = {} ---@type table<string, eve.types.collection.IObservable>
+  self._save_on_dispose = save_on_dispose
+  self._unwatch = nil ---@type (fun():nil)|nil
+  self._verbose = verbose
 
   return self
 end
@@ -47,6 +55,10 @@ function Viewmodel:dispose()
   end
 
   BatchDisposable.dispose(self)
+
+  if self._save_on_dispose and self._filepath ~= nil then
+    self:save()
+  end
 
   ---@type eve.types.collection.IDisposable[]
   local disposables = {}
@@ -65,10 +77,12 @@ function Viewmodel:dispose()
   BatchDisposable.dispose_all(disposables)
 end
 
+---@return string
 function Viewmodel:get_name()
   return self._name
 end
 
+---@return string|nil
 function Viewmodel:get_filepath()
   return self._filepath
 end
@@ -97,11 +111,12 @@ function Viewmodel:snapshot_all()
   return data
 end
 
----@param name string
----@param observable eve.types.collection.IObservable
----@param persistable boolean
----@param auto_save boolean
-function Viewmodel:register(name, observable, persistable, auto_save)
+---@param name                          string
+---@param observable                    eve.types.collection.IObservable
+---@param persistable                   boolean
+---@param autosave                      boolean
+---@return eve.collection.Viewmodel
+function Viewmodel:register(name, observable, persistable, autosave)
   if persistable then
     self._persistables[name] = observable
   end
@@ -109,7 +124,7 @@ function Viewmodel:register(name, observable, persistable, auto_save)
   self[name] = observable
   self._all_observables[name] = observable
 
-  if auto_save then
+  if autosave then
     local subscriber = Subscriber.new({
       on_next = function()
         self:save()
@@ -126,6 +141,7 @@ function Viewmodel:register(name, observable, persistable, auto_save)
   return self
 end
 
+---@return nil
 function Viewmodel:save()
   local filepath = self._filepath ---@type string|nil
   if filepath == nil then
@@ -142,11 +158,11 @@ function Viewmodel:save()
   fs.write_json(filepath, data, true)
 end
 
----@param opts                          ?{ silent_on_notfound?: boolean }
----@return boolean  Indicate whether if the content loaded is different with current data.
-function Viewmodel:load(opts)
-  opts = opts or {}
-  local silent_on_notfound = not not opts.silent_on_notfound ---@type boolean
+---@param params                        ?eve.types.collection.viewmodel.ILoadParams
+---@return nil
+function Viewmodel:load(params)
+  params = params or {}
+  local silent_on_notfound = not not params.silent_on_notfound ---@type boolean
 
   local filepath = self._filepath ---@type string|nil
   if filepath == nil then
@@ -158,7 +174,7 @@ function Viewmodel:load(opts)
         details = { name = self._name, filepath = filepath },
       })
     end
-    return false
+    return
   end
 
   if not path.is_exist(filepath) then
@@ -170,7 +186,7 @@ function Viewmodel:load(opts)
         details = { name = self._name, filepath = filepath },
       })
     end
-    return false
+    return
   end
 
   local data = fs.read_json({ filepath = filepath, silent_on_bad_path = true })
@@ -183,21 +199,15 @@ function Viewmodel:load(opts)
         details = { name = self._name, data = data },
       })
     end
-    return false
+    return
   end
 
-  local has_changed = false ---@type boolean
   for key, value in pairs(data) do
-    if has_changed then
-      break
-    end
-
     local observable = self[key]
     if value ~= nil and is.observable(observable) then
-      has_changed = observable:next(value) or has_changed
+      observable:next(value)
     end
   end
-  return has_changed
 end
 
 ---@param params                        ?eve.types.collection.viewmodel.IAutoReloadParams

@@ -32,13 +32,13 @@ local find_scope = eve.c.Observable.from_value("C")
 ---@field public find_file_pattern      eve.types.collection.IObservable
 ---@field public find_scope             eve.types.collection.IObservable
 local M = require("ghc.context.session.mod")
-  :register("find_exclude_patterns", find_exclude_patterns, true, true)
-  :register("find_flag_case_sensitive", find_flag_case_sensitive, true, true)
-  :register("find_flag_gitignore", find_flag_gitignore, true, true)
-  :register("find_flag_fuzzy", find_flag_fuzzy, true, true)
-  :register("find_flag_regex", find_flag_regex, true, true)
-  :register("find_file_pattern", find_file_pattern, true, true)
-  :register("find_scope", find_scope, true, true)
+  :register("find_exclude_patterns", find_exclude_patterns, true, false)
+  :register("find_flag_case_sensitive", find_flag_case_sensitive, true, false)
+  :register("find_flag_gitignore", find_flag_gitignore, true, false)
+  :register("find_flag_fuzzy", find_flag_fuzzy, true, false)
+  :register("find_flag_regex", find_flag_regex, true, false)
+  :register("find_file_pattern", find_file_pattern, true, false)
+  :register("find_scope", find_scope, true, false)
 
 ---@return ghc.enums.context.FindScope
 function M.get_find_scope_carousel_next()

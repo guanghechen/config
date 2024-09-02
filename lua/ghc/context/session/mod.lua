@@ -5,6 +5,9 @@ local filepath = eve.path.is_git_repo() and eve.path.locate_session_filepath({ f
 local M = eve.c.Viewmodel.new({
   name = "context:session",
   filepath = filepath,
+  save_on_dispose = true,
 })
+
+eve.observables.add_disposable(M)
 
 return M
