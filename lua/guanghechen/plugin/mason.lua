@@ -38,9 +38,19 @@ local function install_all()
   end
 end
 
+---@return nil
+local function install_all_force()
+  vim.cmd("Mason")
+  local mr = require("mason-registry")
+  for _, pkgName in ipairs(ensure_installed) do
+    local p = mr.get_package(pkgName)
+    p:install()
+  end
+end
+
 return {
   name = "mason.nvim",
-  cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonUpdate" },
+  cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },
   build = function()
     vim.defer_fn(function()
       vim.cmd("MasonUpdate")
@@ -88,6 +98,7 @@ return {
 
     -- custom cmd to install all mason binaries listed
     vim.api.nvim_create_user_command("MasonInstallAll", install_all, {})
+    vim.api.nvim_create_user_command("MasonInstallAllForce", install_all_force, {})
   end,
   dependencies = {
     "mason-lspconfig.nvim",
