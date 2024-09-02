@@ -7,5 +7,6 @@ fish_variables
 # Ignore any other automatically generated files
 *.tmp
 
+conf.d/local.fish
 conf.d/omf.fish
 conf.d/rustup.fish

@@ -32,8 +32,8 @@ else if test -f /home/linuxbrew/.linuxbrew/bin/brew
     set -gx VIMRUNTIME                  "/home/linuxbrew/.linuxbrew/share/nvim/runtime"
 end
 fish_add_path "$HOMEBREW_PREFIX/bin"
-fish_add_path "$HOME/.cargo/bin"
 fish_add_path "/opt/me/bin"
+fish_add_path "$HOME/.cargo/bin"
 fish_add_path "$HOME/bin"
 
 # Shortcuts for navigating directories
