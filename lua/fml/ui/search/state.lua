@@ -124,9 +124,9 @@ function M.new(props)
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
 
-  input:subscribe(Subscriber.new({ on_next = on_input_change }), true)
-  visible:subscribe(Subscriber.new({ on_next = on_visible_or_data_change }), true)
-  dirtier_data:subscribe(Subscriber.new({ on_next = on_visible_or_data_change }), true)
+  input:subscribe(Subscriber.new({ on_next = on_input_change }), false)
+  visible:subscribe(Subscriber.new({ on_next = on_visible_or_data_change }), false)
+  dirtier_data:subscribe(Subscriber.new({ on_next = on_visible_or_data_change }), false)
   return self
 end
 
