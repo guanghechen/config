@@ -23,8 +23,6 @@ if test -f /opt/homebrew/bin/brew
     set -gx HOMEBREW_SHELLENV_PREFIX    "/opt/homebrew"
     set -gx VIM                         "/opt/homebrew/share/nvim"
     set -gx VIMRUNTIME                  "/opt/homebrew/share/nvim/runtime"
-
-    fish_add_path "/opt/homebrew/bin"
 else if test -f /home/linuxbrew/.linuxbrew/bin/brew
     set -gx HOMEBREW_PREFIX             "/home/linuxbrew/.linuxbrew"
     set -gx HOMEBREW_CELLAR             "/home/linuxbrew/.linuxbrew/Cellar"
@@ -32,9 +30,8 @@ else if test -f /home/linuxbrew/.linuxbrew/bin/brew
     set -gx HOMEBREW_SHELLENV_PREFIX    "/home/linuxbrew/.linuxbrew"
     set -gx VIM                         "/home/linuxbrew/.linuxbrew/share/nvim"
     set -gx VIMRUNTIME                  "/home/linuxbrew/.linuxbrew/share/nvim/runtime"
-
-    fish_add_path "/opt/homebrew/bin"
 end
+fish_add_path "$HOMEBREW_PREFIX/bin"
 fish_add_path "$HOME/.cargo/bin"
 fish_add_path "/opt/me/bin"
 fish_add_path "$HOME/bin"
