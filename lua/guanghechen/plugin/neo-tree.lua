@@ -56,14 +56,14 @@ return {
         expander_highlight = "NeoTreeExpander",
       },
       icon = {
-        folder_closed = fml.ui.icons.ui.Folder,
-        folder_open = fml.ui.icons.ui.FolderOpen,
-        folder_empty = fml.ui.icons.ui.EmptyFolder,
-        default = fml.ui.icons.ui.File,
+        folder_closed = eve.icons.ui.Folder,
+        folder_open = eve.icons.ui.FolderOpen,
+        folder_empty = eve.icons.ui.EmptyFolder,
+        default = eve.icons.ui.File,
         highlight = "NeoTreeFileIcon",
       },
       modified = {
-        symbol = fml.ui.icons.ui.Modified,
+        symbol = eve.icons.ui.Modified,
         highlight = "NeoTreeModified",
       },
       name = {
@@ -76,14 +76,14 @@ return {
           -- Change type
           added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
           modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
-          deleted = fml.ui.icons.git.Remove, -- this can only be used in the git_status source
-          renamed = fml.ui.icons.git.Rename, -- this can only be used in the git_status source
+          deleted = eve.icons.git.Remove, -- this can only be used in the git_status source
+          renamed = eve.icons.git.Rename, -- this can only be used in the git_status source
           -- Status type
-          untracked = fml.ui.icons.git.Untracked,
-          ignored = fml.ui.icons.git.Ignore,
-          unstaged = fml.ui.icons.git.Unstaged,
-          staged = fml.ui.icons.git.Staged,
-          conflict = fml.ui.icons.git.Conflict,
+          untracked = eve.icons.git.Untracked,
+          ignored = eve.icons.git.Ignore,
+          unstaged = eve.icons.git.Unstaged,
+          staged = eve.icons.git.Staged,
+          conflict = eve.icons.git.Conflict,
         },
       },
       file_size = {
@@ -310,19 +310,19 @@ return {
     -- Set icons for diagnostic errors, you'll need to define them somewhere:
     vim.fn.sign_define(
       "DiagnosticSignError",
-      { text = fml.ui.icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" }
+      { text = eve.icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" }
     )
     vim.fn.sign_define(
       "DiagnosticSignWarn",
-      { text = fml.ui.icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" }
+      { text = eve.icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" }
     )
     vim.fn.sign_define(
       "DiagnosticSignInfo",
-      { text = fml.ui.icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" }
+      { text = eve.icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" }
     )
     vim.fn.sign_define(
       "DiagnosticSignHint",
-      { text = fml.ui.icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" }
+      { text = eve.icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" }
     )
 
     opts.event_handlers = opts.event_handlers or {}

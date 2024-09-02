@@ -1,4 +1,4 @@
-local icons = require("fml.ui.icons")
+local icons = require("eve.globals.icons")
 
 ---@class fml.ui.signcolumn
 local M = {}

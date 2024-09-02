@@ -6,7 +6,7 @@ local M = {
     return readonly
   end,
   render = function()
-    local text = fml.ui.icons.ui.Lock .. " [RO]" ---@type string
+    local text = eve.icons.ui.Lock .. " [RO]" ---@type string
     local hl_text = eve.nvimbar.txt(text, "f_sl_readonly") ---@type string
     local width = vim.fn.strwidth(text) ---@type integer
     return hl_text, width

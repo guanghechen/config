@@ -9,13 +9,13 @@ local function get_filestatus()
     local texts = {} ---@type string[]
     local git_status = buffer_status_line.gitsigns_status_dict
     if git_status.added and git_status.added > 0 then
-      table.insert(texts, fml.ui.icons.git.Add .. " " .. git_status.added)
+      table.insert(texts, eve.icons.git.Add .. " " .. git_status.added)
     end
     if git_status.changed and git_status.changed > 0 then
-      table.insert(texts, fml.ui.icons.git.Mod_alt .. " " .. git_status.changed)
+      table.insert(texts, eve.icons.git.Mod_alt .. " " .. git_status.changed)
     end
     if git_status.removed and git_status.removed > 0 then
-      table.insert(texts, fml.ui.icons.git.Remove .. " " .. git_status.removed)
+      table.insert(texts, eve.icons.git.Remove .. " " .. git_status.removed)
     end
     return table.concat(texts, " ")
   end

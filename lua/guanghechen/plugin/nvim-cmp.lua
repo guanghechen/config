@@ -36,7 +36,7 @@ return {
         -- default fields order i.e completion word + item.kind + item.kind icons
         fields = { "abbr", "kind", "menu" },
         format = function(_, item)
-          local icon = fml.ui.icons.kind[item.kind]
+          local icon = eve.icons.kind[item.kind]
           if icon then
             item.kind = icon -- .. " " .. item.kind
           end

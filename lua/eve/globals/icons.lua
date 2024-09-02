@@ -1,4 +1,4 @@
----@class fml.ui.icons
+---@class eve.globals.icons
 local M = {}
 
 ---@class fml.ui.icosn.fillchars
@@ -13,7 +13,7 @@ M.fillchars = {
   vert = "│",
 }
 
----@class fml.ui.icons.listchars
+---@class eve.globals.icons.listchars
 M.listchars = {
   eol = "↲",
   extends = "»",
@@ -25,7 +25,7 @@ M.listchars = {
   trail = "•",
 }
 
----@class fml.ui.icons.symbols
+---@class eve.globals.icons.symbols
 M.symbols = {
   flag_fuzzy = "󰫳",
   flag_case_sensitive = "",
@@ -36,7 +36,7 @@ M.symbols = {
   win_indicator_active = "▎",
 }
 
----@class fml.ui.icons.kind
+---@class eve.globals.icons.kind
 M.kind = {
   Array = "󰅪",
   --Boolean = "",
@@ -92,7 +92,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class fml.ui.icons.type
+---@class eve.globals.icons.type
 M.type = {
   Array = "󰅪",
   Boolean = "",
@@ -102,7 +102,7 @@ M.type = {
   String = "󰉿",
 }
 
----@class fml.ui.icons.documents
+---@class eve.globals.icons.documents
 M.documents = {
   Default = "",
   File = "",
@@ -112,7 +112,7 @@ M.documents = {
   Symlink = "",
 }
 
----@class fml.ui.icons.git
+---@class eve.globals.icons.git
 M.git = {
   Add = "",
   Branch = "",
@@ -131,7 +131,7 @@ M.git = {
   Conflict = "",
 }
 
----@class fml.ui.icons.os
+---@class eve.globals.icons.os
 M.os = {
   unix = "",
   mac = "",
@@ -139,7 +139,7 @@ M.os = {
   unknown = "",
 }
 
----@class fml.ui.icons.ui
+---@class eve.globals.icons.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",
@@ -209,7 +209,7 @@ M.ui = {
   Window = "",
 }
 
----@class fml.ui.icons.diagnostics
+---@class eve.globals.icons.diagnostics
 M.diagnostics = {
   Error = "",
   Warning = "",
@@ -224,7 +224,7 @@ M.diagnostics = {
   Hint_alt = "󰌶",
 }
 
----@class fml.ui.icons.misc
+---@class eve.globals.icons.misc
 M.misc = {
   Campass = "󰀹",
   Code = "",
@@ -249,7 +249,7 @@ M.misc = {
   Vim = "",
 }
 
----@class fml.ui.icons.cmp
+---@class eve.globals.icons.cmp
 M.cmp = {
   buffer = "",
   cmp_tabnine = "",
@@ -267,7 +267,7 @@ M.cmp = {
   undefined = "",
 }
 
----@class fml.ui.icons.dap
+---@class eve.globals.icons.dap
 M.dap = {
   Breakpoint = "󰝥",
   BreakpointCondition = "󰟃",
@@ -284,148 +284,76 @@ M.dap = {
   Terminate = "󰝤",
 }
 
----@class fml.ui.icons.devicons
+---@class eve.globals.icons.devicons
 M.devicons = {
   default_icon = {
     icon = "󰈚",
     name = "Default",
   },
-
-  c = {
-    icon = "",
-    name = "c",
-  },
-
-  css = {
-    icon = "",
-    name = "css",
-  },
-
   dart = {
     icon = "",
     name = "dart",
   },
-
   deb = {
     icon = "",
     name = "deb",
   },
-
   Dockerfile = {
     icon = "",
     name = "Dockerfile",
   },
-
-  html = {
-    icon = "",
-    name = "html",
-  },
-
   jpeg = {
     icon = "󰉏",
     name = "jpeg",
   },
-
   jpg = {
     icon = "󰉏",
     name = "jpg",
   },
-
-  js = {
-    icon = "󰌞",
-    name = "js",
-  },
-
   kt = {
     icon = "󱈙",
     name = "kt",
   },
-
-  lock = {
-    icon = "󰌾",
-    name = "lock",
-  },
-
-  lua = {
-    icon = "",
-    name = "lua",
-  },
-
   mp3 = {
     icon = "󰎆",
     name = "mp3",
   },
-
   mp4 = {
     icon = "",
     name = "mp4",
   },
-
   out = {
     icon = "",
     name = "out",
   },
-
-  png = {
-    icon = "󰉏",
-    name = "png",
-  },
-
-  py = {
-    icon = "",
-    name = "py",
-  },
-
-  ["robots.txt"] = {
-    icon = "󰚩",
-    name = "robots",
-  },
-
-  toml = {
-    icon = "",
-    name = "toml",
-  },
-
   ts = {
     icon = "󰛦",
     name = "ts",
   },
-
   ttf = {
     icon = "",
     name = "TrueTypeFont",
   },
-
   rb = {
     icon = "",
     name = "rb",
   },
-
   rpm = {
     icon = "",
     name = "rpm",
   },
-
-  vue = {
-    icon = "󰡄",
-    name = "vue",
-  },
-
   woff = {
     icon = "",
     name = "WebOpenFontFormat",
   },
-
   woff2 = {
     icon = "",
     name = "WebOpenFontFormat2",
   },
-
   xz = {
     icon = "",
     name = "xz",
   },
-
   zip = {
     icon = "",
     name = "zip",

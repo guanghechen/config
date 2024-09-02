@@ -1,6 +1,6 @@
 local Observable = require("eve.collection.observable")
 local std_array = require("eve.std.array")
-local icons = require("fml.ui.icons")
+local icons = require("eve.globals.icons")
 local Search = require("fml.ui.search.search")
 
 ---@class fml.ui.Select : fml.types.ui.ISelect

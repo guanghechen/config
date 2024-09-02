@@ -36,7 +36,7 @@ local M = {
     local width = 0 ---@type integer
     for _, symbol in ipairs(symbols) do
       local title = symbol.name or "" ---@type string
-      local icon = (fml.ui.icons.kind[symbol.kind] or "") .. " " ---@type string
+      local icon = (eve.icons.kind[symbol.kind] or "") .. " " ---@type string
       local next_width = width + vim.fn.strwidth(sep .. icon .. title) ---@type integer
       if next_width > remain_width then
         break

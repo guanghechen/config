@@ -5,17 +5,16 @@ return {
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   config = function()
     local severity = vim.diagnostic.severity
-    local icons = fml.ui.icons.diagnostics
     vim.diagnostic.config({
       virtual_text = {
         prefix = "",
       },
       signs = {
         text = {
-          [severity.ERROR] = icons.Error,
-          [severity.WARN] = icons.Warning,
-          [severity.INFO] = icons.Information,
-          [severity.HINT] = icons.Hint,
+          [severity.ERROR] = eve.icons.diagnostics.Error,
+          [severity.WARN] = eve.icons.diagnostics.Warning,
+          [severity.INFO] = eve.icons.diagnostics.Information,
+          [severity.HINT] = eve.icons.diagnostics.Hint,
         },
         numhl = {
           [severity.ERROR] = "f_lnum_error",

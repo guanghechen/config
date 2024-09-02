@@ -32,7 +32,6 @@ local ui = {
   SimpleFileSelect = require("fml.ui.simple_file_select"),
   Textarea = require("fml.ui.textarea"),
   Theme = require("fml.ui.theme"),
-  icons = require("fml.ui.icons"),
   signcolumn = require("fml.ui.signcolumn"),
   search = require("fml.ui.search"),
 }

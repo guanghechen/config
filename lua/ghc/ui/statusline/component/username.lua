@@ -1,12 +1,12 @@
 local function get_os_icon()
   if eve.os.is_mac() then
-    return fml.ui.icons.os.mac
+    return eve.icons.os.mac
   elseif eve.os.is_win() then
-    return fml.ui.icons.os.dos
+    return eve.icons.os.dos
   elseif eve.os.is_nix() or eve.os.is_wsl() then
-    return fml.ui.icons.os.unix
+    return eve.icons.os.unix
   else
-    return fml.ui.icons.os.unknown
+    return eve.icons.os.unknown
   end
 end
 

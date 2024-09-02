@@ -14,7 +14,7 @@ local M = {
     ---@diagnostic disable-next-line: undefined-field
     local text_encoding = vim.opt.fileencoding:get()
     local text_fileformat = fileformat_text_map[vim.bo.fileformat] or "UNKNOWN"
-    local icon_tab = fml.ui.icons.ui.Tab .. " "
+    local icon_tab = eve.icons.ui.Tab .. " "
     local text_tab = vim.api.nvim_get_option_value("shiftwidth", { scope = "local" })
     local text = text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab
     local hl_text = eve.nvimbar.txt(text, "f_sl_text")

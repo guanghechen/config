@@ -15,6 +15,11 @@ local collection = {
   Viewmodel = require("eve.collection.viewmodel"),
 }
 
+---@class eve.globals
+local globals = {
+  icons = require("eve.globals.icons"),
+}
+
 ---@type eve.oxi
 local oxi = require("eve.oxi")
 
@@ -44,14 +49,16 @@ local std = {
   util = require("eve.std.util"),
 }
 
----@class eve : eve.std
+---@class eve : eve.globals, eve.std
 ---@field public c                      eve.collection
 ---@field public collection             eve.collection
+---@field public globals                eve.globals
 ---@field public oxi                    eve.oxi
 ---@field public std                    eve.std
-local eve = vim.tbl_extend("force", std, {
+local eve = vim.tbl_extend("force", globals, std, {
   c = collection,
   collection = collection,
+  globals = globals,
   oxi = oxi,
   std = std,
 })

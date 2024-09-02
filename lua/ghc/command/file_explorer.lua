@@ -54,7 +54,7 @@ local function fetch_diritem(dirpath, force)
         owner = raw_itself.owner,
         group = raw_itself.group,
         date = raw_itself.date,
-        icon = fml.ui.icons.kind.Folder,
+        icon = eve.icons.kind.Folder,
         icon_hl = "f_fe_name_dir",
       }
       file_datamap[dirpath] = itself
@@ -64,7 +64,7 @@ local function fetch_diritem(dirpath, force)
         local icon ---@type string
         local icon_hl ---@type string
         if raw_item.type == "directory" then
-          icon = fml.ui.icons.kind.Folder
+          icon = eve.icons.kind.Folder
           icon_hl = "f_fe_name_dir"
         else
           icon, icon_hl = fml.util.calc_fileicon(raw_item.name)
