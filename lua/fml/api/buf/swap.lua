@@ -1,6 +1,4 @@
 local state = require("fml.api.state")
-local navigate = require("eve.std.navigate")
-local std_array = require("eve.std.array")
 
 ---@class fml.api.buf
 local M = require("fml.api.buf.mod")
@@ -16,10 +14,10 @@ function M.swap_left(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
+  local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
 
   if bufid_cur ~= nil then
-    local bufid_next = navigate.circular(bufid_cur, -step, #tab.bufnrs)
+    local bufid_next = eve.navigate.circular(bufid_cur, -step, #tab.bufnrs)
     if bufid_cur ~= bufid_next then
       local bufnr_next = tab.bufnrs[bufid_next]
       tab.bufnrs[bufid_next] = bufnr_cur
@@ -40,10 +38,10 @@ function M.swap_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
+  local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
 
   if bufid_cur ~= nil then
-    local bufid_next = navigate.circular(bufid_cur, step, #tab.bufnrs)
+    local bufid_next = eve.navigate.circular(bufid_cur, step, #tab.bufnrs)
     if bufid_cur ~= bufid_next then
       local bufnr_next = tab.bufnrs[bufid_next]
       tab.bufnrs[bufid_next] = bufnr_cur

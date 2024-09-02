@@ -80,7 +80,7 @@ local function statuscolumn()
     end
     vim.api.nvim_win_call(win, function()
       if vim.fn.foldclosed(vim.v.lnum) >= 0 then
-        fold = { text = vim.opt.fillchars:get().foldclose or "", texthl = "Folded" }
+        fold = { text = eve.icons.fillchars.foldclose, texthl = "Folded" }
       end
     end)
     -- Left: mark or non-git sign

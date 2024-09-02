@@ -1,4 +1,3 @@
-local reporter = require("eve.std.reporter")
 local state = require("fml.api.state")
 
 ---@class fml.api.win
@@ -9,7 +8,7 @@ function M.back()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local win = state.wins[winnr]
   if win == nil then
-    reporter.error({
+    eve.reporter.error({
       from = "fml.api.win",
       subject = "back",
       message = "Cannot find window.",
@@ -28,7 +27,7 @@ function M.forward()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local win = state.wins[winnr]
   if win == nil then
-    reporter.error({
+    eve.reporter.error({
       from = "fml.api.win",
       subject = "back",
       message = "Cannot find window.",

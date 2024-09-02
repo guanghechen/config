@@ -1,7 +1,3 @@
-local Observable = require("eve.collection.observable")
-local std_array = require("eve.std.array")
-local reporter = require("eve.std.reporter")
-
 ---@class fml.api.state
 local M = require("fml.api.state.mod")
 
@@ -14,7 +10,7 @@ function M.get_tab(tabnr)
 
   local tab = M.tabs[tabnr] ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
-    reporter.error({
+    eve.reporter.error({
       from = "fml.api.state",
       subject = "get_tab",
       message = "Cannot find tab from the state",
@@ -65,19 +61,19 @@ function M.refresh_tab(tabnr)
 
   local bufnr_set = {} ---@type table<integer, boolean>
   local bufnrs = {} ---@type integer[]
-  local winnrs = std_array.filter_inline(vim.api.nvim_tabpage_list_wins(tabnr), M.validate_win) ---@type integer[]
+  local winnrs = eve.array.filter_inline(vim.api.nvim_tabpage_list_wins(tabnr), M.validate_win) ---@type integer[]
 
   local tab = M.tabs[tabnr] ---@type fml.types.api.state.ITabItem|nil
   if tab == nil then
     local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    winnr_cur = std_array.contains(winnrs, winnr_cur) and winnr_cur or winnrs[1] or winnr_cur
+    winnr_cur = eve.array.contains(winnrs, winnr_cur) and winnr_cur or winnrs[1] or winnr_cur
 
     ---@type fml.types.api.state.ITabItem
     tab = {
       name = eve.constants.TAB_UNNAMED,
       bufnrs = {},
       bufnr_set = {},
-      winnr_cur = Observable.from_value(winnr_cur),
+      winnr_cur = eve.c.Observable.from_value(winnr_cur),
     }
     M.tabs[tabnr] = tab
   else

@@ -1,7 +1,4 @@
 local state = require("fml.api.state")
-local fs = require("eve.std.fs")
-local path = require("eve.std.path")
-local reporter = require("eve.std.reporter")
 
 ---@class fml.api.buf
 local M = require("fml.api.buf.mod")
@@ -37,7 +34,7 @@ function M.reload_or_load(filepath)
     return table.concat(lines, "\n")
   end
 
-  return fs.read_file({ filepath = target_filepath, silent = true }) or ""
+  return eve.fs.read_file({ filepath = target_filepath, silent = true }) or ""
 end
 
 ---@param bufnr                         ?integer
@@ -47,9 +44,9 @@ function M.save(bufnr)
   local current_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   if #current_filepath < 1 or current_filepath == eve.constants.BUF_UNTITLED then
     local cwd = eve.path.cwd() ---@type string
-    local workspace = path.workspace() ---@type string
+    local workspace = eve.path.workspace() ---@type string
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local initial_text = path.is_under(workspace, filepath) and path.relative(cwd, filepath, true) or filepath ---@type string
+    local initial_text = eve.path.is_under(workspace, filepath) and eve.path.relative(cwd, filepath, true) or filepath ---@type string
     local winnr = vim.api.nvim_get_current_win() ---@type integer
 
     local Input = require("fml.ui.input")
@@ -59,8 +56,8 @@ function M.save(bufnr)
       title = "Save file",
       min_width = 40,
       on_confirm = function(text)
-        local next_filepath = path.resolve(cwd, text) ---@type string
-        local filetype = fs.is_file_or_dir(next_filepath)
+        local next_filepath = eve.path.resolve(cwd, text) ---@type string
+        local filetype = eve.fs.is_file_or_dir(next_filepath)
 
         ---@return nil
         local on_save = function()
@@ -89,7 +86,7 @@ function M.save(bufnr)
         end
 
         if filetype == "directory" then
-          reporter.error({
+          eve.reporter.error({
             from = "fml.api.buf.create",
             subject = "save",
             message = "Cannot save a file into a directory.",

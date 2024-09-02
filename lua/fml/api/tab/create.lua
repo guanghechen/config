@@ -1,6 +1,4 @@
 local state = require("fml.api.state")
-local std_array = require("eve.std.array")
-local std_object = require("eve.std.object")
 
 ---@class fml.api.tab
 local M = require("fml.api.tab.mod")
@@ -39,7 +37,7 @@ end
 ---@param bufnr                         ?integer
 ---@return integer
 function M.create_if_nonexist(name, bufnr)
-  local tabnr, tab = std_object.find(state.tabs, function(tab)
+  local tabnr, tab = eve.object.find(state.tabs, function(tab)
     return tab.name == name
   end)
 
@@ -50,7 +48,7 @@ function M.create_if_nonexist(name, bufnr)
 
     vim.api.nvim_set_current_tabpage(tabnr)
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-    local _, winnr = std_array.first(winnrs, function(winnr)
+    local _, winnr = eve.array.first(winnrs, function(winnr)
       local win_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       return win_bufnr == bufnr
     end)

@@ -1,9 +1,9 @@
-local reporter = require("eve.std.reporter")
-
+---@return nil
 local function navigate_window_prev()
   vim.cmd("wincmd p")
 end
 
+---@return nil
 local function navigate_window_next()
   vim.cmd("wincmd w")
 end
@@ -27,7 +27,7 @@ local function navigate_vim(direction)
 
   local ok = pcall(navigate_window, direction)
   if not ok then
-    reporter.error({
+    eve.reporter.error({
       from = "fml.api.win",
       subject = "navigate_vim",
       message = "E11: Invalid in command-line window; <CR> executes, CTRL-C quits",

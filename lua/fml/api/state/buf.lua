@@ -1,4 +1,3 @@
-local path = require("eve.std.path")
 local util = require("fml.util")
 
 ---@class fml.api.state
@@ -34,7 +33,7 @@ end
 ---@param filepath                      string
 ---@return boolean
 function M.open_filepath(winnr, filepath)
-  filepath = path.normalize(filepath) ---! normalize the filepath
+  filepath = eve.path.normalize(filepath) ---! normalize the filepath
   if vim.api.nvim_win_is_valid(winnr) then
     local bufnr = M.locate_bufnr_by_filepath(filepath) ---@type integer|nil
     if bufnr ~= nil then
@@ -91,10 +90,10 @@ function M.refresh_buf(bufnr)
 
   local buf = M.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
   if buf == nil then
-    local filename = path.basename(filepath) ---@type string
+    local filename = eve.path.basename(filepath) ---@type string
     filename = (not filename or filename == "") and eve.constants.BUF_UNTITLED or filename
     local fileicon, fileicon_hl = util.calc_fileicon(filename) ---@type string, string
-    local real_paths = path.split_prettier(path.get_cwd_pieces(), filepath) ---@type string[]
+    local real_paths = eve.path.split_prettier(eve.path.get_cwd_pieces(), filepath) ---@type string[]
 
     ---@type fml.types.api.state.IBufItem
     buf = {
@@ -108,10 +107,10 @@ function M.refresh_buf(bufnr)
     }
     M.bufs[bufnr] = buf
   elseif buf.filepath ~= filepath or buf.filetype ~= filetype then
-    local filename = path.basename(filepath) ---@type string
+    local filename = eve.path.basename(filepath) ---@type string
     filename = #filename > 0 and filename or eve.constants.BUF_UNTITLED
     local fileicon, fileicon_hl = util.calc_fileicon(filename) ---@type string, string
-    local real_paths = path.split_prettier(path.get_cwd_pieces(), filepath) ---@type string[]
+    local real_paths = eve.path.split_prettier(eve.path.get_cwd_pieces(), filepath) ---@type string[]
 
     buf.fileicon = fileicon
     buf.fileicon_hl = fileicon_hl

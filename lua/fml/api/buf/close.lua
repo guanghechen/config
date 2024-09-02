@@ -1,6 +1,4 @@
 local state = require("fml.api.state")
-local navigate = require("eve.std.navigate")
-local std_array = require("eve.std.array")
 
 ---@class fml.api.buf
 local M = require("fml.api.buf.mod")
@@ -65,8 +63,8 @@ function M.close_left(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
-  local bufid_next = navigate.limit(bufid_cur, -step, #tab.bufnrs)
+  local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
+  local bufid_next = eve.navigate.limit(bufid_cur, -step, #tab.bufnrs)
 
   local bufnrs_to_remove = {} ---@type integer[]
   local visible_bufnrs = M.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
@@ -94,8 +92,8 @@ function M.close_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-  local bufid_cur = std_array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
-  local bufid_next = navigate.limit(bufid_cur, step, #tab.bufnrs)
+  local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) or 1 ---@type integer
+  local bufid_next = eve.navigate.limit(bufid_cur, step, #tab.bufnrs)
 
   local bufnrs_to_remove = {} ---@type integer[]
   local visible_bufnrs = M.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>

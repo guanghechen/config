@@ -1,5 +1,4 @@
 local state = require("fml.api.state")
-local std_array = require("eve.std.array")
 
 ---@class fml.api.win
 local M = require("fml.api.win.mod")
@@ -16,7 +15,7 @@ function M.split_horizontal()
     if win_cur ~= nil then
       state.wins[winnr_new] = {
         filepath_history = win_cur.filepath_history:fork({ name = "win_filepath" }),
-        lsp_symbols = std_array.slice(win_cur.lsp_symbols),
+        lsp_symbols = eve.array.slice(win_cur.lsp_symbols),
       }
     end
   end
@@ -34,7 +33,7 @@ function M.split_vertical()
     if win_cur ~= nil then
       state.wins[winnr_new] = {
         filepath_history = win_cur.filepath_history:fork({ name = "win_filepath" }),
-        lsp_symbols = std_array.slice(win_cur.lsp_symbols),
+        lsp_symbols = eve.array.slice(win_cur.lsp_symbols),
       }
     end
   end

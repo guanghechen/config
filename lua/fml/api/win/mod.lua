@@ -1,5 +1,3 @@
-local fs = require("eve.std.fs")
-local path = require("eve.std.path")
 local state = require("fml.api.state")
 
 ---@class fml.api.win.IHistoryItem
@@ -26,10 +24,10 @@ local M = {}
 function M.get_win_details(winnr)
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local filetype = fs.is_file_or_dir(filepath) ---@type eve.enums.FileType|nil
+  local filetype = eve.fs.is_file_or_dir(filepath) ---@type eve.enums.FileType|nil
   if filetype == "file" or filetype == "directory" then
-    local dirpath = filetype == "file" and path.dirname(filepath) or filepath ---@type string
-    dirpath = path.normalize(dirpath)
+    local dirpath = filetype == "file" and eve.path.dirname(filepath) or filepath ---@type string
+    dirpath = eve.path.normalize(dirpath)
     return { winnr = winnr, bufnr = bufnr, filepath = filepath, dirpath = dirpath }
   end
   return { winnr = winnr, bufnr = bufnr }

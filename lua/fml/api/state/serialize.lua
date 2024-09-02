@@ -1,8 +1,3 @@
-local std_array = require("eve.std.array")
-local Observable = require("eve.collection.observable")
-local fs = require("eve.std.fs")
-local path = require("eve.std.path")
-local reporter = require("eve.std.reporter")
 local util = require("fml.util")
 
 ---@param data                          fml.types.api.state.ISerializedData
@@ -92,20 +87,20 @@ function M.save(filepath)
     }
     table.insert(data.tabs, item)
   end
-  fs.write_json(filepath, data, false)
+  eve.fs.write_json(filepath, data, false)
 end
 
 ---@param filepath                      string
 ---@return nil
 function M.load(filepath)
-  local data = fs.read_json({
+  local data = eve.fs.read_json({
     filepath = filepath,
     silent_on_bad_path = true,
     silent_on_bad_json = true,
   })
 
   if data == nil then
-    reporter.warn({
+    eve.reporter.warn({
       from = "fml.api.state.load",
       subject = "load",
       message = "Failed to load json data",
@@ -119,7 +114,7 @@ function M.load(filepath)
 
   if type(data.bufs) == "table" then
     local bufs = {} ---@type table<integer, fml.types.api.state.IBufItem>
-    local CWD_PIECES = path.get_cwd_pieces() ---@type string[]
+    local CWD_PIECES = eve.path.get_cwd_pieces() ---@type string[]
     for _, item in ipairs(data.bufs) do
       local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
       if real_bufnr ~= nil and vim.api.nvim_buf_is_valid(real_bufnr) then
@@ -134,7 +129,7 @@ function M.load(filepath)
           filename = item.filename,
           filepath = item.filepath,
           filetype = filetype,
-          real_paths = path.split_prettier(CWD_PIECES, item.filepath),
+          real_paths = eve.path.split_prettier(CWD_PIECES, item.filepath),
           pinned = item.pinned,
         }
         bufs[real_bufnr] = buf
@@ -163,8 +158,8 @@ function M.load(filepath)
         local tab = {
           name = item.name,
           bufnrs = bufnrs,
-          bufnr_set = std_array.to_set(bufnrs),
-          winnr_cur = Observable.from_value(winnr_cur),
+          bufnr_set = eve.array.to_set(bufnrs),
+          winnr_cur = eve.c.Observable.from_value(winnr_cur),
         }
         tabs[real_tabnr] = tab
       end

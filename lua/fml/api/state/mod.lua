@@ -1,7 +1,3 @@
-local Observable = require("eve.collection.observable")
-local AdvanceHistory = require("eve.collection.history_advance")
-local fs = require("eve.std.fs")
-
 ---@type table<string, boolean>
 local BUF_IGNORED_FILETYPES = {
   ["PlenaryTestPopup"] = true,
@@ -63,7 +59,7 @@ function M.validate_filepath(filepath)
   if filepath == nil or filepath == "" or filepath == eve.constants.BUF_UNTITLED then
     return false
   end
-  return fs.is_file_or_dir(filepath) == "file"
+  return eve.fs.is_file_or_dir(filepath) == "file"
 end
 
 ---@param tabnr                         integer|nil
@@ -94,18 +90,18 @@ end
 
 M.bufs = {}
 M.tabs = {}
-M.tab_history = AdvanceHistory.new({
+M.tab_history = eve.c.AdvanceHistory.new({
   name = "tabs",
   capacity = eve.constants.TAB_HISTORY_CAPACITY,
   validate = M.validate_tab,
 })
 M.term_map = {}
 M.wins = {}
-M.win_history = AdvanceHistory.new({
+M.win_history = eve.c.AdvanceHistory.new({
   name = "wins",
   capacity = eve.constants.WIN_HISTORY_CAPACITY,
   validate = M.validate_win,
 })
-M.winline_dirty_nr = Observable.from_value(0, eve.util.falsy)
+M.winline_dirty_nr = eve.c.Observable.from_value(0, eve.util.falsy)
 
 return M

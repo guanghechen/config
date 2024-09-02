@@ -1,6 +1,3 @@
-local AdvanceHistory = require("eve.collection.history_advance")
-local reporter = require("eve.std.reporter")
-
 ---@class fml.api.state
 local M = require("fml.api.state.mod")
 
@@ -13,7 +10,7 @@ function M.get_win(winnr)
 
   local win = M.wins[winnr] ---@type fml.types.api.state.IWinItem|nil
   if win == nil then
-    reporter.error({
+    eve.reporter.error({
       from = "fml.api.state",
       subject = "get_win",
       message = "Cannot find win from the state",
@@ -62,7 +59,7 @@ function M.refresh_win(winnr)
   if win == nil then
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filepath_history = AdvanceHistory.new({
+    local filepath_history = eve.c.AdvanceHistory.new({
       name = "win#bufs",
       capacity = eve.constants.WIN_BUF_HISTORY_CAPACITY,
       validate = M.validate_filepath,

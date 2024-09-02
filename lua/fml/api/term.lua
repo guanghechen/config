@@ -1,5 +1,4 @@
 local state = require("fml.api.state")
-local reporter = require("eve.std.reporter")
 
 ---@class fml.api.term
 local M = {}
@@ -19,7 +18,7 @@ local function validate_position(position, subject)
     return true
   end
 
-  reporter.error({
+  eve.reporter.error({
     from = "fml.api.term",
     subject = subject,
     message = "Not recognized term position.",
@@ -97,7 +96,7 @@ function M.create(params)
 
   local term = state.term_map[name] ---@type fml.types.api.state.ITerm|nil
   if term ~= nil then
-    reporter.error({
+    eve.reporter.error({
       from = "fml.api.term",
       subject = "create",
       message = "The term with the given name already exists.",
@@ -108,7 +107,7 @@ function M.create(params)
 
   local winnr, bufnr = M.create_term_win(position, nil) ---@type integer|nil
   if winnr == nil or bufnr == nil then
-    reporter.error({
+    eve.reporter.error({
       from = "fml.api.term",
       subject = "create",
       message = "Failed to creat the term window.",
@@ -159,7 +158,7 @@ end
 function M.toggle(name)
   local term = state.term_map[name] ---@type fml.types.api.state.ITerm|nil
   if term == nil then
-    reporter.error({
+    eve.reporter.error({
       from = "fml.api.term",
       subject = "toggle",
       message = "Cannot find the term with the given name.",
@@ -179,7 +178,7 @@ function M.toggle(name)
 
   local winnr, bufnr = M.create_term_win(term.position, term.bufnr) ---@type integer|nil
   if winnr == nil or bufnr == nil then
-    reporter.error({
+    eve.reporter.error({
       from = "fml.api.term",
       subject = "toggle",
       message = "Failed to creat the term window.",
