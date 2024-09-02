@@ -4,7 +4,7 @@ local function circular_queue()
   circular:enqueue("B")
   circular:enqueue("C")
 
-  fml.debug.log({
+  eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -14,7 +14,7 @@ local function circular_queue()
   })
 
   circular:enqueue("D")
-  fml.debug.log({
+  eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -24,7 +24,7 @@ local function circular_queue()
   })
 
   circular:dequeue_back()
-  fml.debug.log({
+  eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -35,7 +35,7 @@ local function circular_queue()
 
   circular:enqueue("E")
   circular:enqueue("F")
-  fml.debug.log({
+  eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -48,18 +48,18 @@ local function circular_queue()
   for element in circular:iterator() do
     table.insert(result0, element)
   end
-  fml.debug.log({ result0 = result0 })
+  eve.debug.log({ result0 = result0 })
 
   local result1 = {}
   for element in circular:iterator_reverse() do
     table.insert(result1, element)
   end
-  fml.debug.log({ result1 = result1 })
+  eve.debug.log({ result1 = result1 })
 
   while circular:size() > 1 do
     circular:dequeue_back()
   end
-  fml.debug.log({
+  eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -70,8 +70,8 @@ local function circular_queue()
 
   circular:enqueue("G")
   circular:enqueue("H")
-  circular:rearrange(fml.fn.truthy)
-  fml.debug.log({
+  circular:rearrange(eve.util.truthy)
+  eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -85,7 +85,7 @@ local function circular_queue()
   circular:rearrange(function(element)
     return element ~= "I"
   end)
-  fml.debug.log({
+  eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -96,7 +96,7 @@ local function circular_queue()
 
   circular:enqueue("K")
   circular:enqueue("L")
-  fml.debug.log({
+  eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -108,7 +108,7 @@ local function circular_queue()
   circular:rearrange(function(element)
     return element ~= "L"
   end)
-  fml.debug.log({
+  eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),

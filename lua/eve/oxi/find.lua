@@ -1,3 +1,5 @@
+local json = require("eve.std.json")
+
 ---@class eve.oxi
 local M = require("eve.oxi.mod")
 
@@ -17,7 +19,7 @@ local M = require("eve.oxi.mod")
 ---@param params                        eve.oxi.find.IParams
 ---@return string[]
 function M.find(params)
-  local options_stringified = M.json.stringify(params)
+  local options_stringified = json.stringify(params)
   local result_str = M.nvim_tools.find(options_stringified)
   local ok, data = M.resolve_cmd_result("eve.oxi.find", result_str)
   if ok and data ~= nil then

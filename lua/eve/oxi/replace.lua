@@ -1,3 +1,4 @@
+local json = require("eve.std.json")
 local path = require("eve.std.path")
 
 ---@class eve.oxi
@@ -258,7 +259,7 @@ function M.replace_file_by_matches(params)
     flag_regex = params.flag_regex,
     match_offsets = match_offsets,
   }
-  local payload = M.json.stringify(resolved_params)
+  local payload = json.stringify(resolved_params)
   local ok, data =
     M.run_fun("eve.oxi.replace_file_by_matches", M.nvim_tools.replace_file_advance_by_matches, payload)
   ---@cast data eve.oxi.replace.replace_file_by_matches.IResult
@@ -287,7 +288,7 @@ function M.replace_file_advance_by_matches(params)
     match_offsets = match_offsets,
     remain_offsets = remain_offsets,
   }
-  local payload = M.json.stringify(resolved_params)
+  local payload = json.stringify(resolved_params)
   local ok, data =
     M.run_fun("eve.oxi.replace_file_advance_by_matches", M.nvim_tools.replace_file_advance_by_matches, payload)
   ---@cast data eve.oxi.replace.replace_file_advance_by_matches.IResult
@@ -348,7 +349,7 @@ function M.replace_file_preview_by_matches(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
-  local payload = M.json.stringify(payload_params)
+  local payload = json.stringify(payload_params)
   local ok, data = M.run_fun( ---
     "eve.oxi.replace_file_preview_by_matches",
     M.nvim_tools.replace_file_preview_by_matches,
@@ -425,7 +426,7 @@ function M.replace_file_preview_advance_by_matches(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
-  local payload = M.json.stringify(payload_params)
+  local payload = json.stringify(payload_params)
   local ok, data = M.run_fun(
     "eve.oxi.replace_file_preview_advance_by_matches",
     M.nvim_tools.replace_file_preview_advance_by_matches,
@@ -502,7 +503,7 @@ function M.replace_text_preview_by_matches(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
-  local payload = M.json.stringify(payload_params)
+  local payload = json.stringify(payload_params)
   local ok, data = M.run_fun( ---
     "eve.oxi.replace_text_preview_by_matches",
     M.nvim_tools.replace_text_preview_by_matches,
@@ -583,7 +584,7 @@ function M.replace_text_preview_advance_by_matches(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
-  local payload = M.json.stringify(payload_params)
+  local payload = json.stringify(payload_params)
   local ok, data = M.run_fun( ---
     "eve.oxi.replace_text_preview_advance_by_matches",
     M.nvim_tools.replace_text_preview_advance_by_matches,

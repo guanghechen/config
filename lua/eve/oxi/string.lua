@@ -1,3 +1,5 @@
+local json = require("eve.std.json")
+
 ---@class eve.oxi
 local M = require("eve.oxi.mod")
 
@@ -36,7 +38,7 @@ end
 ---@return integer[]
 function M.get_line_widths(text)
   local str = M.nvim_tools.get_line_widths(text)
-  local raw_result = M.json.parse(str)
+  local raw_result = json.parse(str)
   ---@cast raw_result integer[]
 
   local result = raw_result ---@type integer[]

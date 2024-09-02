@@ -1,3 +1,5 @@
+local json = require("eve.std.json")
+
 ---@class eve.oxi
 local M = require("eve.oxi.mod")
 
@@ -34,7 +36,7 @@ local M = require("eve.oxi.mod")
 ---@param params                        eve.oxi.search.IParams
 ---@return eve.oxi.search.IResult|nil
 function M.search(params)
-  local payload = M.json.stringify(params) ---@type string
+  local payload = json.stringify(params) ---@type string
   local ok, data = M.run_cmd("eve.oxi.search", M.nvim_tools.search, payload)
 
   if ok and data ~= nil and data.items ~= nil then

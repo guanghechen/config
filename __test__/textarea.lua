@@ -8,10 +8,10 @@ function test_textarea()
     height = 0.4,
     title = "Shit!",
     on_close = function()
-      fml.debug.log("on close")
+      eve.debug.log("on close")
     end,
     on_confirm = function(text)
-      fml.debug.log("on confirm:", { text = text or "nil" })
+      eve.debug.log("on confirm:", { text = text or "nil" })
       return true
     end,
   })
@@ -25,10 +25,10 @@ function test_input()
     width = 0.4,
     title = "Shit!",
     on_close = function()
-      fml.debug.log("on close")
+      eve.debug.log("on close")
     end,
     on_confirm = function(text)
-      fml.debug.log("on confirm:", { text = text or "nil" })
+      eve.debug.log("on confirm:", { text = text or "nil" })
       return true
     end,
   })

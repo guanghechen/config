@@ -102,11 +102,11 @@ local function test_window_mouse_click()
     end,
     on_mouse_click = function()
       local cursor = vim.fn.getmousepos()
-      fml.debug.log("mouse click", { cursor = cursor })
+      eve.debug.log("mouse click", { cursor = cursor })
     end,
     on_mouse_dbclick = function()
       local cursor = vim.fn.getmousepos()
-      fml.debug.log("mouse double click", { cursor = cursor })
+      eve.debug.log("mouse double click", { cursor = cursor })
     end,
   }
 

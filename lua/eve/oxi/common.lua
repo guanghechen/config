@@ -1,3 +1,4 @@
+local json = require("eve.std.json")
 local reporter = require("eve.std.reporter")
 
 ---@class eve.oxi
@@ -28,7 +29,7 @@ end
 ---@return boolean
 ---@return any|nil
 function M.resolve_cmd_result(from, result_str)
-  local result = M.json.parse(result_str)
+  local result = json.parse(result_str)
   if result == nil or type(result.error) == "string" then
     reporter.error({
       from = from,
@@ -47,7 +48,7 @@ end
 ---@return boolean
 ---@return any|nil
 function M.resolve_fun_result(from, result_str)
-  local result = M.json.parse(result_str)
+  local result = json.parse(result_str)
   if result == nil or type(result.error) == "string" then
     reporter.error({
       from = from,

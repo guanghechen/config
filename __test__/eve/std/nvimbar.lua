@@ -1,4 +1,4 @@
-fml.debug.log({
+eve.debug.log({
   a = vim.o.columns,
   b = #" ",
   c = vim.fn.strwidth(" "),
@@ -8,8 +8,8 @@ fml.debug.log({
 })
 
 local winnrs = vim.api.nvim_tabpage_list_wins(0)
-fml.debug.log("winnrs:", winnrs)
-fml.debug.log({
+eve.debug.log("winnrs:", winnrs)
+eve.debug.log({
   x1 = vim.api.nvim_win_get_width(winnrs[1]),
   x2 = vim.api.nvim_win_get_width(winnrs[2]),
 })

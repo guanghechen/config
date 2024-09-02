@@ -44,12 +44,12 @@ local std = {
   util = require("eve.std.util"),
 }
 
----@class eve : eve.oxi, eve.std
+---@class eve : eve.std
 ---@field public c                      eve.collection
 ---@field public collection             eve.collection
 ---@field public oxi                    eve.oxi
 ---@field public std                    eve.std
-local eve = vim.tbl_extend("force", oxi, std, {
+local eve = vim.tbl_extend("force", std, {
   c = collection,
   collection = collection,
   oxi = oxi,
