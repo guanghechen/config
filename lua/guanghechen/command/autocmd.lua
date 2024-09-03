@@ -8,7 +8,6 @@ local augroups = {
   session_autosave = fml.util.augroup("session_autosave"),
   set_fileformat = fml.util.augroup("set_fileformat"),
   set_filetype = fml.util.augroup("set_filetype"),
-  set_tabstop = fml.util.augroup("set_tabstop"),
   unlist_buffer = fml.util.augroup("unlist_buffer"),
 }
 
@@ -21,22 +20,6 @@ function M.autocmd_enable_spell(opts)
     pattern = pattern,
     callback = function()
       vim.opt_local.spell = true
-    end,
-  })
-end
-
--- enable wrap in text filetypes
----@param opts {pattern: table}
-function M.autocmd_enable_wrap(opts)
-  local pattern = opts.pattern
-  vim.api.nvim_create_autocmd("FileType", {
-    group = augroups.enable_wrap,
-    pattern = pattern,
-    callback = function()
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      if not fml.api.state.is_floating_win(winnr) then
-        vim.opt_local.wrap = true
-      end
     end,
   })
 end
@@ -71,48 +54,6 @@ function M.autocmd_set_fileformat(opts)
     pattern = pattern,
     callback = function()
       vim.bo.fileformat = format
-    end,
-  })
-end
-
----@param opts {filetype_map: table<string, string[]>}
-function M.autocmd_set_filetype(opts)
-  local filetype_map = opts.filetype_map
-  for filetype, file_patterns in pairs(filetype_map) do
-    vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-      group = augroups.set_filetype,
-      pattern = file_patterns,
-      callback = function()
-        vim.bo.filetype = filetype
-      end,
-    })
-  end
-end
-
----@param opts {pattern: string[], width: number}
-function M.autocmd_set_tabstop(opts)
-  local pattern = opts.pattern ---@type string[]
-  local width = opts.width ---@type number
-  vim.api.nvim_create_autocmd("FileType", {
-    pattern = pattern,
-    group = augroups.set_tabstop,
-    callback = function()
-      vim.opt.shiftwidth = width
-      vim.opt.softtabstop = width -- set the tab width
-      vim.opt.tabstop = width -- set the tab width
-    end,
-  })
-end
-
--- unlist some buffers with specified filetypes for easier close.
----@param opts {pattern: table}
-function M.autocmd_unlist_buffer(opts)
-  local pattern = opts.pattern
-  vim.api.nvim_create_autocmd("FileType", {
-    group = augroups.unlist_buffer,
-    pattern = pattern,
-    callback = function(event)
-      vim.bo[event.buf].buflisted = false
     end,
   })
 end

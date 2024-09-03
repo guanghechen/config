@@ -63,27 +63,21 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   end,
 })
 
----! Auto resize splits when window got resized.
-vim.api.nvim_create_autocmd({ "VimResized" }, {
+---! Set the filetype
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+  pattern = { "*.tmux.conf" },
   callback = function()
-    local current_tab = vim.fn.tabpagenr()
-    vim.cmd("tabdo wincmd =")
-    vim.cmd("tabnext " .. current_tab)
-
-    widgets.resize()
+    vim.bo.filetype = "tmux"
+  end,
+})
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+  pattern = { "*.fzfrc", "*.ripgreprc" },
+  callback = function()
+    vim.bo.filetype = "bash"
   end,
 })
 
----! Check if we need to reload the file when it changed
-vim.api.nvim_create_autocmd({ "FocusGained" }, {
-  callback = function()
-    if vim.o.buftype ~= "nofile" then
-      vim.cmd("checktime")
-    end
-  end,
-})
-
----! close some filetypes with <q>
+---! Close some filetypes with <q>
 vim.api.nvim_create_autocmd("FileType", {
   pattern = {
     "checkhealth",
@@ -106,11 +100,66 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+---! Enable wrap.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown", "text" },
+  callback = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+    if wincfg.relative == nil or wincfg.relative == "" then
+      vim.opt_local.wrap = true
+    end
+  end,
+})
+
 ---! Make the buffers not listed.
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "qf",
   callback = function()
     vim.opt_local.buflisted = false
+  end,
+})
+
+---! Set the tab width
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown" },
+  callback = function()
+    vim.opt.shiftwidth = 2
+    vim.opt.softtabstop = 2 -- set the tab width
+    vim.opt.tabstop = 2 -- set the tab width
+  end,
+})
+
+---! Unlist some buffers with specified filetypes for easier close.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = {
+    "checkhealth",
+    "git",
+    "help",
+    "lspinfo",
+    "man",
+    "neotest-output",
+    "neotest-output-panel",
+    "neotest-summary",
+    "neo-tree",
+    "notify",
+    "PlenaryTestPopup",
+    "qf",
+    "startuptime",
+    "tsplayground",
+    "Trouble",
+  },
+  callback = function(event)
+    vim.bo[event.buf].buflisted = false
+  end,
+})
+
+---! Check if we need to reload the file when it changed
+vim.api.nvim_create_autocmd({ "FocusGained" }, {
+  callback = function()
+    if vim.o.buftype ~= "nofile" then
+      vim.cmd("checktime")
+    end
   end,
 })
 
@@ -125,5 +174,16 @@ vim.api.nvim_create_autocmd("LspProgress", {
 vim.api.nvim_create_autocmd({ "TextYankPost" }, {
   callback = function()
     vim.highlight.on_yank()
+  end,
+})
+
+---! Auto resize splits when window got resized.
+vim.api.nvim_create_autocmd({ "VimResized" }, {
+  callback = function()
+    local current_tab = vim.fn.tabpagenr()
+    vim.cmd("tabdo wincmd =")
+    vim.cmd("tabnext " .. current_tab)
+
+    widgets.resize()
   end,
 })
