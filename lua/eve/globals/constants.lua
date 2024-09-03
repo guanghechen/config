@@ -13,8 +13,6 @@ M.FT_NEOTREE = "neo-tree"
 M.FT_SEARCH_INPUT = "search-input"
 M.FT_SEARCH_MAIN = "search-main"
 M.FT_SEARCH_PREVIEW = "search-preview"
-M.FT_SELECT_INPUT = "select-input"
-M.FT_SELECT_MAIN = "select-main"
 M.FT_TERM = "term"
 
 ---! sign_ids

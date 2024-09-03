@@ -17,8 +17,6 @@ return {
         eve.constants.FT_SEARCH_INPUT,
         eve.constants.FT_SEARCH_MAIN,
         eve.constants.FT_SEARCH_PREVIEW,
-        eve.constants.FT_SELECT_INPUT,
-        eve.constants.FT_SELECT_MAIN,
         eve.constants.FT_TERM,
         "help",
         "alpha",

@@ -9,19 +9,21 @@ return {
   opts = {
     disable = {
       ft = {
+        eve.constants.FT_NEOTREE,
+        eve.constants.FT_SEARCH_INPUT,
+        eve.constants.FT_SEARCH_MAIN,
+        eve.constants.FT_SEARCH_PREVIEW,
         eve.constants.FT_TERM,
-        eve.constants.FT_SELECT_INPUT,
-        eve.constants.FT_SELECT_MAIN,
       },
     },
     spec = {
       {
         mode = { "n", "v" },
-        { "g",         group = "goto" },
-        { "gs",        group = "surround" },
-        { "z",         group = "fold" },
-        { "]",         group = "next" },
-        { "[",         group = "prev" },
+        { "g", group = "goto" },
+        { "gs", group = "surround" },
+        { "z", group = "fold" },
+        { "]", group = "next" },
+        { "[", group = "prev" },
         { "<leader>b", group = "buffer" },
         { "<leader>c", group = "code" },
         { "<leader>d", group = "debug" },
