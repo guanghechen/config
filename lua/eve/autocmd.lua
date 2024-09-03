@@ -1,3 +1,4 @@
+local constants = require("eve.globals.constants")
 local mvc = require("eve.globals.mvc")
 local widgets = require("eve.globals.widgets")
 local os = require("eve.std.os")
@@ -52,17 +53,6 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   end,
 })
 
----! Auto create dirs when saving a file, in case some intermediate directory does not exist
-vim.api.nvim_create_autocmd({ "BufWritePre" }, {
-  callback = function(event)
-    if event.match:match("^%w%w+:[\\/][\\/]") then
-      return
-    end
-    local file = vim.uv.fs_realpath(event.match) or event.match
-    vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
-  end,
-})
-
 ---! Set the filetype
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = { "*.tmux.conf" },
@@ -74,6 +64,46 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = { "*.fzfrc", "*.ripgreprc" },
   callback = function()
     vim.bo.filetype = "bash"
+  end,
+})
+
+---! Go to last loc when opening a buffer
+vim.api.nvim_create_autocmd({ "BufReadPost" }, {
+  callback = function(event)
+    local bufnr = event.buf ---@type integer
+    if vim.b[bufnr].eve_last_loc then
+      return
+    end
+    vim.b[bufnr].eve_last_loc = true
+
+    local filetype = vim.bo[bufnr].filetype
+    if
+      filetype == "gitcommit"
+      or filetype == constants.FT_TERM
+      or filetype == constants.FT_NEOTREE
+      or filetype == constants.FT_SEARCH_INPUT
+      or filetype == constants.FT_SEARCH_MAIN
+      or filetype == constants.FT_SEARCH_PREVIEW
+    then
+      return
+    end
+
+    local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
+    local lcount = vim.api.nvim_buf_line_count(bufnr)
+    if mark[1] > 0 and mark[1] <= lcount then
+      pcall(vim.api.nvim_win_set_cursor, 0, mark)
+    end
+  end,
+})
+
+---! Auto create dirs when saving a file, in case some intermediate directory does not exist
+vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+  callback = function(event)
+    if event.match:match("^%w%w+:[\\/][\\/]") then
+      return
+    end
+    local file = vim.uv.fs_realpath(event.match) or event.match
+    vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
   end,
 })
 
