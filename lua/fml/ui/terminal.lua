@@ -212,11 +212,12 @@ function M:show()
           self:close()
         end,
       })
-      vim.schedule(function()
-        vim.cmd("startinsert")
-      end)
     end
   end
+
+  vim.schedule(function()
+    vim.cmd("startinsert")
+  end)
 end
 
 ---@return nil

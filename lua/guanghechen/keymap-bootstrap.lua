@@ -180,7 +180,7 @@ mk({ "i", "n", "v" }, "<F5>", ghc.command.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
 
 --#[s]earch-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>`", resume_or_find_files, "search: resume or find files")
+mk({ "n", "t", "v" }, "<leader>`", resume_or_find_files, "search: resume or find files")
 mk({ "n", "v" }, "<leader>ss", ghc.command.search_files.open_search, "search: files")
 mk({ "n", "v" }, "<leader>sw", ghc.command.search_files.open_search_workspace, "search: files (workspace)")
 mk({ "n", "v" }, "<leader>sc", ghc.command.search_files.open_search_cwd, "search: files (cwd)")
