@@ -1,7 +1,7 @@
 local session = require("ghc.context.session")
 local actions = require("ghc.command.search_files.actions")
 
----@type fml.types.ui.search.IRawStatuslineItem[]
+---@type eve.types.ux.widgets.IRawStatuslineItem[]
 local statusline_items = {
   {
     type = "enum",
@@ -111,7 +111,7 @@ local input_keymaps = {
 ---@class ghc.command.search_files.keybindings
 local M = {}
 
----@type fml.types.ui.search.IRawStatuslineItem[]
+---@type eve.types.ux.widgets.IRawStatuslineItem[]
 M.statusline_items = eve.array.concat({}, statusline_items)
 
 ---@type fml.types.IKeymap[]

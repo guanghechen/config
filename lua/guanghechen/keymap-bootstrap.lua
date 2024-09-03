@@ -9,8 +9,8 @@ local function mk(mode, key, action, desc, silent, nowait)
 end
 
 ---@return nil
-local function resume_or_close()
-  if not fml.ui.search.resume_or_close() then
+local function resume_or_find_files()
+  if not eve.widgets.resume() then
     ghc.command.find_files.open()
   end
 end
@@ -180,7 +180,7 @@ mk({ "i", "n", "v" }, "<F5>", ghc.command.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
 
 --#[s]earch-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>`", resume_or_close, "search: resume or find files")
+mk({ "n", "v" }, "<leader>`", resume_or_find_files, "search: resume or find files")
 mk({ "n", "v" }, "<leader>ss", ghc.command.search_files.open_search, "search: files")
 mk({ "n", "v" }, "<leader>sw", ghc.command.search_files.open_search_workspace, "search: files (workspace)")
 mk({ "n", "v" }, "<leader>sc", ghc.command.search_files.open_search_cwd, "search: files (cwd)")

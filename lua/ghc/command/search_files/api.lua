@@ -266,9 +266,9 @@ end
 ---@param callback                    fml.types.ui.search.IFetchDataCallback
 ---@return nil
 function M.fetch_data(input_text, force, callback)
+  local current_buf_path = eve.widgets.get_current_buf_filepath() ---@type string
   local cwd = state.search_cwd:snapshot() ---@type string
   local scope = session.search_scope:snapshot() ---@type ghc.enums.context.SearchScope
-  local _, current_buf_path = fml.ui.search.get_current_path() ---@type string, string|nil
   local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
   local flag_gitignore = session.search_flag_gitignore:snapshot() ---@type boolean
   local flag_regex = session.search_flag_regex:snapshot() ---@type boolean

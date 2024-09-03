@@ -4,9 +4,9 @@ local state_search_cwd = eve.c.Observable.from_value(session.get_search_scope_cw
 session.search_scope:subscribe(
   eve.c.Subscriber.new({
     on_next = function()
+      local current_buf_dirpath = eve.widgets.get_current_buf_dirpath() ---@type string
       local current_search_cwd = state_search_cwd:snapshot() ---@type string
-      local dirpath = fml.ui.search.get_current_path() ---@type string
-      local next_search_cwd = session.get_search_scope_cwd(dirpath) ---@type string
+      local next_search_cwd = session.get_search_scope_cwd(current_buf_dirpath) ---@type string
       if current_search_cwd ~= next_search_cwd then
         state_search_cwd:next(next_search_cwd)
       end

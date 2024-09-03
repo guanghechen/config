@@ -45,3 +45,7 @@
 ---| "confirm"
 ---| "command"
 ---| "select"
+
+---@alias eve.enums.WidgetStatuslineItemType
+---| "flag"
+---| "enum"

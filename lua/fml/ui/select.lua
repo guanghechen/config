@@ -40,7 +40,7 @@ M.__index = M
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public provider               fml.types.ui.select.IProvider
 ---@field public delay_render           ?integer
----@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
+---@field public statusline_items       ?eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
@@ -69,7 +69,7 @@ function M.new(props)
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.select.IProvider
   local delay_render = props.delay_render or 48 ---@type integer
-  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
+  local statusline_items = props.statusline_items ---@type eve.types.ux.widgets.IRawStatuslineItem[]
   local title = props.title ---@type string
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
@@ -100,7 +100,7 @@ function M.new(props)
       self:mark_search_state_dirty()
     end
 
-    ---@type fml.types.ui.search.IRawStatuslineItem[]
+    ---@type eve.types.ux.widgets.IRawStatuslineItem[]
     statusline_items = std_array.concat(statusline_items or {}, {
       {
         type = "flag",

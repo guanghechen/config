@@ -27,8 +27,8 @@ local c = {
   noice = "noice",
   pos = "pos",
   readonly = "readonly",
-  search = "search",
   username = "username",
+  widget = "widget",
 }
 for _, name in pairs(c) do
   statusline:register(name, require("ghc.ui.statusline.component." .. name))
@@ -41,7 +41,7 @@ statusline
   :place(c.filetype, "left")
   :place(c.filestatus, "left")
   :place(c.readonly, "left")
-  :place(c.search, "center")
+  :place(c.widget, "center")
   :place(c.pos, "right")
   :place(c.fileformat, "right")
   :place(c.lsp, "right")

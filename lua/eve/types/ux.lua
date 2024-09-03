@@ -29,6 +29,22 @@
 ---@field public hlname                 string
 
 ---@class eve.types.ux.IWidget
+---@field public statusline_items       eve.types.ux.widgets.IStatuslineItem[]|nil
 ---@field public alive                  fun(self: eve.types.ux.IWidget): boolean
+---@field public hide                   fun(self: eve.types.ux.IWidget): nil
 ---@field public resize                 fun(self: eve.types.ux.IWidget): nil
----@field public toggle                 fun(self: eve.types.ux.IWidget): boolean
+---@field public show                   fun(self: eve.types.ux.IWidget): nil
+---@field public visible                fun(self: eve.types.ux.IWidget): boolean
+
+---@class eve.types.ux.widgets.IStatuslineItem
+---@field public type                   eve.enums.WidgetStatuslineItemType
+---@field public state                  eve.types.collection.IObservable
+---@field public symbol                 string
+---@field public callback_fn            string
+
+---@class eve.types.ux.widgets.IRawStatuslineItem
+---@field public type                   eve.enums.WidgetStatuslineItemType
+---@field public desc                   string
+---@field public state                  eve.types.collection.IObservable
+---@field public symbol                 string
+---@field public callback               fun(): nil

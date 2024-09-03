@@ -1,10 +1,5 @@
-local G = require("eve.std.G")
-local Subscriber = require("eve.collection.subscriber")
-local scheduler = require("eve.std.scheduler")
 local api_state = require("fml.api.state")
-local std_array = require("eve.std.array")
 local util = require("fml.util")
-local icons = require("eve.globals.icons")
 local SearchInput = require("fml.ui.search.input")
 local SearchMain = require("fml.ui.search.main")
 local SearchPreview = require("fml.ui.search.preview")
@@ -37,11 +32,8 @@ local PREVIEW_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_preview_normal",
 }, ",")
 
-local _current_buf_dir = vim.fn.expand("%:p:h") ---@type string
-local _current_buf_path = nil ---@type string|nil
-local _search_current = nil ---@type fml.ui.search.Search|nil
-
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
+---@field protected _alive              boolean
 ---@field protected _destroy_on_close   boolean
 ---@field protected _dimension          fml.types.ui.search.IDimension
 ---@field protected _input              fml.types.ui.search.IInput
@@ -69,7 +61,7 @@ M.__index = M
 ---@field public patch_preview_data     ?fml.types.ui.search.IPatchPreviewData
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public delay_render           ?integer
----@field public statusline_items       fml.types.ui.search.IRawStatuslineItem[]
+---@field public statusline_items       eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?fml.types.ui.search.IOnClose
 ---@field public on_confirm             fml.types.ui.search.IOnConfirm
@@ -81,16 +73,16 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local common_keymaps = {} ---@type fml.types.IKeymap[]
-  local statusline_items = {} ---@type fml.types.ui.search.IStatuslineItem[]
+  local statusline_items = {} ---@type eve.types.ux.widgets.IStatuslineItem[]
 
-  local raw_statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]
+  local raw_statusline_items = props.statusline_items ---@type eve.types.ux.widgets.IRawStatuslineItem[]
   for idx, item in ipairs(raw_statusline_items) do
     local state = item.state ---@type eve.types.collection.IObservable
     local symbol = item.symbol ---@type string
     local callback = item.callback ---@type fun(): nil
-    local callback_fn = G.register_anonymous_fn(callback) or "" ---@type string
+    local callback_fn = eve.G.register_anonymous_fn(callback) or "" ---@type string
 
-    ---@type fml.types.ui.search.IStatuslineItem
+    ---@type eve.types.ux.widgets.IStatuslineItem
     local statusline_item = { type = item.type, state = state, symbol = symbol, callback_fn = callback_fn }
     table.insert(statusline_items, statusline_item)
 
@@ -250,7 +242,7 @@ function M.new(props)
     end,
   }
 
-  std_array.extend(common_keymaps, {
+  eve.array.extend(common_keymaps, {
     {
       modes = { "i", "n", "v" },
       key = "<LeftMouse>",
@@ -287,10 +279,10 @@ function M.new(props)
   }
 
   ---@type fml.types.IKeymap[]
-  local input_keymaps = std_array.concat(common_keymaps, left_common_keymaps, props.input_keymaps or {})
+  local input_keymaps = eve.array.concat(common_keymaps, left_common_keymaps, props.input_keymaps or {})
 
   ---@type fml.types.IKeymap[]
-  local main_keymaps = std_array.concat(common_keymaps, left_common_keymaps, {
+  local main_keymaps = eve.array.concat(common_keymaps, left_common_keymaps, {
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
     { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
@@ -300,7 +292,7 @@ function M.new(props)
   }, props.main_keymaps or {})
 
   ---@type fml.types.IKeymap[]
-  local preview_keymaps = std_array.concat(common_keymaps, {
+  local preview_keymaps = eve.array.concat(common_keymaps, {
     { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.focus_input, desc = "search: focus input" },
     { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.focus_input, desc = "search: focus input" },
     { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.on_main_down, desc = "search: focus next item" },
@@ -323,7 +315,7 @@ function M.new(props)
       { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
       { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
     }
-    std_array.extend(input_keymaps, additional_input_keymaps)
+    eve.array.extend(input_keymaps, additional_input_keymaps)
   else
     ---@param key                       string
     ---@param action                    fun(): nil
@@ -354,7 +346,7 @@ function M.new(props)
       { modes = { "n", "v" }, key = "g", callback = on_input_g, desc = "search: locate" },
       { modes = { "n", "v" }, key = "gg", callback = on_input_gg, desc = "search: goto first line" },
     }
-    std_array.extend(input_keymaps, additional_input_keymaps)
+    eve.array.extend(input_keymaps, additional_input_keymaps)
   end
 
   ---@type fml.types.ui.search.IInput
@@ -399,6 +391,7 @@ function M.new(props)
 
   self.state = state
   self.statusline_items = statusline_items
+  self._alive = true
   self._destroy_on_close = destroy_on_close
   self._dimension = dimension
   self._input = input
@@ -411,7 +404,7 @@ function M.new(props)
   self._on_close = on_close_from_props
 
   ---@type eve.std.scheduler.IScheduler
-  local draw_scheduler = scheduler.throttle({
+  local draw_scheduler = eve.scheduler.throttle({
     name = "fml.ui.search.search.draw",
     delay = 48,
     fn = function(callback)
@@ -425,7 +418,7 @@ function M.new(props)
   })
 
   state.visible:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         local visible = state.visible:snapshot() ---@type boolean
         if visible then
@@ -437,7 +430,7 @@ function M.new(props)
   )
 
   state.dirtier_dimension:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         local is_dimension_dirty = state.dirtier_dimension:is_dirty() ---@type boolean
         local visible = state.visible:snapshot() ---@type boolean
@@ -450,7 +443,7 @@ function M.new(props)
   )
 
   state.dirtier_main:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
         local visible = state.visible:snapshot() ---@type boolean
@@ -465,7 +458,7 @@ function M.new(props)
   ---! Trigger the preview dirty change when the preview not exist.
   if preview == nil then
     state.dirtier_preview:subscribe(
-      Subscriber.new({
+      eve.c.Subscriber.new({
         on_next = function()
           local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
           local visible = state.visible:snapshot() ---@type boolean
@@ -480,7 +473,7 @@ function M.new(props)
 
   if enable_multiline_input then
     state.input_line_count:subscribe(
-      Subscriber.new({
+      eve.c.Subscriber.new({
         on_next = function()
           local visible = state.visible:snapshot() ---@type boolean
           if visible then
@@ -504,6 +497,11 @@ function M:sync_main_cursor()
       vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
     end
   end
+end
+
+---@return boolean
+function M:alive()
+  return self._alive
 end
 
 ---@return nil
@@ -623,11 +621,11 @@ function M:create_wins_as_needed()
     vim.wo[winnr_preview].list = true
     vim.wo[winnr_preview].listchars = string.format(
       "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
-      icons.listchars.eol,
-      icons.listchars.lead,
-      icons.listchars.nbsp,
-      icons.listchars.space,
-      icons.listchars.trail
+      eve.icons.listchars.eol,
+      eve.icons.listchars.lead,
+      eve.icons.listchars.nbsp,
+      eve.icons.listchars.space,
+      eve.icons.listchars.trail
     )
   end
 
@@ -718,6 +716,70 @@ end
 
 ---@return nil
 function M:close()
+  self:hide()
+
+  if self._destroy_on_close then
+    self._alive = false
+    self._input:destroy()
+    self._main:destroy()
+
+    if self._preview ~= nil then
+      self._preview:destroy()
+    end
+  end
+
+  if self._on_close ~= nil then
+    self._on_close()
+  end
+end
+
+---@return nil
+function M:focus()
+  local state = self.state ---@type fml.types.ui.search.IState
+  local visible = state.visible:snapshot() ---@type boolean
+
+  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+  local winnr_input = self:get_winnr_input() ---@type integer|nil
+  local winnr_main = self:get_winnr_main() ---@type integer|nil
+
+  if
+    not visible
+    or winnr_input == nil
+    or winnr_main == nil
+    or not vim.api.nvim_win_is_valid(winnr_input)
+    or not vim.api.nvim_win_is_valid(winnr_main)
+  then
+    self:open()
+    return
+  end
+
+  local winnr_preview = self:get_winnr_preview() ---@type integer|nil
+  if winnr_cur ~= winnr_input and winnr_cur ~= winnr_preview then
+    vim.schedule(function()
+      if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+        vim.api.nvim_tabpage_set_win(0, winnr_input)
+      end
+    end)
+  end
+end
+
+---@return integer|nil
+function M:get_winnr_main()
+  return self._winnr_main
+end
+
+---@return integer|nil
+function M:get_winnr_input()
+  return self._winnr_input
+end
+
+---@return integer|nil
+function M:get_winnr_preview()
+  return self._winnr_preview
+end
+
+---@return nil
+function M:hide()
   local winnr = api_state.get_current_tab_winnr() ---@type integer
   vim.api.nvim_tabpage_set_win(0, winnr)
 
@@ -741,106 +803,51 @@ function M:close()
   if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
     vim.api.nvim_win_close(winnr_preview, true)
   end
-
-  if self._destroy_on_close then
-    self._input:destroy()
-    self._main:destroy()
-
-    if self._preview ~= nil then
-      self._preview:destroy()
-    end
-  end
-
-  if self._on_close ~= nil then
-    self._on_close()
-  end
-end
-
----@return nil
-function M:focus()
-  local state = self.state ---@type fml.types.ui.search.IState
-  local visible = state.visible:snapshot() ---@type boolean
-
-  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-  local winnr_main = self:get_winnr_main() ---@type integer|nil
-  local winnr_preview = self:get_winnr_preview() ---@type integer|nil
-
-  if
-    not visible
-    or winnr_main == nil
-    or winnr_preview == nil
-    or not vim.api.nvim_win_is_valid(winnr_main)
-    or not vim.api.nvim_win_is_valid(winnr_preview)
-  then
-    self:open()
-    return
-  end
-
-  if winnr_cur ~= winnr_preview and winnr_cur ~= winnr_preview then
-    vim.schedule(function()
-      if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
-        vim.api.nvim_tabpage_set_win(0, winnr_preview)
-      end
-    end)
-  end
-end
-
----@return fml.types.ui.search.ISearch|nil
-function M.get_current_instance()
-  return _search_current
-end
-
----@return string
----@return string|nil
-function M.get_current_path()
-  return _current_buf_dir, _current_buf_path
-end
-
----@return integer|nil
-function M:get_winnr_main()
-  return self._winnr_main
-end
-
----@return integer|nil
-function M:get_winnr_input()
-  return self._winnr_input
-end
-
----@return integer|nil
-function M:get_winnr_preview()
-  return self._winnr_preview
 end
 
 ---@return nil
 function M:open()
-  if _search_current == nil or not _search_current.state.visible:snapshot() then
-    local filepath = vim.api.nvim_buf_get_name(0) ---@type string
-    local dirpath = vim.fn.expand("%:p:h") ---@type string
-    _current_buf_dir = dirpath ---@type string
-    _current_buf_path = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
-  end
-
-  if _search_current ~= self then
-    if _search_current ~= nil then
-      _search_current:close()
-    end
-    _search_current = self
-  end
-
-  self._input:create_buf_as_needed()
-  self._main:render()
-  if self._preview ~= nil then
-    self._preview:render()
-  end
-
-  local state = self.state ---@type fml.types.ui.search.IState
-  self._input:reset_input()
-  state.visible:next(true)
+  eve.widgets.push(self)
+  self:show()
 end
 
 ---@return nil
 function M:reset_input(text)
   self._input:reset_input(text)
+end
+
+---@return nil
+function M:resize()
+  self.state.dirtier_dimension:mark_dirty()
+end
+
+---@return nil
+function M:show()
+  if not self._alive then
+    eve.reporter.error({
+      from = "fl.ui.search",
+      subject = "show",
+      message = "The widget has been destroyed, cannot open it again.",
+      details = {
+        alive = self._alive,
+        dimension = self._dimension,
+        state = self.state,
+      },
+    })
+    return
+  end
+
+  local visible = self.state.visible:snapshot() ---@type boolean
+  if not visible then
+    self._input:create_buf_as_needed()
+    self._main:render()
+    if self._preview ~= nil then
+      self._preview:render()
+    end
+
+    self._input:reset_input()
+    self.state.visible:next(true)
+  end
 end
 
 ---@return nil
@@ -851,6 +858,11 @@ function M:toggle()
   else
     self:open()
   end
+end
+
+---@return boolean
+function M:visible()
+  return self.state.visible:snapshot()
 end
 
 return M

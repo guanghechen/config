@@ -1,20 +1,24 @@
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
-  name = "fml.ui.search",
+  name = "fml.ui.widget",
   condition = function()
-    local search = fml.ui.search.get_current_instance() ---@type fml.types.ui.search.ISearch|nil
-    return search ~= nil and search.state.visible:snapshot()
+    local widget = eve.widgets:get_current_widget() ---@type eve.types.ux.IWidget|nil
+    return widget ~= nil and widget:visible()
   end,
   render = function()
-    local search = fml.ui.search.get_current_instance() ---@type fml.types.ui.search.ISearch|nil
-    if search == nil then
+    local widget = eve.widgets:get_current_widget() ---@type eve.types.ux.IWidget|nil
+    if widget == nil then
+      return "", 0
+    end
+
+    local items = widget.statusline_items ---@type eve.types.ux.widgets.IStatuslineItem[]|nil
+    if items == nil or #items < 1 then
       return "", 0
     end
 
     local hl_text = "" ---@type string
     local width = 0 ---@type integer
 
-    local items = search.statusline_items ---@type fml.types.ui.search.IStatuslineItem[]
     for _, item in ipairs(items) do
       local fn = item.callback_fn ---@type string
       if item.type == "flag" then

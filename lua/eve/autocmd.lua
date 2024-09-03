@@ -1,4 +1,5 @@
 local mvc = require("eve.globals.mvc")
+local widgets = require("eve.globals.widgets")
 local os = require("eve.std.os")
 local path = require("eve.std.path")
 local tmux = require("eve.std.tmux")
@@ -68,6 +69,8 @@ vim.api.nvim_create_autocmd({ "VimResized" }, {
     local current_tab = vim.fn.tabpagenr()
     vim.cmd("tabdo wincmd =")
     vim.cmd("tabnext " .. current_tab)
+
+    widgets.resize()
   end,
 })
 

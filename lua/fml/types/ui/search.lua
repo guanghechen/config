@@ -46,19 +46,6 @@
 ---@field public lnum                   integer|nil
 ---@field public col                    integer|nil
 
----@class fml.types.ui.search.IRawStatuslineItem
----@field public type                   "flag"|"enum"
----@field public desc                   string
----@field public state                  eve.types.collection.IObservable
----@field public symbol                 string
----@field public callback               fun(): nil
-
----@class fml.types.ui.search.IStatuslineItem
----@field public type                   "flag"|"enum"
----@field public state                  eve.types.collection.IObservable
----@field public symbol                 string
----@field public callback_fn            string
-
 ---@class fml.types.ui.search.IRawDimension
 ---@field public height                 ?number
 ---@field public max_width              ?number
@@ -124,9 +111,8 @@
 ---@field public destroy                fun(self: fml.types.ui.search.IPreview): nil
 ---@field public render                 fun(self: fml.types.ui.search.IPreview): nil
 
----@class fml.types.ui.search.ISearch
+---@class fml.types.ui.search.ISearch : eve.types.ux.IWidget
 ---@field public state                  fml.types.ui.search.IState
----@field public statusline_items       fml.types.ui.search.IStatuslineItem[]
 ---@field public change_dimension       fun(self: fml.types.ui.search.ISearch, dimension: fml.types.ui.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.types.ui.search.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: fml.types.ui.search.ISearch, title: string): nil

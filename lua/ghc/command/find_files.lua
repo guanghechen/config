@@ -13,9 +13,9 @@ end
 session.find_scope:subscribe(
   eve.c.Subscriber.new({
     on_next = function()
+      local current_buf_dirpath = eve.widgets.get_current_buf_dirpath() ---@type string
       local current_find_cwd = state_find_cwd:snapshot() ---@type string
-      local dirpath = fml.ui.search.get_current_path() ---@type string
-      local next_find_cwd = session.get_find_scope_cwd(dirpath) ---@type string
+      local next_find_cwd = session.get_find_scope_cwd(current_buf_dirpath) ---@type string
       if current_find_cwd ~= next_find_cwd then
         state_find_cwd:next(next_find_cwd)
       end
@@ -135,7 +135,7 @@ local function get_select()
     local frecency = state_frecency.load_and_autosave().files ---@type eve.types.collection.IFrecency
     local input_history = state_input_history.load_and_autosave().find_files ---@type eve.types.collection.IHistory
 
-    ---@type fml.types.ui.search.IRawStatuslineItem[]
+    ---@type eve.types.ux.widgets.IRawStatuslineItem[]
     local statusline_items = {
       {
         type = "enum",

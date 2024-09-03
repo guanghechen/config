@@ -1,5 +1,4 @@
 local lsp = require("fml.api.lsp")
-local search = require("fml.ui.search")
 local state = require("fml.api.state")
 
 ---Rebuild the fml.api.state
@@ -122,11 +121,5 @@ vim.api.nvim_create_autocmd({ "CursorHold" }, {
     vim.schedule(function()
       lsp.locate_symbols(winnr, true)
     end)
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "VimResized" }, {
-  callback = function()
-    search.resize()
   end,
 })

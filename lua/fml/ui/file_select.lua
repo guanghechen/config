@@ -29,7 +29,7 @@ M.__index = M
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public provider               fml.types.ui.file_select.IProvider
----@field public statusline_items       ?fml.types.ui.search.IRawStatuslineItem[]
+---@field public statusline_items       ?eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?fml.types.ui.search.IOnClose
 ---@field public on_confirm             ?fml.types.ui.select.IOnConfirm
@@ -55,7 +55,7 @@ function M.new(props)
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.file_select.IProvider
-  local statusline_items = props.statusline_items ---@type fml.types.ui.search.IRawStatuslineItem[]|nil
+  local statusline_items = props.statusline_items ---@type eve.types.ux.widgets.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm|nil
