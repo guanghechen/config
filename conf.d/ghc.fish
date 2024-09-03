@@ -21,6 +21,12 @@ set -gx XDG_CONFIG_HOME                 "$HOME/.config"
 set -gx MYVIMRC                         "$HOME/.config/nvim/init.lua"
 set -gx no_proxy                        "localhost,127.0.0.1,::1"
 
+if test -n (grep -i Microsoft /proc/version)
+  set -gx ghc_vpn_host_ip (ipconfig.exe | grep 'IPv4 Address' | awk '{print $NF}' | grep 192 | head -1 | sed 's/[^0-9.]//g')
+else
+  set -gx ghc_vpn_host_ip (cat /etc/resolv.conf | grep nameserver | awk '{print $2}')
+end
+
 # Configure PATH environment variable
 fish_add_path "/usr/local/bin"
 if test -f /opt/homebrew/bin/brew
