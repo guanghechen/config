@@ -560,7 +560,7 @@ function M:create_wins_as_needed()
       col = col,
       focusable = true,
       title = "",
-      border = { " ", " ", " ", " ", " ", " ", " ", " " }, --- "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+      border = { " ", " ", " ", " ", " ", " ", " ", " " },
       style = "minimal",
     }
     if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
@@ -598,7 +598,7 @@ function M:create_wins_as_needed()
       focusable = true,
       title = " " .. self._preview_title .. " ",
       title_pos = "center",
-      border = { " ", " ", " ", " ", " ", " ", " ", " " }, --- "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+      border = { " ", " ", " ", " ", " ", " ", " ", " " },
       style = "minimal",
     }
 
@@ -640,7 +640,7 @@ function M:create_wins_as_needed()
     focusable = true,
     title = " " .. state.title .. " ",
     title_pos = "center",
-    border = { " ", " ", " ", " ", " ", " ", " ", " " }, --- "rounded", --- { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+    border = { " ", " ", " ", " ", " ", " ", " ", " " },
     style = "minimal",
   }
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
@@ -735,12 +735,10 @@ end
 
 ---@return nil
 function M:focus()
-  local state = self.state ---@type fml.types.ui.search.IState
-  local visible = state.visible:snapshot() ---@type boolean
-
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local winnr_input = self:get_winnr_input() ---@type integer|nil
   local winnr_main = self:get_winnr_main() ---@type integer|nil
+  local visible = self:visible() ---@type boolean
 
   if
     not visible
@@ -837,7 +835,7 @@ function M:show()
     return
   end
 
-  local visible = self.state.visible:snapshot() ---@type boolean
+  local visible = self:visible() ---@type boolean
   if not visible then
     self._input:create_buf_as_needed()
     self._main:render()
@@ -852,7 +850,7 @@ end
 
 ---@return nil
 function M:toggle()
-  local visible = self.state.visible:snapshot() ---@type boolean
+  local visible = self:visible() ---@type boolean
   if visible then
     self:close()
   else

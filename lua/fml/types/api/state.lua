@@ -51,6 +51,4 @@
 
 ---@class fml.types.api.state.ITerm
 ---@field public name                   string
----@field public position               eve.enums.TermPosition
----@field public bufnr                  integer
----@field public winnr                  integer|nil
+---@field public terminal               fml.types.ui.ITerminal

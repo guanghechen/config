@@ -15,7 +15,6 @@ local BUF_IGNORED_FILETYPES = {
 ---@field public bufs                   table<integer, fml.types.api.state.IBufItem>
 ---@field public tabs                   table<integer, fml.types.api.state.ITabItem>
 ---@field public tab_history            eve.types.collection.IAdvanceHistory
----@field public term_map               table<string, fml.types.api.state.ITerm>
 ---@field public wins                   table<integer, fml.types.api.state.IWinItem>
 ---@field public win_history            eve.types.collection.IAdvanceHistory
 ---@field public winline_dirty_nr       eve.types.collection.IObservable
@@ -95,7 +94,6 @@ M.tab_history = eve.c.AdvanceHistory.new({
   capacity = eve.constants.TAB_HISTORY_CAPACITY,
   validate = M.validate_tab,
 })
-M.term_map = {}
 M.wins = {}
 M.win_history = eve.c.AdvanceHistory.new({
   name = "wins",

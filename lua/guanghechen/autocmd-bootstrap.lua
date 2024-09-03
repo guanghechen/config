@@ -2,7 +2,6 @@ local action_autocmd = require("guanghechen.command.autocmd")
 
 action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
   pattern = {
-    eve.constants.FT_TERM,
     "checkhealth",
     "git",
     "help",

@@ -80,9 +80,9 @@ local function open_lazygit(name, cwd, args)
   local config_path = get_lazygit_config_filepath()
   local bufnr = fml.api.term.toggle_or_create({
     name = name,
-    position = "float",
     command = "lazygit --use-config-file " .. vim.fn.fnameescape(config_path) .. " " .. table.concat(args or {}, " "),
     cwd = cwd,
+    destroy_on_close = false,
   })
 
   if bufnr ~= nil then

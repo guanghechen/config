@@ -5,8 +5,8 @@ local M = {}
 function M.toggle_workspace()
   fml.api.term.toggle_or_create({
     name = "workspace",
-    position = "float",
     cwd = eve.path.workspace(),
+    destroy_on_close = true,
   })
 end
 
@@ -14,8 +14,8 @@ end
 function M.toggle_cwd()
   fml.api.term.toggle_or_create({
     name = "workspace",
-    position = "float",
     cwd = eve.path.cwd(),
+    destroy_on_close = true,
   })
 end
 
@@ -23,8 +23,8 @@ end
 function M.toggle_current()
   fml.api.term.toggle_or_create({
     name = "workspace",
-    position = "float",
     cwd = eve.path.current_directory(),
+    destroy_on_close = true,
   })
 end
 
@@ -35,9 +35,9 @@ function M.toggle_tmux()
   else
     fml.api.term.toggle_or_create({
       name = "tmux",
-      position = "float",
       command = "bash '" .. eve.path.locate_script_filepath("tmux.sh") .. "'",
       cwd = eve.path.workspace(),
+      destroy_on_close = true,
     })
   end
 end

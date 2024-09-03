@@ -48,6 +48,13 @@ function M.push(widget)
     return
   end
 
+  for w in _widgets:iterator() do
+    ---@cast w eve.types.ux.IWidget
+    if w:alive() and w:visible() then
+      w:hide()
+    end
+  end
+
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   if win_config.relative == nil or win_config.relative == "" then
@@ -59,12 +66,6 @@ function M.push(widget)
     _current_buf_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
   end
   _widgets:push(widget)
-
-  for _, bottom_widget in ipairs(_widgets) do
-    if bottom_widget ~= widget and bottom_widget:alive() and bottom_widget:visible() then
-      bottom_widget:hidden()
-    end
-  end
 end
 
 ---@return boolean
@@ -91,7 +92,9 @@ end
 ---@return nil
 function M.resize()
   for widget in _widgets:iterator() do
-    widget:resize()
+    if widget:alive() and widget:visible() then
+      widget:resize()
+    end
   end
 end
 
