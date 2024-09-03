@@ -130,6 +130,14 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+---! Enable code spell
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "gitcommit", "html", "lua", "text", "typescript" },
+  callback = function()
+    vim.opt_local.spell = true
+  end,
+})
+
 ---! Enable wrap.
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "markdown", "text" },
