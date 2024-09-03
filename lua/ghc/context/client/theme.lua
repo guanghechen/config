@@ -60,7 +60,7 @@ end
 
 ---Auto refresh statusline
 vim.schedule(function()
-  eve.observables.observe({
+  eve.mvc.observe({
     M.mode,
     M.transparency,
   }, function()

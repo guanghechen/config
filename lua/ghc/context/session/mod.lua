@@ -8,6 +8,6 @@ local M = eve.c.Viewmodel.new({
   save_on_dispose = true,
 })
 
-eve.observables.add_disposable(M)
+eve.mvc.add_disposable(M)
 
 return M

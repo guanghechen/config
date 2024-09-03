@@ -20,7 +20,7 @@ local collection = {
 local globals = {
   constants = require("eve.globals.constants"),
   icons = require("eve.globals.icons"),
-  observables = require("eve.globals.observables"),
+  mvc = require("eve.globals.mvc"),
 }
 
 ---@type eve.oxi

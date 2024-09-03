@@ -27,7 +27,7 @@ local _item_map = {} ---@type table<string, ghc.command.search_files.IItem>
 local _last_preview_data = nil ---@type ghc.command.search_files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.oxi.search.IResult|nil
-eve.observables.observe({
+eve.mvc.observe({
   session.search_exclude_patterns,
   session.search_flag_case_sensitive,
   session.search_flag_gitignore,
@@ -43,7 +43,7 @@ eve.observables.observe({
   _last_search_result = nil
   state.reload()
 end, true)
-eve.observables.observe({
+eve.mvc.observe({
   session.search_flag_replace,
   session.search_replace_pattern,
 }, function()

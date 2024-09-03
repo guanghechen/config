@@ -6,7 +6,7 @@ local augroups = {
   refresh_winline = fml.util.augroup("refresh_winline"),
 }
 
-eve.observables.add_disposable(eve.c.Disposable.new({
+eve.mvc.add_disposable(eve.c.Disposable.new({
   on_dispose = function()
     if vim.fn.argc() < 1 and eve.path.is_git_repo() then
       ghc.command.session.autosave()

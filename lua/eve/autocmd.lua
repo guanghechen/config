@@ -1,4 +1,4 @@
-local observables = require("eve.globals.observables")
+local mvc = require("eve.globals.mvc")
 local os = require("eve.std.os")
 local path = require("eve.std.path")
 local tmux = require("eve.std.tmux")
@@ -35,7 +35,7 @@ end)
 if vim.env.TMUX then
   local function on_resize()
     local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
-    observables.tmux_zen_mode:next(is_tmux_pane_zoomed)
+    mvc.tmux_zen_mode:next(is_tmux_pane_zoomed)
   end
 
   on_resize()
@@ -47,7 +47,7 @@ end
 vim.api.nvim_create_autocmd("VimLeavePre", {
   once = true,
   callback = function()
-    observables.dispose()
+    mvc.dispose()
   end,
 })
 

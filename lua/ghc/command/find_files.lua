@@ -23,7 +23,7 @@ session.find_scope:subscribe(
   }),
   true
 )
-eve.observables.observe({
+eve.mvc.observe({
   session.find_exclude_patterns,
   session.find_flag_case_sensitive,
   session.find_flag_gitignore,

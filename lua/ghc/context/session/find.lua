@@ -76,7 +76,7 @@ end
 
 --Auto refresh statusline
 vim.schedule(function()
-  eve.observables.observe({
+  eve.mvc.observe({
     find_scope,
     find_flag_case_sensitive,
     find_flag_gitignore,

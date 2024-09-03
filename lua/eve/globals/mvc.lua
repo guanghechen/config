@@ -3,7 +3,7 @@ local Observable = require("eve.collection.observable")
 
 local disposables = BatchDisposable.new()
 
----@class eve.globals.observables
+---@class eve.globals.mvc
 ---@field public tmux_zen_mode          eve.types.collection.IObservable
 ---@field public add_disposable         fun(disposable: eve.types.collection.IDisposable): nil
 ---@field public dispose                fun(): nil
