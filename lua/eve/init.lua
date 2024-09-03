@@ -21,6 +21,7 @@ local globals = {
   constants = require("eve.globals.constants"),
   icons = require("eve.globals.icons"),
   mvc = require("eve.globals.mvc"),
+  widgets = require("eve.globals.widgets"),
 }
 
 ---@type eve.oxi

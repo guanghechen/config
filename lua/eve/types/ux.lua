@@ -29,6 +29,6 @@
 ---@field public hlname                 string
 
 ---@class eve.types.ux.IWidget
----@field public show                   fun(self: eve.types.ux.IWidget): nil
----@field public hidden                 fun(self: eve.types.ux.IWidget): nil
+---@field public alive                  fun(self: eve.types.ux.IWidget): boolean
 ---@field public resize                 fun(self: eve.types.ux.IWidget): nil
+---@field public toggle                 fun(self: eve.types.ux.IWidget): boolean
