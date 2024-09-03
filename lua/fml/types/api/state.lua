@@ -48,7 +48,3 @@
 ---@field public wins                   fml.types.api.state.IWinItemData[]
 ---@field public tab_history            eve.types.collection.history.ISerializedData
 ---@field public win_history            eve.types.collection.history.ISerializedData
-
----@class fml.types.api.state.ITerm
----@field public name                   string
----@field public terminal               fml.types.ui.ITerminal

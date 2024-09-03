@@ -1,6 +1,6 @@
 local Terminal = require("fml.ui.terminal")
 
-local term_map = {} ---@type table<string, fml.types.api.state.ITerm>
+local terminal_map = {} ---@type table<string, fml.types.ui.ITerminal>
 
 ---@class fml.api.term
 local M = {}
@@ -21,8 +21,8 @@ function M.create(params)
   local env = params.env ---@type table<string, string>|nil
   local destroy_on_close = params.destroy_on_close ---@type boolean
 
-  local term = term_map[name] ---@type fml.types.api.state.ITerm|nil
-  if term ~= nil then
+  local terminal = terminal_map[name] ---@type fml.types.ui.ITerminal|nil
+  if terminal ~= nil then
     eve.reporter.error({
       from = "fml.api.term",
       subject = "create",
@@ -32,26 +32,23 @@ function M.create(params)
     return
   end
 
-  ---@type fml.types.api.state.ITerm
-  term = {
-    name = name,
-    terminal = Terminal.new({
-      command = command,
-      command_cwd = cwd,
-      command_env = env,
-      destroy_on_close = destroy_on_close,
-    }),
-  }
-  term_map[name] = term
+  ---@type fml.types.ui.ITerminal
+  terminal = Terminal.new({
+    command = command,
+    command_cwd = cwd,
+    command_env = env,
+    destroy_on_close = destroy_on_close,
+  })
+  terminal_map[name] = terminal
 
-  term.terminal:open()
+  terminal:open()
 end
 
 ---@param name                          string
 ---@return integer|nil
 function M.toggle(name)
-  local term = term_map[name] ---@type fml.types.api.state.ITerm|nil
-  if term == nil then
+  local terminal = terminal_map[name] ---@type fml.types.ui.ITerminal
+  if terminal == nil then
     eve.reporter.error({
       from = "fml.api.term",
       subject = "toggle",
@@ -60,13 +57,13 @@ function M.toggle(name)
     })
     return
   end
-  term.terminal:toggle()
+  terminal:toggle()
 end
 
 ---@param params                        fml.api.term.ICreateParams
 ---@return integer|nil
 function M.toggle_or_create(params)
-  if term_map[params.name] == nil then
+  if terminal_map[params.name] == nil then
     return M.create(params)
   else
     return M.toggle(params.name)
