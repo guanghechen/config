@@ -83,10 +83,26 @@ vim.api.nvim_create_autocmd({ "FocusGained" }, {
   end,
 })
 
----! Highlight on yank.
-vim.api.nvim_create_autocmd({ "TextYankPost" }, {
-  callback = function()
-    vim.highlight.on_yank()
+---! close some filetypes with <q>
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = {
+    "checkhealth",
+    "git",
+    "help",
+    "lspinfo",
+    "neotest-output",
+    "neotest-output-panel",
+    "neotest-summary",
+    "neo-tree",
+    "notify",
+    "PlenaryTestPopup",
+    "qf",
+    "startuptime",
+    "tsplayground",
+    "Trouble",
+  },
+  callback = function(event)
+    vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = event.buf, noremap = true, silent = true })
   end,
 })
 
@@ -102,5 +118,12 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.api.nvim_create_autocmd("LspProgress", {
   callback = function()
     vim.cmd("redrawstatus")
+  end,
+})
+
+---! Highlight on yank.
+vim.api.nvim_create_autocmd({ "TextYankPost" }, {
+  callback = function()
+    vim.highlight.on_yank()
   end,
 })

@@ -1,23 +1,5 @@
 local action_autocmd = require("guanghechen.command.autocmd")
 
-action_autocmd.autocmd_close_with_q({ -- close some filetypes with <q>
-  pattern = {
-    "checkhealth",
-    "git",
-    "help",
-    "lspinfo",
-    "neotest-output",
-    "neotest-output-panel",
-    "neotest-summary",
-    "neo-tree",
-    "notify",
-    "PlenaryTestPopup",
-    "qf",
-    "startuptime",
-    "tsplayground",
-    "Trouble",
-  },
-})
 action_autocmd.autocmd_goto_last_location({ exclude = { "gitcommit" } })
 action_autocmd.autocmd_unlist_buffer({
   pattern = {

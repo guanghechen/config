@@ -2,7 +2,6 @@
 local M = {}
 
 local augroups = {
-  close_with_q = fml.util.augroup("close_with_q"),
   enable_spell = fml.util.augroup("enable_spell"),
   enable_wrap = fml.util.augroup("enable_wrap"),
   goto_last_loction = fml.util.augroup("goto_last_loction"),
@@ -12,19 +11,6 @@ local augroups = {
   set_tabstop = fml.util.augroup("set_tabstop"),
   unlist_buffer = fml.util.augroup("unlist_buffer"),
 }
-
--- close some filetypes with <q>
----@param opts {pattern: table}
-function M.autocmd_close_with_q(opts)
-  local pattern = opts.pattern
-  vim.api.nvim_create_autocmd("FileType", {
-    group = augroups.close_with_q,
-    pattern = pattern,
-    callback = function(event)
-      vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = event.buf, noremap = true, silent = true })
-    end,
-  })
-end
 
 -- enable spell in text filetypes
 ---@param opts {pattern: table}
