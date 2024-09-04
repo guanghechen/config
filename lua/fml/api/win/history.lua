@@ -4,8 +4,15 @@ local state = require("fml.api.state")
 local M = require("fml.api.win.mod")
 
 ---@return nil
-function M.back()
+function M.backward()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  if buftype == eve.constants.BT_QUICKFIX then
+    eve.qflist.backward()
+    return
+  end
+
   local win = state.wins[winnr]
   if win == nil then
     eve.reporter.error({
@@ -23,8 +30,16 @@ function M.back()
   end
 end
 
+---@return nil
 function M.forward()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  if buftype == eve.constants.BT_QUICKFIX then
+    eve.qflist.forward()
+    return
+  end
+
   local win = state.wins[winnr]
   if win == nil then
     eve.reporter.error({

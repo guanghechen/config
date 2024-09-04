@@ -69,7 +69,7 @@ function M.new(props)
       if _select ~= nil then
         local cwd = eve.path.cwd() ---@type string
         local select_cwd = self.cwd ---@type string
-        local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
+        local quickfix_items = {} ---@type eve.types.IQuickFixItem[]
         local matched_items = _select:get_matched_items() ---@type fml.types.ui.select.IMatchedItem[]
         for _, matched_item in ipairs(matched_items) do
           local item = _select:get_item(matched_item.uuid) ---@type fml.types.ui.select.IItem|nil
@@ -87,9 +87,10 @@ function M.new(props)
         end
 
         if #quickfix_items > 0 then
-          vim.fn.setqflist(quickfix_items, "r")
           _select:close()
-          vim.cmd("copen")
+
+          eve.qflist.push(quickfix_items)
+          eve.qflist.open_qflist(false)
         end
       end
     end
@@ -304,6 +305,19 @@ end
 function M:focus()
   local select = self._get_select() ---@type fml.types.ui.ISelect
   select:focus()
+end
+
+---@param uuid                          string
+---@return                              fml.types.ui.select.IItem|nil
+function M:get_item(uuid)
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  return select:get_item(uuid)
+end
+
+---@return                              fml.types.ui.select.IMatchedItem[]
+function M:get_matched_items()
+  local select = self._get_select() ---@type fml.types.ui.ISelect
+  return select:get_matched_items()
 end
 
 ---@return integer|nil

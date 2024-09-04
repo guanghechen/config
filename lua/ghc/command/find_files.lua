@@ -102,7 +102,35 @@ local actions = {
   change_scope_workspace = function()
     change_scope("W")
   end,
-  ---@return nil
+  send_to_qflist = function()
+    if _select ~= nil then
+      local cwd = eve.path.cwd() ---@type string
+      local select_cwd = state_find_cwd:snapshot() ---@type string
+      local quickfix_items = {} ---@type eve.types.IQuickFixItem[]
+      local matched_items = _select:get_matched_items() ---@type fml.types.ui.select.IMatchedItem[]
+      for _, matched_item in ipairs(matched_items) do
+        local item = _select:get_item(matched_item.uuid) ---@type fml.types.ui.select.IItem|nil
+        ---@cast item fml.types.ui.file_select.IItem
+
+        if item ~= nil then
+          local absolute_filepath = eve.path.join(select_cwd, item.data.filepath) ---@type string
+          local relative_filepath = eve.path.relative(cwd, absolute_filepath, false) ---@type string
+          table.insert(quickfix_items, {
+            filename = relative_filepath,
+            lnum = item.data.lnum or 1,
+            col = item.data.col or 0,
+          })
+        end
+      end
+
+      if #quickfix_items > 0 then
+        _select:close()
+
+        eve.qflist.push(quickfix_items)
+        eve.qflist.open_qflist(false)
+      end
+    end
+  end,
   toggle_case_sensitive = function()
     local flag = session.find_flag_case_sensitive:snapshot() ---@type boolean
     session.find_flag_case_sensitive:next(not flag)
@@ -211,6 +239,12 @@ local function get_select()
         key = "<leader>r",
         callback = actions.toggle_flag_regex,
         desc = "find: toggle flag regex",
+      },
+      {
+        modes = { "i", "n", "v" },
+        key = "<C-q>",
+        callback = actions.send_to_qflist,
+        desc = "search: send to qflist",
       },
     }
 

@@ -6,15 +6,21 @@ local transient = require("ghc.context.transient")
 local M = {}
 
 function M.inspect()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  local filetype = vim.bo[bufnr].filetype ---@type string
+
   eve.reporter.info({
     from = "ghc.command.debug",
     subject = "inspect",
     details = {
-      tabnr = vim.api.nvim_get_current_tabpage() or "nil",
-      winnr = vim.api.nvim_get_current_win() or "nil",
-      bufnr = vim.api.nvim_get_current_buf() or "nil",
-      tabnrs = vim.api.nvim_list_tabpages(),
-      bufnrs = vim.api.nvim_list_bufs(),
+      tabnr = tabnr,
+      winnr = winnr,
+      bufnr = bufnr,
+      buftype = buftype or "nil",
+      filetype = filetype or "nil",
     },
   })
 end

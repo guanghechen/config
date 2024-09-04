@@ -91,9 +91,9 @@ mk({ "i", "n", "v" }, "<M-h>", fml.api.win.focus_left, "window: focus left", tru
 mk({ "i", "n", "v" }, "<M-j>", fml.api.win.focus_bottom, "window: focus bottom", true, true)
 mk({ "i", "n", "v" }, "<M-k>", fml.api.win.focus_top, "window: focus top", true, true)
 mk({ "i", "n", "v" }, "<M-l>", fml.api.win.focus_right, "window: focus right", true, true)
-mk({ "i", "n", "v" }, "<C-a>i", fml.api.win.back, "window: back", true, true)
+mk({ "i", "n", "v" }, "<C-a>i", fml.api.win.backward, "window: back", true, true)
 mk({ "i", "n", "v" }, "<C-a>o", fml.api.win.forward, "window: forward", true, true)
-mk({ "i", "n", "v" }, "<M-i>", fml.api.win.back, "window: back", true, true)
+mk({ "i", "n", "v" }, "<M-i>", fml.api.win.backward, "window: back", true, true)
 mk({ "i", "n", "v" }, "<M-o>", fml.api.win.forward, "window: forward", true, true)
 
 ----- jump list -----

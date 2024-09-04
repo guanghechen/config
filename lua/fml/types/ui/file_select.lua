@@ -44,6 +44,8 @@
 ---@field public change_preview_title   fun(self: fml.types.ui.IFileSelect, title: string): nil
 ---@field public close                  fun(self: fml.types.ui.IFileSelect): nil
 ---@field public focus                  fun(self: fml.types.ui.IFileSelect): nil
+---@field public get_item               fun(self: fml.types.ui.IFileSelect, uuid: string): fml.types.ui.select.IItem|nil
+---@field public get_matched_items      fun(self: fml.types.ui.IFileSelect): fml.types.ui.select.IMatchedItem[]
 ---@field public get_winnr_input        fun(self: fml.types.ui.IFileSelect): integer|nil
 ---@field public get_winnr_main         fun(self: fml.types.ui.IFileSelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.types.ui.IFileSelect): integer|nil

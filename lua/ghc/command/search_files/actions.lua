@@ -158,18 +158,12 @@ end
 
 ---@return nil
 function M.send_to_qflist()
-  local quickfix_items = api.gen_quickfix_items() ---@type fml.types.IQuickFixItem[]
+  local quickfix_items = api.gen_quickfix_items() ---@type eve.types.IQuickFixItem[]
   if #quickfix_items > 0 then
-    vim.fn.setqflist(quickfix_items, "r")
     state.close()
 
-    local ok = pcall(function()
-      vim.cmd("Trouble qflist toggle")
-    end)
-
-    if not ok then
-      vim.cmd("copen")
-    end
+    eve.qflist.push(quickfix_items)
+    eve.qflist.open_qflist(true)
   end
 end
 

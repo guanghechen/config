@@ -21,6 +21,7 @@ local globals = {
   constants = require("eve.globals.constants"),
   icons = require("eve.globals.icons"),
   mvc = require("eve.globals.mvc"),
+  qflist = require("eve.globals.qflist"),
   widgets = require("eve.globals.widgets"),
 }
 
@@ -35,6 +36,7 @@ local std = {
   box = require("eve.std.box"),
   color = require("eve.std.color"),
   debug = require("eve.std.debug"),
+  equals = require("eve.std.equals"),
   fs = require("eve.std.fs"),
   highlight = require("eve.std.highlight"),
   is = require("eve.std.is"),

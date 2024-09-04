@@ -1,8 +1,9 @@
 local CircularStack = require("eve.collection.circular_stack")
+local path = require("eve.std.path")
 
 local _widgets = CircularStack.new({ capacity = 100 })
 local _current_bufnr = nil ---@type integer|nil
-local _current_buf_dirpath = nil ---@type string|nil
+local _current_buf_dirpath = path.cwd() ---@type string
 local _current_buf_filepath = nil ---@type string|nil
 
 ---@class eve.globals.widgets
@@ -13,7 +14,7 @@ function M.get_current_bufnr()
   return _current_bufnr
 end
 
----@return string|nil
+---@return string
 function M.get_current_buf_dirpath()
   return _current_buf_dirpath
 end

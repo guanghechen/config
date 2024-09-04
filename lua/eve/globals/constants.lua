@@ -7,6 +7,7 @@ M.EDITING_INPUT_PREFIX = "@#!eve!#@"
 ---! buftypes
 M.BT_NOWRITE = "nowrite"
 M.BT_NOFILE = "nofile"
+M.BT_QUICKFIX = "quickfix"
 
 ---! filetypes
 M.FT_NEOTREE = "neo-tree"

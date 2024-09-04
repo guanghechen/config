@@ -523,11 +523,11 @@ function M.fetch_preview_data(search_item)
   }
 end
 
----@return fml.types.IQuickFixItem[]
+---@return eve.types.IQuickFixItem[]
 function M.gen_quickfix_items()
   local cwd = eve.path.cwd() ---@type string
   local search_cwd = state.search_cwd:snapshot() ---@type string
-  local quickfix_items = {} ---@type fml.types.IQuickFixItem[]
+  local quickfix_items = {} ---@type eve.types.IQuickFixItem[]
   for _, item in pairs(_item_map) do
     if item.offset >= 0 then
       local absolute_filepath = eve.path.resolve(search_cwd, item.filepath) ---@type string
