@@ -1,13 +1,34 @@
-promptToReturnFromSubprocess: false
+git:
+  autoFetch: false
+  commit:
+    signOff: false
+  log:
+    order: topo-order
+    showGraph: "always"
+    showWholeGraph: false
+  paging:
+    # cargo install git-delta
+    colorArg: always
+    useConfig: false
+    pager: delta --paging=never
+  parseEmoji: true
+  skipHookPrefix: WIP
 gui:
   authorColors:
     guanghechen: "#61AFEF"
   branchColors:
     main: "#FCA2AA" # orange
   border: "rounded"
+  expandFocusedSidePanel: false
+  mainPanelSplitMode: flexible
+  mouseEvents: true
   nerdFontsVersion: "3"
+  showBottomLine: true
+  showCommandLog: true
   showFileTree: true
   showIcons: true
+  showRandomTip: true
+  splitDiff: auto
   theme:
     activeBorderColor:
       - bold
@@ -42,13 +63,9 @@ gui:
     defaultFgColor:
       - default
       - "#ABB2BF" # white
-git:
-  autoFetch: false
-  paging:
-    # cargo install git-delta
-    colorArg: always
-    useConfig: false
-    pager: delta --paging=never
+notARepository: skip
 os:
   editCommand: "nvim"
   editCommandTemplate: "{{editor}} {{filename}}"
+  editPreset: "nvim-remote"
+promptToReturnFromSubprocess: true
