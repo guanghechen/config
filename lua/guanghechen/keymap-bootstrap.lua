@@ -16,8 +16,6 @@ local function resume_or_find_files()
 end
 
 --#enhance------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>2", ghc.command.search_files.open_search, "search: search/replace")
-
 ---! better indenting
 vim.keymap.set("v", "<", "<gv")
 vim.keymap.set("v", ">", ">gv")
@@ -43,11 +41,11 @@ mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true, true)
 mk({ "i", "n", "v" }, "<C-a>T", ghc.command.toggle.theme, "toggle: theme")
 mk({ "i", "n", "v" }, "<M-T>", ghc.command.toggle.theme, "toggle: theme")
 
---- better access lazygit
+---! better access lazygit
 mk({ "i", "n", "t", "v" }, "<C-a>g", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
 mk({ "i", "n", "t", "v" }, "<M-g>", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
 
---- better access terminal
+---! better access terminal
 mk({ "i", "n", "t", "v" }, "<C-a>t", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
 mk({ "i", "n", "t", "v" }, "<M-t>", ghc.command.term.toggle_cwd, "terminal: toggle (cwd)")
 
@@ -128,6 +126,8 @@ mk({ "n", "v" }, "<leader>bp", fml.api.buf.toggle_pin_cur, "buffer: toggle pin",
 mk({ "n", "v" }, "<leader>dC", ghc.command.debug.show_context_all, "debug: show context (all)", true)
 mk({ "n", "v" }, "<leader>dc", ghc.command.debug.show_context, "debug: show context (persistentable)", true)
 mk({ "n", "v" }, "<leader>dd", ghc.command.debug.inspect, "debug: inspect", true)
+mk({ "n", "v" }, "<leader>dI", ghc.command.debug.show_inspect_tree, "debug: show inspect tree")
+mk({ "n", "v" }, "<leader>di", ghc.command.debug.show_inspect_pos, "debug: show inspect pos")
 mk({ "n", "v" }, "<leader>dse", ghc.command.debug.show_editor_state, "debug: show editor state", true)
 mk({ "n", "v" }, "<leader>dsi", ghc.command.debug.show_input_state, "debug: show input state", true)
 -------------------------------------------------------------------------------------------#[d]ebug--
@@ -149,6 +149,8 @@ mk({ "n", "v" }, "<leader>fh", ghc.command.find_highlights.focus, "find: highlig
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>gf", ghc.command.git.open_diffview_filehistory, "git: open file history", true)
+mk({ "n", "v" }, "<leader>gG", ghc.command.git.open_diffview, "git: open diff view", true)
 mk({ "n", "v" }, "<leader>gg", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
 -------------------------------------------------------------------------------------------#[g]it---
 

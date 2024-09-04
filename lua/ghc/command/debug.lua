@@ -95,4 +95,14 @@ function M:show_input_state()
   })
 end
 
+---@return nil
+function M.show_inspect_pos()
+  vim.show_pos()
+end
+
+---@return nil
+function M.show_inspect_tree()
+  vim.cmd("InspectTree")
+end
+
 return M

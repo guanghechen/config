@@ -18,6 +18,7 @@ end
 --#enhance------------------------------------------------------------------------------------------
 --- quick access widgets (diagnostic, explorer, terminal)
 mk({ "n", "v" }, "<leader>1", A.explorer.toggle_explorer_file_cwd, "explorer: files (cwd)")
+mk({ "n", "v" }, "<leader>2", ghc.command.search_files.open_search, "search: search/replace")
 mk({ "n", "v" }, "<leader>3", A.explorer.toggle_explorer_git_cwd, "explorer: git (cwd)")
 ---------------------------------------------------------------------------------------#enhance-----
 
@@ -37,14 +38,7 @@ mk({ "n", "v" }, "<leader>et", A.explorer.toggle_explorers, "explorer: toggle")
 mk({ "n", "v" }, "<leader>fv", A.find.find_vim_options, "find: vim options")
 -------------------------------------------------------------------------------------------#[f]ind--
 
---#[g]it--------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>gG", ghc.command.git.open_diffview, "git: open diff view", true)
-mk({ "n", "v" }, "<leader>gf", ghc.command.git.open_diffview_filehistory, "git: open file history", true)
--------------------------------------------------------------------------------------------#[g]it---
-
 --#[u]i---------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>uI", A.ui.show_inspect_tree, "ui: show inspect tree")
-mk({ "n", "v" }, "<leader>ui", A.ui.show_inspect_pos, "ui: show inspect pos")
 mk({ "n", "v" }, "<leader>un", A.ui.dismiss_notifications, "ui: dismiss all notifications")
 ---------------------------------------------------------------------------------------------#[u]i--
 
