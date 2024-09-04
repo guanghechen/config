@@ -13,7 +13,12 @@ set -gx PYTHONUTF8                      1
 set -gx TZ                              'Asia/Shanghai'
 
 # Enable true color
-set -gx TERM xterm-256color
+if test -n "$TMUX"
+  set -x TERM tmux-256color
+else
+  set -x TERM xterm-256color
+end
+
 
 # Configure environment variables
 set -gx FZF_DEFAULT_COMMAND             "fd --type f"
