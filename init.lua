@@ -11,8 +11,8 @@ require("guanghechen.autocmd")
 require("guanghechen.option")
 require("guanghechen.keymap-bootstrap")
 require("guanghechen.keymap")
-pcall(require, "neovide")
-pcall(require, "local")
+pcall(require, "integration.neovide")
+pcall(require, "integration.local")
 
 ghc.context.client.reload_theme({ force = false })
 

@@ -1,8 +1,9 @@
 __test__/__tmp__.lua
-bin/
-config/local/
-lua/local/
 lua/nvim_tools.so
 lua/nvim_tools.dll
+
+bin/
+local/
+local/
+target/
 tmp/
-rust/**/target/
