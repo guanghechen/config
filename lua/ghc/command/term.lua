@@ -7,6 +7,7 @@ function M.toggle_workspace()
     name = "workspace",
     cwd = eve.path.workspace(),
     destroy_on_close = true,
+    send_selection_to_run = true,
   })
 end
 
@@ -16,6 +17,7 @@ function M.toggle_cwd()
     name = "workspace",
     cwd = eve.path.cwd(),
     destroy_on_close = true,
+    send_selection_to_run = true,
   })
 end
 
@@ -25,6 +27,7 @@ function M.toggle_current()
     name = "workspace",
     cwd = eve.path.current_directory(),
     destroy_on_close = true,
+    send_selection_to_run = true,
   })
 end
 

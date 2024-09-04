@@ -12,8 +12,11 @@ local M = {}
 ---@field public env                    ?table<string, string>
 ---@field public destroy_on_close       boolean
 
+---@class fml.api.term.IToggleOrCreateParams : fml.api.term.ICreateParams
+---@field public send_selection_to_run  ?boolean
+
 ---@param params                        fml.api.term.ICreateParams
----@return integer|nil
+---@return nil
 function M.create(params)
   local name = params.name ---@type string
   local command = params.command or vim.env.SHELL or vim.o.shell ---@type string
@@ -45,7 +48,7 @@ function M.create(params)
 end
 
 ---@param name                          string
----@return integer|nil
+---@return nil
 function M.toggle(name)
   local terminal = terminal_map[name] ---@type fml.types.ui.ITerminal
   if terminal == nil then
@@ -60,13 +63,38 @@ function M.toggle(name)
   terminal:toggle()
 end
 
----@param params                        fml.api.term.ICreateParams
----@return integer|nil
+---@param params                        fml.api.term.IToggleOrCreateParams
+---@return nil
 function M.toggle_or_create(params)
-  if terminal_map[params.name] == nil then
-    return M.create(params)
+  local name = params.name ---@type string
+  local send_selection_to_run = not not params.send_selection_to_run ---@type boolean
+
+  local selected_text = "" ---@type string'
+  if send_selection_to_run then
+    local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+    local filetype = vim.bo[bufnr_cur].filetype ---@type string
+    if filetype ~= eve.constants.FT_TERM then
+      selected_text = eve.util.get_selected_text() ---@type string
+    end
+  end
+
+  if terminal_map[name] == nil then
+    M.create(params)
   else
-    return M.toggle(params.name)
+    M.toggle(name)
+  end
+
+  if selected_text and #selected_text > 1 then
+    local terminal = terminal_map[name] ---@type fml.types.ui.ITerminal
+    local winnr = terminal:get_winnr() ---@type integer|nil
+    local bufnr = terminal:get_bufnr() ---@type integer|nil
+    if winnr ~= nil and bufnr ~= nil then
+      if selected_text and #selected_text > 1 then
+        vim.api.nvim_set_current_win(winnr)
+        vim.api.nvim_win_set_buf(winnr, bufnr)
+        vim.api.nvim_feedkeys("i" .. selected_text, "n", true) -- Insert the text without newline
+      end
+    end
   end
 end
 

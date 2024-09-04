@@ -6,7 +6,7 @@ local M = {}
 
 ---@return nil
 function M.open_search()
-  local selected_text = fml.util.get_selected_text()
+  local selected_text = eve.util.get_selected_text()
   if selected_text and #selected_text > 1 then
     local next_search_pattern = selected_text ---@type string
     session.search_flag_regex:next(false)
@@ -20,7 +20,7 @@ end
 
 ---@return nil
 function M.open_replace()
-  local selected_text = fml.util.get_selected_text()
+  local selected_text = eve.util.get_selected_text()
   if selected_text and #selected_text > 1 then
     local next_search_pattern = selected_text ---@type string
     session.search_flag_regex:next(false)
