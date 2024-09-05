@@ -1,6 +1,3 @@
---#plugin
-vim.cmd([[autocmd User TelescopePreviewerLoaded setlocal number]]) -- enable numbers in telescope preview.
-
 vim.api.nvim_create_autocmd("FileType", {
   pattern = {
     eve.constants.FT_NEOTREE,

@@ -14,7 +14,6 @@
 ---| "nvim-treesitter-context"
 ---| "statusline"
 ---| "tabline"
----| "telescope"
 ---| "treesitter"
 ---| "trouble"
 ---| "vim-illuminate"

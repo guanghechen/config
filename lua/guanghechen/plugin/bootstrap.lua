@@ -52,7 +52,6 @@ local raw_specs = {
   { name = "nvim-treesitter-context", main = "treesitter-context" },
   { name = "nvim-window-picker", main = "window-picker" },
   { name = "plenary.nvim", main = "plenary" },
-  { name = "telescope.nvim", main = "telescope" },
   { name = "trouble.nvim", main = "trouble" },
   { name = "vim-illuminate", main = "illuminate" },
   { name = "which-key.nvim", main = "which-key" },

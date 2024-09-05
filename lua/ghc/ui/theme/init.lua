@@ -27,7 +27,6 @@ M.integrations = {
   "nvim-dap",
   "nvim-dap-ui",
   "nvim-treesitter-context",
-  "telescope",
   "trouble",
   "vim-illuminate",
   "vim-notify",

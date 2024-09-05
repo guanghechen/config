@@ -1,7 +1,6 @@
 ---@type table<string, boolean>
 local BUF_IGNORED_FILETYPES = {
   ["PlenaryTestPopup"] = true,
-  ["TelescopePrompt"] = true,
   ["Trouble"] = true,
   ["checkhealth"] = true,
   ["lspinfo"] = true,
