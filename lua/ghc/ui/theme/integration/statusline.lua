@@ -10,6 +10,7 @@ local function gen_hlgroup_map(params)
   local hlgroup_map = {
     f_sl_bg = { fg = t and "none" or c.bg_statusline, bg = t and "none" or c.bg_statusline },
     f_sl_copilot_InProgress = { fg = c.cyan, bg = t and "none" or c.bg_statusline },
+    f_sl_copilot_Inactive = { fg = c.red, bg = t and "none" or c.bg_statusline },
     f_sl_copilot_Normal = { fg = c.blue, bg = t and "none" or c.bg_statusline },
     f_sl_copilot_Warning = { fg = c.yellow, bg = t and "none" or c.bg_statusline },
     f_sl_diagnostics_error = { fg = c.red, bg = t and "none" or c.bg_statusline },
