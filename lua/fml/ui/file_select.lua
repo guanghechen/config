@@ -140,7 +140,7 @@ function M.new(props)
 
         ---@type fml.types.ui.file_select.IItem
         local item = {
-          group = filepath,
+          group = raw_item.group or filepath,
           uuid = raw_item.uuid or filepath,
           text = filepath,
           data = {

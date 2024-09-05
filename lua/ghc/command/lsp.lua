@@ -55,12 +55,13 @@ local function fetch_data(method, additional_params, callback)
           end
 
           for _, raw_item in ipairs(vim.lsp.util.locations_to_items(locations, offset_encoding)) do
+            local filepath = eve.path.relative(cwd, raw_item.filename, true) ---@type string
+            local lnum = raw_item.lnum ---@type integer
+            local col = raw_item.col ---@type integer
+            local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
+
             ---@type fml.types.ui.file_select.IRawItem
-            local item = {
-              filepath = eve.path.relative(cwd, raw_item.filename, true),
-              lnum = raw_item.lnum,
-              col = raw_item.col,
-            }
+            local item = { group = filepath, filepath = filepath, uuid = uuid, lnum = lnum, col = col }
             table.insert(items, item)
           end
         end
@@ -81,6 +82,34 @@ local function fetch_data(method, additional_params, callback)
     if #items <= 0 then
       callback(true, nil)
       return
+    end
+
+    if #items > 1 then
+      table.sort(items, function(a, b)
+        if a.filepath == b.filepath then
+          if a.lnum == b.lnum then
+            return a.col < b.col
+          end
+          return a.lnum < b.lnum
+        end
+        return a.filepath < b.filepath
+      end)
+
+      local k = 1 ---@type integer
+      local last_item = items[k] ---@type fml.types.ui.file_select.IRawItem
+      local N = #items ---@type integer
+      for i = 2, N, 1 do
+        local item = items[i] ---@type fml.types.ui.file_select.IRawItem
+
+        if item.filepath ~= last_item.filepath or item.lnum ~= last_item.lnum then
+          k = k + 1
+          items[k] = item
+          last_item = item
+        end
+      end
+      for i = k + 1, N, 1 do
+        items[i] = nil
+      end
     end
 
     if #items == 1 and first_location ~= nil then
@@ -104,7 +133,7 @@ local function create_select(title, method, additional_params)
 
   local select = nil ---@type fml.types.ui.IFileSelect|nil
   select = fml.ui.FileSelect.new({
-    delay_fetch = 10,
+    delay_fetch = 0,
     delay_render = 10,
     destroy_on_close = true,
     enable_preview = true,
