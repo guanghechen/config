@@ -90,6 +90,7 @@
 ---@field public mark_all_items_deleted fun(self: fml.types.ui.search.IState): nil
 ---@field public moveup                 fun(self: fml.types.ui.search.IState): integer
 ---@field public movedown               fun(self: fml.types.ui.search.IState): integer
+---@field public show_state             fun(self: fml.types.ui.search.IState): nil
 
 ---@class fml.types.ui.search.IInput
 ---@field public state                  fml.types.ui.search.IState

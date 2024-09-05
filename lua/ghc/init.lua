@@ -9,6 +9,7 @@ local command = {
   find_git = require("ghc.command.find_git"),
   find_highlights = require("ghc.command.find_highlights"),
   find_win_history = require("ghc.command.find_win_history"),
+  find_vim_options = require("ghc.command.find_vim_options"),
   git = require("ghc.command.git"),
   refresh = require("ghc.command.refresh"),
   search_files = require("ghc.command.search_files"),

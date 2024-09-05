@@ -262,4 +262,27 @@ function M:movedown()
   return self:locate(lnum)
 end
 
+---@return nil
+function M:show_sate()
+  eve.reporter.error({
+    from = "fl.ui.search.state",
+    subject = "show_state",
+    details = {
+      dirtier_dimension = self.dirtier_dimension:snapshot(),
+      dirtier_data = self.dirtier_data:snapshot(),
+      dirtier_main = self.dirtier_main:snapshot(),
+      dirtier_preview = self.dirtier_preview:snapshot(),
+      enable_multiline_input = self.enable_multiline_input,
+      input = self.input:snapshot(),
+      input_history = self.input_history and self.input_history:collect() or "nil",
+      input_line_count = self.input_line_count:snapshot(),
+      item_present_uuid = self.item_present_uuid or "nil",
+      max_width = self.max_width,
+      title = self.title,
+      uuid = self.uuid,
+      visible = self.visible:snapshot(),
+    },
+  })
+end
+
 return M

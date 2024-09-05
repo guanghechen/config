@@ -64,6 +64,12 @@ local function gen_hlgroup_map(params)
     f_ut_current = { bg = c.one_bg2 },
     f_ut_border = { fg = c.darker_pink },
     f_ut_normal = { bg = c.black2 },
+
+    ---vim options
+    f_us_vo_name = { fg = c.purple },
+    f_us_vo_type = { fg = c.base09 },
+    f_us_vo_scope = { fg = c.red, bold = true },
+    f_us_vo_value = { fg = c.white },
   }
 end
 

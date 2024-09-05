@@ -822,17 +822,8 @@ end
 ---@return nil
 function M:show()
   if not self._alive then
-    eve.reporter.error({
-      from = "fl.ui.search",
-      subject = "show",
-      message = "The widget has been destroyed, cannot open it again.",
-      details = {
-        alive = self._alive,
-        dimension = self._dimension,
-        state = self.state,
-      },
-    })
-    return
+    self._alive = true
+    self.state.force_on_fetch_data:next(true)
   end
 
   local visible = self:visible() ---@type boolean
@@ -852,7 +843,7 @@ end
 function M:toggle()
   local visible = self:visible() ---@type boolean
   if visible then
-    self:close()
+    self:hide()
   else
     self:open()
   end

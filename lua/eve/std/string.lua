@@ -22,6 +22,14 @@ function M.is_non_blank_string(text)
 end
 
 ---@param text                          string
+---@return string
+function M.make_termcodes_visible(text)
+  ---@type string
+  local next_text = text:gsub(string.char(9), "<TAB>"):gsub("", "<C-F>"):gsub(" ", "<Space>")
+  return next_text
+end
+
+---@param text                          string
 ---@param width                         integer
 ---@param pad                           string
 ---@return string

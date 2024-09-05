@@ -135,7 +135,7 @@ _select = fml.ui.Select.new({
   enable_preview = true,
   extend_preset_keymaps = true,
   provider = provider,
-  title = "Find highlights",
+  title = "Find Highlights",
   on_confirm = function(item)
     vim.fn.setreg("+", item.text)
     return true
@@ -146,8 +146,8 @@ _select = fml.ui.Select.new({
 local M = {}
 
 ---@return nil
-function M.focus()
-  _select:focus()
+function M.toggle()
+  _select:toggle()
 end
 
 return M

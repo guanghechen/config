@@ -2,7 +2,6 @@
 local A = {
   diagnostic = require("guanghechen.command.diagnostic"),
   explorer = require("guanghechen.command.explorer"),
-  find = require("guanghechen.command.find"),
   ui = require("guanghechen.command.ui"),
 }
 
@@ -33,10 +32,6 @@ mk({ "n", "v" }, "<leader>eg", A.explorer.toggle_explorer_git_cwd, "explorer: gi
 mk({ "n", "v" }, "<leader>er", A.explorer.reveal_file_explorer, "explorer: reveal file")
 mk({ "n", "v" }, "<leader>et", A.explorer.toggle_explorers, "explorer: toggle")
 ---------------------------------------------------------------------------------------#[e]xplorer--
-
---#[f]ind-------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>fv", A.find.find_vim_options, "find: vim options")
--------------------------------------------------------------------------------------------#[f]ind--
 
 --#[u]i---------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>un", A.ui.dismiss_notifications, "ui: dismiss all notifications")
