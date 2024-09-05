@@ -14,8 +14,15 @@ return {
     suggestion = { enabled = false },
     panel = { enabled = false },
     filetypes = {
-      markdown = true,
       help = true,
+      lua = true,
+      markdown = true,
+      typescript = true,
+      typescriptreact = true,
+      javascript = true,
+      javascriptreact = true,
+      text = true,
+      ["*"] = false,
     },
   },
 }
