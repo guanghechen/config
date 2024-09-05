@@ -11,6 +11,7 @@ local command = {
   find_win_history = require("ghc.command.find_win_history"),
   find_vim_options = require("ghc.command.find_vim_options"),
   git = require("ghc.command.git"),
+  lsp = require("ghc.command.lsp"),
   refresh = require("ghc.command.refresh"),
   search_files = require("ghc.command.search_files"),
   run = require("ghc.command.run"),

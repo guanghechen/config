@@ -264,6 +264,10 @@ function M.render_item(item, match)
   local icon_width = string.len(item.data.icon) ---@type integer
   local text = item.data.icon .. item.data.filepath ---@type string
 
+  if item.data.lnum ~= nil and item.data.col ~= nil then
+    text = text .. ":" .. item.data.lnum .. ":" .. item.data.col
+  end
+
   ---@type eve.types.ux.IInlineHighlight[]
   local highlights = { { coll = 0, colr = icon_width, hlname = item.data.icon_hl } }
   for _, piece in ipairs(match.matches) do
