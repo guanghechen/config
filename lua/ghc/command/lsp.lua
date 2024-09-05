@@ -128,7 +128,7 @@ end
 ---@param method                        string
 ---@param additional_params             table<string, any>
 ---@return fun(): nil
-local function create_select(title, method, additional_params)
+local function create_jump_or_list(title, method, additional_params)
   local _last_data = { items = {}, cwd = eve.path.cwd() } ---@type fml.types.ui.file_select.IData
 
   local select = nil ---@type fml.types.ui.IFileSelect|nil
@@ -146,7 +146,7 @@ local function create_select(title, method, additional_params)
     },
   })
 
-  local function fetch()
+  local function jump_or_list()
     fetch_data(method, additional_params, function(ok, data)
       if ok then
         if data ~= nil then
@@ -160,26 +160,41 @@ local function create_select(title, method, additional_params)
       end
     end)
   end
-  return fetch
+  return jump_or_list
 end
 
-local selects = {
-  reference = create_select("LSP Reference", "textDocument/references", { context = { includeDeclaration = true } }),
+local jump_or_lists = {
+  references = create_jump_or_list(
+    "LSP References",
+    "textDocument/references",
+    { context = { includeDeclaration = true } }
+  ),
+  definitions = create_jump_or_list("LSP Definitions", "textDocument/definition", {}),
+  type_definitions = create_jump_or_list("LSP Type Definitions", "textDocument/typeDefinition", {}),
+  implementations = create_jump_or_list("LSP Implementations", "textDocument/implementation", {}),
 }
 
 ---@class  ghc.command.lsp
 local M = {}
 
 ---@return nil
-function M.find_reference()
-  selects.reference()
+function M.goto_reference()
+  jump_or_lists.references()
 end
 
-vim.keymap.set({ "i", "n", "v", "t" }, "<F8>", M.find_reference, {
-  desc = "lsp: find references",
-  noremap = true,
-  silent = true,
-  nowait = true,
-})
+---@return nil
+function M.goto_definitions()
+  jump_or_lists.definitions()
+end
+
+---@return nil
+function M.goto_type_definitions()
+  jump_or_lists.type_definitions()
+end
+
+---@return nil
+function M.goto_implementations()
+  jump_or_lists.implementations()
+end
 
 return M

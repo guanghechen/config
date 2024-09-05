@@ -1,4 +1,30 @@
-local action_lsp = require("guanghechen.command.lsp")
+local actions = {
+  rename = function()
+    vim.lsp.buf.rename()
+    vim.schedule(function()
+      vim.cmd("stopinsert")
+    end)
+  end,
+
+  show_code_action = function()
+    vim.lsp.buf.code_action()
+    vim.schedule(function()
+      vim.cmd("stopinsert")
+    end)
+  end,
+
+  show_code_action_source = function()
+    vim.lsp.buf.code_action({
+      context = {
+        only = { "source" },
+        diagnostics = {},
+      },
+    })
+    vim.schedule(function()
+      vim.cmd("stopinsert")
+    end)
+  end,
+}
 
 local function on_rename(from, to)
   local clients = vim.lsp.get_clients()
@@ -28,28 +54,26 @@ local function on_attach(client, bufnr)
   end
 
   -- keymap
-  vim.keymap.set("n", "K", action_lsp.hover, opts("lsp: Hover"))
-  vim.keymap.set("n", "gd", action_lsp.goto_definitions, opts("lsp: Goto definition"))
-  vim.keymap.set("n", "gD", action_lsp.goto_declarations, opts("lsp: Goto declaration"))
-  vim.keymap.set("n", "gi", action_lsp.goto_implementations, opts("lsp: Goto implementation"))
-  vim.keymap.set("n", "gK", action_lsp.show_signature_help, opts("lsp: Show signature help"))
-  vim.keymap.set("n", "gr", action_lsp.show_references, opts("lsp: Show references"))
-  vim.keymap.set("n", "gt", action_lsp.goto_type_definitions, opts("lsp: Goto type definition"))
-  vim.keymap.set("n", "gwa", vim.lsp.buf.add_workspace_folder, opts("lsp: Goto type definition"))
-  vim.keymap.set("n", "gwr", vim.lsp.buf.remove_workspace_folder, opts("lsp: Goto type definition"))
+  vim.keymap.set("n", "K", vim.lsp.buf.hover, opts("lsp: Hover"))
+  vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts("lsp: Goto declaration"))
+  vim.keymap.set("n", "gK", vim.lsp.buf.signature_help, opts("lsp: Show signature help"))
+  vim.keymap.set("n", "gd", ghc.command.lsp.goto_definitions, opts("lsp: Goto definition"))
+  vim.keymap.set("n", "gi", ghc.command.lsp.goto_implementations, opts("lsp: Goto implementation"))
+  vim.keymap.set("n", "gr", ghc.command.lsp.goto_reference, opts("lsp: Show references"))
+  vim.keymap.set("n", "gt", ghc.command.lsp.goto_type_definitions, opts("lsp: Goto type definition"))
 
   -- code actions
   if eve.lsp.has_support_method(bufnr, "codeLens") then
-    vim.keymap.set({ "n", "v" }, "<leader>cc", action_lsp.codelens_run, opts("lsp: CodeLens"))
-    vim.keymap.set("n", "<leader>cC", action_lsp.codelens_refresh, opts("lsp: Refresh & Display Codelens"))
+    vim.keymap.set({ "n", "v" }, "<leader>cc", vim.lsp.codelens.run, opts("lsp: CodeLens"))
+    vim.keymap.set("n", "<leader>cC", vim.lsp.codelens.refresh, opts("lsp: Refresh & Display Codelens"))
   end
   if eve.lsp.has_support_method(bufnr, "codeAction") then
-    vim.keymap.set({ "n", "v" }, "<leader>ca", action_lsp.show_code_action, opts("lsp: Code action"))
-    vim.keymap.set({ "n", "v" }, "<M-cr>", action_lsp.show_code_action, opts("lsp: Code action"))
-    vim.keymap.set("n", "<leader>cA", action_lsp.show_code_action_source, opts("lsp: Source action"))
+    vim.keymap.set({ "n", "v" }, "<leader>ca", actions.show_code_action, opts("lsp: Code action"))
+    vim.keymap.set({ "n", "v" }, "<M-cr>", actions.show_code_action, opts("lsp: Code action"))
+    vim.keymap.set("n", "<leader>cA", actions.show_code_action_source, opts("lsp: Source action"))
   end
   if eve.lsp.has_support_method(bufnr, "rename") then
-    vim.keymap.set("n", "<leader>cr", action_lsp.rename, opts("lsp: Rename"))
+    vim.keymap.set("n", "<leader>cr", actions.rename, opts("lsp: Rename"))
   end
 end
 

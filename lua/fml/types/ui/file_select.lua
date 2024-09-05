@@ -16,6 +16,7 @@
 ---@field public present_uuid           ?string
 
 ---@class fml.types.ui.file_select.IRawItem
+---
 ---@field public filepath               string
 ---@field public group                  ?string
 ---@field public uuid                   ?string
