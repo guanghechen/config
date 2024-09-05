@@ -104,6 +104,8 @@ local function create_select(title, method, additional_params)
 
   local select = nil ---@type fml.types.ui.IFileSelect|nil
   select = fml.ui.FileSelect.new({
+    delay_fetch = 10,
+    delay_render = 10,
     destroy_on_close = true,
     enable_preview = true,
     extend_preset_keymaps = true,

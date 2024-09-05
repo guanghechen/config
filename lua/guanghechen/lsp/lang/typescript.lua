@@ -20,7 +20,7 @@ return {
       or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
   end,
   settings = {
-    tsserver = {
+    ts_ls = {
       completions = {
         completeFunctionCalls = true,
       },
