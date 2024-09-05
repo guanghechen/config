@@ -1,15 +1,15 @@
 ---@param method                        string
----@param context                       table<string, any>
+---@param additional_params             table<string, any>
 ---@param callback                      fun(ok: boolean, data: fml.types.ui.file_select.IData|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
-local function fetch_data(method, context, callback)
+local function fetch_data(method, additional_params, callback)
   local bufnr = eve.globals.widgets.get_current_bufnr() or vim.api.nvim_get_current_buf() ---@type integer
   if not eve.lsp.has_support_method(bufnr, method) then
     eve.reporter.error({
       from = "ghc.command.lsp",
       subject = "fetch_data",
       message = "Not support method.",
-      details = { bufnr = bufnr, method = method, context = context },
+      details = { bufnr = bufnr, method = method, context = additional_params },
     })
     callback(false, nil)
     return
@@ -17,8 +17,7 @@ local function fetch_data(method, context, callback)
 
   local cwd = eve.path.cwd() ---@type string
   local winnr = fml.api.state.get_current_tab_winnr() ---@type integer
-  local params = vim.lsp.util.make_position_params(winnr)
-  params.context = context
+  local params = vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr), additional_params)
 
   vim.lsp.buf_request_all(bufnr, method, params, function(results_per_client)
     local items = {}
@@ -98,9 +97,9 @@ end
 
 ---@param title                         string
 ---@param method                        string
----@param context                       table<string, any>
+---@param additional_params             table<string, any>
 ---@return fun(): nil
-local function create_select(title, method, context)
+local function create_select(title, method, additional_params)
   local _last_data = { items = {}, cwd = eve.path.cwd() } ---@type fml.types.ui.file_select.IData
 
   local select = nil ---@type fml.types.ui.IFileSelect|nil
@@ -117,7 +116,7 @@ local function create_select(title, method, context)
   })
 
   local function fetch()
-    fetch_data(method, context, function(ok, data)
+    fetch_data(method, additional_params, function(ok, data)
       if ok then
         if data ~= nil then
           _last_data = data
@@ -134,7 +133,7 @@ local function create_select(title, method, context)
 end
 
 local selects = {
-  reference = create_select("LSP Reference", "textDocument/references", { includeDeclaration = true }),
+  reference = create_select("LSP Reference", "textDocument/references", { context = { includeDeclaration = true } }),
 }
 
 ---@class  ghc.command.lsp
