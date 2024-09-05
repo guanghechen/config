@@ -26,10 +26,10 @@ function M.new(props)
 
   local dirtier_dimension = Dirtier.new() ---@type eve.types.collection.IDirtier
   local dirtier_data = Dirtier.new() ---@type eve.types.collection.IDirtier
+  local dirtier_data_cache = Dirtier.new() ---@type eve.types.collection.IDirtier
   local dirtier_main = Dirtier.new() ---@type eve.types.collection.IDirtier
   local dirtier_preview = Dirtier.new() ---@type eve.types.collection.IDirtier
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
-  local force_on_fetch_data = Observable.from_value(false) ---@type eve.types.collection.IObservable
   local fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchData
   local delay_fetch = props.delay_fetch ---@type integer
   local input = props.input ---@type eve.types.collection.IObservable
@@ -45,8 +45,8 @@ function M.new(props)
     delay = delay_fetch,
     fn = function(callback)
       local input_cur = input:snapshot() ---@type string
-      local force = force_on_fetch_data:snapshot() ---@type boolean
-      force_on_fetch_data:next(false)
+      local force = dirtier_data_cache:is_dirty() ---@type boolean
+      dirtier_data_cache:mark_clean()
       fetch_data(input_cur, force, function(succeed, data)
         if succeed and data ~= nil then
           local max_width = 0 ---@type integer
@@ -107,10 +107,10 @@ function M.new(props)
 
   self.dirtier_dimension = dirtier_dimension
   self.dirtier_data = dirtier_data
+  self.dirtier_data_cache = dirtier_data_cache
   self.dirtier_main = dirtier_main
   self.dirtier_preview = dirtier_preview
   self.enable_multiline_input = enable_multiline_input
-  self.force_on_fetch_data = force_on_fetch_data
   self.input = input
   self.input_history = input_history
   self.input_line_count = input_line_count

@@ -174,7 +174,7 @@ function M.new(props)
       end
     end,
     force_refresh = function()
-      state.force_on_fetch_data:next(true)
+      state.dirtier_data_cache:mark_dirty()
       state.dirtier_data:mark_dirty()
     end,
     on_main_G = function()
@@ -823,7 +823,8 @@ end
 function M:show()
   if not self._alive then
     self._alive = true
-    self.state.force_on_fetch_data:next(true)
+    self.state.dirtier_data_cache:mark_dirty()
+    self.state.dirtier_data:mark_dirty()
   end
 
   local visible = self:visible() ---@type boolean

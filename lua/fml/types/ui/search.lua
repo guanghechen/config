@@ -68,10 +68,10 @@
 ---@class fml.types.ui.search.IState
 ---@field public dirtier_dimension      eve.types.collection.IDirtier
 ---@field public dirtier_data           eve.types.collection.IDirtier
+---@field public dirtier_data_cache     eve.types.collection.IDirtier
 ---@field public dirtier_main           eve.types.collection.IDirtier
 ---@field public dirtier_preview        eve.types.collection.IDirtier
 ---@field public enable_multiline_input boolean
----@field public force_on_fetch_data    eve.types.collection.IObservable
 ---@field public input                  eve.types.collection.IObservable
 ---@field public input_history          eve.types.collection.IHistory|nil
 ---@field public input_line_count       eve.types.collection.IObservable
