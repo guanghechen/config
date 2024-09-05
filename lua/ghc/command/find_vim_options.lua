@@ -3,6 +3,7 @@
 ---@field public type                   string
 ---@field public scope                  string
 ---@field public value                  string|number|boolean
+---@field public text                   string
 
 ---@class ghc.command.find_vim_options.IItem : fml.types.ui.select.IItem
 ---@field public data                   ghc.command.find_vim_options.IItemData
@@ -31,6 +32,7 @@ local provider = {
       local text_scope = eve.string.pad_end(info.scope, WIDTH_SCOPE, " ") ---type string
       local text_value = eve.string.make_termcodes_visible(tostring(value)) ---@type string
       local text = text_name .. text_type .. text_scope .. text_value ---@type string
+      local text_for_search = text_name .. string.rep(" ", WIDTH_TYPE + WIDTH_SCOPE) .. text_value ---@type string
 
       ---@type ghc.command.find_vim_options.IItemData
       local data = {
@@ -38,10 +40,11 @@ local provider = {
         scope = info.scope,
         type = info.type,
         value = value,
+        text = text,
       }
 
       ---@type ghc.command.find_vim_options.IItem
-      local item = { uuid = name, text = text, data = data }
+      local item = { uuid = name, text = text_for_search, data = data }
       table.insert(items, item)
     end
 
@@ -66,7 +69,7 @@ local provider = {
       local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
       table.insert(highlights, highlight)
     end
-    return item.text, highlights
+    return data.text, highlights
   end,
 }
 
