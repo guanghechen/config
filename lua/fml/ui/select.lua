@@ -25,11 +25,12 @@ M.__index = M
 ---@class fml.types.ui.select.IProps
 ---@field public case_sensitive         ?eve.types.collection.IObservable
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
+---@field public delay_fetch            ?integer
+---@field public delay_render           ?integer
 ---@field public destroy_on_close       boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public delay_fetch            ?integer
 ---@field public flag_fuzzy             ?eve.types.collection.IObservable
 ---@field public flag_regex             ?eve.types.collection.IObservable
 ---@field public frecency               ?eve.types.collection.IFrecency
@@ -39,7 +40,6 @@ M.__index = M
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public provider               fml.types.ui.select.IProvider
----@field public delay_render           ?integer
 ---@field public statusline_items       ?eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_confirm             fml.types.ui.select.IOnConfirm
@@ -53,11 +53,12 @@ function M.new(props)
 
   local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type eve.types.collection.IObservable
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
+  local delay_fetch = props.delay_fetch or 128 ---@type integer
+  local delay_render = props.delay_render or 48 ---@type integer
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
-  local delay_fetch = props.delay_fetch or 128 ---@type integer
   local flag_fuzzy = props.flag_fuzzy or Observable.from_value(true) ---@type eve.types.collection.IObservable
   local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.types.collection.IObservable
   local frecency = props.frecency ---@type eve.types.collection.IFrecency|nil
@@ -68,7 +69,6 @@ function M.new(props)
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.select.IProvider
-  local delay_render = props.delay_render or 48 ---@type integer
   local statusline_items = props.statusline_items ---@type eve.types.ux.widgets.IRawStatuslineItem[]
   local title = props.title ---@type string
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm

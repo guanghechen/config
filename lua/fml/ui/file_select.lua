@@ -16,6 +16,8 @@ M.__index = M
 ---@field public case_sensitive         ?eve.types.collection.IObservable
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public destroy_on_close       boolean
+---@field public delay_fetch            ?integer
+---@field public delay_render           ?integer
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public dirty_on_close         ?boolean
 ---@field public enable_preview         boolean
@@ -42,6 +44,8 @@ function M.new(props)
 
   local case_sensitive = props.case_sensitive ---@type eve.types.collection.IObservable|nil
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
+  local delay_fetch = props.delay_fetch ---@type integer|nil
+  local delay_render = props.delay_render ---@type integer|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local dirty_on_close = not not props.dirty_on_close ---@type boolean|nil
   local enable_preview = props.enable_preview ---@type boolean
@@ -180,6 +184,8 @@ function M.new(props)
       _select = Select.new({
         case_sensitive = case_sensitive,
         cmp = cmp,
+        delay_fetch = delay_fetch,
+        delay_render = delay_render,
         destroy_on_close = destroy_on_close,
         dimension = dimension,
         enable_preview = enable_preview,

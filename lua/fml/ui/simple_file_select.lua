@@ -7,6 +7,8 @@ M.__index = M
 
 ---@class fml.ui.simple_file_select.IProps
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
+---@field public delay_fetch            ?integer
+---@field public delay_render           ?integer
 ---@field public destroy_on_close       boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public dirty_on_close         ?boolean
@@ -22,6 +24,8 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
+  local delay_fetch = props.delay_fetch ---@type integer|nil
+  local delay_render = props.delay_render ---@type integer|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local dirty_on_close = not not props.dirty_on_close ---@type boolean
@@ -51,6 +55,8 @@ function M.new(props)
 
       _file_select = FileSelect.new({
         cmp = cmp,
+        delay_fetch = delay_fetch,
+        delay_render = delay_render,
         destroy_on_close = destroy_on_close,
         dimension = dimension,
         dirty_on_close = dirty_on_close,

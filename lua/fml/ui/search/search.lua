@@ -51,8 +51,9 @@ M.__index = M
 ---@field public destroy_on_close       ?boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_multiline_input ?boolean
----@field public fetch_data             fml.types.ui.search.IFetchData
 ---@field public delay_fetch            ?integer
+---@field public delay_render           ?integer
+---@field public fetch_data             fml.types.ui.search.IFetchData
 ---@field public fetch_preview_data     ?fml.types.ui.search.IFetchPreviewData
 ---@field public input                  eve.types.collection.IObservable
 ---@field public input_history          eve.types.collection.IHistory|nil
@@ -60,7 +61,6 @@ M.__index = M
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public patch_preview_data     ?fml.types.ui.search.IPatchPreviewData
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
----@field public delay_render           ?integer
 ---@field public statusline_items       eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?fml.types.ui.search.IOnClose
