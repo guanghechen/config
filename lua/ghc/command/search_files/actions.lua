@@ -82,7 +82,7 @@ function M.edit_config()
         return "Invalid data.replace_pattern, expect an string."
       end
 
-      if raw_data.search_paths == nil or not eve.is.array(raw_data.search_paths) then
+      if raw_data.search_paths == nil or not vim.islist(raw_data.search_paths) then
         return "Invalid data.search_paths, expect an array."
       end
 
@@ -94,11 +94,11 @@ function M.edit_config()
         return "Invalid data.max_matches, expect a number."
       end
 
-      if raw_data.include_patterns == nil or not eve.is.array(raw_data.include_patterns) then
+      if raw_data.include_patterns == nil or not vim.islist(raw_data.include_patterns) then
         return "Invalid data.include_patterns, expect an array."
       end
 
-      if raw_data.exclude_patterns == nil or not eve.is.array(raw_data.exclude_patterns) then
+      if raw_data.exclude_patterns == nil or not vim.islist(raw_data.exclude_patterns) then
         return "Invalid data.exclude_patterns, expect an array."
       end
     end,

@@ -1,5 +1,3 @@
-local is = require("eve.std.is")
-
 ---@class eve.std.json
 local M = {}
 
@@ -37,7 +35,7 @@ local function stringify_json_prettier(json, preceding, lines)
 
   if t == "table" then
     local preceding_next = preceding .. "  "
-    if is.array(json) then
+    if vim.islist(json) then
       if #json == 0 then
         lines[#lines] = last_line .. "[]"
         return
