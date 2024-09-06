@@ -179,7 +179,7 @@ function M.new(props)
   end
 
   ---@param item                        fml.types.ui.search.IItem
-  ---@return nil
+  ---@return eve.enums.WidgetConfirmAction|nil
   local function on_confirm(item)
     if frecency ~= nil then
       frecency:access(item.uuid)

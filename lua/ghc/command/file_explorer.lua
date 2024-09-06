@@ -420,20 +420,21 @@ local function get_select()
       on_confirm = function(item)
         local fileitem = file_datamap[item.uuid] ---@type ghc.command.file_explorer.IFileItem|nil
         if fileitem == nil then
-          return false
+          return "none"
         end
 
         if fileitem.type == "directory" then
           local dirpath = fileitem.path ---@type string
           state_cwd:next(dirpath)
-          return false
+          return "none"
         end
 
         if fileitem.type == "file" then
-          return fml.api.buf.open_in_current_valid_win(fileitem.path)
+          local ok = fml.api.buf.open_in_current_valid_win(fileitem.path)
+          return ok and "hide" or "none"
         end
 
-        return false
+        return "none"
       end,
     })
   end

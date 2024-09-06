@@ -138,7 +138,7 @@ _select = fml.ui.Select.new({
   title = "Find Highlights",
   on_confirm = function(item)
     vim.fn.setreg("+", item.text)
-    return true
+    return "hide"
   end,
 })
 

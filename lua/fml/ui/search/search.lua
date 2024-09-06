@@ -127,15 +127,11 @@ function M.new(props)
   })
 
   ---@return nil
-  local function on_close()
-    self:close()
-  end
-
-  ---@return nil
   local function on_confirm()
     local item = state:get_current() ---@type fml.types.ui.search.IItem|nil
     if item ~= nil then
-      if on_confirm_from_props(item) then
+      local action = on_confirm_from_props(item) ---@type eve.enums.WidgetConfirmAction
+      if action == "close" or action == "hide" then
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
           if top ~= nil then
@@ -143,7 +139,11 @@ function M.new(props)
             input_history:update_top(top)
           end
         end
-        on_close()
+        if action == "close" then
+          self:close()
+        elseif action == "hide" then
+          self:hide()
+        end
       end
     end
   end
@@ -157,7 +157,7 @@ function M.new(props)
   local actions = {
     noop = eve.util.noop,
     close = function()
-      on_close()
+      self:close()
     end,
     focus_preview = function()
       local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer

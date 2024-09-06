@@ -91,7 +91,7 @@ local select = fml.ui.Select.new({
     local data = item.data ---@type ghc.command.find_vim_options.IItemData
     local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
     vim.api.nvim_feedkeys(string.format("%s:set %s=%s", esc, data.name, data.value), "m", true)
-    return true
+    return "hide"
   end,
 })
 

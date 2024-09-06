@@ -51,7 +51,7 @@ local function ghc_select(items, opts, on_choice)
     on_confirm = function(item)
       on_choice(item.data.original_item, tonumber(item.uuid))
       confirmed = true
-      return true
+      return "close"
     end,
   })
 

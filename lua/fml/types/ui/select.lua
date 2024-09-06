@@ -14,7 +14,7 @@
 ---| fun(item: fml.types.ui.select.IItem, match: fml.types.ui.select.IMatchedItem): string, eve.types.ux.IInlineHighlight[]
 
 ---@alias fml.types.ui.select.IOnConfirm
----| fun(item: fml.types.ui.select.IItem): boolean
+---| fun(item: fml.types.ui.select.IItem): eve.enums.WidgetConfirmAction|nil
 
 ---@class fml.types.ui.select.IData
 ---@field public items                  fml.types.ui.select.IItem[]

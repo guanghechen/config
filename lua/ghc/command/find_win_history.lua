@@ -109,9 +109,10 @@ local function get_select()
         if _select ~= nil then
           local cwd = eve.path.cwd() ---@type string
           local filepath = eve.path.join(cwd, item.data.filepath) ---@type string
-          return fml.api.buf.open_in_current_valid_win(filepath)
+          local ok = fml.api.buf.open_in_current_valid_win(filepath)
+          return ok and "hide" or "none"
         end
-        return false
+        return "none"
       end,
     })
   end

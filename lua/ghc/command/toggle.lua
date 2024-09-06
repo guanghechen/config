@@ -40,7 +40,6 @@ function M.relativenumber()
   local next_relativenumber = not client.relativenumber:snapshot() ---@type boolean
   client.relativenumber:next(next_relativenumber)
 
-  local bufnr = vim.api.nvim_get_current_buf()
   if vim.o.nu then
     vim.opt.relativenumber = next_relativenumber
     vim.cmd("redraw")

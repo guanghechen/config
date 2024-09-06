@@ -46,6 +46,11 @@
 ---| "command"
 ---| "select"
 
+---@alias eve.enums.WidgetConfirmAction
+---| "none"
+---| "close"
+---| "hide"
+
 ---@alias eve.enums.WidgetStatuslineItemType
 ---| "flag"
 ---| "enum"
