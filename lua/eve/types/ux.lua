@@ -34,7 +34,6 @@
 ---@field public hide                   fun(self: eve.types.ux.IWidget): nil
 ---@field public resize                 fun(self: eve.types.ux.IWidget): nil
 ---@field public show                   fun(self: eve.types.ux.IWidget): nil
----@field public visible                fun(self: eve.types.ux.IWidget): boolean
 
 ---@class eve.types.ux.widgets.IStatuslineItem
 ---@field public type                   eve.enums.WidgetStatuslineItemType

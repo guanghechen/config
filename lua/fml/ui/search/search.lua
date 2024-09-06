@@ -33,13 +33,13 @@ local PREVIEW_WIN_HIGHLIGHT = table.concat({
 }, ",")
 
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
----@field protected _alive              boolean
 ---@field protected _destroy_on_close   boolean
 ---@field protected _dimension          fml.types.ui.search.IDimension
 ---@field protected _input              fml.types.ui.search.IInput
 ---@field protected _main               fml.types.ui.search.IMain
 ---@field protected _preview            fml.types.ui.search.IPreview|nil
 ---@field protected _preview_title      string
+---@field protected _status             eve.enums.WidgetStatus
 ---@field protected _winnr_input        integer|nil
 ---@field protected _winnr_main         integer|nil
 ---@field protected _winnr_preview      integer|nil
@@ -391,13 +391,13 @@ function M.new(props)
 
   self.state = state
   self.statusline_items = statusline_items
-  self._alive = true
   self._destroy_on_close = destroy_on_close
   self._dimension = dimension
   self._input = input
   self._main = main
   self._preview = preview
   self._preview_title = " preview "
+  self._status = "hidden"
   self._winnr_input = nil
   self._winnr_main = nil
   self._winnr_preview = nil
@@ -497,11 +497,6 @@ function M:sync_main_cursor()
       vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
     end
   end
-end
-
----@return boolean
-function M:alive()
-  return self._alive
 end
 
 ---@return nil
@@ -724,9 +719,9 @@ end
 ---@return nil
 function M:close()
   self:hide()
+  self._status = "closed"
 
   if self._destroy_on_close then
-    self._alive = false
     self._input:destroy()
     self._main:destroy()
 
@@ -745,7 +740,7 @@ function M:focus()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local winnr_input = self:get_winnr_input() ---@type integer|nil
   local winnr_main = self:get_winnr_main() ---@type integer|nil
-  local visible = self:visible() ---@type boolean
+  local visible = self.state.visible:snapshot() ---@type boolean
 
   if
     not visible
@@ -795,6 +790,7 @@ function M:hide()
   self._winnr_input = nil
   self._winnr_main = nil
   self._winnr_preview = nil
+  self._status = "hidden"
   self.state.visible:next(false)
 
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
@@ -828,13 +824,13 @@ end
 
 ---@return nil
 function M:show()
-  if not self._alive then
-    self._alive = true
+  if self._status == "closed" then
+    self._status = "visible"
     self.state.dirtier_data_cache:mark_dirty()
     self.state.dirtier_data:mark_dirty()
   end
 
-  local visible = self:visible() ---@type boolean
+  local visible = self.state.visible:snapshot() ---@type boolean
   if not visible then
     self._input:create_buf_as_needed()
     self._main:render()
@@ -846,19 +842,20 @@ function M:show()
   end
 end
 
+---@return eve.enums.WidgetStatus
+function M:status()
+  local visible = self.state.visible:snapshot() ---@type boolean
+  return visible and "visible" or self._status
+end
+
 ---@return nil
 function M:toggle()
-  local visible = self:visible() ---@type boolean
+  local visible = self.state.visible:snapshot() ---@type boolean
   if visible then
     self:hide()
   else
     self:open()
   end
-end
-
----@return boolean
-function M:visible()
-  return self.state.visible:snapshot()
 end
 
 return M

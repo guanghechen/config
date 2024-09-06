@@ -1,14 +1,13 @@
 local api_state = require("fml.api.state")
 
 ---@class fml.ui.Terminal : fml.types.ui.ITerminal
----@field protected _alive              boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _command            string
 ---@field protected _command_cwd        string
 ---@field protected _command_env        table<string, string>|nil
 ---@field protected _destroy_on_close   boolean
+---@field protected _status             eve.enums.WidgetStatus
 ---@field protected _term_alive         boolean
----@field protected _visible            eve.types.collection.IObservable
 ---@field protected _winnr              integer|nil
 local M = {}
 M.__index = M
@@ -28,16 +27,14 @@ function M.new(props)
   local command_cwd = props.command_cwd or eve.path.cwd() ---@type string
   local command_env = props.command_env ---@type table<string, string>|nil
   local destroy_on_close = props.destroy_on_close ---@type boolean
-  local visible = eve.c.Observable.from_value(false) ---@type eve.types.collection.IObservable
 
-  self._alive = true
   self._bufnr = nil
   self._command = command
   self._command_cwd = command_cwd
   self._command_env = command_env
   self._destroy_on_close = destroy_on_close
+  self._status = "hidden"
   self._term_alive = false
-  self._visible = visible
   self._winnr = nil
 
   return self
@@ -109,19 +106,13 @@ function M:create_win_as_needed()
   return winnr, bufnr
 end
 
----@return boolean
-function M:alive()
-  return self._alive
-end
-
 ---@return nil
 function M:close()
   self:hide()
+  self._status = "closed"
 
   if self._destroy_on_close then
     self._term_alive = false
-    self._alive = false
-
     if self._bufnr ~= nil and vim.api.nvim_buf_is_valid(self._bufnr) then
       local bufnr = self._bufnr ---@type integer
       self._bufnr = nil
@@ -149,10 +140,10 @@ function M:hide()
   vim.api.nvim_tabpage_set_win(0, winnr_cur)
 
   local winnr = self._winnr ---@type integer|nil
-  local visible = self:visible() ---@type boolean
+  local visible = self._status == "visible" ---@type boolean
 
   self._winnr = nil
-  self._visible:next(false)
+  self._status = "hidden"
 
   if visible and winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_win_close(winnr, true)
@@ -167,7 +158,7 @@ end
 
 ---@return nil
 function M:resize()
-  local visible = self:visible() ---@type boolean
+  local visible = self._status == "visible" ---@type boolean
   if visible then
     self:create_win_as_needed()
   end
@@ -175,24 +166,9 @@ end
 
 ---@return nil
 function M:show()
-  if not self._alive then
-    eve.reporter.error({
-      from = "fl.ui.terminal",
-      subject = "show",
-      message = "The widget has been destroyed, cannot open it again.",
-      details = {
-        alive = self._alive,
-        command = self._command,
-        command_cwd = self._command_cwd,
-        command_env = self._command_env,
-      },
-    })
-    return
-  end
-
-  local visible = self:visible() ---@type boolean
+  local visible = self._status == "visible" ---@type boolean
   if not visible then
-    self._visible:next(true)
+    self._status = "visible"
 
     local winnr, bufnr = self:create_win_as_needed()
     vim.api.nvim_tabpage_set_win(0, winnr)
@@ -220,19 +196,19 @@ function M:show()
   end)
 end
 
+---@return eve.enums.WidgetStatus
+function M:status()
+  return self._status
+end
+
 ---@return nil
 function M:toggle()
-  local visible = self:visible() ---@type boolean
+  local visible = self._status == "visible" ---@type boolean
   if visible then
     self:hide()
   else
     self:open()
   end
-end
-
----@return boolean
-function M:visible()
-  return self._visible:snapshot()
 end
 
 return M
