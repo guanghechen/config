@@ -5,6 +5,7 @@ require("fml.autocmd")
 _G.fml = require("fml")
 
 require("ghc.autocmd")
+require("ghc.dressing.select")
 _G.ghc = require("ghc")
 
 require("guanghechen.autocmd")

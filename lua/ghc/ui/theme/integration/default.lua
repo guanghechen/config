@@ -60,6 +60,11 @@ local function gen_hlgroup_map(params)
     f_us_match = { fg = c.black, bg = c.yellow },
     f_us_match_cur = { fg = c.black, bg = c.red, bold = true, underline = true },
 
+    ---select codeaction
+    f_us_codeaction_order = { fg = c.red, bg = "none" },
+    f_us_codeaction_content = { fg = c.white, bg = "none" },
+    f_us_codeaction_client_name = { fg = c.grey, bg = "none" },
+
     ---textarea
     f_ut_current = { bg = c.one_bg2 },
     f_ut_border = { fg = c.darker_pink },
