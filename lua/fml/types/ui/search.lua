@@ -110,6 +110,7 @@
 ---@field public state                  fml.types.ui.search.IState
 ---@field public create_buf_as_needed   fun(self: fml.types.ui.search.IPreview): integer, boolean
 ---@field public destroy                fun(self: fml.types.ui.search.IPreview): nil
+---@field public get_current_location   fun(self: fml.types.ui.search.IPreview): integer|nil, integer|nil
 ---@field public render                 fun(self: fml.types.ui.search.IPreview): nil
 
 ---@class fml.types.ui.search.ISearch : eve.types.ux.IWidget

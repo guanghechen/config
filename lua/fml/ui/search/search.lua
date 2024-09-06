@@ -130,7 +130,7 @@ function M.new(props)
   local function on_confirm()
     local item = state:get_current() ---@type fml.types.ui.search.IItem|nil
     if item ~= nil then
-      local action = on_confirm_from_props(item) ---@type eve.enums.WidgetConfirmAction
+      local action = on_confirm_from_props(item) ---@type eve.enums.WidgetConfirmAction|nil
       if action == "close" or action == "hide" then
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
@@ -377,16 +377,14 @@ function M.new(props)
         local new_title = opts.title ---@type string
         self:change_preview_title(new_title)
 
-        vim.schedule(function()
-          local winnr = self:get_winnr_preview() ---@type integer|nil
-          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-            local lnum = opts.lnum ---@type integer|nil
-            local col = opts.col ---@type integer|nil
-            if lnum ~= nil and col ~= nil then
-              vim.api.nvim_win_set_cursor(winnr, { lnum, col })
-            end
+        local winnr = self:get_winnr_preview() ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          local lnum = opts.lnum ---@type integer|nil
+          local col = opts.col ---@type integer|nil
+          if lnum ~= nil and col ~= nil then
+            vim.api.nvim_win_set_cursor(winnr, { lnum, col })
           end
-        end)
+        end
       end,
     })
   end
@@ -611,6 +609,12 @@ function M:create_wins_as_needed()
     else
       winnr_preview = vim.api.nvim_open_win(bufnr_preview, true, wincfg_preview)
       self._winnr_preview = winnr_preview
+
+      ---@type integer|nil, integer|nil
+      local preview_lnum, preview_col = self._preview:get_current_location()
+      if preview_lnum ~= nil and preview_col ~= nil then
+        vim.api.nvim_win_set_cursor(winnr_preview, { preview_lnum, preview_col })
+      end
     end
 
     vim.wo[winnr_preview].cursorline = match_count > 0
@@ -652,6 +656,7 @@ function M:create_wins_as_needed()
     winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_input)
     self._winnr_input = winnr_input
   end
+
   vim.wo[winnr_input].number = false
   vim.wo[winnr_input].relativenumber = false
   vim.wo[winnr_input].signcolumn = "yes:1"
@@ -831,13 +836,13 @@ function M:show()
 
   local visible = self:visible() ---@type boolean
   if not visible then
-    self.state.visible:next(true)
     self._input:create_buf_as_needed()
     self._main:render()
     if self._preview ~= nil then
       self._preview:render()
     end
     self._input:reset_input()
+    self.state.visible:next(true)
   end
 end
 

@@ -123,6 +123,16 @@ function M.new(props)
   })
 
   self.state = state
+
+  ---@return integer|nil
+  ---@return integer|nil
+  self.get_current_location = function()
+    if _last_data == nil then
+      return nil
+    end
+    return _last_data.lnum, _last_data.col
+  end
+
   self._bufnr = nil
   self._keymaps = keymaps
   self._render_scheduler = _render_scheduler

@@ -266,7 +266,7 @@ end
 ---@param callback                    fml.types.ui.search.IFetchDataCallback
 ---@return nil
 function M.fetch_data(input_text, force, callback)
-  local current_buf_path = eve.widgets.get_current_buf_filepath() ---@type string
+  local current_buf_path = eve.widgets.get_current_buf_filepath() ---@type string|nil
   local cwd = state.search_cwd:snapshot() ---@type string
   local scope = session.search_scope:snapshot() ---@type ghc.enums.context.SearchScope
   local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
@@ -559,7 +559,7 @@ end
 
 ---@param item                          fml.types.ui.search.IItem
 ---@param frecency                      eve.types.collection.IFrecency
----@return boolean
+---@return eve.enums.WidgetConfirmAction|nil
 function M.open_file(item, frecency)
   local cwd = state.search_cwd:snapshot() ---@type string
   local workspace = eve.path.workspace() ---@type string
@@ -568,20 +568,10 @@ function M.open_file(item, frecency)
     local absolute_filepath = eve.path.resolve(cwd, data.filepath) ---@type string
     local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string
     frecency:access(relative_filepath)
-    local opened = fml.api.buf.open_in_current_valid_win(absolute_filepath) ---@type boolean
-
-    if opened then
-      vim.schedule(function()
-        local lnum = data.lnum ---@type integer|nil
-        local col = data.col ---@type integer|nil
-        if lnum ~= nil and col ~= nil then
-          vim.api.nvim_win_set_cursor(0, { lnum, col })
-        end
-      end)
-      return true
-    end
+    local opened = fml.api.buf.open_in_current_valid_win(absolute_filepath, data.lnum, data.col) ---@type boolean
+    return opened and "hide" or "none"
   end
-  return false
+  return "none"
 end
 
 ---@param search_item                   fml.types.ui.search.IItem
