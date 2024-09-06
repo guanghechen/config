@@ -1,7 +1,7 @@
 ---@class ghc.dressing.select.IOptions
----@field public prompt                 string|nil
----@field public format_item            fun(item): string
----@field public kind                   string|nil
+---@field public prompt                 ?string
+---@field public format_item            ?fun(item): string
+---@field public kind                   ?string
 
 ---@class ghc.dressing.select.IItemData
 ---@field public original_item          any
