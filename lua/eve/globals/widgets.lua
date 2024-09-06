@@ -32,7 +32,8 @@ function M.get_current_widget()
       return nil
     end
 
-    if top:alive() then
+    local status = top:status() ---@type eve.enums.WidgetStatus
+    if status ~= "closed" then
       return top
     end
 
@@ -50,8 +51,8 @@ function M.push(widget)
   end
 
   for w in _widgets:iterator() do
-    ---@cast w eve.types.ux.IWidget
-    if w:alive() and w:visible() then
+    local status = w:status() ---@type eve.enums.WidgetStatus
+    if status == "visible" then
       w:hide()
     end
   end
@@ -73,15 +74,14 @@ end
 function M.resume()
   while _widgets:size() > 0 do
     local widget = _widgets:top() ---@type eve.types.ux.IWidget
-
-    if widget:alive() then
+    local status = widget:status() ---@type eve.enums.WidgetStatus
+    if status == "visible" then
       vim.schedule(function()
-        if widget:visible() then
-          widget:hide()
-        else
-          widget:show()
-        end
+        widget:hide()
       end)
+      return true
+    elseif status == "hidden" then
+      widget:show()
       return true
     end
 
@@ -93,7 +93,8 @@ end
 ---@return nil
 function M.resize()
   for widget in _widgets:iterator() do
-    if widget:alive() and widget:visible() then
+    local status = widget:status() ---@type eve.enums.WidgetStatus
+    if status == "visible" then
       widget:resize()
     end
   end

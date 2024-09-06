@@ -30,7 +30,7 @@
 
 ---@class eve.types.ux.IWidget
 ---@field public statusline_items       eve.types.ux.widgets.IStatuslineItem[]|nil
----@field public alive                  fun(self: eve.types.ux.IWidget): boolean
+---@field public status                 fun(self: eve.types.ux.IWidget): eve.enums.WidgetStatus
 ---@field public hide                   fun(self: eve.types.ux.IWidget): nil
 ---@field public resize                 fun(self: eve.types.ux.IWidget): nil
 ---@field public show                   fun(self: eve.types.ux.IWidget): nil

@@ -51,6 +51,11 @@
 ---| "close"
 ---| "hide"
 
+---@alias eve.enums.WidgetStatus
+---| "visible"
+---| "hidden"
+---| "closed"
+
 ---@alias eve.enums.WidgetStatuslineItemType
 ---| "flag"
 ---| "enum"
