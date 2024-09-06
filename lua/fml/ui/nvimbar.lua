@@ -99,13 +99,13 @@ end
 ---@param prev_context                  fml.types.ui.nvimbar.IContext|nil
 ---@return nil
 local function render_component(component, context, prev_context, remain_width)
-  if not component.will_change(context, prev_context, remain_width) then
-    return
-  end
-
   if not component.condition(context, remain_width) then
     component.last_result_text = ""
     component.last_result_width = 0
+    return
+  end
+
+  if not component.will_change(context, prev_context, remain_width) then
     return
   end
 
