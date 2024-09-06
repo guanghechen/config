@@ -377,14 +377,16 @@ function M.new(props)
         local new_title = opts.title ---@type string
         self:change_preview_title(new_title)
 
-        local winnr = self:get_winnr_preview() ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          local lnum = opts.lnum ---@type integer|nil
-          local col = opts.col ---@type integer|nil
-          if lnum ~= nil and col ~= nil then
-            vim.api.nvim_win_set_cursor(winnr, { lnum, col })
+        vim.schedule(function()
+          local winnr = self:get_winnr_preview() ---@type integer|nil
+          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+            local lnum = opts.lnum ---@type integer|nil
+            local col = opts.col ---@type integer|nil
+            if lnum ~= nil and col ~= nil then
+              vim.api.nvim_win_set_cursor(winnr, { lnum, col })
+            end
           end
-        end
+        end)
       end,
     })
   end
@@ -829,14 +831,13 @@ function M:show()
 
   local visible = self:visible() ---@type boolean
   if not visible then
+    self.state.visible:next(true)
     self._input:create_buf_as_needed()
     self._main:render()
     if self._preview ~= nil then
       self._preview:render()
     end
-
     self._input:reset_input()
-    self.state.visible:next(true)
   end
 end
 

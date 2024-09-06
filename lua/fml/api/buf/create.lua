@@ -17,10 +17,12 @@ function M.create()
 end
 
 ---@param filepath                      string
+---@param lnum                          ?integer
+---@param col                           ?integer
 ---@return boolean
-function M.open_in_current_valid_win(filepath)
+function M.open_in_current_valid_win(filepath, lnum, col)
   local winnr = state.win_history:present() ---@type integer
-  return state.open_filepath(winnr, filepath)
+  return state.open_filepath(winnr, filepath, lnum, col)
 end
 
 ---@param filepath                      string

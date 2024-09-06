@@ -204,7 +204,7 @@ function M.new(props)
         on_close = on_close,
         on_confirm = on_confirm_from_props or function(item)
           local filepath = path.join(self.cwd, item.data.filepath) ---@type string
-          return api_buf.open_in_current_valid_win(filepath)
+          return api_buf.open_in_current_valid_win(filepath, item.data.lnum, item.data.col)
         end,
         on_preview_rendered = on_preview_rendered,
       })

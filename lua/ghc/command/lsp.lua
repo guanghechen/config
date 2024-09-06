@@ -57,7 +57,7 @@ local function fetch_data(method, additional_params, callback)
           for _, raw_item in ipairs(vim.lsp.util.locations_to_items(locations, offset_encoding)) do
             local filepath = eve.path.relative(cwd, raw_item.filename, true) ---@type string
             local lnum = raw_item.lnum ---@type integer
-            local col = raw_item.col ---@type integer
+            local col = raw_item.col - 1 ---@type integer
             local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
 
             ---@type fml.types.ui.file_select.IRawItem

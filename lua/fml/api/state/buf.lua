@@ -31,29 +31,33 @@ end
 
 ---@param winnr                         integer
 ---@param filepath                      string
+---@param lnum                          ?integer
+---@param col                           ?integer
 ---@return boolean
-function M.open_filepath(winnr, filepath)
+function M.open_filepath(winnr, filepath, lnum, col)
   filepath = eve.path.normalize(filepath) ---! normalize the filepath
   if vim.api.nvim_win_is_valid(winnr) then
     local bufnr = M.locate_bufnr_by_filepath(filepath) ---@type integer|nil
     if bufnr ~= nil then
       vim.api.nvim_win_set_buf(winnr, bufnr)
-      return true
+    else
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      if winnr_cur == winnr then
+        vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+      else
+        vim.api.nvim_set_current_win(winnr)
+        vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+        vim.api.nvim_set_current_win(winnr_cur)
+      end
     end
 
-    local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-    if winnr_cur == winnr then
-      vim.cmd("edit " .. vim.fn.fnameescape(filepath))
-    else
-      vim.api.nvim_set_current_win(winnr)
-      vim.cmd("edit " .. vim.fn.fnameescape(filepath))
-      vim.api.nvim_set_current_win(winnr_cur)
+    if lnum ~= nil and col ~= nil then
+      vim.api.nvim_win_set_cursor(winnr, { lnum, col })
     end
 
     vim.schedule(function()
       vim.cmd("stopinsert")
     end)
-
     return true
   end
   return false
