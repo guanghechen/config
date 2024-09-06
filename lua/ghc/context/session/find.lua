@@ -18,7 +18,7 @@ local find_exclude_patterns = eve.c.Observable.from_value(table.concat({
 }, ","))
 local find_flag_case_sensitive = eve.c.Observable.from_value(false)
 local find_flag_gitignore = eve.c.Observable.from_value(true)
-local find_flag_fuzzy = eve.c.Observable.from_value(true)
+local find_flag_fuzzy = eve.c.Observable.from_value(false)
 local find_flag_regex = eve.c.Observable.from_value(false)
 local find_file_pattern = eve.c.Observable.from_value("")
 local find_scope = eve.c.Observable.from_value("C")

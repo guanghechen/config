@@ -59,7 +59,7 @@ function M.new(props)
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
-  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(true) ---@type eve.types.collection.IObservable
+  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.types.collection.IObservable
   local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.types.collection.IObservable
   local frecency = props.frecency ---@type eve.types.collection.IFrecency|nil
   local input = props.input or Observable.from_value("") ---@type eve.types.collection.IObservable
