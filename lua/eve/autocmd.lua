@@ -96,6 +96,19 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
   end,
 })
 
+vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+  callback = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+    if win_config.relative == nil or win_config.relative == "" then
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      local dirpath = vim.fn.expand("%:p:h") ---@type string
+      widgets.set_current(bufnr, dirpath, filepath)
+    end
+  end,
+})
+
 ---! Auto create dirs when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   callback = function(event)

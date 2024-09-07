@@ -56,17 +56,6 @@ function M.push(widget)
       w:hide()
     end
   end
-
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  if win_config.relative == nil or win_config.relative == "" then
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local dirpath = vim.fn.expand("%:p:h") ---@type string
-    _current_bufnr = bufnr ---@type integer
-    _current_buf_dirpath = dirpath ---@type string
-    _current_buf_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
-  end
   _widgets:push(widget)
 end
 
@@ -98,6 +87,16 @@ function M.resize()
       widget:resize()
     end
   end
+end
+
+---@param bufnr                         integer
+---@param dirpath                       string
+---@param filepath                      string
+---@return nil
+function M.set_current(bufnr, dirpath, filepath)
+  _current_bufnr = bufnr ---@type integer
+  _current_buf_dirpath = dirpath ---@type string
+  _current_buf_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
 end
 
 return M
