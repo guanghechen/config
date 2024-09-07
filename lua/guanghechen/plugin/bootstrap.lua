@@ -1,5 +1,6 @@
 ---@class guanghechen.plugin.IRawSpec
 ---@field public name                   string
+---@field public branch                 ?string
 ---@field public main                   ?string
 
 ---@class guanghechen.plugin.ISpec
@@ -27,7 +28,7 @@ local raw_specs = {
   ------------------------------------------------------------------------------------------------
 
   { name = "conform.nvim", main = "conform" },
-  { name = "copilot.lua", main = "copilot" },
+  { name = "copilot.lua", main = "copilot", branch = "nvim@ghc-copilot.lua" },
   { name = "diffview.nvim", main = "diffview" },
   { name = "dressing.nvim", main = "dressing" },
   { name = "flash.nvim", main = "flash" },
@@ -63,10 +64,11 @@ for _, raw_spec in ipairs(raw_specs) do
   local url = "https://github.com/guanghechen/mirror.git" ---@type string
   local name = raw_spec.name ---@type string
   local main = raw_spec.main ---@type string
+  local branch = raw_spec.branch or ("nvim@" .. name) ---@type string
   ---@type guanghechen.plugin.ISpec
   local meta = {
     url = url,
-    branch = "nvim@" .. name,
+    branch = branch,
     name = name,
     main = main,
   }
