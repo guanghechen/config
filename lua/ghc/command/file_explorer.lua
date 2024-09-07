@@ -405,7 +405,6 @@ local function get_select()
     local preview_keymaps = eve.array.concat({}, common_keymaps)
 
     _select = fml.ui.Select.new({
-      destroy_on_close = false,
       dimension = dimension,
       dirty_on_close = true,
       enable_preview = true,
@@ -414,6 +413,7 @@ local function get_select()
       input_history = input_history,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
+      permanent = true,
       preview_keymaps = preview_keymaps,
       provider = provider,
       title = gen_title(),

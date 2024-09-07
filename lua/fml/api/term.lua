@@ -10,7 +10,7 @@ local M = {}
 ---@field public command                ?string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
----@field public destroy_on_close       boolean
+---@field public permanent              ?boolean
 
 ---@class fml.api.term.IToggleOrCreateParams : fml.api.term.ICreateParams
 ---@field public send_selection_to_run  ?boolean
@@ -22,7 +22,7 @@ function M.create(params)
   local command = params.command or vim.env.SHELL or vim.o.shell ---@type string
   local cwd = params.cwd or eve.path.cwd() ---@type string
   local env = params.env ---@type table<string, string>|nil
-  local destroy_on_close = params.destroy_on_close ---@type boolean
+  local permanent = params.permanent ---@type boolean|nil
 
   local terminal = terminal_map[name] ---@type fml.types.ui.ITerminal|nil
   if terminal ~= nil then
@@ -40,7 +40,7 @@ function M.create(params)
     command = command,
     command_cwd = cwd,
     command_env = env,
-    destroy_on_close = destroy_on_close,
+    permanent = permanent,
   })
   terminal_map[name] = terminal
 

@@ -88,7 +88,6 @@ local function get_select()
     }
 
     _select = fml.ui.FileSelect.new({
-      destroy_on_close = true,
       dimension = { height = 3 },
       dirty_on_close = true,
       enable_preview = false,

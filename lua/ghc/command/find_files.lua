@@ -287,7 +287,6 @@ local function get_select()
     _select = fml.ui.FileSelect.new({
       case_sensitive = session.find_flag_case_sensitive,
       cmp = fml.ui.Select.cmp_by_score,
-      destroy_on_close = false,
       dirty_on_close = false,
       enable_preview = true,
       extend_preset_keymaps = false,
@@ -298,6 +297,7 @@ local function get_select()
       input_history = input_history,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
+      permanent = true,
       preview_keymaps = preview_keymaps,
       provider = provider,
       statusline_items = statusline_items,

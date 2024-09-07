@@ -33,10 +33,10 @@ local PREVIEW_WIN_HIGHLIGHT = table.concat({
 }, ",")
 
 ---@class fml.ui.search.Search : fml.types.ui.search.ISearch
----@field protected _destroy_on_close   boolean
 ---@field protected _dimension          fml.types.ui.search.IDimension
 ---@field protected _input              fml.types.ui.search.IInput
 ---@field protected _main               fml.types.ui.search.IMain
+---@field protected _permanent          boolean
 ---@field protected _preview            fml.types.ui.search.IPreview|nil
 ---@field protected _preview_title      string
 ---@field protected _status             eve.enums.WidgetStatus
@@ -48,7 +48,6 @@ local M = {}
 M.__index = M
 
 ---@class fml.types.ui.search.IProps
----@field public destroy_on_close       ?boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public enable_multiline_input ?boolean
 ---@field public delay_fetch            ?integer
@@ -60,6 +59,7 @@ M.__index = M
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
 ---@field public patch_preview_data     ?fml.types.ui.search.IPatchPreviewData
+---@field public permanent              ?boolean
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public statusline_items       eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
@@ -109,9 +109,9 @@ function M.new(props)
 
   local delay_fetch = math.max(0, props.delay_fetch or 128) ---@type integer
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
-  local destroy_on_close = not not props.destroy_on_close ---@type boolean
   local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
   local input_history = props.input_history ---@type eve.types.collection.IHistory|nil
+  local permanent = not not props.permanent ---@type boolean
 
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
@@ -391,10 +391,10 @@ function M.new(props)
 
   self.state = state
   self.statusline_items = statusline_items
-  self._destroy_on_close = destroy_on_close
   self._dimension = dimension
   self._input = input
   self._main = main
+  self._permanent = permanent
   self._preview = preview
   self._preview_title = " preview "
   self._status = "hidden"
@@ -721,7 +721,7 @@ function M:close()
   self:hide()
   self._status = "closed"
 
-  if self._destroy_on_close then
+  if not self._permanent then
     self._input:destroy()
     self._main:destroy()
 

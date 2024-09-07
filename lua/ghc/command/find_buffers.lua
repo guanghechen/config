@@ -38,11 +38,11 @@ end
 
 select = fml.ui.SimpleFileSelect.new({
   cmp = fml.ui.Select.cmp_by_score,
-  destroy_on_close = false,
   dirty_on_close = true,
   enable_preview = false,
   extend_preset_keymaps = true,
   frecency = frecency,
+  permanent = true,
   provider = { provide = provide },
   title = "Find buffers",
 })

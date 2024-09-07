@@ -5,7 +5,7 @@ local api_state = require("fml.api.state")
 ---@field protected _command            string
 ---@field protected _command_cwd        string
 ---@field protected _command_env        table<string, string>|nil
----@field protected _destroy_on_close   boolean
+---@field protected _permanent          boolean
 ---@field protected _status             eve.enums.WidgetStatus
 ---@field protected _term_alive         boolean
 ---@field protected _winnr              integer|nil
@@ -16,7 +16,7 @@ M.__index = M
 ---@field public command                ?string
 ---@field public command_cwd            ?string
 ---@field public command_env            ?table<string, string>
----@field public destroy_on_close       boolean
+---@field public permanent              ?boolean
 
 ---@param props                         fml.ui.terminal.IProps
 ---@return fml.ui.Terminal
@@ -26,13 +26,13 @@ function M.new(props)
   local command = props.command or vim.env.SHELL or vim.o.shell ---@type string
   local command_cwd = props.command_cwd or eve.path.cwd() ---@type string
   local command_env = props.command_env ---@type table<string, string>|nil
-  local destroy_on_close = props.destroy_on_close ---@type boolean
+  local permanent = not not props.permanent ---@type boolean
 
   self._bufnr = nil
   self._command = command
   self._command_cwd = command_cwd
   self._command_env = command_env
-  self._destroy_on_close = destroy_on_close
+  self._permanent = permanent
   self._status = "hidden"
   self._term_alive = false
   self._winnr = nil
@@ -111,7 +111,7 @@ function M:close()
   self:hide()
   self._status = "closed"
 
-  if self._destroy_on_close then
+  if not self._permanent then
     self._term_alive = false
     if self._bufnr ~= nil and vim.api.nvim_buf_is_valid(self._bufnr) then
       local bufnr = self._bufnr ---@type integer

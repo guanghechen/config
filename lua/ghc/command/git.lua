@@ -82,7 +82,7 @@ local function open_lazygit(name, cwd, args)
     name = name,
     command = "lazygit --use-config-file " .. vim.fn.fnameescape(config_path) .. " " .. table.concat(args or {}, " "),
     cwd = cwd,
-    destroy_on_close = false,
+    permanent = true,
   })
 
   if bufnr ~= nil then

@@ -27,11 +27,11 @@ local function provide()
 end
 
 local select = fml.ui.SimpleFileSelect.new({
-  destroy_on_close = false,
   dirty_on_close = true,
   enable_preview = true,
   extend_preset_keymaps = true,
   frecency = frecency,
+  permanent = true,
   provider = { provide = provide },
   title = "Find git files (Not committed)",
 })

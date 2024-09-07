@@ -30,7 +30,6 @@ local function ghc_select(items, opts, on_choice)
 
   ---@type fml.types.ui.ISelect
   local select = fml.ui.Select.new({
-    destroy_on_close = true,
     dimension = {
       height = #items + 3,
       max_height = 0.8,

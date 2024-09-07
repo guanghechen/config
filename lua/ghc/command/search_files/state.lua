@@ -37,7 +37,6 @@ function M.get_search()
     local input_history = state_input_history.load_and_autosave().search_in_files ---@type eve.types.collection.IHistory
 
     _search = fml.ui.search.Search.new({
-      destroy_on_close = false,
       dimension = {
         height = 0.8,
         max_height = 1,
@@ -54,6 +53,7 @@ function M.get_search()
       input_keymaps = keybindings.input_keymaps,
       main_keymaps = keybindings.main_keymaps,
       patch_preview_data = api.patch_preview_data,
+      permanent = true,
       preview_keymaps = keybindings.preview_keymaps,
       delay_render = 64,
       statusline_items = keybindings.statusline_items,

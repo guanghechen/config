@@ -15,7 +15,6 @@ M.__index = M
 ---@class fml.ui.file_select.IProps
 ---@field public case_sensitive         ?eve.types.collection.IObservable
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
----@field public destroy_on_close       boolean
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
@@ -29,6 +28,7 @@ M.__index = M
 ---@field public input_history          ?eve.types.collection.IHistory
 ---@field public input_keymaps          ?fml.types.IKeymap[]
 ---@field public main_keymaps           ?fml.types.IKeymap[]
+---@field public permanent              ?boolean
 ---@field public preview_keymaps        ?fml.types.IKeymap[]
 ---@field public provider               fml.types.ui.file_select.IProvider
 ---@field public statusline_items       ?eve.types.ux.widgets.IRawStatuslineItem[]
@@ -46,7 +46,6 @@ function M.new(props)
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch ---@type integer|nil
   local delay_render = props.delay_render ---@type integer|nil
-  local destroy_on_close = props.destroy_on_close ---@type boolean
   local dirty_on_close = not not props.dirty_on_close ---@type boolean|nil
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
@@ -57,6 +56,7 @@ function M.new(props)
   local input_history = props.input_history ---@type eve.types.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
   local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
+  local permanent = props.permanent ---@type boolean|nil
   local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.file_select.IProvider
   local statusline_items = props.statusline_items ---@type eve.types.ux.widgets.IRawStatuslineItem[]|nil
@@ -186,7 +186,6 @@ function M.new(props)
         cmp = cmp,
         delay_fetch = delay_fetch,
         delay_render = delay_render,
-        destroy_on_close = destroy_on_close,
         dimension = dimension,
         enable_preview = enable_preview,
         extend_preset_keymaps = extend_preset_keymaps,
@@ -197,6 +196,7 @@ function M.new(props)
         input_history = input_history,
         input_keymaps = input_keymaps,
         main_keymaps = main_keymaps,
+        permanent = permanent,
         preview_keymaps = preview_keymaps,
         provider = file_select_provider,
         statusline_items = statusline_items,

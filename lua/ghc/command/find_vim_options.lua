@@ -75,7 +75,6 @@ local provider = {
 
 ---@type fml.types.ui.ISelect
 local select = fml.ui.Select.new({
-  destroy_on_close = true,
   dimension = {
     height = 0.8,
     max_height = 1,

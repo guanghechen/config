@@ -9,12 +9,12 @@ M.__index = M
 ---@field public cmp                    ?fml.types.ui.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
----@field public destroy_on_close       boolean
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
 ---@field public dirty_on_close         ?boolean
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public frecency               ?eve.types.collection.IFrecency
+---@field public permanent              ?boolean
 ---@field public provider               fml.types.ui.simple_file_select.IProvider
 ---@field public title                  string
 
@@ -26,12 +26,12 @@ function M.new(props)
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch ---@type integer|nil
   local delay_render = props.delay_render ---@type integer|nil
-  local destroy_on_close = props.destroy_on_close ---@type boolean
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
   local dirty_on_close = not not props.dirty_on_close ---@type boolean
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean|nil
   local frecency = props.frecency ---@type eve.types.collection.IFrecency|nil
+  local permanent = props.permanent ---@type boolean|nil
   local simple_provider = props.provider ---@type fml.types.ui.simple_file_select.IProvider
   local title = props.title ---@type string
 
@@ -57,12 +57,12 @@ function M.new(props)
         cmp = cmp,
         delay_fetch = delay_fetch,
         delay_render = delay_render,
-        destroy_on_close = destroy_on_close,
         dimension = dimension,
         dirty_on_close = dirty_on_close,
         enable_preview = enable_preview,
         extend_preset_keymaps = extend_preset_keymaps,
         frecency = frecency,
+        permanent = permanent,
         provider = provider,
         title = title,
       })
