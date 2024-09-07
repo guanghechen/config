@@ -33,7 +33,7 @@ function M.new(props)
   self._command_cwd = command_cwd
   self._command_env = command_env
   self._permanent = permanent
-  self._status = "hidden"
+  self._status = "closed"
   self._term_alive = false
   self._winnr = nil
 

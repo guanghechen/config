@@ -78,9 +78,9 @@
 ---@field public item_present_uuid      string|nil
 ---@field public items                  fml.types.ui.search.IItem[]
 ---@field public max_width              integer
+---@field public status                 eve.types.collection.IObservable
 ---@field public title                  string
 ---@field public uuid                   string
----@field public visible                eve.types.collection.IObservable
 ---@field public get_current            fun(self: fml.types.ui.search.IState): fml.types.ui.search.IItem|nil, integer, string|nil
 ---@field public get_current_lnum       fun(self: fml.types.ui.search.IState): integer
 ---@field public get_current_uuid       fun(self: fml.types.ui.search.IState): string|nil

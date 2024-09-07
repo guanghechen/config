@@ -39,7 +39,6 @@ local PREVIEW_WIN_HIGHLIGHT = table.concat({
 ---@field protected _permanent          boolean
 ---@field protected _preview            fml.types.ui.search.IPreview|nil
 ---@field protected _preview_title      string
----@field protected _status             eve.enums.WidgetStatus
 ---@field protected _winnr_input        integer|nil
 ---@field protected _winnr_main         integer|nil
 ---@field protected _winnr_preview      integer|nil
@@ -397,7 +396,6 @@ function M.new(props)
   self._permanent = permanent
   self._preview = preview
   self._preview_title = " preview "
-  self._status = "hidden"
   self._winnr_input = nil
   self._winnr_main = nil
   self._winnr_preview = nil
@@ -408,7 +406,8 @@ function M.new(props)
     name = "fml.ui.search.search.draw",
     delay = 48,
     fn = function(callback)
-      local visible = state.visible:snapshot() ---@type boolean
+      local status = state.status:snapshot() ---@type eve.enums.WidgetStatus
+      local visible = status == "visible" ---@type boolean
       if visible then
         self:create_wins_as_needed()
         self.state.dirtier_dimension:mark_clean()
@@ -417,10 +416,11 @@ function M.new(props)
     end,
   })
 
-  state.visible:subscribe(
+  state.status:subscribe(
     eve.c.Subscriber.new({
       on_next = function()
-        local visible = state.visible:snapshot() ---@type boolean
+        local status = state.status:snapshot() ---@type eve.enums.WidgetStatus
+        local visible = status == "visible" ---@type boolean
         if visible then
           draw_scheduler:schedule()
         end
@@ -433,7 +433,8 @@ function M.new(props)
     eve.c.Subscriber.new({
       on_next = function()
         local is_dimension_dirty = state.dirtier_dimension:is_dirty() ---@type boolean
-        local visible = state.visible:snapshot() ---@type boolean
+        local status = state.status:snapshot() ---@type eve.enums.WidgetStatus
+        local visible = status == "visible" ---@type boolean
         if visible and is_dimension_dirty then
           draw_scheduler:schedule()
         end
@@ -446,7 +447,8 @@ function M.new(props)
     eve.c.Subscriber.new({
       on_next = function()
         local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
-        local visible = state.visible:snapshot() ---@type boolean
+        local status = state.status:snapshot() ---@type eve.enums.WidgetStatus
+        local visible = status == "visible" ---@type boolean
         if visible and is_main_dirty then
           draw_scheduler:schedule()
         end
@@ -461,7 +463,8 @@ function M.new(props)
       eve.c.Subscriber.new({
         on_next = function()
           local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-          local visible = state.visible:snapshot() ---@type boolean
+          local status = state.status:snapshot() ---@type eve.enums.WidgetStatus
+          local visible = status == "visible" ---@type boolean
           if visible and is_preview_dirty then
             draw_scheduler:schedule()
           end
@@ -475,7 +478,8 @@ function M.new(props)
     state.input_line_count:subscribe(
       eve.c.Subscriber.new({
         on_next = function()
-          local visible = state.visible:snapshot() ---@type boolean
+          local status = state.status:snapshot() ---@type eve.enums.WidgetStatus
+          local visible = status == "visible" ---@type boolean
           if visible then
             draw_scheduler:schedule()
           end
@@ -719,7 +723,7 @@ end
 ---@return nil
 function M:close()
   self:hide()
-  self._status = "closed"
+  self.state.status:next("closed")
 
   if not self._permanent then
     self._input:destroy()
@@ -740,7 +744,8 @@ function M:focus()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local winnr_input = self:get_winnr_input() ---@type integer|nil
   local winnr_main = self:get_winnr_main() ---@type integer|nil
-  local visible = self.state.visible:snapshot() ---@type boolean
+  local status = self.state.status:snapshot() ---@type eve.enums.WidgetStatus
+  local visible = status == "visible" ---@type boolean
 
   if
     not visible
@@ -790,8 +795,7 @@ function M:hide()
   self._winnr_input = nil
   self._winnr_main = nil
   self._winnr_preview = nil
-  self._status = "hidden"
-  self.state.visible:next(false)
+  self.state.status:next("hidden")
 
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
     vim.api.nvim_win_close(winnr_input, true)
@@ -824,13 +828,13 @@ end
 
 ---@return nil
 function M:show()
-  if self._status == "closed" then
-    self._status = "visible"
+  local status = self.state.status:snapshot() ---@type eve.enums.WidgetStatus
+  if status == "closed" then
     self.state.dirtier_data_cache:mark_dirty()
     self.state.dirtier_data:mark_dirty()
   end
 
-  local visible = self.state.visible:snapshot() ---@type boolean
+  local visible = status == "visible" ---@type boolean
   if not visible then
     self._input:create_buf_as_needed()
     self._main:render()
@@ -838,19 +842,20 @@ function M:show()
       self._preview:render()
     end
     self._input:reset_input()
-    self.state.visible:next(true)
+    self.state.status:next("visible")
   end
 end
 
 ---@return eve.enums.WidgetStatus
 function M:status()
-  local visible = self.state.visible:snapshot() ---@type boolean
-  return visible and "visible" or self._status
+  local status = self.state.status:snapshot() ---@type eve.enums.WidgetStatus
+  return status
 end
 
 ---@return nil
 function M:toggle()
-  local visible = self.state.visible:snapshot() ---@type boolean
+  local status = self.state.status:snapshot() ---@type eve.enums.WidgetStatus
+  local visible = status == "visible" ---@type boolean
   if visible then
     self:hide()
   else

@@ -141,7 +141,8 @@ function M.new(props)
     Subscriber.new({
       on_next = function()
         local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-        local visible = state.visible:snapshot() ---@type boolean
+        local status = state.status:snapshot() ---@type eve.enums.WidgetStatus
+        local visible = status == "visible" ---@type boolean
         if visible and is_preview_dirty then
           _render_scheduler.schedule()
         end

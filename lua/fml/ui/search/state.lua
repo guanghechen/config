@@ -37,7 +37,7 @@ function M.new(props)
   local input_line_count = Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.types.collection.IObservable
   local title = props.title ---@type string
   local uuid = eve.oxi.uuid() ---@type string
-  local visible = Observable.from_value(false)
+  local status = Observable.from_value("hidden")
 
   local fetch_scheduler ---@type eve.std.scheduler.IScheduler
   fetch_scheduler = scheduler.debounce({
@@ -97,10 +97,11 @@ function M.new(props)
   end
 
   ---@return nil
-  local function on_visible_or_data_change()
-    local is_visible = visible:snapshot() ---@type boolean
+  local function on_refresh()
+    local _status = status:snapshot() ---@type eve.enums.WidgetStatus
+    local visible = _status == "visible" ---@type boolean
     local is_data_dirty = self.dirtier_data:is_dirty() ---@type boolean
-    if is_visible and is_data_dirty then
+    if visible and is_data_dirty then
       fetch_scheduler.schedule()
     end
   end
@@ -117,16 +118,16 @@ function M.new(props)
   self.item_present_uuid = nil
   self.items = {} ---@type fml.types.ui.search.IItem[]
   self.max_width = 0 ---@type integer
+  self.status = status
   self.title = title
   self.uuid = uuid
-  self.visible = visible
   self._deleted_uuids = {} ---@type table<string, boolean>
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
 
   input:subscribe(Subscriber.new({ on_next = on_input_change }), false)
-  visible:subscribe(Subscriber.new({ on_next = on_visible_or_data_change }), false)
-  dirtier_data:subscribe(Subscriber.new({ on_next = on_visible_or_data_change }), false)
+  status:subscribe(Subscriber.new({ on_next = on_refresh }), false)
+  dirtier_data:subscribe(Subscriber.new({ on_next = on_refresh }), false)
   return self
 end
 
@@ -136,7 +137,8 @@ function M:dispose()
   self.dirtier_data:dispose()
   self.dirtier_main:dispose()
   self.dirtier_preview:dispose()
-  self.visible:dispose()
+  self.input_line_count:dispose()
+  self.status:dispose()
 end
 
 ---@return fml.types.ui.search.IItem|nil
@@ -278,9 +280,9 @@ function M:show_sate()
       input_line_count = self.input_line_count:snapshot(),
       item_present_uuid = self.item_present_uuid or "nil",
       max_width = self.max_width,
+      status = self.status:snapshot(),
       title = self.title,
       uuid = self.uuid,
-      visible = self.visible:snapshot(),
     },
   })
 end
