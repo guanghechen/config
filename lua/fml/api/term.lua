@@ -10,6 +10,7 @@ local M = {}
 ---@field public command                ?string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
+---@field public flag_quit_on_q         ?boolean
 ---@field public permanent              ?boolean
 
 ---@class fml.api.term.IToggleOrCreateParams : fml.api.term.ICreateParams
@@ -35,11 +36,31 @@ function M.create(params)
     return
   end
 
+  local keymaps = {} ---@type fml.types.IKeymap[]
+
+  local flag_quit_on_q = not not params.flag_quit_on_q ---@type boolean
+  if flag_quit_on_q then
+    ---@type fml.types.IKeymap[]
+    local keymap = {
+      modes = { "n" },
+      key = "q",
+      desc = "terminal: quit",
+      callback = function()
+        if terminal ~= nil then
+          ---@cast terminal fml.types.ui.ITerminal
+          terminal:close()
+        end
+      end,
+    }
+    table.insert(keymaps, keymap)
+  end
+
   ---@type fml.types.ui.ITerminal
   terminal = Terminal.new({
     command = command,
     command_cwd = cwd,
     command_env = env,
+    keymaps = keymaps,
     permanent = permanent,
   })
   terminal_map[name] = terminal

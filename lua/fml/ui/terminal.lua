@@ -1,10 +1,12 @@
 local api_state = require("fml.api.state")
+local util = require("fml.util")
 
 ---@class fml.ui.Terminal : fml.types.ui.ITerminal
 ---@field protected _bufnr              integer|nil
 ---@field protected _command            string
 ---@field protected _command_cwd        string
 ---@field protected _command_env        table<string, string>|nil
+---@field protected _keymaps            fml.types.IKeymap[]
 ---@field protected _permanent          boolean
 ---@field protected _status             eve.enums.WidgetStatus
 ---@field protected _term_alive         boolean
@@ -16,6 +18,7 @@ M.__index = M
 ---@field public command                ?string
 ---@field public command_cwd            ?string
 ---@field public command_env            ?table<string, string>
+---@field public keymaps                ?fml.types.IKeymap[]
 ---@field public permanent              ?boolean
 
 ---@param props                         fml.ui.terminal.IProps
@@ -26,12 +29,14 @@ function M.new(props)
   local command = props.command or vim.env.SHELL or vim.o.shell ---@type string
   local command_cwd = props.command_cwd or eve.path.cwd() ---@type string
   local command_env = props.command_env ---@type table<string, string>|nil
+  local keymaps = props.keymaps or {} ---@type fml.types.IKeymap[]
   local permanent = not not props.permanent ---@type boolean
 
   self._bufnr = nil
   self._command = command
   self._command_cwd = command_cwd
   self._command_env = command_env
+  self._keymaps = keymaps
   self._permanent = permanent
   self._status = "closed"
   self._term_alive = false
@@ -55,6 +60,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].buftype = "nowrite"
   vim.bo[bufnr].filetype = eve.constants.FT_TERM
   vim.bo[bufnr].swapfile = false
+  util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   ---@return nil
   local function on_close()
@@ -122,7 +128,25 @@ function M:close()
 end
 
 ---@return nil
-function M:focus() end
+function M:focus()
+  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+  local winnr = self:get_winnr() ---@type integer|nil
+  local status = self._status ---@type eve.enums.WidgetStatus
+  local visible = status == "visible" ---@type boolean
+
+  if not visible or winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    self:open()
+    return
+  end
+
+  if winnr_cur ~= winnr then
+    vim.schedule(function()
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        vim.api.nvim_tabpage_set_win(0, winnr)
+      end
+    end)
+  end
+end
 
 ---@return integer|nil
 function M:get_bufnr()
