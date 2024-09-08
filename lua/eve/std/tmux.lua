@@ -54,11 +54,13 @@ function M.is_tmux_pane_corner(direction)
   return false
 end
 
--- check whether the current tmux pane is zoomed
+-- check whether the current tmux pane is the only pane of the window or if the pane is zoomed
 ---@return boolean
 function M.is_tmux_pane_zoomed()
-  -- the output of the tmux command is "1\n", so we have to test against that
-  return tonumber(tmux_command("display-message -p '#{window_zoomed_flag}'")) == 1
+  return (
+    tonumber(tmux_command("display-message -p '#{window_panes}'")) == 1 ---! Check if the current window has only one pane
+    or tonumber(tmux_command("display-message -p '#{window_zoomed_flag}'")) == 1 ---! Check if the current pane is zoomed
+  )
 end
 
 -- whether tmux should take control over the navigation
