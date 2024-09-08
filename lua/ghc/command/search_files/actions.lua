@@ -126,7 +126,7 @@ function M.edit_config()
         session.search_exclude_patterns:next(exclude_patterns)
 
         if search_pattern ~= last_search_pattern then
-          state.reload()
+          state.reset_input(search_pattern)
         else
           state.reload()
         end
