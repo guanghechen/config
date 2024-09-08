@@ -10,9 +10,6 @@ return {
     disable = {
       ft = {
         eve.constants.FT_NEOTREE,
-        eve.constants.FT_SEARCH_INPUT,
-        eve.constants.FT_SEARCH_MAIN,
-        eve.constants.FT_SEARCH_PREVIEW,
         eve.constants.FT_TERM,
       },
     },
