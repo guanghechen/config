@@ -317,7 +317,6 @@ function M.fetch_data(input_text, force, callback)
   local fileitem_map = {} ---@type table<string, ghc.command.search_files.IFileItem>
   local item_map = {} ---@type table<string, ghc.command.search_files.IItem>
   for _, filepath in ipairs(result.item_orders) do
-    filepath = eve.path.relative(cwd, filepath, true)
     local filematch = result.items[filepath] ---@type eve.oxi.search.IFileMatch|nil
     if filematch ~= nil then
       ---@type ghc.command.search_files.IFileItem

@@ -1,4 +1,5 @@
 local json = require("eve.std.json")
+local path = require("eve.std.path")
 
 ---@class eve.oxi
 local M = require("eve.oxi.mod")
@@ -40,14 +41,15 @@ function M.search(params)
   local ok, data = M.run_cmd("eve.oxi.search", M.nvim_tools.search, payload)
 
   if ok and data ~= nil and data.items ~= nil then
-    local orders = {}
-    for filepath in pairs(data.items) do
-      table.insert(orders, filepath)
-    end
-    table.sort(orders)
-    data.item_orders = orders
+    local items = {} ---@type table<string, eve.oxi.search.IFileMatch>
+    local orders = {} ---@type string[]
 
-    for _, item in pairs(data.items) do
+    local cwd = params.cwd ---@type string
+    for filepath, item in pairs(data.items) do
+      filepath = path.relative(cwd, filepath, true)
+      table.insert(orders, filepath)
+      items[filepath] = item
+
       for _, block_match in ipairs(item.matches) do
         local text = block_match.text ---@type string
         local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -56,6 +58,10 @@ function M.search(params)
         block_match.lwidths = lwidths
       end
     end
+    table.sort(orders)
+
+    data.items = items
+    data.item_orders = orders
   end
 
   return data
