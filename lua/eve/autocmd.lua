@@ -151,18 +151,6 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
----! Enable wrap.
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "markdown", "text" },
-  callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-    if wincfg.relative == nil or wincfg.relative == "" then
-      vim.opt_local.wrap = true
-    end
-  end,
-})
-
 ---! Make the buffers not listed.
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "qf",
