@@ -47,4 +47,3 @@
 ---@field public tabs                   fml.types.api.state.ITabItemData[]
 ---@field public wins                   fml.types.api.state.IWinItemData[]
 ---@field public tab_history            eve.types.collection.history.ISerializedData
----@field public win_history            eve.types.collection.history.ISerializedData

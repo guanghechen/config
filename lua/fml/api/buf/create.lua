@@ -21,8 +21,11 @@ end
 ---@param col                           ?integer
 ---@return boolean
 function M.open_in_current_valid_win(filepath, lnum, col)
-  local winnr = state.win_history:present() ---@type integer
-  return state.open_filepath(winnr, filepath, lnum, col)
+  local winnr = eve.widgets:get_current_winnr() ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    return state.open_filepath(winnr, filepath, lnum, col)
+  end
+  return false
 end
 
 ---@param filepath                      string

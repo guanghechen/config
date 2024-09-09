@@ -16,20 +16,10 @@ local M = require("fml.api.buf.mod")
 ---@param bufnr                         integer the stable unique number of the buffer
 ---@return nil
 function M.go(bufnr)
-  local bufnr_from = vim.api.nvim_get_current_buf() ---@type integer
-  if bufnr_from == bufnr then
-    return
+  local winnr = eve.widgets:get_current_winnr() ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_win_set_buf(winnr, bufnr)
   end
-
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  if state.is_floating_win(winnr) then
-    winnr = state.win_history:present()
-  end
-  if winnr == nil then
-    return
-  end
-
-  vim.api.nvim_win_set_buf(winnr, bufnr)
 end
 
 ---@param bufid                         integer the index of buffer list

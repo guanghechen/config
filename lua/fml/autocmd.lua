@@ -82,8 +82,6 @@ vim.api.nvim_create_autocmd({ "VimEnter", "WinNew", "WinEnter" }, {
       return
     end
 
-    state.win_history:push(winnr)
-
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local tab = state.tabs[tabnr] ---@type fml.types.api.state.ITabItem|nil
     if tab ~= nil then

@@ -33,12 +33,21 @@ end
 ---@param cwd                           string
 ---@return nil
 local function edit_lazygit_file_in_buffer(cwd)
-  local bufnr_cur = vim.fn.bufnr("%")
-  local channel_id = vim.fn.getbufvar(bufnr_cur, "terminal_job_id")
+  local bufnr = eve.widgets:get_current_bufnr() ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    eve.reporter.error({
+      from = "ghc.command.git",
+      subject = "edit_lazygit_file_in_buffer",
+      message = "No valid buf found.",
+      details = { cwd = cwd, bufnr = bufnr },
+    })
+    return
+  end
 
+  local channel_id = vim.fn.getbufvar(bufnr, "terminal_job_id")
   if not channel_id then
     eve.reporter.error({
-      from = "guanghechen.command.git",
+      from = "ghc.command.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "No terminal job ID found.",
     })
@@ -51,20 +60,20 @@ local function edit_lazygit_file_in_buffer(cwd)
   local relative_filepath = get_filepath_from_lazygit(cwd)
   if not relative_filepath then
     eve.reporter.error({
-      from = "guanghechen.command.git",
+      from = "ghc.command.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "Clipboard is empty or invalid.",
     })
     return
   end
 
-  local winnr = fml.api.state.win_history:present()
-  if winnr == nil then
+  local winnr = eve.widgets:get_current_winnr() ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     eve.reporter.error({
-      from = "guanghechen.command.git",
+      from = "ghc.command.git",
       subject = "edit_lazygit_file_in_buffer",
       message = "Could not find the original window.",
-      details = { bufnr_cur = bufnr_cur, channel_id = channel_id },
+      details = { bufnr_cur = bufnr, channel_id = channel_id },
     })
     return
   end

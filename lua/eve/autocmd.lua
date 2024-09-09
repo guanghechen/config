@@ -102,9 +102,8 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
     local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
     if win_config.relative == nil or win_config.relative == "" then
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local dirpath = vim.fn.expand("%:p:h") ---@type string
-      widgets.set_current(bufnr, dirpath, filepath)
+      widgets.set_current_bufnr(bufnr)
+      widgets.set_current_winnr(winnr)
     end
   end,
 })

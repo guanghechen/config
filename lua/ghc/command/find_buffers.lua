@@ -23,7 +23,7 @@ local function provide()
   select:change_dimension({ height = #filepaths + 3, width = width + 16 })
 
   local present_filepath = nil ---@type string|nil
-  local winnr_cur = fml.api.state.win_history:present() ---@type integer|nil
+  local winnr_cur = eve.widgets:get_current_winnr() ---@type integer|nil
   if winnr_cur ~= nil and vim.api.nvim_win_is_valid(winnr_cur) then
     local bufnr = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
     local absolute_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string

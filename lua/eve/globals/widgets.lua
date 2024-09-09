@@ -1,8 +1,15 @@
+local Disposable = require("eve.collection.disposable")
+local Observable = require("eve.collection.observable")
 local CircularStack = require("eve.collection.circular_stack")
 local path = require("eve.std.path")
+local mvc = require("eve.globals.mvc")
+
+local initial_winnr = vim.api.nvim_get_current_win() ---@type integer
+local initial_bufnr = vim.api.nvim_get_current_buf() ---@type integer
 
 local _widgets = CircularStack.new({ capacity = 100 })
-local _current_bufnr = nil ---@type integer|nil
+local _current_bufnr = Observable.from_value(initial_bufnr) ---@type eve.types.collection.IObservable
+local _current_winnr = Observable.from_value(initial_winnr) ---@type eve.types.collection.IObservable
 local _current_buf_dirpath = path.cwd() ---@type string
 local _current_buf_filepath = nil ---@type string|nil
 
@@ -11,7 +18,14 @@ local M = {}
 
 ---@return integer|nil
 function M.get_current_bufnr()
-  return _current_bufnr
+  local bufnr = _current_bufnr:snapshot() ---@type integer
+  return bufnr > 0 and bufnr or nil
+end
+
+---@return integer|nil
+function M.get_current_winnr()
+  local winnr = _current_winnr:snapshot() ---@type integer
+  return winnr > 0 and winnr or nil
 end
 
 ---@return string
@@ -90,13 +104,40 @@ function M.resize()
 end
 
 ---@param bufnr                         integer
----@param dirpath                       string
----@param filepath                      string
 ---@return nil
-function M.set_current(bufnr, dirpath, filepath)
-  _current_bufnr = bufnr ---@type integer
-  _current_buf_dirpath = dirpath ---@type string
-  _current_buf_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
+function M.set_current_bufnr(bufnr)
+  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    local dirpath = path.dirname(filepath) ---@type string
+
+    _current_buf_dirpath = dirpath ---@type string
+    _current_buf_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
+    _current_bufnr:next(bufnr)
+  end
+end
+
+---@param winnr                         integer
+---@return nil
+function M.set_current_winnr(winnr)
+  if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+    _current_winnr:next(winnr)
+  end
+end
+
+---@param subscriber                    eve.types.collection.ISubscriber
+---@param ignoreInitial                 ?boolean
+function M.watch_current_bufnr(subscriber, ignoreInitial)
+  ---@type eve.types.collection.IUnsubscribable
+  local unsubscribable = _current_bufnr:subscribe(subscriber, ignoreInitial)
+  mvc.add_disposable(Disposable.from_unsubscribable(unsubscribable))
+end
+
+---@param subscriber                    eve.types.collection.ISubscriber
+---@param ignoreInitial                 ?boolean
+function M.watch_current_winnr(subscriber, ignoreInitial)
+  ---@type eve.types.collection.IUnsubscribable
+  local unsubscribable = _current_winnr:subscribe(subscriber, ignoreInitial)
+  mvc.add_disposable(Disposable.from_unsubscribable(unsubscribable))
 end
 
 return M

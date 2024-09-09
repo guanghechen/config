@@ -65,7 +65,6 @@ function M.save(filepath)
     tabs = {},
     wins = {},
     tab_history = M.tab_history:dump(),
-    win_history = M.win_history:dump(),
   }
 
   for bufnr, buf in pairs(M.bufs) do

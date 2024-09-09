@@ -75,7 +75,6 @@ function M.show_editor_state()
       bufnrs = vim.api.nvim_list_bufs(),
       bufs = fml.api.state.bufs,
       tabs = fml.api.state.tabs,
-      win_history = fml.api.state.win_history,
       wins = wins,
     },
   })
