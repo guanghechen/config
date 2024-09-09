@@ -3,7 +3,7 @@ local util = require("fml.util")
 
 ---@class fml.ui.Terminal : fml.types.ui.ITerminal
 ---@field protected _bufnr              integer|nil
----@field protected _command            string
+---@field protected _command            string[]
 ---@field protected _command_cwd        string
 ---@field protected _command_env        table<string, string>|nil
 ---@field protected _keymaps            fml.types.IKeymap[]
@@ -26,7 +26,14 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local command = props.command or vim.env.SHELL or vim.o.shell ---@type string
+  local command = {} ---@type string[]
+  local shell = vim.env.SHELL or vim.o.shell ---@type string
+  if props.command == nil or #props.command < 1 then
+    command = { shell }
+  else
+    command = { shell, "-c", props.command }
+  end
+
   local command_cwd = props.command_cwd or eve.path.cwd() ---@type string
   local command_env = props.command_env ---@type table<string, string>|nil
   local keymaps = props.keymaps or {} ---@type fml.types.IKeymap[]
