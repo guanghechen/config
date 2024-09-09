@@ -215,6 +215,16 @@ vim.api.nvim_create_autocmd({ "TextYankPost" }, {
   end,
 })
 
+vim.api.nvim_create_autocmd({ "WinEnter" }, {
+  callback = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+    if win_config.relative == nil or win_config.relative == "" then
+      widgets.set_current_winnr(winnr)
+    end
+  end,
+})
+
 ---! Auto resize splits when window got resized.
 vim.api.nvim_create_autocmd({ "VimResized" }, {
   callback = function()
