@@ -10,6 +10,7 @@ M.BT_NOFILE = "nofile"
 M.BT_QUICKFIX = "quickfix"
 
 ---! filetypes
+M.FT_DIFFVIEW_FILES = "DiffviewFiles"
 M.FT_NEOTREE = "neo-tree"
 M.FT_SEARCH_INPUT = "search-input"
 M.FT_SEARCH_MAIN = "search-main"

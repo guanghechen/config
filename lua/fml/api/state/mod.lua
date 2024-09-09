@@ -4,9 +4,10 @@ local BUF_IGNORED_FILETYPES = {
   ["Trouble"] = true,
   ["checkhealth"] = true,
   ["lspinfo"] = true,
-  ["neo-tree"] = true,
+  [eve.constants.FT_NEOTREE] = true,
   ["notify"] = true,
   ["startuptime"] = true,
+  [eve.constants.FT_DIFFVIEW_FILES] = true,
   [eve.constants.FT_TERM] = true,
 }
 

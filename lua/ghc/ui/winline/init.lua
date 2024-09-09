@@ -5,11 +5,6 @@ local function should_show_winline(winnr)
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local buf = fml.api.state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
-  if buf == nil or buf.filename == eve.constants.BUF_UNTITLED then
-    return false
-  end
-
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == "nofile " or buftype == "nowrite" then
     return false
