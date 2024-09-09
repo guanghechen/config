@@ -205,7 +205,7 @@ function M.new(props)
         on_confirm = on_confirm_from_props or function(item)
           local filepath = path.join(self.cwd, item.data.filepath) ---@type string
           local ok = api_buf.open_in_current_valid_win(filepath, item.data.lnum, item.data.col)
-          return ok and "hide" or "none"
+          return ok and "close" or "none"
         end,
         on_preview_rendered = on_preview_rendered,
       })

@@ -109,7 +109,7 @@ local function get_select()
           local cwd = eve.path.cwd() ---@type string
           local filepath = eve.path.join(cwd, item.data.filepath) ---@type string
           local ok = fml.api.buf.open_in_current_valid_win(filepath)
-          return ok and "hide" or "none"
+          return ok and "close" or "none"
         end
         return "none"
       end,
