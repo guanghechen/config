@@ -106,7 +106,8 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M.set_current_bufnr(bufnr)
-  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+  local bufnr_cur = _current_bufnr:snapshot() ---@type integer|nil
+  if bufnr ~= bufnr_cur and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local dirpath = path.dirname(filepath) ---@type string
 
