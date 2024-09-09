@@ -159,8 +159,7 @@ mk({ "n", "v" }, "<leader>fv", ghc.command.find_vim_options.toggle, "find: vim o
 
 --#[g]it--------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>gf", ghc.command.git.open_diffview_filehistory, "git: open file history", true)
-mk({ "n", "v" }, "<leader>gG", ghc.command.git.open_diffview, "git: open diff view", true)
-mk({ "n", "v" }, "<leader>gg", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
+mk({ "n", "v" }, "<leader>gg", ghc.command.git.open_diffview, "git: open diff view", true)
 -------------------------------------------------------------------------------------------#[g]it---
 
 --#[q]uit/session/context--------------------------------------------------------------------------
