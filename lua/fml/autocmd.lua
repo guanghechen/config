@@ -100,7 +100,7 @@ vim.api.nvim_create_autocmd({ "WinClosed" }, {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
+vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local win = state.wins[winnr] ---@type fml.types.api.state.IWinItem|nil
@@ -115,9 +115,11 @@ vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
 
 vim.api.nvim_create_autocmd({ "CursorHold" }, {
   callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    vim.schedule(function()
-      lsp.locate_symbols(winnr, true)
-    end)
+    local winnr = eve.widgets.get_current_winnr() ---@type integer|nil
+    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+      vim.schedule(function()
+        lsp.locate_symbols(winnr, true)
+      end)
+    end
   end,
 })
