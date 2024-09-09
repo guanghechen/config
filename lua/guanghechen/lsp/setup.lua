@@ -14,7 +14,9 @@ vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
 end
 
 vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
+  border = "rounded",
   focusable = false,
+  silent = true,
 })
 
 local setup = {
