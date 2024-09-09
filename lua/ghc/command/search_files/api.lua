@@ -266,9 +266,22 @@ end
 ---@param callback                    fml.types.ui.search.IFetchDataCallback
 ---@return nil
 function M.fetch_data(input_text, force, callback)
-  local current_buf_path = eve.widgets.get_current_buf_filepath() ---@type string|nil
   local cwd = state.search_cwd:snapshot() ---@type string
   local scope = session.search_scope:snapshot() ---@type ghc.enums.context.SearchScope
+  local current_buf_filepath = eve.widgets.get_current_buf_filepath() ---@type string|nil
+  local is_searching_current_buf = scope == "B" and current_buf_filepath ~= nil ---@type boolean
+  local specified_filepath = scope == "B" and current_buf_filepath or nil ---@type string|nil
+
+  if eve.fs.is_file_or_dir(cwd) ~= "directory" then
+    eve.reporter.error({
+      from = "ghc.command.search_files",
+      subject = "fetch_data",
+      message = "The cwd is not a valid directory path",
+      details = { cwd = cwd, scope = scope, current_buf_filepath = current_buf_filepath },
+    })
+    return
+  end
+
   local flag_case_sensitive = session.search_flag_case_sensitive:snapshot() ---@type boolean
   local flag_gitignore = session.search_flag_gitignore:snapshot() ---@type boolean
   local flag_regex = session.search_flag_regex:snapshot() ---@type boolean
@@ -279,7 +292,6 @@ function M.fetch_data(input_text, force, callback)
   local replace_pattern = session.search_replace_pattern:snapshot() ---@type string
   local include_patterns = session.search_include_patterns:snapshot() ---@type string
   local exclude_patterns = session.search_exclude_patterns:snapshot() ---@type string
-  local is_searching_current_buf = scope == "B" and current_buf_path ~= nil ---@type boolean
 
   ---@type eve.oxi.search.IResult|nil
   local result = (
@@ -300,7 +312,7 @@ function M.fetch_data(input_text, force, callback)
       search_paths = search_paths,
       include_patterns = include_patterns,
       exclude_patterns = exclude_patterns,
-      specified_filepath = scope == "B" and current_buf_path or nil,
+      specified_filepath = specified_filepath,
     })
 
   if result == nil then
