@@ -79,6 +79,15 @@ vim.opt.fileencoding = "utf-8"
 vim.opt.fileformat = "unix"
 vim.opt_global.fileencodings = "utf-8"
 
+---! filetypes
+vim.filetype.add({
+  extension = {
+    ts = "typescript",
+    md = "markdown",
+    tsx = "typescriptreact",
+  },
+})
+
 ---! format
 vim.opt.formatoptions = table.concat({
   --  "c", -- Auto wrap using 'textwidth'
