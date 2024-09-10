@@ -26,6 +26,49 @@ local actions = {
   end,
 }
 
+---@param dirpath                       string
+---@param config_filenames              string[]
+---@return boolean
+local function check_if_lsp_root(dirpath, config_filenames)
+  for _, filename in ipairs(config_filenames) do
+    local filepath = dirpath .. eve.path.SEP .. filename ---@type string
+    if eve.fs.is_file_or_dir(filepath) then
+      return true
+    end
+  end
+  return false
+end
+
+---@param filepath                      string
+---@param config_filenames              string[]
+---@return string|nil
+local function locate_lsp_root(filepath, config_filenames)
+  local cwd = eve.path.cwd() ---@type string
+
+  if check_if_lsp_root(cwd, config_filenames) then
+    return cwd
+  end
+
+  local workspace = eve.path.cwd() ---@type string
+  if cwd ~= workspace and check_if_lsp_root(workspace, config_filenames) then
+    return workspace
+  end
+
+  local pieces = eve.path.split(filepath) ---@type string[]
+  local k = #pieces - 1 ---@type integer
+  while k >= 1 do
+    local dirpath = table.concat(pieces, eve.path.SEP, 1, k) ---@type string
+    if dirpath == cwd then
+      break
+    end
+
+    if check_if_lsp_root(dirpath, config_filenames) then
+      return dirpath
+    end
+    k = k - 1
+  end
+end
+
 local function on_rename(from, to)
   local clients = vim.lsp.get_clients()
   for _, client in ipairs(clients) do
@@ -114,4 +157,5 @@ return {
   on_init = on_init,
   on_rename = on_rename,
   capabilities = capabilities,
+  locate_lsp_root = locate_lsp_root,
 }
