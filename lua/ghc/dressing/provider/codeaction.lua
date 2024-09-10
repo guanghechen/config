@@ -1,5 +1,5 @@
 ---@class ghc.dressing.provider.codeaction.IItemData : ghc.dressing.select.IItemData
----@field public order                  string
+---@field public index                  integer
 ---@field public content                string
 ---@field public client_name            string
 
@@ -13,7 +13,7 @@ local function codeaction_provider(items)
   local width_order = #tostring(#items) ---@type integer
   local width_content = 0 ---@type integer
   local width_client_name = 0 ---@type integer
-  local select_items = {} ---@type ghc.dressing.provider.codeaction.IItem[]
+  local item_data_list = {} ---@type ghc.dressing.provider.codeaction.IItemData[]
   for index, item in ipairs(items) do
     local order = eve.string.pad_start(tostring(index), width_order, " ") ---@type string
     local content = item.action.title ---@type string
@@ -28,15 +28,36 @@ local function codeaction_provider(items)
     ---@type ghc.dressing.provider.codeaction.IItemData
     local item_data = {
       original_item = item,
-      order = order,
+      index = index,
       content = content,
       client_name = client_name,
     }
+    table.insert(item_data_list, item_data)
+  end
+
+  table.sort(item_data_list, function(a, b)
+    if a.client_name ~= b.client_name then
+      local order_a = eve.constants.LSP_CLIENT_NAME_ORDERS[a.client_name] or 0
+      local order_b = eve.constants.LSP_CLIENT_NAME_ORDERS[b.client_name] or 0
+      return order_a < order_b
+    end
+    return a.index < b.index
+  end)
+
+  local select_items = {} ---@type ghc.dressing.provider.codeaction.IItem[]
+  for index, item_data in ipairs(item_data_list) do
+    local uuid = eve.string.pad_start(tostring(item_data.index), width_order, " ") ---@type string
+    local order = eve.string.pad_start(tostring(index), width_order, " ") ---@type string
+    item_data.index = index
+
+    local text_content = eve.string.pad_end(item_data.content, width_content, " ")
+    local text_client_name = item_data.client_name ---@type string
+    local text = order .. ": " .. text_content .. "  " .. text_client_name ---@type string
 
     ---@type ghc.dressing.provider.codeaction.IItem
     local select_item = {
-      uuid = order,
-      text = content,
+      uuid = uuid,
+      text = text,
       data = item_data,
     }
     table.insert(select_items, select_item)
@@ -49,23 +70,22 @@ local function codeaction_provider(items)
     end,
     render_item = function(item, match)
       local item_data = item.data ---@type ghc.dressing.provider.codeaction.IItemData
-      local text_order = item_data.order ---@type string
       local text_content = eve.string.pad_end(item_data.content, width_content, " ")
       local text_client_name = item_data.client_name ---@type string
-      local text = text_order .. ": " .. text_content .. "  " .. text_client_name ---@type string
+      local text = item.text ---@type string
 
       ---@type eve.types.ux.IInlineHighlight[]
       local highlights = {
-        { coll = 0, colr = #text_order + 1, hlname = "f_us_codeaction_order" },
-        { coll = #text_order + 2, colr = #text_order + 2 + #text_content, hlname = "f_us_codeaction_content" },
+        { coll = 0, colr = width_order + 1, hlname = "f_us_codeaction_order" },
+        { coll = width_order + 2, colr = width_order + 2 + #text_content, hlname = "f_us_codeaction_content" },
         {
-          coll = #text_order + #text_content + 4,
-          colr = #text_order + #text_content + 4 + #text_client_name,
+          coll = width_order + #text_content + 4,
+          colr = width_order + #text_content + 4 + #text_client_name,
           hlname = "f_us_codeaction_client_name",
         },
       }
 
-      local offset = #text_order + 2 ---@type integer
+      local offset = width_order + 2 ---@type integer
       for _, piece in ipairs(match.matches) do
         ---@type eve.types.ux.IInlineHighlight[]
         local highlight = { coll = offset + piece.l, colr = offset + piece.r, hlname = "f_us_main_match" }
