@@ -2,6 +2,7 @@ local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
 local reporter = require("eve.std.reporter")
 local std_boolean = require("eve.std.boolean")
+local shallow_equals = require("eve.std.equals").shallow_equals
 local util = require("eve.std.util")
 
 ---@class eve.collection.Observable : eve.types.collection.IObservable
@@ -16,14 +17,6 @@ setmetatable(M, { __index = BatchDisposable })
 local noop_unsubscribable = {
   unsubscribe = function(...) end,
 }
-
----@generic T
----@param x T
----@param y T
----@return boolean
-local function shallow_equals(x, y)
-  return x == y
-end
 
 ---@class eve.collection.observable.IProps
 ---@field public initial_value          eve.types.T           Initial value of the observable

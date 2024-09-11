@@ -1,12 +1,6 @@
 local CircularStack = require("eve.collection.circular_stack")
 local reporter = require("eve.std.reporter")
-
----@param x                             eve.types.T
----@param y                             eve.types.T
----@return boolean
-local function default_equals(x, y)
-  return x == y
-end
+local shallow_equals = require("eve.std.equals").shallow_equals
 
 ---@class eve.collection.History : eve.types.collection.IHistory
 ---@field public name                   string
@@ -32,7 +26,7 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local capacity = props.capacity ---@type integer
-  local equals = props.equals or default_equals ---@type eve.types.IEquals
+  local equals = props.equals or shallow_equals ---@type eve.types.IEquals
 
   local self = setmetatable({}, M)
   self.name = name
@@ -49,7 +43,7 @@ function M.deserialize(props)
 
   local self = setmetatable({}, M)
   self.name = props.name
-  self.equals = props.equals or default_equals
+  self.equals = props.equals or shallow_equals ---@type eve.types.IEquals
   self._stack = CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
