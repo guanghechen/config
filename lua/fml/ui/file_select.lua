@@ -18,7 +18,7 @@ M.__index = M
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
----@field public dirty_on_close         ?boolean
+---@field public dirty_on_invisible     ?boolean
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public flag_fuzzy             ?eve.types.collection.IObservable
@@ -46,7 +46,7 @@ function M.new(props)
   local cmp = props.cmp ---@type fml.types.ui.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch ---@type integer|nil
   local delay_render = props.delay_render ---@type integer|nil
-  local dirty_on_close = not not props.dirty_on_close ---@type boolean|nil
+  local dirty_on_invisible = props.dirty_on_invisible ---@type boolean|nil
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
   local flag_fuzzy = props.flag_fuzzy ---@type eve.types.collection.IObservable|nil
@@ -61,7 +61,7 @@ function M.new(props)
   local provider = props.provider ---@type fml.types.ui.file_select.IProvider
   local statusline_items = props.statusline_items ---@type eve.types.ux.widgets.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
-  local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
+  local on_close = props.on_close ---@type fml.types.ui.search.IOnClose|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
 
@@ -111,17 +111,6 @@ function M.new(props)
     input_keymaps = std_array.concat(common_keymaps, input_keymaps or {}) ---@type eve.types.ux.IKeymap[]
     main_keymaps = std_array.concat(common_keymaps, main_keymaps or {}) ---@type eve.types.ux.IKeymap[]
     preview_keymaps = std_array.concat(common_keymaps, preview_keymaps or {}) ---@type eve.types.ux.IKeymap[]
-  end
-
-  ---@return nil
-  local function on_close()
-    if dirty_on_close then
-      self:mark_data_dirty()
-    end
-
-    if on_close_from_props ~= nil then
-      on_close_from_props()
-    end
   end
 
   ---@type fml.types.ui.select.IProvider
@@ -187,6 +176,7 @@ function M.new(props)
         delay_fetch = delay_fetch,
         delay_render = delay_render,
         dimension = dimension,
+        dirty_on_invisible = dirty_on_invisible,
         enable_preview = enable_preview,
         extend_preset_keymaps = extend_preset_keymaps,
         flag_fuzzy = flag_fuzzy,

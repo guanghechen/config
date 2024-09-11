@@ -43,6 +43,7 @@ local PREVIEW_WIN_HIGHLIGHT = table.concat({
 ---@field protected _winnr_main         integer|nil
 ---@field protected _winnr_preview      integer|nil
 ---@field protected _on_close           ?fml.types.ui.search.IOnClose
+---@field protected _on_invisible       ?fml.types.ui.search.IOnInvisible
 local M = {}
 M.__index = M
 
@@ -63,6 +64,7 @@ M.__index = M
 ---@field public statusline_items       eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?fml.types.ui.search.IOnClose
+---@field public on_invisible           ?fml.types.ui.search.IOnInvisible
 ---@field public on_confirm             fml.types.ui.search.IOnConfirm
 ---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
 
@@ -114,6 +116,7 @@ function M.new(props)
 
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
+  local on_invisible_from_props = props.on_invisible ---@type fml.types.ui.search.IOnInvisible|nil
 
   ---@type fml.types.ui.search.IState
   local state = SearchState.new({
@@ -400,6 +403,7 @@ function M.new(props)
   self._winnr_main = nil
   self._winnr_preview = nil
   self._on_close = on_close_from_props
+  self._on_invisible = on_invisible_from_props
 
   ---@type eve.std.scheduler.IScheduler
   local draw_scheduler = eve.scheduler.throttle({
@@ -723,19 +727,19 @@ end
 ---@return nil
 function M:close()
   self:hide()
-  self.state.status:next("closed")
 
   if not self._permanent then
+    self.state.status:next("closed")
     self._input:destroy()
     self._main:destroy()
 
     if self._preview ~= nil then
       self._preview:destroy()
     end
-  end
 
-  if self._on_close ~= nil then
-    self._on_close()
+    if self._on_close ~= nil then
+      self._on_close()
+    end
   end
 end
 
@@ -807,6 +811,10 @@ function M:hide()
 
   if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
     vim.api.nvim_win_close(winnr_preview, true)
+  end
+
+  if self._on_invisible ~= nil then
+    self._on_invisible()
   end
 end
 

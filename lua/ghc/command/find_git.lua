@@ -27,7 +27,7 @@ local function provide()
 end
 
 local select = fml.ui.SimpleFileSelect.new({
-  dirty_on_close = true,
+  dirty_on_invisible = true,
   enable_preview = true,
   extend_preset_keymaps = true,
   frecency = frecency,

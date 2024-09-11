@@ -28,6 +28,7 @@ M.__index = M
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
 ---@field public dimension              ?fml.types.ui.search.IRawDimension
+---@field public dirty_on_invisible     ?boolean
 ---@field public enable_preview         boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public flag_fuzzy             ?eve.types.collection.IObservable
@@ -42,8 +43,9 @@ M.__index = M
 ---@field public provider               fml.types.ui.select.IProvider
 ---@field public statusline_items       ?eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
----@field public on_confirm             fml.types.ui.select.IOnConfirm
 ---@field public on_close               ?fml.types.ui.search.IOnClose
+---@field public on_confirm             fml.types.ui.select.IOnConfirm
+---@field public on_invisible           ?fml.types.ui.search.IOnInvisible
 ---@field public on_preview_rendered    ?fml.types.ui.search.IOnPreviewRendered
 
 ---@param props                         fml.types.ui.select.IProps
@@ -56,6 +58,7 @@ function M.new(props)
   local delay_fetch = props.delay_fetch or 128 ---@type integer
   local delay_render = props.delay_render or 48 ---@type integer
   local dimension = props.dimension ---@type fml.types.ui.search.IRawDimension|nil
+  local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
   local enable_preview = props.enable_preview ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
   local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.types.collection.IObservable
@@ -73,6 +76,7 @@ function M.new(props)
   local title = props.title ---@type string
   local on_confirm_from_props = props.on_confirm ---@type fml.types.ui.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.types.ui.search.IOnClose|nil
+  local on_invisible_from_props = props.on_invisible ---@type fml.types.ui.search.IOnInvisible|nil
   local on_preview_rendered = props.on_preview_rendered ---@type fml.types.ui.search.IOnPreviewRendered|nil
 
   if statusline_items == nil or extend_preset_keymaps then
@@ -191,6 +195,17 @@ function M.new(props)
     end
   end
 
+  ---@return nil
+  local function on_invisible()
+    if dirty_on_invisible then
+      self:mark_data_dirty()
+    end
+
+    if on_invisible_from_props ~= nil then
+      on_invisible_from_props()
+    end
+  end
+
   local _search = nil ---@type fml.types.ui.search.ISearch|nil
 
   ---@return fml.types.ui.search.ISearch
@@ -214,6 +229,7 @@ function M.new(props)
         title = title,
         on_confirm = on_confirm,
         on_close = on_close_from_props,
+        on_invisible = on_invisible,
         on_preview_rendered = on_preview_rendered,
       })
     end
@@ -222,7 +238,6 @@ function M.new(props)
 
   self._case_sensitive = case_sensitive
   self._cmp = cmp
-  self._live_data_dirty = live_data_dirty
   self._flag_fuzzy = flag_fuzzy
   self._flag_regex = flag_regex
   self._frecency = frecency
@@ -232,6 +247,7 @@ function M.new(props)
   self._item_uuid_cursor = nil
   self._last_input = nil ---@type string|nil
   self._last_case_sensitive = case_sensitive:snapshot()
+  self._live_data_dirty = live_data_dirty
   self._matches = {}
   self._provider = provider
   self._get_search = get_search

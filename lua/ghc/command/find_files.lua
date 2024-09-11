@@ -287,7 +287,7 @@ local function get_select()
     _select = fml.ui.FileSelect.new({
       case_sensitive = session.find_flag_case_sensitive,
       cmp = fml.ui.Select.cmp_by_score,
-      dirty_on_close = false,
+      dirty_on_invisible = false,
       enable_preview = true,
       extend_preset_keymaps = false,
       flag_fuzzy = session.find_flag_fuzzy,

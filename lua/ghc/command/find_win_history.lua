@@ -89,7 +89,7 @@ local function get_select()
 
     _select = fml.ui.FileSelect.new({
       dimension = { height = 3 },
-      dirty_on_close = true,
+      dirty_on_invisible = true,
       enable_preview = false,
       extend_preset_keymaps = true,
       frecency = frecency,

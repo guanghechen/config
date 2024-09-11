@@ -130,7 +130,7 @@ _select = fml.ui.Select.new({
     width = 0.35,
     width_preview = 0.5,
   },
-  dirty_on_close = false,
+  dirty_on_invisible = false,
   enable_preview = true,
   extend_preset_keymaps = true,
   provider = provider,

@@ -406,7 +406,7 @@ local function get_select()
 
     _select = fml.ui.Select.new({
       dimension = dimension,
-      dirty_on_close = true,
+      dirty_on_invisible = true,
       enable_preview = true,
       extend_preset_keymaps = true,
       frecency = frecency,

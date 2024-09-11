@@ -81,7 +81,7 @@ local select = fml.ui.Select.new({
     max_width = 1,
     width = 0.8,
   },
-  dirty_on_close = false,
+  dirty_on_invisible = false,
   enable_preview = false,
   extend_preset_keymaps = true,
   provider = provider,

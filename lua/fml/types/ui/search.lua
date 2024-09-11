@@ -4,6 +4,9 @@
 ---@alias fml.types.ui.search.IOnConfirm
 ---| fun(item: fml.types.ui.search.IItem): eve.enums.WidgetConfirmAction|nil
 
+---@alias fml.types.ui.search.IOnInvisible
+---| fun(): nil
+
 ---@alias fml.types.ui.search.IOnMainRendered
 ---| fun(): nil
 

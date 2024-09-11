@@ -38,7 +38,7 @@ end
 
 select = fml.ui.SimpleFileSelect.new({
   cmp = fml.ui.Select.cmp_by_score,
-  dirty_on_close = true,
+  dirty_on_invisible = true,
   enable_preview = false,
   extend_preset_keymaps = true,
   frecency = frecency,

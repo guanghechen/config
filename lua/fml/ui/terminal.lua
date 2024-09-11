@@ -124,9 +124,9 @@ end
 ---@return nil
 function M:close()
   self:hide()
-  self._status = "closed"
 
   if not self._permanent then
+    self._status = "closed"
     self._term_alive = false
     if self._bufnr ~= nil and vim.api.nvim_buf_is_valid(self._bufnr) then
       local bufnr = self._bufnr ---@type integer
