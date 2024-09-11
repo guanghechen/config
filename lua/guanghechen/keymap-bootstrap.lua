@@ -38,8 +38,8 @@ mk("n", "<esc>", "<cmd>noh<cr><esc>", "remove search highlights", true, true) --
 mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true, true) -- Exit terminal
 
 ---! quick shortcut
-mk({ "i", "n", "v" }, "<C-a>T", ghc.command.toggle.theme, "toggle: theme")
-mk({ "i", "n", "v" }, "<M-T>", ghc.command.toggle.theme, "toggle: theme")
+mk({ "i", "n", "v" }, "<C-a><c-t>", ghc.command.toggle.theme, "toggle: theme")
+mk({ "i", "n", "v" }, "<M-C-t>", ghc.command.toggle.theme, "toggle: theme")
 
 ---! better access lazygit
 mk({ "i", "n", "t", "v" }, "<C-a>g", ghc.command.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
