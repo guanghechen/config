@@ -1,10 +1,37 @@
 ---@class ghc.dressing.provider.codeaction.IItemData : ghc.dressing.select.IItemData
 ---@field public index                  integer
----@field public content                string
 ---@field public client_name            string
+---@field public content                string
+---@field public order_client           integer
+---@field public order_type             integer
 
 ---@class ghc.dressing.provider.codeaction.IItem : fml.types.ui.select.IItem
 ---@field public data                   ghc.dressing.provider.codeaction.IItemData
+
+local ACTION_TYPE_ORDERS = {
+  ["update"] = 1,
+  ["fix"] = 1,
+  ["disable"] = 10,
+}
+
+local LSP_CLIENT_NAME_ORDERS = {
+  bashls = 5,
+  clangd = 5,
+  cssls = 5,
+  dockerls = 5,
+  docker_compose_language_service = 10,
+  eslint = 7,
+  html = 5,
+  jsonls = 5,
+  lua_ls = 5,
+  pyright = 5,
+  rust_analyzer = 5,
+  tailwindcss = 3,
+  taplo = 5,
+  ts_ls = 5,
+  vuels = 7,
+  yamlls = 5,
+}
 
 ---@param items                         any[]
 ---@return fml.types.ui.select.IProvider
@@ -25,21 +52,29 @@ local function codeaction_provider(items)
     width_content = width_content < #content and #content or width_content
     width_client_name = width_client_name < #client_name and #client_name or width_client_name
 
+    local action_type = content:match("^%S+") ---@type string|nil
+    local order_type = action_type ~= nil and ACTION_TYPE_ORDERS[action_type:lower()] or math.huge ---@type integer
+    local order_client = LSP_CLIENT_NAME_ORDERS[client_name] or math.huge ---@type integer
+
     ---@type ghc.dressing.provider.codeaction.IItemData
     local item_data = {
       original_item = item,
       index = index,
       content = content,
       client_name = client_name,
+      order_client = order_client,
+      order_type = order_type,
     }
     table.insert(item_data_list, item_data)
   end
 
   table.sort(item_data_list, function(a, b)
-    if a.client_name ~= b.client_name then
-      local order_a = eve.constants.LSP_CLIENT_NAME_ORDERS[a.client_name] or 0
-      local order_b = eve.constants.LSP_CLIENT_NAME_ORDERS[b.client_name] or 0
-      return order_a < order_b
+    if a.order_type ~= b.order_type then
+      return a.order_type < b.order_type
+    end
+
+    if a.order_client ~= b.order_client then
+      return a.order_client < b.order_client
     end
     return a.index < b.index
   end)
