@@ -138,6 +138,10 @@ bindings = [
   { key = "Right",      mods = "Command",                   chars = "\u0001\u001b[C" },     # <Ctrl-a><Right>
   { key = "Down",       mods = "Command",                   chars = "\u0001\u001b[B" },     # <Ctrl-a><Down>
   { key = "Left",       mods = "Command",                   chars = "\u0001\u001b[D" },     # <Ctrl-a><Left>
+  { key = "Up",         mods = "Command|Shift",             chars = "\u0001\u001b[1;2A" },  # <Ctrl-a><Shift-Up>
+  { key = "Right",      mods = "Command|Shift",             chars = "\u0001\u001b[1;2C" },  # <Ctrl-a><Shift-Right>
+  { key = "Down",       mods = "Command|Shift",             chars = "\u0001\u001b[1;2B" },  # <Ctrl-a><Shift-Down> 
+  { key = "Left",       mods = "Command|Shift",             chars = "\u0001\u001b[1;2D" },  # <Ctrl-a><Shift-Left>
   { key = "Up",         mods = "Command|Control",           chars = "\u0001\u001b[1;5A" },  # <Ctrl-a><Ctrl-Up>
   { key = "Right",      mods = "Command|Control",           chars = "\u0001\u001b[1;5C" },  # <Ctrl-a><Ctrl-Right>
   { key = "Down",       mods = "Command|Control",           chars = "\u0001\u001b[1;5B" },  # <Ctrl-a><Ctrl-Down> 
