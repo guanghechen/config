@@ -4,7 +4,7 @@ local util = require("fml.util")
 
 ---@class fml.ui.search.Preview : fml.types.ui.search.IPreview
 ---@field protected _bufnr              integer|nil
----@field protected _keymaps            fml.types.IKeymap[]
+---@field protected _keymaps            eve.types.ux.IKeymap[]
 ---@field protected _render_scheduler   eve.std.scheduler.IScheduler
 local M = {}
 M.__index = M
@@ -12,7 +12,7 @@ M.__index = M
 ---@class fml.ui.search.preview.IProps
 ---@field public delay_render           integer
 ---@field public fetch_data             fml.types.ui.search.IFetchPreviewData
----@field public keymaps                fml.types.IKeymap[]
+---@field public keymaps                eve.types.ux.IKeymap[]
 ---@field public patch_data             ?fml.types.ui.search.IPatchPreviewData
 ---@field public state                  fml.types.ui.search.IState
 ---@field public on_rendered            ?fml.types.ui.search.IOnPreviewRendered
@@ -26,7 +26,7 @@ function M.new(props)
   local delay_render = props.delay_render ---@type integer
   local _fetch_data = props.fetch_data ---@type fml.types.ui.search.IFetchPreviewData
   local _patch_data = props.patch_data ---@type fml.types.ui.search.IPatchPreviewData|nil
-  local keymaps = props.keymaps ---@type fml.types.IKeymap[]
+  local keymaps = props.keymaps ---@type eve.types.ux.IKeymap[]
   local state = props.state ---@type fml.types.ui.search.IState
   local on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
   local _update_win_config = props.update_win_config ---@type fun(opts: fml.types.ui.search.preview.IWinOpts): nil

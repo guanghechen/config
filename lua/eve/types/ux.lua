@@ -28,6 +28,18 @@
 ---@field public colr                   integer
 ---@field public hlname                 string
 
+---@class eve.types.ux.IKeymapOverridable
+---@field public bufnr                  ?integer
+---@field public nowait                 ?boolean
+---@field public noremap                ?boolean
+---@field public silent                 ?boolean
+
+---@class eve.types.ux.IKeymap : eve.types.ux.IKeymapOverridable
+---@field public modes                  eve.enums.VimMode[]
+---@field public key                    string
+---@field public callback               fun(): nil
+---@field public desc                   string|nil
+
 ---@class eve.types.ux.IWidget
 ---@field public statusline_items       eve.types.ux.widgets.IStatuslineItem[]|nil
 ---@field public status                 fun(self: eve.types.ux.IWidget): eve.enums.WidgetStatus

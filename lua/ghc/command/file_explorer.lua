@@ -382,7 +382,7 @@ local function get_select()
       end,
     }
 
-    ---@type fml.types.IKeymap[]
+    ---@type eve.types.ux.IKeymap[]
     local common_keymaps = {
       {
         modes = { "n", "v" },
@@ -395,13 +395,13 @@ local function get_select()
       },
     }
 
-    ---@type fml.types.IKeymap[]
+    ---@type eve.types.ux.IKeymap[]
     local input_keymaps = eve.array.concat({}, common_keymaps)
 
-    ---@type fml.types.IKeymap[]
+    ---@type eve.types.ux.IKeymap[]
     local main_keymaps = eve.array.concat({}, common_keymaps)
 
-    ---@type fml.types.IKeymap[]
+    ---@type eve.types.ux.IKeymap[]
     local preview_keymaps = eve.array.concat({}, common_keymaps)
 
     _select = fml.ui.Select.new({

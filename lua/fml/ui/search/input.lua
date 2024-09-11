@@ -9,7 +9,7 @@ local signcolumn = require("fml.ui.signcolumn")
 ---@field protected _bufnr              integer|nil
 ---@field protected _extmark_nr         integer|nil
 ---@field protected _input_scheduler    eve.std.scheduler.IScheduler
----@field protected _keymaps            fml.types.IKeymap[]
+---@field protected _keymaps            eve.types.ux.IKeymap[]
 local M = {}
 M.__index = M
 
@@ -18,7 +18,7 @@ local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ui.search.input") ---@ty
 
 ---@class fml.ui.search.input.IProps
 ---@field public state                  fml.types.ui.search.IState
----@field public keymaps                fml.types.IKeymap[]
+---@field public keymaps                eve.types.ux.IKeymap[]
 
 ---@param props                         fml.ui.search.input.IProps
 ---@return fml.ui.search.Input
@@ -52,7 +52,7 @@ function M.new(props)
     end,
   }
 
-  ---@type fml.types.IKeymap[]
+  ---@type eve.types.ux.IKeymap[]
   local keymaps = input_history ~= nil
       and std_array.concat({
         { modes = { "i", "n", "v" }, key = "<C-j>", callback = actions.apply_next_input, desc = "search: next input" },

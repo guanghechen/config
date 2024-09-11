@@ -5,14 +5,14 @@ local signcolumn = require("fml.ui.signcolumn")
 
 ---@class fml.ui.search.Main : fml.types.ui.search.IMain
 ---@field protected _bufnr              integer|nil
----@field protected _keymaps            fml.types.IKeymap[]
+---@field protected _keymaps            eve.types.ux.IKeymap[]
 ---@field protected _render_scheduler   eve.std.scheduler.IScheduler
 local M = {}
 M.__index = M
 
 ---@class fml.ui.search.main.IProps
 ---@field public delay_render           integer
----@field public keymaps                fml.types.IKeymap[]
+---@field public keymaps                eve.types.ux.IKeymap[]
 ---@field public state                  fml.types.ui.search.IState
 ---@field public on_rendered            ?fml.types.ui.search.IOnMainRendered
 
@@ -22,7 +22,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local delay_render = props.delay_render ---@type integer
-  local keymaps = props.keymaps ---@type fml.types.IKeymap[]
+  local keymaps = props.keymaps ---@type eve.types.ux.IKeymap[]
   local state = props.state ---@type fml.types.ui.search.IState
   local on_rendered = props.on_rendered ---@type fml.types.ui.search.IOnMainRendered|nil
 

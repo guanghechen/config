@@ -40,7 +40,7 @@ local statusline_items = {
   },
 }
 
----@type fml.types.IKeymap[]
+---@type eve.types.ux.IKeymap[]
 local common_keymaps = {
   {
     modes = { "i", "n", "v" },
@@ -92,7 +92,7 @@ local common_keymaps = {
   },
 }
 
----@type fml.types.IKeymap[]
+---@type eve.types.ux.IKeymap[]
 local input_keymaps = {
   {
     modes = { "n", "v" },
@@ -116,13 +116,13 @@ local M = {}
 ---@type eve.types.ux.widgets.IRawStatuslineItem[]
 M.statusline_items = eve.array.concat({}, statusline_items)
 
----@type fml.types.IKeymap[]
+---@type eve.types.ux.IKeymap[]
 M.input_keymaps = eve.array.concat({}, common_keymaps, input_keymaps)
 
----@type fml.types.IKeymap[]
+---@type eve.types.ux.IKeymap[]
 M.main_keymaps = eve.array.concat({}, common_keymaps, input_keymaps)
 
----@type fml.types.IKeymap[]
+---@type eve.types.ux.IKeymap[]
 M.preview_keymaps = eve.array.concat({}, common_keymaps)
 
 return M

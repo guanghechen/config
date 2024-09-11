@@ -36,11 +36,11 @@ function M.create(params)
     return
   end
 
-  local keymaps = {} ---@type fml.types.IKeymap[]
+  local keymaps = {} ---@type eve.types.ux.IKeymap[]
 
   local flag_quit_on_q = not not params.flag_quit_on_q ---@type boolean
   if flag_quit_on_q then
-    ---@type fml.types.IKeymap[]
+    ---@type eve.types.ux.IKeymap[]
     local keymap = {
       modes = { "n" },
       key = "q",

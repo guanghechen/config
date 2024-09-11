@@ -110,7 +110,7 @@ local function test_window_mouse_click()
     end,
   }
 
-  ---@type fml.types.IKeymap[]
+  ---@type eve.types.ux.IKeymap[]
   local keymaps = {
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "close" },
     {

@@ -6,7 +6,7 @@ local util = require("fml.util")
 ---@field protected _command            string[]
 ---@field protected _command_cwd        string
 ---@field protected _command_env        table<string, string>|nil
----@field protected _keymaps            fml.types.IKeymap[]
+---@field protected _keymaps            eve.types.ux.IKeymap[]
 ---@field protected _permanent          boolean
 ---@field protected _status             eve.enums.WidgetStatus
 ---@field protected _term_alive         boolean
@@ -18,7 +18,7 @@ M.__index = M
 ---@field public command                ?string
 ---@field public command_cwd            ?string
 ---@field public command_env            ?table<string, string>
----@field public keymaps                ?fml.types.IKeymap[]
+---@field public keymaps                ?eve.types.ux.IKeymap[]
 ---@field public permanent              ?boolean
 
 ---@param props                         fml.ui.terminal.IProps
@@ -34,9 +34,11 @@ function M.new(props)
     command = { shell, "-c", props.command }
   end
 
+  local keymaps = eve.widgets.get_keymaps() ---@type eve.types.ux.IKeymap[]
+  eve.array.extend(keymaps, props.keymaps or {})
+
   local command_cwd = props.command_cwd or eve.path.cwd() ---@type string
   local command_env = props.command_env ---@type table<string, string>|nil
-  local keymaps = props.keymaps or {} ---@type fml.types.IKeymap[]
   local permanent = not not props.permanent ---@type boolean
 
   self._bufnr = nil
@@ -198,28 +200,30 @@ end
 ---@return nil
 function M:show()
   local visible = self._status == "visible" ---@type boolean
-  if not visible then
-    self._status = "visible"
+  if visible then
+    return
+  end
 
-    local winnr, bufnr = self:create_win_as_needed()
-    vim.api.nvim_tabpage_set_win(0, winnr)
-    if not self._term_alive then
-      self._term_alive = true
-      vim.fn.termopen(self._command, { cwd = self._command_cwd, env = self._command_env })
-      vim.api.nvim_create_autocmd("TermClose", {
-        once = true,
-        buffer = bufnr,
-        callback = function()
-          self._bufnr = nil
-          self._term_alive = false
+  self._status = "visible" ---@type eve.enums.WidgetStatus
 
-          if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-            vim.api.nvim_buf_delete(bufnr, { force = true })
-          end
-          self:close()
-        end,
-      })
-    end
+  local winnr, bufnr = self:create_win_as_needed()
+  vim.api.nvim_tabpage_set_win(0, winnr)
+  if not self._term_alive then
+    self._term_alive = true
+    vim.fn.termopen(self._command, { cwd = self._command_cwd, env = self._command_env })
+    vim.api.nvim_create_autocmd("TermClose", {
+      once = true,
+      buffer = bufnr,
+      callback = function()
+        self._bufnr = nil
+        self._term_alive = false
+
+        if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+          vim.api.nvim_buf_delete(bufnr, { force = true })
+        end
+        self:close()
+      end,
+    })
   end
 
   vim.schedule(function()

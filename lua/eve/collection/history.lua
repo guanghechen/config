@@ -150,7 +150,7 @@ function M:load(data)
 end
 
 ---@return eve.types.T|nil
----@return integer|nil
+---@return integer
 function M:present()
   return self._stack:at(self._present), self._present
 end

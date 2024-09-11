@@ -12,7 +12,7 @@ setmetatable(M, { __index = Textarea })
 ---@field public title                  ?string
 ---@field public max_width              ?number
 ---@field public min_width              ?number
----@field public keymaps                ?fml.types.IKeymap[]
+---@field public keymaps                ?eve.types.ux.IKeymap[]
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(value: string): string|nil
 ---@field public on_close               ?fun(): nil
@@ -52,12 +52,12 @@ function M.new(props)
     self.on_confirm()
   end
 
-  ---@type fml.types.IKeymap[]
+  ---@type eve.types.ux.IKeymap[]
   local builtin_keymaps = {
     { modes = { "n" }, key = "<esc>", desc = "input: quit", callback = handle_close },
     { modes = { "i" }, key = "<cr>", desc = "input: confirm", callback = handle_confirm },
   }
-  local keymaps = std_array.concat(builtin_keymaps, props.keymaps) ---@type fml.types.IKeymap[]
+  local keymaps = std_array.concat(builtin_keymaps, props.keymaps) ---@type eve.types.ux.IKeymap[]
 
   ---@param lines                       string[]
   ---@return string|nil

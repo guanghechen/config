@@ -55,11 +55,11 @@ M.__index = M
 ---@field public fetch_preview_data     ?fml.types.ui.search.IFetchPreviewData
 ---@field public input                  eve.types.collection.IObservable
 ---@field public input_history          eve.types.collection.IHistory|nil
----@field public input_keymaps          ?fml.types.IKeymap[]
----@field public main_keymaps           ?fml.types.IKeymap[]
+---@field public input_keymaps          ?eve.types.ux.IKeymap[]
+---@field public main_keymaps           ?eve.types.ux.IKeymap[]
 ---@field public patch_preview_data     ?fml.types.ui.search.IPatchPreviewData
 ---@field public permanent              ?boolean
----@field public preview_keymaps        ?fml.types.IKeymap[]
+---@field public preview_keymaps        ?eve.types.ux.IKeymap[]
 ---@field public statusline_items       eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?fml.types.ui.search.IOnClose
@@ -71,7 +71,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local common_keymaps = {} ---@type fml.types.IKeymap[]
+  local common_keymaps = eve.widgets.get_keymaps() ---@type eve.types.ux.IKeymap[]
   local statusline_items = {} ---@type eve.types.ux.widgets.IStatuslineItem[]
 
   local raw_statusline_items = props.statusline_items ---@type eve.types.ux.widgets.IRawStatuslineItem[]
@@ -85,7 +85,7 @@ function M.new(props)
     local statusline_item = { type = item.type, state = state, symbol = symbol, callback_fn = callback_fn }
     table.insert(statusline_items, statusline_item)
 
-    ---@type fml.types.IKeymap
+    ---@type eve.types.ux.IKeymap
     local keymap = {
       modes = { "n", "v" },
       key = "<leader>" .. idx,
@@ -261,7 +261,7 @@ function M.new(props)
     { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
   })
 
-  ---@type fml.types.IKeymap[]
+  ---@type eve.types.ux.IKeymap[]
   local left_common_keymaps = {
     { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.on_main_down, desc = "search: focus next item" },
     { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.on_main_down, desc = "search: focus next item" },
@@ -277,10 +277,10 @@ function M.new(props)
     },
   }
 
-  ---@type fml.types.IKeymap[]
+  ---@type eve.types.ux.IKeymap[]
   local input_keymaps = eve.array.concat(common_keymaps, left_common_keymaps, props.input_keymaps or {})
 
-  ---@type fml.types.IKeymap[]
+  ---@type eve.types.ux.IKeymap[]
   local main_keymaps = eve.array.concat(common_keymaps, left_common_keymaps, {
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
@@ -290,7 +290,7 @@ function M.new(props)
     { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
   }, props.main_keymaps or {})
 
-  ---@type fml.types.IKeymap[]
+  ---@type eve.types.ux.IKeymap[]
   local preview_keymaps = eve.array.concat(common_keymaps, {
     { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.focus_input, desc = "search: focus input" },
     { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.focus_input, desc = "search: focus input" },
@@ -303,7 +303,7 @@ function M.new(props)
   }, props.preview_keymaps or {})
 
   if not enable_multiline_input then
-    ---@type fml.types.IKeymap[]
+    ---@type eve.types.ux.IKeymap[]
     local additional_input_keymaps = {
       { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
       { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
@@ -336,7 +336,7 @@ function M.new(props)
     local on_input_g = create_fallback("g", actions.on_main_g)
     local on_input_gg = create_fallback("gg", actions.on_main_gg)
 
-    ---@type fml.types.IKeymap[]
+    ---@type eve.types.ux.IKeymap[]
     local additional_input_keymaps = {
       { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
       { modes = { "n", "v" }, key = "j", callback = on_input_move_down, desc = "search: focus next item" },
@@ -834,8 +834,7 @@ function M:show()
     self.state.dirtier_data:mark_dirty()
   end
 
-  local visible = status == "visible" ---@type boolean
-  if not visible then
+  if status ~= "visible" then
     self._input:create_buf_as_needed()
     self._main:render()
     if self._preview ~= nil then

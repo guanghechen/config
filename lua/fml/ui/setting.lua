@@ -16,7 +16,7 @@ setmetatable(M, { __index = Textarea })
 ---@field public max_height             ?number
 ---@field public min_width              ?number
 ---@field public min_height             ?number
----@field public keymaps                ?fml.types.IKeymap[]
+---@field public keymaps                ?eve.types.ux.IKeymap[]
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(value: eve.types.T): string|nil
 ---@field public on_close               ?fun(): nil
@@ -32,7 +32,7 @@ function M.new(props)
   local max_height = props.max_height ---@type number|nil
   local min_width = props.min_width ---@type number|nil
   local min_height = props.min_height ---@type number|nil
-  local keymaps = props.keymaps or {} ---@type fml.types.IKeymap[]
+  local keymaps = props.keymaps or {} ---@type eve.types.ux.IKeymap[]
   local title = props.title ---@type string|nil
   local win_opts = props.win_opts or {} ---@type table<string, any>
 

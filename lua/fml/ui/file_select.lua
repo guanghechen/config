@@ -26,10 +26,10 @@ M.__index = M
 ---@field public frecency               ?eve.types.collection.IFrecency
 ---@field public input                  ?eve.types.collection.IObservable
 ---@field public input_history          ?eve.types.collection.IHistory
----@field public input_keymaps          ?fml.types.IKeymap[]
----@field public main_keymaps           ?fml.types.IKeymap[]
+---@field public input_keymaps          ?eve.types.ux.IKeymap[]
+---@field public main_keymaps           ?eve.types.ux.IKeymap[]
 ---@field public permanent              ?boolean
----@field public preview_keymaps        ?fml.types.IKeymap[]
+---@field public preview_keymaps        ?eve.types.ux.IKeymap[]
 ---@field public provider               fml.types.ui.file_select.IProvider
 ---@field public statusline_items       ?eve.types.ux.widgets.IRawStatuslineItem[]
 ---@field public title                  string
@@ -54,10 +54,10 @@ function M.new(props)
   local frecency = props.frecency ---@type eve.types.collection.IFrecency|nil
   local input = props.input ---@type eve.types.collection.IObservable|nil
   local input_history = props.input_history ---@type eve.types.collection.IHistory|nil
-  local input_keymaps = props.input_keymaps ---@type fml.types.IKeymap[]|nil
-  local main_keymaps = props.main_keymaps ---@type fml.types.IKeymap[]|nil
+  local input_keymaps = props.input_keymaps ---@type eve.types.ux.IKeymap[]|nil
+  local main_keymaps = props.main_keymaps ---@type eve.types.ux.IKeymap[]|nil
   local permanent = props.permanent ---@type boolean|nil
-  local preview_keymaps = props.preview_keymaps ---@type fml.types.IKeymap[]|nil
+  local preview_keymaps = props.preview_keymaps ---@type eve.types.ux.IKeymap[]|nil
   local provider = props.provider ---@type fml.types.ui.file_select.IProvider
   local statusline_items = props.statusline_items ---@type eve.types.ux.widgets.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
@@ -99,7 +99,7 @@ function M.new(props)
       end
     end
 
-    ---@type fml.types.IKeymap[]
+    ---@type eve.types.ux.IKeymap[]
     local common_keymaps = {
       {
         modes = { "i", "n", "v" },
@@ -108,9 +108,9 @@ function M.new(props)
         desc = "search: send to qflist",
       },
     }
-    input_keymaps = std_array.concat(common_keymaps, input_keymaps or {}) ---@type fml.types.IKeymap[]
-    main_keymaps = std_array.concat(common_keymaps, main_keymaps or {}) ---@type fml.types.IKeymap[]
-    preview_keymaps = std_array.concat(common_keymaps, preview_keymaps or {}) ---@type fml.types.IKeymap[]
+    input_keymaps = std_array.concat(common_keymaps, input_keymaps or {}) ---@type eve.types.ux.IKeymap[]
+    main_keymaps = std_array.concat(common_keymaps, main_keymaps or {}) ---@type eve.types.ux.IKeymap[]
+    preview_keymaps = std_array.concat(common_keymaps, preview_keymaps or {}) ---@type eve.types.ux.IKeymap[]
   end
 
   ---@return nil

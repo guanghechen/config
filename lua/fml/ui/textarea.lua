@@ -25,7 +25,7 @@ local WIN_HIGHLIGHT = table.concat({
 ---@field protected min_height          number|nil
 ---@field protected title               string
 ---@field protected filetype            string|nil
----@field protected keymaps             fml.types.IKeymap[]
+---@field protected keymaps             eve.types.ux.IKeymap[]
 ---@field protected win_opts            table<string, any>
 local M = {}
 M.__index = M
@@ -40,7 +40,7 @@ M.__index = M
 ---@field public min_width              ?number
 ---@field public min_height             ?number
 ---@field public filetype               ?string
----@field public keymaps                ?fml.types.IKeymap[]
+---@field public keymaps                ?eve.types.ux.IKeymap[]
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(lines: string[]): string|nil
 ---@field public on_close               ?fun(): nil
@@ -116,12 +116,12 @@ function M.new(props)
     end
   end
 
-  ---@type fml.types.IKeymap[]
+  ---@type eve.types.ux.IKeymap[]
   local builtin_keymaps = {
     { modes = { "n" }, key = "q", desc = "textarea: quit", callback = on_close },
     { modes = { "n" }, key = "<cr>", desc = "textarea: confirm", callback = on_confirm },
   }
-  local keymaps = std_array.concat(builtin_keymaps, props.keymaps) ---@type fml.types.IKeymap[]
+  local keymaps = std_array.concat(builtin_keymaps, props.keymaps) ---@type eve.types.ux.IKeymap[]
 
   self._bufnr = nil
   self._winnr = nil
