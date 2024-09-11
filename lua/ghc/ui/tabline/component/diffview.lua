@@ -4,7 +4,7 @@ local indicator_symbol_width = vim.fn.strwidth(eve.icons.symbols.win_indicator_a
 local function get_pane_width()
   for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type number
-    if vim.bo[bufnr].ft == eve.constants.FT_NEOTREE then
+    if vim.bo[bufnr].ft == eve.constants.FT_DIFFVIEW_FILES then
       if not fml.api.state.is_floating_win(winnr) then
         return vim.api.nvim_win_get_width(winnr) + 1
       end
@@ -15,7 +15,7 @@ end
 
 ---@type fml.types.ui.nvimbar.IRawComponent
 local M = {
-  name = "neotree",
+  name = "diffview",
   ---@diagnostic disable-next-line: unused-local
   render = function(context, remain_width)
     local width = math.min(remain_width, get_pane_width()) ---@type integer
@@ -25,10 +25,10 @@ local M = {
 
     local winnr_cur = fml.api.state.get_current_tab_winnr() ---@type integer
     local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
-    local is_win_active = vim.bo[bufnr_cur].ft == eve.constants.FT_NEOTREE
+    local is_win_active = vim.bo[bufnr_cur].ft == eve.constants.FT_DIFFVIEW_FILES
     local indicator = is_win_active and eve.icons.symbols.win_indicator_active or eve.icons.symbols.win_indicator
 
-    local text = eve.icons.ui.Explorer .. " Explorer" ---@type string
+    local text = eve.icons.git.Git .. " Git Diffview" ---@type string
     local text_width = vim.fn.strwidth(text) ---@type integer
     local text_width_remain = width - text_width - indicator_symbol_width ---@type integer
     local left_width = math.floor(text_width_remain / 2)
