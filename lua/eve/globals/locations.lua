@@ -49,9 +49,14 @@ function M.get_current_buf_filepath()
   return _current_buf_filepath
 end
 
----@param filetype                      string
+---@param bufnr                         integer
 ---@return boolean
-function M.is_listed_buf_filetype(filetype)
+function M.is_listed_buf(bufnr)
+  if vim.fn.buflisted(bufnr) ~= 1 then
+    return false
+  end
+
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   return not IGNORED_FILETYPES[filetype]
 end
 
@@ -63,8 +68,7 @@ function M.set_current_bufnr(bufnr)
     return
   end
 
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if IGNORED_FILETYPES[filetype] then
+  if not M.is_listed_buf(bufnr) then
     return
   end
 

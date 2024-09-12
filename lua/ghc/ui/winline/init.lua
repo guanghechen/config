@@ -5,8 +5,7 @@ local function should_show_winline(winnr)
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if not eve.locations.is_listed_buf_filetype(filetype) then
+  if not eve.locations.is_listed_buf(bufnr) then
     return false
   end
 

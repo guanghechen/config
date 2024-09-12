@@ -24,12 +24,7 @@ function M.validate_buf(bufnr)
     return false
   end
 
-  if vim.fn.buflisted(bufnr) ~= 1 then
-    return false
-  end
-
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-  return eve.locations.is_listed_buf_filetype(filetype)
+  return eve.locations.is_listed_buf(bufnr)
 end
 
 ---@param filepath                      string|nil
