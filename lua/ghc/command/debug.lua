@@ -12,8 +12,8 @@ function M.inspect()
   local buftype = vim.bo[bufnr].buftype ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
 
-  local winnr_cur = eve.widgets.get_current_winnr() ---@type integer|nil
-  local bufnr_cur = eve.widgets.get_current_bufnr() ---@type integer|nil
+  local winnr_cur = eve.locations.get_current_winnr() ---@type integer|nil
+  local bufnr_cur = eve.locations.get_current_bufnr() ---@type integer|nil
 
   eve.reporter.info({
     from = "ghc.command.debug",

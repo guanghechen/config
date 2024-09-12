@@ -21,7 +21,7 @@ local function get_select()
         local items = {} ---@type fml.types.ui.file_select.IRawItem[]
         local present_uuid = "0" ---@type string
         local width = 0 ---@type integer
-        local winnr = eve.widgets:get_current_winnr() ---@type integer|nil
+        local winnr = eve.locations.get_current_winnr() ---@type integer|nil
         local win = winnr ~= nil and fml.api.state.wins[winnr] or nil ---@type fml.types.api.state.IWinItem|nil
         if win == nil then
           eve.reporter.error({
@@ -98,7 +98,7 @@ local function get_select()
       on_confirm = function(item)
         local item_index = tonumber(item.uuid) ---@type integer|nil
         if item_index ~= nil then
-          local winnr = eve.widgets:get_current_winnr() ---@type integer|nil
+          local winnr = eve.locations.get_current_winnr() ---@type integer|nil
           local win = winnr ~= nil and fml.api.state.wins[winnr] or nil ---@type fml.types.api.state.IWinItem|nil
           if win ~= nil then
             win.filepath_history:go(item_index)

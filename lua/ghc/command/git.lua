@@ -33,7 +33,7 @@ end
 ---@param cwd                           string
 ---@return nil
 local function edit_lazygit_file_in_buffer(cwd)
-  local bufnr = eve.widgets:get_current_bufnr() ---@type integer|nil
+  local bufnr = eve.locations.get_current_bufnr() ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     eve.reporter.error({
       from = "ghc.command.git",
@@ -67,7 +67,7 @@ local function edit_lazygit_file_in_buffer(cwd)
     return
   end
 
-  local winnr = eve.widgets:get_current_winnr() ---@type integer|nil
+  local winnr = eve.locations.get_current_winnr() ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     eve.reporter.error({
       from = "ghc.command.git",

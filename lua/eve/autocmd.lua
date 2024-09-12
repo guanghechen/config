@@ -1,6 +1,7 @@
 local constants = require("eve.globals.constants")
 local mvc = require("eve.globals.mvc")
 local widgets = require("eve.globals.widgets")
+local locations = require("eve.globals.locations")
 local os = require("eve.std.os")
 local path = require("eve.std.path")
 local tmux = require("eve.std.tmux")
@@ -102,8 +103,8 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
     local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
     if win_config.relative == nil or win_config.relative == "" then
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      widgets.set_current_bufnr(bufnr)
-      widgets.set_current_winnr(winnr)
+      locations.set_current_bufnr(bufnr)
+      locations.set_current_winnr(winnr)
     end
   end,
 })
@@ -221,8 +222,8 @@ vim.api.nvim_create_autocmd({ "WinEnter" }, {
     local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
     if win_config.relative == nil or win_config.relative == "" then
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      widgets.set_current_bufnr(bufnr)
-      widgets.set_current_winnr(winnr)
+      locations.set_current_bufnr(bufnr)
+      locations.set_current_winnr(winnr)
     end
   end,
 })

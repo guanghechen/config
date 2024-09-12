@@ -115,7 +115,7 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
 
 vim.api.nvim_create_autocmd({ "CursorHold" }, {
   callback = function()
-    local winnr = eve.widgets.get_current_winnr() ---@type integer|nil
+    local winnr = eve.locations.get_current_winnr() ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       vim.schedule(function()
         lsp.locate_symbols(winnr, true)

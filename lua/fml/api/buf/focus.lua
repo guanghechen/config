@@ -16,7 +16,7 @@ local M = require("fml.api.buf.mod")
 ---@param bufnr                         integer the stable unique number of the buffer
 ---@return nil
 function M.go(bufnr)
-  local winnr = eve.widgets:get_current_winnr() ---@type integer|nil
+  local winnr = eve.locations.get_current_winnr() ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end

@@ -268,7 +268,7 @@ end
 function M.fetch_data(input_text, force, callback)
   local cwd = state.search_cwd:snapshot() ---@type string
   local scope = session.search_scope:snapshot() ---@type ghc.enums.context.SearchScope
-  local current_buf_filepath = eve.widgets.get_current_buf_filepath() ---@type string|nil
+  local current_buf_filepath = eve.locations.get_current_buf_filepath() ---@type string|nil
   local is_searching_current_buf = scope == "B" and current_buf_filepath ~= nil ---@type boolean
   local specified_filepath = scope == "B" and current_buf_filepath or nil ---@type string|nil
 

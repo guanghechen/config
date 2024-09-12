@@ -13,7 +13,7 @@ end
 session.find_scope:subscribe(
   eve.c.Subscriber.new({
     on_next = function()
-      local current_buf_dirpath = eve.widgets.get_current_buf_dirpath() ---@type string
+      local current_buf_dirpath = eve.locations.get_current_buf_dirpath() ---@type string
       local current_find_cwd = state_find_cwd:snapshot() ---@type string
       local next_find_cwd = session.get_find_scope_cwd(current_buf_dirpath) ---@type string
       if current_find_cwd ~= next_find_cwd then

@@ -2,11 +2,11 @@
 local M = {
   name = "fml.ui.widget",
   condition = function()
-    local widget = eve.widgets:get_current_widget() ---@type eve.types.ux.IWidget|nil
+    local widget = eve.widgets.get_current_widget() ---@type eve.types.ux.IWidget|nil
     return widget ~= nil and widget:status() == "visible"
   end,
   render = function()
-    local widget = eve.widgets:get_current_widget() ---@type eve.types.ux.IWidget|nil
+    local widget = eve.widgets.get_current_widget() ---@type eve.types.ux.IWidget|nil
     if widget == nil then
       return "", 0
     end

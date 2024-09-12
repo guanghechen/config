@@ -10,12 +10,18 @@ M.BT_NOFILE = "nofile"
 M.BT_QUICKFIX = "quickfix"
 
 ---! filetypes
+M.FT_CHECKHEALTH = "checkhealth"
 M.FT_DIFFVIEW_FILES = "DiffviewFiles"
 M.FT_NEOTREE = "neo-tree"
+M.FT_NOTIFY = "notify"
+M.FT_LSPINFO = "lspinfo"
+M.FT_PLENARY_TEST_POPUP = "PlenaryTestPopup"
 M.FT_SEARCH_INPUT = "search-input"
 M.FT_SEARCH_MAIN = "search-main"
 M.FT_SEARCH_PREVIEW = "search-preview"
+M.FT_STARTUPTIME = "startuptime"
 M.FT_TERM = "term"
+M.FT_TROUBLE = "Trouble"
 
 ---! sign_ids
 M.SIGN_NR_SEARCH_MAIN_CURRENT = 2333

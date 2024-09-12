@@ -1,16 +1,3 @@
----@type table<string, boolean>
-local BUF_IGNORED_FILETYPES = {
-  ["PlenaryTestPopup"] = true,
-  ["Trouble"] = true,
-  ["checkhealth"] = true,
-  ["lspinfo"] = true,
-  [eve.constants.FT_NEOTREE] = true,
-  ["notify"] = true,
-  ["startuptime"] = true,
-  [eve.constants.FT_DIFFVIEW_FILES] = true,
-  [eve.constants.FT_TERM] = true,
-}
-
 ---@class fml.api.state
 ---@field public bufs                   table<integer, fml.types.api.state.IBufItem>
 ---@field public tabs                   table<integer, fml.types.api.state.ITabItem>
@@ -24,12 +11,6 @@ local M = {}
 function M.is_floating_win(winnr)
   local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   return config.relative ~= nil and config.relative ~= ""
-end
-
----@param filetype                      string
----@return boolean
-function M.is_ignored_filetype(filetype)
-  return not not BUF_IGNORED_FILETYPES[filetype]
 end
 
 ---@param bufnr                         integer|nil
@@ -48,7 +29,7 @@ function M.validate_buf(bufnr)
   end
 
   local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-  return not BUF_IGNORED_FILETYPES[filetype]
+  return eve.locations.is_listed_buf_filetype(filetype)
 end
 
 ---@param filepath                      string|nil

@@ -20,6 +20,7 @@ local collection = {
 local globals = {
   constants = require("eve.globals.constants"),
   icons = require("eve.globals.icons"),
+  locations = require("eve.globals.locations"),
   mvc = require("eve.globals.mvc"),
   qflist = require("eve.globals.qflist"),
   widgets = require("eve.globals.widgets"),
