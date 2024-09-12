@@ -9,6 +9,7 @@
 ---@field public data                   ghc.dressing.provider.codeaction.IItemData
 
 local ACTION_TYPE_ORDERS = {
+  ["Add"] = 1,
   ["update"] = 1,
   ["fix"] = 1,
   ["disable"] = 10,
