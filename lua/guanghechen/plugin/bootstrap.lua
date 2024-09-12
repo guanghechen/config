@@ -28,7 +28,7 @@ local raw_specs = {
   ------------------------------------------------------------------------------------------------
 
   { name = "conform.nvim", main = "conform" },
-  { name = "copilot.lua", main = "copilot", branch = "nvim@ghc-copilot.lua" },
+  { name = "copilot.lua", main = "copilot" },
   { name = "diffview.nvim", main = "diffview" },
   { name = "dressing.nvim", main = "dressing" },
   { name = "flash.nvim", main = "flash" },

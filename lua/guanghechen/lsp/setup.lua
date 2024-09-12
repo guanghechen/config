@@ -47,8 +47,7 @@ local setup = {
   tailwindcss = function()
     require("lspconfig").tailwindcss.setup(require("guanghechen.lsp.lang.tailwindcss"))
   end,
-  ---TODO should replace it with ts_ls when mason applied the changes, see https://github.com/neovim/nvim-lspconfig/pull/3232#issuecomment-2331025714
-  tsserver = function()
+  ts_ls = function()
     require("lspconfig").ts_ls.setup(require("guanghechen.lsp.lang.typescript"))
   end,
 }

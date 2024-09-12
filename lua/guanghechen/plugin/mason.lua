@@ -15,7 +15,7 @@ local ensure_installed = {
   -- "sqls", -- sqls
   "tailwindcss-language-server", --  tailwindcss
   "taplo", -- taplo
-  "typescript-language-server", -- tsserver
+  "typescript-language-server", -- ts_ls
   "vetur-vls", -- vuels
   "yaml-language-server", -- yamlls
 
@@ -88,7 +88,7 @@ return {
         -- "sqls", -- sql
         "tailwindcss",
         "taplo", -- toml
-        "tsserver", -- javascript/typescript
+        "ts_ls", -- javascript/typescript
         "vuels", -- vue -- by vuejs official
         "yamlls", -- yaml -- by redhat
       },
