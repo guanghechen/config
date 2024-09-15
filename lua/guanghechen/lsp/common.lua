@@ -28,30 +28,35 @@ local actions = {
 
 ---@param dirpath                       string
 ---@param config_filenames              string[]
----@return boolean
-local function check_if_lsp_root(dirpath, config_filenames)
+---@return string|nil
+local function find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
     local filepath = dirpath .. eve.path.SEP .. filename ---@type string
-    if eve.fs.is_file_or_dir(filepath) then
-      return true
+    if eve.fs.is_file_or_dir(filepath) == "file" then
+      return filepath
     end
   end
-  return false
 end
 
 ---@param filepath                      string
 ---@param config_filenames              string[]
 ---@return string|nil
+---@return string|nil
 local function locate_lsp_root(filepath, config_filenames)
   local cwd = eve.path.cwd() ---@type string
-
-  if check_if_lsp_root(cwd, config_filenames) then
-    return cwd
+  do
+    local config_filepath = find_filepath(cwd, config_filenames) ---@type string|nil
+    if config_filepath ~= nil then
+      return cwd, config_filepath
+    end
   end
 
-  local workspace = eve.path.cwd() ---@type string
-  if cwd ~= workspace and check_if_lsp_root(workspace, config_filenames) then
-    return workspace
+  local workspace = eve.path.workspace() ---@type string
+  if cwd ~= workspace then
+    local config_filepath = find_filepath(workspace, config_filenames) ---@type string|nil
+    if config_filepath ~= nil then
+      return workspace, config_filepath
+    end
   end
 
   local pieces = eve.path.split(filepath) ---@type string[]
@@ -62,8 +67,9 @@ local function locate_lsp_root(filepath, config_filenames)
       break
     end
 
-    if check_if_lsp_root(dirpath, config_filenames) then
-      return dirpath
+    local config_filepath = find_filepath(dirpath, config_filenames) ---@type string|nil
+    if config_filepath ~= nil then
+      return dirpath, config_filepath
     end
     k = k - 1
   end
@@ -157,5 +163,6 @@ return {
   on_init = on_init,
   on_rename = on_rename,
   capabilities = capabilities,
+  find_filepath = find_filepath,
   locate_lsp_root = locate_lsp_root,
 }
