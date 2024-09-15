@@ -15,6 +15,7 @@ return {
       css = { "prettier" },
       html = { "prettier" },
       json = { "prettier" },
+      jsonc = { "prettier" },
       yaml = { "prettier" },
       markdown = { "prettier" },
       graphql = { "prettier" },
@@ -38,7 +39,7 @@ return {
     },
     format_on_save = function(bufnr)
       -- Disable autoformat on certain filetypes
-      local ignore_filetypes = { "text", "tmux", "toml", "json", "markdown", "sql" }
+      local ignore_filetypes = { "text", "tmux", "toml", "markdown", "sql" }
       if vim.tbl_contains(ignore_filetypes, vim.bo[bufnr].filetype) then
         return
       end
