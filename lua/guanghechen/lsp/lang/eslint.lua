@@ -5,6 +5,7 @@ local locate_lsp_root = require("guanghechen.lsp.common").locate_lsp_root
 
 ---@type string[]
 local CONFIG_FILENAMES = {
+  "eslint.config.js",
   ".eslintrc",
   ".eslintrc.json",
   ".eslintrc.js",
