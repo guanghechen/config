@@ -23,6 +23,7 @@ function fish_prompt --description 'Write out the prompt'
 
   set -l color_cwd
   set -l suffix
+  set -l user_separator
   if functions -q fish_is_root_user; and fish_is_root_user
     if set -q fish_color_cwd_root
       set color_cwd $fish_color_cwd_root
@@ -30,9 +31,11 @@ function fish_prompt --description 'Write out the prompt'
       set color_cwd $fish_color_cwd
     end
     set suffix '#'
+    set user_separator '#'
   else
     set color_cwd $fish_color_cwd
     set suffix '$'
+    set user_separator '@'
   end
 
   # PWD
@@ -41,18 +44,27 @@ function fish_prompt --description 'Write out the prompt'
     set_color red
     echo -n ' '
   end
+
+  set_color $fish_color_user
+  echo -n (whoami)
+
+  set_color $fish_color_user_separator
+  echo -n $user_separator
+
+  set_color $fish_color_host
+  printf "%s " (hostname)
+
   set -l pwd (string replace -r "^$HOME" "~" $pwd)
   set_color $color_cwd
   echo -n  $pwd
-  set_color normal
 
+  set_color normal
   printf '%s ' (fish_vcs_prompt)
 
   set -l status_color (set_color $fish_color_status)
   set -l statusb_color (set_color --bold $fish_color_status)
   set -l prompt_status (__fish_print_pipestatus "[" "]" "|" "$status_color" "$statusb_color" $last_pipestatus)
   echo -n $prompt_status
-  set_color normal
 
   # current time
   set -l current_time (date "+%H:%M:%S")
