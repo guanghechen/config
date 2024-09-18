@@ -28,7 +28,9 @@ set -gx no_proxy                        "localhost,127.0.0.1,::1"
 
 if test -e /proc/version
   if grep -qEi "(Microsoft|WSL)" /proc/version
-    set -gx ghc_vpn_host_ip (ipconfig.exe | grep 'IPv4 Address' | awk '{print $NF}' | grep 192 | head -1 | sed 's/[^0-9.]//g')
+    if command -v ipconfig.exe > /dev/null
+      set -gx ghc_vpn_host_ip (ipconfig.exe | grep 'IPv4 Address' | awk '{print $NF}' | grep 192 | head -1 | sed 's/[^0-9.]//g')
+    end
   else
     set -gx ghc_vpn_host_ip (cat /etc/resolv.conf | grep nameserver | awk '{print $2}' | grep -v '::' | head -1)
   end
