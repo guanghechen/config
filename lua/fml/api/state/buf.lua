@@ -51,13 +51,17 @@ function M.open_filepath(winnr, filepath, lnum, col)
       end
     end
 
-    if lnum ~= nil and col ~= nil then
-      vim.api.nvim_win_set_cursor(winnr, { lnum, col })
-    end
-
     vim.schedule(function()
       vim.cmd("stopinsert")
     end)
+
+    if lnum ~= nil and col ~= nil then
+      vim.schedule(function()
+        pcall(function()
+          vim.api.nvim_win_set_cursor(winnr, { lnum, col })
+        end)
+      end)
+    end
     return true
   end
   return false
