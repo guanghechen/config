@@ -286,6 +286,13 @@ function M.new(props)
   ---@type eve.types.ux.IKeymap[]
   local main_keymaps = eve.array.concat(common_keymaps, left_common_keymaps, {
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
+    {
+      modes = { "i", "n", "v" },
+      key = "<Down>",
+      callback = actions.on_main_down,
+      desc = "search: focus next item",
+    },
+    { modes = { "i", "n", "v" }, key = "<Up>", callback = actions.on_main_up, desc = "search: focus prev item" },
     { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
     { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
@@ -309,6 +316,8 @@ function M.new(props)
     ---@type eve.types.ux.IKeymap[]
     local additional_input_keymaps = {
       { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
+      { modes = { "i", "n", "v" }, key = "<Down>", callback = actions.on_main_down, desc = "search: focus next item" },
+      { modes = { "i", "n", "v" }, key = "<Up>", callback = actions.on_main_up, desc = "search: focus prev item" },
       { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
       { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
       { modes = { "n", "v" }, key = "o", callback = actions.noop },
