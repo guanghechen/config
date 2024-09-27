@@ -9,6 +9,6 @@ return {
     },
   },
   dependencies = {
-    "friendly-snippets"
+    "friendly-snippets",
   },
 }

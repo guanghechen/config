@@ -3,7 +3,7 @@
 return {
   name = "mini.comment",
   keys = {
-    { "gc",  mode = { "n", "v" } },
+    { "gc", mode = { "n", "v" } },
     { "gcc", mode = { "n", "v" } },
   },
   opts = {

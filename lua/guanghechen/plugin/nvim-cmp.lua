@@ -121,11 +121,11 @@ return {
         },
       },
       sources = {
-        { name = "copilot",  group_index = 1, priority = 100 },
+        { name = "copilot", group_index = 1, priority = 100 },
         { name = "nvim_lsp", group_index = 1, priority = 100 },
         { name = "snippets", group_index = 1, priority = 90 },
-        { name = "path",     group_index = 2, priority = 60 },
-        { name = "buffer",   group_index = 2, priority = 60 },
+        { name = "path", group_index = 2, priority = 60 },
+        { name = "buffer", group_index = 2, priority = 60 },
       },
       window = {
         completion = {

@@ -7,9 +7,6 @@ return {
     end, 1000)
   end,
   event = { "InsertEnter" },
-  cond = function()
-    return ghc.context.session.flight_copilot:snapshot()
-  end,
   opts = {
     suggestion = { enabled = false },
     panel = { enabled = false },

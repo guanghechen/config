@@ -3,9 +3,6 @@ local util_lsp = require("guanghechen.util.lsp")
 return {
   name = "copilot-cmp",
   opts = {},
-  cond = function()
-    return ghc.context.session.flight_copilot:snapshot()
-  end,
   config = function(_, opts)
     local copilot_cmp = require("copilot_cmp")
     copilot_cmp.setup(opts)

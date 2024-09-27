@@ -54,12 +54,12 @@ return {
       rainbow = {
         enabled = false,
         shade = 5,
-      }
+      },
     },
     modes = {
       char = {
         enabled = false,
-      }
+      },
     },
     search = {
       mode = "exact",
@@ -68,7 +68,7 @@ return {
         "noice",
         "notify",
         "flash_prompt",
-      }
-    }
+      },
+    },
   },
 }

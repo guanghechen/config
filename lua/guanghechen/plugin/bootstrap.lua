@@ -2,6 +2,7 @@
 ---@field public name                   string
 ---@field public branch                 ?string
 ---@field public main                   ?string
+---@field public cond                   fun(): boolean
 
 ---@class guanghechen.plugin.ISpec
 ---@field public url                    string
@@ -16,46 +17,58 @@
 ---@field public event                  ?any
 ---@field public lazy                   ?any
 
+---@class guanghechen.plugin.bootstrap.conds
+local conds = {
+  ---@return boolean
+  not_vscode = function()
+    return not vim.g.vscode
+  end,
+  ---@return boolean
+  copilot = function()
+    return not vim.g.vscode and ghc.context.session.flight_copilot:snapshot()
+  end,
+  common = function()
+    return true
+  end,
+}
+
 ---@type guanghechen.plugin.IRawSpec[]
 local raw_specs = {
-  { name = "cmp-buffer" },
-  { name = "cmp-nvim-lsp" },
-  { name = "cmp-path" },
-  { name = "copilot-cmp" },
-  { name = "friendly-snippets" },
-  { name = "nvim-treesitter-textobjects" },
-
-  ------------------------------------------------------------------------------------------------
-
-  { name = "conform.nvim", main = "conform" },
-  { name = "copilot.lua", main = "copilot" },
-  { name = "diffview.nvim", main = "diffview" },
-  { name = "dressing.nvim", main = "dressing" },
-  { name = "flash.nvim", main = "flash" },
-  { name = "gitsigns.nvim", main = "gitsigns" },
-  { name = "indent-blankline.nvim", main = "ibl" },
-  { name = "mason.nvim", main = "mason" },
-  { name = "mason-lspconfig.nvim", main = "mason-lspconfig" },
-  { name = "mini.comment", main = "mini.comment" },
-  { name = "mini.icons", main = "mini.icons" },
-  { name = "mini.indentscope", main = "mini.indentscope" },
-  { name = "mini.pairs", main = "mini.pairs" },
-  { name = "mini.surround", main = "mini.surround" },
-  { name = "neo-tree.nvim", main = "neo-tree" },
-  { name = "noice.nvim", main = "noice" },
-  { name = "nui.nvim", main = "nui" },
-  { name = "nvim-cmp", main = "cmp" },
-  { name = "nvim-colorizer.lua", main = "colorizer" },
-  { name = "nvim-lspconfig", main = "lspconfig" },
-  { name = "nvim-notify", main = "notify" },
-  { name = "nvim-snippets", main = "snippets" },
-  { name = "nvim-treesitter", main = "nvim-treesitter" },
-  { name = "nvim-treesitter-context", main = "treesitter-context" },
-  { name = "nvim-window-picker", main = "window-picker" },
-  { name = "plenary.nvim", main = "plenary" },
-  { name = "trouble.nvim", main = "trouble" },
-  { name = "vim-illuminate", main = "illuminate" },
-  { name = "which-key.nvim", main = "which-key" },
+  { name = "cmp-buffer", main = "cmp_buffer", cond = conds.not_vscode },
+  { name = "cmp-nvim-lsp", main = "cmp_nvim_lsp", cond = conds.not_vscode },
+  { name = "cmp-path", main = "cmp_path", cond = conds.not_vscode },
+  { name = "conform.nvim", main = "conform", cond = conds.not_vscode },
+  { name = "copilot.lua", main = "copilot", cond = conds.copilot },
+  { name = "copilot-cmp", main = "copilot_cmp", cond = conds.copilot },
+  { name = "diffview.nvim", main = "diffview", cond = conds.not_vscode },
+  { name = "dressing.nvim", main = "dressing", cond = conds.not_vscode },
+  { name = "flash.nvim", main = "flash", cond = conds.not_vscode },
+  { name = "friendly-snippets", cond = conds.not_vscode },
+  { name = "gitsigns.nvim", main = "gitsigns", cond = conds.not_vscode },
+  { name = "indent-blankline.nvim", main = "ibl", cond = conds.not_vscode },
+  { name = "mason.nvim", main = "mason", cond = conds.not_vscode },
+  { name = "mason-lspconfig.nvim", main = "mason-lspconfig", cond = conds.not_vscode },
+  { name = "mini.comment", main = "mini.comment", cond = conds.not_vscode },
+  { name = "mini.icons", main = "mini.icons", cond = conds.not_vscode },
+  { name = "mini.indentscope", main = "mini.indentscope", cond = conds.not_vscode },
+  { name = "mini.pairs", main = "mini.pairs", cond = conds.not_vscode },
+  { name = "mini.surround", main = "mini.surround", cond = conds.common },
+  { name = "neo-tree.nvim", main = "neo-tree", cond = conds.not_vscode },
+  { name = "noice.nvim", main = "noice", cond = conds.not_vscode },
+  { name = "nui.nvim", main = "nui", cond = conds.not_vscode },
+  { name = "nvim-cmp", main = "cmp", cond = conds.not_vscode },
+  { name = "nvim-colorizer.lua", main = "colorizer", cond = conds.not_vscode },
+  { name = "nvim-lspconfig", main = "lspconfig", cond = conds.not_vscode },
+  { name = "nvim-notify", main = "notify", cond = conds.not_vscode },
+  { name = "nvim-snippets", main = "snippets", cond = conds.not_vscode },
+  { name = "nvim-treesitter", main = "nvim-treesitter", cond = conds.not_vscode },
+  { name = "nvim-treesitter-context", main = "treesitter-context", cond = conds.not_vscode },
+  { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects", cond = conds.not_vscode },
+  { name = "nvim-window-picker", main = "window-picker", cond = conds.not_vscode },
+  { name = "plenary.nvim", main = "plenary", cond = conds.not_vscode },
+  { name = "trouble.nvim", main = "trouble", cond = conds.not_vscode },
+  { name = "vim-illuminate", main = "illuminate", cond = conds.not_vscode },
+  { name = "which-key.nvim", main = "which-key", cond = conds.not_vscode },
 }
 
 ---@type guanghechen.plugin.ISpec[]
@@ -84,8 +97,17 @@ for _, spec in ipairs(specs) do
   table.insert(final_specs, spec_basic)
 end
 
-local no_details_module_names =
-  { "cmp-buffer", "cmp-nvim-lsp", "cmp-path", "friendly-snippets", "mason-lspconfig.nvim", "nui.nvim", "plenary.nvim" }
+---@type string[]
+local no_details_module_names = {
+  "cmp-buffer", --
+  "cmp-nvim-lsp",
+  "cmp-path",
+  "friendly-snippets",
+  "mason-lspconfig.nvim",
+  "nui.nvim",
+  "plenary.nvim",
+}
+
 for index = 1, #specs, 1 do
   local spec_basic = final_specs[index] ---@type guanghechen.plugin.ISpecDetails
   local spec_module_name = "guanghechen.plugin."
@@ -96,7 +118,7 @@ for index = 1, #specs, 1 do
     table.insert(final_specs, spec_details)
 
     spec_basic.cmd = spec_details.cmd
-    spec_basic.cond = spec_details.cond
+    spec_basic.cond = spec_details.cond or spec_basic.cond
     spec_basic.enabled = spec_details.enabled
     spec_basic.event = spec_details.event
     spec_basic.lazy = spec_details.lazy
