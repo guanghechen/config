@@ -163,6 +163,21 @@ return {
     cmp.event:on("menu_opened", function(event)
       util_cmp.add_missing_snippet_docs(event.window)
     end)
+
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = {
+        eve.constants.FT_NEOTREE,
+        eve.constants.FT_SEARCH_INPUT,
+        eve.constants.FT_SEARCH_MAIN,
+        eve.constants.FT_SEARCH_PREVIEW,
+        eve.constants.FT_TERM,
+      },
+      callback = function()
+        pcall(function()
+          require("cmp").setup.buffer({ enabled = false })
+        end)
+      end,
+    })
   end,
   dependencies = {
     "cmp-buffer",

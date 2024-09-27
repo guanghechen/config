@@ -134,4 +134,74 @@ for index = 1, #specs, 1 do
   end
 end
 
-return final_specs
+---! bootstrap lazy and all plugins
+local lazypath = eve.path.locate_data_filepath("/lazy/lazy.nvim")
+if not eve.path.is_exist(lazypath) then
+  local repo = "https://github.com/guanghechen/mirror"
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    repo,
+    "--single-branch",
+    "--branch=nvim@ghc-lazy.nvim",
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+vim.env.LAZY_PATH = lazypath
+require("lazy").setup({
+  spec = final_specs,
+  defaults = {
+    lazy = true,
+  },
+  install = {
+    colorscheme = {},
+  },
+  checker = {
+    enabled = false, -- set true to automatically check for plugin updates
+  },
+  performance = {
+    rtp = {
+      -- disable some rtp plugins
+      disabled_plugins = {
+        "2html_plugin",
+        "bugreport",
+        "compiler",
+        "ftplugin",
+        "getscript",
+        "getscriptPlugin",
+        "gzip",
+        "logipat",
+        "matchit",
+        "matchparen",
+        "netrw",
+        "netrwFileHandlers",
+        "netrwPlugin",
+        "netrwSettings",
+        "optwin",
+        "rplugin",
+        "rrhelper",
+        "spellfile_plugin",
+        "synmenu",
+        "syntax",
+        "tar",
+        "tarPlugin",
+        "tohtml",
+        "tutor",
+        "vimball",
+        "vimballPlugin",
+        "zip",
+        "zipPlugin",
+      },
+    },
+  },
+  ui = {
+    icons = {
+      ft = "",
+      lazy = "󰂠 ",
+      loaded = "",
+      not_loaded = "",
+    },
+  },
+})
