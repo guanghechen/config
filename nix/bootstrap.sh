@@ -3,8 +3,10 @@
 ## Update system
 sudo apt update
 sudo apt dist-upgrade -y
-sudo apt install -y gcc clangd git curl wget
 sudo apt remove -y tmux vim
+sudo apt install -y vim gcc clangd git curl wget
+sudo apt autoremove
+sudo apt autoclean
 
 ## Fetch app configurations
 mkdir -p ~/.config
@@ -44,28 +46,16 @@ npm install -g npm yarn
 
 ## Config
 
-### Set fish as the default shell
+### fish
 sudo echo "$(which fish)" >>/etc/shells
 chsh -s "$(which fish)"
 
-### Config cargo
-_cargo_config='
-[target.x86_64-apple-darwin]
-rustflags = [
-"-C", "link-arg=-undefined",
-"-C", "link-arg=dynamic_lookup",
-]
-
-[target.aarch64-apple-darwin]
-rustflags = [
-"-C", "link-arg=-undefined",
-"-C", "link-arg=dynamic_lookup",
-]
-'
-echo "${_cargo_config}" >~/.cargo/config.toml
-
-### Config nvim
+### nvim
 fish -c "cd ~/.config/nvim/rust/nvim_tools/ && bash build.sh"
+
+### others
+cp -f ~/.config/guanghechen/config/cargo.toml ~/.cargo/config.toml
+cp -f ~/.config/guanghechen/config/.gitconfig ~/.gitconfig
 
 ## anaconda
 # mkdir -p ~/download && cd ~/download
