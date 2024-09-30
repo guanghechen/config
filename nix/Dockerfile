@@ -20,5 +20,5 @@ USER lemon
 WORKDIR /home/lemon
 
 # Run any additional commands as 'lemon'
-CMD ["bash"]
+CMD ["sh -c $SHELL"]
 
