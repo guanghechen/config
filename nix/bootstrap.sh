@@ -41,8 +41,8 @@ brew install ~/.config/guanghechen/config/homebrew/tmux.rb
 brew pin tmux
 
 ### Install node
-fnm install 20
-npm install -g npm yarn
+fish -c "fnm install 20"
+fish -c "npm install -g npm yarn"
 
 ## Config
 
