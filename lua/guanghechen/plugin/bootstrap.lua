@@ -114,14 +114,15 @@ for index = 1, #specs, 1 do
     .. spec_basic.name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
   local ok, spec_module = pcall(require, spec_module_name)
   if ok then
-    local spec_details = vim.tbl_deep_extend("force", {}, spec_module)
+    local spec_details = vim.tbl_deep_extend("force", {}, spec_basic, spec_module)
     table.insert(final_specs, spec_details)
 
     spec_basic.cmd = spec_details.cmd
-    spec_basic.cond = spec_details.cond or spec_basic.cond
     spec_basic.enabled = spec_details.enabled
     spec_basic.event = spec_details.event
     spec_basic.lazy = spec_details.lazy
+
+    spec_details.cond = spec_basic.cond
     spec_details.url = spec_basic.url
     spec_details.branch = spec_basic.branch
     spec_details.main = spec_basic.main
