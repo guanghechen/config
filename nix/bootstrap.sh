@@ -12,6 +12,7 @@ git clone https://github.com/guanghechen/config.git --single-branch --branch=ala
 git clone https://github.com/guanghechen/config.git --single-branch --branch=btop ~/.config/btop
 git clone https://github.com/guanghechen/config.git --single-branch --branch=fish ~/.config/fish
 git clone https://github.com/guanghechen/config.git --single-branch --branch=fzf ~/.config/fzf
+git clone https://github.com/guanghechen/config.git --single-branch --branch=guanghechen ~/.config/guanghechen
 git clone https://github.com/guanghechen/config.git --single-branch --branch=helix ~/.config/helix
 git clone https://github.com/guanghechen/config.git --single-branch --branch=lazygit ~/.config/lazygit
 git clone https://github.com/guanghechen/config.git --single-branch --branch=nvim ~/.config/nvim
@@ -34,7 +35,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ### Install apps
 brew update
 brew install fd fnm fish git-delta httpie lazygit nvim python3 ripgrep tree unzip
-brew install ~/.config/tmux/tmux.rb
+brew install ~/.config/guanghechen/config/homebrew/tmux.rb
 brew pin tmux
 
 ### Install node
@@ -46,7 +47,6 @@ npm install -g npm yarn
 ### Set fish as the default shell
 sudo echo "$(which fish)" >>/etc/shells
 chsh -s "$(which fish)"
-fish ## Enter fish
 
 ### Config cargo
 _cargo_config='
