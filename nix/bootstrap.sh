@@ -23,6 +23,9 @@ git clone https://github.com/guanghechen/config.git --single-branch --branch=tmu
 
 ## Install
 
+### Install rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
 ### Install homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 if [ -e "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
@@ -31,10 +34,6 @@ elif [ -e "/opt/homebrew/bin/brew" ]; then
   export PATH=$PATH:/opt/homebrew/bin
 fi
 
-### Install rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-### Install apps
 brew update
 brew install fd fnm fish git-delta httpie lazygit nvim python3 ripgrep tree unzip
 brew install ~/.config/guanghechen/config/homebrew/tmux.rb

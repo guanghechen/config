@@ -6,20 +6,16 @@
 
 * Test in docker
 
-  - Start a new container with ubuntu latest.
+  - Build the docker image.
+
     ```bash
-    docker run -it ubuntu:latest /bin/bash
+    docker build -t guanghechen/nix:latest -f ~/.config/guanghechen/nix/Dockerfile ~/.config/guanghechen/nix
     ```
 
-  - Create a temp user with sudo privilege.
+  - Run the docker container.
 
     ```bash
-    apt update
-    apt install -y sudo curl
-    useradd -m lemon
-    usermod -aG sudo lemon
-    passwd lemon
-    su - lemon
+    docker run -it --name ghc-config guanghechen/nix:latest /bin/bash
     ```
 
   - Run the bootstrap script.
