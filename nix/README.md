@@ -23,3 +23,16 @@
     ```bash
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/bootstrap.sh)"
     ```
+
+* Install RobotoMono Nerd Font
+
+  See https://www.nerdfonts.com/font-downloads
+
+  ```bash
+  mkdir -p ~/download/fonts/RobotoMono
+  cd ~/download/fonts/RobotoMono
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/RobotoMono.zip
+  unzip RobotoMono.zip
+  sudo cp -r ~/download/fonts/RobotoMono /usr/share/fonts/
+  sudo fc-cache -f -v
+  ```
