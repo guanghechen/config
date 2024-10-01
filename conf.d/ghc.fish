@@ -34,6 +34,8 @@ if test -e /proc/version
   else
     set -gx ghc_vpn_host_ip (cat /etc/resolv.conf | grep nameserver | awk '{print $2}' | grep -v '::' | head -1)
   end
+else
+  set -gx ghc_vpn_host_ip '127.0.0.1'
 end
 
 # Configure PATH environment variable
