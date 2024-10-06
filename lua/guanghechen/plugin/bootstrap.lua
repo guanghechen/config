@@ -9,6 +9,7 @@
 ---@field public branch                 string
 ---@field public name                   string
 ---@field public main                   ?string
+---@field public cond                   fun(): boolean
 
 ---@class guanghechen.plugin.ISpecDetails : guanghechen.plugin.ISpec
 ---@field public cmd                    ?any
@@ -78,12 +79,14 @@ for _, raw_spec in ipairs(raw_specs) do
   local name = raw_spec.name ---@type string
   local main = raw_spec.main ---@type string
   local branch = raw_spec.branch or ("nvim@" .. name) ---@type string
+  local cond = raw_spec.cond ---@type fun(): boolean
   ---@type guanghechen.plugin.ISpec
   local meta = {
     url = url,
     branch = branch,
     name = name,
     main = main,
+    cond = cond,
   }
   table.insert(specs, meta)
 end

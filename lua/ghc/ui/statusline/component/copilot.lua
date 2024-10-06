@@ -1,5 +1,3 @@
-local session = require("ghc.context.session")
-
 ---@type string
 local fn_show_message = eve.G.register_anonymous_fn(function()
   if package.loaded["copilot"] then
@@ -21,7 +19,7 @@ local last_status = nil ---@type string|nil
 local M = {
   name = "copilot",
   condition = function()
-    return not not package.loaded["copilot"] and session.flight_copilot:snapshot()
+    return not not package.loaded["copilot"]
   end,
   will_change = function()
     local status = require("copilot.api").status.data.status ---@type string|nil
