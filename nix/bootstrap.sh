@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#! /usr/bin/env bash
 
 ## Update system
 sudo apt update
@@ -55,10 +55,3 @@ fish -c "cd ~/.config/nvim/rust/nvim_tools/ && bash build.sh"
 ### others
 cp -f ~/.config/guanghechen/config/cargo.toml ~/.cargo/config.toml
 cp -f ~/.config/guanghechen/config/.gitconfig ~/.gitconfig
-
-## anaconda
-# mkdir -p ~/download && cd ~/download
-# wget <anaconda installer url>
-# export PYTHONIOENCODING=utf8
-# export PYTHONUTF8=1
-# bash <anaconda installer>
