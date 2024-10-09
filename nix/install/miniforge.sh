@@ -11,4 +11,4 @@ mkdir -p ~/download/app/
 ## Download and install the miniforge3
 cd ~/download/app/
 curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-bash -i Miniforge3-$(uname)-$(uname -m).sh # should install at ~/.app/miniforge3
+printf "\n\nyes\n$HOME/.app/miniforge3\nno\n" | bash Miniforge3-$(uname)-$(uname -m).sh # should install at ~/.app/miniforge3

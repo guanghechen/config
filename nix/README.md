@@ -1,23 +1,7 @@
 * Bootstrap
 
   ```bash
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/bootstrap.sh)"
-  ```
-
-* Install extra apps.
-
-  - Miniforge3
-    
-    ```bash
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/miniforge.sh)"
-    ```
-
-* Install Fonts
-
-  See https://www.nerdfonts.com/font-downloads
-
-  ```bash
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/fonts.sh)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/install/bootstrap.sh)"
   ```
 
 ### FAQ
@@ -39,8 +23,6 @@
   - Run the bootstrap scripts.
 
     ```bash
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/bootstrap.sh)"
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/miniforge.sh)"
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/fonts.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/install/bootstrap.sh)"
     ```
 
