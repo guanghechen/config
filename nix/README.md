@@ -26,3 +26,14 @@
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/install/bootstrap.sh)"
     ```
 
+    Or
+
+    ```bash
+    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/install/bootstrap.sh)
+    ```
+
+  - Run the container with fish.
+
+    ```bash
+    docker exec -it ghc-config /home/linuxbrew/.linuxbrew/bin/fish
+    ```

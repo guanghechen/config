@@ -2,7 +2,7 @@
 FROM ubuntu:latest
 
 # Update package list and install necessary packages
-RUN apt update && apt install -y sudo curl
+RUN apt update && apt install -y sudo curl wget
 
 # Create a new user with a password and home directory
 RUN useradd -m -s /bin/bash lemon
@@ -20,5 +20,5 @@ USER lemon
 WORKDIR /home/lemon
 
 # Run any additional commands as 'lemon'
-CMD ["sh -c $SHELL"]
+CMD ["/bin/bash"]
 

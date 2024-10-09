@@ -21,6 +21,9 @@ git clone https://github.com/guanghechen/config.git --single-branch --branch=nvi
 git clone https://github.com/guanghechen/config.git --single-branch --branch=ripgrep ~/.config/ripgrep
 git clone https://github.com/guanghechen/config.git --single-branch --branch=tmux ~/.config/tmux
 
+### Setup git
+cp -f ~/.config/guanghechen/config/.gitconfig ~/.gitconfig
+
 ## Install
 
 ### Install homebrew
@@ -40,15 +43,5 @@ source ~/.config/guanghechen/nix/install/fonts.sh
 
 ## Setup
 
-### Setup fish
-echo "$(which fish)" | sudo tee -a /etc/shells
-chsh -s "$(which fish)"
-
 ### Setup nvim
 fish -c "cd ~/.config/nvim/rust/nvim_tools/ && bash build.sh"
-
-### Setup tmux
-cp -f ~/.config/guanghechen/config/cargo.toml ~/.cargo/config.toml
-
-### Setup git
-cp -f ~/.config/guanghechen/config/.gitconfig ~/.gitconfig
