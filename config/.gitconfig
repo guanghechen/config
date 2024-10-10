@@ -44,6 +44,7 @@
   default = upstream
 [user]
   name = guanghechen
+  email = me.guanghechen@gmail.com
 
 # delta config
 # https://github.com/dandavison/delta
