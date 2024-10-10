@@ -8,6 +8,10 @@ sudo apt install -y clangd curl fontconfig gcc git vim wget
 sudo apt autoremove
 sudo apt autoclean
 
+## Fix locale issues
+sudo locale-gen en_US.UTF-8
+sudo update-locale LANG=en_US.UTF-8
+
 ## Fetch app configurations
 mkdir -p ~/.config
 git clone https://github.com/guanghechen/config.git --single-branch --branch=alacritty ~/.config/alacritty
