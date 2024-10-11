@@ -88,7 +88,7 @@ alias tmux-use-fake-clipboard="tmux set-environment ghc_use_fake_clipboard /opt/
 alias vim="$HOMEBREW_PREFIX/bin/nvim"
 alias vi="$HOMEBREW_PREFIX/bin/nvim"
 alias nvchad="NVIM_APPNAME=nvim-nvchad $HOMEBREW_PREFIX/bin/nvim"
-alias lazyvim="NVIM_APPNAME=nvim-nvchad $HOMEBREW_PREFIX/bin/nvim"
+alias lazyvim="NVIM_APPNAME=nvim-lazy $HOMEBREW_PREFIX/bin/nvim"
 
 # Misc
 alias cp='cp -i'
