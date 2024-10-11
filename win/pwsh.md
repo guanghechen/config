@@ -6,8 +6,13 @@
   winget install --id Microsoft.WindowsTerminal.Preview -e
   winget install --id Microsoft.PowerShell --source winget
   winget install Neovim.Neovim
+  winget install sharkdp.fd
   winget install Schniz.fnm
-  winget install JanDeDobbeleer.OhMyPosh -s winget
+  winget install fzf
+  winget install BurntSushi.ripgrep.MSVC
+  winget install dandavison.delta
+  winget install --id=JesseDuffield.lazygit -e
+  winget install JanDeDobbeleer.OhMyPosh --source winget
   ```
 
 * Install rust
