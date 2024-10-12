@@ -4,19 +4,6 @@ return {
   name = "nvim-cmp",
   event = { "InsertEnter" },
   opts = function()
-    local function border(hl_name)
-      return {
-        { "╭", hl_name },
-        { "─", hl_name },
-        { "╮", hl_name },
-        { "│", hl_name },
-        { "╯", hl_name },
-        { "─", hl_name },
-        { "╰", hl_name },
-        { "│", hl_name },
-      }
-    end
-
     local cmp = require("cmp") ---@type any
     local compare = require("cmp.config.compare")
     local options = {
@@ -129,14 +116,14 @@ return {
       },
       window = {
         completion = {
-          border = border("CmpBorder"),
           scrollbar = false,
           side_padding = 1,
-          winhighlight = "Normal:CmpPmenu,CursorLine:CmpSel,Search:None",
+          border = "single",
+          winhighlight = "Normal:CmpPmenu,CursorLine:CmpSel,Search:None,FloatBorder:CmpBorder",
         },
         documentation = {
-          border = border("CmpDocBorder"),
-          winhighlight = "Normal:CmpDoc",
+          border = "single",
+          winhighlight = "Normal:CmpDoc,FloatBorder:CmpDocBorder",
         },
       },
     }
