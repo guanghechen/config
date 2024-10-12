@@ -3,16 +3,16 @@
 * Install through winget
 
   ```pwsh
-  winget install --id Microsoft.WindowsTerminal.Preview -e
-  winget install --id Microsoft.PowerShell --source winget
-  winget install Neovim.Neovim
-  winget install sharkdp.fd
-  winget install Schniz.fnm
-  winget install fzf
-  winget install BurntSushi.ripgrep.MSVC
-  winget install dandavison.delta
-  winget install --id=JesseDuffield.lazygit -e
-  winget install JanDeDobbeleer.OhMyPosh --source winget
+  winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
+  winget install -e --source winget --id Microsoft.PowerShell
+  winget install -e --source winget --id JesseDuffield.lazygit
+  winget install -e --source winget --id Neovim.Neovim
+  winget install -e --source winget --id sharkdp.fd
+  winget install -e --source winget --id Schniz.fnm
+  winget install -e --source winget --id BurntSushi.ripgrep.MSVC
+  winget install -e --source winget --id dandavison.delta
+  winget install -e --source winget --id JanDeDobbeleer.OhMyPosh
+  winget install -e --source winget fzf
   ```
 
 * Install rust
