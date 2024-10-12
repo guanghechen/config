@@ -34,7 +34,7 @@ local M = {
 
     local text_filestatus = " " .. status ---@type string
     local hl_text = eve.nvimbar.txt(text_filestatus, "f_sl_text") ---@type string
-    local width = vim.fn.strwidth(text_filestatus)
+    local width = vim.api.nvim_strwidth(text_filestatus)
     return hl_text, width
   end,
 }

@@ -31,7 +31,7 @@ local M = {
     local status = last_status or "Normal" ---@type string
     local icon = status_icon_map[status] or eve.icons.cmp.copilot ---@type string
     local text = icon .. " " ---@type string
-    local width = vim.fn.strwidth(text) ---@type integer
+    local width = vim.api.nvim_strwidth(text) ---@type integer
     local hl_text = eve.nvimbar.txt(text, (status == nil or #status < 1) and "f_sl_text" or ("f_sl_copilot_" .. status))
     hl_text = eve.nvimbar.btn(hl_text, fn_show_message)
     return hl_text, width

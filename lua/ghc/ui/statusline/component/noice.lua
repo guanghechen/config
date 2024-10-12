@@ -12,7 +12,7 @@ local M = {
     --    local text_noice_command = status.command.get() ---@type string | nil
     --    if text_noice_command ~= nil and #text_noice_command > 0 then
     --      hl_text = eve.nvimbar.txt(text_noice_command, "f_sl_noice_command")
-    --      width = vim.fn.strwidth(text_noice_command)
+    --      width = vim.api.nvim_strwidth(text_noice_command)
     --    end
 
     local text_noice_mode = status.mode.get() or ""
@@ -23,7 +23,7 @@ local M = {
       end
 
       hl_text = hl_text .. eve.nvimbar.txt(text_noice_mode, "f_sl_noice_mode")
-      width = width + vim.fn.strwidth(text_noice_mode)
+      width = width + vim.api.nvim_strwidth(text_noice_mode)
     end
     return hl_text, width
   end,

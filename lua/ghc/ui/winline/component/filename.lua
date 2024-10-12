@@ -15,7 +15,7 @@ local M = {
     local hl_text_title = eve.nvimbar.txt(text_filename, "f_wl_filename_text") ---@type string
 
     local hl_text = hl_text_icon .. hl_text_title
-    local width = vim.fn.strwidth(text_icon .. text_filename) ---@type integer
+    local width = vim.api.nvim_strwidth(text_icon .. text_filename) ---@type integer
     return hl_text, width
   end,
 }

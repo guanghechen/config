@@ -108,7 +108,7 @@ function M:open(params)
     initial_lines = { text },
     row = params.row,
     col = params.col,
-    width = params.width or vim.fn.strwidth(text) + 10,
+    width = params.width or vim.api.nvim_strwidth(text) + 10,
     max_width = params.max_width,
     min_width = params.min_width,
     text_cursor_col = params.text_cursor_col,

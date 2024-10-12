@@ -18,7 +18,7 @@ local M = {
     local text_tab = vim.api.nvim_get_option_value("shiftwidth", { scope = "local" })
     local text = text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab
     local hl_text = eve.nvimbar.txt(text, "f_sl_text")
-    local width = vim.fn.strwidth(text) ---@type integer
+    local width = vim.api.nvim_strwidth(text) ---@type integer
     return hl_text, width
   end,
 }

@@ -1,4 +1,4 @@
-local ORIDINAL_WIDTH = vim.fn.strwidth(tostring(eve.constants.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
+local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.constants.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
 
 local _select = nil ---@type fml.ui.FileSelect|nil
 
@@ -47,7 +47,7 @@ local function get_select()
           end
 
           for _, item in ipairs(items) do
-            local w = vim.fn.strwidth(item.filepath) ---@type integer
+            local w = vim.api.nvim_strwidth(item.filepath) ---@type integer
             width = width < w and w or width
           end
         end

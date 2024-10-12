@@ -21,10 +21,10 @@ local M = {
         .. eve.nvimbar.txt(text_count_warn, "f_sl_diagnostics_warn")
         .. eve.nvimbar.txt(text_count_hint, "f_sl_diagnostics_hint")
         .. eve.nvimbar.txt(text_count_info, "f_sl_diagnostics_info")
-    local width = vim.fn.strwidth(text_count_error)
-        + vim.fn.strwidth(text_count_warn)
-        + vim.fn.strwidth(text_count_hint)
-        + vim.fn.strwidth(text_count_info)
+    local width = vim.api.nvim_strwidth(text_count_error)
+        + vim.api.nvim_strwidth(text_count_warn)
+        + vim.api.nvim_strwidth(text_count_hint)
+        + vim.api.nvim_strwidth(text_count_info)
 
     return text_hl, width
   end,

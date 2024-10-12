@@ -38,14 +38,14 @@ local M = {
 
     if folded then
       local text = " 󰅁 "
-      local width = vim.fn.strwidth(text)
+      local width = vim.api.nvim_strwidth(text)
       local hl_text = eve.nvimbar.txt(text, "f_tl_tab_toggle")
       hl_text = eve.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
       return hl_text, width
     end
 
     local text = " 󰅂 " ---@type string
-    local width = vim.fn.strwidth(text) ---@type integer
+    local width = vim.api.nvim_strwidth(text) ---@type integer
     local hl_text = eve.nvimbar.txt(text, "f_tl_tab_toggle")
     hl_text = eve.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
 
@@ -53,7 +53,7 @@ local M = {
     for tabid = 1, last_tab_count, 1 do
       local hlname = last_tab_cur == tabid and "f_tl_tab_item_cur" or "f_tl_tab_item"
       text = " " .. tabid .. " "
-      width = width + vim.fn.strwidth(text)
+      width = width + vim.api.nvim_strwidth(text)
       local hl_text_inner = eve.nvimbar.txt(text, hlname)
       hl_text = hl_text .. eve.nvimbar.btn(hl_text_inner, fn_active_tab, tabnrs[tabid])
     end

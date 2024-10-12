@@ -58,7 +58,7 @@ function M.new(props)
           ---@diagnostic disable-next-line: invisible
           local item_uuid_cur = cursor_uuid or self._item_uuid_cur ---@type string|nil
           for lnum, item in ipairs(items) do
-            local width = vim.fn.strwidth(item.text) ---@type integer
+            local width = vim.api.nvim_strwidth(item.text) ---@type integer
             max_width = max_width < width and width or max_width
 
             if item.uuid == item_uuid_cur then

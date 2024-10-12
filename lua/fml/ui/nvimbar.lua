@@ -129,7 +129,7 @@ function M.new(props)
   self._dirty = true
   self._rendering = false
   self._sep = nvimbar.txt(component_sep, component_sep_hlname)
-  self._sep_width = vim.fn.strwidth(component_sep)
+  self._sep_width = vim.api.nvim_strwidth(component_sep)
   self._last_result = nil
   self._last_context = nil
   self._preset_context = preset_context

@@ -1,4 +1,4 @@
-local indicator_symbol_width = vim.fn.strwidth(eve.icons.symbols.win_indicator_active) ---@type integer
+local indicator_symbol_width = vim.api.nvim_strwidth(eve.icons.symbols.win_indicator_active) ---@type integer
 
 ---@return integer
 local function get_pane_width()
@@ -29,7 +29,7 @@ local M = {
     local indicator = is_win_active and eve.icons.symbols.win_indicator_active or eve.icons.symbols.win_indicator
 
     local text = eve.icons.git.Git .. " Git Diffview" ---@type string
-    local text_width = vim.fn.strwidth(text) ---@type integer
+    local text_width = vim.api.nvim_strwidth(text) ---@type integer
     local text_width_remain = width - text_width - indicator_symbol_width ---@type integer
     local left_width = math.floor(text_width_remain / 2)
     local right_width = text_width_remain - left_width - 1

@@ -13,7 +13,7 @@ local function provide()
   for _, buf in pairs(fml.api.state.bufs) do
     if buf.filename ~= eve.constants.BUF_UNTITLED and eve.path.is_under(workspace, buf.filepath) then
       local relative_path = eve.path.relative(cwd, buf.filepath, true) ---@type string
-      local w = vim.fn.strwidth(relative_path) ---@type integer
+      local w = vim.api.nvim_strwidth(relative_path) ---@type integer
       width = width < w and w or width
       table.insert(filepaths, relative_path)
     end

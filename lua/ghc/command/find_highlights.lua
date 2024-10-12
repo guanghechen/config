@@ -42,7 +42,7 @@ local provider = {
 
       local max_hlname_width = 0 ---@type integer
       for _, hlname in ipairs(hlnames) do
-        max_hlname_width = math.max(max_hlname_width, vim.fn.strwidth(hlname))
+        max_hlname_width = math.max(max_hlname_width, vim.api.nvim_strwidth(hlname))
       end
 
       for lnum, hlname in ipairs(hlnames) do

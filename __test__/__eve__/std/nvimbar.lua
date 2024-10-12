@@ -1,9 +1,9 @@
 eve.debug.log({
   a = vim.o.columns,
   b = #" ",
-  c = vim.fn.strwidth(" "),
+  c = vim.api.nvim_strwidth(" "),
   d = #eve.nvimbar.txt(" ", "Number"),
-  e = vim.fn.strwidth(eve.nvimbar.txt(" ", "Comment")),
+  e = vim.api.nvim_strwidth(eve.nvimbar.txt(" ", "Comment")),
   f = vim.api.nvim_win_get_width(0),
 })
 

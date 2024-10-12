@@ -34,7 +34,7 @@ end
 ---@param pad                           string
 ---@return string
 function M.pad_start(text, width, pad)
-  local delta = width - vim.fn.strwidth(text) ---@type integer
+  local delta = width - vim.api.nvim_strwidth(text) ---@type integer
   return delta <= 0 and text or (string.rep(pad, delta) .. text)
 end
 
@@ -43,7 +43,7 @@ end
 ---@param pad                           string
 ---@return string
 function M.pad_end(text, width, pad)
-  local delta = width - vim.fn.strwidth(text) ---@type integer
+  local delta = width - vim.api.nvim_strwidth(text) ---@type integer
   return delta <= 0 and text or (text .. string.rep(pad, delta))
 end
 

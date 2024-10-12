@@ -24,7 +24,7 @@ local M = {
   render = function()
     local text = get_text() ---@type string
     local hl_text = eve.nvimbar.txt(text, "f_sl_text") ---@type string
-    local width = vim.fn.strwidth(text) ---@type integer
+    local width = vim.api.nvim_strwidth(text) ---@type integer
     return hl_text, width
   end,
 }

@@ -8,7 +8,7 @@ local M = {
   render = function()
     local text = eve.icons.ui.Lock .. " [RO]" ---@type string
     local hl_text = eve.nvimbar.txt(text, "f_sl_readonly") ---@type string
-    local width = vim.fn.strwidth(text) ---@type integer
+    local width = vim.api.nvim_strwidth(text) ---@type integer
     return hl_text, width
   end,
 }

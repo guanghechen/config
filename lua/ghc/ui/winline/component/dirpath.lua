@@ -19,7 +19,7 @@ local M = {
       local hl_text_piece = eve.nvimbar.txt(piece, "f_wl_dirpath_text") ---@type string
       local hl_text_sep = eve.nvimbar.txt(sep, "f_wl_dirpath_sep") ---@type string
       hl_text = hl_text .. hl_text_piece .. hl_text_sep
-      width = width + vim.fn.strwidth(piece .. sep)
+      width = width + vim.api.nvim_strwidth(piece .. sep)
     end
     return hl_text, width
   end,

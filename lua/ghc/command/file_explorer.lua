@@ -85,13 +85,13 @@ local function fetch_diritem(dirpath, force)
           icon_hl = icon_hl,
         }
 
-        icon_width = math.max(icon_width, vim.fn.strwidth(item.icon)) ---@type integer)
-        name_width = math.max(name_width, vim.fn.strwidth(item.name)) ---@type integer)
-        perm_width = math.max(perm_width, vim.fn.strwidth(item.perm)) ---@type integer)
-        size_width = math.max(size_width, vim.fn.strwidth(item.size)) ---@type integer)
-        date_width = math.max(date_width, vim.fn.strwidth(item.date)) ---@type integer)
-        owner_width = math.max(owner_width, vim.fn.strwidth(item.owner)) ---@type integer)
-        group_width = math.max(group_width, vim.fn.strwidth(item.group)) ---@type integer)
+        icon_width = math.max(icon_width, vim.api.nvim_strwidth(item.icon)) ---@type integer)
+        name_width = math.max(name_width, vim.api.nvim_strwidth(item.name)) ---@type integer)
+        perm_width = math.max(perm_width, vim.api.nvim_strwidth(item.perm)) ---@type integer)
+        size_width = math.max(size_width, vim.api.nvim_strwidth(item.size)) ---@type integer)
+        date_width = math.max(date_width, vim.api.nvim_strwidth(item.date)) ---@type integer)
+        owner_width = math.max(owner_width, vim.api.nvim_strwidth(item.owner)) ---@type integer)
+        group_width = math.max(group_width, vim.api.nvim_strwidth(item.group)) ---@type integer)
 
         table.insert(items, item)
         file_datamap[filepath] = item
