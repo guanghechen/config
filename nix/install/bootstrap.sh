@@ -21,6 +21,7 @@ git clone https://github.com/guanghechen/config.git --single-branch --branch=fzf
 git clone https://github.com/guanghechen/config.git --single-branch --branch=guanghechen ~/.config/guanghechen
 git clone https://github.com/guanghechen/config.git --single-branch --branch=helix ~/.config/helix
 git clone https://github.com/guanghechen/config.git --single-branch --branch=lazygit ~/.config/lazygit
+git clone https://github.com/guanghechen/config.git --single-branch --branch=lsd ~/.config/lsd
 git clone https://github.com/guanghechen/config.git --single-branch --branch=nvim ~/.config/nvim
 git clone https://github.com/guanghechen/config.git --single-branch --branch=ripgrep ~/.config/ripgrep
 git clone https://github.com/guanghechen/config.git --single-branch --branch=tmux ~/.config/tmux
