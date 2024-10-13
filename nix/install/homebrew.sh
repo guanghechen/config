@@ -14,13 +14,13 @@ brew install bat fastfetch fd ffmpeg fish fnm fzf git-delta httpie lazygit lsd n
 brew install ~/.config/guanghechen/config/homebrew/tmux.rb
 brew pin tmux
 
-### Install node
-fnm install 20
-npm install -g npm yarn
-
 ### Setup fish
 echo "$(which fish)" | sudo tee -a /etc/shells
 chsh -s "$(which fish)"
+
+### Setup node
+fnm install 20
+fish -c "npm install -g npm yarn"
 
 ### Setup nvim
 fish -c "cd ~/.config/nvim/rust/nvim_tools/ && bash build.sh"
