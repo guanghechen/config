@@ -1,0 +1,27 @@
+name:
+  .cargo: 
+  .trash: 
+  .gitignore: 󰊢
+  README: 󰍔
+extension:
+  css: 
+  go: 
+  html: 
+  lock: 󰌾
+  md: 󰍔
+  png: 󰉏
+  py: 
+  rs: 󱘗
+  tmux: 
+  yaml: 
+  vue: 󰡄
+filetype:
+  dir: 󰉋
+  file: 󰈙
+  socket: 󰆨
+  executable: 
+  symlink-dir: 
+  symlink-file: 
+  device-char: 
+  device-block: 󰜫
+  special: 

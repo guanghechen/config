@@ -1,0 +1,38 @@
+## See https://github.com/lsd-rs/lsd?tab=readme-ov-file#configuration
+
+# == Blocks ==
+# This specifies the columns and their order when using the long and the tree
+# layout.
+# Possible values: permission, user, group, context, size, date, name, inode, links, git
+blocks:
+  - permission
+  - links
+  - user
+  - group
+  - size
+  - date
+  - name
+
+color:
+  when: always
+  theme: custom
+
+icons:
+  when: always
+  theme: fancy
+  separator: " "
+
+sorting:
+  column: name
+  reverse: false
+  dir-grouping: first
+
+date: +%Y-%m-%d %H:%M:%S
+header: false
+layout: grid
+literal: true
+permission: rwx
+size: short
+
+no-symlink: false
+symlink-arrow: 
