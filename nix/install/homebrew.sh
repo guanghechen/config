@@ -9,7 +9,7 @@ elif [ -e "/opt/homebrew/bin/brew" ]; then
 fi
 
 brew update
-brew install bat fastfetch fd ffmpeg fish fnm fzf git-delta lazygit lsd nvim ripgrep tree unzip
+brew install bat fastfetch fd ffmpeg fish fnm fzf git-delta lazygit lsd nvim ripgrep tldr tree unzip
 brew install ~/.config/guanghechen/config/homebrew/tmux.rb
 brew pin tmux
 
