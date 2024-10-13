@@ -8,11 +8,19 @@ elif [ -e "/opt/homebrew/bin/brew" ]; then
   export PATH=$PATH:/opt/homebrew/bin
 fi
 
+### Install apps through homebrew
 brew update
-brew install bat fastfetch fd ffmpeg fish fnm fzf git-delta lazygit lsd nvim ripgrep tldr tree unzip
+brew install bat fastfetch fd ffmpeg fish fnm fzf git-delta httpie lazygit lsd nvim ripgrep tldr tree unzip you-get
 brew install ~/.config/guanghechen/config/homebrew/tmux.rb
 brew pin tmux
+
+### Install node
+fnm install 20
+npm install -g npm yarn
 
 ### Setup fish
 echo "$(which fish)" | sudo tee -a /etc/shells
 chsh -s "$(which fish)"
+
+### Setup nvim
+fish -c "cd ~/.config/nvim/rust/nvim_tools/ && bash build.sh"

@@ -21,7 +21,7 @@ source "$HOME_MINIFORGE/etc/profile.d/conda.sh"
 conda config --set auto_activate_base false
 conda create --yes --name lemon python=3.12
 conda activate lemon
-pip install httpie ipython shell-gpt you-get
+pip install ipython shell-gpt
 
 ### Setup ipython
 ipython profile create

@@ -1,7 +1,7 @@
 * Bootstrap
 
   ```bash
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/install/bootstrap.sh)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/setup.sh)"
   ```
 
 ### FAQ
@@ -23,13 +23,13 @@
   - Run the bootstrap scripts.
 
     ```bash
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/install/bootstrap.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/setup.sh)"
     ```
 
     Or
 
     ```bash
-    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/install/bootstrap.sh)
+    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/setup.sh)
     ```
 
   - Run the container with fish.
