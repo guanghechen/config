@@ -13,6 +13,7 @@
   winget install -e --source winget --id dandavison.delta
   winget install -e --source winget --id JanDeDobbeleer.OhMyPosh
   winget install -e --source winget --id lsd-rs.lsd
+  winget install -e --source winget --id ajeetdsouza.zoxide
   winget install -e --source winget fzf
   ```
 
@@ -32,6 +33,7 @@
   ```powershell
   Set-PSReadLineOption -EditMode Vi
   fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
+  Invoke-Expression (& { (zoxide init powershell | Out-String) })
   
   oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH/catppuccin_mocha.omp.json" | Invoke-Expression
   
