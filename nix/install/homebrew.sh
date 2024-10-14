@@ -29,5 +29,8 @@ fish -c "cd ~/.config/nvim/rust/nvim_tools/ && bash build.sh"
 brew install ~/.config/guanghechen/config/homebrew/tmux.rb
 brew pin tmux
 
+### Setup hardware utilities (cpu/network/io)
+brew install btop fastfetch httpie
+
 ### Setup other tools
-brew install bat fastfetch ffmpeg fzf httpie jq lsd tldr tree unzip you-get zoxide
+brew install bat ffmpeg fzf hyperfine jq lsd scc tldr tree unzip you-get zoxide
