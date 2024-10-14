@@ -37,3 +37,10 @@
     ```bash
     docker exec -it ghc-config /home/linuxbrew/.linuxbrew/bin/fish
     ```
+
+  - Remove docker container
+
+    ```bash
+    docker container stop ghc-config
+    docker rm ghc-config
+    ```

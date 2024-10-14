@@ -12,7 +12,8 @@
     ```fish
     sudo apt-get update
     apt-cache policy docker-ce
-    sudo apt-get install -y docker-ce docker-compose
+    sudo apt-get install -y docker-ce
+    sudo apt-get install -y docker-compose
     sudo apt-get upgrade
     sudo usermod -a -G docker $USER
     ```
