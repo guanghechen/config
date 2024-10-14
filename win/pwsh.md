@@ -12,6 +12,7 @@
   winget install -e --source winget --id BurntSushi.ripgrep.MSVC
   winget install -e --source winget --id dandavison.delta
   winget install -e --source winget --id JanDeDobbeleer.OhMyPosh
+  winget install -e --source winget --id lsd-rs.lsd
   winget install -e --source winget fzf
   ```
 
