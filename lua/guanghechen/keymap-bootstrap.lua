@@ -71,8 +71,6 @@ mk({ "n", "v" }, "<leader>{", fml.api.buf.swap_left, "buf: swap left", true, tru
 mk({ "n", "v" }, "<leader>}", fml.api.buf.swap_right, "buf: swap right", true, true)
 mk({ "n", "v" }, "[b", fml.api.buf.focus_left, "buf: focus left", true, true)
 mk({ "n", "v" }, "]b", fml.api.buf.focus_right, "buf: focus right", true, true)
-mk({ "n", "v" }, "[B", fml.api.buf.swap_left, "buf: swap left", true, true)
-mk({ "n", "v" }, "]B", fml.api.buf.swap_right, "buf: swap right", true, true)
 
 ----- tab -----
 mk({ "n", "v" }, "<leader>,", fml.api.tab.focus_left, "tab: focus left", true, true)
@@ -120,8 +118,6 @@ mk({ "n", "v" }, "<leader>b9", fml.api.buf.focus_9, "buf: focus buffer 9", true,
 mk({ "n", "v" }, "<leader>b0", fml.api.buf.focus_10, "buf: focus buffer 10", true, true)
 mk({ "n", "v" }, "<leader>b[", fml.api.buf.focus_left, "buf: focus left", true, true)
 mk({ "n", "v" }, "<leader>b]", fml.api.buf.focus_right, "buf: focus right", true, true)
-mk({ "n", "v" }, "<leader>bH", fml.api.buf.swap_left, "buf: swap left", true, true)
-mk({ "n", "v" }, "<leader>bL", fml.api.buf.swap_right, "buf: swap right", true, true)
 mk({ "n", "v" }, "<leader>bd", fml.api.buf.close_current, "buf: close current", true)
 mk({ "n", "v" }, "<leader>bh", fml.api.buf.close_to_leftest, "buf: close to the leftest", true)
 mk({ "n", "v" }, "<leader>bl", fml.api.buf.close_to_rightest, "buf: close to the rightest", true)
