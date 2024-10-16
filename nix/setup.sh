@@ -28,13 +28,13 @@ git clone https://github.com/guanghechen/config.git --single-branch --branch=tmu
 cp -f ~/.config/guanghechen/config/.gitconfig ~/.gitconfig
 
 ## Setup rust envrionment
-source ~/.config/guanghechen/nix/install/rust.sh
+source ~/.config/guanghechen/nix/setup/rust.sh
 
 ## Setup python encironment
-source ~/.config/guanghechen/nix/install/miniforge.sh
+source ~/.config/guanghechen/nix/setup/miniforge.sh
 
 ## Install fonts
-source ~/.config/guanghechen/nix/install/fonts.sh
+source ~/.config/guanghechen/nix/setup/fonts.sh
 
 ## Install apps
-source ~/.config/guanghechen/nix/install/homebrew.sh
+source ~/.config/guanghechen/nix/setup/homebrew.sh
