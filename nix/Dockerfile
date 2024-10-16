@@ -5,20 +5,20 @@ FROM ubuntu:latest
 RUN apt update && apt install -y sudo curl wget
 
 # Create a new user with a password and home directory
-RUN useradd -m -s /bin/bash lemon
+RUN useradd -m -s /bin/bash wulala
 
-# Set the password for the user 'lemon' to 'cat'
-RUN echo "lemon:cat" | chpasswd
+# Set the password for the user 'wulala' to '111'
+RUN echo "wulala:111" | chpasswd
 
 # Add the new user to the sudo group
-RUN usermod -aG sudo lemon
+RUN usermod -aG sudo wulala 
 
-# Switch to the new user 'lemon'
-USER lemon
+# Switch to the new user 'wulala'
+USER wulala
 
 # Set the working directory
-WORKDIR /home/lemon
+WORKDIR /home/wulala
 
-# Run any additional commands as 'lemon'
+# Run any additional commands as 'wulala'
 CMD ["/bin/bash"]
 
