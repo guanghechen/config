@@ -13,28 +13,26 @@ sudo locale-gen en_US.UTF-8
 sudo update-locale LANG=en_US.UTF-8
 
 ## Setup app configurations
-mkdir -p ~/.config
-git clone https://github.com/guanghechen/config.git --single-branch --branch=alacritty ~/.config/alacritty
-git clone https://github.com/guanghechen/config.git --single-branch --branch=btop ~/.config/btop
-git clone https://github.com/guanghechen/config.git --single-branch --branch=fish ~/.config/fish
-git clone https://github.com/guanghechen/config.git --single-branch --branch=fzf ~/.config/fzf
-git clone https://github.com/guanghechen/config.git --single-branch --branch=guanghechen ~/.config/guanghechen
-git clone https://github.com/guanghechen/config.git --single-branch --branch=helix ~/.config/helix
-git clone https://github.com/guanghechen/config.git --single-branch --branch=lazygit ~/.config/lazygit
-git clone https://github.com/guanghechen/config.git --single-branch --branch=lsd ~/.config/lsd
-git clone https://github.com/guanghechen/config.git --single-branch --branch=nvim ~/.config/nvim
-git clone https://github.com/guanghechen/config.git --single-branch --branch=ripgrep ~/.config/ripgrep
-git clone https://github.com/guanghechen/config.git --single-branch --branch=tmux ~/.config/tmux
-cp -f ~/.config/guanghechen/config/.gitconfig ~/.gitconfig
+CONFIG_ROOT_DIR="$HOME/.config/guanghechen"
+if [ -d "$CONFIG_ROOT_DIR/.git" ]; then
+  git -C "$CONFIG_ROOT_DIR" pull origin guanghechen
+else
+  mkdir -p "$CONFIG_ROOT_DIR"
+  git clone https://github.com/guanghechen/config.git --single-branch --branch=guanghechen "$CONFIG_ROOT_DIR"
+fi
 
 ## Setup rust envrionment
+echo -e "\n\n"
 source ~/.config/guanghechen/nix/setup/rust.sh
 
 ## Setup python encironment
+echo -e "\n\n"
 source ~/.config/guanghechen/nix/setup/miniforge.sh
 
 ## Install fonts
+echo -e "\n\n"
 source ~/.config/guanghechen/nix/setup/fonts.sh
 
 ## Install apps
+echo -e "\n\n"
 source ~/.config/guanghechen/nix/setup/homebrew.sh
