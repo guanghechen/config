@@ -10,7 +10,7 @@ local statusline = fml.ui.Nvimbar.new({
   end,
   trigger_rerender = function()
     statusline_dirty = false
-    vim.cmd("redrawstatus")
+    vim.cmd.redrawstatus()
   end,
 })
 

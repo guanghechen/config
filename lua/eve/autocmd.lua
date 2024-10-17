@@ -1,7 +1,8 @@
 local constants = require("eve.globals.constants")
-local mvc = require("eve.globals.mvc")
-local widgets = require("eve.globals.widgets")
 local locations = require("eve.globals.locations")
+local mvc = require("eve.globals.mvc")
+local state = require("eve.globals.state")
+local widgets = require("eve.globals.widgets")
 local os = require("eve.std.os")
 local path = require("eve.std.path")
 local tmux = require("eve.std.tmux")
@@ -204,8 +205,19 @@ vim.api.nvim_create_autocmd({ "FocusGained" }, {
 
 ---! Show lsp progress.
 vim.api.nvim_create_autocmd("LspProgress", {
-  callback = function()
-    vim.cmd("redrawstatus")
+  pattern = { "begin", "end" },
+  callback = function(args)
+    local data = args.data.params.value
+    local progress = ""
+    if data.percentage then
+      local spinners = { "", "󰪞", "󰪟", "󰪠", "󰪢", "󰪣", "󰪤", "󰪥" }
+      local spinner_w = 100 / #spinners
+      local icon = spinners[math.floor(data.percentage / spinner_w) + 1]
+      progress = icon .. " " .. data.percentage .. "%% "
+    end
+    local str = progress .. (data.message or "") .. " " .. (data.title or "")
+    state.lsp_msg = data.kind == "end" and "" or str
+    vim.cmd.redrawstatus()
   end,
 })
 

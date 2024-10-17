@@ -107,6 +107,6 @@ vim.schedule(function()
     search_flag_regex,
     search_scope,
   }, function()
-    vim.cmd("redrawstatus")
+    vim.cmd.redrawstatus()
   end, true)
 end)

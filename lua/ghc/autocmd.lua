@@ -19,7 +19,7 @@ vim.api.nvim_create_autocmd("ModeChanged", {
   group = augroups.redraw_when_mode,
   callback = function()
     vim.schedule(function()
-      vim.cmd("redrawstatus")
+      vim.cmd.redrawstatus()
     end)
   end,
 })

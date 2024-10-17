@@ -23,8 +23,15 @@ local M = {
   end,
   render = function()
     local text = get_text() ---@type string
-    local hl_text = eve.nvimbar.txt(text, "f_sl_text") ---@type string
     local width = vim.api.nvim_strwidth(text) ---@type integer
+    local hl_text = eve.nvimbar.txt(text, "f_sl_text") ---@type string
+
+    local lsp_msg = eve.globals.state.lsp_msg ---@type string
+    if lsp_msg ~= "" then
+      hl_text = hl_text .. " " .. lsp_msg
+      width = width + vim.api.nvim_strwidth(lsp_msg) + 1
+    end
+
     return hl_text, width
   end,
 }

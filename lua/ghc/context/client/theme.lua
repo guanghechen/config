@@ -64,6 +64,6 @@ vim.schedule(function()
     M.mode,
     M.transparency,
   }, function()
-    vim.cmd("redrawstatus")
+    vim.cmd.redrawstatus()
   end, true)
 end)

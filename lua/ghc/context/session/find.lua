@@ -83,6 +83,6 @@ vim.schedule(function()
     find_flag_fuzzy,
     find_flag_regex,
   }, function()
-    vim.cmd("redrawstatus")
+    vim.cmd.redrawstatus()
   end, true)
 end)

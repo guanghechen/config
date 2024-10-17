@@ -13,6 +13,6 @@ vim.schedule(function()
   eve.mvc.observe({
     flight_copilot,
   }, function()
-    vim.cmd("redrawstatus")
+    vim.cmd.redrawstatus()
   end, true)
 end)
