@@ -37,4 +37,9 @@ foreach ($branch in $config_repo_branch) {
   CloneOrUpdateRepo -branch $branch
 }
 
+# Define the source and destination paths
+$source = "$HOME\.config\guanghechen\config\pwsh\profile.ps1"
+$destination = $PROFILE
+Copy-Item -Path $source -Destination $destination -Force
+
 Write-Host "[Setup config] done."
