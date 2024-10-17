@@ -20,4 +20,7 @@ Set-Location -Path $config_repo_path
 . .\win\setup\winget.ps1
 
 Set-Location -Path $config_repo_path
+. .\win\setup\node.ps1
+
+Set-Location -Path $config_repo_path
 . .\win\setup\miniforge.ps1
