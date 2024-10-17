@@ -123,7 +123,7 @@ mk({ "n", "v" }, "<leader>bh", fml.api.buf.close_to_leftest, "buf: close to the 
 mk({ "n", "v" }, "<leader>bl", fml.api.buf.close_to_rightest, "buf: close to the rightest", true)
 mk({ "n", "v" }, "<leader>bn", fml.api.buf.create, "buf: new", true)
 mk({ "n", "v" }, "<leader>bo", fml.api.buf.close_others, "buf: close others", true)
-mk({ "n", "v" }, "<leader>bp", fml.api.buf.toggle_pin_cur, "buf: toggle pin", true)
+mk({ "n", "v" }, "<leader>bp", ghc.command.buf.toggle_pin_cur, "buf: toggle pin", true)
 -----------------------------------------------------------------------------------------#[b]uffer--
 
 ----#[d]ebug-----------------------------------------------------------------------------------------
@@ -150,6 +150,7 @@ mk({ "n", "v" }, "<leader>fd", ghc.command.find_files.open_directory, "find: fil
 mk({ "n", "v" }, "<leader>fb", ghc.command.find_buffers.focus, "find: buffers")
 mk({ "n", "v" }, "<leader>fg", ghc.command.find_git.list_uncommited_git_files, "find: git files (Not committed)")
 mk({ "n", "v" }, "<leader>fh", ghc.command.find_highlights.toggle, "find: highlights")
+mk({ "n", "v" }, "<leader>fp", ghc.command.find_pinned_files.focus, "find: pinned files")
 mk({ "n", "v" }, "<leader>fv", ghc.command.find_vim_options.toggle, "find: vim options")
 -------------------------------------------------------------------------------------------#[f]ind--
 

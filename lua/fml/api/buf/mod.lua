@@ -1,5 +1,3 @@
-local state = require("fml.api.state")
-
 ---@class fml.api.buf
 local M = {}
 
@@ -23,17 +21,6 @@ function M.is_visible(bufnr)
     local win_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     return win_bufnr == bufnr
   end)
-end
-
----@return nil
-function M.toggle_pin_cur()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local buf = state.bufs[bufnr] ---@type fml.types.api.state.IBufItem|nil
-  if buf ~= nil then
-    local pinned = buf.pinned ---@type boolean
-    buf.pinned = not pinned
-    vim.cmd("redrawtabline")
-  end
 end
 
 return M

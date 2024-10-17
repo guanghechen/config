@@ -1,5 +1,6 @@
 ---@class ghc.command
 local command = {
+  buf = require("ghc.command.buf"),
   context = require("ghc.command.context"),
   copy = require("ghc.command.copy"),
   debug = require("ghc.command.debug"),
@@ -8,6 +9,7 @@ local command = {
   find_files = require("ghc.command.find_files"),
   find_git = require("ghc.command.find_git"),
   find_highlights = require("ghc.command.find_highlights"),
+  find_pinned_files = require("ghc.command.find_pinned_files"),
   find_win_history = require("ghc.command.find_win_history"),
   find_vim_options = require("ghc.command.find_vim_options"),
   git = require("ghc.command.git"),
