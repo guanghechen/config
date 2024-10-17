@@ -39,6 +39,11 @@ conda activate lemon
 pip install ipython shell-gpt
 
 ### Setup ipython
-printf "\n\e[34m  [setup miniforge] setting up ipython...\e[0m\n"
-ipython profile create
-printf "\nc.TerminalInteractiveShell.editing_mode = 'vi'\n" >>"$HOME/.ipython/profile_default/ipython_config.py"
+ipython_config_path="$HOME/.ipython/profile_default/ipython_config.py"
+if [ -f $ipython_config_path ]; then
+  printf "\n\e[38;5;214m  [setup miniforge] $ipython_config_path is already exist. (skipped).\e[0m\n"
+else
+  printf "\n\e[34m  [setup miniforge] setting up ipython...\e[0m\n"
+  ipython profile create
+  printf "\nc.TerminalInteractiveShell.editing_mode = 'vi'\n" >>"$ipython_config_path"
+fi

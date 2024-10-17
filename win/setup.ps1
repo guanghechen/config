@@ -10,8 +10,10 @@ if (Test-Path $config_repo_path) {
 }
 
 Set-Location -Path $config_repo_path
-. win\setup\config.ps1
+. .\win\setup\config.ps1
 
 Set-Location -Path $config_repo_path
-. win\setup\winget.ps1
+. .\win\setup\winget.ps1
 
+Set-Location -Path $config_repo_path
+. .\win\setup\miniforge.ps1
