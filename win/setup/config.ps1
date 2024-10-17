@@ -1,9 +1,9 @@
 Write-Host
 Write-Host "[Setup config] starting..."
 
-setx XDG_CONFIG_HOME    "$env:USERPROFILE\AppData\Local"
+setx XDG_CONFIG_HOME    "$env:USERPROFILE\.config"
+setx YAZI_CONFIG_HOME   "$env:USERPROFILE\.config\yazi"
 setx YAZI_FILE_ONE      "C:\app\git\usr\bin\file.exe"
-setx YAZI_CONFIG_HOME   "$env:USERPROFILE\AppData\Local\yazi"
 
 $config_root_dir = "$env:LOCALAPPDATA"
 $config_repo_branch = @(
