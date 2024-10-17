@@ -38,11 +38,12 @@ return {
   opts = {
     current_line_blame = true,
     current_line_blame_formatter = "    <author>, <author_time:%Y-%m-%d %H:%M:%S> - <summary>",
-    signcolumn = true,
-    numhl = true,
     linehl = false,
-    word_diff = false,
     max_file_length = 3000, -- Disable if file is longer than this (in lines)
+    numhl = true,
+    signcolumn = true,
+    signs_staged_enable = true,
+    word_diff = true,
     signs = {
       add = { text = "▎" },
       change = { text = "▎" },
@@ -51,7 +52,15 @@ return {
       changedelete = { text = "󱕖" },
       untracked = { text = "┆" },
     },
-    on_attach = function(buffer)
+    signs_staged = {
+      add = { text = "▎" },
+      change = { text = "▎" },
+      delete = { text = "_" },
+      topdelete = { text = "‾" },
+      changedelete = { text = "󱕖" },
+      untracked = { text = "┆" },
+    },
+    on_attach = function(bufnr)
       ---@param mode string
       ---@param key string
       ---@param action any
@@ -62,7 +71,7 @@ return {
           mode,
           key,
           action,
-          { buffer = buffer, noremap = true, silent = silent ~= nil and silent or false, desc = desc }
+          { buffer = bufnr, noremap = true, silent = silent ~= nil and silent or false, desc = desc }
         )
       end
 
