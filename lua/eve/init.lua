@@ -23,7 +23,6 @@ local globals = {
   locations = require("eve.globals.locations"),
   mvc = require("eve.globals.mvc"),
   qflist = require("eve.globals.qflist"),
-  state = require("eve.globals.state"),
   widgets = require("eve.globals.widgets"),
 }
 

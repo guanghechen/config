@@ -48,8 +48,8 @@ end
 ---@return nil
 function M.show_context_all()
   local context = {
-    config = vim.tbl_deep_extend("force", { _location = ghc.context.client:get_filepath() }, client:snapshot_all()),
-    session = vim.tbl_deep_extend("force", { _location = ghc.context.session:get_filepath() }, session:snapshot_all()),
+    config = vim.tbl_deep_extend("force", { _location = client:get_filepath() }, client:snapshot_all()),
+    session = vim.tbl_deep_extend("force", { _location = session:get_filepath() }, session:snapshot_all()),
     transient = vim.tbl_deep_extend("force", {}, transient:snapshot_all()),
   }
 

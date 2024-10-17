@@ -43,7 +43,7 @@ return {
     numhl = true,
     signcolumn = true,
     signs_staged_enable = true,
-    word_diff = true,
+    word_diff = false,
     signs = {
       add = { text = "▎" },
       change = { text = "▎" },

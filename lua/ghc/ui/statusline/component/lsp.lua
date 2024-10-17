@@ -1,3 +1,5 @@
+local transient = require("ghc.context.transient")
+
 ---@return string
 local function get_text()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -26,7 +28,7 @@ local M = {
     local width = vim.api.nvim_strwidth(text) ---@type integer
     local hl_text = eve.nvimbar.txt(text, "f_sl_text") ---@type string
 
-    local lsp_msg = eve.globals.state.lsp_msg ---@type string
+    local lsp_msg = transient.lsp_msg:snapshot() ---@type string
     if lsp_msg ~= "" then
       hl_text = hl_text .. " " .. lsp_msg
       width = width + vim.api.nvim_strwidth(lsp_msg) + 1
