@@ -45,6 +45,10 @@ printf "\n\e[34m  [setup homebrew] setting up tmux...\e[0m\n"
 brew install ~/.config/guanghechen/config/homebrew/tmux.rb
 brew pin tmux
 
+### Setup yazi
+printf "\n\e[34m  [setup homebrew] setting up yazi...\e[0m\n"
+brew install yazi ffmpegthumbnailer jq imagemagick
+
 ### Setup hardware utilities (cpu/memo/disk/network)
 printf "\n\e[34m  [setup homebrew] setting up hardware utilities (cpu/memo/disk/network)...\e[0m\n"
 brew install btop fastfetch httpie
