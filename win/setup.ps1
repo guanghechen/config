@@ -11,5 +11,7 @@ if (Test-Path $config_repo_path) {
 
 Set-Location -Path $config_repo_path
 . win\setup\config.ps1
+
+Set-Location -Path $config_repo_path
 . win\setup\winget.ps1
 
