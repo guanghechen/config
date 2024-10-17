@@ -22,26 +22,26 @@ else
 fi
 
 ## Setup app configs
-echo -e "\n\e[32m  [setup config] preparing...\e[0m"
+printf "\n\e[32m  [setup config] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/config.sh
-echo -e "\e[32m  [setup config] done.\e[0m"
+printf "\e[32m  [setup config] done.\e[0m\n"
 
 ## Setup rust envrionment
-echo -e "\n\e[32m  [setup rust] preparing...\e[0m"
+printf "\n\e[32m  [setup rust] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/rust.sh
-echo -e "\e[32m  [setup rust] done.\e[0m"
+printf "\e[32m  [setup rust] done.\e[0m\n"
 
 ## Setup python encironment
-echo -e "\n\e[32m  [setup miniforge] preparing...\e[0m"
+printf "\n\e[32m  [setup miniforge] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/miniforge.sh
-echo -e "\n\e[32m  [setup miniforge] done.\e[0m"
+printf "\n\e[32m  [setup miniforge] done.\e[0m\n"
 
 ## Install fonts
-echo -e "\n\e[32m  [setup fonts] preparing...\e[0m"
+printf "\n\e[32m  [setup fonts] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/fonts.sh
-echo -e "\e[32m  [setup fonts] done.\e[0m"
+printf "\e[32m  [setup fonts] done.\e[0m\n"
 
 ## Install apps
-echo -e "\n\e[32m  [setup homebrew] preparing...\e[0m"
+printf "\n\e[32m  [setup homebrew] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/homebrew.sh
-echo -e "\n\e[32m  [setup homebrew] done.\e[0m"
+printf "\n\e[32m  [setup homebrew] done.\e[0m\n"

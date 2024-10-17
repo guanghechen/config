@@ -28,12 +28,12 @@ clone_or_update_config_repo() {
   done
 }
 
-echo -e "\n\e[34m  [setup config] cloning configs...\e[0m"
+printf "\n\e[34m  [setup config] cloning configs...\e[0m\n"
 clone_or_update_config_repo
 
 if [ -f "$HOME/.gitconfig" ]; then
-  echo -e "\n\e[38;5;214m  [setup config] ~/.gitconfig is already exist. (skipped).\e[0m"
+  printf "\n\e[38;5;214m  [setup config] ~/.gitconfig is already exist. (skipped).\e[0m\n"
 else
-  echo -e "\n\e[34m  [setup config] setting up ~/.gitconfig...\e[0m"
+  printf "\n\e[34m  [setup config] setting up ~/.gitconfig...\e[0m\n"
   cp -f ~/.config/guanghechen/config/.gitconfig "$HOME/.gitconfig"
 fi
