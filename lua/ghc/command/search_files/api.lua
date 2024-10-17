@@ -27,6 +27,16 @@ local _item_map = {} ---@type table<string, ghc.command.search_files.IItem>
 local _last_preview_data = nil ---@type ghc.command.search_files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.oxi.search.IResult|nil
+
+session.search_paths:subscribe(
+  eve.c.Subscriber.new({
+    on_next = function()
+      state.refresh_title()()
+    end,
+  }),
+  true
+)
+
 eve.mvc.observe({
   session.search_exclude_patterns,
   session.search_flag_case_sensitive,

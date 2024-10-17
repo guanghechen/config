@@ -35,6 +35,7 @@ function M.get_search()
 
     local frecency = state_frecency.load_and_autosave().files ---@type eve.types.collection.IFrecency
     local input_history = state_input_history.load_and_autosave().search_in_files ---@type eve.types.collection.IHistory
+    local title = M.get_title() ---@type string
 
     _search = fml.ui.search.Search.new({
       dimension = {
@@ -57,7 +58,7 @@ function M.get_search()
       preview_keymaps = keybindings.preview_keymaps,
       delay_render = 64,
       statusline_items = keybindings.statusline_items,
-      title = "Search in files",
+      title = title,
       on_close = function()
         vim.cmd("checktime")
       end,
@@ -109,6 +110,23 @@ end
 function M.close()
   if _search ~= nil then
     _search:close()
+  end
+end
+
+---@return string
+function M.get_title()
+  local search_paths = session.search_paths:snapshot() ---@type string
+  local title = (search_paths ~= nil and search_paths ~= "") --
+      and "Search in files (" .. search_paths .. ")"
+    or "Search in files"
+  return title
+end
+
+---@return nil
+function M.refresh_title()
+  if _search ~= nil then
+    local title = M.get_title() ---@type string
+    _search:change_input_title(title)
   end
 end
 
