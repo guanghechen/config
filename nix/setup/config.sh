@@ -15,6 +15,7 @@ clone_or_update_config_repo() {
     "nvim"
     "ripgrep"
     "tmux"
+    "yazi"
   )
 
   for branch in "${CONFIG_BRANCHES[@]}"; do
