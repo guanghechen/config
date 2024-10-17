@@ -1,6 +1,6 @@
 function ghc-refresh-configs
-  set primary_configs alacritty btop fish fzf helix lazygit lsd nvim ripgrep tmux
-  set develop_configs guanghechen nvim-nvchad
+  set primary_configs alacritty btop fish fzf guanghechen helix lazygit lsd nvim ripgrep tmux
+  set develop_configs nvim-nvchad
   set base_path "$HOME/.config"
 
   for config in $primary_configs
