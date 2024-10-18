@@ -53,7 +53,7 @@ local function gen_hlgroup_map(params)
     CursorLineNr = { fg = c.fg0 },
     Debug = { fg = c.red },
     DevIconDefault = { fg = c.red },
-    Directory = { fg = c.blue },
+    Directory = { fg = c.dark_blue },
     Error = { fg = c.black, bg = c.red },
     ErrorMsg = { fg = c.red, bg = c.bg1 },
     Exception = { fg = c.red },

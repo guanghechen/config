@@ -7,6 +7,7 @@
 ---| "lazy"
 ---| "mason"
 ---| "mini-icons"
+---| "neo-tree"
 ---| "nvim-cmp"
 ---| "nvim-dap"
 ---| "nvim-dap-ui"

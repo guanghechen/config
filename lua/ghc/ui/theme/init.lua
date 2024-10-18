@@ -25,6 +25,7 @@ M.integrations = {
   "gitsigns",
   "indent-blank-line",
   "mason",
+  "neo-tree",
   "nvim-cmp",
   "nvim-dap",
   "nvim-dap-ui",

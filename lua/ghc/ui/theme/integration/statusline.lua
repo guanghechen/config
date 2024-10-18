@@ -23,7 +23,7 @@ local function gen_hlgroup_map(params)
     f_sl_flag_scope = { fg = c.black, bg = c.pink },
     f_sl_noice_command = { fg = c.fg0, bg = t and "none" or bg_statusline },
     f_sl_noice_mode = { fg = c.yellow, bg = t and "none" or bg_statusline },
-    f_sl_pos = { fg = c.black, bg = c.bg_blue },
+    f_sl_pos = { fg = mode == "darken" and c.black or c.white, bg = c.bg_blue },
     f_sl_readonly = { fg = c.dark_yellow, bg = t and "none" or bg_statusline },
     f_sl_text = { fg = c.fg0, bg = t and "none" or bg_statusline },
     f_sl_text_command = { fg = c.green, bg = mode_bg, bold = true },
