@@ -1,4 +1,3 @@
-# Function to write colored output (approximating terminal color codes)
 function Write-ColoredMessage {
     param (
         [string]$Message,
@@ -43,3 +42,4 @@ if (Test-Path $ipythonConfigPath) {
     Add-Content $ipythonConfigPath "`nc.TerminalInteractiveShell.editing_mode = 'vi'"
 }
 
+Write-ColoredMessage "[setup miniforge] done..." Green
