@@ -1,4 +1,3 @@
-# Function to write colored output (approximating terminal color codes)
 function Write-ColoredMessage {
     param (
         [string]$Message,
@@ -11,16 +10,15 @@ function Write-ColoredMessage {
 Write-ColoredMessage "[setup miniforge] setting up conda..." Blue
 
 # Source conda environment script
-If (Test-Path "C:\app\miniforge\Scripts\conda.exe") {
-  (& "C:\app\miniforge\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
+If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
+  (& "$env:APP_HOME_MINIFORGE\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
 }
 
 # Disable auto activation of base environment
 conda config --set auto_activate_base false
 
 # Check if 'lemon' environment exists
-$envList = conda env list
-if ($envList -match "^lemon\s") {
+if (conda env list | Select-String -Pattern "^lemon\s") {
     Write-ColoredMessage "[setup miniforge] the 'lemon' env is already created. (skipped)" DarkYellow
 } else {
     Write-ColoredMessage "[setup miniforge] creating 'lemon' env with conda..." Blue
@@ -34,7 +32,7 @@ conda activate lemon
 pip install ipython shell-gpt
 
 # Setup ipython configuration
-$ipythonConfigPath = "$HOME\.ipython\profile_default\ipython_config.py"
+$ipythonConfigPath = "$env:USERPROFILE\.ipython\profile_default\ipython_config.py"
 if (Test-Path $ipythonConfigPath) {
     Write-ColoredMessage "[setup miniforge] $ipythonConfigPath already exists. (skipped)" DarkYellow
 } else {
@@ -43,3 +41,4 @@ if (Test-Path $ipythonConfigPath) {
     Add-Content $ipythonConfigPath "`nc.TerminalInteractiveShell.editing_mode = 'vi'"
 }
 
+Write-ColoredMessage "[setup miniforge] done..." Green
