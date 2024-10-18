@@ -1,7 +1,7 @@
 ---@param params                        ghc.types.ui.theme.IGenHlgroupMapParams
 ---@return table<string, fml.types.ui.theme.IHlgroup>
 local function gen_hlgroup_map(params)
-  local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
+  local c = params.scheme.palette ---@type fml.types.ui.theme.IPalette
 
   return {
     MasonHeader = { fg = c.black, bg = c.red },
@@ -9,8 +9,8 @@ local function gen_hlgroup_map(params)
     MasonHighlight = { fg = c.blue },
     MasonHighlightBlock = { fg = c.black, bg = c.green },
     MasonHighlightBlockBold = { fg = c.black, bg = c.green },
-    MasonMuted = { fg = c.light_grey },
-    MasonMutedBlock = { fg = c.light_grey, bg = c.one_bg },
+    MasonMuted = { fg = c.grey },
+    MasonMutedBlock = { fg = c.grey, bg = c.bg1 },
   }
 end
 

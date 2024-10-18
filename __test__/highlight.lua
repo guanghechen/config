@@ -1,6 +1,6 @@
 local function test_compile_highlights()
   local scheme = require("ghc.ui.theme.scheme.darken") ---@type fml.types.ui.theme.IScheme
-  local c = scheme.colors
+  local c = scheme.palette
   local hlgroup_map = {
     f_sr_invisible = { fg = "none", bg = "none" },
     f_sr_opt_name = { fg = c.blue, bg = "none", bold = true },
@@ -8,12 +8,12 @@ local function test_compile_highlights()
     f_sr_opt_search_pattern = { fg = c.diff_del_word, bg = "none" },
     f_sr_opt_value = { fg = c.yellow, bg = "none" },
     f_sr_filepath = { fg = c.blue, bg = "none" },
-    f_sr_flag = { fg = c.white, bg = "grey" },
-    f_sr_flag_enabled = { fg = c.black, bg = c.baby_pink },
+    f_sr_flag = { fg = c.fg0, bg = "grey" },
+    f_sr_flag_enabled = { fg = c.black, bg = c.pink },
     f_sr_result_fence = { fg = c.grey, bg = "none" },
     f_sr_text_deleted = { fg = c.diff_del_word, strikethrough = true },
     f_sr_text_added = { fg = c.diff_add_word, bg = "none" },
-    f_sr_usage = { fg = c.grey_fg2, bg = "none" },
+    f_sr_usage = { fg = c.grey2, bg = "none" },
   }
 
   local hlgroup_strs = {} ---@type string[]

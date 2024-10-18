@@ -1,34 +1,34 @@
 ---@param params                        ghc.types.ui.theme.IGenHlgroupMapParams
 ---@return table<string, fml.types.ui.theme.IHlgroup>
 local function gen_hlgroup_map(params)
-  local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
+  local c = params.scheme.palette ---@type fml.types.ui.theme.IPalette
 
   return {
     DiffAdd = { fg = c.blue },
     DiffAdded = { fg = c.green },
-    DiffChange = { fg = c.light_grey },
+    DiffChange = { fg = c.grey },
     DiffChangeDelete = { fg = c.red },
     DiffDelete = { fg = c.red },
-    DiffModified = { fg = c.orange },
+    DiffModified = { fg = c.yellow },
     diffNewFile = { fg = c.blue },
-    diffOldFile = { fg = c.baby_pink },
+    diffOldFile = { fg = c.pink },
     DiffRemoved = { fg = c.red },
-    DiffText = { fg = c.white, bg = c.black2 },
-    gitcommitBranch = { fg = c.base09, bold = true },
-    gitcommitComment = { fg = c.base03 },
-    gitcommitDiscarded = { fg = c.base03 },
-    gitcommitDiscardedFile = { fg = c.base08, bold = true },
-    gitcommitDiscardedType = { fg = c.base0D },
-    gitcommitHeader = { fg = c.base0E },
-    gitcommitOverflow = { fg = c.base08 },
-    gitcommitSelected = { fg = c.base03 },
-    gitcommitSelectedFile = { fg = c.base0B, bold = true },
-    gitcommitSelectedType = { fg = c.base0D },
-    gitcommitSummary = { fg = c.base0B },
-    gitcommitUnmergedFile = { fg = c.base08, bold = true },
-    gitcommitUnmergedType = { fg = c.base0D },
-    gitcommitUntracked = { fg = c.base03 },
-    gitcommitUntrackedFile = { fg = c.base0A },
+    DiffText = { fg = c.fg0, bg = c.bg1 },
+    gitcommitBranch = { fg = c.dark_yellow, bold = true },
+    gitcommitComment = { fg = c.grey },
+    gitcommitDiscarded = { fg = c.grey },
+    gitcommitDiscardedFile = { fg = c.red, bold = true },
+    gitcommitDiscardedType = { fg = c.blue },
+    gitcommitHeader = { fg = c.purple },
+    gitcommitOverflow = { fg = c.red },
+    gitcommitSelected = { fg = c.grey },
+    gitcommitSelectedFile = { fg = c.green, bold = true },
+    gitcommitSelectedType = { fg = c.blue },
+    gitcommitSummary = { fg = c.green },
+    gitcommitUnmergedFile = { fg = c.red, bold = true },
+    gitcommitUnmergedType = { fg = c.blue },
+    gitcommitUntracked = { fg = c.grey },
+    gitcommitUntrackedFile = { fg = c.yellow },
   }
 end
 

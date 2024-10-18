@@ -1,7 +1,7 @@
 ---@param params                        ghc.types.ui.theme.IGenHlgroupMapParams
 ---@return table<string, fml.types.ui.theme.IHlgroup>
 local function gen_hlgroup_map(params)
-  local c = params.scheme.colors ---@type fml.types.ui.theme.IColors
+  local c = params.scheme.palette ---@type fml.types.ui.theme.IPalette
 
   return {
     NotifyDEBUGBorder = { fg = c.grey },
@@ -16,9 +16,9 @@ local function gen_hlgroup_map(params)
     NotifyTRACEBorder = { fg = c.purple },
     NotifyTRACEIcon = { fg = c.purple },
     NotifyTRACETitle = { fg = c.purple },
-    NotifyWARNBorder = { fg = c.orange },
-    NotifyWARNIcon = { fg = c.orange },
-    NotifyWARNTitle = { fg = c.orange },
+    NotifyWARNBorder = { fg = c.yellow },
+    NotifyWARNIcon = { fg = c.yellow },
+    NotifyWARNTitle = { fg = c.yellow },
   }
 end
 
