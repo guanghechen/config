@@ -16,8 +16,7 @@
 ---@field public integration            ghc.enum.ui.theme.HighlightIntegration
 
 ---@class ghc.types.context.client : eve.collection.Viewmodel
----@field public mode                   eve.types.collection.IObservable
+---@field public flight_devmode         eve.types.collection.IObservable
+---@field public theme                  eve.types.collection.IObservable
 ---@field public relativenumber         eve.types.collection.IObservable
 ---@field public transparency           eve.types.collection.IObservable
----@field public toggle_scheme          fun(params: ghc.types.context.client.IToggleSchemeParams):nil
----@field public reload_theme           fun(params: ghc.types.context.client.IReloadThemeParams):nil

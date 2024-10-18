@@ -20,7 +20,7 @@ end
 ---@return string
 local function get_lazygit_config_filepath()
   local lazygit_config_dir = eve.path.locate_config_filepath("lazygit")
-  local darken = client.mode:snapshot() == "darken" ---@type boolean
+  local darken = client.theme:snapshot() == "darken" ---@type boolean
   local config_filepaths = {
     eve.path.join(lazygit_config_dir, "config.yaml"),
     eve.path.join(lazygit_config_dir, darken and "theme.darken.yaml" or "theme.lighten.yaml"),

@@ -1,47 +1,54 @@
 local client = require("ghc.context.client")
 local session = require("ghc.context.session")
+local cmd_theme = require("ghc.command.theme")
 
 ---@class ghc.command.toggle
 local M = {}
 
 ---@return nil
 function M.flag_case_sensitive()
-  local next_case_sensitive = not session.search_flag_case_sensitive:snapshot() ---@type boolean
-  session.search_flag_case_sensitive:next(next_case_sensitive)
+  local next_flag = not session.search_flag_case_sensitive:snapshot() ---@type boolean
+  session.search_flag_case_sensitive:next(next_flag)
 end
 
 ---@return nil
 function M.flight_autoload_session()
-  local next_flight_autoload_session = not session.flight_autoload_session:snapshot() ---@type boolean
-  session.flight_autoload_session:next(next_flight_autoload_session)
+  local next_flag = not session.flight_autoload_session:snapshot() ---@type boolean
+  session.flight_autoload_session:next(next_flag)
 end
 
 ---@return nil
 function M.flight_copilot()
-  local next_flight_copilot = not session.flight_copilot:snapshot() ---@type boolean
-  session.flight_copilot:next(next_flight_copilot)
+  local next_flag = not session.flight_copilot:snapshot() ---@type boolean
+  session.flight_copilot:next(next_flag)
+end
+
+---@return nil
+function M.flight_devmode()
+  local next_flag = not client.flight_devmode:snapshot() ---@type boolean
+  client.flight_devmode:next(next_flag)
 end
 
 ---@return nil
 function M.theme()
-  local darken = client.mode:snapshot() == "darken" ---@type boolean
-  local next_mode = darken and "lighten" or "darken"
-  client.toggle_scheme({ mode = next_mode, persistent = true })
+  local darken = client.theme:snapshot() == "darken" ---@type boolean
+  local next_flag = darken and "lighten" or "darken"
+  cmd_theme.toggle_scheme({ mode = next_flag, persistent = true })
 end
 
 ---@return nil
 function M.transparency()
-  local next_transparency = not client.transparency:snapshot() ---@type boolean
-  client.toggle_scheme({ transparency = next_transparency, persistent = true })
+  local next_flag = not client.transparency:snapshot() ---@type boolean
+  cmd_theme.toggle_scheme({ transparency = next_flag, persistent = true })
 end
 
 ---@return nil
 function M.relativenumber()
-  local next_relativenumber = not client.relativenumber:snapshot() ---@type boolean
-  client.relativenumber:next(next_relativenumber)
+  local next_flag = not client.relativenumber:snapshot() ---@type boolean
+  client.relativenumber:next(next_flag)
 
   if vim.o.nu then
-    vim.opt.relativenumber = next_relativenumber
+    vim.opt.relativenumber = next_flag
     vim.cmd("redraw")
   end
 end

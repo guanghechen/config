@@ -17,6 +17,7 @@ local tabline = fml.ui.Nvimbar.new({
 local c = {
   bufs = "bufs",
   cwd = "cwd",
+  devmode = "devmode",
   diffview = "diffview",
   neotree = "neotree",
   tabs = "tabs",
@@ -27,6 +28,7 @@ end
 
 tabline
   ---
+  :place(c.devmode, "right")
   :place(c.cwd, "right")
   :place(c.tabs, "right")
   :place(c.neotree, "left")

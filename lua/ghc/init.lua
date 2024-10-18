@@ -20,6 +20,7 @@ local command = {
   session = require("ghc.command.session"),
   scroll = require("ghc.command.scroll"),
   term = require("ghc.command.term"),
+  theme = require("ghc.command.theme"),
   toggle = require("ghc.command.toggle"),
 }
 

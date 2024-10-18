@@ -35,4 +35,10 @@ function M.get_selected_text()
   return selected_text or ""
 end
 
+---@param module_name                   string
+function M.hmr(module_name)
+  package.loaded[module_name] = nil
+  return require(module_name)
+end
+
 return M

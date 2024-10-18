@@ -17,6 +17,7 @@ local function gen_hlgroup_map(params)
     f_tl_buf_title = { fg = c.grey, bg = t and "none" or c.bg1 },
     f_tl_buf_title_cur = { fg = c.fg0, bg = t and "none" or c.bg1 },
     f_tl_cwd = { fg = c.fg0, bg = c.bg_pink },
+    f_tl_devmode = { fg = c.dark_black, bg = c.dark_yellow },
     f_tl_sidebar_blank = { fg = c.fg0, bg = t and "none" or c.bg1 },
     f_tl_sidebar_text = { fg = c.blue, bg = t and "none" or c.bg1 },
     f_tl_sidebar_split = { fg = c.fg3, bg = t and "none" or c.bg1 },

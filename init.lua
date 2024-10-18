@@ -24,7 +24,7 @@ else
   pcall(require, "integration.neovide")
   pcall(require, "integration.local")
 
-  ghc.context.client.reload_theme({ force = false })
+  ghc.command.theme.reload_theme({ force = false })
 
   ---! Reload session if not specify file and current directory is a git repository.
   if ghc.context.session.flight_autoload_session:snapshot() and vim.fn.argc() < 1 and eve.path.is_git_repo() then

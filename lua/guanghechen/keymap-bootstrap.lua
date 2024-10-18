@@ -230,6 +230,7 @@ mk({ "n", "v" }, "<leader>tt", ghc.command.term.toggle_cwd, "terminal: toggle (c
 
 --#[t]oggle-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>tfc", ghc.command.toggle.flight_copilot, "toggle: copilot")
+mk({ "n", "v" }, "<leader>tfd", ghc.command.toggle.flight_devmode, "toggle: devmode")
 mk({ "n", "v" }, "<leader>tfi", ghc.command.toggle.flag_case_sensitive, "toggle: case sensitive")
 mk({ "n", "v" }, "<leader>tul", ghc.command.toggle.relativenumber, "toggle: relative line number")
 mk({ "n", "v" }, "<leader>tuT", ghc.command.toggle.transparency, "toggle: transparency")

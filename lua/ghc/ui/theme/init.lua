@@ -1,5 +1,7 @@
-local gen_tabline_hlgroup_map = require("ghc.ui.theme.integration.tabline")
-local gen_winline_hlgroup_map = require("ghc.ui.theme.integration.winline")
+local client = require("ghc.context.client")
+
+local devmode = client.flight_devmode:snapshot() ---@type boolean
+local hmr = devmode and eve.util.hmr or require
 
 ---@class ghc.ui.theme
 local M = {}
@@ -58,7 +60,7 @@ end
 ---@param mode                          fml.enums.theme.Mode
 ---@return fml.types.ui.theme.IScheme|nil
 function M.get_scheme(mode)
-  local present_scheme, scheme = pcall(require, "ghc.ui.theme.scheme." .. mode)
+  local present_scheme, scheme = pcall(hmr, "ghc.ui.theme.scheme." .. mode)
   if not present_scheme then
     eve.reporter.error({
       from = "ghc.ui.theme",
@@ -86,7 +88,7 @@ function M.load_partial_theme(params)
 
   local theme = fml.ui.Theme.new()
 
-  local gen_hlgroup_map = require("ghc.ui.theme.integration." .. integration)
+  local gen_hlgroup_map = hmr("ghc.ui.theme.integration." .. integration)
   local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
   theme:registers(hlgroup_map)
 
@@ -108,13 +110,15 @@ function M.load_theme(params)
   end
 
   local theme = fml.ui.Theme.new()
+  local gen_tabline_hlgroup_map = hmr("ghc.ui.theme.integration.tabline")
+  local gen_winline_hlgroup_map = hmr("ghc.ui.theme.integration.winline")
 
   ---@type ghc.ui.theme.integration.tabline.hlgroups
   local tabline_hlgroup_map = gen_tabline_hlgroup_map({ scheme = scheme, transparency = transparency })
   local winline_hlgroup_map = gen_winline_hlgroup_map({ scheme = scheme, transparency = transparency })
 
   for _, integration in ipairs(M.integrations) do
-    local gen_hlgroup_map = require("ghc.ui.theme.integration." .. integration)
+    local gen_hlgroup_map = hmr("ghc.ui.theme.integration." .. integration)
     ---@return table<string, fml.types.ui.theme.IHlgroup>
     local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
@@ -139,13 +143,11 @@ function M.load_theme(params)
     theme:registers(hlgroup_map)
   end
 
+  theme:apply({ scheme = scheme, nsnr = nsnr })
   if persistent and filepath ~= nil then
     vim.schedule(function()
       theme:compile({ nsnr = 0, scheme = scheme, filepath = filepath })
-      dofile(filepath)
     end)
-  else
-    theme:apply({ scheme = scheme, nsnr = nsnr })
   end
 
   M.set_term_colors(scheme)
