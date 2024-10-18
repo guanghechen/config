@@ -16,7 +16,7 @@ local function gen_hlgroup_map(params)
     ["@constant.builtin"] = { fg = c.dark_yellow },
     ["@constant.macro"] = { fg = c.red },
     ["@constant"] = { fg = c.red },
-    ["@constructor"] = { fg = c.cyan },
+    ["@constructor"] = { fg = c.purple },
     ["@definition"] = { sp = c.grey, underline = true },
     ["@diff.delta"] = { fg = c.grey },
     ["@diff.minus"] = { fg = c.red },
@@ -57,7 +57,7 @@ local function gen_hlgroup_map(params)
     ["@number"] = { fg = c.dark_yellow },
     ["@operator"] = { fg = c.fg0 },
     ["@property"] = { fg = c.red },
-    ["@punctuation.bracket"] = { fg = c.dark_red },
+    ["@punctuation.bracket"] = { fg = c.purple },
     ["@punctuation.delimiter"] = { fg = c.dark_red },
     ["@reference"] = { fg = c.fg0 },
     ["@scope"] = { bold = true },
@@ -74,11 +74,11 @@ local function gen_hlgroup_map(params)
     ["@text.diff.add"] = { link = "DiffAdded", default = true },
     ["@text.diff.delete"] = { link = "DiffRemoved", default = true },
     ["@type.builtin"] = { fg = c.yellow },
+    ["@variable"] = { fg = c.red },
     ["@variable.builtin"] = { fg = c.dark_yellow },
     ["@variable.member.key"] = { fg = c.red },
-    ["@variable.member"] = { fg = c.red },
+    ["@variable.member"] = { fg = c.fg1 },
     ["@variable.parameter"] = { fg = c.red },
-    ["@variable"] = { fg = c.fg0 },
   }
 end
 
