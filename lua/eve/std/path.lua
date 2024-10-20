@@ -2,14 +2,43 @@ local md5 = require("eve.std.md5")
 local std_os = require("eve.std.os")
 local reporter = require("eve.std.reporter")
 
-local last_cwd = "" ---@type string
-local last_cwd_pieces = {} ---@type string[]
+---@param category "config"|"data"|"state"
+---@return string
+local function resolve_home(category)
+  local home = vim.fn.stdpath(category) ---@type string|string[]
+  if type(home) == "string" then
+    return home
+  end
+
+  if type(home) == "table" and #home > 0 then
+    return home[1]
+  end
+
+  reporter.error({
+    from = "eve.std.path",
+    subject = "resolve_home",
+    message = "Cannot resolve ''" .. category .. "' home",
+    details = { category = category, home = home },
+  })
+  error("[eve.std.path] Cannot resolve '" .. category .. ".'")
+end
+
+local HOME_NVIM_CONFIG = resolve_home("config") ---@type string
+local HOME_NVIM_DATA = resolve_home("data") ---@type string
+local HOME_NVIM_STATE = resolve_home("state") ---@type string
+local SEP = std_os.path_sep() ---@type string
 
 ---@class eve.std.path
+---@field public HOME_NVIM_CONFIG       string
+---@field public HOME_NVIM_DATA         string
+---@field public HOME_NVIM_STATE        string
 ---@field public SEP                    string
-local M = {}
-
-M.SEP = std_os.path_sep() ---@type string
+local M = {
+  HOME_NVIM_CONFIG = HOME_NVIM_CONFIG,
+  HOME_NVIM_DATA = HOME_NVIM_DATA,
+  HOME_NVIM_STATE = HOME_NVIM_STATE,
+  SEP = SEP,
+}
 
 ---@param filepath                      string
 ---@return string
@@ -26,7 +55,7 @@ function M.dirname(filepath)
     return pieces[1]
   end
 
-  return #pieces > 0 and table.concat(pieces, M.SEP, 1, #pieces - 1) or ""
+  return #pieces > 0 and table.concat(pieces, SEP, 1, #pieces - 1) or ""
 end
 
 ---@param filename                      string
@@ -41,7 +70,7 @@ function M.is_absolute(filepath)
   if std_os.is_win() then
     return string.match(filepath, "^[%a]:[\\/].*$") ~= nil
   end
-  return string.sub(filepath, 1, 1) == M.SEP
+  return string.sub(filepath, 1, 1) == SEP
 end
 
 ---@param filepath                      string
@@ -86,7 +115,7 @@ end
 ---@param to                            string
 ---@return string
 function M.join(from, to)
-  return M.normalize(from .. M.SEP .. to)
+  return M.normalize(from .. SEP .. to)
 end
 
 function M.mkdir_if_nonexist(dirpath)
@@ -98,7 +127,7 @@ end
 ---@param filepath                      string
 ---@return string
 function M.normalize(filepath)
-  return table.concat(M.split(filepath), M.SEP)
+  return table.concat(M.split(filepath), SEP)
 end
 
 ---@param from                          string
@@ -137,14 +166,14 @@ function M.relative(from, to, prefer_slash)
     table.insert(pieces, to_pieces[j])
   end
 
-  local sep = prefer_slash and "/" or M.SEP
+  local sep = prefer_slash and "/" or SEP
   return table.concat(pieces, sep)
 end
 
 ---@param cwd                           string
 ---@param to                            string
 function M.resolve(cwd, to)
-  return M.is_absolute(to) and M.normalize(to) or M.normalize(cwd .. M.SEP .. to)
+  return M.is_absolute(to) and M.normalize(to) or M.normalize(cwd .. SEP .. to)
 end
 
 ---@param filepath                      string
@@ -152,7 +181,7 @@ end
 function M.split(filepath)
   local pieces = {} ---@type string[]
   local pattern = "([^/\\]+)" ---@type string
-  local has_prefix_sep = M.SEP == "/" and string.sub(filepath, 1, 1) == M.SEP ---@type boolean
+  local has_prefix_sep = SEP == "/" and string.sub(filepath, 1, 1) == SEP ---@type boolean
 
   for piece in string.gmatch(filepath, pattern) do
     if #piece > 0 and piece ~= "." then
@@ -170,10 +199,11 @@ function M.split(filepath)
 end
 
 ---! Check if the `to` path is under the `from` path.
----@param from_pieces                   string[]
+---@param from                          string
 ---@param to                            string
 ---@return string[]
-function M.split_prettier(from_pieces, to)
+function M.split_prettier(from, to)
+  local from_pieces = M.split(from) ---@type string[]
   local to_pieces = M.split(to) ---@type string[]
   local is_under = true ---@type boolean
   for i = 1, #from_pieces do
@@ -212,16 +242,7 @@ end
 ---@return string
 function M.cwd()
   local cwd = vim.fn.getcwd()
-  if cwd ~= last_cwd then
-    last_cwd = cwd
-    last_cwd_pieces = M.split(cwd)
-  end
   return cwd
-end
-
----@return string[]
-function M.get_cwd_pieces()
-  return last_cwd_pieces
 end
 
 ---@return string
@@ -238,8 +259,8 @@ end
 function M.locate_git_repo(filepath)
   local path_pieces = M.split(filepath) ---@type string[]
   while #path_pieces > 0 do
-    local current_path = table.concat(path_pieces, M.SEP) ---@type string
-    local git_dir_path = current_path .. M.SEP .. ".git" ---@type string
+    local current_path = table.concat(path_pieces, SEP) ---@type string
+    local git_dir_path = current_path .. SEP .. ".git" ---@type string
     if vim.fn.isdirectory(git_dir_path) ~= 0 then
       return current_path
     end
@@ -248,148 +269,50 @@ function M.locate_git_repo(filepath)
   return nil
 end
 
----@type ... string[]
+---@param app                           string
 ---@return string
-function M.locate_config_filepath(...)
-  local config_paths = vim.fn.stdpath("config")
-  local config_path = type(config_paths) == "table" and config_paths[1] or config_paths
-
-  if type(config_path) ~= "string" or #config_path < 1 then
-    reporter.error({
-      from = "eve.std.path",
-      subject = "locate_config_filepath",
-      message = "Cannot resolve the data_paths.",
-      details = { config_paths = config_paths },
-    })
-    return ""
-  end
-
-  ---@cast config_path string
-  return M.normalize(table.concat({ config_path, "config", ... }, M.SEP))
+function M.locate_app_config_home(app)
+  local filepath = eve.path.join(HOME_NVIM_CONFIG, "../" .. app)
+  return M.normalize(filepath)
 end
 
----@param opts {filename: string}
+---@param filename                      string
 ---@return string
-function M.locate_context_filepath(opts)
-  local filename = opts.filename ---@type string
-  return M.locate_state_filepath("guanghechen/context", filename)
+function M.locate_config_filepath(filename)
+  local filepath = eve.path.join(HOME_NVIM_CONFIG, "/config/" .. filename)
+  return M.normalize(filepath)
 end
 
----@type ... string[]
+---@param filename                      string
 ---@return string
-function M.locate_data_filepath(...)
-  local data_paths = vim.fn.stdpath("data")
-  local data_path = type(data_paths) == "table" and data_paths[1] or data_paths
-
-  if type(data_path) ~= "string" or #data_path < 1 then
-    reporter.error({
-      from = "eve.std.path",
-      subject = "locate_data_filepath",
-      message = "Cannot resolve the data_paths.",
-      details = { data_paths = data_paths },
-    })
-    return ""
-  end
-
-  ---@cast data_path string
-  return M.normalize(table.concat({ data_path, ... }, M.SEP))
+function M.locate_script_filepath(filename)
+  local filepath = eve.path.join(HOME_NVIM_CONFIG, "/script/" .. filename)
+  return M.normalize(filepath)
 end
 
----@type ... string[]
+---@param filename                      string
 ---@return string
-function M.locate_script_filepath(...)
-  local config_paths = vim.fn.stdpath("config")
-  local config_path = type(config_paths) == "table" and config_paths[1] or config_paths
-
-  if type(config_path) ~= "string" or #config_path < 1 then
-    reporter.error({
-      from = "eve.std.path",
-      subject = "locate_script_filepath",
-      message = "Cannot resolve the config_paths.",
-      details = { config_paths = config_paths },
-    })
-    return ""
-  end
-
-  ---@cast config_path string
-  return M.normalize(table.concat({ config_path, "script", ... }, M.SEP))
+function M.locate_context_filepath(filename)
+  local filepath = eve.path.join(HOME_NVIM_STATE, "/guanghechen/context/" .. filename)
+  return eve.path.normalize(filepath)
 end
 
----@param opts                          { filename: string }
+---@param filename                      string
 ---@return string
-function M.locate_session_filepath(opts)
-  local filename = opts.filename
+function M.locate_session_filepath(filename)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
   local hash = md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
-  local session_filename = filename ---@type string
-  local session_filepath = M.locate_state_filepath("guanghechen/sessions", session_dir, session_filename)
-  return session_filepath
+  local filepath = eve.path.join(HOME_NVIM_STATE, "/guanghechen/sessions/" .. session_dir .. "/" .. filename)
+  return eve.path.normalize(filepath)
 end
 
----@type ... string[]
+---@param filename                      string
 ---@return string
-function M.locate_state_filepath(...)
-  local state_paths = vim.fn.stdpath("state")
-  local state_path = type(state_paths) == "table" and state_paths[1] or state_paths
-
-  if type(state_path) ~= "string" or #state_path < 1 then
-    reporter.error({
-      from = "eve.std.path",
-      subject = "locate_state_filepath",
-      message = "Cannot resolve the state_paths.",
-      details = { state_paths = state_paths },
-    })
-    return ""
-  end
-
-  ---@cast state_path string
-  return M.normalize(table.concat({ state_path, ... }, M.SEP))
-end
-
----@param opts {filenames: string[]}
----@return nil
-function M.remove_session_filepaths(opts)
-  local workspace_path = M.workspace()
-  local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = md5.sumhexa(workspace_path)
-  local session_dir = workspace_name .. "@" .. hash ---@type string
-  for _, filename in ipairs(opts.filenames) do
-    local session_filepath = session_dir .. M.SEP .. filename
-    if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
-      os.remove(session_filepath)
-      reporter.info({
-        from = "eve.std.path",
-        subject = "remove_session_filepaths",
-        message = "Removed " .. session_filepath,
-      })
-    end
-  end
-end
-
----@param opts {filenames: string[]}
----@return nil
-function M.remove_session_filepaths_all(opts)
-  local session_root_dir = M.locate_state_filepath("guanghechen/sessions") ---@type string
-  local pfile = io.popen('ls -a "' .. session_root_dir .. '"')
-  if pfile then
-    for dirname in pfile:lines() do
-      if dirname then
-        for _, filename in ipairs(opts.filenames) do
-          local session_filepath = session_root_dir .. M.SEP .. dirname .. M.SEP .. filename
-          if session_filepath and vim.fn.filereadable(session_filepath) ~= 0 then
-            os.remove(session_filepath)
-            reporter.info({
-              from = "eve.std.path",
-              subject = "remove_session_filepaths_all",
-              message = "Removed " .. session_filepath,
-            })
-          end
-        end
-      end
-    end
-  end
+function M.locate_theme_filepath(filename)
+  local filepath = eve.path.join(HOME_NVIM_STATE, "/guanghechen/theme/" .. filename)
+  return eve.path.normalize(filepath)
 end
 
 return M

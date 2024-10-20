@@ -1,29 +1,51 @@
----@alias eve.enums.BoxPosition
+
+---@alias t.eve.e.FindScope
+---|"W"
+---|"C"
+---|"D"
+
+---@alias t.eve.e.SearchScope
+---|"W"
+---|"C"
+---|"D"
+---|"B"
+
+---@alias t.eve.e.Theme
+---|"gruvbox"
+---|"one_half"
+
+---@alias t.eve.e.ThemeMode
+---|"dark"
+---|"light"
+
+----------------------------------------------------------------------------------------------------
+
+---@alias t.eve.e.BoxPosition
 ---| "cursor"
 ---| "center"
 
----@alias eve.enums.FileType
+---@alias t.eve.e.FileType
 ---| "file"
 ---| "directory"
 ---| "other"
 
----@alias eve.enums.NvimbarCompPosition
+---@alias t.eve.e.NvimbarCompPosition
 ---| "left"
 ---| "center"
 ---| "right"
 
----@alias eve.enums.ReportLevel
+---@alias t.eve.e.ReportLevel
 ---| "DEBUG"
 ---| "INFO"
 ---| "WARN"
 ---| "ERROR"
 
----@alias eve.enums.TermPosition
+---@alias t.eve.e.TermPosition
 ---| "bottom"
 ---| "right"
 ---| "float"
 
----@alias eve.enums.VimMode
+---@alias t.eve.e.VimMode
 ---| "c" Command-line
 ---| "i" Insert
 ---| "n" Normal
@@ -35,7 +57,7 @@
 ---| "V" Visual-line
 ---| "x" Visual-block
 
----@alias eve.enums.VimModeName
+---@alias t.eve.e.VimModeName
 ---| "normal"
 ---| "visual"
 ---| "insert"
@@ -46,16 +68,16 @@
 ---| "command"
 ---| "select"
 
----@alias eve.enums.WidgetConfirmAction
+---@alias t.eve.e.WidgetConfirmAction
 ---| "none"
 ---| "close"
 ---| "hide"
 
----@alias eve.enums.WidgetStatus
+---@alias t.eve.e.WidgetStatus
 ---| "visible"
 ---| "hidden"
 ---| "closed"
 
----@alias eve.enums.WidgetStatuslineItemType
+---@alias t.eve.e.WidgetStatuslineItemType
 ---| "flag"
 ---| "enum"

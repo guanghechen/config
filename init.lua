@@ -1,45 +1,61 @@
-if not vim.g.vscode then
-  require("eve.autocmd")
-end
-_G.eve = require("eve")
+require("eve.autocmd")
+local eve = require("eve")
+_G.eve = eve
 
-if not vim.g.vscode then
-  require("fml.autocmd")
+do
+  local is_git_repo = eve.path.is_git_repo() ---@type boolean
+
+  ---@type t.eve.context.storage
+  local storage = {
+    client = eve.path.locate_context_filepath("client.json"),
+    session = is_git_repo and eve.path.locate_session_filepath("session.json") or nil,
+    workspace = is_git_repo and eve.path.locate_session_filepath("workspace.json") or nil,
+    nvim_session = is_git_repo and eve.path.locate_session_filepath("session.vim") or nil,
+    nvim_session_autosaved = is_git_repo and eve.path.locate_session_filepath("session.autosaved.vim") or nil,
+  }
+  eve.context.set_storage(storage)
+  eve.context.load(storage)
 end
+
+require("fml.autocmd")
 _G.fml = require("fml")
 
-if not vim.g.vscode then
-  require("ghc.autocmd")
-  require("ghc.dressing.select")
-end
+require("ghc.autocmd")
 _G.ghc = require("ghc")
 
 if vim.g.vscode then
-  pcall(require, "integration.vscode")
+  require("integration.vscode.autocmd")
+  require("integration.vscode.option")
+  require("integration.vscode.keymap")
+  require("integration.vscode.plugin")
+  pcall(require, "integration.local")
+  return
+end
+
+require("ghc.dressing.select")
+if vim.g.neovide then
+  require("integration.neovide.autocmd")
+  require("integration.neovide.keymap")
+  require("integration.neovide.option")
+  require("integration.neovide.plugin")
   pcall(require, "integration.local")
 else
   require("guanghechen.option")
-  require("guanghechen.keymap-bootstrap")
   require("guanghechen.keymap")
-  pcall(require, "integration.neovide")
+  require("guanghechen.plugin")
   pcall(require, "integration.local")
-
-  ghc.command.theme.reload_theme({ force = false })
-
-  ---! Reload session if not specify file and current directory is a git repository.
-  if ghc.context.session.flight_autoload_session:snapshot() and vim.fn.argc() < 1 and eve.path.is_git_repo() then
-    vim.schedule(function()
-      local ok_load_session, error_load_session = pcall(ghc.command.session.load_autosaved)
-      if not ok_load_session then
-        eve.reporter.error({
-          from = "init",
-          subject = "auto reload session",
-          message = "Failed to load autosaved session",
-          details = { error = error_load_session },
-        })
-      end
-    end)
-  end
 end
 
-require("guanghechen.plugin.bootstrap")
+---! Reload session if not specify file and current directory is a git repository.
+if eve.path.is_git_repo() and eve.context.state.flight.autoload:snapshot() then
+  eve.nvim.load_nvim_session(eve.context.storage.nvim_session_autosaved)
+end
+
+vim.schedule(function()
+  ghc.action.theme.reload_theme({ force = false })
+  eve.context.watch_changes({
+    on_theme_changed = function()
+      ghc.action.theme.reload_theme({ force = false })
+    end,
+  })
+end)

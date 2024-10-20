@@ -1,8 +1,8 @@
 local History = require("eve.collection.history")
 local equals = require("eve.std.equals")
-local constants = require("eve.globals.constants")
+local constants = require("eve.std.constants")
 
----@type eve.types.collection.IHistory
+---@type t.eve.collection.IHistory
 local qflist_history = History.new({
   name = "qflist",
   capacity = 100,
@@ -13,12 +13,12 @@ local M = {}
 
 ---@return nil
 function M.backward()
-  local qflist_cur = qflist_history:present() ---@type eve.types.IQuickFixItem[]|nil
+  local qflist_cur = qflist_history:present() ---@type t.eve.IQuickFixItem[]|nil
   if qflist_cur == nil then
     return
   end
 
-  local qflist_prev = qflist_history:backward() ---@type eve.types.IQuickFixItem[]|nil
+  local qflist_prev = qflist_history:backward() ---@type t.eve.IQuickFixItem[]|nil
   if qflist_prev == nil or qflist_prev == qflist_cur then
     return
   end
@@ -30,12 +30,12 @@ end
 
 ---@return nil
 function M.forward()
-  local qflist_cur = qflist_history:present() ---@type eve.types.IQuickFixItem[]|nil
+  local qflist_cur = qflist_history:present() ---@type t.eve.IQuickFixItem[]|nil
   if qflist_cur == nil then
     return
   end
 
-  local qflist_next = qflist_history:forward() ---@type eve.types.IQuickFixItem[]|nil
+  local qflist_next = qflist_history:forward() ---@type t.eve.IQuickFixItem[]|nil
   if qflist_next == nil or qflist_next == qflist_cur then
     return
   end
@@ -73,14 +73,14 @@ function M.open_qflist(prefer_trouble)
   vim.cmd("copen")
 end
 
----@param qflist                        eve.types.IQuickFixItem[]|nil
+---@param qflist                        t.eve.IQuickFixItem[]|nil
 ---@return nil
 function M.push(qflist)
   if qflist == nil or #qflist < 1 then
     return
   end
 
-  local qflist_cur = qflist_history:present() ---@type eve.types.IQuickFixItem[]|nil
+  local qflist_cur = qflist_history:present() ---@type t.eve.IQuickFixItem[]|nil
   if qflist_cur == nil or not equals.deep_equals(qflist_cur, qflist) then
     qflist_history:push(qflist)
     vim.fn.setqflist(qflist, "r")

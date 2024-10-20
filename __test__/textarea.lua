@@ -2,7 +2,7 @@
 
 ---@return nil
 function test_textarea()
-  local textarea = fml.ui.Textarea.new({
+  local textarea = fml.ux.Textarea.new({
     position = "center",
     width = 0.4,
     height = 0.4,
@@ -20,7 +20,7 @@ end
 
 ---@return nil
 function test_input()
-  local input = fml.ui.Input.new({
+  local input = fml.ux.Input.new({
     position = "center",
     width = 0.4,
     title = "Shit!",

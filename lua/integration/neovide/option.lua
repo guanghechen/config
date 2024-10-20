@@ -1,3 +1,5 @@
+require("guanghechen.option")
+
 -- Appearance
 vim.g.neovide_cursor_trail_size = 0
 vim.g.neovide_cursor_trail_length = 0

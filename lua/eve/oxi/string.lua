@@ -6,7 +6,7 @@ local M = require("eve.oxi.mod")
 ---@class eve.oxi.string.ILineMatch
 ---@field public lnum                   integer
 ---@field public score                  integer
----@field public matches                eve.types.IMatchPoint[]
+---@field public matches                t.eve.IMatchPoint[]
 
 ---@param text                          string
 ---@return integer
@@ -47,7 +47,7 @@ end
 
 ---@param text                          string
 ---@param offsets                       integer[]
----@return eve.types.IMatchLocation[]
+---@return t.eve.IMatchLocation[]
 function M.get_locations(text, offsets)
   local ok, data =
     M.resolve_fun_result("eve.oxi.get_locations", M.nvim_tools.get_locations(text, table.concat(offsets, ",")))

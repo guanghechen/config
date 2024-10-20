@@ -13,7 +13,7 @@ local function test_window_mouse_click()
   ---@type string[]
   local lines = {
     "  local _render_scheduler = scheduler.debounce({",
-    '    name = "fml.ui.search.main.render",',
+    '    name = "fml.ux.search.main.render",',
     "    delay = _delay_render,",
     "    fn = function(callback)",
     "      local ok, error = pcall(function()",
@@ -31,9 +31,9 @@ local function test_window_mouse_click()
     "        vim.bo[bufnr].modifiable = false",
     "        vim.bo[bufnr].readonly = true",
     "",
-    "        local items = state.items ---@type fml.types.ui.search.IItem[]",
+    "        local items = state.items ---@type t.fml.ux.search.IItem[]",
     "        for lnum, item in ipairs(items) do",
-    "          local highlights = item.highlights ---@type eve.types.ux.IInlineHighlight[]",
+    "          local highlights = item.highlights ---@type t.eve.IHighlightInline[]",
     "          for _, hl in ipairs(highlights) do",
     "            vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.coll, hl.colr)",
     "          end",
@@ -110,7 +110,7 @@ local function test_window_mouse_click()
     end,
   }
 
-  ---@type eve.types.ux.IKeymap[]
+  ---@type t.eve.IKeymap[]
   local keymaps = {
     { modes = { "n", "v" }, key = "q", callback = actions.on_close, desc = "close" },
     {
@@ -128,7 +128,7 @@ local function test_window_mouse_click()
       nowait = true,
     },
   }
-  fml.util.bind_keys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 end
 
 test_window_mouse_click()

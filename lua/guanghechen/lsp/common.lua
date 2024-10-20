@@ -106,10 +106,10 @@ local function on_attach(client, bufnr)
   vim.keymap.set("n", "K", vim.lsp.buf.hover, opts("lsp: Hover"))
   vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts("lsp: Goto declaration"))
   vim.keymap.set("n", "gK", vim.lsp.buf.signature_help, opts("lsp: Show signature help"))
-  vim.keymap.set("n", "gd", ghc.command.lsp.goto_definitions, opts("lsp: Goto definition"))
-  vim.keymap.set("n", "gi", ghc.command.lsp.goto_implementations, opts("lsp: Goto implementation"))
-  vim.keymap.set("n", "gr", ghc.command.lsp.goto_reference, opts("lsp: Show references"))
-  vim.keymap.set("n", "gt", ghc.command.lsp.goto_type_definitions, opts("lsp: Goto type definition"))
+  vim.keymap.set("n", "gd", ghc.action.lsp.goto_definitions, opts("lsp: Goto definition"))
+  vim.keymap.set("n", "gi", ghc.action.lsp.goto_implementations, opts("lsp: Goto implementation"))
+  vim.keymap.set("n", "gr", ghc.action.lsp.goto_reference, opts("lsp: Show references"))
+  vim.keymap.set("n", "gt", ghc.action.lsp.goto_type_definitions, opts("lsp: Goto type definition"))
 
   -- code actions
   if eve.lsp.has_support_method(bufnr, "codeLens") then

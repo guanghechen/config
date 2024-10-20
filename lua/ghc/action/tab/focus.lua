@@ -1,0 +1,52 @@
+---@class ghc.action.tab
+---@field public focus_1                fun(): nil
+---@field public focus_2                fun(): nil
+---@field public focus_3                fun(): nil
+---@field public focus_4                fun(): nil
+---@field public focus_5                fun(): nil
+---@field public focus_6                fun(): nil
+---@field public focus_7                fun(): nil
+---@field public focus_8                fun(): nil
+---@field public focus_9                fun(): nil
+---@field public focus_10               fun(): nil
+local M = require("ghc.action.tab.mod")
+
+---@param tabid                         integer the index of tab list
+---@return nil
+function M.focus(tabid)
+  local tab_count = vim.fn.tabpagenr("$") ---@type integer
+  local tabid_next = eve.navigate.limit(0, tabid, tab_count)
+  local tabpages = vim.api.nvim_list_tabpages()
+  local tabnr_next = tabpages[tabid_next]
+  fml.api.tab.go(tabnr_next)
+end
+
+---@param step                         ?integer
+---@return nil
+function M.focus_left(step)
+  step = math.max(1, step or vim.v.count1 or 1)
+  local tabid_cur = vim.fn.tabpagenr() ---@type integer
+  local tab_count = vim.fn.tabpagenr("$") ---@type integer
+  local tabid_next = eve.navigate.circular(tabid_cur, -step, tab_count)
+  local tabpages = vim.api.nvim_list_tabpages()
+  local tabnr_next = tabpages[tabid_next]
+  fml.api.tab.go(tabnr_next)
+end
+
+---@param step                         ?integer
+---@return nil
+function M.focus_right(step)
+  step = math.max(1, step or vim.v.count1 or 1)
+  local tabid_cur = vim.fn.tabpagenr() ---@type integer
+  local tab_count = vim.fn.tabpagenr("$") ---@type integer
+  local tabid_next = eve.navigate.circular(tabid_cur, step, tab_count)
+  local tabpages = vim.api.nvim_list_tabpages()
+  local tabnr_next = tabpages[tabid_next]
+  fml.api.tab.go(tabnr_next)
+end
+
+for i = 1, 10 do
+  M["focus_" .. i] = function()
+    M.focus(i)
+  end
+end

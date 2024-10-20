@@ -1,0 +1,36 @@
+---@class t.ghc.ux.IThemeContext
+---@field public theme                  string
+---@field public scheme                 t.fml.ux.theme.IScheme
+---@field public transparency           boolean
+
+---@class t.ghc.ux.theme.IApp
+---@field public get_filepaths          fun(context: t.ghc.ux.IThemeContext): string[]
+---@field public gen_theme              fun(context: t.ghc.ux.IThemeContext): string
+
+---@alias t.ghc.e.ux.theme.App
+---| "fish"
+---| "lazygit"
+---| "tmux"
+
+---@alias t.ghc.e.ux.theme.HighlightIntegration
+---| "basic"
+---| "default"
+---| "flash"
+---| "gitsigns"
+---| "indent-blank-line"
+---| "lazy"
+---| "mason"
+---| "mini-icons"
+---| "neo-tree"
+---| "nvim-cmp"
+---| "nvim-dap"
+---| "nvim-dap-ui"
+---| "nvim-treesitter-context"
+---| "statusline"
+---| "tabline"
+---| "treesitter"
+---| "trouble"
+---| "vim-illuminate"
+---| "vim-notify"
+---| "which-key"
+---| "winline"

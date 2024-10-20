@@ -1,0 +1,16 @@
+---@class t.fml.ux.IInput
+---@field public bufnr                  integer|nil
+---@field public winnr                  integer|nil
+---@field public open                   fun(self: t.fml.ux.IInput, params: t.fml.ux.input.IOpenParams): nil
+---@field public close                  fun(self: t.fml.ux.IInput): nil
+
+---@class t.fml.ux.input.IOpenParams
+---@field public initial_value          string
+---@field public row                    ?number
+---@field public col                    ?number
+---@field public width                  ?number
+---@field public max_width              ?number
+---@field public min_width              ?number
+---@field public text_cursor_col        ?integer
+---@field public win_cursor_row         ?integer
+---@field public win_cursor_col         ?integer

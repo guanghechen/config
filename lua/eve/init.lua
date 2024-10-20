@@ -13,12 +13,13 @@ local collection = {
   Subscriber = require("eve.collection.subscriber"),
   Subscribers = require("eve.collection.subscribers"),
   Ticker = require("eve.collection.ticker"),
-  Viewmodel = require("eve.collection.viewmodel"),
 }
+
+---@type eve.context
+local context = require("eve.context")
 
 ---@class eve.globals
 local globals = {
-  constants = require("eve.globals.constants"),
   icons = require("eve.globals.icons"),
   locations = require("eve.globals.locations"),
   mvc = require("eve.globals.mvc"),
@@ -33,18 +34,20 @@ local oxi = require("eve.oxi")
 local std = {
   G = require("eve.std.G"),
   array = require("eve.std.array"),
+  async = require("eve.std.async"),
   boolean = require("eve.std.boolean"),
   box = require("eve.std.box"),
+  buf = require("eve.std.buf"),
   color = require("eve.std.color"),
+  constants = require("eve.std.constants"),
   debug = require("eve.std.debug"),
   equals = require("eve.std.equals"),
   fs = require("eve.std.fs"),
-  highlight = require("eve.std.highlight"),
-  is = require("eve.std.is"),
   json = require("eve.std.json"),
   lsp = require("eve.std.lsp"),
   md5 = require("eve.std.md5"),
   navigate = require("eve.std.navigate"),
+  nvim = require("eve.std.nvim"),
   nvimbar = require("eve.std.nvimbar"),
   object = require("eve.std.object"),
   os = require("eve.std.os"),
@@ -52,19 +55,24 @@ local std = {
   reporter = require("eve.std.reporter"),
   scheduler = require("eve.std.scheduler"),
   string = require("eve.std.string"),
+  tab = require("eve.std.tab"),
   tmux = require("eve.std.tmux"),
   util = require("eve.std.util"),
+  validator = require("eve.std.validator"),
+  win = require("eve.std.win"),
 }
 
 ---@class eve : eve.globals, eve.std
 ---@field public c                      eve.collection
 ---@field public collection             eve.collection
+---@field public context                eve.context
 ---@field public globals                eve.globals
 ---@field public oxi                    eve.oxi
 ---@field public std                    eve.std
-local eve = vim.tbl_extend("force", globals, std, {
+local eve = vim.tbl_extend("force", {}, globals, std, {
   c = collection,
   collection = collection,
+  context = context,
   globals = globals,
   oxi = oxi,
   std = std,

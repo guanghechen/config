@@ -32,7 +32,14 @@ local function default_watch_on_error(filepath, err, unwatch)
 end
 
 ---@param filepath                      string
----@return eve.enums.FileType|nil
+---@return nil
+function M.edit_file(filepath)
+  vim.cmd("noswapfile tabnew " .. filepath)
+  vim.bo.backupcopy = "yes"
+end
+
+---@param filepath                      string
+---@return t.eve.e.FileType|nil
 function M.is_file_or_dir(filepath)
   local stat = vim.uv.fs_stat(filepath)
   if stat == nil then
@@ -183,7 +190,7 @@ end
 function M.write_file(filepath, content)
   vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
 
-  local file = io.open(filepath, "w")
+  local file = io.open(filepath, "wb")
   if not file then
     reporter.error({
       from = "eve.std.fs",
