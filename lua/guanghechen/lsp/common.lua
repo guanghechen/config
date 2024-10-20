@@ -98,32 +98,68 @@ end
 ---@param bufnr                         integer
 ---@diagnostic disable-next-line: unused-local
 local function on_attach(client, bufnr)
-  local function opts(desc)
-    return { buffer = bufnr, desc = "LSP " .. desc }
-  end
+  local has_support_codeLens = eve.lsp.has_support_method(bufnr, "codeLens") ---@type boolean
+  local has_support_codeAction = eve.lsp.has_support_method(bufnr, "codeAction") ---@type boolean
+  local has_support_rename = eve.lsp.has_support_method(bufnr, "rename") ---@type boolean
 
-  -- keymap
-  vim.keymap.set("n", "K", vim.lsp.buf.hover, opts("lsp: Hover"))
-  vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts("lsp: Goto declaration"))
-  vim.keymap.set("n", "gK", vim.lsp.buf.signature_help, opts("lsp: Show signature help"))
-  vim.keymap.set("n", "gd", ghc.command.lsp.goto_definitions, opts("lsp: Goto definition"))
-  vim.keymap.set("n", "gi", ghc.command.lsp.goto_implementations, opts("lsp: Goto implementation"))
-  vim.keymap.set("n", "gr", ghc.command.lsp.goto_reference, opts("lsp: Show references"))
-  vim.keymap.set("n", "gt", ghc.command.lsp.goto_type_definitions, opts("lsp: Goto type definition"))
-
-  -- code actions
-  if eve.lsp.has_support_method(bufnr, "codeLens") then
-    vim.keymap.set({ "n", "v" }, "<leader>cc", vim.lsp.codelens.run, opts("lsp: CodeLens"))
-    vim.keymap.set("n", "<leader>cC", vim.lsp.codelens.refresh, opts("lsp: Refresh & Display Codelens"))
-  end
-  if eve.lsp.has_support_method(bufnr, "codeAction") then
-    vim.keymap.set({ "n", "v" }, "<leader>ca", actions.show_code_action, opts("lsp: Code action"))
-    vim.keymap.set({ "n", "v" }, "<M-cr>", actions.show_code_action, opts("lsp: Code action"))
-    vim.keymap.set("n", "<leader>cA", actions.show_code_action_source, opts("lsp: Source action"))
-  end
-  if eve.lsp.has_support_method(bufnr, "rename") then
-    vim.keymap.set("n", "<leader>cr", actions.rename, opts("lsp: Rename"))
-  end
+  ---@type t.eve.IKeymap[]
+  local keymaps = {
+    { modes = { "n" }, key = "K", callback = vim.lsp.buf.hover, desc = "lsp: Hover" },
+    { modes = { "n" }, key = "gD", callback = vim.lsp.buf.declaration, desc = "lsp: Goto declaration" },
+    { modes = { "n" }, key = "gK", callback = vim.lsp.buf.signature_help, desc = "lsp: Show signature help" },
+    { modes = { "n" }, key = "gd", callback = ghc.action.lsp.goto_definitions, desc = "lsp: Goto definition" },
+    { modes = { "n" }, key = "gi", callback = ghc.action.lsp.goto_implementations, desc = "lsp: Goto implementation" },
+    { modes = { "n" }, key = "gr", callback = ghc.action.lsp.goto_reference, desc = "lsp: Show references" },
+    {
+      modes = { "n" },
+      key = "gt",
+      callback = ghc.action.lsp.goto_type_definitions,
+      desc = "lsp: Goto type definition",
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>cc",
+      callback = vim.lsp.codelens.run,
+      desc = "lsp: CodeLens",
+      active = has_support_codeLens,
+    },
+    {
+      modes = { "n" },
+      key = "<leader>cC",
+      callback = vim.lsp.codelens.refresh,
+      desc = "lsp: Refresh & Display Codelens",
+      active = has_support_codeLens,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>ca",
+      callback = actions.show_code_action,
+      desc = "lsp: Code action",
+      active = has_support_codeAction,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<M-cr>",
+      callback = actions.show_code_action,
+      desc = "lsp: Code action",
+      active = has_support_codeAction,
+    },
+    {
+      modes = { "n" },
+      key = "<leader>cA",
+      callback = actions.show_code_action_source,
+      desc = "lsp: Source action",
+      active = has_support_codeAction,
+    },
+    {
+      modes = { "n" },
+      key = "<leader>cr",
+      callback = actions.rename,
+      desc = "lsp: Rename",
+      active = has_support_rename,
+    },
+  }
+  eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end
 
 local function on_init(client, _)

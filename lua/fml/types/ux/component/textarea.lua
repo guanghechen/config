@@ -1,0 +1,22 @@
+---@class t.fml.ux.ITextarea
+---@field public get_bufnr              fun(): integer|nil
+---@field public get_winnr              fun(): integer|nil
+---@field public on_close               fun(): nil
+---@field public on_confirm             fun(): nil
+---@field public open                   fun(self: t.fml.ux.ITextarea, params: t.fml.ux.textarea.IOpenParams): nil
+---@field public close                  fun(self: t.fml.ux.ITextarea): nil
+
+---@class t.fml.ux.textarea.IOpenParams
+---@field public initial_lines          string[]
+---@field public row                    ?number
+---@field public col                    ?number
+---@field public width                  ?number
+---@field public height                 ?number
+---@field public max_width              ?number
+---@field public max_height             ?number
+---@field public min_width              ?number
+---@field public min_height             ?number
+---@field public text_cursor_row        ?integer
+---@field public text_cursor_col        ?integer
+---@field public win_cursor_row         ?integer
+---@field public win_cursor_col         ?integer

@@ -1,0 +1,257 @@
+---@param context                       t.ghc.ux.IThemeContext
+---@return table<string, t.fml.ux.theme.IHlgroup>
+local function gen_hlgroup_map(context)
+  local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
+  local t = context.transparency ---@type boolean
+
+  ---@type string
+  local item_kind_bg =
+    --(m == "dark" and eve.color.change_hex_lightness(c.black, 6)) or
+    --(m == "light" and eve.color.change_hex_lightness(c.black, -6)) or
+    "none"
+
+  local bg_noice = c.bg1 ---@type string
+
+  return {
+    ---! flash.nvim
+    FlashBackdrop = { fg = c.neutral_grey, bg = "none" },
+    FlashCurrent = { fg = c.orange, bg = t and "none" or c.bg2, italic = true },
+    FlashLabel = { fg = c.purple, bg = t and "none" or c.bg0, bold = true },
+    FlashMatch = { fg = c.yellow, bg = t and "none" or c.bg1, italic = true },
+    FlashPrompt = { fg = c.yellow, bg = c.bg2 },
+    FlashPromptIcon = { fg = c.orange, bg = t and "none" or c.bg2 },
+
+    ---! gitsigns.nvim
+    GitSignsAdd = { fg = c.green },
+    GitSignsChange = { fg = c.orange },
+    GitSignsDelete = { fg = c.red },
+
+    ---! indent-blankline.nvim
+    IblChar = { fg = c.fg3 },
+    IblScopeChar = { fg = c.grey },
+    ["@ibl.scope.underline.1"] = { bg = c.bg2 },
+    ["@ibl.scope.underline.2"] = { bg = c.bg2 },
+    ["@ibl.scope.underline.3"] = { bg = c.bg2 },
+    ["@ibl.scope.underline.4"] = { bg = c.bg2 },
+    ["@ibl.scope.underline.5"] = { bg = c.bg2 },
+    ["@ibl.scope.underline.6"] = { bg = c.bg2 },
+    ["@ibl.scope.underline.7"] = { bg = c.bg2 },
+    RainbowDelimiterRed = { fg = c.red },
+    RainbowDelimiterYellow = { fg = c.yellow },
+    RainbowDelimiterBlue = { fg = c.blue },
+    RainbowDelimiterOrange = { fg = c.orange },
+    RainbowDelimiterGreen = { fg = c.green },
+    RainbowDelimiterViolet = { fg = c.purple },
+    RainbowDelimiterCyan = { fg = c.aqua },
+
+    ---! lazy.nvim
+    LazyButton = { fg = c.fg2, bg = "none" },
+    LazyCommit = { fg = c.green },
+    LazyCommitIssue = { fg = c.orange },
+    LazyDir = { fg = c.fg0 },
+    LazyH1 = { fg = c.bg0, bg = c.green },
+    LazyH2 = { fg = c.fg, bold = true, underline = true },
+    LazyNoCond = { fg = c.red },
+    LazyOperator = { fg = c.fg0 },
+    LazyProgressDone = { fg = c.green },
+    LazyReasonCmd = { fg = c.yellow },
+    LazyReasonEvent = { fg = c.yellow },
+    LazyReasonFt = { fg = c.purple },
+    LazyReasonImport = { fg = c.fg0 },
+    LazyReasonKeys = { fg = c.neutral_aqua },
+    LazyReasonPlugin = { fg = c.red },
+    LazyReasonRuntime = { fg = c.lavender },
+    LazyReasonSource = { fg = c.aqua },
+    LazyReasonStart = { fg = c.fg0 },
+    LazySpecial = { fg = c.blue },
+    LazyTaskOutput = { fg = c.fg0 },
+    LazyUrl = { fg = c.fg0 },
+    LazyValue = { fg = c.neutral_aqua },
+
+    ---! mason.nvim
+    MasonHeader = { fg = c.bg0, bg = c.red },
+    MasonHighlight = { fg = c.blue },
+    MasonHighlightBlock = { fg = c.bg0, bg = c.green },
+    MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
+    MasonHeaderSecondary = { link = "MasonHighlightBlock" },
+    MasonMuted = { fg = c.fg4 },
+    MasonMutedBlock = { fg = c.bg4, bg = c.bg1 },
+
+    ---! mini.icons
+    MiniIconsAzure = { fg = c.blue },
+    MiniIconsBlue = { fg = c.blue },
+    MiniIconsCyan = { fg = c.aqua },
+    MiniIconsGreen = { fg = c.green },
+    MiniIconsGrey = { fg = c.bg4 },
+    MiniIconsOrange = { fg = c.orange },
+    MiniIconsPurple = { fg = c.purple },
+    MiniIconsRed = { fg = c.red },
+    MiniIconsYellow = { fg = c.yellow },
+
+    ---! neo-tree.nvim
+    NeoTreeDirectoryIcon = { link = "Directory" },
+    NeoTreeDirectoryName = { fg = c.blue },
+    NeoTreeFileName = { fg = c.fg2 },
+    NeoTreeRootName = { fg = c.fg, bold = true },
+
+    ---! noice.nvim
+    NoiceCmdlineIcon = { fg = c.green, bg = bg_noice },
+    NoiceCmdlinePopup = { bg = bg_noice },
+    NoiceCmdlinePopupBorder = { fg = c.green, bg = bg_noice },
+
+    ---! nvim-cmp
+    CmpBorder = { fg = c.grey },
+    CmpDoc = { bg = c.bg0_h },
+    CmpDocBorder = { fg = c.grey, bg = c.bg0_h },
+    CmpGhostText = { link = "Comment", default = true },
+    CmpItemAbbr = { fg = c.fg },
+    CmpItemAbbrMatch = { fg = c.blue, bold = true },
+    CmpItemKindClass = { fg = c.aqua, bg = item_kind_bg },
+    CmpItemKindCodeium = { fg = c.green, bg = item_kind_bg },
+    CmpItemKindColor = { fg = c.fg, bg = item_kind_bg },
+    CmpItemKindConstant = { fg = c.orange, bg = item_kind_bg },
+    CmpItemKindConstructor = { fg = c.blue, bg = item_kind_bg },
+    CmpItemKindCopilot = { fg = c.green, bg = item_kind_bg },
+    CmpItemKindEnum = { fg = c.blue, bg = item_kind_bg },
+    CmpItemKindEnumMember = { fg = c.purple, bg = item_kind_bg },
+    CmpItemKindEvent = { fg = c.yellow, bg = item_kind_bg },
+    CmpItemKindField = { fg = c.red, bg = item_kind_bg },
+    CmpItemKindFile = { fg = c.fg, bg = item_kind_bg },
+    CmpItemKindFolder = { fg = c.fg, bg = item_kind_bg },
+    CmpItemKindFunction = { fg = c.blue, bg = item_kind_bg },
+    CmpItemKindIdentifier = { fg = c.red, bg = item_kind_bg },
+    CmpItemKindInterface = { fg = c.green, bg = item_kind_bg },
+    CmpItemKindKeyword = { fg = c.fg, bg = item_kind_bg },
+    CmpItemKindMethod = { fg = c.blue, bg = item_kind_bg },
+    CmpItemKindModule = { fg = c.yellow, bg = item_kind_bg },
+    CmpItemKindOperator = { fg = c.fg, bg = item_kind_bg },
+    CmpItemKindProperty = { fg = c.red, bg = item_kind_bg },
+    CmpItemKindReference = { fg = c.fg, bg = item_kind_bg },
+    CmpItemKindSnippet = { fg = c.red, bg = item_kind_bg },
+    CmpItemKindStruct = { fg = c.purple, bg = item_kind_bg },
+    CmpItemKindStructure = { fg = c.purple, bg = item_kind_bg },
+    CmpItemKindTabNine = { fg = c.orange, bg = item_kind_bg },
+    CmpItemKindText = { fg = c.green, bg = item_kind_bg },
+    CmpItemKindType = { fg = c.yellow, bg = item_kind_bg },
+    CmpItemKindTypeParameter = { fg = c.red, bg = item_kind_bg },
+    CmpItemKindUnit = { fg = c.purple, bg = item_kind_bg },
+    CmpItemKindValue = { fg = c.aqua, bg = item_kind_bg },
+    CmpItemKindVariable = { fg = c.purple, bg = item_kind_bg },
+    CmpItemMenu = { fg = c.grey, italic = true },
+    CmpPmenu = { bg = c.bg1 },
+    CmpSel = { link = "PmenuSel", bold = true },
+
+    ---! nvim-dap
+    DapBreakpoint = { fg = c.red },
+    DapBreakpointCondition = { fg = c.yellow },
+    DapLogPoint = { fg = c.aqua },
+    DapStopped = { fg = c.orange },
+
+    ---! nvim-dap-ui
+    DapUIBreakPointsCurrentLine = { fg = c.green, bold = true },
+    DapUIBreakpointsDisabledLine = { fg = c.bg4 },
+    DapUIBreakpointsInfo = { fg = c.green },
+    DapUIBreakpointsPath = { fg = c.aqua },
+    DapUIDecoration = { fg = c.aqua },
+    DapUIFloatBorder = { fg = c.aqua },
+    DapUILineNumber = { fg = c.aqua },
+    DapUIModifiedValue = { fg = c.orange },
+    DapUIPlayPause = { fg = c.green },
+    DapUIPlayPauseNC = { fg = c.green },
+    DapUIRestart = { fg = c.green },
+    DapUIRestartNC = { fg = c.green },
+    DAPUIScope = { fg = c.aqua },
+    DapUISource = { fg = c.lavender },
+    DapUIStepBack = { fg = c.blue },
+    DapUIStepBackNC = { fg = c.blue },
+    DapUIStepInto = { fg = c.blue },
+    DapUIStepIntoNC = { fg = c.blue },
+    DapUIStepOut = { fg = c.blue },
+    DapUIStepOutNC = { fg = c.blue },
+    DapUIStepOver = { fg = c.blue },
+    DapUIStepOverNC = { fg = c.blue },
+    DapUIStop = { fg = c.red },
+    DapUIStopNC = { fg = c.red },
+    DapUIStoppedThread = { fg = c.aqua },
+    DapUIThread = { fg = c.green },
+    DAPUIType = { fg = c.neutral_purple },
+    DapUIUnavailable = { fg = c.bg2 },
+    DapUIUnavailableNC = { fg = c.bg2 },
+    DAPUIValue = { fg = c.aqua },
+    DAPUIVariable = { fg = c.fg },
+    DapUIWatchesEmpty = { fg = c.orange },
+    DapUIWatchesError = { fg = c.orange },
+    DapUIWatchesValue = { fg = c.green },
+
+    ---! nvim-notify
+    NotifyDEBUGBorder = { fg = c.grey },
+    NotifyDEBUGIcon = { fg = c.grey },
+    NotifyDEBUGTitle = { fg = c.grey },
+    NotifyERRORBorder = { fg = c.red },
+    NotifyERRORIcon = { fg = c.red },
+    NotifyERRORTitle = { fg = c.red },
+    NotifyINFOBorder = { fg = c.green },
+    NotifyINFOIcon = { fg = c.green },
+    NotifyINFOTitle = { fg = c.green },
+    NotifyTRACEBorder = { fg = c.purple },
+    NotifyTRACEIcon = { fg = c.purple },
+    NotifyTRACETitle = { fg = c.purple },
+    NotifyWARNBorder = { fg = c.orange },
+    NotifyWARNIcon = { fg = c.orange },
+    NotifyWARNTitle = { fg = c.orange },
+
+    ---! nvim-treesitter-context
+    TreesitterContext = { fg = c.fg, bg = c.bg2 },
+    TreesitterContextBottom = {},
+    TreesitterContextLineNumber = { fg = c.orange },
+    TreesitterContextLineNumberBottom = { underline = true },
+
+    ---! trouble.nvim
+    TroubleCode = { fg = c.fg },
+    TroubleCount = { fg = c.purple },
+    TroubleError = { fg = c.red },
+    TroubleFile = { fg = c.yellow },
+    TroubleFoldIcon = { link = "Folded" },
+    TroubleHint = { fg = c.orange },
+    TroubleIndent = { link = "Comment" },
+    TroubleInformation = { fg = c.fg },
+    TroubleLocation = { fg = c.red },
+    TroubleNormal = { fg = c.fg },
+    TroublePreview = { fg = c.red },
+    TroubleSignError = { link = "DiagnosticError" },
+    TroubleSignHint = { link = "DiagnosticHint" },
+    TroubleSignInformation = { fg = c.fg },
+    TroubleSignOther = { link = "DiagnosticNormal" },
+    TroubleSignWarning = { link = "DiagnosticWarn" },
+    TroubleSource = { fg = c.aqua },
+    TroubleText = { fg = c.fg },
+    TroubleTextError = { fg = c.fg },
+    TroubleTextHint = { fg = c.fg },
+    TroubleTextInformation = { fg = c.fg },
+    TroubleTextWarning = { fg = c.fg },
+    TroubleWarning = { fg = c.orange },
+
+    ---! vim-illuminate
+    IlluminatedWordRead = { link = "LspReferenceRead" },
+    IlluminatedWordText = { link = "LspReferenceText" },
+    IlluminatedWordWrite = { link = "LspReferenceWrite" },
+
+    ---! which-key.nvim
+    WhichKey = { fg = c.blue },
+    WhichKeyDesc = { fg = c.fg3 },
+    WhichKeyGroup = { fg = c.blue },
+    WhichKeyIconAzure = { fg = c.blue },
+    WhichKeyIconBlue = { fg = c.blue },
+    WhichKeyIconCyan = { fg = c.aqua },
+    WhichKeyIconGreen = { fg = c.green },
+    WhichKeyIconGrey = { fg = c.bg4 },
+    WhichKeyIconOrange = { fg = c.orange },
+    WhichKeyIconPurple = { fg = c.purple },
+    WhichKeyIconRed = { fg = c.red },
+    WhichKeyIconYellow = { fg = c.yellow },
+    WhichKeySeparator = { fg = c.bg4 },
+    WhichKeyValue = { fg = c.green },
+  }
+end
+
+return gen_hlgroup_map

@@ -1,4 +1,4 @@
----@class eve.collection.Disposable : eve.types.collection.IDisposable
+---@class eve.collection.Disposable : t.eve.collection.IDisposable
 ---@field private _on_dispose           fun():nil
 local M = {}
 M.__index = M
@@ -19,7 +19,7 @@ function M.new(props)
   return self
 end
 
----@param unsubscribable                eve.types.collection.IUnsubscribable
+---@param unsubscribable                t.eve.collection.IUnsubscribable
 function M.from_unsubscribable(unsubscribable)
   return M.new({
     on_dispose = function()

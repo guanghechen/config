@@ -1,28 +1,28 @@
----@alias eve.types.T
+---@alias t.eve.T
 ---| any
 
 ---@generic T
----@alias eve.types.IEquals
+---@alias t.eve.IEquals
 ---| fun(x: T, y: T): boolean
 
 ---@generic T
----@alias eve.types.IFilter
+---@alias t.eve.IFilter
 ---| fun(element: T, index: integer): boolean
 
 ---@generic T
----@alias eve.types.INormalize
+---@alias t.eve.INormalize
 ---| fun(x: T): T
 
 ---@generic T
----@alias eve.types.IValidate
+---@alias t.eve.IValidate
 ---| fun(element: T): boolean
 
----@class eve.types.IMatchLocation
+---@class t.eve.IMatchLocation
 ---@field public offset                 integer
 ---@field public lnum                   integer
 ---@field public col                    integer
 ---@field public line                   string
 
----@class eve.types.IMatchPoint
+---@class t.eve.IMatchPoint
 ---@field public l                      integer
 ---@field public r                      integer

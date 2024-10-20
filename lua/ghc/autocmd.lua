@@ -1,20 +1,10 @@
-local transient = require("ghc.context.transient")
-local cmd_session = require("ghc.command.session")
-local winline = require("ghc.ui.winline")
+local winline = require("ghc.ux.winline")
 
 local augroups = {
-  toggle_relative = fml.util.augroup("toggle_relative"),
-  redraw_when_mode_changes = fml.util.augroup("redraw_when_mode_changes"),
-  refresh_winline = fml.util.augroup("refresh_winline"),
+  toggle_relative = eve.nvim.augroup("toggle_relative"),
+  redraw_when_mode_changes = eve.nvim.augroup("redraw_when_mode_changes"),
+  refresh_winline = eve.nvim.augroup("refresh_winline"),
 }
-
-eve.mvc.add_disposable(eve.c.Disposable.new({
-  on_dispose = function()
-    if vim.fn.argc() < 1 and eve.path.is_git_repo() then
-      cmd_session.autosave()
-    end
-  end,
-}))
 
 vim.api.nvim_create_autocmd("ModeChanged", {
   pattern = "*",
@@ -40,7 +30,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
     end
     local str = progress .. (data.message or "") .. " " .. (data.title or "")
     local lsp_msg = data.kind == "end" and "" or str ---@type string
-    transient.lsp_msg:next(lsp_msg)
+    eve.context.state.status.lsp_msg:next(lsp_msg)
     vim.cmd.redrawstatus()
   end,
 })
@@ -51,7 +41,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
 --   group = augroups.toggle_relative,
 --   callback = function()
 --     if vim.o.nu and vim.api.nvim_get_mode().mode == "n" then
---       if ghc.context.client.relativenumber:snapshot() then
+--       if eve.context.state.theme.relativenumber:snapshot() then
 --         vim.opt.relativenumber = true
 --       end
 --     end
@@ -65,7 +55,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
 --     if vim.o.nu then
 --       vim.opt.relativenumber = false
 --       vim.schedule(function()
---         vim.cmd("redraw")
+--         vim.cmd.redraw()
 --       end)
 --     end
 --   end,

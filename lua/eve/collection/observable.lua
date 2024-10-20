@@ -5,30 +5,30 @@ local std_boolean = require("eve.std.boolean")
 local shallow_equals = require("eve.std.equals").shallow_equals
 local util = require("eve.std.util")
 
----@class eve.collection.Observable : eve.types.collection.IObservable
----@field private _value                eve.types.T
----@field private _value_last_notified  eve.types.T|nil
----@field private _subscribers          eve.types.collection.ISubscribers
+---@class eve.collection.Observable : t.eve.collection.IObservable
+---@field private _value                t.eve.T
+---@field private _value_last_notified  t.eve.T|nil
+---@field private _subscribers          t.eve.collection.ISubscribers
 local M = {}
 M.__index = M
 setmetatable(M, { __index = BatchDisposable })
 
----@type eve.types.collection.IUnsubscribable
+---@type t.eve.collection.IUnsubscribable
 local noop_unsubscribable = {
   unsubscribe = function(...) end,
 }
 
 ---@class eve.collection.observable.IProps
----@field public initial_value          eve.types.T           Initial value of the observable
----@field public equals                 ?eve.types.IEquals    Determine whether the two values are equal.
----@field public normalize              ?eve.types.INormalize Normalize the value before compare or update
+---@field public initial_value          t.eve.T           Initial value of the observable
+---@field public equals                 ?t.eve.IEquals    Determine whether the two values are equal.
+---@field public normalize              ?t.eve.INormalize Normalize the value before compare or update
 
 ---@param props                         eve.collection.observable.IProps
 ---@return eve.collection.Observable
 function M.new(props)
-  local equals = props.equals or shallow_equals ---@type eve.types.IEquals
-  local normalize = props.normalize or util.identity ---@type eve.types.INormalize
-  local initial_value = props.initial_value ---@type eve.types.T
+  local equals = props.equals or shallow_equals ---@type t.eve.IEquals
+  local normalize = props.normalize or util.identity ---@type t.eve.INormalize
+  local initial_value = props.initial_value ---@type t.eve.T
 
   local self = setmetatable(BatchDisposable.new(), M)
   ---@cast self eve.collection.Observable
@@ -42,9 +42,9 @@ function M.new(props)
   return self
 end
 
----@param value                         eve.types.T         Initial value of the observable
----@param equals                        ?eve.types.IEquals  Determine whether the two values are equal.
----@param normalize                     ?eve.types.INormalize Normalize the value before compare or update
+---@param value                         t.eve.T         Initial value of the observable
+---@param equals                        ?t.eve.IEquals  Determine whether the two values are equal.
+---@param normalize                     ?t.eve.INormalize Normalize the value before compare or update
 ---@return eve.collection.Observable
 function M.from_value(value, equals, normalize)
   return M.new({ initial_value = value, equals = equals, normalize = normalize })
@@ -66,12 +66,12 @@ function M:dispose()
   self._subscribers:dispose()
 end
 
----@param value eve.types.T
----@param options? eve.types.collection.IObservableNextOptions
+---@param value t.eve.T
+---@param options? t.eve.collection.IObservableNextOptions
 ---@return boolean Indicate whether if the value changed.
 function M:next(value, options)
   options = options or {}
-  ---@cast options eve.types.collection.IObservableNextOptions
+  ---@cast options t.eve.collection.IObservableNextOptions
 
   if self:is_disposed() then
     ---@type boolean
@@ -99,17 +99,17 @@ function M:next(value, options)
   return false
 end
 
----@param subscriber                    eve.types.collection.ISubscriber
+---@param subscriber                    t.eve.collection.ISubscriber
 ---@param ignoreInitial                 boolean
----@return eve.types.collection.IUnsubscribable
+---@return t.eve.collection.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)
   if subscriber:is_disposed() then
     return noop_unsubscribable
   end
 
   if not ignoreInitial then
-    local value_prev = self._value_last_notified ---@type eve.types.T | nil
-    local value = self._value ---@type eve.types.T
+    local value_prev = self._value_last_notified ---@type t.eve.T | nil
+    local value = self._value ---@type t.eve.T
     subscriber:next(value, value_prev)
   end
 
@@ -123,10 +123,10 @@ end
 
 ---@return nil
 function M:_notify()
-  ---@type eve.types.T | nil
+  ---@type t.eve.T | nil
   local value_prev = self._value_last_notified
 
-  ---@type eve.types.T
+  ---@type t.eve.T
   local value = self._value
 
   self._value_last_notified = value

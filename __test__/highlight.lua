@@ -1,5 +1,5 @@
 local function test_compile_highlights()
-  local scheme = require("ghc.ui.theme.scheme.darken") ---@type fml.types.ui.theme.IScheme
+  local scheme = require("ghc.ux.theme.scheme.dark") ---@type t.fml.ux.theme.IScheme
   local c = scheme.palette
   local hlgroup_map = {
     f_sr_invisible = { fg = "none", bg = "none" },
@@ -9,7 +9,7 @@ local function test_compile_highlights()
     f_sr_opt_value = { fg = c.yellow, bg = "none" },
     f_sr_filepath = { fg = c.blue, bg = "none" },
     f_sr_flag = { fg = c.fg0, bg = "grey" },
-    f_sr_flag_enabled = { fg = c.black, bg = c.pink },
+    f_sr_flag_enabled = { fg = c.black, bg = c.orange },
     f_sr_result_fence = { fg = c.grey, bg = "none" },
     f_sr_text_deleted = { fg = c.diff_del_word, strikethrough = true },
     f_sr_text_added = { fg = c.diff_add_word, bg = "none" },

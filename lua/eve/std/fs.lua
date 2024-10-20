@@ -32,7 +32,14 @@ local function default_watch_on_error(filepath, err, unwatch)
 end
 
 ---@param filepath                      string
----@return eve.enums.FileType|nil
+---@return nil
+function M.edit_file(filepath)
+  vim.cmd("noswapfile tabnew " .. filepath)
+  vim.bo.backupcopy = "yes"
+end
+
+---@param filepath                      string
+---@return t.eve.e.FileType|nil
 function M.is_file_or_dir(filepath)
   local stat = vim.uv.fs_stat(filepath)
   if stat == nil then
@@ -135,6 +142,29 @@ function M.read_json(params)
   return data
 end
 
+---@param filepath                      string
+---@return nil
+function M.touch(filepath)
+  local stat = vim.uv.fs_stat(filepath)
+  if stat ~= nil and stat.type == "file" then
+    local file = io.open(filepath, "a")
+    if file then
+      file:close() -- Close the file immediately
+      local current_time = vim.loop.hrtime() / 1e9 -- Get current time in seconds
+      vim.uv.fs_utime(filepath, current_time, current_time, function(err)
+        if err then
+          reporter.error({
+            from = "eve.std.fs",
+            subject = "touch",
+            message = "Failed to touch file.",
+            details = { filepath = filepath, err = err },
+          })
+        end
+      end)
+    end
+  end
+end
+
 ---@class eve.std.fs.IWatchFileOptions
 ---@field filepath string
 ---@field on_event fun(filepath:string, events: any, unwatch:fun():nil):nil
@@ -183,7 +213,7 @@ end
 function M.write_file(filepath, content)
   vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
 
-  local file = io.open(filepath, "w")
+  local file = io.open(filepath, "wb")
   if not file then
     reporter.error({
       from = "eve.std.fs",

@@ -10,7 +10,7 @@ local M = require("eve.oxi.mod")
 ---@field public offset                 integer
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                eve.types.IMatchPoint[]
+---@field public matches                t.eve.IMatchPoint[]
 
 ---@class eve.oxi.search.IFileMatch
 ---@field public matches                eve.oxi.search.IBlockMatch[]

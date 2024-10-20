@@ -1,7 +1,7 @@
 ---@class eve.globals.icons
 local M = {}
 
----@class fml.ui.icosn.fillchars
+---@class eve.globals.icosn.fillchars
 M.fillchars = {
   diff = "╱",
   eob = " ",
@@ -17,7 +17,7 @@ M.fillchars = {
 M.listchars = {
   eol = "↲",
   extends = "»",
-  lead = "·",
+  lead = " ",
   nbsp = "·",
   precedes = "«",
   space = "·",

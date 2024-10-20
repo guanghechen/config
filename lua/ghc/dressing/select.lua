@@ -7,7 +7,7 @@
 ---@field public original_item          any
 
 ---@alias ghc.dressing.select.IProvider
----| fun(items: any[], opts: ghc.dressing.select.IOptions): fml.types.ui.select.IProvider, integer
+---| fun(items: any[], opts: ghc.dressing.select.IOptions): t.fml.ux.select.IProvider, integer
 
 local codeaction_provider = require("ghc.dressing.provider.codeaction")
 local fallback_provider = require("ghc.dressing.provider.fallback")
@@ -28,8 +28,8 @@ local function ghc_select(items, opts, on_choice)
   local provider, width = create_provider(items, opts)
   local confirmed = false ---@type boolean
 
-  ---@type fml.types.ui.ISelect
-  local select = fml.ui.Select.new({
+  ---@type t.fml.ux.ISelect
+  local select = fml.ux.Select.new({
     dimension = {
       height = #items + 3,
       max_height = 0.8,

@@ -1,26 +1,13 @@
 local Disposable = require("eve.collection.disposable")
 local Observable = require("eve.collection.observable")
-local constants = require("eve.globals.constants")
 local mvc = require("eve.globals.mvc")
 local path = require("eve.std.path")
-
----@type table<string, boolean>
-local IGNORED_FILETYPES = {
-  [constants.FT_CHECKHEALTH] = true,
-  [constants.FT_DIFFVIEW_FILES] = true,
-  [constants.FT_LSPINFO] = true,
-  [constants.FT_NEOTREE] = true,
-  [constants.FT_NOTIFY] = true,
-  [constants.FT_PLENARY_TEST_POPUP] = true,
-  [constants.FT_STARTUPTIME] = true,
-  [constants.FT_TERM] = true,
-  [constants.FT_TROUBLE] = true,
-}
+local std_buf = require("eve.std.buf")
 
 local _initial_winnr = vim.api.nvim_get_current_win() ---@type integer
 local _initial_bufnr = vim.api.nvim_get_current_buf() ---@type integer
-local _current_bufnr = Observable.from_value(_initial_bufnr) ---@type eve.types.collection.IObservable
-local _current_winnr = Observable.from_value(_initial_winnr) ---@type eve.types.collection.IObservable
+local _current_bufnr = Observable.from_value(_initial_bufnr) ---@type t.eve.collection.IObservable
+local _current_winnr = Observable.from_value(_initial_winnr) ---@type t.eve.collection.IObservable
 local _current_buf_dirpath = path.cwd() ---@type string
 local _current_buf_filepath = nil ---@type string|nil
 
@@ -50,17 +37,6 @@ function M.get_current_buf_filepath()
 end
 
 ---@param bufnr                         integer
----@return boolean
-function M.is_listed_buf(bufnr)
-  if vim.fn.buflisted(bufnr) ~= 1 then
-    return false
-  end
-
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-  return not IGNORED_FILETYPES[filetype]
-end
-
----@param bufnr                         integer
 ---@return nil
 function M.set_current_bufnr(bufnr)
   local bufnr_cur = _current_bufnr:snapshot() ---@type integer|nil
@@ -68,7 +44,7 @@ function M.set_current_bufnr(bufnr)
     return
   end
 
-  if not M.is_listed_buf(bufnr) then
+  if not std_buf.is_listed(bufnr) then
     return
   end
 
@@ -88,18 +64,18 @@ function M.set_current_winnr(winnr)
   end
 end
 
----@param subscriber                    eve.types.collection.ISubscriber
+---@param subscriber                    t.eve.collection.ISubscriber
 ---@param ignoreInitial                 ?boolean
 function M.watch_current_bufnr(subscriber, ignoreInitial)
-  ---@type eve.types.collection.IUnsubscribable
+  ---@type t.eve.collection.IUnsubscribable
   local unsubscribable = _current_bufnr:subscribe(subscriber, ignoreInitial)
   mvc.add_disposable(Disposable.from_unsubscribable(unsubscribable))
 end
 
----@param subscriber                    eve.types.collection.ISubscriber
+---@param subscriber                    t.eve.collection.ISubscriber
 ---@param ignoreInitial                 ?boolean
 function M.watch_current_winnr(subscriber, ignoreInitial)
-  ---@type eve.types.collection.IUnsubscribable
+  ---@type t.eve.collection.IUnsubscribable
   local unsubscribable = _current_winnr:subscribe(subscriber, ignoreInitial)
   mvc.add_disposable(Disposable.from_unsubscribable(unsubscribable))
 end

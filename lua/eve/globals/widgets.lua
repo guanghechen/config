@@ -7,13 +7,13 @@ local M = {}
 
 ---@return nil
 function M.backward()
-  local present, present_index = _widgets:present() ---@type eve.types.ux.IWidget|nil, integer|nil
+  local present, present_index = _widgets:present() ---@type t.eve.ux.IWidget|nil, integer|nil
   if present == nil or present_index <= 1 then
     return
   end
 
   while true do
-    local widget, is_bottom = _widgets:backward() ---@type eve.types.ux.IWidget|nil, boolean
+    local widget, is_bottom = _widgets:backward() ---@type t.eve.ux.IWidget|nil, boolean
     if widget ~= nil and widget ~= present and widget:status() == "hidden" then
       present:hide()
       widget:show()
@@ -28,13 +28,13 @@ end
 
 ---@return nil
 function M.forward()
-  local present, present_index = _widgets:present() ---@type eve.types.ux.IWidget|nil, integer|nil
+  local present, present_index = _widgets:present() ---@type t.eve.ux.IWidget|nil, integer|nil
   if present == nil or present_index >= _widgets:size() then
     return
   end
 
   while true do
-    local widget, is_top = _widgets:forward() ---@type eve.types.ux.IWidget|nil, boolean
+    local widget, is_top = _widgets:forward() ---@type t.eve.ux.IWidget|nil, boolean
     if widget ~= nil and widget ~= present and widget:status() == "hidden" then
       present:hide()
       widget:show()
@@ -47,15 +47,15 @@ function M.forward()
   end
 end
 
----@return eve.types.ux.IWidget|nil
+---@return t.eve.ux.IWidget|nil
 function M.get_current_widget()
   while true do
-    local present, preset_index = _widgets:present() ---@type eve.types.ux.IWidget|nil, integer
+    local present, preset_index = _widgets:present() ---@type t.eve.ux.IWidget|nil, integer
     if present == nil then
       return nil
     end
 
-    local status = present:status() ---@type eve.enums.WidgetStatus
+    local status = present:status() ---@type t.eve.e.WidgetStatus
     if status ~= "closed" then
       return present
     end
@@ -69,9 +69,9 @@ function M.get_current_widget()
   return nil
 end
 
----@return eve.types.ux.IKeymap[]
+---@return t.eve.IKeymap[]
 function M.get_keymaps()
-  ---@type eve.types.ux.IKeymap[]
+  ---@type t.eve.IKeymap[]
   local keymaps = {
     { modes = { "i", "n", "t", "v" }, key = "<C-a>i", callback = M.backward, desc = "widgets: backward" },
     { modes = { "i", "n", "t", "v" }, key = "<C-a>o", callback = M.forward, desc = "widgets: forward" },
@@ -81,7 +81,7 @@ function M.get_keymaps()
   return keymaps
 end
 
----@param widget                        eve.types.ux.IWidget
+---@param widget                        t.eve.ux.IWidget
 ---@return nil
 function M.push(widget)
   _widgets:push(widget)
@@ -95,12 +95,12 @@ end
 ---@return boolean
 function M.resume()
   while true do
-    local present, present_index = _widgets:present() ---@type eve.types.ux.IWidget|nil, integer
+    local present, present_index = _widgets:present() ---@type t.eve.ux.IWidget|nil, integer
     if present == nil then
       break
     end
 
-    local status = present:status() ---@type eve.enums.WidgetStatus
+    local status = present:status() ---@type t.eve.e.WidgetStatus
     if status == "visible" then
       vim.schedule(function()
         present:hide()
@@ -125,7 +125,7 @@ end
 ---@return nil
 function M.resize()
   for widget in _widgets:iterator() do
-    local status = widget:status() ---@type eve.enums.WidgetStatus
+    local status = widget:status() ---@type t.eve.e.WidgetStatus
     if status == "visible" then
       widget:resize()
     end
