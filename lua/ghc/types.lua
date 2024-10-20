@@ -1,0 +1,27 @@
+---@class t.ghc.ux.theme.IGenHlgroupMapParams
+---@field public scheme                 t.fml.ux.theme.IScheme
+---@field public transparency           boolean
+
+---@alias t.ghc.e.ux.theme.HighlightIntegration
+---| "basic"
+---| "default"
+---| "flash"
+---| "gitsigns"
+---| "indent-blank-line"
+---| "lazy"
+---| "mason"
+---| "mini-icons"
+---| "neo-tree"
+---| "nvim-cmp"
+---| "nvim-dap"
+---| "nvim-dap-ui"
+---| "nvim-lspconfig"
+---| "nvim-treesitter-context"
+---| "statusline"
+---| "tabline"
+---| "treesitter"
+---| "trouble"
+---| "vim-illuminate"
+---| "vim-notify"
+---| "which-key"
+---| "winline"

@@ -17,7 +17,7 @@ local ReporterLevelEnum = {
   ERROR = vim.log.levels.ERROR,
 }
 
----@param level                         eve.enums.ReportLevel|nil
+---@param level                         t.eve.e.ReportLevel|nil
 ---@return number
 local function resolve_level(level)
   if level == nil then
@@ -53,7 +53,7 @@ local function log(options, level)
 end
 
 ---@param options                       eve.std.reporter.IReporterOptions
----@param level                         ?eve.enums.ReportLevel
+---@param level                         ?t.eve.e.ReportLevel
 function M.log(options, level)
   local level_value = resolve_level(level) ---@type number
   log(options, level_value)

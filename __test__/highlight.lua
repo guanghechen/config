@@ -1,5 +1,5 @@
 local function test_compile_highlights()
-  local scheme = require("ghc.ui.theme.scheme.darken") ---@type fml.types.ui.theme.IScheme
+  local scheme = require("ghc.ux.theme.scheme.dark") ---@type t.fml.ux.theme.IScheme
   local c = scheme.palette
   local hlgroup_map = {
     f_sr_invisible = { fg = "none", bg = "none" },

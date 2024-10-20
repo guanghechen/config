@@ -18,8 +18,8 @@ end
 
 ---@param width                         integer
 ---@param height                        integer
----@param restriction                   eve.types.ux.IBoxRestriction
----@return eve.types.ux.IBoxDimension
+---@param restriction                   t.eve.ux.IBoxRestriction
+---@return t.eve.ux.IBoxDimension
 function M.measure(width, height, restriction)
   local rows = restriction.rows ---@type integer
   local cols = restriction.cols ---@type integer
@@ -41,11 +41,11 @@ function M.measure(width, height, restriction)
     row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
     col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-    ---@type eve.types.ux.IBoxDimension
+    ---@type t.eve.ux.IBoxDimension
     return { row = row, col = col, width = width, height = height }
   end
 
-  local position = restriction.position ---@type eve.enums.BoxPosition
+  local position = restriction.position ---@type t.eve.e.BoxPosition
   if position == "cursor" then
     if restriction.cursor_row ~= nil and restriction.cursor_col ~= nil then
       local row = restriction.cursor_row + 1 ---@type integer
@@ -53,7 +53,7 @@ function M.measure(width, height, restriction)
       row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
       col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-      ---@type eve.types.ux.IBoxDimension
+      ---@type t.eve.ux.IBoxDimension
       return { row = row, col = col, width = width, height = height }
     end
   end
@@ -63,7 +63,7 @@ function M.measure(width, height, restriction)
   row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
   col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-  ---@type eve.types.ux.IBoxDimension
+  ---@type t.eve.ux.IBoxDimension
   return { row = row, col = col, width = width, height = height }
 end
 

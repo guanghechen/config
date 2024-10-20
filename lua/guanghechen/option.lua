@@ -14,8 +14,8 @@ vim.opt.foldmethod = "expr"
 vim.opt.foldtext = ""
 vim.opt.laststatus = 3 -- Keep only the global status bar.
 vim.opt.showtabline = 2
-vim.opt.statusline = "%!v:lua._G.ghc.ui.statusline.render()"
-vim.opt.tabline = "%!v:lua._G.ghc.ui.tabline.render()"
+vim.opt.statusline = "%!v:lua._G.ghc.ux.statusline.render()"
+vim.opt.tabline = "%!v:lua._G.ghc.ux.tabline.render()"
 
 ---! appearance
 vim.opt.autoindent = true
@@ -37,7 +37,7 @@ vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim`
 vim.opt.number = true -- Print line number
 vim.opt.pumblend = 10 -- Popup blend
 vim.opt.pumheight = 10 -- Maximum number of entries in a popup
-vim.opt.relativenumber = ghc.context.client.relativenumber:snapshot()
+vim.opt.relativenumber = eve.context.state.theme.relativenumber:snapshot()
 vim.opt.scrolloff = 4 -- Lines of context
 vim.opt.shiftround = true -- Round indent
 vim.opt.shiftwidth = 2

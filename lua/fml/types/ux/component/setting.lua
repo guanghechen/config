@@ -1,0 +1,14 @@
+---@class t.fml.ux.ISetting
+---@field public bufnr                  integer|nil
+---@field public winnr                  integer|nil
+---@field public open                   fun(self: t.fml.ux.ISetting, params: t.fml.ux.setting.IOpenParams): nil
+---@field public close                  fun(self: t.fml.ux.ISetting): nil
+
+---@class t.fml.ux.setting.IOpenParams
+---@field public initial_value          t.eve.T
+---@field public row                    ?number
+---@field public col                    ?number
+---@field public width                  ?number
+---@field public height                 ?number
+---@field public win_cursor_row         ?integer
+---@field public win_cursor_col         ?integer

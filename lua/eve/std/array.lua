@@ -27,6 +27,27 @@ end
 
 ---@generic T
 ---@param arr                           T[]
+---@param element                       T
+function M.toggle_inline(arr, element)
+  local N = #arr ---@type integer
+  local k = 0 ---@type integer
+  for i = 1, N, 1 do
+    local val = arr[i]
+    if val ~= element then
+      k = k + 1
+      arr[k] = val
+    end
+  end
+
+  if k == N then
+    arr[N + 1] = element
+  else
+    arr[N] = nil
+  end
+end
+
+---@generic T
+---@param arr                           T[]
 ---@param filter                        fun(v: T, i: integer, arr: T[]): boolean
 ---@return integer
 function M.count(arr, filter)

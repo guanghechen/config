@@ -1,7 +1,7 @@
 local BatchHandler = require("eve.collection.batch_handler")
 local reporter = require("eve.std.reporter")
 
----@class eve.collection.BatchDisposable : eve.types.collection.IBatchDisposable
+---@class eve.collection.BatchDisposable : t.eve.collection.IBatchDisposable
 local M = {}
 M.__index = M
 
@@ -12,12 +12,12 @@ function M.new()
   ---@type boolean
   self._disposed = false
 
-  ---@type eve.types.collection.IDisposable[]
+  ---@type t.eve.collection.IDisposable[]
   self._disposables = {}
   return self
 end
 
----@param disposables                   eve.types.collection.IDisposable[]
+---@param disposables                   t.eve.collection.IDisposable[]
 ---@return nil
 function M.dispose_all(disposables)
   if #disposables <= 0 then
@@ -65,7 +65,7 @@ function M:dispose()
   end
 end
 
----@param disposable eve.types.collection.IDisposable
+---@param disposable t.eve.collection.IDisposable
 ---@return nil
 function M:add_disposable(disposable)
   if disposable:is_disposed() then

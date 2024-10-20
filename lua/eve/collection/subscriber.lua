@@ -1,6 +1,6 @@
 local util = require("eve.std.util")
 
----@class eve.collection.Subscriber : eve.types.collection.ISubscriber
+---@class eve.collection.Subscriber : t.eve.collection.ISubscriber
 ---@field private _on_next              fun(value: any, value_prev: any|nil):nil
 ---@field private _on_dispose           fun():nil
 local M = {}

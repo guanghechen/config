@@ -1,12 +1,12 @@
----@class eve.types.collection.ISubscriber : eve.types.collection.IDisposable
----@field public next                   fun(self: eve.types.collection.ISubscriber, value: eve.types.T, value_prev: eve.types.T| nil): nil
+---@class t.eve.collection.ISubscriber : t.eve.collection.IDisposable
+---@field public next                   fun(self: t.eve.collection.ISubscriber, value: t.eve.T, value_prev: t.eve.T| nil): nil
 
----@class eve.types.collection.IUnsubscribable
----@field public unsubscribe            fun(self: eve.types.collection.IUnsubscribable):nil
+---@class t.eve.collection.IUnsubscribable
+---@field public unsubscribe            fun(self: t.eve.collection.IUnsubscribable):nil
 
----@class eve.types.collection.ISubscribable
----@field public subscribe              fun(self: eve.types.collection.ISubscribable, subscriber: eve.types.collection.ISubscriber, ignoreInitial?: boolean): eve.types.collection.IUnsubscribable
+---@class t.eve.collection.ISubscribable
+---@field public subscribe              fun(self: t.eve.collection.ISubscribable, subscriber: t.eve.collection.ISubscriber, ignoreInitial?: boolean): t.eve.collection.IUnsubscribable
 
----@class eve.types.collection.ISubscribers : eve.types.collection.ISubscribable, eve.types.collection.IDisposable
----@field public count                  fun(self: eve.types.collection.ISubscribers): nil
----@field public notify                 fun(self: eve.types.collection.ISubscribers, value: eve.types.T, value_prev: eve.types.T | nil): nil
+---@class t.eve.collection.ISubscribers : t.eve.collection.ISubscribable, t.eve.collection.IDisposable
+---@field public count                  fun(self: t.eve.collection.ISubscribers): nil
+---@field public notify                 fun(self: t.eve.collection.ISubscribers, value: t.eve.T, value_prev: t.eve.T | nil): nil

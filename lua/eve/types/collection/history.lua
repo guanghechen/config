@@ -1,51 +1,51 @@
----@class eve.types.collection.IHistory
+---@class t.eve.collection.IHistory
 ---@field public name                   string
----@field public equals                 eve.types.IEquals
----@field public backward               fun(self: eve.types.collection.IHistory, step?: integer): eve.types.T|nil, boolean
----@field public capacity               fun(self: eve.types.collection.IHistory): integer
----@field public clear                  fun(self: eve.types.collection.IHistory): nil
----@field public collect                fun(self: eve.types.collection.IHistory): eve.types.T[]
----@field public dump                   fun(self: eve.types.collection.IHistory): eve.types.collection.history.ISerializedData
----@field public fork                   fun(self: eve.types.collection.IHistory, params: eve.types.collection.history.IForkParams): eve.types.collection.IHistory
----@field public forward                fun(self: eve.types.collection.IHistory, step?: integer): eve.types.T|nil, boolean
----@field public go                     fun(self: eve.types.collection.IHistory, index: integer): eve.types.T|nil, integer
----@field public is_bottom              fun(self: eve.types.collection.IHistory): boolean
----@field public is_empty               fun(self: eve.types.collection.IHistory): boolean
----@field public is_top                 fun(self: eve.types.collection.IHistory): boolean
----@field public iterator               fun(self: eve.types.collection.IHistory): fun(): eve.types.T|nil, integer|nil
----@field public iterator_reverse       fun(self: eve.types.collection.IHistory): fun(): eve.types.T|nil, integer|nil
----@field public load                   fun(self: eve.types.collection.IHistory, data: eve.types.collection.history.ISerializedData): nil
----@field public present                fun(self: eve.types.collection.IHistory): eve.types.T|nil, integer
----@field public print                  fun(self: eve.types.collection.IHistory): nil
----@field public push                   fun(self: eve.types.collection.IHistory, element: eve.types.T): nil
----@field public rearrange              fun(self: eve.types.collection.IHistory, filter: eve.types.IFilter): nil
----@field public size                   fun(self: eve.types.collection.IHistory): integer
----@field public top                    fun(self: eve.types.collection.IHistory): eve.types.T|nil, integer
----@field public update_top             fun(self: eve.types.collection.IHistory, element: eve.types.T): nil
+---@field public equals                 t.eve.IEquals
+---@field public backward               fun(self: t.eve.collection.IHistory, step?: integer): t.eve.T|nil, boolean
+---@field public capacity               fun(self: t.eve.collection.IHistory): integer
+---@field public clear                  fun(self: t.eve.collection.IHistory): nil
+---@field public collect                fun(self: t.eve.collection.IHistory): t.eve.T[]
+---@field public dump                   fun(self: t.eve.collection.IHistory): t.eve.collection.history.ISerializedData
+---@field public fork                   fun(self: t.eve.collection.IHistory, params: t.eve.collection.history.IForkParams): t.eve.collection.IHistory
+---@field public forward                fun(self: t.eve.collection.IHistory, step?: integer): t.eve.T|nil, boolean
+---@field public go                     fun(self: t.eve.collection.IHistory, index: integer): t.eve.T|nil, integer
+---@field public is_bottom              fun(self: t.eve.collection.IHistory): boolean
+---@field public is_empty               fun(self: t.eve.collection.IHistory): boolean
+---@field public is_top                 fun(self: t.eve.collection.IHistory): boolean
+---@field public iterator               fun(self: t.eve.collection.IHistory): fun(): t.eve.T|nil, integer|nil
+---@field public iterator_reverse       fun(self: t.eve.collection.IHistory): fun(): t.eve.T|nil, integer|nil
+---@field public load                   fun(self: t.eve.collection.IHistory, data: t.eve.collection.history.ISerializedData): nil
+---@field public present                fun(self: t.eve.collection.IHistory): t.eve.T|nil, integer
+---@field public print                  fun(self: t.eve.collection.IHistory): nil
+---@field public push                   fun(self: t.eve.collection.IHistory, element: t.eve.T): nil
+---@field public rearrange              fun(self: t.eve.collection.IHistory, filter: t.eve.IFilter): nil
+---@field public size                   fun(self: t.eve.collection.IHistory): integer
+---@field public top                    fun(self: t.eve.collection.IHistory): t.eve.T|nil, integer
+---@field public update_top             fun(self: t.eve.collection.IHistory, element: t.eve.T): nil
 
----@class eve.types.collection.IAdvanceHistory
+---@class t.eve.collection.IAdvanceHistory
 ---@field public name                   string
----@field public equals                 eve.types.IEquals
----@field public validate               eve.types.IValidate
----@field public backward               fun(self: eve.types.collection.IAdvanceHistory, step?: integer): eve.types.T|nil, boolean
----@field public capacity               fun(self: eve.types.collection.IAdvanceHistory): integer
----@field public clear                  fun(self: eve.types.collection.IAdvanceHistory): nil
----@field public dump                   fun(self: eve.types.collection.IAdvanceHistory): eve.types.collection.history.ISerializedData
----@field public fork                   fun(self: eve.types.collection.IAdvanceHistory, params?: eve.types.collection.history.IForkParams): eve.types.collection.IAdvanceHistory
----@field public forward                fun(self: eve.types.collection.IAdvanceHistory, step?: integer): eve.types.T|nil, boolean
----@field public go                     fun(self: eve.types.collection.IAdvanceHistory, index: integer): eve.types.T|nil
----@field public iterator               fun(self: eve.types.collection.IAdvanceHistory): fun(): eve.types.T|nil, integer|nil
----@field public iterator_reverse       fun(self: eve.types.collection.IAdvanceHistory): fun(): eve.types.T|nil, integer|nil
----@field public load                   fun(self: eve.types.collection.IAdvanceHistory, data: eve.types.collection.history.ISerializedData): nil
----@field public present                fun(self: eve.types.collection.IAdvanceHistory): eve.types.T|nil, integer
----@field public print                  fun(self: eve.types.collection.IAdvanceHistory): nil
----@field public push                   fun(self: eve.types.collection.IAdvanceHistory, element: eve.types.T|nil): nil
----@field public rearrange              fun(self: eve.types.collection.IAdvanceHistory): nil
----@field public size                   fun(self: eve.types.collection.IAdvanceHistory): integer
+---@field public equals                 t.eve.IEquals
+---@field public validate               t.eve.IValidate
+---@field public backward               fun(self: t.eve.collection.IAdvanceHistory, step?: integer): t.eve.T|nil, boolean
+---@field public capacity               fun(self: t.eve.collection.IAdvanceHistory): integer
+---@field public clear                  fun(self: t.eve.collection.IAdvanceHistory): nil
+---@field public dump                   fun(self: t.eve.collection.IAdvanceHistory): t.eve.collection.history.ISerializedData
+---@field public fork                   fun(self: t.eve.collection.IAdvanceHistory, params?: t.eve.collection.history.IForkParams): t.eve.collection.IAdvanceHistory
+---@field public forward                fun(self: t.eve.collection.IAdvanceHistory, step?: integer): t.eve.T|nil, boolean
+---@field public go                     fun(self: t.eve.collection.IAdvanceHistory, index: integer): t.eve.T|nil
+---@field public iterator               fun(self: t.eve.collection.IAdvanceHistory): fun(): t.eve.T|nil, integer|nil
+---@field public iterator_reverse       fun(self: t.eve.collection.IAdvanceHistory): fun(): t.eve.T|nil, integer|nil
+---@field public load                   fun(self: t.eve.collection.IAdvanceHistory, data: t.eve.collection.history.ISerializedData): nil
+---@field public present                fun(self: t.eve.collection.IAdvanceHistory): t.eve.T|nil, integer
+---@field public print                  fun(self: t.eve.collection.IAdvanceHistory): nil
+---@field public push                   fun(self: t.eve.collection.IAdvanceHistory, element: t.eve.T|nil): nil
+---@field public rearrange              fun(self: t.eve.collection.IAdvanceHistory): nil
+---@field public size                   fun(self: t.eve.collection.IAdvanceHistory): integer
 
----@class eve.types.collection.history.IForkParams
+---@class t.eve.collection.history.IForkParams
 ---@field public name                   ?string
 
----@class eve.types.collection.history.ISerializedData
+---@class t.eve.collection.history.ISerializedData
 ---@field public present                integer
----@field public stack                  eve.types.T[]
+---@field public stack                  t.eve.T[]

@@ -5,7 +5,7 @@
 ---@field public order_client           integer
 ---@field public order_type             integer
 
----@class ghc.dressing.provider.codeaction.IItem : fml.types.ui.select.IItem
+---@class ghc.dressing.provider.codeaction.IItem : t.fml.ux.select.IItem
 ---@field public data                   ghc.dressing.provider.codeaction.IItemData
 
 local ACTION_TYPE_ORDERS = {
@@ -35,7 +35,7 @@ local LSP_CLIENT_NAME_ORDERS = {
 }
 
 ---@param items                         any[]
----@return fml.types.ui.select.IProvider
+---@return t.fml.ux.select.IProvider
 ---@return integer
 local function codeaction_provider(items)
   local width_order = #tostring(#items) ---@type integer
@@ -99,7 +99,7 @@ local function codeaction_provider(items)
     table.insert(select_items, select_item)
   end
 
-  ---@type fml.types.ui.select.IProvider
+  ---@type t.fml.ux.select.IProvider
   local provider = {
     fetch_data = function()
       return { items = select_items }
@@ -110,7 +110,7 @@ local function codeaction_provider(items)
       local text_client_name = item_data.client_name ---@type string
       local text = item.text ---@type string
 
-      ---@type eve.types.ux.IInlineHighlight[]
+      ---@type t.eve.IHighlightInline[]
       local highlights = {
         { coll = 0, colr = width_order + 1, hlname = "f_us_codeaction_order" },
         { coll = width_order + 2, colr = width_order + 2 + #text_content, hlname = "f_us_codeaction_content" },
@@ -123,7 +123,7 @@ local function codeaction_provider(items)
 
       local offset = width_order + 2 ---@type integer
       for _, piece in ipairs(match.matches) do
-        ---@type eve.types.ux.IInlineHighlight[]
+        ---@type t.eve.IHighlightInline[]
         local highlight = { coll = offset + piece.l, colr = offset + piece.r, hlname = "f_us_main_match" }
         table.insert(highlights, highlight)
       end

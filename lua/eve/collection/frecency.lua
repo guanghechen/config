@@ -1,19 +1,19 @@
 local util = require("eve.std.util")
 
----@class eve.collection.Frecency : eve.types.collection.IFrecency
+---@class eve.collection.Frecency : t.eve.collection.IFrecency
 ---@field public MAX_TIMESTAMPS         integer
----@field protected _items              table<string, eve.types.collection.frecency.IItem>
+---@field protected _items              table<string, t.eve.collection.frecency.IItem>
 ---@field protected _normalize          fun(key: string): string
 local M = {}
 M.__index = M
 
 ---@class eve.collection.frecency.IProps
 ---@field public MAX_TIMESTAMPS         ?integer
----@field public items                  table<string, eve.types.collection.frecency.IItem>
+---@field public items                  table<string, t.eve.collection.frecency.IItem>
 ---@field public normalize              ?fun(key: string): string
 
 ---@class eve.collection.frecency.IDeserializeProps
----@field public data                   eve.types.collection.frecency.ISerializedData
+---@field public data                   t.eve.collection.frecency.ISerializedData
 ---@field public MAX_TIMESTAMPS         ?integer
 
 ---@param props                         eve.collection.frecency.IProps
@@ -22,7 +22,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
-  local items = props.items ---@type table<string, eve.types.collection.frecency.IItem>
+  local items = props.items ---@type table<string, t.eve.collection.frecency.IItem>
   local normalize = props.normalize or util.identity ---@type fun(key: string): string
 
   self.MAX_TIMESTAMPS = MAX_TIMESTAMPS
@@ -35,7 +35,7 @@ end
 ---@param props                         eve.collection.frecency.IDeserializeProps
 ---@return eve.collection.Frecency
 function M.deserialize(props)
-  local data = props.data ---@type eve.types.collection.frecency.ISerializedData
+  local data = props.data ---@type t.eve.collection.frecency.ISerializedData
   return M.new({ items = data.items })
 end
 
@@ -44,9 +44,9 @@ end
 function M:access(key)
   key = self._normalize(key)
   local timestamp = os.time() ---@type integer
-  local item = self._items[key] ---@type eve.types.collection.frecency.IItem|nil
+  local item = self._items[key] ---@type t.eve.collection.frecency.IItem|nil
   if item == nil then
-    item = { timestamps = { timestamp }, idx = 1 } ---@type eve.types.collection.frecency.IItem
+    item = { timestamps = { timestamp }, idx = 1 } ---@type t.eve.collection.frecency.IItem
     self._items[key] = item
   else
     local idx = item.idx == self.MAX_TIMESTAMPS and 1 or item.idx + 1 ---@type integer
@@ -55,17 +55,17 @@ function M:access(key)
   end
 end
 
----@return eve.types.collection.frecency.ISerializedData
+---@return t.eve.collection.frecency.ISerializedData
 function M:dump()
-  ---@type eve.types.collection.frecency.ISerializedData
+  ---@type t.eve.collection.frecency.ISerializedData
   local data = { items = self._items }
   return data
 end
 
----@param data                          eve.types.collection.frecency.ISerializedData
+---@param data                          t.eve.collection.frecency.ISerializedData
 ---@return nil
 function M:load(data)
-  local items = data.items ---@type eve.types.collection.frecency.IItem[]
+  local items = data.items ---@type t.eve.collection.frecency.IItem[]
   self._items = items
 end
 
@@ -74,7 +74,7 @@ end
 function M:score(key)
   key = self._normalize(key)
   local timestamp_cur = os.time() ---@type integer
-  local item = self._items[key] ---@type eve.types.collection.frecency.IItem|nil
+  local item = self._items[key] ---@type t.eve.collection.frecency.IItem|nil
   local score = 0 ---@type number
   if item ~= nil then
     for _, timestamp in ipairs(item.timestamps) do

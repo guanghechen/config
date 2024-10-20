@@ -1,12 +1,12 @@
----@class eve.types.collection.IFrecency
----@field public access                 fun(self: eve.types.collection.IFrecency, key: string): nil
----@field public load                   fun(self: eve.types.collection.IFrecency, data: eve.types.collection.frecency.ISerializedData): nil
----@field public dump                   fun(self: eve.types.collection.IFrecency): eve.types.collection.frecency.ISerializedData
----@field public score                  fun(self: eve.types.collection.IFrecency, key: string): number
+---@class t.eve.collection.IFrecency
+---@field public access                 fun(self: t.eve.collection.IFrecency, key: string): nil
+---@field public load                   fun(self: t.eve.collection.IFrecency, data: t.eve.collection.frecency.ISerializedData): nil
+---@field public dump                   fun(self: t.eve.collection.IFrecency): t.eve.collection.frecency.ISerializedData
+---@field public score                  fun(self: t.eve.collection.IFrecency, key: string): number
 
----@class eve.types.collection.frecency.IItem
+---@class t.eve.collection.frecency.IItem
 ---@field public timestamps             integer[]
 ---@field public idx                    integer
 
----@class eve.types.collection.frecency.ISerializedData
----@field public items                  eve.types.collection.frecency.IItem[]
+---@class t.eve.collection.frecency.ISerializedData
+---@field public items                  t.eve.collection.frecency.IItem[]
