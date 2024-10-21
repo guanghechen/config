@@ -65,7 +65,10 @@ gui:
       - "#ABB2BF" # white
 notARepository: skip
 os:
-  editCommand: "nvim"
-  editCommandTemplate: "{{editor}} {{filename}}"
+  edit: "nvim"
+  editAtLine: "nvim --line={{line}} {{filename}}"
+  editAtLineAndWait: "nvim --block --line={{line}} {{filename}}"
+  editInTerminal: true
   editPreset: "nvim-remote"
+  openDirInEditor: "nvim {{dir}}"
 promptToReturnFromSubprocess: true
