@@ -42,9 +42,6 @@
   conflictstyle= diff3
 [push]
   default = upstream
-[user]
-  name = guanghechen
-  email = me.guanghechen@gmail.com
 
 # delta config
 # https://github.com/dandavison/delta
@@ -61,4 +58,16 @@
   side-by-side = true
   syntax-theme = GitHub
   true-color = always
+
+[includeIf "gitdir:~/.config/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/playground/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/ws/github/guanghechen/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/ws/github/yozora/"]
+  path = ~/.config/git/guanghechen/.gitconfig
 

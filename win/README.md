@@ -19,7 +19,7 @@
 * Setup pwsh
 
   - Edit the profile by `nvim $PROFILE` or `notepad $PROFILE`
-  - Copy the preset config from ../config/pwsh/profile.ps1
+  - Copy the preset config from ./config/pwsh/profile.ps1
 
 
 * Setup neovim

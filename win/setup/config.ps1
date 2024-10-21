@@ -46,7 +46,7 @@ foreach ($branch in $config_repo_branch) {
 
 # Define the source and destination paths
 Write-ColoredMessage "[setup config] copying pwsh profile.ps1..." Blue
-$source = "$env:XDG_CONFIG_HOME\guanghechen\config\pwsh\profile.ps1"
+$source = "$env:XDG_CONFIG_HOME\guanghechen\config\win\pwsh\profile.ps1"
 $destination = $PROFILE
 Copy-Item -Path $source -Destination $destination -Force
 

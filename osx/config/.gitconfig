@@ -1,0 +1,73 @@
+[alias]
+  last = log -1 HEAD
+  loga = log --color --graph --abbrev-commit --decorate --date=relative --format=format:'%C(red)%h%C(reset) %C(bold blue)%an%C(reset) %Creset%s%C(reset) %C(dim white) %Cgreen(%cr)%C(reset) %C(yellow)%d%C(reset)'
+  logi = log --color --abbrev-commit --decorate --date=relative --format=format:'%C(red)%h%C(reset) %C(bold blue)%an%C(reset) %Creset%s%C(reset) %C(dim white) %Cgreen(%cr)%C(reset) %C(yellow)%d%C(reset)'
+  unstage = reset HEAD --
+  volatile = push origin --force HEAD:volatile
+[commit]
+#  gpgSign = true
+[core]
+  quotepath = false
+  editor = nvim
+  eol = lf
+  safecrlf = true
+  savecrlf = true
+  autocrlf = false
+  fileMode = true
+  compression = 0
+  pager = delta
+[color]
+  ui = true
+[diff]
+  colorMoved = default
+[filter "lfs"]
+  clean = git-lfs clean -- %f
+  process = git-lfs filter-process
+  required = true
+  smudge = git-lfs smudge -- %f
+[gpg]
+#  program = gpg
+[gui]
+  encoding = utf-8
+[http]
+  postBuffer=52428800
+[init]
+  defaultBranch = main
+[i18n]
+  commitencoding = utf-8
+  logOutputEncoding = utf-8
+[i18n "commit"]
+  encoding = utf-8
+[merge]
+  conflictstyle= diff3
+[push]
+  default = upstream
+
+# delta config
+# https://github.com/dandavison/delta
+[delta]
+  hunk-header-style = raw
+  hunk-header-decoration-style = ul
+  hyperlinks = true
+  hyperlinks-file-link-format = vscode://file/{path}:{line}
+  detect-dark-light = auto
+  # diff-so-fancy = true
+  line-numbers = true
+  navigate = true    # use n and N to move between diff sections
+  paging = never
+  side-by-side = true
+  syntax-theme = GitHub
+  true-color = always
+
+[includeIf "gitdir:~/.config/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/playground/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/ws/github/guanghechen/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/ws/github/yozora/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
