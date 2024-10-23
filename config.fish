@@ -43,6 +43,7 @@ else
   set -gx ghc_vpn_host_ip '127.0.0.1'
 end
 
+source ~/.config/fish/conf.d/theme.fish
 source ~/.config/fish/conf.d/alias.fish
 source ~/.config/fish/conf.d/app.fish
 source ~/.config/fish/conf.d/fzf.fish
