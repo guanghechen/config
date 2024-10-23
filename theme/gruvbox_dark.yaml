@@ -1,40 +1,39 @@
 gui:
   authorColors:
-    guanghechen: "#50A14F" # green
+    guanghechen: "#CCD5FF"
   branchColors:
-    main: "#0184BC" # blue
+    main: "#83A598"
   theme:
     activeBorderColor:
       - bold
-      - "#F07178" # pink
+      - "#FE8019"
     inactiveBorderColor:
       - default
-      - "#4F525D" # grey
+      - "#A89984"
     searchingActiveBorderColor:
       - default
-      - "#FF6A00" # orange
+      - "#83A598"
     optionsTextColor:
       - default
-      - "#F07178" # pink
+      -  "#FE8019"
     selectedLineBgColor:
       - default
-      - "#A2A2A3" # light_grey
+      - "#504945"
     cherryPickedCommitFgColor:
       - default
-      - "#4078F2" # blue
+      - "#83A598"
     cherryPickedCommitBgColor:
       - default
-      - "#0B8EC6" # cyan
+      - "#8EC07C"
     markedBaseCommitFgColor:
       - default
-      - "#7ECA9C" # vibrant_green
+      - "#B8BB26"
     markedBaseCommitBgColor:
       - default
-      - "#428BAB" # nord_blue
+      - "#B16286"
     unstagedChangesColor:
       - default
-      - "#E45649" # red
+      - "#FB4934"
     defaultFgColor:
       - default
-      - "#FAFAFA" # white
-
+      - "#EBDBB2"
