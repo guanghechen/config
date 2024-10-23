@@ -15,9 +15,34 @@ git:
   skipHookPrefix: WIP
 gui:
   authorColors:
-    guanghechen: "#98C379" # green
+    guanghechen: "#076678"
+    "*": "#504945"
   branchColors:
-    main: "#61AFEF" # blue
+    main: "#076678"
+  theme:
+    defaultFgColor:
+      - "#504945"
+    activeBorderColor:
+      - "#D65D0E"
+      - bold
+    inactiveBorderColor:
+      - "#7C6F64"
+    optionsTextColor:
+      -  "#D65D0E"
+    selectedLineBgColor:
+      - "#D5C4A1"
+    cherryPickedCommitFgColor:
+      - "#076678"
+    cherryPickedCommitBgColor:
+      - "#427B58"
+    markedBaseCommitFgColor:
+      - "#79740E"
+    markedBaseCommitBgColor:
+      - "#B16286"
+    searchingActiveBorderColor:
+      - "#076678"
+    unstagedChangesColor:
+      - "#9D0006"
   border: "rounded"
   expandFocusedSidePanel: false
   mainPanelSplitMode: flexible
@@ -29,40 +54,6 @@ gui:
   showIcons: true
   showRandomTip: true
   splitDiff: auto
-  theme:
-    activeBorderColor:
-      - bold
-      - "#DE8C92" # pink
-    inactiveBorderColor:
-      - default
-      - "#5A6374" # grey
-    searchingActiveBorderColor:
-      - default
-      - "#FCA2AA" # orange
-    optionsTextColor:
-      - default
-      - "#DE8C92" # pink
-    selectedLineBgColor:
-      - default
-      - "#6F737B" # light_grey
-    cherryPickedCommitFgColor:
-      - default
-      - "#61AFEF" # blue
-    cherryPickedCommitBgColor:
-      - default
-      - "#A3B8EF" # bg_cyan
-    markedBaseCommitFgColor:
-      - default
-      - "#56B6C2" # cyan
-    markedBaseCommitBgColor:
-      - default
-      - "#7c94b7" # dark_blue
-    unstagedChangesColor:
-      - default
-      - "#E06C75" # red
-    defaultFgColor:
-      - default
-      - "#DCDFE4" # white
 notARepository: skip
 os:
   edit: "nvim"
