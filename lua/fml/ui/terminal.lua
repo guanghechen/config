@@ -35,7 +35,19 @@ function M.new(props)
   end
 
   local keymaps = eve.widgets.get_keymaps() ---@type eve.types.ux.IKeymap[]
-  eve.array.extend(keymaps, props.keymaps or {})
+
+  ---@type eve.types.ux.IKeymap[]
+  local preset_keymaps = {
+    {
+      modes = { "n", "v" },
+      key = "q",
+      callback = function()
+        self:close()
+      end,
+      desc = "close",
+    },
+  }
+  eve.array.extend(keymaps, preset_keymaps, props.keymaps or {})
 
   local command_cwd = props.command_cwd or eve.path.cwd() ---@type string
   local command_env = props.command_env ---@type table<string, string>|nil
@@ -70,12 +82,6 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].filetype = eve.constants.FT_TERM
   vim.bo[bufnr].swapfile = false
   util.bind_keys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
-
-  ---@return nil
-  local function on_close()
-    self:close()
-  end
-  vim.keymap.set({ "n", "v" }, "q", on_close, { desc = "close", noremap = true, silent = true })
 
   return bufnr, true
 end
