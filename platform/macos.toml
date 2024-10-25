@@ -1,3 +1,2 @@
-[shell]
-program = "/opt/homebrew/bin/fish"
-args = ["-l"]
+[terminal]
+shell = "/opt/homebrew/bin/fish"
