@@ -1,7 +1,7 @@
 # Bell
 [bell]
 animation = "EaseOutExpo"
-color = "#EEEEF3"
+color = "#888888"
 duration = 100
 
 [cursor]
@@ -46,4 +46,4 @@ lines = 40
 
 [window.padding]
 x = 0
-y = 5
+y = 0

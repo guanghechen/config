@@ -4,11 +4,14 @@
 live_config_reload = true
 import = [
   "~/.config/alacritty/basic.toml",
-  "~/.config/alacritty/local/linux.toml",
-  "~/.config/alacritty/local/macos.toml",
-  "~/.config/alacritty/local/windows.toml",
   "~/.config/alacritty/font.toml",
   "~/.config/alacritty/keymap.toml",
   "~/.config/alacritty/theme/one-half-dark.toml",
-  # "~/.config/alacritty/theme/one-half-light.toml",
+
+  #### local 
+  
+  "~/.config/alacritty/local/theme.toml",
+  "~/.config/alacritty/local/linux.toml",
+  "~/.config/alacritty/local/macos.toml",
+  "~/.config/alacritty/local/windows.toml",
 ]
