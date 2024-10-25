@@ -7,7 +7,6 @@ fish_variables
 # Ignore any other automatically generated files
 *.tmp
 
+# Ignore local files
 conf.d/local.fish
-conf.d/omf.fish
-
-theme/local.fish
+local/
