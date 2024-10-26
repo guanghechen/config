@@ -48,7 +48,7 @@ local M = {
   gen_theme = function(context)
     local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
     local text = template:gsub("{{(.-)}}", function(key)
-      return c[key] or c.red
+      return c[key] or ("{{" .. key .. "}}")
     end)
     return text
   end,

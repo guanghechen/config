@@ -27,7 +27,7 @@ local function gen_hlgroup_map(context)
     f_tl_tab_add = { fg = c.fg, bg = c.bg3 },
     f_tl_tab_item = { fg = c.fg, bg = bg_tabline },
     f_tl_tab_item_cur = { fg = c.red, bg = bg_buf_item_cur },
-    f_tl_tab_toggle = { fg = c.bg1, bg = c.blue },
+    f_tl_tab_toggle = { fg = c.bg1, bg = c.green },
   }
   return hlgroup_map
 end

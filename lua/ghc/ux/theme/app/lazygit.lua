@@ -1,4 +1,19 @@
 local template = [[
+git:
+  autoFetch: false
+  commit:
+    signOff: false
+  log:
+    order: topo-order
+    showGraph: "always"
+    showWholeGraph: false
+  paging:
+    # cargo install git-delta
+    colorArg: always
+    useConfig: false
+    pager: delta --paging=never
+  parseEmoji: true
+  skipHookPrefix: WIP
 gui:
   authorColors:
     guanghechen: "{{blue}}"
@@ -29,6 +44,26 @@ gui:
       - "{{blue}}"
     unstagedChangesColor:
       - "{{red}}"
+  border: "rounded"
+  expandFocusedSidePanel: false
+  mainPanelSplitMode: flexible
+  mouseEvents: true
+  nerdFontsVersion: "3"
+  showBottomLine: true
+  showCommandLog: true
+  showFileTree: true
+  showIcons: true
+  showRandomTip: true
+  splitDiff: auto
+notARepository: skip
+os:
+  edit: "nvim"
+  editAtLine: "nvim --line={{line}} {{filename}}"
+  editAtLineAndWait: "nvim --block --line={{line}} {{filename}}"
+  editInTerminal: true
+  editPreset: "nvim-remote"
+  openDirInEditor: "nvim {{dir}}"
+promptToReturnFromSubprocess: true
 ]]
 
 ---@type t.ghc.ux.theme.IApp
@@ -49,7 +84,7 @@ local M = {
   gen_theme = function(context)
     local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
     local text = template:gsub("{{(.-)}}", function(key)
-      return c[key] or c.red
+      return c[key] or ("{{" .. key .. "}}")
     end)
     return text
   end,

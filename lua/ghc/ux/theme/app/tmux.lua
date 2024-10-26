@@ -1,8 +1,8 @@
 local template = [[
-set -g @GHC_SL_COLOR_BG_APP_SYM       "{{green}}"
+set -g @GHC_SL_COLOR_BG_APP_SYM       "{{aqua}}"
 set -g @GHC_SL_COLOR_BG_APP_TEXT      "{{bg2}}"
 set -g @GHC_SL_COLOR_BG_BAR           "{{bg2}}"
-set -g @GHC_SL_COLOR_BG_DATE_SYM      "{{green}}"
+set -g @GHC_SL_COLOR_BG_DATE_SYM      "{{aqua}}"
 set -g @GHC_SL_COLOR_BG_DATE_TEXT     "{{bg2}}"
 set -g @GHC_SL_COLOR_BG_MESSAGE       "{{yellow}}"
 set -g @GHC_SL_COLOR_BG_SESSION       "{{green}}"
@@ -44,7 +44,7 @@ local M = {
   gen_theme = function(context)
     local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
     local text = template:gsub("{{(.-)}}", function(key)
-      return c[key] or c.red
+      return c[key] or ("{{" .. key .. "}}")
     end)
     return text
   end,

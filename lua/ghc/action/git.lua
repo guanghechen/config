@@ -15,23 +15,22 @@ local function get_filepath_from_lazygit(cwd)
   end
 end
 
----@return string
+---@return string|nil
 local function get_lazygit_config_filepath()
   local HOME_LAZYGIT = eve.path.locate_app_config_home("lazygit") ---@type string
 
   ---@type string[]
   local candidate_config_filepaths = {
-    eve.path.join(HOME_LAZYGIT, "config.yml"),
     eve.path.join(HOME_LAZYGIT, "local/theme.yaml"),
+    eve.path.join(HOME_LAZYGIT, "config.yml"),
   }
 
-  local config_filepaths = {} ---@type string[]
   for _, config_filepath in ipairs(candidate_config_filepaths) do
     if vim.fn.filereadable(config_filepath) ~= 0 then
-      table.insert(config_filepaths, config_filepath)
+      return config_filepath
     end
   end
-  return table.concat(config_filepaths, ",")
+  return nil
 end
 
 ---https://github.com/kdheepak/lazygit.nvim/issues/22#issuecomment-1815426074
@@ -91,10 +90,12 @@ end
 ---@param cwd                           string
 ---@param args                          ?string[]
 local function open_lazygit(name, cwd, args)
-  local config_path = get_lazygit_config_filepath()
+  local config_path = get_lazygit_config_filepath() ---@type string|nil
   local bufnr = fml.api.term.toggle_or_create({
     name = name,
-    command = "lazygit --use-config-file " .. vim.fn.fnameescape(config_path) .. " " .. table.concat(args or {}, " "),
+    command = config_path
+        and "lazygit -ucf " .. vim.fn.fnameescape(config_path) .. " " .. table.concat(args or {}, " ")
+      or "lazygit " .. table.concat(args or {}, " "),
     cwd = cwd,
     permanent = true,
   })
