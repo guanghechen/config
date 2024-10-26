@@ -28,6 +28,13 @@ alias vdir='vdir --color=auto'
 alias fzf="FZF_DEFAULT_OPTS_FILE=$HOME/.config/fzf/default.fzfrc $HOMEBREW_PREFIX/bin/fzf"
 alias fvim='FZF_DEFAULT_OPTS_FILE=$HOME/.config/fzf/nvim.fzfrc $HOMEBREW_PREFIX/bin/fzf --print0 | xargs -0 -o nvim'
 
+### lazygit
+if test -f "$HOME/.config/lazygit/local/theme.yml"
+  alias lg="lazygit -ucf $HOME/.config/lazygit/local/theme.yml"
+else
+  alias lg="lazygit -ucf $HOME/.config/lazygit/config.yml"
+end
+
 ### nvim
 alias vim="$HOMEBREW_PREFIX/bin/nvim"
 alias vi="$HOMEBREW_PREFIX/bin/nvim"
