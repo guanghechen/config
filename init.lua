@@ -43,7 +43,9 @@ if vim.g.neovide then
 else
   require("guanghechen.option")
   require("guanghechen.autocmd")
+  require("guanghechen.command")
   require("guanghechen.keymap")
+  require("guanghechen.keymap2")
   require("guanghechen.plugin")
   pcall(require, "integration.local")
 end

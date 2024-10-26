@@ -5,7 +5,7 @@ local M = {}
 
 ---@return nil
 function M.open_search()
-  local selected_text = eve.util.get_selected_text()
+  local selected_text = eve.nvim.get_selected_text()
   if selected_text and #selected_text > 1 then
     local next_search_pattern = selected_text ---@type string
     eve.context.state.search.flag_regex:next(false)
@@ -19,7 +19,7 @@ end
 
 ---@return nil
 function M.open_replace()
-  local selected_text = eve.util.get_selected_text()
+  local selected_text = eve.nvim.get_selected_text()
   if selected_text and #selected_text > 1 then
     local next_keyword = selected_text ---@type string
     eve.context.state.search.flag_regex:next(false)

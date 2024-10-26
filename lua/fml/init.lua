@@ -15,6 +15,7 @@ local api = {
 local fn = {
   foldexpr = require("fml.fn.foldexpr"),
   get_clipboard = require("fml.fn.get_clipboard"),
+  hmr = require("fml.fn.hmr"),
   refresh_state = require("fml.fn.refresh_state"),
   select = require("fml.fn.select"),
   statuscolumn = require("fml.fn.statuscolumn"),

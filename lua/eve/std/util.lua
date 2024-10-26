@@ -25,20 +25,4 @@ function M.truthy(...)
   return true
 end
 
----@return string
-function M.get_selected_text()
-  local saved_reg = vim.fn.getreg("v")
-  vim.cmd([[noautocmd sil norm! "vy]])
-
-  local selected_text = vim.fn.getreg("v")
-  vim.fn.setreg("v", saved_reg)
-  return selected_text or ""
-end
-
----@param module_name                   string
-function M.hmr(module_name)
-  package.loaded[module_name] = nil
-  return require(module_name)
-end
-
 return M

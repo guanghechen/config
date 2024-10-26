@@ -46,12 +46,11 @@ select = fml.ux.SimpleFileSelect.new({
   title = "Find buffers",
 })
 
----@class ghc.action.find_buffers
-local M = {}
-
----@return nil
-function M.focus()
-  select:focus()
-end
-
-return M
+local uuids = eve.commander.uuids
+eve.commander.register({
+  uuid = uuids.find_buffers,
+  desc = "find: buffers",
+  action = function()
+    select:focus()
+  end,
+})

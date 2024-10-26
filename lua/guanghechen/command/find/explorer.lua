@@ -1,5 +1,5 @@
----@class ghc.action.file_explorer.IDirItem
----@field public items                  ghc.action.file_explorer.IFileItem[]
+---@class guanghechen.command.find.explorer.IDirItem
+---@field public items                  guanghechen.command.find.explorer.IFileItem[]
 ---@field public icon_width             integer
 ---@field public name_width             integer
 ---@field public perm_width             integer
@@ -8,7 +8,7 @@
 ---@field public owner_width            integer
 ---@field public group_width            integer
 
----@class ghc.action.file_explorer.IFileItem
+---@class guanghechen.command.find.explorer.IFileItem
 ---@field public type                   string
 ---@field public name                   string
 ---@field public path                   string
@@ -21,16 +21,16 @@
 ---@field public icon                   string
 ---@field public icon_hl                string
 
-local dir_datamap = {} ---@type table<string, ghc.action.file_explorer.IDirItem>
-local file_datamap = {} ---@type table<string, ghc.action.file_explorer.IFileItem>
+local dir_datamap = {} ---@type table<string, guanghechen.command.find.explorer.IDirItem>
+local file_datamap = {} ---@type table<string, guanghechen.command.find.explorer.IFileItem>
 
 ---@param dirpath                       string
 ---@param force                         boolean
----@return ghc.action.file_explorer.IDirItem
+---@return guanghechen.command.find.explorer.IDirItem
 local function fetch_diritem(dirpath, force)
-  local diritem = (not force) and dir_datamap[dirpath] or nil ---@type ghc.action.file_explorer.IDirItem|nil
+  local diritem = (not force) and dir_datamap[dirpath] or nil ---@type guanghechen.command.find.explorer.IDirItem|nil
   if diritem == nil then
-    local items = {} ---@type ghc.action.file_explorer.IFileItem[]
+    local items = {} ---@type guanghechen.command.find.explorer.IFileItem[]
     local icon_width = 0 ---@type integer
     local name_width = 0 ---@type integer
     local perm_width = 0 ---@type integer
@@ -43,7 +43,7 @@ local function fetch_diritem(dirpath, force)
     if raw_data ~= nil then
       local raw_itself = raw_data.itself ---@type eve.oxi.IFileItemWithStatus
 
-      ---@type ghc.action.file_explorer.IFileItem
+      ---@type guanghechen.command.find.explorer.IFileItem
       local itself = {
         type = raw_itself.type,
         name = raw_itself.name,
@@ -70,7 +70,7 @@ local function fetch_diritem(dirpath, force)
           icon, icon_hl = eve.nvim.calc_fileicon(raw_item.name)
         end
 
-        ---@type ghc.action.file_explorer.IFileItem
+        ---@type guanghechen.command.find.explorer.IFileItem
         local item = {
           type = raw_item.type,
           name = raw_item.name,
@@ -97,7 +97,7 @@ local function fetch_diritem(dirpath, force)
         file_datamap[filepath] = item
       end
     end
-    ---@type ghc.action.file_explorer.IDirItem
+    ---@type guanghechen.command.find.explorer.IDirItem
     diritem = {
       items = items,
       icon_width = icon_width,
@@ -164,7 +164,7 @@ local function get_select()
       fetch_data = function(force)
         local dirpath = eve.path.normalize(state_cwd:snapshot()) ---@type string
         local parent_dirpath = eve.path.dirname(dirpath) ---@type string
-        local diritem = fetch_diritem(dirpath, force) ---@type ghc.action.file_explorer.IDirItem
+        local diritem = fetch_diritem(dirpath, force) ---@type guanghechen.command.find.explorer.IDirItem
         fetch_diritem(parent_dirpath, force)
 
         ---@type t.fml.ux.select.IItem[]
@@ -182,7 +182,7 @@ local function get_select()
         return { items = items, cursor_uuid = #items > 1 and items[2].uuid or nil }
       end,
       fetch_preview_data = function(item)
-        local fileitem = file_datamap[item.uuid] ---@type ghc.action.file_explorer.IFileItem|nil
+        local fileitem = file_datamap[item.uuid] ---@type guanghechen.command.find.explorer.IFileItem|nil
         if fileitem == nil then
           local lines = { "  Cannot found the file.  " } ---@type string[]
           local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type t.eve.IHighlight[]
@@ -192,7 +192,7 @@ local function get_select()
         end
 
         local dirpath = fileitem.dir ---@type string
-        local diritem = dir_datamap[dirpath] ---@type ghc.action.file_explorer.IDirItem|nil
+        local diritem = dir_datamap[dirpath] ---@type guanghechen.command.find.explorer.IDirItem|nil
         if diritem == nil then
           local lines = { "  Cannot found the parent directory.  " } ---@type string[]
           local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type t.eve.IHighlight[]
@@ -221,7 +221,7 @@ local function get_select()
         elseif fileitem.type == "directory" then
           local lines = {} ---@type string[]
           local highlights = {} ---@type t.eve.IHighlight[]
-          local c_diritem = fetch_diritem(fileitem.path, false) ---@type ghc.action.file_explorer.IDirItem
+          local c_diritem = fetch_diritem(fileitem.path, false) ---@type guanghechen.command.find.explorer.IDirItem
           for lnum, c_fileitem in ipairs(c_diritem.items) do
             local width = 0 ---@type integer
             local text = "" ---@type string
@@ -300,13 +300,13 @@ local function get_select()
         return { lines = lines, highlights = highlights, filetype = nil, title = item.text, lnum = 1, col = 0 }
       end,
       render_item = function(item, match)
-        local fileitem = file_datamap[item.uuid] ---@type ghc.action.file_explorer.IFileItem|nil
+        local fileitem = file_datamap[item.uuid] ---@type guanghechen.command.find.explorer.IFileItem|nil
         if fileitem == nil then
           return item.text, {}
         end
 
         local dirpath = state_cwd:snapshot() ---@type string
-        local diritem = dir_datamap[dirpath] ---@type ghc.action.file_explorer.IDirItem|nil
+        local diritem = dir_datamap[dirpath] ---@type guanghechen.command.find.explorer.IDirItem|nil
         if diritem == nil then
           return item.text, {}
         end
@@ -416,7 +416,7 @@ local function get_select()
       provider = provider,
       title = gen_title(),
       on_confirm = function(item)
-        local fileitem = file_datamap[item.uuid] ---@type ghc.action.file_explorer.IFileItem|nil
+        local fileitem = file_datamap[item.uuid] ---@type guanghechen.command.find.explorer.IFileItem|nil
         if fileitem == nil then
           return "none"
         end
@@ -440,19 +440,18 @@ local function get_select()
   return _select
 end
 
----@class ghc.action.find_explorer
-local M = {}
+local uuids = eve.commander.uuids
+eve.commander.register({
+  uuid = uuids.find_explorer,
+  desc = "find: explorer",
+  action = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local win_detail = eve.win.get_details(winnr) ---@type eve.std.win.IDetails|nil
+    if win_detail ~= nil and win_detail.dirpath ~= nil then
+      state_cwd:next(win_detail.dirpath)
+    end
 
----@return nil
-function M.open()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local win_detail = eve.win.get_details(winnr) ---@type eve.std.win.IDetails|nil
-  if win_detail ~= nil and win_detail.dirpath ~= nil then
-    state_cwd:next(win_detail.dirpath)
-  end
-
-  local select = get_select() ---@type t.fml.ux.ISelect
-  select:open()
-end
-
-return M
+    local select = get_select() ---@type t.fml.ux.ISelect
+    select:open()
+  end,
+})

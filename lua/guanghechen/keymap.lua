@@ -179,15 +179,11 @@ mk({ "n", "v" }, "<leader>fn", ghc.action.buf.create, "file: new", true)
 --#[f]ind-------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader><leader>", ghc.action.find_files.open, "find: files")
 mk({ "n", "v" }, "<leader>fbp", ghc.action.find_bookmark_pinned.focus, "find: bookmark (pinned files)")
-mk({ "n", "v" }, "<leader>fe", ghc.action.file_explorer.open, "find: file explorer")
 mk({ "n", "v" }, "<leader>ff", ghc.action.find_files.open, "find: files")
 mk({ "n", "v" }, "<leader>fw", ghc.action.find_files.open_workspace, "find: files (workspace)")
 mk({ "n", "v" }, "<leader>fc", ghc.action.find_files.open_cwd, "find: files (cwd)")
 mk({ "n", "v" }, "<leader>fd", ghc.action.find_files.open_directory, "find: files (directory)")
-mk({ "n", "v" }, "<leader>fb", ghc.action.find_buffers.focus, "find: buffers")
 mk({ "n", "v" }, "<leader>fg", ghc.action.find_git.list_uncommited_git_files, "find: git files (Not committed)")
-mk({ "n", "v" }, "<leader>fh", ghc.action.find_highlights.toggle, "find: highlights")
-mk({ "n", "v" }, "<leader>fv", ghc.action.find_vim_options.toggle, "find: vim options")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
@@ -261,13 +257,8 @@ mk({ "n", "v" }, "<leader>tt", ghc.action.term.toggle_cwd, "terminal: toggle (cw
 ---------------------------------------------------------------------------------------#[t]merinal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>tfs", ghc.action.flight.toggle_autosave, "flight: toggle autosave")
-mk({ "n", "v" }, "<leader>tfl", ghc.action.flight.toggle_autoload, "flight: toggle autoload")
-mk({ "n", "v" }, "<leader>tfc", ghc.action.flight.toggle_copilot, "flight: toggle copilot")
-mk({ "n", "v" }, "<leader>tfd", ghc.action.flight.toggle_devmode, "flight: toggle devmode")
 mk({ "n", "v" }, "<leader>tul", ghc.action.theme.toggle_relativenumber, "toggle: relative line number")
 mk({ "n", "v" }, "<leader>tuT", ghc.action.theme.toggle_transparency, "toggle: transparency")
-mk({ "n", "v" }, "<leader>tut", ghc.action.theme.select_theme, "theme: select theme")
 mk({ "n", "v" }, "<leader>tuw", ghc.action.theme.toggle_wrap_tmp, "toggle: wrap (temporary)")
 -----------------------------------------------------------------------------------------#[t]oggle--
 

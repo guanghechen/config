@@ -2,23 +2,34 @@ local reporter = require("eve.std.reporter")
 
 ---@class t.eve.ICommand
 ---@field public uuid                   string
----@field public action                 function(args?: string): nil
+---@field public desc                   string
+---@field public action                 fun(args?: string): nil
 ---@field public candidates             ?string[]
+
+---@class t.eve.IRawCommand
+---@field public uuid                   string
+---@field public desc                   string
+---@field public action                 fun(args?: string): nil
+---@field public candidates             ?string[]
+---@field public nargs                  ?0|1|"?"
 
 ---@type table<string, t.eve.ICommand>
 local command_map = {}
 
----@class eve.std.commander.uuids
-local uuids = {
-  buf_close = "f-buf-close",
-  buf_close_to_leftest = "f-buf-close-to-leftest",
-  buf_close_to_rightest = "f-buf-close-to-rightest",
-}
-
 ---@class eve.std.commander
----@field public uuids                  eve.std.commander.uuids
-local M = {
-  uuids = uuids,
+local M = {}
+
+---@class eve.std.commander.uuids
+M.uuids = {
+  buf_close = "Fbufclose",
+  buf_close_to_leftest = "Fbufclosetoleftest",
+  buf_close_to_rightest = "Fbufclosetorightest",
+  find_buffers = "Ffindbuffers",
+  find_explorer = "Ffindexplorer",
+  find_highlights = "Ffindhighlights",
+  find_vim_options = "Ffindvimoptions",
+  flight = "Fflight",
+  select_theme = "Fselecttheme",
 }
 
 ---@param uuid                          string
@@ -35,18 +46,21 @@ function M.execute(uuid, args, silent)
         message = "Cannot resolve the command by the given uuid",
         details = { uuid = uuid },
       })
-      return
     end
+    return
   end
   command.action(args)
 end
 
----@param uuid                          string
----@param action                        function(args?: string): nil
----@param candidates                    ?string[]
+---@param raw_command                   t.eve.IRawCommand
 ---@param overwrite                     ?boolean
----@return nil
-function M.register(uuid, action, candidates, overwrite)
+---@return eve.std.commander
+function M.register(raw_command, overwrite)
+  local uuid = raw_command.uuid ---@type string
+  local desc = raw_command.desc ---@type string
+  local action = raw_command.action ---@type fun(args?: string): nil
+  local candidates = raw_command.candidates ---@type string[]|nil
+  local nargs = raw_command.nargs or 0 ---@type 0|1|"?"
   local has_existed = command_map[uuid] ~= nil ---@type boolean
 
   if has_existed and not overwrite then
@@ -56,39 +70,44 @@ function M.register(uuid, action, candidates, overwrite)
       message = "The command has been registered, please set the `overwrite` param to true if you want to replace it",
       details = { uuid = uuid, overwrite = overwrite },
     })
-    return
+    return M
   end
-
-  ---@type t.eve.ICommand
-  local command = {
-    uuid = uuid,
-    action = action,
-    candidates = candidates,
-  }
-  command_map[uuid] = command
 
   if not has_existed then
     vim.api.nvim_create_user_command(uuid, function(opts)
       M.execute(uuid, opts.args, false)
     end, {
-      nargs = "?",
-      complete = function(argLead)
-        local cmd = M.resolve(uuid, true)
-        if cmd ~= nil and cmd.candidates ~= nil then
-          local pattern = "^" .. argLead ---@type string
-          local options = cmd.candidates ---@type string[]
+      desc = desc,
+      nargs = nargs,
+      complete = nargs ~= 0
+          and function(argLead)
+            local command = M.resolve(uuid, true)
+            if command ~= nil and command.candidates ~= nil then
+              local pattern = "^" .. argLead ---@type string
+              local options = command.candidates ---@type string[]
 
-          local matches = {}
-          for _, option in ipairs(options) do
-            if option:match(pattern) then
-              table.insert(matches, option)
+              local matches = {}
+              for _, option in ipairs(options) do
+                if option:match(pattern) then
+                  table.insert(matches, option)
+                end
+              end
+              return matches
             end
           end
-          return matches
-        end
-      end,
+        or nil,
     })
   end
+
+  ---@type t.eve.ICommand
+  local command = {
+    uuid = uuid,
+    desc = desc,
+    action = action,
+    candidates = candidates,
+  }
+  command_map[uuid] = command
+  return M
 end
 
 ---@param uuid                          string

@@ -1,6 +1,3 @@
-local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
-local hmr = devmode and eve.util.hmr or require
-
 local uxTheme = require("ghc.ux.theme")
 local theme_cache_path = eve.path.locate_theme_filepath("theme")
 
@@ -126,47 +123,6 @@ function M.reload_theme(params)
   if scheme ~= nil then
     uxTheme.set_term_colors(scheme)
   end
-end
-
----@return nil
-function M.select_theme()
-  local themes = {
-    "gruvbox_dark",
-    "gruvbox_light",
-    "one_half_dark",
-    "one_half_light",
-  }
-
-  fml.fn.select({
-    title = "Select Theme",
-    fetch_items = function()
-      local items = {} ---@type t.fml.ux.select.IItem[]
-      for _, theme in ipairs(themes) do
-        table.insert(items, { uuid = theme, text = theme })
-      end
-      return items
-    end,
-    on_confirm = function(item)
-      local theme = item.uuid ---@type string
-      local ok, scheme = pcall(hmr, "ghc.ux.theme.scheme." .. theme)
-      if ok then
-        ---@cast scheme t.fml.ux.theme.IScheme
-        M.toggle_scheme({
-          mode = scheme.mode,
-          theme = scheme.theme,
-          persistent = true,
-          force = false,
-        })
-      else
-        eve.reporter.error({
-          from = "ghc.action.theme",
-          subject = "select_theme",
-          message = "Failed to load theme scheme",
-          details = { theme = theme, error = scheme },
-        })
-      end
-    end,
-  })
 end
 
 return M
