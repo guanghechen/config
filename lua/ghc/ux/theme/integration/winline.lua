@@ -50,8 +50,8 @@ local function gen_hlgroup_map(context)
     f_wl_lsp_icon_Unit = { fg = c.neutral_purple, bg = bg_winline },
     f_wl_lsp_icon_Value = { fg = c.aqua, bg = bg_winline },
     f_wl_lsp_icon_Variable = { fg = c.neutral_purple, bg = bg_winline },
-    f_wl_lsp_sep = { fg = c.grey, bg = bg_winline },
-    f_wl_lsp_text = { fg = c.grey, bg = bg_winline },
+    f_wl_lsp_sep = { fg = c.fg3, bg = bg_winline },
+    f_wl_lsp_text = { fg = c.fg3, bg = bg_winline },
   }
   return hlgroup_map
 end

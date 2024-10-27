@@ -32,7 +32,7 @@ local function gen_hlgroup_map(context)
     f_diff_word_right = { bg = diff_add_word, fg = "none" },
 
     ---file explorer
-    f_fe_date = { fg = c.grey },
+    f_fe_date = { fg = c.fg4 },
     f_fe_group = { fg = c.red },
     f_fe_match = { fg = c.red },
     f_fe_name_dir = { fg = c.blue },
@@ -52,7 +52,7 @@ local function gen_hlgroup_map(context)
     f_us_main_border = { fg = bg_main, bg = bg_main },
     f_us_main_current = { bg = c.bg3 },
     f_us_main_match = { fg = c.blue },
-    f_us_main_match_lnum = { fg = c.grey },
+    f_us_main_match_lnum = { fg = c.fg4 },
     f_us_main_present = { fg = c.blue, bg = "none" },
     f_us_main_present_cur = { fg = c.blue, bg = c.bg3 },
     f_us_main_normal = { bg = bg_main },
@@ -73,7 +73,7 @@ local function gen_hlgroup_map(context)
     ---select codeaction
     f_us_codeaction_order = { fg = c.red, bg = "none" },
     f_us_codeaction_content = { fg = c.fg, bg = "none" },
-    f_us_codeaction_client_name = { fg = c.grey, bg = "none" },
+    f_us_codeaction_client_name = { fg = c.fg4, bg = "none" },
 
     ---terminal
     f_us_terminal_bg = { bg = c.bg0 },

@@ -19,7 +19,7 @@ white   = "{{fg4}}"
 
 # Bright colors
 [colors.bright]
-black   = "{{grey}}"
+black   = "{{fg4}}"
 red     = "{{red}}"
 green   = "{{green}}"
 yellow  = "{{yellow}}"

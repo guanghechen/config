@@ -27,7 +27,6 @@ local M = {
     purple = "#D3869B",
     aqua = "#8EC07C",
     orange = "#FE8019",
-    grey = "#A89984",
 
     neutral_red = "#CC241D",
     neutral_green = "#98971A",
@@ -36,7 +35,6 @@ local M = {
     neutral_purple = "#B16286",
     neutral_aqua = "#689D6A",
     neutral_orange = "#D65D0E",
-    neutral_grey = "#928374",
 
     lavender = "#CCD5FF",
   },

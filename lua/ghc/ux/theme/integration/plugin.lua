@@ -14,7 +14,7 @@ local function gen_hlgroup_map(context)
 
   return {
     ---! flash.nvim
-    FlashBackdrop = { fg = c.neutral_grey, bg = "none" },
+    FlashBackdrop = { fg = c.bg4, bg = "none" },
     FlashCurrent = { fg = c.orange, bg = t and "none" or c.bg2, italic = true },
     FlashLabel = { fg = c.purple, bg = t and "none" or c.bg0, bold = true },
     FlashMatch = { fg = c.yellow, bg = t and "none" or c.bg1, italic = true },
@@ -28,7 +28,7 @@ local function gen_hlgroup_map(context)
 
     ---! indent-blankline.nvim
     IblChar = { fg = c.fg3 },
-    IblScopeChar = { fg = c.grey },
+    IblScopeChar = { fg = c.fg4 },
     ["@ibl.scope.underline.1"] = { bg = c.bg2 },
     ["@ibl.scope.underline.2"] = { bg = c.bg2 },
     ["@ibl.scope.underline.3"] = { bg = c.bg2 },
@@ -100,9 +100,9 @@ local function gen_hlgroup_map(context)
     NoiceCmdlinePopupBorder = { fg = c.green, bg = bg_noice },
 
     ---! nvim-cmp
-    CmpBorder = { fg = c.grey },
+    CmpBorder = { fg = c.fg4 },
     CmpDoc = { bg = c.bg0_h },
-    CmpDocBorder = { fg = c.grey, bg = c.bg0_h },
+    CmpDocBorder = { fg = c.bg4, bg = c.bg0_h },
     CmpGhostText = { link = "Comment", default = true },
     CmpItemAbbr = { fg = c.fg },
     CmpItemAbbrMatch = { fg = c.blue, bold = true },
@@ -137,7 +137,7 @@ local function gen_hlgroup_map(context)
     CmpItemKindUnit = { fg = c.purple, bg = item_kind_bg },
     CmpItemKindValue = { fg = c.aqua, bg = item_kind_bg },
     CmpItemKindVariable = { fg = c.purple, bg = item_kind_bg },
-    CmpItemMenu = { fg = c.grey, italic = true },
+    CmpItemMenu = { fg = c.fg4, italic = true },
     CmpPmenu = { bg = c.bg1 },
     CmpSel = { link = "PmenuSel", bold = true },
 
@@ -184,9 +184,9 @@ local function gen_hlgroup_map(context)
     DapUIWatchesValue = { fg = c.green },
 
     ---! nvim-notify
-    NotifyDEBUGBorder = { fg = c.grey },
-    NotifyDEBUGIcon = { fg = c.grey },
-    NotifyDEBUGTitle = { fg = c.grey },
+    NotifyDEBUGBorder = { fg = c.bg4 },
+    NotifyDEBUGIcon = { fg = c.fg4 },
+    NotifyDEBUGTitle = { fg = c.fg4 },
     NotifyERRORBorder = { fg = c.red },
     NotifyERRORIcon = { fg = c.red },
     NotifyERRORTitle = { fg = c.red },

@@ -34,7 +34,7 @@ function M.set_term_colors(scheme)
   vim.g.terminal_color_5 = c.neutral_purple
   vim.g.terminal_color_6 = c.neutral_aqua
   vim.g.terminal_color_7 = c.bg4
-  vim.g.terminal_color_8 = c.grey
+  vim.g.terminal_color_8 = c.fg4
   vim.g.terminal_color_9 = c.red
   vim.g.terminal_color_10 = c.green
   vim.g.terminal_color_11 = c.yellow

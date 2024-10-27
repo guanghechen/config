@@ -6,7 +6,6 @@
 ---@field public purple                 string
 ---@field public aqua                   string
 ---@field public orange                 string
----@field public grey                   string
 ---
 ---@field public neutral_red            string
 ---@field public neutral_green          string
@@ -15,7 +14,6 @@
 ---@field public neutral_purple         string
 ---@field public neutral_aqua           string
 ---@field public neutral_orange         string
----@field public neutral_grey          string
 --
 ---@field public bg0_h                  string
 ---@field public bg0                    string

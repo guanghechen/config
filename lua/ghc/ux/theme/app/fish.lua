@@ -21,7 +21,6 @@ set -gx color_blue            '{{blue}}'
 set -gx color_purple          '{{purple}}'
 set -gx color_aqua            '{{aqua}}'
 set -gx color_orange          '{{orange}}'
-set -gx color_grey            '{{grey}}'
 
 set -gx color_neutral_red     '{{neutral_red}}'
 set -gx color_neutral_green   '{{neutral_green}}'
@@ -30,7 +29,6 @@ set -gx color_neutral_blue    '{{neutral_blue}}'
 set -gx color_neutral_purple  '{{neutral_purple}}'
 set -gx color_neutral_aqua    '{{neutral_aqua}}'
 set -gx color_neutral_orange  '{{neutral_orange}}'
-set -gx color_neutral_grey    '{{neutral_grey}}'
 ]]
 
 ---@type t.ghc.ux.theme.IApp
