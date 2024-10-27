@@ -12,7 +12,7 @@ set _U blue                                     $color_neutral_blue
 set _U magenta                                  $color_neutral_purple
 set _U cyan                                     $color_neutral_aqua
 set _U white                                    $color_fg4
-set -U brblack                                  $color_grey
+set -U brblack                                  $color_bg4
 set _U brred                                    $color_red
 set _U brgreen                                  $color_green
 set _U bryellow                                 $color_yellow
@@ -25,7 +25,7 @@ set -U fish_color_autosuggestion                $color_fg4
 set -U fish_color_command                       $color_blue
 set -U fish_color_comment                       $color_fg4
 set -U fish_color_cancel                        --reverse
-set -U fish_color_date                          $color_grey
+set -U fish_color_date                          $color_fg4
 set -U fish_color_end                           $color_orange
 set -U fish_color_error                         $color_neutral_red
 set -U fish_color_escape                        $color_aqua
