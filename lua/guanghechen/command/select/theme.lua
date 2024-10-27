@@ -4,6 +4,8 @@ local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 local themes = {
   "gruvbox_dark",
   "gruvbox_light",
+  "nord_dark",
+  "nord_light",
   "one_half_dark",
   "one_half_light",
 }

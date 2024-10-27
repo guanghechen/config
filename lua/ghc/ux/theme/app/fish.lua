@@ -1,7 +1,5 @@
 local template = [[
-set -gx color_bg0_h           '{{bg0_h}}'
 set -gx color_bg0             '{{bg0}}'
-set -gx color_bg0_s           '{{bg0_s}}'
 set -gx color_bg1             '{{bg1}}'
 set -gx color_bg2             '{{bg2}}'
 set -gx color_bg3             '{{bg3}}'

@@ -1,9 +1,7 @@
 local template = [[
 # Default colors
 [colors.primary]
-# hard contrast background = "{{bg0_h}}"
 background = "{{bg0}}"
-# soft contrast background = "{{bg0_s}}"
 foreground = "{{fg}}"
 
 # Normal colors
