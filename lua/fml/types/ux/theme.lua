@@ -30,8 +30,6 @@
 ---@field public fg3                    string
 ---@field public fg4                    string
 ---
----@field public lavender               string
-
 ---@class t.fml.ux.theme.IScheme
 ---@field public theme                  t.eve.e.Theme
 ---@field public mode                   t.eve.e.ThemeMode

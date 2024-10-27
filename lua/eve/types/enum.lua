@@ -12,6 +12,7 @@
 
 ---@alias t.eve.e.Theme
 ---|"gruvbox"
+---|"nord"
 ---|"one_half"
 
 ---@alias t.eve.e.ThemeMode
