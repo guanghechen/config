@@ -56,7 +56,7 @@ function M.get_search()
       statusline_items = keybindings.statusline_items,
       title = title,
       on_close = function()
-        vim.cmd("checktime")
+        vim.cmd.checktime()
       end,
       on_confirm = function(item)
         return api.open_file(item, frecency)

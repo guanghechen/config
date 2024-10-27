@@ -5,7 +5,7 @@ local M = {}
 
 ---@return nil
 function M.refresh_all()
-  vim.cmd("checktime")
+  vim.cmd.checktime()
   fml.fn.refresh_state()
 
   vim.cmd("LspRestart")

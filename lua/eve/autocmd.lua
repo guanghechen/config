@@ -201,7 +201,7 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.api.nvim_create_autocmd({ "FocusGained" }, {
   callback = function()
     if vim.o.buftype ~= "nofile" then
-      vim.cmd("checktime")
+      vim.cmd.checktime()
     end
   end,
 })

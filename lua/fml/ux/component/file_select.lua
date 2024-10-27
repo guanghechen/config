@@ -163,6 +163,8 @@ function M.new(props)
     height = dimension_from_props.height or 0.8,
     max_height = dimension_from_props.max_height or 1,
     max_width = dimension_from_props.max_width or 1,
+    row = dimension_from_props.row or 5,
+    col = dimension_from_props.col,
     width = dimension_from_props.width or (enable_preview and 0.4 or 0.5),
     width_preview = dimension_from_props.width_preview or (enable_preview and 0.45 or 0),
   }

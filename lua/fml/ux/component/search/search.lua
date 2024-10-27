@@ -110,6 +110,8 @@ function M.new(props)
     height = raw_dimension.height,
     max_width = raw_dimension.max_width or 0.8,
     max_height = raw_dimension.max_height or 0.8,
+    row = raw_dimension.row,
+    col = raw_dimension.col,
     width = raw_dimension.width,
     width_preview = raw_dimension.width_preview,
   }
@@ -529,38 +531,52 @@ function M:create_wins_as_needed()
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
   local dimension = self._dimension ---@type t.fml.ux.search.IDimension
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+  local screen_height = vim.o.lines ---@type integer
+  local screen_width = vim.o.columns ---@type integer
 
   ---@type number
-  local max_height = dimension.max_height <= 1 and math.floor(vim.o.lines * dimension.max_height)
+  local max_height = dimension.max_height <= 1 and math.floor(dimension.max_height * screen_height)
     or dimension.max_height
   ---@type number
-  local max_width = dimension.max_width <= 1 and math.floor(vim.o.columns * dimension.max_width) or dimension.max_width
+  local max_width = dimension.max_width <= 1 and math.floor(dimension.max_width * screen_width) or dimension.max_width
 
   local input_height = state.enable_multiline_input and math.max(1, math.min(3, state.input_line_count:snapshot())) or 1
   local input_height_with_borders = input_height + 2 ---@type integer
 
   local height = dimension.height or (#state.items + input_height_with_borders) ---@type number
   if height < 1 then
-    height = math.floor(vim.o.lines * height)
+    height = math.floor(height * screen_height)
   end
   height = math.min(max_height, math.max(input_height_with_borders, height)) ---@type integer
 
   local width = dimension.width or state.max_width + 10 ---@type number
   if width < 1 then
-    width = math.floor(vim.o.columns * width)
+    width = math.floor(width * screen_width)
   end
   width = math.min(max_width, math.max(10, width)) ---@type integer
+
+  local prefer_row = dimension.row or screen_height ---@type number
+  if prefer_row < 1 then
+    prefer_row = math.floor(prefer_row * screen_height)
+  end
+  prefer_row = math.min(screen_height, math.max(0, prefer_row)) ---@type integer
+
+  local prefer_col = dimension.col or screen_width ---@type number
+  if prefer_col < 1 then
+    prefer_col = math.floor(prefer_col * screen_width)
+  end
+  prefer_col = math.min(screen_width, math.max(0, prefer_col)) ---@type integer
 
   local has_preview = self._preview ~= nil ---@type boolean
 
   local width_preview = dimension.width_preview or width ---@type integer
   if width_preview < 1 then
-    width_preview = math.floor(vim.o.columns * width_preview)
+    width_preview = math.floor(width_preview * screen_width)
   end
   width_preview = has_preview and math.min(max_width - width - 2, math.max(10, width_preview)) or 0
 
-  local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
-  local col = math.floor((vim.o.columns - width - width_preview - 2) / 2) ---@type integer
+  local row = math.min(prefer_row, math.floor((screen_height - height) / 2) - 1) ---@type integer
+  local col = math.min(prefer_col, math.floor((screen_width - width - width_preview - 2) / 2)) ---@type integer
   local winnr_input = self._winnr_input ---@type integer|nil
   local winnr_main = self._winnr_main ---@type integer|nil
   local winnr_preview = self._winnr_preview ---@type integer|nil
@@ -697,6 +713,8 @@ function M:change_dimension(raw_dimension)
     height = raw_dimension.height,
     max_width = raw_dimension.max_width or 0.8,
     max_height = raw_dimension.max_height or 0.8,
+    row = raw_dimension.row,
+    col = raw_dimension.col,
     width = raw_dimension.width,
     width_preview = raw_dimension.width_preview,
   }

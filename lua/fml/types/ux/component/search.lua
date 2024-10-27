@@ -67,6 +67,8 @@
 ---@field public height                 ?number
 ---@field public max_width              ?number
 ---@field public max_height             ?number
+---@field public row                    ?number
+---@field public col                    ?number
 ---@field public width                  ?number
 ---@field public width_preview          ?number
 
@@ -74,6 +76,8 @@
 ---@field public height                 ?number
 ---@field public max_width              number
 ---@field public max_height             number
+---@field public row                    ?number
+---@field public col                    ?number
 ---@field public width                  ?number
 ---@field public width_preview          ?number
 

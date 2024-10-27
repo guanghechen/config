@@ -22,9 +22,8 @@ local function toggle_theme(theme)
     })
   else
     eve.reporter.error({
-      from = "ghc.action.theme",
-      subject = "select_theme",
-      message = "Failed to load theme scheme",
+      from = "guanghechen.command.select.theme",
+      message = "Cannot find the theme.",
       details = { theme = theme, error = scheme },
     })
   end
@@ -36,8 +35,7 @@ eve.commander.register({
   candidates = themes,
   nargs = "?",
   action = function(args)
-    local arg = type(args) == "string" and args:lower() or ""
-
+    local arg = type(args) == "string" and args:lower() or "" ---@type string
     if eve.array.contains(themes, arg) then
       toggle_theme(arg)
     else
@@ -45,6 +43,7 @@ eve.commander.register({
         title = "Select theme",
         input = eve.c.Observable.from_value(arg),
         dimension = {
+          row = 5,
           width = 50,
         },
         get_present = function()
