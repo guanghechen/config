@@ -41,16 +41,16 @@ local function change_scope(scope)
   end
 end
 
----@class ghc.action.find_files.actions
+---@class guanghechen.command.find.files.actions
 local actions = {
   ---@return nil
   edit_config = function()
-    ---@class ghc.action.find_files.IConfigData
+    ---@class guanghechen.command.find.files.actions.IConfigData
     ---@field public exclude_patterns       string[]
 
     local f_exclude_patterns = eve.context.state.find.excludes:snapshot() ---@type string
 
-    ---@type ghc.action.find_files.IConfigData
+    ---@type guanghechen.command.find.files.actions.IConfigData
     local data = {
       exclude_patterns = eve.array.parse_comma_list(f_exclude_patterns),
     }
@@ -63,7 +63,7 @@ local actions = {
         if type(raw_data) ~= "table" then
           return "Invalid find_files configuration, expect an object."
         end
-        ---@cast raw_data ghc.action.find_files.IConfigData
+        ---@cast raw_data guanghechen.command.find.files.actions.IConfigData
 
         if raw_data.exclude_patterns == nil or not vim.islist(raw_data.exclude_patterns) then
           return "Invalid data.exclude_patterns, expect an array."
@@ -72,7 +72,7 @@ local actions = {
       on_confirm = function(raw_data)
         vim.schedule(function()
           local raw = vim.tbl_extend("force", data, raw_data)
-          ---@cast raw ghc.action.find_files.IConfigData
+          ---@cast raw guanghechen.command.find.files.actions.IConfigData
 
           local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
           eve.context.state.find.excludes:next(exclude_patterns)
@@ -302,31 +302,40 @@ local function get_select()
   return _select
 end
 
----@class ghc.action.find_files
-local M = {}
-
----@return nil
-function M.open()
-  local select = get_select() ---@type t.fml.ux.IFileSelect
-  select:focus()
-end
-
----@return nil
-function M.open_workspace()
-  eve.context.state.find.scope:next("W")
-  M.open()
-end
-
----@return nil
-function M.open_cwd()
-  eve.context.state.find.scope:next("C")
-  M.open()
-end
-
----@return nil
-function M.open_directory()
-  eve.context.state.find.scope:next("D")
-  M.open()
-end
-
-return M
+local uuids = eve.commander.uuids
+eve.commander
+  .register({
+    uuid = uuids.find_files,
+    desc = "find: files",
+    action = function()
+      local select = get_select() ---@type t.fml.ux.IFileSelect
+      select:focus()
+    end,
+  })
+  .register({
+    uuid = uuids.find_files_workspace,
+    desc = "find: files (workspace)",
+    action = function()
+      eve.context.state.find.scope:next("W")
+      local select = get_select() ---@type t.fml.ux.IFileSelect
+      select:focus()
+    end,
+  })
+  .register({
+    uuid = uuids.find_files_cwd,
+    desc = "find: files (cwd)",
+    action = function()
+      eve.context.state.find.scope:next("C")
+      local select = get_select() ---@type t.fml.ux.IFileSelect
+      select:focus()
+    end,
+  })
+  .register({
+    uuid = uuids.find_files_directory,
+    desc = "find: files (directory)",
+    action = function()
+      eve.context.state.find.scope:next("D")
+      local select = get_select() ---@type t.fml.ux.IFileSelect
+      select:focus()
+    end,
+  })

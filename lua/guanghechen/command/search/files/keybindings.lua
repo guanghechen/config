@@ -1,4 +1,4 @@
-local actions = require("ghc.action.search_files.actions")
+local actions = require("guanghechen.command.search.files.actions")
 
 ---@type t.eve.ux.widget.IRawStatuslineItem[]
 local statusline_items = {
@@ -109,7 +109,7 @@ local input_keymaps = {
   },
 }
 
----@class ghc.action.search_files.keybindings
+---@class guanghechen.command.search.files.keybindings
 local M = {}
 
 ---@type t.eve.ux.widget.IRawStatuslineItem[]

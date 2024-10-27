@@ -1,4 +1,4 @@
-local uuids = eve.commander.uuids
+local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 ---@type string[]
 local themes = {

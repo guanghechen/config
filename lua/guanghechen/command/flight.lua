@@ -60,7 +60,7 @@ eve.commander.register({
           local text_enabled = enabled and "true" or "false" ---@type string
 
           local width_padding = 32 ---@type integer
-          local padding = string.rep(" ", width_padding - vim.fn.strwidth(flight)) ---@type string
+          local padding = string.rep(" ", width_padding - vim.api.nvim_strwidth(flight)) ---@type string
           local text = flight .. padding .. text_enabled ---@type string
 
           ---@type t.eve.IHighlightInline[]

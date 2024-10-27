@@ -8,21 +8,14 @@ local action = {
 
   ----
 
-  copy = require("ghc.action.copy"),
-  debug = require("ghc.action.debug"),
   diagnostic = require("ghc.action.diagnostic"),
   explorer = require("ghc.action.explorer"),
-  find_bookmark_pinned = require("ghc.action.find_bookmark_pinned"),
-  find_files = require("ghc.action.find_files"),
-  find_git = require("ghc.action.find_git"),
   find_win_history = require("ghc.action.find_win_history"),
   git = require("ghc.action.git"),
   notification = require("ghc.action.notification"),
-  refresh = require("ghc.action.refresh"),
   run = require("ghc.action.run"),
   scroll = require("ghc.action.scroll"),
   session = require("ghc.action.session"),
-  search_files = require("ghc.action.search_files"),
   theme = require("ghc.action.theme"),
 }
 

@@ -1,5 +1,6 @@
 require("eve.option")
 require("eve.autocmd")
+require("eve.keymap")
 _G.eve = require("eve")
 
 do
@@ -45,7 +46,6 @@ else
   require("guanghechen.autocmd")
   require("guanghechen.command")
   require("guanghechen.keymap")
-  require("guanghechen.keymap2")
   require("guanghechen.plugin")
   pcall(require, "integration.local")
 end

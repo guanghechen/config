@@ -1,5 +1,5 @@
-local api = require("ghc.action.search_files.api")
-local state = require("ghc.action.search_files.state")
+local api = require("guanghechen.command.search.files.api")
+local state = require("guanghechen.command.search.files.state")
 
 ---@param scope                         t.eve.e.SearchScope
 ---@return nil
@@ -10,7 +10,7 @@ local function change_scope(scope)
   end
 end
 
----@class ghc.action.search_files.actions
+---@class guanghechen.command.search.files.actions
 local M = {}
 
 ---@return nil
@@ -35,7 +35,7 @@ end
 
 ---@return nil
 function M.edit_config()
-  ---@class ghc.action.search_files.IConfigData
+  ---@class guanghechen.command.search.files.IConfigData
   ---@field public keyword              string
   ---@field public replacement          string
   ---@field public search_paths         string[]
@@ -52,7 +52,7 @@ function M.edit_config()
   local s_includes = eve.context.state.search.includes:snapshot() ---@type string[]
   local s_excludes = eve.context.state.search.excludes:snapshot() ---@type string[]
 
-  ---@type ghc.action.search_files.IConfigData
+  ---@type guanghechen.command.search.files.IConfigData
   local data = {
     keyword = s_keyword,
     replacement = s_replacement,
@@ -71,7 +71,7 @@ function M.edit_config()
       if type(raw_data) ~= "table" then
         return "Invalid search_files configuration, expect an object."
       end
-      ---@cast raw_data ghc.action.search_files.IConfigData
+      ---@cast raw_data guanghechen.command.search.files.IConfigData
 
       if raw_data.keyword == nil or type(raw_data.keyword) ~= "string" then
         return "Invalid data.search_pattern, expect an string."
@@ -106,7 +106,7 @@ function M.edit_config()
         local last_search_pattern = eve.context.state.search.keyword:snapshot() ---@type string
 
         local raw = vim.tbl_extend("force", data, raw_data)
-        ---@cast raw ghc.action.search_files.IConfigData
+        ---@cast raw guanghechen.command.search.files.IConfigData
 
         local keyword = raw.keyword ---@type string
         local replacement = raw.replacement ---@type string

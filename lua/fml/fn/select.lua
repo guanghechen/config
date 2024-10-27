@@ -39,6 +39,7 @@ local function select(params)
 
   Select.new({
     enable_preview = false,
+    extend_preset_keymaps = true,
     permanent = false,
     title = title,
     dimension = dimension,

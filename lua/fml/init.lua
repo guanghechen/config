@@ -18,6 +18,7 @@ local fn = {
   hmr = require("fml.fn.hmr"),
   refresh_state = require("fml.fn.refresh_state"),
   select = require("fml.fn.select"),
+  select_files = require("fml.fn.select_files"),
   statuscolumn = require("fml.fn.statuscolumn"),
 }
 

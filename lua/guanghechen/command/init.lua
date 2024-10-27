@@ -1,9 +1,18 @@
 require("guanghechen.command.find.buffers")
 require("guanghechen.command.find.explorer")
+require("guanghechen.command.find.files")
+require("guanghechen.command.find.git")
 require("guanghechen.command.find.highlights")
+require("guanghechen.command.find.pinned_files")
 require("guanghechen.command.find.vim_options")
 
 require("guanghechen.command.select.theme")
 
+require("guanghechen.command.search.files")
+
 require("guanghechen.command.buf")
+require("guanghechen.command.copy")
+require("guanghechen.command.debug")
 require("guanghechen.command.flight")
+require("guanghechen.command.refresh")
+require("guanghechen.command.resume")

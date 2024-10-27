@@ -24,13 +24,48 @@ M.uuids = {
   buf_close = "Fbufclose",
   buf_close_to_leftest = "Fbufclosetoleftest",
   buf_close_to_rightest = "Fbufclosetorightest",
+  copy_current_filepath = "Fcopycurrentfilepath",
+  copy_current_filepath_relative = "Fcopycurrentfilepathrelative",
+  debug_inspect = "Finspect",
+  debug_inspect_pos = "Finspectpos",
+  debug_inspect_state = "Finspectstate",
+  debug_inspect_tree = "Finspecttree",
   find_buffers = "Ffindbuffers",
   find_explorer = "Ffindexplorer",
+  find_files = "Ffindfiles",
+  find_files_cwd = "Ffindfilescwd",
+  find_files_directory = "Ffindfilesdirectory",
+  find_files_workspace = "Ffindfilesworkspace",
+  find_git_not_committed = "Ffindgitnotcommitted",
   find_highlights = "Ffindhighlights",
+  find_pinned_files = "Ffindpinnedfiles",
   find_vim_options = "Ffindvimoptions",
   flight = "Fflight",
+  refresh_all = "Frefreshall",
+  replace_files = "Freplacefiles",
+  replace_files_buffer = "Freplacefilesbuffer",
+  replace_files_cwd = "Freplacefilescwd",
+  replace_files_directory = "Freplacefilesdirectory",
+  replace_files_workspace = "Freplacefilesworkspace",
+  resume = "Fresume",
+  search_files = "Fsearchfiles",
+  search_files_buffer = "Fsearchfilesbuffer",
+  search_files_cwd = "Fsearchfilescwd",
+  search_files_directory = "Fsearchfilesdirectory",
+  search_files_workspace = "Fsearchfilesworkspace",
   select_theme = "Fselecttheme",
 }
+
+---@param uuid                          string
+---@return boolean
+function M.should_be_command(uuid)
+  for _, val in pairs(M.uuids) do
+    if val == uuid then
+      return true
+    end
+  end
+  return false
+end
 
 ---@param uuid                          string
 ---@param args                          ?string

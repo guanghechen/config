@@ -8,13 +8,6 @@ local function mk(mode, key, action, desc, silent, nowait)
   vim.keymap.set(mode, key, action, { noremap = true, silent = silent, nowait = nowait, desc = desc })
 end
 
----@return nil
-local function resume_or_find_files()
-  if not eve.widgets.resume() then
-    ghc.action.find_files.open()
-  end
-end
-
 --#enhance------------------------------------------------------------------------------------------
 ---! better indenting
 vim.keymap.set("v", "<", "<gv")
@@ -34,9 +27,6 @@ vim.keymap.set("n", "N", "'nN'[v:searchforward].'zv'", { expr = true, desc = "pr
 vim.keymap.set("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
 vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
 
-mk("n", "<esc>", "<cmd>noh<cr><esc>", "remove search highlights", true, true) -- Clear search with <esc>
-mk("t", "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode", true, true) -- Exit terminal
-
 ---! quick shortcut
 mk({ "i", "n", "v" }, "<C-a>T", ghc.action.theme.toggle_mode, "theme: toggle mode")
 mk({ "i", "n", "v" }, "<M-T>", ghc.action.theme.toggle_mode, "theme: toggle mode")
@@ -49,22 +39,12 @@ mk({ "i", "n", "t", "v" }, "<M-g>", ghc.action.git.toggle_lazygit_cwd, "git: tog
 mk({ "i", "n", "t", "v" }, "<C-a>t", ghc.action.term.toggle_cwd, "terminal: toggle (cwd)")
 mk({ "i", "n", "t", "v" }, "<M-t>", ghc.action.term.toggle_cwd, "terminal: toggle (cwd)")
 
----! better copy/paste
-mk("v", "<C-a>c", '"+y', "system: copy to clipboard")
-mk("v", "<M-c>", '"+y', "system: copy to clipboard")
-mk("v", "<C-a>x", '"+x', "system: cut to clipboard")
-mk("v", "<M-x>", '"+x', "system: cut to clipboard")
+---! better save
 mk({ "i", "n", "v" }, "<C-a>s", ghc.action.buf.save, "system: save changes")
 mk({ "i", "n", "v" }, "<M-s>", ghc.action.buf.save, "system: save changes")
-mk({ "i", "n", "v" }, "<C-a>a", "<esc>gg0vG$", "system: select all")
-mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "system: select all")
-mk({ "i", "n", "v" }, "<C-a>v", '<esc>"+p', "system: paste from clipboard")
-mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "system: paste from clipboard")
-mk({ "i", "n", "v" }, "<Esc><C-c>", ghc.action.copy.current_buffer_filepath, "copy: current buffer filepath")
 
 --- quick access widgets (diagnostic, explorer, terminal)
 mk({ "n", "v" }, "<leader>1", ghc.action.explorer.toggle_explorer_file_cwd, "explorer: files (cwd)")
-mk({ "n", "v" }, "<leader>2", ghc.action.search_files.open_search, "search: search/replace")
 mk({ "n", "v" }, "<leader>3", ghc.action.explorer.toggle_explorer_git_cwd, "explorer: git (cwd)")
 ---------------------------------------------------------------------------------------#enhance-----
 
@@ -110,10 +90,6 @@ mk({ "i", "n", "v" }, "<C-a>i", ghc.action.win.backward, "win: back", true, true
 mk({ "i", "n", "v" }, "<C-a>o", ghc.action.win.forward, "win: forward", true, true)
 mk({ "i", "n", "v" }, "<M-i>", ghc.action.win.backward, "win: back", true, true)
 mk({ "i", "n", "v" }, "<M-o>", ghc.action.win.forward, "win: forward", true, true)
-
------ jump list -----
-mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back", true, true)
-mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward", true, true)
 ---------------------------------------------------------------------------------------#navigation--
 
 --[#]buffer-----------------------------------------------------------------------------------------
@@ -153,13 +129,6 @@ mk({ "n", "v" }, "[w", ghc.action.diagnostic.goto_prev_warn, "diagnostic: goto p
 mk({ "n", "v" }, "]w", ghc.action.diagnostic.goto_next_warn, "diagnostic: goto next warning", true)
 -----------------------------------------------------------------------------------#[x] diagnostic--
 
-----#[d]ebug-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>dd", ghc.action.debug.show_inspect, "debug: inspect", true)
-mk({ "n", "v" }, "<leader>dI", ghc.action.debug.show_inspect_tree, "debug: show inspect tree")
-mk({ "n", "v" }, "<leader>di", ghc.action.debug.show_inspect_pos, "debug: show inspect pos")
-mk({ "n", "v" }, "<leader>ds", ghc.action.debug.show_state, "debug: show state", true)
--------------------------------------------------------------------------------------------#[d]ebug--
-
 --#[e]xplorer---------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>eB", ghc.action.explorer.toggle_explorer_buffer_workspace, "explorer: buffers (workspace)")
 mk({ "n", "v" }, "<leader>eb", ghc.action.explorer.toggle_explorer_buffer_cwd, "explorer: buffers (cwd)")
@@ -176,54 +145,19 @@ mk({ "n", "v" }, "<leader>et", ghc.action.explorer.toggle_explorers, "explorer: 
 mk({ "n", "v" }, "<leader>fn", ghc.action.buf.create, "file: new", true)
 -------------------------------------------------------------------------------------------#[f]ile--
 
---#[f]ind-------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader><leader>", ghc.action.find_files.open, "find: files")
-mk({ "n", "v" }, "<leader>fbp", ghc.action.find_bookmark_pinned.focus, "find: bookmark (pinned files)")
-mk({ "n", "v" }, "<leader>ff", ghc.action.find_files.open, "find: files")
-mk({ "n", "v" }, "<leader>fw", ghc.action.find_files.open_workspace, "find: files (workspace)")
-mk({ "n", "v" }, "<leader>fc", ghc.action.find_files.open_cwd, "find: files (cwd)")
-mk({ "n", "v" }, "<leader>fd", ghc.action.find_files.open_directory, "find: files (directory)")
-mk({ "n", "v" }, "<leader>fg", ghc.action.find_git.list_uncommited_git_files, "find: git files (Not committed)")
--------------------------------------------------------------------------------------------#[f]ind--
-
 --#[g]it--------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>gf", ghc.action.git.open_diffview_filehistory, "git: open file history", true)
 mk({ "n", "v" }, "<leader>gg", ghc.action.git.open_diffview, "git: open diff view", true)
 -------------------------------------------------------------------------------------------#[g]it---
 
 --#[q]uit/session/context--------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>qq", ghc.action.session.quit_all, "quit: quit all", true)
 mk({ "n", "v" }, "<leader>ql", ghc.action.session.load, "session: restore session", true)
 mk({ "n", "v" }, "<leader>qs", ghc.action.session.save, "session: save session", true)
 --------------------------------------------------------------------------#[q]uit/session/context---
 
---#[r]efresh----------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<C-a>r", ghc.action.refresh.refresh_all, "refresh: refresh all", true)
-mk({ "i", "n", "v" }, "<M-r>", ghc.action.refresh.refresh_all, "refresh: refresh all", true)
----------------------------------------------------------------------------------------#[r]efresh---
-
---#[r]eplace----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>rr", ghc.action.search_files.open_replace, "replace: files")
-mk({ "n", "v" }, "<leader>rw", ghc.action.search_files.open_replace_workspace, "replace: files (workspace)")
-mk({ "n", "v" }, "<leader>rc", ghc.action.search_files.open_replace_cwd, "replace: files (cwd)")
-mk({ "n", "v" }, "<leader>rd", ghc.action.search_files.open_replace_directory, "replace: files (directory)")
-mk({ "n", "v" }, "<leader>rb", ghc.action.search_files.open_replace_buffer, "replace: files (buffer)")
----------------------------------------------------------------------------------------#[r]eplace---
-
 --#[r]un--------------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<F5>", ghc.action.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
-
---#[s]earch-----------------------------------------------------------------------------------------
-mk({ "n", "t", "v" }, "<leader>`", resume_or_find_files, "search: resume or find files")
-mk({ "n", "v" }, "<leader>ss", ghc.action.search_files.open_search, "search: files")
-mk({ "n", "v" }, "<leader>sw", ghc.action.search_files.open_search_workspace, "search: files (workspace)")
-mk({ "n", "v" }, "<leader>sc", ghc.action.search_files.open_search_cwd, "search: files (cwd)")
-mk({ "n", "v" }, "<leader>sd", ghc.action.search_files.open_search_directory, "search: files (directory)")
-mk({ "n", "v" }, "<leader>sb", ghc.action.search_files.open_search_buffer, "search: files (buffer)")
-mk({ "i", "n", "v" }, "<C-a>f", ghc.action.search_files.open_search_buffer, "search: files (buffer)")
-mk({ "i", "n", "v" }, "<M-f>", ghc.action.search_files.open_search_buffer, "search: files (buffer)")
------------------------------------------------------------------------------------------#[s]earch--
 
 --#[s]croll-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>sj", ghc.action.scroll.down_half_window, "scroll: down half of window")
