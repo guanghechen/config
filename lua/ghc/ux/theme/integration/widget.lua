@@ -2,7 +2,6 @@
 ---@return table<string, t.fml.ux.theme.IHlgroup>
 local function gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
-  local m = context.scheme.mode ---@type t.eve.e.ThemeMode
 
   local diff_del = c.red ---@type string
   local diff_add = c.green ---@type string
@@ -10,8 +9,8 @@ local function gen_hlgroup_map(context)
   local diff_add_word = c.neutral_green ---@type string
 
   local bg_input = c.bg2 ---@type string
-  local bg_main = m == "light" and c.bg0_s or c.bg1 ---@type string
-  local bg_preview = m == "light" and c.bg1 or c.bg0_h ---@type string
+  local bg_main = c.bg0_s ---@type string
+  local bg_preview = c.bg1 ---@type string
 
   return {
     ---common

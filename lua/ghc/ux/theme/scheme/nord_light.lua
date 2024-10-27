@@ -3,7 +3,7 @@
 ---@type t.fml.ux.theme.IScheme
 local M = {
   theme = "nord",
-  mode = "dark",
+  mode = "light",
   palette = {
     bg0_h = "#1D2021",
     bg0 = "#282828",

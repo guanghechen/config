@@ -22,7 +22,7 @@ local function gen_hlgroup_map(context)
     f_sl_flag_scope = { fg = c.bg1, bg = c.orange },
     f_sl_noice_command = { fg = c.fg, bg = bg_statusline },
     f_sl_noice_mode = { fg = c.yellow, bg = bg_statusline },
-    f_sl_pos = { fg = c.bg1, bg = c.green },
+    f_sl_pos = { fg = c.bg1, bg = c.fg3 },
     f_sl_readonly = { fg = c.orange, bg = bg_statusline },
     f_sl_text = { fg = c.fg2, bg = bg_statusline },
     f_sl_text_command = { fg = c.green, bg = mode_bg, bold = true },

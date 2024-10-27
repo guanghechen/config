@@ -27,8 +27,8 @@ local function gen_hlgroup_map(context)
     GitSignsDelete = { fg = c.red },
 
     ---! indent-blankline.nvim
-    IblChar = { fg = c.fg3 },
-    IblScopeChar = { fg = c.fg4 },
+    IblChar = { fg = c.bg4 },
+    IblScopeChar = { fg = c.bg4 },
     ["@ibl.scope.underline.1"] = { bg = c.bg2 },
     ["@ibl.scope.underline.2"] = { bg = c.bg2 },
     ["@ibl.scope.underline.3"] = { bg = c.bg2 },
@@ -36,13 +36,6 @@ local function gen_hlgroup_map(context)
     ["@ibl.scope.underline.5"] = { bg = c.bg2 },
     ["@ibl.scope.underline.6"] = { bg = c.bg2 },
     ["@ibl.scope.underline.7"] = { bg = c.bg2 },
-    RainbowDelimiterRed = { fg = c.red },
-    RainbowDelimiterYellow = { fg = c.yellow },
-    RainbowDelimiterBlue = { fg = c.blue },
-    RainbowDelimiterOrange = { fg = c.orange },
-    RainbowDelimiterGreen = { fg = c.green },
-    RainbowDelimiterViolet = { fg = c.purple },
-    RainbowDelimiterCyan = { fg = c.aqua },
 
     ---! lazy.nvim
     LazyButton = { fg = c.fg2, bg = "none" },
@@ -101,8 +94,8 @@ local function gen_hlgroup_map(context)
 
     ---! nvim-cmp
     CmpBorder = { fg = c.fg4 },
-    CmpDoc = { bg = c.bg0_h },
-    CmpDocBorder = { fg = c.bg4, bg = c.bg0_h },
+    CmpDoc = { bg = c.bg1 },
+    CmpDocBorder = { fg = c.bg4, bg = c.bg1 },
     CmpGhostText = { link = "Comment", default = true },
     CmpItemAbbr = { fg = c.fg },
     CmpItemAbbrMatch = { fg = c.blue, bold = true },

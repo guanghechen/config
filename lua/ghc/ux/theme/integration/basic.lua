@@ -1,15 +1,17 @@
 ---@param context                       t.ghc.ux.IThemeContext
 ---@return table<string, t.fml.ux.theme.IHlgroup>
 local function gen_hlgroup_map(context)
+  local theme = context.scheme.theme ---@type t.eve.e.Theme
   local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
   local t = context.transparency ---@type boolean
 
-  return {
+  ---@type table<string, t.fml.ux.theme.IHlgroup>
+  local hlgroup_map = {
     ---cursor
     Cursor = { fg = c.bg1, bg = c.fg },
     CursorColumn = { bg = c.bg1 },
     CursorLine = { bg = c.bg1 },
-    CursorLineNr = { fg = c.yellow, bg = c.bg1 },
+    CursorLineNr = { fg = c.fg2, bg = c.bg1 },
     vCursor = { link = "Cursor" },
     iCursor = { link = "Cursor" },
     lCursor = { link = "Cursor" },
@@ -53,13 +55,13 @@ local function gen_hlgroup_map(context)
     DiffIndexLine = { link = "diffChanged" },
 
     ---lsp
-    LspInlayHint = { fg = c.fg4, bg = c.bg0_s },
+    LspInlayHint = { fg = c.fg4, bg = c.bg1 },
     LspReferenceRead = { bold = true, underline = true, sp = c.neutral_purple },
     LspReferenceText = { bold = true, underline = true, sp = c.neutral_purple },
     LspReferenceWrite = { bold = true, underline = true, sp = c.neutral_purple },
-    LspSignatureActiveParameter = { fg = c.bg0_s, bg = c.green },
+    LspSignatureActiveParameter = { fg = c.bg1, bg = c.green },
     RenamerBorder = { fg = c.red },
-    RenamerTitle = { fg = c.bg0_s, bg = c.red },
+    RenamerTitle = { fg = c.bg0, bg = c.red },
 
     ---msg
     ErrorMsg = { fg = c.bg0, bg = c.red, bold = true },
@@ -76,26 +78,30 @@ local function gen_hlgroup_map(context)
     SpellRare = { undercurl = true, sp = c.purple },
 
     ---special
-    Delimiter = { fg = c.purple },
+    Delimiter = { fg = c.orange },
     EndOfBuffer = { fg = c.bg2 },
     NonText = { fg = c.bg2 },
     Whitespace = { fg = c.bg2 },
 
     ---syntax
     Boolean = { fg = c.purple },
+    Builtin = { fg = c.purple },
     Character = { fg = c.purple },
     Conditional = { fg = c.red },
-    Constant = { fg = c.purple },
+    Constant = { fg = c.red },
     Define = { fg = c.aqua },
     Float = { fg = c.purple },
-    Function = { fg = c.blue, bold = true },
+    Function = { fg = c.yellow, bold = true },
     Identifier = { fg = c.blue },
     Include = { fg = c.aqua },
-    Keyword = { fg = c.red },
+    Keyword = { fg = c.purple },
     Label = { fg = c.red },
     Macro = { fg = c.aqua },
+    Member = { fg = c.aqua },
+    Method = { fg = c.blue, bold = true },
     Number = { fg = c.purple },
-    Operator = { fg = c.red },
+    Operator = { fg = c.fg1 },
+    Parameter = { fg = c.red },
     PreCondit = { fg = c.aqua },
     PreProc = { fg = c.yellow },
     Repeat = { fg = c.red },
@@ -103,11 +109,11 @@ local function gen_hlgroup_map(context)
     SpecialChar = { fg = c.neutral_red },
     Statement = { fg = c.red },
     StorageClass = { fg = c.orange },
-    String = { fg = c.green },
+    String = { fg = c.yellow },
     Structure = { fg = c.aqua },
     Type = { fg = c.yellow },
     Typedef = { fg = c.yellow },
-    Variable = { fg = c.fg0 },
+    Variable = { fg = c.fg2 },
 
     ---tag
     Tag = { fg = c.yellow },
@@ -168,6 +174,12 @@ local function gen_hlgroup_map(context)
     WinSeparator = { fg = c.bg4, bg = t and "none" or c.bg0 },
     WinSeparatorActive = { fg = c.neutral_orange, bg = t and "none" or c.bg0 },
   }
+
+  if theme == "one_half" then
+    hlgroup_map.Identifier = { fg = c.red }
+  end
+
+  return hlgroup_map
 end
 
 return gen_hlgroup_map
