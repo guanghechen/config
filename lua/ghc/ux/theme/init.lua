@@ -1,15 +1,6 @@
 ---@class ghc.ux.theme
 local M = {}
 
----@type t.ghc.e.ux.theme.App[]
-M.app = {
-  "alacritty",
-  "fish",
-  "lazygit",
-  "tmux",
-  "windows_terminal",
-}
-
 ---@type t.ghc.e.ux.theme.HighlightIntegration[]
 M.integrations = {
   --- orders as needed
@@ -61,37 +52,6 @@ function M.get_scheme(theme, mode)
     return nil
   end
   return scheme
-end
-
----@param app_name                      t.ghc.e.ux.theme.App
-function M.gen_app_theme(app_name)
-  local theme = eve.context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
-  local mode = eve.context.state.theme.mode:snapshot() ---@type t.eve.e.ThemeMode
-  local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
-
-  local scheme = M.get_scheme(theme, mode)
-  if scheme ~= nil then
-    ---@type t.ghc.ux.IThemeContext
-    local context = {
-      theme = scheme.theme .. "_" .. scheme.mode,
-      scheme = scheme,
-      transparency = transparency,
-    }
-    local app = fml.fn.hmr("ghc.ux.theme.app." .. app_name) ---@type t.ghc.ux.theme.IApp
-
-    local filepaths = app.get_filepaths(context)
-    if #filepaths > 0 then
-      local content = app.gen_theme(context) ---@type string
-
-      for _, filepath in ipairs(filepaths) do
-        eve.fs.write_file(filepath, content)
-      end
-
-      if app.after_written then
-        pcall(app.after_written, context)
-      end
-    end
-  end
 end
 
 ---@param nsnr                          integer
@@ -174,11 +134,20 @@ function M.load_theme(params)
     end
     M.set_term_colors(scheme)
 
-    ---generate app themes
-    local auto_integration = eve.context.state.theme.auto_integration:snapshot() ---@type string
-    if auto_integration and persistent then
-      for _, app in ipairs(M.app) do
-        M.gen_app_theme(app)
+    ---! toggle theme for other apps.
+    do
+      local app_home = eve.path.locate_app_config_home("guanghechen")
+      local script_path = eve.path.join(app_home, "config/theme/toggle_theme.mjs")
+      local ok, error = pcall(function()
+        vim.fn.system({ "node", script_path, theme .. "_" .. mode })
+      end)
+      if not ok then
+        eve.reporter.error({
+          from = "ghc.ux.theme",
+          subject = "load_theme",
+          message = "Failed to toggle theme.",
+          details = { app_home = app_home, script_path = script_path, error = error },
+        })
       end
     end
   end

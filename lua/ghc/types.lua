@@ -8,13 +8,6 @@
 ---@field public gen_theme              fun(context: t.ghc.ux.IThemeContext): string
 ---@field public after_written          ?fun(context: t.ghc.ux.IThemeContext): nil
 
----@alias t.ghc.e.ux.theme.App
----|"alacritty"
----|"fish"
----|"lazygit"
----|"tmux"
----|"windows_terminal"
-
 ---@alias t.ghc.e.ux.theme.HighlightIntegration
 ---|"basic"
 ---|"statusline"

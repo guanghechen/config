@@ -11,7 +11,6 @@ function M.defaults()
     mode = "dark",
     transparency = false,
     relativenumber = true,
-    auto_integration = true,
   }
 
   ---@type t.eve.context.client.data
@@ -36,7 +35,6 @@ function M.dump()
     mode = state.theme.mode:snapshot(),
     transparency = state.theme.transparency:snapshot(),
     relativenumber = state.theme.relativenumber:snapshot(),
-    auto_integration = state.theme.auto_integration:snapshot(),
   }
 
   ---@type t.eve.context.client.data
@@ -56,7 +54,6 @@ function M.load(data)
       mode = Observable.from_value(data.theme.mode),
       transparency = Observable.from_value(data.theme.transparency),
       relativenumber = Observable.from_value(data.theme.relativenumber),
-      auto_integration = Observable.from_value(data.theme.auto_integration),
     }
 
     ---@type t.eve.context.client.state
@@ -72,7 +69,6 @@ function M.load(data)
     state.theme.mode:next(data.theme.mode)
     state.theme.transparency:next(data.theme.transparency)
     state.theme.relativenumber:next(data.theme.relativenumber)
-    state.theme.auto_integration:next(data.theme.auto_integration)
   end
 end
 
@@ -99,9 +95,6 @@ function M.normalize(data)
     if type(data.theme.relativenumber) == "boolean" then
       resolved.theme.relativenumber = data.theme.relativenumber
     end
-    if type(data.theme.auto_integration) == "boolean" then
-      resolved.theme.auto_integration = data.theme.auto_integration
-    end
   end
 
   return resolved
@@ -118,7 +111,6 @@ function M.equals(data)
     or data.theme.mode ~= cur.theme.mode
     or data.theme.transparency ~= cur.theme.transparency
     or data.theme.relativenumber ~= cur.theme.relativenumber
-    or data.theme.auto_integration ~= cur.theme.auto_integration
   then
     return false
   end

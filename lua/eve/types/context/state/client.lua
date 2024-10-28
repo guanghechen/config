@@ -3,7 +3,6 @@
 ---@field public mode                   t.eve.collection.IObservable
 ---@field public transparency           t.eve.collection.IObservable
 ---@field public relativenumber         t.eve.collection.IObservable
----@field public auto_integration       t.eve.collection.IObservable
 
 ---@class t.eve.context.client.state
 ---@field public theme                  t.eve.context.state.theme
