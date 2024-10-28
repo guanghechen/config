@@ -51,6 +51,25 @@ mk({ "n", "t", "v" }, "<leader>`", uuids.resume)
 mk({ "n", "v" }, "<leader>2", uuids.search_files)
 ------------------------------------------------------------------------------------------#enhance--
 
+--#[b]uf--------------------------------------------------------------------------------------------
+mk({ "n", "v" }, "[b", uuids.buf_focus_left)
+mk({ "n", "v" }, "]b", uuids.buf_focus_right)
+mk({ "n", "v" }, "<leader>[", uuids.buf_focus_left)
+mk({ "n", "v" }, "<leader>]", uuids.buf_focus_right)
+mk({ "n", "v" }, "<leader>b[", uuids.buf_focus_left)
+mk({ "n", "v" }, "<leader>b]", uuids.buf_focus_right)
+mk({ "n", "v" }, "<leader>b1", uuids.buf_focus_1)
+mk({ "n", "v" }, "<leader>b2", uuids.buf_focus_2)
+mk({ "n", "v" }, "<leader>b3", uuids.buf_focus_3)
+mk({ "n", "v" }, "<leader>b4", uuids.buf_focus_4)
+mk({ "n", "v" }, "<leader>b5", uuids.buf_focus_5)
+mk({ "n", "v" }, "<leader>b6", uuids.buf_focus_6)
+mk({ "n", "v" }, "<leader>b7", uuids.buf_focus_7)
+mk({ "n", "v" }, "<leader>b8", uuids.buf_focus_8)
+mk({ "n", "v" }, "<leader>b9", uuids.buf_focus_9)
+mk({ "n", "v" }, "<leader>b0", uuids.buf_focus_10)
+--------------------------------------------------------------------------------------------#[b]uf--
+
 --#[c]opy-------------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<C-a>C", uuids.copy_current_filepath)
 mk({ "i", "n", "v" }, "<M-C>", uuids.copy_current_filepath)

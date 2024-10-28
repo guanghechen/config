@@ -1,3 +1,5 @@
+require("guanghechen.command.buf.focus")
+
 require("guanghechen.command.find.buffers")
 require("guanghechen.command.find.explorer")
 require("guanghechen.command.find.files")

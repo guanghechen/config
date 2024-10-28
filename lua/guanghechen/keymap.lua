@@ -42,12 +42,8 @@ mk({ "n", "v" }, "<leader>3", ghc.action.explorer.toggle_explorer_git_cwd, "expl
 
 --#navigation---------------------------------------------------------------------------------------
 ----- buffer -----
-mk({ "n", "v" }, "<leader>[", ghc.action.buf.focus_left, "buf: focus left", true, true)
-mk({ "n", "v" }, "<leader>]", ghc.action.buf.focus_right, "buf: focus right", true, true)
 mk({ "n", "v" }, "<leader>{", ghc.action.buf.swap_left, "buf: swap left", true, true)
 mk({ "n", "v" }, "<leader>}", ghc.action.buf.swap_right, "buf: swap right", true, true)
-mk({ "n", "v" }, "[b", ghc.action.buf.focus_left, "buf: focus left", true, true)
-mk({ "n", "v" }, "]b", ghc.action.buf.focus_right, "buf: focus right", true, true)
 
 ----- tab -----
 mk({ "n", "v" }, "<leader>,", ghc.action.tab.focus_left, "tab: focus left", true, true)
@@ -85,18 +81,6 @@ mk({ "i", "n", "v" }, "<M-o>", ghc.action.win.forward, "win: forward", true, tru
 ---------------------------------------------------------------------------------------#navigation--
 
 --[#]buffer-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>b1", ghc.action.buf.focus_1, "buf: focus buffer 1", true, true)
-mk({ "n", "v" }, "<leader>b2", ghc.action.buf.focus_2, "buf: focus buffer 2", true, true)
-mk({ "n", "v" }, "<leader>b3", ghc.action.buf.focus_3, "buf: focus buffer 3", true, true)
-mk({ "n", "v" }, "<leader>b4", ghc.action.buf.focus_4, "buf: focus buffer 4", true, true)
-mk({ "n", "v" }, "<leader>b5", ghc.action.buf.focus_5, "buf: focus buffer 5", true, true)
-mk({ "n", "v" }, "<leader>b6", ghc.action.buf.focus_6, "buf: focus buffer 6", true, true)
-mk({ "n", "v" }, "<leader>b7", ghc.action.buf.focus_7, "buf: focus buffer 7", true, true)
-mk({ "n", "v" }, "<leader>b8", ghc.action.buf.focus_8, "buf: focus buffer 8", true, true)
-mk({ "n", "v" }, "<leader>b9", ghc.action.buf.focus_9, "buf: focus buffer 9", true, true)
-mk({ "n", "v" }, "<leader>b0", ghc.action.buf.focus_10, "buf: focus buffer 10", true, true)
-mk({ "n", "v" }, "<leader>b[", ghc.action.buf.focus_left, "buf: focus left", true, true)
-mk({ "n", "v" }, "<leader>b]", ghc.action.buf.focus_right, "buf: focus right", true, true)
 mk({ "n", "v" }, "<leader>bd", ghc.action.buf.close_current, "buf: close current", true)
 mk({ "n", "v" }, "<leader>bh", ghc.action.buf.close_to_leftest, "buf: close to the leftest", true)
 mk({ "n", "v" }, "<leader>bl", ghc.action.buf.close_to_rightest, "buf: close to the rightest", true)
