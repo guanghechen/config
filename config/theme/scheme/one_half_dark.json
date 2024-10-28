@@ -1,0 +1,36 @@
+{
+  "theme": "one_half",
+  "mode": "dark",
+  "palette": {
+    "bg0_h": "#1E222A",
+    "bg0": "#1E222A",
+    "bg0_s": "#1B1F27",
+    "bg1": "#252931",
+    "bg2": "#31353F",
+    "bg3": "#393F4A",
+    "bg4": "#3E4451",
+
+    "fg": "#DCDFE4",
+    "fg0": "#E5E5E6",
+    "fg1": "#DCDFE4",
+    "fg2": "#C8CCD4",
+    "fg3": "#B6BDCA",
+    "fg4": "#ABB2BF",
+
+    "red": "#E06C75",
+    "green": "#98C379",
+    "yellow": "#E5C07B",
+    "blue": "#61AFEF",
+    "purple": "#C678DD",
+    "aqua": "#56B6C2",
+    "orange": "#DE8C92",
+
+    "neutral_red": "#E06C75",
+    "neutral_green": "#98C379",
+    "neutral_yellow": "#E5C07B",
+    "neutral_blue": "#61AFEF",
+    "neutral_purple": "#C678DD",
+    "neutral_aqua": "#56B6C2",
+    "neutral_orange": "#FF75A0"
+  }
+}

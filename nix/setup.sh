@@ -36,12 +36,17 @@ printf "\n\e[32m  [setup miniforge] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/miniforge.sh
 printf "\n\e[32m  [setup miniforge] done.\e[0m\n"
 
-## Install fonts
-printf "\n\e[32m  [setup fonts] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/fonts.sh
-printf "\e[32m  [setup fonts] done.\e[0m\n"
+## Install font
+printf "\n\e[32m  [setup font] preparing...\e[0m\n"
+source ~/.config/guanghechen/nix/setup/font.sh
+printf "\e[32m  [setup font] done.\e[0m\n"
 
 ## Install apps
 printf "\n\e[32m  [setup homebrew] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/homebrew.sh
 printf "\n\e[32m  [setup homebrew] done.\e[0m\n"
+
+## Setup themes
+printf "\n\e[32m  [setup theme] preparing...\e[0m\n"
+source ~/.config/guanghechen/nix/setup/theme.sh
+printf "\n\e[32m  [setup theme] done.\e[0m\n"
