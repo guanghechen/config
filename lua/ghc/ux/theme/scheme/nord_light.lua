@@ -1,5 +1,3 @@
---- https://github.com/shaunsingh/nord.nvim/blob/80c1e5321505aeb22b7a9f23eb82f1e193c12470/lua/nord/named_colors.lua
-
 ---@type t.fml.ux.theme.IScheme
 local M = {
   theme = "nord",
@@ -24,16 +22,16 @@ local M = {
     green = "#A3BE8C",
     yellow = "#EBCB8B",
     blue = "#5E81AC",
-    aqua = "#88C0D0",
     purple = "#B48EAD",
+    aqua = "#88C0D0",
     orange = "#D08770",
 
     neutral_red = "#BF616A",
     neutral_green = "#A3BE8C",
     neutral_yellow = "#EBCB8B",
     neutral_blue = "#81A1C1",
-    neutral_aqua = "#8FBCBB",
     neutral_purple = "#B48EAD",
+    neutral_aqua = "#8FBCBB",
     neutral_orange = "#D08770",
   },
 }

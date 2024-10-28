@@ -7,6 +7,7 @@ M.app = {
   "fish",
   "lazygit",
   "tmux",
+  "windows_terminal",
 }
 
 ---@type t.ghc.e.ux.theme.HighlightIntegration[]

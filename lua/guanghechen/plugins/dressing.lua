@@ -14,6 +14,30 @@ return {
       enabled = true,
       insert_only = false,
       start_in_insert = false,
+      title_pos = "center",
+      win_options = {
+        winblend = 10,
+        winhighlight = table.concat({
+          "FloatTitle:RenamerTitle",
+          "FloatBorder:FloatBorder",
+          "NormalFloat:NormalFloat",
+        }, ","),
+      },
+      mappings = {
+        n = {
+          ["<Esc>"] = "Close",
+          ["q"] = "Close",
+          ["<CR>"] = "Confirm",
+          ["<C-k>"] = "HistoryPrev",
+          ["<C-j>"] = "HistoryNext",
+        },
+        i = {
+          ["<C-c>"] = "Close",
+          ["<CR>"] = "Confirm",
+          ["<C-k>"] = "HistoryPrev",
+          ["<C-j>"] = "HistoryNext",
+        },
+      },
     },
     select = {
       enabled = false,

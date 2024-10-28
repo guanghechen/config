@@ -82,9 +82,14 @@ local function gen_hlgroup_map(context)
     MiniIconsYellow = { fg = c.yellow },
 
     ---! neo-tree.nvim
+    NeoTreeCursorLine = { bg = c.bg2 },
     NeoTreeDirectoryIcon = { link = "Directory" },
     NeoTreeDirectoryName = { fg = c.blue },
     NeoTreeFileName = { fg = c.fg2 },
+    NeoTreeFloatBorder = { link = "FloatBorder" },
+    NeoTreeFloatTitle = { link = "FloatTitle" },
+    NeoTreeNormal = { bg = c.bg1 },
+    NeoTreeNormalNC = { bg = c.bg0_s },
     NeoTreeRootName = { fg = c.fg, bold = true },
 
     ---! noice.nvim

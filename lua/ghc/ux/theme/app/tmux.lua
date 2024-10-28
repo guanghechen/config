@@ -26,10 +26,11 @@ set -g @GHC_SL_COLOR_SESSION          "{{bg1}}"
 set -g @GHC_SL_COLOR_USER             "{{bg1}}"
 ]]
 
+local app_home = eve.path.locate_app_config_home("tmux")
+
 ---@type t.ghc.ux.theme.IApp
 local M = {
   get_filepaths = function(context)
-    local app_home = eve.path.locate_app_config_home("tmux")
     if vim.fn.isdirectory(app_home) == 0 then
       return {}
     end
@@ -47,6 +48,12 @@ local M = {
       return c[key] or ("{{" .. key .. "}}")
     end)
     return text
+  end,
+  after_written = function()
+    if vim.env.TMUX then
+      local main_config_path = eve.path.join(app_home, "tmux.conf") ---@type string
+      vim.fn.system({ "tmux", "source-file", main_config_path })
+    end
   end,
 }
 

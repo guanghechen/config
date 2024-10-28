@@ -1,5 +1,3 @@
--- https://github.com/navarasu/onedark.nvim/blob/master/lua/onedark/palette.lua
-
 ---@type t.fml.ux.theme.IScheme
 local M = {
   theme = "one_half",
@@ -21,8 +19,8 @@ local M = {
     fg4 = "#565C64",
 
     red = "#D84A3D",
-    yellow = "#DEA95F",
     green = "#50A14F",
+    yellow = "#DEA95F",
     blue = "#4078F2",
     purple = "#A28DCD",
     aqua = "#0B8EC6",

@@ -1,5 +1,3 @@
--- https://github.com/navarasu/onedark.nvim/blob/master/lua/onedark/palette.lua
-
 ---@type t.fml.ux.theme.IScheme
 local M = {
   theme = "one_half",

@@ -76,7 +76,7 @@ local function gen_hlgroup_map(context)
 
     ---terminal
     f_us_terminal_bg = { bg = c.bg0 },
-    f_us_terminal_border = { fg = c.bg1, bg = c.bg0 },
+    f_us_terminal_border = { fg = c.orange, bg = c.bg0 },
     f_us_terminal_current = { bg = c.bg2 },
 
     ---textarea

@@ -13,6 +13,7 @@
 ---|"fish"
 ---|"lazygit"
 ---|"tmux"
+---|"windows_terminal"
 
 ---@alias t.ghc.e.ux.theme.HighlightIntegration
 ---|"basic"

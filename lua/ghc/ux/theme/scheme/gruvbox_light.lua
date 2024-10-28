@@ -1,5 +1,3 @@
---- https://github.com/morhetz/gruvbox/blob/f1ecde848f0cdba877acb0c740320568252cc482/colors/gruvbox.vim
-
 ---@type t.fml.ux.theme.IScheme
 local M = {
   theme = "gruvbox",
