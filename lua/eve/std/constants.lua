@@ -1,4 +1,4 @@
----@class eve.constants
+---@class eve.std.constants
 local M = {}
 
 ---! special symbols.

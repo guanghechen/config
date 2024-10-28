@@ -47,17 +47,25 @@ mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back")
 mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward")
 
 --- quick access widgets (diagnostic, explorer, terminal) -----
-mk({ "n", "t", "v" }, "<leader>`", uuids.resume)
-mk({ "n", "v" }, "<leader>2", uuids.search_files)
+mk({ "n", "t", "v" }, "<leader>`", uuids.resume, "resume: widgets")
+mk({ "n", "v" }, "<leader>2", uuids.search_files, "search: files")
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[b]uf--------------------------------------------------------------------------------------------
+mk({ "i", "n", "v" }, "<C-a>s", uuids.buf_save, "buf: save changes")
+mk({ "i", "n", "v" }, "<M-s>", uuids.buf_save, "buf: save changes")
 mk({ "n", "v" }, "[b", uuids.buf_focus_left, "buf: focus left")
 mk({ "n", "v" }, "]b", uuids.buf_focus_right, "buf: focus right")
+mk({ "n", "v" }, "{b", uuids.buf_swap_left, "buf: swap left")
+mk({ "n", "v" }, "}b", uuids.buf_swap_right, "buf: swap right")
 mk({ "n", "v" }, "<leader>[", uuids.buf_focus_left, "buf: focus left")
 mk({ "n", "v" }, "<leader>]", uuids.buf_focus_right, "buf: focus right")
+mk({ "n", "v" }, "<leader>{", uuids.buf_swap_left, "buf: swap left")
+mk({ "n", "v" }, "<leader>}", uuids.buf_swap_right, "buf: swap right")
 mk({ "n", "v" }, "<leader>b[", uuids.buf_focus_left, "buf: focus left")
 mk({ "n", "v" }, "<leader>b]", uuids.buf_focus_right, "buf: focus right")
+mk({ "n", "v" }, "<leader>b{", uuids.buf_swap_left, "buf: swap left")
+mk({ "n", "v" }, "<leader>b}", uuids.buf_swap_right, "buf: swap right")
 mk({ "n", "v" }, "<leader>b1", uuids.buf_focus_1, "buf: focus 1")
 mk({ "n", "v" }, "<leader>b2", uuids.buf_focus_2, "buf: focus 2")
 mk({ "n", "v" }, "<leader>b3", uuids.buf_focus_3, "buf: focus 3")
@@ -68,6 +76,12 @@ mk({ "n", "v" }, "<leader>b7", uuids.buf_focus_7, "buf: focus 7")
 mk({ "n", "v" }, "<leader>b8", uuids.buf_focus_8, "buf: focus 8")
 mk({ "n", "v" }, "<leader>b9", uuids.buf_focus_9, "buf: focus 9")
 mk({ "n", "v" }, "<leader>b0", uuids.buf_focus_10, "buf: focus 10")
+mk({ "n", "v" }, "<leader>bd", uuids.buf_close, "buf: close current")
+mk({ "n", "v" }, "<leader>bh", uuids.buf_close_to_leftest, "buf: close to the leftest")
+mk({ "n", "v" }, "<leader>bl", uuids.buf_close_to_rightest, "buf: close to the rightest")
+mk({ "n", "v" }, "<leader>bn", uuids.buf_new, "buf: new")
+mk({ "n", "v" }, "<leader>bo", uuids.buf_close_others, "buf: close others")
+mk({ "n", "v" }, "<leader>bp", uuids.buf_pin, "buf: toggle pin")
 --------------------------------------------------------------------------------------------#[b]uf--
 
 --#[c]opy-------------------------------------------------------------------------------------------

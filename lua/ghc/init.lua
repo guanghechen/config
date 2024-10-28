@@ -1,6 +1,5 @@
 ---@class ghc.action
 local action = {
-  buf = require("ghc.action.buf"),
   tab = require("ghc.action.tab"),
   win = require("ghc.action.win"),
   lsp = require("ghc.action.lsp"),

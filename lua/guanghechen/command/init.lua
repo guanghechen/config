@@ -1,4 +1,8 @@
+require("guanghechen.command.buf.close")
+require("guanghechen.command.buf.create")
 require("guanghechen.command.buf.focus")
+require("guanghechen.command.buf.pin")
+require("guanghechen.command.buf.save")
 
 require("guanghechen.command.find.buffers")
 require("guanghechen.command.find.explorer")
@@ -12,7 +16,6 @@ require("guanghechen.command.select.theme")
 
 require("guanghechen.command.search.files")
 
-require("guanghechen.command.buf")
 require("guanghechen.command.copy")
 require("guanghechen.command.debug")
 require("guanghechen.command.flight")

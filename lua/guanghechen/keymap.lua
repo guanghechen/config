@@ -32,8 +32,6 @@ mk({ "i", "n", "v" }, "<C-a>T", ghc.action.theme.toggle_mode, "theme: toggle mod
 mk({ "i", "n", "v" }, "<M-T>", ghc.action.theme.toggle_mode, "theme: toggle mode")
 
 ---! better save
-mk({ "i", "n", "v" }, "<C-a>s", ghc.action.buf.save, "system: save changes")
-mk({ "i", "n", "v" }, "<M-s>", ghc.action.buf.save, "system: save changes")
 
 --- quick access widgets (diagnostic, explorer, terminal)
 mk({ "n", "v" }, "<leader>1", ghc.action.explorer.toggle_explorer_file_cwd, "explorer: files (cwd)")
@@ -41,10 +39,6 @@ mk({ "n", "v" }, "<leader>3", ghc.action.explorer.toggle_explorer_git_cwd, "expl
 ---------------------------------------------------------------------------------------#enhance-----
 
 --#navigation---------------------------------------------------------------------------------------
------ buffer -----
-mk({ "n", "v" }, "<leader>{", ghc.action.buf.swap_left, "buf: swap left", true, true)
-mk({ "n", "v" }, "<leader>}", ghc.action.buf.swap_right, "buf: swap right", true, true)
-
 ----- tab -----
 mk({ "n", "v" }, "<leader>,", ghc.action.tab.focus_left, "tab: focus left", true, true)
 mk({ "n", "v" }, "<leader>.", ghc.action.tab.focus_right, "tab: focus right", true, true)
@@ -80,15 +74,6 @@ mk({ "i", "n", "v" }, "<M-i>", ghc.action.win.backward, "win: back", true, true)
 mk({ "i", "n", "v" }, "<M-o>", ghc.action.win.forward, "win: forward", true, true)
 ---------------------------------------------------------------------------------------#navigation--
 
---[#]buffer-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>bd", ghc.action.buf.close_current, "buf: close current", true)
-mk({ "n", "v" }, "<leader>bh", ghc.action.buf.close_to_leftest, "buf: close to the leftest", true)
-mk({ "n", "v" }, "<leader>bl", ghc.action.buf.close_to_rightest, "buf: close to the rightest", true)
-mk({ "n", "v" }, "<leader>bn", ghc.action.buf.create, "buf: new", true)
-mk({ "n", "v" }, "<leader>bo", ghc.action.buf.close_others, "buf: close others", true)
-mk({ "n", "v" }, "<leader>bp", ghc.action.buf.toggle_pin_cur, "buf: toggle pin", true)
------------------------------------------------------------------------------------------#[b]uffer--
-
 --#[x] diagnostic-----------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>xd", ghc.action.diagnostic.toggle_diagnositics_cur, "diagnostic: open diagnostics (document)")
 mk({ "n", "v" }, "<leader>xD", ghc.action.diagnostic.toggle_diagnostics, "diagnostic: open diagnostics (workspace)")
@@ -116,10 +101,6 @@ mk({ "n", "v" }, "<leader>eg", ghc.action.explorer.toggle_explorer_git_cwd, "exp
 mk({ "n", "v" }, "<leader>er", ghc.action.explorer.reveal_file_explorer, "explorer: reveal file")
 mk({ "n", "v" }, "<leader>et", ghc.action.explorer.toggle_explorers, "explorer: toggle")
 ---------------------------------------------------------------------------------------#[e]xplorer--
-
---#[f]ile-------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>fn", ghc.action.buf.create, "file: new", true)
--------------------------------------------------------------------------------------------#[f]ile--
 
 --#[s]croll-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>sj", ghc.action.scroll.down_half_window, "scroll: down half of window")
