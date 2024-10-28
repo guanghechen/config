@@ -54,6 +54,8 @@ M.uuids = {
   search_files_directory = "Fsearchfilesdirectory",
   search_files_workspace = "Fsearchfilesworkspace",
   select_theme = "Fselecttheme",
+  session_restore = "Fsessionrestore",
+  session_save = "Fsessionsave",
 }
 
 ---@param uuid                          string

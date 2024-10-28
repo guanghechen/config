@@ -15,7 +15,6 @@ local action = {
   notification = require("ghc.action.notification"),
   run = require("ghc.action.run"),
   scroll = require("ghc.action.scroll"),
-  session = require("ghc.action.session"),
   theme = require("ghc.action.theme"),
 }
 

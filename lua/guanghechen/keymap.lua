@@ -150,11 +150,6 @@ mk({ "n", "v" }, "<leader>gf", ghc.action.git.open_diffview_filehistory, "git: o
 mk({ "n", "v" }, "<leader>gg", ghc.action.git.open_diffview, "git: open diff view", true)
 -------------------------------------------------------------------------------------------#[g]it---
 
---#[q]uit/session/context--------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>ql", ghc.action.session.load, "session: restore session", true)
-mk({ "n", "v" }, "<leader>qs", ghc.action.session.save, "session: save session", true)
---------------------------------------------------------------------------#[q]uit/session/context---
-
 --#[r]un--------------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<F5>", ghc.action.run.run, "run: run codes", true)
 --------------------------------------------------------------------------------------------#[r]un--
