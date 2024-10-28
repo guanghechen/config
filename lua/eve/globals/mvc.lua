@@ -1,18 +1,12 @@
 local BatchDisposable = require("eve.collection.batch_disposable")
-local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 
 local disposables = BatchDisposable.new()
 
 ---@class eve.globals.mvc
----@field public tmux_zen_mode          t.eve.collection.IObservable
 ---@field public add_disposable         fun(disposable: t.eve.collection.IDisposable): nil
 ---@field public dispose                fun(): nil
-local M = {
-  tmux_zen_mode = Observable.from_value(false),
-}
-
-disposables:add_disposable(M.tmux_zen_mode)
+local M = {}
 
 ---@param disposable                    t.eve.collection.IDisposable
 ---@return nil

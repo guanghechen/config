@@ -8,6 +8,7 @@ local md5 = require("eve.std.md5")
 local std_nvim = require("eve.std.nvim")
 local path = require("eve.std.path")
 local std_tab = require("eve.std.tab")
+local tmux = require("eve.std.tmux")
 local std_util = require("eve.std.util")
 
 ---@param bufs                          t.eve.context.data.buf.IItem[]
@@ -228,7 +229,7 @@ function M.load(data)
     ---@type t.eve.context.state.status
     local status = {
       lsp_msg = Observable.from_value(""),
-      tmux_zen_mode = Observable.from_value(false),
+      tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
     }
 
     ---@type t.eve.context.state.frecency

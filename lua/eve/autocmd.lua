@@ -4,7 +4,6 @@ local widgets = require("eve.globals.widgets")
 local constants = require("eve.std.constants")
 local os = require("eve.std.os")
 local path = require("eve.std.path")
-local tmux = require("eve.std.tmux")
 
 if os.is_mac() or os.is_nix() or os.is_wsl() then
   vim.opt.shell = "/bin/bash"
@@ -34,19 +33,6 @@ if not vim.g.vscode then
   vim.schedule(function()
     vim.cmd("clearjumps")
   end)
-end
-
----! Watch the zen mode change on tmux.
-if vim.env.TMUX then
-  local function on_resize()
-    local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
-    mvc.tmux_zen_mode:next(is_tmux_pane_zoomed)
-  end
-
-  on_resize()
-  vim.api.nvim_create_autocmd({ "VimResized" }, {
-    callback = on_resize,
-  })
 end
 
 vim.api.nvim_create_autocmd("VimLeavePre", {

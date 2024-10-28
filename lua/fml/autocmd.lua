@@ -5,6 +5,19 @@ local api_win = require("fml.api.win")
 
 refresh_state()
 
+---! Watch the zen mode change on tmux.
+if vim.env.TMUX then
+  local function on_resize()
+    local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
+    eve.context.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
+  end
+
+  on_resize()
+  vim.api.nvim_create_autocmd({ "VimResized" }, {
+    callback = on_resize,
+  })
+end
+
 vim.api.nvim_create_autocmd({ "BufAdd", "BufWinEnter" }, {
   callback = function(args)
     local bufnr = args.buf
