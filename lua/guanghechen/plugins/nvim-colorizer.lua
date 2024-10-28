@@ -11,9 +11,11 @@ return {
       fish = {},
       html = {},
       lua = {},
+      javascriptreact = {},
       json = {},
       tmux = {},
       toml = {},
+      typescriptreact = {},
       yaml = {},
     },
     user_default_options = {
