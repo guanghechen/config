@@ -1,23 +1,25 @@
-## Change the git prompt style
-## See https://fishshell.com/docs/current/cmds/fish_git_prompt.html
-set -g __fish_git_prompt_char_cleanstate          ''
-set -g __fish_git_prompt_char_dirtystate          '●'
-set -g __fish_git_prompt_char_invalidstate        '✗'
-set -g __fish_git_prompt_char_stagedstate         '+'
-set -g __fish_git_prompt_char_untrackedfiles      '?'
-set -g __fish_git_prompt_color_branch             magenta   --bold
-set -g __fish_git_prompt_color_cleanstate         green     --bold
-set -g __fish_git_prompt_color_dirtystate         yellow
-set -g __fish_git_prompt_color_invalidstate       red
-set -g __fish_git_prompt_color_stagedstate        blue
-set -g __fish_git_prompt_color_untrackedfiles     $fish_color_normal
-set -g __fish_git_prompt_show_informative_status  true
-set -g __fish_git_prompt_showdirtystate           true
-set -g __fish_git_prompt_showstashstate           true
-set -g __fish_git_prompt_showuntrackedfiles       true
-set -g __fish_git_prompt_showupstream             informative
-
 function fish_prompt --description 'Write out the prompt'
+  source ~/.config/fish/conf.d/theme.fish
+
+  ## Change the git prompt style
+  ## See https://fishshell.com/docs/current/cmds/fish_git_prompt.html
+  set -g __fish_git_prompt_char_cleanstate          ''
+  set -g __fish_git_prompt_char_dirtystate          '●'
+  set -g __fish_git_prompt_char_invalidstate        '✗'
+  set -g __fish_git_prompt_char_stagedstate         '+'
+  set -g __fish_git_prompt_char_untrackedfiles      '?'
+  set -g __fish_git_prompt_color_branch             magenta   --bold
+  set -g __fish_git_prompt_color_cleanstate         green     --bold
+  set -g __fish_git_prompt_color_dirtystate         yellow
+  set -g __fish_git_prompt_color_invalidstate       red
+  set -g __fish_git_prompt_color_stagedstate        blue
+  set -g __fish_git_prompt_color_untrackedfiles     $fish_color_normal
+  set -g __fish_git_prompt_show_informative_status  true
+  set -g __fish_git_prompt_showdirtystate           true
+  set -g __fish_git_prompt_showstashstate           true
+  set -g __fish_git_prompt_showuntrackedfiles       true
+  set -g __fish_git_prompt_showupstream             informative
+
   set -l last_pipestatus $pipestatus
   set -lx __fish_last_status $status # Export for __fish_print_pipestatus.
 
