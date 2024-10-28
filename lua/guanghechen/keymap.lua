@@ -142,10 +142,6 @@ mk({ "n", "v" }, "<leader>gf", ghc.action.git.open_diffview_filehistory, "git: o
 mk({ "n", "v" }, "<leader>gg", ghc.action.git.open_diffview, "git: open diff view", true)
 -------------------------------------------------------------------------------------------#[g]it---
 
---#[r]un--------------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<F5>", ghc.action.run.run, "run: run codes", true)
---------------------------------------------------------------------------------------------#[r]un--
-
 --#[s]croll-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>sj", ghc.action.scroll.down_half_window, "scroll: down half of window")
 mk({ "n", "v" }, "<leader>sk", ghc.action.scroll.up_half_window, "scroll: up half of window")

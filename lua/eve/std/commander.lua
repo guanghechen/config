@@ -51,6 +51,7 @@ M.uuids = {
   replace_files_directory = "Freplacefilesdirectory",
   replace_files_workspace = "Freplacefilesworkspace",
   resume = "Fresume",
+  run = "Frun",
   search_files = "Fsearchfiles",
   search_files_buffer = "Fsearchfilesbuffer",
   search_files_cwd = "Fsearchfilescwd",

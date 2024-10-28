@@ -12,7 +12,6 @@ local action = {
   find_win_history = require("ghc.action.find_win_history"),
   git = require("ghc.action.git"),
   notification = require("ghc.action.notification"),
-  run = require("ghc.action.run"),
   scroll = require("ghc.action.scroll"),
   theme = require("ghc.action.theme"),
 }
