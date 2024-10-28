@@ -48,3 +48,6 @@ source ~/.config/fish/conf.d/alias.fish
 source ~/.config/fish/conf.d/app.fish
 source ~/.config/fish/conf.d/fzf.fish
 
+if test -f "$HOME/.config/fish/local/config.fish"
+  source "$HOME/.config/fish/local/config.fish"
+end

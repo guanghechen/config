@@ -8,5 +8,4 @@ fish_variables
 *.tmp
 
 # Ignore local files
-conf.d/local.fish
 local/
