@@ -10,7 +10,6 @@ local action = {
   diagnostic = require("ghc.action.diagnostic"),
   explorer = require("ghc.action.explorer"),
   find_win_history = require("ghc.action.find_win_history"),
-  git = require("ghc.action.git"),
   notification = require("ghc.action.notification"),
   scroll = require("ghc.action.scroll"),
   theme = require("ghc.action.theme"),

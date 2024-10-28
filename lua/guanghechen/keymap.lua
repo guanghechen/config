@@ -137,11 +137,6 @@ mk({ "n", "v" }, "<leader>et", ghc.action.explorer.toggle_explorers, "explorer: 
 mk({ "n", "v" }, "<leader>fn", ghc.action.buf.create, "file: new", true)
 -------------------------------------------------------------------------------------------#[f]ile--
 
---#[g]it--------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>gf", ghc.action.git.open_diffview_filehistory, "git: open file history", true)
-mk({ "n", "v" }, "<leader>gg", ghc.action.git.open_diffview, "git: open diff view", true)
--------------------------------------------------------------------------------------------#[g]it---
-
 --#[s]croll-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>sj", ghc.action.scroll.down_half_window, "scroll: down half of window")
 mk({ "n", "v" }, "<leader>sk", ghc.action.scroll.up_half_window, "scroll: up half of window")
