@@ -56,6 +56,9 @@ M.uuids = {
   select_theme = "Fselecttheme",
   session_restore = "Fsessionrestore",
   session_save = "Fsessionsave",
+  term_cwd = "Ftermcwd",
+  term_directory = "Ftermdirectory",
+  term_workspace = "Ftermworkspace",
 }
 
 ---@param uuid                          string

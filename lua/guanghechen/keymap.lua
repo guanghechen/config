@@ -35,10 +35,6 @@ mk({ "i", "n", "v" }, "<M-T>", ghc.action.theme.toggle_mode, "theme: toggle mode
 mk({ "i", "n", "t", "v" }, "<C-a>g", ghc.action.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
 mk({ "i", "n", "t", "v" }, "<M-g>", ghc.action.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
 
----! better access terminal
-mk({ "i", "n", "t", "v" }, "<C-a>t", ghc.action.term.toggle_cwd, "terminal: toggle (cwd)")
-mk({ "i", "n", "t", "v" }, "<M-t>", ghc.action.term.toggle_cwd, "terminal: toggle (cwd)")
-
 ---! better save
 mk({ "i", "n", "v" }, "<C-a>s", ghc.action.buf.save, "system: save changes")
 mk({ "i", "n", "v" }, "<M-s>", ghc.action.buf.save, "system: save changes")
@@ -179,11 +175,6 @@ mk({ "n", "v" }, "<leader>th", ghc.action.tab.close_to_leftest, "tab: close tabs
 mk({ "n", "v" }, "<leader>tl", ghc.action.tab.close_to_rightest, "tab: close tabs to the rightest", true)
 mk({ "n", "v" }, "<leader>to", ghc.action.tab.close_others, "tab: close other tabs", true)
 --------------------------------------------------------------------------------------------#[t]ab--
-
---#[t]merinal---------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>tT", ghc.action.term.toggle_workspace, "terminal: toggle (workspace)")
-mk({ "n", "v" }, "<leader>tt", ghc.action.term.toggle_cwd, "terminal: toggle (cwd)")
----------------------------------------------------------------------------------------#[t]merinal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>tul", ghc.action.theme.toggle_relativenumber, "toggle: relative line number")
