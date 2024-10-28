@@ -1,5 +1,16 @@
 ## Requirements
 
+* Set windows code pages with UTF-8
+
+  https://learn.microsoft.com/en-us/windows/apps/design/globalizing/use-utf8-code-page
+
+
+  > GDI doesn't currently support setting the ActiveCodePage property per process. Instead,
+  > GDI defaults to the active system codepage. To configure your app to render UTF-8 text
+  > via GDI, go to Windows Settings > Time & language > Language & region > Administrative
+  > language settings > Change system locale, and check Beta: Use Unicode UTF-8 for
+  > worldwide language support. Then reboot the PC for the change to take effect.
+
 * Install rust
 
   - Download exe from https://www.rust-lang.org/tools/install

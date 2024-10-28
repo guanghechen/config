@@ -1,4 +1,5 @@
 Set-PSReadLineOption -EditMode Vi
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 ## Setup fnm
 fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
