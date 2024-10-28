@@ -31,10 +31,6 @@ vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Se
 mk({ "i", "n", "v" }, "<C-a>T", ghc.action.theme.toggle_mode, "theme: toggle mode")
 mk({ "i", "n", "v" }, "<M-T>", ghc.action.theme.toggle_mode, "theme: toggle mode")
 
----! better access lazygit
-mk({ "i", "n", "t", "v" }, "<C-a>g", ghc.action.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
-mk({ "i", "n", "t", "v" }, "<M-g>", ghc.action.git.toggle_lazygit_cwd, "git: toggle lazygit (cwd)", true)
-
 ---! better save
 mk({ "i", "n", "v" }, "<C-a>s", ghc.action.buf.save, "system: save changes")
 mk({ "i", "n", "v" }, "<M-s>", ghc.action.buf.save, "system: save changes")
