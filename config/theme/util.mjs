@@ -71,13 +71,7 @@ export async function safe_exec(cmd, args) {
 }
 
 export async function gen_theme(app, theme) {
-  if (!HOME_CONFIG) return;
-
   const meta = apps[app];
-  const app_home = path.join(HOME_CONFIG, app);
-  if (!fs.existsSync(app_home)) return;
-  if (!fs.statSync(app_home).isDirectory()) return;
-
   const template_filepath = path.join(
     HOME_THEME_APP,
     `${meta.template ?? app}.hbs`,
@@ -112,6 +106,19 @@ export async function gen_theme(app, theme) {
     /\{{2}([\w]+)\}{2}/g,
     (_, key) => data[key] || `{{${key}}}`,
   );
+  return content;
+}
+
+export async function gen_and_save_theme(app, theme) {
+  if (!HOME_CONFIG) return;
+
+  const meta = apps[app];
+  const app_home = path.join(HOME_CONFIG, app);
+  if (!fs.existsSync(app_home)) return;
+  if (!fs.statSync(app_home).isDirectory()) return;
+
+  const content = gen_theme(app, theme);
+  if (!content) return;
 
   const theme_filepath = path.join(
     app_home,
@@ -136,7 +143,7 @@ export async function toggle_theme(app, theme) {
     path.normalize(meta.scheme_home ?? "theme"),
     `${theme}${meta.extname}`,
   );
-  if (!fs.existsSync(theme_filepath)) await gen_theme(app, theme);
+  if (!fs.existsSync(theme_filepath)) await gen_and_save_theme(app, theme);
 
   const local_theme_filepath = path.join(
     app_home,
@@ -167,38 +174,39 @@ export async function toggle_theme(app, theme) {
       }
       break;
     }
-    case "windows_terminal": {
-      if (
-        process.env.f_windows_terminal_settings &&
-        fs.existsSync(main_config_filepath) &&
-        fs.statSync(main_config_filepath).isFile()
-      ) {
-        const raw_content = fs.readFileSync(main_config_filepath, "utf8");
-        const settings = JSON.parse(raw_content);
-
-        if (settings?.profiles?.defaults?.colorScheme) {
-          settings.profiles.defaults.colorScheme = theme;
-        }
-
-        const raw_scheme = fs.readFileSync(theme_filepath, "utf8");
-        const scheme = JSON.parse(raw_scheme);
-        if (Array.isArray(settings.schemes)) {
-          if (settings.schemes.some((s) => s.name === theme)) {
-            settings.schemes = settings.schemes.map((s) =>
-              s.name === theme ? scheme : s,
-            );
-          } else {
-            settings.schemes.push(scheme);
-          }
-        } else {
-          settings.schemes = [scheme];
-        }
-        const content = JSON.stringify(settings, null, 2);
-        fs.writeFileSync(main_config_filepath, content, "utf8");
-      }
-      break;
-    }
     default:
       break;
+  }
+}
+
+export async function toggle_theme_windows_terminal(theme) {
+  const main_config_filepath = apps.windows_terminal.main;
+  if (
+    main_config_filepath &&
+    fs.existsSync(main_config_filepath) &&
+    fs.statSync(main_config_filepath).isFile()
+  ) {
+    const raw_content = fs.readFileSync(main_config_filepath, "utf8");
+    const settings = JSON.parse(raw_content);
+
+    if (settings?.profiles?.defaults?.colorScheme) {
+      settings.profiles.defaults.colorScheme = theme;
+    }
+
+    const raw_scheme = await gen_theme("windows_terminal", theme);
+    const scheme = JSON.parse(raw_scheme);
+    if (Array.isArray(settings.schemes)) {
+      if (settings.schemes.some((s) => s.name === theme)) {
+        settings.schemes = settings.schemes.map((s) =>
+          s.name === theme ? scheme : s,
+        );
+      } else {
+        settings.schemes.push(scheme);
+      }
+    } else {
+      settings.schemes = [scheme];
+    }
+    const content = JSON.stringify(settings, null, 2);
+    fs.writeFileSync(main_config_filepath, content, "utf8");
   }
 }
