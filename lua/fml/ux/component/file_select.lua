@@ -219,7 +219,7 @@ function M.fetch_preview_data(cwd, item)
   local is_text_file = validator.is_printable_file(filename) ---@type boolean
   if is_text_file then
     local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-    local lines = fs.read_file_as_lines({ filepath = filepath, max_lines = 300, silent = true }) ---@type string[]
+    local lines = fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
 
     ---@type t.fml.ux.search.preview.IData
     return {
