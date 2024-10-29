@@ -137,7 +137,7 @@ function M.load_theme(params)
     ---! toggle theme for other apps.
     do
       local app_home = eve.path.locate_app_config_home("guanghechen")
-      local script_path = eve.path.join(app_home, "config/theme/toggle_theme.mjs")
+      local script_path = eve.path.join(app_home, "config/theme/apply_theme.mjs")
       local ok, error = pcall(function()
         vim.fn.system({ "node", script_path, theme .. "_" .. mode })
       end)
