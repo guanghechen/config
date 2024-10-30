@@ -20,6 +20,7 @@ local c = {
   diagnostics = "diagnostics",
   fileformat = "fileformat",
   filepath = "filepath",
+  filesize = "filesize",
   filestatus = "filestatus",
   filetype = "filetype",
   git = "git",
@@ -44,6 +45,7 @@ statusline
   :place(c.readonly, "left")
   :place(c.widget, "center")
   :place(c.pos, "right")
+  :place(c.filesize, "right")
   :place(c.fileformat, "right")
   :place(c.lsp, "right")
   :place(c.copilot, "right")
