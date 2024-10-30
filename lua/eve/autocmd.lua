@@ -179,7 +179,20 @@ vim.api.nvim_create_autocmd("FileType", {
     "Trouble",
   },
   callback = function(event)
-    vim.bo[event.buf].buflisted = false
+    local bufnr = event.buf ---@type integer|nil
+    if bufnr ~= nil then
+      vim.bo[bufnr].buflisted = false
+      vim.schedule(function()
+        vim.keymap.set("n", "q", function()
+          vim.cmd("close")
+          pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+        end, {
+          buffer = bufnr,
+          silent = true,
+          desc = "Quit buffer",
+        })
+      end)
+    end
   end,
 })
 
