@@ -40,35 +40,6 @@ mk({ "n", "v" }, "<leader>3", ghc.action.explorer.toggle_explorer_git_cwd, "expl
 
 --#navigation---------------------------------------------------------------------------------------
 
------ window -----
-mk({ "i", "n", "t", "v" }, "<C-a>h", ghc.action.win.focus_left, "win: focus left", true, true)
-mk({ "i", "n", "t", "v" }, "<C-a>j", ghc.action.win.focus_bottom, "win: focus bottom", true, true)
-mk({ "i", "n", "t", "v" }, "<C-a>k", ghc.action.win.focus_top, "win: focus top", true, true)
-mk({ "i", "n", "t", "v" }, "<C-a>l", ghc.action.win.focus_right, "win: focus right", true, true)
-mk({ "i", "n", "t", "v" }, "<M-h>", ghc.action.win.focus_left, "win: focus left", true, true)
-mk({ "i", "n", "t", "v" }, "<M-j>", ghc.action.win.focus_bottom, "win: focus bottom", true, true)
-mk({ "i", "n", "t", "v" }, "<M-k>", ghc.action.win.focus_top, "win: focus top", true, true)
-mk({ "i", "n", "t", "v" }, "<M-l>", ghc.action.win.focus_right, "win: focus right", true, true)
-mk({ "i", "n", "v" }, "<C-a><Left>", ghc.action.win.resize_vertical_minus, "win: resize -(v:count) vertically.", true)
-mk(
-  { "i", "n", "v" },
-  "<C-a><Down>",
-  ghc.action.win.resize_horizontal_minus,
-  "win: resize -(v:count) horizontally.",
-  true
-)
-mk({ "i", "n", "v" }, "<C-a><Up>", ghc.action.win.resize_horizontal_plus, "win: resize +(v:count) horizontally.", true)
-mk({ "i", "n", "v" }, "<C-a><Right>", ghc.action.win.resize_vertical_plus, "win: resize +(v:count) vertically.", true)
-mk({ "i", "n", "v" }, "<M-Left>", ghc.action.win.resize_vertical_minus, "win: resize -(v:count) vertically.", true)
-mk({ "i", "n", "v" }, "<M-Down>", ghc.action.win.resize_horizontal_minus, "win: resize -(v:count) horizontally.", true)
-mk({ "i", "n", "v" }, "<M-Up>", ghc.action.win.resize_horizontal_plus, "win: resize +(v:count) horizontally.", true)
-mk({ "i", "n", "v" }, "<M-Right>", ghc.action.win.resize_vertical_plus, "win: resize +(v:count) vertically.", true)
-mk({ "i", "n", "v" }, "<C-a>i", ghc.action.win.backward, "win: back", true, true)
-mk({ "i", "n", "v" }, "<C-a>o", ghc.action.win.forward, "win: forward", true, true)
-mk({ "i", "n", "v" }, "<M-i>", ghc.action.win.backward, "win: back", true, true)
-mk({ "i", "n", "v" }, "<M-o>", ghc.action.win.forward, "win: forward", true, true)
----------------------------------------------------------------------------------------#navigation--
-
 --#[x] diagnostic-----------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>xd", ghc.action.diagnostic.toggle_diagnositics_cur, "diagnostic: open diagnostics (document)")
 mk({ "n", "v" }, "<leader>xD", ghc.action.diagnostic.toggle_diagnostics, "diagnostic: open diagnostics (workspace)")
@@ -102,10 +73,6 @@ mk({ "n", "v" }, "<leader>sj", ghc.action.scroll.down_half_window, "scroll: down
 mk({ "n", "v" }, "<leader>sk", ghc.action.scroll.up_half_window, "scroll: up half of window")
 -----------------------------------------------------------------------------------------#[s]croll--
 
---#[t]ab--------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------#[t]ab--
-
 --#[t]oggle-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>tul", ghc.action.theme.toggle_relativenumber, "toggle: relative line number")
 mk({ "n", "v" }, "<leader>tuT", ghc.action.theme.toggle_transparency, "toggle: transparency")
@@ -115,14 +82,3 @@ mk({ "n", "v" }, "<leader>tuw", ghc.action.theme.toggle_wrap_tmp, "toggle: wrap 
 --#[u]i---------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>un", ghc.action.notification.dismiss_all, "notification: dismiss all")
 ---------------------------------------------------------------------------------------------#[u]i--
-
---#[w]indow-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>wh", ghc.action.find_win_history.focus, "win: history", true)
-mk({ "n", "v" }, "<leader>wp", ghc.action.win.project_with_picker, "win: project (with picker)", true)
-mk({ "n", "v" }, "<leader>ws", ghc.action.win.swap_with_picker, "win: swap (with picker)", true)
-mk({ "n", "v" }, "<leader>ww", ghc.action.win.focus_with_picker, "win: focus (with picker)", true)
-mk({ "n", "v" }, "<leader>wj", ghc.action.win.split_horizontal, "win: split horizontally", true)
-mk({ "n", "v" }, "<leader>wl", ghc.action.win.split_vertical, "win: split vertically", true)
-mk({ "n", "v" }, "<leader>wd", ghc.action.win.close_current, "win: close current window", true)
-mk({ "n", "v" }, "<leader>wo", ghc.action.win.close_others, "win: close others", true)
------------------------------------------------------------------------------------------#[w]indow--

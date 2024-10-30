@@ -8,6 +8,12 @@ require("guanghechen.command.tab.close")
 require("guanghechen.command.tab.create")
 require("guanghechen.command.tab.focus")
 
+require("guanghechen.command.win.close")
+require("guanghechen.command.win.create")
+require("guanghechen.command.win.focus")
+require("guanghechen.command.win.history")
+require("guanghechen.command.win.resize")
+
 require("guanghechen.command.find.buffers")
 require("guanghechen.command.find.explorer")
 require("guanghechen.command.find.files")

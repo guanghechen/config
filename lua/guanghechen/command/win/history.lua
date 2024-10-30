@@ -1,17 +1,18 @@
-local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.constants.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
+local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
-local _select = nil ---@type fml.ux.FileSelect|nil
-
----@param ordinal                       integer
----@return string
-local function gen_uuid_from_ordinal(ordinal)
-  return eve.string.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
-end
+local _history_select = nil ---@type fml.ux.FileSelect|nil
 
 ---@return fml.ux.FileSelect
-local function get_select()
-  if _select == nil then
+local function get_history_select()
+  if _history_select == nil then
+    local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.constants.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
     local frecency = eve.context.state.frecency.files ---@type t.eve.collection.IFrecency
+
+    ---@param ordinal                       integer
+    ---@return string
+    local function gen_uuid_from_ordinal(ordinal)
+      return eve.string.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
+    end
 
     ---@type t.fml.ux.file_select.IProvider
     local provider = {
@@ -24,7 +25,7 @@ local function get_select()
         local win = winnr ~= nil and eve.context.state.wins[winnr] or nil ---@type t.eve.context.state.win.IItem|nil
         if win == nil then
           eve.reporter.error({
-            from = "ghc.action.find_win_history",
+            from = "guanghechen.command.win.history",
             message = "Cannot find window.",
             details = { winnr = winnr },
           })
@@ -50,9 +51,9 @@ local function get_select()
           end
         end
 
-        if _select ~= nil then
+        if _history_select ~= nil then
           width = math.max(width + 16, 60)
-          _select:change_dimension({ height = #items + 3, width = width + 16 })
+          _history_select:change_dimension({ height = #items + 3, width = width + 16 })
         end
 
         ---@type t.fml.ux.file_select.IData
@@ -85,7 +86,7 @@ local function get_select()
       end,
     }
 
-    _select = fml.ux.FileSelect.new({
+    _history_select = fml.ux.FileSelect.new({
       dimension = { height = 3 },
       dirty_on_invisible = true,
       enable_preview = false,
@@ -103,7 +104,7 @@ local function get_select()
           end
         end
 
-        if _select ~= nil then
+        if _history_select ~= nil then
           local cwd = eve.path.cwd() ---@type string
           local filepath = eve.path.join(cwd, item.data.filepath) ---@type string
           local ok = fml.api.buf.open_filepath_in_current_valid_win(filepath)
@@ -113,16 +114,74 @@ local function get_select()
       end,
     })
   end
-  return _select
+  return _history_select
 end
 
----@class ghc.action.find_win_history
-local M = {}
+eve.commander
+  .register({
+    uuid = uuids.win_history,
+    desc = "win: history",
+    action = function()
+      local select = get_history_select() ---@type fml.ux.FileSelect
+      select:focus()
+    end,
+  })
+  .register({
+    uuid = uuids.win_history_backward,
+    desc = "win: history backward",
+    action = function()
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local buftype = vim.bo[bufnr].buftype ---@type string
+      if buftype == eve.constants.BT_QUICKFIX then
+        eve.qflist.backward()
+        return
+      end
 
----@return nil
-function M.focus()
-  local select = get_select() ---@type fml.ux.FileSelect
-  select:focus()
-end
+      local win = eve.context.state.wins[winnr]
+      if win == nil then
+        eve.reporter.error({
+          from = "guanghechen.command.win",
+          subject = "history.backward",
+          message = "Cannot find window.",
+          details = { winnr = winnr },
+        })
+        return
+      end
 
-return M
+      local last_filepath = win.filepath_history:backward() ---@type string|nil
+      if last_filepath ~= nil then
+        fml.api.buf.open_filepath(winnr, last_filepath)
+      end
+    end,
+  })
+  .register({
+    uuid = uuids.win_history_forward,
+    desc = "win: history forward",
+    action = function()
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local buftype = vim.bo[bufnr].buftype ---@type string
+      if buftype == eve.constants.BT_QUICKFIX then
+        eve.qflist.forward()
+        return
+      end
+
+      local win = eve.context.state.wins[winnr]
+      if win == nil then
+        eve.reporter.error({
+          from = "guanghechen.command.win",
+          subject = "history.forward",
+          message = "Cannot find window.",
+          details = { winnr = winnr },
+        })
+        return
+      end
+
+      local next_filepath = win.filepath_history:forward() ---@type string|nil
+      if next_filepath ~= nil then
+        fml.api.buf.open_filepath(winnr, next_filepath)
+        return
+      end
+    end,
+  })

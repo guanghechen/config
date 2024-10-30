@@ -1,13 +1,8 @@
 ---@class ghc.action
 local action = {
-  win = require("ghc.action.win"),
-  lsp = require("ghc.action.lsp"),
-
-  ----
-
   diagnostic = require("ghc.action.diagnostic"),
   explorer = require("ghc.action.explorer"),
-  find_win_history = require("ghc.action.find_win_history"),
+  lsp = require("ghc.action.lsp"),
   notification = require("ghc.action.notification"),
   scroll = require("ghc.action.scroll"),
   theme = require("ghc.action.theme"),
