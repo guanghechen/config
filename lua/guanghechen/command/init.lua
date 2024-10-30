@@ -4,6 +4,10 @@ require("guanghechen.command.buf.focus")
 require("guanghechen.command.buf.pin")
 require("guanghechen.command.buf.save")
 
+require("guanghechen.command.tab.close")
+require("guanghechen.command.tab.create")
+require("guanghechen.command.tab.focus")
+
 require("guanghechen.command.find.buffers")
 require("guanghechen.command.find.explorer")
 require("guanghechen.command.find.files")

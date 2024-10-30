@@ -156,6 +156,31 @@ mk({ "n", "v" }, "<leader>sw", uuids.search_files_workspace, "search: files (wor
 mk({ "n", "v" }, "<leader>st", uuids.select_theme, "select: theme")
 -----------------------------------------------------------------------------------------#[s]elect--
 
+--#[t]ab--------------------------------------------------------------------------------------------
+mk({ "n", "v" }, "[t", uuids.tab_focus_left, "tab: focus left")
+mk({ "n", "v" }, "]t", uuids.tab_focus_right, "tab: focus right")
+mk({ "n", "v" }, "<leader>,", uuids.tab_focus_left, "tab: focus left")
+mk({ "n", "v" }, "<leader>.", uuids.tab_focus_right, "tab: focus right")
+mk({ "n", "v" }, "<leader>t[", uuids.tab_focus_left, "tab: focus left")
+mk({ "n", "v" }, "<leader>t]", uuids.tab_focus_right, "tab: focus right")
+mk({ "n", "v" }, "<leader>t1", uuids.tab_focus_1, "tab: focus 1")
+mk({ "n", "v" }, "<leader>t2", uuids.tab_focus_2, "tab: focus 2")
+mk({ "n", "v" }, "<leader>t3", uuids.tab_focus_3, "tab: focus 3")
+mk({ "n", "v" }, "<leader>t4", uuids.tab_focus_4, "tab: focus 4")
+mk({ "n", "v" }, "<leader>t5", uuids.tab_focus_5, "tab: focus 5")
+mk({ "n", "v" }, "<leader>t6", uuids.tab_focus_6, "tab: focus 6")
+mk({ "n", "v" }, "<leader>t7", uuids.tab_focus_7, "tab: focus 7")
+mk({ "n", "v" }, "<leader>t8", uuids.tab_focus_8, "tab: focus 8")
+mk({ "n", "v" }, "<leader>t9", uuids.tab_focus_9, "tab: focus 9")
+mk({ "n", "v" }, "<leader>t0", uuids.tab_focus_10, "tab: focus 10")
+mk({ "n", "v" }, "<leader>td", uuids.tab_close, "tab: close current")
+mk({ "n", "v" }, "<leader>th", uuids.tab_close_to_leftest, "tab: close to the leftest")
+mk({ "n", "v" }, "<leader>tl", uuids.tab_close_to_rightest, "tab: close to the rightest")
+mk({ "n", "v" }, "<leader>to", uuids.tab_close_others, "tab: close other tabs")
+mk({ "n", "v" }, "<leader>tN", uuids.tab_new, "tab: new")
+mk({ "n", "v" }, "<leader>tn", uuids.tab_new_with_buf, "tab: new (with current buf)")
+--------------------------------------------------------------------------------------------#[t]ab--
+
 --#[t]erminal---------------------------------------------------------------------------------------
 mk({ "i", "n", "t", "v" }, "<C-a>t", uuids.term_cwd, "terminal: toggle (cwd)")
 mk({ "i", "n", "t", "v" }, "<M-t>", uuids.term_cwd, "terminal: toggle (cwd)")

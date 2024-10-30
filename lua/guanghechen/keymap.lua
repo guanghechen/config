@@ -39,11 +39,6 @@ mk({ "n", "v" }, "<leader>3", ghc.action.explorer.toggle_explorer_git_cwd, "expl
 ---------------------------------------------------------------------------------------#enhance-----
 
 --#navigation---------------------------------------------------------------------------------------
------ tab -----
-mk({ "n", "v" }, "<leader>,", ghc.action.tab.focus_left, "tab: focus left", true, true)
-mk({ "n", "v" }, "<leader>.", ghc.action.tab.focus_right, "tab: focus right", true, true)
-mk({ "n", "v" }, "[t", ghc.action.tab.focus_left, "tab: focus left", true, true)
-mk({ "n", "v" }, "]t", ghc.action.tab.focus_right, "tab: focus right", true, true)
 
 ----- window -----
 mk({ "i", "n", "t", "v" }, "<C-a>h", ghc.action.win.focus_left, "win: focus left", true, true)
@@ -108,24 +103,7 @@ mk({ "n", "v" }, "<leader>sk", ghc.action.scroll.up_half_window, "scroll: up hal
 -----------------------------------------------------------------------------------------#[s]croll--
 
 --#[t]ab--------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>t1", ghc.action.tab.focus_1, "tab: focus tab 1", true, true)
-mk({ "n", "v" }, "<leader>t2", ghc.action.tab.focus_2, "tab: focus tab 2", true, true)
-mk({ "n", "v" }, "<leader>t3", ghc.action.tab.focus_3, "tab: focus tab 3", true, true)
-mk({ "n", "v" }, "<leader>t4", ghc.action.tab.focus_4, "tab: focus tab 4", true, true)
-mk({ "n", "v" }, "<leader>t5", ghc.action.tab.focus_5, "tab: focus tab 5", true, true)
-mk({ "n", "v" }, "<leader>t6", ghc.action.tab.focus_6, "tab: focus tab 6", true, true)
-mk({ "n", "v" }, "<leader>t7", ghc.action.tab.focus_7, "tab: focus tab 7", true, true)
-mk({ "n", "v" }, "<leader>t8", ghc.action.tab.focus_8, "tab: focus tab 8", true, true)
-mk({ "n", "v" }, "<leader>t9", ghc.action.tab.focus_9, "tab: focus tab 9", true, true)
-mk({ "n", "v" }, "<leader>t0", ghc.action.tab.focus_10, "tab: focus tab 10", true, true)
-mk({ "n", "v" }, "<leader>t[", ghc.action.tab.focus_left, "tab: focus the left tab", true)
-mk({ "n", "v" }, "<leader>t]", ghc.action.tab.focus_right, "tab: focus the right tab", true)
-mk({ "n", "v" }, "<leader>tN", ghc.action.tab.create, "tab: new tab", true)
-mk({ "n", "v" }, "<leader>tn", ghc.action.tab.create_with_buf, "tab: new tab with current buf", true)
-mk({ "n", "v" }, "<leader>td", ghc.action.tab.close_current, "tab: close", true)
-mk({ "n", "v" }, "<leader>th", ghc.action.tab.close_to_leftest, "tab: close tabs to the leftest", true)
-mk({ "n", "v" }, "<leader>tl", ghc.action.tab.close_to_rightest, "tab: close tabs to the rightest", true)
-mk({ "n", "v" }, "<leader>to", ghc.action.tab.close_others, "tab: close other tabs", true)
+
 --------------------------------------------------------------------------------------------#[t]ab--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
