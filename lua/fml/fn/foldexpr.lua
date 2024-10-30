@@ -1,3 +1,4 @@
+local skip_check = assert(vim.uv.new_check())
 local skip_foldexpr = {} ---@type table<number,boolean>
 
 ---@return string
@@ -9,8 +10,8 @@ local function foldexpr()
     return "0"
   end
 
-  -- don't use treesitter folds for non-file buffers
-  if vim.bo[bufnr].buftype ~= "" then
+  -- don't use treesitter folds for terminal
+  if vim.bo[bufnr].buftype == "terminal" then
     return "0"
   end
 
@@ -29,6 +30,11 @@ local function foldexpr()
   -- no parser available, so mark it as skip
   -- in the next tick, all skip marks will be reset
   skip_foldexpr[bufnr] = true
+  skip_check:start(function()
+    skip_foldexpr = {}
+    skip_check:stop()
+  end)
+
   return "0"
 end
 
