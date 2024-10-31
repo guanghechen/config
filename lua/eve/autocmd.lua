@@ -128,19 +128,15 @@ vim.api.nvim_create_autocmd("FileType", {
     "Trouble",
   },
   callback = function(event)
+    vim.opt_local.buflisted = false
+
     local bufnr = event.buf ---@type integer|nil
     if bufnr ~= nil then
-      vim.bo[bufnr].buflisted = false
-      vim.schedule(function()
-        vim.keymap.set("n", "q", function()
-          vim.cmd("close")
-          pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
-        end, {
-          buffer = bufnr,
-          silent = true,
-          desc = "Quit buffer",
-        })
-      end)
+      local function action()
+        vim.cmd.close()
+        pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+      end
+      vim.keymap.set("n", "q", action, { buffer = bufnr, silent = true, desc = "Quit buffer" })
     end
   end,
 })
@@ -150,14 +146,6 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = { "gitcommit", "html", "lua", "text", "typescript" },
   callback = function()
     vim.opt_local.spell = true
-  end,
-})
-
----! Make the buffers not listed.
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "qf",
-  callback = function()
-    vim.opt_local.buflisted = false
   end,
 })
 
