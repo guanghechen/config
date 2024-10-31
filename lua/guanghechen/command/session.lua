@@ -6,12 +6,6 @@ eve.commander
     desc = "session: restore",
     action = function()
       if eve.path.is_git_repo() then
-        eve.context.load({
-          client = eve.context.storage.client,
-          session = eve.context.storage.session,
-          workspace = eve.context.storage.workspace,
-        })
-
         local nvim_session_filepath = nil ---@type string|nil
         if eve.context.storage.nvim_session and vim.fn.filereadable(eve.context.storage.nvim_session) ~= 0 then
           nvim_session_filepath = eve.context.storage.nvim_session
@@ -23,7 +17,16 @@ eve.commander
         end
 
         if nvim_session_filepath then
+          eve.context.set_bufs({})
+          eve.context.set_tabs({})
+          eve.context.set_wins({})
+
           eve.nvim.load_nvim_session(nvim_session_filepath)
+          eve.context.load({
+            client = eve.context.storage.client,
+            session = eve.context.storage.session,
+            workspace = eve.context.storage.workspace,
+          })
           fml.fn.refresh_state()
         end
       end
