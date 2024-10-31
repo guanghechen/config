@@ -98,7 +98,7 @@ local function gen_hlgroup_map(context)
     NoiceCmdlinePopupBorder = { fg = c.green, bg = bg_noice },
 
     ---! nvim-cmp
-    CmpBorder = { fg = c.fg4 },
+    CmpBorder = { fg = c.bg4 },
     CmpDoc = { bg = c.bg1 },
     CmpDocBorder = { fg = c.bg4, bg = c.bg1 },
     CmpGhostText = { link = "Comment", default = true },
@@ -137,7 +137,7 @@ local function gen_hlgroup_map(context)
     CmpItemKindVariable = { fg = c.purple, bg = item_kind_bg },
     CmpItemMenu = { fg = c.fg4, italic = true },
     CmpPmenu = { bg = c.bg1 },
-    CmpSel = { link = "PmenuSel", bold = true },
+    CmpSel = { fg = c.bg2, bg = c.green, bold = true },
 
     ---! nvim-dap
     DapBreakpoint = { fg = c.red },

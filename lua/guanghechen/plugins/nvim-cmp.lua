@@ -23,15 +23,13 @@ return {
         -- default fields order i.e completion word + item.kind + item.kind icons
         fields = { "abbr", "kind", "menu" },
         format = function(_, item)
-          local icon = eve.icons.kind[item.kind]
-          if icon then
-            item.kind = icon -- .. " " .. item.kind
-          end
+          local icon = eve.icons.kind[item.kind] or eve.icons.kind.Text ---@type string
 
-          local widths = {
-            abbr = vim.g.cmp_widths and vim.g.cmp_widths.abbr or 40,
-            menu = vim.g.cmp_widths and vim.g.cmp_widths.menu or 30,
-          }
+          item.abbr = item.abbr .. " "
+          item.menu_hl_group = "CmpItemKind" .. (item.kind or "")
+          item.kind = icon .. " " .. item.kind
+
+          local widths = { abbr = 40, menu = 30 }
           for key, width in pairs(widths) do
             if item[key] and vim.fn.strdisplaywidth(item[key]) > width then
               item[key] = vim.fn.strcharpart(item[key], 0, width - 1) .. "…"
