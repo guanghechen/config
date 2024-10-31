@@ -43,14 +43,6 @@ export const apps = [
     },
   },
   {
-    name: "fish",
-    themes: "theme/",
-    extname: ".fish",
-    local: "local/theme.fish",
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
-    render: (_, template, scheme) => render_template(template, scheme),
-  },
-  {
     name: "lazygit",
     themes: "theme/",
     extname: ".yml",
