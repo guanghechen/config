@@ -75,7 +75,7 @@ local function gen_hlgroup_map(context)
     MiniIconsBlue = { fg = c.blue },
     MiniIconsCyan = { fg = c.aqua },
     MiniIconsGreen = { fg = c.green },
-    MiniIconsGrey = { fg = c.bg4 },
+    MiniIconsGrey = { fg = c.fg4 },
     MiniIconsOrange = { fg = c.orange },
     MiniIconsPurple = { fg = c.purple },
     MiniIconsRed = { fg = c.red },
