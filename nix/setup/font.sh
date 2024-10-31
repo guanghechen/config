@@ -9,7 +9,7 @@ else
   cd ~/download/fonts/RobotoMono
 
   printf "\n\e[34m  [setup font] downloading RobotoMono fonts...\e[0m\n"
-  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/RobotoMono.zip
+  wget https://github.com/guanghechen/mirror/releases/download/font/RobotoMono.zip
 
   printf "\n\e[34m  [setup font] installing RobotoMono fonts...\e[0m\n"
   unzip RobotoMono.zip
