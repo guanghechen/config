@@ -115,57 +115,6 @@ vim.api.nvim_create_autocmd("FileType", {
     "git",
     "help",
     "lspinfo",
-    "neotest-output",
-    "neotest-output-panel",
-    "neotest-summary",
-    "neo-tree",
-    "notify",
-    "PlenaryTestPopup",
-    "qf",
-    "startuptime",
-    "tsplayground",
-    "Trouble",
-  },
-  callback = function(event)
-    if type(event.buf) == "number" then
-      vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = event.buf, noremap = true, silent = true })
-    end
-  end,
-})
-
----! Enable code spell
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "gitcommit", "html", "lua", "text", "typescript" },
-  callback = function()
-    vim.opt_local.spell = true
-  end,
-})
-
----! Make the buffers not listed.
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "qf",
-  callback = function()
-    vim.opt_local.buflisted = false
-  end,
-})
-
----! Set the tab width
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "markdown" },
-  callback = function()
-    vim.opt.shiftwidth = 2
-    vim.opt.softtabstop = 2 -- set the tab width
-    vim.opt.tabstop = 2 -- set the tab width
-  end,
-})
-
----! Unlist some buffers with specified filetypes for easier close.
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = {
-    "checkhealth",
-    "git",
-    "help",
-    "lspinfo",
     "man",
     "neotest-output",
     "neotest-output-panel",
@@ -193,6 +142,32 @@ vim.api.nvim_create_autocmd("FileType", {
         })
       end)
     end
+  end,
+})
+
+---! Enable code spell
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "gitcommit", "html", "lua", "text", "typescript" },
+  callback = function()
+    vim.opt_local.spell = true
+  end,
+})
+
+---! Make the buffers not listed.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "qf",
+  callback = function()
+    vim.opt_local.buflisted = false
+  end,
+})
+
+---! Set the tab width
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown" },
+  callback = function()
+    vim.opt.shiftwidth = 2
+    vim.opt.softtabstop = 2 -- set the tab width
+    vim.opt.tabstop = 2 -- set the tab width
   end,
 })
 
