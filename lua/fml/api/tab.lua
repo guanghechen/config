@@ -105,8 +105,7 @@ function M.refresh_all()
       tabs[tabnr] = tab
     end
   end
-
-  eve.context.state.tabs = tabs
+  eve.context.set_tabs(tabs)
 end
 
 ---@type fun(): nil

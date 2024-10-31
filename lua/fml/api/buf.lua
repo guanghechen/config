@@ -145,7 +145,7 @@ function M.refresh_all()
       bufs[bufnr] = buf
     end
   end
-  eve.context.state.bufs = bufs
+  eve.context.set_bufs(bufs)
 end
 
 ---@param bufnrs                        ?integer[]

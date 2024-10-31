@@ -160,72 +160,6 @@ end
 ---@return nil
 function M.load(data)
   if M.state == nil then
-    local bufnr_2_real_bufnr = gen_real_bufnr_map(data.bufs) ---@type table<integer, integer>
-    local tabnr_2_real_tabnr = gen_real_tabnr_map(data.tabs) ---@type table<integer, integer>
-    local bufs = {} ---@type table<integer, t.eve.context.state.buf.IItem>
-
-    local cwd = path.cwd() ---@type string
-    for _, item in ipairs(data.bufs) do
-      local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
-      if real_bufnr ~= nil and vim.api.nvim_buf_is_valid(real_bufnr) then
-        local filename = item.filename ---@type string
-        local filetype = vim.bo[real_bufnr].filetype ---@type string
-        local fileicon, fileicon_hl = std_nvim.calc_fileicon(filename) ---@type string, string
-
-        ---@type t.eve.context.state.buf.IItem
-        local buf = {
-          fileicon_hl = fileicon_hl,
-          fileicon = fileicon,
-          filename = item.filename,
-          filepath = item.filepath,
-          filetype = filetype,
-          relpath = path.split_prettier(cwd, item.filepath),
-          pinned = item.pinned,
-        }
-        bufs[real_bufnr] = buf
-      end
-    end
-
-    local tabs = {} ---@type table<integer, t.eve.context.state.tab.IItem>
-    for _, item in ipairs(data.tabs) do
-      local real_tabnr = type(item.tabnr) == "number" and tabnr_2_real_tabnr[item.tabnr] or nil
-      if real_tabnr ~= nil then
-        local bufnrs = {} ---@type integer[]
-        if type(item.bufnrs) == "table" then
-          for _, bufnr in ipairs(item.bufnrs) do
-            local real_bufnr = bufnr_2_real_bufnr[bufnr]
-            if real_bufnr ~= nil then
-              table.insert(bufnrs, real_bufnr)
-            end
-          end
-        end
-
-        local winnr_cur = vim.api.nvim_tabpage_get_win(real_tabnr) ---@type integer
-        ---@type t.eve.context.state.tab.IItem
-        local tab = {
-          name = item.name,
-          bufnrs = bufnrs,
-          bufnr_set = std_array.to_set(bufnrs),
-          winnr_cur = Observable.from_value(winnr_cur),
-        }
-        tabs[real_tabnr] = tab
-      end
-    end
-
-    local stack = {} ---@type integer[]
-    local present = data.tab_history.present ---@type integer
-    for i, tabnr in ipairs(data.tab_history.stack) do
-      local real_tabnr = tabnr_2_real_tabnr[tabnr]
-      if real_tabnr ~= nil then
-        table.insert(stack, real_tabnr)
-      elseif present > i then
-        present = present - 1
-      end
-      if present == i then
-        present = #stack
-      end
-    end
-
     ---@type t.eve.context.state.status
     local status = {
       lsp_msg = Observable.from_value(""),
@@ -242,15 +176,12 @@ function M.load(data)
         end,
       }),
     }
-    frecency.files:load(data.frecency.files)
 
     ---@type t.eve.context.state.input_history
     local input_history = {
       find_files = History.new({ name = "find_files", capacity = 100 }),
       search_in_files = History.new({ name = "search_in_files", capacity = 300 }),
     }
-    input_history.find_files:load(data.input_history.find_files)
-    input_history.search_in_files:load(data.input_history.search_in_files)
 
     ---@type t.eve.collection.IAdvanceHistory
     local tab_history = AdvanceHistory.new({
@@ -258,12 +189,11 @@ function M.load(data)
       capacity = constants.TAB_HISTORY_CAPACITY,
       validate = std_tab.is_valid,
     })
-    tab_history:load({ present = present, stack = stack })
 
     ---@type t.eve.context.workspace.state
     local state = {
-      bufs = bufs,
-      tabs = tabs,
+      bufs = {},
+      tabs = {},
       wins = {},
       status = status,
       frecency = frecency,
@@ -272,6 +202,93 @@ function M.load(data)
     }
     M.state = state
   end
+
+  local state = M.state ---@type t.eve.context.workspace.state
+
+  --- bufs
+  local bufs = {} ---@type table<integer, t.eve.context.state.buf.IItem>
+  local cwd = path.cwd() ---@type string
+  local bufnr_2_real_bufnr = gen_real_bufnr_map(data.bufs) ---@type table<integer, integer>
+  local tabnr_2_real_tabnr = gen_real_tabnr_map(data.tabs) ---@type table<integer, integer>
+  for _, item in ipairs(data.bufs) do
+    local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
+    if real_bufnr ~= nil and vim.api.nvim_buf_is_valid(real_bufnr) then
+      local filename = item.filename ---@type string
+      local filetype = vim.bo[real_bufnr].filetype ---@type string
+      local fileicon, fileicon_hl = std_nvim.calc_fileicon(filename) ---@type string, string
+
+      ---@type t.eve.context.state.buf.IItem
+      local buf = {
+        fileicon_hl = fileicon_hl,
+        fileicon = fileicon,
+        filename = item.filename,
+        filepath = item.filepath,
+        filetype = filetype,
+        relpath = path.split_prettier(cwd, item.filepath),
+        pinned = item.pinned,
+      }
+      bufs[real_bufnr] = buf
+    end
+  end
+  state.bufs = bufs
+
+  ---! tabs
+  local tabs = {} ---@type table<integer, t.eve.context.state.tab.IItem>
+  for _, item in ipairs(data.tabs) do
+    local real_tabnr = type(item.tabnr) == "number" and tabnr_2_real_tabnr[item.tabnr] or nil
+    if real_tabnr ~= nil then
+      local bufnrs = {} ---@type integer[]
+      if type(item.bufnrs) == "table" then
+        for _, bufnr in ipairs(item.bufnrs) do
+          local real_bufnr = bufnr_2_real_bufnr[bufnr]
+          if real_bufnr ~= nil then
+            table.insert(bufnrs, real_bufnr)
+          end
+        end
+      end
+
+      local winnr_cur = vim.api.nvim_tabpage_get_win(real_tabnr) ---@type integer
+      ---@type t.eve.context.state.tab.IItem
+      local tab = {
+        name = item.name,
+        bufnrs = bufnrs,
+        bufnr_set = std_array.to_set(bufnrs),
+        winnr_cur = Observable.from_value(winnr_cur),
+      }
+      tabs[real_tabnr] = tab
+    end
+  end
+  state.tabs = tabs
+
+  ---! wins
+  state.wins = {} ---@type table<integer, t.eve.context.state.win.IItem>
+
+  ---! status
+  state.status.lsp_msg:next("")
+  state.status.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
+  state.status.winline_dirty_nr:next(0)
+
+  ---! frecency
+  state.frecency.files:load(data.frecency.files)
+
+  state.input_history.find_files:load(data.input_history.find_files)
+  state.input_history.search_in_files:load(data.input_history.search_in_files)
+
+  ---! tab_history
+  local stack = {} ---@type integer[]
+  local present = data.tab_history.present ---@type integer
+  for i, tabnr in ipairs(data.tab_history.stack) do
+    local real_tabnr = tabnr_2_real_tabnr[tabnr]
+    if real_tabnr ~= nil then
+      table.insert(stack, real_tabnr)
+    elseif present > i then
+      present = present - 1
+    end
+    if present == i then
+      present = #stack
+    end
+  end
+  state.tab_history:load({ present = present, stack = stack })
 end
 
 ---@param data                          any

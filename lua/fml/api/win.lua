@@ -160,7 +160,7 @@ function M.refresh_all()
       wins[winnr] = win
     end
   end
-  eve.context.state.wins = wins
+  eve.context.set_wins(wins)
 end
 
 ---@param tabnr                         integer

@@ -102,6 +102,13 @@ function M.load(storage)
       workspace_has_changed = Ticker.new({ start = 0 }),
     }
     M.state = state
+  else
+    local state = M.state ---@type t.eve.context.state
+
+    ---! workspace
+    state.bufs = workspace.state.bufs
+    state.tabs = workspace.state.tabs
+    state.wins = workspace.state.wins
   end
 end
 
@@ -124,6 +131,27 @@ function M.save(storage)
     local data_workspace = workspace.dump() ---@type t.eve.context.workspace.data
     eve.fs.write_json(storage.workspace, data_workspace, true)
   end
+end
+
+---@param bufs                          table<integer, t.eve.context.state.buf.IItem>
+---@return nil
+function M.set_bufs(bufs)
+  M.state.bufs = bufs
+  workspace.state.bufs = bufs
+end
+
+---@param tabs                          table<integer, t.eve.context.state.tab.IItem>
+---@return nil
+function M.set_tabs(tabs)
+  M.state.tabs = tabs
+  workspace.state.tabs = tabs
+end
+
+---@param wins                          table<integer, t.eve.context.state.win.IItem>
+---@return nil
+function M.set_wins(wins)
+  M.state.wins = wins
+  workspace.state.wins = wins
 end
 
 ---@param storage                       t.eve.context.storage
