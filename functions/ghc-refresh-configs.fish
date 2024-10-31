@@ -11,7 +11,7 @@ function ghc-refresh-configs
       set cmd "git clone https://github.com/guanghechen/config.git --single-branch --branch=$config $dir"
     end
 
-    set_color $fish_color_gray
+    set_color white
     printf "\n%s\n" $cmd
 
     set_color normal
@@ -23,7 +23,7 @@ function ghc-refresh-configs
     if test -d "$dir"
       set cmd "cd $dir && git pull origin $config"
 
-      set_color $fish_color_gray
+      set_color white
       printf "\n%s\n" $cmd
 
       set_color normal
