@@ -89,7 +89,7 @@ local function gen_hlgroup_map(context)
     NeoTreeFloatBorder = { link = "FloatBorder" },
     NeoTreeFloatTitle = { link = "FloatTitle" },
     NeoTreeNormal = { bg = c.bg1 },
-    NeoTreeNormalNC = { bg = c.bg0_s },
+    NeoTreeNormalNC = { bg = c.bg1 },
     NeoTreeRootName = { fg = c.fg, bold = true },
 
     ---! noice.nvim
