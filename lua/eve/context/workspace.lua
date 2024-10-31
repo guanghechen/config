@@ -230,6 +230,7 @@ function M.load(data)
     local status = {
       lsp_msg = Observable.from_value(""),
       tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
+      winline_dirty_nr = Observable.from_value(0, std_util.falsy),
     }
 
     ---@type t.eve.context.state.frecency
@@ -259,9 +260,6 @@ function M.load(data)
     })
     tab_history:load({ present = present, stack = stack })
 
-    ---@type t.eve.collection.IObservable
-    local winline_dirty_nr = Observable.from_value(0, std_util.falsy)
-
     ---@type t.eve.context.workspace.state
     local state = {
       bufs = bufs,
@@ -271,7 +269,6 @@ function M.load(data)
       frecency = frecency,
       input_history = input_history,
       tab_history = tab_history,
-      winline_dirty_nr = winline_dirty_nr,
     }
     M.state = state
   end

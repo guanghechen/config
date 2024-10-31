@@ -120,7 +120,7 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
     if win ~= nil and not eve.win.is_floating(winnr) then
       win.lsp_symbols = {} ---@type t.eve.context.state.lsp.ISymbol[]
       vim.defer_fn(function()
-        eve.context.state.winline_dirty_nr:next(winnr)
+        eve.context.state.status.winline_dirty_nr:next(winnr)
       end, 20)
     end
   end,

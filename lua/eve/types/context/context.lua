@@ -28,7 +28,6 @@
 ---@field public frecency               t.eve.context.state.frecency
 ---@field public input_history          t.eve.context.state.input_history
 ---@field public tab_history            t.eve.collection.IAdvanceHistory
----@field public winline_dirty_nr       t.eve.collection.IObservable
 ---
 ---@field public client_has_changed     t.eve.collection.ITicker
 ---@field public session_has_changed    t.eve.collection.ITicker

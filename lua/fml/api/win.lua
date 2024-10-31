@@ -103,7 +103,7 @@ function M.locate_symbols(winnr, force)
       for i = k + 1, N, 1 do
         pieces[i] = nil
       end
-      eve.context.state.winline_dirty_nr:next(winnr)
+      eve.context.state.status.winline_dirty_nr:next(winnr)
     end
 
     if dirty_set[winnr] then

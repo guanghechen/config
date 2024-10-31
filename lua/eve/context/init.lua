@@ -95,7 +95,6 @@ function M.load(storage)
       frecency = workspace.state.frecency,
       input_history = workspace.state.input_history,
       tab_history = workspace.state.tab_history,
-      winline_dirty_nr = workspace.state.winline_dirty_nr,
 
       ---
       client_has_changed = Ticker.new({ start = 0 }),

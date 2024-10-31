@@ -26,6 +26,7 @@
 ---@class t.eve.context.state.status
 ---@field public lsp_msg                t.eve.collection.IObservable
 ---@field public tmux_zen_mode          t.eve.collection.IObservable
+---@field public winline_dirty_nr       t.eve.collection.IObservable
 
 ---@class t.eve.context.state.frecency
 ---@field public files                  t.eve.collection.IFrecency
@@ -42,7 +43,6 @@
 ---@field public frecency               t.eve.context.state.frecency
 ---@field public input_history          t.eve.context.state.input_history
 ---@field public tab_history            t.eve.collection.IAdvanceHistory
----@field public winline_dirty_nr       t.eve.collection.IObservable
 
 ---@class t.eve.context.workspace
 ---@field public state                  t.eve.context.workspace.state
