@@ -1,6 +1,6 @@
 local History = require("eve.collection.history")
-local equals = require("eve.std.equals")
 local constants = require("eve.std.constants")
+local equals = require("eve.std.equals")
 
 ---@type t.eve.collection.IHistory
 local qflist_history = History.new({
@@ -24,7 +24,7 @@ function M.backward()
   end
 
   if #qflist_prev > 0 then
-    vim.fn.setqflist(qflist_prev, "r")
+    M.set_qflist(qflist_prev)
   end
 end
 
@@ -41,7 +41,7 @@ function M.forward()
   end
 
   if #qflist_next > 0 then
-    vim.fn.setqflist(qflist_next, "r")
+    M.set_qflist(qflist_next)
   end
 end
 
@@ -65,12 +65,20 @@ function M.open_qflist(prefer_trouble)
     ---@diagnostic disable-next-line: param-type-mismatch
     local ok = pcall(vim.cmd, "Trouble qflist toggle")
     if ok then
-      vim.cmd("cclose")
       return
     end
   end
+  vim.cmd([[botright copen]])
+end
 
-  vim.cmd("copen")
+---@param qflist                        t.eve.IQuickFixItem[]|nil
+function M.set_qflist(qflist)
+  if qflist ~= nil or #qflist > 0 then
+    vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
+    vim.fn.setqflist(qflist, "r")
+    vim.fn.setqflist({}, "a", { title = "" })
+    vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
+  end
 end
 
 ---@param qflist                        t.eve.IQuickFixItem[]|nil
@@ -83,7 +91,7 @@ function M.push(qflist)
   local qflist_cur = qflist_history:present() ---@type t.eve.IQuickFixItem[]|nil
   if qflist_cur == nil or not equals.deep_equals(qflist_cur, qflist) then
     qflist_history:push(qflist)
-    vim.fn.setqflist(qflist, "r")
+    M.set_qflist(qflist)
   end
 end
 
