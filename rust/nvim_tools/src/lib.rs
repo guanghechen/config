@@ -25,6 +25,10 @@ fn nvim_tools() -> Dictionary {
             )),
         ),
         (
+            "get_filesize",
+            Object::from(Function::from_fn(oxi::file::get_filesize)),
+        ),
+        (
             "get_line_widths",
             Object::from(Function::from_fn(oxi::string::get_line_widths)),
         ),

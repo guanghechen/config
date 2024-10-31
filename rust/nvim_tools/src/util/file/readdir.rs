@@ -77,6 +77,18 @@ pub fn readdir<P: AsRef<Path>>(dirpath: P) -> Result<ReaddirSucceedResult, Readd
     }
 }
 
+pub fn get_filesize<P: AsRef<Path>>(filepath: P) -> Result<String, String> {
+    let metadata = match fs::metadata(filepath) {
+        Ok(metadata) => metadata,
+        Err(e) => {
+            return Err(format!("Failed to get metadata {}", e));
+        }
+    };
+
+    let filesize: String = format_filesize(metadata.len());
+    Ok(filesize)
+}
+
 pub fn flat_filestatus(path: &Path) -> Result<FileItemWithStatus, String> {
     let metadata = match fs::metadata(path) {
         Ok(metadata) => metadata,
@@ -181,7 +193,7 @@ const KB: u64 = 1024;
 const MB: u64 = KB * 1024;
 const GB: u64 = MB * 1024;
 const TB: u64 = GB * 1024;
-fn format_filesize(size_bytes: u64) -> String {
+pub fn format_filesize(size_bytes: u64) -> String {
     let (value, unit) = if size_bytes >= TB {
         (size_bytes as f64 / TB as f64, "TB")
     } else if size_bytes >= GB {
@@ -193,7 +205,15 @@ fn format_filesize(size_bytes: u64) -> String {
     } else {
         return format!("{}B", size_bytes);
     };
-    format!("{:.1}{}", value, unit)
+
+    let remain: u32 = ((value * 100.0).round() as u32) % 100;
+    if remain == 0 {
+        format!("{}{}", value, unit)
+    } else if remain % 10 == 0 {
+        format!("{:.1}{}", value, unit)
+    } else {
+        format!("{:.2}{}", value, unit)
+    }
 }
 
 pub fn format_time(timestamp: SystemTime) -> String {
@@ -226,4 +246,3 @@ fn get_groupname_from_gid(gid: u32) -> Option<String> {
         }
     }
 }
-

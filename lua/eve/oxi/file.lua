@@ -22,3 +22,17 @@ function M.readdir(dirpath)
     return data
   end
 end
+
+---@param filepath string
+---@return string|nil
+function M.get_filesize(filepath)
+  local stat = vim.uv.fs_stat(filepath)
+  if stat == nil or stat.type ~= "file" then
+    return nil
+  end
+
+  local ok, data = M.run_fun("eve.oxi.get_filesize", M.nvim_tools.get_filesize, filepath)
+  if ok then
+    return data
+  end
+end
