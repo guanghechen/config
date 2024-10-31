@@ -7,16 +7,17 @@ fi
 
 printf "\n\e[34m  [setup homebrew] updating...\e[0m\n"
 if [ -e "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
-  export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+  export HOME_HOMEBREW=/home/linuxbrew/.linuxbrew
 elif [ -e "/opt/homebrew/bin/brew" ]; then
-  export PATH=$PATH:/opt/homebrew/bin
+  export HOME_HOMEBREW=/opt/homebrew
 fi
+export PATH=$PATH:"$HOME_HOMEBREW/bin"
 brew update
 
 ### Setup fish
-fish_path=$(which fish)
+fish_path="$HOME_HOMEBREW/bin/fish"
 if [[ 
-  -n "$fish_path" &&
+  -f "$fish_path" &&
   $(
     grep -Fxq "$fish_path" /etc/shells
     echo $?
