@@ -10,6 +10,7 @@ Write-ColoredMessage "[setup winget] preparing..." Green
 
 winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
 winget install -e --source winget --id Microsoft.PowerShell
+winget install -e --source winget --id Microsoft.PowerToys
 winget install -e --source winget --id JesseDuffield.lazygit
 winget install -e --source winget --id Neovim.Neovim
 winget install -e --source winget --id sharkdp.fd
