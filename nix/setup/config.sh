@@ -8,7 +8,6 @@ clone_or_update_config_repo() {
     "btop"
     "fish"
     "fzf"
-    "guanghechen"
     "helix"
     "lazygit"
     "lsd"
