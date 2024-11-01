@@ -25,6 +25,7 @@ require("guanghechen.command.find.vim_options")
 require("guanghechen.command.lsp.diagnostic")
 
 require("guanghechen.command.plugin.diffview")
+require("guanghechen.command.plugin.neo-tree")
 require("guanghechen.command.plugin.nvim-notify")
 require("guanghechen.command.plugin.nvim-window-picker")
 

@@ -32,6 +32,24 @@ end
 mk({ "n" }, "<esc>", "<cmd>noh<cr><esc>", "remove search highlights") -- Clear search with <esc>
 mk({ "t" }, "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode") -- Exit terminal
 
+---! better indenting
+vim.keymap.set("v", "<", "<gv")
+vim.keymap.set("v", ">", ">gv")
+
+---! better up/down
+vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true, desc = "down" })
+vim.keymap.set({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true, desc = "down" })
+vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true, desc = "up" })
+vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true, desc = "up" })
+
+---! https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
+vim.keymap.set("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "next Search Result" })
+vim.keymap.set("x", "n", "'Nn'[v:searchforward]", { expr = true, desc = "next Search Result" })
+vim.keymap.set("o", "n", "'Nn'[v:searchforward]", { expr = true, desc = "next Search Result" })
+vim.keymap.set("n", "N", "'nN'[v:searchforward].'zv'", { expr = true, desc = "prev Search Result" })
+vim.keymap.set("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
+vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
+
 ----- better copy/paste list -----
 mk({ "v" }, "<C-a>c", '"+y', "system: copy to clipboard")
 mk({ "v" }, "<M-c>", '"+y', "system: copy to clipboard")
@@ -48,7 +66,9 @@ mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward")
 
 --- quick access widgets (diagnostic, explorer, terminal) -----
 mk({ "n", "t", "v" }, "<leader>`", uuids.resume, "resume: widgets")
+mk({ "n", "v" }, "<leader>1", uuids.explorer_filesystem_cwd, "explorer: filesystem (cwd)")
 mk({ "n", "v" }, "<leader>2", uuids.search_files, "search: files")
+mk({ "n", "v" }, "<leader>3", uuids.explorer_git_cwd, "explorer: git (cwd)")
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[b]uf--------------------------------------------------------------------------------------------
@@ -97,6 +117,16 @@ mk({ "n", "v" }, "<leader>dI", uuids.debug_inspect_tree, "debug: inspect tree")
 mk({ "n", "v" }, "<leader>di", uuids.debug_inspect_pos, "debug: inspect pos")
 mk({ "n", "v" }, "<leader>ds", uuids.debug_inspect_state, "debug: inspect state")
 ------------------------------------------------------------------------------------------#[d]ebug--
+
+--#[e]xplorer---------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>ee", uuids.explorer_last, "explorer: last")
+mk({ "n", "v" }, "<leader>eF", uuids.explorer_filesystem_workspace, "explorer: filesystem (workspace)")
+mk({ "n", "v" }, "<leader>ef", uuids.explorer_filesystem_cwd, "explorer: filesystem (cwd)")
+mk({ "n", "v" }, "<leader>eG", uuids.explorer_git_workspace, "explorer: git (workspace)")
+mk({ "n", "v" }, "<leader>eg", uuids.explorer_git_cwd, "explorer: git (cwd)")
+mk({ "n", "v" }, "<leader>er", uuids.explorer_reveal, "explorer: reveal")
+mk({ "n", "v" }, "<leader>et", uuids.explorer_toggle, "explorer: toggle")
+---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ind-------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader><leader>", uuids.find_files, "find: files")

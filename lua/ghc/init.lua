@@ -1,6 +1,5 @@
 ---@class ghc.action
 local action = {
-  explorer = require("ghc.action.explorer"),
   lsp = require("ghc.action.lsp"),
 }
 

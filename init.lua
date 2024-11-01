@@ -37,7 +37,6 @@ require("ghc.dressing.select")
 require("guanghechen.option")
 require("guanghechen.autocmd")
 require("guanghechen.command")
-require("guanghechen.keymap")
 if vim.g.neovide then
   require("integration.neovide.option")
   require("integration.neovide.autocmd")
