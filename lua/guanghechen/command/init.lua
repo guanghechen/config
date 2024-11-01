@@ -22,6 +22,10 @@ require("guanghechen.command.find.highlights")
 require("guanghechen.command.find.pinned_files")
 require("guanghechen.command.find.vim_options")
 
+require("guanghechen.command.plugin.diffview")
+require("guanghechen.command.plugin.nvim-notify")
+require("guanghechen.command.plugin.nvim-window-picker")
+
 require("guanghechen.command.search.files")
 
 require("guanghechen.command.toggle.flag")
@@ -31,9 +35,7 @@ require("guanghechen.command.toggle.theme")
 
 require("guanghechen.command.copy")
 require("guanghechen.command.debug")
-require("guanghechen.command.git")
 require("guanghechen.command.lazygit")
-require("guanghechen.command.notification")
 require("guanghechen.command.refresh")
 require("guanghechen.command.resume")
 require("guanghechen.command.run")
