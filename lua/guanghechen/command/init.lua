@@ -22,6 +22,8 @@ require("guanghechen.command.find.highlights")
 require("guanghechen.command.find.pinned_files")
 require("guanghechen.command.find.vim_options")
 
+require("guanghechen.command.lsp.diagnostic")
+
 require("guanghechen.command.plugin.diffview")
 require("guanghechen.command.plugin.nvim-notify")
 require("guanghechen.command.plugin.nvim-window-picker")

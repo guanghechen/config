@@ -38,16 +38,8 @@ mk({ "n", "v" }, "<leader>3", ghc.action.explorer.toggle_explorer_git_cwd, "expl
 mk({ "n", "v" }, "<leader>xd", ghc.action.diagnostic.toggle_diagnositics_cur, "diagnostic: open diagnostics (document)")
 mk({ "n", "v" }, "<leader>xD", ghc.action.diagnostic.toggle_diagnostics, "diagnostic: open diagnostics (workspace)")
 mk({ "n", "v" }, "<leader>xL", ghc.action.diagnostic.toggle_loclist, "diagnostic: open location list (Trouble)")
-mk({ "n", "v" }, "<leader>xl", ghc.action.diagnostic.open_line_diagnostics, "diagnostic: open diagnostics(line)")
 mk({ "n", "v" }, "<leader>xq", ghc.action.diagnostic.toggle_quickfix, "diagnostic: open quickfix list (Trouble)")
-mk({ "n", "v" }, "[d", ghc.action.diagnostic.goto_prev_diagnostic, "diagnostic: goto prev diagnostic", true)
-mk({ "n", "v" }, "]d", ghc.action.diagnostic.goto_next_diagnostic, "diagnostic: goto next Diagnostic", true)
-mk({ "n", "v" }, "[e", ghc.action.diagnostic.goto_prev_error, "diagnostic: goto prev error", true)
-mk({ "n", "v" }, "]e", ghc.action.diagnostic.goto_next_error, "diagnostic: goto next error", true)
-mk({ "n", "v" }, "[q", ghc.action.diagnostic.toggle_previous_quickfix_item, "diagnostic: goto previous quickfix", true)
-mk({ "n", "v" }, "]q", ghc.action.diagnostic.toggle_next_quickfix_item, "diagnostic: goto next quickfix", true)
-mk({ "n", "v" }, "[w", ghc.action.diagnostic.goto_prev_warn, "diagnostic: goto prev warning", true)
-mk({ "n", "v" }, "]w", ghc.action.diagnostic.goto_next_warn, "diagnostic: goto next warning", true)
+
 -----------------------------------------------------------------------------------#[x] diagnostic--
 
 --#[e]xplorer---------------------------------------------------------------------------------------
