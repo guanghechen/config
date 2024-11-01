@@ -12,7 +12,7 @@ eve.commander.register({
 
     local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
     if devmode then
-      ghc.action.theme.reload_theme({ force = true })
+      eve.commander.execute(eve.commander.uuids.reload_theme, "true")
     end
 
     eve.reporter.info({

@@ -1,6 +1,14 @@
 ---@class ghc.ux.theme
 local M = {}
 
+---@class ghc.ux.theme.ILoadThemeParams
+---@field public theme                  t.eve.e.Theme
+---@field public mode                   t.eve.e.ThemeMode
+---@field public transparency           boolean
+---@field public persistent             boolean
+---@field public filepath               ?string
+---@field public nsnr                   ?integer
+
 ---@type t.ghc.e.ux.theme.HighlightIntegration[]
 M.integrations = {
   --- orders as needed
@@ -78,7 +86,7 @@ function M.load_integration(nsnr, integration)
   end
 end
 
----@param params                        ghc.action.theme.ILoadThemeParams
+---@param params                        ghc.ux.theme.ILoadThemeParams
 ---@return t.fml.ux.theme.IScheme|nil
 function M.load_theme(params)
   local theme = params.theme ---@type t.eve.e.Theme

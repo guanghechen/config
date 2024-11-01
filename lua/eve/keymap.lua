@@ -157,10 +157,6 @@ mk({ "n", "v" }, "<leader>sd", uuids.search_files_directory, "search: files (dir
 mk({ "n", "v" }, "<leader>sw", uuids.search_files_workspace, "search: files (workspace)")
 -----------------------------------------------------------------------------------------#[s]earch--
 
---#[s]elect-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>st", uuids.select_theme, "select: theme")
------------------------------------------------------------------------------------------#[s]elect--
-
 --#[t]ab--------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "[t", uuids.tab_focus_left, "tab: focus left")
 mk({ "n", "v" }, "]t", uuids.tab_focus_right, "tab: focus right")
@@ -192,6 +188,18 @@ mk({ "i", "n", "t", "v" }, "<M-t>", uuids.term_cwd, "terminal: toggle (cwd)")
 mk({ "n", "t" }, "<leader>tT", uuids.term_workspace, "terminal: toggle (workspace)")
 mk({ "n", "t" }, "<leader>tt", uuids.term_cwd, "terminal: toggle (cwd)")
 ---------------------------------------------------------------------------------------#[t]erminal--
+
+--#[t]oggle-----------------------------------------------------------------------------------------
+mk({ "i", "n", "v" }, "<C-a>T", uuids.toggle_theme_mode, "theme: toggle mode")
+mk({ "i", "n", "v" }, "<M-T>", uuids.toggle_theme_mode, "theme: toggle mode")
+mk({ "n", "v" }, "<leader>tt", uuids.toggle, "toggle")
+mk({ "n", "v" }, "<leader>tuf", uuids.toggle_flight, "toggle: flight")
+mk({ "n", "v" }, "<leader>tul", uuids.toggle_relativenumber, "toggle: relativenumber")
+mk({ "n", "v" }, "<leader>tum", uuids.toggle_theme_mode, "toggle: theme mode")
+mk({ "n", "v" }, "<leader>tuT", uuids.toggle_theme_transparency, "toggle: theme transparency")
+mk({ "n", "v" }, "<leader>tut", uuids.toggle_theme, "toggle: theme")
+mk({ "n", "v" }, "<leader>tuw", uuids.toggle_wrap, "toggle: wrap (temporary)")
+-----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[u]x---------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>un", uuids.notification_dismiss_all, "notification: dismiss all")

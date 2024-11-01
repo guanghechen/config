@@ -22,13 +22,15 @@ require("guanghechen.command.find.highlights")
 require("guanghechen.command.find.pinned_files")
 require("guanghechen.command.find.vim_options")
 
-require("guanghechen.command.select.theme")
-
 require("guanghechen.command.search.files")
+
+require("guanghechen.command.toggle.flag")
+require("guanghechen.command.toggle.flight")
+require("guanghechen.command.toggle.main")
+require("guanghechen.command.toggle.theme")
 
 require("guanghechen.command.copy")
 require("guanghechen.command.debug")
-require("guanghechen.command.flight")
 require("guanghechen.command.git")
 require("guanghechen.command.lazygit")
 require("guanghechen.command.notification")

@@ -37,7 +37,7 @@ return {
     local hooks = require("ibl.hooks")
     hooks.register(hooks.type.WHITESPACE, hooks.builtin.hide_first_space_indent_level)
     hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
-      ghc.action.theme.reload_partial({ integration = "plugin" })
+      ghc.ux.theme.load_integration(0, "plugin")
     end)
 
     require("ibl").setup(opts)

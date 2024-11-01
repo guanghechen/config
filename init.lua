@@ -33,22 +33,25 @@ if vim.g.vscode then
   return
 end
 
-ghc.action.theme.reload_theme({ force = false })
 require("ghc.dressing.select")
+require("guanghechen.option")
+require("guanghechen.autocmd")
+require("guanghechen.command")
+require("guanghechen.keymap")
 if vim.g.neovide then
   require("integration.neovide.option")
   require("integration.neovide.autocmd")
   require("integration.neovide.keymap")
-  require("integration.neovide.plugin")
-  pcall(require, "integration.local")
-else
-  require("guanghechen.option")
-  require("guanghechen.autocmd")
-  require("guanghechen.command")
-  require("guanghechen.keymap")
-  require("guanghechen.plugin")
-  pcall(require, "integration.local")
 end
+
+eve.commander.execute(eve.commander.uuids.reload_theme)
+
+require("guanghechen.plugin")
+if vim.g.neovide then
+  require("integration.neovide.plugin")
+end
+
+pcall(require, "integration.local")
 
 ---! Reload session if not specify file and current directory is a git repository.
 if eve.path.is_git_repo() and eve.context.state.flight.autoload:snapshot() then
@@ -56,10 +59,10 @@ if eve.path.is_git_repo() and eve.context.state.flight.autoload:snapshot() then
 end
 
 vim.schedule(function()
-  ghc.action.theme.reload_theme({ force = false })
+  eve.commander.execute(eve.commander.uuids.reload_theme)
   eve.context.watch_changes({
     on_theme_changed = function()
-      ghc.action.theme.reload_theme({ force = false })
+      eve.commander.execute(eve.commander.uuids.reload_theme)
     end,
   })
 end)
