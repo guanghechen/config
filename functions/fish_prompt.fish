@@ -63,8 +63,10 @@ function fish_prompt --description 'Write out the prompt'
   # current time
   set -l current_time (date "+%H:%M:%S")
   set_color white
-  printf '%s ' $current_time
-  set_color normal
+  printf '%s \n' $current_time
 
-  printf "\n  %s " $suffix
+  set_color brcyan
+  printf "  %s " $suffix
+
+  set_color normal
 end
