@@ -9,7 +9,7 @@ local function open()
     eve.context.state.search.keyword:next(next_search_pattern)
   end
 
-  local state = require("guanghechen.command.search.files.state")
+  local state = require("ghc.command.search.files.state")
   local search = state.get_search() ---@type t.fml.ux.search.ISearch
   search:focus()
 end

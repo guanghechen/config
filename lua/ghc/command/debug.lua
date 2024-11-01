@@ -15,7 +15,7 @@ eve.commander
       local bufnr_cur = eve.locations.get_current_bufnr() ---@type integer|nil
 
       eve.reporter.info({
-        from = "guanghechen.command.debug",
+        from = "ghc.command.debug",
         subject = "inspect",
         details = {
           tabnr = tabnr,
@@ -42,7 +42,7 @@ eve.commander
     action = function()
       local data = eve.context.dump() ---@type t.eve.context.data
       eve.reporter.info({
-        from = "guanghechen.command.inspect",
+        from = "ghc.command.inspect",
         subject = "inspect_state",
         details = { data = data },
       })

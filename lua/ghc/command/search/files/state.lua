@@ -18,7 +18,7 @@ eve.context.state.search.scope:subscribe(
 
 local _search = nil ---@type t.fml.ux.search.ISearch|nil
 
----@class guanghechen.command.search.files.state
+---@class ghc.command.search.files.state
 local M = {}
 
 M.search_cwd = state_search_cwd
@@ -26,8 +26,8 @@ M.search_cwd = state_search_cwd
 ---@return t.fml.ux.search.ISearch
 function M.get_search()
   if _search == nil then
-    local api = require("guanghechen.command.search.files.api")
-    local keybindings = require("guanghechen.command.search.files.keybindings")
+    local api = require("ghc.command.search.files.api")
+    local keybindings = require("ghc.command.search.files.keybindings")
 
     local frecency = eve.context.state.frecency.files ---@type t.eve.collection.IFrecency
     local input_history = eve.context.state.input_history.search_in_files ---@type t.eve.collection.IHistory

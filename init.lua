@@ -34,22 +34,22 @@ if vim.g.vscode then
 end
 
 require("ghc.dressing.select")
+require("ghc.command")
+eve.commander.execute(eve.commander.uuids.reload_theme)
+
 require("guanghechen.option")
 require("guanghechen.autocmd")
-require("guanghechen.command")
 if vim.g.neovide then
   require("integration.neovide.option")
   require("integration.neovide.autocmd")
   require("integration.neovide.keymap")
 end
 
-eve.commander.execute(eve.commander.uuids.reload_theme)
-
 require("guanghechen.plugin")
+require("guanghechen.command")
 if vim.g.neovide then
   require("integration.neovide.plugin")
 end
-
 pcall(require, "integration.local")
 
 ---! Reload session if not specify file and current directory is a git repository.

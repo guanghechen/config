@@ -1,11 +1,11 @@
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
----@class guanghechen.command.toggle.IItem
+---@class ghc.command.toggle.IItem
 ---@field public uuid                   string
 ---@field public title                  string
 ---@field public snapshot               fun(): string, string
 
----@type table<string, guanghechen.command.toggle.IItem>
+---@type table<string, ghc.command.toggle.IItem>
 local flag_map = {
   flight = {
     uuid = uuids.toggle_flight,
@@ -71,7 +71,7 @@ eve.commander.register({
   action = function(args)
     local arg = type(args) == "string" and args:lower() or "" ---@type string
     if flag_map[arg] ~= nil then
-      local flag_item = flag_map[arg] ---@type guanghechen.command.toggle.IItem
+      local flag_item = flag_map[arg] ---@type ghc.command.toggle.IItem
       eve.commander.execute(flag_item.uuid)
     else
       fml.fn.select({
@@ -86,13 +86,13 @@ eve.commander.register({
         fetch_items = function()
           local items = {} ---@type t.fml.ux.select.IItem[]
           for _, flag in ipairs(flags) do
-            local flag_item = flag_map[flag] ---@type guanghechen.command.toggle.IItem
+            local flag_item = flag_map[flag] ---@type ghc.command.toggle.IItem
             table.insert(items, { uuid = flag_item.uuid, text = flag })
           end
           return items
         end,
         render_item = function(item, match)
-          local flag_item = flag_map[item.text] ---@type guanghechen.command.toggle.IItem
+          local flag_item = flag_map[item.text] ---@type ghc.command.toggle.IItem
           local text_flag, hln_flag = flag_item.snapshot()
 
           local width_padding = 32 ---@type integer

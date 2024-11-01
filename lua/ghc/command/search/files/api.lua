@@ -1,29 +1,29 @@
-local state = require("guanghechen.command.search.files.state")
+local state = require("ghc.command.search.files.state")
 
----@class guanghechen.command.search.files.IFileItem
+---@class ghc.command.search.files.IFileItem
 ---@field public children               string[]
 ---@field public fragmentary            boolean
 ---@field public filematch              ?eve.oxi.search.IFileMatch|nil
 
----@class guanghechen.command.search.files.IItem
+---@class ghc.command.search.files.IItem
 ---@field public filepath               string
 ---@field public offset                 integer
 ---@field public lnum                   integer
 ---@field public col                    integer
 ---@field public content                string
 
----@class guanghechen.command.search.files.IHighlight : t.eve.IHighlight
+---@class ghc.command.search.files.IHighlight : t.eve.IHighlight
 ---@field public offset                 integer
 
----@class guanghechen.command.search.files.IPreviewData
+---@class ghc.command.search.files.IPreviewData
 ---@field public filetype               string|nil
----@field public highlights             guanghechen.command.search.files.IHighlight[]
+---@field public highlights             ghc.command.search.files.IHighlight[]
 ---@field public lines                  string[]
 ---@field public title                  string
 
-local _fileitem_map = {} ---@type table<string, guanghechen.command.search.files.IFileItem>
-local _item_map = {} ---@type table<string, guanghechen.command.search.files.IItem>
-local _last_preview_data = nil ---@type guanghechen.command.search.files.IPreviewData|nil
+local _fileitem_map = {} ---@type table<string, ghc.command.search.files.IFileItem>
+local _item_map = {} ---@type table<string, ghc.command.search.files.IItem>
+local _last_preview_data = nil ---@type ghc.command.search.files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.oxi.search.IResult|nil
 
@@ -81,22 +81,22 @@ local function calc_same_line_pos(lwidths, l, r)
   return lnum, col, col_end
 end
 
----@class guanghechen.command.search.files.api
+---@class ghc.command.search.files.api
 local M = {}
 
 ---@param uuid                          string
----@return guanghechen.command.search.files.IPreviewData
+---@return ghc.command.search.files.IPreviewData
 ---@return integer
 ---@return integer
 function M.calc_preview_data(uuid)
-  local item = _item_map[uuid] ---@type guanghechen.command.search.files.IItem|nil
+  local item = _item_map[uuid] ---@type ghc.command.search.files.IItem|nil
   if item == nil then
     local lines = { "  Cannot retrieve the item by uuid=" .. uuid } ---@type string[]
 
-    ---@type guanghechen.command.search.files.IHighlight[]
+    ---@type ghc.command.search.files.IHighlight[]
     local highlights = { { offset = -1, lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
 
-    ---@type guanghechen.command.search.files.IPreviewData
+    ---@type ghc.command.search.files.IPreviewData
     local result = { filetype = nil, highlights = highlights, lines = lines, title = uuid }
     return result, 1, 0
   end
@@ -107,10 +107,10 @@ function M.calc_preview_data(uuid)
   if not eve.validator.is_printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
-    ---@type guanghechen.command.search.files.IHighlight[]
+    ---@type ghc.command.search.files.IHighlight[]
     local highlights = { { offset = -1, lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } }
 
-    ---@type guanghechen.command.search.files.IPreviewData
+    ---@type ghc.command.search.files.IPreviewData
     local result = { filetype = nil, highlights = highlights, lines = lines, title = item.filepath }
     return result, 1, 0
   end
@@ -124,7 +124,7 @@ function M.calc_preview_data(uuid)
   local match_offset_cur = item.offset ---@type integer
   local match_offsets = M.collect_valid_match_offsets(uuid) ---@type integer[]
   local lines = {} ---@type string[]
-  local highlights = {} ---@type guanghechen.command.search.files.IHighlight[]
+  local highlights = {} ---@type ghc.command.search.files.IHighlight[]
   local cur_lnum = -1 ---@type integer
   local cur_col = 0 ---@type integer
 
@@ -141,7 +141,7 @@ function M.calc_preview_data(uuid)
     })
 
     lines = preview_result.lines ---@type string[]
-    highlights = {} ---@type guanghechen.command.search.files.IHighlight[]
+    highlights = {} ---@type ghc.command.search.files.IHighlight[]
     local lwidths = preview_result.lwidths ---@type integer[]
     local matches = preview_result.matches ---@type t.eve.IMatchPoint[]
 
@@ -181,7 +181,7 @@ function M.calc_preview_data(uuid)
         local col_end = math.min(lwidth, r - offset) ---@type integer
         l = offset + lwidth ---@type integer
 
-        ---@type guanghechen.command.search.files.IHighlight
+        ---@type ghc.command.search.files.IHighlight
         local highlight = { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
         table.insert(highlights, highlight)
 
@@ -193,7 +193,7 @@ function M.calc_preview_data(uuid)
     end
   else
     lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
-    highlights = {} ---@type guanghechen.command.search.files.IHighlight[]
+    highlights = {} ---@type ghc.command.search.files.IHighlight[]
 
     local filematch = M.get_filematch(item.filepath) ---@type eve.oxi.search.IFileMatch|nil
     if filematch ~= nil then
@@ -226,7 +226,7 @@ function M.calc_preview_data(uuid)
               local col_end = math.min(lwidth, r - offset) ---@type integer
               l = offset + lwidth ---@type integer
 
-              ---@type guanghechen.command.search.files.IHighlight
+              ---@type ghc.command.search.files.IHighlight
               local highlight = { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
               table.insert(highlights, highlight)
 
@@ -241,7 +241,7 @@ function M.calc_preview_data(uuid)
     end
   end
 
-  ---@type guanghechen.command.search.files.IPreviewData
+  ---@type ghc.command.search.files.IPreviewData
   local data = {
     filetype = filetype,
     highlights = highlights,
@@ -254,12 +254,12 @@ end
 ---@param uuid                          string
 ---@return integer[]
 function M.collect_valid_match_offsets(uuid)
-  local item = _item_map[uuid] ---@type guanghechen.command.search.files.IItem|nil
+  local item = _item_map[uuid] ---@type ghc.command.search.files.IItem|nil
   if item == nil then
     return {}
   end
 
-  local fileitem = _fileitem_map[item.filepath] ---@type guanghechen.command.search.files.IFileItem
+  local fileitem = _fileitem_map[item.filepath] ---@type ghc.command.search.files.IFileItem
   local offsets = {} ---@type integer[]
   for _, child_uuid in ipairs(fileitem.children) do
     if not state.has_item_deleted(child_uuid) then
@@ -283,7 +283,7 @@ function M.fetch_data(input_text, force, callback)
 
   if eve.fs.is_file_or_dir(cwd) ~= "directory" then
     eve.reporter.error({
-      from = "guanghechen.command.search.files",
+      from = "ghc.command.search.files",
       subject = "fetch_data",
       message = "The cwd is not a valid directory path",
       details = { cwd = cwd, scope = scope, current_buf_filepath = current_buf_filepath },
@@ -335,12 +335,12 @@ function M.fetch_data(input_text, force, callback)
   end
 
   local search_items = {} ---@type t.fml.ux.search.IItem[]
-  local fileitem_map = {} ---@type table<string, guanghechen.command.search.files.IFileItem>
-  local item_map = {} ---@type table<string, guanghechen.command.search.files.IItem>
+  local fileitem_map = {} ---@type table<string, ghc.command.search.files.IFileItem>
+  local item_map = {} ---@type table<string, ghc.command.search.files.IItem>
   for _, filepath in ipairs(result.item_orders) do
     local filematch = result.items[filepath] ---@type eve.oxi.search.IFileMatch|nil
     if filematch ~= nil then
-      ---@type guanghechen.command.search.files.IFileItem
+      ---@type ghc.command.search.files.IFileItem
       local fileitem = {
         children = {},
         fragmentary = false,
@@ -366,7 +366,7 @@ function M.fetch_data(input_text, force, callback)
         }
         table.insert(search_items, search_item)
 
-        ---@type guanghechen.command.search.files.IItem
+        ---@type ghc.command.search.files.IItem
         local item = {
           filepath = filepath,
           offset = -1,
@@ -459,7 +459,7 @@ function M.fetch_data(input_text, force, callback)
             table.insert(search_items, search_item)
             table.insert(fileitem.children, search_item.uuid)
 
-            ---@type guanghechen.command.search.files.IItem
+            ---@type ghc.command.search.files.IItem
             local item = {
               filepath = filepath,
               offset = block_match.offset + original_search_match.l,
@@ -502,7 +502,7 @@ function M.fetch_data(input_text, force, callback)
             table.insert(search_items, search_item)
             table.insert(fileitem.children, search_item.uuid)
 
-            ---@type guanghechen.command.search.files.IItem
+            ---@type ghc.command.search.files.IItem
             local item = {
               filepath = filepath,
               offset = block_match.offset + search_match.l,
@@ -529,7 +529,7 @@ end
 ---@param search_item                   t.fml.ux.search.IItem
 ---@return t.fml.ux.search.preview.IData
 function M.fetch_preview_data(search_item)
-  local preview_data, lnum, col = M.calc_preview_data(search_item.uuid) ---@type guanghechen.command.search.files.IPreviewData
+  local preview_data, lnum, col = M.calc_preview_data(search_item.uuid) ---@type ghc.command.search.files.IPreviewData
   _last_preview_data = preview_data
 
   ---@type t.fml.ux.search.preview.IData
@@ -566,7 +566,7 @@ end
 ---@param filepath                      string
 ---@return eve.oxi.search.IFileMatch|nil
 function M.get_filematch(filepath)
-  local fileitem = _fileitem_map[filepath] ---@type guanghechen.command.search.files.IFileItem|nil
+  local fileitem = _fileitem_map[filepath] ---@type ghc.command.search.files.IFileItem|nil
   if fileitem == nil then
     return nil
   end
@@ -583,7 +583,7 @@ end
 function M.open_file(item, frecency)
   local cwd = state.search_cwd:snapshot() ---@type string
   local workspace = eve.path.workspace() ---@type string
-  local data = _item_map and _item_map[item.uuid] ---@type guanghechen.command.search.files.IItem|nil
+  local data = _item_map and _item_map[item.uuid] ---@type ghc.command.search.files.IItem|nil
   if data ~= nil then
     local absolute_filepath = eve.path.resolve(cwd, data.filepath) ---@type string
     local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string
@@ -599,7 +599,7 @@ end
 ---@param last_data                     t.fml.ux.search.preview.IData
 ---@diagnostic disable-next-line: unused-local
 function M.patch_preview_data(search_item, last_search_item, last_data)
-  local item = _item_map[search_item.uuid] ---@type guanghechen.command.search.files.IItem|nil
+  local item = _item_map[search_item.uuid] ---@type ghc.command.search.files.IItem|nil
   if _last_preview_data == nil or item == nil then
     return M.fetch_preview_data(search_item)
   end
@@ -719,12 +719,12 @@ end
 ---@param uuid                          string
 ---@return nil
 function M.replace_file(uuid)
-  local item = _item_map[uuid] ---@type guanghechen.command.search.files.IItem|nil
+  local item = _item_map[uuid] ---@type ghc.command.search.files.IItem|nil
   if item == nil then
     return
   end
 
-  local fileitem = _fileitem_map[item.filepath] ---@type guanghechen.command.search.files.IFileItem|nil
+  local fileitem = _fileitem_map[item.filepath] ---@type ghc.command.search.files.IFileItem|nil
   if fileitem == nil then
     return
   end
@@ -768,7 +768,7 @@ function M.replace_file(uuid)
 
     if #locations ~= #remain_offsets then
       eve.reporter.error({
-        from = "guanghechen.command.search.files.api",
+        from = "ghc.command.search.files.api",
         subject = "replace_file",
         mesage = "Bad locations, the size of locations should match the given remain_offsets.",
         details = {
@@ -792,7 +792,7 @@ function M.replace_file(uuid)
 
     for i = 1, #locations, 1 do
       local child_uuid = remain_child_uuids[i] ---@type string
-      local child_item = _item_map[child_uuid] ---@type guanghechen.command.search.files.IItem
+      local child_item = _item_map[child_uuid] ---@type ghc.command.search.files.IItem
       local location = locations[i] ---@type t.eve.IMatchLocation
       child_item.offset = location.offset
       child_item.lnum = location.lnum

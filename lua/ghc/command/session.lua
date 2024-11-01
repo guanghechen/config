@@ -44,7 +44,7 @@ eve.commander
         eve.nvim.save_nvim_session(eve.context.storage.nvim_session)
 
         eve.reporter.info({
-          from = "guanghechen.command.session",
+          from = "ghc.command.session",
           message = "Session saved successfully!",
         })
       end

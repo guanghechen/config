@@ -1,3 +1,5 @@
+local uxTheme = require("ghc.ux.theme")
+
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 local theme_cache_path = eve.path.locate_theme_filepath("theme")
 
@@ -19,7 +21,7 @@ local function reload_theme(force)
   local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
 
   if force or not eve.path.is_exist(theme_cache_path) then
-    ghc.ux.theme.load_theme({
+    uxTheme.load_theme({
       theme = theme,
       mode = mode,
       transparency = transparency,
@@ -30,9 +32,9 @@ local function reload_theme(force)
     dofile(theme_cache_path)
   end
 
-  local scheme = ghc.ux.theme.get_scheme(theme, mode) ---@type t.fml.ux.theme.IScheme|nil
+  local scheme = uxTheme.get_scheme(theme, mode) ---@type t.fml.ux.theme.IScheme|nil
   if scheme ~= nil then
-    ghc.ux.theme.set_term_colors(scheme)
+    uxTheme.set_term_colors(scheme)
   end
 end
 
@@ -52,7 +54,7 @@ local function toggle_theme(theme)
     end
 
     if has_changed then
-      ghc.ux.theme.load_theme({
+      uxTheme.load_theme({
         theme = scheme.theme,
         mode = scheme.mode,
         transparency = transparency,
@@ -62,7 +64,7 @@ local function toggle_theme(theme)
     end
   else
     eve.reporter.error({
-      from = "guanghechen.command.toggle",
+      from = "ghc.command.toggle",
       subject = "theme",
       message = "Cannot find the theme.",
       details = { theme = theme, error = scheme },

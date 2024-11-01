@@ -9,7 +9,7 @@ eve.commander
       local content = filepath ---@type string
       vim.fn.setreg("+", content)
       eve.reporter.info({
-        from = "guanghechen.command.copy",
+        from = "ghc.command.copy",
         message = "Copied current buffer filepath to system clipboard!",
       })
     end,
@@ -24,7 +24,7 @@ eve.commander
 
       vim.fn.setreg("+", content)
       eve.reporter.info({
-        from = "guanghechen.command.copy",
+        from = "ghc.command.copy",
         message = "Copied current buffer filepath (relative) to system clipboard!",
       })
     end,

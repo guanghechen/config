@@ -1,7 +1,7 @@
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 local runners = {
-  [".lua"] = require("guanghechen.command.run.lua"),
+  [".lua"] = require("ghc.command.run.lua"),
 }
 
 eve.commander.register({

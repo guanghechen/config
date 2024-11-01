@@ -25,7 +25,7 @@ local function get_history_select()
         local win = winnr ~= nil and eve.context.state.wins[winnr] or nil ---@type t.eve.context.state.win.IItem|nil
         if win == nil then
           eve.reporter.error({
-            from = "guanghechen.command.win.history",
+            from = "ghc.command.win.history",
             message = "Cannot find window.",
             details = { winnr = winnr },
           })
@@ -141,7 +141,7 @@ eve.commander
       local win = eve.context.state.wins[winnr]
       if win == nil then
         eve.reporter.error({
-          from = "guanghechen.command.win",
+          from = "ghc.command.win",
           subject = "history.backward",
           message = "Cannot find window.",
           details = { winnr = winnr },
@@ -170,7 +170,7 @@ eve.commander
       local win = eve.context.state.wins[winnr]
       if win == nil then
         eve.reporter.error({
-          from = "guanghechen.command.win",
+          from = "ghc.command.win",
           subject = "history.forward",
           message = "Cannot find window.",
           details = { winnr = winnr },

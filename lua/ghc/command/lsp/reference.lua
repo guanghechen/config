@@ -8,7 +8,7 @@ local function fetch_data(method, additional_params, callback)
   local bufnr = eve.locations.get_current_bufnr() or vim.api.nvim_get_current_buf() ---@type integer
   if not eve.lsp.has_support_method(bufnr, method) then
     eve.reporter.error({
-      from = "guanghechen.command.lsp.reference",
+      from = "ghc.command.lsp.reference",
       subject = "fetch_data",
       message = "Not support method.",
       details = { bufnr = bufnr, method = method, context = additional_params },
@@ -72,7 +72,7 @@ local function fetch_data(method, additional_params, callback)
 
     if #errors > 0 then
       eve.reporter.error({
-        from = "guanghechen.command.lsp.reference",
+        from = "ghc.command.lsp.reference",
         subject = "fetch_data",
         message = "Encountered errors.",
         details = { bufnr = bufnr, method = method, params = params, errors = errors },

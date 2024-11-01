@@ -1,4 +1,4 @@
----@class guanghechen.command.run.lua
+---@class ghc.command.run.lua
 local runner = {}
 
 ---@param filepath string

@@ -41,16 +41,16 @@ local function change_scope(scope)
   end
 end
 
----@class guanghechen.command.find.files.actions
+---@class ghc.command.find.files.actions
 local actions = {
   ---@return nil
   edit_config = function()
-    ---@class guanghechen.command.find.files.actions.IConfigData
+    ---@class ghc.command.find.files.actions.IConfigData
     ---@field public exclude_patterns       string[]
 
     local f_exclude_patterns = eve.context.state.find.excludes:snapshot() ---@type string
 
-    ---@type guanghechen.command.find.files.actions.IConfigData
+    ---@type ghc.command.find.files.actions.IConfigData
     local data = {
       exclude_patterns = eve.array.parse_comma_list(f_exclude_patterns),
     }
@@ -63,7 +63,7 @@ local actions = {
         if type(raw_data) ~= "table" then
           return "Invalid find_files configuration, expect an object."
         end
-        ---@cast raw_data guanghechen.command.find.files.actions.IConfigData
+        ---@cast raw_data ghc.command.find.files.actions.IConfigData
 
         if raw_data.exclude_patterns == nil or not vim.islist(raw_data.exclude_patterns) then
           return "Invalid data.exclude_patterns, expect an array."
@@ -72,7 +72,7 @@ local actions = {
       on_confirm = function(raw_data)
         vim.schedule(function()
           local raw = vim.tbl_extend("force", data, raw_data)
-          ---@cast raw guanghechen.command.find.files.actions.IConfigData
+          ---@cast raw ghc.command.find.files.actions.IConfigData
 
           local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
           eve.context.state.find.excludes:next(exclude_patterns)

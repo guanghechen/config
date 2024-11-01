@@ -17,13 +17,13 @@ local function toggle_flight(flight)
     observable:next(enabled)
 
     eve.reporter.info({
-      from = "guanghechen.command.toggle",
+      from = "ghc.command.toggle",
       subject = "flight",
       message = flight .. " flight has been " .. (enabled and "enabled" or "disabled") .. ".",
     })
   else
     eve.reporter.error({
-      from = "guanghechen.command.toggle",
+      from = "ghc.command.toggle",
       subject = "flight",
       message = "Unknown flight.",
       details = { flight = flight },

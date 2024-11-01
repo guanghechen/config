@@ -3,7 +3,7 @@ local _hlnames ---@type string[]|nil
 local _hlgroups ---@type table<string, vim.api.keyset.hl_info>
 local _preview_data ---@type t.fml.ux.search.preview.IData|nil
 
----@class guanghechen.command.find.highlights.IItem : t.fml.ux.select.IItem
+---@class ghc.command.find.highlights.IItem : t.fml.ux.select.IItem
 ---@field public data                   integer
 
 ---@type t.fml.ux.select.IProvider
@@ -25,7 +25,7 @@ local provider = {
 
     local items = {} ---@type t.fml.ux.select.IItem[]
     for lnum, hlname in ipairs(_hlnames) do
-      ---@type guanghechen.command.find.highlights.IItem
+      ---@type ghc.command.find.highlights.IItem
       local item = { group = "H", uuid = hlname, text = hlname, data = lnum }
       table.insert(items, item)
     end

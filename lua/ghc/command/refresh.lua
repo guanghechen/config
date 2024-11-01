@@ -16,7 +16,7 @@ eve.commander.register({
     end
 
     eve.reporter.info({
-      from = "guanghechen.command.refresh",
+      from = "ghc.command.refresh",
       message = "Refreshed all!",
     })
   end,
