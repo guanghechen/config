@@ -32,16 +32,6 @@ mk({ "n", "v" }, "<leader>1", ghc.action.explorer.toggle_explorer_file_cwd, "exp
 mk({ "n", "v" }, "<leader>3", ghc.action.explorer.toggle_explorer_git_cwd, "explorer: git (cwd)")
 ---------------------------------------------------------------------------------------#enhance-----
 
---#navigation---------------------------------------------------------------------------------------
-
---#[x] diagnostic-----------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>xd", ghc.action.diagnostic.toggle_diagnositics_cur, "diagnostic: open diagnostics (document)")
-mk({ "n", "v" }, "<leader>xD", ghc.action.diagnostic.toggle_diagnostics, "diagnostic: open diagnostics (workspace)")
-mk({ "n", "v" }, "<leader>xL", ghc.action.diagnostic.toggle_loclist, "diagnostic: open location list (Trouble)")
-mk({ "n", "v" }, "<leader>xq", ghc.action.diagnostic.toggle_quickfix, "diagnostic: open quickfix list (Trouble)")
-
------------------------------------------------------------------------------------#[x] diagnostic--
-
 --#[e]xplorer---------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>eB", ghc.action.explorer.toggle_explorer_buffer_workspace, "explorer: buffers (workspace)")
 mk({ "n", "v" }, "<leader>eb", ghc.action.explorer.toggle_explorer_buffer_cwd, "explorer: buffers (cwd)")

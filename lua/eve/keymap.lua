@@ -119,18 +119,6 @@ mk({ "n", "v" }, "<leader>gf", uuids.git_file_history, "git: open file history")
 mk({ "n", "v" }, "<leader>gg", uuids.git_diffview, "git: open diffview")
 --------------------------------------------------------------------------------------------#[g]it--
 
---#[x] diagnostic-----------------------------------------------------------------------------------
-mk({ "n", "v" }, "[d", uuids.goto_prev_diagnostic, "diagnostic: goto prev")
-mk({ "n", "v" }, "]d", uuids.goto_next_diagnostic, "diagnostic: goto next")
-mk({ "n", "v" }, "[e", uuids.goto_prev_error, "diagnostic: goto prev error")
-mk({ "n", "v" }, "]e", uuids.goto_next_error, "diagnostic: goto next error")
-mk({ "n", "v" }, "[q", uuids.goto_prev_quickfix_item, "diagnostic: goto prev quickfix item")
-mk({ "n", "v" }, "]q", uuids.goto_next_quickfix_item, "diagnostic: goto next quickfix item")
-mk({ "n", "v" }, "[w", uuids.goto_prev_warn, "diagnostic: goto prev warning")
-mk({ "n", "v" }, "]w", uuids.goto_next_warn, "diagnostic: goto next warning")
-mk({ "n", "v" }, "<leader>xl", uuids.open_line_diagnostic, "diagnostic: open float window")
------------------------------------------------------------------------------------#[x] diagnostic--
-
 --#[q]uit-------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")
 mk({ "n", "v" }, "<leader>ql", uuids.session_restore, "session: restore")
@@ -247,3 +235,24 @@ mk({ "n", "v" }, "<leader>wp", uuids.win_project, "win: project (with picker)")
 mk({ "n", "v" }, "<leader>ws", uuids.win_swap, "win: swap (with picker)")
 mk({ "n", "v" }, "<leader>ww", uuids.win_focus, "win: focus (with picker)")
 --------------------------------------------------------------------------------------------#[w]in--
+
+--#[x] diagnostic-----------------------------------------------------------------------------------
+mk({ "n", "v" }, "[d", uuids.goto_prev_diagnostic, "diagnostic: goto prev")
+mk({ "n", "v" }, "]d", uuids.goto_next_diagnostic, "diagnostic: goto next")
+mk({ "n", "v" }, "[e", uuids.goto_prev_error, "diagnostic: goto prev error")
+mk({ "n", "v" }, "]e", uuids.goto_next_error, "diagnostic: goto next error")
+mk({ "n", "v" }, "[q", uuids.goto_prev_quickfix_item, "diagnostic: goto prev quickfix item")
+mk({ "n", "v" }, "]q", uuids.goto_next_quickfix_item, "diagnostic: goto next quickfix item")
+mk({ "n", "v" }, "[w", uuids.goto_prev_warn, "diagnostic: goto prev warning")
+mk({ "n", "v" }, "]w", uuids.goto_next_warn, "diagnostic: goto next warning")
+mk({ "n", "v" }, "<leader>xl", uuids.open_line_diagnostic, "diagnostic: open float window")
+mk(
+  { "n", "v" },
+  "<leader>xd",
+  "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+  "diagnostic: open diagnostics (document)"
+)
+mk({ "n", "v" }, "<leader>xD", "<cmd>Trouble diagnostics toggle<cr>", "diagnostic: open diagnostics (workspace)")
+mk({ "n", "v" }, "<leader>xL", "<cmd>Trouble loclist toggle<cr>", "diagnostic: open location list (Trouble)")
+mk({ "n", "v" }, "<leader>xq", "<cmd>Trouble qflist toggle<cr>", "diagnostic: open quickfix list (Trouble)")
+-----------------------------------------------------------------------------------#[x] diagnostic--
