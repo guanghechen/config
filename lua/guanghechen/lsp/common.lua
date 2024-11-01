@@ -1,3 +1,5 @@
+local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+
 local actions = {
   rename = function()
     vim.lsp.buf.rename()
@@ -107,13 +109,36 @@ local function on_attach(client, bufnr)
     { modes = { "n" }, key = "K", callback = vim.lsp.buf.hover, desc = "lsp: Hover" },
     { modes = { "n" }, key = "gD", callback = vim.lsp.buf.declaration, desc = "lsp: Goto declaration" },
     { modes = { "n" }, key = "gK", callback = vim.lsp.buf.signature_help, desc = "lsp: Show signature help" },
-    { modes = { "n" }, key = "gd", callback = ghc.action.lsp.goto_definitions, desc = "lsp: Goto definition" },
-    { modes = { "n" }, key = "gi", callback = ghc.action.lsp.goto_implementations, desc = "lsp: Goto implementation" },
-    { modes = { "n" }, key = "gr", callback = ghc.action.lsp.goto_reference, desc = "lsp: Show references" },
+    {
+      modes = { "n" },
+      key = "gd",
+      callback = function()
+        eve.commander.execute(uuids.goto_lsp_definitions)
+      end,
+      desc = "lsp: Goto definition",
+    },
+    {
+      modes = { "n" },
+      key = "gi",
+      callback = function()
+        eve.commander.execute(uuids.goto_lsp_implementations)
+      end,
+      desc = "lsp: Goto implementation",
+    },
+    {
+      modes = { "n" },
+      key = "gr",
+      callback = function()
+        eve.commander.execute(uuids.goto_lsp_references)
+      end,
+      desc = "lsp: Show references",
+    },
     {
       modes = { "n" },
       key = "gt",
-      callback = ghc.action.lsp.goto_type_definitions,
+      callback = function()
+        eve.commander.execute(uuids.goto_lsp_type_definitions)
+      end,
       desc = "lsp: Goto type definition",
     },
     {

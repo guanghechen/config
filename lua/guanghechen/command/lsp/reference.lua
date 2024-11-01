@@ -1,3 +1,5 @@
+local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+
 ---@param method                        string
 ---@param additional_params             table<string, any>
 ---@param callback                      fun(ok: boolean, data: t.fml.ux.file_select.IData|nil): nil
@@ -6,7 +8,7 @@ local function fetch_data(method, additional_params, callback)
   local bufnr = eve.locations.get_current_bufnr() or vim.api.nvim_get_current_buf() ---@type integer
   if not eve.lsp.has_support_method(bufnr, method) then
     eve.reporter.error({
-      from = "ghc.action.lsp",
+      from = "guanghechen.command.lsp.reference",
       subject = "fetch_data",
       message = "Not support method.",
       details = { bufnr = bufnr, method = method, context = additional_params },
@@ -70,7 +72,7 @@ local function fetch_data(method, additional_params, callback)
 
     if #errors > 0 then
       eve.reporter.error({
-        from = "ghc.action.lsp",
+        from = "guanghechen.command.lsp.reference",
         subject = "fetch_data",
         message = "Encountered errors.",
         details = { bufnr = bufnr, method = method, params = params, errors = errors },
@@ -173,27 +175,32 @@ local jump_or_lists = {
   implementations = create_jump_or_list("LSP Implementations", "textDocument/implementation", {}),
 }
 
----@class  ghc.action.lsp
-local M = {}
-
----@return nil
-function M.goto_reference()
-  jump_or_lists.references()
-end
-
----@return nil
-function M.goto_definitions()
-  jump_or_lists.definitions()
-end
-
----@return nil
-function M.goto_type_definitions()
-  jump_or_lists.type_definitions()
-end
-
----@return nil
-function M.goto_implementations()
-  jump_or_lists.implementations()
-end
-
-return M
+eve.commander
+  .register({
+    uuid = uuids.goto_lsp_definitions,
+    desc = "lsp: goto definitions",
+    action = function()
+      jump_or_lists.definitions()
+    end,
+  })
+  .register({
+    uuid = uuids.goto_lsp_implementations,
+    desc = "lsp: goto implementations",
+    action = function()
+      jump_or_lists.implementations()
+    end,
+  })
+  .register({
+    uuid = uuids.goto_lsp_references,
+    desc = "lsp: goto references",
+    action = function()
+      jump_or_lists.references()
+    end,
+  })
+  .register({
+    uuid = uuids.goto_lsp_type_definitions,
+    desc = "lsp: goto type definitions",
+    action = function()
+      jump_or_lists.type_definitions()
+    end,
+  })

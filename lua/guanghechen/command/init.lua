@@ -23,6 +23,7 @@ require("guanghechen.command.find.pinned_files")
 require("guanghechen.command.find.vim_options")
 
 require("guanghechen.command.lsp.diagnostic")
+require("guanghechen.command.lsp.reference")
 
 require("guanghechen.command.plugin.diffview")
 require("guanghechen.command.plugin.neo-tree")

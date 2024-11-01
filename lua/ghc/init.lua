@@ -1,8 +1,3 @@
----@class ghc.action
-local action = {
-  lsp = require("ghc.action.lsp"),
-}
-
 ---@class ghc.ux
 local ux = {
   statusline = require("ghc.ux.statusline"),
@@ -12,10 +7,8 @@ local ux = {
 }
 
 ---@class ghc
----@field public action                 ghc.action
 ---@field public ux                     ghc.ux
 local ghc = {
-  action = action,
   ux = ux,
 }
 
