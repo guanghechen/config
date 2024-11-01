@@ -4,6 +4,8 @@ local frecency = eve.context.state.frecency.files ---@type t.eve.collection.IFre
 ---@class fml.fn.select_files.IParams
 ---@field public cwd                    string
 ---@field public dimension              ?t.fml.ux.search.IRawDimension
+---@field public flag_fuzzy             ?boolean
+---@field public flag_regex             ?boolean
 ---@field public input                  ?t.eve.collection.IObservable
 ---@field public title                  string
 ---@field public fetch_filepaths        fun(): string[]
@@ -14,6 +16,8 @@ local frecency = eve.context.state.frecency.files ---@type t.eve.collection.IFre
 local function select_files(params)
   local cwd = params.cwd ---@type string
   local dimension = params.dimension ---@type t.fml.ux.search.IRawDimension|nil
+  local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
+  local flag_regex = not not params.flag_regex ---@type boolean
   local input = params.input ---@type t.eve.collection.IObservable | nil
   local title = params.title ---@type string
   local fetch_filepaths = params.fetch_filepaths ---@type fun(): string[]
@@ -67,15 +71,17 @@ local function select_files(params)
 
   file_select = FileSelect.new({
     cmp = fml.ux.Select.cmp_by_score,
+    dimension = dimension,
     dirty_on_invisible = true,
     enable_preview = false,
     extend_preset_keymaps = true,
+    flag_fuzzy = eve.c.Observable.from_value(flag_fuzzy),
+    flag_regex = eve.c.Observable.from_value(flag_regex),
     frecency = frecency,
-    permanent = false,
-    title = title,
-    dimension = dimension,
     input = input,
+    permanent = false,
     provider = provider,
+    title = title,
   }):focus()
 end
 

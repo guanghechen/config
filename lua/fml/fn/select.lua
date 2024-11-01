@@ -3,6 +3,8 @@ local Select = require("fml.ux.component.select")
 ---@class fml.fn.select.IParams
 ---@field public title                  string
 ---@field public dimension              ?t.fml.ux.search.IRawDimension
+---@field public flag_fuzzy             ?boolean
+---@field public flag_regex             ?boolean
 ---@field public input                  ?t.eve.collection.IObservable
 ---@field public fetch_items            fun(): t.fml.ux.select.IItem[]
 ---@field public on_confirm             fun(item: t.fml.ux.select.IItem): t.eve.e.WidgetConfirmAction|nil
@@ -14,6 +16,8 @@ local Select = require("fml.ux.component.select")
 local function select(params)
   local title = params.title ---@type string
   local dimension = params.dimension ---@type t.fml.ux.search.IRawDimension|nil
+  local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
+  local flag_regex = not not params.flag_regex ---@type boolean
   local input = params.input ---@type t.eve.collection.IObservable | nil
   local fetch_items = params.fetch_items ---@type fun(): t.fml.ux.select.IItem[]
   local on_confirm = params.on_confirm ---@type fun(item: t.fml.ux.select.IItem): nil
@@ -38,13 +42,15 @@ local function select(params)
   }
 
   Select.new({
+    dimension = dimension,
     enable_preview = false,
     extend_preset_keymaps = true,
-    permanent = false,
-    title = title,
-    dimension = dimension,
+    flag_fuzzy = eve.c.Observable.from_value(flag_fuzzy),
+    flag_regex = eve.c.Observable.from_value(flag_regex),
     input = input,
+    permanent = false,
     provider = provider,
+    title = title,
     on_confirm = function(item)
       return on_confirm(item) or "close"
     end,

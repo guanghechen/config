@@ -92,6 +92,8 @@ eve.commander
       else
         fml.fn.select({
           title = "Select theme",
+          flag_fuzzy = true,
+          flag_regex = false,
           input = eve.c.Observable.from_value(arg),
           dimension = {
             row = 5,

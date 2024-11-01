@@ -9,6 +9,8 @@ eve.commander.register({
     fml.fn.select_files({
       cwd = cwd,
       title = "Find pinned files",
+      flag_fuzzy = true,
+      flag_regex = false,
       fetch_filepaths = function()
         local filepaths = {} ---@type string[]
         local pinned_filepaths = eve.context.state.bookmark.pinned:snapshot() ---@type string[]

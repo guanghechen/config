@@ -10,6 +10,8 @@ eve.commander.register({
     fml.fn.select_files({
       cwd = cwd,
       title = "Find: git files (Not committed)",
+      flag_fuzzy = true,
+      flag_regex = false,
       fetch_filepaths = function()
         local result = vim.fn.system("git diff HEAD --name-only") ---@type string
         local lines = eve.oxi.parse_lines(result) ---@type string[]

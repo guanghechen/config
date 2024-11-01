@@ -10,6 +10,8 @@ eve.commander.register({
     fml.fn.select_files({
       cwd = cwd,
       title = "Find buffers",
+      flag_fuzzy = true,
+      flag_regex = false,
       fetch_filepaths = function()
         local filepaths = {} ---@type string[]
         for _, buf in pairs(eve.context.state.bufs) do
