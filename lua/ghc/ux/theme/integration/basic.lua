@@ -166,7 +166,7 @@ local function gen_hlgroup_map(context)
     UnderLined = { fg = c.blue, underline = true },
     VertSplit = { fg = c.fg2 },
     VertSplitActive = { fg = c.neutral_orange },
-    Visual = { bg = c.bg3, reverse = false },
+    Visual = { bg = c.bg4, reverse = false },
     VisualNOS = { link = "Visual" },
     WildMenu = { fg = c.blue, bg = c.bg2, bold = true },
     WinBar = { fg = c.bg2, bg = c.bg2 },
@@ -176,8 +176,9 @@ local function gen_hlgroup_map(context)
   }
 
   if theme == "one_half" then
-    hlgroup_map.CursorLine = { bg = c.bg2 }
-    hlgroup_map.Identifier = { fg = c.red }
+    hlgroup_map.CursorLine.bg = c.bg2
+    hlgroup_map.CursorLineNr.bg = c.bg2
+    hlgroup_map.Identifier.fg = c.red
   end
 
   return hlgroup_map
