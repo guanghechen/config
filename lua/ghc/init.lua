@@ -3,8 +3,6 @@ local action = {
   diagnostic = require("ghc.action.diagnostic"),
   explorer = require("ghc.action.explorer"),
   lsp = require("ghc.action.lsp"),
-  notification = require("ghc.action.notification"),
-  scroll = require("ghc.action.scroll"),
   theme = require("ghc.action.theme"),
 }
 

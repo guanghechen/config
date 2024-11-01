@@ -142,6 +142,11 @@ mk({ "n", "v" }, "<leader>rw", uuids.replace_files_workspace, "replace: files (w
 mk({ "i", "n", "v" }, "<F5>", uuids.run, "run: run codes")
 -------------------------------------------------------------------------------------------#[r]run--
 
+--#[s]croll-----------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>sj", uuids.scroll_down_half_window, "scroll: down (half window)")
+mk({ "n", "v" }, "<leader>sk", uuids.scroll_up_half_window, "scroll: up (half window)")
+-----------------------------------------------------------------------------------------#[s]croll--
+
 --#[s]earch-----------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<C-a>f", uuids.search_files_buffer, "search: files (buffer)")
 mk({ "i", "n", "v" }, "<M-f>", uuids.search_files_buffer, "search: files (buffer)")
@@ -187,6 +192,10 @@ mk({ "i", "n", "t", "v" }, "<M-t>", uuids.term_cwd, "terminal: toggle (cwd)")
 mk({ "n", "t" }, "<leader>tT", uuids.term_workspace, "terminal: toggle (workspace)")
 mk({ "n", "t" }, "<leader>tt", uuids.term_cwd, "terminal: toggle (cwd)")
 ---------------------------------------------------------------------------------------#[t]erminal--
+
+--#[u]x---------------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>un", uuids.notification_dismiss_all, "notification: dismiss all")
+---------------------------------------------------------------------------------------------#[u]x--
 
 --#[w]in--------------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<C-a><Left>", uuids.win_resize_vertical_minus, "win: resize vertical (minus)")

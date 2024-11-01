@@ -68,17 +68,8 @@ mk({ "n", "v" }, "<leader>er", ghc.action.explorer.reveal_file_explorer, "explor
 mk({ "n", "v" }, "<leader>et", ghc.action.explorer.toggle_explorers, "explorer: toggle")
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
---#[s]croll-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>sj", ghc.action.scroll.down_half_window, "scroll: down half of window")
-mk({ "n", "v" }, "<leader>sk", ghc.action.scroll.up_half_window, "scroll: up half of window")
------------------------------------------------------------------------------------------#[s]croll--
-
 --#[t]oggle-----------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>tul", ghc.action.theme.toggle_relativenumber, "toggle: relative line number")
 mk({ "n", "v" }, "<leader>tuT", ghc.action.theme.toggle_transparency, "toggle: transparency")
 mk({ "n", "v" }, "<leader>tuw", ghc.action.theme.toggle_wrap_tmp, "toggle: wrap (temporary)")
 -----------------------------------------------------------------------------------------#[t]oggle--
-
---#[u]i---------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>un", ghc.action.notification.dismiss_all, "notification: dismiss all")
----------------------------------------------------------------------------------------------#[u]i--
