@@ -18,7 +18,7 @@ local function get_lazygit_config_filepath()
 
   ---@type string[]
   local candidate_config_filepaths = {
-    eve.path.join(HOME_LAZYGIT, "local/theme.yaml"),
+    eve.path.join(HOME_LAZYGIT, "local/theme.yml"),
     eve.path.join(HOME_LAZYGIT, "config.yml"),
   }
 
