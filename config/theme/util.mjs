@@ -22,7 +22,7 @@ export const themes = fs //
  * @property {string|null}                                                    local
  * @property {(app: IAppConfig) => boolean}                                   active
  * @property {(app: IAppConfig, template: string, scheme: string) => string}  render
- * @property {?((app: IAppConfig) => Promise<void>)}                          on_apply
+ * @property {?((app: IAppConfig, theme: string) => Promise<void>)}           after_apply
  */
 
 export const apps = [
@@ -33,7 +33,7 @@ export const apps = [
     local: "local/theme.toml",
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
-    on_apply: async (app) => {
+    after_apply: async (app) => {
       const main_config_filepath = path.join(
         HOME_CONFIG,
         app.name,
@@ -73,13 +73,19 @@ export const apps = [
     local: "local/theme.tmux.conf",
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
-    on_apply: async (app) => {
+    after_apply: async (app, theme) => {
       if (process.env.TMUX) {
         const main_config_filepath = path.join(
           HOME_CONFIG,
           app.name,
           "tmux.conf",
         );
+        await safe_exec("tmux", [
+          "set-environment",
+          "-g",
+          "@GHC_TMUX_THEME",
+          theme,
+        ]);
         await safe_exec("tmux", ["source-file", main_config_filepath]);
       }
     },
@@ -201,7 +207,7 @@ async function safe_exec(cmd, args) {
         const child = spawn(cmd, args, {
           cwd: __dirname,
           env: process.env,
-          stdio: "inherit",
+          stdio: ["ignore", "pipe", "pipe"], // Suppress output
         });
         child.stdout?.on("data", (data) => {
           stdoutData += data.toString(encoding);

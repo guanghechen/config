@@ -42,6 +42,6 @@ async function apply_theme(theme) {
     fs.mkdirSync(path.dirname(theme_filepath), { recursive: true });
     fs.writeFileSync(theme_filepath, content, "utf8");
 
-    await app.on_apply?.(app);
+    await app.after_apply?.(app, theme);
   }
 }
