@@ -16,7 +16,7 @@ local function gen_hlgroup_map(context)
     ---! flash.nvim
     FlashBackdrop = { fg = c.bg4, bg = "none" },
     FlashCurrent = { fg = c.orange, bg = t and "none" or c.bg2, italic = true },
-    FlashLabel = { fg = c.purple, bg = t and "none" or c.bg0, bold = true },
+    FlashLabel = { fg = c.blue, bg = t and "none" or c.bg0, bold = true },
     FlashMatch = { fg = c.yellow, bg = t and "none" or c.bg1, italic = true },
     FlashPrompt = { fg = c.yellow, bg = c.bg2 },
     FlashPromptIcon = { fg = c.orange, bg = t and "none" or c.bg2 },

@@ -43,6 +43,20 @@ return {
       container = {
         enable_character_fade = true,
       },
+      diagnostics = {
+        symbols = {
+          hint = eve.icons.diagnostics.Hint .. " ",
+          info = eve.icons.diagnostics.Information .. " ",
+          warn = eve.icons.diagnostics.Warning .. " ",
+          error = eve.icons.diagnostics.Error .. " ",
+        },
+        highlights = {
+          hint = "DiagnosticSignHint",
+          info = "DiagnosticSignInfo",
+          warn = "DiagnosticSignWarn",
+          error = "DiagnosticSignError",
+        },
+      },
       indent = {
         indent_size = 2,
         padding = 1, -- extra padding on left hand side
@@ -311,24 +325,6 @@ return {
     end
 
     local events = require("neo-tree.events")
-
-    -- Set icons for diagnostic errors, you'll need to define them somewhere:
-    vim.fn.sign_define(
-      "DiagnosticSignError",
-      { text = eve.icons.diagnostics.Error .. " ", texthl = "DiagnosticSignError" }
-    )
-    vim.fn.sign_define(
-      "DiagnosticSignWarn",
-      { text = eve.icons.diagnostics.Warning .. " ", texthl = "DiagnosticSignWarn" }
-    )
-    vim.fn.sign_define(
-      "DiagnosticSignInfo",
-      { text = eve.icons.diagnostics.Information .. " ", texthl = "DiagnosticSignInfo" }
-    )
-    vim.fn.sign_define(
-      "DiagnosticSignHint",
-      { text = eve.icons.diagnostics.Hint .. " ", texthl = "DiagnosticSignHint" }
-    )
 
     opts.event_handlers = opts.event_handlers or {}
     vim.list_extend(opts.event_handlers, {
