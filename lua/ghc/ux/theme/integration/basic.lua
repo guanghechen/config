@@ -176,6 +176,7 @@ local function gen_hlgroup_map(context)
   }
 
   if theme == "one_half" then
+    hlgroup_map.CursorLine = { bg = c.bg2 }
     hlgroup_map.Identifier = { fg = c.red }
   end
 
