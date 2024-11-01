@@ -115,7 +115,7 @@
 
 ---@class t.fml.ux.search.IInput
 ---@field public state                  t.fml.ux.search.IState
----@field public create_buf_as_needed   fun(self: t.fml.ux.search.IInput): integer, boolean
+---@field public create_buf_as_needed   fun(self: t.fml.ux.search.IInput): integer
 ---@field public destroy                fun(self: t.fml.ux.search.IInput): nil
 ---@field public reset_input            fun(self: t.fml.ux.search.IInput, input?: string): nil
 ---@field public set_virtual_text       fun(self: t.fml.ux.search.IInput): nil
@@ -129,7 +129,7 @@
 
 ---@class t.fml.ux.search.IPreview
 ---@field public state                  t.fml.ux.search.IState
----@field public create_buf_as_needed   fun(self: t.fml.ux.search.IPreview): integer, boolean
+---@field public create_buf_as_needed   fun(self: t.fml.ux.search.IPreview): integer
 ---@field public destroy                fun(self: t.fml.ux.search.IPreview): nil
 ---@field public get_current_location   fun(self: t.fml.ux.search.IPreview): integer|nil, integer|nil
 ---@field public render                 fun(self: t.fml.ux.search.IPreview): nil

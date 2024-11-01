@@ -92,7 +92,6 @@ local provider = {
         col = 0,
       }
     end
-
     return _preview_data
   end,
   patch_preview_data = function(item, _, last_data)
@@ -105,7 +104,6 @@ local provider = {
       lnum = item.data,
       col = 0,
     }
-
     return data
   end,
   render_item = function(item, match)
@@ -133,6 +131,7 @@ _select = fml.ux.Select.new({
   dirty_on_invisible = false,
   enable_preview = true,
   extend_preset_keymaps = true,
+  permanent = false,
   provider = provider,
   title = "Find Highlights",
   on_confirm = function(item)

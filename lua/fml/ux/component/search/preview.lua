@@ -33,6 +33,7 @@ function M.new(props)
 
   local _last_item = nil ---@type t.fml.ux.search.IItem|nil
   local _last_data = nil ---@type t.fml.ux.search.preview.IData|nil
+  local _last_drawed_bufnr = nil ---@type integer|nil
 
   ---@param item                          t.fml.ux.search.IItem|nil
   ---@return t.fml.ux.search.preview.IData|nil
@@ -56,7 +57,8 @@ function M.new(props)
 
   ---@return nil
   local function render()
-    local bufnr, new_created = self:create_buf_as_needed() ---@type integer, boolean
+    local bufnr = self:create_buf_as_needed() ---@type integer
+
     local last_data = _last_data ---@type t.fml.ux.search.preview.IData|nil
     local item = state:get_current() ---@type t.fml.ux.search.IItem|nil
     local data = fetch_data(item) ---@type t.fml.ux.search.preview.IData|nil
@@ -64,24 +66,31 @@ function M.new(props)
     _last_data = data
 
     ---@type boolean
-    local has_content_changed = new_created or data == nil or last_data == nil or data.lines ~= last_data.lines
+    local has_content_changed = bufnr ~= _last_drawed_bufnr
+      or data == nil
+      or last_data == nil
+      or data.lines ~= last_data.lines
+
+    ---@type boolean
+    local has_highlights_changed = has_content_changed
+      or data == nil
+      or last_data == nil
+      or bufnr ~= _last_drawed_bufnr
+      or data.filetype ~= last_data.filetype
+      or data.highlights ~= last_data.highlights
+
     if has_content_changed then
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
 
       local lines = data and data.lines or {} ---@type string[]
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      _last_drawed_bufnr = bufnr
 
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
     end
 
-    ---@type boolean
-    local has_highlights_changed = has_content_changed
-      or data == nil
-      or last_data == nil
-      or data.filetype ~= last_data.filetype
-      or data.highlights ~= last_data.highlights
     if has_highlights_changed and data ~= nil then
       vim.api.nvim_buf_clear_namespace(bufnr, 0, 0, -1)
       local filetype = data and data.filetype or nil ---@type string|nil
@@ -123,6 +132,9 @@ function M.new(props)
   })
 
   self.state = state
+  self._bufnr = nil
+  self._keymaps = keymaps
+  self._render_scheduler = _render_scheduler
 
   ---@return integer|nil
   ---@return integer|nil
@@ -132,10 +144,6 @@ function M.new(props)
     end
     return _last_data.lnum, _last_data.col
   end
-
-  self._bufnr = nil
-  self._keymaps = keymaps
-  self._render_scheduler = _render_scheduler
 
   state.dirtier_preview:subscribe(
     Subscriber.new({
@@ -154,11 +162,10 @@ function M.new(props)
 end
 
 ---@return integer
----@return boolean
 function M:create_buf_as_needed()
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    return bufnr, false
+    return bufnr
   end
 
   bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -172,12 +179,10 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].readonly = true
   eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-  self._last_data = nil
-
   vim.schedule(function()
     vim.cmd("stopinsert")
   end)
-  return bufnr, true
+  return bufnr
 end
 
 ---@return nil

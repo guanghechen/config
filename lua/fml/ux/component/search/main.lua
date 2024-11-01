@@ -28,17 +28,18 @@ function M.new(props)
 
   local _last_items = nil ---@type t.fml.ux.search.IItem[]|nil
   local _last_items_count = 0 ---@type integer
+  local _last_drawed_bufnr = nil ---@type integer|nil
 
   ---@return nil
   local function render()
-    local bufnr, new_created = self:create_buf_as_needed() ---@type integer, boolean
+    local bufnr = self:create_buf_as_needed() ---@type integer
     local last_items = _last_items ---@type t.fml.ux.search.IItem[]|nil
     local last_items_count = _last_items_count ---@type integer
     _last_items = state.items
     _last_items_count = #state.items
 
     ---@type boolean
-    local has_content_changed = new_created
+    local has_content_changed = bufnr ~= _last_drawed_bufnr
       or last_items == nil
       or last_items ~= state.items
       or last_items_count ~= #state.items
@@ -52,6 +53,7 @@ function M.new(props)
         lines[i] = item.text
       end
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      _last_drawed_bufnr = bufnr
 
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
