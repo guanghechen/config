@@ -1,9 +1,12 @@
+local cs = require("eve.std.color")
+
 ---@param context                       t.ghc.ux.IThemeContext
 ---@return table<string, t.fml.ux.theme.IHlgroup>
 local function gen_hlgroup_map(context)
   local theme = context.scheme.theme ---@type t.eve.e.Theme
   local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
   local t = context.transparency ---@type boolean
+  local bg_main = c.bg0 ---@type string
 
   ---@type table<string, t.fml.ux.theme.IHlgroup>
   local hlgroup_map = {
@@ -41,8 +44,17 @@ local function gen_hlgroup_map(context)
     DiagnosticSignWarn = { fg = c.yellow, bg = t and "none" or c.bg1 },
 
     ---diff
-    DiffAdd = { bg = c.neutral_green },
-    DiffDelete = { bg = c.neutral_red },
+    DiffAddLeft = { bg = cs.mix(bg_main, c.red, 30) },
+    DiffAddRight = { bg = cs.mix(bg_main, c.aqua, 30) },
+    DiffDelLeft = { bg = cs.mix(bg_main, c.red, 30) },
+    DiffDelRight = { bg = cs.mix(bg_main, c.red, 30) },
+    DiffModeLeft = { bg = cs.mix(bg_main, c.red, 30) },
+    DiffModeRight = { bg = cs.mix(bg_main, c.aqua, 30) },
+    DiffWordLeft = { bg = cs.mix(bg_main, c.neutral_red, 60) },
+    DiffWordRight = { bg = cs.mix(bg_main, c.neutral_green, 60) },
+
+    DiffAdd = { bg = c.green },
+    DiffDelete = { bg = c.red },
     DiffChange = { bg = c.neutral_aqua },
     DiffText = { fg = c.bg0, bg = c.yellow },
     DiffAdded = { link = "DiffAdd" },
