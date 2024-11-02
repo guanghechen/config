@@ -1,10 +1,22 @@
+local winline_map = {} ---@type table<string, t.fml.ux.INvimbar>
+
+---@class ghc.ux.winline
+local M = {}
+
 ---@param winnr                         integer
-local function should_show_winline(winnr)
+---@return boolean
+function M.should_show_winline(winnr)
   if eve.win.is_floating(winnr) then
     return false
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  if filepath:sub(1, 9) == "diffview:" then
+    return filepath:sub(1, 19) ~= "diffview:///panels/"
+  end
+
   if not eve.buf.is_listed(bufnr) then
     return false
   end
@@ -12,16 +24,11 @@ local function should_show_winline(winnr)
   return true
 end
 
-local winline_map = {} ---@type table<string, t.fml.ux.INvimbar>
-
----@class ghc.ux.winline
-local M = {}
-
 ---@param winnr                         integer
 ---@param force                         boolean
 ---@return string
 function M.render(winnr, force)
-  if not should_show_winline(winnr) then
+  if not M.should_show_winline(winnr) then
     return ""
   end
 

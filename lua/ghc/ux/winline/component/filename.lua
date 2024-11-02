@@ -6,7 +6,10 @@ local M = {
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local buf = eve.context.state.bufs[bufnr] ---@type t.eve.context.state.buf.IItem|nil
     if buf == nil then
-      return "", 0
+      local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      local width = vim.api.nvim_strwidth(text) ---@type integer
+      local hl_text = eve.nvimbar.txt(text, "f_wl_filename_text")
+      return hl_text, width
     end
 
     local text_icon = buf.fileicon .. " " ---@type string
