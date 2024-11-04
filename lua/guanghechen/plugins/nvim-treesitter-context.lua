@@ -6,7 +6,7 @@ return {
   opts = {
     enable = true,
     line_numbers = true,
-    max_lines = 7,
+    max_lines = 3,
     min_window_height = 30,
     mode = "cursor",
     multiline_threshold = 20,

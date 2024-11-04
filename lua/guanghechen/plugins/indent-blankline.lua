@@ -9,6 +9,7 @@ return {
       highlight = "IblChar",
     },
     scope = {
+      enabled = false, --- Since we used the mini.indentscope plugin
       show_start = false,
       show_end = false,
       highlight = "IblScopeChar",

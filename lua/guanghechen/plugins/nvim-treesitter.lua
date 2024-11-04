@@ -47,6 +47,8 @@ return {
       "cpp",
       "css",
       "diff",
+      "fish",
+      "git_config",
       "gitignore",
       "go",
       "gomod",

@@ -36,6 +36,10 @@ if not vim.g.vscode then
 end
 
 vim.filetype.add({
+  extension = { rasi = "rasi", rofi = "rasi", wofi = "rasi" },
+  filename = {
+    ["vifmrc"] = "vim",
+  },
   pattern = {
     [".*"] = {
       function(filepath, bufnr)
@@ -59,12 +63,17 @@ vim.filetype.add({
     ["*.js"] = "javascript",
     ["*.cjs"] = "javascript",
     ["*.mjs"] = "javascript",
+
+    [".*/waybar/config"] = "jsonc",
+    [".*/mako/config"] = "dosini",
+    [".*/kitty/.+%.conf"] = "bash",
+    [".*/hypr/.+%.conf"] = "hyprlang",
+    ["%.env%.[%w_.-]+"] = "sh",
   },
 })
 vim.api.nvim_create_autocmd({ "FileType" }, {
   pattern = "bigfile",
   callback = function(ev)
-    vim.b.minianimate_disable = true
     vim.schedule(function()
       vim.bo[ev.buf].syntax = vim.filetype.match({ buf = ev.buf }) or ""
     end)
