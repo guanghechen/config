@@ -86,6 +86,8 @@ local function gen_hlgroup_map(context)
     NeoTreeDirectoryIcon = { link = "Directory" },
     NeoTreeDirectoryName = { fg = c.blue },
     NeoTreeFileName = { fg = c.fg2 },
+    NeoTreeGitModified = { fg = c.yellow },
+    NeoTreeGitUntracked = { fg = c.orange },
     NeoTreeFloatBorder = { link = "FloatBorder" },
     NeoTreeFloatTitle = { link = "FloatTitle" },
     NeoTreeNormal = { bg = c.bg1 },
