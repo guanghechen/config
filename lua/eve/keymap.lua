@@ -29,8 +29,13 @@ local function mk(modes, key, uuid, desc)
 end
 
 --#enhance------------------------------------------------------------------------------------------
-mk({ "n" }, "<esc>", "<cmd>noh<cr><esc>", "remove search highlights") -- Clear search with <esc>
-mk({ "t" }, "<esc><esc>", "<C-\\><C-n>", "terminal: exit terminal mode") -- Exit terminal
+mk({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", "remove search highlights") -- Clear search with <esc>
+mk({ "t" }, "<esc><esc>", "<C-\\><C-n>", "terminal: enter normal mode") -- Exit terminal
+
+---! Add undo break-points
+mk({ "i" }, ",", ",<c-g>u")
+mk({ "i" }, ".", ".<c-g>u")
+mk({ "i" }, ";", ";<c-g>u")
 
 ---! better indenting
 vim.keymap.set("v", "<", "<gv")
@@ -103,6 +108,11 @@ mk({ "n", "v" }, "<leader>bn", uuids.buf_new, "buf: new")
 mk({ "n", "v" }, "<leader>bo", uuids.buf_close_others, "buf: close others")
 mk({ "n", "v" }, "<leader>bp", uuids.buf_pin, "buf: toggle pin")
 --------------------------------------------------------------------------------------------#[b]uf--
+
+--#[c]ode-------------------------------------------------------------------------------------------
+mk({ "n" }, "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "code: add comment below")
+mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "code: add comment above")
+-------------------------------------------------------------------------------------------#[c]ode--
 
 --#[c]opy-------------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<C-a>C", uuids.copy_current_filepath, "copy: current filepath")

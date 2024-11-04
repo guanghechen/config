@@ -1,4 +1,5 @@
 vim.g.mapleader = " "
+vim.g.bigfile_size = 1.5 * 1024 * 1024 --- 1.5MB
 
 vim.opt.mouse:append("a")
 vim.opt.shortmess:append({ W = true, I = true, c = true, C = true }) --Don't show the intro message when starting nvim
@@ -106,6 +107,7 @@ vim.opt.spelloptions:append("noplainbuffer")
 -- misc
 vim.opt.completeopt = "menu,menuone,noselect"
 vim.opt.confirm = true -- Confirm to save changes before exiting modified buffer
+vim.opt.inccommand = "nosplit" -- preview incremental substitute
 vim.opt.jumpoptions = "view"
 vim.opt.updatetime = 200 -- Save swap file and trigger CursorHold
 vim.opt.undofile = true

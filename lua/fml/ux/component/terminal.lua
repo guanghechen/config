@@ -199,8 +199,6 @@ function M:hide()
   if visible and winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_win_close(winnr, true)
   end
-
-  vim.cmd.checktime()
 end
 
 ---@return nil

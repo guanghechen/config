@@ -35,6 +35,42 @@ if not vim.g.vscode then
   end)
 end
 
+vim.filetype.add({
+  pattern = {
+    [".*"] = {
+      function(filepath, bufnr)
+        return vim.bo[bufnr]
+            and vim.bo[bufnr].filetype ~= "bigfile"
+            and filepath
+            and vim.fn.getfsize(filepath) > vim.g.bigfile_size
+            and "bigfile"
+          or nil
+      end,
+    },
+
+    ["*.fzfrc"] = "bash",
+    ["*.ripgreprc"] = "bash",
+    ["*.tmux.conf"] = "tmux",
+
+    ["*.ts"] = "typescript",
+    ["*.cts"] = "typescript",
+    ["*.mts"] = "typescript",
+
+    ["*.js"] = "javascript",
+    ["*.cjs"] = "javascript",
+    ["*.mjs"] = "javascript",
+  },
+})
+vim.api.nvim_create_autocmd({ "FileType" }, {
+  pattern = "bigfile",
+  callback = function(ev)
+    vim.b.minianimate_disable = true
+    vim.schedule(function()
+      vim.bo[ev.buf].syntax = vim.filetype.match({ buf = ev.buf }) or ""
+    end)
+  end,
+})
+
 vim.api.nvim_create_autocmd("VimLeavePre", {
   once = true,
   callback = function()
@@ -42,17 +78,14 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   end,
 })
 
----! Set the filetype
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-  pattern = { "*.tmux.conf" },
-  callback = function()
-    vim.bo.filetype = "tmux"
-  end,
-})
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-  pattern = { "*.fzfrc", "*.ripgreprc" },
-  callback = function()
-    vim.bo.filetype = "bash"
+---! Auto create dirs when saving a file, in case some intermediate directory does not exist
+vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+  callback = function(event)
+    if event.match:match("^%w%w+:[\\/][\\/]") then
+      return
+    end
+    local file = vim.uv.fs_realpath(event.match) or event.match
+    vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
   end,
 })
 
@@ -97,18 +130,7 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
   end,
 })
 
----! Auto create dirs when saving a file, in case some intermediate directory does not exist
-vim.api.nvim_create_autocmd({ "BufWritePre" }, {
-  callback = function(event)
-    if event.match:match("^%w%w+:[\\/][\\/]") then
-      return
-    end
-    local file = vim.uv.fs_realpath(event.match) or event.match
-    vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
-  end,
-})
-
----! Close some filetypes with <q>
+---! Close some filetypes with q
 vim.api.nvim_create_autocmd("FileType", {
   pattern = {
     "checkhealth",
@@ -116,9 +138,6 @@ vim.api.nvim_create_autocmd("FileType", {
     "help",
     "lspinfo",
     "man",
-    "neotest-output",
-    "neotest-output-panel",
-    "neotest-summary",
     "neo-tree",
     "notify",
     "PlenaryTestPopup",
@@ -128,39 +147,20 @@ vim.api.nvim_create_autocmd("FileType", {
     "Trouble",
   },
   callback = function(event)
-    vim.opt_local.buflisted = false
-
     local bufnr = event.buf ---@type integer|nil
     if bufnr ~= nil then
+      vim.bo[bufnr].buflisted = false
       local function action()
         vim.cmd.close()
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
       end
-      vim.keymap.set("n", "q", action, { buffer = bufnr, silent = true, desc = "Quit buffer" })
+      vim.keymap.set("n", "q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
     end
   end,
 })
 
----! Enable code spell
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "gitcommit", "html", "lua", "text", "typescript" },
-  callback = function()
-    vim.opt_local.spell = true
-  end,
-})
-
----! Set the tab width
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "markdown" },
-  callback = function()
-    vim.opt.shiftwidth = 2
-    vim.opt.softtabstop = 2 -- set the tab width
-    vim.opt.tabstop = 2 -- set the tab width
-  end,
-})
-
 ---! Check if we need to reload the file when it changed
-vim.api.nvim_create_autocmd({ "FocusGained" }, {
+vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   callback = function()
     if vim.o.buftype ~= "nofile" then
       vim.cmd.checktime()
@@ -190,10 +190,9 @@ vim.api.nvim_create_autocmd({ "WinEnter" }, {
 ---! Auto resize splits when window got resized.
 vim.api.nvim_create_autocmd({ "VimResized" }, {
   callback = function()
-    local current_tab = vim.fn.tabpagenr()
+    local current_tab = vim.fn.tabpagenr() ---@type integer
     vim.cmd("tabdo wincmd =")
     vim.cmd("tabnext " .. current_tab)
-
     widgets.resize()
   end,
 })
