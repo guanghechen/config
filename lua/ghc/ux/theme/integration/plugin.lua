@@ -23,7 +23,7 @@ local function gen_hlgroup_map(context)
 
     ---! gitsigns.nvim
     GitSignsAdd = { fg = c.green },
-    GitSignsChange = { fg = c.orange },
+    GitSignsChange = { fg = c.yellow },
     GitSignsDelete = { fg = c.red },
 
     ---! indent-blankline.nvim
