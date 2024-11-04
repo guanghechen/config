@@ -43,7 +43,10 @@ fish -c "npm install -g npm yarn"
 ### Setup nvim
 printf "\n\e[34m  [setup homebrew] setting up nvim...\e[0m\n"
 brew install nvim fd git-delta lazygit ripgrep
-fish -c "cd ~/.config/nvim/rust/nvim_tools/ && bash build.sh"
+fish -c "cd $HOME/.config/nvim/rust/nvim_tools/ && bash build.sh"
+if [ -d "$HOME/.config/nvim-nvchad/" ]; then
+  fish -c "cd $HOME/.config/nvim-nvchad/rust/nvim_tools/ && bash build.sh"
+fi
 
 ### Setup tmux
 printf "\n\e[34m  [setup homebrew] setting up tmux...\e[0m\n"
