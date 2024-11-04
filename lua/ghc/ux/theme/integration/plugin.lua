@@ -70,6 +70,12 @@ local function gen_hlgroup_map(context)
     MasonMuted = { fg = c.fg4 },
     MasonMutedBlock = { fg = c.bg4, bg = c.bg1 },
 
+    ---! mini.hipatterns
+    MiniHipatternsFixme = { fg = c.bg4, bg = c.red, bold = true, italic = true, underline = true },
+    MiniHipatternsHack = { fg = c.bg4, bg = c.yellow, bold = true, italic = true, underline = true },
+    MiniHipatternsTodo = { fg = c.bg4, bg = c.green, bold = true, italic = true, underline = true },
+    MiniHipatternsNote = { fg = c.bg4, bg = c.purple, bold = true, italic = true, underline = true },
+
     ---! mini.icons
     MiniIconsAzure = { fg = c.blue },
     MiniIconsBlue = { fg = c.blue },
