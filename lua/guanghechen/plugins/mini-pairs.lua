@@ -3,6 +3,11 @@ return {
   name = "mini.pairs",
   event = "VeryLazy",
   opts = {
+    modes = { insert = true, command = true, terminal = false },
+    skip_next = [=[[%w%%%'%[%"%.%`%$]]=], -- skip autopair when next character is one of these
+    skip_ts = { "string" }, -- skip autopair when the cursor is inside these treesitter nodes
+    skip_unbalanced = true,
+    markdown = true,
     mappings = {
       ["("] = { action = "open", pair = "()", neigh_pattern = "[^\\]." },
       ["["] = { action = "open", pair = "[]", neigh_pattern = "[^\\]." },
