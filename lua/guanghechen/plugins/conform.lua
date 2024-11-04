@@ -1,7 +1,7 @@
 return {
   name = "conform.nvim",
   cmd = "ConformInfo",
-  event = { "VeryLazy" },
+  event = { "LspAttach", "BufReadPost", "BufNewFile" },
   opts = {
     log_level = vim.log.levels.ERROR,
     notify_on_error = true,
@@ -79,7 +79,16 @@ return {
         async = false,
         lsp_fallback = true,
         quiet = false,
-        timeout_ms = 500,
+        timeout_ms = 2500,
+      }
+    end,
+    config = function(_, opts)
+      local conform = require("conform")
+      conform.setup(opts)
+
+      -- Customise the default "prettier" command to format Markdown files as well
+      conform.formatters.prettier = {
+        prepend_args = { "--prose-wrap", "always" },
       }
     end,
   },
