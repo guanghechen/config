@@ -16,17 +16,17 @@ git:
 gui:
   authorColors:
     guanghechen: "#5E81AC"
-    "*": "#E5E9F0"
+    "*": "#D8DEE9"
   branchColors:
     main: "#5E81AC"
   theme:
     defaultFgColor:
-      - "#E5E9F0"
+      - "#D8DEE9"
     activeBorderColor:
       - "#D08770"
       - bold
     inactiveBorderColor:
-      - "#C8CCD4"
+      - "#B0BEC5"
     optionsTextColor:
       -  "#D08770"
     selectedLineBgColor:

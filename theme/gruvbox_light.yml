@@ -23,12 +23,12 @@ gui:
     defaultFgColor:
       - "#504945"
     activeBorderColor:
-      - "#D65D0E"
+      - "#AF3A03"
       - bold
     inactiveBorderColor:
       - "#7C6F64"
     optionsTextColor:
-      -  "#D65D0E"
+      -  "#AF3A03"
     selectedLineBgColor:
       - "#D5C4A1"
     cherryPickedCommitFgColor:
