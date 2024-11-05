@@ -3,15 +3,12 @@ local M = {
   theme = "gruvbox",
   mode = "light",
   palette = {
-    bg0_h = "#F9F5D7",
     bg0 = "#FBF1C7",
-    bg0_s = "#F2E5BC",
     bg1 = "#EBDBB2",
     bg2 = "#D5C4A1",
     bg3 = "#BDAE93",
     bg4 = "#A89984",
 
-    fg = "#3C3836",
     fg0 = "#282828",
     fg1 = "#3C3836",
     fg2 = "#504945",
@@ -24,7 +21,7 @@ local M = {
     blue = "#076678",
     purple = "#8F3F71",
     aqua = "#427B58",
-    orange = "#D65D0E",
+    orange = "#AF3A03",
 
     neutral_red = "#CC241D",
     neutral_green = "#98971A",
@@ -33,6 +30,9 @@ local M = {
     neutral_purple = "#B16286",
     neutral_aqua = "#689D6A",
     neutral_orange = "#D65D0E",
+
+    grey = "#928374",
+    pink = "#D3869B",
   },
 }
 

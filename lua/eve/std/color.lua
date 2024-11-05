@@ -33,13 +33,14 @@ local M = {}
 -- @return b: Blue (0-255)
 function M.hex2rgb(hex)
   local hash = string.sub(hex, 1, 1) == "#"
-  if string.len(hex) ~= (7 - (hash and 0 or 1)) then
+  local offset = hash and 0 or 1 ---@type integer
+  if string.len(hex) ~= (7 - offset) then
     return nil
   end
 
-  local r = tonumber(hex:sub(2 - (hash and 0 or 1), 3 - (hash and 0 or 1)), 16)
-  local g = tonumber(hex:sub(4 - (hash and 0 or 1), 5 - (hash and 0 or 1)), 16)
-  local b = tonumber(hex:sub(6 - (hash and 0 or 1), 7 - (hash and 0 or 1)), 16)
+  local r = tonumber(hex:sub(2 - offset, 3 - offset), 16)
+  local g = tonumber(hex:sub(4 - offset, 5 - offset), 16)
+  local b = tonumber(hex:sub(6 - offset, 7 - offset), 16)
   return r, g, b
 end
 
@@ -289,7 +290,7 @@ end
 -- @param strength The percentage of second color in the output.
 --                 This needs to be a number between 0 - 100.
 -- @return The mixed color as a hex value
- function M.mix(first, second, strength)
+function M.mix(first, second, strength)
   if strength == nil then
     strength = 0.5
   end

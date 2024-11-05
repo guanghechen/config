@@ -11,7 +11,7 @@ local function gen_hlgroup_map(context)
   ---@type table<string, t.fml.ux.theme.IHlgroup>
   local hlgroup_map = {
     ---cursor
-    Cursor = { fg = c.bg1, bg = c.fg },
+    Cursor = { fg = c.bg1, bg = c.fg1 },
     CursorColumn = { bg = c.bg1 },
     CursorLine = { bg = c.bg1 },
     CursorLineNr = { fg = c.fg2, bg = c.bg1 },
@@ -152,9 +152,9 @@ local function gen_hlgroup_map(context)
     Italic = { italic = true },
     LineNr = { fg = c.bg4 },
     MatchParen = { bg = c.bg3, bold = true },
-    MatchWord = { fg = c.fg, bg = c.bg4 },
+    MatchWord = { fg = c.fg1, bg = c.bg4 },
     Normal = { fg = c.fg1, bg = t and "none" or c.bg0 },
-    NormalFloat = { fg = c.fg1, bg = t and "none" or c.bg0_s },
+    NormalFloat = { fg = c.fg1, bg = t and "none" or c.bg1 },
     NormalNC = { link = "Normal" },
     NvimInternalError = { fg = c.red },
     Pmenu = { fg = c.fg1, bg = c.bg2 },
@@ -187,7 +187,8 @@ local function gen_hlgroup_map(context)
     WinSeparatorActive = { fg = c.neutral_orange, bg = t and "none" or c.bg0 },
   }
 
-  if theme == "one_half" then
+  if theme == "gruvbox" then
+  elseif theme == "one_half" then
     hlgroup_map.Comment.fg = cs.change_hex_lightness(c.bg4, 20)
     hlgroup_map.CursorLine.bg = c.bg2
     hlgroup_map.CursorLineNr.bg = c.bg2

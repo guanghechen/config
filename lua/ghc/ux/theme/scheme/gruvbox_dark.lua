@@ -3,15 +3,12 @@ local M = {
   theme = "gruvbox",
   mode = "dark",
   palette = {
-    bg0_h = "#1d2021",
     bg0 = "#282828",
-    bg0_s = "#32302f",
     bg1 = "#3C3836",
     bg2 = "#504945",
     bg3 = "#665C54",
     bg4 = "#7C6F64",
 
-    fg = "#EBDBB2",
     fg0 = "#FBF1C7",
     fg1 = "#EBDBB2",
     fg2 = "#D5C4A1",
@@ -33,6 +30,9 @@ local M = {
     neutral_purple = "#B16286",
     neutral_aqua = "#689D6A",
     neutral_orange = "#D65D0E",
+
+    grey = "#928374",
+    pink = "#D3869B",
   },
 }
 

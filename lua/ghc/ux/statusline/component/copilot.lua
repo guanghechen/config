@@ -2,7 +2,10 @@
 local fn_show_message = eve.G.register_anonymous_fn(function()
   if package.loaded["copilot"] then
     local status = require("copilot.api").status.data
-    eve.debug.log({ status = status or "nil" })
+    eve.reporter.info({
+      from = "ghc.ux.statusline.component.copilot",
+      details = { status = status or "nil" },
+    })
   end
 end)
 

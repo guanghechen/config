@@ -3,20 +3,17 @@ local M = {
   theme = "nord",
   mode = "dark",
   palette = {
-    bg0_h = "#282828",
     bg0 = "#2E3440",
-    bg0_s = "#31353F",
     bg1 = "#3B4252",
     bg2 = "#434C5E",
     bg3 = "#4C566A",
     bg4 = "#545862",
 
-    fg = "#ECEFF4",
-    fg0 = "#E5E5E6",
-    fg1 = "#ECEFF4",
-    fg2 = "#E5E9F0",
-    fg3 = "#D8DEE9",
-    fg4 = "#C8CCD4",
+    fg0 = "#ECEFF4",
+    fg1 = "#E5E9F0",
+    fg2 = "#D8DEE9",
+    fg3 = "#C8CCD4",
+    fg4 = "#B0BEC5",
 
     red = "#BF616A",
     green = "#A3BE8C",
@@ -33,6 +30,9 @@ local M = {
     neutral_purple = "#B48EAD",
     neutral_aqua = "#8FBCBB",
     neutral_orange = "#D08770",
+
+    grey = "#4C566A",
+    pink = "#FFA3A3",
   },
 }
 

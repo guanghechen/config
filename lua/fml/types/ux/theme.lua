@@ -1,4 +1,16 @@
 ---@class t.fml.ux.theme.IPalette
+---@field public bg0                    string
+---@field public bg1                    string
+---@field public bg2                    string
+---@field public bg3                    string
+---@field public bg4                    string
+---
+---@field public fg0                    string
+---@field public fg1                    string
+---@field public fg2                    string
+---@field public fg3                    string
+---@field public fg4                    string
+---
 ---@field public red                    string
 ---@field public green                  string
 ---@field public yellow                 string
@@ -14,22 +26,10 @@
 ---@field public neutral_purple         string
 ---@field public neutral_aqua           string
 ---@field public neutral_orange         string
---
----@field public bg0_h                  string
----@field public bg0                    string
----@field public bg0_s                  string
----@field public bg1                    string
----@field public bg2                    string
----@field public bg3                    string
----@field public bg4                    string
 ---
----@field public fg                     string
----@field public fg0                    string
----@field public fg1                    string
----@field public fg2                    string
----@field public fg3                    string
----@field public fg4                    string
----
+---@field public grey                   string
+---@field public pink                   string
+
 ---@class t.fml.ux.theme.IScheme
 ---@field public theme                  t.eve.e.Theme
 ---@field public mode                   t.eve.e.ThemeMode

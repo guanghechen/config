@@ -1,7 +1,10 @@
+local cs = require("eve.std.color")
+
 ---@param context                       t.ghc.ux.IThemeContext
 ---@return table<string, t.fml.ux.theme.IHlgroup>
 local function gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
+  local mode = context.scheme.mode ---@type t.eve.e.ThemeMode
 
   local diff_del = c.red ---@type string
   local diff_add = c.green ---@type string
@@ -9,8 +12,11 @@ local function gen_hlgroup_map(context)
   local diff_add_word = c.neutral_green ---@type string
 
   local bg_input = c.bg2 ---@type string
-  local bg_main = c.bg0_s ---@type string
-  local bg_preview = c.bg1 ---@type string
+  local bg_preview = c.bg1
+
+  local bg_main = c.bg0 --@type string
+  bg_main = cs.change_hex_saturation(bg_main, -20) ---@type string
+  bg_main = cs.change_hex_lightness(bg_main, (mode == "light" and -1 or 1) * 4) ---@type string
 
   return {
     ---common
@@ -35,16 +41,16 @@ local function gen_hlgroup_map(context)
     f_fe_group = { fg = c.red },
     f_fe_match = { fg = c.red },
     f_fe_name_dir = { fg = c.blue },
-    f_fe_name_file = { fg = c.fg },
+    f_fe_name_file = { fg = c.fg1 },
     f_fe_owner = { fg = c.red },
     f_fe_perm_dir = { fg = c.blue },
-    f_fe_perm_file = { fg = c.fg },
-    f_fe_perm = { fg = c.fg },
+    f_fe_perm_file = { fg = c.fg1 },
+    f_fe_perm = { fg = c.fg1 },
     f_fe_size = { fg = c.green },
 
     ---search
-    f_us_input_border = { fg = c.fg, bg = bg_input },
-    f_us_input_normal = { fg = c.fg, bg = bg_input },
+    f_us_input_border = { fg = c.fg1, bg = bg_input },
+    f_us_input_normal = { fg = c.fg1, bg = bg_input },
     f_us_input_prompt = { fg = c.red, bg = bg_input },
     f_us_input_title = { fg = c.bg0, bg = c.red },
     f_us_main_bg = { bg = bg_main },
@@ -61,7 +67,7 @@ local function gen_hlgroup_map(context)
     f_us_preview_border = { fg = c.bg1, bg = bg_preview },
     f_us_preview_error = { fg = c.red, bold = true },
     f_us_preview_normal = { bg = bg_preview },
-    f_us_preview_search = { fg = c.fg, bg = diff_del, strikethrough = true },
+    f_us_preview_search = { fg = c.fg1, bg = diff_del, strikethrough = true },
     f_us_preview_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
     f_us_preview_replace = { fg = c.bg1, bg = diff_add },
     f_us_preview_replace_cur = { fg = c.bg1, bg = c.green, bold = true },
@@ -71,7 +77,7 @@ local function gen_hlgroup_map(context)
 
     ---select codeaction
     f_us_codeaction_order = { fg = c.red, bg = "none" },
-    f_us_codeaction_content = { fg = c.fg, bg = "none" },
+    f_us_codeaction_content = { fg = c.fg1, bg = "none" },
     f_us_codeaction_client_name = { fg = c.fg4, bg = "none" },
 
     ---terminal
@@ -88,7 +94,7 @@ local function gen_hlgroup_map(context)
     f_us_vo_name = { fg = c.purple },
     f_us_vo_type = { fg = c.orange },
     f_us_vo_scope = { fg = c.red, bold = true },
-    f_us_vo_value = { fg = c.fg },
+    f_us_vo_value = { fg = c.fg1 },
   }
 end
 
