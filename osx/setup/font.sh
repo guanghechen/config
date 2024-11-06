@@ -8,6 +8,9 @@ else
   mkdir -p ~/download/fonts/RobotoMono
   cd ~/download/fonts/RobotoMono
 
+  rm -rf ~/Library/Fonts/RobotoMonoNerdFont*
+  sudo rm -rf /Library/FontsRobotoMonoNerdFont*/
+
   printf "\n\e[34m  [setup font] downloading RobotoMono fonts...\e[0m\n"
   wget https://github.com/guanghechen/mirror/releases/download/font/RobotoMono.zip
 
