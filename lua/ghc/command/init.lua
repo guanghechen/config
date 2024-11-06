@@ -3,6 +3,7 @@ require("ghc.command.buf.create")
 require("ghc.command.buf.focus")
 require("ghc.command.buf.pin")
 require("ghc.command.buf.save")
+require("ghc.command.buf.swap")
 
 require("ghc.command.tab.close")
 require("ghc.command.tab.create")
