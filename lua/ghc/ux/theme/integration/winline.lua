@@ -10,7 +10,7 @@ local function gen_hlgroup_map(context)
     f_wl_bg = { fg = bg_winline, bg = bg_winline },
     f_wl_dirpath_sep = { fg = c.fg1, bg = bg_winline },
     f_wl_dirpath_text = { fg = c.blue, bg = bg_winline },
-    f_wl_filename_text = { fg = c.orange, bg = bg_winline },
+    f_wl_filename_text = { fg = c.fg1, bg = bg_winline },
     f_wl_indicator = { fg = c.orange, bg = bg_winline },
     f_wl_lsp_icon = { fg = c.neutral_purple, bg = bg_winline },
     f_wl_lsp_icon_Array = { fg = c.blue, bg = bg_winline },

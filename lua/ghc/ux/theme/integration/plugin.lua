@@ -13,6 +13,11 @@ local function gen_hlgroup_map(context)
   local bg_noice = c.bg1 ---@type string
 
   return {
+    ---! diffview.nvim
+    DiffviewFilePanelDeletions = { fg = c.red, bold = true },
+    DiffviewFilePanelInsertions = { fg = c.green, bold = true },
+    DiffviewStatusModified = { fg = c.green, bold = true },
+
     ---! flash.nvim
     FlashBackdrop = { fg = c.bg4, bg = "none" },
     FlashCurrent = { fg = c.orange, bg = t and "none" or c.bg2, italic = true },
@@ -71,21 +76,25 @@ local function gen_hlgroup_map(context)
     MasonMutedBlock = { fg = c.bg4, bg = c.bg1 },
 
     ---! mini.hipatterns
-    MiniHipatternsFixme = { fg = c.bg4, bg = c.red, bold = true, italic = true, underline = true },
-    MiniHipatternsHack = { fg = c.bg4, bg = c.yellow, bold = true, italic = true, underline = true },
-    MiniHipatternsTodo = { fg = c.bg4, bg = c.green, bold = true, italic = true, underline = true },
-    MiniHipatternsNote = { fg = c.bg4, bg = c.purple, bold = true, italic = true, underline = true },
+    MiniHipatternsFixme = { fg = c.bg0, bg = c.red, bold = true, italic = true, underline = true },
+    MiniHipatternsHack = { fg = c.bg0, bg = c.yellow, bold = true, italic = true, underline = true },
+    MiniHipatternsTodo = { fg = c.bg0, bg = c.aqua, bold = true, italic = true, underline = true },
+    MiniHipatternsNote = { fg = c.bg0, bg = c.purple, bold = true, italic = true, underline = true },
 
     ---! mini.icons
     MiniIconsAzure = { fg = c.blue },
     MiniIconsBlue = { fg = c.blue },
     MiniIconsCyan = { fg = c.aqua },
     MiniIconsGreen = { fg = c.green },
-    MiniIconsGrey = { fg = c.fg4 },
+    MiniIconsGrey = { fg = c.fg2 },
     MiniIconsOrange = { fg = c.orange },
     MiniIconsPurple = { fg = c.purple },
     MiniIconsRed = { fg = c.red },
     MiniIconsYellow = { fg = c.yellow },
+
+    ---! mini.indentscope
+    MiniIndentscopeSymbol = { fg = c.pink },
+    MiniIndentscopeSymbolOff = { fg = c.yellow },
 
     ---! neo-tree.nvim
     NeoTreeCursorLine = { bg = c.bg2 },
