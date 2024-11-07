@@ -7,6 +7,7 @@ local locate_lsp_root = require("guanghechen.lsp.common").locate_lsp_root
 local CONFIG_FILENAMES = {
   "tailwind.config.ts",
   "tailwind.config.js",
+  "tailwind.config.mjs",
 }
 
 return {
