@@ -100,7 +100,7 @@ local function gen_hlgroup_map(context)
     Builtin = { fg = c.purple },
     Character = { fg = c.purple },
     Conditional = { fg = c.red },
-    Constant = { fg = c.red },
+    Constant = { fg = c.purple },
     Define = { fg = c.aqua },
     Float = { fg = c.purple },
     Function = { fg = c.yellow, bold = true },
