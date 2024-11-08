@@ -20,6 +20,12 @@ return {
     return locate_lsp_root(filename, CONFIG_FILENAMES)
   end,
   settings = {
-    tailwindCSS = {},
+    tailwindCSS = {
+      includeLanguages = {
+        elixir = "html-eex",
+        eelixir = "html-eex",
+        heex = "html-eex",
+      },
+    },
   },
 }
