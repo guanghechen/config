@@ -1,9 +1,9 @@
 local cs = require("eve.std.color")
 
 ---@param context                       t.ghc.ux.IThemeContext
----@return table<string, t.fml.ux.theme.IHlgroup>
+---@return table<string, t.eve.collection.theme.IHlgroup>
 local function gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
+  local c = context.scheme.palette ---@type t.eve.collection.theme.IPalette
   local mode = context.scheme.mode ---@type t.eve.e.ThemeMode
 
   local diff_del = c.red ---@type string

@@ -1,6 +1,6 @@
 ---@class t.ghc.ux.IThemeContext
 ---@field public theme                  string
----@field public scheme                 t.fml.ux.theme.IScheme
+---@field public scheme                 t.eve.collection.theme.IScheme
 ---@field public transparency           boolean
 
 ---@class t.ghc.ux.theme.IApp

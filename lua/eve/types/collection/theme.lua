@@ -1,4 +1,4 @@
----@class t.fml.ux.theme.IPalette
+---@class t.eve.collection.theme.IPalette
 ---@field public bg0                    string
 ---@field public bg1                    string
 ---@field public bg2                    string
@@ -30,24 +30,24 @@
 ---@field public grey                   string
 ---@field public pink                   string
 
----@class t.fml.ux.theme.IScheme
+---@class t.eve.collection.theme.IScheme
 ---@field public theme                  t.eve.e.Theme
 ---@field public mode                   t.eve.e.ThemeMode
----@field public palette                t.fml.ux.theme.IPalette
+---@field public palette                t.eve.collection.theme.IPalette
 
----@class t.fml.ux.theme.IHlgroup : vim.api.keyset.highlight
+---@class t.eve.collection.theme.IHlgroup : vim.api.keyset.highlight
 
----@class t.fml.ux.theme.IApplyParams
----@field public scheme                 t.fml.ux.theme.IScheme
+---@class t.eve.collection.theme.IApplyParams
+---@field public scheme                 t.eve.collection.theme.IScheme
 ---@field public nsnr                   integer
 
----@class t.fml.ux.theme.ICompileParams
----@field public scheme                 t.fml.ux.theme.IScheme
+---@class t.eve.collection.theme.ICompileParams
+---@field public scheme                 t.eve.collection.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
----@class t.fml.ux.ITheme
----@field public apply                  fun(self: t.fml.ux.ITheme, params: t.fml.ux.theme.IApplyParams): nil
----@field public compile                fun(self: t.fml.ux.ITheme, params: t.fml.ux.theme.ICompileParams): nil
----@field public register               fun(self: t.fml.ux.ITheme, hlname: string, hlgroup: t.fml.ux.theme.IHlgroup): t.fml.ux.ITheme
----@field public registers              fun(self: t.fml.ux.ITheme, hlgroup_map: table<string, t.fml.ux.theme.IHlgroup | nil>): t.fml.ux.ITheme
+---@class t.eve.collection.ITheme
+---@field public apply                  fun(self: t.eve.collection.ITheme, params: t.eve.collection.theme.IApplyParams): nil
+---@field public compile                fun(self: t.eve.collection.ITheme, params: t.eve.collection.theme.ICompileParams): nil
+---@field public register               fun(self: t.eve.collection.ITheme, hlname: string, hlgroup: t.eve.collection.theme.IHlgroup): t.eve.collection.ITheme
+---@field public registers              fun(self: t.eve.collection.ITheme, hlgroup_map: table<string, t.eve.collection.theme.IHlgroup | nil>): t.eve.collection.ITheme

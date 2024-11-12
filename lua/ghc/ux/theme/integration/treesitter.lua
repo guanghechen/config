@@ -1,7 +1,7 @@
 ---@param context                       t.ghc.ux.IThemeContext
----@return table<string, t.fml.ux.theme.IHlgroup>
+---@return table<string, t.eve.collection.theme.IHlgroup>
 local function gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
+  local c = context.scheme.palette ---@type t.eve.collection.theme.IPalette
 
   return {
     ["@annotation"] = { fg = c.neutral_red },

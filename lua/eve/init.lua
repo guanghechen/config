@@ -12,6 +12,7 @@ local collection = {
   Observable = require("eve.collection.observable"),
   Subscriber = require("eve.collection.subscriber"),
   Subscribers = require("eve.collection.subscribers"),
+  Theme = require("eve.collection.theme"),
   Ticker = require("eve.collection.ticker"),
 }
 

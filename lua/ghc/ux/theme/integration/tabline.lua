@@ -1,13 +1,13 @@
 ---@param context                       t.ghc.ux.IThemeContext
 ---@return ghc.ux.theme.integration.tabline.hlgroups
 local function gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
+  local c = context.scheme.palette ---@type t.eve.collection.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_tabline = t and "none" or c.bg3 ---@type string
   local bg_buf_item = t and "none" or c.bg1 ---@type string
   local bg_buf_item_cur = t and "none" or c.bg0 ---@type string
 
-  ---@class ghc.ux.theme.integration.tabline.hlgroups : table<string, t.fml.ux.theme.IHlgroup>
+  ---@class ghc.ux.theme.integration.tabline.hlgroups : table<string, t.eve.collection.theme.IHlgroup>
   local hlgroup_map = {
     f_tl_bg = { fg = bg_tabline, bg = bg_tabline },
     f_tl_buf_item = { fg = c.bg4, bg = bg_buf_item },

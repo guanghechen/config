@@ -1,18 +1,18 @@
 local path = require("eve.std.path")
 
----@class fml.ux.Theme : t.fml.ux.ITheme
----@field private hlgroup_map          table<string, t.fml.ux.theme.IHlgroup>
+---@class eve.collection.Theme : t.eve.collection.ITheme
+---@field private hlgroup_map          table<string, t.eve.collection.theme.IHlgroup>
 local M = {}
 M.__index = M
 
----@return fml.ux.Theme
+---@return eve.collection.Theme
 function M.new()
   local self = setmetatable({}, M)
   self.hlgroup_map = {}
   return self
 end
 
----@param params                        t.fml.ux.theme.IApplyParams
+---@param params                        t.eve.collection.theme.IApplyParams
 ---@return nil
 function M:apply(params)
   local nsnr = params.nsnr ---@type integer
@@ -22,15 +22,15 @@ function M:apply(params)
 end
 
 ---@param hlname                        string
----@param hlgroup                       t.fml.ux.theme.IHlgroup
----@return fml.ux.Theme
+---@param hlgroup                       t.eve.collection.theme.IHlgroup
+---@return eve.collection.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlgroup_map                   table<string, t.fml.ux.theme.IHlgroup|nil>
----@return fml.ux.Theme
+---@param hlgroup_map                   table<string, t.eve.collection.theme.IHlgroup|nil>
+---@return eve.collection.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do
     if hlgroup ~= nil then
@@ -40,7 +40,7 @@ function M:registers(hlgroup_map)
   return self
 end
 
----@param params                        t.fml.ux.theme.ICompileParams
+---@param params                        t.eve.collection.theme.ICompileParams
 ---@return nil
 function M:compile(params)
   local filepath = params.filepath ---@type string

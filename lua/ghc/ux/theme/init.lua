@@ -22,10 +22,10 @@ M.integrations = {
   "plugin",
 }
 
----@param scheme                        t.fml.ux.theme.IScheme
+---@param scheme                        t.eve.collection.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette ---@type t.fml.ux.theme.IPalette
+  local c = scheme.palette ---@type t.eve.collection.theme.IPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.neutral_red
   vim.g.terminal_color_2 = c.neutral_green
@@ -46,7 +46,7 @@ end
 
 ---@param theme                         t.eve.e.Theme
 ---@param mode                          t.eve.e.ThemeMode
----@return t.fml.ux.theme.IScheme|nil
+---@return t.eve.collection.theme.IScheme|nil
 function M.get_scheme(theme, mode)
   local scheme_name = theme .. "_" .. mode
   local ok, scheme = pcall(fml.fn.hmr, "ghc.ux.theme.scheme." .. scheme_name)
@@ -80,14 +80,14 @@ function M.load_integration(nsnr, integration)
     }
     local gen_hlgroup_map = fml.fn.hmr("ghc.ux.theme.integration." .. integration)
     local hlgroup_map = gen_hlgroup_map(context)
-    local uxTheme = fml.ux.Theme.new()
+    local uxTheme = eve.c.Theme.new()
     uxTheme:registers(hlgroup_map)
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
   end
 end
 
 ---@param params                        ghc.ux.theme.ILoadThemeParams
----@return t.fml.ux.theme.IScheme|nil
+---@return t.eve.collection.theme.IScheme|nil
 function M.load_theme(params)
   local theme = params.theme ---@type t.eve.e.Theme
   local mode = params.mode ---@type t.eve.e.ThemeMode
@@ -107,14 +107,14 @@ function M.load_theme(params)
     ---@type ghc.ux.theme.integration.winline.hlgroups
     local winline_hlgroup_map = gen_winline_hlgroup_map({ scheme = scheme, transparency = transparency })
 
-    local uxTheme = fml.ux.Theme.new()
+    local uxTheme = eve.c.Theme.new()
     for _, integration in ipairs(M.integrations) do
       local gen_hlgroup_map = fml.fn.hmr("ghc.ux.theme.integration." .. integration)
-      ---@return table<string, t.fml.ux.theme.IHlgroup>
+      ---@return table<string, t.eve.collection.theme.IHlgroup>
       local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
       if integration == "plugin" then
-        local additional = {} ---@type table<string, t.fml.ux.theme.IHlgroup>
+        local additional = {} ---@type table<string, t.eve.collection.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if hlname:sub(1, 9) == "MiniIcons" then
             ---! Integrated  with tabline

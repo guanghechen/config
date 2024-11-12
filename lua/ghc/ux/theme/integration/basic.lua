@@ -1,14 +1,14 @@
 local cs = require("eve.std.color")
 
 ---@param context                       t.ghc.ux.IThemeContext
----@return table<string, t.fml.ux.theme.IHlgroup>
+---@return table<string, t.eve.collection.theme.IHlgroup>
 local function gen_hlgroup_map(context)
   local theme = context.scheme.theme ---@type t.eve.e.Theme
-  local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
+  local c = context.scheme.palette ---@type t.eve.collection.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_main = c.bg0 ---@type string
 
-  ---@type table<string, t.fml.ux.theme.IHlgroup>
+  ---@type table<string, t.eve.collection.theme.IHlgroup>
   local hlgroup_map = {
     ---cursor
     Cursor = { fg = c.bg1, bg = c.fg1 },

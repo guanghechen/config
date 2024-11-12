@@ -39,7 +39,6 @@ local ux = {
 
   ---
 
-  Theme = require("fml.ux.theme"),
   signcolumn = require("fml.ux.signcolumn"),
 }
 

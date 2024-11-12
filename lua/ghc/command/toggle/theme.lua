@@ -32,7 +32,7 @@ local function reload_theme(force)
     dofile(theme_cache_path)
   end
 
-  local scheme = uxTheme.get_scheme(theme, mode) ---@type t.fml.ux.theme.IScheme|nil
+  local scheme = uxTheme.get_scheme(theme, mode) ---@type t.eve.collection.theme.IScheme|nil
   if scheme ~= nil then
     uxTheme.set_term_colors(scheme)
   end

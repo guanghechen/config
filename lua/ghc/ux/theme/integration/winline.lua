@@ -1,11 +1,11 @@
 ---@param context                       t.ghc.ux.IThemeContext
 ---@return ghc.ux.theme.integration.winline.hlgroups
 local function gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type t.fml.ux.theme.IPalette
+  local c = context.scheme.palette ---@type t.eve.collection.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_winline = t and "none" or c.bg2 ---@type string
 
-  ---@class ghc.ux.theme.integration.winline.hlgroups : table<string, t.fml.ux.theme.IHlgroup>
+  ---@class ghc.ux.theme.integration.winline.hlgroups : table<string, t.eve.collection.theme.IHlgroup>
   local hlgroup_map = {
     f_wl_bg = { fg = bg_winline, bg = bg_winline },
     f_wl_dirpath_sep = { fg = c.fg1, bg = bg_winline },

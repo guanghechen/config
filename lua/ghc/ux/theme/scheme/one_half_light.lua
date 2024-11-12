@@ -1,4 +1,4 @@
----@type t.fml.ux.theme.IScheme
+---@type t.eve.collection.theme.IScheme
 local M = {
   theme = "one_half",
   mode = "light",
