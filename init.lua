@@ -2,7 +2,6 @@ require("eve.option")
 require("eve.autocmd")
 require("eve.keymap")
 _G.eve = require("eve")
-
 do
   local is_git_repo = eve.path.is_git_repo() ---@type boolean
 

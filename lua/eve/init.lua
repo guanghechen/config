@@ -19,6 +19,11 @@ local collection = {
 ---@type eve.context
 local context = require("eve.context")
 
+---@class eve.fn
+local fn = {
+  hmr = require("eve.fn.hmr"),
+}
+
 ---@class eve.globals
 local globals = {
   icons = require("eve.globals.icons"),
@@ -68,6 +73,7 @@ local std = {
 ---@field public c                      eve.collection
 ---@field public collection             eve.collection
 ---@field public context                eve.context
+---@field public fn                     eve.fn
 ---@field public globals                eve.globals
 ---@field public oxi                    eve.oxi
 ---@field public std                    eve.std
@@ -75,6 +81,7 @@ local eve = vim.tbl_extend("force", {}, globals, std, {
   c = collection,
   collection = collection,
   context = context,
+  fn = fn,
   globals = globals,
   oxi = oxi,
   std = std,

@@ -41,7 +41,7 @@ end
 ---@param theme                         string
 ---@return nil
 local function toggle_theme(theme)
-  local ok, scheme = pcall(fml.fn.hmr, "ghc.ux.theme.scheme." .. theme)
+  local ok, scheme = pcall(eve.fn.hmr, "ghc.ux.theme.scheme." .. theme)
   if ok then
     local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
 

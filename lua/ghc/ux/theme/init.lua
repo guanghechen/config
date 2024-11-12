@@ -49,7 +49,7 @@ end
 ---@return t.eve.collection.theme.IScheme|nil
 function M.get_scheme(theme, mode)
   local scheme_name = theme .. "_" .. mode
-  local ok, scheme = pcall(fml.fn.hmr, "ghc.ux.theme.scheme." .. scheme_name)
+  local ok, scheme = pcall(eve.fn.hmr, "ghc.ux.theme.scheme." .. scheme_name)
   if not ok then
     eve.reporter.error({
       from = "ghc.ux.theme",
@@ -78,7 +78,7 @@ function M.load_integration(nsnr, integration)
       scheme = scheme,
       transparency = transparency,
     }
-    local gen_hlgroup_map = fml.fn.hmr("ghc.ux.theme.integration." .. integration)
+    local gen_hlgroup_map = eve.fn.hmr("ghc.ux.theme.integration." .. integration)
     local hlgroup_map = gen_hlgroup_map(context)
     local uxTheme = eve.c.Theme.new()
     uxTheme:registers(hlgroup_map)
@@ -98,8 +98,8 @@ function M.load_theme(params)
 
   local scheme = M.get_scheme(theme, mode)
   if scheme ~= nil then
-    local gen_tabline_hlgroup_map = fml.fn.hmr("ghc.ux.theme.integration.tabline")
-    local gen_winline_hlgroup_map = fml.fn.hmr("ghc.ux.theme.integration.winline")
+    local gen_tabline_hlgroup_map = eve.fn.hmr("ghc.ux.theme.integration.tabline")
+    local gen_winline_hlgroup_map = eve.fn.hmr("ghc.ux.theme.integration.winline")
 
     ---@type ghc.ux.theme.integration.tabline.hlgroups
     local tabline_hlgroup_map = gen_tabline_hlgroup_map({ scheme = scheme, transparency = transparency })
@@ -109,7 +109,7 @@ function M.load_theme(params)
 
     local uxTheme = eve.c.Theme.new()
     for _, integration in ipairs(M.integrations) do
-      local gen_hlgroup_map = fml.fn.hmr("ghc.ux.theme.integration." .. integration)
+      local gen_hlgroup_map = eve.fn.hmr("ghc.ux.theme.integration." .. integration)
       ---@return table<string, t.eve.collection.theme.IHlgroup>
       local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
