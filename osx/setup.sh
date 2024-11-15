@@ -32,7 +32,7 @@ source ~/.config/guanghechen/osx/setup/font.sh
 printf "\e[32m  [setup font] done.\e[0m\n"
 
 ## Install apps
-if [ -z "$HOME_HOMEBREW" ] && [ -w "$HOME_HOMEBREW" ]; then
+if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW" ]; then
   printf "\n\e[32m  [setup homebrew] preparing...\e[0m\n"
   source ~/.config/guanghechen/nix/setup/homebrew.sh
   source ~/.config/guanghechen/osx/setup/homebrew-patch.sh
