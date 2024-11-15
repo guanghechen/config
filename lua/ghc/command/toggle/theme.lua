@@ -39,31 +39,17 @@ local function toggle_theme(theme)
     return
   end
 
-  local ok, scheme = pcall(eve.fn.hmr, "fml.ux.theme.scheme." .. theme)
-  if ok then
-    local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
-
-    ---@type boolean
-    local has_changed = eve.context.state.theme.theme:snapshot() ~= scheme.theme
-      or eve.context.state.theme.mode:snapshot() ~= scheme.mode
-    if has_changed then
-      fml.ux.theme.apply_theme({
-        theme = scheme.theme,
-        mode = scheme.mode,
-        transparency = transparency,
-        persistent = true,
-        filepath = theme_cache_path,
-      })
-
-      eve.context.state.theme.theme:next(scheme.theme)
-      eve.context.state.theme.mode:next(scheme.mode)
-    end
-  else
+  local app_home = eve.path.locate_app_config_home("guanghechen")
+  local script_path = eve.path.join(app_home, "config/theme/apply_theme.mjs")
+  local ok, error = pcall(function()
+    vim.fn.system({ "node", script_path, theme })
+  end)
+  if not ok then
     eve.reporter.error({
       from = "ghc.command.toggle",
       subject = "theme",
-      message = "Cannot find the theme.",
-      details = { theme = theme, error = scheme },
+      message = "Failed to toggle theme.",
+      details = { app_home = app_home, script_path = script_path, error = error },
     })
   end
 end

@@ -1,5 +1,4 @@
 local Theme = require("eve.collection.theme")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local hmr = require("eve.fn.hmr")
 
@@ -169,28 +168,9 @@ function M.apply_theme(params)
 
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
     if persistent and filepath ~= nil then
-      vim.schedule(function()
-        uxTheme:compile({ nsnr = 0, scheme = scheme, filepath = filepath })
-      end)
+      uxTheme:compile({ nsnr = 0, scheme = scheme, filepath = filepath })
     end
     M.set_term_colors(scheme)
-
-    ---! toggle theme for other apps.
-    do
-      local app_home = path.locate_app_config_home("guanghechen")
-      local script_path = path.join(app_home, "config/theme/apply_theme.mjs")
-      local ok, error = pcall(function()
-        vim.fn.system({ "node", script_path, theme .. "_" .. mode })
-      end)
-      if not ok then
-        reporter.error({
-          from = "fml.ux.theme",
-          subject = "load_theme",
-          message = "Failed to toggle theme.",
-          details = { app_home = app_home, script_path = script_path, error = error },
-        })
-      end
-    end
   end
 
   return scheme
