@@ -42,7 +42,7 @@ return {
       local mode = eve.context.state.theme.mode:snapshot() ---@type t.eve.e.ThemeMode
       local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
 
-      fml.ux.theme.load_integration({
+      fml.ux.theme.apply_integration({
         theme = theme,
         mode = mode,
         transparency = transparency,

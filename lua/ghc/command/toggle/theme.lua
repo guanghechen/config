@@ -9,7 +9,7 @@ local function reload_theme(force)
   local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
 
   if force or not eve.path.is_exist(theme_cache_path) then
-    fml.ux.theme.load_theme({
+    fml.ux.theme.apply_theme({
       theme = theme,
       mode = mode,
       transparency = transparency,
@@ -18,11 +18,11 @@ local function reload_theme(force)
     })
   else
     dofile(theme_cache_path)
-  end
 
-  local scheme = fml.ux.theme.get_scheme(theme, mode) ---@type t.eve.collection.theme.IScheme|nil
-  if scheme ~= nil then
-    fml.ux.theme.set_term_colors(scheme)
+    local scheme = fml.ux.theme.get_scheme(theme, mode) ---@type t.eve.collection.theme.IScheme|nil
+    if scheme ~= nil then
+      fml.ux.theme.set_term_colors(scheme)
+    end
   end
 end
 
@@ -47,7 +47,7 @@ local function toggle_theme(theme)
     local has_changed = eve.context.state.theme.theme:snapshot() ~= scheme.theme
       or eve.context.state.theme.mode:snapshot() ~= scheme.mode
     if has_changed then
-      fml.ux.theme.load_theme({
+      fml.ux.theme.apply_theme({
         theme = scheme.theme,
         mode = scheme.mode,
         transparency = transparency,

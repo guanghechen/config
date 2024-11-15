@@ -96,7 +96,7 @@ end
 
 ---@param params                        fml.ux.theme.ILoadIntegrationParams
 ---@return nil
-function M.load_integration(params)
+function M.apply_integration(params)
   local theme = params.theme ---@type t.eve.e.Theme
   local mode = params.mode ---@type t.eve.e.ThemeMode
   local transparency = params.transparency ---@type boolean
@@ -121,7 +121,7 @@ end
 
 ---@param params                        fml.ux.theme.ILoadThemeParams
 ---@return t.eve.collection.theme.IScheme|nil
-function M.load_theme(params)
+function M.apply_theme(params)
   local theme = params.theme ---@type t.eve.e.Theme
   local mode = params.mode ---@type t.eve.e.ThemeMode
   local transparency = params.transparency ---@type boolean
