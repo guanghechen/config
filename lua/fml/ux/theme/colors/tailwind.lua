@@ -1,7 +1,7 @@
----@class ghc.ux.theme.colors.tailwind
+---@class fml.ux.theme.colors.tailwind
 local M = {}
 
----@class ghc.ux.theme.colors.tailwind.colors
+---@class fml.ux.theme.colors.tailwind.colors
 M.colors = {
   slate = {
     [50] = "#F8FAFC",

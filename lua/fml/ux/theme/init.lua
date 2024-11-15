@@ -3,17 +3,17 @@ local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local hmr = require("eve.fn.hmr")
 
----@class ghc.ux.theme
+---@class fml.ux.theme
 local M = {}
 
----@class ghc.ux.theme.ILoadIntegrationParams
+---@class fml.ux.theme.ILoadIntegrationParams
 ---@field public theme                  t.eve.e.Theme
 ---@field public mode                   t.eve.e.ThemeMode
 ---@field public transparency           boolean
----@field public integration            t.ghc.e.ux.theme.HighlightIntegration
+---@field public integration            t.fml.e.ux.theme.HighlightIntegration
 ---@field public nsnr                   ?integer
 
----@class ghc.ux.theme.ILoadThemeParams
+---@class fml.ux.theme.ILoadThemeParams
 ---@field public theme                  t.eve.e.Theme
 ---@field public mode                   t.eve.e.ThemeMode
 ---@field public transparency           boolean
@@ -21,7 +21,17 @@ local M = {}
 ---@field public filepath               ?string
 ---@field public nsnr                   ?integer
 
----@type t.ghc.e.ux.theme.HighlightIntegration[]
+---@type string[]
+M.themes = {
+  "gruvbox_dark",
+  "gruvbox_light",
+  "nord_dark",
+  "nord_light",
+  "one_half_dark",
+  "one_half_light",
+}
+
+---@type t.fml.e.ux.theme.HighlightIntegration[]
 M.integrations = {
   --- orders as needed
   "basic",
@@ -61,10 +71,20 @@ end
 ---@return t.eve.collection.theme.IScheme|nil
 function M.get_scheme(theme, mode)
   local scheme_name = theme .. "_" .. mode
-  local ok, scheme = pcall(hmr, "ghc.ux.theme.scheme." .. scheme_name)
+  if not vim.tbl_contains(M.themes, scheme_name) then
+    reporter.error({
+      from = "fml.ux.theme",
+      subject = "get_scheme",
+      message = "Unknown theme.",
+      details = { theme = theme, mode = mode },
+    })
+    return nil
+  end
+
+  local ok, scheme = pcall(hmr, "fml.ux.theme.scheme." .. scheme_name)
   if not ok then
     reporter.error({
-      from = "ghc.ux.theme",
+      from = "fml.ux.theme",
       subject = "get_scheme",
       message = "Cannot find scheme.",
       details = { theme = theme, mode = mode },
@@ -74,24 +94,24 @@ function M.get_scheme(theme, mode)
   return scheme
 end
 
----@param params                        ghc.ux.theme.ILoadIntegrationParams
+---@param params                        fml.ux.theme.ILoadIntegrationParams
 ---@return nil
 function M.load_integration(params)
   local theme = params.theme ---@type t.eve.e.Theme
   local mode = params.mode ---@type t.eve.e.ThemeMode
   local transparency = params.transparency ---@type boolean
-  local integration = params.integration ---@type t.ghc.e.ux.theme.HighlightIntegration
+  local integration = params.integration ---@type t.fml.e.ux.theme.HighlightIntegration
   local nsnr = params.nsnr or 0 ---@type integer
 
   local scheme = M.get_scheme(theme, mode)
   if scheme ~= nil then
-    ---@type t.ghc.ux.IThemeContext
+    ---@type t.fml.ux.IThemeContext
     local themeContext = {
       theme = scheme.theme .. "_" .. scheme.mode,
       scheme = scheme,
       transparency = transparency,
     }
-    local gen_hlgroup_map = hmr("ghc.ux.theme.integration." .. integration)
+    local gen_hlgroup_map = hmr("fml.ux.theme.integration." .. integration)
     local hlgroup_map = gen_hlgroup_map(themeContext)
     local uxTheme = Theme.new()
     uxTheme:registers(hlgroup_map)
@@ -99,7 +119,7 @@ function M.load_integration(params)
   end
 end
 
----@param params                        ghc.ux.theme.ILoadThemeParams
+---@param params                        fml.ux.theme.ILoadThemeParams
 ---@return t.eve.collection.theme.IScheme|nil
 function M.load_theme(params)
   local theme = params.theme ---@type t.eve.e.Theme
@@ -111,18 +131,18 @@ function M.load_theme(params)
 
   local scheme = M.get_scheme(theme, mode)
   if scheme ~= nil then
-    local gen_tabline_hlgroup_map = hmr("ghc.ux.theme.integration.tabline")
-    local gen_winline_hlgroup_map = hmr("ghc.ux.theme.integration.winline")
+    local gen_tabline_hlgroup_map = hmr("fml.ux.theme.integration.tabline")
+    local gen_winline_hlgroup_map = hmr("fml.ux.theme.integration.winline")
 
-    ---@type ghc.ux.theme.integration.tabline.hlgroups
+    ---@type fml.ux.theme.integration.tabline.hlgroups
     local tabline_hlgroup_map = gen_tabline_hlgroup_map({ scheme = scheme, transparency = transparency })
 
-    ---@type ghc.ux.theme.integration.winline.hlgroups
+    ---@type fml.ux.theme.integration.winline.hlgroups
     local winline_hlgroup_map = gen_winline_hlgroup_map({ scheme = scheme, transparency = transparency })
 
     local uxTheme = Theme.new()
     for _, integration in ipairs(M.integrations) do
-      local gen_hlgroup_map = hmr("ghc.ux.theme.integration." .. integration)
+      local gen_hlgroup_map = hmr("fml.ux.theme.integration." .. integration)
       ---@return table<string, t.eve.collection.theme.IHlgroup>
       local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
@@ -164,7 +184,7 @@ function M.load_theme(params)
       end)
       if not ok then
         reporter.error({
-          from = "ghc.ux.theme",
+          from = "fml.ux.theme",
           subject = "load_theme",
           message = "Failed to toggle theme.",
           details = { app_home = app_home, script_path = script_path, error = error },

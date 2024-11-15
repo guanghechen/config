@@ -1,17 +1,5 @@
-local uxTheme = require("ghc.ux.theme")
-
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 local theme_cache_path = eve.path.locate_theme_filepath("theme")
-
----@type string[]
-local themes = {
-  "gruvbox_dark",
-  "gruvbox_light",
-  "nord_dark",
-  "nord_light",
-  "one_half_dark",
-  "one_half_light",
-}
 
 ---@param force                         ?boolean
 ---@return nil
@@ -21,7 +9,7 @@ local function reload_theme(force)
   local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
 
   if force or not eve.path.is_exist(theme_cache_path) then
-    uxTheme.load_theme({
+    fml.ux.theme.load_theme({
       theme = theme,
       mode = mode,
       transparency = transparency,
@@ -32,16 +20,26 @@ local function reload_theme(force)
     dofile(theme_cache_path)
   end
 
-  local scheme = uxTheme.get_scheme(theme, mode) ---@type t.eve.collection.theme.IScheme|nil
+  local scheme = fml.ux.theme.get_scheme(theme, mode) ---@type t.eve.collection.theme.IScheme|nil
   if scheme ~= nil then
-    uxTheme.set_term_colors(scheme)
+    fml.ux.theme.set_term_colors(scheme)
   end
 end
 
 ---@param theme                         string
 ---@return nil
 local function toggle_theme(theme)
-  local ok, scheme = pcall(eve.fn.hmr, "ghc.ux.theme.scheme." .. theme)
+  if not vim.tbl_contains(fml.ux.theme.themes, theme) then
+    eve.reporter.error({
+      from = "ghc.command.toggle",
+      subject = "theme",
+      message = "Unknown theme.",
+      details = { theme = theme },
+    })
+    return
+  end
+
+  local ok, scheme = pcall(eve.fn.hmr, "fml.ux.theme.scheme." .. theme)
   if ok then
     local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
 
@@ -54,7 +52,7 @@ local function toggle_theme(theme)
     end
 
     if has_changed then
-      uxTheme.load_theme({
+      fml.ux.theme.load_theme({
         theme = scheme.theme,
         mode = scheme.mode,
         transparency = transparency,
@@ -85,11 +83,11 @@ eve.commander
   .register({
     uuid = uuids.toggle_theme,
     desc = "toggle: theme",
-    candidates = themes,
+    candidates = fml.ux.theme.themes,
     nargs = "?",
     action = function(args)
       local arg = type(args) == "string" and args:lower() or "" ---@type string
-      if eve.array.contains(themes, arg) then
+      if eve.array.contains(fml.ux.theme.themes, arg) then
         toggle_theme(arg)
       else
         fml.fn.select({
@@ -108,7 +106,7 @@ eve.commander
           end,
           fetch_items = function()
             local items = {} ---@type t.fml.ux.select.IItem[]
-            for _, theme in ipairs(themes) do
+            for _, theme in ipairs(fml.ux.theme.themes) do
               table.insert(items, { uuid = theme, text = theme })
             end
             return items

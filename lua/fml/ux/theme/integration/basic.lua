@@ -1,6 +1,6 @@
 local cs = require("eve.std.color")
 
----@param context                       t.ghc.ux.IThemeContext
+---@param context                       t.fml.ux.IThemeContext
 ---@return table<string, t.eve.collection.theme.IHlgroup>
 local function gen_hlgroup_map(context)
   local theme = context.scheme.theme ---@type t.eve.e.Theme

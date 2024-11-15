@@ -1,4 +1,4 @@
-local tailwind = require("ghc.ux.theme.colors.tailwind")
+local tailwind = require("fml.ux.theme.colors.tailwind")
 
 ---@type table<string,true>
 local highlighted = {}

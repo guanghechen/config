@@ -39,6 +39,7 @@ local ux = {
   ---
 
   signcolumn = require("fml.ux.signcolumn"),
+  theme = require("fml.ux.theme"),
 }
 
 ---@class fml
