@@ -33,6 +33,8 @@ mk({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", "remove search highlights") -- Cl
 mk({ "t" }, "<esc><esc>", "<C-\\><C-n>", "terminal: enter normal mode") -- Exit terminal
 
 ---! Add undo break-points
+mk({ "i" }, "<space>", "<space><c-g>u")
+mk({ "i" }, "<cr>", "<cr><c-g>u")
 mk({ "i" }, ",", ",<c-g>u")
 mk({ "i" }, ".", ".<c-g>u")
 mk({ "i" }, ";", ";<c-g>u")
