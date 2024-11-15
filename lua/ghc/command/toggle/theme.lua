@@ -47,11 +47,6 @@ local function toggle_theme(theme)
     local has_changed = eve.context.state.theme.theme:snapshot() ~= scheme.theme
       or eve.context.state.theme.mode:snapshot() ~= scheme.mode
     if has_changed then
-      eve.context.state.theme.theme:next(scheme.theme)
-      eve.context.state.theme.mode:next(scheme.mode)
-    end
-
-    if has_changed then
       fml.ux.theme.load_theme({
         theme = scheme.theme,
         mode = scheme.mode,
@@ -59,6 +54,9 @@ local function toggle_theme(theme)
         persistent = true,
         filepath = theme_cache_path,
       })
+
+      eve.context.state.theme.theme:next(scheme.theme)
+      eve.context.state.theme.mode:next(scheme.mode)
     end
   else
     eve.reporter.error({
