@@ -1,3 +1,9 @@
+local Theme = require("eve.collection.theme")
+local context = require("eve.context")
+local path = require("eve.std.path")
+local reporter = require("eve.std.reporter")
+local hmr = require("eve.fn.hmr")
+
 ---@class ghc.ux.theme
 local M = {}
 
@@ -49,9 +55,9 @@ end
 ---@return t.eve.collection.theme.IScheme|nil
 function M.get_scheme(theme, mode)
   local scheme_name = theme .. "_" .. mode
-  local ok, scheme = pcall(eve.fn.hmr, "ghc.ux.theme.scheme." .. scheme_name)
+  local ok, scheme = pcall(hmr, "ghc.ux.theme.scheme." .. scheme_name)
   if not ok then
-    eve.reporter.error({
+    reporter.error({
       from = "ghc.ux.theme",
       subject = "get_scheme",
       message = "Cannot find scheme.",
@@ -66,21 +72,21 @@ end
 ---@param integration                   t.ghc.e.ux.theme.HighlightIntegration
 ---@return nil
 function M.load_integration(nsnr, integration)
-  local theme = eve.context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
-  local mode = eve.context.state.theme.mode:snapshot() ---@type t.eve.e.ThemeMode
-  local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
+  local theme = context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
+  local mode = context.state.theme.mode:snapshot() ---@type t.eve.e.ThemeMode
+  local transparency = context.state.theme.transparency:snapshot() ---@type boolean
 
   local scheme = M.get_scheme(theme, mode)
   if scheme ~= nil then
     ---@type t.ghc.ux.IThemeContext
-    local context = {
+    local themeContext = {
       theme = scheme.theme .. "_" .. scheme.mode,
       scheme = scheme,
       transparency = transparency,
     }
-    local gen_hlgroup_map = eve.fn.hmr("ghc.ux.theme.integration." .. integration)
-    local hlgroup_map = gen_hlgroup_map(context)
-    local uxTheme = eve.c.Theme.new()
+    local gen_hlgroup_map = hmr("ghc.ux.theme.integration." .. integration)
+    local hlgroup_map = gen_hlgroup_map(themeContext)
+    local uxTheme = Theme.new()
     uxTheme:registers(hlgroup_map)
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
   end
@@ -98,8 +104,8 @@ function M.load_theme(params)
 
   local scheme = M.get_scheme(theme, mode)
   if scheme ~= nil then
-    local gen_tabline_hlgroup_map = eve.fn.hmr("ghc.ux.theme.integration.tabline")
-    local gen_winline_hlgroup_map = eve.fn.hmr("ghc.ux.theme.integration.winline")
+    local gen_tabline_hlgroup_map = hmr("ghc.ux.theme.integration.tabline")
+    local gen_winline_hlgroup_map = hmr("ghc.ux.theme.integration.winline")
 
     ---@type ghc.ux.theme.integration.tabline.hlgroups
     local tabline_hlgroup_map = gen_tabline_hlgroup_map({ scheme = scheme, transparency = transparency })
@@ -107,9 +113,9 @@ function M.load_theme(params)
     ---@type ghc.ux.theme.integration.winline.hlgroups
     local winline_hlgroup_map = gen_winline_hlgroup_map({ scheme = scheme, transparency = transparency })
 
-    local uxTheme = eve.c.Theme.new()
+    local uxTheme = Theme.new()
     for _, integration in ipairs(M.integrations) do
-      local gen_hlgroup_map = eve.fn.hmr("ghc.ux.theme.integration." .. integration)
+      local gen_hlgroup_map = hmr("ghc.ux.theme.integration." .. integration)
       ---@return table<string, t.eve.collection.theme.IHlgroup>
       local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
@@ -144,13 +150,13 @@ function M.load_theme(params)
 
     ---! toggle theme for other apps.
     do
-      local app_home = eve.path.locate_app_config_home("guanghechen")
-      local script_path = eve.path.join(app_home, "config/theme/apply_theme.mjs")
+      local app_home = path.locate_app_config_home("guanghechen")
+      local script_path = path.join(app_home, "config/theme/apply_theme.mjs")
       local ok, error = pcall(function()
         vim.fn.system({ "node", script_path, theme .. "_" .. mode })
       end)
       if not ok then
-        eve.reporter.error({
+        reporter.error({
           from = "ghc.ux.theme",
           subject = "load_theme",
           message = "Failed to toggle theme.",
