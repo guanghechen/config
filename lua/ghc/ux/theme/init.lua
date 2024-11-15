@@ -1,11 +1,17 @@
 local Theme = require("eve.collection.theme")
-local context = require("eve.context")
 local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local hmr = require("eve.fn.hmr")
 
 ---@class ghc.ux.theme
 local M = {}
+
+---@class ghc.ux.theme.ILoadIntegrationParams
+---@field public theme                  t.eve.e.Theme
+---@field public mode                   t.eve.e.ThemeMode
+---@field public transparency           boolean
+---@field public integration            t.ghc.e.ux.theme.HighlightIntegration
+---@field public nsnr                   ?integer
 
 ---@class ghc.ux.theme.ILoadThemeParams
 ---@field public theme                  t.eve.e.Theme
@@ -68,13 +74,14 @@ function M.get_scheme(theme, mode)
   return scheme
 end
 
----@param nsnr                          integer
----@param integration                   t.ghc.e.ux.theme.HighlightIntegration
+---@param params                        ghc.ux.theme.ILoadIntegrationParams
 ---@return nil
-function M.load_integration(nsnr, integration)
-  local theme = context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
-  local mode = context.state.theme.mode:snapshot() ---@type t.eve.e.ThemeMode
-  local transparency = context.state.theme.transparency:snapshot() ---@type boolean
+function M.load_integration(params)
+  local theme = params.theme ---@type t.eve.e.Theme
+  local mode = params.mode ---@type t.eve.e.ThemeMode
+  local transparency = params.transparency ---@type boolean
+  local integration = params.integration ---@type t.ghc.e.ux.theme.HighlightIntegration
+  local nsnr = params.nsnr or 0 ---@type integer
 
   local scheme = M.get_scheme(theme, mode)
   if scheme ~= nil then
