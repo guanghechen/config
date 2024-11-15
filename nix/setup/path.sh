@@ -22,6 +22,7 @@ fi
 
 ### Miniforge3
 if [ -f "$HOME/.app/miniforge3/bin/conda" ] && [[ ":$PATH:" != *":$HOME/.app/miniforge3/bin:"* ]]; then
+  export HOME_MINIFORGE="$HOME/.app/miniforge3"
   export PATH="$HOME/.app/miniforge3/bin:$PATH"
   eval "$("$HOME/.app/miniforge3/bin/conda" shell.bash hook)"
 fi

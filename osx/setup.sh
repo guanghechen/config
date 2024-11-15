@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+source $HOME/.config/guanghechen/nix/setup/path.sh
+
 ## Download core configurations
 CONFIG_ROOT_DIR="$HOME/.config/guanghechen"
 if [ -d "$CONFIG_ROOT_DIR/.git" ]; then
@@ -30,10 +32,12 @@ source ~/.config/guanghechen/osx/setup/font.sh
 printf "\e[32m  [setup font] done.\e[0m\n"
 
 ## Install apps
-printf "\n\e[32m  [setup homebrew] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/homebrew.sh
-source ~/.config/guanghechen/osx/setup/homebrew-patch.sh
-printf "\n\e[32m  [setup homebrew] done.\e[0m\n"
+if [ -z "$HOME_HOMEBREW" ] && [ -w "$HOME_HOMEBREW" ]; then
+  printf "\n\e[32m  [setup homebrew] preparing...\e[0m\n"
+  source ~/.config/guanghechen/nix/setup/homebrew.sh
+  source ~/.config/guanghechen/osx/setup/homebrew-patch.sh
+  printf "\n\e[32m  [setup homebrew] done.\e[0m\n"
+fi
 
 ## Setup fish
 printf "\n\e[32m  [setup fish] preparing...\e[0m\n"
