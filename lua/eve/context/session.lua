@@ -1,11 +1,14 @@
 local Observable = require("eve.collection.observable")
 local std_array = require("eve.std.array")
+local path = require("eve.std.path")
 
 ---@class eve.context.session : t.eve.context.session
 local M = {}
 
 ---@return t.eve.context.session.data
 function M.defaults()
+  local is_home_config_dir = path.workspace() == path.HOME_NVIM_CONFIG ---@type boolean
+
   ---@type t.eve.context.data.bookmark
   local bookmark = {
     pinned = {},
@@ -41,8 +44,8 @@ function M.defaults()
   local flight = {
     autoload = false,
     autosave = true,
-    copilot = false,
-    devmode = false,
+    copilot = is_home_config_dir,
+    devmode = is_home_config_dir,
   }
 
   ---@type t.eve.context.data.search
