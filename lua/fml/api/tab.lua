@@ -62,7 +62,7 @@ function M.refresh(tabnr)
   local tab = eve.context.state.tabs[tabnr] ---@type t.eve.context.state.tab.IItem|nil
   if tab == nil then
     local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    winnr_cur = eve.array.contains(winnrs, winnr_cur) and winnr_cur or winnrs[1] or winnr_cur
+    winnr_cur = vim.tbl_contains(winnrs, winnr_cur) and winnr_cur or winnrs[1] or winnr_cur
 
     ---@type t.eve.context.state.tab.IItem
     tab = {

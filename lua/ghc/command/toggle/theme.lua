@@ -76,7 +76,7 @@ eve.commander
     desc = "reload: theme",
     nargs = "?",
     action = function(args)
-      local force = type(args) == "string" and args:lower() == "true" ---@type boolean
+      local force = type(args) == "string" and args:lower() == "force" ---@type boolean
       reload_theme(force)
     end,
   })
@@ -87,7 +87,7 @@ eve.commander
     nargs = "?",
     action = function(args)
       local arg = type(args) == "string" and args:lower() or "" ---@type string
-      if eve.array.contains(fml.ux.theme.themes, arg) then
+      if vim.tbl_contains(fml.ux.theme.themes, arg) then
         toggle_theme(arg)
       else
         fml.fn.select({

@@ -38,7 +38,7 @@ eve.commander.register({
   nargs = "?",
   action = function(args)
     local arg = type(args) == "string" and args:lower() or "" ---@type string
-    if eve.array.contains(flights, arg) then
+    if vim.tbl_contains(flights, arg) then
       toggle_flight(arg)
     else
       fml.fn.select({
