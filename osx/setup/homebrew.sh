@@ -14,53 +14,31 @@ fi
 export PATH=$PATH:"$HOME_HOMEBREW/bin"
 brew update
 
-### Setup fish
-fish_path="$HOME_HOMEBREW/bin/fish"
-if [[ 
-  -f "$fish_path" &&
-  $(
-    grep -Fxq "$fish_path" /etc/shells
-    echo $?
-  ) -eq 0 ]]; then
-  printf "\n\e[38;5;214m  [setup homebrew] fish is already setted up. (skipped)\e[0m\n"
-else
-  printf "\n\e[34m  [setup homebrew] setting up fish...\e[0m\n"
-  brew install fish
-  echo "$fish_path" | sudo tee -a /etc/shells
-  chsh -s "$fish_path"
-fi
-
-### Setup git
+### Install git
 brew tap microsoft/git
 brew install --cask git-credential-manager
 
-### Setup node
-printf "\n\e[34m  [setup homebrew] setting up node...\e[0m\n"
+### Install node
+printf "\n\e[34m  [setup homebrew] installing fnm...\e[0m\n"
 brew install fnm
-fnm install 20
-fish -c "npm install -g npm yarn"
 
-### Setup nvim
-printf "\n\e[34m  [setup homebrew] setting up nvim...\e[0m\n"
+### Install nvim
+printf "\n\e[34m  [setup homebrew] installing nvim...\e[0m\n"
 brew install nvim fd git-delta lazygit ripgrep
-fish -c "cd $HOME/.config/nvim/rust/nvim_tools/ && bash build.sh"
-if [ -d "$HOME/.config/nvim-nvchad/" ]; then
-  fish -c "cd $HOME/.config/nvim-nvchad/rust/nvim_tools/ && bash build.sh"
-fi
 
-### Setup tmux
-printf "\n\e[34m  [setup homebrew] setting up tmux...\e[0m\n"
+### Install tmux
+printf "\n\e[34m  [setup homebrew] installing tmux...\e[0m\n"
 brew install ~/.config/guanghechen/config/homebrew/tmux.rb
 brew pin tmux
 
-### Setup yazi
-printf "\n\e[34m  [setup homebrew] setting up yazi...\e[0m\n"
+### Install yazi
+printf "\n\e[34m  [setup homebrew] installing yazi...\e[0m\n"
 brew install yazi ffmpegthumbnailer jq imagemagick
 
-### Setup hardware utilities (cpu/memo/disk/network)
-printf "\n\e[34m  [setup homebrew] setting up hardware utilities (cpu/memo/disk/network)...\e[0m\n"
+### Install hardware utilities (cpu/memo/disk/network)
+printf "\n\e[34m  [setup homebrew] installing hardware utilities (cpu/memo/disk/network)...\e[0m\n"
 brew install btop fastfetch httpie
 
-### Setup usual tools
-printf "\n\e[34m  [setup homebrew] setting up usual tools...\n"
+### Install usual tools
+printf "\n\e[34m  [setup homebrew] installing usual tools...\n"
 brew install bat ffmpeg fzf hyperfine jq lsd scc tldr tree unzip you-get zoxide
