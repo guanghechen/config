@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+source $HOME/.config/guanghechen/nix/setup/path.sh
+
 # printf "\n\e[34m  [setup config] gen themes...\e[0m\n"
 # fish -c "node ~/.config/guanghechen/config/theme/gen_themes.mjs"
 

@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+source $HOME/.config/guanghechen/nix/setup/path.sh
+
 ROBOTO_MONO_FONT_DIR="/usr/share/fonts/RobotoMono"
 
 if [ -d $ROBOTO_MONO_FONT_DIR ]; then

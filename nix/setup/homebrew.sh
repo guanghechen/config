@@ -6,12 +6,7 @@ if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ] && [ ! -f "/opt/homebrew/bin/b
 fi
 
 printf "\n\e[34m  [setup homebrew] updating...\e[0m\n"
-if [ -e "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
-  export HOME_HOMEBREW=/home/linuxbrew/.linuxbrew
-elif [ -e "/opt/homebrew/bin/brew" ]; then
-  export HOME_HOMEBREW=/opt/homebrew
-fi
-export PATH=$PATH:"$HOME_HOMEBREW/bin"
+source $HOME/.config/guanghechen/nix/setup/path.sh
 brew update
 
 ### Install node
@@ -24,7 +19,7 @@ brew install nvim fd git-delta lazygit ripgrep
 
 ### Install tmux
 printf "\n\e[34m  [setup homebrew] installing tmux...\e[0m\n"
-brew install ~/.config/guanghechen/config/homebrew/tmux.rb
+brew install $HOME/.config/guanghechen/config/homebrew/tmux.rb
 brew pin tmux
 
 ### Install yazi

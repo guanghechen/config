@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+source $HOME/.config/guanghechen/nix/setup/path.sh
+
 ROBOTO_MONO_FONT_COMMON_DIR="/Library/Fonts"
 ROBOTO_MONO_FONT_LOCAL_DIR="$HOME/Library/Fonts"
 
