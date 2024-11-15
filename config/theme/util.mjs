@@ -57,6 +57,21 @@ export const apps = [
     local: null,
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
+    after_apply: async (app, theme) => {
+      const theme_config_filepath = path.join(
+        HOME_CONFIG,
+        app.name,
+        "theme.lua",
+      );
+      await safe_exec("nvim", [
+        "--headless",
+        "-c",
+        `let g:ghc_theme='${theme}'`,
+        "-c",
+        `source ${theme_config_filepath}`,
+        "+q",
+      ]);
+    },
   },
   {
     name: "nvim-nvchad",
@@ -65,6 +80,27 @@ export const apps = [
     local: null,
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
+    after_apply: async (app, theme) => {
+      const theme_config_filepath = path.join(
+        HOME_CONFIG,
+        app.name,
+        "theme.lua",
+      );
+      await safe_exec(
+        "nvim",
+        [
+          "--headless",
+          "-c",
+          `let g:ghc_theme='${theme}'`,
+          "-c",
+          `source ${theme_config_filepath}`,
+          "+q",
+        ],
+        {
+          NVIM_APPNAME: app.name,
+        },
+      );
+    },
   },
   {
     name: "tmux",
@@ -180,7 +216,7 @@ async function touch(filepath) {
   }
 }
 
-async function safe_exec(cmd, args) {
+async function safe_exec(cmd, args, extendedEnv) {
   const encoding = "utf8";
 
   try {
@@ -206,7 +242,7 @@ async function safe_exec(cmd, args) {
       try {
         const child = spawn(cmd, args, {
           cwd: __dirname,
-          env: process.env,
+          env: { ...process.env, ...extendedEnv },
           stdio: ["ignore", "pipe", "pipe"], // Suppress output
         });
         child.stdout?.on("data", (data) => {
