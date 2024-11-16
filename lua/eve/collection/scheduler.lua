@@ -32,7 +32,7 @@ function M.new(props)
 
   local name = props.name ---@type string
   local silent = not not props.silent ---@type boolean
-  local delay = props.delay or 0 ---@type integer
+  local delay = props.delay or 32 ---@type integer
   local task = props.task ---@type t.eve.collection.scheduler.ITask
 
   self.name = name
@@ -56,7 +56,7 @@ end
 
 ---@return nil
 function M:cancel()
-  self._alive = self._tick_scheduled + 1
+  self._tick_alive = self._tick_scheduled + 1
 end
 
 ---@return nil
@@ -67,7 +67,7 @@ end
 ---@return nil
 function M:schedule()
   local delay = self._tick_dirty > self._tick_resolved and 0 or self._delay ---@type integer
-  local tick = self._tick_scheduled + 1
+  local tick = self._tick_scheduled + 1 ---@type integer
   self._tick_scheduled = tick
 
   vim.defer_fn(function()
@@ -83,7 +83,7 @@ end
 ---@param tick                          integer
 ---@return nil
 function M:execute(tick)
-  if tick < self._alive then
+  if tick < self._tick_alive then
     return
   end
 

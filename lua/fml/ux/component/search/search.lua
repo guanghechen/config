@@ -1,9 +1,9 @@
 local icons = require("eve.globals.icons")
 local widgets = require("eve.globals.widgets")
 local Subscriber = require("eve.collection.subscriber")
+local Scheduler = require("eve.collection.scheduler")
 local G = require("eve.std.G")
 local std_array = require("eve.std.array")
-local scheduler = require("eve.std.scheduler")
 local SearchInput = require("fml.ux.component.search.input")
 local SearchMain = require("fml.ux.component.search.main")
 local SearchPreview = require("fml.ux.component.search.preview")
@@ -422,18 +422,19 @@ function M.new(props)
   self._on_close = on_close_from_props
   self._on_invisible = on_invisible_from_props
 
-  ---@type eve.std.scheduler.IScheduler
-  local draw_scheduler = scheduler.throttle({
+  local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
+  local draw_scheduler = Scheduler.new({
     name = "fml.ux.search.search.draw",
     delay = 48,
-    fn = function(callback)
+    silent = not devmode,
+    task = function(callback)
       local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
       local visible = status == "visible" ---@type boolean
       if visible then
         self:create_wins_as_needed()
         self.state.dirtier_dimension:mark_clean()
       end
-      callback(true)
+      callback("fulfilled")
     end,
   })
 

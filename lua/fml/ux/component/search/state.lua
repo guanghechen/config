@@ -1,10 +1,10 @@
 local Dirtier = require("eve.collection.dirtier")
 local Observable = require("eve.collection.observable")
+local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
 local oxi = require("eve.oxi")
 local navigate = require("eve.std.navigate")
 local reporter = require("eve.std.reporter")
-local scheduler = require("eve.std.scheduler")
 
 ---@class fml.ux.search.State : t.fml.ux.search.IState
 ---@field protected _deleted_uuids      table<string, boolean>
@@ -41,11 +41,11 @@ function M.new(props)
   local uuid = oxi.uuid() ---@type string
   local status = Observable.from_value("hidden")
 
-  local fetch_scheduler ---@type eve.std.scheduler.IScheduler
-  fetch_scheduler = scheduler.debounce({
+  ---@type t.eve.collection.IScheduler
+  local fetch_scheduler = Scheduler.new({
     name = "fml.ux.search.state.fetch",
     delay = delay_fetch,
-    fn = function(callback)
+    task = function(callback)
       local input_cur = input:snapshot() ---@type string
       local force = dirtier_data_cache:is_dirty() ---@type boolean
       dirtier_data_cache:mark_clean()
@@ -72,20 +72,19 @@ function M.new(props)
           self.items = items
           self.max_width = max_width
           self:locate(item_lnum_next)
-          callback(true)
+          callback("fulfilled")
         else
-          callback(false, data)
+          callback("rejected", nil, data)
+        end
+
+        self.dirtier_data:mark_clean()
+        if succeed and data ~= nil then
+          ---@diagnostic disable-next-line: invisible
+          self._deleted_uuids = {} ---@type table<string, boolean>
+          self.dirtier_main:mark_dirty()
+          self.dirtier_preview:mark_dirty()
         end
       end)
-    end,
-    callback = function(ok)
-      self.dirtier_data:mark_clean()
-      if ok then
-        ---@diagnostic disable-next-line: invisible
-        self._deleted_uuids = {} ---@type table<string, boolean>
-        self.dirtier_main:mark_dirty()
-        self.dirtier_preview:mark_dirty()
-      end
     end,
   })
 
@@ -104,7 +103,7 @@ function M.new(props)
     local visible = _status == "visible" ---@type boolean
     local is_data_dirty = self.dirtier_data:is_dirty() ---@type boolean
     if visible and is_data_dirty then
-      fetch_scheduler.schedule()
+      fetch_scheduler:schedule()
     end
   end
 

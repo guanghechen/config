@@ -1,11 +1,11 @@
 local constants = require("eve.std.constants")
+local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
-local scheduler = require("eve.std.scheduler")
 
 ---@class fml.ux.search.Preview : t.fml.ux.search.IPreview
 ---@field protected _bufnr              integer|nil
 ---@field protected _keymaps            t.eve.IKeymap[]
----@field protected _render_scheduler   eve.std.scheduler.IScheduler
+---@field protected _render_scheduler   t.eve.collection.IScheduler
 local M = {}
 M.__index = M
 
@@ -115,15 +115,13 @@ function M.new(props)
     _update_win_config({ title = title, lnum = lnum, col = col })
   end
 
-  ---@type eve.std.scheduler.IScheduler
-  local _render_scheduler = scheduler.debounce({
+  local _render_scheduler = Scheduler.new({
     name = "fml.ux.search.preview.render",
     delay = delay_render,
-    fn = function(callback)
-      local ok, error = pcall(render)
-      callback(ok, error)
-    end,
-    callback = function()
+    task = function(callback)
+      render()
+      callback("fulfilled")
+
       state.dirtier_preview:mark_clean()
       if on_rendered then
         on_rendered()
@@ -152,7 +150,7 @@ function M.new(props)
         local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_preview_dirty then
-          _render_scheduler.schedule()
+          _render_scheduler:schedule()
         end
       end,
     }),
@@ -189,7 +187,7 @@ end
 function M:destroy()
   local bufnr = self._bufnr ---@type integer|nil
   self._bufnr = nil
-  self._render_scheduler.cancel()
+  self._render_scheduler:cancel()
 
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })

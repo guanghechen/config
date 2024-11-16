@@ -1,12 +1,12 @@
 local constants = require("eve.std.constants")
 local Subscriber = require("eve.collection.subscriber")
-local scheduler = require("eve.std.scheduler")
+local Scheduler = require("eve.collection.scheduler")
 local signcolumn = require("fml.ux.signcolumn")
 
 ---@class fml.ux.search.Main : t.fml.ux.search.IMain
 ---@field protected _bufnr              integer|nil
 ---@field protected _keymaps            t.eve.IKeymap[]
----@field protected _render_scheduler   eve.std.scheduler.IScheduler
+---@field protected _render_scheduler   t.eve.collection.IScheduler
 local M = {}
 M.__index = M
 
@@ -70,15 +70,13 @@ function M.new(props)
     self:place_lnum_sign()
   end
 
-  ---@type eve.std.scheduler.IScheduler
-  local render_scheduler = scheduler.debounce({
+  local render_scheduler = Scheduler.new({
     name = "fml.ux.search.main.render",
     delay = delay_render,
-    fn = function(callback)
-      local ok, error = pcall(render)
-      callback(ok, error)
-    end,
-    callback = function()
+    task = function(callback)
+      render()
+      callback("fulfilled")
+
       state.dirtier_main:mark_clean()
       if on_rendered then
         on_rendered()
@@ -98,7 +96,7 @@ function M.new(props)
         local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_main_dirty then
-          render_scheduler.schedule()
+          render_scheduler:schedule()
         end
       end,
     }),
@@ -137,7 +135,7 @@ end
 function M:destroy()
   local bufnr = self._bufnr ---@type integer|nil
   self._bufnr = nil
-  self._render_scheduler.cancel()
+  self._render_scheduler:cancel()
   self.state.dirtier_main:mark_clean()
 
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then

@@ -1,8 +1,8 @@
 local constants = require("eve.std.constants")
 local Subscriber = require("eve.collection.subscriber")
+local Scheduler = require("eve.collection.scheduler")
 local oxi = require("eve.oxi")
 local std_array = require("eve.std.array")
-local scheduler = require("eve.std.scheduler")
 local util = require("fml.util")
 local signcolumn = require("fml.ux.signcolumn")
 
@@ -10,7 +10,7 @@ local signcolumn = require("fml.ux.signcolumn")
 ---@field protected _autocmd_group      integer
 ---@field protected _bufnr              integer|nil
 ---@field protected _extmark_nr         integer|nil
----@field protected _input_scheduler    eve.std.scheduler.IScheduler
+---@field protected _input_scheduler    t.eve.collection.IScheduler
 ---@field protected _keymaps            t.eve.IKeymap[]
 local M = {}
 M.__index = M
@@ -62,10 +62,12 @@ function M.new(props)
       }, props.keymaps)
     or props.keymaps
 
-  local input_scheduler = scheduler.throttle({
+  local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
+  local input_scheduler = Scheduler.new({
     name = "fml.ux.search.input.on_change",
     delay = 32,
-    fn = function(callback)
+    silent = not devmode,
+    task = function(callback)
       ---@diagnostic disable-next-line: invisible
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
@@ -75,7 +77,7 @@ function M.new(props)
           self.state.input:next(next_input)
         end
       end
-      callback(true)
+      callback("fulfilled")
     end,
   })
 
@@ -170,7 +172,7 @@ end
 function M:destroy()
   local bufnr = self._bufnr ---@type integer|nil
   self._bufnr = nil
-  self._input_scheduler.cancel()
+  self._input_scheduler:cancel()
 
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })

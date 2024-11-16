@@ -173,6 +173,6 @@ function M.refresh_tabpage_wins(tabnr)
 end
 
 ---@type fun(): nil
-M.schedule_refresh_all = eve.scheduler.schedule("fml.api.win.refresh_all", M.refresh_all, 16)
+M.schedule_refresh_all = eve.fn.schedule("fml.api.win.refresh_all", M.refresh_all, 16)
 
 return M

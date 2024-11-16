@@ -24,6 +24,7 @@ local context = require("eve.context")
 ---@class eve.fn
 local fn = {
   hmr = require("eve.fn.hmr"),
+  schedule = require("eve.fn.schedule"),
 }
 
 ---@class eve.globals
@@ -62,7 +63,6 @@ local std = {
   os = require("eve.std.os"),
   path = require("eve.std.path"),
   reporter = require("eve.std.reporter"),
-  scheduler = require("eve.std.scheduler"),
   string = require("eve.std.string"),
   tab = require("eve.std.tab"),
   tmux = require("eve.std.tmux"),

@@ -10,4 +10,4 @@ local function refresh_state()
   api_buf.remove_unrefereced_bufs()
 end
 
-return eve.scheduler.schedule("fml.fn.refresh_state", refresh_state)
+return eve.fn.schedule("fml.fn.refresh_state", refresh_state, 16)

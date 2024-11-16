@@ -179,6 +179,6 @@ function M.remove_unrefereced_bufs(bufnrs)
 end
 
 ---@type fun(): nil
-M.schedule_refresh_all = eve.scheduler.schedule("fml.api.buf.refresh_all", M.refresh_all)
+M.schedule_refresh_all = eve.fn.schedule("fml.api.buf.refresh_all", M.refresh_all, 16)
 
 return M
