@@ -8,10 +8,6 @@ local reporter = require("eve.std.reporter")
 local M = {}
 M.__index = M
 
----@class eve.collection.promise.IProps
----@field public delay                  ?number
----@field public task                   fun(): unknown
-
 ---@param fn                            fun(resolve: t.eve.collection.promise.IResolve, reject: t.eve.collection.promise.IReject): nil
 ---@return eve.collection.Promise
 function M.new(fn)
