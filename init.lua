@@ -1,5 +1,6 @@
 require("eve.option")
 require("eve.autocmd")
+require("eve.ftp")
 require("eve.keymap")
 _G.eve = require("eve")
 do
