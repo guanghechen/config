@@ -1,5 +1,6 @@
 local Disposable = require("eve.collection.disposable")
 local Subscriber = require("eve.collection.subscriber")
+local Scheduler = require("eve.collection.scheduler")
 local Ticker = require("eve.collection.ticker")
 local client = require("eve.context.client")
 local session = require("eve.context.session")
@@ -169,12 +170,18 @@ function M.watch_changes(params)
     state.theme.theme,
     state.theme.mode,
     state.theme.transparency,
-    state.theme.relativenumber,
   }, function()
     if params.on_theme_changed then
       params.on_theme_changed()
     end
 
+    vim.cmd.redraw()
+    state.client_has_changed:tick()
+  end, true)
+
+  mvc.observe({
+    state.theme.relativenumber,
+  }, function()
     vim.cmd.redraw()
     state.client_has_changed:tick()
   end, true)
@@ -243,24 +250,29 @@ function M.watch_changes(params)
     vim.cmd.redrawtabline()
   end, true)
 
-  local client_last_saved_tick = 0 ---@type integer
-  state.client_has_changed:subscribe(Subscriber.new({
-    on_next = function()
-      client_last_saved_tick = state.client_has_changed:snapshot() ---@type integer
-      vim.defer_fn(function()
-        local tick = state.client_has_changed:snapshot() ---@type integer
-        if client_last_saved_tick == tick then
-          local raw_data_snapshot = M.storage.client
-              and eve.fs.read_json({ filepath = M.storage.client, silent_on_bad_path = true })
-            or nil
-          local snapshot = client.normalize(raw_data_snapshot) ---@type t.eve.context.client.data
-          if not client.equals(snapshot) then
-            M.save({ client = M.storage.client })
-          end
-        end
-      end, 200)
+  local save_client_scheduler = Scheduler.new({
+    name = "eve.context#save_client",
+    delay = 200,
+    silent = not state.flight.devmode:snapshot(),
+    task = function(callback)
+      local raw_data_snapshot = M.storage.client
+          and eve.fs.read_json({ filepath = M.storage.client, silent_on_bad_path = true })
+        or nil
+      local snapshot = client.normalize(raw_data_snapshot) ---@type t.eve.context.client.data
+      if not client.equals(snapshot) then
+        M.save({ client = M.storage.client })
+      end
+      callback("fulfilled")
     end,
-  }))
+  })
+  state.client_has_changed:subscribe(
+    Subscriber.new({
+      on_next = function()
+        save_client_scheduler:schedule()
+      end,
+    }),
+    true
+  )
 
   ---! Save when leave the editor.
   mvc.add_disposable(Disposable.new({

@@ -33,7 +33,7 @@ eve.commander
       local observable = eve.context.state.theme.transparency ---@type t.eve.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
-      eve.commander.execute(uuids.reload_theme, "true")
+      eve.commander.execute(uuids.reload_theme, "force")
     end,
   })
   .register({
