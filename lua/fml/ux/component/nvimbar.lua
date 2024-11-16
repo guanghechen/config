@@ -1,5 +1,6 @@
 local nvimbar = require("eve.std.nvimbar")
 local path = require("eve.std.path")
+local Scheduler = require("eve.collection.scheduler")
 local reporter = require("eve.std.reporter")
 
 ---@return boolean
@@ -9,18 +10,14 @@ end
 
 ---@class fml.ux.Nvimbar : t.fml.ux.INvimbar
 ---@field public name                   string
----@field private _dirty                boolean
----@field private _rendering            boolean
----@field private _render_delay         integer
 ---@field private _sep                  string
 ---@field private _sep_width            integer
----@field private _last_result          string|nil
 ---@field private _last_context         t.fml.ux.nvimbar.IContext|nil
 ---@field private _preset_context       t.fml.ux.nvimbar.IPresetContext
 ---@field private _components           table<string, t.fml.ux.nvimbar.IComponent>
 ---@field private _items                t.fml.ux.nvimbar.IItem[]
+---@field private _render_scheduler     t.eve.collection.IScheduler
 ---@field private _get_max_width        fun(): integer
----@field private _trigger_rerender     fun(): nil
 local M = {}
 M.__index = M
 
@@ -30,6 +27,7 @@ M.__index = M
 ---@field public component_sep_hlname   string
 ---@field public preset_context         ?t.fml.ux.nvimbar.IPresetContext
 ---@field public render_delay           ?integer
+---@field public silent                 ?boolean
 ---@field public get_max_width          fun(): integer
 ---@field public trigger_rerender       fun(): nil
 
@@ -127,25 +125,40 @@ function M.new(props)
   local component_sep = props.component_sep ---@type string
   local component_sep_hlname = props.component_sep_hlname ---@type string
   local render_delay = props.render_delay or 20 ---@type integer
+  local silent = not not props.silent ---@type boolean
   local preset_context = props.preset_context or {} ---@type t.fml.ux.nvimbar.IPresetContext
   local get_max_width = props.get_max_width ---@type fun(): integer
   local trigger_rerender = props.trigger_rerender ---@type fun(): nil
 
   local self = setmetatable({}, M)
+
+  local _render_scheduler = Scheduler.new({
+    name = "fml.ux.component.nvimbar#" .. name,
+    delay = render_delay,
+    silent = silent,
+    task = function(callback)
+      local result = self:internal_render()
+      callback("fulfilled", result)
+
+      trigger_rerender()
+    end,
+  })
+
   self.name = name
-  self._dirty = true
-  self._rendering = false
-  self._render_delay = render_delay
   self._sep = nvimbar.txt(component_sep, component_sep_hlname)
   self._sep_width = vim.api.nvim_strwidth(component_sep)
-  self._last_result = nil
   self._last_context = nil
   self._preset_context = preset_context
   self._components = {}
   self._items = {}
+  self._render_scheduler = _render_scheduler
   self._get_max_width = get_max_width
-  self._trigger_rerender = trigger_rerender
   return self
+end
+
+---@return nil
+function M:cancel_render()
+  self._render_scheduler:cancel()
 end
 
 ---@param name                          string
@@ -178,6 +191,16 @@ function M:place(name, position)
   return self
 end
 
+---@param force                         boolean
+---@return string
+function M:render(force)
+  if force then
+    self._render_scheduler:mark_dirty()
+  end
+  self._render_scheduler:schedule()
+  return self._render_scheduler:snapshot() or ""
+end
+
 ---@param name                          string
 ---@param raw_component                 t.fml.ux.nvimbar.IRawComponent
 ---@param enabled                       boolean
@@ -198,100 +221,79 @@ function M:register(name, raw_component, enabled)
   return self
 end
 
----@param force boolean
 ---@return string
-function M:render(force)
-  self._dirty = self._dirty or force
-  if self._rendering or not self._dirty then
-    return self._last_result or ""
-  end
+function M:internal_render()
+  local sep = self._sep ---@type string
+  local sep_width = self._sep_width ---@type integer
+  local context = build_context(self._preset_context) ---@type t.fml.ux.nvimbar.IContext
+  local prev_context = self._last_context ---@type t.fml.ux.nvimbar.IContext|nil
 
-  self._rendering = true
-  local render_delay = self._render_delay ---@type integer
-  vim.defer_fn(function()
-    self._dirty = false
+  local lc = "" ---@type string
+  local cc = "" ---@type string
+  local rc = "" ---@type string
+  local remain_width = self._get_max_width() - sep_width - sep_width ---@type integer
+  local components = self._components ---@type t.fml.ux.nvimbar.IComponent[]
+  local positions = self._items ---@type t.fml.ux.nvimbar.IItem[]
+  for i = 1, #positions, 1 do
+    local item = positions[i] ---@type t.fml.ux.nvimbar.IItem
+    local name = item.name ---@type string
+    local position = item.position ---@type t.eve.e.NvimbarCompPosition
 
-    local sep = self._sep ---@type string
-    local sep_width = self._sep_width ---@type integer
-    local context = build_context(self._preset_context) ---@type t.fml.ux.nvimbar.IContext
-    local prev_context = self._last_context ---@type t.fml.ux.nvimbar.IContext|nil
-
-    local lc = "" ---@type string
-    local cc = "" ---@type string
-    local rc = "" ---@type string
-    local remain_width = self._get_max_width() - sep_width - sep_width ---@type integer
-    local components = self._components ---@type t.fml.ux.nvimbar.IComponent[]
-    local positions = self._items ---@type t.fml.ux.nvimbar.IItem[]
-    for i = 1, #positions, 1 do
-      local item = positions[i] ---@type t.fml.ux.nvimbar.IItem
-      local name = item.name ---@type string
-      local position = item.position ---@type t.eve.e.NvimbarCompPosition
-
-      local component = components[name] ---@type t.fml.ux.nvimbar.IComponent|nil
-      if component ~= nil and component.enabled then
-        local ok, err = pcall(render_component, component, context, prev_context, remain_width)
-        if ok then
-          local text = component.last_result_text ---@type string
-          local width = component.last_result_width ---@type integer
-          if width > 0 then
-            local tight = component.tight ---@type boolean
-            if position == "left" then
-              if #lc < 1 or tight then
-                lc = lc .. text
-                remain_width = remain_width - width - sep_width
-              else
-                lc = lc .. sep .. text
-                remain_width = remain_width - width - sep_width - sep_width
-              end
-            elseif position == "center" then
-              if #cc < 1 or tight then
-                cc = cc .. text
-                remain_width = remain_width - width - sep_width
-              else
-                cc = cc .. sep .. text
-                remain_width = remain_width - width - sep_width - sep_width
-              end
-            elseif position == "right" then
-              if #rc < 1 or tight then
-                rc = text .. rc
-                remain_width = remain_width - width - sep_width
-              else
-                rc = text .. sep .. rc
-                remain_width = remain_width - width - sep_width - sep_width
-              end
+    local component = components[name] ---@type t.fml.ux.nvimbar.IComponent|nil
+    if component ~= nil and component.enabled then
+      local ok, err = pcall(render_component, component, context, prev_context, remain_width)
+      if ok then
+        local text = component.last_result_text ---@type string
+        local width = component.last_result_width ---@type integer
+        if width > 0 then
+          local tight = component.tight ---@type boolean
+          if position == "left" then
+            if #lc < 1 or tight then
+              lc = lc .. text
+              remain_width = remain_width - width - sep_width
             else
-              reporter.error({
-                from = "fml.ux.nvimbar",
-                subject = "render",
-                message = "Bad component position.",
-                details = { item = item, component = component },
-              })
+              lc = lc .. sep .. text
+              remain_width = remain_width - width - sep_width - sep_width
             end
+          elseif position == "center" then
+            if #cc < 1 or tight then
+              cc = cc .. text
+              remain_width = remain_width - width - sep_width
+            else
+              cc = cc .. sep .. text
+              remain_width = remain_width - width - sep_width - sep_width
+            end
+          elseif position == "right" then
+            if #rc < 1 or tight then
+              rc = text .. rc
+              remain_width = remain_width - width - sep_width
+            else
+              rc = text .. sep .. rc
+              remain_width = remain_width - width - sep_width - sep_width
+            end
+          else
+            reporter.error({
+              from = "fml.ux.nvimbar",
+              subject = "render",
+              message = "Bad component position.",
+              details = { item = item, component = component },
+            })
           end
-        else
-          reporter.error({
-            from = "fml.ux.nvimbar",
-            subject = "render",
-            message = "Encounter error while render the nvimbar component.",
-            details = { item = item, component = component, error = err },
-          })
         end
+      else
+        reporter.error({
+          from = "fml.ux.nvimbar",
+          subject = "render",
+          message = "Encounter error while render the nvimbar component.",
+          details = { item = item, component = component, error = err },
+        })
       end
     end
+  end
 
-    local final_result = lc .. sep .. "%=" .. sep .. cc .. sep .. "%=" .. sep .. rc ---@type string
-    self._last_context = context
-    self._last_result = final_result
-
-    self._rendering = false
-    if self._dirty then
-      self:render(false)
-    else
-      self._trigger_rerender()
-    end
-  end, render_delay)
-
-  return self._last_result or ""
+  local final_result = lc .. sep .. "%=" .. sep .. cc .. sep .. "%=" .. sep .. rc ---@type string
+  self._last_context = context
+  return final_result
 end
 
 return M

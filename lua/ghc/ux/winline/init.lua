@@ -39,7 +39,7 @@ function M.render(winnr, force)
       component_sep = "",
       component_sep_hlname = "f_wl_bg",
       preset_context = { winnr = winnr },
-      render_delay = 20,
+      render_delay = 32,
       get_max_width = function()
         return vim.api.nvim_win_get_width(winnr)
       end,

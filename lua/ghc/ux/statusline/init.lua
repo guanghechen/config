@@ -1,17 +1,21 @@
 local statusline_dirty = true ---@type boolean
 
----@type t.fml.ux.INvimbar
-local statusline = fml.ux.Nvimbar.new({
+local statusline ---@type t.fml.ux.INvimbar
+
+statusline = fml.ux.Nvimbar.new({
   name = "statusline",
   component_sep = "  ",
   component_sep_hlname = "f_sl_bg",
-  render_delay = 50,
+  render_delay = 64,
   get_max_width = function()
     return vim.o.columns
   end,
   trigger_rerender = function()
     statusline_dirty = false
     vim.cmd.redrawstatus()
+    vim.schedule(function()
+      statusline:cancel_render()
+    end)
   end,
 })
 

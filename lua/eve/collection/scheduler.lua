@@ -71,7 +71,7 @@ function M:schedule()
   self._tick_scheduled = tick
 
   vim.defer_fn(function()
-    self:execute(tick)
+    self:execute()
   end, delay)
 end
 
@@ -80,9 +80,10 @@ function M:snapshot()
   return self._result
 end
 
----@param tick                          integer
 ---@return nil
-function M:execute(tick)
+function M:execute()
+  local tick = self._tick_scheduled ---@type integer
+
   if tick < self._tick_alive then
     return
   end
@@ -141,7 +142,7 @@ function M:execute(tick)
       if self._immediate then
         self._immediate = false
         vim.schedule(function()
-          self:execute(self._tick_scheduled)
+          self:execute()
         end)
       end
     end

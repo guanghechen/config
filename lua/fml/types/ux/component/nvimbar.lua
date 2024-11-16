@@ -33,6 +33,7 @@
 ---@field public position               t.eve.e.NvimbarCompPosition
 
 ---@class t.fml.ux.INvimbar
+---@field public cancel_render          fun(self: t.fml.ux.INvimbar): t.fml.ux.INvimbar
 ---@field public disable                fun(self: t.fml.ux.INvimbar, name: string): t.fml.ux.INvimbar
 ---@field public enable                 fun(self: t.fml.ux.INvimbar, name: string): t.fml.ux.INvimbar
 ---@field public place                  fun(self: t.fml.ux.INvimbar, name: string, position: t.eve.e.NvimbarCompPosition): t.fml.ux.INvimbar

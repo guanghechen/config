@@ -1,17 +1,21 @@
 local tabline_dirty = true ---@type boolean
 
----@type t.fml.ux.INvimbar
-local tabline = fml.ux.Nvimbar.new({
+local tabline ---@type t.fml.ux.INvimbar
+
+tabline = fml.ux.Nvimbar.new({
   name = "tabline",
   component_sep = "",
   component_sep_hlname = "f_tl_bg",
-  render_delay = 50,
+  render_delay = 64,
   get_max_width = function()
     return vim.o.columns
   end,
   trigger_rerender = function()
     tabline_dirty = false
     vim.cmd("redrawtabline")
+    vim.schedule(function()
+      tabline:cancel_render()
+    end)
   end,
 })
 
