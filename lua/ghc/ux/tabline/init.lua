@@ -1,12 +1,13 @@
+local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
 local tabline_dirty = true ---@type boolean
 
 local tabline ---@type t.fml.ux.INvimbar
-
 tabline = fml.ux.Nvimbar.new({
   name = "tabline",
   component_sep = "",
   component_sep_hlname = "f_tl_bg",
   render_delay = 64,
+  silent = not devmode,
   get_max_width = function()
     return vim.o.columns
   end,

@@ -34,12 +34,14 @@ function M.render(winnr, force)
 
   local winline = winline_map[winnr] ---@type t.fml.ux.INvimbar
   if winline == nil then
+    local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
     winline = fml.ux.Nvimbar.new({
       name = "winline_" .. winnr,
       component_sep = "",
       component_sep_hlname = "f_wl_bg",
       preset_context = { winnr = winnr },
       render_delay = 32,
+      silent = not devmode,
       get_max_width = function()
         return vim.api.nvim_win_get_width(winnr)
       end,

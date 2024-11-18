@@ -1,3 +1,4 @@
+local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
 local statusline_dirty = true ---@type boolean
 
 local statusline ---@type t.fml.ux.INvimbar
@@ -7,6 +8,7 @@ statusline = fml.ux.Nvimbar.new({
   component_sep = "  ",
   component_sep_hlname = "f_sl_bg",
   render_delay = 64,
+  silent = not devmode,
   get_max_width = function()
     return vim.o.columns
   end,
