@@ -48,6 +48,13 @@ function M.render(winnr, force)
           M.update(winnr, false)
         end)
       end,
+      validate = function()
+        if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+          return nil
+        else
+          return "The window is not valid, winnr=" .. winnr .. "."
+        end
+      end,
     })
     winline_map[winnr] = winline
 

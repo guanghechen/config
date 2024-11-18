@@ -17,6 +17,9 @@ statusline = fml.ux.Nvimbar.new({
       statusline:cancel_render()
     end)
   end,
+  validate = function()
+    return nil
+  end,
 })
 
 local c = {

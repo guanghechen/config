@@ -17,6 +17,9 @@ tabline = fml.ux.Nvimbar.new({
       tabline:cancel_render()
     end)
   end,
+  validate = function()
+    return nil
+  end,
 })
 
 local c = {

@@ -30,6 +30,7 @@ M.__index = M
 ---@field public silent                 ?boolean
 ---@field public get_max_width          fun(): integer
 ---@field public trigger_rerender       fun(): nil
+---@field public validate               fun(): string|nil
 
 local modes_map = {
   ["n"] = { "normal", "NORMAL" },
@@ -128,19 +129,26 @@ function M.new(props)
   local silent = not not props.silent ---@type boolean
   local preset_context = props.preset_context or {} ---@type t.fml.ux.nvimbar.IPresetContext
   local get_max_width = props.get_max_width ---@type fun(): integer
+  local validate = props.validate ---@type fun(): string|nil
   local trigger_rerender = props.trigger_rerender ---@type fun(): nil
 
   local self = setmetatable({}, M)
 
+  ---@type t.eve.collection.IScheduler
   local _render_scheduler = Scheduler.new({
     name = "fml.ux.component.nvimbar#" .. name,
     delay = render_delay,
     silent = silent,
     task = function(callback)
-      local result = self:internal_render()
-      callback("fulfilled", result)
+      local validate_message = validate() ---@type string|nil
+      if validate_message == nil then
+        local result = self:internal_render()
+        callback("fulfilled", result)
 
-      trigger_rerender()
+        trigger_rerender()
+      else
+        callback("rejected", nil, "[fml.ux.component.nvimbar#render] Invalid: " .. validate_message)
+      end
     end,
   })
 
