@@ -115,3 +115,6 @@ vim.opt.undofile = true
 vim.opt.undolevels = 10000
 vim.opt.virtualedit = "block" -- Allow cursor to move where there is no text in visual block mode
 vim.opt.wildmode = "longest:full,full" -- Command-line completion mode
+
+vim.opt.ruler = false -- Disable the default ruler
+vim.g.markdown_recommended_style = 0 -- fix markdown indentation settings

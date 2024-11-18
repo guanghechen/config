@@ -106,9 +106,30 @@ local function on_attach(client, bufnr)
 
   ---@type t.eve.IKeymap[]
   local keymaps = {
-    { modes = { "n" }, key = "K", callback = vim.lsp.buf.hover, desc = "lsp: Hover" },
-    { modes = { "n" }, key = "gD", callback = vim.lsp.buf.declaration, desc = "lsp: Goto declaration" },
-    { modes = { "n" }, key = "gK", callback = vim.lsp.buf.signature_help, desc = "lsp: Show signature help" },
+    {
+      modes = { "n" },
+      key = "K",
+      callback = function()
+        vim.lsp.buf.hover()
+      end,
+      desc = "lsp: Hover",
+    },
+    {
+      modes = { "n" },
+      key = "gD",
+      callback = function()
+        vim.lsp.buf.declaration()
+      end,
+      desc = "lsp: Goto declaration",
+    },
+    {
+      modes = { "n" },
+      key = "gK",
+      callback = function()
+        vim.lsp.buf.signature_help()
+      end,
+      desc = "lsp: Show signature help",
+    },
     {
       modes = { "n" },
       key = "gd",
@@ -144,14 +165,18 @@ local function on_attach(client, bufnr)
     {
       modes = { "n", "v" },
       key = "<leader>cc",
-      callback = vim.lsp.codelens.run,
+      callback = function()
+        vim.lsp.codelens.run()
+      end,
       desc = "lsp: CodeLens",
       active = has_support_codeLens,
     },
     {
       modes = { "n" },
       key = "<leader>cC",
-      callback = vim.lsp.codelens.refresh,
+      callback = function()
+        vim.lsp.codelens.refresh()
+      end,
       desc = "lsp: Refresh & Display Codelens",
       active = has_support_codeLens,
     },
