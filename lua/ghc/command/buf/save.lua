@@ -1,18 +1,44 @@
-local constants = eve.constants ---@type eve.std.constants
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 eve.commander.register({
   uuid = uuids.buf_save,
   desc = "buf: save",
   action = function()
-    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    local current_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if #current_filepath < 1 or current_filepath == constants.BUF_UNTITLED then
-      local cwd = eve.path.cwd() ---@type string
-      local workspace = eve.path.workspace() ---@type string
+    local cwd = eve.path.cwd() ---@type string
+    local workspace = eve.path.workspace() ---@type string
+
+    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+    local new_file_bufnrs = {} ---@type integer[]
+
+    local modified_count = 0 ---@type integer
+    local new_file_count = 0 ---@type integer
+    local ready_count = 0 ---@type integer
+
+    for _, bufnr in ipairs(bufnrs) do
+      local is_mod = vim.api.nvim_get_option_value("mod", { buf = bufnr }) ---@type boolean
+      if is_mod then
+        modified_count = modified_count + 1
+
+        local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        local filepath = eve.path.resolve(cwd, filename) ---@type string
+        if eve.fs.is_file_or_dir(filepath) == nil then
+          new_file_count = new_file_count + 1
+          table.insert(new_file_bufnrs, bufnr)
+        end
+      end
+    end
+
+    ---@return nil
+    local function check()
+      if ready_count == new_file_count then
+        vim.cmd("wa")
+        vim.cmd.redrawtabline()
+      end
+    end
+
+    for _, bufnr in ipairs(new_file_bufnrs) do
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       local initial_text = eve.path.is_under(workspace, filepath) and eve.path.relative(cwd, filepath, true) or filepath ---@type string
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
 
       local input ---@type t.fml.ux.IInput
       input = fml.ux.Input.new({
@@ -25,15 +51,11 @@ eve.commander.register({
 
           ---@return nil
           local on_save = function()
-            local escaped_filepath = vim.fn.fnameescape(next_filepath)
             vim.api.nvim_buf_set_name(bufnr, next_filepath)
-            vim.api.nvim_win_set_buf(winnr, bufnr)
-            vim.cmd("write! " .. escaped_filepath)
-            vim.cmd("edit " .. escaped_filepath)
-            vim.schedule(function()
-              vim.cmd("redrawtabline")
-            end)
             input:close()
+
+            ready_count = ready_count + 1
+            check()
           end
 
           if filetype == "file" then
@@ -62,6 +84,9 @@ eve.commander.register({
                 next_filepath = next_filepath,
               },
             })
+
+            ready_count = ready_count + 1
+            check()
             return false
           end
 
@@ -74,8 +99,10 @@ eve.commander.register({
         row = 3,
         text_cursor_col = string.len(initial_text),
       })
-    else
-      vim.cmd("wa")
+    end
+
+    if modified_count > 0 then
+      check()
     end
   end,
 })
