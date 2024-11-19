@@ -27,7 +27,7 @@ return {
 
           item.abbr = item.abbr .. " "
           item.menu_hl_group = "CmpItemKind" .. (item.kind or "")
-          item.kind = icon .. " " .. item.kind
+          item.kind = icon .. " " .. (item.kind or "")
 
           local widths = { abbr = 40, menu = 30 }
           for key, width in pairs(widths) do

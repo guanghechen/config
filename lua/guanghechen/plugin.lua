@@ -49,7 +49,6 @@ local raw_specs = {
   { name = "indent-blankline.nvim", main = "ibl", cond = conds.not_vscode },
   { name = "mason.nvim", main = "mason", cond = conds.not_vscode },
   { name = "mason-lspconfig.nvim", main = "mason-lspconfig", cond = conds.not_vscode },
-  { name = "mini.comment", main = "mini.comment", cond = conds.not_vscode },
   { name = "mini.hipatterns", main = "mini.hipatterns", cond = conds.not_vscode },
   { name = "mini.icons", main = "mini.icons", cond = conds.not_vscode },
   { name = "mini.indentscope", main = "mini.indentscope", cond = conds.not_vscode },

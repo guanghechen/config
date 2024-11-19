@@ -33,6 +33,7 @@ if vim.g.vscode then
   return
 end
 
+require("ghc.dressing.commentstring")
 require("ghc.dressing.select")
 require("ghc.command")
 eve.commander.execute(eve.commander.uuids.reload_theme)

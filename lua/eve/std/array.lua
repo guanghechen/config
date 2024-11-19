@@ -294,14 +294,4 @@ function M.to_set(elements)
   return set
 end
 
----@param strs                                         string[]
----@return string[]
-function M.trim_and_filter(strs)
-  return M.map(strs, function(v)
-    return v:match("^%s*(.-)%s*$")
-  end, function(v)
-    return #v > 0
-  end)
-end
-
 return M
