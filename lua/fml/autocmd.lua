@@ -88,6 +88,29 @@ vim.api.nvim_create_autocmd({ "TabClosed" }, {
   end,
 })
 
+vim.api.nvim_create_autocmd({ "VimEnter" }, {
+  callback = function()
+    local existed_filepaths = {} ---@type table<string, boolean>
+    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+    for _, bufnr in ipairs(bufnrs) do
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      existed_filepaths[filepath] = true
+    end
+
+    local cwd = eve.path.cwd() ---@type string
+    for _, bufnr in ipairs(bufnrs) do
+      local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      local filepath = eve.path.resolve(cwd, filename) ---@type string
+      if eve.fs.is_file_or_dir(filepath) == "directory" then
+        local new_filepath = eve.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
+        if new_filepath ~= nil then
+          vim.api.nvim_buf_set_name(bufnr, new_filepath)
+        end
+      end
+    end
+  end,
+})
+
 vim.api.nvim_create_autocmd({ "VimEnter", "WinNew", "WinEnter" }, {
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer

@@ -12,6 +12,13 @@ eve.commander.register({
     vim.bo[bufnr].filetype = "text"
     vim.bo[bufnr].readonly = false
     vim.bo[bufnr].modifiable = true
+
+    local cwd = eve.path.cwd() ---@type string
+    local filepath = eve.buf.pick_filepath(cwd) ---@type string|nil
+    if filepath ~= nil then
+      vim.api.nvim_buf_set_name(bufnr, filepath)
+    end
+
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end,
 })

@@ -61,4 +61,27 @@ function M.is_visible(bufnr)
   end)
 end
 
+---@param cwd                           string
+---@param existed_filepaths             ?table<string, boolean>
+---@return string|nil
+function M.pick_filepath(cwd, existed_filepaths)
+  if existed_filepaths == nil then
+    existed_filepaths = {} ---@type table<string, boolean>
+
+    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+    for _, bufnr in ipairs(bufnrs) do
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      existed_filepaths[filepath] = true
+    end
+  end
+
+  for i = 1, 1000 do
+    local filepath = eve.path.join(cwd, constants.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
+    if not existed_filepaths[filepath] and vim.uv.fs_stat(filepath) == nil then
+      return filepath
+    end
+  end
+  return nil
+end
+
 return M
