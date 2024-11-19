@@ -3,7 +3,7 @@ local indicator_symbol_width = vim.api.nvim_strwidth(eve.icons.symbols.win_indic
 ---@return integer
 local function get_pane_width()
   for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type number
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if vim.bo[bufnr].ft == eve.constants.FT_NEOTREE then
       if not eve.win.is_floating(winnr) then
         return vim.api.nvim_win_get_width(winnr) + 1

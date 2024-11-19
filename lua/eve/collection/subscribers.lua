@@ -25,7 +25,7 @@ local noop_unsubscribable = {
 function M.new(props)
   local self = setmetatable({}, M)
 
-  ---@type number
+  ---@type integer
   self.ARRANGE_THRESHOLD = (props and props.ARRANGE_THRESHOLD) and props.ARRANGE_THRESHOLD or 16
 
   ---@type boolean
@@ -34,7 +34,7 @@ function M.new(props)
   ---@type eve.collection.Subscribers.ISubscriberItem[]
   self._items = {}
 
-  ---@type number
+  ---@type integer
   self._subscribing_count = 0
 
   return self

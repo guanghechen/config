@@ -315,7 +315,7 @@ function M:update(index, value)
     return
   end
 
-  local idx = self._start + index - 1 ---@type number
+  local idx = self._start + index - 1 ---@type integer
   idx = idx <= self._capacity and idx or idx - self._capacity ---@type integer
   self._elements[idx] = value
 end

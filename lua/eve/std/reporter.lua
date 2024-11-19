@@ -55,7 +55,7 @@ end
 ---@param options                       eve.std.reporter.IReporterOptions
 ---@param level                         ?t.eve.e.ReportLevel
 function M.log(options, level)
-  local level_value = resolve_level(level) ---@type number
+  local level_value = resolve_level(level) ---@type integer
   log(options, level_value)
 end
 

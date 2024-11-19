@@ -15,10 +15,10 @@ M.words.ns = vim.api.nvim_create_namespace("vim_lsp_references")
 function M.on_attach(on_attach)
   return vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(args)
-      local buffer = args.buf ---@type number
+      local bufnr = args.buf ---@type integer
       local client = vim.lsp.get_client_by_id(args.data.client_id)
       if client then
-        return on_attach(client, buffer)
+        return on_attach(client, bufnr)
       end
     end,
   })
@@ -32,9 +32,9 @@ function M.on_dynamic_capability(fn, opts)
     group = opts and opts.group or nil,
     callback = function(args)
       local client = vim.lsp.get_client_by_id(args.data.client_id)
-      local buffer = args.data.buffer ---@type number
+      local bufnr = args.data.buffer ---@type integer
       if client then
-        return fn(client, buffer)
+        return fn(client, bufnr)
       end
     end,
   })
@@ -49,9 +49,9 @@ function M.on_supports_method(method, fn)
     pattern = "LspSupportsMethod",
     callback = function(args)
       local client = vim.lsp.get_client_by_id(args.data.client_id)
-      local buffer = args.data.buffer ---@type number
+      local bufnr = args.data.buffer ---@type integer
       if client and method == args.data.method then
-        return fn(client, buffer)
+        return fn(client, bufnr)
       end
     end,
   })

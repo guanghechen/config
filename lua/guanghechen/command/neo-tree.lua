@@ -16,7 +16,7 @@ end
 ---@return boolean
 local function has_explorer_window_opened()
   for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type number
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if vim.bo[bufnr].ft == "neo-tree" then
       return true
     end
