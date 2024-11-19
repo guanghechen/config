@@ -110,7 +110,7 @@ local function buf_signs(bufnr)
       local sign = {
         type = "mark",
         text = mark.mark:sub(2),
-        texthl = "DiagnosticHint",
+        texthl = "DiagnosticSignHint",
         priority = 0,
       }
 

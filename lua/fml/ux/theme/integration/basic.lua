@@ -38,10 +38,10 @@ local function gen_hlgroup_map(context)
     DiagnosticVirtualTextInfo = { fg = c.green },
     DiagnosticVirtualTextWarn = { fg = c.yellow },
     DiagnosticOk = { fg = c.green, bg = t and "none" or c.bg1 },
-    DiagnosticSignError = { fg = c.red, bg = t and "none" or c.bg1 },
-    DiagnosticSignHint = { fg = c.purple, bg = t and "none" or c.bg1 },
-    DiagnosticSignInfo = { fg = c.green, bg = t and "none" or c.bg1 },
-    DiagnosticSignWarn = { fg = c.yellow, bg = t and "none" or c.bg1 },
+    DiagnosticSignError = { fg = c.red },
+    DiagnosticSignHint = { fg = c.purple },
+    DiagnosticSignInfo = { fg = c.green },
+    DiagnosticSignWarn = { fg = c.yellow },
 
     ---diff
     DiffAddLeft = { bg = cs.mix(bg_main, c.red, 30) },
@@ -147,7 +147,7 @@ local function gen_hlgroup_map(context)
     FloatTitle = { fg = c.bg0, bg = c.red },
     FloatBorder = { fg = c.bg4 },
     FoldColumn = { fg = c.fg4, bg = t and "none" or c.bg1 },
-    Folded = { fg = c.fg4, bg = c.bg1 },
+    Folded = { fg = c.fg4 },
     IncSearch = { fg = c.bg0, bg = c.orange },
     Italic = { italic = true },
     LineNr = { fg = c.bg4 },
