@@ -2,12 +2,15 @@
 ---@return fml.ux.theme.integration.winline.hlgroups
 local function gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type t.eve.collection.theme.IPalette
-  local t = context.transparency ---@type boolean
-  local bg_winline = t and "none" or c.bg2 ---@type string
+  local bg_winline = "none" ---@type string
+  local bg_winline_active = c.bg2 ---@type string
 
   ---@class fml.ux.theme.integration.winline.hlgroups : table<string, t.eve.collection.theme.IHlgroup>
+  ---@field public f_wla_bg             { fg: string, bg: string }
   local hlgroup_map = {
     f_wl_bg = { fg = bg_winline, bg = bg_winline },
+    f_wla_bg = { fg = bg_winline_active, bg = bg_winline_active },
+
     f_wl_dirpath_sep = { fg = c.fg1, bg = bg_winline },
     f_wl_dirpath_text = { fg = c.blue, bg = bg_winline },
     f_wl_filename_text = { fg = c.fg1, bg = bg_winline },
@@ -52,7 +55,24 @@ local function gen_hlgroup_map(context)
     f_wl_lsp_icon_Variable = { fg = c.neutral_purple, bg = bg_winline },
     f_wl_lsp_sep = { fg = c.fg3, bg = bg_winline },
     f_wl_lsp_text = { fg = c.fg3, bg = bg_winline },
+    f_wl_text = { fg = c.fg1, bg = bg_winline },
   }
+
+  ---@class fml.ux.theme.integration.winline.hlgroups : table<string, t.eve.collection.theme.IHlgroup>
+  local extend_hlgroup_map = {}
+  for hlname, hlgroup in pairs(hlgroup_map) do
+    if hlname:sub(1, 5) == "f_wl_" then
+      local active_hlname = "f_wla_" .. hlname:sub(6)
+      if not hlgroup_map[active_hlname] then
+        extend_hlgroup_map[active_hlname] = { fg = hlgroup.fg, bg = bg_winline_active }
+      end
+    end
+  end
+
+  for hlname, hlgroup in pairs(extend_hlgroup_map) do
+    hlgroup_map[hlname] = hlgroup
+  end
+
   return hlgroup_map
 end
 

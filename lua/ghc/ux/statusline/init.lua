@@ -7,11 +7,13 @@ statusline = fml.ux.Nvimbar.new({
   name = "statusline",
   component_sep = "  ",
   component_sep_hlname = "f_sl_bg",
+  component_sep_hlname_active = "f_sl_bg",
   render_delay = 64,
   silent = not devmode,
   get_max_width = function()
     return vim.o.columns
   end,
+  is_active = eve.util.falsy,
   trigger_rerender = function()
     statusline_dirty = false
     vim.cmd.redrawstatus()
@@ -52,7 +54,9 @@ statusline
   :place(c.filetype, "left")
   :place(c.filestatus, "left")
   :place(c.readonly, "left")
+  --
   :place(c.widget, "center")
+  --
   :place(c.pos, "right")
   :place(c.filesize, "right")
   :place(c.fileformat, "right")

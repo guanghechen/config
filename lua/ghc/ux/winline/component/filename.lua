@@ -12,10 +12,15 @@ local M = {
       return hl_text, width
     end
 
+    local winnr_cur = fml.api.tab.get_current_winnr() ---@type integer
+    local activated = winnr_cur == winnr ---@type boolean
+    local hln_icon = activated and (buf.fileicon_hl .. "_wla") or (buf.fileicon_hl .. "_wl") ---@type string
+    local hln_text = activated and "f_wla_filename_text" or "f_wl_filename_text" ---@type string
+
     local text_icon = buf.fileicon .. " " ---@type string
     local text_filename = buf.filename ---@type string
-    local hl_text_icon = eve.nvimbar.txt(text_icon, buf.fileicon_hl .. "_wl") ---@type string
-    local hl_text_title = eve.nvimbar.txt(text_filename, "f_wl_filename_text") ---@type string
+    local hl_text_icon = eve.nvimbar.txt(text_icon, hln_icon) ---@type string
+    local hl_text_title = eve.nvimbar.txt(text_filename, hln_text) ---@type string
 
     local hl_text = hl_text_icon .. hl_text_title
     local width = vim.api.nvim_strwidth(text_icon .. text_filename) ---@type integer

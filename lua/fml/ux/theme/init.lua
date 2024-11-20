@@ -155,6 +155,7 @@ function M.apply_theme(params)
 
             ---! Integrated  with winline
             additional[hlname .. "_wl"] = { fg = hlgroup.fg, bg = winline_hlgroup_map.f_wl_bg.bg }
+            additional[hlname .. "_wla"] = { fg = hlgroup.fg, bg = winline_hlgroup_map.f_wla_bg.bg }
           end
         end
 

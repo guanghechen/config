@@ -39,11 +39,16 @@ function M.render(winnr, force)
       name = "winline_" .. winnr,
       component_sep = "",
       component_sep_hlname = "f_wl_bg",
+      component_sep_hlname_active = "f_wla_bg",
       preset_context = { winnr = winnr },
       render_delay = 32,
       silent = not devmode,
       get_max_width = function()
         return vim.api.nvim_win_get_width(winnr)
+      end,
+      is_active = function(context)
+        local winnr_cur = fml.api.tab.get_current_winnr() ---@type integer
+        return winnr_cur == context.winnr
       end,
       trigger_rerender = function()
         vim.schedule(function()

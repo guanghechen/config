@@ -11,6 +11,7 @@ end
 ---@class fml.ux.Nvimbar : t.fml.ux.INvimbar
 ---@field public name                   string
 ---@field private _sep                  string
+---@field private _sep_active           string
 ---@field private _sep_width            integer
 ---@field private _last_context         t.fml.ux.nvimbar.IContext|nil
 ---@field private _preset_context       t.fml.ux.nvimbar.IPresetContext
@@ -18,6 +19,7 @@ end
 ---@field private _items                t.fml.ux.nvimbar.IItem[]
 ---@field private _render_scheduler     t.eve.collection.IScheduler
 ---@field private _get_max_width        fun(): integer
+---@field private _is_active            fun(context: t.fml.ux.nvimbar.IContext): boolean
 local M = {}
 M.__index = M
 
@@ -25,10 +27,12 @@ M.__index = M
 ---@field public name                   string
 ---@field public component_sep          string
 ---@field public component_sep_hlname   string
+---@field public component_sep_hlname_active string
 ---@field public preset_context         ?t.fml.ux.nvimbar.IPresetContext
 ---@field public render_delay           ?integer
 ---@field public silent                 ?boolean
 ---@field public get_max_width          fun(): integer
+---@field public is_active              fun(context: t.fml.ux.nvimbar.IContext): boolean
 ---@field public trigger_rerender       fun(): nil
 ---@field public validate               fun(): string|nil
 
@@ -125,10 +129,12 @@ function M.new(props)
   local name = props.name ---@type string
   local component_sep = props.component_sep ---@type string
   local component_sep_hlname = props.component_sep_hlname ---@type string
+  local component_sep_hlname_active = props.component_sep_hlname_active ---@type string
   local render_delay = props.render_delay or 20 ---@type integer
   local silent = not not props.silent ---@type boolean
   local preset_context = props.preset_context or {} ---@type t.fml.ux.nvimbar.IPresetContext
   local get_max_width = props.get_max_width ---@type fun(): integer
+  local is_active = props.is_active ---@type fun(context: t.fml.ux.nvimbar.IContext): boolean
   local validate = props.validate ---@type fun(): string|nil
   local trigger_rerender = props.trigger_rerender ---@type fun(): nil
 
@@ -154,6 +160,7 @@ function M.new(props)
 
   self.name = name
   self._sep = nvimbar.txt(component_sep, component_sep_hlname)
+  self._sep_active = nvimbar.txt(component_sep, component_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(component_sep)
   self._last_context = nil
   self._preset_context = preset_context
@@ -161,6 +168,7 @@ function M.new(props)
   self._items = {}
   self._render_scheduler = _render_scheduler
   self._get_max_width = get_max_width
+  self._is_active = is_active
   return self
 end
 
@@ -231,10 +239,11 @@ end
 
 ---@return string
 function M:internal_render()
-  local sep = self._sep ---@type string
-  local sep_width = self._sep_width ---@type integer
   local context = build_context(self._preset_context) ---@type t.fml.ux.nvimbar.IContext
   local prev_context = self._last_context ---@type t.fml.ux.nvimbar.IContext|nil
+
+  local sep = self._is_active(context) and self._sep_active or self._sep ---@type string
+  local sep_width = self._sep_width ---@type integer
 
   local lc = "" ---@type string
   local cc = "" ---@type string

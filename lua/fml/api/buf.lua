@@ -106,7 +106,10 @@ function M.refresh(bufnr)
     local filename = eve.path.basename(filepath) ---@type string
     filename = (not filename or filename == "") and eve.constants.BUF_UNTITLED or filename
     local fileicon, fileicon_hl = eve.nvim.calc_fileicon(filename) ---@type string, string
-    local relpath = eve.path.split_prettier(eve.path.cwd(), filepath) ---@type string[]
+
+    local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
+    local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
+    local relpath = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
 
     ---@type t.eve.context.state.buf.IItem
     buf = {
@@ -123,7 +126,10 @@ function M.refresh(bufnr)
     local filename = eve.path.basename(filepath) ---@type string
     filename = #filename > 0 and filename or eve.constants.BUF_UNTITLED
     local fileicon, fileicon_hl = eve.nvim.calc_fileicon(filename) ---@type string, string
-    local relpath = eve.path.split_prettier(eve.path.cwd(), filepath) ---@type string[]
+
+    local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
+    local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
+    local relpath = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
 
     buf.fileicon = fileicon
     buf.fileicon_hl = fileicon_hl

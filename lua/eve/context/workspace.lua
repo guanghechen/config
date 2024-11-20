@@ -207,9 +207,11 @@ function M.load(data)
 
   --- bufs
   local bufs = {} ---@type table<integer, t.eve.context.state.buf.IItem>
-  local cwd = path.cwd() ---@type string
   local bufnr_2_real_bufnr = gen_real_bufnr_map(data.bufs) ---@type table<integer, integer>
   local tabnr_2_real_tabnr = gen_real_tabnr_map(data.tabs) ---@type table<integer, integer>
+
+  local workspace_pieces = path.split(path.workspace()) ---@type string[]
+  local cwd_pieces = path.split(path.cwd()) ---@type string[]
   for _, item in ipairs(data.bufs) do
     local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
     if real_bufnr ~= nil and vim.api.nvim_buf_is_valid(real_bufnr) then
@@ -224,7 +226,7 @@ function M.load(data)
         filename = item.filename,
         filepath = item.filepath,
         filetype = filetype,
-        relpath = path.split_prettier(cwd, item.filepath),
+        relpath = path.split_prettier(workspace_pieces, cwd_pieces, item.filepath),
         pinned = item.pinned,
       }
       bufs[real_bufnr] = buf

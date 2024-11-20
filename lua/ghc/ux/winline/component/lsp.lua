@@ -32,6 +32,12 @@ local M = {
       return "", 0
     end
 
+    local winnr_cur = fml.api.tab.get_current_winnr() ---@type integer
+    local activated = winnr_cur == winnr ---@type boolean
+
+    local hln_sep = activated and "f_wla_lsp_sep" or "f_wl_lsp_sep" ---@type string
+    local hln_text = activated and "f_wla_lsp_text" or "f_wl_lsp_text" ---@type string
+
     local hl_text = "" ---@type string
     local width = 0 ---@type integer
     for _, symbol in ipairs(symbols) do
@@ -42,10 +48,13 @@ local M = {
         break
       end
 
+      local hln_icon = activated and "f_wla_lsp_icon" or "f_wl_lsp_icon" ---@type string
+      hln_icon = symbol.kind and hln_icon .. "_" .. symbol.kind or hln_icon
+
       width = next_width
-      local hl_lsp_piece = eve.nvimbar.txt(sep, "f_wl_lsp_sep")
-        .. eve.nvimbar.txt(icon, symbol.kind and "f_wl_lsp_icon_" .. symbol.kind or "f_wl_lsp_icon")
-        .. eve.nvimbar.txt(title, "f_wl_lsp_text")
+      local hl_lsp_piece = eve.nvimbar.txt(sep, hln_sep)
+        .. eve.nvimbar.txt(icon, hln_icon)
+        .. eve.nvimbar.txt(title, hln_text)
       hl_text = hl_text .. eve.nvimbar.btn(hl_lsp_piece, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
     end
     return hl_text, width

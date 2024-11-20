@@ -6,11 +6,13 @@ tabline = fml.ux.Nvimbar.new({
   name = "tabline",
   component_sep = "",
   component_sep_hlname = "f_tl_bg",
+  component_sep_hlname_active = "f_tl_bg",
   render_delay = 64,
   silent = not devmode,
   get_max_width = function()
     return vim.o.columns
   end,
+  is_active = eve.util.falsy,
   trigger_rerender = function()
     tabline_dirty = false
     vim.cmd("redrawtabline")
@@ -40,6 +42,7 @@ tabline
   :place(c.devmode, "right")
   :place(c.cwd, "right")
   :place(c.tabs, "right")
+  --
   :place(c.neotree, "left")
   :place(c.diffview, "left")
   :place(c.bufs, "left")
