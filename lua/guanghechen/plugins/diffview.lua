@@ -52,10 +52,10 @@ return {
         ---@diagnostic disable-next-line: unused-local
         diff_buf_win_enter = function(bufnr, winid, ctx)
           vim.opt_local.wrap = false
-          vim.opt_local.list = false
-          vim.opt_local.foldlevel = 99
-          vim.opt_local.foldmethod = "manual"
-          vim.opt_local.colorcolumn = ""
+          vim.opt_local.list = true
+          -- vim.opt_local.foldlevel = 99
+          -- vim.opt_local.foldmethod = "expr"
+          -- vim.opt_local.foldexpr = "v:lua._G.fml.fn.foldexpr()"
 
           -- Highlight 'DiffChange' as 'DiffDelete' on the left, and 'DiffAdd' on the right.
           if ctx.layout_name:match("^diff2") then
