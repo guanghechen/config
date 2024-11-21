@@ -48,6 +48,11 @@ local function gen_hlgroup_map(context)
     f_fe_perm = { fg = c.fg1 },
     f_fe_size = { fg = c.green },
 
+    ---git hunk preview
+    f_ghp_cursor = { bg = c.bg3 },
+    f_ghp_border = { fg = c.bg1, bg = c.bg1 },
+    f_ghp_normal = { bg = c.bg1 },
+
     ---search
     f_us_input_border = { fg = c.fg1, bg = bg_input },
     f_us_input_normal = { fg = c.fg1, bg = bg_input },

@@ -1,3 +1,20 @@
+---@class guanghechen.plugins.gitsigns.config
+local config = {
+  win = {
+    preview_hunk = {
+      title = " git hunk preview ",
+      highlight = table.concat({
+        "Cursor:f_ghp_cursor",
+        "CursorColumn:f_ghp_cursor",
+        "CursorLine:f_ghp_cursor",
+        "CursorLineNr:f_ghp_cursor",
+        "FloatBorder:f_ghp_border",
+        "Normal:f_ghp_normal",
+      }, ","),
+    },
+  },
+}
+
 ---@type t.eve.IKeymap[]
 local keymaps = {
   {
@@ -62,6 +79,28 @@ local keymaps = {
     desc = "git: preview hunk inline",
     callback = function()
       require("gitsigns").preview_hunk()
+      vim.defer_fn(function()
+        local winnrs = vim.api.nvim_list_wins() ---@type integer[]
+        for _, winnr in ipairs(winnrs) do
+          local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+          if
+            wincfg.relative ~= nil
+            and wincfg.relative ~= ""
+            and type(wincfg.title) == "table"
+            and type(wincfg.title[1]) == "table"
+            and wincfg.title[1][1] == config.win.preview_hunk.title
+          then
+            vim.api.nvim_set_current_win(winnr)
+            vim.wo[winnr].number = false
+            vim.wo[winnr].relativenumber = false
+            vim.wo[winnr].signcolumn = "yes"
+            vim.wo[winnr].winblend = 10
+            vim.wo[winnr].winhighlight = config.win.preview_hunk.highlight
+            vim.wo[winnr].wrap = false
+            return
+          end
+        end
+      end, 50)
     end,
   },
   {
@@ -105,6 +144,19 @@ return {
     signcolumn = true,
     signs_staged_enable = true,
     word_diff = false,
+    preview_config = {
+      relative = "cursor",
+      row = 0,
+      col = 1,
+
+      title = config.win.preview_hunk.title,
+      title_pos = "center",
+      border = { " ", " ", " ", " ", " ", " ", " ", " " },
+      style = "minimal",
+      width = 124,
+
+      focusable = true,
+    },
     signs = {
       add = { text = "▎" },
       change = { text = "▎" },
