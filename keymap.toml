@@ -255,6 +255,7 @@ bindings = [
   { key = ">",          mods = "Command|Shift",             chars = "\u0001\u003e" },       # <Ctrl-a>>
   { key = "[",          mods = "Command",                   chars = "\u0001\u005b" },       # <Ctrl-a>[
   { key = "]",          mods = "Command",                   chars = "\u0001\u005d" },       # <Ctrl-a>]>
+  { key = "`",          mods = "Command",                   chars = "\u0001\u0060" },       # <Ctrl-a>`
   { key = "{",          mods = "Command|Shift",             chars = "\u0001\u007b" },       # <Ctrl-a>{
   { key = "}",          mods = "Command|Shift",             chars = "\u0001\u007d" },       # <Ctrl-a>}
 
