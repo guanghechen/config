@@ -1,29 +1,50 @@
-set -g @GHC_SL_COLOR_BG_APP_SYM       "{{aqua}}"
-set -g @GHC_SL_COLOR_BG_APP_TEXT      "{{bg2}}"
-set -g @GHC_SL_COLOR_BG_BAR           "{{bg2}}"
-set -g @GHC_SL_COLOR_BG_DATE_SYM      "{{aqua}}"
-set -g @GHC_SL_COLOR_BG_DATE_TEXT     "{{bg2}}"
-set -g @GHC_SL_COLOR_BG_MESSAGE       "{{yellow}}"
-set -g @GHC_SL_COLOR_BG_PID_SYM       "{{aqua}}"
-set -g @GHC_SL_COLOR_BG_PID_TEXT      "{{bg2}}"
-set -g @GHC_SL_COLOR_BG_SESSION       "{{green}}"
-set -g @GHC_SL_COLOR_BG_USER          "{{blue}}"
-set -g @GHC_SL_COLOR_BG_WIN_NAME      "{{bg2}}"
-set -g @GHC_SL_COLOR_BG_WIN_NAME_CUR  "{{bg1}}"
-set -g @GHC_SL_COLOR_BG_WIN_NUM       "{{bg4}}"
-set -g @GHC_SL_COLOR_BG_WIN_NUM_CUR   "{{orange}}"
-set -g @GHC_SL_COLOR_BORDER           "{{bg4}}"
-set -g @GHC_SL_COLOR_BORDER_CUR       "{{orange}}"
-set -g @GHC_SL_COLOR_FG_APP_SYM       "{{bg1}}"
-set -g @GHC_SL_COLOR_FG_APP_TEXT      "{{fg1}}"
-set -g @GHC_SL_COLOR_FG_DATE_SYM      "{{bg1}}"
-set -g @GHC_SL_COLOR_FG_DATE_TEXT     "{{fg1}}"
-set -g @GHC_SL_COLOR_FG_MESSAGE       "{{bg1}}"
-set -g @GHC_SL_COLOR_FG_PID_SYM       "{{bg1}}"
-set -g @GHC_SL_COLOR_FG_PID_TEXT      "{{fg1}}"
-set -g @GHC_SL_COLOR_FG_WIN_NAME      "{{fg1}}"
-set -g @GHC_SL_COLOR_FG_WIN_NAME_CUR  "{{orange}}"
-set -g @GHC_SL_COLOR_FG_WIN_NUM       "{{fg2}}"
-set -g @GHC_SL_COLOR_FG_WIN_NUM_CUR   "{{bg1}}"
-set -g @GHC_SL_COLOR_SESSION          "{{bg1}}"
-set -g @GHC_SL_COLOR_USER             "{{bg1}}"
+# Basic
+set -g @GHC_SL_COLOR_BG                 "default"
+
+
+## MESSAGE
+set -g @GHC_SL_COLOR_BG_MESSAGE         "{{yellow}}"
+set -g @GHC_SL_COLOR_FG_MESSAGE         "{{bg1}}"
+
+## BORDER
+set -g @GHC_SL_COLOR_BORDER             "{{bg4}}"
+set -g @GHC_SL_COLOR_BORDER_CUR         "{{orange}}"
+
+# Component
+
+## APP
+set -g @GHC_SL_COLOR_BG_APP_SYM         "{{aqua}}"
+set -g @GHC_SL_COLOR_FG_APP_SYM         "{{bg1}}"
+set -g @GHC_SL_COLOR_BG_APP_TEXT        "{{bg1}}"
+set -g @GHC_SL_COLOR_FG_APP_TEXT        "{{fg2}}"
+
+## DATE
+set -g @GHC_SL_COLOR_BG_DATE_SYM        "{{aqua}}"
+set -g @GHC_SL_COLOR_FG_DATE_SYM        "{{bg1}}"
+set -g @GHC_SL_COLOR_BG_DATE_TEXT       "{{bg1}}"
+set -g @GHC_SL_COLOR_FG_DATE_TEXT       "{{fg2}}"
+
+## PID
+set -g @GHC_SL_COLOR_BG_PID_SYM         "{{aqua}}"
+set -g @GHC_SL_COLOR_FG_PID_SYM         "{{bg1}}"
+set -g @GHC_SL_COLOR_BG_PID_TEXT        "{{bg1}}"
+set -g @GHC_SL_COLOR_FG_PID_TEXT        "{{fg2}}"
+
+## SESSION
+set -g @GHC_SL_COLOR_BG_SESSION_SYM     "{{aqua}}"
+set -g @GHC_SL_COLOR_FG_SESSION_SYM     "{{bg1}}"
+set -g @GHC_SL_COLOR_BG_SESSION_TEXT    "{{bg2}}"
+set -g @GHC_SL_COLOR_FG_SESSION_TEXT    "{{fg1}}"
+
+## WINDOW
+set -g @GHC_SL_COLOR_BG_WIN_NAME        "{{bg2}}"
+set -g @GHC_SL_COLOR_FG_WIN_NAME        "{{fg1}}"
+set -g @GHC_SL_COLOR_BG_WIN_NUM         "{{blue}}"
+set -g @GHC_SL_COLOR_FG_WIN_NUM         "{{bg2}}"
+
+## WINDOW_CURRENT
+set -g @GHC_SL_COLOR_BG_WIN_CUR_NAME    "default"
+set -g @GHC_SL_COLOR_FG_WIN_CUR_NAME    "{{fg1}}"
+set -g @GHC_SL_COLOR_BG_WIN_CUR_NUM     "{{orange}}"
+set -g @GHC_SL_COLOR_FG_WIN_CUR_NUM     "{{bg2}}"
+
