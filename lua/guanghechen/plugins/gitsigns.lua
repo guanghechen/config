@@ -19,7 +19,7 @@ local config = {
 local keymaps = {
   {
     modes = { "n" },
-    key = "[C",
+    key = "[H",
     desc = "git: goto first hunk",
     callback = function()
       require("gitsigns").nav_hunk("first")
@@ -27,7 +27,7 @@ local keymaps = {
   },
   {
     modes = { "n" },
-    key = "]C",
+    key = "]H",
     desc = "git: goto last hunk",
     callback = function()
       require("gitsigns").nav_hunk("last")
@@ -35,7 +35,7 @@ local keymaps = {
   },
   {
     modes = { "n" },
-    key = "[c",
+    key = "[h",
     desc = "git: goto prev hunk",
     callback = function()
       if vim.wo.diff then
@@ -47,7 +47,7 @@ local keymaps = {
   },
   {
     modes = { "n" },
-    key = "]c",
+    key = "]h",
     desc = "git: goto next hunk",
     callback = function()
       if vim.wo.diff then
