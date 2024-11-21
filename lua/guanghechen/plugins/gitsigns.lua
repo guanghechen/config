@@ -2,7 +2,24 @@
 local keymaps = {
   {
     modes = { "n" },
-    key = "[h",
+    key = "[C",
+    desc = "git: goto first hunk",
+    callback = function()
+      require("gitsigns").nav_hunk("first")
+    end,
+  },
+  {
+    modes = { "n" },
+    key = "]C",
+    desc = "git: goto last hunk",
+    callback = function()
+      require("gitsigns").nav_hunk("last")
+    end,
+  },
+  {
+    modes = { "n" },
+    key = "[c",
+    desc = "git: goto prev hunk",
     callback = function()
       if vim.wo.diff then
         vim.cmd.normal({ "[c", bang = true })
@@ -10,11 +27,11 @@ local keymaps = {
         require("gitsigns").nav_hunk("prev")
       end
     end,
-    desc = "git: goto prev hunk",
   },
   {
     modes = { "n" },
-    key = "]h",
+    key = "]c",
+    desc = "git: goto next hunk",
     callback = function()
       if vim.wo.diff then
         vim.cmd.normal({ "]c", bang = true })
@@ -22,39 +39,54 @@ local keymaps = {
         require("gitsigns").nav_hunk("next")
       end
     end,
-    desc = "git: goto next hunk",
   },
   {
     modes = { "n" },
     key = "<leader>gb",
+    desc = "git: blame line",
     callback = function()
       require("gitsigns").blame_line({ full = true })
     end,
-    desc = "git: blame line",
   },
   {
     modes = { "n" },
-    key = "<leader>gd",
+    key = "<leader>ghd",
+    desc = "git: diff current file",
     callback = function()
       require("gitsigns").diffthis("~")
     end,
-    desc = "git: diff current file",
   },
   {
-    modes = { "n" },
-    key = "<leader>gp",
-    callback = function()
-      require("gitsigns").preview_hunk_inline()
-    end,
+    modes = { "n", "v" },
+    key = "<leader>ghp",
     desc = "git: preview hunk inline",
+    callback = function()
+      require("gitsigns").preview_hunk()
+    end,
   },
   {
-    modes = { "n" },
-    key = "<leader>gu",
+    modes = { "n", "v" },
+    key = "<leader>ghr",
+    desc = "git: reset hunk",
+    callback = function()
+      require("gitsigns").reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+    end,
+  },
+  {
+    modes = { "n", "v" },
+    key = "<leader>ghs",
+    desc = "git: stage hunk",
+    callback = function()
+      require("gitsigns").stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+    end,
+  },
+  {
+    modes = { "n", "v" },
+    key = "<leader>ghu",
+    desc = "git: undo stage hunk",
     callback = function()
       require("gitsigns").undo_stage_hunk()
     end,
-    desc = "git: undo stage hunk",
   },
 }
 
@@ -76,21 +108,28 @@ return {
     signs = {
       add = { text = "▎" },
       change = { text = "▎" },
-      delete = { text = "" },
-      topdelete = { text = "" },
+      delete = { text = "_" },
+      topdelete = { text = "‾" },
       changedelete = { text = "󱕖" },
       untracked = { text = "┆" },
     },
     signs_staged = {
       add = { text = "▎" },
       change = { text = "▎" },
-      delete = { text = "" },
-      topdelete = { text = "" },
+      delete = { text = "_" },
+      topdelete = { text = "‾" },
       changedelete = { text = "󱕖" },
       untracked = { text = "┆" },
     },
     on_attach = function(bufnr)
       eve.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
+
+      vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", {
+        buffer = bufnr,
+        noremap = true,
+        silent = true,
+        desc = "git: select hunk",
+      })
     end,
   },
 }
