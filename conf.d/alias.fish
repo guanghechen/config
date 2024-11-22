@@ -59,7 +59,9 @@ alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
 
 
 ### wsl
-if grep -qiE "microsoft|wsl" /proc/version
-  alias open="ghc-open"
-  alias pbpaste="ghc-pbpaste"
+if test -e /proc/version
+  if grep -qEi "(Microsoft|WSL)" /proc/version
+    alias open="ghc-open"
+    alias pbpaste="ghc-pbpaste"
+  end
 end
