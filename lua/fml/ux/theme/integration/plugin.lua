@@ -148,6 +148,7 @@ local function gen_hlgroup_map(context)
     NeoTreeGitUntracked = { fg = c.orange },
     NeoTreeFloatBorder = { link = "FloatBorder" },
     NeoTreeFloatTitle = { link = "FloatTitle" },
+    NeoTreeIndentMarker = { fg = c.bg2 },
     NeoTreeNormal = { bg = c.bg1 },
     NeoTreeNormalNC = { bg = c.bg1 },
     NeoTreeRootName = { fg = c.fg1, bold = true },
