@@ -1,23 +1,10 @@
 local constants = require("eve.std.constants")
 local std_array = require("eve.std.array")
 local fs = require("eve.std.fs")
+local ft = require("eve.std.filetype")
 
 ---@class eve.std.buf
 local M = {}
-
----@type table<string, boolean>
-local IGNORED_FILETYPES = {
-  [constants.FT_AERIAL] = true,
-  [constants.FT_CHECKHEALTH] = true,
-  [constants.FT_DIFFVIEW_FILES] = true,
-  [constants.FT_LSPINFO] = true,
-  [constants.FT_NEOTREE] = true,
-  [constants.FT_NOTIFY] = true,
-  [constants.FT_PLENARY_TEST_POPUP] = true,
-  [constants.FT_STARTUPTIME] = true,
-  [constants.FT_TERM] = true,
-  [constants.FT_TROUBLE] = true,
-}
 
 ---@param bufnr                         integer
 ---@return boolean
@@ -27,7 +14,11 @@ function M.is_listed(bufnr)
   end
 
   local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-  return not IGNORED_FILETYPES[filetype]
+  if not ft.is_plain_file(filetype) then
+    return false
+  end
+
+  return true
 end
 
 ---@param bufnr                         integer|nil

@@ -29,17 +29,7 @@ return {
   },
   opts = {
     delay = 200,
-    filetypes_denylist = {
-      eve.constants.FT_AERIAL,
-      eve.constants.FT_NEOTREE,
-      eve.constants.FT_SEARCH_INPUT,
-      eve.constants.FT_SEARCH_MAIN,
-      eve.constants.FT_SEARCH_PREVIEW,
-      eve.constants.FT_TERM,
-      "noice",
-      "notify",
-      "quickfix",
-    },
+    filetypes_denylist = eve.filetype.get_no_illuminate_filetypes(),
     large_file_cutoff = 2000,
     large_file_overrides = {
       providers = { "lsp" },

@@ -52,6 +52,7 @@ local std = {
   constants = require("eve.std.constants"),
   debug = require("eve.std.debug"),
   equals = require("eve.std.equals"),
+  filetype = require("eve.std.filetype"),
   fs = require("eve.std.fs"),
   json = require("eve.std.json"),
   lsp = require("eve.std.lsp"),

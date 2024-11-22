@@ -14,6 +14,21 @@ return {
         cmp = { enabled = true },
         completeopt = "menu,menuone,noinsert",
       },
+      enabled = function()
+        local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+
+        local buftype = vim.bo[bufnr].buftype ---@type string
+        if buftype == eve.constants.BT_NOFILE then
+          return false
+        end
+
+        local filetype = vim.bo[bufnr].filetype ---@type string
+        if eve.filetype.is_no_cmp_filetype(filetype) then
+          return false
+        end
+
+        return true
+      end,
       experimental = {
         ghost_text = {
           hl_group = "CmpGhostText",

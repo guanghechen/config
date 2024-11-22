@@ -12,23 +12,7 @@ return {
   },
   init = function()
     vim.api.nvim_create_autocmd("FileType", {
-      pattern = {
-        eve.constants.FT_AERIAL,
-        eve.constants.FT_NEOTREE,
-        eve.constants.FT_SEARCH_INPUT,
-        eve.constants.FT_SEARCH_MAIN,
-        eve.constants.FT_SEARCH_PREVIEW,
-        eve.constants.FT_TERM,
-        "help",
-        "alpha",
-        "dashboard",
-        "neo-tree",
-        "Trouble",
-        "trouble",
-        "lazy",
-        "mason",
-        "notify",
-      },
+      pattern = eve.filetype.get_no_ibl_filetypes(),
       callback = function()
         vim.b.miniindentscope_disable = true
       end,

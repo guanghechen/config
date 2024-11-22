@@ -1,7 +1,7 @@
 local locations = require("eve.globals.locations")
 local mvc = require("eve.globals.mvc")
 local widgets = require("eve.globals.widgets")
-local constants = require("eve.std.constants")
+local ft = require("eve.std.filetype")
 local os = require("eve.std.os")
 local path = require("eve.std.path")
 
@@ -107,24 +107,13 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
     end
     vim.b[bufnr].eve_last_loc = true
 
-    local filetype = vim.bo[bufnr].filetype
-    if
-      filetype == ""
-      or filetype == constants.FT_AERIAL
-      or filetype == constants.FT_GITCOMMIT
-      or filetype == constants.FT_NEOTREE
-      or filetype == constants.FT_SEARCH_INPUT
-      or filetype == constants.FT_SEARCH_MAIN
-      or filetype == constants.FT_SEARCH_PREVIEW
-      or filetype == constants.FT_TERM
-    then
-      return
-    end
-
-    local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
-    local lcount = vim.api.nvim_buf_line_count(bufnr)
-    if mark[1] > 0 and mark[1] <= lcount then
-      pcall(vim.api.nvim_win_set_cursor, 0, mark)
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    if ft.is_plain_file(filetype) then
+      local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
+      local lcount = vim.api.nvim_buf_line_count(bufnr)
+      if mark[1] > 0 and mark[1] <= lcount then
+        pcall(vim.api.nvim_win_set_cursor, 0, mark)
+      end
     end
   end,
 })
@@ -137,16 +126,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
       local filetype = vim.bo[bufnr].filetype
-      if
-        filetype ~= ""
-        and filetype ~= constants.FT_AERIAL
-        and filetype ~= constants.FT_GITCOMMIT
-        and filetype ~= constants.FT_NEOTREE
-        and filetype ~= constants.FT_SEARCH_INPUT
-        and filetype ~= constants.FT_SEARCH_MAIN
-        and filetype ~= constants.FT_SEARCH_PREVIEW
-        and filetype ~= constants.FT_TERM
-      then
+      if ft.is_plain_file(filetype) then
         locations.set_current_bufnr(bufnr)
         locations.set_current_winnr(winnr)
       end
@@ -156,20 +136,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
 
 ---! Close some filetypes with q
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = {
-    "checkhealth",
-    "git",
-    "help",
-    "lspinfo",
-    "man",
-    "neo-tree",
-    "notify",
-    "PlenaryTestPopup",
-    "qf",
-    "startuptime",
-    "tsplayground",
-    "Trouble",
-  },
+  pattern = ft.get_quitable_with_q_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
     if bufnr ~= nil then
