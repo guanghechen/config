@@ -32,7 +32,7 @@ local function gen_hlgroup_map(context)
     GitSignsDelete = { fg = c.red },
 
     ---! indent-blankline.nvim
-    IblChar = { fg = c.bg4 },
+    IblChar = { fg = c.bg1 },
     IblScopeChar = { fg = c.bg4 },
     ["@ibl.scope.underline.1"] = { bg = c.bg2 },
     ["@ibl.scope.underline.2"] = { bg = c.bg2 },

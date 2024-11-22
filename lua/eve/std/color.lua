@@ -285,34 +285,42 @@ function M.hex2complementary(hex, count)
 end
 
 -- Mix two colors with a given percentage.
--- @param first The primary hex color.
--- @param second The hex color you want to mix into the first color.
--- @param strength The percentage of second color in the output.
---                 This needs to be a number between 0 - 100.
--- @return The mixed color as a hex value
+---@param first                         string    The primary hex color.
+---@param second                        string    The hex color you want to mix into the first color.
+---@param strength                      ?integer  The percentage of second color in the output. [0-100]
+---@return string The mixed color as a hex value
 function M.mix(first, second, strength)
-  if strength == nil then
-    strength = 0.5
-  end
-
-  local s = strength / 100
-  local r1, g1, b1 = M.hex2rgb(first)
-  local r2, g2, b2 = M.hex2rgb(second)
-
-  if r1 == nil or r2 == nil then
+  strength = strength or 50 ---@type integer
+  if strength <= 0 then
     return first
   end
-
-  if s == 0 then
-    return first
-  elseif s == 1 then
+  if strength >= 100 then
     return second
   end
 
-  local r3 = r1 * (1 - s) + r2 * s
-  local g3 = g1 * (1 - s) + g2 * s
-  local b3 = b1 * (1 - s) + b2 * s
+  local t1 = strength / 100 ---@type number
+  local t2 = 1 - t1 ---@type number
 
+  if first == "none" then
+    if second == "none" then
+      return "none"
+    end
+
+    local r2, g2, b2 = M.hex2rgb(second)
+    return M.rgb2hex(r2 * t1, g2 * t1, b2 * t1)
+  end
+
+  if second == "none" then
+    local r1, g1, b1 = M.hex2rgb(first)
+    return M.rgb2hex(r1 * t2, g1 * t2, b1 * t2)
+  end
+
+  local r1, g1, b1 = M.hex2rgb(first)
+  local r2, g2, b2 = M.hex2rgb(second)
+
+  local r3 = r1 * t2 + r2 * t1
+  local g3 = g1 * t2 + g2 * t1
+  local b3 = b1 * t2 + b2 * t1
   return M.rgb2hex(r3, g3, b3)
 end
 
