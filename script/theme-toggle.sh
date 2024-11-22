@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
-function _ghc_tmux_toggle_theme_ {
-  local current_theme=$(tmux show-environment -g @GHC_TMUX_THEME 2>/dev/null | cut -d '=' -f 2)
+function _ghc_tmux_theme_toggle_ {
+  local current_theme=$(tmux show -gqv @GHC_TMUX_THEME)
   local current_mode=$(echo $current_theme | rg -o '_([a-zA-Z0-9]+)$' -r '$1')
 
   local next_theme=$current_theme
@@ -14,4 +14,4 @@ function _ghc_tmux_toggle_theme_ {
   node $HOME/.config/guanghechen/config/theme/apply_theme.mjs "$next_theme"
 }
 
-_ghc_tmux_toggle_theme_
+_ghc_tmux_theme_toggle_

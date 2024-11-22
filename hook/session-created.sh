@@ -12,11 +12,6 @@ function _ghc_tmux_hook_session_created {
     # Show the status line
     tmux set-option status on
   fi
-
-  local current_theme=$(tmux show-environment -g @GHC_TMUX_THEME 2>/dev/null | cut -d '=' -f 2)
-  if [ -z "$current_theme" ]; then
-    tmux set-environment -g @GHC_TMUX_THEME "one_half_dark" 2>/dev/null
-  fi
 }
 
 _ghc_tmux_hook_session_created "$1"

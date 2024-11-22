@@ -1,0 +1,16 @@
+#! /usr/bin/env bash
+
+function _ghc_tmux_theme_load_scheme_ {
+  if [ -f "$HOME/.config/tmux/local/theme.tmux.conf" ]; then
+    tmux source-file "$HOME/.config/tmux/local/theme.tmux.conf"
+  else
+    local theme=$(tmux show -gqv @GHC_TMUX_THEME)
+    if [ -n "$theme" ]; then
+      theme="gruvbox_light"
+      tmux set -g @GHC_TMUX_THEME "$theme"
+    fi
+    tmux source-file "$HOME/.config/tmux/theme/${theme}.tmux.conf"
+  fi
+}
+
+_ghc_tmux_theme_load_scheme_
