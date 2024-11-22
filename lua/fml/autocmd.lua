@@ -104,7 +104,9 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
       if eve.fs.is_file_or_dir(filepath) == "directory" then
         local new_filepath = eve.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
         if new_filepath ~= nil then
-          vim.api.nvim_buf_set_name(bufnr, new_filepath)
+          pcall(function()
+            vim.api.nvim_buf_set_name(bufnr, new_filepath)
+          end)
         end
       end
     end
