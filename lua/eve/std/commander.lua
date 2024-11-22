@@ -87,6 +87,7 @@ M.uuids = {
   lazygit_workspace = "Flazygitworkspace",
   notification_dismiss_all = "Fnotificationdismissall",
   open_line_diagnostic = "Fopenlinediagnostics",
+  outline_toggle = "Foutlinetoggle",
   refresh_all = "Frefreshall",
   reload_theme = "Freloadtheme",
   replace_files = "Freplacefiles",

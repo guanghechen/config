@@ -9,7 +9,6 @@ return {
   opts = {
     disable = {
       ft = {
-        eve.constants.FT_NEOTREE,
         eve.constants.FT_TERM,
       },
     },

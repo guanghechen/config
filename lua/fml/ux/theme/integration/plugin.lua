@@ -1,3 +1,5 @@
+local cs = require("eve.std.color")
+
 ---@param context                       t.fml.ux.IThemeContext
 ---@return table<string, t.eve.collection.theme.IHlgroup>
 local function gen_hlgroup_map(context)
@@ -13,6 +15,47 @@ local function gen_hlgroup_map(context)
   local bg_noice = c.bg1 ---@type string
 
   return {
+    ---! aerial.nvim
+    AerialGuide = { fg = c.bg2 },
+    AerialGuide1 = { fg = cs.mix(c.bg2, c.red, 60) },
+    AerialGuide2 = { fg = cs.mix(c.bg2, c.green, 60) },
+    AerialGuide3 = { fg = cs.mix(c.bg2, c.yellow, 60) },
+    AerialGuide4 = { fg = cs.mix(c.bg2, c.blue, 60) },
+    AerialGuide5 = { fg = cs.mix(c.bg2, c.aqua, 60) },
+    AerialGuide6 = { fg = cs.mix(c.bg2, c.orange, 60) },
+    AerialLine = { fg = c.yellow },
+    AerialNormal = { bg = c.bg1 },
+    AerialNormalNC = { link = "AerialNormal" },
+    AerialCursorLine = { bg = c.bg2 },
+    AerialCursorLineNr = { link = "AerialCursorLine" },
+
+    AerialArrayIcon = { link = "f_wl_lsp_icon_Array" },
+    AerialBooleanIcon = { link = "f_wl_lsp_icon_Boolean" },
+    AerialClassIcon = { link = "f_wl_lsp_icon_Class" },
+    AerialConstantIcon = { link = "f_wl_lsp_icon_Constant" },
+    AerialConstructorIcon = { link = "f_wl_lsp_icon_Constructor" },
+    AerialEnumIcon = { link = "f_wl_lsp_icon_Enum" },
+    AerialEnumMemberIcon = { link = "f_wl_lsp_icon_EnumMember" },
+    AerialEventIcon = { link = "f_wl_lsp_icon_Event" },
+    AerialFieldIcon = { link = "f_wl_lsp_icon_Field" },
+    AerialFileIcon = { link = "f_wl_lsp_icon_File" },
+    AerialFunctionIcon = { link = "f_wl_lsp_icon_Function" },
+    AerialInterfaceIcon = { link = "f_wl_lsp_icon_" },
+    AerialKeyIcon = { link = "f_wl_lsp_icon_Key" },
+    AerialMethodIcon = { link = "f_wl_lsp_icon_Method" },
+    AerialModuleIcon = { link = "f_wl_lsp_icon_Module" },
+    AerialNamespaceIcon = { link = "f_wl_lsp_icon_Namespace" },
+    AerialNullIcon = { link = "f_wl_lsp_icon_Null" },
+    AerialNumberIcon = { link = "f_wl_lsp_icon_Number" },
+    AerialObjectIcon = { link = "f_wl_lsp_icon_Object" },
+    AerialOperatorIcon = { link = "f_wl_lsp_icon_Operator" },
+    AerialPackageIcon = { link = "f_wl_lsp_icon_Package" },
+    AerialPropertyIcon = { link = "f_wl_lsp_icon_Property" },
+    AerialStringIcon = { link = "f_wl_lsp_icon_String" },
+    AerialStructIcon = { link = "f_wl_lsp_icon_Struct" },
+    AerialTypeParameterIcon = { link = "f_wl_lsp_icon_TypeParameter" },
+    AerialVariableIcon = { link = "f_wl_lsp_icon_Variable" },
+
     ---! diffview.nvim
     DiffviewFilePanelDeletions = { fg = c.red, bold = true },
     DiffviewFilePanelInsertions = { fg = c.green, bold = true },

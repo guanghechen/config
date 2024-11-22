@@ -7,6 +7,7 @@ local M = {}
 
 ---@type table<string, boolean>
 local IGNORED_FILETYPES = {
+  [constants.FT_AERIAL] = true,
   [constants.FT_CHECKHEALTH] = true,
   [constants.FT_DIFFVIEW_FILES] = true,
   [constants.FT_LSPINFO] = true,

@@ -35,6 +35,7 @@ local conds = {
 
 ---@type guanghechen.plugin.IRawSpec[]
 local raw_specs = {
+  { name = "aerial.nvim", main = "aerial", cond = conds.not_vscode },
   { name = "cmp-buffer", main = "cmp_buffer", cond = conds.not_vscode },
   { name = "cmp-nvim-lsp", main = "cmp_nvim_lsp", cond = conds.not_vscode },
   { name = "cmp-path", main = "cmp_path", cond = conds.not_vscode },

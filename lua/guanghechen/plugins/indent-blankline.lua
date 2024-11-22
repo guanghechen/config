@@ -16,6 +16,7 @@ return {
     },
     exclude = {
       filetypes = {
+        eve.constants.FT_AERIAL,
         eve.constants.FT_NEOTREE,
         eve.constants.FT_SEARCH_INPUT,
         eve.constants.FT_SEARCH_INPUT,

@@ -1,3 +1,4 @@
+require("guanghechen.command.aerial")
 require("guanghechen.command.diffview")
 require("guanghechen.command.neo-tree")
 require("guanghechen.command.nvim-notify")

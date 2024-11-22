@@ -10,8 +10,10 @@ M.BT_NOFILE = "nofile"
 M.BT_QUICKFIX = "quickfix"
 
 ---! filetypes
+M.FT_AERIAL = "aerial"
 M.FT_CHECKHEALTH = "checkhealth"
 M.FT_DIFFVIEW_FILES = "DiffviewFiles"
+M.FT_GITCOMMIT = "gitcommit"
 M.FT_NEOTREE = "neo-tree"
 M.FT_NOTIFY = "notify"
 M.FT_LSPINFO = "lspinfo"

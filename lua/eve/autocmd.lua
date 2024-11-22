@@ -109,12 +109,14 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
 
     local filetype = vim.bo[bufnr].filetype
     if
-      filetype == "gitcommit"
-      or filetype == constants.FT_TERM
+      filetype == ""
+      or filetype == constants.FT_AERIAL
+      or filetype == constants.FT_GITCOMMIT
       or filetype == constants.FT_NEOTREE
       or filetype == constants.FT_SEARCH_INPUT
       or filetype == constants.FT_SEARCH_MAIN
       or filetype == constants.FT_SEARCH_PREVIEW
+      or filetype == constants.FT_TERM
     then
       return
     end
@@ -127,14 +129,27 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
     if win_config.relative == nil or win_config.relative == "" then
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      locations.set_current_bufnr(bufnr)
-      locations.set_current_winnr(winnr)
+
+      local filetype = vim.bo[bufnr].filetype
+      if
+        filetype ~= ""
+        and filetype ~= constants.FT_AERIAL
+        and filetype ~= constants.FT_GITCOMMIT
+        and filetype ~= constants.FT_NEOTREE
+        and filetype ~= constants.FT_SEARCH_INPUT
+        and filetype ~= constants.FT_SEARCH_MAIN
+        and filetype ~= constants.FT_SEARCH_PREVIEW
+        and filetype ~= constants.FT_TERM
+      then
+        locations.set_current_bufnr(bufnr)
+        locations.set_current_winnr(winnr)
+      end
     end
   end,
 })
@@ -181,18 +196,6 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
 vim.api.nvim_create_autocmd({ "TextYankPost" }, {
   callback = function()
     vim.highlight.on_yank()
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "WinEnter" }, {
-  callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-    if win_config.relative == nil or win_config.relative == "" then
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      locations.set_current_bufnr(bufnr)
-      locations.set_current_winnr(winnr)
-    end
   end,
 })
 

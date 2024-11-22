@@ -30,6 +30,7 @@ return {
   opts = {
     delay = 200,
     filetypes_denylist = {
+      eve.constants.FT_AERIAL,
       eve.constants.FT_NEOTREE,
       eve.constants.FT_SEARCH_INPUT,
       eve.constants.FT_SEARCH_MAIN,

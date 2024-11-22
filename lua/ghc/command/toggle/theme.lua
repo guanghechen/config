@@ -25,8 +25,9 @@ local function reload_theme(force)
     end
   end
 
-  ---! Reload the indent-blankline.nvim plugin to trigger it to apply the new highlights.
+  ---! Reload the plugins to trigger it to apply the new highlights.
   pcall(function()
+    ---! Reload the indent-blankline.nvim plugin.
     vim.cmd("Lazy reload indent-blankline.nvim")
   end)
 end

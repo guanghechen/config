@@ -287,14 +287,15 @@ mk({ "n", "v" }, "[q", uuids.goto_prev_quickfix_item, "diagnostic: goto prev qui
 mk({ "n", "v" }, "]q", uuids.goto_next_quickfix_item, "diagnostic: goto next quickfix item")
 mk({ "n", "v" }, "[w", uuids.goto_prev_warn, "diagnostic: goto prev warning")
 mk({ "n", "v" }, "]w", uuids.goto_next_warn, "diagnostic: goto next warning")
-mk({ "n", "v" }, "<leader>xl", uuids.open_line_diagnostic, "diagnostic: open float window")
+mk({ "n", "v" }, "<leader>xD", "<cmd>Trouble diagnostics toggle<cr>", "diagnostic: open diagnostics (workspace)")
 mk(
   { "n", "v" },
   "<leader>xd",
   "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
   "diagnostic: open diagnostics (document)"
 )
-mk({ "n", "v" }, "<leader>xD", "<cmd>Trouble diagnostics toggle<cr>", "diagnostic: open diagnostics (workspace)")
 mk({ "n", "v" }, "<leader>xL", "<cmd>Trouble loclist toggle<cr>", "diagnostic: open location list (Trouble)")
+mk({ "n", "v" }, "<leader>xl", uuids.open_line_diagnostic, "diagnostic: open float window")
+mk({ "n", "v" }, "<leader>xo", uuids.outline_toggle, "code: toggle outline")
 mk({ "n", "v" }, "<leader>xq", "<cmd>Trouble qflist toggle<cr>", "diagnostic: open quickfix list (Trouble)")
 -----------------------------------------------------------------------------------#[x] diagnostic--
