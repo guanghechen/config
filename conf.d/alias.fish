@@ -56,3 +56,10 @@ alias tmux-use-fake-clipboard="tmux set-environment ghc_use_fake_clipboard /opt/
 alias ghc-ports='netstat -tulanp'
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
+
+
+### wsl
+if grep -qiE "microsoft|wsl" /proc/version
+  alias open="ghc-open"
+  alias pbpaste="ghc-pbpaste"
+end
