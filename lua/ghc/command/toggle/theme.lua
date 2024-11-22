@@ -24,6 +24,11 @@ local function reload_theme(force)
       fml.ux.theme.set_term_colors(scheme)
     end
   end
+
+  ---! Reload the indent-blankline.nvim plugin to trigger it to apply the new highlights.
+  pcall(function()
+    vim.cmd("Lazy reload indent-blankline.nvim")
+  end)
 end
 
 ---@param theme                         string

@@ -33,7 +33,7 @@ local function gen_hlgroup_map(context)
 
     ---! indent-blankline.nvim
     IblChar = { fg = c.bg1 },
-    IblScopeChar = { fg = c.bg4 },
+    IblScopeChar = { fg = c.grey },
     ["@ibl.scope.underline.1"] = { bg = c.bg2 },
     ["@ibl.scope.underline.2"] = { bg = c.bg2 },
     ["@ibl.scope.underline.3"] = { bg = c.bg2 },

@@ -37,19 +37,6 @@ return {
   config = function(_, opts)
     local hooks = require("ibl.hooks")
     hooks.register(hooks.type.WHITESPACE, hooks.builtin.hide_first_space_indent_level)
-    hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
-      local theme = eve.context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
-      local mode = eve.context.state.theme.mode:snapshot() ---@type t.eve.e.ThemeMode
-      local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
-
-      fml.ux.theme.apply_integration({
-        theme = theme,
-        mode = mode,
-        transparency = transparency,
-        integration = "plugin",
-      })
-    end)
-
     require("ibl").setup(opts)
   end,
 }
