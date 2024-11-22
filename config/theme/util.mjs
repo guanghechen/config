@@ -109,20 +109,14 @@ export const apps = [
     local: "local/theme.tmux.conf",
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
-    after_apply: async (app, theme) => {
+    after_apply: async (app) => {
       if (process.env.TMUX) {
-        const main_config_filepath = path.join(
+        const script_filepath = path.join(
           HOME_CONFIG,
           app.name,
-          "tmux.conf",
+          "script/theme-reload.sh",
         );
-        await safe_exec("tmux", [
-          "set-environment",
-          "-g",
-          "@GHC_TMUX_THEME",
-          theme,
-        ]);
-        await safe_exec("tmux", ["source-file", main_config_filepath]);
+        await safe_exec("/bin/bash", [script_filepath]);
       }
     },
   },
