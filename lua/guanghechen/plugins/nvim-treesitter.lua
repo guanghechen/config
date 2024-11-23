@@ -90,10 +90,31 @@ return {
     textobjects = {
       move = {
         enable = true,
-        goto_next_start = { ["]f"] = "@function.outer", ["]c"] = "@class.outer", ["]a"] = "@parameter.inner" },
-        goto_next_end = { ["]F"] = "@function.outer", ["]C"] = "@class.outer", ["]A"] = "@parameter.inner" },
-        goto_previous_start = { ["[f"] = "@function.outer", ["[c"] = "@class.outer", ["[a"] = "@parameter.inner" },
-        goto_previous_end = { ["[F"] = "@function.outer", ["[C"] = "@class.outer", ["[A"] = "@parameter.inner" },
+        set_jumps = true,
+        goto_next_start = {
+          ["]a"] = "@parameter.inner",
+          ["]c"] = "@class.outer",
+          ["]f"] = "@function.outer",
+          ["]s"] = { query = "@local.scope", query_group = "locals", desc = "goto: next scope" },
+          ["]z"] = { query = "@fold", query_group = "folds", desc = "goto: next fold" },
+        },
+        goto_next_end = {
+          ["]A"] = "@parameter.inner",
+          ["]C"] = "@class.outer",
+          ["]F"] = "@function.outer",
+        },
+        goto_previous_start = {
+          ["[a"] = "@parameter.inner",
+          ["[c"] = "@class.outer",
+          ["[f"] = "@function.outer",
+          ["[s"] = { query = "@local.scope", query_group = "locals", desc = "goto: prev scope" },
+          ["[z"] = { query = "@fold", query_group = "folds", desc = "goto: prev fold" },
+        },
+        goto_previous_end = {
+          ["[A"] = "@parameter.inner",
+          ["[C"] = "@class.outer",
+          ["[F"] = "@function.outer",
+        },
       },
     },
   },
