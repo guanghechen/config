@@ -110,10 +110,6 @@ end
 ---@param filetype                      string|nil
 ---@return boolean
 function M.is_plain_file(filetype)
-  if filetype == nil or #filetype < 1 then
-    return false
-  end
-
   if filetypes.not_plain[filetype] then
     return false
   end
