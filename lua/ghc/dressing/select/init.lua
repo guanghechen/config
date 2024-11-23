@@ -9,8 +9,8 @@
 ---@alias ghc.dressing.select.IProvider
 ---| fun(items: any[], opts: ghc.dressing.select.IOptions): t.fml.ux.select.IProvider, integer
 
-local codeaction_provider = require("ghc.dressing.provider.codeaction")
-local fallback_provider = require("ghc.dressing.provider.fallback")
+local codeaction_provider = require("ghc.dressing.select.provider.codeaction")
+local fallback_provider = require("ghc.dressing.select.provider.fallback")
 
 local providers = {
   codeaction = codeaction_provider,
