@@ -33,16 +33,16 @@ function M.new(winnr, limit)
     bot = vim.fn.line("w$", winnr),
   }
 
-  if cursor.row - viewport.top > limit then
+  if viewport.top < cursor.row - limit then
     viewport.top = cursor.row - limit
   end
 
-  if viewport.bot - cursor.row > limit then
-    viewport.bot = self.cursor.row + limit
+  if viewport.bot > cursor.row + limit then
+    viewport.bot = cursor.row + limit
   end
 
-  ---@type string[]
-  local lines = vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(winnr), viewport.top - 1, viewport.bot, true)
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local lines = vim.api.nvim_buf_get_lines(bufnr, viewport.top - 1, viewport.bot, true) ---@type string[]
 
   self.cursor = cursor
   self.viewport = viewport
@@ -75,7 +75,7 @@ end
 ---@return string
 function M:get_line(row)
   local index = row - self.viewport.top + 1 ---@type integer
-  return self.lines[index]
+  return self.lines[index] or ""
 end
 
 ---Get the character under the cursor.
@@ -83,47 +83,44 @@ end
 ---@return string
 function M:get_current_char()
   local cursor = self.cursor ---@type ghc.dressing.autopairs.IPos
-  return self:get_line(cursor.row):sub(cursor.col, cursor.col)
+  local line = self:get_line(cursor.row) ---@type string
+  return line:sub(cursor.col, cursor.col)
 end
 
----@return fun(): ghc.dressing.autopairs.IPos|nil, string
+---@return fun(): ghc.dressing.autopairs.IPos|nil, string|nil
 function M:iter()
   local cursor = self:get_cursor() ---@type ghc.dressing.autopairs.IPos
+  local viewport = self.viewport ---@type ghc.dressing.autopairs.IViewport
 
   return function()
     local line = self:get_line(cursor.row) ---@type string
-    local viewport = self.viewport ---@type ghc.dressing.autopairs.IViewport
 
     cursor.col = cursor.col + 1
-
     if cursor.col > #line then
       cursor.row = cursor.row + 1
-      if cursor.row > viewport.bot then
-        return nil, ""
-      end
-
-      line = self:get_line(cursor.row)
       cursor.col = 1
+      if cursor.row > viewport.bot then
+        return nil, nil
+      end
     end
 
     return cursor, line:sub(cursor.col, cursor.col)
   end
 end
 
----@return fun(): ghc.dressing.autopairs.IPos|nil, string
+---@return fun(): ghc.dressing.autopairs.IPos|nil, string|nil
 function M:iter_reverse()
   local cursor = self:get_cursor() ---@type ghc.dressing.autopairs.IPos
+  local viewport = self.viewport ---@type ghc.dressing.autopairs.IViewport
 
   return function()
     local line = self:get_line(cursor.row) ---@type string
-    local viewport = self.viewport ---@type ghc.dressing.autopairs.IViewport
 
     cursor.col = cursor.col - 1
-
     if cursor.col < 1 then
       cursor.row = cursor.row - 1
       if cursor.row < viewport.top then
-        return nil, ""
+        return nil, nil
       end
 
       line = self:get_line(cursor.row)

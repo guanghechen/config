@@ -8,9 +8,9 @@ local all_pairs = {
 
 local left_to_right_pairs = {} ---@type table<string, string>
 local right_to_left_pairs = {} ---@type table<string, string>
-for left, right in pairs(all_pairs) do
-  left_to_right_pairs[left] = right
-  right_to_left_pairs[right] = left
+for _, pair in ipairs(all_pairs) do
+  left_to_right_pairs[pair[1]] = pair[2]
+  right_to_left_pairs[pair[2]] = pair[1]
 end
 
 ---@class ghc.dressing.autopairs.config
