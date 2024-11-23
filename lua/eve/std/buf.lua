@@ -62,7 +62,8 @@ function M.pick_filepath(cwd, existed_filepaths)
 
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      local filepath = eve.path.resolve(cwd, filename) ---@type string
       existed_filepaths[filepath] = true
     end
   end
