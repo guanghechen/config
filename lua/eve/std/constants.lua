@@ -30,6 +30,7 @@ M.FT_SEARCH_PREVIEW = "search-preview"
 M.FT_STARTUPTIME = "startuptime"
 M.FT_TERM = "term"
 M.FT_TROUBLE = "Trouble"
+M.FT_WINSEP = "winsep"
 
 ---! sign_ids
 M.SIGN_NR_SEARCH_MAIN_CURRENT = 2333

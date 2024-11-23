@@ -100,6 +100,13 @@ local function gen_hlgroup_map(context)
     f_us_vo_type = { fg = c.orange },
     f_us_vo_scope = { fg = c.red, bold = true },
     f_us_vo_value = { fg = c.fg1 },
+
+    ---winsep
+    f_winsep_left_border = { fg = c.pink, bold = true, bg = "none" },
+    f_winsep_top_border = { fg = c.pink, bold = true, bg = "none" },
+    f_winsep_right_border = { fg = c.pink, bold = true, bg = "none" },
+    f_winsep_bottom_border = { fg = c.pink, bold = true, bg = "none" },
+    f_winsep_normal = { fg = "none", bg = "none" },
   }
 end
 

@@ -36,6 +36,7 @@ end
 require("ghc.dressing.autopairs")
 require("ghc.dressing.commentstring")
 require("ghc.dressing.select")
+require("ghc.dressing.winsep")
 require("ghc.command")
 eve.commander.execute(eve.commander.uuids.reload_theme)
 

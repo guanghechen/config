@@ -3,19 +3,19 @@ local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 local pick_config_map = {
   focus = {
     bo = {
-      filetype = { "noice" },
+      filetype = eve.filetype.get_no_window_picker_focusable_filetypes(),
       buftype = {},
     },
   },
   swap = {
     bo = {
-      filetype = { "neo-tree", "neo-tree-popup", "noice", "notify" },
+      filetype = eve.filetype.get_no_window_picker_swappable_filetypes(),
       buftype = { "terminal", "quickfix" },
     },
   },
   project = {
     bo = {
-      filetype = { "neo-tree", "neo-tree-popup", "noice", "notify", "Trouble", "quickfix" },
+      filetype = eve.filetype.get_no_window_picker_projectable_filetypes(),
       buftype = { "terminal", "quickfix" },
     },
   },

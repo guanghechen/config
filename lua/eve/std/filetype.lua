@@ -23,6 +23,7 @@ local filetypes = {
     [constants.FT_STARTUPTIME] = true,
     [constants.FT_TERM] = true,
     [constants.FT_TROUBLE] = true,
+    [constants.FT_WINSEP] = true,
   },
   no_ibl = {
     [constants.FT_AERIAL] = true,
@@ -44,6 +45,7 @@ local filetypes = {
     [constants.FT_STARTUPTIME] = true,
     [constants.FT_TERM] = true,
     [constants.FT_TROUBLE] = true,
+    [constants.FT_WINSEP] = true,
   },
   no_cmp = {
     [constants.FT_AERIAL] = true,
@@ -64,6 +66,58 @@ local filetypes = {
     [constants.FT_STARTUPTIME] = true,
     [constants.FT_TERM] = true,
     [constants.FT_TROUBLE] = true,
+    [constants.FT_WINSEP] = true,
+  },
+  no_window_picker_focusable = {
+    [constants.FT_NOICE] = true,
+    [constants.FT_LSPINFO] = true,
+    [constants.FT_PLENARY_TEST_POPUP] = true,
+    [constants.FT_WINSEP] = true,
+  },
+  no_window_picker_projectable = {
+    [constants.FT_AERIAL] = true,
+    [constants.FT_CHECKHEALTH] = true,
+    [constants.FT_DIFFVIEW_FILES] = true,
+    [constants.FT_GITCOMMIT] = true,
+    [constants.FT_HELP] = true,
+    [constants.FT_LAZY] = true,
+    [constants.FT_MAN] = true,
+    [constants.FT_MASON] = true,
+    [constants.FT_NEOTREE] = true,
+    [constants.FT_NOICE] = true,
+    [constants.FT_NOTIFY] = true,
+    [constants.FT_LSPINFO] = true,
+    [constants.FT_PLENARY_TEST_POPUP] = true,
+    [constants.FT_QUICKFIX] = true,
+    [constants.FT_SEARCH_INPUT] = true,
+    [constants.FT_SEARCH_MAIN] = true,
+    [constants.FT_SEARCH_PREVIEW] = true,
+    [constants.FT_STARTUPTIME] = true,
+    [constants.FT_TERM] = true,
+    [constants.FT_TROUBLE] = true,
+    [constants.FT_WINSEP] = true,
+  },
+  no_window_picker_swappable = {
+    [constants.FT_AERIAL] = true,
+    [constants.FT_CHECKHEALTH] = true,
+    [constants.FT_DIFFVIEW_FILES] = true,
+    [constants.FT_GITCOMMIT] = true,
+    [constants.FT_HELP] = true,
+    [constants.FT_LAZY] = true,
+    [constants.FT_MASON] = true,
+    [constants.FT_NEOTREE] = true,
+    [constants.FT_NOICE] = true,
+    [constants.FT_NOTIFY] = true,
+    [constants.FT_LSPINFO] = true,
+    [constants.FT_PLENARY_TEST_POPUP] = true,
+    [constants.FT_QUICKFIX] = true,
+    [constants.FT_SEARCH_INPUT] = true,
+    [constants.FT_SEARCH_MAIN] = true,
+    [constants.FT_SEARCH_PREVIEW] = true,
+    [constants.FT_STARTUPTIME] = true,
+    [constants.FT_TERM] = true,
+    [constants.FT_TROUBLE] = true,
+    [constants.FT_WINSEP] = true,
   },
   quitable_with_q = {
     [constants.FT_AERIAL] = true,
@@ -81,6 +135,7 @@ local filetypes = {
     [constants.FT_QUICKFIX] = true,
     [constants.FT_STARTUPTIME] = true,
     [constants.FT_TROUBLE] = true,
+    [constants.FT_WINSEP] = true,
   },
 }
 
@@ -100,6 +155,21 @@ end
 ---@return string[]
 function M.get_no_illuminate_filetypes()
   return vim.tbl_keys(filetypes.no_ibl)
+end
+
+---@return string[]
+function M.get_no_window_picker_focusable_filetypes()
+  return vim.tbl_keys(filetypes.no_window_picker_focusable)
+end
+
+---@return string[]
+function M.get_no_window_picker_projectable_filetypes()
+  return vim.tbl_keys(filetypes.no_window_picker_projectable)
+end
+
+---@return string[]
+function M.get_no_window_picker_swappable_filetypes()
+  return vim.tbl_keys(filetypes.no_window_picker_swappable)
 end
 
 ---@return string[]
