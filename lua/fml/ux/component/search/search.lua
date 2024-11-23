@@ -252,7 +252,7 @@ function M.new(props)
     end,
   }
 
-  std_array.extend(common_keymaps, {
+  vim.list_extend(common_keymaps, {
     {
       modes = { "i", "n", "v" },
       key = "<LeftMouse>",
@@ -334,7 +334,7 @@ function M.new(props)
       { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
       { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
     }
-    std_array.extend(input_keymaps, additional_input_keymaps)
+    vim.list_extend(input_keymaps, additional_input_keymaps)
   else
     ---@param key                       string
     ---@param action                    fun(): nil
@@ -365,7 +365,7 @@ function M.new(props)
       { modes = { "n", "v" }, key = "g", callback = on_input_g, desc = "search: locate" },
       { modes = { "n", "v" }, key = "gg", callback = on_input_gg, desc = "search: goto first line" },
     }
-    std_array.extend(input_keymaps, additional_input_keymaps)
+    vim.list_extend(input_keymaps, additional_input_keymaps)
   end
 
   ---@type t.fml.ux.search.IInput

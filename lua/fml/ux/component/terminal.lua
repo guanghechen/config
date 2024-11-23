@@ -1,6 +1,5 @@
 local constants = require("eve.std.constants")
 local widgets = require("eve.globals.widgets")
-local std_array = require("eve.std.array")
 local path = require("eve.std.path")
 local api_tab = require("fml.api.tab")
 
@@ -58,8 +57,8 @@ function M.new(props)
     },
   }
 
-  local widget_keymaps = widgets.get_keymaps() ---@type t.eve.IKeymap[]
-  std_array.extend(keymaps, widget_keymaps, props.keymaps or {})
+  vim.list_extend(keymaps, widgets.get_keymaps())
+  vim.list_extend(keymaps, props.keymaps or {})
 
   local command_cwd = props.command_cwd or path.cwd() ---@type string
   local command_env = props.command_env ---@type table<string, string>|nil

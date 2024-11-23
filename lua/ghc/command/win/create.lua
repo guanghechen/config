@@ -15,7 +15,7 @@ eve.commander
         if win_cur ~= nil then
           eve.context.state.wins[winnr_new] = {
             filepath_history = win_cur.filepath_history:fork({ name = "win_filepath" }),
-            lsp_symbols = eve.array.slice(win_cur.lsp_symbols),
+            lsp_symbols = vim.list_slice(win_cur.lsp_symbols),
           }
         end
       end
@@ -35,7 +35,7 @@ eve.commander
         if win_cur ~= nil then
           eve.context.state.wins[winnr_new] = {
             filepath_history = win_cur.filepath_history:fork({ name = "win_filepath" }),
-            lsp_symbols = eve.array.slice(win_cur.lsp_symbols),
+            lsp_symbols = vim.list_slice(win_cur.lsp_symbols),
           }
         end
       end

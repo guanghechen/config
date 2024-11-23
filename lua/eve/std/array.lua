@@ -217,18 +217,6 @@ function M.concat(...)
   return result
 end
 
----@param base                          any[]
----@param ...                           any[][]
----@return nil
-function M.extend(base, ...)
-  local result = base
-  for _, tbl in ipairs({ ... }) do
-    for _, v in ipairs(tbl) do
-      table.insert(result, v)
-    end
-  end
-end
-
 ---@param str                           string
 ---@param separator_pattern             ?string
 ---@return string[]
@@ -247,22 +235,6 @@ end
 
 ---@generic T
 ---@param arr                           T[]
----@param start                         ?integer
----@param stop                          ?integer
----@return T[]
-function M.slice(arr, start, stop)
-  start = math.max(1, start or 1)
-  stop = math.min(#arr, stop or #arr)
-
-  local result = {}
-  for i = start, stop, 1 do
-    table.insert(result, arr[i])
-  end
-  return result
-end
-
----@generic T
----@param arr                           T[]
 ---@param filter                        fun(v: T, i: integer, arr: T[]): boolean
 ---@return boolean
 function M.some(arr, filter)
@@ -274,13 +246,6 @@ function M.some(arr, filter)
     end
   end
   return false
-end
-
----@param items                         string[]
----@param sep                           ?string
----@return string
-function M.to_comma_list(items, sep)
-  return table.concat(items, sep or ",")
 end
 
 ---@generic T
