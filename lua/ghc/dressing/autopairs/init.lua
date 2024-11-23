@@ -1,0 +1,37 @@
+local ux = require("ghc.dressing.autopairs.ux")
+
+local timer = nil ---@type any|nil
+local function close_timer()
+  if timer ~= nil and timer:is_active() then
+    timer:close()
+    timer = nil
+  end
+end
+
+---Initial rendering pairs.
+for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+  timer = ux.render(winnr)
+end
+
+---Start rendering pairs on events.
+vim.api.nvim_create_autocmd({
+  "BufWinEnter",
+  "WinScrolled",
+  "ModeChanged",
+  "CursorMoved",
+  "CursorMovedI",
+}, {
+  desc = "[ghc.dressing.autopairs] render pairs",
+  callback = function()
+    close_timer()
+    timer = ux.render()
+  end,
+})
+
+---Clean `timer` on `VimLeavePre`
+vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
+  desc = "[ghc.dressing.autopairs] cleanup timer",
+  callback = function()
+    close_timer()
+  end,
+})

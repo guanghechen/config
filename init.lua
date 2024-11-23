@@ -33,6 +33,7 @@ if vim.g.vscode then
   return
 end
 
+require("ghc.dressing.autopairs")
 require("ghc.dressing.commentstring")
 require("ghc.dressing.select")
 require("ghc.command")
