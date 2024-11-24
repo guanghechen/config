@@ -17,12 +17,13 @@ local function gen_hlgroup_map(context)
   return {
     ---! aerial.nvim
     AerialGuide = { fg = c.bg2 },
-    AerialGuide1 = { fg = cs.mix(c.bg2, c.red, 60) },
-    AerialGuide2 = { fg = cs.mix(c.bg2, c.green, 60) },
-    AerialGuide3 = { fg = cs.mix(c.bg2, c.yellow, 60) },
-    AerialGuide4 = { fg = cs.mix(c.bg2, c.blue, 60) },
-    AerialGuide5 = { fg = cs.mix(c.bg2, c.aqua, 60) },
+    AerialGuide1 = { fg = cs.mix(c.bg2, c.purple, 60) },
+    AerialGuide2 = { fg = cs.mix(c.bg2, c.blue, 60) },
+    AerialGuide3 = { fg = cs.mix(c.bg2, c.aqua, 60) },
+    AerialGuide4 = { fg = cs.mix(c.bg2, c.green, 60) },
+    AerialGuide5 = { fg = cs.mix(c.bg2, c.yellow, 60) },
     AerialGuide6 = { fg = cs.mix(c.bg2, c.orange, 60) },
+    AerialGuide7 = { fg = cs.mix(c.bg2, c.red, 60) },
     AerialLine = { fg = c.yellow },
     AerialNormal = { bg = c.bg1 },
     AerialNormalNC = { link = "AerialNormal" },
@@ -73,6 +74,7 @@ local function gen_hlgroup_map(context)
     GitSignsAdd = { fg = c.green },
     GitSignsChange = { fg = c.yellow },
     GitSignsDelete = { fg = c.red },
+    GitSignsCurrentLineBlame = { fg = c.bg4 },
 
     ---! indent-blankline.nvim
     IblChar = { fg = c.bg1 },

@@ -15,6 +15,10 @@ eve.commander.register({
       eve.commander.execute(eve.commander.uuids.reload_theme, "force")
     end
 
+    pcall(function()
+      require("gitsigns").refresh()
+    end)
+
     eve.reporter.info({
       from = "ghc.command.refresh",
       message = "Refreshed all!",
