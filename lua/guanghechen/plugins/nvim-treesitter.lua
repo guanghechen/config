@@ -93,6 +93,7 @@ return {
         set_jumps = true,
         goto_next_start = {
           ["]a"] = "@parameter.inner",
+          ["]b"] = "@block.outer",
           ["]c"] = "@class.outer",
           ["]f"] = "@function.outer",
           ["]s"] = { query = "@local.scope", query_group = "locals", desc = "goto: next scope" },
@@ -105,6 +106,7 @@ return {
         },
         goto_previous_start = {
           ["[a"] = "@parameter.inner",
+          ["[b"] = "@block.outer",
           ["[c"] = "@class.outer",
           ["[f"] = "@function.outer",
           ["[s"] = { query = "@local.scope", query_group = "locals", desc = "goto: prev scope" },
