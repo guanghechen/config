@@ -13,7 +13,6 @@ end
 ---@field protected top                    ghc.dressing.winsep.Line
 ---@field protected right                  ghc.dressing.winsep.Line
 ---@field protected bottom                 ghc.dressing.winsep.Line
----@field protected visible                boolean
 local Winsep = {}
 
 ---@return ghc.dressing.Winsep
@@ -25,29 +24,11 @@ function Winsep.new()
   self.top = Line.new("k")
   self.right = Line.new("l")
   self.bottom = Line.new("j")
-  self.visible = true
   return self
-end
-
----@return boolean
-function Winsep:is_visible()
-  return self.visible
-end
-
----@param visiblity                     ?boolean
----@return nil
-function Winsep:toggle_visiblity(visiblity)
-  if visiblity ~= nil then
-    self.visible = visiblity
-  else
-    self.visible = not self.visible
-  end
 end
 
 ---@return nil
 function Winsep:show()
-  self.visible = true
-
   local bufnr = self.bufnr ---@type integer
   if self.bufnr == nil or not vim.api.nvim_buf_is_valid(self.bufnr) then
     bufnr = vim.api.nvim_create_buf(false, true)
@@ -119,41 +100,45 @@ end
 
 ---@return nil
 function Winsep:hide()
-  if self.visible then
-    self.visible = false
-
-    self.left:hide()
-    self.top:hide()
-    self.right:hide()
-    self.bottom:hide()
-  end
-end
-
----@return nil
-function Winsep:toggle()
-  if self.visible then
-    self:hide()
-  else
-    self:show()
-  end
+  self.left:hide()
+  self.top:hide()
+  self.right:hide()
+  self.bottom:hide()
 end
 
 local winsep = Winsep.new() ---@type ghc.dressing.Winsep
 
-vim.keymap.set({ "i", "n", "v", "t" }, "<F10>", function()
-  winsep:toggle()
-end)
+---@param winnr                         integer
+---@return boolean
+local function should_show(winnr)
+  local enabled = eve.context.state.dressing.winsep:snapshot() ---@type boolean
+  if not enabled then
+    return false
+  end
+
+  if eve.win.is_floating(winnr) then
+    return false
+  end
+
+  return true
+end
 
 vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-
-    if eve.win.is_floating(winnr) then
+    if not should_show(winnr) then
       return
     end
 
-    if winsep:is_visible() then
-      winsep:show()
-    end
+    winsep:show()
   end,
 })
+
+eve.mvc.observe({ eve.context.state.dressing.winsep }, function()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  if not should_show(winnr) then
+    winsep:hide()
+  else
+    winsep:show()
+  end
+end)

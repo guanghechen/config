@@ -1,4 +1,5 @@
 ---@class t.eve.context.data
+---@field public dressing               t.eve.context.data.dressing
 ---@field public theme                  t.eve.context.data.theme
 ---
 ---@field public bookmark               t.eve.context.data.bookmark
@@ -14,6 +15,7 @@
 ---@field public tab_history            t.eve.collection.history.ISerializedData
 
 ---@class t.eve.context.state
+---@field public dressing               t.eve.context.state.dressing
 ---@field public theme                  t.eve.context.state.theme
 ---
 ---@field public bookmark               t.eve.context.state.bookmark

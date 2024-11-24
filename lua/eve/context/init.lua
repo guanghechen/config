@@ -25,6 +25,7 @@ function M.dump()
   ---@type t.eve.context.data
   local data = {
     ---! client
+    dressing = data_client.dressing,
     theme = data_client.theme,
 
     ---! session
@@ -80,6 +81,7 @@ function M.load(storage)
     ---@type t.eve.context.state
     local state = {
       ---! client
+      dressing = client.state.dressing,
       theme = client.state.theme,
 
       ---! session
@@ -180,6 +182,8 @@ function M.watch_changes(params)
   end, true)
 
   mvc.observe({
+    state.dressing.autopairs,
+    state.dressing.winsep,
     state.theme.relativenumber,
   }, function()
     vim.cmd.redraw()

@@ -1,3 +1,7 @@
+---@class t.eve.context.state.dressing
+---@field public autopairs              t.eve.collection.IObservable
+---@field public winsep                 t.eve.collection.IObservable
+
 ---@class t.eve.context.state.theme
 ---@field public theme                  t.eve.collection.IObservable
 ---@field public mode                   t.eve.collection.IObservable
@@ -5,6 +9,7 @@
 ---@field public relativenumber         t.eve.collection.IObservable
 
 ---@class t.eve.context.client.state
+---@field public dressing               t.eve.context.state.dressing
 ---@field public theme                  t.eve.context.state.theme
 
 ---@class t.eve.context.client

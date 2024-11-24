@@ -25,6 +25,11 @@ vim.api.nvim_create_autocmd({
   callback = function()
     close_timer()
 
+    local enabled = eve.context.state.dressing.autopairs:snapshot() ---@type boolean
+    if not enabled then
+      return
+    end
+
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     timer = ux.render(winnr)
   end,

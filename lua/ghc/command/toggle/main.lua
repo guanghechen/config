@@ -7,6 +7,24 @@ local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 ---@type table<string, ghc.command.toggle.IItem>
 local flag_map = {
+  dressing_autopairs = {
+    uuid = uuids.toggle_dressing_autopairs,
+    title = "dressing autopairs",
+    snapshot = function()
+      local observable = eve.context.state.dressing.autopairs ---@type t.eve.collection.IObservable
+      local flag = observable:snapshot()
+      return flag and "true" or "false", "Boolean"
+    end,
+  },
+  dressing_winsep = {
+    uuid = uuids.toggle_dressing_winsep,
+    title = "dressing winsep",
+    snapshot = function()
+      local observable = eve.context.state.dressing.winsep ---@type t.eve.collection.IObservable
+      local flag = observable:snapshot()
+      return flag and "true" or "false", "Boolean"
+    end,
+  },
   flight = {
     uuid = uuids.toggle_flight,
     title = "flight",

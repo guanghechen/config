@@ -2,6 +2,26 @@ local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 eve.commander
   .register({
+    uuid = uuids.toggle_dressing_autopairs,
+    desc = "toggle: dressing autopairs",
+    action = function()
+      local observable = eve.context.state.dressing.autopairs ---@type t.eve.collection.IObservable
+      local flag = observable:snapshot() ---@type boolean
+      observable:next(not flag)
+      eve.commander.execute(uuids.reload_theme, "force")
+    end,
+  })
+  .register({
+    uuid = uuids.toggle_dressing_winsep,
+    desc = "toggle: dressing winsep",
+    action = function()
+      local observable = eve.context.state.dressing.winsep ---@type t.eve.collection.IObservable
+      local flag = observable:snapshot() ---@type boolean
+      observable:next(not flag)
+      eve.commander.execute(uuids.reload_theme, "force")
+    end,
+  })
+  .register({
     uuid = uuids.toggle_relativenumber,
     desc = "toggle: relativenumber",
     action = function()
