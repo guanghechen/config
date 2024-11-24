@@ -1,3 +1,7 @@
+if not eve.context.state.flight.copilot:snapshot() then
+  return
+end
+
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 eve.commander
