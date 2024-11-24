@@ -41,7 +41,7 @@ local keymaps = {
       if vim.wo.diff then
         vim.cmd.normal({ "[c", bang = true })
       else
-        require("gitsigns").nav_hunk("prev", { foldopen = true, target = "all" })
+        require("gitsigns").nav_hunk("prev", { foldopen = true, target = "unstaged" })
       end
     end,
   },
@@ -53,7 +53,7 @@ local keymaps = {
       if vim.wo.diff then
         vim.cmd.normal({ "]c", bang = true })
       else
-        require("gitsigns").nav_hunk("next", { foldopen = true, target = "all" })
+        require("gitsigns").nav_hunk("next", { foldopen = true, target = "unstaged" })
       end
     end,
   },
