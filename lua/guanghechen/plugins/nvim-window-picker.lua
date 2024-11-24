@@ -7,7 +7,7 @@ return {
       autoselect_one = true,
       include_current_win = false,
       bo = {
-        filetype = { "neo-tree", "neo-tree-popup", "noice", "notify" },
+        filetype = eve.filetype.get_no_window_picker_focusable_filetypes(),
         buftype = { "terminal", "quickfix" },
       },
     },
