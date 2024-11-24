@@ -283,7 +283,7 @@ local function get_select()
       case_sensitive = eve.context.state.find.flag_case_sensitive,
       cmp = fml.ux.Select.cmp_by_score,
       dirty_on_invisible = false,
-      enable_preview = true,
+      preview_enabled = true,
       extend_preset_keymaps = false,
       flag_fuzzy = eve.context.state.find.flag_fuzzy,
       flag_regex = eve.context.state.find.flag_regex,

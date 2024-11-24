@@ -37,7 +37,7 @@ local function ghc_select(items, opts, on_choice)
       min_width = 40,
       width = width + 10,
     },
-    enable_preview = false,
+    preview_enabled = false,
     extend_preset_keymaps = true,
     title = title,
     provider = provider,

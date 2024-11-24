@@ -30,7 +30,8 @@ M.__index = M
 ---@field public delay_render           ?integer
 ---@field public dimension              ?t.fml.ux.search.IRawDimension
 ---@field public dirty_on_invisible     ?boolean
----@field public enable_preview         boolean
+---@field public preview_enabled        boolean
+---@field public preview_flag_wrap      ?boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public flag_fuzzy             ?t.eve.collection.IObservable
 ---@field public flag_regex             ?t.eve.collection.IObservable
@@ -60,7 +61,8 @@ function M.new(props)
   local delay_render = props.delay_render or 48 ---@type integer
   local dimension = props.dimension ---@type t.fml.ux.search.IRawDimension|nil
   local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
-  local enable_preview = props.enable_preview ---@type boolean
+  local preview_enabled = props.preview_enabled ---@type boolean
+  local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
   local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type t.eve.collection.IObservable
   local flag_regex = props.flag_regex or Observable.from_value(false) ---@type t.eve.collection.IObservable
@@ -152,7 +154,7 @@ function M.new(props)
   end ---@type t.fml.ux.search.IFetchPreviewData|nil
 
   local fetch_preview_data = nil
-  if enable_preview and provider.fetch_preview_data ~= nil then
+  if preview_enabled and provider.fetch_preview_data ~= nil then
     fetch_preview_data = function(item)
       ---@diagnostic disable-next-line: invisible
       local select_item = self._item_map[item.uuid] ---@type t.fml.ux.select.IItem|nil
@@ -162,7 +164,7 @@ function M.new(props)
 
   ---@type t.fml.ux.search.IPatchPreviewData|nil
   local patch_preview_data = nil
-  if enable_preview and provider.patch_preview_data ~= nil then
+  if preview_enabled and provider.patch_preview_data ~= nil then
     patch_preview_data = function(item, last_item, data)
       ---@diagnostic disable-next-line: invisible
       local select_item = self._item_map[item.uuid] ---@type t.fml.ux.select.IItem
@@ -225,6 +227,7 @@ function M.new(props)
         main_keymaps = main_keymaps,
         patch_preview_data = patch_preview_data,
         permanent = permanent,
+        preview_flag_wrap = preview_flag_wrap,
         preview_keymaps = preview_keymaps,
         statusline_items = statusline_items,
         title = title,

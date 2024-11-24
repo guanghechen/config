@@ -73,7 +73,7 @@ local function select_files(params)
     cmp = fml.ux.Select.cmp_by_score,
     dimension = dimension,
     dirty_on_invisible = true,
-    enable_preview = false,
+    preview_enabled = false,
     extend_preset_keymaps = true,
     flag_fuzzy = eve.c.Observable.from_value(flag_fuzzy),
     flag_regex = eve.c.Observable.from_value(flag_regex),

@@ -89,7 +89,7 @@ local function get_history_select()
     _history_select = fml.ux.FileSelect.new({
       dimension = { height = 3 },
       dirty_on_invisible = true,
-      enable_preview = false,
+      preview_enabled = false,
       extend_preset_keymaps = true,
       frecency = frecency,
       provider = provider,

@@ -137,7 +137,7 @@ local function create_jump_or_list(title, method, additional_params)
   select = fml.ux.FileSelect.new({
     delay_fetch = 0,
     delay_render = 10,
-    enable_preview = true,
+    preview_enabled = true,
     extend_preset_keymaps = true,
     title = title,
     provider = {

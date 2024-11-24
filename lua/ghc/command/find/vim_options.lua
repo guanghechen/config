@@ -82,7 +82,7 @@ local select = fml.ux.Select.new({
     width = 0.8,
   },
   dirty_on_invisible = false,
-  enable_preview = false,
+  preview_enabled = false,
   extend_preset_keymaps = true,
   provider = provider,
   title = "Find Vim Options",

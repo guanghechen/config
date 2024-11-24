@@ -6,10 +6,13 @@ local Select = require("fml.ux.component.select")
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
 ---@field public input                  ?t.eve.collection.IObservable
+---@field public preview_flag_wrap      ?boolean
 ---@field public fetch_items            fun(): t.fml.ux.select.IItem[]
 ---@field public on_confirm             fun(item: t.fml.ux.select.IItem): t.eve.e.WidgetConfirmAction|nil
 ---@field public get_present            ?fun(): string|nil
 ---@field public render_item            ?t.fml.ux.select.IRenderItem
+---@field public fetch_preview_data     ?t.fml.ux.select.IFetchPreviewData
+---@field public patch_preview_data     ?t.fml.ux.select.IPatchPreviewData
 
 ---@param params                        fml.fn.select.IParams
 ---@return nil
@@ -19,11 +22,16 @@ local function select(params)
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
   local input = params.input ---@type t.eve.collection.IObservable | nil
+  local preview_flag_wrap = params.preview_flag_wrap ---@type boolean|nil
   local fetch_items = params.fetch_items ---@type fun(): t.fml.ux.select.IItem[]
   local on_confirm = params.on_confirm ---@type fun(item: t.fml.ux.select.IItem): nil
   local get_present = params.get_present ---@type (fun(): string|nil) | nil
   local render_item = params.render_item ---@type t.fml.ux.select.IRenderItem | nil
+  local fetch_preview_data = params.fetch_preview_data ---@type t.fml.ux.select.IFetchPreviewData | nil
+  local patch_preview_data = params.patch_preview_data ---@type t.fml.ux.select.IPatchPreviewData | nil
   local last_items = nil ---@type t.fml.ux.select.IItem[] | nil
+
+  local preview_enabled = not not fetch_preview_data ---@type boolean
 
   ---@type t.fml.ux.select.IProvider
   local provider = {
@@ -39,16 +47,19 @@ local function select(params)
       return data
     end,
     render_item = render_item,
+    fetch_preview_data = fetch_preview_data,
+    patch_preview_data = patch_preview_data,
   }
 
   Select.new({
     dimension = dimension,
-    enable_preview = false,
     extend_preset_keymaps = true,
     flag_fuzzy = eve.c.Observable.from_value(flag_fuzzy),
     flag_regex = eve.c.Observable.from_value(flag_regex),
     input = input,
     permanent = false,
+    preview_enabled = preview_enabled,
+    preview_flag_wrap = preview_flag_wrap,
     provider = provider,
     title = title,
     on_confirm = function(item)

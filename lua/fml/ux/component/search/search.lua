@@ -45,6 +45,7 @@ local PREVIEW_WIN_HIGHLIGHT = table.concat({
 ---@field protected _permanent          boolean
 ---@field protected _preview            t.fml.ux.search.IPreview|nil
 ---@field protected _preview_title      string
+---@field protected _preview_flag_wrap  ?boolean
 ---@field protected _winnr_input        integer|nil
 ---@field protected _winnr_main         integer|nil
 ---@field protected _winnr_preview      integer|nil
@@ -66,6 +67,7 @@ M.__index = M
 ---@field public main_keymaps           ?t.eve.IKeymap[]
 ---@field public patch_preview_data     ?t.fml.ux.search.IPatchPreviewData
 ---@field public permanent              ?boolean
+---@field public preview_flag_wrap      ?boolean
 ---@field public preview_keymaps        ?t.eve.IKeymap[]
 ---@field public statusline_items       t.eve.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
@@ -121,6 +123,7 @@ function M.new(props)
   local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
   local input_history = props.input_history ---@type t.eve.collection.IHistory|nil
   local permanent = not not props.permanent ---@type boolean
+  local preview_flag_wrap = not not props.preview_flag_wrap ---@type boolean
 
   local on_confirm_from_props = props.on_confirm ---@type t.fml.ux.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type t.fml.ux.search.IOnClose|nil
@@ -416,6 +419,7 @@ function M.new(props)
   self._permanent = permanent
   self._preview = preview
   self._preview_title = " preview "
+  self._preview_flag_wrap = preview_flag_wrap
   self._winnr_input = nil
   self._winnr_main = nil
   self._winnr_preview = nil
@@ -658,7 +662,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_preview].signcolumn = "yes:1"
     vim.wo[winnr_preview].winblend = 10
     vim.wo[winnr_preview].winhighlight = PREVIEW_WIN_HIGHLIGHT
-    vim.wo[winnr_preview].wrap = false
+    vim.wo[winnr_preview].wrap = self._preview_flag_wrap
     vim.wo[winnr_preview].list = true
     vim.wo[winnr_preview].listchars = string.format(
       "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",

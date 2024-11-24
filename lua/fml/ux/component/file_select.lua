@@ -19,7 +19,8 @@ M.__index = M
 ---@field public delay_render           ?integer
 ---@field public dimension              ?t.fml.ux.search.IRawDimension
 ---@field public dirty_on_invisible     ?boolean
----@field public enable_preview         boolean
+---@field public preview_enabled        boolean
+---@field public preview_flag_wrap      ?boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public flag_fuzzy             ?t.eve.collection.IObservable
 ---@field public flag_regex             ?t.eve.collection.IObservable
@@ -47,7 +48,8 @@ function M.new(props)
   local delay_fetch = props.delay_fetch ---@type integer|nil
   local delay_render = props.delay_render ---@type integer|nil
   local dirty_on_invisible = props.dirty_on_invisible ---@type boolean|nil
-  local enable_preview = props.enable_preview ---@type boolean
+  local preview_enabled = props.preview_enabled ---@type boolean
+  local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
   local flag_fuzzy = props.flag_fuzzy ---@type t.eve.collection.IObservable|nil
   local flag_regex = props.flag_regex ---@type t.eve.collection.IObservable|nil
@@ -149,10 +151,10 @@ function M.new(props)
       ---@type t.fml.ux.select.IData
       return { items = items, present_uuid = present_uuid }
     end,
-    fetch_preview_data = enable_preview and function(item)
+    fetch_preview_data = preview_enabled and function(item)
       return self.fetch_preview_data(self.cwd, item)
     end or nil,
-    patch_preview_data = enable_preview and M.patch_preview_data or nil,
+    patch_preview_data = preview_enabled and M.patch_preview_data or nil,
     render_item = provider.render_item or M.render_item,
   }
 
@@ -165,8 +167,8 @@ function M.new(props)
     max_width = dimension_from_props.max_width or 1,
     row = dimension_from_props.row or 5,
     col = dimension_from_props.col,
-    width = dimension_from_props.width or (enable_preview and 0.4 or 0.5),
-    width_preview = dimension_from_props.width_preview or (enable_preview and 0.45 or 0),
+    width = dimension_from_props.width or (preview_enabled and 0.4 or 0.5),
+    width_preview = dimension_from_props.width_preview or (preview_enabled and 0.45 or 0),
   }
 
   ---@return t.fml.ux.ISelect
@@ -179,7 +181,8 @@ function M.new(props)
         delay_render = delay_render,
         dimension = dimension,
         dirty_on_invisible = dirty_on_invisible,
-        enable_preview = enable_preview,
+        preview_enabled = preview_enabled,
+        preview_flag_wrap = preview_flag_wrap,
         extend_preset_keymaps = extend_preset_keymaps,
         flag_fuzzy = flag_fuzzy,
         flag_regex = flag_regex,

@@ -11,7 +11,8 @@ M.__index = M
 ---@field public delay_render           ?integer
 ---@field public dimension              ?t.fml.ux.search.IRawDimension
 ---@field public dirty_on_invisible     ?boolean
----@field public enable_preview         boolean
+---@field public preview_enabled        boolean
+---@field public preview_flag_wrap      ?boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public frecency               ?t.eve.collection.IFrecency
 ---@field public permanent              ?boolean
@@ -28,7 +29,8 @@ function M.new(props)
   local delay_render = props.delay_render ---@type integer|nil
   local dimension = props.dimension ---@type t.fml.ux.search.IRawDimension|nil
   local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
-  local enable_preview = props.enable_preview ---@type boolean
+  local preview_enabled = props.preview_enabled ---@type boolean
+  local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean|nil
   local frecency = props.frecency ---@type t.eve.collection.IFrecency|nil
   local permanent = props.permanent ---@type boolean|nil
@@ -59,7 +61,8 @@ function M.new(props)
         delay_render = delay_render,
         dimension = dimension,
         dirty_on_invisible = dirty_on_invisible,
-        enable_preview = enable_preview,
+        preview_enabled = preview_enabled,
+        preview_flag_wrap = preview_flag_wrap,
         extend_preset_keymaps = extend_preset_keymaps,
         frecency = frecency,
         permanent = permanent,
