@@ -1,6 +1,7 @@
 local locations = require("eve.globals.locations")
 local mvc = require("eve.globals.mvc")
 local widgets = require("eve.globals.widgets")
+local constants = require("eve.std.constants")
 local ft = require("eve.std.filetype")
 local os = require("eve.std.os")
 local path = require("eve.std.path")
@@ -44,10 +45,10 @@ vim.filetype.add({
     [".*"] = {
       function(filepath, bufnr)
         return vim.bo[bufnr]
-            and vim.bo[bufnr].filetype ~= "bigfile"
+            and vim.bo[bufnr].filetype ~= constants.FT_BIGFILE
             and filepath
             and vim.fn.getfsize(filepath) > vim.g.bigfile_size
-            and "bigfile"
+            and constants.FT_BIGFILE
           or nil
       end,
     },
