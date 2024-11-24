@@ -78,6 +78,14 @@ mk({ "n", "v" }, "<leader>2", uuids.search_files, "search: files")
 mk({ "n", "v" }, "<leader>3", uuids.explorer_git_cwd, "explorer: git (cwd)")
 ------------------------------------------------------------------------------------------#enhance--
 
+--#[a]i---------------------------------------------------------------------------------------------
+mk({ "n", "v" }, "<leader>aa", uuids.copilot_chat_toggle, "copilot chat: toggle")
+mk({ "n", "v" }, "<leader>ap", uuids.copilot_chat_prompt, "copilot chat: prompt actions")
+mk({ "n", "v" }, "<leader>aq", uuids.copilot_chat_quick, "copilot chat: quick chat")
+mk({ "n", "v" }, "<leader>as", uuids.copilot_chat_stop, "copilot chat: stop output")
+mk({ "n", "v" }, "<leader>ax", uuids.copilot_chat_reset, "copilot chat: reset")
+---------------------------------------------------------------------------------------------#[a]i--
+
 --#[b]uf--------------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<C-a>s", uuids.buf_save, "buf: save changes")
 mk({ "i", "n", "v" }, "<M-s>", uuids.buf_save, "buf: save changes")

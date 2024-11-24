@@ -12,6 +12,7 @@ M.BT_QUICKFIX = "quickfix"
 ---! filetypes
 M.FT_AERIAL = "aerial"
 M.FT_BIGFILE = "bigfile"
+M.FT_COPILOT_CHAT = "copilot-chat"
 M.FT_CHECKHEALTH = "checkhealth"
 M.FT_DIFFVIEW_FILES = "DiffviewFiles"
 M.FT_GITCOMMIT = "gitcommit"

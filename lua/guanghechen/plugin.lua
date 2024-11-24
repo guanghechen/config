@@ -41,6 +41,7 @@ local raw_specs = {
   { name = "cmp-path", main = "cmp_path", cond = conds.not_vscode },
   { name = "conform.nvim", main = "conform", cond = conds.not_vscode },
   { name = "copilot.lua", main = "copilot", cond = conds.copilot },
+  { name = "CopilotChat.nvim", main = "CopilotChat", cond = conds.copilot },
   { name = "copilot-cmp", main = "copilot_cmp", cond = conds.copilot },
   { name = "diffview.nvim", main = "diffview", cond = conds.not_vscode },
   { name = "dressing.nvim", main = "dressing", cond = conds.not_vscode },

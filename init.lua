@@ -38,7 +38,16 @@ require("ghc.dressing.commentstring")
 require("ghc.dressing.select")
 require("ghc.dressing.winsep")
 require("ghc.command")
+
 eve.commander.execute(eve.commander.uuids.reload_theme)
+vim.schedule(function()
+  eve.commander.execute(eve.commander.uuids.reload_theme)
+  eve.context.watch_changes({
+    on_theme_changed = function()
+      eve.commander.execute(eve.commander.uuids.reload_theme)
+    end,
+  })
+end)
 
 require("guanghechen.option")
 require("guanghechen.autocmd")
@@ -59,12 +68,3 @@ pcall(require, "integration.local")
 if eve.path.is_git_repo() and eve.context.state.flight.autoload:snapshot() then
   eve.nvim.load_nvim_session(eve.context.storage.nvim_session_autosaved)
 end
-
-vim.schedule(function()
-  eve.commander.execute(eve.commander.uuids.reload_theme)
-  eve.context.watch_changes({
-    on_theme_changed = function()
-      eve.commander.execute(eve.commander.uuids.reload_theme)
-    end,
-  })
-end)

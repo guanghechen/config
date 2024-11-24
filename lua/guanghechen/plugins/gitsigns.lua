@@ -62,7 +62,9 @@ local keymaps = {
     key = "<leader>gb",
     desc = "git: blame line",
     callback = function()
-      require("gitsigns").blame_line({ full = true })
+      require("gitsigns").blame_line({
+        ignore_whitespace = false,
+      })
     end,
   },
   {

@@ -1,3 +1,5 @@
+local std_os = require("eve.std.os")
+
 ---@class eve.globals.icons
 local M = {}
 
@@ -122,10 +124,21 @@ M.git = {
 
 ---@class eve.globals.icons.os
 M.os = {
-  unix = "",
+  nix = "",
   mac = "",
   dos = "",
   unknown = "",
+  current = (function()
+    if std_os.is_nix() then
+      return ""
+    elseif std_os.is_mac() then
+      return ""
+    elseif std_os.is_win() then
+      return ""
+    else
+      return ""
+    end
+  end)(),
 }
 
 ---@class eve.globals.icons.ui
