@@ -16,11 +16,6 @@ return {
       end,
     })
   end,
-  build = function()
-    pcall(function()
-      vim.cmd("make tiktoken")
-    end)
-  end,
   opts = {
     auto_insert_mode = true,
     question_header = eve.icons.os.current .. " " .. username .. " ",
