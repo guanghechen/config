@@ -24,7 +24,9 @@ vim.api.nvim_create_autocmd({
   desc = "[ghc.dressing.autopairs] render pairs",
   callback = function()
     close_timer()
-    timer = ux.render()
+
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    timer = ux.render(winnr)
   end,
 })
 
