@@ -1,15 +1,12 @@
 return {
   name = "which-key.nvim",
   event = { "VeryLazy" },
-  init = function()
-    vim.o.timeout = true
-    vim.o.timeoutlen = 300
-  end,
   opts_extend = { "spec" },
   opts = {
     disable = {
       ft = {
         eve.constants.FT_TERM,
+        eve.constants.FT_WINSEP,
       },
     },
     spec = {

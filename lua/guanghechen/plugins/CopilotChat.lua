@@ -7,15 +7,6 @@ local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@typ
 return {
   name = "CopilotChat.nvim",
   cmd = "CopilotChat",
-  init = function()
-    vim.api.nvim_create_autocmd("BufEnter", {
-      pattern = "copilot-chat",
-      callback = function()
-        vim.opt_local.relativenumber = false
-        vim.opt_local.number = false
-      end,
-    })
-  end,
   opts = {
     auto_insert_mode = true,
     question_header = eve.icons.os.current .. " " .. username .. " ",
