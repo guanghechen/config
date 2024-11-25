@@ -6,8 +6,8 @@ return {
   opts = {
     allow_insecure = false,
     auto_insert_mode = true,
-    answer_header = eve.icons.kind.Copilot .. " Copilot ",
-    question_header = eve.icons.os.current .. " " .. username .. " ",
+    answer_header = " " .. eve.icons.kind.Copilot .. " Copilot ",
+    question_header = " " .. eve.icons.os.current .. " " .. username .. " ",
     -- proxy = os.getenv("http_proxy"),
     window = {
       layout = "float",

@@ -14,7 +14,7 @@ local function gen_hlgroup_map(context)
     Cursor = { fg = c.bg1, bg = c.fg1 },
     CursorColumn = { bg = c.bg1 },
     CursorLine = { bg = c.bg1 },
-    CursorLineNr = { fg = c.fg2, bg = c.bg1 },
+    CursorLineNr = { fg = c.fg2, bg = c.bg1, bold = true },
     vCursor = { link = "Cursor" },
     iCursor = { link = "Cursor" },
     lCursor = { link = "Cursor" },
