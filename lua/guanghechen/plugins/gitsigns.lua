@@ -140,12 +140,20 @@ return {
   opts = {
     current_line_blame = true,
     current_line_blame_formatter = "    <author>, <author_time:%Y-%m-%d %H:%M:%S> - <summary>",
-    linehl = false,
-    max_file_length = 3000, -- Disable if file is longer than this (in lines)
     numhl = true,
+    linehl = false,
+    culhl = false,
     signcolumn = true,
     signs_staged_enable = true,
     word_diff = false,
+    max_file_length = 3000, -- Disable if file is longer than this (in lines)
+    diff_opts = {
+      algorithm = "minimal",
+      ignore_blank_lines = false,
+      ignore_whitespace = false,
+      ignore_whitespace_change = false,
+      ignore_whitespace_change_at_eol = false,
+    },
     preview_config = {
       relative = "cursor",
       row = 0,
@@ -162,16 +170,16 @@ return {
     signs = {
       add = { text = "▎" },
       change = { text = "▎" },
-      delete = { text = "_" },
-      topdelete = { text = "‾" },
+      delete = { text = "▁" },
+      topdelete = { text = "▔" },
       changedelete = { text = "󱕖" },
       untracked = { text = "┆" },
     },
     signs_staged = {
       add = { text = "▎" },
       change = { text = "▎" },
-      delete = { text = "_" },
-      topdelete = { text = "‾" },
+      delete = { text = "▁" },
+      topdelete = { text = "▔" },
       changedelete = { text = "󱕖" },
       untracked = { text = "┆" },
     },

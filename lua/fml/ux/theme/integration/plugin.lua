@@ -72,9 +72,25 @@ local function gen_hlgroup_map(context)
 
     ---! gitsigns.nvim
     GitSignsAdd = { fg = c.green },
-    GitSignsChange = { fg = c.yellow },
+    GitSignsAddNr = { link = "GitSignsAdd" },
+    GitSignsChange = { fg = c.blue },
+    GitSignsChangeNr = { link = "GitSignsChange" },
     GitSignsDelete = { fg = c.red },
-    GitSignsCurrentLineBlame = { fg = c.bg4 },
+    GitSignsDeleteNr = { link = "GitSignsDelete" },
+    GitSignsTopdelete = { fg = c.red },
+    GitSignsTopdeleteNr = { link = "GitSignsTopdelete" },
+    GitSignsUntracked = { fg = c.grey },
+    GitSignsUntrackedNr = { link = "GitSignsUntracked" },
+    GitSignsStagedAdd = { fg = cs.mix(c.bg0, c.green, 50) },
+    GitSignsStagedAddNr = { link = "GitSignsStagedAdd" },
+    GitSignsStagedChange = { fg = cs.mix(c.bg0, c.blue, 50) },
+    GitSignsStagedChangeNr = { link = "GitSignsStagedChange" },
+    GitSignsStagedDelete = { fg = cs.mix(c.bg0, c.red, 50) },
+    GitSignsStagedDeleteNr = { link = "GitSignsStagedDelete" },
+    GitSignsStagedTopdelete = { fg = cs.mix(c.bg0, c.red, 50) },
+    GitSignsStagedTopdeleteNr = { link = "GitSignsStagedTopdelete" },
+    GitSignsStagedUntracked = { fg = cs.mix(c.bg0, c.grey, 50) },
+    GitSignsStagedUntrackedNr = { link = "GitSignsStagedUntracked" },
 
     ---! indent-blankline.nvim
     IblChar = { fg = c.bg1 },
