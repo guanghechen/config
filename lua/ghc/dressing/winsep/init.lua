@@ -42,7 +42,8 @@ function Winsep:show()
     vim.bo[bufnr].readonly = true
   end
 
-  local win_pos = vim.api.nvim_win_get_position(0) ---@type integer[]
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local win_pos = vim.api.nvim_win_get_position(winnr) ---@type integer[]
   local row = win_pos[1] ---@type integer
   local col = win_pos[2] ---@type integer
   local width = vim.fn.winwidth(0) - 1 ---@type integer
@@ -52,6 +53,10 @@ function Winsep:show()
   local k_exist = have_border_on_direction("k") ---@type boolean
   local l_exist = have_border_on_direction("l") ---@type boolean
   local j_exist = have_border_on_direction("j") ---@type boolean
+
+  if vim.wo[winnr].winbar == "" then
+    height = height - 1
+  end
 
   if h_exist then
     col = col - 1
