@@ -4,18 +4,6 @@ end
 
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
----@return boolean
-local function detect_if_copilot_chat_is_open()
-  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  for _, bufnr in ipairs(bufnrs) do
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    if filetype == eve.constants.FT_COPILOT_CHAT then
-      return true
-    end
-  end
-  return false
-end
-
 local widget_status = "closed" ---@type t.eve.e.WidgetStatus
 
 ---@type t.eve.ux.IWidget
@@ -26,21 +14,56 @@ widget = {
     return widget_status
   end,
   hide = function()
-    eve.debug.log("CopilotChat hidden")
     widget_status = "hidden"
     require("CopilotChat").close()
   end,
   resize = function()
-    if detect_if_copilot_chat_is_open() then
+    if widget_status == "visible" then
       require("CopilotChat").close()
       require("CopilotChat").open()
     end
   end,
   show = function()
-    eve.debug.log("CopilotChat show")
+    if widget_status == "visible" then
+      return
+    end
+
+    require("CopilotChat").open()
+
     widget_status = "visible"
     eve.globals.widgets.push(widget)
-    require("CopilotChat").open()
+
+    vim.schedule(function()
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      if vim.bo[bufnr].filetype == eve.constants.FT_COPILOT_CHAT then
+        vim.cmd("stopinsert")
+
+        ---Center the title
+        local cfg = vim.api.nvim_win_get_config(winnr)
+        cfg.title_pos = "center"
+        vim.api.nvim_win_set_config(winnr, cfg)
+
+        ---Change highlights
+        vim.wo[winnr].wrap = true
+
+        if not vim.b[bufnr].guanghechen_key_binded then
+          vim.b[bufnr].guanghechen_key_binded = true
+
+          local keymaps = eve.globals.widgets.get_keymaps() ---@type t.eve.IKeymap[]
+          keymaps[#keymaps + 1] = {
+            modes = { "n", "v" },
+            key = "q",
+            callback = function()
+              widget:hide()
+            end,
+            desc = "widgets: hide",
+          }
+
+          eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+        end
+      end
+    end)
   end,
 }
 
@@ -141,7 +164,7 @@ eve.commander
     uuid = uuids.copilot_chat_toggle,
     desc = "copilot chat: toggle",
     action = function()
-      if detect_if_copilot_chat_is_open() then
+      if widget_status == "visible" then
         widget:hide()
       else
         widget:show()

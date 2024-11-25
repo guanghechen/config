@@ -15,11 +15,11 @@ return {
     -- proxy = os.getenv("http_proxy"),
     window = {
       layout = "float",
-      width = 0.6,
+      width = 124,
       height = 0.6,
       row = 4,
       border = "rounded",
-      title = "Copilot Chat",
+      title = " Copilot Chat ",
       title_pos = "center",
       footer = nil,
     },
