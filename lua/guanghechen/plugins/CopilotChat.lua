@@ -8,24 +8,44 @@ return {
   name = "CopilotChat.nvim",
   cmd = "CopilotChat",
   opts = {
+    allow_insecure = false,
     auto_insert_mode = true,
-    question_header = eve.icons.os.current .. " " .. username .. " ",
     answer_header = eve.icons.kind.Copilot .. " Copilot ",
+    question_header = eve.icons.os.current .. " " .. username .. " ",
     -- proxy = os.getenv("http_proxy"),
     window = {
-      width = 0.4,
+      layout = "float",
+      width = 0.6,
+      height = 0.6,
+      row = 4,
+      border = "rounded",
+      title = "Copilot Chat",
+      title_pos = "center",
+      footer = nil,
     },
     prompts = {
       Translate = {
+        description = "Translate English to Chinese and vice versa.",
         prompt = "Translate and refine these words, if it's mainly written in English, then translate and refine it to Chinese, otherwise translate and refine to English",
-        system_prompt = [[You are a helpful assistant.
+        system_prompt = [[
+You are a helpful assistant.
 You are highly proficient in both Chinese and English, and you are capable of translating or
 converting them smartly, concisely, elegantly, and without losing the accuracy of the information.
 Accuracy is extremely important, a point on which you steadfastly insist.
 In the following dialogue, should my message contain at least one Chinese character,
 please translate the whole sentence into English; otherwise, translate the whole sentence into Chinese."
 ]],
-        description = "Translate English to Chinese and vice versa",
+      },
+      ExplainNvimStartuptime = {
+        description = "Explain the nvim startuptime output.",
+        prompt = [[
+This is the output produced by `nvim --startuptime`.
+
+Please explain each column of the output, and summary the top 20 records that consumed the most time,
+make a beautiful table format and sort the picked 20 records by the ascending order at the clock field.
+
+The time consumed on each record should be the delta of it's clock field and the previous record's clock field.
+]],
       },
     },
   },

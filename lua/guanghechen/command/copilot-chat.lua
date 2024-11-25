@@ -4,6 +4,46 @@ end
 
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
+---@return boolean
+local function detect_if_copilot_chat_is_open()
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    if filetype == eve.constants.FT_COPILOT_CHAT then
+      return true
+    end
+  end
+  return false
+end
+
+local widget_status = "closed" ---@type t.eve.e.WidgetStatus
+
+---@type t.eve.ux.IWidget
+local widget
+widget = {
+  statusline_items = nil,
+  status = function()
+    return widget_status
+  end,
+  hide = function()
+    eve.debug.log("CopilotChat hidden")
+    widget_status = "hidden"
+    require("CopilotChat").close()
+  end,
+  resize = function()
+    if detect_if_copilot_chat_is_open() then
+      require("CopilotChat").close()
+      require("CopilotChat").open()
+    end
+  end,
+  show = function()
+    eve.debug.log("CopilotChat show")
+    widget_status = "visible"
+    eve.globals.widgets.push(widget)
+    require("CopilotChat").open()
+  end,
+}
+
 eve.commander
   .register({
     uuid = uuids.copilot_chat_prompt,
@@ -60,6 +100,7 @@ eve.commander
         on_confirm = function(item)
           local data = item.data ---@type guanghechen.plugins.copilot_chat.prompt_actions.IItem
           vim.defer_fn(function()
+            widget:show()
             require("CopilotChat").ask(data.prompt, data)
           end, 100)
 
@@ -74,7 +115,11 @@ eve.commander
     action = function()
       local input = vim.fn.input("Quick Chat: ") ---@type string
       if input ~= "" then
-        require("CopilotChat").ask(input)
+        widget:show()
+        require("CopilotChat").ask(input, {
+          context = { "buffer", "files", "git" },
+          selection = require("CopilotChat.select").buffer,
+        })
       end
     end,
   })
@@ -96,6 +141,10 @@ eve.commander
     uuid = uuids.copilot_chat_toggle,
     desc = "copilot chat: toggle",
     action = function()
-      return require("CopilotChat").toggle()
+      if detect_if_copilot_chat_is_open() then
+        widget:hide()
+      else
+        widget:show()
+      end
     end,
   })
