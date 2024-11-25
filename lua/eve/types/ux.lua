@@ -18,11 +18,13 @@
 ---@field public min_height             ?number
 
 ---@class t.eve.ux.IWidget
+---@field public uuid                   string|nil
 ---@field public statusline_items       t.eve.ux.widget.IStatuslineItem[]|nil
 ---@field public status                 fun(self: t.eve.ux.IWidget): t.eve.e.WidgetStatus
+---@field public close                  fun(self: t.eve.ux.IWidget): nil
 ---@field public hide                   fun(self: t.eve.ux.IWidget): nil
----@field public resize                 fun(self: t.eve.ux.IWidget): nil
 ---@field public show                   fun(self: t.eve.ux.IWidget): nil
+---@field public resize                 fun(self: t.eve.ux.IWidget): nil
 
 ---@class t.eve.ux.widget.IStatuslineItem
 ---@field public type                   t.eve.e.WidgetStatuslineItemType

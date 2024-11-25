@@ -858,7 +858,7 @@ end
 
 ---@return nil
 function M:open()
-  widgets.push(self)
+  widgets.open(self)
   self:show()
 end
 

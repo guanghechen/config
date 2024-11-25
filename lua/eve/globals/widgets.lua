@@ -1,6 +1,17 @@
 local History = require("eve.collection.history")
 
-local _widgets = History.new({ name = "widgets", capacity = 100 })
+---@param w1                            t.eve.ux.IWidget
+---@param w2                            t.eve.ux.IWidget
+---@return boolean
+local function equals_widgets(w1, w2)
+  return w1 == w2
+end
+
+local _widgets = History.new({
+  name = "widgets",
+  capacity = 20,
+  equals = equals_widgets,
+})
 
 ---@class eve.globals.widgets
 local M = {}
@@ -12,15 +23,13 @@ function M.backward()
     return
   end
 
-  while true do
-    local widget, is_bottom = _widgets:backward() ---@type t.eve.ux.IWidget|nil, boolean
-    if widget ~= nil and widget ~= present and widget:status() == "hidden" then
+  local widget = nil ---@type t.eve.ux.IWidget|nil
+  local is_bottom = false ---@type boolean
+  while not is_bottom do
+    widget, is_bottom = _widgets:backward()
+    if widget ~= nil and not equals_widgets(widget, present) and widget:status() == "hidden" then
       present:hide()
       widget:show()
-      break
-    end
-
-    if is_bottom then
       break
     end
   end
@@ -33,39 +42,42 @@ function M.forward()
     return
   end
 
-  while true do
-    local widget, is_top = _widgets:forward() ---@type t.eve.ux.IWidget|nil, boolean
-    if widget ~= nil and widget ~= present and widget:status() == "hidden" then
+  local widget = nil ---@type t.eve.ux.IWidget|nil
+  local is_top = false ---@type boolean
+  while not is_top do
+    widget, is_top = _widgets:forward() ---@type t.eve.ux.IWidget|nil, boolean
+    if widget ~= nil and not equals_widgets(widget, present) and widget:status() == "hidden" then
       present:hide()
       widget:show()
-      break
-    end
-
-    if is_top then
       break
     end
   end
 end
 
+---@return nil
+function M.close_present()
+  local widget = M.get_current_widget() ---@type t.eve.ux.IWidget|nil
+  if widget ~= nil and widget:status() == "visible" then
+    widget:close()
+  end
+end
+
 ---@return t.eve.ux.IWidget|nil
 function M.get_current_widget()
-  while true do
-    local present, preset_index = _widgets:present() ---@type t.eve.ux.IWidget|nil, integer
-    if present == nil then
-      return nil
-    end
-
-    local status = present:status() ---@type t.eve.e.WidgetStatus
-    if status ~= "closed" then
-      return present
-    end
-
-    if preset_index <= 1 then
-      break
-    end
-
-    _widgets:backward()
+  local present = _widgets:present() ---@type t.eve.ux.IWidget|nil
+  if present ~= nil and present:status() ~= "closed" then
+    return present
   end
+
+  local widget = nil ---@type t.eve.ux.IWidget|nil
+  local is_bottom = false ---@type boolean
+  while not is_bottom do
+    widget, is_bottom = _widgets:backward()
+    if widget ~= nil and widget:status() ~= "closed" then
+      return widget
+    end
+  end
+
   return nil
 end
 
@@ -73,6 +85,7 @@ end
 function M.get_keymaps()
   ---@type t.eve.IKeymap[]
   local keymaps = {
+    { modes = { "n", "t", "v" }, key = "q", callback = M.close_present, desc = "widgets: close present" },
     { modes = { "i", "n", "t", "v" }, key = "<C-a>i", callback = M.backward, desc = "widgets: backward" },
     { modes = { "i", "n", "t", "v" }, key = "<C-a>o", callback = M.forward, desc = "widgets: forward" },
     { modes = { "i", "n", "t", "v" }, key = "<M-i>", callback = M.backward, desc = "widgets: backward" },
@@ -83,50 +96,50 @@ end
 
 ---@param widget                        t.eve.ux.IWidget
 ---@return nil
-function M.push(widget)
-  _widgets:push(widget)
-  for w in _widgets:iterator() do
-    if w ~= widget and w:status() == "visible" then
-      w:hide()
-    end
+function M.open(widget)
+  local present = M.get_current_widget() ---@type t.eve.ux.IWidget|nil
+  if present == nil then
+    _widgets:push(widget)
+    widget:show()
+    return
   end
+
+  if not equals_widgets(present, widget) then
+    if _widgets:size() == _widgets:capacity() then
+      local bottom_widget = _widgets:bottom() ---@type t.eve.ux.IWidget
+      bottom_widget:close()
+    end
+    _widgets:push(widget)
+
+    present:hide()
+  end
+
+  widget:show()
 end
 
 ---@return boolean
 function M.resume()
-  while true do
-    local present, present_index = _widgets:present() ---@type t.eve.ux.IWidget|nil, integer
-    if present == nil then
-      break
-    end
+  local present = M.get_current_widget() ---@type t.eve.ux.IWidget|nil
+  if present == nil or present:status() == "closed" then
+    return false
+  end
 
+  vim.schedule(function()
     local status = present:status() ---@type t.eve.e.WidgetStatus
     if status == "visible" then
-      vim.schedule(function()
-        present:hide()
-      end)
-      return true
+      present:hide()
     elseif status == "hidden" then
-      vim.schedule(function()
-        present:show()
-      end)
-      return true
+      present:show()
     end
-
-    if present_index <= 1 then
-      break
-    end
-
-    _widgets:backward()
-  end
-  return false
+  end)
+  return true
 end
 
 ---@return nil
 function M.resize()
   for widget in _widgets:iterator() do
     local status = widget:status() ---@type t.eve.e.WidgetStatus
-    if status == "visible" then
+    if status ~= "closed" then
       widget:resize()
     end
   end

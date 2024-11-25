@@ -58,6 +58,11 @@ function M:backward(step)
   return element, present <= 1
 end
 
+---@return t.eve.T|nil
+function M:bottom()
+  return self._stack:at(1)
+end
+
 ---@return integer
 function M:capacity()
   return self._stack:capacity()
@@ -171,8 +176,8 @@ end
 function M:push(element)
   local present = self._present ---@type integer
   local stack = self._stack ---@type t.eve.collection.ICircularStack
-  local el_present = stack:at(present) ---@type t.eve.T
-  if self.equals(el_present, element) then
+  local el_present = stack:at(present) ---@type t.eve.T|nil
+  if el_present ~= nil and self.equals(el_present, element) then
     return
   end
 

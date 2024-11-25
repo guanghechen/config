@@ -3,7 +3,6 @@
 ---@field public change_dimension       fun(self: t.fml.ux.search.ISearch, dimension: t.fml.ux.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: t.fml.ux.search.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: t.fml.ux.search.ISearch, title: string): nil
----@field public close                  fun(self: t.fml.ux.search.ISearch): nil
 ---@field public focus                  fun(self: t.fml.ux.search.ISearch): nil
 ---@field public get_winnr_input        fun(self: t.fml.ux.search.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: t.fml.ux.search.ISearch): integer|nil

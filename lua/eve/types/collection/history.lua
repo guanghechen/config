@@ -2,6 +2,7 @@
 ---@field public name                   string
 ---@field public equals                 t.eve.IEquals
 ---@field public backward               fun(self: t.eve.collection.IHistory, step?: integer): t.eve.T|nil, boolean
+---@field public bottom                 fun(self: t.eve.collection.IHistory): t.eve.T|nil
 ---@field public capacity               fun(self: t.eve.collection.IHistory): integer
 ---@field public clear                  fun(self: t.eve.collection.IHistory): nil
 ---@field public collect                fun(self: t.eve.collection.IHistory): t.eve.T[]

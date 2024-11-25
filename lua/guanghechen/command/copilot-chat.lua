@@ -13,9 +13,13 @@ local widget_status = "closed" ---@type t.eve.e.WidgetStatus
 ---@type t.eve.ux.IWidget
 local widget
 widget = {
+  uuid = "copitlot-chat",
   statusline_items = nil,
   status = function()
     return widget_status
+  end,
+  close = function()
+    widget:hide()
   end,
   hide = function()
     widget_status = "hidden"
@@ -35,7 +39,7 @@ widget = {
     require("CopilotChat").open()
 
     widget_status = "visible"
-    eve.globals.widgets.push(widget)
+    eve.globals.widgets.open(widget)
 
     vim.schedule(function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer

@@ -1,5 +1,4 @@
 ---@class t.fml.ux.ITerminal : t.eve.ux.IWidget
----@field public close                  fun(self: t.fml.ux.ITerminal): nil
 ---@field public focus                  fun(self: t.fml.ux.ITerminal): nil
 ---@field public get_winnr              fun(self: t.fml.ux.ITerminal): integer|nil
 ---@field public get_bufnr              fun(self: t.fml.ux.ITerminal): integer|nil
