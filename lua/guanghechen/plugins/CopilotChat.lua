@@ -1,7 +1,3 @@
----@class guanghechen.plugins.copilot_chat.prompt_actions.IItem
----@field public prompt                 ?string
----@field public callback               ?fun(): nil
-
 local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
 
 return {

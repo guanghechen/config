@@ -2,6 +2,10 @@ if not eve.context.state.flight.copilot:snapshot() then
   return
 end
 
+---@class guanghechen.command.copilot_chat.prompt_actions.IItem
+---@field public prompt                 ?string
+---@field public callback               ?fun(): nil
+
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 local widget_status = "closed" ---@type t.eve.e.WidgetStatus
@@ -108,7 +112,7 @@ eve.commander
           return select_items
         end,
         fetch_preview_data = function(item)
-          local data = item.data ---@type guanghechen.plugins.copilot_chat.prompt_actions.IItem
+          local data = item.data ---@type guanghechen.command.copilot_chat.prompt_actions.IItem
           local lines = vim.split(data.prompt or "", "\n") ---@type string[]
 
           ---@type t.fml.ux.search.preview.IData
@@ -121,7 +125,7 @@ eve.commander
           return result
         end,
         on_confirm = function(item)
-          local data = item.data ---@type guanghechen.plugins.copilot_chat.prompt_actions.IItem
+          local data = item.data ---@type guanghechen.command.copilot_chat.prompt_actions.IItem
           vim.defer_fn(function()
             widget:show()
             require("CopilotChat").ask(data.prompt, data)
