@@ -273,10 +273,10 @@ M.cmp = {
 
 ---@class eve.globals.icons.dap
 M.dap = {
-  Breakpoint = "󰝥",
-  BreakpointCondition = "󰟃",
+  Breakpoint = "",
+  BreakpointCondition = "",
   BreakpointRejected = "",
-  LogPoint = "",
+  LogPoint = ".>",
   Pause = "",
   Play = "",
   RunLast = "↻",

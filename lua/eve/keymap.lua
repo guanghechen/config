@@ -62,6 +62,8 @@ mk({ "v" }, "<C-a>c", '"+y', "system: copy to clipboard")
 mk({ "v" }, "<M-c>", '"+y', "system: copy to clipboard")
 mk({ "v" }, "<C-a>x", '"+x', "system: cut to clipboard")
 mk({ "v" }, "<M-x>", '"+x', "system: cut to clipboard")
+mk({ "n" }, "<C-a>c", uuids.copy_char_under_cursor, "system: copy char under curosr to clipboard")
+mk({ "n" }, "<M-c>", uuids.copy_char_under_cursor, "system: copy char under curosr to clipboard")
 mk({ "i", "n", "v" }, "<C-a>a", "<esc>gg0vG$", "system: select all")
 mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "system: select all")
 mk({ "i", "n", "v" }, "<C-a>v", '<esc>"+p', "system: paste from clipboard")
@@ -123,8 +125,6 @@ mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "code: add commen
 --#[c]opy-------------------------------------------------------------------------------------------
 mk({ "i", "n", "v" }, "<C-a>C", uuids.copy_current_filepath, "copy: current filepath")
 mk({ "i", "n", "v" }, "<M-C>", uuids.copy_current_filepath, "copy: current filepath")
-mk({ "i", "n" }, "<C-a>c", uuids.copy_current_filepath_relative, "copy: current filepath (relative)")
-mk({ "i", "n" }, "<M-c>", uuids.copy_current_filepath_relative, "copy: current filepath (relative)")
 -----------------------------------------------------------------------------------------#[c]opy----
 
 --#[d]ebug------------------------------------------------------------------------------------------
