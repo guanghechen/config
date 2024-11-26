@@ -133,11 +133,13 @@ function M:close()
   if not self._permanent then
     self._status = "closed"
     self._term_alive = false
-    if self._bufnr ~= nil and vim.api.nvim_buf_is_valid(self._bufnr) then
-      local bufnr = self._bufnr ---@type integer
-      self._bufnr = nil
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
+
+    local bufnr = self._bufnr ---@type integer
+    vim.schedule(function()
+      if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
+    end)
   end
 end
 
@@ -221,10 +223,11 @@ function M:show()
       callback = function()
         self._bufnr = nil
         self._term_alive = false
-
-        if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-          vim.api.nvim_buf_delete(bufnr, { force = true })
-        end
+        vim.schedule(function()
+          if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+            vim.api.nvim_buf_delete(bufnr, { force = true })
+          end
+        end)
         self:close()
       end,
     })
