@@ -23,6 +23,9 @@ require("ghc.command.find.highlights")
 require("ghc.command.find.pinned_files")
 require("ghc.command.find.vim_options")
 
+require("ghc.command.git.browse")
+require("ghc.command.git.lazygit")
+
 require("ghc.command.lsp.diagnostic")
 require("ghc.command.lsp.reference")
 
@@ -35,7 +38,6 @@ require("ghc.command.toggle.theme")
 
 require("ghc.command.copy")
 require("ghc.command.debug")
-require("ghc.command.lazygit")
 require("ghc.command.refresh")
 require("ghc.command.resume")
 require("ghc.command.run")

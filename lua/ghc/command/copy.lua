@@ -75,8 +75,8 @@ eve.commander
           end,
           fetch_items = function()
             local items = {} ---@type t.fml.ux.select.IItem[]
-            for _, theme in ipairs(copy_current_filepath_candidates) do
-              table.insert(items, { uuid = theme, text = theme })
+            for _, candidate in ipairs(copy_current_filepath_candidates) do
+              table.insert(items, { uuid = candidate, text = candidate })
             end
             return items
           end,

@@ -161,6 +161,7 @@ mk({ "n", "v" }, "<leader>fw", uuids.find_files_workspace, "find: files (workspa
 --#[g]it--------------------------------------------------------------------------------------------
 mk({ "i", "n", "t", "v" }, "<C-a>g", uuids.lazygit_cwd, "git: toggle lazygit (cwd)")
 mk({ "i", "n", "t", "v" }, "<M-g>", uuids.lazygit_cwd, "git: toggle lazygit (cwd)")
+mk({ "n", "v" }, "<leader>gB", uuids.git_browse, "git: browse")
 mk({ "n", "v" }, "<leader>gf", uuids.git_file_history, "git: open file history")
 mk({ "n", "v" }, "<leader>gg", uuids.git_diffview, "git: open diffview")
 --------------------------------------------------------------------------------------------#[g]it--

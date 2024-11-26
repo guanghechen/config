@@ -71,6 +71,7 @@ M.uuids = {
   find_highlights = "Ffindhighlights",
   find_pinned_files = "Ffindpinnedfiles",
   find_vim_options = "Ffindvimoptions",
+  git_browse = "Fgitbrowse",
   git_diffview = "Fgitdiffview",
   git_file_history = "Fgitfilehistory",
   goto_lsp_definitions = "Fgotolspdefinitions",
