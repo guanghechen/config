@@ -1,18 +1,13 @@
-import { spawn } from "node:child_process";
-import fs from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
-import url from "node:url";
-
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-export const HOME_THEME_SCHEME = path.join(__dirname, "scheme");
-export const HOME_THEME_APP = path.join(__dirname, "app");
-export const HOME_CONFIG =
-  process.env.XDG_CONFIG_HOME ||
-  (process.env.HOME ? path.join(process.env.HOME, ".config") : "");
-
-export const themes = fs //
-  .readdirSync(HOME_THEME_SCHEME)
-  .map((p) => p.replace(/\.json$/, ""));
+import { HOME_CONFIG } from "./_env.mjs";
+import {
+  is_directory,
+  is_file,
+  render_template,
+  touch,
+  safe_exec,
+} from "./_util.mjs";
 
 /**
  * @typedef {Object} IAppConfig
@@ -127,7 +122,7 @@ export const apps = [
     local: process.env.f_windows_terminal_settings,
     active: (app) => is_file(app.local),
     render: (app, template, scheme) => {
-      const raw_content = fs.readFileSync(app.local, "utf8");
+      const raw_content = readFileSync(app.local, "utf8");
       const settings = JSON.parse(raw_content);
 
       const raw_color_scheme = render_template(template, scheme);
@@ -152,110 +147,3 @@ export const apps = [
     },
   },
 ];
-
-/**
- * @param {string|null|undefined} filepath
- * @return {boolean}
- */
-function is_directory(filepath) {
-  return (
-    !!filepath && fs.existsSync(filepath) && fs.statSync(filepath).isDirectory()
-  );
-}
-
-/**
- * @param {string|null|undefined} filepath
- * @return {boolean}
- */
-function is_file(filepath) {
-  return (
-    !!filepath && fs.existsSync(filepath) && fs.statSync(filepath).isFile()
-  );
-}
-
-/**
- * @param {string}  template
- * @param {string}  raw_scheme
- * @return {string}
- */
-function render_template(template, raw_scheme) {
-  const scheme = JSON.parse(raw_scheme);
-  const mode = scheme.mode;
-  const c = scheme.palette;
-
-  const data = {
-    black: mode === "light" ? c.fg0 : c.bg0,
-    white: mode === "light" ? c.bg4 : c.fg4,
-    brightBlack: mode === "light" ? c.fg1 : c.bg1,
-    brightWhite: mode === "light" ? c.bg1 : c.fg1,
-    ...c,
-    mode,
-    theme: scheme.theme,
-  };
-  const content = template.replace(
-    /\{{2}([\w]+)\}{2}/g,
-    (_, key) => data[key] || `{{${key}}}`,
-  );
-  return content;
-}
-
-async function touch(filepath) {
-  if (fs.existsSync(filepath)) {
-    try {
-      const now = new Date();
-      fs.utimesSync(filepath, now, now);
-    } catch (error) {
-      console.error("[touch] Error touching file:", { filepath, error });
-    }
-  }
-}
-
-async function safe_exec(cmd, args, extendedEnv) {
-  const encoding = "utf8";
-
-  try {
-    const stdout = await new Promise((resolve, reject) => {
-      let stdoutData = "";
-      let stderrData = "";
-      let terminated = false;
-
-      const onResolved = () => {
-        if (!terminated) {
-          terminated = true;
-          resolve(stdoutData.trimEnd());
-        }
-      };
-
-      const onRejected = (error) => {
-        if (!terminated) {
-          terminated = true;
-          reject(error || new Error((stderrData || stdoutData).trimEnd()));
-        }
-      };
-
-      try {
-        const child = spawn(cmd, args, {
-          cwd: __dirname,
-          env: { ...process.env, ...extendedEnv },
-          stdio: ["ignore", "pipe", "pipe"], // Suppress output
-        });
-        child.stdout?.on("data", (data) => {
-          stdoutData += data.toString(encoding);
-        });
-        child.stderr?.on("data", (data) => {
-          stderrData += data.toString(encoding);
-        });
-        child.on("close", (code) => {
-          if (code === 0) onResolved();
-          else onRejected();
-        });
-      } catch (error) {
-        onRejected(error);
-      }
-    });
-
-    return { stdout };
-  } catch (error) {
-    console.error(`['safe_exec'] Failed to run command.`, { cmd, args, error });
-  }
-}

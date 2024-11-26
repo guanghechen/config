@@ -1,6 +1,7 @@
 {
-  "theme": "one_half",
-  "mode": "light",
+  "theme": "one_half_light",
+  "variant": "light",
+  "opposite": "one_half_dark",
   "palette": {
     "bg0": "#FAFAFA",
     "bg1": "#F0F0F0",

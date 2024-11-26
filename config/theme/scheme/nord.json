@@ -1,6 +1,6 @@
 {
   "theme": "nord",
-  "mode": "dark",
+  "variant": "neutral",
   "palette": {
     "bg0": "#2E3440",
     "bg1": "#3B4252",
