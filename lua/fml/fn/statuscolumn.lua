@@ -226,4 +226,10 @@ local function statuscolumn()
   return table.concat(components, "")
 end
 
-return statuscolumn
+---@return string
+local function safe_statuscolumn()
+  local ok, result = pcall(statuscolumn)
+  return ok and result or ""
+end
+
+return safe_statuscolumn
