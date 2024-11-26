@@ -73,6 +73,7 @@ local filetypes = {
     [constants.FT_WINSEP] = true,
   },
   no_cmp_code = {
+    [constants.FT_COPILOT_CHAT] = true,
     [constants.FT_BIGFILE] = true,
     [constants.FT_NEOTREE_POPUP] = true,
     [constants.FT_SEARCH_INPUT] = true,
