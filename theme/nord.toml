@@ -1,3 +1,5 @@
+# nord
+
 # Default colors
 [colors.primary]
 background = "#2E3440"
@@ -9,9 +11,9 @@ black   = "#2E3440"
 red     = "#BF616A"
 green   = "#A3BE8C"
 yellow  = "#EBCB8B"
-blue    = "#81A1C1"
+blue    = "#5E81AC"
 magenta = "#B48EAD"
-cyan    = "#8FBCBB"
+cyan    = "#88C0D0"
 white   = "#B0BEC5"
 
 # Bright colors
@@ -20,7 +22,7 @@ black   = "#B0BEC5"
 red     = "#BF616A"
 green   = "#A3BE8C"
 yellow  = "#EBCB8B"
-blue    = "#5E81AC"
+blue    = "#81A1C1"
 magenta = "#B48EAD"
-cyan    = "#88C0D0"
+cyan    = "#8FBCBB"
 white   = "#E5E9F0"
