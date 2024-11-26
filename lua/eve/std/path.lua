@@ -272,29 +272,29 @@ end
 ---@param app                           string
 ---@return string
 function M.locate_app_config_home(app)
-  local filepath = eve.path.join(HOME_NVIM_CONFIG, "../" .. app)
+  local filepath = M.join(HOME_NVIM_CONFIG, "../" .. app)
   return M.normalize(filepath)
 end
 
 ---@param filename                      string
 ---@return string
 function M.locate_config_filepath(filename)
-  local filepath = eve.path.join(HOME_NVIM_CONFIG, "/config/" .. filename)
+  local filepath = M.join(HOME_NVIM_CONFIG, "/config/" .. filename)
   return M.normalize(filepath)
 end
 
 ---@param filename                      string
 ---@return string
 function M.locate_script_filepath(filename)
-  local filepath = eve.path.join(HOME_NVIM_CONFIG, "/script/" .. filename)
+  local filepath = M.join(HOME_NVIM_CONFIG, "/script/" .. filename)
   return M.normalize(filepath)
 end
 
 ---@param filename                      string
 ---@return string
 function M.locate_context_filepath(filename)
-  local filepath = eve.path.join(HOME_NVIM_STATE, "/guanghechen/context/" .. filename)
-  return eve.path.normalize(filepath)
+  local filepath = M.join(HOME_NVIM_STATE, "/guanghechen/context/" .. filename)
+  return M.normalize(filepath)
 end
 
 ---@param filename                      string
@@ -304,15 +304,15 @@ function M.locate_session_filepath(filename)
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
   local hash = md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
-  local filepath = eve.path.join(HOME_NVIM_STATE, "/guanghechen/sessions/" .. session_dir .. "/" .. filename)
-  return eve.path.normalize(filepath)
+  local filepath = M.join(HOME_NVIM_STATE, "/guanghechen/sessions/" .. session_dir .. "/" .. filename)
+  return M.normalize(filepath)
 end
 
 ---@param filename                      string
 ---@return string
 function M.locate_theme_filepath(filename)
-  local filepath = eve.path.join(HOME_NVIM_STATE, "/guanghechen/theme/" .. filename)
-  return eve.path.normalize(filepath)
+  local filepath = M.join(HOME_NVIM_STATE, "/guanghechen/theme/" .. filename)
+  return M.normalize(filepath)
 end
 
 return M

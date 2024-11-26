@@ -1,3 +1,6 @@
+---@alias t.eve.e.InputMethod
+---|"English"
+---|"Chinese"
 
 ---@alias t.eve.e.FindScope
 ---|"W"

@@ -3,11 +3,31 @@ local mvc = require("eve.globals.mvc")
 local widgets = require("eve.globals.widgets")
 local constants = require("eve.std.constants")
 local ft = require("eve.std.filetype")
-local os = require("eve.std.os")
+local std_os = require("eve.std.os")
 local path = require("eve.std.path")
 
-if os.is_mac() or os.is_nix() or os.is_wsl() then
+if std_os.is_mac() or std_os.is_nix() or std_os.is_wsl() then
   vim.opt.shell = "/bin/bash"
+end
+
+if std_os.is_mac() then
+  local im = require("eve.std.im")
+  local previous_mode = nil ---@type t.eve.e.VimMode|nil
+  local previous_input_method = nil ---@type t.eve.e.InputMethod|nil
+  vim.api.nvim_create_autocmd({ "ModeChanged" }, {
+    callback = function()
+      local current_mode = vim.fn.mode() ---@type t.eve.e.VimMode|nil
+      if previous_mode == "i" and current_mode == "n" then
+        previous_input_method = im.get_input_method() ---@type t.eve.e.InputMethod|nil
+        im.set_input_method("English")
+      elseif previous_mode == "n" and current_mode == "i" then
+        if previous_input_method ~= nil then
+          im.set_input_method(previous_input_method)
+        end
+      end
+      previous_mode = current_mode
+    end,
+  })
 end
 
 if not vim.g.vscode then
