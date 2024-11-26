@@ -70,6 +70,15 @@ local filetypes = {
     [constants.FT_TROUBLE] = true,
     [constants.FT_WINSEP] = true,
   },
+  no_flash = {
+    [constants.FT_CMP_MENU] = true,
+    [constants.FT_FLASH_PROMPT] = true,
+    [constants.FT_NOICE] = true,
+    [constants.FT_NOTIFY] = true,
+    [constants.FT_LSPINFO] = true,
+    [constants.FT_PLENARY_TEST_POPUP] = true,
+    [constants.FT_WINSEP] = true,
+  },
   no_window_picker_focusable = {
     [constants.FT_NOICE] = true,
     [constants.FT_LSPINFO] = true,
@@ -155,6 +164,11 @@ end
 ---@return string[]
 function M.get_no_cmp_filetypes()
   return vim.tbl_keys(filetypes.no_cmp)
+end
+
+---@return string[]
+function M.get_no_flash_filetypes()
+  return vim.tbl_keys(filetypes.no_flash)
 end
 
 ---@return string[]

@@ -20,30 +20,6 @@ return {
       end,
       desc = "Flash Treesitter",
     },
-    {
-      "r",
-      mode = "o",
-      function()
-        require("flash").remote()
-      end,
-      desc = "Remote Flash",
-    },
-    {
-      "R",
-      mode = { "o", "x" },
-      function()
-        require("flash").treesitter_search()
-      end,
-      desc = "Treesitter Search",
-    },
-    {
-      "<C-s>",
-      mode = { "c" },
-      function()
-        require("flash").toggle()
-      end,
-      desc = "Toggle Flash Search",
-    },
   },
   opts = {
     jump = {
@@ -58,17 +34,14 @@ return {
     },
     modes = {
       char = {
-        enabled = false,
+        enabled = true,
+        multi_line = false,
+        keys = { "f", "F", "t", "T", ",", ";" },
       },
     },
     search = {
       mode = "exact",
-      exclude = {
-        "cmp_menu",
-        "noice",
-        "notify",
-        "flash_prompt",
-      },
+      exclude = eve.filetype.get_no_flash_filetypes(),
     },
   },
 }
