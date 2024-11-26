@@ -68,9 +68,9 @@ local function gen_hlgroup_map(context)
 
     ---lsp
     LspInlayHint = { fg = c.fg4, bg = c.bg1 },
-    LspReferenceRead = { bold = true, underline = true, sp = c.neutral_purple },
-    LspReferenceText = { bold = true, underline = true, sp = c.neutral_purple },
-    LspReferenceWrite = { bold = true, underline = true, sp = c.neutral_purple },
+    LspReferenceRead = { bg = c.bg2, underline = true, sp = c.neutral_purple },
+    LspReferenceText = { bg = c.bg2, underline = true, sp = c.neutral_purple },
+    LspReferenceWrite = { bg = c.bg2, underline = true, sp = c.neutral_purple },
     LspSignatureActiveParameter = { fg = c.bg1, bg = c.green },
     RenamerBorder = { fg = c.red },
     RenamerTitle = { fg = c.bg0, bg = c.red },
