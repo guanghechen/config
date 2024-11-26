@@ -1,5 +1,42 @@
 local util_cmp = require("guanghechen.util.cmp")
 
+---@param buftype                       string|nil
+---@param filetype                      string|nil
+---@return boolean
+local function enabled_basic(buftype, filetype)
+  if buftype == eve.constants.BT_NOFILE then
+    return false
+  end
+  return not eve.filetype.is_no_cmp_filetype(filetype)
+end
+
+---@return boolean
+local function enabled_code()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  if not enabled_basic(buftype, filetype) then
+    return false
+  end
+  return not eve.filetype.is_no_cmp_code_filetype(filetype)
+end
+
+---@return boolean
+local function enabled_path()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  return enabled_basic(buftype, filetype)
+end
+
+---@return boolean
+local function enabled_buffer()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  return enabled_basic(buftype, filetype)
+end
+
 return {
   name = "nvim-cmp",
   event = { "InsertEnter" },
@@ -14,21 +51,6 @@ return {
         cmp = { enabled = true },
         completeopt = "menu,menuone,noinsert",
       },
-      enabled = function()
-        local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-
-        local buftype = vim.bo[bufnr].buftype ---@type string
-        if buftype == eve.constants.BT_NOFILE then
-          return false
-        end
-
-        local filetype = vim.bo[bufnr].filetype ---@type string
-        if eve.filetype.is_no_cmp_filetype(filetype) then
-          return false
-        end
-
-        return true
-      end,
       experimental = {
         ghost_text = {
           hl_group = "CmpGhostText",
@@ -123,11 +145,11 @@ return {
         },
       },
       sources = {
-        { name = "copilot", group_index = 1, priority = 100 },
-        { name = "path", group_index = 1, priority = 99 },
-        { name = "nvim_lsp", group_index = 1, priority = 98 },
-        { name = "snippets", group_index = 2, priority = 80 },
-        { name = "buffer", group_index = 2, priority = 60 },
+        { name = "copilot", group_index = 1, priority = 100, enabled = enabled_code },
+        { name = "path", group_index = 1, priority = 99, enabled = enabled_path },
+        { name = "nvim_lsp", group_index = 1, priority = 98, enabled = enabled_code },
+        { name = "snippets", group_index = 2, priority = 80, enabled = enabled_code },
+        { name = "buffer", group_index = 2, priority = 60, enabled = enabled_buffer },
       },
       window = {
         completion = {

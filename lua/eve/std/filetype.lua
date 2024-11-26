@@ -53,6 +53,7 @@ local filetypes = {
     [constants.FT_AERIAL] = true,
     [constants.FT_CHECKHEALTH] = true,
     [constants.FT_DIFFVIEW_FILES] = true,
+    [constants.FT_FLASH_PROMPT] = true,
     [constants.FT_GITCOMMIT] = true,
     [constants.FT_HELP] = true,
     [constants.FT_LAZY] = true,
@@ -65,10 +66,16 @@ local filetypes = {
     [constants.FT_PLENARY_TEST_POPUP] = true,
     [constants.FT_QUICKFIX] = true,
     [constants.FT_SEARCH_MAIN] = true,
+    [constants.FT_SEARCH_PREVIEW] = true,
     [constants.FT_STARTUPTIME] = true,
     [constants.FT_TERM] = true,
     [constants.FT_TROUBLE] = true,
     [constants.FT_WINSEP] = true,
+  },
+  no_cmp_code = {
+    [constants.FT_BIGFILE] = true,
+    [constants.FT_NEOTREE_POPUP] = true,
+    [constants.FT_SEARCH_INPUT] = true,
   },
   no_flash = {
     [constants.FT_CMP_MENU] = true,
@@ -167,6 +174,11 @@ function M.get_no_cmp_filetypes()
 end
 
 ---@return string[]
+function M.get_no_cmp_code_filetypes()
+  return vim.tbl_keys(filetypes.no_cmp_code)
+end
+
+---@return string[]
 function M.get_no_flash_filetypes()
   return vim.tbl_keys(filetypes.no_flash)
 end
@@ -210,7 +222,6 @@ function M.is_no_ibl_filetype(filetype)
   if filetype == nil or #filetype < 1 then
     return true
   end
-
   return filetypes.no_ibl[filetype]
 end
 
@@ -218,8 +229,14 @@ function M.is_no_cmp_filetype(filetype)
   if filetype == nil or #filetype < 1 then
     return true
   end
-
   return filetypes.no_cmp[filetype]
+end
+
+function M.is_no_cmp_code_filetype(filetype)
+  if filetype == nil or #filetype < 1 then
+    return true
+  end
+  return filetypes.no_cmp_code[filetype]
 end
 
 return M
