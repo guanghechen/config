@@ -85,7 +85,7 @@ end
 function M.get_keymaps()
   ---@type t.eve.IKeymap[]
   local keymaps = {
-    { modes = { "n", "t", "v" }, key = "q", callback = M.close_present, desc = "widgets: close present" },
+    { modes = { "n", "v" }, key = "q", callback = M.close_present, desc = "widgets: close present" },
     { modes = { "i", "n", "t", "v" }, key = "<C-a>i", callback = M.backward, desc = "widgets: backward" },
     { modes = { "i", "n", "t", "v" }, key = "<C-a>o", callback = M.forward, desc = "widgets: forward" },
     { modes = { "i", "n", "t", "v" }, key = "<M-i>", callback = M.backward, desc = "widgets: backward" },
