@@ -1,4 +1,7 @@
----@alias ghc.command.git.browse.TargetType "branch" |"file" |"repo"
+---@alias ghc.command.git.browse.TargetType
+---|"branch"
+---|"file"
+---|"repo"
 
 ---@class ghc.command.git.browse.IRemote
 ---@field public name                   string
@@ -50,6 +53,87 @@ local function system(cmd, err)
   return vim.split(vim.trim(proc), "\n")
 end
 
+---@return string
+local function get_git_branch_or_commit()
+  local command = eve.os.is_win()
+    and 'git rev-parse --abbrev-ref HEAD 2>$null'
+    or 'git rev-parse --abbrev-ref HEAD 2>/dev/null'
+
+  -- Run the git command to get the branch name
+  local handle = io.popen(command)
+  if not handle then
+    eve.reporter.error({
+      from = "ghc.command.git.browse",
+      message = "Failed to run git command to get branch",
+    })
+    return "HEAD"
+  end
+
+  local branch = handle:read('*a')
+  handle:close()
+
+  if branch and branch ~= nil then
+    branch = branch:match("^%s*(.-)%s*$")
+  end
+
+  -- If not on a branch, try to get the commit hash
+  if branch == '' or branch == 'HEAD' then
+    command = eve.os.is_win()
+      and 'git rev-parse HEAD 2>$null'
+      or 'git rev-parse HEAD 2>/dev/null'
+
+    handle = io.popen(command)
+    if not handle then
+      eve.reporter.error({
+        from = "ghc.command.git.browse",
+        message = "Failed to run git command to get commit hash",
+      })
+      return "HEAD"
+    end
+
+    branch = handle:read('*a')
+    handle:close()
+  end
+
+  if branch and branch ~= '' then
+    return branch:match("^%s*(.-)%s*$")
+  end
+  return "HEAD"
+end
+
+---@return string|nil
+local function get_filepath()
+  local workspace  = eve.path.workspace() ---@type string
+  local filepath = vim.api.nvim_buf_get_name(0) ---@type string|nil
+
+  if filepath == nil then
+    return nil
+  end
+
+  if eve.path.is_under(workspace, filepath) then
+    return  eve.path.relative(workspace, filepath, true) ---@type string
+  end
+
+  return  nil
+end
+
+---@return string|nil
+local function get_file_line()
+  local mode = vim.fn.mode()
+  if  mode ~= "v" and mode ~= "V" then
+    vim.fn.line(".")
+  end
+
+  local start_line = vim.fn.line("v")
+  local end_line = vim.fn.line(".")
+
+  -- Ensure start_line is always the smaller number
+  if start_line > end_line then
+    start_line, end_line = end_line, start_line
+  end
+  return start_line .. "-L" .. end_line
+end
+
 ---@param remote                        string
 ---@return string
 local function get_repo(remote)
@@ -85,29 +169,13 @@ end
 ---@return nil
 local function open()
   local workspace  = eve.path.workspace() ---@type string
+  local filepath = get_filepath() ---@type string|nil
   local remotes = {} ---@type ghc.command.git.browse.IRemote[]
-
-  local filepath = vim.api.nvim_buf_get_name(0) ---@type string|nil
-  filepath = filepath and (vim.uv.fs_stat(filepath) or {}).type == "file" and vim.fs.normalize(filepath) or nil
-
   local fields = {
-    branch = system({ "git", "-C", workspace, "rev-parse", "--abbrev-ref", "HEAD" }, "Failed to get current branch")[1],
-    file = filepath and system({ "git", "-C", workspace, "ls-files", "--full-name", filepath }, "Failed to get git file path")[1],
-    line = nil,
+    branch = get_git_branch_or_commit(),
+    file = filepath,
+    line = filepath and get_file_line(),
   }
-
-  -- Get visual selection range if in visual mode
-  if vim.fn.mode() == "v" or vim.fn.mode() == "V" then
-    local start_line = vim.fn.line("v")
-    local end_line = vim.fn.line(".")
-    -- Ensure start_line is always the smaller number
-    if start_line > end_line then
-      start_line, end_line = end_line, start_line
-    end
-    fields.line = filepath and start_line .. "-L" .. end_line
-  else
-    fields.line = filepath and vim.fn.line(".")
-  end
 
   local what = config.what ---@type ghc.command.git.browse.TargetType
   what = what == "file" and not fields.file and "branch" or what
