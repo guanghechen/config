@@ -20,6 +20,8 @@ local M = {}
 
 ---@type t.eve.e.Theme[]
 M.themes = {
+  "catppuccin-latte",
+  "catppuccin-mocha",
   "gruvbox_dark",
   "gruvbox_light",
   "nord",

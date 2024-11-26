@@ -11,6 +11,8 @@
 ---|"B"
 
 ---@alias t.eve.e.Theme
+---|"catppuccin-latte"
+---|"catppuccin-mocha"
 ---|"gruvbox_light"
 ---|"gruvbox_dark"
 ---|"nord"
