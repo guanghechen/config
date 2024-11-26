@@ -45,19 +45,7 @@ function M.new(props)
     command = { shell, "-c", props.command }
   end
 
-  ---@type t.eve.IKeymap[]
-  local keymaps = {
-    {
-      modes = { "n", "v" },
-      key = "q",
-      callback = function()
-        self:close()
-      end,
-      desc = "close",
-    },
-  }
-
-  vim.list_extend(keymaps, widgets.get_keymaps())
+  local keymaps = widgets.get_keymaps() ---@type t.eve.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
   local command_cwd = props.command_cwd or path.cwd() ---@type string
@@ -203,7 +191,6 @@ end
 ---@return nil
 function M:open()
   widgets.open(self)
-  self:show()
 end
 
 ---@return nil

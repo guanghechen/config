@@ -272,7 +272,6 @@ function M.new(props)
     },
     { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.force_refresh, desc = "search: refresh" },
     { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.force_refresh, desc = "search: refresh" },
-    { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
   })
 
   ---@type t.eve.IKeymap[]
@@ -859,7 +858,6 @@ end
 ---@return nil
 function M:open()
   widgets.open(self)
-  self:show()
 end
 
 ---@return nil

@@ -18,7 +18,7 @@
 ---@field public min_height             ?number
 
 ---@class t.eve.ux.IWidget
----@field public uuid                   string|nil
+---@field public name                   string|nil
 ---@field public statusline_items       t.eve.ux.widget.IStatuslineItem[]|nil
 ---@field public status                 fun(self: t.eve.ux.IWidget): t.eve.e.WidgetStatus
 ---@field public close                  fun(self: t.eve.ux.IWidget): nil

@@ -13,7 +13,7 @@ local widget_status = "closed" ---@type t.eve.e.WidgetStatus
 ---@type t.eve.ux.IWidget
 local widget
 widget = {
-  uuid = "copitlot-chat",
+  name = "copitlot-chat",
   statusline_items = nil,
   status = function()
     return widget_status
@@ -31,15 +31,16 @@ widget = {
       require("CopilotChat").open()
     end
   end,
+  open = function()
+    eve.globals.widgets.open(widget)
+  end,
   show = function()
     if widget_status == "visible" then
       return
     end
 
     require("CopilotChat").open()
-
     widget_status = "visible"
-    eve.globals.widgets.open(widget)
 
     vim.schedule(function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -59,15 +60,6 @@ widget = {
           vim.b[bufnr].guanghechen_key_binded = true
 
           local keymaps = eve.globals.widgets.get_keymaps() ---@type t.eve.IKeymap[]
-          keymaps[#keymaps + 1] = {
-            modes = { "n", "v" },
-            key = "q",
-            callback = function()
-              widget:hide()
-            end,
-            desc = "widgets: hide",
-          }
-
           eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
       end
@@ -131,7 +123,7 @@ eve.commander
         on_confirm = function(item)
           local data = item.data ---@type guanghechen.command.copilot_chat.prompt_actions.IItem
           vim.defer_fn(function()
-            widget:show()
+            widget:open()
             require("CopilotChat").ask(data.prompt, data)
           end, 100)
 
@@ -146,7 +138,7 @@ eve.commander
     action = function()
       local input = vim.fn.input("Quick Chat: ") ---@type string
       if input ~= "" then
-        widget:show()
+        widget:open()
         require("CopilotChat").ask(input, {
           context = { "buffer", "files", "git" },
           selection = require("CopilotChat.select").buffer,
@@ -175,7 +167,7 @@ eve.commander
       if widget_status == "visible" then
         widget:hide()
       else
-        widget:show()
+        widget:open()
       end
     end,
   })
