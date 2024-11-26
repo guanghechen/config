@@ -1,4 +1,4 @@
----@alias ghc.command.git.browse.TargetType
+---@alias ghc.command.git.browse.TargetScope
 ---|"branch"
 ---|"file"
 ---|"repo"
@@ -9,7 +9,6 @@
 
 ---@class ghc.command.git.browse
 local config = {
-  what = "file", ---@type ghc.command.git.browse.TargetType
   -- patterns to transform remotes to an actual URL
   remote_patterns = {
     { "^(https?://.*)%.git$"              , "%1" },
@@ -51,6 +50,36 @@ local function system(cmd, err)
     error(err)
   end
   return vim.split(vim.trim(proc), "\n")
+end
+
+---@param filename                      string
+---@param lnum                          integer
+local function get_last_commit_hash(filename, lnum)
+  local command = string.format("git blame -slL %d,%d %s", lnum, lnum, filename)
+  local handle = io.popen(command)
+
+  if not handle then
+    eve.reporter.error({
+      from = "ghc.command.git.browse",
+      message = "Failed to run git command to get last commit hash of the filename with specified line number",
+    })
+    return
+  end
+
+  local output = handle:read("*a")
+  handle:close()
+
+  -- If output is empty, return nil (no commit history found for that line)
+  if output == "" then
+    return nil
+  end
+
+  -- Extract the commit hash (first part of the output line)
+  local commit_hash = output:match("^%S+")
+  if commit_hash == "0000000000000000000000000000000000000000" then
+    return nil
+  end
+  return commit_hash
 end
 
 ---@return string
@@ -145,7 +174,7 @@ local function get_repo(remote)
 end
 
 ---@param repo                          string
----@param what                          ghc.command.git.browse.TargetType
+---@param what                          ghc.command.git.browse.TargetScope
 local function get_url(repo, what)
   for remote, patterns in pairs(config.url_patterns) do
     if repo:find(remote) then
@@ -177,10 +206,7 @@ local function open()
     line = filepath and get_file_line(),
   }
 
-  local what = config.what ---@type ghc.command.git.browse.TargetType
-  what = what == "file" and not fields.file and "branch" or what
-  what = what == "branch" and not fields.branch and "repo" or what
-
+  local scope = fields.file and "file" or (fields.branch and "branch" or "repo") ---@type ghc.command.git.browse.TargetScope
   for _, line in ipairs(system({ "git", "-C", workspace, "remote", "-v" }, "Failed to get git remotes")) do
     local name, remote_url = line:match("(%S+)%s+(%S+)%s+%(fetch%)")
     if name and remote_url then
@@ -189,7 +215,7 @@ local function open()
         ---@type ghc.command.git.browse.IRemote
         local remote = {
           name = name,
-          url = get_url(repo, what):gsub("(%b{})", function(key)
+          url = get_url(repo, scope):gsub("(%b{})", function(key)
             return fields[key:sub(2, -2)] or key
           end),
         }
@@ -202,7 +228,7 @@ local function open()
     eve.reporter.error({
       from = "ghc.command.git.browse",
       message = "No git remotes found",
-      details = { what = what, workspace = workspace, filepath = filepath }
+      details = { what = scope, workspace = workspace, filepath = filepath }
     })
     return
   end
