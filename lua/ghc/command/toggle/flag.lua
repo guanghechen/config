@@ -36,17 +36,6 @@ eve.commander
     end,
   })
   .register({
-    uuid = uuids.toggle_theme_mode,
-    desc = "toggle: theme mode",
-    action = function()
-      local theme = eve.context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
-      local mode = eve.context.state.theme.mode:snapshot() ---@type t.eve.e.ThemeMode
-      local next_mode = mode == "light" and "dark" or "light"
-      local scheme_name = theme .. "_" .. next_mode
-      eve.commander.execute(uuids.toggle_theme, scheme_name)
-    end,
-  })
-  .register({
     uuid = uuids.toggle_theme_transparency,
     desc = "toggle: theme transparency",
     action = function()

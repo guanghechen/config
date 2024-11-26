@@ -1,7 +1,7 @@
 ---@type t.eve.collection.theme.IScheme
 local M = {
-  theme = "one_half",
-  mode = "light",
+  theme = "one_half_light",
+  variant = "light",
   palette = {
     bg0 = "#FAFAFA",
     bg1 = "#F0F0F0",

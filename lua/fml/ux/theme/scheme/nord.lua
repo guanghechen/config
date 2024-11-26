@@ -1,7 +1,7 @@
 ---@type t.eve.collection.theme.IScheme
 local M = {
   theme = "nord",
-  mode = "light",
+  variant = "neutral",
   palette = {
     bg0 = "#2E3440",
     bg1 = "#3B4252",

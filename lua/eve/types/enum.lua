@@ -11,11 +11,13 @@
 ---|"B"
 
 ---@alias t.eve.e.Theme
----|"gruvbox"
+---|"gruvbox_light"
+---|"gruvbox_dark"
 ---|"nord"
----|"one_half"
+---|"one_half_light"
+---|"one_half_dark"
 
----@alias t.eve.e.ThemeMode
+---@alias t.eve.e.ThemeVariant
 ---|"dark"
 ---|"light"
 

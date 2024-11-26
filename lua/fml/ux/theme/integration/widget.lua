@@ -4,7 +4,7 @@ local cs = require("eve.std.color")
 ---@return table<string, t.eve.collection.theme.IHlgroup>
 local function gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type t.eve.collection.theme.IPalette
-  local mode = context.scheme.mode ---@type t.eve.e.ThemeMode
+  local variant = context.scheme.variant ---@type t.eve.e.ThemeVariant
 
   local diff_del = c.red ---@type string
   local diff_add = c.green ---@type string
@@ -16,7 +16,7 @@ local function gen_hlgroup_map(context)
 
   local bg_main = c.bg0 --@type string
   bg_main = cs.change_hex_saturation(bg_main, -20) ---@type string
-  bg_main = cs.change_hex_lightness(bg_main, (mode == "light" and -1 or 1) * 4) ---@type string
+  bg_main = cs.change_hex_lightness(bg_main, (variant == "light" and -1 or 1) * 4) ---@type string
 
   return {
     ---common

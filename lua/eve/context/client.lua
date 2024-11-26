@@ -13,8 +13,7 @@ function M.defaults()
 
   ---@type t.eve.context.data.theme
   local theme = {
-    theme = "one_half",
-    mode = "dark",
+    theme = "gruvbox_dark",
     transparency = false,
     relativenumber = true,
   }
@@ -45,7 +44,6 @@ function M.dump()
   ---@type t.eve.context.data.theme
   local theme = {
     theme = state.theme.theme:snapshot(),
-    mode = state.theme.mode:snapshot(),
     transparency = state.theme.transparency:snapshot(),
     relativenumber = state.theme.relativenumber:snapshot(),
   }
@@ -71,7 +69,6 @@ function M.load(data)
     ---@type t.eve.context.state.theme
     local theme = {
       theme = Observable.from_value(data.theme.theme),
-      mode = Observable.from_value(data.theme.mode),
       transparency = Observable.from_value(data.theme.transparency),
       relativenumber = Observable.from_value(data.theme.relativenumber),
     }
@@ -91,7 +88,6 @@ function M.load(data)
 
     ---! theme
     state.theme.theme:next(data.theme.theme)
-    state.theme.mode:next(data.theme.mode)
     state.theme.transparency:next(data.theme.transparency)
     state.theme.relativenumber:next(data.theme.relativenumber)
   end
@@ -122,9 +118,6 @@ function M.normalize(data)
     if type(data.theme.theme) == "string" then
       resolved.theme.theme = data.theme.theme
     end
-    if type(data.theme.mode) == "string" then
-      resolved.theme.mode = data.theme.mode
-    end
     if type(data.theme.transparency) == "boolean" then
       resolved.theme.transparency = data.theme.transparency
     end
@@ -152,7 +145,6 @@ function M.equals(data)
   ---compare theme data
   if
     data.theme.theme ~= cur.theme.theme
-    or data.theme.mode ~= cur.theme.mode
     or data.theme.transparency ~= cur.theme.transparency
     or data.theme.relativenumber ~= cur.theme.relativenumber
   then

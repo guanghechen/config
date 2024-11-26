@@ -4,7 +4,6 @@
 
 ---@class t.eve.context.state.theme
 ---@field public theme                  t.eve.collection.IObservable
----@field public mode                   t.eve.collection.IObservable
 ---@field public transparency           t.eve.collection.IObservable
 ---@field public relativenumber         t.eve.collection.IObservable
 

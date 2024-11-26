@@ -46,16 +46,7 @@ local flag_map = {
     title = "theme",
     snapshot = function()
       local theme = eve.context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
-      local mode = eve.context.state.theme.mode:snapshot() ---@type t.eve.e.ThemeMode
-      return theme .. "_" .. mode, "String"
-    end,
-  },
-  theme_mode = {
-    uuid = uuids.toggle_theme_mode,
-    title = "theme mode",
-    snapshot = function()
-      local mode = eve.context.state.theme.mode:snapshot() ---@type t.eve.e.ThemeMode
-      return mode, "String"
+      return theme, "String"
     end,
   },
   theme_transparency = {

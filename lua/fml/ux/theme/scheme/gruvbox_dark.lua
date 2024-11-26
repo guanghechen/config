@@ -1,7 +1,7 @@
 ---@type t.eve.collection.theme.IScheme
 local M = {
-  theme = "gruvbox",
-  mode = "dark",
+  theme = "gruvbox_dark",
+  variant = "dark",
   palette = {
     bg0 = "#282828",
     bg1 = "#3C3836",

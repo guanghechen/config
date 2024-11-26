@@ -32,7 +32,7 @@
 
 ---@class t.eve.collection.theme.IScheme
 ---@field public theme                  t.eve.e.Theme
----@field public mode                   t.eve.e.ThemeMode
+---@field public variant                t.eve.e.ThemeVariant
 ---@field public palette                t.eve.collection.theme.IPalette
 
 ---@class t.eve.collection.theme.IHlgroup : vim.api.keyset.highlight

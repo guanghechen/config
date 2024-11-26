@@ -7,25 +7,22 @@ local M = {}
 
 ---@class fml.ux.theme.ILoadIntegrationParams
 ---@field public theme                  t.eve.e.Theme
----@field public mode                   t.eve.e.ThemeMode
 ---@field public transparency           boolean
 ---@field public integration            t.fml.e.ux.theme.HighlightIntegration
 ---@field public nsnr                   ?integer
 
 ---@class fml.ux.theme.ILoadThemeParams
 ---@field public theme                  t.eve.e.Theme
----@field public mode                   t.eve.e.ThemeMode
 ---@field public transparency           boolean
 ---@field public persistent             boolean
 ---@field public filepath               ?string
 ---@field public nsnr                   ?integer
 
----@type string[]
+---@type t.eve.e.Theme[]
 M.themes = {
   "gruvbox_dark",
   "gruvbox_light",
-  "nord_dark",
-  "nord_light",
+  "nord",
   "one_half_dark",
   "one_half_light",
 }
@@ -66,27 +63,25 @@ function M.set_term_colors(scheme)
 end
 
 ---@param theme                         t.eve.e.Theme
----@param mode                          t.eve.e.ThemeMode
 ---@return t.eve.collection.theme.IScheme|nil
-function M.get_scheme(theme, mode)
-  local scheme_name = theme .. "_" .. mode
-  if not vim.tbl_contains(M.themes, scheme_name) then
+function M.get_scheme(theme)
+  if not vim.tbl_contains(M.themes, theme) then
     reporter.error({
       from = "fml.ux.theme",
       subject = "get_scheme",
       message = "Unknown theme.",
-      details = { theme = theme, mode = mode },
+      details = { theme = theme },
     })
     return nil
   end
 
-  local ok, scheme = pcall(hmr, "fml.ux.theme.scheme." .. scheme_name)
+  local ok, scheme = pcall(hmr, "fml.ux.theme.scheme." .. theme)
   if not ok then
     reporter.error({
       from = "fml.ux.theme",
       subject = "get_scheme",
       message = "Cannot find scheme.",
-      details = { theme = theme, mode = mode },
+      details = { theme = theme },
     })
     return nil
   end
@@ -97,16 +92,15 @@ end
 ---@return nil
 function M.apply_integration(params)
   local theme = params.theme ---@type t.eve.e.Theme
-  local mode = params.mode ---@type t.eve.e.ThemeMode
   local transparency = params.transparency ---@type boolean
   local integration = params.integration ---@type t.fml.e.ux.theme.HighlightIntegration
   local nsnr = params.nsnr or 0 ---@type integer
 
-  local scheme = M.get_scheme(theme, mode)
+  local scheme = M.get_scheme(theme)
   if scheme ~= nil then
     ---@type t.fml.ux.IThemeContext
     local themeContext = {
-      theme = scheme.theme .. "_" .. scheme.mode,
+      theme = scheme.theme,
       scheme = scheme,
       transparency = transparency,
     }
@@ -122,13 +116,12 @@ end
 ---@return t.eve.collection.theme.IScheme|nil
 function M.apply_theme(params)
   local theme = params.theme ---@type t.eve.e.Theme
-  local mode = params.mode ---@type t.eve.e.ThemeMode
   local transparency = params.transparency ---@type boolean
   local persistent = params.persistent ---@type boolean
   local filepath = params.filepath ---@type string|nil
   local nsnr = params.nsnr or 0 ---@type integer
 
-  local scheme = M.get_scheme(theme, mode)
+  local scheme = M.get_scheme(theme)
   if scheme ~= nil then
     local gen_tabline_hlgroup_map = hmr("fml.ux.theme.integration.tabline")
     local gen_winline_hlgroup_map = hmr("fml.ux.theme.integration.winline")

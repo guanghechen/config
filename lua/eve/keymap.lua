@@ -236,12 +236,11 @@ mk({ "n", "t" }, "<leader>tt", uuids.term_cwd, "terminal: toggle (cwd)")
 ---------------------------------------------------------------------------------------#[t]erminal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<C-a>T", uuids.toggle_theme_mode, "theme: toggle mode")
-mk({ "i", "n", "v" }, "<M-T>", uuids.toggle_theme_mode, "theme: toggle mode")
+mk({ "i", "n", "v" }, "<C-a>T", uuids.toggle_theme_variant, "theme: toggle variant")
+mk({ "i", "n", "v" }, "<M-T>", uuids.toggle_theme_variant, "theme: toggle variant")
 mk({ "n", "v" }, "<leader>tt", uuids.toggle, "toggle")
 mk({ "n", "v" }, "<leader>tuf", uuids.toggle_flight, "toggle: flight")
 mk({ "n", "v" }, "<leader>tul", uuids.toggle_relativenumber, "toggle: relativenumber")
-mk({ "n", "v" }, "<leader>tum", uuids.toggle_theme_mode, "toggle: theme mode")
 mk({ "n", "v" }, "<leader>tuT", uuids.toggle_theme_transparency, "toggle: theme transparency")
 mk({ "n", "v" }, "<leader>tut", uuids.toggle_theme, "toggle: theme")
 mk({ "n", "v" }, "<leader>tuw", uuids.toggle_wrap, "toggle: wrap (temporary)")

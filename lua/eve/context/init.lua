@@ -170,7 +170,6 @@ function M.watch_changes(params)
 
   mvc.observe({
     state.theme.theme,
-    state.theme.mode,
     state.theme.transparency,
   }, function()
     if params.on_theme_changed then
