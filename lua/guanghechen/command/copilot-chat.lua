@@ -33,17 +33,9 @@ chat_widget = {
     end
   end,
   internal_win_cfg = function()
-    local width_min = math.floor(vim.o.columns * 0.6) ---@type integer
-    local width_max = math.floor(vim.o.columns * 0.9) ---@type integer
-    local width = eve.util.minmax(width_min, width_max, 124) ---@type integer
-
-    local height_min = math.floor(vim.o.lines * 0.8) ---@type integer
-    local height_max = math.floor(vim.o.lines * 0.9) ---@type integer
-    local height = eve.util.minmax(height_min, height_max, 48) ---@type integer
-
-    local row_max = math.floor((vim.o.lines - height) / 2) ---@type integer
-    local row = math.min(row_max, 4) ---@type integer
-
+    local width = math.min(124, math.floor(vim.o.columns * 0.8)) ---@type integer
+    local height = math.min(48, math.floor(vim.o.lines * 0.8)) ---@type integer
+    local row = math.floor((vim.o.lines - height) / 2) ---@type integer
     local col = math.floor((vim.o.columns - width) / 2) ---@type integer
 
     ---@type vim.api.keyset.win_config
@@ -77,6 +69,12 @@ chat_widget = {
     vim.schedule(function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+
+      local cfg_current = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+      local cfg_customized = chat_widget.internal_win_cfg() ---@type vim.api.keyset.win_config
+      local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
+      vim.api.nvim_win_set_config(winnr, cfg)
+
       if vim.bo[bufnr].filetype == eve.constants.FT_COPILOT_CHAT then
         chat_widget.internal_winnr = winnr
         chat_widget.internal_status = "visible"
