@@ -25,4 +25,11 @@ function M.truthy(...)
   return true
 end
 
+---@param min                           number
+---@param max                           number
+---@param value                         number
+function M.minmax(min, max, value)
+  return math.min(max, math.max(min, value))
+end
+
 return M

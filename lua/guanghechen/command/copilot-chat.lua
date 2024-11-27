@@ -34,12 +34,12 @@ chat_widget = {
   end,
   internal_win_cfg = function()
     local width_min = math.floor(vim.o.columns * 0.6) ---@type integer
-    local width_max = math.floor(vim.o.columns * 0.8) ---@type integer
-    local width = math.max(width_min, math.min(width_max, 124)) ---@type integer
+    local width_max = math.floor(vim.o.columns * 0.9) ---@type integer
+    local width = eve.util.minmax(width_min, width_max, 124) ---@type integer
 
-    local height_min = math.floor(vim.o.lines * 0.6) ---@type integer
-    local height_max = math.floor(vim.o.lines * 0.8) ---@type integer
-    local height = math.max(height_min, math.min(height_max, 48)) ---@type integer
+    local height_min = math.floor(vim.o.lines * 0.8) ---@type integer
+    local height_max = math.floor(vim.o.lines * 0.9) ---@type integer
+    local height = eve.util.minmax(height_min, height_max, 48) ---@type integer
 
     local row_max = math.floor((vim.o.lines - height) / 2) ---@type integer
     local row = math.min(row_max, 4) ---@type integer
