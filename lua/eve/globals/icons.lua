@@ -5,7 +5,7 @@ local M = {}
 
 ---@class eve.globals.icosn.fillchars
 M.fillchars = {
-  diff = "╱",
+  diff = " ",
   eob = " ",
   foldopen = "",
   foldclose = "",
