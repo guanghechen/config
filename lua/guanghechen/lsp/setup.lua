@@ -3,12 +3,13 @@ vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
   ---@diagnostic disable-next-line: no-unknown
   local ret = register_capability(err, res, ctx)
   local client = vim.lsp.get_client_by_id(ctx.client_id)
-  local buffer = vim.api.nvim_get_current_buf()
   if client then
-    vim.api.nvim_exec_autocmds("User", {
-      pattern = "LspDynamicCapability",
-      data = { client_id = client.id, buffer = buffer },
-    })
+    for bufnr in pairs(client.attached_buffers) do
+      vim.api.nvim_exec_autocmds("User", {
+        pattern = "LspDynamicCapability",
+        data = { client_id = client.id, buffer = bufnr },
+      })
+    end
   end
   return ret
 end

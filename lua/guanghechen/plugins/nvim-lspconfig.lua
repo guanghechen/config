@@ -1,4 +1,4 @@
-local util_lsp = require("guanghechen.util.lsp")
+local on_supports_method = require("fml.fn.on_supports_method")
 
 return {
   name = "nvim-lspconfig",
@@ -40,7 +40,7 @@ return {
 
     -- inlay hints
     ---@diagnostic disable-next-line: unused-local
-    util_lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
+    on_supports_method("textDocument/inlayHint", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
         vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
       end
@@ -49,7 +49,7 @@ return {
     -- code lens
     if vim.lsp.codelens then
       ---@diagnostic disable-next-line: unused-local
-      util_lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
+      on_supports_method("textDocument/codeLens", function(client, bufnr)
         vim.lsp.codelens.refresh()
         vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
           buffer = bufnr,
