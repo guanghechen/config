@@ -1,6 +1,9 @@
 ---@class eve.std.constants
 local M = {}
 
+---! Variable names
+M.V_WINLINE_DISABLED = "ghc_winline_disabled"
+
 ---! special symbols.
 M.EDITING_INPUT_PREFIX = "@#!eve!#@"
 

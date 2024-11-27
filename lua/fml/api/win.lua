@@ -42,7 +42,10 @@ function M.locate_symbols(winnr, force)
 
   ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  if not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
+  if
+    vim.b[bufnr][eve.constants.V_WINLINE_DISABLED]
+    or not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol")
+  then
     return
   end
 
@@ -61,6 +64,13 @@ function M.locate_symbols(winnr, force)
     locating_set[winnr] = nil
 
     if err then
+      if type(err) == "table" then
+        if err.message == "trying to get AST for non-added document" then
+          vim.b[bufnr][eve.constants.V_WINLINE_DISABLED] = true
+          return
+        end
+      end
+
       eve.reporter.error({
         from = "fml.api.lsp",
         subject = "locate_symbols",

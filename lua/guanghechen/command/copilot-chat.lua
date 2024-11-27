@@ -2,68 +2,143 @@ if not eve.context.state.flight.copilot:snapshot() then
   return
 end
 
+local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+
 ---@class guanghechen.command.copilot_chat.prompt_actions.IItem
 ---@field public prompt                 ?string
 ---@field public callback               ?fun(): nil
 
-local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+---@class guanghechen.command.copilot_chat.widget : t.eve.ux.IWidget
+---@field public internal_winnr         integer|nil
+---@field public internal_cursor        integer[]|nil
+---@field public internal_status        t.eve.e.WidgetStatus
+---@field public internal_win_find      fun(): integer|nil
+---@field public internal_win_cfg       fun(): vim.api.keyset.win_config
+---@field public internal_win_clsoe     fun(): nil
+---@field public internal_win_open      fun(): nil
+---@field public internal_win_resize    fun(): nil
+local chat_widget
 
-local widget_status = "closed" ---@type t.eve.e.WidgetStatus
+chat_widget = {
+  internal_winnr = nil,
+  internal_cursor = nil,
+  internal_status = "closed",
+  internal_win_find = function()
+    local winnrs = vim.api.nvim_list_wins() ---@type integer[]
+    for _, winnr in ipairs(winnrs) do
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      if vim.bo[bufnr].filetype == eve.constants.FT_COPILOT_CHAT then
+        return winnr
+      end
+    end
+  end,
+  internal_win_cfg = function()
+    local width_min = math.floor(vim.o.columns * 0.6) ---@type integer
+    local width_max = math.floor(vim.o.columns * 0.8) ---@type integer
+    local width = math.max(width_min, math.min(width_max, 124)) ---@type integer
 
----@type t.eve.ux.IWidget
-local widget
-widget = {
-  name = "copitlot-chat",
-  statusline_items = nil,
-  status = function()
-    return widget_status
+    local height_min = math.floor(vim.o.lines * 0.6) ---@type integer
+    local height_max = math.floor(vim.o.lines * 0.8) ---@type integer
+    local height = math.max(height_min, math.min(height_max, 48)) ---@type integer
+
+    local row_max = math.floor((vim.o.lines - height) / 2) ---@type integer
+    local row = math.min(row_max, 4) ---@type integer
+
+    local col = math.floor((vim.o.columns - width) / 2) ---@type integer
+
+    ---@type vim.api.keyset.win_config
+    local wincfg = {
+      relative = "editor",
+      row = row,
+      col = col,
+      width = width,
+      height = height,
+      title = " Copilot Chat ",
+      title_pos = "center",
+      border = "rounded",
+      focusable = true,
+    }
+    return wincfg
   end,
-  close = function()
-    widget:hide()
-  end,
-  hide = function()
-    widget_status = "hidden"
+  internal_win_clsoe = function()
+    local winnr = chat_widget.internal_winnr ---@type integer|nil
+    chat_widget.internal_winnr = nil
+
+    ---save the window cursor.
+    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+      local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+      chat_widget.internal_cursor = cursor
+    end
+
     require("CopilotChat").close()
   end,
-  resize = function()
-    if widget_status == "visible" then
-      require("CopilotChat").close()
-      require("CopilotChat").open()
-    end
-  end,
-  open = function()
-    eve.globals.widgets.open(widget)
-  end,
-  show = function()
-    if widget_status == "visible" then
-      return
-    end
-
+  internal_win_open = function()
     require("CopilotChat").open()
-    widget_status = "visible"
-
     vim.schedule(function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if vim.bo[bufnr].filetype == eve.constants.FT_COPILOT_CHAT then
-        vim.cmd("stopinsert")
+        chat_widget.internal_winnr = winnr
+        chat_widget.internal_status = "visible"
 
-        ---Center the title
-        local cfg = vim.api.nvim_win_get_config(winnr)
-        cfg.title_pos = "center"
-        vim.api.nvim_win_set_config(winnr, cfg)
-
-        ---Change highlights
         vim.wo[winnr].wrap = true
+        vim.wo[winnr].number = false
+        vim.wo[winnr].relativenumber = false
+        vim.wo[winnr].signcolumn = "yes"
 
         if not vim.b[bufnr].guanghechen_key_binded then
           vim.b[bufnr].guanghechen_key_binded = true
-
           local keymaps = eve.globals.widgets.get_keymaps() ---@type t.eve.IKeymap[]
           eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
+
+        vim.schedule(function()
+          vim.cmd("stopinsert")
+          if chat_widget.internal_cursor then
+            pcall(function()
+              vim.api.nvim_win_set_cursor(winnr, chat_widget.internal_cursor)
+            end)
+          end
+        end)
       end
     end)
+  end,
+  internal_win_resize = function()
+    local winnr = chat_widget.internal_winnr ---@type integer|nil
+    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+      local wincfg = chat_widget.internal_win_cfg() ---@type vim.api.keyset.win_config
+      vim.api.nvim_win_set_config(winnr, wincfg)
+    end
+  end,
+
+  ----
+
+  name = "copitlot-chat",
+  statusline_items = nil,
+  status = function()
+    return chat_widget.internal_status
+  end,
+  close = function()
+    chat_widget.internal_status = "closed"
+    chat_widget.internal_win_clsoe()
+  end,
+  hide = function()
+    chat_widget.internal_status = "hidden"
+    chat_widget.internal_win_clsoe()
+  end,
+  resize = function()
+    chat_widget.internal_win_resize()
+  end,
+  open = function()
+    if chat_widget.internal_status == "closed" then
+      chat_widget.internal_status = "hidden"
+    end
+    eve.globals.widgets.open(chat_widget)
+  end,
+  show = function()
+    if chat_widget.internal_status ~= "visible" then
+      chat_widget.internal_win_open()
+    end
   end,
 }
 
@@ -123,7 +198,7 @@ eve.commander
         on_confirm = function(item)
           local data = item.data ---@type guanghechen.command.copilot_chat.prompt_actions.IItem
           vim.defer_fn(function()
-            widget:open()
+            chat_widget:open()
             require("CopilotChat").ask(data.prompt, data)
           end, 100)
 
@@ -138,9 +213,9 @@ eve.commander
     action = function()
       local input = vim.fn.input("Quick Chat: ") ---@type string
       if input ~= "" then
-        widget:open()
+        chat_widget:open()
         require("CopilotChat").ask(input, {
-          context = { "buffer", "files", "git" },
+          context = { "buffer", "files" },
           selection = require("CopilotChat.select").buffer,
         })
       end
@@ -164,10 +239,10 @@ eve.commander
     uuid = uuids.copilot_chat_toggle,
     desc = "copilot chat: toggle",
     action = function()
-      if widget_status == "visible" then
-        widget:hide()
+      if chat_widget.internal_status == "visible" then
+        chat_widget:hide()
       else
-        widget:open()
+        chat_widget:open()
       end
     end,
   })
