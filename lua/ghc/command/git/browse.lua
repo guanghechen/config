@@ -1,3 +1,5 @@
+local Observable = require("eve.collection.observable")
+
 ---@alias ghc.command.git.browse.TargetScope
 ---|"branch"
 ---|"file"
@@ -242,7 +244,7 @@ local function open()
     title = "Select remote to browse",
     flag_fuzzy = true,
     flag_regex = false,
-    input = eve.c.Observable.from_value(""),
+    input = Observable.from_value(""),
     dimension = {
       row = 5,
       width = 80,

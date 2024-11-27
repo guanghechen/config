@@ -1,3 +1,5 @@
+local Observable = require("eve.collection.observable")
+
 ---@class fml.api.tab
 local M = {}
 
@@ -69,7 +71,7 @@ function M.refresh(tabnr)
       name = eve.constants.TAB_UNNAMED,
       bufnrs = {},
       bufnr_set = {},
-      winnr_cur = eve.c.Observable.from_value(winnr_cur),
+      winnr_cur = Observable.from_value(winnr_cur),
     }
     eve.context.state.tabs[tabnr] = tab
   else

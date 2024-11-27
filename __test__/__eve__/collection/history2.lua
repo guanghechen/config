@@ -1,4 +1,6 @@
-local history = eve.c.AdvanceHistory.new({
+local AdvanceHistory = require("eve.collection.history_advance")
+
+local history = AdvanceHistory.new({
   name = "haha",
   capacity = 5,
   validate = function(v)

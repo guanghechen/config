@@ -1,3 +1,4 @@
+local Observable = require("eve.collection.observable")
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 ---@type string[]
@@ -45,7 +46,7 @@ eve.commander.register({
         title = "Toggle flight",
         flag_fuzzy = true,
         flag_regex = false,
-        input = eve.c.Observable.from_value(arg),
+        input = Observable.from_value(arg),
         dimension = {
           row = 5,
           width = 50,

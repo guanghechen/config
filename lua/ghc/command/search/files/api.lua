@@ -1,3 +1,4 @@
+local Subscriber = require("eve.collection.subscriber")
 local state = require("ghc.command.search.files.state")
 
 ---@class ghc.command.search.files.IFileItem
@@ -28,7 +29,7 @@ local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.oxi.search.IResult|nil
 
 eve.context.state.search.search_paths:subscribe(
-  eve.c.Subscriber.new({
+  Subscriber.new({
     on_next = function()
       state.refresh_title()()
     end,

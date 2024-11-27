@@ -1,6 +1,9 @@
-local state_search_cwd = eve.c.Observable.from_value(fml.api.search.get_scope_cwd(eve.path.cwd()))
+local Observable = require("eve.collection.observable")
+local Subscriber = require("eve.collection.subscriber")
+
+local state_search_cwd = Observable.from_value(fml.api.search.get_scope_cwd(eve.path.cwd()))
 eve.context.state.search.scope:subscribe(
-  eve.c.Subscriber.new({
+  Subscriber.new({
     on_next = function()
       local current_buf_dirpath = eve.locations.get_current_buf_dirpath() ---@type string
       local current_search_cwd = state_search_cwd:snapshot() ---@type string

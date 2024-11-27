@@ -1,3 +1,4 @@
+local Observable = require("eve.collection.observable")
 local FileSelect = require("fml.ux.component.file_select")
 local frecency = eve.context.state.frecency.files ---@type t.eve.collection.IFrecency
 
@@ -75,8 +76,8 @@ local function select_files(params)
     dirty_on_invisible = true,
     preview_enabled = false,
     extend_preset_keymaps = true,
-    flag_fuzzy = eve.c.Observable.from_value(flag_fuzzy),
-    flag_regex = eve.c.Observable.from_value(flag_regex),
+    flag_fuzzy = Observable.from_value(flag_fuzzy),
+    flag_regex = Observable.from_value(flag_regex),
     frecency = frecency,
     input = input,
     permanent = false,

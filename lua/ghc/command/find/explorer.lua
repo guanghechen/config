@@ -1,3 +1,6 @@
+local Observable = require("eve.collection.observable")
+local Subscriber = require("eve.collection.subscriber")
+
 ---@class ghc.command.find.explorer.IDirItem
 ---@field public items                  ghc.command.find.explorer.IFileItem[]
 ---@field public icon_width             integer
@@ -114,7 +117,7 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = eve.c.Observable.from_value(eve.path.normalize(initial_dirpath)) ---@type t.eve.collection.IObservable
+local state_cwd = Observable.from_value(eve.path.normalize(initial_dirpath)) ---@type t.eve.collection.IObservable
 local _select = nil ---@type t.fml.ux.ISelect|nil
 
 ---@return string
@@ -130,7 +133,7 @@ local function gen_title()
 end
 
 state_cwd:subscribe(
-  eve.c.Subscriber.new({
+  Subscriber.new({
     on_next = function()
       if _select ~= nil then
         _select:mark_data_dirty()

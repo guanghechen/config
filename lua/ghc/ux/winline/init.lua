@@ -1,3 +1,5 @@
+local Subscriber = require("eve.collection.subscriber")
+
 local winline_map = {} ---@type table<string, t.fml.ux.INvimbar>
 
 ---@class ghc.ux.winline
@@ -108,7 +110,7 @@ function M.update(winnr, force)
 end
 
 eve.context.state.status.winline_dirty_nr:subscribe(
-  eve.c.Subscriber.new({
+  Subscriber.new({
     on_next = function(winnr)
       if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
         M.update(winnr, true)

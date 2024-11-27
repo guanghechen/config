@@ -1,3 +1,4 @@
+local Observable = require("eve.collection.observable")
 local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 ---@alias ghc.command.copy.current_filepath_candidate
@@ -65,7 +66,7 @@ eve.commander
           title = "Copy current filepath",
           flag_fuzzy = true,
           flag_regex = false,
-          input = eve.c.Observable.from_value(arg),
+          input = Observable.from_value(arg),
           dimension = {
             row = 5,
             width = 50,

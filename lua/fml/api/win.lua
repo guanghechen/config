@@ -1,3 +1,5 @@
+local AdvanceHistory = require("eve.collection.history_advance")
+
 local locating_set = {} ---@type table<integer, boolean>
 local dirty_set = {} ---@type table<integer, boolean>
 
@@ -146,7 +148,7 @@ function M.refresh(winnr)
   if win == nil then
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filepath_history = eve.c.AdvanceHistory.new({
+    local filepath_history = AdvanceHistory.new({
       name = "win#bufs",
       capacity = eve.constants.WIN_BUF_HISTORY_CAPACITY,
       validate = eve.buf.is_valid_filepath,

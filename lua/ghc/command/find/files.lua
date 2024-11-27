@@ -1,4 +1,7 @@
-local state_find_cwd = eve.c.Observable.from_value(fml.api.find.get_scope_cwd(eve.path.cwd()))
+local Observable = require("eve.collection.observable")
+local Subscriber = require("eve.collection.subscriber")
+
+local state_find_cwd = Observable.from_value(fml.api.find.get_scope_cwd(eve.path.cwd()))
 local _select = nil ---@type t.fml.ux.IFileSelect|nil
 
 ---@return nil
@@ -9,7 +12,7 @@ local function reload()
 end
 
 eve.context.state.find.scope:subscribe(
-  eve.c.Subscriber.new({
+  Subscriber.new({
     on_next = function()
       local current_buf_dirpath = eve.locations.get_current_buf_dirpath() ---@type string
       local current_find_cwd = state_find_cwd:snapshot() ---@type string

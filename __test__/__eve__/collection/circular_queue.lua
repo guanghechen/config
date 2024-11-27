@@ -1,5 +1,7 @@
+local CircularQueue = require("eve.collection.circular_queue")
+
 local function circular_queue()
-  local circular = eve.c.CircularQueue.new({ capacity = 3 })
+  local circular = CircularQueue.new({ capacity = 3 })
   circular:enqueue("A")
   circular:enqueue("B")
   circular:enqueue("C")

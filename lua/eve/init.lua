@@ -1,23 +1,3 @@
----@class eve.collection
-local collection = {
-  AdvanceHistory = require("eve.collection.history_advance"),
-  BatchHandler = require("eve.collection.batch_handler"),
-  BatchDisposable = require("eve.collection.batch_disposable"),
-  CircularQueue = require("eve.collection.circular_queue"),
-  CircularStack = require("eve.collection.circular_stack"),
-  Dirtier = require("eve.collection.dirtier"),
-  Disposable = require("eve.collection.disposable"),
-  Frecency = require("eve.collection.frecency"),
-  History = require("eve.collection.history"),
-  Observable = require("eve.collection.observable"),
-  Promise = require("eve.collection.promise"),
-  Scheduler = require("eve.collection.scheduler"),
-  Subscriber = require("eve.collection.subscriber"),
-  Subscribers = require("eve.collection.subscribers"),
-  Theme = require("eve.collection.theme"),
-  Ticker = require("eve.collection.ticker"),
-}
-
 ---@type eve.context
 local context = require("eve.context")
 
@@ -71,16 +51,12 @@ local std = {
 }
 
 ---@class eve : eve.globals, eve.std
----@field public c                      eve.collection
----@field public collection             eve.collection
 ---@field public context                eve.context
 ---@field public fn                     eve.fn
 ---@field public globals                eve.globals
 ---@field public oxi                    eve.oxi
 ---@field public std                    eve.std
 local eve = vim.tbl_extend("force", {}, globals, std, {
-  c = collection,
-  collection = collection,
   context = context,
   fn = fn,
   globals = globals,
