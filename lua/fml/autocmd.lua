@@ -7,29 +7,24 @@ refresh_state()
 
 ---! Watch the zen mode change on tmux.
 if vim.env.TMUX then
-  local function on_resize()
-    local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
-    eve.context.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
-  end
-
-  on_resize()
   vim.api.nvim_create_autocmd({ "VimResized" }, {
-    callback = on_resize,
+    callback = function()
+      local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
+      eve.context.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
+    end,
   })
 end
 
 vim.api.nvim_create_autocmd({ "BufAdd", "BufWinEnter" }, {
   callback = function(args)
     local bufnr = args.buf
-    if type(bufnr) ~= "number" then
-      return
+    if type(bufnr) == "number" then
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      vim.schedule(function()
+        api_buf.refresh(bufnr)
+        api_tab.refresh(tabnr)
+      end)
     end
-
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    vim.schedule(function()
-      api_buf.refresh(bufnr)
-      api_tab.refresh(tabnr)
-    end)
   end,
 })
 
@@ -48,17 +43,15 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
 vim.api.nvim_create_autocmd({ "BufDelete" }, {
   callback = function(args)
     local bufnr = args.buf
-    if type(bufnr) ~= "number" then
-      return
-    end
-
-    eve.context.state.bufs[bufnr] = nil
-    for _, tab in pairs(eve.context.state.tabs) do
-      if tab.bufnr_set[bufnr] then
-        tab.bufnr_set[bufnr] = nil
-        eve.array.filter_inline(tab.bufnrs, function(nr)
-          return nr ~= bufnr
-        end)
+    if type(bufnr) == "number" then
+      eve.context.state.bufs[bufnr] = nil
+      for _, tab in pairs(eve.context.state.tabs) do
+        if tab.bufnr_set[bufnr] then
+          tab.bufnr_set[bufnr] = nil
+          eve.array.filter_inline(tab.bufnrs, function(nr)
+            return nr ~= bufnr
+          end)
+        end
       end
     end
   end,

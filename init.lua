@@ -1,6 +1,6 @@
 require("eve.option")
 require("eve.autocmd")
-require("eve.ftp")
+require("eve.autocmd_filetype")
 require("eve.keymap")
 _G.eve = require("eve")
 do
@@ -50,7 +50,6 @@ vim.schedule(function()
 end)
 
 require("guanghechen.option")
-require("guanghechen.autocmd")
 if vim.g.neovide then
   require("integration.neovide.option")
   require("integration.neovide.autocmd")

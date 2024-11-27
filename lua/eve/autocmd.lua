@@ -1,7 +1,6 @@
 local locations = require("eve.globals.locations")
 local mvc = require("eve.globals.mvc")
 local widgets = require("eve.globals.widgets")
-local constants = require("eve.std.constants")
 local ft = require("eve.std.filetype")
 local std_os = require("eve.std.os")
 local path = require("eve.std.path")
@@ -50,51 +49,6 @@ if not vim.g.vscode then
   end)
 end
 
-vim.filetype.add({
-  extension = { rasi = "rasi", rofi = "rasi", wofi = "rasi" },
-  filename = {
-    ["vifmrc"] = "vim",
-  },
-  pattern = {
-    [".*"] = {
-      function(filepath, bufnr)
-        return vim.bo[bufnr]
-            and vim.bo[bufnr].filetype ~= constants.FT_BIGFILE
-            and filepath
-            and vim.fn.getfsize(filepath) > vim.g.bigfile_size
-            and constants.FT_BIGFILE
-          or nil
-      end,
-    },
-
-    ["*.fzfrc"] = "bash",
-    ["*.ripgreprc"] = "bash",
-    ["*.tmux.conf"] = "tmux",
-
-    ["*.ts"] = "typescript",
-    ["*.cts"] = "typescript",
-    ["*.mts"] = "typescript",
-
-    ["*.js"] = "javascript",
-    ["*.cjs"] = "javascript",
-    ["*.mjs"] = "javascript",
-
-    [".*/waybar/config"] = "jsonc",
-    [".*/mako/config"] = "dosini",
-    [".*/kitty/.+%.conf"] = "bash",
-    [".*/hypr/.+%.conf"] = "hyprlang",
-    ["%.env%.[%w_.-]+"] = "sh",
-  },
-})
-vim.api.nvim_create_autocmd({ "FileType" }, {
-  pattern = "bigfile",
-  callback = function(ev)
-    vim.schedule(function()
-      vim.bo[ev.buf].syntax = vim.filetype.match({ buf = ev.buf }) or ""
-    end)
-  end,
-})
-
 vim.api.nvim_create_autocmd("VimLeavePre", {
   once = true,
   callback = function()
@@ -110,6 +64,26 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     end
     local file = vim.uv.fs_realpath(event.match) or event.match
     vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
+  end,
+})
+
+---! Go to last loc when opening a buffer
+vim.api.nvim_create_autocmd({ "BufReadPost" }, {
+  callback = function(event)
+    local bufnr = event.buf ---@type integer
+    if vim.b[bufnr].eve_last_loc then
+      return
+    end
+    vim.b[bufnr].eve_last_loc = true
+
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    if eve.filetype.is_plain_file(filetype) then
+      local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
+      local lcount = vim.api.nvim_buf_line_count(bufnr)
+      if mark[1] > 0 and mark[1] <= lcount then
+        pcall(vim.api.nvim_win_set_cursor, 0, mark)
+      end
+    end
   end,
 })
 
