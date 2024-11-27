@@ -92,6 +92,8 @@ local function gen_hlgroup_map(context)
     GitSignsStagedUntracked = { fg = cs.mix(c.bg0, c.grey, 50) },
     GitSignsStagedUntrackedNr = { link = "GitSignsStagedUntracked" },
 
+    GitSignsCurrentLineBlame = { fg = c.bg4, italic = true },
+
     ---! indent-blankline.nvim
     IblChar = { fg = c.bg1 },
     IblScopeChar = { fg = c.grey },

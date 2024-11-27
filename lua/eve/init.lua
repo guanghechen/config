@@ -66,6 +66,7 @@ local std = {
   reporter = require("eve.std.reporter"),
   string = require("eve.std.string"),
   tab = require("eve.std.tab"),
+  time = require("eve.std.time"),
   tmux = require("eve.std.tmux"),
   util = require("eve.std.util"),
   validator = require("eve.std.validator"),

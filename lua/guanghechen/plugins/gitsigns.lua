@@ -15,6 +15,22 @@ local config = {
   },
 }
 
+---@param lnum                          integer
+---@return string|nil
+local function get_previous_line_by_hunk(lnum)
+  local hunks = require("gitsigns").get_hunks()
+  if hunks then
+    for _, hunk in ipairs(hunks) do
+      local line_start = hunk.added.start ---@type integer
+      local line_end = hunk.added.start + hunk.added.count ---@type integer
+      if lnum >= line_start and lnum < line_end then
+        local offset = lnum - line_start ---@type integer
+        return hunk.removed.lines[offset + 1]
+      end
+    end
+  end
+end
+
 ---@type t.eve.IKeymap[]
 local keymaps = {
   {
@@ -62,9 +78,116 @@ local keymaps = {
     key = "<leader>gb",
     desc = "git: blame line",
     callback = function()
-      require("gitsigns").blame_line({
-        ignore_whitespace = false,
+      local lnum = vim.fn.line(".") ---@type integer
+      local content_current = vim.fn.getline(lnum) ---@type string
+      local filepath = vim.fn.expand("%") ---@type string
+      local blame_info = vim.fn.system(string.format("git blame --porcelain -slL %d,%d %s", lnum, lnum, filepath)) ---@type string
+      local lines = vim.split(blame_info, "\n") ---@type string[]
+
+      local commit_hash = string.match(lines[1], "^([0-9a-fA-F]+)")
+
+      ---author information
+      local author_name = vim.trim(string.match(lines[2], "author%s+(.+)")) ---@type string
+      local author_time = vim.trim(string.match(lines[4], "author%-time%s+(%d+)")) ---@type string
+      -- local author_tz = vim.trim(string.match(lines[5], "author%-tz%s+([+-]%d%d%d%d)")) ---@type string
+      -- local author_tz_offset_hours = tonumber(string.sub(author_tz, 1, 3)) or 0 ---@type integer
+      -- local author_tz_offset_minutes = tonumber(string.sub(author_tz, 4, 5)) or 0 ---@type integer
+      -- local author_tz_offset_seconds = (author_tz_offset_hours * 3600) + (author_tz_offset_minutes * 60) ---@type integer
+      -- local author_timestamp = tonumber(author_time) - author_tz_offset_seconds ---@type integer
+      local author_timestamp = tonumber(author_time) ---@type integer|nil
+      local author_date = os.date("%Y-%m-%d %H:%M:%S", author_timestamp)
+
+      ---committer information
+      -- local committer_name = vim.trim(string.match(lines[6], "committer%s+(.+)")) ---@type string
+      -- local committer_time = vim.trim(string.match(lines[8], "committer%-time%s+(%d+)")) ---@type string
+      -- local committer_tz = vim.trim(string.match(lines[9], "committer%-tz%s+([+-]%d%d%d%d)")) ---@type string
+      -- local committer_tz_offset_hours = tonumber(string.sub(committer_tz, 1, 3)) or 0 ---@type integer
+      -- local committer_tz_offset_minutes = tonumber(string.sub(committer_tz, 4, 5)) or 0 ---@type integer
+      -- local committer_tz_offset_seconds = (committer_tz_offset_hours * 3600) + (committer_tz_offset_minutes * 60) ---@type integer
+      -- local committer_timestamp = tonumber(committer_time) - committer_tz_offset_seconds ---@type integer
+      -- local committer_date = os.date("%Y-%m-%d %H:%M:%S", committer_timestamp)
+
+      local content_previous = get_previous_line_by_hunk(lnum) ---@type string|nil
+      local commit_message = "Uncommitted changes" ---@type string
+      if commit_hash ~= "0000000000000000000000000000000000000000" then
+        commit_message = vim.trim(vim.fn.system("git log -1 " .. commit_hash .. ' --pretty=format:"%s%n%n%b"')) ---@type string
+      end
+
+      local width = 84 ---@type integer
+      local separate_line = string.rep("─", width - 4) ---@type string
+      local prefix_indent = "  " ---@type string
+      local lines_commit_message = vim.split(commit_message, "\n") ---@type string[]
+
+      ---@type string[]
+      local v_lines = {
+        "",
+        string.format("%s, %s (%s)", author_name, eve.time.time_ago(author_timestamp or os.time()), author_date),
+        separate_line,
+      }
+      vim.list_extend(v_lines, lines_commit_message)
+      if content_previous ~= nil then
+        vim.list_extend(v_lines, {
+          " - " .. content_previous,
+          " + " .. content_current,
+        })
+      end
+      vim.list_extend(v_lines, {
+        separate_line,
+        string.format("Changes added in %s | <remote url>", commit_hash),
+        "",
       })
+
+      for index, v_line in ipairs(v_lines) do
+        v_lines[index] = prefix_indent .. v_line
+      end
+
+      local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, v_lines)
+
+      ---@type t.eve.IKeymap[]
+      local keymaps = {
+        {
+          modes = { "n" },
+          key = "q",
+          callback = function()
+            pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+          end,
+        },
+      }
+      eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+
+      -- Apply highlights
+      vim.api.nvim_buf_add_highlight(bufnr, 0, "Title", 1, 2, -1)
+      vim.api.nvim_buf_add_highlight(bufnr, 0, "VertSplit", 2, 2, -1)
+      local lnum_offset = 2 ---@type integer
+      for _ = 1, #lines_commit_message do
+        lnum_offset = lnum_offset + 1
+        vim.api.nvim_buf_add_highlight(bufnr, 0, "Comment", lnum_offset, 2, -1)
+      end
+      lnum_offset = lnum_offset + 1
+      if content_previous ~= nil then
+        vim.api.nvim_buf_add_highlight(bufnr, 0, "DiffDelRight", lnum_offset, 2, -1)
+        lnum_offset = lnum_offset + 1
+        vim.api.nvim_buf_add_highlight(bufnr, 0, "DiffAddRight", lnum_offset, 2, -1)
+        lnum_offset = lnum_offset + 1
+      end
+      vim.api.nvim_buf_add_highlight(bufnr, 0, "VertSplit", lnum_offset, 2, -1)
+
+      local height = #v_lines
+      local opts = {
+        relative = "cursor",
+        width = width,
+        height = height,
+        col = 1,
+        row = 1,
+        style = "minimal",
+        border = "rounded",
+      }
+      local winnr = vim.api.nvim_open_win(bufnr, true, opts)
+      vim.wo[winnr].wrap = false
+      vim.wo[winnr].number = false
+      vim.wo[winnr].relativenumber = false
+      vim.wo[winnr].signcolumn = "no"
     end,
   },
   {
@@ -185,7 +308,6 @@ return {
     },
     on_attach = function(bufnr)
       eve.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
-
       vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", {
         buffer = bufnr,
         noremap = true,
