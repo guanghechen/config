@@ -30,7 +30,7 @@ end
 
 --#enhance------------------------------------------------------------------------------------------
 mk({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", "remove search highlights") -- Clear search with <esc>
--- mk({ "t" }, "<esc><esc>", "<C-\\><C-n>", "terminal: enter normal mode") -- Exit terminal
+mk({ "t" }, "jk", "<C-\\><C-n>", "terminal: enter normal mode") -- Exit terminal
 
 ---! Add undo break-points
 mk({ "i" }, "<space>", "<space><c-g>u")
