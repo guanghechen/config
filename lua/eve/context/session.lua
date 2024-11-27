@@ -46,6 +46,7 @@ function M.defaults()
     autosave = true,
     copilot = is_home_config_dir,
     devmode = is_home_config_dir,
+    lsp_inlay_hints = false,
   }
 
   ---@type t.eve.context.data.search
@@ -120,6 +121,7 @@ function M.dump()
     autosave = state.flight.autosave:snapshot(),
     copilot = state.flight.copilot:snapshot(),
     devmode = state.flight.devmode:snapshot(),
+    lsp_inlay_hints = state.flight.lsp_inlay_hints:snapshot(),
   }
 
   ---@type t.eve.context.data.search
@@ -175,6 +177,7 @@ function M.load(data)
       autosave = Observable.from_value(data.flight.autosave),
       copilot = Observable.from_value(data.flight.copilot),
       devmode = Observable.from_value(data.flight.devmode),
+      lsp_inlay_hints = Observable.from_value(data.flight.lsp_inlay_hints),
     }
 
     ---@type t.eve.context.state.search
@@ -228,6 +231,7 @@ function M.load(data)
     state.flight.autosave:next(data.flight.autosave)
     state.flight.copilot:next(data.flight.copilot)
     state.flight.devmode:next(data.flight.devmode)
+    state.flight.lsp_inlay_hints:next(data.flight.lsp_inlay_hints)
 
     ---! search
     state.search.flag_case_sensitive:next(data.search.flag_case_sensitive)
@@ -306,6 +310,9 @@ function M.normalize(data)
     end
     if type(data.flight.devmode) == "boolean" then
       resolved.flight.devmode = data.flight.devmode
+    end
+    if type(data.flight.lsp_inlay_hints) == "boolean" then
+      resolved.flight.lsp_inlay_hints = data.flight.lsp_inlay_hints
     end
   end
 

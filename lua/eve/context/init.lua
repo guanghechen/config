@@ -207,6 +207,7 @@ function M.watch_changes(params)
     state.flight.autosave,
     state.flight.copilot,
     state.flight.devmode,
+    state.flight.lsp_inlay_hints,
 
     ---
     state.search.flag_case_sensitive,

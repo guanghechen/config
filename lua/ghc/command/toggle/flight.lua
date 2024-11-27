@@ -7,6 +7,7 @@ local flights = {
   "autosave",
   "copilot",
   "devmode",
+  "lsp_inlay_hints",
 }
 
 ---@param flight                        string

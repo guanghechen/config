@@ -42,7 +42,8 @@ return {
     ---@diagnostic disable-next-line: unused-local
     on_supports_method("textDocument/inlayHint", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
-        vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+        local enable_lsp_inlay_hints = eve.context.state.flight.lsp_inlay_hints:snapshot() ---@type boolean
+        vim.lsp.inlay_hint.enable(enable_lsp_inlay_hints, { bufnr = bufnr })
       end
     end)
 

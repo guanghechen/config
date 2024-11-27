@@ -16,6 +16,7 @@
 ---@field public autosave               t.eve.collection.IObservable
 ---@field public copilot                t.eve.collection.IObservable
 ---@field public devmode                t.eve.collection.IObservable
+---@field public lsp_inlay_hints        t.eve.collection.IObservable
 
 ---@class t.eve.context.state.search
 ---@field public flag_case_sensitive    t.eve.collection.IObservable

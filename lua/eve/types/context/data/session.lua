@@ -16,6 +16,7 @@
 ---@field public autosave               boolean
 ---@field public copilot                boolean
 ---@field public devmode                boolean
+---@field public lsp_inlay_hints        boolean
 
 ---@class t.eve.context.data.search
 ---@field public flag_case_sensitive    boolean
