@@ -1,6 +1,6 @@
 local History = require("eve.collection.history")
 local constants = require("eve.std.constants")
-local equals = require("eve.std.equals")
+local util = require("eve.std.util")
 
 ---@type t.eve.collection.IHistory
 local qflist_history = History.new({
@@ -89,7 +89,7 @@ function M.push(qflist)
   end
 
   local qflist_cur = qflist_history:present() ---@type t.eve.IQuickFixItem[]|nil
-  if qflist_cur == nil or not equals.deep_equals(qflist_cur, qflist) then
+  if qflist_cur == nil or not util.deep_equals(qflist_cur, qflist) then
     qflist_history:push(qflist)
     M.set_qflist(qflist)
   end

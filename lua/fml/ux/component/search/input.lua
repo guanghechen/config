@@ -2,7 +2,6 @@ local constants = require("eve.std.constants")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local oxi = require("eve.oxi")
-local std_array = require("eve.std.array")
 local util = require("fml.util")
 local signcolumn = require("fml.ux.signcolumn")
 
@@ -54,13 +53,13 @@ function M.new(props)
     end,
   }
 
-  ---@type t.eve.IKeymap[]
-  local keymaps = input_history ~= nil
-      and std_array.concat({
-        { modes = { "i", "n", "v" }, key = "<C-j>", callback = actions.apply_next_input, desc = "search: next input" },
-        { modes = { "i", "n", "v" }, key = "<C-k>", callback = actions.apply_prev_input, desc = "search: last input" },
-      }, props.keymaps)
-    or props.keymaps
+  local keymaps = props.keymaps ---@type t.eve.IKeymap[]
+  if input_history ~= nil then
+    vim.list_extend({
+      { modes = { "i", "n", "v" }, key = "<C-j>", callback = actions.apply_next_input, desc = "search: next input" },
+      { modes = { "i", "n", "v" }, key = "<C-k>", callback = actions.apply_prev_input, desc = "search: last input" },
+    }, props.keymaps)
+  end
 
   local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
   local input_scheduler = Scheduler.new({

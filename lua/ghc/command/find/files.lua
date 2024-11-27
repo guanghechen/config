@@ -244,13 +244,13 @@ local function get_select()
     }
 
     ---@type t.eve.IKeymap[]
-    local input_keymaps = eve.array.concat({}, common_keymaps)
+    local input_keymaps = vim.list_slice(common_keymaps)
 
     ---@type t.eve.IKeymap[]
-    local main_keymaps = eve.array.concat({}, common_keymaps)
+    local main_keymaps = vim.list_slice(common_keymaps)
 
     ---@type t.eve.IKeymap[]
-    local preview_keymaps = eve.array.concat({}, common_keymaps)
+    local preview_keymaps = vim.list_slice(common_keymaps)
 
     ---@type t.fml.ux.file_select.IProvider
     local provider = {

@@ -1,4 +1,3 @@
-local std_array = require("eve.std.array")
 local Textarea = require("fml.ux.component.textarea")
 
 ---@class fml.ux.Input : t.fml.ux.IInput, fml.ux.Textarea
@@ -53,11 +52,11 @@ function M.new(props)
   end
 
   ---@type t.eve.IKeymap[]
-  local builtin_keymaps = {
+  local keymaps = {
     { modes = { "n" }, key = "<esc>", desc = "input: quit", callback = handle_close },
     { modes = { "i" }, key = "<cr>", desc = "input: confirm", callback = handle_confirm },
   }
-  local keymaps = std_array.concat(builtin_keymaps, props.keymaps) ---@type t.eve.IKeymap[]
+  vim.list_extend(keymaps, props.keymaps or {})
 
   ---@param lines                       string[]
   ---@return string|nil

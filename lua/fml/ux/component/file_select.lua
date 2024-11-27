@@ -1,5 +1,4 @@
 local qflist = require("eve.globals.qflist")
-local std_array = require("eve.std.array")
 local fs = require("eve.std.fs")
 local path = require("eve.std.path")
 local validator = require("eve.std.validator")
@@ -110,9 +109,9 @@ function M.new(props)
         desc = "search: send to qflist",
       },
     }
-    input_keymaps = std_array.concat(common_keymaps, input_keymaps or {}) ---@type t.eve.IKeymap[]
-    main_keymaps = std_array.concat(common_keymaps, main_keymaps or {}) ---@type t.eve.IKeymap[]
-    preview_keymaps = std_array.concat(common_keymaps, preview_keymaps or {}) ---@type t.eve.IKeymap[]
+    input_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps or {}) ---@type t.eve.IKeymap[]
+    main_keymaps = vim.list_extend(vim.list_slice(common_keymaps), main_keymaps or {}) ---@type t.eve.IKeymap[]
+    preview_keymaps = vim.list_extend(vim.list_slice(common_keymaps), preview_keymaps or {}) ---@type t.eve.IKeymap[]
   end
 
   ---@type t.fml.ux.select.IProvider

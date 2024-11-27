@@ -113,15 +113,15 @@ local input_keymaps = {
 local M = {}
 
 ---@type t.eve.ux.widget.IRawStatuslineItem[]
-M.statusline_items = eve.array.concat({}, statusline_items)
+M.statusline_items = vim.list_slice(statusline_items)
 
 ---@type t.eve.IKeymap[]
-M.input_keymaps = eve.array.concat({}, common_keymaps, input_keymaps)
+M.input_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps)
 
 ---@type t.eve.IKeymap[]
-M.main_keymaps = eve.array.concat({}, common_keymaps, input_keymaps)
+M.main_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps)
 
 ---@type t.eve.IKeymap[]
-M.preview_keymaps = eve.array.concat({}, common_keymaps)
+M.preview_keymaps = vim.list_slice(common_keymaps)
 
 return M

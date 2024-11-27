@@ -1,8 +1,6 @@
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
 local reporter = require("eve.std.reporter")
-local std_boolean = require("eve.std.boolean")
-local shallow_equals = require("eve.std.equals").shallow_equals
 local util = require("eve.std.util")
 
 ---@class eve.collection.Observable : t.eve.collection.IObservable
@@ -26,7 +24,7 @@ local noop_unsubscribable = {
 ---@param props                         eve.collection.observable.IProps
 ---@return eve.collection.Observable
 function M.new(props)
-  local equals = props.equals or shallow_equals ---@type t.eve.IEquals
+  local equals = props.equals or util.shallow_equals ---@type t.eve.IEquals
   local normalize = props.normalize or util.identity ---@type t.eve.INormalize
   local initial_value = props.initial_value ---@type t.eve.T
 
@@ -74,8 +72,7 @@ function M:next(value, options)
   ---@cast options t.eve.collection.IObservableNextOptions
 
   if self:is_disposed() then
-    ---@type boolean
-    local strict = std_boolean.cover(options.strict, true)
+    local strict = options.strict ~= false ---@type boolean
     if strict then
       reporter.error({
         from = "eve.collection.observable",
@@ -89,8 +86,7 @@ function M:next(value, options)
 
   value = self.normalize(value)
 
-  ---@type boolean
-  local force = std_boolean.cover(options.force, false)
+  local force = not not options.force ---@type boolean
   if force or not self.equals(value, self._value) then
     self._value = value
     self:_notify()

@@ -1,4 +1,3 @@
-local std_array = require("eve.std.array")
 local box = require("eve.std.box")
 local reporter = require("eve.std.reporter")
 
@@ -116,11 +115,11 @@ function M.new(props)
   end
 
   ---@type t.eve.IKeymap[]
-  local builtin_keymaps = {
+  local keymaps = {
     { modes = { "n" }, key = "q", desc = "textarea: quit", callback = on_close },
     { modes = { "n" }, key = "<cr>", desc = "textarea: confirm", callback = on_confirm },
   }
-  local keymaps = std_array.concat(builtin_keymaps, props.keymaps) ---@type t.eve.IKeymap[]
+  vim.list_extend(keymaps, props.keymaps or {})
 
   self._bufnr = nil
   self._winnr = nil

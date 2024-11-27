@@ -1,6 +1,5 @@
 local Observable = require("eve.collection.observable")
 local oxi = require("eve.oxi")
-local std_array = require("eve.std.array")
 local icons = require("eve.globals.icons")
 local Search = require("fml.ux.component.search.search")
 
@@ -108,7 +107,7 @@ function M.new(props)
     end
 
     ---@type t.eve.ux.widget.IRawStatuslineItem[]
-    statusline_items = std_array.concat(statusline_items or {}, {
+    statusline_items = vim.list_extend(statusline_items or {}, {
       {
         type = "flag",
         desc = "select: toggle flag fuzzy",
@@ -148,9 +147,9 @@ function M.new(props)
       },
     }
 
-    input_keymaps = std_array.concat(input_keymaps or {}, preset_keymaps)
-    main_keymaps = std_array.concat(main_keymaps or {}, preset_keymaps)
-    preview_keymaps = std_array.concat(preview_keymaps or {}, preset_keymaps)
+    input_keymaps = vim.list_extend(vim.list_slice(preset_keymaps), input_keymaps or {})
+    main_keymaps = vim.list_extend(vim.list_slice(preset_keymaps), main_keymaps or {})
+    preview_keymaps = vim.list_extend(vim.list_slice(preset_keymaps), preview_keymaps or {})
   end ---@type t.fml.ux.search.IFetchPreviewData|nil
 
   local fetch_preview_data = nil

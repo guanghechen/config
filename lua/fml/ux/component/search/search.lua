@@ -3,7 +3,6 @@ local widgets = require("eve.globals.widgets")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local G = require("eve.std.G")
-local std_array = require("eve.std.array")
 local SearchInput = require("fml.ux.component.search.input")
 local SearchMain = require("fml.ux.component.search.main")
 local SearchPreview = require("fml.ux.component.search.preview")
@@ -290,11 +289,13 @@ function M.new(props)
     },
   }
 
-  ---@type t.eve.IKeymap[]
-  local input_keymaps = std_array.concat(common_keymaps, left_common_keymaps, props.input_keymaps or {})
+  local input_keymaps = vim.list_slice(common_keymaps) ---@type t.eve.IKeymap[]
+  vim.list_extend(input_keymaps, left_common_keymaps)
+  vim.list_extend(input_keymaps, props.input_keymaps or {})
 
-  ---@type t.eve.IKeymap[]
-  local main_keymaps = std_array.concat(common_keymaps, left_common_keymaps, {
+  local main_keymaps = vim.list_slice(common_keymaps) ---@type t.eve.IKeymap[]
+  vim.list_extend(main_keymaps, left_common_keymaps)
+  vim.list_extend(main_keymaps, {
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     {
       modes = { "i", "n", "v" },
@@ -308,10 +309,11 @@ function M.new(props)
     { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
     { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
     { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
-  }, props.main_keymaps or {})
+  })
+  vim.list_extend(main_keymaps, props.main_keymaps or {})
 
-  ---@type t.eve.IKeymap[]
-  local preview_keymaps = std_array.concat(common_keymaps, {
+  local preview_keymaps = vim.list_slice(common_keymaps) ---@type t.eve.IKeymap[]
+  vim.list_extend(main_keymaps, {
     { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.focus_input, desc = "search: focus input" },
     { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.focus_input, desc = "search: focus input" },
     { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.on_main_down, desc = "search: focus next item" },
@@ -320,7 +322,8 @@ function M.new(props)
     { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.on_main_up, desc = "search: focus prev item" },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
-  }, props.preview_keymaps or {})
+  })
+  vim.list_extend(main_keymaps, props.preview_keymaps or {})
 
   if not enable_multiline_input then
     ---@type t.eve.IKeymap[]
