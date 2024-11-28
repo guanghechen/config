@@ -1,41 +1,18 @@
 local util_cmp = require("guanghechen.util.cmp")
 
----@param buftype                       string|nil
----@param filetype                      string|nil
----@return boolean
-local function enabled_basic(buftype, filetype)
-  if buftype == eve.constants.BT_NOFILE then
-    return false
-  end
-  return not eve.filetype.is_no_cmp_filetype(filetype)
-end
-
----@return boolean
-local function enabled_code()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if not enabled_basic(buftype, filetype) then
-    return false
-  end
-  return not eve.filetype.is_no_cmp_code_filetype(filetype)
-end
-
----@return boolean
-local function enabled_path()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  return enabled_basic(buftype, filetype)
-end
-
----@return boolean
-local function enabled_buffer()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  return enabled_basic(buftype, filetype)
-end
+local cmp_sources_map = {
+  basic = {
+    { name = "path", group_index = 1, priority = 100 },
+    { name = "buffer", group_index = 2, priority = 80 },
+  },
+  code = {
+    { name = "copilot", group_index = 1, priority = 100 },
+    { name = "path", group_index = 1, priority = 99 },
+    { name = "nvim_lsp", group_index = 1, priority = 98 },
+    { name = "snippets", group_index = 2, priority = 80 },
+    { name = "buffer", group_index = 2, priority = 60 },
+  },
+}
 
 return {
   name = "nvim-cmp",
@@ -144,13 +121,7 @@ return {
           compare.order,
         },
       },
-      sources = {
-        { name = "copilot", group_index = 1, priority = 100, enabled = enabled_code },
-        { name = "path", group_index = 1, priority = 99, enabled = enabled_path },
-        { name = "nvim_lsp", group_index = 1, priority = 98, enabled = enabled_code },
-        { name = "snippets", group_index = 2, priority = 80, enabled = enabled_code },
-        { name = "buffer", group_index = 2, priority = 60, enabled = enabled_buffer },
-      },
+      sources = vim.list_slice(cmp_sources_map.basic),
       window = {
         completion = {
           scrollbar = false,
@@ -178,7 +149,6 @@ return {
     end
 
     local cmp = require("cmp") ---@type any
-    cmp.setup(opts)
     cmp.event:on("confirm_done", function(event)
       if vim.tbl_contains(opts.auto_brackets or {}, vim.bo.filetype) then
         util_cmp.auto_brackets(event.entry)
@@ -187,6 +157,11 @@ return {
     cmp.event:on("menu_opened", function(event)
       util_cmp.add_missing_snippet_docs(event.window)
     end)
+
+    cmp.setup(opts)
+    cmp.setup.filetype(eve.filetype.get_cmp_code_filetypes(), {
+      sources = vim.list_slice(cmp_sources_map.code),
+    })
   end,
   dependencies = {
     "cmp-buffer",
