@@ -1,5 +1,5 @@
 {
-  "CopilotChat.nvim": { "branch": "nvim@CopilotChat.nvim", "commit": "3968c25e9418a544d5faa3c242d577526b0710e7" },
+  "CopilotChat.nvim": { "branch": "nvim@CopilotChat.nvim", "commit": "dee009062a5941d77285910570ac83f92209952b" },
   "aerial.nvim": { "branch": "nvim@aerial.nvim", "commit": "ddd25f57e5205b36bc2e939c486b47818bef9ec3" },
   "cmp-buffer": { "branch": "nvim@cmp-buffer", "commit": "3022dbc9166796b644a841a02de8dd1cc1d311fa" },
   "cmp-nvim-lsp": { "branch": "nvim@cmp-nvim-lsp", "commit": "39e2eda76828d88b773cc27a3f61d2ad782c922d" },
@@ -25,7 +25,7 @@
   "noice.nvim": { "branch": "nvim@noice.nvim", "commit": "c6f6fb178ebe9b4fd90383de743c3399f8c3a37c" },
   "nui.nvim": { "branch": "nvim@nui.nvim", "commit": "b58e2bfda5cea347c9d58b7f11cf3012c7b3953f" },
   "nvim-cmp": { "branch": "nvim@nvim-cmp", "commit": "ed31156aa2cc14e3bc066c59357cc91536a2bc01" },
-  "nvim-lspconfig": { "branch": "nvim@nvim-lspconfig", "commit": "d651732cecfc77be1b3727512bec0438c22410d1" },
+  "nvim-lspconfig": { "branch": "nvim@nvim-lspconfig", "commit": "4ae9796c4e95ca84ec77946a9f9089b8f1a3eec9" },
   "nvim-notify": { "branch": "nvim@nvim-notify", "commit": "fbef5d32be8466dd76544a257d3f3dce20082a07" },
   "nvim-snippets": { "branch": "nvim@nvim-snippets", "commit": "56b4052f71220144689caaa2e5b66222ba5661eb" },
   "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "8d4fdc5e47e2a4e00179e43f56221250ce365973" },
