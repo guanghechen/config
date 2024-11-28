@@ -243,12 +243,16 @@ function M:internal_render()
   local prev_context = self._last_context ---@type t.fml.ux.nvimbar.IContext|nil
 
   local sep = self._is_active(context) and self._sep_active or self._sep ---@type string
-  local sep_width = self._sep_width ---@type integer
+  local width_sep = self._sep_width ---@type integer
+  local width_full = self._get_max_width() ---@type integer
 
   local lc = "" ---@type string
   local cc = "" ---@type string
   local rc = "" ---@type string
-  local remain_width = self._get_max_width() - sep_width - sep_width ---@type integer
+  local width_left = width_sep ---@type integer
+  local width_right = width_sep ---@type integer
+  local width_center = width_sep + width_sep ---@type integer
+  local width_remain = width_full - width_left - width_center - width_right ---@type integer
   local components = self._components ---@type t.fml.ux.nvimbar.IComponent[]
   local positions = self._items ---@type t.fml.ux.nvimbar.IItem[]
   for i = 1, #positions, 1 do
@@ -258,7 +262,7 @@ function M:internal_render()
 
     local component = components[name] ---@type t.fml.ux.nvimbar.IComponent|nil
     if component ~= nil and component.enabled then
-      local ok, err = pcall(render_component, component, context, prev_context, remain_width)
+      local ok, err = pcall(render_component, component, context, prev_context, width_remain)
       if ok then
         local text = component.last_result_text ---@type string
         local width = component.last_result_width ---@type integer
@@ -267,26 +271,32 @@ function M:internal_render()
           if position == "left" then
             if #lc < 1 or tight then
               lc = lc .. text
-              remain_width = remain_width - width - sep_width
+              width_left = width_left + width
+              width_remain = width_remain - width
             else
               lc = lc .. sep .. text
-              remain_width = remain_width - width - sep_width - sep_width
+              width_left = width_left + width + width_sep
+              width_remain = width_remain - width - width_sep
             end
           elseif position == "center" then
             if #cc < 1 or tight then
               cc = cc .. text
-              remain_width = remain_width - width - sep_width
+              width_center = width_center + width
+              width_remain = width_remain - width
             else
               cc = cc .. sep .. text
-              remain_width = remain_width - width - sep_width - sep_width
+              width_center = width_center + width + width_sep
+              width_remain = width_remain - width - width_sep
             end
           elseif position == "right" then
             if #rc < 1 or tight then
               rc = text .. rc
-              remain_width = remain_width - width - sep_width
+              width_right = width_right + width
+              width_remain = width_remain - width
             else
               rc = text .. sep .. rc
-              remain_width = remain_width - width - sep_width - sep_width
+              width_right = width_right + width + width_sep
+              width_remain = width_remain - width - width_sep
             end
           else
             reporter.error({
@@ -308,9 +318,18 @@ function M:internal_render()
     end
   end
 
-  local final_result = lc .. sep .. "%=" .. sep .. cc .. sep .. "%=" .. sep .. rc ---@type string
   self._last_context = context
-  return final_result
+
+  local width_half_left = math.floor(width_full / 2) ---@type integer
+  local width_padding_left = width_half_left - width_left - math.floor(width_center / 2) ---@type integer
+  if width_padding_left > 0 and width_padding_left + 1 < width_remain then
+    local width_padding_right = width_remain - width_padding_left ---@type integer
+    local padding_left = string.rep(" ", width_padding_left) ---@type string
+    local padding_right = string.rep(" ", width_padding_right) ---@type string
+    return lc .. sep .. padding_left .. sep .. cc .. sep .. padding_right .. sep .. rc
+  else
+    return lc .. sep .. "%=" .. sep .. cc .. sep .. "%=" .. sep .. rc
+  end
 end
 
 return M

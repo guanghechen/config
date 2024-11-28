@@ -34,7 +34,7 @@ return {
     },
     modes = {
       char = {
-        enabled = true,
+        enabled = false,
         multi_line = false,
         keys = { "f", "F", "t", "T", ",", ";" },
       },
