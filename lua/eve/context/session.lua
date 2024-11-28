@@ -46,7 +46,7 @@ function M.defaults()
     autosave = true,
     copilot = is_home_config_dir,
     devmode = is_home_config_dir,
-    lsp_inlay_hints = false,
+    lsp_inlay_hints = is_home_config_dir,
   }
 
   ---@type t.eve.context.data.search

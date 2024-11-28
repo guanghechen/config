@@ -254,6 +254,14 @@ function M.watch_changes(params)
     vim.cmd.redrawtabline()
   end, true)
 
+  mvc.observe({
+    state.flight.lsp_inlay_hints,
+  }, function()
+    pcall(function()
+      vim.cmd("LspRestart")
+    end)
+  end, true)
+
   local save_client_scheduler = Scheduler.new({
     name = "eve.context#save_client",
     delay = 200,
