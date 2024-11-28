@@ -313,7 +313,7 @@ function M.new(props)
   vim.list_extend(main_keymaps, props.main_keymaps or {})
 
   local preview_keymaps = vim.list_slice(common_keymaps) ---@type t.eve.IKeymap[]
-  vim.list_extend(main_keymaps, {
+  vim.list_extend(preview_keymaps, {
     { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.focus_input, desc = "search: focus input" },
     { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.focus_input, desc = "search: focus input" },
     { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.on_main_down, desc = "search: focus next item" },
@@ -323,7 +323,7 @@ function M.new(props)
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
   })
-  vim.list_extend(main_keymaps, props.preview_keymaps or {})
+  vim.list_extend(preview_keymaps, props.preview_keymaps or {})
 
   if not enable_multiline_input then
     ---@type t.eve.IKeymap[]
