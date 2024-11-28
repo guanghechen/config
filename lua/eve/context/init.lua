@@ -226,6 +226,7 @@ function M.watch_changes(params)
     state.session_has_changed:tick()
   end, true)
 
+  ---! Trigger statusline redraw.
   mvc.observe({
     ---find
     state.find.flag_case_sensitive,
@@ -243,10 +244,14 @@ function M.watch_changes(params)
     state.search.flag_regex,
     state.search.flag_replace,
     state.search.scope,
+
+    ---status
+    state.status.lsp_msg,
   }, function()
     vim.cmd.redrawstatus()
   end, true)
 
+  ---! Trigger tabline redraw.
   mvc.observe({
     ---flight
     state.flight.devmode,

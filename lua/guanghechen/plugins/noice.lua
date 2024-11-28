@@ -3,6 +3,9 @@ return {
   lazy = false,
   opts = {
     lsp = {
+      progress = {
+        enabled = false,
+      },
       override = {
         ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
         ["vim.lsp.util.stylize_markdown"] = true,
@@ -34,19 +37,9 @@ return {
       lsp_doc_border = false,
     },
   },
-  config = function(_, opts)
-    -- HACK: noice shows messages from before it was enabled,
-    -- but this is not ideal when Lazy is installing plugins,
-    -- so clear the messages in this case.
-    if vim.o.filetype == "lazy" then
-      vim.cmd([[messages clear]])
-    end
-    require("noice").setup(opts)
-  end,
   -- stylua: ignore
   keys = {
     { "<leader>sn",  "",                                                                            desc = "+noice" },
-    { "<S-Enter>",   function() require("noice").redirect(vim.fn.getcmdline()) end,                 mode = "c",                              desc = "Redirect Cmdline" },
     { "<leader>snl", function() require("noice").cmd("last") end,                                   desc = "Noice Last Message" },
     { "<leader>snh", function() require("noice").cmd("history") end,                                desc = "Noice History" },
     { "<leader>sna", function() require("noice").cmd("all") end,                                    desc = "Noice All" },

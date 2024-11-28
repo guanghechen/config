@@ -28,7 +28,7 @@ local M = {
 
     local lsp_msg = eve.context.state.status.lsp_msg:snapshot() ---@type string
     if lsp_msg ~= "" then
-      hl_text = hl_text .. " " .. lsp_msg
+      hl_text = eve.nvimbar.txt(lsp_msg, "f_sl_text") .. " " .. hl_text
       width = width + vim.api.nvim_strwidth(lsp_msg) + 1
     end
 
