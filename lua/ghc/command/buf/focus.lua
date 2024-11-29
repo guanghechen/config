@@ -12,7 +12,7 @@ local function focus(bufid)
     return
   end
 
-  local bufid_next = eve.navigate.circular(0, bufid, #tab.bufnrs)
+  local bufid_next = eve.util.navigate_circular(0, bufid, #tab.bufnrs)
   local bufnr_next = tab.bufnrs[bufid_next]
   fml.api.buf.go(bufnr_next)
 end
@@ -59,7 +59,7 @@ eve.commander
       local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
 
       if bufid_cur ~= nil then
-        local bufid_next = eve.navigate.circular(bufid_cur, -step, #tab.bufnrs)
+        local bufid_next = eve.util.navigate_circular(bufid_cur, -step, #tab.bufnrs)
         local bufnr_next = tab.bufnrs[bufid_next]
         fml.api.buf.go(bufnr_next)
       end
@@ -83,7 +83,7 @@ eve.commander
       local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
 
       if bufid_cur ~= nil then
-        local bufid_next = eve.navigate.circular(bufid_cur, step, #tab.bufnrs)
+        local bufid_next = eve.util.navigate_circular(bufid_cur, step, #tab.bufnrs)
         local bufnr_next = tab.bufnrs[bufid_next]
         fml.api.buf.go(bufnr_next)
       end

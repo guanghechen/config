@@ -41,7 +41,6 @@ local std = {
   commander = require("eve.std.commander"),
   fs = require("eve.std.fs"),
   lsp = require("eve.std.lsp"),
-  navigate = require("eve.std.navigate"),
   nvim = require("eve.std.nvim"),
   nvimbar = require("eve.std.nvimbar"),
   string = require("eve.std.string"),

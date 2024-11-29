@@ -7,7 +7,7 @@ local focus_candidates = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }
 ---@return nil
 local function focus(tabid)
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
-  local tabid_next = eve.navigate.limit(0, tabid, tab_count)
+  local tabid_next = eve.util.navigate_limit(0, tabid, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   fml.api.tab.go(tabnr_next)
@@ -47,7 +47,7 @@ eve.commander
       step = math.max(1, step or vim.v.count1 or 1)
       local tabid_cur = vim.fn.tabpagenr() ---@type integer
       local tab_count = vim.fn.tabpagenr("$") ---@type integer
-      local tabid_next = eve.navigate.circular(tabid_cur, -step, tab_count)
+      local tabid_next = eve.util.navigate_circular(tabid_cur, -step, tab_count)
       local tabpages = vim.api.nvim_list_tabpages()
       local tabnr_next = tabpages[tabid_next]
       fml.api.tab.go(tabnr_next)
@@ -63,7 +63,7 @@ eve.commander
       step = math.max(1, step or vim.v.count1 or 1)
       local tabid_cur = vim.fn.tabpagenr() ---@type integer
       local tab_count = vim.fn.tabpagenr("$") ---@type integer
-      local tabid_next = eve.navigate.circular(tabid_cur, step, tab_count)
+      local tabid_next = eve.util.navigate_circular(tabid_cur, step, tab_count)
       local tabpages = vim.api.nvim_list_tabpages()
       local tabnr_next = tabpages[tabid_next]
       fml.api.tab.go(tabnr_next)

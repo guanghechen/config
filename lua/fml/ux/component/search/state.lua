@@ -4,7 +4,6 @@ local Observable = require("eve.collection.observable")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
 local oxi = require("eve.oxi")
-local navigate = require("eve.std.navigate")
 
 ---@class fml.ux.search.State : fml.t.ux.search.IState
 ---@field protected _deleted_uuids      table<string, boolean>
@@ -253,7 +252,7 @@ end
 function M:moveup()
   local step = vim.v.count1 or 1 ---@type integer
   local items = self.items ---@type fml.t.ux.search.IItem[]
-  local lnum = navigate.circular(self._item_lnum_cur, -step, #items) ---@type integer
+  local lnum = eve.util.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
   return self:locate(lnum)
 end
 
@@ -261,7 +260,7 @@ end
 function M:movedown()
   local step = vim.v.count1 or 1 ---@type integer
   local items = self.items ---@type fml.t.ux.search.IItem[]
-  local lnum = navigate.circular(self._item_lnum_cur, step, #items) ---@type integer
+  local lnum = eve.util.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
   return self:locate(lnum)
 end
 

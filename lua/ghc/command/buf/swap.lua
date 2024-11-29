@@ -16,7 +16,7 @@ eve.commander
       local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
 
       if bufid_cur ~= nil then
-        local bufid_next = eve.navigate.circular(bufid_cur, -step, #tab.bufnrs)
+        local bufid_next = eve.util.navigate_circular(bufid_cur, -step, #tab.bufnrs)
         if bufid_cur ~= bufid_next then
           local bufnr_next = tab.bufnrs[bufid_next]
           tab.bufnrs[bufid_next] = bufnr_cur
@@ -41,7 +41,7 @@ eve.commander
       local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
 
       if bufid_cur ~= nil then
-        local bufid_next = eve.navigate.circular(bufid_cur, step, #tab.bufnrs)
+        local bufid_next = eve.util.navigate_circular(bufid_cur, step, #tab.bufnrs)
         if bufid_cur ~= bufid_next then
           local bufnr_next = tab.bufnrs[bufid_next]
           tab.bufnrs[bufid_next] = bufnr_cur
