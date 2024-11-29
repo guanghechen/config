@@ -1,6 +1,6 @@
+local path = require("eve.builtin.path")
 local constants = require("eve.std.constants")
 local widgets = require("eve.globals.widgets")
-local path = require("eve.std.path")
 local api_tab = require("fml.api.tab")
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({

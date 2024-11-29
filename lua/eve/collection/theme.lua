@@ -1,4 +1,4 @@
-local path = require("eve.std.path")
+local path = require("eve.builtin.path")
 
 ---@class eve.collection.Theme : eve.t.collection.ITheme
 ---@field private hlgroup_map          table<string, eve.t.collection.theme.IHlgroup>

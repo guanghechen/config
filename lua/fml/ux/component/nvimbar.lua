@@ -1,6 +1,6 @@
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local nvimbar = require("eve.std.nvimbar")
-local path = require("eve.std.path")
 local Scheduler = require("eve.collection.scheduler")
 
 ---@return boolean

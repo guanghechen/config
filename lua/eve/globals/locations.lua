@@ -1,7 +1,7 @@
+local path = require("eve.builtin.path")
 local Disposable = require("eve.collection.disposable")
 local Observable = require("eve.collection.observable")
 local mvc = require("eve.globals.mvc")
-local path = require("eve.std.path")
 local std_buf = require("eve.std.buf")
 
 local _initial_winnr = vim.api.nvim_get_current_win() ---@type integer

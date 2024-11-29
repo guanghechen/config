@@ -1,5 +1,5 @@
 local json = require("eve.builtin.json")
-local path = require("eve.std.path")
+local path = require("eve.builtin.path")
 
 ---@class eve.oxi
 local M = require("eve.oxi.mod")

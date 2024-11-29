@@ -5,7 +5,7 @@ local SEP = constant.PATH_SEP ---@type string
 local HOME_NVIM_CONFIG = constant.HOME_NVIM_CONFIG ---@type string
 local HOME_CONTEXT = constant.HOME_CONTEXT ---@type string
 
----@class eve.std.path
+---@class eve.builtin.path
 local M = {}
 
 ---@param filepath                      string

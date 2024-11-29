@@ -7,6 +7,7 @@ local builtin = {
   icons = require("eve.builtin.icons"),
   json = require("eve.builtin.json"),
   md5 = require("eve.builtin.md5"),
+  path = require("eve.builtin.path"),
   reporter = require("eve.builtin.reporter"),
 }
 
@@ -44,7 +45,6 @@ local std = {
   navigate = require("eve.std.navigate"),
   nvim = require("eve.std.nvim"),
   nvimbar = require("eve.std.nvimbar"),
-  path = require("eve.std.path"),
   string = require("eve.std.string"),
   tab = require("eve.std.tab"),
   time = require("eve.std.time"),

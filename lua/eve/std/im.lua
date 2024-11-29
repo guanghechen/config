@@ -1,6 +1,6 @@
 local constant = require("eve.builtin.constant")
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-local path = require("eve.std.path")
 
 ---@class eve.std.im
 ---@field public get_input_method   fun(): eve.e.InputMethod|nil
