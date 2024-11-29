@@ -3,6 +3,7 @@ local context = require("eve.context")
 
 ---@class eve.builtin
 local builtin = {
+  constant = require("eve.builtin.constant"),
   json = require("eve.builtin.json"),
   md5 = require("eve.builtin.md5"),
   reporter = require("eve.builtin.reporter"),
