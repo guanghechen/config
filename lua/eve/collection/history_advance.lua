@@ -1,12 +1,37 @@
 local History = require("eve.collection.history")
 
----@class eve.collection.AdvanceHistory : eve.t.collection.IAdvanceHistory
+---@class eve.t.collection.IAdvanceHistory
 ---@field public name                   string
 ---@field public equals                 eve.t.IEquals
 ---@field public validate               eve.t.IValidate
----@field private _history              eve.t.collection.IHistory
-local M = {}
-M.__index = M
+---@field public backward               fun(self: eve.t.collection.IAdvanceHistory, step?: integer): eve.t.T|nil, boolean
+---@field public capacity               fun(self: eve.t.collection.IAdvanceHistory): integer
+---@field public clear                  fun(self: eve.t.collection.IAdvanceHistory): nil
+---@field public dump                   fun(self: eve.t.collection.IAdvanceHistory): eve.t.collection.history.ISerializedData
+---@field public fork                   fun(self: eve.t.collection.IAdvanceHistory, params?: eve.t.collection.history.IForkParams): eve.t.collection.IAdvanceHistory
+---@field public forward                fun(self: eve.t.collection.IAdvanceHistory, step?: integer): eve.t.T|nil, boolean
+---@field public go                     fun(self: eve.t.collection.IAdvanceHistory, index: integer): eve.t.T|nil
+---@field public iterator               fun(self: eve.t.collection.IAdvanceHistory): fun(): eve.t.T|nil, integer|nil
+---@field public iterator_reverse       fun(self: eve.t.collection.IAdvanceHistory): fun(): eve.t.T|nil, integer|nil
+---@field public load                   fun(self: eve.t.collection.IAdvanceHistory, data: eve.t.collection.history.ISerializedData): nil
+---@field public present                fun(self: eve.t.collection.IAdvanceHistory): eve.t.T|nil, integer
+---@field public print                  fun(self: eve.t.collection.IAdvanceHistory): nil
+---@field public push                   fun(self: eve.t.collection.IAdvanceHistory, element: eve.t.T|nil): nil
+---@field public rearrange              fun(self: eve.t.collection.IAdvanceHistory): nil
+---@field public size                   fun(self: eve.t.collection.IAdvanceHistory): integer
+
+---@class eve.t.collection.history_advance.IProps
+---@field public name                   string
+---@field public capacity               integer
+---@field public equals                 ?eve.t.IEquals
+---@field public validate               ?eve.t.IValidate
+
+---@class eve.t.collection.history_advance.IDeserializeProps
+---@field public data                   eve.t.collection.history.ISerializedData
+---@field public name                   string
+---@field public capacity               integer
+---@field public equals                 ?eve.t.IEquals
+---@field public validate               ?eve.t.IValidate
 
 ---@param element                       eve.t.T
 ---@return boolean
@@ -15,20 +40,15 @@ local function default_validate(element)
   return true
 end
 
----@class eve.collection.history_advance.IProps
+---@class eve.collection.AdvanceHistory : eve.t.collection.IAdvanceHistory
 ---@field public name                   string
----@field public capacity               integer
----@field public equals                 ?eve.t.IEquals
----@field public validate               ?eve.t.IValidate
+---@field public equals                 eve.t.IEquals
+---@field public validate               eve.t.IValidate
+---@field private _history              eve.t.collection.IHistory
+local M = {}
+M.__index = M
 
----@class eve.collection.history_advance.IDeserializeProps
----@field public data                   eve.t.collection.history.ISerializedData
----@field public name                   string
----@field public capacity               integer
----@field public equals                 ?eve.t.IEquals
----@field public validate               ?eve.t.IValidate
-
----@param props                         eve.collection.history_advance.IProps
+---@param props                         eve.t.collection.history_advance.IProps
 ---@return eve.collection.AdvanceHistory
 function M.new(props)
   local name = props.name ---@type string
@@ -49,7 +69,7 @@ function M.new(props)
   return self
 end
 
----@param props                         eve.collection.history_advance.IDeserializeProps
+---@param props                         eve.t.collection.history_advance.IDeserializeProps
 ---@return eve.collection.AdvanceHistory
 function M.deserialize(props)
   local data = props.data ---@type eve.t.collection.history.ISerializedData

@@ -1,3 +1,25 @@
+---@class eve.t.collection.ICircularStack
+---@field public capacity               fun(self: eve.t.collection.ICircularStack): integer
+---@field public size                   fun(self: eve.t.collection.ICircularStack): integer
+---@field public at                     fun(self: eve.t.collection.ICircularStack, index: integer): eve.t.T|nil
+---@field public clear                  fun(self: eve.t.collection.ICircularStack): nil
+---@field public collect                fun(self: eve.t.collection.ICircularStack): eve.t.T[]
+---@field public count                  fun(self: eve.t.collection.ICircularStack, filter: eve.t.IFilter): integer
+---@field public fork                   fun(self: eve.t.collection.ICircularStack, filter: eve.t.IFilter): eve.t.collection.ICircularStack
+---@field public iterator               fun(self: eve.t.collection.ICircularStack): fun(): eve.t.T|nil
+---@field public iterator_reverse       fun(self: eve.t.collection.ICircularStack): fun(): eve.t.T|nil
+---@field public pop                    fun(self: eve.t.collection.ICircularStack): eve.t.T|nil
+---@field public push                   fun(self: eve.t.collection.ICircularStack, element: eve.t.T): nil
+---@field public rearrange              fun(self: eve.t.collection.ICircularStack, filter: eve.t.IFilter): fun(): eve.t.T|nil
+---@field public reset                  fun(self: eve.t.collection.ICircularStack, elements: eve.t.T[]): boolean): fun(): eve.t.T|nil
+---@field public top                    fun(self: eve.t.collection.ICircularStack): eve.t.T|nil
+---@field public update                 fun(self: eve.t.collection.ICircularStack, index: integer, value: eve.t.T): nil
+
+---@class eve.t.collection.circular_stack.IProps
+---@field public capacity               integer
+
+local _tmp_array = {} ---@type eve.t.T[]
+
 ---@class eve.collection.CircularStack : eve.t.collection.ICircularStack
 ---@field private _elements             eve.t.T[]
 ---@field private _capacity             integer
@@ -7,12 +29,7 @@
 local M = {}
 M.__index = M
 
----@class eve.collection.circular_stack.IProps
----@field public capacity               integer
-
-local _tmp_array = {} ---@type eve.t.T[]
-
----@param props                         eve.collection.circular_stack.IProps
+---@param props                         eve.t.collection.circular_stack.IProps
 ---@return eve.collection.CircularStack
 function M.new(props)
   local capacity = math.max(1, props.capacity) ---@type integer

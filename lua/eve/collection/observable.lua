@@ -3,6 +3,26 @@ local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
 local util = require("eve.std.util")
 
+---@class eve.t.collection.observable.INextOptions
+---@field public strict                 ?boolean Whether to throw an error if the observable disposed.
+---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
+
+---@class eve.t.collection.IObservable: eve.t.collection.IBatchDisposable, eve.t.collection.ISubscribable
+---@field public equals                 eve.t.IEquals
+---@field public normalize              eve.t.INormalize
+---@field public snapshot               fun(self: eve.t.collection.IObservable): eve.t.T
+---@field public next                   fun(self: eve.t.collection.IObservable, value: eve.t.T, options?: eve.t.collection.observable.INextOptions):boolean
+
+---@class eve.t.collection.observable.IProps
+---@field public initial_value          eve.t.T           Initial value of the observable
+---@field public equals                 ?eve.t.IEquals    Determine whether the two values are equal.
+---@field public normalize              ?eve.t.INormalize Normalize the value before compare or update
+
+---@type eve.t.collection.IUnsubscribable
+local noop_unsubscribable = {
+  unsubscribe = function(...) end,
+}
+
 ---@class eve.collection.Observable : eve.t.collection.IObservable
 ---@field private _value                eve.t.T
 ---@field private _value_last_notified  eve.t.T|nil
@@ -11,17 +31,7 @@ local M = {}
 M.__index = M
 setmetatable(M, { __index = BatchDisposable })
 
----@type eve.t.collection.IUnsubscribable
-local noop_unsubscribable = {
-  unsubscribe = function(...) end,
-}
-
----@class eve.collection.observable.IProps
----@field public initial_value          eve.t.T           Initial value of the observable
----@field public equals                 ?eve.t.IEquals    Determine whether the two values are equal.
----@field public normalize              ?eve.t.INormalize Normalize the value before compare or update
-
----@param props                         eve.collection.observable.IProps
+---@param props                         eve.t.collection.observable.IProps
 ---@return eve.collection.Observable
 function M.new(props)
   local equals = props.equals or util.shallow_equals ---@type eve.t.IEquals
@@ -65,11 +75,11 @@ function M:dispose()
 end
 
 ---@param value eve.t.T
----@param options? eve.t.collection.IObservableNextOptions
+---@param options? eve.t.collection.observable.INextOptions
 ---@return boolean Indicate whether if the value changed.
 function M:next(value, options)
   options = options or {}
-  ---@cast options eve.t.collection.IObservableNextOptions
+  ---@cast options eve.t.collection.observable.INextOptions
 
   if self:is_disposed() then
     local strict = options.strict ~= false ---@type boolean

@@ -1,12 +1,16 @@
+---@class eve.t.collection.IDisposable
+---@field public is_disposed            fun(self: eve.t.collection.IDisposable): boolean Check if the disposable disposed.
+---@field public dispose                fun(self: eve.t.collection.IDisposable): boolean Dispose the disposable.
+
+---@class eve.t.collection.disposable.IProps
+---@field public on_dispose             fun():nil
+
 ---@class eve.collection.Disposable : eve.t.collection.IDisposable
 ---@field private _on_dispose           fun():nil
 local M = {}
 M.__index = M
 
----@class eve.collection.disposable.IProps
----@field public on_dispose             fun():nil
-
----@param props eve.collection.disposable.IProps
+---@param props eve.t.collection.disposable.IProps
 ---@return eve.collection.Disposable
 function M.new(props)
   local self = setmetatable({}, M)

@@ -1,5 +1,10 @@
 local Observable = require("eve.collection.observable")
 
+---@class eve.t.collection.IDirtier : eve.t.collection.IObservable
+---@field public is_dirty               fun(self: eve.t.collection.IDirtier): boolean
+---@field public mark_clean             fun(self: eve.t.collection.IDirtier): nil
+---@field public mark_dirty             fun(self: eve.t.collection.IDirtier): nil
+
 ---@class eve.collection.Dirtier : eve.t.collection.IDirtier
 ---@field protected _clean_tick         integer
 local M = {}

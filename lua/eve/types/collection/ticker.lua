@@ -1,2 +1,0 @@
----@class eve.t.collection.ITicker: eve.t.collection.IObservable
----@field public tick                   fun(self: eve.t.collection.ITicker): nil

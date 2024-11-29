@@ -1,6 +1,10 @@
 local reporter = require("eve.builtin.reporter")
 local BatchHandler = require("eve.collection.batch_handler")
 
+---@class eve.t.collection.IBatchDisposable : eve.t.collection.IDisposable
+---@field public dispose_all            fun(disposables: eve.t.collection.IDisposable[]): nil
+---@field public add_disposable         fun(self: eve.t.collection.IBatchDisposable, disposable: eve.t.collection.IDisposable): nil
+
 ---@class eve.collection.BatchDisposable : eve.t.collection.IBatchDisposable
 local M = {}
 M.__index = M

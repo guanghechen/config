@@ -1,5 +1,27 @@
 local util = require("eve.std.util")
 
+---@class eve.t.collection.IFrecency
+---@field public access                 fun(self: eve.t.collection.IFrecency, key: string): nil
+---@field public load                   fun(self: eve.t.collection.IFrecency, data: eve.t.collection.frecency.ISerializedData): nil
+---@field public dump                   fun(self: eve.t.collection.IFrecency): eve.t.collection.frecency.ISerializedData
+---@field public score                  fun(self: eve.t.collection.IFrecency, key: string): number
+
+---@class eve.t.collection.frecency.IItem
+---@field public timestamps             integer[]
+---@field public idx                    integer
+
+---@class eve.t.collection.frecency.ISerializedData
+---@field public items                  eve.t.collection.frecency.IItem[]
+
+---@class eve.t.collection.frecency.IProps
+---@field public MAX_TIMESTAMPS         ?integer
+---@field public items                  table<string, eve.t.collection.frecency.IItem>
+---@field public normalize              ?fun(key: string): string
+
+---@class eve.t.collection.frecency.IDeserializeProps
+---@field public data                   eve.t.collection.frecency.ISerializedData
+---@field public MAX_TIMESTAMPS         ?integer
+
 ---@class eve.collection.Frecency : eve.t.collection.IFrecency
 ---@field public MAX_TIMESTAMPS         integer
 ---@field protected _items              table<string, eve.t.collection.frecency.IItem>
@@ -7,16 +29,7 @@ local util = require("eve.std.util")
 local M = {}
 M.__index = M
 
----@class eve.collection.frecency.IProps
----@field public MAX_TIMESTAMPS         ?integer
----@field public items                  table<string, eve.t.collection.frecency.IItem>
----@field public normalize              ?fun(key: string): string
-
----@class eve.collection.frecency.IDeserializeProps
----@field public data                   eve.t.collection.frecency.ISerializedData
----@field public MAX_TIMESTAMPS         ?integer
-
----@param props                         eve.collection.frecency.IProps
+---@param props                         eve.t.collection.frecency.IProps
 ---@return eve.collection.Frecency
 function M.new(props)
   local self = setmetatable({}, M)
@@ -32,7 +45,7 @@ function M.new(props)
   return self
 end
 
----@param props                         eve.collection.frecency.IDeserializeProps
+---@param props                         eve.t.collection.frecency.IDeserializeProps
 ---@return eve.collection.Frecency
 function M.deserialize(props)
   local data = props.data ---@type eve.t.collection.frecency.ISerializedData

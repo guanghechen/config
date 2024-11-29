@@ -1,15 +1,18 @@
 local Observable = require("eve.collection.observable")
 
+---@class eve.t.collection.ITicker: eve.t.collection.IObservable
+---@field public tick                   fun(self: eve.t.collection.ITicker): nil
+
+---@class eve.t.collection.ticker.IProps
+---@field public start                  ?integer
+
 ---@class eve.collection.Ticker : eve.t.collection.ITicker
 local M = {}
 M.__index = M
 
 setmetatable(M, { __index = Observable })
 
----@class eve.collection.ticker.IProps
----@field public start                  ?integer
-
----@param props                         ?eve.collection.ticker.IProps
+---@param props                         ?eve.t.collection.ticker.IProps
 ---@return eve.collection.Ticker
 function M.new(props)
   local start = props and props.start or 0 ---@type integer

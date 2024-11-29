@@ -1,26 +1,36 @@
 local BatchHandler = require("eve.collection.batch_handler")
 
----@class eve.collection.Subscribers : eve.t.collection.ISubscribers
----@field private ARRANGE_THRESHOLD     number
----@field private _disposed             boolean
----@field private _items                eve.collection.Subscribers.ISubscriberItem[]
----@field private _subscribing_count    integer
-local M = {}
-M.__index = M
+---@class eve.t.collection.IUnsubscribable
+---@field public unsubscribe            fun(self: eve.t.collection.IUnsubscribable):nil
+
+---@class eve.t.collection.ISubscribable
+---@field public subscribe              fun(self: eve.t.collection.ISubscribable, subscriber: eve.t.collection.ISubscriber, ignoreInitial?: boolean): eve.t.collection.IUnsubscribable
+
+---@class eve.t.collection.ISubscribers : eve.t.collection.ISubscribable, eve.t.collection.IDisposable
+---@field public count                  fun(self: eve.t.collection.ISubscribers): nil
+---@field public notify                 fun(self: eve.t.collection.ISubscribers, value: eve.t.T, value_prev: eve.t.T | nil): nil
+
+---@class eve.t.collection.Subscribers.IProps
+---@field public ARRANGE_THRESHOLD      ?number
+
+---@class eve.t.collection.Subscribers.ISubscriberItem
+---@field subscriber                    eve.t.collection.ISubscriber
+---@field unsubscribed                  boolean
 
 ---@type eve.t.collection.IUnsubscribable
 local noop_unsubscribable = {
   unsubscribe = function(...) end,
 }
 
----@class eve.collection.Subscribers.IProps
----@field public ARRANGE_THRESHOLD      ?number
+---@class eve.collection.Subscribers : eve.t.collection.ISubscribers
+---@field private ARRANGE_THRESHOLD     number
+---@field private _disposed             boolean
+---@field private _items                eve.t.collection.Subscribers.ISubscriberItem[]
+---@field private _subscribing_count    integer
+local M = {}
+M.__index = M
 
----@class eve.collection.Subscribers.ISubscriberItem
----@field subscriber                    eve.t.collection.ISubscriber
----@field unsubscribed                  boolean
-
----@param props                         ?eve.collection.Subscribers.IProps
+---@param props                         ?eve.t.collection.Subscribers.IProps
 ---@return eve.collection.Subscribers
 function M.new(props)
   local self = setmetatable({}, M)
@@ -31,7 +41,7 @@ function M.new(props)
   ---@type boolean
   self._disposed = false
 
-  ---@type eve.collection.Subscribers.ISubscriberItem[]
+  ---@type eve.t.collection.Subscribers.ISubscriberItem[]
   self._items = {}
 
   ---@type integer
@@ -126,7 +136,7 @@ function M:subscribe(subscriber)
     return noop_unsubscribable
   end
 
-  ---@type eve.collection.Subscribers.ISubscriberItem
+  ---@type eve.t.collection.Subscribers.ISubscriberItem
   local item = { subscriber = subscriber, unsubscribed = false }
 
   table.insert(self._items, item)
@@ -151,7 +161,7 @@ end
 function M:_arrange()
   local items = self._items
   if #items >= self.ARRANGE_THRESHOLD and self._subscribing_count * 2 <= #items then
-    ---@type eve.collection.Subscribers.ISubscriberItem[]
+    ---@type eve.t.collection.Subscribers.ISubscriberItem[]
     local next_items = {}
 
     local i = 1

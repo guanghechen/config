@@ -1,5 +1,21 @@
 local reporter = require("eve.builtin.reporter")
 
+---@class eve.t.collection.IScheduler
+---@field public name                   string
+---@field public cancel                 fun(self: eve.t.collection.IScheduler): nil
+---@field public mark_dirty             fun(self: eve.t.collection.IScheduler): nil
+---@field public schedule               fun(self: eve.t.collection.IScheduler): nil
+---@field public snapshot               fun(self: eve.t.collection.IScheduler): unknown|nil
+
+---@alias eve.t.collection.scheduler.ITask
+---| fun(callback: eve.t.collection.promise.IOnFinally): nil
+
+---@class eve.t.collection.scheduler.IProps
+---@field public name                   string
+---@field public delay                  ?integer
+---@field public silent                 ?boolean
+---@field public task                   eve.t.collection.scheduler.ITask
+
 ---@class eve.collection.Scheduler : eve.t.collection.IScheduler
 ---@field public name                   string
 ---
@@ -19,13 +35,7 @@ local reporter = require("eve.builtin.reporter")
 local M = {}
 M.__index = M
 
----@class eve.collection.scheduler.IProps
----@field public name                   string
----@field public delay                  ?integer
----@field public silent                 ?boolean
----@field public task                   eve.t.collection.scheduler.ITask
-
----@param props                         eve.collection.scheduler.IProps
+---@param props                         eve.t.collection.scheduler.IProps
 ---@return eve.collection.Scheduler
 function M.new(props)
   local self = setmetatable({}, M)

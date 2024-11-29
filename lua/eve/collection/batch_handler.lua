@@ -1,3 +1,8 @@
+---@class eve.t.collection.IBatchHandler
+---@field public cleanup                fun(self: eve.t.collection.IBatchHandler): nil
+---@field public run                    fun(self: eve.t.collection.IBatchHandler, action: fun(): nil): nil
+---@field public summary                fun(self: eve.t.collection.IBatchHandler, title: string): nil): nil
+
 ---@class eve.collection.BatchHandler : eve.t.collection.IBatchHandler
 local M = {}
 M.__index = M
