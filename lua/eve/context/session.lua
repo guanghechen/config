@@ -1,7 +1,7 @@
 local constant = require("eve.builtin.constant")
 local path = require("eve.builtin.path")
+local util = require("eve.builtin.util")
 local Observable = require("eve.collection.observable")
-local std_array = require("eve.std.array")
 
 ---@class eve.context.session : eve.t.context.session
 local M = {}
@@ -209,7 +209,7 @@ function M.load(data)
     local state = M.state ---@type eve.t.context.session.state
 
     ---! bookmark
-    if not std_array.equals(state.bookmark.pinned:snapshot(), data.bookmark.pinned) then
+    if not util.equals_list(state.bookmark.pinned:snapshot(), data.bookmark.pinned) then
       state.bookmark.pinned:next(data.bookmark.pinned)
     end
 
@@ -218,10 +218,10 @@ function M.load(data)
     state.find.flag_gitignore:next(data.find.flag_gitignore)
     state.find.flag_fuzzy:next(data.find.flag_fuzzy)
     state.find.flag_regex:next(data.find.flag_regex)
-    if not std_array.equals(state.find.includes:snapshot(), data.find.includes) then
+    if not util.equals_list(state.find.includes:snapshot(), data.find.includes) then
       state.find.includes:next(data.find.includes)
     end
-    if not std_array.equals(state.find.excludes:snapshot(), data.find.excludes) then
+    if not util.equals_list(state.find.excludes:snapshot(), data.find.excludes) then
       state.find.excludes:next(data.find.excludes)
     end
     state.find.keyword:next(data.find.keyword)
@@ -241,16 +241,16 @@ function M.load(data)
     state.search.flag_replace:next(data.search.flag_replace)
     state.search.max_filesize:next(data.search.max_filesize)
     state.search.max_matches:next(data.search.max_matches)
-    if not std_array.equals(state.search.includes:snapshot(), data.search.includes) then
+    if not util.equals_list(state.search.includes:snapshot(), data.search.includes) then
       state.search.includes:next(data.search.includes)
     end
-    if not std_array.equals(state.search.excludes:snapshot(), data.search.excludes) then
+    if not util.equals_list(state.search.excludes:snapshot(), data.search.excludes) then
       state.search.excludes:next(data.search.excludes)
     end
     state.search.keyword:next(data.search.keyword)
     state.search.replacement:next(data.search.replacement)
     state.search.scope:next(data.search.scope)
-    if not std_array.equals(state.search.search_paths:snapshot(), data.search.search_paths) then
+    if not util.equals_list(state.search.search_paths:snapshot(), data.search.search_paths) then
       state.search.search_paths:next(data.search.search_paths)
     end
   end

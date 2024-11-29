@@ -23,25 +23,6 @@ function M.toggle_inline(arr, element)
 end
 
 ---@generic T
----@param arr1                          T[]
----@param arr2                          T[]
----@return boolean
-function M.equals(arr1, arr2)
-  if arr1 == arr2 then
-    return true
-  end
-  if #arr1 ~= #arr2 then
-    return false
-  end
-  for i = 1, #arr1, 1 do
-    if arr1[i] ~= arr2[i] then
-      return false
-    end
-  end
-  return true
-end
-
----@generic T
 ---@param arr                           T[]
 ---@param filter                        fun(v: T, i: integer, arr: T[]): boolean
 ---@return T[]

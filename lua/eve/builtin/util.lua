@@ -75,6 +75,38 @@ function M.equals_shallow(left, right)
   return left == right
 end
 
+---@param left                          any[]
+---@param right                         any[]
+---@param deep                          ?boolean
+---@return boolean
+function M.equals_list(left, right, deep)
+  if left == right then
+    return true
+  end
+
+  if #left ~= #right then
+    return false
+  end
+
+  local N = #left ---@type integer
+  if not deep then
+    for i = 1, N, 1 do
+      if left[i] ~= right[i] then
+        return false
+      end
+    end
+    return true
+  end
+
+  local equals = M.equals_deep
+  for i = 1, N, 1 do
+    if not equals(left[i], right[i]) then
+      return false
+    end
+  end
+  return true
+end
+
 ---@param current                       integer  current index
 ---@param step                          integer  moving step
 ---@param total                         integer  total index.
