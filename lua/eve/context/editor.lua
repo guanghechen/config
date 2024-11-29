@@ -5,12 +5,6 @@ local M = {}
 
 ---@return eve.t.context.editor.data
 function M.defaults()
-  ---@type eve.t.context.data.dressing
-  local dressing = {
-    autopairs = true,
-    winsep = true,
-  }
-
   ---@type eve.t.context.data.theme
   local theme = {
     theme = "gruvbox_dark",
@@ -20,7 +14,6 @@ function M.defaults()
 
   ---@type eve.t.context.editor.data
   local data = {
-    dressing = dressing,
     theme = theme,
   }
   return data
@@ -35,12 +28,6 @@ function M.dump()
 
   local state = M.state ---@type eve.t.context.editor.state
 
-  ---@type eve.t.context.data.dressing
-  local dressing = {
-    autopairs = state.dressing.autopairs:snapshot(),
-    winsep = state.dressing.winsep:snapshot(),
-  }
-
   ---@type eve.t.context.data.theme
   local theme = {
     theme = state.theme.theme:snapshot(),
@@ -50,7 +37,6 @@ function M.dump()
 
   ---@type eve.t.context.editor.data
   local data = {
-    dressing = dressing,
     theme = theme,
   }
   return data
@@ -60,12 +46,6 @@ end
 ---@return nil
 function M.load(data)
   if M.state == nil then
-    ---@type eve.t.context.state.dressing
-    local dressing = {
-      autopairs = Observable.from_value(data.dressing.autopairs),
-      winsep = Observable.from_value(data.dressing.winsep),
-    }
-
     ---@type eve.t.context.state.theme
     local theme = {
       theme = Observable.from_value(data.theme.theme),
@@ -75,16 +55,11 @@ function M.load(data)
 
     ---@type eve.t.context.editor.state
     local state = {
-      dressing = dressing,
       theme = theme,
     }
     M.state = state
   else
     local state = M.state ---@type eve.t.context.editor.state
-
-    ---! dressing
-    state.dressing.autopairs:next(data.dressing.autopairs)
-    state.dressing.winsep:next(data.dressing.winsep)
 
     ---! theme
     state.theme.theme:next(data.theme.theme)
@@ -102,16 +77,6 @@ function M.normalize(data)
     return resolved
   end
   ---@cast data eve.t.context.editor.data
-
-  ---resolve dressing data
-  if type(data.dressing) == "table" then
-    if type(data.dressing.autopairs) == "boolean" then
-      resolved.dressing.autopairs = data.dressing.autopairs
-    end
-    if type(data.dressing.winsep) == "boolean" then
-      resolved.dressing.winsep = data.dressing.winsep
-    end
-  end
 
   ---resolve theme data
   if type(data.theme) == "table" then
@@ -133,14 +98,6 @@ end
 ---@return boolean
 function M.equals(data)
   local cur = M.dump() ---@type eve.t.context.editor.data
-
-  ---compare dressing data
-  if
-    data.dressing.autopairs ~= cur.dressing.autopairs --
-    or data.dressing.winsep ~= cur.dressing.winsep
-  then
-    return false
-  end
 
   ---compare theme data
   if

@@ -19,28 +19,28 @@ local M = {
 ---@return eve.t.context.data
 function M.dump()
   local data_editor = editor.dump() ---@type eve.t.context.editor.data
-  local data_session = session.dump() ---@type eve.t.context.session.data
   local data_workspace = workspace.dump() ---@type eve.t.context.workspace.data
+  local data_session = session.dump() ---@type eve.t.context.session.data
 
   ---@type eve.t.context.data
   local data = {
     ---! editor
-    dressing = data_editor.dressing,
     theme = data_editor.theme,
 
-    ---! session
-    bookmark = data_session.bookmark,
-    find = data_session.find,
-    flight = data_session.flight,
-    search = data_session.search,
-
     ---! workspace
-    bufs = data_workspace.bufs,
-    tabs = data_workspace.tabs,
-    wins = data_workspace.wins,
+    bookmark = data_workspace.bookmark,
+    dressing = data_workspace.dressing,
+    find = data_workspace.find,
+    flight = data_workspace.flight,
     frecency = data_workspace.frecency,
     input_history = data_workspace.input_history,
-    tab_history = data_workspace.tab_history,
+    search = data_workspace.search,
+
+    ---! session
+    bufs = data_session.bufs,
+    tabs = data_session.tabs,
+    wins = data_session.wins,
+    tab_history = data_session.tab_history,
   }
   return data
 end
@@ -58,14 +58,6 @@ function M.load(storage)
     end
   end
 
-  if session.state == nil or (storage.session and vim.fn.filereadable(storage.session)) ~= 0 then
-    local raw_data = storage.session and fs.read_json({ filepath = storage.session, silent_on_bad_path = true }) or nil
-    if session.state == nil or raw_data ~= nil then
-      local data = session.normalize(raw_data) ---@type eve.t.context.session.data
-      session.load(data)
-    end
-  end
-
   if workspace.state == nil or (storage.workspace and vim.fn.filereadable(storage.workspace)) ~= 0 then
     local raw_data = storage.workspace and fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
       or nil
@@ -75,41 +67,49 @@ function M.load(storage)
     end
   end
 
+  if session.state == nil or (storage.session and vim.fn.filereadable(storage.session)) ~= 0 then
+    local raw_data = storage.session and fs.read_json({ filepath = storage.session, silent_on_bad_path = true }) or nil
+    if session.state == nil or raw_data ~= nil then
+      local data = session.normalize(raw_data) ---@type eve.t.context.session.data
+      session.load(data)
+    end
+  end
+
   if M.state == nil then
     ---@type eve.t.context.state
     local state = {
       ---! editor
-      dressing = editor.state.dressing,
       theme = editor.state.theme,
 
-      ---! session
-      bookmark = session.state.bookmark,
-      find = session.state.find,
-      flight = session.state.flight,
-      search = session.state.search,
-
       ---! workspace
-      bufs = workspace.state.bufs,
-      tabs = workspace.state.tabs,
-      wins = workspace.state.wins,
-      status = workspace.state.status,
+      bookmark = workspace.state.bookmark,
+      dressing = workspace.state.dressing,
+      find = workspace.state.find,
+      flight = workspace.state.flight,
       frecency = workspace.state.frecency,
       input_history = workspace.state.input_history,
-      tab_history = workspace.state.tab_history,
+      search = workspace.state.search,
+
+      ---! session
+      bufs = session.state.bufs,
+      tabs = session.state.tabs,
+      wins = session.state.wins,
+      status = session.state.status,
+      tab_history = session.state.tab_history,
 
       ---
       editor_states_ticker = Ticker.new({ start = 0 }),
-      session_states_ticker = Ticker.new({ start = 0 }),
       workspace_states_ticker = Ticker.new({ start = 0 }),
+      session_states_ticker = Ticker.new({ start = 0 }),
     }
     M.state = state
   else
     local state = M.state ---@type eve.t.context.state
 
-    ---! workspace
-    state.bufs = workspace.state.bufs
-    state.tabs = workspace.state.tabs
-    state.wins = workspace.state.wins
+    ---! session
+    state.bufs = session.state.bufs
+    state.tabs = session.state.tabs
+    state.wins = session.state.wins
   end
 end
 
@@ -123,14 +123,14 @@ function M.save(storage)
     fs.write_json(storage.editor, data_editor, true)
   end
 
-  if storage.session then
-    local data_session = session.dump() ---@type eve.t.context.session.data
-    fs.write_json(storage.session, data_session, true)
-  end
-
   if storage.workspace then
     local data_workspace = workspace.dump() ---@type eve.t.context.workspace.data
     fs.write_json(storage.workspace, data_workspace, true)
+  end
+
+  if storage.session then
+    local data_session = session.dump() ---@type eve.t.context.session.data
+    fs.write_json(storage.session, data_session, true)
   end
 end
 
@@ -138,21 +138,21 @@ end
 ---@return nil
 function M.set_bufs(bufs)
   M.state.bufs = bufs
-  workspace.state.bufs = bufs
+  session.state.bufs = bufs
 end
 
 ---@param tabs                          table<integer, eve.t.context.state.tab.IItem>
 ---@return nil
 function M.set_tabs(tabs)
   M.state.tabs = tabs
-  workspace.state.tabs = tabs
+  session.state.tabs = tabs
 end
 
 ---@param wins                          table<integer, eve.t.context.state.win.IItem>
 ---@return nil
 function M.set_wins(wins)
   M.state.wins = wins
-  workspace.state.wins = wins
+  session.state.wins = wins
 end
 
 ---@param storage                       eve.t.context.storage
@@ -179,16 +179,18 @@ function M.watch_changes(params)
   end, true)
 
   mvc.observe({
-    state.dressing.autopairs,
-    state.dressing.winsep,
     state.theme.relativenumber,
   }, function()
-    vim.cmd.redraw()
     state.editor_states_ticker:tick()
+    vim.cmd.redraw()
   end, true)
 
   mvc.observe({
     state.bookmark.pinned,
+
+    ---
+    state.dressing.autopairs,
+    state.dressing.winsep,
 
     ---
     state.find.flag_case_sensitive,
@@ -221,7 +223,7 @@ function M.watch_changes(params)
     state.search.scope,
     state.search.search_paths,
   }, function()
-    state.session_states_ticker:tick()
+    state.workspace_states_ticker:tick()
   end, true)
 
   ---! Trigger statusline redraw.
@@ -292,13 +294,13 @@ function M.watch_changes(params)
   ---! Save when leave the editor.
   mvc.add_disposable(Disposable.new({
     on_dispose = function()
-      local session_has_changed = state.session_states_ticker:snapshot() > 0 ---@type boolean
+      local workspace_has_changed = state.workspace_states_ticker:snapshot() > 0 ---@type boolean
       local autosave = state.flight.autosave:snapshot() ---@type boolean
 
       ---@type eve.t.context.storage
       local storage = {
-        session = session_has_changed and M.storage.session or nil,
-        workspace = autosave and M.storage.workspace or nil,
+        session = autosave and M.storage.session or nil,
+        workspace = workspace_has_changed and M.storage.workspace or nil,
       }
 
       if autosave and M.storage.nvim_session_autosaved then

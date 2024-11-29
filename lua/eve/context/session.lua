@@ -1,91 +1,84 @@
 local constant = require("eve.builtin.constant")
 local path = require("eve.builtin.path")
 local util = require("eve.builtin.util")
+local AdvanceHistory = require("eve.collection.history_advance")
 local Observable = require("eve.collection.observable")
+local std_array = require("eve.std.array")
+local std_nvim = require("eve.std.nvim")
+local std_tab = require("eve.std.tab")
+local tmux = require("eve.std.tmux")
+
+---@param bufs                          eve.t.context.data.buf.IItem[]
+---@return table<integer, integer>
+local function gen_real_bufnr_map(bufs)
+  if type(bufs) ~= "table" then
+    return {}
+  end
+
+  local filepath_2_real_bufnr_map = {} ---@type table<string, integer>
+  local bufnr_2_real_bufnr = {} ---@type table<integer, integer>
+  local real_bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+
+  for _, real_bufnr in ipairs(real_bufnrs) do
+    local real_filepath = vim.api.nvim_buf_get_name(real_bufnr)
+    if type(real_filepath) == "string" then
+      filepath_2_real_bufnr_map[real_filepath] = real_bufnr
+    end
+  end
+
+  for _, item in ipairs(bufs) do
+    if type(item.bufnr) == "number" and type(item.filepath) == "string" then
+      local real_bufnr = filepath_2_real_bufnr_map[item.filepath]
+      bufnr_2_real_bufnr[item.bufnr] = real_bufnr
+    end
+  end
+
+  return bufnr_2_real_bufnr
+end
+
+---@param tabs                          eve.t.context.data.tab.IItem[]
+---@return table<integer, integer>
+local function gen_real_tabnr_map(tabs)
+  if type(tabs) ~= "table" then
+    return {}
+  end
+
+  local tabnr_2_real_tabnr = {} ---@type table<integer, integer>
+  local real_tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+
+  local tabnrs = {} ---@type integer[]
+  for _, item in ipairs(tabs) do
+    table.insert(tabnrs, item.tabnr)
+  end
+  table.sort(tabnrs)
+
+  for i, tabnr in ipairs(tabnrs) do
+    if i <= #real_tabnrs then
+      tabnr_2_real_tabnr[tabnr] = real_tabnrs[i]
+    end
+  end
+
+  return tabnr_2_real_tabnr
+end
 
 ---@class eve.context.session : eve.t.context.session
 local M = {}
 
 ---@return eve.t.context.session.data
 function M.defaults()
-  local is_home_config_dir = path.workspace() == constant.HOME_NVIM_CONFIG ---@type boolean
+  local bufs = {} ---@type eve.t.context.data.buf.IItem[]
+  local tabs = {} ---@type eve.t.context.data.tab.IItem[]
+  local wins = {} ---@type eve.t.context.data.win.IItem[]
 
-  ---@type eve.t.context.data.bookmark
-  local bookmark = {
-    pinned = {},
-  }
-
-  ---@type eve.t.context.data.find
-  local find = {
-    flag_case_sensitive = false,
-    flag_gitignore = true,
-    flag_fuzzy = false,
-    flag_regex = false,
-    includes = {},
-    excludes = {
-      ".git/",
-      ".cache/",
-      ".next/",
-      ".yarn/",
-      "build/",
-      "debug/",
-      "node_modules/",
-      "target/",
-      "tmp/",
-      "*.pdf",
-      "*.mkv",
-      "*.mp4",
-      "*.zip",
-    },
-    keyword = "",
-    scope = "C",
-  }
-
-  ---@type eve.t.context.data.flight
-  local flight = {
-    autoload = false,
-    autosave = true,
-    copilot = is_home_config_dir,
-    devmode = is_home_config_dir,
-    lsp_inlay_hints = is_home_config_dir,
-  }
-
-  ---@type eve.t.context.data.search
-  local search = {
-    flag_case_sensitive = true,
-    flag_gitignore = true,
-    flag_regex = false,
-    flag_replace = false,
-    max_filesize = "1M",
-    max_matches = 500,
-    includes = {},
-    excludes = {
-      ".git/",
-      ".cache/",
-      ".next/",
-      ".yarn/",
-      "build/",
-      "debug/",
-      "node_modules/",
-      "target/",
-      "tmp/",
-      "*.pdf",
-      "*.mkv",
-      "*.mp4",
-      "*.zip",
-    },
-    keyword = "",
-    replacement = "",
-    scope = "C",
-    search_paths = {},
-  }
+  ---@type eve.t.collection.history.ISerializedData
+  local tab_history = { present = 0, stack = {} }
 
   ---@type eve.t.context.session.data
   local data = {
-    bookmark = bookmark,
-    find = find,
-    flight = flight,
-    search = search,
+    bufs = bufs,
+    tabs = tabs,
+    wins = wins,
+    tab_history = tab_history,
   }
   return data
 end
@@ -99,54 +92,37 @@ function M.dump()
 
   local state = M.state ---@type eve.t.context.session.state
 
-  ---@type eve.t.context.data.bookmark
-  local bookmark = {
-    pinned = state.bookmark.pinned:snapshot(),
-  }
+  local bufs = {} ---@type eve.t.context.data.buf.IItem[]
+  for bufnr, buf in pairs(state.bufs) do
+    ---@type eve.t.context.data.buf.IItem
+    local item = {
+      bufnr = bufnr,
+      filename = buf.filename,
+      filepath = buf.filepath,
+      pinned = buf.pinned,
+    }
+    table.insert(bufs, item)
+  end
 
-  ---@type eve.t.context.data.find
-  local find = {
-    flag_case_sensitive = state.find.flag_case_sensitive:snapshot(),
-    flag_gitignore = state.find.flag_gitignore:snapshot(),
-    flag_fuzzy = state.find.flag_fuzzy:snapshot(),
-    flag_regex = state.find.flag_regex:snapshot(),
-    includes = state.find.includes:snapshot(),
-    excludes = state.find.excludes:snapshot(),
-    keyword = state.find.keyword:snapshot(),
-    scope = state.find.scope:snapshot(),
-  }
+  local tabs = {} ---@type eve.t.context.data.tab.IItem[]
+  for tabnr, tab in pairs(state.tabs) do
+    ---@type eve.t.context.data.tab.IItem
+    local item = {
+      tabnr = tabnr,
+      name = tab.name,
+      bufnrs = tab.bufnrs,
+    }
+    table.insert(tabs, item)
+  end
 
-  ---@type eve.t.context.data.flight
-  local flight = {
-    autoload = state.flight.autoload:snapshot(),
-    autosave = state.flight.autosave:snapshot(),
-    copilot = state.flight.copilot:snapshot(),
-    devmode = state.flight.devmode:snapshot(),
-    lsp_inlay_hints = state.flight.lsp_inlay_hints:snapshot(),
-  }
-
-  ---@type eve.t.context.data.search
-  local search = {
-    flag_case_sensitive = state.search.flag_case_sensitive:snapshot(),
-    flag_gitignore = state.search.flag_gitignore:snapshot(),
-    flag_regex = state.search.flag_regex:snapshot(),
-    flag_replace = state.search.flag_replace:snapshot(),
-    max_matches = state.search.max_matches:snapshot(),
-    max_filesize = state.search.max_filesize:snapshot(),
-    includes = state.search.includes:snapshot(),
-    excludes = state.search.excludes:snapshot(),
-    keyword = state.search.keyword:snapshot(),
-    replacement = state.search.replacement:snapshot(),
-    scope = state.search.scope:snapshot(),
-    search_paths = state.search.search_paths:snapshot(),
-  }
+  local tab_history = state.tab_history:dump() ---@type eve.t.collection.history.ISerializedData
 
   ---@type eve.t.context.session.data
   local data = {
-    bookmark = bookmark,
-    find = find,
-    flight = flight,
-    search = search,
+    bufs = bufs,
+    tabs = tabs,
+    wins = {},
+    tab_history = tab_history,
   }
   return data
 end
@@ -155,105 +131,113 @@ end
 ---@return nil
 function M.load(data)
   if M.state == nil then
-    ---@type eve.t.context.state.bookmark
-    local bookmark = {
-      pinned = Observable.from_value(data.bookmark.pinned),
+    ---@type eve.t.context.state.status
+    local status = {
+      lsp_msg = Observable.from_value(""),
+      tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
+      winline_dirty_nr = Observable.from_value(0, util.falsy),
     }
 
-    ---@type eve.t.context.state.find
-    local find = {
-      flag_case_sensitive = Observable.from_value(data.find.flag_case_sensitive),
-      flag_gitignore = Observable.from_value(data.find.flag_gitignore),
-      flag_fuzzy = Observable.from_value(data.find.flag_fuzzy),
-      flag_regex = Observable.from_value(data.find.flag_regex),
-      includes = Observable.from_value(data.find.includes),
-      excludes = Observable.from_value(data.find.excludes),
-      keyword = Observable.from_value(data.find.keyword),
-      scope = Observable.from_value(data.find.scope),
-    }
-
-    ---@type eve.t.context.state.flight
-    local flight = {
-      autoload = Observable.from_value(data.flight.autoload),
-      autosave = Observable.from_value(data.flight.autosave),
-      copilot = Observable.from_value(data.flight.copilot),
-      devmode = Observable.from_value(data.flight.devmode),
-      lsp_inlay_hints = Observable.from_value(data.flight.lsp_inlay_hints),
-    }
-
-    ---@type eve.t.context.state.search
-    local search = {
-      flag_case_sensitive = Observable.from_value(data.search.flag_case_sensitive),
-      flag_gitignore = Observable.from_value(data.search.flag_gitignore),
-      flag_regex = Observable.from_value(data.search.flag_regex),
-      flag_replace = Observable.from_value(data.search.flag_replace),
-      max_filesize = Observable.from_value(data.search.max_filesize),
-      max_matches = Observable.from_value(data.search.max_matches),
-      includes = Observable.from_value(data.search.includes),
-      excludes = Observable.from_value(data.search.excludes),
-      keyword = Observable.from_value(data.search.keyword),
-      replacement = Observable.from_value(data.search.replacement),
-      scope = Observable.from_value(data.search.scope),
-      search_paths = Observable.from_value(data.search.search_paths),
-    }
+    ---@type eve.t.collection.IAdvanceHistory
+    local tab_history = AdvanceHistory.new({
+      name = "tabs",
+      capacity = constant.TAB_HISTORY_CAPACITY,
+      validate = std_tab.is_valid,
+    })
 
     ---@type eve.t.context.session.state
     local state = {
-      bookmark = bookmark,
-      find = find,
-      flight = flight,
-      search = search,
+      bufs = {},
+      tabs = {},
+      wins = {},
+      status = status,
+      tab_history = tab_history,
     }
     M.state = state
-  else
-    local state = M.state ---@type eve.t.context.session.state
+  end
 
-    ---! bookmark
-    if not util.equals_list(state.bookmark.pinned:snapshot(), data.bookmark.pinned) then
-      state.bookmark.pinned:next(data.bookmark.pinned)
-    end
+  local state = M.state ---@type eve.t.context.session.state
 
-    ---! find
-    state.find.flag_case_sensitive:next(data.find.flag_case_sensitive)
-    state.find.flag_gitignore:next(data.find.flag_gitignore)
-    state.find.flag_fuzzy:next(data.find.flag_fuzzy)
-    state.find.flag_regex:next(data.find.flag_regex)
-    if not util.equals_list(state.find.includes:snapshot(), data.find.includes) then
-      state.find.includes:next(data.find.includes)
-    end
-    if not util.equals_list(state.find.excludes:snapshot(), data.find.excludes) then
-      state.find.excludes:next(data.find.excludes)
-    end
-    state.find.keyword:next(data.find.keyword)
-    state.find.scope:next(data.find.scope)
+  --- bufs
+  local bufs = {} ---@type table<integer, eve.t.context.state.buf.IItem>
+  local bufnr_2_real_bufnr = gen_real_bufnr_map(data.bufs) ---@type table<integer, integer>
+  local tabnr_2_real_tabnr = gen_real_tabnr_map(data.tabs) ---@type table<integer, integer>
 
-    ---! flight
-    state.flight.autoload:next(data.flight.autoload)
-    state.flight.autosave:next(data.flight.autosave)
-    state.flight.copilot:next(data.flight.copilot)
-    state.flight.devmode:next(data.flight.devmode)
-    state.flight.lsp_inlay_hints:next(data.flight.lsp_inlay_hints)
+  local workspace_pieces = path.split(path.workspace()) ---@type string[]
+  local cwd_pieces = path.split(path.cwd()) ---@type string[]
+  for _, item in ipairs(data.bufs) do
+    local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
+    if real_bufnr ~= nil and vim.api.nvim_buf_is_valid(real_bufnr) then
+      local filename = item.filename ---@type string
+      local filetype = vim.bo[real_bufnr].filetype ---@type string
+      local fileicon, fileicon_hl = std_nvim.calc_fileicon(filename) ---@type string, string
 
-    ---! search
-    state.search.flag_case_sensitive:next(data.search.flag_case_sensitive)
-    state.search.flag_gitignore:next(data.search.flag_gitignore)
-    state.search.flag_regex:next(data.search.flag_regex)
-    state.search.flag_replace:next(data.search.flag_replace)
-    state.search.max_filesize:next(data.search.max_filesize)
-    state.search.max_matches:next(data.search.max_matches)
-    if not util.equals_list(state.search.includes:snapshot(), data.search.includes) then
-      state.search.includes:next(data.search.includes)
-    end
-    if not util.equals_list(state.search.excludes:snapshot(), data.search.excludes) then
-      state.search.excludes:next(data.search.excludes)
-    end
-    state.search.keyword:next(data.search.keyword)
-    state.search.replacement:next(data.search.replacement)
-    state.search.scope:next(data.search.scope)
-    if not util.equals_list(state.search.search_paths:snapshot(), data.search.search_paths) then
-      state.search.search_paths:next(data.search.search_paths)
+      ---@type eve.t.context.state.buf.IItem
+      local buf = {
+        fileicon_hl = fileicon_hl,
+        fileicon = fileicon,
+        filename = item.filename,
+        filepath = item.filepath,
+        filetype = filetype,
+        relpath = path.split_prettier(workspace_pieces, cwd_pieces, item.filepath),
+        pinned = item.pinned,
+      }
+      bufs[real_bufnr] = buf
     end
   end
+  state.bufs = bufs
+
+  ---! tabs
+  local tabs = {} ---@type table<integer, eve.t.context.state.tab.IItem>
+  for _, item in ipairs(data.tabs) do
+    local real_tabnr = type(item.tabnr) == "number" and tabnr_2_real_tabnr[item.tabnr] or nil
+    if real_tabnr ~= nil then
+      local bufnrs = {} ---@type integer[]
+      if type(item.bufnrs) == "table" then
+        for _, bufnr in ipairs(item.bufnrs) do
+          local real_bufnr = bufnr_2_real_bufnr[bufnr]
+          if real_bufnr ~= nil then
+            table.insert(bufnrs, real_bufnr)
+          end
+        end
+      end
+
+      local winnr_cur = vim.api.nvim_tabpage_get_win(real_tabnr) ---@type integer
+      ---@type eve.t.context.state.tab.IItem
+      local tab = {
+        name = item.name,
+        bufnrs = bufnrs,
+        bufnr_set = std_array.to_set(bufnrs),
+        winnr_cur = Observable.from_value(winnr_cur),
+      }
+      tabs[real_tabnr] = tab
+    end
+  end
+  state.tabs = tabs
+
+  ---! wins
+  state.wins = {} ---@type table<integer, eve.t.context.state.win.IItem>
+
+  ---! status
+  state.status.lsp_msg:next("")
+  state.status.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
+  state.status.winline_dirty_nr:next(0)
+
+  ---! tab_history
+  local stack = {} ---@type integer[]
+  local present = data.tab_history.present ---@type integer
+  for i, tabnr in ipairs(data.tab_history.stack) do
+    local real_tabnr = tabnr_2_real_tabnr[tabnr]
+    if real_tabnr ~= nil then
+      table.insert(stack, real_tabnr)
+    elseif present > i then
+      present = present - 1
+    end
+    if present == i then
+      present = #stack
+    end
+  end
+  state.tab_history:load({ present = present, stack = stack })
 end
 
 ---@param data                          any
@@ -266,93 +250,24 @@ function M.normalize(data)
   end
   ---@cast data eve.t.context.session.data
 
-  if type(data.bookmark) == "table" then
-    if type(data.bookmark.pinned) == "table" then
-      resolved.bookmark.pinned = data.bookmark.pinned
-    end
+  if type(data.bufs) == "table" then
+    resolved.bufs = data.bufs
   end
 
-  if type(data.find) == "table" then
-    if type(data.find.flag_case_sensitive) == "boolean" then
-      resolved.find.flag_case_sensitive = data.find.flag_case_sensitive
-    end
-    if type(data.find.flag_gitignore) == "boolean" then
-      resolved.find.flag_gitignore = data.find.flag_gitignore
-    end
-    if type(data.find.flag_fuzzy) == "boolean" then
-      resolved.find.flag_fuzzy = data.find.flag_fuzzy
-    end
-    if type(data.find.flag_regex) == "boolean" then
-      resolved.find.flag_regex = data.find.flag_regex
-    end
-    if type(data.find.includes) == "table" then
-      resolved.find.includes = data.find.includes
-    end
-    if type(data.find.excludes) == "table" then
-      resolved.find.excludes = data.find.excludes
-    end
-    if type(data.find.keyword) == "string" then
-      resolved.find.keyword = data.find.keyword
-    end
-    if type(data.find.scope) == "string" then
-      resolved.find.scope = data.find.scope
-    end
+  if type(data.tabs) == "table" then
+    resolved.tabs = data.tabs
   end
 
-  if type(data.flight) == "table" then
-    if type(data.flight.autoload) == "boolean" then
-      resolved.flight.autoload = data.flight.autoload
-    end
-    if type(data.flight.autosave) == "boolean" then
-      resolved.flight.autosave = data.flight.autosave
-    end
-    if type(data.flight.copilot) == "boolean" then
-      resolved.flight.copilot = data.flight.copilot
-    end
-    if type(data.flight.devmode) == "boolean" then
-      resolved.flight.devmode = data.flight.devmode
-    end
-    if type(data.flight.lsp_inlay_hints) == "boolean" then
-      resolved.flight.lsp_inlay_hints = data.flight.lsp_inlay_hints
-    end
+  if type(data.wins) == "table" then
+    resolved.wins = data.wins
   end
 
-  if type(data.search) == "table" then
-    if type(data.search.flag_case_sensitive) == "boolean" then
-      resolved.search.flag_case_sensitive = data.search.flag_case_sensitive
+  if type(data.tab_history) == "table" then
+    if type(data.tab_history.present) == "number" then
+      resolved.tab_history.present = data.tab_history.present
     end
-    if type(data.search.flag_gitignore) == "boolean" then
-      resolved.search.flag_gitignore = data.search.flag_gitignore
-    end
-    if type(data.search.flag_regex) == "boolean" then
-      resolved.search.flag_regex = data.search.flag_regex
-    end
-    if type(data.search.flag_replace) == "boolean" then
-      resolved.search.flag_replace = data.search.flag_replace
-    end
-    if type(data.search.max_filesize) == "string" then
-      resolved.search.max_filesize = data.search.max_filesize
-    end
-    if type(data.search.max_matches) == "number" then
-      resolved.search.max_matches = data.search.max_matches
-    end
-    if type(data.search.includes) == "table" then
-      resolved.search.includes = data.search.includes
-    end
-    if type(data.search.excludes) == "table" then
-      resolved.search.excludes = data.search.excludes
-    end
-    if type(data.search.keyword) == "string" then
-      resolved.search.keyword = data.search.keyword
-    end
-    if type(data.search.replacement) == "string" then
-      resolved.search.replacement = data.search.replacement
-    end
-    if type(data.search.scope) == "string" then
-      resolved.search.scope = data.search.scope
-    end
-    if type(data.search.search_paths) == "table" then
-      resolved.search.search_paths = data.search.search_paths
+    if type(data.tab_history.stack) == "table" then
+      resolved.tab_history.stack = data.tab_history.stack
     end
   end
 
