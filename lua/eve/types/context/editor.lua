@@ -1,11 +1,24 @@
+---@class eve.t.context.data.dressing
+---@field public autopairs              boolean
+---@field public winsep                 boolean
+
 ---@class eve.t.context.state.dressing
 ---@field public autopairs              eve.t.collection.IObservable
 ---@field public winsep                 eve.t.collection.IObservable
+
+---@class eve.t.context.data.theme
+---@field public theme                  eve.e.Theme
+---@field public transparency           boolean
+---@field public relativenumber         boolean
 
 ---@class eve.t.context.state.theme
 ---@field public theme                  eve.t.collection.IObservable
 ---@field public transparency           eve.t.collection.IObservable
 ---@field public relativenumber         eve.t.collection.IObservable
+
+---@class eve.t.context.editor.data
+---@field public dressing               eve.t.context.data.dressing
+---@field public theme                  eve.t.context.data.theme
 
 ---@class eve.t.context.editor.state
 ---@field public dressing               eve.t.context.state.dressing
