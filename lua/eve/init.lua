@@ -34,7 +34,6 @@ local oxi = require("eve.oxi")
 local std = {
   G = require("eve.std.G"),
   array = require("eve.std.array"),
-  async = require("eve.std.async"),
   box = require("eve.std.box"),
   buf = require("eve.std.buf"),
   color = require("eve.std.color"),
