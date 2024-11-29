@@ -33,7 +33,7 @@ local actions = {
 ---@return string|nil
 local function find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
-    local filepath = dirpath .. eve.path.SEP .. filename ---@type string
+    local filepath = dirpath .. eve.constant.PATH_SEP .. filename ---@type string
     if eve.fs.is_file_or_dir(filepath) == "file" then
       return filepath
     end
@@ -64,7 +64,7 @@ local function locate_lsp_root(filepath, config_filenames)
   local pieces = eve.path.split(filepath) ---@type string[]
   local k = #pieces - 1 ---@type integer
   while k >= 1 do
-    local dirpath = table.concat(pieces, eve.path.SEP, 1, k) ---@type string
+    local dirpath = table.concat(pieces, eve.constant.PATH_SEP, 1, k) ---@type string
     if dirpath == cwd then
       break
     end

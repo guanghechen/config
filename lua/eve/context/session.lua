@@ -1,3 +1,4 @@
+local constant = require("eve.builtin.constant")
 local Observable = require("eve.collection.observable")
 local std_array = require("eve.std.array")
 local path = require("eve.std.path")
@@ -7,7 +8,7 @@ local M = {}
 
 ---@return eve.t.context.session.data
 function M.defaults()
-  local is_home_config_dir = path.workspace() == path.HOME_NVIM_CONFIG ---@type boolean
+  local is_home_config_dir = path.workspace() == constant.HOME_NVIM_CONFIG ---@type boolean
 
   ---@type eve.t.context.data.bookmark
   local bookmark = {

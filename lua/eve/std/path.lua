@@ -1,45 +1,12 @@
 local constant = require("eve.builtin.constant")
 local md5 = require("eve.builtin.md5")
-local reporter = require("eve.builtin.reporter")
-
----@param category "config"|"data"|"state"
----@return string
-local function resolve_home(category)
-  local home = vim.fn.stdpath(category) ---@type string|string[]
-  if type(home) == "string" then
-    return home
-  end
-
-  if type(home) == "table" and #home > 0 then
-    return home[1]
-  end
-
-  reporter.error({
-    from = "eve.std.path",
-    subject = "resolve_home",
-    message = "Cannot resolve ''" .. category .. "' home",
-    details = { category = category, home = home },
-  })
-  error("[eve.std.path] Cannot resolve '" .. category .. ".'")
-end
 
 local SEP = constant.PATH_SEP ---@type string
-local HOME_NVIM_CONFIG = resolve_home("config") ---@type string
-local HOME_NVIM_DATA = resolve_home("data") ---@type string
-local HOME_NVIM_STATE = resolve_home("state") ---@type string
-local HOME_CONTEXT = HOME_NVIM_STATE .. SEP .. "guanghechen" ---@type string
+local HOME_NVIM_CONFIG = constant.HOME_NVIM_CONFIG ---@type string
+local HOME_CONTEXT = constant.HOME_CONTEXT ---@type string
 
 ---@class eve.std.path
----@field public HOME_NVIM_CONFIG       string
----@field public HOME_NVIM_DATA         string
----@field public HOME_NVIM_STATE        string
----@field public SEP                    string
-local M = {
-  HOME_NVIM_CONFIG = HOME_NVIM_CONFIG,
-  HOME_NVIM_DATA = HOME_NVIM_DATA,
-  HOME_NVIM_STATE = HOME_NVIM_STATE,
-  SEP = SEP,
-}
+local M = {}
 
 ---@param filepath                      string
 ---@return string

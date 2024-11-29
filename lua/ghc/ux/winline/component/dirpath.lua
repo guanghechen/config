@@ -1,4 +1,4 @@
-local sep = " " .. eve.path.SEP .. " "
+local sep = " " .. eve.constant.PATH_SEP .. " "
 
 ---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
