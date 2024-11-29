@@ -1,6 +1,6 @@
 local constant = require("eve.builtin.constant")
+local util = require("eve.builtin.util")
 local History = require("eve.collection.history")
-local util = require("eve.std.util")
 
 ---@type eve.t.collection.IHistory
 local qflist_history = History.new({

@@ -1,4 +1,4 @@
-local util = require("eve.std.util")
+local util = require("eve.builtin.util")
 
 ---@class eve.t.collection.ISubscriber : eve.t.collection.IDisposable
 ---@field public next                   fun(self: eve.t.collection.ISubscriber, value: eve.t.T, value_prev: eve.t.T| nil): nil

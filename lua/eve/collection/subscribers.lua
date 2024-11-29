@@ -1,4 +1,5 @@
 local BatchHandler = require("eve.collection.batch_handler")
+local util = require("eve.builtin.util")
 
 ---@class eve.t.collection.IUnsubscribable
 ---@field public unsubscribe            fun(self: eve.t.collection.IUnsubscribable):nil
@@ -18,9 +19,7 @@ local BatchHandler = require("eve.collection.batch_handler")
 ---@field unsubscribed                  boolean
 
 ---@type eve.t.collection.IUnsubscribable
-local noop_unsubscribable = {
-  unsubscribe = function(...) end,
-}
+local noop_unsubscribable = { unsubscribe = util.noop }
 
 ---@class eve.collection.Subscribers : eve.t.collection.ISubscribers
 ---@field private ARRANGE_THRESHOLD     number

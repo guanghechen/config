@@ -1,4 +1,4 @@
-local util = require("eve.std.util")
+local util = require("eve.builtin.util")
 
 ---@class eve.t.collection.IFrecency
 ---@field public access                 fun(self: eve.t.collection.IFrecency, key: string): nil

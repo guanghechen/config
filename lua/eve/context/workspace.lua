@@ -1,6 +1,7 @@
 local constant = require("eve.builtin.constant")
 local md5 = require("eve.builtin.md5")
 local path = require("eve.builtin.path")
+local util = require("eve.builtin.util")
 local Frecency = require("eve.collection.frecency")
 local History = require("eve.collection.history")
 local AdvanceHistory = require("eve.collection.history_advance")
@@ -9,7 +10,6 @@ local std_array = require("eve.std.array")
 local std_nvim = require("eve.std.nvim")
 local std_tab = require("eve.std.tab")
 local tmux = require("eve.std.tmux")
-local std_util = require("eve.std.util")
 
 ---@param bufs                          eve.t.context.data.buf.IItem[]
 ---@return table<integer, integer>
@@ -164,7 +164,7 @@ function M.load(data)
     local status = {
       lsp_msg = Observable.from_value(""),
       tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
-      winline_dirty_nr = Observable.from_value(0, std_util.falsy),
+      winline_dirty_nr = Observable.from_value(0, util.falsy),
     }
 
     ---@type eve.t.context.state.frecency

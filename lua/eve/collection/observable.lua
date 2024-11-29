@@ -1,7 +1,7 @@
 local reporter = require("eve.builtin.reporter")
+local util = require("eve.builtin.util")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
-local util = require("eve.std.util")
 
 ---@class eve.t.collection.observable.INextOptions
 ---@field public strict                 ?boolean Whether to throw an error if the observable disposed.
@@ -19,9 +19,7 @@ local util = require("eve.std.util")
 ---@field public normalize              ?eve.t.INormalize Normalize the value before compare or update
 
 ---@type eve.t.collection.IUnsubscribable
-local noop_unsubscribable = {
-  unsubscribe = function(...) end,
-}
+local noop_unsubscribable = { unsubscribe = util.noop }
 
 ---@class eve.collection.Observable : eve.t.collection.IObservable
 ---@field private _value                eve.t.T

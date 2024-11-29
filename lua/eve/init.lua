@@ -9,6 +9,7 @@ local builtin = {
   md5 = require("eve.builtin.md5"),
   path = require("eve.builtin.path"),
   reporter = require("eve.builtin.reporter"),
+  util = require("eve.builtin.util"),
 }
 
 ---@class eve.fn
@@ -48,7 +49,6 @@ local std = {
   tab = require("eve.std.tab"),
   time = require("eve.std.time"),
   tmux = require("eve.std.tmux"),
-  util = require("eve.std.util"),
   validator = require("eve.std.validator"),
   win = require("eve.std.win"),
 }
