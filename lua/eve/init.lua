@@ -4,6 +4,7 @@ local context = require("eve.context")
 ---@class eve.builtin
 local builtin = {
   constant = require("eve.builtin.constant"),
+  debug = require("eve.builtin.debug"),
   filetype = require("eve.builtin.filetype"),
   icons = require("eve.builtin.icons"),
   json = require("eve.builtin.json"),
@@ -38,7 +39,6 @@ local std = {
   buf = require("eve.std.buf"),
   color = require("eve.std.color"),
   commander = require("eve.std.commander"),
-  debug = require("eve.std.debug"),
   fs = require("eve.std.fs"),
   lsp = require("eve.std.lsp"),
   navigate = require("eve.std.navigate"),
