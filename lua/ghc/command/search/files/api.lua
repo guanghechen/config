@@ -31,7 +31,7 @@ local _last_search_result = nil ---@type eve.oxi.search.IResult|nil
 eve.context.state.search.search_paths:subscribe(
   Subscriber.new({
     on_next = function()
-      state.refresh_title()()
+      state.refresh_title()
     end,
   }),
   true
