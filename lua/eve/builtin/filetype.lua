@@ -184,7 +184,7 @@ local filetypes = {
   },
 }
 
----@class eve.std.filetype
+---@class eve.builtin.filetype
 local M = {}
 
 ---@return string[]

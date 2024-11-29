@@ -1,7 +1,7 @@
 local constant = require("eve.builtin.constant")
+local ft = require("eve.builtin.filetype")
 local std_array = require("eve.std.array")
 local fs = require("eve.std.fs")
-local ft = require("eve.std.filetype")
 
 ---@class eve.std.buf
 local M = {}
