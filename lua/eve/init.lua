@@ -44,7 +44,6 @@ local std = {
   nvim = require("eve.std.nvim"),
   nvimbar = require("eve.std.nvimbar"),
   tab = require("eve.std.tab"),
-  time = require("eve.std.time"),
   tmux = require("eve.std.tmux"),
   validator = require("eve.std.validator"),
   win = require("eve.std.win"),

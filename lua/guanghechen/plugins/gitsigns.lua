@@ -121,7 +121,7 @@ local keymaps = {
       ---@type string[]
       local v_lines = {
         "",
-        string.format("%s, %s (%s)", author_name, eve.time.time_ago(author_timestamp or os.time()), author_date),
+        string.format("%s, %s (%s)", author_name, eve.util.time_ago(author_timestamp or os.time()), author_date),
         separate_line,
       }
       vim.list_extend(v_lines, lines_commit_message)
