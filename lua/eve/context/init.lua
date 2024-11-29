@@ -76,6 +76,13 @@ function M.load(storage)
   end
 
   if M.state == nil then
+    ---@type eve.t.context.state.dirtier
+    local dirtier = {
+      editor_states = Ticker.new({ start = 0 }),
+      workspace_states = Ticker.new({ start = 0 }),
+      session_states = Ticker.new({ start = 0 }),
+    }
+
     ---@type eve.t.context.state
     local state = {
       ---! editor
@@ -98,9 +105,7 @@ function M.load(storage)
       tab_history = session.state.tab_history,
 
       ---
-      editor_states_ticker = Ticker.new({ start = 0 }),
-      workspace_states_ticker = Ticker.new({ start = 0 }),
-      session_states_ticker = Ticker.new({ start = 0 }),
+      dirtier = dirtier,
     }
     M.state = state
   else
@@ -175,13 +180,13 @@ function M.watch_changes(params)
     end
 
     vim.cmd.redraw()
-    state.editor_states_ticker:tick()
+    state.dirtier.editor_states:tick()
   end, true)
 
   mvc.observe({
     state.theme.relativenumber,
   }, function()
-    state.editor_states_ticker:tick()
+    state.dirtier.editor_states:tick()
     vim.cmd.redraw()
   end, true)
 
@@ -223,7 +228,7 @@ function M.watch_changes(params)
     state.search.scope,
     state.search.search_paths,
   }, function()
-    state.workspace_states_ticker:tick()
+    state.dirtier.workspace_states:tick()
   end, true)
 
   ---! Trigger statusline redraw.
@@ -282,7 +287,7 @@ function M.watch_changes(params)
       callback("fulfilled")
     end,
   })
-  state.editor_states_ticker:subscribe(
+  state.dirtier.editor_states:subscribe(
     Subscriber.new({
       on_next = function()
         editor_states_save_scheduler:schedule()
@@ -294,7 +299,7 @@ function M.watch_changes(params)
   ---! Save when leave the editor.
   mvc.add_disposable(Disposable.new({
     on_dispose = function()
-      local workspace_has_changed = state.workspace_states_ticker:snapshot() > 0 ---@type boolean
+      local workspace_has_changed = state.dirtier.workspace_states:snapshot() > 0 ---@type boolean
       local autosave = state.flight.autosave:snapshot() ---@type boolean
 
       ---@type eve.t.context.storage

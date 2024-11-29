@@ -1,3 +1,8 @@
+---@class eve.t.context.state.dirtier
+---@field public editor_states          eve.t.collection.ITicker
+---@field public session_states         eve.t.collection.ITicker
+---@field public workspace_states       eve.t.collection.ITicker
+
 ---@class eve.t.context.data
 ---@field public dressing               eve.t.context.data.dressing
 ---@field public theme                  eve.t.context.data.theme
@@ -31,9 +36,7 @@
 ---@field public input_history          eve.t.context.state.input_history
 ---@field public tab_history            eve.t.collection.IAdvanceHistory
 ---
----@field public editor_states_ticker   eve.t.collection.ITicker
----@field public session_states_ticker  eve.t.collection.ITicker
----@field public workspace_states_ticker eve.t.collection.ITicker
+---@field public dirtier                eve.t.context.state.dirtier
 
 ---@class eve.t.context.storage
 ---@field public editor                 ?string
