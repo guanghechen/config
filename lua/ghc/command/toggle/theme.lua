@@ -1,5 +1,5 @@
 local Observable = require("eve.collection.observable")
-local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 local theme_cache_path = eve.path.locate_context_filepath("theme")
 
 ---@param force                         ?boolean

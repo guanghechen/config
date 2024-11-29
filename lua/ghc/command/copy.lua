@@ -1,5 +1,5 @@
 local Observable = require("eve.collection.observable")
-local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@alias ghc.command.copy.current_filepath_candidate
 ---| "absolute"

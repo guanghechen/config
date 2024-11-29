@@ -1,4 +1,4 @@
-local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@type string[]
 local focus_candidates = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }

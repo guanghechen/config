@@ -1,5 +1,5 @@
 local Observable = require("eve.collection.observable")
-local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@class ghc.command.toggle.IItem
 ---@field public uuid                   string

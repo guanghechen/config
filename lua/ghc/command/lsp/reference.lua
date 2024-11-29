@@ -1,4 +1,4 @@
-local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@param method                        string
 ---@param additional_params             table<string, any>

@@ -1,25 +1,25 @@
 local reporter = require("eve.builtin.reporter")
 
----@class eve.t.ICommand
+---@class eve.t.builtin.commander.ICommand
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public action                 fun(args?: string): nil
 ---@field public candidates             ?string[]
 
----@class eve.t.IRawCommand
+---@class eve.t.builtin.commander.IRawCommand
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public action                 fun(args?: string): nil
 ---@field public candidates             ?string[]
 ---@field public nargs                  ?0|1|"?"
 
----@type table<string, eve.t.ICommand>
+---@type table<string, eve.t.builtin.commander.ICommand>
 local command_map = {}
 
----@class eve.std.commander
+---@class eve.builtin.commander
 local M = {}
 
----@class eve.std.commander.uuids
+---@class eve.builtin.commander.uuids
 M.uuids = {
   buf_close = "Fbufclose",
   buf_close_to_leftest = "Fbufclosetoleftest",
@@ -179,13 +179,13 @@ end
 ---@param uuid                          string
 ---@param args                          ?string
 ---@param silent                        ?boolean
----@return eve.t.ICommand|nil
+---@return eve.t.builtin.commander.ICommand|nil
 function M.execute(uuid, args, silent)
-  local command = M.resolve(uuid, true) ---@type eve.t.ICommand|nil
+  local command = M.resolve(uuid, true) ---@type eve.t.builtin.commander.ICommand|nil
   if command == nil then
     if not silent then
       reporter.error({
-        from = "eve.std.commander",
+        from = "eve.builtin.commander",
         subject = "execute",
         message = "Cannot resolve the command by the given uuid",
         details = { uuid = uuid },
@@ -196,9 +196,9 @@ function M.execute(uuid, args, silent)
   command.action(args)
 end
 
----@param raw_command                   eve.t.IRawCommand
+---@param raw_command                   eve.t.builtin.commander.IRawCommand
 ---@param overwrite                     ?boolean
----@return eve.std.commander
+---@return eve.builtin.commander
 function M.register(raw_command, overwrite)
   local uuid = raw_command.uuid ---@type string
   local desc = raw_command.desc ---@type string
@@ -209,7 +209,7 @@ function M.register(raw_command, overwrite)
 
   if has_existed and not overwrite then
     reporter.warn({
-      from = "eve.std.commander",
+      from = "eve.builtin.commander",
       subject = "register",
       message = "The command has been registered, please set the `overwrite` param to true if you want to replace it",
       details = { uuid = uuid, overwrite = overwrite },
@@ -243,7 +243,7 @@ function M.register(raw_command, overwrite)
     })
   end
 
-  ---@type eve.t.ICommand
+  ---@type eve.t.builtin.commander.ICommand
   local command = {
     uuid = uuid,
     desc = desc,
@@ -256,12 +256,12 @@ end
 
 ---@param uuid                          string
 ---@param silent                        ?boolean
----@return eve.t.ICommand|nil
+---@return eve.t.builtin.commander.ICommand|nil
 function M.resolve(uuid, silent)
-  local command = command_map[uuid] ---@type eve.t.ICommand|nil
+  local command = command_map[uuid] ---@type eve.t.builtin.commander.ICommand|nil
   if command == nil and not silent then
     reporter.warn({
-      from = "eve.std.commander",
+      from = "eve.builtin.commander",
       subject = "resolve",
       message = "Cannot resolve the command by the given uuid",
       details = { uuid = uuid },

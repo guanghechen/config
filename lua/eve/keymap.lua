@@ -1,5 +1,5 @@
-local commander = require("eve.std.commander")
-local uuids = commander.uuids ---@type eve.std.commander.uuids
+local commander = require("eve.builtin.commander")
+local uuids = commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@param modes                         string[]
 ---@param key                           string
@@ -10,7 +10,7 @@ local function mk(modes, key, uuid, desc)
 
   if commander.should_be_command(uuid) then
     if desc == nil then
-      local command = commander.resolve(uuid, true) ---@type eve.t.ICommand|nil
+      local command = commander.resolve(uuid, true) ---@type eve.t.builtin.commander.ICommand|nil
       desc = command ~= nil and command.desc or nil ---@type string|nil
     end
 

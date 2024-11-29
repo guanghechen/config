@@ -2,7 +2,7 @@ if not eve.context.state.flight.copilot:snapshot() then
   return
 end
 
-local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
+local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@class guanghechen.command.copilot_chat.prompt_actions.IItem
 ---@field public prompt                 ?string
