@@ -31,11 +31,12 @@
 ---@field public input_history          eve.t.context.state.input_history
 ---@field public tab_history            eve.t.collection.IAdvanceHistory
 ---
----@field public client_has_changed     eve.t.collection.ITicker
----@field public session_has_changed    eve.t.collection.ITicker
+---@field public editor_states_ticker   eve.t.collection.ITicker
+---@field public session_states_ticker  eve.t.collection.ITicker
+---@field public workspace_states_ticker eve.t.collection.ITicker
 
 ---@class eve.t.context.storage
----@field public client                 ?string
+---@field public editor                 ?string
 ---@field public session                ?string
 ---@field public workspace              ?string
 ---@field public nvim_session           ?string

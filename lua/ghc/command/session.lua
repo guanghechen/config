@@ -23,7 +23,7 @@ eve.commander
 
           eve.nvim.load_nvim_session(nvim_session_filepath)
           eve.context.load({
-            client = eve.context.storage.client,
+            editor = eve.context.storage.editor,
             session = eve.context.storage.session,
             workspace = eve.context.storage.workspace,
           })

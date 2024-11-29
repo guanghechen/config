@@ -1,7 +1,10 @@
 require("eve.option")
 _G.eve = require("eve")
 
-local storage = { client = eve.path.locate_context_filepath("client.json") } ---@type eve.t.context.storage
+---@type eve.t.context.storage
+local storage = {
+  editor = eve.path.locate_context_filepath("editor.json"),
+}
 eve.context.set_storage(storage)
 eve.context.load(storage)
 

@@ -8,7 +8,7 @@ do
 
   ---@type eve.t.context.storage
   local storage = {
-    client = eve.path.locate_context_filepath("client.json"),
+    editor = eve.path.locate_context_filepath("editor.json"),
     session = is_git_repo and eve.path.locate_session_filepath("session.json") or nil,
     workspace = is_git_repo and eve.path.locate_session_filepath("workspace.json") or nil,
     nvim_session = is_git_repo and eve.path.locate_session_filepath("session.vim") or nil,

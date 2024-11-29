@@ -2,7 +2,7 @@ local Disposable = require("eve.collection.disposable")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local Ticker = require("eve.collection.ticker")
-local client = require("eve.context.client")
+local editor = require("eve.context.editor")
 local session = require("eve.context.session")
 local workspace = require("eve.context.workspace")
 local mvc = require("eve.globals.mvc")
@@ -18,15 +18,15 @@ local M = {
 
 ---@return eve.t.context.data
 function M.dump()
-  local data_client = client.dump() ---@type eve.t.context.client.data
+  local data_editor = editor.dump() ---@type eve.t.context.editor.data
   local data_session = session.dump() ---@type eve.t.context.session.data
   local data_workspace = workspace.dump() ---@type eve.t.context.workspace.data
 
   ---@type eve.t.context.data
   local data = {
-    ---! client
-    dressing = data_client.dressing,
-    theme = data_client.theme,
+    ---! editor
+    dressing = data_editor.dressing,
+    theme = data_editor.theme,
 
     ---! session
     bookmark = data_session.bookmark,
@@ -50,12 +50,12 @@ end
 function M.load(storage)
   storage = storage or M.storage ---@type eve.t.context.storage
 
-  if client.state == nil or (storage.client and vim.fn.filereadable(storage.client)) ~= 0 then
-    local raw_data = storage.client and eve.fs.read_json({ filepath = storage.client, silent_on_bad_path = true })
+  if editor.state == nil or (storage.editor and vim.fn.filereadable(storage.editor)) ~= 0 then
+    local raw_data = storage.editor and eve.fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
       or nil
-    if client.state == nil or raw_data ~= nil then
-      local data = client.normalize(raw_data) ---@type eve.t.context.client.data
-      client.load(data)
+    if editor.state == nil or raw_data ~= nil then
+      local data = editor.normalize(raw_data) ---@type eve.t.context.editor.data
+      editor.load(data)
     end
   end
 
@@ -80,9 +80,9 @@ function M.load(storage)
   if M.state == nil then
     ---@type eve.t.context.state
     local state = {
-      ---! client
-      dressing = client.state.dressing,
-      theme = client.state.theme,
+      ---! editor
+      dressing = editor.state.dressing,
+      theme = editor.state.theme,
 
       ---! session
       bookmark = session.state.bookmark,
@@ -100,9 +100,9 @@ function M.load(storage)
       tab_history = workspace.state.tab_history,
 
       ---
-      client_has_changed = Ticker.new({ start = 0 }),
-      session_has_changed = Ticker.new({ start = 0 }),
-      workspace_has_changed = Ticker.new({ start = 0 }),
+      editor_states_ticker = Ticker.new({ start = 0 }),
+      session_states_ticker = Ticker.new({ start = 0 }),
+      workspace_states_ticker = Ticker.new({ start = 0 }),
     }
     M.state = state
   else
@@ -120,9 +120,9 @@ end
 function M.save(storage)
   storage = storage or M.storage ---@type eve.t.context.storage
 
-  if storage.client then
-    local data_client = client.dump() ---@type eve.t.context.client.data
-    eve.fs.write_json(storage.client, data_client, true)
+  if storage.editor then
+    local data_editor = editor.dump() ---@type eve.t.context.editor.data
+    eve.fs.write_json(storage.editor, data_editor, true)
   end
 
   if storage.session then
@@ -177,7 +177,7 @@ function M.watch_changes(params)
     end
 
     vim.cmd.redraw()
-    state.client_has_changed:tick()
+    state.editor_states_ticker:tick()
   end, true)
 
   mvc.observe({
@@ -186,7 +186,7 @@ function M.watch_changes(params)
     state.theme.relativenumber,
   }, function()
     vim.cmd.redraw()
-    state.client_has_changed:tick()
+    state.editor_states_ticker:tick()
   end, true)
 
   mvc.observe({
@@ -223,7 +223,7 @@ function M.watch_changes(params)
     state.search.scope,
     state.search.search_paths,
   }, function()
-    state.session_has_changed:tick()
+    state.session_states_ticker:tick()
   end, true)
 
   ---! Trigger statusline redraw.
@@ -267,25 +267,25 @@ function M.watch_changes(params)
     end)
   end, true)
 
-  local save_client_scheduler = Scheduler.new({
-    name = "eve.context#save_client",
+  local editor_states_save_scheduler = Scheduler.new({
+    name = "eve.context#editor/save",
     delay = 200,
     silent = not state.flight.devmode:snapshot(),
     task = function(callback)
-      local raw_data_snapshot = M.storage.client
-          and eve.fs.read_json({ filepath = M.storage.client, silent_on_bad_path = true })
+      local raw_data_snapshot = M.storage.editor
+          and eve.fs.read_json({ filepath = M.storage.editor, silent_on_bad_path = true })
         or nil
-      local snapshot = client.normalize(raw_data_snapshot) ---@type eve.t.context.client.data
-      if not client.equals(snapshot) then
-        M.save({ client = M.storage.client })
+      local snapshot = editor.normalize(raw_data_snapshot) ---@type eve.t.context.editor.data
+      if not editor.equals(snapshot) then
+        M.save({ editor = M.storage.editor })
       end
       callback("fulfilled")
     end,
   })
-  state.client_has_changed:subscribe(
+  state.editor_states_ticker:subscribe(
     Subscriber.new({
       on_next = function()
-        save_client_scheduler:schedule()
+        editor_states_save_scheduler:schedule()
       end,
     }),
     true
@@ -294,7 +294,7 @@ function M.watch_changes(params)
   ---! Save when leave the editor.
   mvc.add_disposable(Disposable.new({
     on_dispose = function()
-      local session_has_changed = state.session_has_changed:snapshot() > 0 ---@type boolean
+      local session_has_changed = state.session_states_ticker:snapshot() > 0 ---@type boolean
       local autosave = state.flight.autosave:snapshot() ---@type boolean
 
       ---@type eve.t.context.storage
@@ -311,21 +311,21 @@ function M.watch_changes(params)
     end,
   }))
 
-  ---! watch the client config file changes.
-  if M.storage.client and vim.fn.filereadable(M.storage.client) then
+  ---! watch the editor states file changes.
+  if M.storage.editor and vim.fn.filereadable(M.storage.editor) then
     local unwatch = fs.watch_file({
-      filepath = M.storage.client,
+      filepath = M.storage.editor,
       ---@diagnostic disable-next-line: unused-local
       on_event = function(p, event)
         if type(event) == "table" and event.change == true then
-          M.load({ client = M.storage.client })
+          M.load({ editor = M.storage.editor })
         end
       end,
       on_error = function(p, err)
         reporter.error({
           from = "eve.context",
           subject = "watch_changes",
-          message = "Something got wrong while watching the client context file changes!",
+          message = "Something got wrong while watching the editor states file changes!",
           details = { err = err, filepath = p },
         })
       end,

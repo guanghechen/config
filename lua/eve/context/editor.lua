@@ -1,9 +1,9 @@
 local Observable = require("eve.collection.observable")
 
----@class eve.context.client : eve.t.context.client
+---@class eve.context.editor : eve.t.context.editor
 local M = {}
 
----@return eve.t.context.client.data
+---@return eve.t.context.editor.data
 function M.defaults()
   ---@type eve.t.context.data.dressing
   local dressing = {
@@ -18,7 +18,7 @@ function M.defaults()
     relativenumber = true,
   }
 
-  ---@type eve.t.context.client.data
+  ---@type eve.t.context.editor.data
   local data = {
     dressing = dressing,
     theme = theme,
@@ -26,14 +26,14 @@ function M.defaults()
   return data
 end
 
----@return eve.t.context.client.data
+---@return eve.t.context.editor.data
 function M.dump()
   if M.state == nil then
-    error("[eve.context.client] the state is not initialized.")
+    error("[eve.context.editor] the state is not initialized.")
     return M.defaults()
   end
 
-  local state = M.state ---@type eve.t.context.client.state
+  local state = M.state ---@type eve.t.context.editor.state
 
   ---@type eve.t.context.data.dressing
   local dressing = {
@@ -48,7 +48,7 @@ function M.dump()
     relativenumber = state.theme.relativenumber:snapshot(),
   }
 
-  ---@type eve.t.context.client.data
+  ---@type eve.t.context.editor.data
   local data = {
     dressing = dressing,
     theme = theme,
@@ -56,7 +56,7 @@ function M.dump()
   return data
 end
 
----@param data                          eve.t.context.client.data
+---@param data                          eve.t.context.editor.data
 ---@return nil
 function M.load(data)
   if M.state == nil then
@@ -73,14 +73,14 @@ function M.load(data)
       relativenumber = Observable.from_value(data.theme.relativenumber),
     }
 
-    ---@type eve.t.context.client.state
+    ---@type eve.t.context.editor.state
     local state = {
       dressing = dressing,
       theme = theme,
     }
     M.state = state
   else
-    local state = M.state ---@type eve.t.context.client.state
+    local state = M.state ---@type eve.t.context.editor.state
 
     ---! dressing
     state.dressing.autopairs:next(data.dressing.autopairs)
@@ -94,14 +94,14 @@ function M.load(data)
 end
 
 ---@param data                          any
----@return eve.t.context.client.data
+---@return eve.t.context.editor.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.t.context.client.data
+  local resolved = M.defaults() ---@type eve.t.context.editor.data
 
   if type(data) ~= "table" then
     return resolved
   end
-  ---@cast data eve.t.context.client.data
+  ---@cast data eve.t.context.editor.data
 
   ---resolve dressing data
   if type(data.dressing) == "table" then
@@ -129,10 +129,10 @@ function M.normalize(data)
   return resolved
 end
 
----@param data                          eve.t.context.client.data
+---@param data                          eve.t.context.editor.data
 ---@return boolean
 function M.equals(data)
-  local cur = M.dump() ---@type eve.t.context.client.data
+  local cur = M.dump() ---@type eve.t.context.editor.data
 
   ---compare dressing data
   if
