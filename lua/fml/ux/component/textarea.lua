@@ -1,5 +1,5 @@
+local reporter = require("eve.builtin.reporter")
 local box = require("eve.std.box")
-local reporter = require("eve.std.reporter")
 
 ---@type string
 local WIN_HIGHLIGHT = table.concat({

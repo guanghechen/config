@@ -1,4 +1,4 @@
-local json = require("eve.std.json")
+local json = require("eve.builtin.json")
 local path = require("eve.std.path")
 
 ---@class eve.oxi
@@ -260,8 +260,7 @@ function M.replace_file_by_matches(params)
     match_offsets = match_offsets,
   }
   local payload = json.stringify(resolved_params)
-  local ok, data =
-    M.run_fun("eve.oxi.replace_file_by_matches", M.nvim_tools.replace_file_advance_by_matches, payload)
+  local ok, data = M.run_fun("eve.oxi.replace_file_by_matches", M.nvim_tools.replace_file_advance_by_matches, payload)
   ---@cast data eve.oxi.replace.replace_file_by_matches.IResult
 
   return ok, data

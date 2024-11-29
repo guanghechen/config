@@ -1,6 +1,6 @@
+local reporter = require("eve.builtin.reporter")
 local os = require("eve.std.os")
 local path = require("eve.std.path")
-local reporter = require("eve.std.reporter")
 
 ---@class eve.std.im
 ---@field public get_input_method   fun(): eve.e.InputMethod|nil

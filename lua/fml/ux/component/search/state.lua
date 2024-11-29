@@ -1,10 +1,10 @@
+local reporter = require("eve.builtin.reporter")
 local Dirtier = require("eve.collection.dirtier")
 local Observable = require("eve.collection.observable")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
 local oxi = require("eve.oxi")
 local navigate = require("eve.std.navigate")
-local reporter = require("eve.std.reporter")
 
 ---@class fml.ux.search.State : fml.t.ux.search.IState
 ---@field protected _deleted_uuids      table<string, boolean>

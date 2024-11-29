@@ -1,4 +1,4 @@
-local reporter = require("eve.std.reporter")
+local reporter = require("eve.builtin.reporter")
 
 ---@class eve.collection.Scheduler : eve.t.collection.IScheduler
 ---@field public name                   string

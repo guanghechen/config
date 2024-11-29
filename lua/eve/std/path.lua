@@ -1,6 +1,6 @@
-local md5 = require("eve.std.md5")
+local md5 = require("eve.builtin.md5")
+local reporter = require("eve.builtin.reporter")
 local std_os = require("eve.std.os")
-local reporter = require("eve.std.reporter")
 
 ---@param category "config"|"data"|"state"
 ---@return string

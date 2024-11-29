@@ -1,5 +1,5 @@
+local reporter = require("eve.builtin.reporter")
 local Theme = require("eve.collection.theme")
-local reporter = require("eve.std.reporter")
 local hmr = require("eve.fn.hmr")
 
 ---@class fml.ux.theme

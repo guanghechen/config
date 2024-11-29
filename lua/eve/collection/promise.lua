@@ -1,4 +1,4 @@
-local reporter = require("eve.std.reporter")
+local reporter = require("eve.builtin.reporter")
 
 ---@class eve.collection.Promise: eve.t.collection.IPromise
 ---@protected _callbacks                eve.t.collection.promise.ICallback[]

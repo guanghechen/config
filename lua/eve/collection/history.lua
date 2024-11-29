@@ -1,5 +1,5 @@
+local reporter = require("eve.builtin.reporter")
 local CircularStack = require("eve.collection.circular_stack")
-local reporter = require("eve.std.reporter")
 local util = require("eve.std.util")
 
 ---@class eve.collection.History : eve.t.collection.IHistory

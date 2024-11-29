@@ -1,4 +1,4 @@
-local reporter = require("eve.std.reporter")
+local reporter = require("eve.builtin.reporter")
 
 ---@class eve.t.ICommand
 ---@field public uuid                   string

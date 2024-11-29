@@ -1,4 +1,4 @@
-local reporter = require("eve.std.reporter")
+local reporter = require("eve.builtin.reporter")
 
 ---@return nil
 local function navigate_window_prev()

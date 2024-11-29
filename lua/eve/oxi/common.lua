@@ -1,5 +1,5 @@
-local json = require("eve.std.json")
-local reporter = require("eve.std.reporter")
+local json = require("eve.builtin.json")
+local reporter = require("eve.builtin.reporter")
 
 ---@class eve.oxi
 local M = require("eve.oxi.mod")

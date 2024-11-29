@@ -1,4 +1,4 @@
-local json = require("eve.std.json")
+local json = require("eve.builtin.json")
 
 ---@class eve.oxi
 local M = require("eve.oxi.mod")

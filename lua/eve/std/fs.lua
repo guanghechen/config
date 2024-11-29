@@ -1,5 +1,5 @@
-local std_json = require("eve.std.json")
-local reporter = require("eve.std.reporter")
+local std_json = require("eve.builtin.json")
+local reporter = require("eve.builtin.reporter")
 
 ---@class eve.std.fs
 local M = {}

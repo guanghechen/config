@@ -1,4 +1,4 @@
-local json = require("eve.std.json")
+local json = require("eve.builtin.json")
 local path = require("eve.std.path")
 
 ---@class eve.oxi

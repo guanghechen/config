@@ -1,5 +1,5 @@
+local reporter = require("eve.builtin.reporter")
 local BatchHandler = require("eve.collection.batch_handler")
-local reporter = require("eve.std.reporter")
 
 ---@class eve.collection.BatchDisposable : eve.t.collection.IBatchDisposable
 local M = {}

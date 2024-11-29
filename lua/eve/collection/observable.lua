@@ -1,6 +1,6 @@
+local reporter = require("eve.builtin.reporter")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
-local reporter = require("eve.std.reporter")
 local util = require("eve.std.util")
 
 ---@class eve.collection.Observable : eve.t.collection.IObservable

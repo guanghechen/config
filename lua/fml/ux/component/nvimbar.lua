@@ -1,7 +1,7 @@
+local reporter = require("eve.builtin.reporter")
 local nvimbar = require("eve.std.nvimbar")
 local path = require("eve.std.path")
 local Scheduler = require("eve.collection.scheduler")
-local reporter = require("eve.std.reporter")
 
 ---@return boolean
 local function truthy()

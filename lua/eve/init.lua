@@ -1,6 +1,13 @@
 ---@type eve.context
 local context = require("eve.context")
 
+---@class eve.builtin
+local builtin = {
+  json = require("eve.builtin.json"),
+  md5 = require("eve.builtin.md5"),
+  reporter = require("eve.builtin.reporter"),
+}
+
 ---@class eve.fn
 local fn = {
   hmr = require("eve.fn.hmr"),
@@ -32,15 +39,12 @@ local std = {
   debug = require("eve.std.debug"),
   filetype = require("eve.std.filetype"),
   fs = require("eve.std.fs"),
-  json = require("eve.std.json"),
   lsp = require("eve.std.lsp"),
-  md5 = require("eve.std.md5"),
   navigate = require("eve.std.navigate"),
   nvim = require("eve.std.nvim"),
   nvimbar = require("eve.std.nvimbar"),
   os = require("eve.std.os"),
   path = require("eve.std.path"),
-  reporter = require("eve.std.reporter"),
   string = require("eve.std.string"),
   tab = require("eve.std.tab"),
   time = require("eve.std.time"),
@@ -50,13 +54,13 @@ local std = {
   win = require("eve.std.win"),
 }
 
----@class eve : eve.globals, eve.std
+---@class eve : eve.builtin, eve.globals, eve.std
 ---@field public context                eve.context
 ---@field public fn                     eve.fn
 ---@field public globals                eve.globals
 ---@field public oxi                    eve.oxi
 ---@field public std                    eve.std
-local eve = vim.tbl_extend("force", {}, globals, std, {
+local eve = vim.tbl_extend("force", {}, builtin, globals, std, {
   context = context,
   fn = fn,
   globals = globals,

@@ -1,5 +1,5 @@
-local json = require("eve.std.json")
-local reporter = require("eve.std.reporter")
+local json = require("eve.builtin.json")
+local reporter = require("eve.builtin.reporter")
 local Textarea = require("fml.ux.component.textarea")
 
 ---@class fml.ux.Setting : fml.t.ux.ISetting, fml.ux.Textarea

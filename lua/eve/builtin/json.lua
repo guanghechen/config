@@ -1,9 +1,9 @@
----@class eve.std.json
+---@class eve.builtin.json
 local M = {}
 
----@param json any
----@param preceding string
----@param lines string[]
+---@param json                          any
+---@param preceding                     string
+---@param lines                         string[]
 ---@return nil
 local function stringify_json_prettier(json, preceding, lines)
   local t = type(json)
@@ -82,7 +82,7 @@ local function stringify_json_prettier(json, preceding, lines)
   table.insert(lines, preceding .. text)
 end
 
----@param json any
+---@param json                          any
 ---@return string[]
 function M.stringify_prettier_lines(json)
   local lines = { "" } ---@type string[]
@@ -90,7 +90,7 @@ function M.stringify_prettier_lines(json)
   return lines
 end
 
----@param json any
+---@param json                          any
 ---@return string
 function M.stringify_prettier(json)
   local lines = { "" } ---@type string[]
@@ -98,11 +98,13 @@ function M.stringify_prettier(json)
   return table.concat(lines, "\n")
 end
 
+---@return string
 function M.stringify(json)
   return vim.json.encode(json)
 end
 
----@param json_text string
+---@param json_text                     string
+---@return any
 function M.parse(json_text)
   if json_text == nil then
     return
