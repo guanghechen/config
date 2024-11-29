@@ -4,6 +4,7 @@ local context = require("eve.context")
 ---@class eve.builtin
 local builtin = {
   constant = require("eve.builtin.constant"),
+  icons = require("eve.builtin.icons"),
   json = require("eve.builtin.json"),
   md5 = require("eve.builtin.md5"),
   reporter = require("eve.builtin.reporter"),
@@ -17,7 +18,6 @@ local fn = {
 
 ---@class eve.globals
 local globals = {
-  icons = require("eve.globals.icons"),
   locations = require("eve.globals.locations"),
   mvc = require("eve.globals.mvc"),
   qflist = require("eve.globals.qflist"),

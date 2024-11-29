@@ -1,6 +1,5 @@
 local Observable = require("eve.collection.observable")
 local oxi = require("eve.oxi")
-local icons = require("eve.globals.icons")
 local Search = require("fml.ux.component.search.search")
 
 ---@class fml.ux.Select : fml.t.ux.ISelect
@@ -111,21 +110,21 @@ function M.new(props)
       {
         type = "flag",
         desc = "select: toggle flag fuzzy",
-        symbol = icons.symbols.flag_fuzzy,
+        symbol = eve.icons.symbols.flag_fuzzy,
         state = flag_fuzzy,
         callback = toggle_flag_fuzzy,
       },
       {
         type = "flag",
         desc = "select: toggle case sensitive",
-        symbol = icons.symbols.flag_case_sensitive,
+        symbol = eve.icons.symbols.flag_case_sensitive,
         state = case_sensitive,
         callback = toggle_case_sensitive,
       },
       {
         type = "flag",
         desc = "select: toggle flag regex",
-        symbol = icons.symbols.flag_regex,
+        symbol = eve.icons.symbols.flag_regex,
         state = flag_regex,
         callback = toggle_flag_regex,
       },

@@ -1,9 +1,9 @@
 local constant = require("eve.builtin.constant")
 
----@class eve.globals.icons
+---@class eve.builtin.icons
 local M = {}
 
----@class eve.globals.icosn.fillchars
+---@class eve.builtin.icons.fillchars
 M.fillchars = {
   diff = " ",
   eob = " ",
@@ -15,7 +15,7 @@ M.fillchars = {
   vert = "│",
 }
 
----@class eve.globals.icons.listchars
+---@class eve.builtin.icons.listchars
 M.listchars = {
   eol = "↲",
   extends = "»",
@@ -27,7 +27,7 @@ M.listchars = {
   trail = "•",
 }
 
----@class eve.globals.icons.symbols
+---@class eve.builtin.icons.symbols
 M.symbols = {
   flag_fuzzy = "󰫳",
   flag_case_sensitive = "",
@@ -38,7 +38,7 @@ M.symbols = {
   win_indicator_active = "▎",
 }
 
----@class eve.globals.icons.kind
+---@class eve.builtin.icons.kind
 M.kind = {
   Array = "󰅪",
   Boolean = "󰨙",
@@ -93,7 +93,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class eve.globals.icons.documents
+---@class eve.builtin.icons.documents
 M.documents = {
   Default = "",
   File = "",
@@ -103,7 +103,7 @@ M.documents = {
   Symlink = "",
 }
 
----@class eve.globals.icons.git
+---@class eve.builtin.icons.git
 M.git = {
   Add = "",
   Branch = "",
@@ -122,7 +122,7 @@ M.git = {
   Conflict = "",
 }
 
----@class eve.globals.icons.os
+---@class eve.builtin.icons.os
 M.os = {
   dos = "",
   mac = "",
@@ -136,7 +136,7 @@ M.os = {
     or "",
 }
 
----@class eve.globals.icons.ui
+---@class eve.builtin.icons.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",
@@ -206,7 +206,7 @@ M.ui = {
   Window = "",
 }
 
----@class eve.globals.icons.diagnostics
+---@class eve.builtin.icons.diagnostics
 M.diagnostics = {
   Error = "",
   Warning = "",
@@ -221,7 +221,7 @@ M.diagnostics = {
   Hint_alt = "󰌶",
 }
 
----@class eve.globals.icons.misc
+---@class eve.builtin.icons.misc
 M.misc = {
   Campass = "󰀹",
   Code = "",
@@ -246,7 +246,7 @@ M.misc = {
   Vim = "",
 }
 
----@class eve.globals.icons.cmp
+---@class eve.builtin.icons.cmp
 M.cmp = {
   buffer = "",
   cmp_tabnine = "",
@@ -266,7 +266,7 @@ M.cmp = {
   undefined = "",
 }
 
----@class eve.globals.icons.dap
+---@class eve.builtin.icons.dap
 M.dap = {
   Breakpoint = "",
   BreakpointCondition = "",
