@@ -23,10 +23,11 @@ local function resolve_home(category)
   error("[eve.std.path] Cannot resolve '" .. category .. ".'")
 end
 
+local SEP = std_os.path_sep() ---@type string
 local HOME_NVIM_CONFIG = resolve_home("config") ---@type string
 local HOME_NVIM_DATA = resolve_home("data") ---@type string
 local HOME_NVIM_STATE = resolve_home("state") ---@type string
-local SEP = std_os.path_sep() ---@type string
+local HOME_CONTEXT = HOME_NVIM_STATE .. SEP .. "guanghechen" ---@type string
 
 ---@class eve.std.path
 ---@field public HOME_NVIM_CONFIG       string
@@ -293,7 +294,7 @@ end
 ---@param filename                      string
 ---@return string
 function M.locate_context_filepath(filename)
-  local filepath = M.join(HOME_NVIM_STATE, "/guanghechen/context/" .. filename)
+  local filepath = M.join(HOME_CONTEXT, filename)
   return M.normalize(filepath)
 end
 
@@ -304,15 +305,7 @@ function M.locate_session_filepath(filename)
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
   local hash = md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
-  local filepath = M.join(HOME_NVIM_STATE, "/guanghechen/sessions/" .. session_dir .. "/" .. filename)
-  return M.normalize(filepath)
-end
-
----@param filename                      string
----@return string
-function M.locate_theme_filepath(filename)
-  local filepath = M.join(HOME_NVIM_STATE, "/guanghechen/theme/" .. filename)
-  return M.normalize(filepath)
+  return M.locate_context_filepath("sessions" .. SEP .. session_dir .. SEP .. filename)
 end
 
 return M

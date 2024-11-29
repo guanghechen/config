@@ -3,50 +3,9 @@ local mvc = require("eve.globals.mvc")
 local widgets = require("eve.globals.widgets")
 local ft = require("eve.std.filetype")
 local std_os = require("eve.std.os")
-local path = require("eve.std.path")
 
 if std_os.is_mac() or std_os.is_nix() or std_os.is_wsl() then
   vim.opt.shell = "/bin/bash"
-end
-
-if std_os.is_mac() then
-  local im = require("eve.std.im")
-  local previous_mode = nil ---@type eve.e.VimMode|nil
-  vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-    callback = function()
-      local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
-      if previous_mode == "i" and current_mode == "n" then
-        im.set_input_method("English")
-      end
-      previous_mode = current_mode
-    end,
-  })
-end
-
-if not vim.g.vscode then
-  ---! Auto cd the directory:
-  ---! 1. the opend file is under a git repo, let's remember the the git repo path as A,
-  ---!    and assume the git repo directory of the shell cwd is B.
-  ---!      a) If A is different from B, then auto cd the A.
-  ---!      b) If A is the same as B, then no action needed.
-  ---! 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
-  if vim.fn.expand("%") ~= "" then
-    local cwd = vim.fn.getcwd()
-    local p = vim.fn.expand("%:p:h")
-    local A = path.locate_git_repo(p)
-    local B = path.locate_git_repo(cwd)
-
-    if A == nil then
-      vim.cmd("cd " .. p .. "")
-    elseif A ~= B then
-      vim.cmd("cd " .. A .. "")
-    end
-  end
-
-  ---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
-  vim.schedule(function()
-    vim.cmd("clearjumps")
-  end)
 end
 
 vim.api.nvim_create_autocmd("VimLeavePre", {

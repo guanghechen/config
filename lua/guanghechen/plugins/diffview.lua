@@ -63,14 +63,14 @@ return {
               vim.opt_local.winhl = table.concat({
                 "DiffAdd:DiffAddLeft",
                 "DiffDelete:DiffDelLeft",
-                "DiffChange:DiffModeLeft",
+                "DiffChange:DiffModLeft",
                 "DiffText:DiffWordLeft",
               }, ",")
             elseif ctx.symbol == "b" then
               vim.opt_local.winhl = table.concat({
                 "DiffAdd:DiffAddRight",
                 "DiffDelete:DiffDelRight",
-                "DiffChange:DiffModeRight",
+                "DiffChange:DiffModRight",
                 "DiffText:DiffWordRight",
               }, ",")
             end

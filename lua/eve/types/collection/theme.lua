@@ -29,6 +29,11 @@
 ---
 ---@field public grey                   string
 ---@field public pink                   string
+---
+---@field public diff_del               ?string
+---@field public diff_del_inline        ?string
+---@field public diff_add               ?string
+---@field public diff_add_inline        ?string
 
 ---@class eve.t.collection.theme.IScheme
 ---@field public theme                  eve.e.Theme

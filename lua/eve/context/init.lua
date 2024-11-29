@@ -51,8 +51,7 @@ function M.load(storage)
   storage = storage or M.storage ---@type eve.t.context.storage
 
   if editor.state == nil or (storage.editor and vim.fn.filereadable(storage.editor)) ~= 0 then
-    local raw_data = storage.editor and eve.fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
-      or nil
+    local raw_data = storage.editor and fs.read_json({ filepath = storage.editor, silent_on_bad_path = true }) or nil
     if editor.state == nil or raw_data ~= nil then
       local data = editor.normalize(raw_data) ---@type eve.t.context.editor.data
       editor.load(data)
@@ -60,8 +59,7 @@ function M.load(storage)
   end
 
   if session.state == nil or (storage.session and vim.fn.filereadable(storage.session)) ~= 0 then
-    local raw_data = storage.session and eve.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
-      or nil
+    local raw_data = storage.session and fs.read_json({ filepath = storage.session, silent_on_bad_path = true }) or nil
     if session.state == nil or raw_data ~= nil then
       local data = session.normalize(raw_data) ---@type eve.t.context.session.data
       session.load(data)
@@ -69,7 +67,7 @@ function M.load(storage)
   end
 
   if workspace.state == nil or (storage.workspace and vim.fn.filereadable(storage.workspace)) ~= 0 then
-    local raw_data = storage.workspace and eve.fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
+    local raw_data = storage.workspace and fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
       or nil
     if workspace.state == nil or raw_data ~= nil then
       local data = workspace.normalize(raw_data) ---@type eve.t.context.workspace.data
@@ -122,17 +120,17 @@ function M.save(storage)
 
   if storage.editor then
     local data_editor = editor.dump() ---@type eve.t.context.editor.data
-    eve.fs.write_json(storage.editor, data_editor, true)
+    fs.write_json(storage.editor, data_editor, true)
   end
 
   if storage.session then
     local data_session = session.dump() ---@type eve.t.context.session.data
-    eve.fs.write_json(storage.session, data_session, true)
+    fs.write_json(storage.session, data_session, true)
   end
 
   if storage.workspace then
     local data_workspace = workspace.dump() ---@type eve.t.context.workspace.data
-    eve.fs.write_json(storage.workspace, data_workspace, true)
+    fs.write_json(storage.workspace, data_workspace, true)
   end
 end
 
@@ -273,7 +271,7 @@ function M.watch_changes(params)
     silent = not state.flight.devmode:snapshot(),
     task = function(callback)
       local raw_data_snapshot = M.storage.editor
-          and eve.fs.read_json({ filepath = M.storage.editor, silent_on_bad_path = true })
+          and fs.read_json({ filepath = M.storage.editor, silent_on_bad_path = true })
         or nil
       local snapshot = editor.normalize(raw_data_snapshot) ---@type eve.t.context.editor.data
       if not editor.equals(snapshot) then

@@ -1,22 +1,12 @@
+require("eve.setup").workspace()
+require("eve.setup").context()
+require("eve.setup").clear_jumplist()
+
 require("eve.option")
 require("eve.autocmd")
 require("eve.autocmd_filetype")
 require("eve.keymap")
 _G.eve = require("eve")
-do
-  local is_git_repo = eve.path.is_git_repo() ---@type boolean
-
-  ---@type eve.t.context.storage
-  local storage = {
-    editor = eve.path.locate_context_filepath("editor.json"),
-    session = is_git_repo and eve.path.locate_session_filepath("session.json") or nil,
-    workspace = is_git_repo and eve.path.locate_session_filepath("workspace.json") or nil,
-    nvim_session = is_git_repo and eve.path.locate_session_filepath("session.vim") or nil,
-    nvim_session_autosaved = is_git_repo and eve.path.locate_session_filepath("session.autosaved.vim") or nil,
-  }
-  eve.context.set_storage(storage)
-  eve.context.load(storage)
-end
 
 require("fml.autocmd")
 _G.fml = require("fml")

@@ -44,14 +44,14 @@ local function gen_hlgroup_map(context)
     DiagnosticSignWarn = { fg = c.yellow },
 
     ---diff
-    DiffAddLeft = { bg = cs.mix(bg_main, c.red, 30) },
-    DiffAddRight = { bg = cs.mix(bg_main, c.aqua, 30) },
-    DiffDelLeft = { bg = cs.mix(bg_main, c.red, 30) },
-    DiffDelRight = { bg = cs.mix(bg_main, c.red, 30) },
-    DiffModeLeft = { bg = cs.mix(bg_main, c.red, 30) },
-    DiffModeRight = { bg = cs.mix(bg_main, c.aqua, 30) },
-    DiffWordLeft = { bg = cs.mix(bg_main, c.neutral_red, 60) },
-    DiffWordRight = { bg = cs.mix(bg_main, c.neutral_green, 60) },
+    DiffAddLeft = { bg = c.diff_del or cs.mix(bg_main, c.red, 30) },
+    DiffAddRight = { bg = c.diff_add or cs.mix(bg_main, c.aqua, 30) },
+    DiffDelLeft = { bg = c.diff_del or cs.mix(bg_main, c.red, 30) },
+    DiffDelRight = { bg = c.diff_del or cs.mix(bg_main, c.red, 30) },
+    DiffModLeft = { bg = c.diff_del or cs.mix(bg_main, c.red, 30) },
+    DiffModRight = { bg = c.diff_add or cs.mix(bg_main, c.aqua, 30) },
+    DiffWordLeft = { bg = c.diff_del_inline or cs.mix(bg_main, c.neutral_red, 60) },
+    DiffWordRight = { bg = c.diff_add_inline or cs.mix(bg_main, c.neutral_green, 60) },
 
     DiffAdd = { link = "DiffAddRight" },
     DiffChange = { link = "DiffModRight" },
