@@ -1,4 +1,4 @@
-local constants = require("eve.std.constants")
+local constant = require("eve.builtin.constant")
 local std_array = require("eve.std.array")
 local fs = require("eve.std.fs")
 local ft = require("eve.std.filetype")
@@ -37,7 +37,7 @@ end
 ---@param filepath                      string|nil
 ---@return boolean
 function M.is_valid_filepath(filepath)
-  if filepath == nil or filepath == "" or filepath == constants.BUF_UNTITLED then
+  if filepath == nil or filepath == "" or filepath == constant.BUF_UNTITLED then
     return false
   end
   return fs.is_file_or_dir(filepath) == "file"
@@ -69,7 +69,7 @@ function M.pick_filepath(cwd, existed_filepaths)
   end
 
   for i = 1, 1000 do
-    local filepath = eve.path.join(cwd, constants.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
+    local filepath = eve.path.join(cwd, constant.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
     if not existed_filepaths[filepath] and vim.uv.fs_stat(filepath) == nil then
       return filepath
     end

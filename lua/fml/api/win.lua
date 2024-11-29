@@ -45,7 +45,7 @@ function M.locate_symbols(winnr, force)
   ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   if
-    vim.b[bufnr][eve.constants.V_WINLINE_DISABLED]
+    vim.b[bufnr][eve.constant.V_WINLINE_DISABLED]
     or not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol")
   then
     return
@@ -68,7 +68,7 @@ function M.locate_symbols(winnr, force)
     if err then
       if type(err) == "table" then
         if err.message == "trying to get AST for non-added document" then
-          vim.b[bufnr][eve.constants.V_WINLINE_DISABLED] = true
+          vim.b[bufnr][eve.constant.V_WINLINE_DISABLED] = true
           return
         end
       end
@@ -150,7 +150,7 @@ function M.refresh(winnr)
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local filepath_history = AdvanceHistory.new({
       name = "win#bufs",
-      capacity = eve.constants.WIN_BUF_HISTORY_CAPACITY,
+      capacity = eve.constant.WIN_BUF_HISTORY_CAPACITY,
       validate = eve.buf.is_valid_filepath,
     })
     filepath_history:push(filepath)

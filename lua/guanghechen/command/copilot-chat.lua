@@ -27,7 +27,7 @@ chat_widget = {
     local winnrs = vim.api.nvim_list_wins() ---@type integer[]
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype == eve.constants.FT_COPILOT_CHAT then
+      if vim.bo[bufnr].filetype == eve.constant.FT_COPILOT_CHAT then
         return winnr
       end
     end
@@ -75,7 +75,7 @@ chat_widget = {
       local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
       vim.api.nvim_win_set_config(winnr, cfg)
 
-      if vim.bo[bufnr].filetype == eve.constants.FT_COPILOT_CHAT then
+      if vim.bo[bufnr].filetype == eve.constant.FT_COPILOT_CHAT then
         chat_widget.internal_winnr = winnr
         chat_widget.internal_status = "visible"
 

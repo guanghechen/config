@@ -1,5 +1,5 @@
+local constant = require("eve.builtin.constant")
 local History = require("eve.collection.history")
-local constants = require("eve.std.constants")
 local util = require("eve.std.util")
 
 ---@type eve.t.collection.IHistory
@@ -51,7 +51,7 @@ function M.is_quickfix_opened()
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local buftype = vim.bo[bufnr].buftype ---@type string
-    if buftype == constants.BT_QUICKFIX then
+    if buftype == constant.BT_QUICKFIX then
       return true
     end
   end

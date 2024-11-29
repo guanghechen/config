@@ -1,3 +1,4 @@
+local constant = require("eve.builtin.constant")
 local md5 = require("eve.builtin.md5")
 local path = require("eve.builtin.path")
 local Frecency = require("eve.collection.frecency")
@@ -5,7 +6,6 @@ local History = require("eve.collection.history")
 local AdvanceHistory = require("eve.collection.history_advance")
 local Observable = require("eve.collection.observable")
 local std_array = require("eve.std.array")
-local constants = require("eve.std.constants")
 local std_nvim = require("eve.std.nvim")
 local std_tab = require("eve.std.tab")
 local tmux = require("eve.std.tmux")
@@ -186,7 +186,7 @@ function M.load(data)
     ---@type eve.t.collection.IAdvanceHistory
     local tab_history = AdvanceHistory.new({
       name = "tabs",
-      capacity = constants.TAB_HISTORY_CAPACITY,
+      capacity = constant.TAB_HISTORY_CAPACITY,
       validate = std_tab.is_valid,
     })
 

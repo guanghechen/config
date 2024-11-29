@@ -1,4 +1,4 @@
-local constants = require("eve.std.constants")
+local constant = require("eve.builtin.constant")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local oxi = require("eve.oxi")
@@ -14,7 +14,7 @@ local signcolumn = require("fml.ux.signcolumn")
 local M = {}
 M.__index = M
 
-local EDITING_PREFIX = constants.EDITING_INPUT_PREFIX ---@type string
+local EDITING_PREFIX = constant.EDITING_INPUT_PREFIX ---@type string
 local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@type integer
 
 ---@class fml.ux.search.input.IProps
@@ -136,7 +136,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = constants.FT_SEARCH_INPUT
+  vim.bo[bufnr].filetype = constant.FT_SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
 
   eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })

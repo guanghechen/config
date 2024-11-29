@@ -4,7 +4,7 @@ local indicator_symbol_width = vim.api.nvim_strwidth(eve.icons.symbols.win_indic
 local function get_pane_width()
   for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].ft == eve.constants.FT_DIFFVIEW_FILES then
+    if vim.bo[bufnr].ft == eve.constant.FT_DIFFVIEW_FILES then
       if not eve.win.is_floating(winnr) then
         return vim.api.nvim_win_get_width(winnr) + 1
       end
@@ -25,7 +25,7 @@ local M = {
 
     local winnr_cur = fml.api.tab.get_current_winnr() ---@type integer
     local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
-    local is_win_active = vim.bo[bufnr_cur].ft == eve.constants.FT_DIFFVIEW_FILES
+    local is_win_active = vim.bo[bufnr_cur].ft == eve.constant.FT_DIFFVIEW_FILES
     local indicator = is_win_active and eve.icons.symbols.win_indicator_active or eve.icons.symbols.win_indicator
 
     local text = eve.icons.git.Git .. " Git Diffview" ---@type string

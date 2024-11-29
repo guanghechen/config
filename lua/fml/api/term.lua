@@ -92,7 +92,7 @@ function M.toggle_or_create(params)
   if send_selection_to_run then
     local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
     local filetype = vim.bo[bufnr_cur].filetype ---@type string
-    if filetype ~= eve.constants.FT_TERM then
+    if filetype ~= eve.constant.FT_TERM then
       selected_text = eve.nvim.get_selected_text() ---@type string
     end
   end

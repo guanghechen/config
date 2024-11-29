@@ -37,7 +37,6 @@ local std = {
   buf = require("eve.std.buf"),
   color = require("eve.std.color"),
   commander = require("eve.std.commander"),
-  constants = require("eve.std.constants"),
   debug = require("eve.std.debug"),
   filetype = require("eve.std.filetype"),
   fs = require("eve.std.fs"),

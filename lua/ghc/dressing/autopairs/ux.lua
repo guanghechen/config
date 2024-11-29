@@ -175,7 +175,7 @@ function M.render(winnr)
     end
 
     local filetype = vim.bo[bufnr].filetype
-    if filetype == eve.constants.FT_BIGFILE or not eve.filetype.is_plain_file(filetype) then
+    if filetype == eve.constant.FT_BIGFILE or not eve.filetype.is_plain_file(filetype) then
       return
     end
 

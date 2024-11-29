@@ -104,7 +104,7 @@ function M.refresh(bufnr)
   local buf = eve.context.state.bufs[bufnr] ---@type eve.t.context.state.buf.IItem|nil
   if buf == nil then
     local filename = eve.path.basename(filepath) ---@type string
-    filename = (not filename or filename == "") and eve.constants.BUF_UNTITLED or filename
+    filename = (not filename or filename == "") and eve.constant.BUF_UNTITLED or filename
     local fileicon, fileicon_hl = eve.nvim.calc_fileicon(filename) ---@type string, string
 
     local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
@@ -124,7 +124,7 @@ function M.refresh(bufnr)
     eve.context.state.bufs[bufnr] = buf
   elseif buf.filepath ~= filepath or buf.filetype ~= filetype then
     local filename = eve.path.basename(filepath) ---@type string
-    filename = #filename > 0 and filename or eve.constants.BUF_UNTITLED
+    filename = #filename > 0 and filename or eve.constant.BUF_UNTITLED
     local fileicon, fileicon_hl = eve.nvim.calc_fileicon(filename) ---@type string, string
 
     local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]

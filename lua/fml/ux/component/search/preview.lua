@@ -1,4 +1,4 @@
-local constants = require("eve.std.constants")
+local constant = require("eve.builtin.constant")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
 
@@ -171,7 +171,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nowrite"
-  vim.bo[bufnr].filetype = constants.FT_SEARCH_PREVIEW
+  vim.bo[bufnr].filetype = constant.FT_SEARCH_PREVIEW
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

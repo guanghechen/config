@@ -36,7 +36,7 @@ function Winsep:show()
 
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nowrite"
-    vim.bo[bufnr].filetype = eve.constants.FT_WINSEP
+    vim.bo[bufnr].filetype = eve.constant.FT_WINSEP
     vim.bo[bufnr].swapfile = false
     vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].readonly = true

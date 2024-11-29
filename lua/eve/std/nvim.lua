@@ -1,5 +1,5 @@
-local constants = require("eve.std.constants")
-local BUF_UNTITLED = constants.BUF_UNTITLED ---@type string
+local constant = require("eve.builtin.constant")
+local BUF_UNTITLED = constant.BUF_UNTITLED ---@type string
 
 ---@class eve.std.nvim
 local M = {}
@@ -98,7 +98,7 @@ end
 function M.save_nvim_session(filepath)
   vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = constants.SESSION_SAVE_OPTION
+  vim.o.sessionoptions = constant.SESSION_SAVE_OPTION
   vim.cmd("mks! " .. vim.fn.fnameescape(filepath))
   vim.o.sessionoptions = tmp
 end

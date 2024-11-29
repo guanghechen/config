@@ -1,4 +1,4 @@
-local EDITING_PREFIX = eve.constants.EDITING_INPUT_PREFIX ---@type string
+local EDITING_PREFIX = eve.constant.EDITING_INPUT_PREFIX ---@type string
 
 ---@class fml.util
 local M = {}

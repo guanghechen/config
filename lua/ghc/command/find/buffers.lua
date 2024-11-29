@@ -15,7 +15,7 @@ eve.commander.register({
       fetch_filepaths = function()
         local filepaths = {} ---@type string[]
         for _, buf in pairs(eve.context.state.bufs) do
-          if buf.filename ~= eve.constants.BUF_UNTITLED and eve.path.is_under(workspace, buf.filepath) then
+          if buf.filename ~= eve.constant.BUF_UNTITLED and eve.path.is_under(workspace, buf.filepath) then
             local relative_filepath = eve.path.relative(cwd, buf.filepath, true) ---@type string
             table.insert(filepaths, relative_filepath)
           end

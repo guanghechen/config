@@ -5,7 +5,7 @@ local _history_select = nil ---@type fml.ux.FileSelect|nil
 ---@return fml.ux.FileSelect
 local function get_history_select()
   if _history_select == nil then
-    local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.constants.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
+    local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.constant.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
     local frecency = eve.context.state.frecency.files ---@type eve.t.collection.IFrecency
 
     ---@param ordinal                       integer
@@ -133,7 +133,7 @@ eve.commander
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
-      if buftype == eve.constants.BT_QUICKFIX then
+      if buftype == eve.constant.BT_QUICKFIX then
         eve.qflist.backward()
         return
       end
@@ -162,7 +162,7 @@ eve.commander
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
-      if buftype == eve.constants.BT_QUICKFIX then
+      if buftype == eve.constant.BT_QUICKFIX then
         eve.qflist.forward()
         return
       end

@@ -1,4 +1,4 @@
-local constants = require("eve.std.constants")
+local constant = require("eve.builtin.constant")
 
 vim.filetype.add({
   extension = { rasi = "rasi", rofi = "rasi", wofi = "rasi" },
@@ -9,10 +9,10 @@ vim.filetype.add({
     [".*"] = {
       function(filepath, bufnr)
         return vim.bo[bufnr]
-            and vim.bo[bufnr].filetype ~= constants.FT_BIGFILE
+            and vim.bo[bufnr].filetype ~= constant.FT_BIGFILE
             and filepath
             and vim.fn.getfsize(filepath) > vim.g.bigfile_size
-            and constants.FT_BIGFILE
+            and constant.FT_BIGFILE
           or nil
       end,
     },

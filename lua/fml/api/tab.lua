@@ -68,7 +68,7 @@ function M.refresh(tabnr)
 
     ---@type eve.t.context.state.tab.IItem
     tab = {
-      name = eve.constants.TAB_UNNAMED,
+      name = eve.constant.TAB_UNNAMED,
       bufnrs = {},
       bufnr_set = {},
       winnr_cur = Observable.from_value(winnr_cur),

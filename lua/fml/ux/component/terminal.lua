@@ -1,5 +1,5 @@
+local constant = require("eve.builtin.constant")
 local path = require("eve.builtin.path")
-local constants = require("eve.std.constants")
 local widgets = require("eve.globals.widgets")
 local api_tab = require("fml.api.tab")
 
@@ -78,7 +78,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nowrite"
-  vim.bo[bufnr].filetype = constants.FT_TERM
+  vim.bo[bufnr].filetype = constant.FT_TERM
   vim.bo[bufnr].swapfile = false
   eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
   return bufnr, true
