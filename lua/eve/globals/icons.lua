@@ -1,4 +1,4 @@
-local std_os = require("eve.std.os")
+local constant = require("eve.builtin.constant")
 
 ---@class eve.globals.icons
 local M = {}
@@ -124,21 +124,16 @@ M.git = {
 
 ---@class eve.globals.icons.os
 M.os = {
-  nix = "",
-  mac = "",
   dos = "",
+  mac = "",
+  nix = "",
+  wsl = "",
   unknown = "",
-  current = (function()
-    if std_os.is_nix() then
-      return ""
-    elseif std_os.is_mac() then
-      return ""
-    elseif std_os.is_win() then
-      return ""
-    else
-      return ""
-    end
-  end)(),
+  current = (constant.IS_NIX and "")
+    or (constant.IS_MAC and "")
+    or (constant.IS_WIN and "")
+    or (constant.IS_WSL and "")
+    or "",
 }
 
 ---@class eve.globals.icons.ui

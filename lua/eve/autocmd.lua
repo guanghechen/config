@@ -1,10 +1,10 @@
+local constant = require("eve.builtin.constant")
 local locations = require("eve.globals.locations")
 local mvc = require("eve.globals.mvc")
 local widgets = require("eve.globals.widgets")
 local ft = require("eve.std.filetype")
-local std_os = require("eve.std.os")
 
-if std_os.is_mac() or std_os.is_nix() or std_os.is_wsl() then
+if constant.IS_MAC or constant.IS_NIX or constant.IS_WSL then
   vim.opt.shell = "/bin/bash"
 end
 

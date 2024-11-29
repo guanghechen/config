@@ -1,3 +1,5 @@
+local constant = require("eve.builtin.constant")
+
 local function wsl_clipboard()
   return {
     name = "WslClipboard",
@@ -78,10 +80,9 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
 end
 
 local function get_clipboard()
-  if eve.os.is_wsl() then
+  if constant.IS_WSL then
     return wsl_clipboard()
-  end
-  if eve.os.is_mac() then
+  elseif constant.IS_MAC then
     if vim.env.TMUX ~= nil then
       local fake_clipboard_filepath = eve.tmux.get_tmux_env_value("ghc_use_fake_clipboard")
       if fake_clipboard_filepath ~= nil and eve.path.is_exist(fake_clipboard_filepath) then

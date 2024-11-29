@@ -1,3 +1,4 @@
+local constant = require("eve.builtin.constant")
 local Observable = require("eve.collection.observable")
 
 ---@alias ghc.command.git.browse.TargetScope
@@ -86,7 +87,7 @@ end
 
 ---@return string
 local function get_git_branch_or_commit()
-  local command = eve.os.is_win()
+  local command = constant.IS_WIN
     and 'git rev-parse --abbrev-ref HEAD 2>$null'
     or 'git rev-parse --abbrev-ref HEAD 2>/dev/null'
 
@@ -109,7 +110,7 @@ local function get_git_branch_or_commit()
 
   -- If not on a branch, try to get the commit hash
   if branch == '' or branch == 'HEAD' then
-    command = eve.os.is_win()
+    command = constant.IS_WIN
       and 'git rev-parse HEAD 2>$null'
       or 'git rev-parse HEAD 2>/dev/null'
 

@@ -44,7 +44,6 @@ local std = {
   navigate = require("eve.std.navigate"),
   nvim = require("eve.std.nvim"),
   nvimbar = require("eve.std.nvimbar"),
-  os = require("eve.std.os"),
   path = require("eve.std.path"),
   string = require("eve.std.string"),
   tab = require("eve.std.tab"),

@@ -1,3 +1,4 @@
+local constant = require("eve.builtin.constant")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 
@@ -249,7 +250,7 @@ local function get_select()
             text = text .. text_size
             width = width + width_size
 
-            if not eve.os.is_win() then
+            if not constant.IS_WIN then
               local sep_owner = string.rep(" ", 1) ---@type string
               local text_owner = eve.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
               local width_owner = string.len(text_owner) ---@type integer

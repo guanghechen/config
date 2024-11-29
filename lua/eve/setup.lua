@@ -1,3 +1,5 @@
+local constant = require("eve.builtin.constant")
+
 ---@class eve.setup
 local M = {}
 
@@ -45,9 +47,7 @@ end
 
 ---! Setup the input method auto toggling
 function M.auto_toggle_im()
-  local std_os = require("eve.std.os")
-
-  if std_os.is_mac() then
+  if constant.IS_MAC then
     local im = require("eve.std.im")
     local previous_mode = nil ---@type eve.e.VimMode|nil
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {

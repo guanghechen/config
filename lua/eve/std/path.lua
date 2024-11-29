@@ -1,6 +1,6 @@
+local constant = require("eve.builtin.constant")
 local md5 = require("eve.builtin.md5")
 local reporter = require("eve.builtin.reporter")
-local std_os = require("eve.std.os")
 
 ---@param category "config"|"data"|"state"
 ---@return string
@@ -23,7 +23,7 @@ local function resolve_home(category)
   error("[eve.std.path] Cannot resolve '" .. category .. ".'")
 end
 
-local SEP = std_os.path_sep() ---@type string
+local SEP = constant.PATH_SEP ---@type string
 local HOME_NVIM_CONFIG = resolve_home("config") ---@type string
 local HOME_NVIM_DATA = resolve_home("data") ---@type string
 local HOME_NVIM_STATE = resolve_home("state") ---@type string
@@ -68,7 +68,7 @@ end
 ---@param filepath                      string
 ---@return boolean
 function M.is_absolute(filepath)
-  if std_os.is_win() then
+  if constant.IS_WIN then
     return string.match(filepath, "^[%a]:[\\/].*$") ~= nil
   end
   return string.sub(filepath, 1, 1) == SEP

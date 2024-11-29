@@ -1,5 +1,5 @@
+local constant = require("eve.builtin.constant")
 local reporter = require("eve.builtin.reporter")
-local os = require("eve.std.os")
 local path = require("eve.std.path")
 
 ---@class eve.std.im
@@ -7,7 +7,7 @@ local path = require("eve.std.path")
 ---@field public set_input_method   fun(input_method: eve.e.InputMethod): nil
 local M = {}
 
-if os.is_mac() then
+if constant.IS_MAC then
   local app_home = path.locate_app_config_home("guanghechen")
   local script_path = path.join(app_home, "osx/script/im-select/im-select")
 
