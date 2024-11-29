@@ -32,7 +32,7 @@ setmetatable(M, { __index = BatchDisposable })
 ---@param props                         eve.t.collection.observable.IProps
 ---@return eve.collection.Observable
 function M.new(props)
-  local equals = props.equals or util.shallow_equals ---@type eve.t.IEquals
+  local equals = props.equals or util.equals_shallow ---@type eve.t.IEquals
   local normalize = props.normalize or util.identity ---@type eve.t.INormalize
   local initial_value = props.initial_value ---@type eve.t.T
 

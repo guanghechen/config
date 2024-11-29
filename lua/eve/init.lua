@@ -43,7 +43,6 @@ local std = {
   lsp = require("eve.std.lsp"),
   nvim = require("eve.std.nvim"),
   nvimbar = require("eve.std.nvimbar"),
-  string = require("eve.std.string"),
   tab = require("eve.std.tab"),
   time = require("eve.std.time"),
   tmux = require("eve.std.tmux"),

@@ -46,7 +46,7 @@ local provider = {
       end
 
       for lnum, hlname in ipairs(hlnames) do
-        local line = "xxx   " .. eve.string.pad_end(hlname, max_hlname_width, " ") ---@type string
+        local line = "xxx   " .. eve.util.pad_end(hlname, max_hlname_width, " ") ---@type string
         local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.t.IHighlight
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info

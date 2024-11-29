@@ -16,6 +16,13 @@ local OFFSET_TYPE = OFFSET_NAME + WIDTH_NAME ---@type integer
 local OFFSET_SCOPE = OFFSET_TYPE + WIDTH_TYPE ---@type integer
 local OFFSET_VALUE = OFFSET_SCOPE + WIDTH_SCOPE ---@type integer
 
+---@param text                          string
+---@return string
+local function make_termcodes_visible(text)
+  local next_text = text:gsub(string.char(9), "<TAB>"):gsub("", "<C-F>"):gsub(" ", "<Space>") ---@type string
+  return next_text
+end
+
 ---@type fml.t.ux.select.IProvider
 local provider = {
   fetch_data = function()
@@ -27,10 +34,10 @@ local provider = {
         value = info.default
       end
 
-      local text_name = eve.string.pad_end(info.name, WIDTH_NAME, " ") ---type string
-      local text_type = eve.string.pad_end(info.type, WIDTH_TYPE, " ") ---type string
-      local text_scope = eve.string.pad_end(info.scope, WIDTH_SCOPE, " ") ---type string
-      local text_value = eve.string.make_termcodes_visible(tostring(value)) ---@type string
+      local text_name = eve.util.pad_end(info.name, WIDTH_NAME, " ") ---type string
+      local text_type = eve.util.pad_end(info.type, WIDTH_TYPE, " ") ---type string
+      local text_scope = eve.util.pad_end(info.scope, WIDTH_SCOPE, " ") ---type string
+      local text_value = make_termcodes_visible(tostring(value)) ---@type string
       local text = text_name .. text_type .. text_scope .. text_value ---@type string
       local text_for_search = text_name .. string.rep(" ", WIDTH_TYPE + WIDTH_SCOPE) .. text_value ---@type string
 

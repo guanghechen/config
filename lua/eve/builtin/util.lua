@@ -34,7 +34,7 @@ end
 ---@param left                          any
 ---@param right                         any
 ---@return boolean
-function M.deep_equals(left, right)
+function M.equals_deep(left, right)
   if left == right then
     return true
   end
@@ -48,19 +48,19 @@ function M.deep_equals(left, right)
   end
 
   for i = 0, #left, 1 do
-    if not M.deep_equals(left[i], right[i]) then
+    if not M.equals_deep(left[i], right[i]) then
       return false
     end
   end
 
   for key, val in pairs(left) do
-    if not M.deep_equals(val, right[key]) then
+    if not M.equals_deep(val, right[key]) then
       return false
     end
   end
 
   for key, val in pairs(right) do
-    if not M.deep_equals(val, left[key]) then
+    if not M.equals_deep(val, left[key]) then
       return false
     end
   end
@@ -71,7 +71,7 @@ end
 ---@param left                          any
 ---@param right                         any
 ---@return boolean
-function M.shallow_equals(left, right)
+function M.equals_shallow(left, right)
   return left == right
 end
 
@@ -109,6 +109,24 @@ function M.navigate_limit(current, step, total)
   end
 
   return candidate
+end
+
+---@param text                          string
+---@param width                         integer
+---@param pad                           string
+---@return string
+function M.pad_start(text, width, pad)
+  local delta = width - vim.api.nvim_strwidth(text) ---@type integer
+  return delta <= 0 and text or (string.rep(pad, delta) .. text)
+end
+
+---@param text                          string
+---@param width                         integer
+---@param pad                           string
+---@return string
+function M.pad_end(text, width, pad)
+  local delta = width - vim.api.nvim_strwidth(text) ---@type integer
+  return delta <= 0 and text or (text .. string.rep(pad, delta))
 end
 
 return M
