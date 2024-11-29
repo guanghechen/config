@@ -8,7 +8,7 @@ local function close(bufnrs)
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tab = eve.context.state.tabs[tabnr] ---@type t.eve.context.state.tab.IItem
+  local tab = eve.context.state.tabs[tabnr] ---@type eve.t.context.state.tab.IItem
   if tab ~= nil then
     for _, bufnr in ipairs(bufnrs) do
       tab.bufnr_set[bufnr] = nil
@@ -38,7 +38,7 @@ eve.commander
     action = function()
       local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
       local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-      local win = eve.context.state.wins[winnr_cur] ---@type t.eve.context.state.win.IItem|nil
+      local win = eve.context.state.wins[winnr_cur] ---@type eve.t.context.state.win.IItem|nil
 
       ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.
       if win ~= nil then
@@ -57,7 +57,7 @@ eve.commander
     desc = "buf: close to leftest",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+      local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
       if tab == nil then
         return
       end
@@ -83,7 +83,7 @@ eve.commander
     desc = "buf: close to rightest",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+      local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
       if tab == nil then
         return
       end
@@ -116,7 +116,7 @@ eve.commander
     desc = "buf: close others",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+      local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
       if tab == nil then
         return
       end
@@ -125,7 +125,7 @@ eve.commander
       local visible_bufnrs = eve.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
       for _, bufnr in ipairs(tab.bufnrs) do
         if not visible_bufnrs[bufnr] then
-          local buf = eve.context.state.bufs[bufnr] ---@type t.eve.context.state.buf.IItem|nil
+          local buf = eve.context.state.bufs[bufnr] ---@type eve.t.context.state.buf.IItem|nil
           if buf == nil or not buf.pinned then
             table.insert(bufnrs_to_remove, bufnr)
           end

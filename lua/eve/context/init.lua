@@ -10,19 +10,19 @@ local fs = require("eve.std.fs")
 local reporter = require("eve.std.reporter")
 local std_nvim = require("eve.std.nvim")
 
----@class eve.context : t.eve.context
----@field public storage                t.eve.context.storage
+---@class eve.context : eve.t.context
+---@field public storage                eve.t.context.storage
 local M = {
   storage = {},
 }
 
----@return t.eve.context.data
+---@return eve.t.context.data
 function M.dump()
-  local data_client = client.dump() ---@type t.eve.context.client.data
-  local data_session = session.dump() ---@type t.eve.context.session.data
-  local data_workspace = workspace.dump() ---@type t.eve.context.workspace.data
+  local data_client = client.dump() ---@type eve.t.context.client.data
+  local data_session = session.dump() ---@type eve.t.context.session.data
+  local data_workspace = workspace.dump() ---@type eve.t.context.workspace.data
 
-  ---@type t.eve.context.data
+  ---@type eve.t.context.data
   local data = {
     ---! client
     dressing = data_client.dressing,
@@ -45,16 +45,16 @@ function M.dump()
   return data
 end
 
----@param storage                       t.eve.context.storage
+---@param storage                       eve.t.context.storage
 ---@return nil
 function M.load(storage)
-  storage = storage or M.storage ---@type t.eve.context.storage
+  storage = storage or M.storage ---@type eve.t.context.storage
 
   if client.state == nil or (storage.client and vim.fn.filereadable(storage.client)) ~= 0 then
     local raw_data = storage.client and eve.fs.read_json({ filepath = storage.client, silent_on_bad_path = true })
       or nil
     if client.state == nil or raw_data ~= nil then
-      local data = client.normalize(raw_data) ---@type t.eve.context.client.data
+      local data = client.normalize(raw_data) ---@type eve.t.context.client.data
       client.load(data)
     end
   end
@@ -63,7 +63,7 @@ function M.load(storage)
     local raw_data = storage.session and eve.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
       or nil
     if session.state == nil or raw_data ~= nil then
-      local data = session.normalize(raw_data) ---@type t.eve.context.session.data
+      local data = session.normalize(raw_data) ---@type eve.t.context.session.data
       session.load(data)
     end
   end
@@ -72,13 +72,13 @@ function M.load(storage)
     local raw_data = storage.workspace and eve.fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
       or nil
     if workspace.state == nil or raw_data ~= nil then
-      local data = workspace.normalize(raw_data) ---@type t.eve.context.workspace.data
+      local data = workspace.normalize(raw_data) ---@type eve.t.context.workspace.data
       workspace.load(data)
     end
   end
 
   if M.state == nil then
-    ---@type t.eve.context.state
+    ---@type eve.t.context.state
     local state = {
       ---! client
       dressing = client.state.dressing,
@@ -106,7 +106,7 @@ function M.load(storage)
     }
     M.state = state
   else
-    local state = M.state ---@type t.eve.context.state
+    local state = M.state ---@type eve.t.context.state
 
     ---! workspace
     state.bufs = workspace.state.bufs
@@ -115,58 +115,58 @@ function M.load(storage)
   end
 end
 
----@param storage                       t.eve.context.storage
+---@param storage                       eve.t.context.storage
 ---@return nil
 function M.save(storage)
-  storage = storage or M.storage ---@type t.eve.context.storage
+  storage = storage or M.storage ---@type eve.t.context.storage
 
   if storage.client then
-    local data_client = client.dump() ---@type t.eve.context.client.data
+    local data_client = client.dump() ---@type eve.t.context.client.data
     eve.fs.write_json(storage.client, data_client, true)
   end
 
   if storage.session then
-    local data_session = session.dump() ---@type t.eve.context.session.data
+    local data_session = session.dump() ---@type eve.t.context.session.data
     eve.fs.write_json(storage.session, data_session, true)
   end
 
   if storage.workspace then
-    local data_workspace = workspace.dump() ---@type t.eve.context.workspace.data
+    local data_workspace = workspace.dump() ---@type eve.t.context.workspace.data
     eve.fs.write_json(storage.workspace, data_workspace, true)
   end
 end
 
----@param bufs                          table<integer, t.eve.context.state.buf.IItem>
+---@param bufs                          table<integer, eve.t.context.state.buf.IItem>
 ---@return nil
 function M.set_bufs(bufs)
   M.state.bufs = bufs
   workspace.state.bufs = bufs
 end
 
----@param tabs                          table<integer, t.eve.context.state.tab.IItem>
+---@param tabs                          table<integer, eve.t.context.state.tab.IItem>
 ---@return nil
 function M.set_tabs(tabs)
   M.state.tabs = tabs
   workspace.state.tabs = tabs
 end
 
----@param wins                          table<integer, t.eve.context.state.win.IItem>
+---@param wins                          table<integer, eve.t.context.state.win.IItem>
 ---@return nil
 function M.set_wins(wins)
   M.state.wins = wins
   workspace.state.wins = wins
 end
 
----@param storage                       t.eve.context.storage
+---@param storage                       eve.t.context.storage
 ---@return nil
 function M.set_storage(storage)
   M.storage = storage
 end
 
----@param params                        t.eve.context.IWatchChangeParams
+---@param params                        eve.t.context.IWatchChangeParams
 ---@return nil
 function M.watch_changes(params)
-  local state = M.state ---@type t.eve.context.state
+  local state = M.state ---@type eve.t.context.state
 
   mvc.observe({
     state.theme.theme,
@@ -275,7 +275,7 @@ function M.watch_changes(params)
       local raw_data_snapshot = M.storage.client
           and eve.fs.read_json({ filepath = M.storage.client, silent_on_bad_path = true })
         or nil
-      local snapshot = client.normalize(raw_data_snapshot) ---@type t.eve.context.client.data
+      local snapshot = client.normalize(raw_data_snapshot) ---@type eve.t.context.client.data
       if not client.equals(snapshot) then
         M.save({ client = M.storage.client })
       end
@@ -297,7 +297,7 @@ function M.watch_changes(params)
       local session_has_changed = state.session_has_changed:snapshot() > 0 ---@type boolean
       local autosave = state.flight.autosave:snapshot() ---@type boolean
 
-      ---@type t.eve.context.storage
+      ---@type eve.t.context.storage
       local storage = {
         session = session_has_changed and M.storage.session or nil,
         workspace = autosave and M.storage.workspace or nil,

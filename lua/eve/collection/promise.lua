@@ -1,19 +1,19 @@
 local reporter = require("eve.std.reporter")
 
----@class eve.collection.Promise: t.eve.collection.IPromise
----@protected _callbacks                t.eve.collection.promise.ICallback[]
----@protected _settled                  t.eve.collection.promise.ISettled|nil
+---@class eve.collection.Promise: eve.t.collection.IPromise
+---@protected _callbacks                eve.t.collection.promise.ICallback[]
+---@protected _settled                  eve.t.collection.promise.ISettled|nil
 ---@protected _reason                   unknown|nil
 ---@protected _result                   unknown|nil
 local M = {}
 M.__index = M
 
----@param fn                            fun(resolve: t.eve.collection.promise.IResolve, reject: t.eve.collection.promise.IReject): nil
+---@param fn                            fun(resolve: eve.t.collection.promise.IResolve, reject: eve.t.collection.promise.IReject): nil
 ---@return eve.collection.Promise
 function M.new(fn)
   local self = setmetatable({}, M)
 
-  local callbacks = {} ---@type t.eve.collection.promise.ICallback[]
+  local callbacks = {} ---@type eve.t.collection.promise.ICallback[]
 
   ---@param value                       unknown
   ---@return nil
@@ -107,7 +107,7 @@ function M:snapshot()
   return self._result, self._reason
 end
 
----@param on_fulfilled                  t.eve.collection.promise.IOnFulfilled
+---@param on_fulfilled                  eve.t.collection.promise.IOnFulfilled
 ---@return eve.collection.Promise
 function M:xthen(on_fulfilled)
   if self._settled ~= nil then
@@ -120,14 +120,14 @@ function M:xthen(on_fulfilled)
     end)
   end
 
-  local _resolve ---@type t.eve.collection.promise.IResolve
-  local _reject ---@type t.eve.collection.promise.IReject
+  local _resolve ---@type eve.t.collection.promise.IResolve
+  local _reject ---@type eve.t.collection.promise.IReject
   local promise = M.new(function(resolve, reject)
     _resolve = resolve
     _reject = reject
   end)
 
-  ---@type t.eve.collection.promise.ICallback
+  ---@type eve.t.collection.promise.ICallback
   local callback = {
     type = "fulfilled",
     callback = function()
@@ -142,7 +142,7 @@ function M:xthen(on_fulfilled)
   return promise
 end
 
----@param on_rejected                  t.eve.collection.promise.IOnRejected
+---@param on_rejected                  eve.t.collection.promise.IOnRejected
 ---@return eve.collection.Promise
 function M:xcatch(on_rejected)
   if self._settled ~= nil then
@@ -155,12 +155,12 @@ function M:xcatch(on_rejected)
     end)
   end
 
-  local _resolve ---@type t.eve.collection.promise.IResolve
+  local _resolve ---@type eve.t.collection.promise.IResolve
   local promise = M.new(function(resolve)
     _resolve = resolve
   end)
 
-  ---@type t.eve.collection.promise.ICallback
+  ---@type eve.t.collection.promise.ICallback
   local callback = {
     type = "rejected",
     callback = function()
@@ -175,7 +175,7 @@ function M:xcatch(on_rejected)
   return promise
 end
 
----@param on_finally                  t.eve.collection.promise.IOnFinally
+---@param on_finally                  eve.t.collection.promise.IOnFinally
 ---@return eve.collection.Promise
 function M:xfinally(on_finally)
   if self._settled ~= nil then
@@ -184,11 +184,11 @@ function M:xfinally(on_finally)
     end)
   end
 
-  local _resolve ---@type t.eve.collection.promise.IResolve
+  local _resolve ---@type eve.t.collection.promise.IResolve
   local promise = M.new(function(resolve)
     _resolve = resolve
   end)
-  ---@type t.eve.collection.promise.ICallback
+  ---@type eve.t.collection.promise.ICallback
   local callback = {
     type = "finally",
     callback = function()

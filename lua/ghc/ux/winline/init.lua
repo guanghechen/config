@@ -1,6 +1,6 @@
 local Subscriber = require("eve.collection.subscriber")
 
-local winline_map = {} ---@type table<string, t.fml.ux.INvimbar>
+local winline_map = {} ---@type table<string, fml.t.ux.INvimbar>
 
 ---@class ghc.ux.winline
 local M = {}
@@ -34,7 +34,7 @@ function M.render(winnr, force)
     return ""
   end
 
-  local winline = winline_map[winnr] ---@type t.fml.ux.INvimbar
+  local winline = winline_map[winnr] ---@type fml.t.ux.INvimbar
   if winline == nil then
     local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
     winline = fml.ux.Nvimbar.new({

@@ -1,4 +1,4 @@
----@class t.eve.collection.IDirtier : t.eve.collection.IObservable
----@field public is_dirty               fun(self: t.eve.collection.IDirtier): boolean
----@field public mark_clean             fun(self: t.eve.collection.IDirtier): nil
----@field public mark_dirty             fun(self: t.eve.collection.IDirtier): nil
+---@class eve.t.collection.IDirtier : eve.t.collection.IObservable
+---@field public is_dirty               fun(self: eve.t.collection.IDirtier): boolean
+---@field public mark_clean             fun(self: eve.t.collection.IDirtier): nil
+---@field public mark_dirty             fun(self: eve.t.collection.IDirtier): nil

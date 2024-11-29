@@ -4,11 +4,11 @@ local Subscriber = require("eve.collection.subscriber")
 local disposables = BatchDisposable.new()
 
 ---@class eve.globals.mvc
----@field public add_disposable         fun(disposable: t.eve.collection.IDisposable): nil
+---@field public add_disposable         fun(disposable: eve.t.collection.IDisposable): nil
 ---@field public dispose                fun(): nil
 local M = {}
 
----@param disposable                    t.eve.collection.IDisposable
+---@param disposable                    eve.t.collection.IDisposable
 ---@return nil
 function M.add_disposable(disposable)
   disposables:add_disposable(disposable)
@@ -19,7 +19,7 @@ function M.dispose()
   disposables:dispose()
 end
 
----@param observables                   t.eve.collection.IObservable[]
+---@param observables                   eve.t.collection.IObservable[]
 ---@param callback                      fun(): nil
 ---@param ignore_initial                ?boolean
 ---@return nil

@@ -1,12 +1,12 @@
----@param context                       t.fml.ux.IThemeContext
+---@param context                       fml.t.ux.IThemeContext
 ---@return fml.ux.theme.integration.statusline.hlgroups
 local function gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type t.eve.collection.theme.IPalette
+  local c = context.scheme.palette ---@type eve.t.collection.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_statusline = t and "none" or c.bg1 ---@type string
   local mode_bg = t and "none" or c.bg2 ---@type string
 
-  ---@class fml.ux.theme.integration.statusline.hlgroups : table<string, t.eve.collection.theme.IHlgroup>
+  ---@class fml.ux.theme.integration.statusline.hlgroups : table<string, eve.t.collection.theme.IHlgroup>
   local hlgroup_map = {
     f_sl_bg = { fg = bg_statusline, bg = bg_statusline },
     f_sl_copilot_InProgress = { fg = c.aqua, bg = bg_statusline },

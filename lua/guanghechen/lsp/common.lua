@@ -104,7 +104,7 @@ local function on_attach(client, bufnr)
   local has_support_codeAction = eve.lsp.has_support_method(bufnr, "codeAction") ---@type boolean
   local has_support_rename = eve.lsp.has_support_method(bufnr, "rename") ---@type boolean
 
-  ---@type t.eve.IKeymap[]
+  ---@type eve.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },

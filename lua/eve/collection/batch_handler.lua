@@ -1,4 +1,4 @@
----@class eve.collection.BatchHandler : t.eve.collection.IBatchHandler
+---@class eve.collection.BatchHandler : eve.t.collection.IBatchHandler
 local M = {}
 M.__index = M
 

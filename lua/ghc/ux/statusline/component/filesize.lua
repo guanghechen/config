@@ -1,11 +1,11 @@
----@param context                       t.fml.ux.nvimbar.IContext
+---@param context                       fml.t.ux.nvimbar.IContext
 ---@return string
 local function get_filesize(context)
   local filepath = context.filepath ---@type string
   return eve.oxi.get_filesize(filepath) or ""
 end
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "filesize",
   render = function(context)

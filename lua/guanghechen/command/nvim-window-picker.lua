@@ -120,8 +120,8 @@ eve.commander
       vim.api.nvim_win_set_cursor(winnr_current, cursor_target)
       vim.api.nvim_set_current_win(winnr_target)
 
-      local win_current = eve.context.state.wins[winnr_current] ---@type t.eve.context.state.win.IItem|nil
-      local win_target = eve.context.state.wins[winnr_target] ---@type t.eve.context.state.win.IItem|nil
+      local win_current = eve.context.state.wins[winnr_current] ---@type eve.t.context.state.win.IItem|nil
+      local win_target = eve.context.state.wins[winnr_target] ---@type eve.t.context.state.win.IItem|nil
       if win_current ~= nil and win_target ~= nil then
         eve.context.state.wins[winnr_current] = win_target
         eve.context.state.wins[winnr_target] = win_current

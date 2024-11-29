@@ -39,7 +39,7 @@ function M.edit_file(filepath)
 end
 
 ---@param filepath                      string
----@return t.eve.e.FileType|nil
+---@return eve.e.FileType|nil
 function M.is_file_or_dir(filepath)
   local stat = vim.uv.fs_stat(filepath)
   if stat == nil then

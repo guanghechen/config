@@ -19,21 +19,21 @@ eve.context.state.search.scope:subscribe(
   true
 )
 
-local _search = nil ---@type t.fml.ux.search.ISearch|nil
+local _search = nil ---@type fml.t.ux.search.ISearch|nil
 
 ---@class ghc.command.search.files.state
 local M = {}
 
 M.search_cwd = state_search_cwd
 
----@return t.fml.ux.search.ISearch
+---@return fml.t.ux.search.ISearch
 function M.get_search()
   if _search == nil then
     local api = require("ghc.command.search.files.api")
     local keybindings = require("ghc.command.search.files.keybindings")
 
-    local frecency = eve.context.state.frecency.files ---@type t.eve.collection.IFrecency
-    local input_history = eve.context.state.input_history.search_in_files ---@type t.eve.collection.IHistory
+    local frecency = eve.context.state.frecency.files ---@type eve.t.collection.IFrecency
+    local input_history = eve.context.state.input_history.search_in_files ---@type eve.t.collection.IHistory
     local title = M.get_title() ---@type string
 
     _search = fml.ux.search.Search.new({

@@ -10,8 +10,8 @@ function M.augroup(name)
   return vim.api.nvim_create_augroup("eve_" .. name, { clear = true })
 end
 
----@param keymaps                       t.eve.IKeymap[]
----@param keymap_override               t.eve.IKeymapOverridable
+---@param keymaps                       eve.t.IKeymap[]
+---@param keymap_override               eve.t.IKeymapOverridable
 function M.bindkeys(keymaps, keymap_override)
   for _, keymap in ipairs(keymaps) do
     if keymap.active ~= false then

@@ -5,7 +5,7 @@
 ---@field public value                  string|number|boolean
 ---@field public text                   string
 
----@class ghc.command.find.vim_options.IItem : t.fml.ux.select.IItem
+---@class ghc.command.find.vim_options.IItem : fml.t.ux.select.IItem
 ---@field public data                   ghc.command.find.vim_options.IItemData
 
 local WIDTH_NAME = 25 ---@type integer
@@ -16,10 +16,10 @@ local OFFSET_TYPE = OFFSET_NAME + WIDTH_NAME ---@type integer
 local OFFSET_SCOPE = OFFSET_TYPE + WIDTH_TYPE ---@type integer
 local OFFSET_VALUE = OFFSET_SCOPE + WIDTH_SCOPE ---@type integer
 
----@type t.fml.ux.select.IProvider
+---@type fml.t.ux.select.IProvider
 local provider = {
   fetch_data = function()
-    local items = {} ---@type t.fml.ux.select.IItem[]
+    local items = {} ---@type fml.t.ux.select.IItem[]
 
     for name, info in pairs(vim.api.nvim_get_all_options_info()) do
       local ok, value = pcall(vim.api.nvim_get_option_value, name, {})
@@ -56,7 +56,7 @@ local provider = {
   render_item = function(item, match)
     local data = item.data ---@type ghc.command.find.vim_options.IItemData
 
-    ---@type t.eve.IHighlightInline[]
+    ---@type eve.t.IHighlightInline[]
     local highlights = {
       { coll = OFFSET_NAME, colr = OFFSET_NAME + #data.name, hlname = "f_us_vo_name" },
       { coll = OFFSET_TYPE, colr = OFFSET_TYPE + #data.type, hlname = "f_us_vo_type" },
@@ -65,7 +65,7 @@ local provider = {
     }
 
     for _, piece in ipairs(match.matches) do
-      ---@type t.eve.IHighlightInline[]
+      ---@type eve.t.IHighlightInline[]
       local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
       table.insert(highlights, highlight)
     end
@@ -73,7 +73,7 @@ local provider = {
   end,
 }
 
----@type t.fml.ux.ISelect
+---@type fml.t.ux.ISelect
 local select = fml.ux.Select.new({
   dimension = {
     height = 0.8,

@@ -1,4 +1,4 @@
----@class t.eve.collection.IBatchHandler
----@field public cleanup                fun(self: t.eve.collection.IBatchHandler): nil
----@field public run                    fun(self: t.eve.collection.IBatchHandler, action: fun(): nil): nil
----@field public summary                fun(self: t.eve.collection.IBatchHandler, title: string): nil): nil
+---@class eve.t.collection.IBatchHandler
+---@field public cleanup                fun(self: eve.t.collection.IBatchHandler): nil
+---@field public run                    fun(self: eve.t.collection.IBatchHandler, action: fun(): nil): nil
+---@field public summary                fun(self: eve.t.collection.IBatchHandler, title: string): nil): nil

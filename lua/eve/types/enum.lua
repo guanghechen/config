@@ -1,19 +1,19 @@
----@alias t.eve.e.InputMethod
+---@alias eve.e.InputMethod
 ---|"English"
 ---|"Chinese"
 
----@alias t.eve.e.FindScope
+---@alias eve.e.FindScope
 ---|"W"
 ---|"C"
 ---|"D"
 
----@alias t.eve.e.SearchScope
+---@alias eve.e.SearchScope
 ---|"W"
 ---|"C"
 ---|"D"
 ---|"B"
 
----@alias t.eve.e.Theme
+---@alias eve.e.Theme
 ---|"catppuccin-latte"
 ---|"catppuccin-mocha"
 ---|"gruvbox_light"
@@ -22,38 +22,38 @@
 ---|"one_half_light"
 ---|"one_half_dark"
 
----@alias t.eve.e.ThemeVariant
+---@alias eve.e.ThemeVariant
 ---|"dark"
 ---|"light"
 
 ----------------------------------------------------------------------------------------------------
 
----@alias t.eve.e.BoxPosition
+---@alias eve.e.BoxPosition
 ---| "cursor"
 ---| "center"
 
----@alias t.eve.e.FileType
+---@alias eve.e.FileType
 ---| "file"
 ---| "directory"
 ---| "other"
 
----@alias t.eve.e.NvimbarCompPosition
+---@alias eve.e.NvimbarCompPosition
 ---| "left"
 ---| "center"
 ---| "right"
 
----@alias t.eve.e.ReportLevel
+---@alias eve.e.ReportLevel
 ---| "DEBUG"
 ---| "INFO"
 ---| "WARN"
 ---| "ERROR"
 
----@alias t.eve.e.TermPosition
+---@alias eve.e.TermPosition
 ---| "bottom"
 ---| "right"
 ---| "float"
 
----@alias t.eve.e.VimMode
+---@alias eve.e.VimMode
 ---| "c" Command-line
 ---| "i" Insert
 ---| "n" Normal
@@ -65,7 +65,7 @@
 ---| "V" Visual-line
 ---| "x" Visual-block
 
----@alias t.eve.e.VimModeName
+---@alias eve.e.VimModeName
 ---| "normal"
 ---| "visual"
 ---| "insert"
@@ -76,16 +76,16 @@
 ---| "command"
 ---| "select"
 
----@alias t.eve.e.WidgetConfirmAction
+---@alias eve.e.WidgetConfirmAction
 ---| "none"
 ---| "close"
 ---| "hide"
 
----@alias t.eve.e.WidgetStatus
+---@alias eve.e.WidgetStatus
 ---| "visible"
 ---| "hidden"
 ---| "closed"
 
----@alias t.eve.e.WidgetStatuslineItemType
+---@alias eve.e.WidgetStatuslineItemType
 ---| "flag"
 ---| "enum"

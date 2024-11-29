@@ -5,68 +5,68 @@ local validator = require("eve.std.validator")
 local Select = require("fml.ux.component.select")
 local api_buf = require("fml.api.buf")
 
----@class fml.ux.FileSelect : t.fml.ux.IFileSelect
+---@class fml.ux.FileSelect : fml.t.ux.IFileSelect
 ---@field public cwd                    string
----@field protected _get_select         fun(): t.fml.ux.ISelect
+---@field protected _get_select         fun(): fml.t.ux.ISelect
 local M = {}
 M.__index = M
 
 ---@class fml.ux.file_select.IProps
----@field public case_sensitive         ?t.eve.collection.IObservable
----@field public cmp                    ?t.fml.ux.select.IMatchedItemCmp
+---@field public case_sensitive         ?eve.t.collection.IObservable
+---@field public cmp                    ?fml.t.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
----@field public dimension              ?t.fml.ux.search.IRawDimension
+---@field public dimension              ?fml.t.ux.search.IRawDimension
 ---@field public dirty_on_invisible     ?boolean
 ---@field public preview_enabled        boolean
 ---@field public preview_flag_wrap      ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?t.eve.collection.IObservable
----@field public flag_regex             ?t.eve.collection.IObservable
----@field public frecency               ?t.eve.collection.IFrecency
----@field public input                  ?t.eve.collection.IObservable
----@field public input_history          ?t.eve.collection.IHistory
----@field public input_keymaps          ?t.eve.IKeymap[]
----@field public main_keymaps           ?t.eve.IKeymap[]
+---@field public flag_fuzzy             ?eve.t.collection.IObservable
+---@field public flag_regex             ?eve.t.collection.IObservable
+---@field public frecency               ?eve.t.collection.IFrecency
+---@field public input                  ?eve.t.collection.IObservable
+---@field public input_history          ?eve.t.collection.IHistory
+---@field public input_keymaps          ?eve.t.IKeymap[]
+---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public permanent              ?boolean
----@field public preview_keymaps        ?t.eve.IKeymap[]
----@field public provider               t.fml.ux.file_select.IProvider
----@field public statusline_items       ?t.eve.ux.widget.IRawStatuslineItem[]
+---@field public preview_keymaps        ?eve.t.IKeymap[]
+---@field public provider               fml.t.ux.file_select.IProvider
+---@field public statusline_items       ?eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
----@field public on_close               ?t.fml.ux.search.IOnClose
----@field public on_confirm             ?t.fml.ux.select.IOnConfirm
----@field public on_preview_rendered    ?t.fml.ux.search.IOnPreviewRendered
+---@field public on_close               ?fml.t.ux.search.IOnClose
+---@field public on_confirm             ?fml.t.ux.select.IOnConfirm
+---@field public on_preview_rendered    ?fml.t.ux.search.IOnPreviewRendered
 
 ---@param props fml.ux.file_select.IProps
 ---@return fml.ux.FileSelect
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive ---@type t.eve.collection.IObservable|nil
-  local cmp = props.cmp ---@type t.fml.ux.select.IMatchedItemCmp|nil
+  local case_sensitive = props.case_sensitive ---@type eve.t.collection.IObservable|nil
+  local cmp = props.cmp ---@type fml.t.ux.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch ---@type integer|nil
   local delay_render = props.delay_render ---@type integer|nil
   local dirty_on_invisible = props.dirty_on_invisible ---@type boolean|nil
   local preview_enabled = props.preview_enabled ---@type boolean
   local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
-  local flag_fuzzy = props.flag_fuzzy ---@type t.eve.collection.IObservable|nil
-  local flag_regex = props.flag_regex ---@type t.eve.collection.IObservable|nil
-  local frecency = props.frecency ---@type t.eve.collection.IFrecency|nil
-  local input = props.input ---@type t.eve.collection.IObservable|nil
-  local input_history = props.input_history ---@type t.eve.collection.IHistory|nil
-  local input_keymaps = props.input_keymaps ---@type t.eve.IKeymap[]|nil
-  local main_keymaps = props.main_keymaps ---@type t.eve.IKeymap[]|nil
+  local flag_fuzzy = props.flag_fuzzy ---@type eve.t.collection.IObservable|nil
+  local flag_regex = props.flag_regex ---@type eve.t.collection.IObservable|nil
+  local frecency = props.frecency ---@type eve.t.collection.IFrecency|nil
+  local input = props.input ---@type eve.t.collection.IObservable|nil
+  local input_history = props.input_history ---@type eve.t.collection.IHistory|nil
+  local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
+  local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
   local permanent = props.permanent ---@type boolean|nil
-  local preview_keymaps = props.preview_keymaps ---@type t.eve.IKeymap[]|nil
-  local provider = props.provider ---@type t.fml.ux.file_select.IProvider
-  local statusline_items = props.statusline_items ---@type t.eve.ux.widget.IRawStatuslineItem[]|nil
+  local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
+  local provider = props.provider ---@type fml.t.ux.file_select.IProvider
+  local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
-  local on_close = props.on_close ---@type t.fml.ux.search.IOnClose|nil
-  local on_confirm_from_props = props.on_confirm ---@type t.fml.ux.select.IOnConfirm|nil
-  local on_preview_rendered = props.on_preview_rendered ---@type t.fml.ux.search.IOnPreviewRendered|nil
+  local on_close = props.on_close ---@type fml.t.ux.search.IOnClose|nil
+  local on_confirm_from_props = props.on_confirm ---@type fml.t.ux.select.IOnConfirm|nil
+  local on_preview_rendered = props.on_preview_rendered ---@type fml.t.ux.search.IOnPreviewRendered|nil
 
-  local _select = nil ---@type t.fml.ux.ISelect|nil
+  local _select = nil ---@type fml.t.ux.ISelect|nil
 
   if extend_preset_keymaps then
     ---@return nil
@@ -74,11 +74,11 @@ function M.new(props)
       if _select ~= nil then
         local cwd = path.cwd() ---@type string
         local select_cwd = self.cwd ---@type string
-        local quickfix_items = {} ---@type t.eve.IQuickFixItem[]
-        local matched_items = _select:get_matched_items() ---@type t.fml.ux.select.IMatchedItem[]
+        local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
+        local matched_items = _select:get_matched_items() ---@type fml.t.ux.select.IMatchedItem[]
         for _, matched_item in ipairs(matched_items) do
-          local item = _select:get_item(matched_item.uuid) ---@type t.fml.ux.select.IItem|nil
-          ---@cast item t.fml.ux.file_select.IItem
+          local item = _select:get_item(matched_item.uuid) ---@type fml.t.ux.select.IItem|nil
+          ---@cast item fml.t.ux.file_select.IItem
 
           if item ~= nil then
             local absolute_filepath = path.join(select_cwd, item.data.filepath) ---@type string
@@ -100,7 +100,7 @@ function M.new(props)
       end
     end
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local common_keymaps = {
       {
         modes = { "i", "n", "v" },
@@ -109,26 +109,26 @@ function M.new(props)
         desc = "search: send to qflist",
       },
     }
-    input_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps or {}) ---@type t.eve.IKeymap[]
-    main_keymaps = vim.list_extend(vim.list_slice(common_keymaps), main_keymaps or {}) ---@type t.eve.IKeymap[]
-    preview_keymaps = vim.list_extend(vim.list_slice(common_keymaps), preview_keymaps or {}) ---@type t.eve.IKeymap[]
+    input_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps or {}) ---@type eve.t.IKeymap[]
+    main_keymaps = vim.list_extend(vim.list_slice(common_keymaps), main_keymaps or {}) ---@type eve.t.IKeymap[]
+    preview_keymaps = vim.list_extend(vim.list_slice(common_keymaps), preview_keymaps or {}) ---@type eve.t.IKeymap[]
   end
 
-  ---@type t.fml.ux.select.IProvider
+  ---@type fml.t.ux.select.IProvider
   local file_select_provider = {
     fetch_data = function(force)
-      local raw_data = provider.fetch_data(force) ---@type t.fml.ux.file_select.IData
+      local raw_data = provider.fetch_data(force) ---@type fml.t.ux.file_select.IData
       local next_cwd = raw_data.cwd ---@type string
-      local raw_items = raw_data.items ---@type t.fml.ux.file_select.IRawItem[]
+      local raw_items = raw_data.items ---@type fml.t.ux.file_select.IRawItem[]
       local present_uuid = raw_data.present_uuid ---@type string|nil
 
-      local items = {} ---@type t.fml.ux.file_select.IItem[]
+      local items = {} ---@type fml.t.ux.file_select.IItem[]
       for _, raw_item in ipairs(raw_items) do
         local filepath = raw_item.filepath ---@type string
         local filename = path.basename(raw_item.filepath)
         local icon, icon_hl = eve.nvim.calc_fileicon(filename)
 
-        ---@type t.fml.ux.file_select.IItem
+        ---@type fml.t.ux.file_select.IItem
         local item = {
           group = raw_item.group or filepath,
           uuid = raw_item.uuid or filepath,
@@ -147,7 +147,7 @@ function M.new(props)
 
       self.cwd = next_cwd
 
-      ---@type t.fml.ux.select.IData
+      ---@type fml.t.ux.select.IData
       return { items = items, present_uuid = present_uuid }
     end,
     fetch_preview_data = preview_enabled and function(item)
@@ -157,9 +157,9 @@ function M.new(props)
     render_item = provider.render_item or M.render_item,
   }
 
-  local dimension_from_props = props.dimension or {} ---@type t.fml.ux.search.IRawDimension
+  local dimension_from_props = props.dimension or {} ---@type fml.t.ux.search.IRawDimension
 
-  ---@type t.fml.ux.search.IRawDimension
+  ---@type fml.t.ux.search.IRawDimension
   local dimension = {
     height = dimension_from_props.height or 0.8,
     max_height = dimension_from_props.max_height or 1,
@@ -170,7 +170,7 @@ function M.new(props)
     width_preview = dimension_from_props.width_preview or (preview_enabled and 0.45 or 0),
   }
 
-  ---@return t.fml.ux.ISelect
+  ---@return fml.t.ux.ISelect
   local function get_select()
     if _select == nil then
       _select = Select.new({
@@ -213,8 +213,8 @@ function M.new(props)
 end
 
 ---@param cwd                           string
----@param item                          t.fml.ux.file_select.IItem
----@return t.fml.ux.search.preview.IData
+---@param item                          fml.t.ux.file_select.IItem
+---@return fml.t.ux.search.preview.IData
 function M.fetch_preview_data(cwd, item)
   local filepath = path.join(cwd, item.data.filepath) ---@type string
   local filename = path.basename(filepath) ---@type string
@@ -223,7 +223,7 @@ function M.fetch_preview_data(cwd, item)
     local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
     local lines = fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
 
-    ---@type t.fml.ux.search.preview.IData
+    ---@type fml.t.ux.search.preview.IData
     return {
       lines = lines,
       highlights = {},
@@ -235,18 +235,18 @@ function M.fetch_preview_data(cwd, item)
   end
 
   local lines = { "  Not a text file, cannot preview." } ---@type string[]
-  local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type t.eve.IHighlight[]
+  local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
 
-  ---@type t.fml.ux.search.preview.IData
+  ---@type fml.t.ux.search.preview.IData
   return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
 end
 
----@param item                          t.fml.ux.file_select.IItem
----@param last_item                     t.fml.ux.file_select.IItem
----@param last_data                     t.fml.ux.search.preview.IData
+---@param item                          fml.t.ux.file_select.IItem
+---@param last_item                     fml.t.ux.file_select.IItem
+---@param last_data                     fml.t.ux.search.preview.IData
 ---@diagnostic disable-next-line: unused-local
 function M.patch_preview_data(item, last_item, last_data)
-  ---@type t.fml.ux.search.preview.IData
+  ---@type fml.t.ux.search.preview.IData
   return {
     lines = last_data.lines,
     highlights = {},
@@ -257,10 +257,10 @@ function M.patch_preview_data(item, last_item, last_data)
   }
 end
 
----@param item                          t.fml.ux.file_select.IItem
----@param match                         t.fml.ux.select.IMatchedItem
+---@param item                          fml.t.ux.file_select.IItem
+---@param match                         fml.t.ux.select.IMatchedItem
 ---@return string
----@return t.eve.IHighlightInline[]
+---@return eve.t.IHighlightInline[]
 function M.render_item(item, match)
   local icon_width = string.len(item.data.icon) ---@type integer
   local text = item.data.icon .. item.data.filepath ---@type string
@@ -269,93 +269,93 @@ function M.render_item(item, match)
     text = text .. ":" .. item.data.lnum .. ":" .. item.data.col
   end
 
-  ---@type t.eve.IHighlightInline[]
+  ---@type eve.t.IHighlightInline[]
   local highlights = { { coll = 0, colr = icon_width, hlname = item.data.icon_hl } }
   for _, piece in ipairs(match.matches) do
-    ---@type t.eve.IHighlightInline
+    ---@type eve.t.IHighlightInline
     local highlight = { coll = piece.l + icon_width, colr = piece.r + icon_width, hlname = "f_us_main_match" }
     table.insert(highlights, highlight)
   end
   return text, highlights
 end
 
----@param dimension                     t.fml.ux.search.IRawDimension
+---@param dimension                     fml.t.ux.search.IRawDimension
 ---@return nil
 function M:change_dimension(dimension)
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   select:change_dimension(dimension)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   select:change_input_title(title)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   select:change_preview_title(title)
 end
 
 ---@return nil
 function M:close()
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   select:close()
 end
 
 ---@return nil
 function M:focus()
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   select:focus()
 end
 
 ---@param uuid                          string
----@return                              t.fml.ux.select.IItem|nil
+---@return                              fml.t.ux.select.IItem|nil
 function M:get_item(uuid)
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   return select:get_item(uuid)
 end
 
----@return                              t.fml.ux.select.IMatchedItem[]
+---@return                              fml.t.ux.select.IMatchedItem[]
 function M:get_matched_items()
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   return select:get_matched_items()
 end
 
 ---@return integer|nil
 function M:get_winnr_main()
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   return select:get_winnr_main()
 end
 
 ---@return integer|nil
 function M:get_winnr_input()
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   return select:get_winnr_input()
 end
 
 ---@return integer|nil
 function M:get_winnr_preview()
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   return select:get_winnr_preview()
 end
 
 ---@return nil
 function M:mark_data_dirty()
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   select:mark_data_dirty()
 end
 
 ---@param filepaths                     string[]
----@return t.fml.ux.file_select.IRawItem[]
+---@return fml.t.ux.file_select.IRawItem[]
 function M.make_items_by_filepaths(filepaths)
-  ---@type t.fml.ux.file_select.IRawItem[]
+  ---@type fml.t.ux.file_select.IRawItem[]
   local items = {}
   for _, filepath in ipairs(filepaths) do
-    ---@type t.fml.ux.file_select.IRawItem
+    ---@type fml.t.ux.file_select.IRawItem
     local item = { filepath = filepath }
     table.insert(items, item)
   end
@@ -364,13 +364,13 @@ end
 
 ---@return nil
 function M:open()
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   select:open()
 end
 
 ---@return nil
 function M:toggle()
-  local select = self._get_select() ---@type t.fml.ux.ISelect
+  local select = self._get_select() ---@type fml.t.ux.ISelect
   select:toggle()
 end
 

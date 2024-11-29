@@ -87,7 +87,7 @@ function M.open_filepath_in_current_valid_win(filepath, lnum, col)
 end
 
 ---@param bufnr                         integer|nil
----@return t.eve.context.state.buf.IItem|nil
+---@return eve.t.context.state.buf.IItem|nil
 function M.refresh(bufnr)
   if bufnr == nil or type(bufnr) ~= "number" then
     return
@@ -101,7 +101,7 @@ function M.refresh(bufnr)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
 
-  local buf = eve.context.state.bufs[bufnr] ---@type t.eve.context.state.buf.IItem|nil
+  local buf = eve.context.state.bufs[bufnr] ---@type eve.t.context.state.buf.IItem|nil
   if buf == nil then
     local filename = eve.path.basename(filepath) ---@type string
     filename = (not filename or filename == "") and eve.constants.BUF_UNTITLED or filename
@@ -111,7 +111,7 @@ function M.refresh(bufnr)
     local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
     local relpath = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
 
-    ---@type t.eve.context.state.buf.IItem
+    ---@type eve.t.context.state.buf.IItem
     buf = {
       fileicon = fileicon,
       fileicon_hl = fileicon_hl,
@@ -144,9 +144,9 @@ end
 ---@return nil
 function M.refresh_all()
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  local bufs = {} ---@type table<integer, t.eve.context.state.buf.IItem>
+  local bufs = {} ---@type table<integer, eve.t.context.state.buf.IItem>
   for _, bufnr in ipairs(bufnrs) do
-    local buf = M.refresh(bufnr) ---@type t.eve.context.state.buf.IItem|nil
+    local buf = M.refresh(bufnr) ---@type eve.t.context.state.buf.IItem|nil
     if buf ~= nil then
       bufs[bufnr] = buf
     end

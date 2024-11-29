@@ -10,13 +10,13 @@ local M = {}
 M.navigate = vim.env.TMUX and require("fml.api.internal.navigate_tmux") or require("fml.api.internal.navigate_vim")
 
 ---@param winnr                         integer
----@return t.eve.context.state.win.IItem|nil
+---@return eve.t.context.state.win.IItem|nil
 function M.get(winnr)
   if eve.context.state.wins[winnr] == nil then
     M.refresh(winnr)
   end
 
-  local win = eve.context.state.wins[winnr] ---@type t.eve.context.state.win.IItem|nil
+  local win = eve.context.state.wins[winnr] ---@type eve.t.context.state.win.IItem|nil
   if win == nil then
     eve.reporter.error({
       from = "fml.api.win",
@@ -87,12 +87,12 @@ function M.locate_symbols(winnr, force)
       return
     end
 
-    local win = eve.context.state.wins[winnr] ---@type t.eve.context.state.win.IItem|nil
+    local win = eve.context.state.wins[winnr] ---@type eve.t.context.state.win.IItem|nil
     if win ~= nil and type(symbols) == "table" then
       local cursor_pos = { line = row - 1, character = col }
       local symbol_path = eve.lsp.find_symbol_path(cursor_pos, symbols)
 
-      local pieces = win.lsp_symbols ---@type t.eve.context.state.lsp.ISymbol[]
+      local pieces = win.lsp_symbols ---@type eve.t.context.state.lsp.ISymbol[]
       local N = #pieces ---@type integer
       local k = 0 ---@type integer
       if symbol_path then
@@ -100,7 +100,7 @@ function M.locate_symbols(winnr, force)
           local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
           local name = symbol.name
           local position = symbol.range and symbol.range.start or symbol.location.range.start
-          ---@type t.eve.context.state.lsp.ISymbol
+          ---@type eve.t.context.state.lsp.ISymbol
           local piece = {
             kind = kind,
             name = name,
@@ -133,7 +133,7 @@ function M.locate_symbols(winnr, force)
 end
 
 ---@param winnr                         integer|nil
----@return t.eve.context.state.win.IItem|nil
+---@return eve.t.context.state.win.IItem|nil
 function M.refresh(winnr)
   if winnr == nil or type(winnr) ~= "number" then
     return
@@ -144,7 +144,7 @@ function M.refresh(winnr)
     return
   end
 
-  local win = eve.context.state.wins[winnr] ---@type t.eve.context.state.win.IItem|nil
+  local win = eve.context.state.wins[winnr] ---@type eve.t.context.state.win.IItem|nil
   if win == nil then
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
@@ -155,7 +155,7 @@ function M.refresh(winnr)
     })
     filepath_history:push(filepath)
 
-    ---@type t.eve.context.state.win.IItem
+    ---@type eve.t.context.state.win.IItem
     win = { filepath_history = filepath_history, lsp_symbols = {} }
     eve.context.state.wins[winnr] = win
   end
@@ -165,9 +165,9 @@ end
 ---@return nil
 function M.refresh_all()
   local winnrs = vim.api.nvim_list_wins() ---@type integer[]
-  local wins = {} ---@type table<integer, t.eve.context.state.win.IItem>
+  local wins = {} ---@type table<integer, eve.t.context.state.win.IItem>
   for _, winnr in ipairs(winnrs) do
-    local win = M.refresh(winnr) ---@type t.eve.context.state.win.IItem|nil
+    local win = M.refresh(winnr) ---@type eve.t.context.state.win.IItem|nil
     if win ~= nil then
       wins[winnr] = win
     end

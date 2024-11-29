@@ -1,6 +1,6 @@
 local Observable = require("eve.collection.observable")
 
----@class eve.collection.Dirtier : t.eve.collection.IDirtier
+---@class eve.collection.Dirtier : eve.t.collection.IDirtier
 ---@field protected _clean_tick         integer
 local M = {}
 M.__index = M

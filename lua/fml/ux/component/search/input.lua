@@ -5,12 +5,12 @@ local oxi = require("eve.oxi")
 local util = require("fml.util")
 local signcolumn = require("fml.ux.signcolumn")
 
----@class fml.ux.search.Input : t.fml.ux.search.IInput
+---@class fml.ux.search.Input : fml.t.ux.search.IInput
 ---@field protected _autocmd_group      integer
 ---@field protected _bufnr              integer|nil
 ---@field protected _extmark_nr         integer|nil
----@field protected _input_scheduler    t.eve.collection.IScheduler
----@field protected _keymaps            t.eve.IKeymap[]
+---@field protected _input_scheduler    eve.t.collection.IScheduler
+---@field protected _keymaps            eve.t.IKeymap[]
 local M = {}
 M.__index = M
 
@@ -18,16 +18,16 @@ local EDITING_PREFIX = constants.EDITING_INPUT_PREFIX ---@type string
 local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@type integer
 
 ---@class fml.ux.search.input.IProps
----@field public state                  t.fml.ux.search.IState
----@field public keymaps                t.eve.IKeymap[]
+---@field public state                  fml.t.ux.search.IState
+---@field public keymaps                eve.t.IKeymap[]
 
 ---@param props                         fml.ux.search.input.IProps
 ---@return fml.ux.search.Input
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local state = props.state ---@type t.fml.ux.search.IState
-  local input_history = state.input_history ---@type t.eve.collection.IHistory|nil
+  local state = props.state ---@type fml.t.ux.search.IState
+  local input_history = state.input_history ---@type eve.t.collection.IHistory|nil
   local autocmd_group = eve.nvim.augroup(state.uuid .. ":search_input") ---@type integer
 
   local actions = {
@@ -53,7 +53,7 @@ function M.new(props)
     end,
   }
 
-  local keymaps = props.keymaps ---@type t.eve.IKeymap[]
+  local keymaps = props.keymaps ---@type eve.t.IKeymap[]
   if input_history ~= nil then
     vim.list_extend({
       { modes = { "i", "n", "v" }, key = "<C-j>", callback = actions.apply_next_input, desc = "search: next input" },
@@ -91,7 +91,7 @@ function M.new(props)
     Subscriber.new({
       on_next = function()
         local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
+        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_preview_dirty then
           self:set_virtual_text()
@@ -141,7 +141,7 @@ function M:create_buf_as_needed()
 
   eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-  local state = self.state ---@type t.fml.ux.search.IState
+  local state = self.state ---@type fml.t.ux.search.IState
   local input = state.input:snapshot() ---@type string
   local lines = oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
@@ -180,7 +180,7 @@ end
 
 ---@return nil
 function M:set_virtual_text()
-  local state = self.state ---@type t.fml.ux.search.IState
+  local state = self.state ---@type fml.t.ux.search.IState
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     local total = #state.items or 0 ---@type integer
@@ -203,7 +203,7 @@ end
 ---@param text                          string|nil
 ---@return nil
 function M:reset_input(text)
-  local state = self.state ---@type t.fml.ux.search.IState
+  local state = self.state ---@type fml.t.ux.search.IState
   local next_text = util.unwrap_editing_prefix(text or state.input:snapshot()) ---@type string
   state.input:next(next_text)
 

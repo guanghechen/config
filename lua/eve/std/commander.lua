@@ -1,19 +1,19 @@
 local reporter = require("eve.std.reporter")
 
----@class t.eve.ICommand
+---@class eve.t.ICommand
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public action                 fun(args?: string): nil
 ---@field public candidates             ?string[]
 
----@class t.eve.IRawCommand
+---@class eve.t.IRawCommand
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public action                 fun(args?: string): nil
 ---@field public candidates             ?string[]
 ---@field public nargs                  ?0|1|"?"
 
----@type table<string, t.eve.ICommand>
+---@type table<string, eve.t.ICommand>
 local command_map = {}
 
 ---@class eve.std.commander
@@ -179,9 +179,9 @@ end
 ---@param uuid                          string
 ---@param args                          ?string
 ---@param silent                        ?boolean
----@return t.eve.ICommand|nil
+---@return eve.t.ICommand|nil
 function M.execute(uuid, args, silent)
-  local command = M.resolve(uuid, true) ---@type t.eve.ICommand|nil
+  local command = M.resolve(uuid, true) ---@type eve.t.ICommand|nil
   if command == nil then
     if not silent then
       reporter.error({
@@ -196,7 +196,7 @@ function M.execute(uuid, args, silent)
   command.action(args)
 end
 
----@param raw_command                   t.eve.IRawCommand
+---@param raw_command                   eve.t.IRawCommand
 ---@param overwrite                     ?boolean
 ---@return eve.std.commander
 function M.register(raw_command, overwrite)
@@ -243,7 +243,7 @@ function M.register(raw_command, overwrite)
     })
   end
 
-  ---@type t.eve.ICommand
+  ---@type eve.t.ICommand
   local command = {
     uuid = uuid,
     desc = desc,
@@ -256,9 +256,9 @@ end
 
 ---@param uuid                          string
 ---@param silent                        ?boolean
----@return t.eve.ICommand|nil
+---@return eve.t.ICommand|nil
 function M.resolve(uuid, silent)
-  local command = command_map[uuid] ---@type t.eve.ICommand|nil
+  local command = command_map[uuid] ---@type eve.t.ICommand|nil
   if command == nil and not silent then
     reporter.warn({
       from = "eve.std.commander",

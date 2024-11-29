@@ -8,10 +8,10 @@ local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 ---@field public prompt                 ?string
 ---@field public callback               ?fun(): nil
 
----@class guanghechen.command.copilot_chat.widget : t.eve.ux.IWidget
+---@class guanghechen.command.copilot_chat.widget : eve.t.ux.IWidget
 ---@field public internal_winnr         integer|nil
 ---@field public internal_cursor        integer[]|nil
----@field public internal_status        t.eve.e.WidgetStatus
+---@field public internal_status        eve.e.WidgetStatus
 ---@field public internal_win_find      fun(): integer|nil
 ---@field public internal_win_cfg       fun(): vim.api.keyset.win_config
 ---@field public internal_win_clsoe     fun(): nil
@@ -86,7 +86,7 @@ chat_widget = {
 
         if not vim.b[bufnr].guanghechen_key_binded then
           vim.b[bufnr].guanghechen_key_binded = true
-          local keymaps = eve.globals.widgets.get_keymaps() ---@type t.eve.IKeymap[]
+          local keymaps = eve.globals.widgets.get_keymaps() ---@type eve.t.IKeymap[]
           eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 
@@ -165,9 +165,9 @@ eve.commander
         },
         preview_flag_wrap = true,
         fetch_items = function()
-          local select_items = {} ---@type t.fml.ux.select.IItem[]
+          local select_items = {} ---@type fml.t.ux.select.IItem[]
           for name, action in pairs(prompt_actions.actions) do
-            ---@type t.fml.ux.select.IItem
+            ---@type fml.t.ux.select.IItem
             local item = {
               uuid = name,
               text = name,
@@ -184,7 +184,7 @@ eve.commander
           local data = item.data ---@type guanghechen.command.copilot_chat.prompt_actions.IItem
           local lines = vim.split(data.prompt or "", "\n") ---@type string[]
 
-          ---@type t.fml.ux.search.preview.IData
+          ---@type fml.t.ux.search.preview.IData
           local result = {
             title = "Prompt",
             lines = lines,

@@ -13,7 +13,7 @@ local state = require("ghc.command.search.files.state")
 ---@field public col                    integer
 ---@field public content                string
 
----@class ghc.command.search.files.IHighlight : t.eve.IHighlight
+---@class ghc.command.search.files.IHighlight : eve.t.IHighlight
 ---@field public offset                 integer
 
 ---@class ghc.command.search.files.IPreviewData
@@ -144,7 +144,7 @@ function M.calc_preview_data(uuid)
     lines = preview_result.lines ---@type string[]
     highlights = {} ---@type ghc.command.search.files.IHighlight[]
     local lwidths = preview_result.lwidths ---@type integer[]
-    local matches = preview_result.matches ---@type t.eve.IMatchPoint[]
+    local matches = preview_result.matches ---@type eve.t.IMatchPoint[]
 
     local lnum0 = 1 ---@type integer
     local k = 1 ---@type integer
@@ -273,11 +273,11 @@ end
 
 ---@param input_text                  string
 ---@param force                       boolean
----@param callback                    t.fml.ux.search.IFetchDataCallback
+---@param callback                    fml.t.ux.search.IFetchDataCallback
 ---@return nil
 function M.fetch_data(input_text, force, callback)
   local cwd = state.search_cwd:snapshot() ---@type string
-  local scope = eve.context.state.search.scope:snapshot() ---@type t.eve.e.SearchScope
+  local scope = eve.context.state.search.scope:snapshot() ---@type eve.e.SearchScope
   local current_buf_filepath = eve.locations.get_current_buf_filepath() ---@type string|nil
   local is_searching_current_buf = scope == "B" and current_buf_filepath ~= nil ---@type boolean
   local specified_filepath = scope == "B" and current_buf_filepath or nil ---@type string|nil
@@ -335,7 +335,7 @@ function M.fetch_data(input_text, force, callback)
     return
   end
 
-  local search_items = {} ---@type t.fml.ux.search.IItem[]
+  local search_items = {} ---@type fml.t.ux.search.IItem[]
   local fileitem_map = {} ---@type table<string, ghc.command.search.files.IFileItem>
   local item_map = {} ---@type table<string, ghc.command.search.files.IItem>
   for _, filepath in ipairs(result.item_orders) do
@@ -352,13 +352,13 @@ function M.fetch_data(input_text, force, callback)
       local filename = eve.path.basename(filepath) ---@type string
       local icon, icon_hl = eve.nvim.calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
-      local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type t.eve.IHighlightInline[]
+      local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type eve.t.IHighlightInline[]
 
       local file_item_uuid = filepath ---@type string
       if not is_searching_current_buf then
         local text = icon .. " " .. filepath ---@type string
 
-        ---@type t.fml.ux.search.IItem
+        ---@type fml.t.ux.search.IItem
         local search_item = {
           group = filepath,
           uuid = file_item_uuid,
@@ -393,32 +393,32 @@ function M.fetch_data(input_text, force, callback)
 
           local r_lines = preview_result.lines ---@type string[]
           local r_lwidths = preview_result.lwidths ---@type integer[]
-          local r_matches = preview_result.matches ---@type t.eve.IMatchPoint[]
+          local r_matches = preview_result.matches ---@type eve.t.IMatchPoint[]
           local s_lines = block_match.lines ---@type string[]
           local s_lwidths = block_match.lwidths ---@type integer[]
-          local s_matches = block_match.matches ---@type t.eve.IMatchPoint[]
+          local s_matches = block_match.matches ---@type eve.t.IMatchPoint[]
           for i = 1, #s_matches, 1 do
-            local original_search_match = s_matches[i] ---@type t.eve.IMatchPoint
+            local original_search_match = s_matches[i] ---@type eve.t.IMatchPoint
             local k, col, col_end = calc_same_line_pos(s_lwidths, original_search_match.l, original_search_match.r)
             local line = s_lines[k] ---@type string
             local lnum = block_match.lnum + k - 1 ---@type integer
 
-            local search_match = r_matches[i * 2 - 1] ---@type t.eve.IMatchPoint
+            local search_match = r_matches[i * 2 - 1] ---@type eve.t.IMatchPoint
             local s_k, s_col = calc_same_line_pos(r_lwidths, search_match.l, search_match.r)
             local s_lnum = block_match.lnum + s_k - 1 + lnum_delta ---@type integer
 
-            local replace_match = r_matches[i * 2] ---@type t.eve.IMatchPoint
+            local replace_match = r_matches[i * 2] ---@type eve.t.IMatchPoint
             local r_k, r_col, r_col_end = calc_same_line_pos(r_lwidths, replace_match.l, replace_match.r)
             local r_line = r_lines[r_k] ---@type string
 
             local text_prefix = "  " .. lnum .. ":" .. col .. " " ---@type string
             local width_prefix = string.len(text_prefix) ---@type integer
-            local search_item ---@type t.fml.ux.search.IItem
+            local search_item ---@type fml.t.ux.search.IItem
             if s_k == r_k then
               local prettier_line = line:sub(1, col_end) .. r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
               local text = text_prefix .. prettier_line .. eve.icons.listchars.eol ---@type string
 
-              ---@type t.eve.IHighlightInline[]
+              ---@type eve.t.IHighlightInline[]
               local highlights = {
                 { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
                 { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
@@ -429,7 +429,7 @@ function M.fetch_data(input_text, force, callback)
                 },
               }
 
-              ---@type t.fml.ux.search.IItem
+              ---@type fml.t.ux.search.IItem
               search_item = {
                 group = filepath,
                 parent = file_item_uuid,
@@ -441,13 +441,13 @@ function M.fetch_data(input_text, force, callback)
               local prettier_line = line ---@type string
               local text = text_prefix .. prettier_line .. eve.icons.listchars.eol ---@type string
 
-              ---@type t.eve.IHighlightInline[]
+              ---@type eve.t.IHighlightInline[]
               local highlights = {
                 { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
                 { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
               }
 
-              ---@type t.fml.ux.search.IItem
+              ---@type fml.t.ux.search.IItem
               search_item = {
                 group = filepath,
                 parent = file_item_uuid,
@@ -477,7 +477,7 @@ function M.fetch_data(input_text, force, callback)
         for _, block_match in ipairs(filematch.matches) do
           local lines = block_match.lines ---@type string[]
           local lwidths = block_match.lwidths ---@type integer[]
-          local matches = block_match.matches ---@type t.eve.IMatchPoint[]
+          local matches = block_match.matches ---@type eve.t.IMatchPoint[]
           for _, search_match in ipairs(matches) do
             local k, col, col_end = calc_same_line_pos(lwidths, search_match.l, search_match.r)
             local lnum = block_match.lnum + k - 1 ---@type integer
@@ -486,13 +486,13 @@ function M.fetch_data(input_text, force, callback)
             local text = text_prefix .. lines[k] .. eve.icons.listchars.eol ---@type string
             local width_prefix = string.len(text_prefix) ---@type integer
 
-            ---@type t.eve.IHighlightInline[]
+            ---@type eve.t.IHighlightInline[]
             local highlights = {
               { coll = 0, colr = width_prefix, hlname = "f_us_main_match_lnum" },
               { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_match" },
             }
 
-            ---@type t.fml.ux.search.IItem
+            ---@type fml.t.ux.search.IItem
             local search_item = {
               group = filepath,
               parent = file_item_uuid,
@@ -523,17 +523,17 @@ function M.fetch_data(input_text, force, callback)
   _fileitem_map = fileitem_map
   _item_map = item_map
 
-  local data = { items = search_items } ---@type t.fml.ux.search.IData
+  local data = { items = search_items } ---@type fml.t.ux.search.IData
   callback(true, data)
 end
 
----@param search_item                   t.fml.ux.search.IItem
----@return t.fml.ux.search.preview.IData
+---@param search_item                   fml.t.ux.search.IItem
+---@return fml.t.ux.search.preview.IData
 function M.fetch_preview_data(search_item)
   local preview_data, lnum, col = M.calc_preview_data(search_item.uuid) ---@type ghc.command.search.files.IPreviewData
   _last_preview_data = preview_data
 
-  ---@type t.fml.ux.search.preview.IData
+  ---@type fml.t.ux.search.preview.IData
   return {
     filetype = preview_data.filetype,
     title = preview_data.title,
@@ -544,11 +544,11 @@ function M.fetch_preview_data(search_item)
   }
 end
 
----@return t.eve.IQuickFixItem[]
+---@return eve.t.IQuickFixItem[]
 function M.gen_quickfix_items()
   local cwd = eve.path.cwd() ---@type string
   local search_cwd = state.search_cwd:snapshot() ---@type string
-  local quickfix_items = {} ---@type t.eve.IQuickFixItem[]
+  local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
   for _, item in pairs(_item_map) do
     if item.offset >= 0 then
       local absolute_filepath = eve.path.resolve(search_cwd, item.filepath) ---@type string
@@ -578,9 +578,9 @@ function M.get_filematch(filepath)
   return fileitem.filematch
 end
 
----@param item                          t.fml.ux.search.IItem
----@param frecency                      t.eve.collection.IFrecency
----@return t.eve.e.WidgetConfirmAction|nil
+---@param item                          fml.t.ux.search.IItem
+---@param frecency                      eve.t.collection.IFrecency
+---@return eve.e.WidgetConfirmAction|nil
 function M.open_file(item, frecency)
   local cwd = state.search_cwd:snapshot() ---@type string
   local workspace = eve.path.workspace() ---@type string
@@ -595,9 +595,9 @@ function M.open_file(item, frecency)
   return "none"
 end
 
----@param search_item                   t.fml.ux.search.IItem
----@param last_search_item              t.fml.ux.search.IItem
----@param last_data                     t.fml.ux.search.preview.IData
+---@param search_item                   fml.t.ux.search.IItem
+---@param last_search_item              fml.t.ux.search.IItem
+---@param last_data                     fml.t.ux.search.preview.IData
 ---@diagnostic disable-next-line: unused-local
 function M.patch_preview_data(search_item, last_search_item, last_data)
   local item = _item_map[search_item.uuid] ---@type ghc.command.search.files.IItem|nil
@@ -605,7 +605,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
     return M.fetch_preview_data(search_item)
   end
 
-  local highlights = {} ---@type t.eve.IHighlight[]
+  local highlights = {} ---@type eve.t.IHighlight[]
   local cur_lnum = -1 ---@type integer
   local cur_col = 0 ---@type integer
   local flag_replace = eve.context.state.search.flag_replace:snapshot() ---@type boolean
@@ -625,7 +625,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
       local hlname = is_search_match and (is_match_cur and "f_us_preview_search_cur" or "f_us_preview_search")
         or (is_match_cur and "f_us_preview_replace_cur" or "f_us_preview_replace")
 
-      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type t.eve.IHighlight
+      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type eve.t.IHighlight
       table.insert(highlights, highlight)
 
       if is_match_cur and cur_lnum < 0 then
@@ -644,7 +644,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
 
       local is_match_cur = match_offset_cur == hl.offset or (match_offset_cur < 0 and order == 1) ---@type boolean
       local hlname = is_match_cur and "f_us_match_cur" or "f_us_match" ---@type string
-      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type t.eve.IHighlight
+      local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type eve.t.IHighlight
       table.insert(highlights, highlight)
 
       if is_match_cur and cur_lnum < 0 then
@@ -654,7 +654,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
     end
   end
 
-  ---@type t.fml.ux.search.preview.IData
+  ---@type fml.t.ux.search.preview.IData
   local data = {
     lines = last_data.lines,
     highlights = highlights or last_data.highlights,
@@ -794,7 +794,7 @@ function M.replace_file(uuid)
     for i = 1, #locations, 1 do
       local child_uuid = remain_child_uuids[i] ---@type string
       local child_item = _item_map[child_uuid] ---@type ghc.command.search.files.IItem
-      local location = locations[i] ---@type t.eve.IMatchLocation
+      local location = locations[i] ---@type eve.t.IMatchLocation
       child_item.offset = location.offset
       child_item.lnum = location.lnum
       child_item.col = location.col

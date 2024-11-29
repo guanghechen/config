@@ -103,7 +103,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "WinNew", "WinEnter" }, {
     end
 
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local tab = eve.context.state.tabs[tabnr] ---@type t.eve.context.state.tab.IItem|nil
+    local tab = eve.context.state.tabs[tabnr] ---@type eve.t.context.state.tab.IItem|nil
     if tab ~= nil then
       tab.winnr_cur:next(winnr)
     end
@@ -123,9 +123,9 @@ vim.api.nvim_create_autocmd({ "WinClosed" }, {
 vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local win = eve.context.state.wins[winnr] ---@type t.eve.context.state.win.IItem|nil
+    local win = eve.context.state.wins[winnr] ---@type eve.t.context.state.win.IItem|nil
     if win ~= nil and not eve.win.is_floating(winnr) then
-      win.lsp_symbols = {} ---@type t.eve.context.state.lsp.ISymbol[]
+      win.lsp_symbols = {} ---@type eve.t.context.state.lsp.ISymbol[]
       vim.defer_fn(function()
         eve.context.state.status.winline_dirty_nr:next(winnr)
       end, 20)

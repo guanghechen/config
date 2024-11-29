@@ -6,7 +6,7 @@ local oxi = require("eve.oxi")
 local navigate = require("eve.std.navigate")
 local reporter = require("eve.std.reporter")
 
----@class fml.ux.search.State : t.fml.ux.search.IState
+---@class fml.ux.search.State : fml.t.ux.search.IState
 ---@field protected _deleted_uuids      table<string, boolean>
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
@@ -15,10 +15,10 @@ M.__index = M
 
 ---@class fml.ux.search.state.IProps
 ---@field public enable_multiline_input boolean
----@field public fetch_data             t.fml.ux.search.IFetchData
+---@field public fetch_data             fml.t.ux.search.IFetchData
 ---@field public delay_fetch            integer
----@field public input                  t.eve.collection.IObservable
----@field public input_history          t.eve.collection.IHistory|nil
+---@field public input                  eve.t.collection.IObservable
+---@field public input_history          eve.t.collection.IHistory|nil
 ---@field public title                  string
 
 ---@param props                         fml.ux.search.state.IProps
@@ -26,22 +26,22 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local dirtier_dimension = Dirtier.new() ---@type t.eve.collection.IDirtier
-  local dirtier_data = Dirtier.new() ---@type t.eve.collection.IDirtier
-  local dirtier_data_cache = Dirtier.new() ---@type t.eve.collection.IDirtier
-  local dirtier_main = Dirtier.new() ---@type t.eve.collection.IDirtier
-  local dirtier_preview = Dirtier.new() ---@type t.eve.collection.IDirtier
+  local dirtier_dimension = Dirtier.new() ---@type eve.t.collection.IDirtier
+  local dirtier_data = Dirtier.new() ---@type eve.t.collection.IDirtier
+  local dirtier_data_cache = Dirtier.new() ---@type eve.t.collection.IDirtier
+  local dirtier_main = Dirtier.new() ---@type eve.t.collection.IDirtier
+  local dirtier_preview = Dirtier.new() ---@type eve.t.collection.IDirtier
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
-  local fetch_data = props.fetch_data ---@type t.fml.ux.search.IFetchData
+  local fetch_data = props.fetch_data ---@type fml.t.ux.search.IFetchData
   local delay_fetch = props.delay_fetch ---@type integer
-  local input = props.input ---@type t.eve.collection.IObservable
-  local input_history = props.input_history ---@type t.eve.collection.IHistory|nil
-  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type t.eve.collection.IObservable
+  local input = props.input ---@type eve.t.collection.IObservable
+  local input_history = props.input_history ---@type eve.t.collection.IHistory|nil
+  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.t.collection.IObservable
   local title = props.title ---@type string
   local uuid = oxi.uuid() ---@type string
   local status = Observable.from_value("hidden")
 
-  ---@type t.eve.collection.IScheduler
+  ---@type eve.t.collection.IScheduler
   local fetch_scheduler = Scheduler.new({
     name = "fml.ux.search.state.fetch",
     delay = delay_fetch,
@@ -53,7 +53,7 @@ function M.new(props)
         if succeed and data ~= nil then
           local max_width = 0 ---@type integer
           local item_lnum_next = 1 ---@type integer
-          local items = data.items ---@type t.fml.ux.search.IItem[]
+          local items = data.items ---@type fml.t.ux.search.IItem[]
           local present_uuid = data.present_uuid ---@type string|nil
           local cursor_uuid = data.cursor_uuid or data.present_uuid ---@type string|nil
 
@@ -99,7 +99,7 @@ function M.new(props)
 
   ---@return nil
   local function on_refresh()
-    local _status = status:snapshot() ---@type t.eve.e.WidgetStatus
+    local _status = status:snapshot() ---@type eve.e.WidgetStatus
     local visible = _status == "visible" ---@type boolean
     local is_data_dirty = self.dirtier_data:is_dirty() ---@type boolean
     if visible and is_data_dirty then
@@ -117,7 +117,7 @@ function M.new(props)
   self.input_history = input_history
   self.input_line_count = input_line_count
   self.item_present_uuid = nil
-  self.items = {} ---@type t.fml.ux.search.IItem[]
+  self.items = {} ---@type fml.t.ux.search.IItem[]
   self.max_width = 0 ---@type integer
   self.status = status
   self.title = title
@@ -142,7 +142,7 @@ function M:dispose()
   self.status:dispose()
 end
 
----@return t.fml.ux.search.IItem|nil
+---@return fml.t.ux.search.IItem|nil
 ---@return integer
 ---@return string|nil
 function M:get_current()
@@ -170,7 +170,7 @@ end
 ---@param lnum                          integer
 ---@return integer
 function M:locate(lnum)
-  local items = self.items ---@type t.fml.ux.search.IItem[]
+  local items = self.items ---@type fml.t.ux.search.IItem[]
   local next_lnum = math.max(1, math.min(#items, lnum)) ---@type integer
   local next_uuid = items[next_lnum] and items[next_lnum].uuid or nil ---@type string|nil
   local has_changed = self._item_lnum_cur ~= next_lnum or self._item_uuid_cur ~= next_uuid ---@type boolean
@@ -188,7 +188,7 @@ end
 function M:mark_item_deleted(uuid)
   local deleted_uuids = self._deleted_uuids ---@type table<string, boolean>
   local lnum = 0 ---@type integer
-  local items = self.items ---@type t.fml.ux.search.IItem[]
+  local items = self.items ---@type fml.t.ux.search.IItem[]
 
   for i, item in ipairs(self.items) do
     if item.uuid == uuid then
@@ -213,7 +213,7 @@ function M:mark_item_deleted(uuid)
   local k = lnum ---@type integer
   local N = #items ---@type integer
   for i = lnum + 1, N, 1 do
-    local item = items[i] ---@type t.fml.ux.search.IItem
+    local item = items[i] ---@type fml.t.ux.search.IItem
     if deleted_uuids[item.parent] then
       deleted_uuids[item.uuid] = true
     else
@@ -252,7 +252,7 @@ end
 ---@return integer
 function M:moveup()
   local step = vim.v.count1 or 1 ---@type integer
-  local items = self.items ---@type t.fml.ux.search.IItem[]
+  local items = self.items ---@type fml.t.ux.search.IItem[]
   local lnum = navigate.circular(self._item_lnum_cur, -step, #items) ---@type integer
   return self:locate(lnum)
 end
@@ -260,7 +260,7 @@ end
 ---@return integer
 function M:movedown()
   local step = vim.v.count1 or 1 ---@type integer
-  local items = self.items ---@type t.fml.ux.search.IItem[]
+  local items = self.items ---@type fml.t.ux.search.IItem[]
   local lnum = navigate.circular(self._item_lnum_cur, step, #items) ---@type integer
   return self:locate(lnum)
 end

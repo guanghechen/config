@@ -2,7 +2,7 @@ local uuids = eve.commander.uuids ---@type eve.std.commander.uuids
 
 ---@param method                        string
 ---@param additional_params             table<string, any>
----@param callback                      fun(ok: boolean, data: t.fml.ux.file_select.IData|nil): nil
+---@param callback                      fun(ok: boolean, data: fml.t.ux.file_select.IData|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, additional_params, callback)
   local bufnr = eve.locations.get_current_bufnr() or vim.api.nvim_get_current_buf() ---@type integer
@@ -62,7 +62,7 @@ local function fetch_data(method, additional_params, callback)
             local col = raw_item.col - 1 ---@type integer
             local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
 
-            ---@type t.fml.ux.file_select.IRawItem
+            ---@type fml.t.ux.file_select.IRawItem
             local item = { group = filepath, filepath = filepath, uuid = uuid, lnum = lnum, col = col }
             table.insert(items, item)
           end
@@ -98,10 +98,10 @@ local function fetch_data(method, additional_params, callback)
       end)
 
       local k = 1 ---@type integer
-      local last_item = items[k] ---@type t.fml.ux.file_select.IRawItem
+      local last_item = items[k] ---@type fml.t.ux.file_select.IRawItem
       local N = #items ---@type integer
       for i = 2, N, 1 do
-        local item = items[i] ---@type t.fml.ux.file_select.IRawItem
+        local item = items[i] ---@type fml.t.ux.file_select.IRawItem
 
         if item.filepath ~= last_item.filepath or item.lnum ~= last_item.lnum then
           k = k + 1
@@ -120,7 +120,7 @@ local function fetch_data(method, additional_params, callback)
       return
     end
 
-    ---@type t.fml.ux.file_select.IData
+    ---@type fml.t.ux.file_select.IData
     local data = { items = items, cwd = cwd }
     callback(true, data)
   end)
@@ -131,9 +131,9 @@ end
 ---@param additional_params             table<string, any>
 ---@return fun(): nil
 local function create_jump_or_list(title, method, additional_params)
-  local _last_data = { items = {}, cwd = eve.path.cwd() } ---@type t.fml.ux.file_select.IData
+  local _last_data = { items = {}, cwd = eve.path.cwd() } ---@type fml.t.ux.file_select.IData
 
-  local select = nil ---@type t.fml.ux.IFileSelect|nil
+  local select = nil ---@type fml.t.ux.IFileSelect|nil
   select = fml.ux.FileSelect.new({
     delay_fetch = 0,
     delay_render = 10,

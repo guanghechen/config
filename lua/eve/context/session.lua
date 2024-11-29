@@ -2,19 +2,19 @@ local Observable = require("eve.collection.observable")
 local std_array = require("eve.std.array")
 local path = require("eve.std.path")
 
----@class eve.context.session : t.eve.context.session
+---@class eve.context.session : eve.t.context.session
 local M = {}
 
----@return t.eve.context.session.data
+---@return eve.t.context.session.data
 function M.defaults()
   local is_home_config_dir = path.workspace() == path.HOME_NVIM_CONFIG ---@type boolean
 
-  ---@type t.eve.context.data.bookmark
+  ---@type eve.t.context.data.bookmark
   local bookmark = {
     pinned = {},
   }
 
-  ---@type t.eve.context.data.find
+  ---@type eve.t.context.data.find
   local find = {
     flag_case_sensitive = false,
     flag_gitignore = true,
@@ -40,7 +40,7 @@ function M.defaults()
     scope = "C",
   }
 
-  ---@type t.eve.context.data.flight
+  ---@type eve.t.context.data.flight
   local flight = {
     autoload = false,
     autosave = true,
@@ -49,7 +49,7 @@ function M.defaults()
     lsp_inlay_hints = is_home_config_dir,
   }
 
-  ---@type t.eve.context.data.search
+  ---@type eve.t.context.data.search
   local search = {
     flag_case_sensitive = true,
     flag_gitignore = true,
@@ -79,7 +79,7 @@ function M.defaults()
     search_paths = {},
   }
 
-  ---@type t.eve.context.session.data
+  ---@type eve.t.context.session.data
   local data = {
     bookmark = bookmark,
     find = find,
@@ -89,21 +89,21 @@ function M.defaults()
   return data
 end
 
----@return t.eve.context.session.data
+---@return eve.t.context.session.data
 function M.dump()
   if M.state == nil then
     error("[eve.context.session] the state is not initialized.")
     return M.defaults()
   end
 
-  local state = M.state ---@type t.eve.context.session.state
+  local state = M.state ---@type eve.t.context.session.state
 
-  ---@type t.eve.context.data.bookmark
+  ---@type eve.t.context.data.bookmark
   local bookmark = {
     pinned = state.bookmark.pinned:snapshot(),
   }
 
-  ---@type t.eve.context.data.find
+  ---@type eve.t.context.data.find
   local find = {
     flag_case_sensitive = state.find.flag_case_sensitive:snapshot(),
     flag_gitignore = state.find.flag_gitignore:snapshot(),
@@ -115,7 +115,7 @@ function M.dump()
     scope = state.find.scope:snapshot(),
   }
 
-  ---@type t.eve.context.data.flight
+  ---@type eve.t.context.data.flight
   local flight = {
     autoload = state.flight.autoload:snapshot(),
     autosave = state.flight.autosave:snapshot(),
@@ -124,7 +124,7 @@ function M.dump()
     lsp_inlay_hints = state.flight.lsp_inlay_hints:snapshot(),
   }
 
-  ---@type t.eve.context.data.search
+  ---@type eve.t.context.data.search
   local search = {
     flag_case_sensitive = state.search.flag_case_sensitive:snapshot(),
     flag_gitignore = state.search.flag_gitignore:snapshot(),
@@ -140,7 +140,7 @@ function M.dump()
     search_paths = state.search.search_paths:snapshot(),
   }
 
-  ---@type t.eve.context.session.data
+  ---@type eve.t.context.session.data
   local data = {
     bookmark = bookmark,
     find = find,
@@ -150,16 +150,16 @@ function M.dump()
   return data
 end
 
----@param data                          t.eve.context.session.data
+---@param data                          eve.t.context.session.data
 ---@return nil
 function M.load(data)
   if M.state == nil then
-    ---@type t.eve.context.state.bookmark
+    ---@type eve.t.context.state.bookmark
     local bookmark = {
       pinned = Observable.from_value(data.bookmark.pinned),
     }
 
-    ---@type t.eve.context.state.find
+    ---@type eve.t.context.state.find
     local find = {
       flag_case_sensitive = Observable.from_value(data.find.flag_case_sensitive),
       flag_gitignore = Observable.from_value(data.find.flag_gitignore),
@@ -171,7 +171,7 @@ function M.load(data)
       scope = Observable.from_value(data.find.scope),
     }
 
-    ---@type t.eve.context.state.flight
+    ---@type eve.t.context.state.flight
     local flight = {
       autoload = Observable.from_value(data.flight.autoload),
       autosave = Observable.from_value(data.flight.autosave),
@@ -180,7 +180,7 @@ function M.load(data)
       lsp_inlay_hints = Observable.from_value(data.flight.lsp_inlay_hints),
     }
 
-    ---@type t.eve.context.state.search
+    ---@type eve.t.context.state.search
     local search = {
       flag_case_sensitive = Observable.from_value(data.search.flag_case_sensitive),
       flag_gitignore = Observable.from_value(data.search.flag_gitignore),
@@ -196,7 +196,7 @@ function M.load(data)
       search_paths = Observable.from_value(data.search.search_paths),
     }
 
-    ---@type t.eve.context.session.state
+    ---@type eve.t.context.session.state
     local state = {
       bookmark = bookmark,
       find = find,
@@ -205,7 +205,7 @@ function M.load(data)
     }
     M.state = state
   else
-    local state = M.state ---@type t.eve.context.session.state
+    local state = M.state ---@type eve.t.context.session.state
 
     ---! bookmark
     if not std_array.equals(state.bookmark.pinned:snapshot(), data.bookmark.pinned) then
@@ -256,14 +256,14 @@ function M.load(data)
 end
 
 ---@param data                          any
----@return t.eve.context.session.data
+---@return eve.t.context.session.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type t.eve.context.session.data
+  local resolved = M.defaults() ---@type eve.t.context.session.data
 
   if type(data) ~= "table" then
     return resolved
   end
-  ---@cast data t.eve.context.session.data
+  ---@cast data eve.t.context.session.data
 
   if type(data.bookmark) == "table" then
     if type(data.bookmark.pinned) == "table" then

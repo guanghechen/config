@@ -1,11 +1,11 @@
----@param context                       t.fml.ux.IThemeContext
+---@param context                       fml.t.ux.IThemeContext
 ---@return fml.ux.theme.integration.winline.hlgroups
 local function gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type t.eve.collection.theme.IPalette
+  local c = context.scheme.palette ---@type eve.t.collection.theme.IPalette
   local bg_winline = "none" ---@type string
   local bg_winline_active = c.bg2 ---@type string
 
-  ---@class fml.ux.theme.integration.winline.hlgroups : table<string, t.eve.collection.theme.IHlgroup>
+  ---@class fml.ux.theme.integration.winline.hlgroups : table<string, eve.t.collection.theme.IHlgroup>
   ---@field public f_wla_bg             { fg: string, bg: string }
   local hlgroup_map = {
     f_wl_bg = { fg = bg_winline, bg = bg_winline },
@@ -58,7 +58,7 @@ local function gen_hlgroup_map(context)
     f_wl_text = { fg = c.fg1, bg = bg_winline },
   }
 
-  ---@class fml.ux.theme.integration.winline.hlgroups : table<string, t.eve.collection.theme.IHlgroup>
+  ---@class fml.ux.theme.integration.winline.hlgroups : table<string, eve.t.collection.theme.IHlgroup>
   local extend_hlgroup_map = {}
   for hlname, hlgroup in pairs(hlgroup_map) do
     if hlname:sub(1, 5) == "f_wl_" then

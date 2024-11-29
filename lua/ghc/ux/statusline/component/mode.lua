@@ -1,4 +1,4 @@
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "mode",
   tight = true,

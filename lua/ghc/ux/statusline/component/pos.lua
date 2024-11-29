@@ -18,7 +18,7 @@ local function calc_row_percentage()
   end
 end
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "pos",
   render = function()

@@ -1,28 +1,28 @@
----@class t.eve.IHighlight
+---@class eve.t.IHighlight
 ---@field public lnum                   integer
 ---@field public coll                   integer
 ---@field public colr                   integer
 ---@field public hlname                 string
 
----@class t.eve.IHighlightInline
+---@class eve.t.IHighlightInline
 ---@field public coll                   integer
 ---@field public colr                   integer
 ---@field public hlname                 string
 
----@class t.eve.IKeymapOverridable
+---@class eve.t.IKeymapOverridable
 ---@field public bufnr                  ?integer
 ---@field public nowait                 ?boolean
 ---@field public noremap                ?boolean
 ---@field public silent                 ?boolean
 
----@class t.eve.IKeymap : t.eve.IKeymapOverridable
----@field public modes                  t.eve.e.VimMode[]
+---@class eve.t.IKeymap : eve.t.IKeymapOverridable
+---@field public modes                  eve.e.VimMode[]
 ---@field public key                    string
 ---@field public callback               fun(): nil
 ---@field public desc                   string|nil
 ---@field public active                 boolean|nil
 
----@class t.eve.IQuickFixItem
+---@class eve.t.IQuickFixItem
 ---@field public filename               string
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer

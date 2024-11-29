@@ -1,6 +1,6 @@
 local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "username",
   ---@diagnostic disable-next-line: unused-local

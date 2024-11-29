@@ -40,7 +40,7 @@ eve.commander
     uuid = uuids.debug_inspect_state,
     desc = "debug: inspect state",
     action = function()
-      local data = eve.context.dump() ---@type t.eve.context.data
+      local data = eve.context.dump() ---@type eve.t.context.data
       eve.reporter.info({
         from = "ghc.command.inspect",
         subject = "inspect_state",

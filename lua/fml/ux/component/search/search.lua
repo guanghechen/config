@@ -37,64 +37,64 @@ local PREVIEW_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_preview_normal",
 }, ",")
 
----@class fml.ux.search.Search : t.fml.ux.search.ISearch
----@field protected _dimension          t.fml.ux.search.IDimension
----@field protected _input              t.fml.ux.search.IInput
----@field protected _main               t.fml.ux.search.IMain
+---@class fml.ux.search.Search : fml.t.ux.search.ISearch
+---@field protected _dimension          fml.t.ux.search.IDimension
+---@field protected _input              fml.t.ux.search.IInput
+---@field protected _main               fml.t.ux.search.IMain
 ---@field protected _permanent          boolean
----@field protected _preview            t.fml.ux.search.IPreview|nil
+---@field protected _preview            fml.t.ux.search.IPreview|nil
 ---@field protected _preview_title      string
 ---@field protected _preview_flag_wrap  ?boolean
 ---@field protected _winnr_input        integer|nil
 ---@field protected _winnr_main         integer|nil
 ---@field protected _winnr_preview      integer|nil
----@field protected _on_close           ?t.fml.ux.search.IOnClose
----@field protected _on_invisible       ?t.fml.ux.search.IOnInvisible
+---@field protected _on_close           ?fml.t.ux.search.IOnClose
+---@field protected _on_invisible       ?fml.t.ux.search.IOnInvisible
 local M = {}
 M.__index = M
 
----@class t.fml.ux.search.IProps
----@field public dimension              ?t.fml.ux.search.IRawDimension
+---@class fml.t.ux.search.IProps
+---@field public dimension              ?fml.t.ux.search.IRawDimension
 ---@field public enable_multiline_input ?boolean
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
----@field public fetch_data             t.fml.ux.search.IFetchData
----@field public fetch_preview_data     ?t.fml.ux.search.IFetchPreviewData
----@field public input                  t.eve.collection.IObservable
----@field public input_history          t.eve.collection.IHistory|nil
----@field public input_keymaps          ?t.eve.IKeymap[]
----@field public main_keymaps           ?t.eve.IKeymap[]
----@field public patch_preview_data     ?t.fml.ux.search.IPatchPreviewData
+---@field public fetch_data             fml.t.ux.search.IFetchData
+---@field public fetch_preview_data     ?fml.t.ux.search.IFetchPreviewData
+---@field public input                  eve.t.collection.IObservable
+---@field public input_history          eve.t.collection.IHistory|nil
+---@field public input_keymaps          ?eve.t.IKeymap[]
+---@field public main_keymaps           ?eve.t.IKeymap[]
+---@field public patch_preview_data     ?fml.t.ux.search.IPatchPreviewData
 ---@field public permanent              ?boolean
 ---@field public preview_flag_wrap      ?boolean
----@field public preview_keymaps        ?t.eve.IKeymap[]
----@field public statusline_items       t.eve.ux.widget.IRawStatuslineItem[]
+---@field public preview_keymaps        ?eve.t.IKeymap[]
+---@field public statusline_items       eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
----@field public on_close               ?t.fml.ux.search.IOnClose
----@field public on_invisible           ?t.fml.ux.search.IOnInvisible
----@field public on_confirm             t.fml.ux.search.IOnConfirm
----@field public on_preview_rendered    ?t.fml.ux.search.IOnPreviewRendered
+---@field public on_close               ?fml.t.ux.search.IOnClose
+---@field public on_invisible           ?fml.t.ux.search.IOnInvisible
+---@field public on_confirm             fml.t.ux.search.IOnConfirm
+---@field public on_preview_rendered    ?fml.t.ux.search.IOnPreviewRendered
 
----@param props                         t.fml.ux.search.IProps
+---@param props                         fml.t.ux.search.IProps
 ---@return fml.ux.search.Search
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local common_keymaps = widgets.get_keymaps() ---@type t.eve.IKeymap[]
-  local statusline_items = {} ---@type t.eve.ux.widget.IStatuslineItem[]
+  local common_keymaps = widgets.get_keymaps() ---@type eve.t.IKeymap[]
+  local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
 
-  local raw_statusline_items = props.statusline_items ---@type t.eve.ux.widget.IRawStatuslineItem[]
+  local raw_statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
   for idx, item in ipairs(raw_statusline_items) do
-    local state = item.state ---@type t.eve.collection.IObservable
+    local state = item.state ---@type eve.t.collection.IObservable
     local symbol = item.symbol ---@type string
     local callback = item.callback ---@type fun(): nil
     local callback_fn = G.register_anonymous_fn(callback) or "" ---@type string
 
-    ---@type t.eve.ux.widget.IStatuslineItem
+    ---@type eve.t.ux.widget.IStatuslineItem
     local statusline_item = { type = item.type, state = state, symbol = symbol, callback_fn = callback_fn }
     table.insert(statusline_items, statusline_item)
 
-    ---@type t.eve.IKeymap
+    ---@type eve.t.IKeymap
     local keymap = {
       modes = { "n", "v" },
       key = "<leader>" .. idx,
@@ -105,8 +105,8 @@ function M.new(props)
     table.insert(common_keymaps, keymap)
   end
 
-  local raw_dimension = props.dimension or {} ---@type t.fml.ux.search.IRawDimension
-  ---@type t.fml.ux.search.IDimension
+  local raw_dimension = props.dimension or {} ---@type fml.t.ux.search.IRawDimension
+  ---@type fml.t.ux.search.IDimension
   local dimension = {
     height = raw_dimension.height,
     max_width = raw_dimension.max_width or 0.8,
@@ -120,15 +120,15 @@ function M.new(props)
   local delay_fetch = math.max(0, props.delay_fetch or 128) ---@type integer
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
   local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
-  local input_history = props.input_history ---@type t.eve.collection.IHistory|nil
+  local input_history = props.input_history ---@type eve.t.collection.IHistory|nil
   local permanent = not not props.permanent ---@type boolean
   local preview_flag_wrap = not not props.preview_flag_wrap ---@type boolean
 
-  local on_confirm_from_props = props.on_confirm ---@type t.fml.ux.search.IOnConfirm
-  local on_close_from_props = props.on_close ---@type t.fml.ux.search.IOnClose|nil
-  local on_invisible_from_props = props.on_invisible ---@type t.fml.ux.search.IOnInvisible|nil
+  local on_confirm_from_props = props.on_confirm ---@type fml.t.ux.search.IOnConfirm
+  local on_close_from_props = props.on_close ---@type fml.t.ux.search.IOnClose|nil
+  local on_invisible_from_props = props.on_invisible ---@type fml.t.ux.search.IOnInvisible|nil
 
-  ---@type t.fml.ux.search.IState
+  ---@type fml.t.ux.search.IState
   local state = SearchState.new({
     title = props.title,
     input = props.input,
@@ -140,9 +140,9 @@ function M.new(props)
 
   ---@return nil
   local function on_confirm()
-    local item = state:get_current() ---@type t.fml.ux.search.IItem|nil
+    local item = state:get_current() ---@type fml.t.ux.search.IItem|nil
     if item ~= nil then
-      local action = on_confirm_from_props(item) ---@type t.eve.e.WidgetConfirmAction|nil
+      local action = on_confirm_from_props(item) ---@type eve.e.WidgetConfirmAction|nil
       if action == "close" or action == "hide" then
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
@@ -273,7 +273,7 @@ function M.new(props)
     { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.force_refresh, desc = "search: refresh" },
   })
 
-  ---@type t.eve.IKeymap[]
+  ---@type eve.t.IKeymap[]
   local left_common_keymaps = {
     { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.on_main_down, desc = "search: focus next item" },
     { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.on_main_down, desc = "search: focus next item" },
@@ -289,11 +289,11 @@ function M.new(props)
     },
   }
 
-  local input_keymaps = vim.list_slice(common_keymaps) ---@type t.eve.IKeymap[]
+  local input_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
   vim.list_extend(input_keymaps, left_common_keymaps)
   vim.list_extend(input_keymaps, props.input_keymaps or {})
 
-  local main_keymaps = vim.list_slice(common_keymaps) ---@type t.eve.IKeymap[]
+  local main_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
   vim.list_extend(main_keymaps, left_common_keymaps)
   vim.list_extend(main_keymaps, {
     { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
@@ -312,7 +312,7 @@ function M.new(props)
   })
   vim.list_extend(main_keymaps, props.main_keymaps or {})
 
-  local preview_keymaps = vim.list_slice(common_keymaps) ---@type t.eve.IKeymap[]
+  local preview_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
   vim.list_extend(preview_keymaps, {
     { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.focus_input, desc = "search: focus input" },
     { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.focus_input, desc = "search: focus input" },
@@ -326,7 +326,7 @@ function M.new(props)
   vim.list_extend(preview_keymaps, props.preview_keymaps or {})
 
   if not enable_multiline_input then
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local additional_input_keymaps = {
       { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
       { modes = { "i", "n", "v" }, key = "<Down>", callback = actions.on_main_down, desc = "search: focus next item" },
@@ -361,7 +361,7 @@ function M.new(props)
     local on_input_g = create_fallback("g", actions.on_main_g)
     local on_input_gg = create_fallback("gg", actions.on_main_gg)
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local additional_input_keymaps = {
       { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
       { modes = { "n", "v" }, key = "j", callback = on_input_move_down, desc = "search: focus next item" },
@@ -373,13 +373,13 @@ function M.new(props)
     vim.list_extend(input_keymaps, additional_input_keymaps)
   end
 
-  ---@type t.fml.ux.search.IInput
+  ---@type fml.t.ux.search.IInput
   local input = SearchInput.new({
     state = state,
     keymaps = input_keymaps,
   })
 
-  ---@type t.fml.ux.search.IMain
+  ---@type fml.t.ux.search.IMain
   local main = SearchMain.new({
     state = state,
     keymaps = main_keymaps,
@@ -387,7 +387,7 @@ function M.new(props)
     delay_render = delay_render,
   })
 
-  ---@type t.fml.ux.search.IPreview|nil
+  ---@type fml.t.ux.search.IPreview|nil
   local preview = nil
   if props.fetch_preview_data then
     preview = SearchPreview.new({
@@ -434,7 +434,7 @@ function M.new(props)
     delay = 48,
     silent = not devmode,
     task = function(callback)
-      local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
+      local status = state.status:snapshot() ---@type eve.e.WidgetStatus
       local visible = status == "visible" ---@type boolean
       if visible then
         self:create_wins_as_needed()
@@ -447,7 +447,7 @@ function M.new(props)
   state.status:subscribe(
     Subscriber.new({
       on_next = function()
-        local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
+        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible then
           draw_scheduler:schedule()
@@ -461,7 +461,7 @@ function M.new(props)
     Subscriber.new({
       on_next = function()
         local is_dimension_dirty = state.dirtier_dimension:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
+        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_dimension_dirty then
           draw_scheduler:schedule()
@@ -475,7 +475,7 @@ function M.new(props)
     Subscriber.new({
       on_next = function()
         local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
+        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_main_dirty then
           draw_scheduler:schedule()
@@ -491,7 +491,7 @@ function M.new(props)
       Subscriber.new({
         on_next = function()
           local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-          local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
+          local status = state.status:snapshot() ---@type eve.e.WidgetStatus
           local visible = status == "visible" ---@type boolean
           if visible and is_preview_dirty then
             draw_scheduler:schedule()
@@ -506,7 +506,7 @@ function M.new(props)
     state.input_line_count:subscribe(
       Subscriber.new({
         on_next = function()
-          local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
+          local status = state.status:snapshot() ---@type eve.e.WidgetStatus
           local visible = status == "visible" ---@type boolean
           if visible then
             draw_scheduler:schedule()
@@ -533,10 +533,10 @@ end
 
 ---@return nil
 function M:create_wins_as_needed()
-  local state = self.state ---@type t.fml.ux.search.IState
+  local state = self.state ---@type fml.t.ux.search.IState
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
-  local dimension = self._dimension ---@type t.fml.ux.search.IDimension
+  local dimension = self._dimension ---@type fml.t.ux.search.IDimension
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local screen_height = vim.o.lines ---@type integer
   local screen_width = vim.o.columns ---@type integer
@@ -710,12 +710,12 @@ function M:create_wins_as_needed()
   end
 end
 
----@param raw_dimension                 t.fml.ux.search.IRawDimension
+---@param raw_dimension                 fml.t.ux.search.IRawDimension
 ---@return nil
 function M:change_dimension(raw_dimension)
   local old_dimension = self._dimension
 
-  ---@type t.fml.ux.search.IDimension
+  ---@type fml.t.ux.search.IDimension
   local dimension = {
     height = raw_dimension.height,
     max_width = raw_dimension.max_width or 0.8,
@@ -788,7 +788,7 @@ function M:focus()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local winnr_input = self:get_winnr_input() ---@type integer|nil
   local winnr_main = self:get_winnr_main() ---@type integer|nil
-  local status = self.state.status:snapshot() ---@type t.eve.e.WidgetStatus
+  local status = self.state.status:snapshot() ---@type eve.e.WidgetStatus
   local visible = status == "visible" ---@type boolean
 
   if
@@ -875,7 +875,7 @@ end
 
 ---@return nil
 function M:show()
-  local status = self.state.status:snapshot() ---@type t.eve.e.WidgetStatus
+  local status = self.state.status:snapshot() ---@type eve.e.WidgetStatus
   if status == "closed" then
     self.state.dirtier_data_cache:mark_dirty()
     self.state.dirtier_data:mark_dirty()
@@ -892,15 +892,15 @@ function M:show()
   end
 end
 
----@return t.eve.e.WidgetStatus
+---@return eve.e.WidgetStatus
 function M:status()
-  local status = self.state.status:snapshot() ---@type t.eve.e.WidgetStatus
+  local status = self.state.status:snapshot() ---@type eve.e.WidgetStatus
   return status
 end
 
 ---@return nil
 function M:toggle()
-  local status = self.state.status:snapshot() ---@type t.eve.e.WidgetStatus
+  local status = self.state.status:snapshot() ---@type eve.e.WidgetStatus
   local visible = status == "visible" ---@type boolean
   if visible then
     self:hide()

@@ -5,7 +5,7 @@ local theme_cache_path = eve.path.locate_theme_filepath("theme")
 ---@param force                         ?boolean
 ---@return nil
 local function reload_theme(force)
-  local theme = eve.context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
+  local theme = eve.context.state.theme.theme:snapshot() ---@type eve.e.Theme
   local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
 
   if force or not eve.path.is_exist(theme_cache_path) then
@@ -18,7 +18,7 @@ local function reload_theme(force)
   else
     dofile(theme_cache_path)
 
-    local scheme = fml.ux.theme.get_scheme(theme) ---@type t.eve.collection.theme.IScheme|nil
+    local scheme = fml.ux.theme.get_scheme(theme) ---@type eve.t.collection.theme.IScheme|nil
     if scheme ~= nil then
       fml.ux.theme.set_term_colors(scheme)
     end
@@ -107,11 +107,11 @@ eve.commander
             width = 50,
           },
           get_present = function()
-            local theme = eve.context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
+            local theme = eve.context.state.theme.theme:snapshot() ---@type eve.e.Theme
             return theme
           end,
           fetch_items = function()
-            local items = {} ---@type t.fml.ux.select.IItem[]
+            local items = {} ---@type fml.t.ux.select.IItem[]
             for _, theme in ipairs(fml.ux.theme.themes) do
               table.insert(items, { uuid = theme, text = theme })
             end
@@ -129,7 +129,7 @@ eve.commander
     uuid = uuids.toggle_theme_variant,
     desc = "toggle: theme variant",
     action = function()
-      local theme = eve.context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
+      local theme = eve.context.state.theme.theme:snapshot() ---@type eve.e.Theme
       toggle_theme_variant(theme)
     end,
   })

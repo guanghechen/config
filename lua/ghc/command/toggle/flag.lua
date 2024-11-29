@@ -5,7 +5,7 @@ eve.commander
     uuid = uuids.toggle_dressing_autopairs,
     desc = "toggle: dressing autopairs",
     action = function()
-      local observable = eve.context.state.dressing.autopairs ---@type t.eve.collection.IObservable
+      local observable = eve.context.state.dressing.autopairs ---@type eve.t.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
       eve.commander.execute(uuids.reload_theme, "force")
@@ -15,7 +15,7 @@ eve.commander
     uuid = uuids.toggle_dressing_winsep,
     desc = "toggle: dressing winsep",
     action = function()
-      local observable = eve.context.state.dressing.winsep ---@type t.eve.collection.IObservable
+      local observable = eve.context.state.dressing.winsep ---@type eve.t.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
       eve.commander.execute(uuids.reload_theme, "force")
@@ -25,7 +25,7 @@ eve.commander
     uuid = uuids.toggle_relativenumber,
     desc = "toggle: relativenumber",
     action = function()
-      local observable = eve.context.state.theme.relativenumber ---@type t.eve.collection.IObservable
+      local observable = eve.context.state.theme.relativenumber ---@type eve.t.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
 
@@ -39,7 +39,7 @@ eve.commander
     uuid = uuids.toggle_theme_transparency,
     desc = "toggle: theme transparency",
     action = function()
-      local observable = eve.context.state.theme.transparency ---@type t.eve.collection.IObservable
+      local observable = eve.context.state.theme.transparency ---@type eve.t.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
       eve.commander.execute(uuids.reload_theme, "force")

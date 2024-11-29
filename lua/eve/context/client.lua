@@ -1,24 +1,24 @@
 local Observable = require("eve.collection.observable")
 
----@class eve.context.client : t.eve.context.client
+---@class eve.context.client : eve.t.context.client
 local M = {}
 
----@return t.eve.context.client.data
+---@return eve.t.context.client.data
 function M.defaults()
-  ---@type t.eve.context.data.dressing
+  ---@type eve.t.context.data.dressing
   local dressing = {
     autopairs = true,
     winsep = true,
   }
 
-  ---@type t.eve.context.data.theme
+  ---@type eve.t.context.data.theme
   local theme = {
     theme = "gruvbox_dark",
     transparency = false,
     relativenumber = true,
   }
 
-  ---@type t.eve.context.client.data
+  ---@type eve.t.context.client.data
   local data = {
     dressing = dressing,
     theme = theme,
@@ -26,29 +26,29 @@ function M.defaults()
   return data
 end
 
----@return t.eve.context.client.data
+---@return eve.t.context.client.data
 function M.dump()
   if M.state == nil then
     error("[eve.context.client] the state is not initialized.")
     return M.defaults()
   end
 
-  local state = M.state ---@type t.eve.context.client.state
+  local state = M.state ---@type eve.t.context.client.state
 
-  ---@type t.eve.context.data.dressing
+  ---@type eve.t.context.data.dressing
   local dressing = {
     autopairs = state.dressing.autopairs:snapshot(),
     winsep = state.dressing.winsep:snapshot(),
   }
 
-  ---@type t.eve.context.data.theme
+  ---@type eve.t.context.data.theme
   local theme = {
     theme = state.theme.theme:snapshot(),
     transparency = state.theme.transparency:snapshot(),
     relativenumber = state.theme.relativenumber:snapshot(),
   }
 
-  ---@type t.eve.context.client.data
+  ---@type eve.t.context.client.data
   local data = {
     dressing = dressing,
     theme = theme,
@@ -56,31 +56,31 @@ function M.dump()
   return data
 end
 
----@param data                          t.eve.context.client.data
+---@param data                          eve.t.context.client.data
 ---@return nil
 function M.load(data)
   if M.state == nil then
-    ---@type t.eve.context.state.dressing
+    ---@type eve.t.context.state.dressing
     local dressing = {
       autopairs = Observable.from_value(data.dressing.autopairs),
       winsep = Observable.from_value(data.dressing.winsep),
     }
 
-    ---@type t.eve.context.state.theme
+    ---@type eve.t.context.state.theme
     local theme = {
       theme = Observable.from_value(data.theme.theme),
       transparency = Observable.from_value(data.theme.transparency),
       relativenumber = Observable.from_value(data.theme.relativenumber),
     }
 
-    ---@type t.eve.context.client.state
+    ---@type eve.t.context.client.state
     local state = {
       dressing = dressing,
       theme = theme,
     }
     M.state = state
   else
-    local state = M.state ---@type t.eve.context.client.state
+    local state = M.state ---@type eve.t.context.client.state
 
     ---! dressing
     state.dressing.autopairs:next(data.dressing.autopairs)
@@ -94,14 +94,14 @@ function M.load(data)
 end
 
 ---@param data                          any
----@return t.eve.context.client.data
+---@return eve.t.context.client.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type t.eve.context.client.data
+  local resolved = M.defaults() ---@type eve.t.context.client.data
 
   if type(data) ~= "table" then
     return resolved
   end
-  ---@cast data t.eve.context.client.data
+  ---@cast data eve.t.context.client.data
 
   ---resolve dressing data
   if type(data.dressing) == "table" then
@@ -129,10 +129,10 @@ function M.normalize(data)
   return resolved
 end
 
----@param data                          t.eve.context.client.data
+---@param data                          eve.t.context.client.data
 ---@return boolean
 function M.equals(data)
-  local cur = M.dump() ---@type t.eve.context.client.data
+  local cur = M.dump() ---@type eve.t.context.client.data
 
   ---compare dressing data
   if

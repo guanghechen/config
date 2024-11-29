@@ -1,17 +1,17 @@
 local Textarea = require("fml.ux.component.textarea")
 
----@class fml.ux.Input : t.fml.ux.IInput, fml.ux.Textarea
+---@class fml.ux.Input : fml.t.ux.IInput, fml.ux.Textarea
 local M = {}
 M.__index = M
 setmetatable(M, { __index = Textarea })
 
 ---@class fml.ux.input.IProps
----@field public position               t.eve.e.BoxPosition
+---@field public position               eve.e.BoxPosition
 ---@field public width                  ?number
 ---@field public title                  ?string
 ---@field public max_width              ?number
 ---@field public min_width              ?number
----@field public keymaps                ?t.eve.IKeymap[]
+---@field public keymaps                ?eve.t.IKeymap[]
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(value: string): string|nil
 ---@field public on_close               ?fun(): nil
@@ -20,7 +20,7 @@ setmetatable(M, { __index = Textarea })
 ---@param props                         fml.ux.input.IProps
 ---@return fml.ux.Input
 function M.new(props)
-  local position = props.position ---@type t.eve.e.BoxPosition
+  local position = props.position ---@type eve.e.BoxPosition
   local width = props.width ---@type number|nil
   local max_width = props.max_width ---@type number|nil
   local min_width = props.min_width ---@type number|nil
@@ -51,7 +51,7 @@ function M.new(props)
     self.on_confirm()
   end
 
-  ---@type t.eve.IKeymap[]
+  ---@type eve.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "<esc>", desc = "input: quit", callback = handle_close },
     { modes = { "i" }, key = "<cr>", desc = "input: confirm", callback = handle_confirm },
@@ -97,12 +97,12 @@ function M.new(props)
   return self
 end
 
----@param params                        t.fml.ux.input.IOpenParams
+---@param params                        fml.t.ux.input.IOpenParams
 ---@return nil
 function M:open(params)
   local text = params.initial_value ---@type string
 
-  ---@type t.fml.ux.textarea.IOpenParams
+  ---@type fml.t.ux.textarea.IOpenParams
   local opts = {
     initial_lines = { text },
     row = params.row,

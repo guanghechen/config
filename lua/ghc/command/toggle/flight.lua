@@ -13,7 +13,7 @@ local flights = {
 ---@param flight                        string
 ---@return nil
 local function toggle_flight(flight)
-  local observable = eve.context.state.flight[flight] ---@type t.eve.collection.IObservable|nil
+  local observable = eve.context.state.flight[flight] ---@type eve.t.collection.IObservable|nil
   if observable ~= nil then
     local enabled = not observable:snapshot() ---@type boolean
     observable:next(enabled)
@@ -53,7 +53,7 @@ eve.commander.register({
           width = 50,
         },
         fetch_items = function()
-          local items = {} ---@type t.fml.ux.select.IItem[]
+          local items = {} ---@type fml.t.ux.select.IItem[]
           for _, flight in ipairs(flights) do
             table.insert(items, { uuid = flight, text = flight })
           end
@@ -61,7 +61,7 @@ eve.commander.register({
         end,
         render_item = function(item, match)
           local flight = item.uuid ---@type string
-          local observable = eve.context.state.flight[flight] ---@type t.eve.collection.IObservable
+          local observable = eve.context.state.flight[flight] ---@type eve.t.collection.IObservable
           local enabled = observable:snapshot() ---@type boolean
           local text_enabled = enabled and "true" or "false" ---@type string
 
@@ -69,13 +69,13 @@ eve.commander.register({
           local padding = string.rep(" ", width_padding - vim.api.nvim_strwidth(flight)) ---@type string
           local text = flight .. padding .. text_enabled ---@type string
 
-          ---@type t.eve.IHighlightInline[]
+          ---@type eve.t.IHighlightInline[]
           local highlights = {
             { coll = width_padding, colr = width_padding + #text_enabled, hlname = "Boolean" },
           }
 
           for _, piece in ipairs(match.matches) do
-            ---@type t.eve.IHighlightInline[]
+            ---@type eve.t.IHighlightInline[]
             local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
             table.insert(highlights, highlight)
           end

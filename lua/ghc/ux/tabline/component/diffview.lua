@@ -13,7 +13,7 @@ local function get_pane_width()
   return 0
 end
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "diffview",
   ---@diagnostic disable-next-line: unused-local

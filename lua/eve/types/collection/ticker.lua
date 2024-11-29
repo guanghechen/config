@@ -1,2 +1,2 @@
----@class t.eve.collection.ITicker: t.eve.collection.IObservable
----@field public tick                   fun(self: t.eve.collection.ITicker): nil
+---@class eve.t.collection.ITicker: eve.t.collection.IObservable
+---@field public tick                   fun(self: eve.t.collection.ITicker): nil

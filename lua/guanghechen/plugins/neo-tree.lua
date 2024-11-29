@@ -114,7 +114,7 @@ return {
         handler = function(args)
           vim.cmd("stopinsert")
 
-          ---@type t.eve.IKeymap[]
+          ---@type eve.t.IKeymap[]
           local keymaps = {
             { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert },
           }

@@ -10,7 +10,7 @@ local function mk(modes, key, uuid, desc)
 
   if commander.should_be_command(uuid) then
     if desc == nil then
-      local command = commander.resolve(uuid, true) ---@type t.eve.ICommand|nil
+      local command = commander.resolve(uuid, true) ---@type eve.t.ICommand|nil
       desc = command ~= nil and command.desc or nil ---@type string|nil
     end
 

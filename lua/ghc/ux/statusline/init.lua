@@ -1,7 +1,7 @@
 local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
 local statusline_dirty = true ---@type boolean
 
-local statusline ---@type t.fml.ux.INvimbar
+local statusline ---@type fml.t.ux.INvimbar
 
 statusline = fml.ux.Nvimbar.new({
   name = "statusline",

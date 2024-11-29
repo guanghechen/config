@@ -6,7 +6,7 @@ local _history_select = nil ---@type fml.ux.FileSelect|nil
 local function get_history_select()
   if _history_select == nil then
     local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.constants.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
-    local frecency = eve.context.state.frecency.files ---@type t.eve.collection.IFrecency
+    local frecency = eve.context.state.frecency.files ---@type eve.t.collection.IFrecency
 
     ---@param ordinal                       integer
     ---@return string
@@ -14,15 +14,15 @@ local function get_history_select()
       return eve.string.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
     end
 
-    ---@type t.fml.ux.file_select.IProvider
+    ---@type fml.t.ux.file_select.IProvider
     local provider = {
       fetch_data = function()
         local cwd = eve.path.cwd() ---@type string
-        local items = {} ---@type t.fml.ux.file_select.IRawItem[]
+        local items = {} ---@type fml.t.ux.file_select.IRawItem[]
         local present_uuid = "0" ---@type string
         local width = 0 ---@type integer
         local winnr = eve.locations.get_current_winnr() ---@type integer|nil
-        local win = winnr ~= nil and eve.context.state.wins[winnr] or nil ---@type t.eve.context.state.win.IItem|nil
+        local win = winnr ~= nil and eve.context.state.wins[winnr] or nil ---@type eve.t.context.state.win.IItem|nil
         if win == nil then
           eve.reporter.error({
             from = "ghc.command.win.history",
@@ -30,7 +30,7 @@ local function get_history_select()
             details = { winnr = winnr },
           })
 
-          ---@type t.fml.ux.file_select.IData
+          ---@type fml.t.ux.file_select.IData
           return { cwd = cwd, items = {} }
         else
           local _, present_ordinal = win.filepath_history:present() ---@type string|nil, integer|nil
@@ -41,7 +41,7 @@ local function get_history_select()
           for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
             local filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-            local item = { uuid = uuid, filepath = filepath } ---@type t.fml.ux.file_select.IRawItem
+            local item = { uuid = uuid, filepath = filepath } ---@type fml.t.ux.file_select.IRawItem
             table.insert(items, item)
           end
 
@@ -56,7 +56,7 @@ local function get_history_select()
           _history_select:change_dimension({ height = #items + 3, width = width + 16 })
         end
 
-        ---@type t.fml.ux.file_select.IData
+        ---@type fml.t.ux.file_select.IData
         return { cwd = cwd, items = items, present_uuid = present_uuid }
       end,
       render_item = function(item, match)
@@ -65,7 +65,7 @@ local function get_history_select()
         local width_icon = string.len(item.data.icon) ---@type integer
         local text = text_prefix .. item.data.icon .. item.data.filepath ---@type string
 
-        ---@type t.eve.IHighlightInline[]
+        ---@type eve.t.IHighlightInline[]
         local highlights = {
           {
             coll = width_prefix,
@@ -74,7 +74,7 @@ local function get_history_select()
           },
         }
         for _, piece in ipairs(match.matches) do
-          ---@type t.eve.IHighlightInline
+          ---@type eve.t.IHighlightInline
           local highlight = {
             coll = width_prefix + width_icon + piece.l,
             colr = width_prefix + width_icon + piece.r,
@@ -98,7 +98,7 @@ local function get_history_select()
         local item_index = tonumber(item.uuid) ---@type integer|nil
         if item_index ~= nil then
           local winnr = eve.locations.get_current_winnr() ---@type integer|nil
-          local win = winnr ~= nil and eve.context.state.wins[winnr] or nil ---@type t.eve.context.state.win.IItem|nil
+          local win = winnr ~= nil and eve.context.state.wins[winnr] or nil ---@type eve.t.context.state.win.IItem|nil
           if win ~= nil then
             win.filepath_history:go(item_index)
           end

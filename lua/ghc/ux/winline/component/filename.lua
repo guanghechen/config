@@ -1,10 +1,10 @@
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "filename",
   render = function(context)
     local winnr = context.winnr ---@type integer
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local buf = eve.context.state.bufs[bufnr] ---@type t.eve.context.state.buf.IItem|nil
+    local buf = eve.context.state.bufs[bufnr] ---@type eve.t.context.state.buf.IItem|nil
     if buf == nil then
       local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
       local width = vim.api.nvim_strwidth(text) ---@type integer

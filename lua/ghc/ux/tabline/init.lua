@@ -1,7 +1,7 @@
 local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
 local tabline_dirty = true ---@type boolean
 
-local tabline ---@type t.fml.ux.INvimbar
+local tabline ---@type fml.t.ux.INvimbar
 tabline = fml.ux.Nvimbar.new({
   name = "tabline",
   component_sep = "",

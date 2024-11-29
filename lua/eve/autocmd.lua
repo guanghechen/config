@@ -11,10 +11,10 @@ end
 
 if std_os.is_mac() then
   local im = require("eve.std.im")
-  local previous_mode = nil ---@type t.eve.e.VimMode|nil
+  local previous_mode = nil ---@type eve.e.VimMode|nil
   vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     callback = function()
-      local current_mode = vim.fn.mode() ---@type t.eve.e.VimMode|nil
+      local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
       if previous_mode == "i" and current_mode == "n" then
         im.set_input_method("English")
       end

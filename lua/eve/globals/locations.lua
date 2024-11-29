@@ -6,8 +6,8 @@ local std_buf = require("eve.std.buf")
 
 local _initial_winnr = vim.api.nvim_get_current_win() ---@type integer
 local _initial_bufnr = vim.api.nvim_get_current_buf() ---@type integer
-local _current_bufnr = Observable.from_value(_initial_bufnr) ---@type t.eve.collection.IObservable
-local _current_winnr = Observable.from_value(_initial_winnr) ---@type t.eve.collection.IObservable
+local _current_bufnr = Observable.from_value(_initial_bufnr) ---@type eve.t.collection.IObservable
+local _current_winnr = Observable.from_value(_initial_winnr) ---@type eve.t.collection.IObservable
 local _current_buf_dirpath = path.cwd() ---@type string
 local _current_buf_filepath = nil ---@type string|nil
 
@@ -64,18 +64,18 @@ function M.set_current_winnr(winnr)
   end
 end
 
----@param subscriber                    t.eve.collection.ISubscriber
+---@param subscriber                    eve.t.collection.ISubscriber
 ---@param ignoreInitial                 ?boolean
 function M.watch_current_bufnr(subscriber, ignoreInitial)
-  ---@type t.eve.collection.IUnsubscribable
+  ---@type eve.t.collection.IUnsubscribable
   local unsubscribable = _current_bufnr:subscribe(subscriber, ignoreInitial)
   mvc.add_disposable(Disposable.from_unsubscribable(unsubscribable))
 end
 
----@param subscriber                    t.eve.collection.ISubscriber
+---@param subscriber                    eve.t.collection.ISubscriber
 ---@param ignoreInitial                 ?boolean
 function M.watch_current_winnr(subscriber, ignoreInitial)
-  ---@type t.eve.collection.IUnsubscribable
+  ---@type eve.t.collection.IUnsubscribable
   local unsubscribable = _current_winnr:subscribe(subscriber, ignoreInitial)
   mvc.add_disposable(Disposable.from_unsubscribable(unsubscribable))
 end

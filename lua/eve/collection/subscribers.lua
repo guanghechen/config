@@ -1,6 +1,6 @@
 local BatchHandler = require("eve.collection.batch_handler")
 
----@class eve.collection.Subscribers : t.eve.collection.ISubscribers
+---@class eve.collection.Subscribers : eve.t.collection.ISubscribers
 ---@field private ARRANGE_THRESHOLD     number
 ---@field private _disposed             boolean
 ---@field private _items                eve.collection.Subscribers.ISubscriberItem[]
@@ -8,7 +8,7 @@ local BatchHandler = require("eve.collection.batch_handler")
 local M = {}
 M.__index = M
 
----@type t.eve.collection.IUnsubscribable
+---@type eve.t.collection.IUnsubscribable
 local noop_unsubscribable = {
   unsubscribe = function(...) end,
 }
@@ -17,7 +17,7 @@ local noop_unsubscribable = {
 ---@field public ARRANGE_THRESHOLD      ?number
 
 ---@class eve.collection.Subscribers.ISubscriberItem
----@field subscriber                    t.eve.collection.ISubscriber
+---@field subscriber                    eve.t.collection.ISubscriber
 ---@field unsubscribed                  boolean
 
 ---@param props                         ?eve.collection.Subscribers.IProps
@@ -114,8 +114,8 @@ function M:notify(value, value_prev)
   handler:cleanup()
 end
 
----@param subscriber                    t.eve.collection.ISubscriber
----@return t.eve.collection.IUnsubscribable
+---@param subscriber                    eve.t.collection.ISubscriber
+---@return eve.t.collection.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:is_disposed() then
     return noop_unsubscribable
@@ -132,7 +132,7 @@ function M:subscribe(subscriber)
   table.insert(self._items, item)
   self._subscribing_count = self._subscribing_count + 1
 
-  ---@type t.eve.collection.IUnsubscribable
+  ---@type eve.t.collection.IUnsubscribable
   local unsubscribe = {
     unsubscribe = function()
       if item.unsubscribed then

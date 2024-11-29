@@ -11,7 +11,7 @@ local std_tab = require("eve.std.tab")
 local tmux = require("eve.std.tmux")
 local std_util = require("eve.std.util")
 
----@param bufs                          t.eve.context.data.buf.IItem[]
+---@param bufs                          eve.t.context.data.buf.IItem[]
 ---@return table<integer, integer>
 local function gen_real_bufnr_map(bufs)
   if type(bufs) ~= "table" then
@@ -39,7 +39,7 @@ local function gen_real_bufnr_map(bufs)
   return bufnr_2_real_bufnr
 end
 
----@param tabs                          t.eve.context.data.tab.IItem[]
+---@param tabs                          eve.t.context.data.tab.IItem[]
 ---@return table<integer, integer>
 local function gen_real_tabnr_map(tabs)
   if type(tabs) ~= "table" then
@@ -64,30 +64,30 @@ local function gen_real_tabnr_map(tabs)
   return tabnr_2_real_tabnr
 end
 
----@class eve.context.workspace : t.eve.context.workspace
+---@class eve.context.workspace : eve.t.context.workspace
 local M = {}
 
----@return t.eve.context.workspace.data
+---@return eve.t.context.workspace.data
 function M.defaults()
-  local bufs = {} ---@type t.eve.context.data.buf.IItem[]
-  local tabs = {} ---@type t.eve.context.data.tab.IItem[]
-  local wins = {} ---@type t.eve.context.data.win.IItem[]
+  local bufs = {} ---@type eve.t.context.data.buf.IItem[]
+  local tabs = {} ---@type eve.t.context.data.tab.IItem[]
+  local wins = {} ---@type eve.t.context.data.win.IItem[]
 
-  ---@type t.eve.context.data.frecency
+  ---@type eve.t.context.data.frecency
   local frecency = {
     files = { items = {} },
   }
 
-  ---@type t.eve.context.data.input_history
+  ---@type eve.t.context.data.input_history
   local input_history = {
     find_files = { present = 0, stack = {} },
     search_in_files = { present = 0, stack = {} },
   }
 
-  ---@type t.eve.collection.history.ISerializedData
+  ---@type eve.t.collection.history.ISerializedData
   local tab_history = { present = 0, stack = {} }
 
-  ---@type t.eve.context.workspace.data
+  ---@type eve.t.context.workspace.data
   local data = {
     bufs = bufs,
     tabs = tabs,
@@ -99,18 +99,18 @@ function M.defaults()
   return data
 end
 
----@return t.eve.context.workspace.data
+---@return eve.t.context.workspace.data
 function M.dump()
   if M.state == nil then
     error("[eve.context.workspace] the state is not initialized.")
     return M.defaults()
   end
 
-  local state = M.state ---@type t.eve.context.workspace.state
+  local state = M.state ---@type eve.t.context.workspace.state
 
-  local bufs = {} ---@type t.eve.context.data.buf.IItem[]
+  local bufs = {} ---@type eve.t.context.data.buf.IItem[]
   for bufnr, buf in pairs(state.bufs) do
-    ---@type t.eve.context.data.buf.IItem
+    ---@type eve.t.context.data.buf.IItem
     local item = {
       bufnr = bufnr,
       filename = buf.filename,
@@ -120,9 +120,9 @@ function M.dump()
     table.insert(bufs, item)
   end
 
-  local tabs = {} ---@type t.eve.context.data.tab.IItem[]
+  local tabs = {} ---@type eve.t.context.data.tab.IItem[]
   for tabnr, tab in pairs(state.tabs) do
-    ---@type t.eve.context.data.tab.IItem
+    ---@type eve.t.context.data.tab.IItem
     local item = {
       tabnr = tabnr,
       name = tab.name,
@@ -131,20 +131,20 @@ function M.dump()
     table.insert(tabs, item)
   end
 
-  ---@type t.eve.context.data.frecency
+  ---@type eve.t.context.data.frecency
   local frecency = {
     files = state.frecency.files:dump(),
   }
 
-  ---@type t.eve.context.data.input_history
+  ---@type eve.t.context.data.input_history
   local input_history = {
     find_files = state.input_history.find_files:dump(),
     search_in_files = state.input_history.search_in_files:dump(),
   }
 
-  local tab_history = state.tab_history:dump() ---@type t.eve.collection.history.ISerializedData
+  local tab_history = state.tab_history:dump() ---@type eve.t.collection.history.ISerializedData
 
-  ---@type t.eve.context.workspace.data
+  ---@type eve.t.context.workspace.data
   local data = {
     bufs = bufs,
     tabs = tabs,
@@ -156,18 +156,18 @@ function M.dump()
   return data
 end
 
----@param data                          t.eve.context.workspace.data
+---@param data                          eve.t.context.workspace.data
 ---@return nil
 function M.load(data)
   if M.state == nil then
-    ---@type t.eve.context.state.status
+    ---@type eve.t.context.state.status
     local status = {
       lsp_msg = Observable.from_value(""),
       tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
       winline_dirty_nr = Observable.from_value(0, std_util.falsy),
     }
 
-    ---@type t.eve.context.state.frecency
+    ---@type eve.t.context.state.frecency
     local frecency = {
       files = Frecency.new({
         items = {},
@@ -177,20 +177,20 @@ function M.load(data)
       }),
     }
 
-    ---@type t.eve.context.state.input_history
+    ---@type eve.t.context.state.input_history
     local input_history = {
       find_files = History.new({ name = "find_files", capacity = 100 }),
       search_in_files = History.new({ name = "search_in_files", capacity = 300 }),
     }
 
-    ---@type t.eve.collection.IAdvanceHistory
+    ---@type eve.t.collection.IAdvanceHistory
     local tab_history = AdvanceHistory.new({
       name = "tabs",
       capacity = constants.TAB_HISTORY_CAPACITY,
       validate = std_tab.is_valid,
     })
 
-    ---@type t.eve.context.workspace.state
+    ---@type eve.t.context.workspace.state
     local state = {
       bufs = {},
       tabs = {},
@@ -203,10 +203,10 @@ function M.load(data)
     M.state = state
   end
 
-  local state = M.state ---@type t.eve.context.workspace.state
+  local state = M.state ---@type eve.t.context.workspace.state
 
   --- bufs
-  local bufs = {} ---@type table<integer, t.eve.context.state.buf.IItem>
+  local bufs = {} ---@type table<integer, eve.t.context.state.buf.IItem>
   local bufnr_2_real_bufnr = gen_real_bufnr_map(data.bufs) ---@type table<integer, integer>
   local tabnr_2_real_tabnr = gen_real_tabnr_map(data.tabs) ---@type table<integer, integer>
 
@@ -219,7 +219,7 @@ function M.load(data)
       local filetype = vim.bo[real_bufnr].filetype ---@type string
       local fileicon, fileicon_hl = std_nvim.calc_fileicon(filename) ---@type string, string
 
-      ---@type t.eve.context.state.buf.IItem
+      ---@type eve.t.context.state.buf.IItem
       local buf = {
         fileicon_hl = fileicon_hl,
         fileicon = fileicon,
@@ -235,7 +235,7 @@ function M.load(data)
   state.bufs = bufs
 
   ---! tabs
-  local tabs = {} ---@type table<integer, t.eve.context.state.tab.IItem>
+  local tabs = {} ---@type table<integer, eve.t.context.state.tab.IItem>
   for _, item in ipairs(data.tabs) do
     local real_tabnr = type(item.tabnr) == "number" and tabnr_2_real_tabnr[item.tabnr] or nil
     if real_tabnr ~= nil then
@@ -250,7 +250,7 @@ function M.load(data)
       end
 
       local winnr_cur = vim.api.nvim_tabpage_get_win(real_tabnr) ---@type integer
-      ---@type t.eve.context.state.tab.IItem
+      ---@type eve.t.context.state.tab.IItem
       local tab = {
         name = item.name,
         bufnrs = bufnrs,
@@ -263,7 +263,7 @@ function M.load(data)
   state.tabs = tabs
 
   ---! wins
-  state.wins = {} ---@type table<integer, t.eve.context.state.win.IItem>
+  state.wins = {} ---@type table<integer, eve.t.context.state.win.IItem>
 
   ---! status
   state.status.lsp_msg:next("")
@@ -294,14 +294,14 @@ function M.load(data)
 end
 
 ---@param data                          any
----@return t.eve.context.workspace.data
+---@return eve.t.context.workspace.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type t.eve.context.workspace.data
+  local resolved = M.defaults() ---@type eve.t.context.workspace.data
 
   if type(data) ~= "table" then
     return resolved
   end
-  ---@cast data t.eve.context.workspace.data
+  ---@cast data eve.t.context.workspace.data
 
   if type(data.bufs) == "table" then
     resolved.bufs = data.bufs

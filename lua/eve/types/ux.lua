@@ -1,11 +1,11 @@
----@class t.eve.ux.IBoxDimension
+---@class eve.t.ux.IBoxDimension
 ---@field public row                    integer
 ---@field public col                    integer
 ---@field public width                  integer
 ---@field public height                 integer
 
----@class t.eve.ux.IBoxRestriction
----@field public position               t.eve.e.BoxPosition
+---@class eve.t.ux.IBoxRestriction
+---@field public position               eve.e.BoxPosition
 ---@field public rows                   integer
 ---@field public cols                   integer
 ---@field public row                    ?number
@@ -17,24 +17,24 @@
 ---@field public min_width              ?number
 ---@field public min_height             ?number
 
----@class t.eve.ux.IWidget
+---@class eve.t.ux.IWidget
 ---@field public name                   string|nil
----@field public statusline_items       t.eve.ux.widget.IStatuslineItem[]|nil
----@field public status                 fun(self: t.eve.ux.IWidget): t.eve.e.WidgetStatus
----@field public close                  fun(self: t.eve.ux.IWidget): nil
----@field public hide                   fun(self: t.eve.ux.IWidget): nil
----@field public show                   fun(self: t.eve.ux.IWidget): nil
----@field public resize                 fun(self: t.eve.ux.IWidget): nil
+---@field public statusline_items       eve.t.ux.widget.IStatuslineItem[]|nil
+---@field public status                 fun(self: eve.t.ux.IWidget): eve.e.WidgetStatus
+---@field public close                  fun(self: eve.t.ux.IWidget): nil
+---@field public hide                   fun(self: eve.t.ux.IWidget): nil
+---@field public show                   fun(self: eve.t.ux.IWidget): nil
+---@field public resize                 fun(self: eve.t.ux.IWidget): nil
 
----@class t.eve.ux.widget.IStatuslineItem
----@field public type                   t.eve.e.WidgetStatuslineItemType
----@field public state                  t.eve.collection.IObservable
+---@class eve.t.ux.widget.IStatuslineItem
+---@field public type                   eve.e.WidgetStatuslineItemType
+---@field public state                  eve.t.collection.IObservable
 ---@field public symbol                 string
 ---@field public callback_fn            string
 
----@class t.eve.ux.widget.IRawStatuslineItem
----@field public type                   t.eve.e.WidgetStatuslineItemType
+---@class eve.t.ux.widget.IRawStatuslineItem
+---@field public type                   eve.e.WidgetStatuslineItemType
 ---@field public desc                   string
----@field public state                  t.eve.collection.IObservable
+---@field public state                  eve.t.collection.IObservable
 ---@field public symbol                 string
 ---@field public callback               fun(): nil

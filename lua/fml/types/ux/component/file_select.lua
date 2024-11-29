@@ -1,36 +1,36 @@
----@class t.fml.ux.IFileSelect
----@field public change_dimension       fun(self: t.fml.ux.IFileSelect, dimension: t.fml.ux.search.IRawDimension): nil
----@field public change_input_title     fun(self: t.fml.ux.IFileSelect, title: string): nil
----@field public change_preview_title   fun(self: t.fml.ux.IFileSelect, title: string): nil
----@field public close                  fun(self: t.fml.ux.IFileSelect): nil
----@field public focus                  fun(self: t.fml.ux.IFileSelect): nil
----@field public get_item               fun(self: t.fml.ux.IFileSelect, uuid: string): t.fml.ux.select.IItem|nil
----@field public get_matched_items      fun(self: t.fml.ux.IFileSelect): t.fml.ux.select.IMatchedItem[]
----@field public get_winnr_input        fun(self: t.fml.ux.IFileSelect): integer|nil
----@field public get_winnr_main         fun(self: t.fml.ux.IFileSelect): integer|nil
----@field public get_winnr_preview      fun(self: t.fml.ux.IFileSelect): integer|nil
----@field public mark_data_dirty        fun(self: t.fml.ux.IFileSelect): nil
----@field public open                   fun(self: t.fml.ux.IFileSelect): nil
----@field public toggle                 fun(self: t.fml.ux.IFileSelect): nil
+---@class fml.t.ux.IFileSelect
+---@field public change_dimension       fun(self: fml.t.ux.IFileSelect, dimension: fml.t.ux.search.IRawDimension): nil
+---@field public change_input_title     fun(self: fml.t.ux.IFileSelect, title: string): nil
+---@field public change_preview_title   fun(self: fml.t.ux.IFileSelect, title: string): nil
+---@field public close                  fun(self: fml.t.ux.IFileSelect): nil
+---@field public focus                  fun(self: fml.t.ux.IFileSelect): nil
+---@field public get_item               fun(self: fml.t.ux.IFileSelect, uuid: string): fml.t.ux.select.IItem|nil
+---@field public get_matched_items      fun(self: fml.t.ux.IFileSelect): fml.t.ux.select.IMatchedItem[]
+---@field public get_winnr_input        fun(self: fml.t.ux.IFileSelect): integer|nil
+---@field public get_winnr_main         fun(self: fml.t.ux.IFileSelect): integer|nil
+---@field public get_winnr_preview      fun(self: fml.t.ux.IFileSelect): integer|nil
+---@field public mark_data_dirty        fun(self: fml.t.ux.IFileSelect): nil
+---@field public open                   fun(self: fml.t.ux.IFileSelect): nil
+---@field public toggle                 fun(self: fml.t.ux.IFileSelect): nil
 
----@alias t.fml.ux.file_select.IFetchData
----| fun(force: boolean): t.fml.ux.file_select.IData
+---@alias fml.t.ux.file_select.IFetchData
+---| fun(force: boolean): fml.t.ux.file_select.IData
 
----@alias t.fml.ux.file_select.IFetchPreviewData
----| fun(item: t.fml.ux.file_select.IItem): t.fml.ux.search.preview.IData|nil
+---@alias fml.t.ux.file_select.IFetchPreviewData
+---| fun(item: fml.t.ux.file_select.IItem): fml.t.ux.search.preview.IData|nil
 
----@alias t.fml.ux.file_select.IPatchPreviewData
----| fun(item: t.fml.ux.file_select.IItem, last_item: t.fml.ux.file_select.IItem, last_data: t.fml.ux.search.preview.IData): t.fml.ux.search.preview.IData
+---@alias fml.t.ux.file_select.IPatchPreviewData
+---| fun(item: fml.t.ux.file_select.IItem, last_item: fml.t.ux.file_select.IItem, last_data: fml.t.ux.search.preview.IData): fml.t.ux.search.preview.IData
 
----@alias t.fml.ux.file_select.IRenderItem
----| fun(item: t.fml.ux.file_select.IItem, match: t.fml.ux.select.IMatchedItem): string, t.eve.IHighlightInline[]
+---@alias fml.t.ux.file_select.IRenderItem
+---| fun(item: fml.t.ux.file_select.IItem, match: fml.t.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
 
----@class t.fml.ux.file_select.IData
+---@class fml.t.ux.file_select.IData
 ---@field public cwd                    string
----@field public items                  t.fml.ux.file_select.IRawItem[]
+---@field public items                  fml.t.ux.file_select.IRawItem[]
 ---@field public present_uuid           ?string
 
----@class t.fml.ux.file_select.IRawItem
+---@class fml.t.ux.file_select.IRawItem
 ---
 ---@field public filepath               string
 ---@field public group                  ?string
@@ -38,7 +38,7 @@
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class t.fml.ux.file_select.IItemData
+---@class fml.t.ux.file_select.IItemData
 ---@field public filepath               string
 ---@field public filename               string
 ---@field public icon                   string
@@ -46,11 +46,11 @@
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class t.fml.ux.file_select.IItem : t.fml.ux.select.IItem
----@field public data                   t.fml.ux.file_select.IItemData
+---@class fml.t.ux.file_select.IItem : fml.t.ux.select.IItem
+---@field public data                   fml.t.ux.file_select.IItemData
 
----@class t.fml.ux.file_select.IProvider
----@field public fetch_data             t.fml.ux.file_select.IFetchData
----@field public fetch_preview_data     ?t.fml.ux.file_select.IFetchPreviewData
----@field public patch_preview_data     ?t.fml.ux.file_select.IPatchPreviewData
----@field public render_item            ?t.fml.ux.file_select.IRenderItem
+---@class fml.t.ux.file_select.IProvider
+---@field public fetch_data             fml.t.ux.file_select.IFetchData
+---@field public fetch_preview_data     ?fml.t.ux.file_select.IFetchPreviewData
+---@field public patch_preview_data     ?fml.t.ux.file_select.IPatchPreviewData
+---@field public render_item            ?fml.t.ux.file_select.IRenderItem

@@ -3,18 +3,18 @@ local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local signcolumn = require("fml.ux.signcolumn")
 
----@class fml.ux.search.Main : t.fml.ux.search.IMain
+---@class fml.ux.search.Main : fml.t.ux.search.IMain
 ---@field protected _bufnr              integer|nil
----@field protected _keymaps            t.eve.IKeymap[]
----@field protected _render_scheduler   t.eve.collection.IScheduler
+---@field protected _keymaps            eve.t.IKeymap[]
+---@field protected _render_scheduler   eve.t.collection.IScheduler
 local M = {}
 M.__index = M
 
 ---@class fml.ux.search.main.IProps
 ---@field public delay_render           integer
----@field public keymaps                t.eve.IKeymap[]
----@field public state                  t.fml.ux.search.IState
----@field public on_rendered            ?t.fml.ux.search.IOnMainRendered
+---@field public keymaps                eve.t.IKeymap[]
+---@field public state                  fml.t.ux.search.IState
+---@field public on_rendered            ?fml.t.ux.search.IOnMainRendered
 
 ---@param props                         fml.ux.search.main.IProps
 ---@return fml.ux.search.Main
@@ -22,18 +22,18 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local delay_render = props.delay_render ---@type integer
-  local keymaps = props.keymaps ---@type t.eve.IKeymap[]
-  local state = props.state ---@type t.fml.ux.search.IState
-  local on_rendered = props.on_rendered ---@type t.fml.ux.search.IOnMainRendered|nil
+  local keymaps = props.keymaps ---@type eve.t.IKeymap[]
+  local state = props.state ---@type fml.t.ux.search.IState
+  local on_rendered = props.on_rendered ---@type fml.t.ux.search.IOnMainRendered|nil
 
-  local _last_items = nil ---@type t.fml.ux.search.IItem[]|nil
+  local _last_items = nil ---@type fml.t.ux.search.IItem[]|nil
   local _last_items_count = 0 ---@type integer
   local _last_drawed_bufnr = nil ---@type integer|nil
 
   ---@return nil
   local function render()
     local bufnr = self:create_buf_as_needed() ---@type integer
-    local last_items = _last_items ---@type t.fml.ux.search.IItem[]|nil
+    local last_items = _last_items ---@type fml.t.ux.search.IItem[]|nil
     local last_items_count = _last_items_count ---@type integer
     _last_items = state.items
     _last_items_count = #state.items
@@ -58,9 +58,9 @@ function M.new(props)
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 
-      local items = state.items ---@type t.fml.ux.search.IItem[]
+      local items = state.items ---@type fml.t.ux.search.IItem[]
       for lnum, item in ipairs(items) do
-        local highlights = item.highlights ---@type t.eve.IHighlightInline[]
+        local highlights = item.highlights ---@type eve.t.IHighlightInline[]
         for _, hl in ipairs(highlights) do
           vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.coll, hl.colr)
         end
@@ -93,7 +93,7 @@ function M.new(props)
     Subscriber.new({
       on_next = function()
         local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
+        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_main_dirty then
           render_scheduler:schedule()

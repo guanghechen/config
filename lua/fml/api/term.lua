@@ -1,4 +1,4 @@
-local terminal_map = {} ---@type table<string, t.fml.ux.ITerminal>
+local terminal_map = {} ---@type table<string, fml.t.ux.ITerminal>
 
 ---@class fml.api.term
 local M = {}
@@ -23,7 +23,7 @@ function M.create(params)
   local env = params.env ---@type table<string, string>|nil
   local permanent = params.permanent ---@type boolean|nil
 
-  local terminal = terminal_map[name] ---@type t.fml.ux.ITerminal|nil
+  local terminal = terminal_map[name] ---@type fml.t.ux.ITerminal|nil
   if terminal ~= nil then
     eve.reporter.error({
       from = "fml.api.term",
@@ -34,18 +34,18 @@ function M.create(params)
     return
   end
 
-  local keymaps = {} ---@type t.eve.IKeymap[]
+  local keymaps = {} ---@type eve.t.IKeymap[]
 
   local flag_quit_on_q = not not params.flag_quit_on_q ---@type boolean
   if flag_quit_on_q then
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local keymap = {
       modes = { "n" },
       key = "q",
       desc = "terminal: quit",
       callback = function()
         if terminal ~= nil then
-          ---@cast terminal t.fml.ux.ITerminal
+          ---@cast terminal fml.t.ux.ITerminal
           terminal:close()
         end
       end,
@@ -53,7 +53,7 @@ function M.create(params)
     table.insert(keymaps, keymap)
   end
 
-  ---@type t.fml.ux.ITerminal
+  ---@type fml.t.ux.ITerminal
   terminal = fml.ux.Terminal.new({
     command = command,
     command_cwd = cwd,
@@ -69,7 +69,7 @@ end
 ---@param name                          string
 ---@return nil
 function M.toggle(name)
-  local terminal = terminal_map[name] ---@type t.fml.ux.ITerminal
+  local terminal = terminal_map[name] ---@type fml.t.ux.ITerminal
   if terminal == nil then
     eve.reporter.error({
       from = "fml.api.term",
@@ -104,7 +104,7 @@ function M.toggle_or_create(params)
   end
 
   if selected_text and #selected_text > 1 then
-    local terminal = terminal_map[name] ---@type t.fml.ux.ITerminal
+    local terminal = terminal_map[name] ---@type fml.t.ux.ITerminal
     local winnr = terminal:get_winnr() ---@type integer|nil
     local bufnr = terminal:get_bufnr() ---@type integer|nil
     if winnr ~= nil and bufnr ~= nil then

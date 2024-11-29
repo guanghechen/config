@@ -16,7 +16,7 @@ local function create(bufnr)
   vim.schedule(function()
     fml.api.tab.refresh(tabnr)
 
-    local tab = eve.context.state.tabs[tabnr] ---@type t.eve.context.state.tab.IItem
+    local tab = eve.context.state.tabs[tabnr] ---@type eve.t.context.state.tab.IItem
     if bufnr ~= nil and tab ~= nil and #tab.bufnrs > 1 then
       tab.bufnrs = { bufnr }
       tab.bufnr_set = { [bufnr] = true }

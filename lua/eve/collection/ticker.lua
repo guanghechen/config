@@ -1,6 +1,6 @@
 local Observable = require("eve.collection.observable")
 
----@class eve.collection.Ticker : t.eve.collection.ITicker
+---@class eve.collection.Ticker : eve.t.collection.ITicker
 local M = {}
 M.__index = M
 

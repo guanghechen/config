@@ -250,9 +250,9 @@ local function open()
       width = 80,
     },
     fetch_items = function()
-      local items = {} ---@type t.fml.ux.select.IItem[]
+      local items = {} ---@type fml.t.ux.select.IItem[]
       for _, remote in ipairs(remotes) do
-        local item = {uuid = remote.url, text = remote.name .. " | " .. remote.url, data = remote }---@type t.fml.ux.select.IItem
+        local item = {uuid = remote.url, text = remote.name .. " | " .. remote.url, data = remote }---@type fml.t.ux.select.IItem
         table.insert(items, item)
       end
       return items

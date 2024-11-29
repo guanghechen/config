@@ -1,4 +1,4 @@
----@type t.eve.IKeymap[]
+---@type eve.t.IKeymap[]
 local keymaps = {
   {
     modes = { "n" },

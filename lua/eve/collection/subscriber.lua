@@ -1,16 +1,16 @@
 local util = require("eve.std.util")
 
----@class eve.collection.Subscriber : t.eve.collection.ISubscriber
+---@class eve.collection.Subscriber : eve.t.collection.ISubscriber
 ---@field private _on_next              fun(value: any, value_prev: any|nil):nil
 ---@field private _on_dispose           fun():nil
 local M = {}
 M.__index = M
 
----@class eve.collection.Subscriber.IProps
+---@class eve.collection.subscriber.IProps
 ---@field on_next                       fun(value: any, value_prev: any|nil):nil
 ---@field on_dispose                    ?fun():nil
 
----@param props eve.collection.Subscriber.IProps
+---@param props eve.collection.subscriber.IProps
 ---@return eve.collection.Subscriber
 function M.new(props)
   local self = setmetatable({}, M)

@@ -21,7 +21,7 @@ end) or ""
 ---@return string
 ---@return integer
 local function render_buf(bufnr, is_current, is_first)
-  local buf = eve.context.state.bufs[bufnr] ---@type t.eve.context.state.buf.IItem|nil
+  local buf = eve.context.state.bufs[bufnr] ---@type eve.t.context.state.buf.IItem|nil
   if buf == nil then
     return "", 0
   end
@@ -52,13 +52,13 @@ local function render_buf(bufnr, is_current, is_first)
   return eve.nvimbar.btn(hl_text, fn_active_buf, bufnr), width
 end
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "bufs",
   ---@diagnostic disable-next-line: unused-local
   render = function(context, remain_width)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+    local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
     if tab == nil or #tab.bufnrs < 1 then
       return "", 0
     end

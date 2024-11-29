@@ -1,7 +1,7 @@
 ---@return string
 local function get_filestatus()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+  local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
   local winnr = tab ~= nil and tab.winnr_cur:snapshot() or 0 ---@type integer
   local bufnr_status_line = vim.api.nvim_win_get_buf(winnr)
   local buffer_status_line = vim.b[bufnr_status_line]
@@ -22,7 +22,7 @@ local function get_filestatus()
   return ""
 end
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "filestatus",
   tight = true,

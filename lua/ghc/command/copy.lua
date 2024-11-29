@@ -75,7 +75,7 @@ eve.commander
             return "relative"
           end,
           fetch_items = function()
-            local items = {} ---@type t.fml.ux.select.IItem[]
+            local items = {} ---@type fml.t.ux.select.IItem[]
             for _, candidate in ipairs(copy_current_filepath_candidates) do
               table.insert(items, { uuid = candidate, text = candidate })
             end

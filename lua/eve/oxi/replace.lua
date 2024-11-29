@@ -63,11 +63,11 @@ local M = require("eve.oxi.mod")
 
 ---@class eve.oxi.replace.replace_file_preview_advance.IRawResult
 ---@field public text                   string
----@field public matches                t.eve.IMatchPoint[]
+---@field public matches                eve.t.IMatchPoint[]
 
 ---@class eve.oxi.replace.replace_file_preview_advance_by_matches.IRawResult
 ---@field public text                   string
----@field public matches                t.eve.IMatchPoint[]
+---@field public matches                eve.t.IMatchPoint[]
 
 ---@class eve.oxi.replace.replace_text_preview.IRawResult
 ---@field public text                   string
@@ -77,11 +77,11 @@ local M = require("eve.oxi.mod")
 
 ---@class eve.oxi.replace.replace_text_preview_advance.IRawResult
 ---@field public text                   string
----@field public matches                t.eve.IMatchPoint[]
+---@field public matches                eve.t.IMatchPoint[]
 
 ---@class eve.oxi.replace.replace_text_preview_advance_by_matches.IRawResult
 ---@field public text                   string
----@field public matches                t.eve.IMatchPoint[]
+---@field public matches                eve.t.IMatchPoint[]
 
 ---@class eve.oxi.replace.replace_file.IResult
 ---@field public success                boolean
@@ -91,7 +91,7 @@ local M = require("eve.oxi.mod")
 ---| boolean
 
 ---@class eve.oxi.replace.replace_file_advance_by_matches.IResult
----@field public locations              t.eve.IMatchLocation[]
+---@field public locations              eve.t.IMatchLocation[]
 
 ---@class eve.oxi.replace.replace_file_preview.IResult
 ---@field public lines                  string[]
@@ -104,12 +104,12 @@ local M = require("eve.oxi.mod")
 ---@class eve.oxi.replace.replace_file_preview_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                t.eve.IMatchPoint[]
+---@field public matches                eve.t.IMatchPoint[]
 
 ---@class eve.oxi.replace.replace_file_preview_advance_by_matches.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                t.eve.IMatchPoint[]
+---@field public matches                eve.t.IMatchPoint[]
 
 ---@class eve.oxi.replace.replace_text_preview.IResult
 ---@field public lines                  string[]
@@ -122,12 +122,12 @@ local M = require("eve.oxi.mod")
 ---@class eve.oxi.replace.replace_text_preview_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                t.eve.IMatchPoint[]
+---@field public matches                eve.t.IMatchPoint[]
 
 ---@class eve.oxi.replace.replace_text_preview_advance_by_matches.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                t.eve.IMatchPoint[]
+---@field public matches                eve.t.IMatchPoint[]
 
 ---@class eve.oxi.replace.replace_file.IParams
 ---@field public cwd                    string
@@ -269,7 +269,7 @@ end
 
 ---@param params                        eve.oxi.replace.replace_file_advance_by_matches.IParams
 ---@return boolean
----@return t.eve.IMatchLocation[]
+---@return eve.t.IMatchLocation[]
 function M.replace_file_advance_by_matches(params)
   local search_pattern = params.search_pattern ---@type string
   local filepath = path.resolve(params.cwd, params.filepath) ---@type string

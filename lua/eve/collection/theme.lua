@@ -1,7 +1,7 @@
 local path = require("eve.std.path")
 
----@class eve.collection.Theme : t.eve.collection.ITheme
----@field private hlgroup_map          table<string, t.eve.collection.theme.IHlgroup>
+---@class eve.collection.Theme : eve.t.collection.ITheme
+---@field private hlgroup_map          table<string, eve.t.collection.theme.IHlgroup>
 local M = {}
 M.__index = M
 
@@ -12,7 +12,7 @@ function M.new()
   return self
 end
 
----@param params                        t.eve.collection.theme.IApplyParams
+---@param params                        eve.t.collection.theme.IApplyParams
 ---@return nil
 function M:apply(params)
   local nsnr = params.nsnr ---@type integer
@@ -22,14 +22,14 @@ function M:apply(params)
 end
 
 ---@param hlname                        string
----@param hlgroup                       t.eve.collection.theme.IHlgroup
+---@param hlgroup                       eve.t.collection.theme.IHlgroup
 ---@return eve.collection.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlgroup_map                   table<string, t.eve.collection.theme.IHlgroup|nil>
+---@param hlgroup_map                   table<string, eve.t.collection.theme.IHlgroup|nil>
 ---@return eve.collection.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do
@@ -40,7 +40,7 @@ function M:registers(hlgroup_map)
   return self
 end
 
----@param params                        t.eve.collection.theme.ICompileParams
+---@param params                        eve.t.collection.theme.ICompileParams
 ---@return nil
 function M:compile(params)
   local filepath = params.filepath ---@type string

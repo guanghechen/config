@@ -17,7 +17,7 @@ local fn_toggle_tabs_folded = eve.G.register_anonymous_fn(function()
   vim.cmd("redrawtabline")
 end) or ""
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "tabs",
   will_change = function()

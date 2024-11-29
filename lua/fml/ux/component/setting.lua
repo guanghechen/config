@@ -2,13 +2,13 @@ local json = require("eve.std.json")
 local reporter = require("eve.std.reporter")
 local Textarea = require("fml.ux.component.textarea")
 
----@class fml.ux.Setting : t.fml.ux.ISetting, fml.ux.Textarea
+---@class fml.ux.Setting : fml.t.ux.ISetting, fml.ux.Textarea
 local M = {}
 M.__index = M
 setmetatable(M, { __index = Textarea })
 
 ---@class fml.ux.setting.IProps
----@field public position               t.eve.e.BoxPosition
+---@field public position               eve.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -16,29 +16,29 @@ setmetatable(M, { __index = Textarea })
 ---@field public max_height             ?number
 ---@field public min_width              ?number
 ---@field public min_height             ?number
----@field public keymaps                ?t.eve.IKeymap[]
+---@field public keymaps                ?eve.t.IKeymap[]
 ---@field public win_opts               ?table<string, any>
----@field public validate               ?fun(value: t.eve.T): string|nil
+---@field public validate               ?fun(value: eve.t.T): string|nil
 ---@field public on_close               ?fun(): nil
----@field public on_confirm             fun(value: t.eve.T): boolean
+---@field public on_confirm             fun(value: eve.t.T): boolean
 
 ---@param props                         fml.ux.setting.IProps
 ---@return fml.ux.Setting
 function M.new(props)
-  local position = props.position ---@type t.eve.e.BoxPosition
+  local position = props.position ---@type eve.e.BoxPosition
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil
   local max_height = props.max_height ---@type number|nil
   local min_width = props.min_width ---@type number|nil
   local min_height = props.min_height ---@type number|nil
-  local keymaps = props.keymaps or {} ---@type t.eve.IKeymap[]
+  local keymaps = props.keymaps or {} ---@type eve.t.IKeymap[]
   local title = props.title ---@type string|nil
   local win_opts = props.win_opts or {} ---@type table<string, any>
 
-  local validate_from_props = props.validate ---@type (fun(value: t.eve.T): string)|nil
+  local validate_from_props = props.validate ---@type (fun(value: eve.t.T): string)|nil
   local on_close_from_props = props.on_close ---@type (fun(): nil)
-  local on_confirm_from_props = props.on_confirm ---@type fun(text: t.eve.T): boolean
+  local on_confirm_from_props = props.on_confirm ---@type fun(text: eve.t.T): boolean
 
   ---@param lines                       string[]
   ---@return string|nil
@@ -101,11 +101,11 @@ function M.new(props)
   return self
 end
 
----@param params                        t.fml.ux.setting.IOpenParams
+---@param params                        fml.t.ux.setting.IOpenParams
 ---@return nil
 function M:open(params)
   local lines = json.stringify_prettier_lines(params.initial_value) ---@type string[]
-  ---@type t.fml.ux.textarea.IOpenParams
+  ---@type fml.t.ux.textarea.IOpenParams
   local opts = {
     initial_lines = lines,
     row = params.row,

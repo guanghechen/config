@@ -4,7 +4,7 @@ local fileformat_text_map = {
   unix = "LF",
 }
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "fileformat",
   condition = function()

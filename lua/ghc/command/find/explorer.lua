@@ -117,8 +117,8 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = Observable.from_value(eve.path.normalize(initial_dirpath)) ---@type t.eve.collection.IObservable
-local _select = nil ---@type t.fml.ux.ISelect|nil
+local state_cwd = Observable.from_value(eve.path.normalize(initial_dirpath)) ---@type eve.t.collection.IObservable
+local _select = nil ---@type fml.t.ux.ISelect|nil
 
 ---@return string
 local function gen_title()
@@ -146,14 +146,14 @@ state_cwd:subscribe(
   true
 )
 
----@return t.fml.ux.ISelect
+---@return fml.t.ux.ISelect
 local function get_select()
   if _select == nil then
-    local frecency = eve.context.state.frecency.files ---@type t.eve.collection.IFrecency
-    local input_history = eve.context.state.input_history.find_files ---@type t.eve.collection.IHistory
+    local frecency = eve.context.state.frecency.files ---@type eve.t.collection.IFrecency
+    local input_history = eve.context.state.input_history.find_files ---@type eve.t.collection.IHistory
 
     local main_width = 0.4 ---@type number
-    ---@type t.fml.ux.search.IRawDimension
+    ---@type fml.t.ux.search.IRawDimension
     local dimension = {
       height = 0.8,
       max_height = 1,
@@ -162,7 +162,7 @@ local function get_select()
       width_preview = 0.45,
     }
 
-    ---@type t.fml.ux.select.IProvider
+    ---@type fml.t.ux.select.IProvider
     local provider = {
       fetch_data = function(force)
         local dirpath = eve.path.normalize(state_cwd:snapshot()) ---@type string
@@ -170,27 +170,27 @@ local function get_select()
         local diritem = fetch_diritem(dirpath, force) ---@type ghc.command.find.explorer.IDirItem
         fetch_diritem(parent_dirpath, force)
 
-        ---@type t.fml.ux.select.IItem[]
+        ---@type fml.t.ux.select.IItem[]
         local items = {
           --- { group = nil, uuid = dirpath, text = "./" },
           { group = nil, uuid = parent_dirpath, text = "../" },
         }
         for _, fileitem in ipairs(diritem.items) do
           local filename = fileitem.type == "directory" and fileitem.name .. "/" or fileitem.name ---@type string
-          local item = { group = nil, uuid = fileitem.path, text = filename } ---@type t.fml.ux.select.IItem
+          local item = { group = nil, uuid = fileitem.path, text = filename } ---@type fml.t.ux.select.IItem
           table.insert(items, item)
         end
 
-        ---@type t.fml.ux.select.IData
+        ---@type fml.t.ux.select.IData
         return { items = items, cursor_uuid = #items > 1 and items[2].uuid or nil }
       end,
       fetch_preview_data = function(item)
         local fileitem = file_datamap[item.uuid] ---@type ghc.command.find.explorer.IFileItem|nil
         if fileitem == nil then
           local lines = { "  Cannot found the file.  " } ---@type string[]
-          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type t.eve.IHighlight[]
+          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
 
-          ---@type t.fml.ux.search.preview.IData
+          ---@type fml.t.ux.search.preview.IData
           return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
         end
 
@@ -198,9 +198,9 @@ local function get_select()
         local diritem = dir_datamap[dirpath] ---@type ghc.command.find.explorer.IDirItem|nil
         if diritem == nil then
           local lines = { "  Cannot found the parent directory.  " } ---@type string[]
-          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type t.eve.IHighlight[]
+          local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
 
-          ---@type t.fml.ux.search.preview.IData
+          ---@type fml.t.ux.search.preview.IData
           return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
         end
 
@@ -211,7 +211,7 @@ local function get_select()
             local lines = eve.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
             local title = eve.path.relative(eve.path.cwd(), item.uuid, false) ---@type string
 
-            ---@type t.fml.ux.search.preview.IData
+            ---@type fml.t.ux.search.preview.IData
             return {
               lines = lines,
               highlights = {},
@@ -223,7 +223,7 @@ local function get_select()
           end
         elseif fileitem.type == "directory" then
           local lines = {} ---@type string[]
-          local highlights = {} ---@type t.eve.IHighlight[]
+          local highlights = {} ---@type eve.t.IHighlight[]
           local c_diritem = fetch_diritem(fileitem.path, false) ---@type ghc.command.find.explorer.IDirItem
           for lnum, c_fileitem in ipairs(c_diritem.items) do
             local width = 0 ---@type integer
@@ -292,14 +292,14 @@ local function get_select()
             title = eve.path.normalize(item.uuid)
           end
 
-          ---@type t.fml.ux.search.preview.IData
+          ---@type fml.t.ux.search.preview.IData
           return { lines = lines, highlights = highlights, filetype = nil, title = title }
         end
 
         local lines = { "  Not a text file, cannot preview." } ---@type string[]
-        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type t.eve.IHighlight[]
+        local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
 
-        ---@type t.fml.ux.search.preview.IData
+        ---@type fml.t.ux.search.preview.IData
         return { lines = lines, highlights = highlights, filetype = nil, title = item.text, lnum = 1, col = 0 }
       end,
       render_item = function(item, match)
@@ -314,7 +314,7 @@ local function get_select()
           return item.text, {}
         end
 
-        local highlights = {} ---@type t.eve.IHighlightInline[]
+        local highlights = {} ---@type eve.t.IHighlightInline[]
         local width = 0 ---@type integer
         local text = "" ---@type string
         local filename = ((item.text == "../") or (item.text == "./")) and item.text
@@ -346,7 +346,7 @@ local function get_select()
           hlname = fileitem.type == "directory" and "f_fe_name_dir" or "f_fe_name_file",
         })
         for _, piece in ipairs(match.matches) do
-          ---@type t.eve.IHighlightInline
+          ---@type eve.t.IHighlightInline
           local highlight = { coll = width + piece.l, colr = width + piece.r, hlname = "f_fe_match" }
           table.insert(highlights, highlight)
         end
@@ -383,7 +383,7 @@ local function get_select()
       end,
     }
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local common_keymaps = {
       {
         modes = { "n", "v" },
@@ -396,13 +396,13 @@ local function get_select()
       },
     }
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local input_keymaps = vim.list_slice(common_keymaps)
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local main_keymaps = vim.list_slice(common_keymaps)
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local preview_keymaps = vim.list_slice(common_keymaps)
 
     _select = fml.ux.Select.new({
@@ -454,7 +454,7 @@ eve.commander.register({
       state_cwd:next(win_detail.dirpath)
     end
 
-    local select = get_select() ---@type t.fml.ux.ISelect
+    local select = get_select() ---@type fml.t.ux.ISelect
     select:open()
   end,
 })

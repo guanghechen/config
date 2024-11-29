@@ -1,10 +1,10 @@
 local api = require("ghc.command.search.files.api")
 local state = require("ghc.command.search.files.state")
 
----@param scope                         t.eve.e.SearchScope
+---@param scope                         eve.e.SearchScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = eve.context.state.search.scope:snapshot() ---@type t.eve.e.SearchScope
+  local scope_current = eve.context.state.search.scope:snapshot() ---@type eve.e.SearchScope
   if scope_current ~= scope then
     eve.context.state.search.scope:next(scope)
   end
@@ -142,8 +142,8 @@ end
 
 ---@return nil
 function M.replace_file()
-  local search = state.get_search() ---@type t.fml.ux.search.ISearch
-  local item = search.state:get_current() ---@type t.fml.ux.search.IItem|nil
+  local search = state.get_search() ---@type fml.t.ux.search.ISearch
+  local item = search.state:get_current() ---@type fml.t.ux.search.IItem|nil
   if item ~= nil then
     api.replace_file(item.uuid)
     return
@@ -157,7 +157,7 @@ end
 
 ---@return nil
 function M.send_to_qflist()
-  local quickfix_items = api.gen_quickfix_items() ---@type t.eve.IQuickFixItem[]
+  local quickfix_items = api.gen_quickfix_items() ---@type eve.t.IQuickFixItem[]
   if #quickfix_items > 0 then
     state.close()
 
@@ -192,7 +192,7 @@ end
 
 ---@return nil
 function M.toggle_scope()
-  local next_scope = fml.api.search.get_scope_carousel_next() ---@type t.eve.e.SearchScope
+  local next_scope = fml.api.search.get_scope_carousel_next() ---@type eve.e.SearchScope
   change_scope(next_scope)
 end
 

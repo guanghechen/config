@@ -18,7 +18,7 @@ local status_icon_map = {
 
 local last_status = nil ---@type string|nil
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "copilot",
   condition = function()

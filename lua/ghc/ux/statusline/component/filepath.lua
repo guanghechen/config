@@ -1,4 +1,4 @@
----@param context                       t.fml.ux.nvimbar.IContext
+---@param context                       fml.t.ux.nvimbar.IContext
 ---@return string
 local function get_filepath(context)
   local cwd = context.cwd ---@type string
@@ -16,7 +16,7 @@ local function get_filepath(context)
   return context.fileicon .. " " .. relative_to_cwd
 end
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "filepath",
   condition = function(context)

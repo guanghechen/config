@@ -3,15 +3,15 @@ local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 
 ---@class eve.std.im
----@field public get_input_method   fun(): t.eve.e.InputMethod|nil
----@field public set_input_method   fun(input_method: t.eve.e.InputMethod): nil
+---@field public get_input_method   fun(): eve.e.InputMethod|nil
+---@field public set_input_method   fun(input_method: eve.e.InputMethod): nil
 local M = {}
 
 if os.is_mac() then
   local app_home = path.locate_app_config_home("guanghechen")
   local script_path = path.join(app_home, "osx/script/im-select/im-select")
 
-  ---@return t.eve.e.InputMethod|nil
+  ---@return eve.e.InputMethod|nil
   function M.get_input_method()
     if not vim.fn.executable(script_path) then
       reporter.error({
@@ -56,7 +56,7 @@ if os.is_mac() then
     })
   end
 
-  ---@param input_method                t.eve.e.InputMethod
+  ---@param input_method                eve.e.InputMethod
   ---@return nil
   function M.set_input_method(input_method)
     if not vim.fn.executable(script_path) then

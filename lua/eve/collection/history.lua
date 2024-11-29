@@ -2,31 +2,31 @@ local CircularStack = require("eve.collection.circular_stack")
 local reporter = require("eve.std.reporter")
 local util = require("eve.std.util")
 
----@class eve.collection.History : t.eve.collection.IHistory
+---@class eve.collection.History : eve.t.collection.IHistory
 ---@field public name                   string
----@field public equals                 t.eve.IEquals
+---@field public equals                 eve.t.IEquals
 ---@field protected _present            integer
----@field protected _stack              t.eve.collection.ICircularStack
+---@field protected _stack              eve.t.collection.ICircularStack
 local M = {}
 M.__index = M
 
 ---@class eve.collection.history.IDeserializeProps
----@field public data                   t.eve.collection.history.ISerializedData
+---@field public data                   eve.t.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
----@field public equals                 ?t.eve.IEquals
+---@field public equals                 ?eve.t.IEquals
 
 ---@class eve.collection.history.IProps
 ---@field public name                   string
 ---@field public capacity               integer
----@field public equals                 ?t.eve.IEquals
+---@field public equals                 ?eve.t.IEquals
 
 ---@param props                         eve.collection.history.IProps
 ---@return eve.collection.History
 function M.new(props)
   local name = props.name ---@type string
   local capacity = props.capacity ---@type integer
-  local equals = props.equals or util.shallow_equals ---@type t.eve.IEquals
+  local equals = props.equals or util.shallow_equals ---@type eve.t.IEquals
 
   local self = setmetatable({}, M)
   self.name = name
@@ -39,26 +39,26 @@ end
 ---@param props                         eve.collection.history.IDeserializeProps
 ---@return eve.collection.History
 function M.deserialize(props)
-  local data = props.data ---@type t.eve.collection.history.ISerializedData
+  local data = props.data ---@type eve.t.collection.history.ISerializedData
 
   local self = setmetatable({}, M)
   self.name = props.name
-  self.equals = props.equals or util.shallow_equals ---@type t.eve.IEquals
+  self.equals = props.equals or util.shallow_equals ---@type eve.t.IEquals
   self._stack = CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
 end
 
 ---@param step                          ?integer
----@return t.eve.T|nil
+---@return eve.t.T|nil
 ---@return boolean
 function M:backward(step)
   local index = self._present - math.max(1, step or 1) ---@type integer
-  local element, present = self:go(index) ---@type t.eve.T|nil, integer
+  local element, present = self:go(index) ---@type eve.t.T|nil, integer
   return element, present <= 1
 end
 
----@return t.eve.T|nil
+---@return eve.t.T|nil
 function M:bottom()
   return self._stack:at(1)
 end
@@ -74,21 +74,21 @@ function M:clear()
   self._stack:clear()
 end
 
----@return t.eve.T[]
+---@return eve.t.T[]
 function M:collect()
   return self._stack:collect()
 end
 
----@return t.eve.collection.history.ISerializedData
+---@return eve.t.collection.history.ISerializedData
 function M:dump()
-  ---@type t.eve.collection.history.ISerializedData
+  ---@type eve.t.collection.history.ISerializedData
   return {
     present = self._present,
     stack = self._stack:collect(),
   }
 end
 
----@param params                        t.eve.collection.history.IForkParams
+---@param params                        eve.t.collection.history.IForkParams
 ---@return eve.collection.History
 function M:fork(params)
   local instance = setmetatable({}, M)
@@ -100,19 +100,19 @@ function M:fork(params)
 end
 
 ---@param step                          ?integer
----@return t.eve.T|nil
+---@return eve.t.T|nil
 ---@return boolean
 function M:forward(step)
   local index = self._present + math.max(1, step or 1) ---@type integer
-  local element, present = self:go(index) ---@type t.eve.T|nil, integer
+  local element, present = self:go(index) ---@type eve.t.T|nil, integer
   return element, present == self._stack:size()
 end
 
 ---@param index                         integer
----@return t.eve.T|nil
+---@return eve.t.T|nil
 ---@return integer
 function M:go(index)
-  local stack = self._stack ---@type t.eve.collection.ICircularStack
+  local stack = self._stack ---@type eve.t.collection.ICircularStack
   local present = math.min(stack:size(), math.max(1, index)) ---@type integer
   self._present = present
   return stack:at(present), present
@@ -133,28 +133,28 @@ function M:is_top()
   return self._present == self._stack:size()
 end
 
----@return fun(): t.eve.T, integer
+---@return fun(): eve.t.T, integer
 function M:iterator()
-  local stack = self._stack ---@type t.eve.collection.ICircularStack
+  local stack = self._stack ---@type eve.t.collection.ICircularStack
   return stack:iterator()
 end
 
----@return fun(): t.eve.T, integer
+---@return fun(): eve.t.T, integer
 function M:iterator_reverse()
-  local stack = self._stack ---@type t.eve.collection.ICircularStack
+  local stack = self._stack ---@type eve.t.collection.ICircularStack
   return stack:iterator_reverse()
 end
 
----@param data                          t.eve.collection.history.ISerializedData
+---@param data                          eve.t.collection.history.ISerializedData
 ---@return nil
 function M:load(data)
-  local stack = data.stack ---@type t.eve.T[]
+  local stack = data.stack ---@type eve.t.T[]
   local present = data.present ---@type integer
   self._stack:reset(stack)
   self:go(present or math.huge)
 end
 
----@return t.eve.T|nil
+---@return eve.t.T|nil
 ---@return integer
 function M:present()
   return self._stack:at(self._present), self._present
@@ -163,7 +163,7 @@ end
 ---@return nil
 function M:print()
   local present = self._present ---@type integer
-  local stack = self._stack:collect() ---@type t.eve.T
+  local stack = self._stack:collect() ---@type eve.t.T
   reporter.info({
     from = "eve.collection.history",
     subject = "print",
@@ -171,18 +171,18 @@ function M:print()
   })
 end
 
----@param element                       t.eve.T
+---@param element                       eve.t.T
 ---@return nil
 function M:push(element)
   local present = self._present ---@type integer
-  local stack = self._stack ---@type t.eve.collection.ICircularStack
-  local el_present = stack:at(present) ---@type t.eve.T|nil
+  local stack = self._stack ---@type eve.t.collection.ICircularStack
+  local el_present = stack:at(present) ---@type eve.t.T|nil
   if el_present ~= nil and self.equals(el_present, element) then
     return
   end
 
   if present < stack:size() then
-    local el_next = stack:at(present + 1) ---@type t.eve.T
+    local el_next = stack:at(present + 1) ---@type eve.t.T
     if self.equals(el_next, element) then
       self._present = present + 1
       return
@@ -196,10 +196,10 @@ function M:push(element)
   self._present = stack:size()
 end
 
----@param filter                        t.eve.IFilter
+---@param filter                        eve.t.IFilter
 ---@return nil
 function M:rearrange(filter)
-  local stack = self._stack ---@type t.eve.collection.ICircularStack
+  local stack = self._stack ---@type eve.t.collection.ICircularStack
   local old_present = self._present ---@type integer
   local new_present = 0 ---@type integer
   local idx = 0 ---@type integer
@@ -224,17 +224,17 @@ function M:size()
   return self._stack:size()
 end
 
----@return t.eve.T|nil
+---@return eve.t.T|nil
 ---@return integer
 function M:top()
-  local stack = self._stack ---@type t.eve.collection.ICircularStack
+  local stack = self._stack ---@type eve.t.collection.ICircularStack
   return stack:top(), stack:size()
 end
 
----@param element                       t.eve.T
+---@param element                       eve.t.T
 ---@return nil
 function M:update_top(element)
-  local stack = self._stack ---@type t.eve.collection.ICircularStack
+  local stack = self._stack ---@type eve.t.collection.ICircularStack
   local present = stack:size()
   self._present = present
   stack:update(present, element)

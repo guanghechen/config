@@ -2,7 +2,7 @@ local History = require("eve.collection.history")
 local constants = require("eve.std.constants")
 local util = require("eve.std.util")
 
----@type t.eve.collection.IHistory
+---@type eve.t.collection.IHistory
 local qflist_history = History.new({
   name = "qflist",
   capacity = 100,
@@ -13,12 +13,12 @@ local M = {}
 
 ---@return nil
 function M.backward()
-  local qflist_cur = qflist_history:present() ---@type t.eve.IQuickFixItem[]|nil
+  local qflist_cur = qflist_history:present() ---@type eve.t.IQuickFixItem[]|nil
   if qflist_cur == nil then
     return
   end
 
-  local qflist_prev = qflist_history:backward() ---@type t.eve.IQuickFixItem[]|nil
+  local qflist_prev = qflist_history:backward() ---@type eve.t.IQuickFixItem[]|nil
   if qflist_prev == nil or qflist_prev == qflist_cur then
     return
   end
@@ -30,12 +30,12 @@ end
 
 ---@return nil
 function M.forward()
-  local qflist_cur = qflist_history:present() ---@type t.eve.IQuickFixItem[]|nil
+  local qflist_cur = qflist_history:present() ---@type eve.t.IQuickFixItem[]|nil
   if qflist_cur == nil then
     return
   end
 
-  local qflist_next = qflist_history:forward() ---@type t.eve.IQuickFixItem[]|nil
+  local qflist_next = qflist_history:forward() ---@type eve.t.IQuickFixItem[]|nil
   if qflist_next == nil or qflist_next == qflist_cur then
     return
   end
@@ -71,7 +71,7 @@ function M.open_qflist(prefer_trouble)
   vim.cmd([[botright copen]])
 end
 
----@param qflist                        t.eve.IQuickFixItem[]|nil
+---@param qflist                        eve.t.IQuickFixItem[]|nil
 function M.set_qflist(qflist)
   if qflist ~= nil or #qflist > 0 then
     vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
@@ -81,14 +81,14 @@ function M.set_qflist(qflist)
   end
 end
 
----@param qflist                        t.eve.IQuickFixItem[]|nil
+---@param qflist                        eve.t.IQuickFixItem[]|nil
 ---@return nil
 function M.push(qflist)
   if qflist == nil or #qflist < 1 then
     return
   end
 
-  local qflist_cur = qflist_history:present() ---@type t.eve.IQuickFixItem[]|nil
+  local qflist_cur = qflist_history:present() ---@type eve.t.IQuickFixItem[]|nil
   if qflist_cur == nil or not util.deep_equals(qflist_cur, qflist) then
     qflist_history:push(qflist)
     M.set_qflist(qflist)

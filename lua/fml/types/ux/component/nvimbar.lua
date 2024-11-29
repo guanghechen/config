@@ -1,7 +1,7 @@
----@class t.fml.ux.nvimbar.IPresetContext
+---@class fml.t.ux.nvimbar.IPresetContext
 ---@field public winnr                  ?integer
 
----@class t.fml.ux.nvimbar.IContext
+---@class fml.t.ux.nvimbar.IContext
 ---@field public tabnr                  integer
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
@@ -9,33 +9,33 @@
 ---@field public filepath               string
 ---@field public fileicon               string
 ---@field public filetype               string
----@field public mode                   t.eve.e.VimModeName
+---@field public mode                   eve.e.VimModeName
 ---@field public mode_name              string
 
----@class t.fml.ux.nvimbar.IRawComponent
+---@class fml.t.ux.nvimbar.IRawComponent
 ---@field public name                   string
----@field public render                 fun(context: t.fml.ux.nvimbar.IContext, remain_width: integer): string, integer
+---@field public render                 fun(context: fml.t.ux.nvimbar.IContext, remain_width: integer): string, integer
 ---@field public tight                  ?boolean
----@field public condition              ?fun(context: t.fml.ux.nvimbar.IContext, remain_width: integer): boolean
----@field public will_change            ?fun(context: t.fml.ux.nvimbar.IContext, prev_context: t.fml.ux.nvimbar.IContext|nil, remain_width: integer): boolean
+---@field public condition              ?fun(context: fml.t.ux.nvimbar.IContext, remain_width: integer): boolean
+---@field public will_change            ?fun(context: fml.t.ux.nvimbar.IContext, prev_context: fml.t.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
----@class t.fml.ux.nvimbar.IComponent
+---@class fml.t.ux.nvimbar.IComponent
 ---@field public enabled                boolean
 ---@field public last_result_text       string
 ---@field public last_result_width      integer
 ---@field public tight                  boolean
----@field public render                 fun(context: t.fml.ux.nvimbar.IContext, remain_width: integer): string, integer
----@field public condition              fun(context: t.fml.ux.nvimbar.IContext, remain_width: integer): boolean
----@field public will_change            fun(context: t.fml.ux.nvimbar.IContext, prev_context: t.fml.ux.nvimbar.IContext|nil, remain_width: integer): boolean
+---@field public render                 fun(context: fml.t.ux.nvimbar.IContext, remain_width: integer): string, integer
+---@field public condition              fun(context: fml.t.ux.nvimbar.IContext, remain_width: integer): boolean
+---@field public will_change            fun(context: fml.t.ux.nvimbar.IContext, prev_context: fml.t.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
----@class t.fml.ux.nvimbar.IItem
+---@class fml.t.ux.nvimbar.IItem
 ---@field public name                   string
----@field public position               t.eve.e.NvimbarCompPosition
+---@field public position               eve.e.NvimbarCompPosition
 
----@class t.fml.ux.INvimbar
----@field public cancel_render          fun(self: t.fml.ux.INvimbar): t.fml.ux.INvimbar
----@field public disable                fun(self: t.fml.ux.INvimbar, name: string): t.fml.ux.INvimbar
----@field public enable                 fun(self: t.fml.ux.INvimbar, name: string): t.fml.ux.INvimbar
----@field public place                  fun(self: t.fml.ux.INvimbar, name: string, position: t.eve.e.NvimbarCompPosition): t.fml.ux.INvimbar
----@field public register               fun(self: t.fml.ux.INvimbar, name: string, component: t.fml.ux.nvimbar.IRawComponent, enabled?: boolean): t.fml.ux.INvimbar
----@field public render                 fun(self: t.fml.ux.INvimbar, force: boolean): string
+---@class fml.t.ux.INvimbar
+---@field public cancel_render          fun(self: fml.t.ux.INvimbar): fml.t.ux.INvimbar
+---@field public disable                fun(self: fml.t.ux.INvimbar, name: string): fml.t.ux.INvimbar
+---@field public enable                 fun(self: fml.t.ux.INvimbar, name: string): fml.t.ux.INvimbar
+---@field public place                  fun(self: fml.t.ux.INvimbar, name: string, position: eve.e.NvimbarCompPosition): fml.t.ux.INvimbar
+---@field public register               fun(self: fml.t.ux.INvimbar, name: string, component: fml.t.ux.nvimbar.IRawComponent, enabled?: boolean): fml.t.ux.INvimbar
+---@field public render                 fun(self: fml.t.ux.INvimbar, force: boolean): string

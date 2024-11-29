@@ -1,16 +1,16 @@
----@class t.eve.collection.ICircularStack
----@field public capacity               fun(self: t.eve.collection.ICircularStack): integer
----@field public size                   fun(self: t.eve.collection.ICircularStack): integer
----@field public at                     fun(self: t.eve.collection.ICircularStack, index: integer): t.eve.T|nil
----@field public clear                  fun(self: t.eve.collection.ICircularStack): nil
----@field public collect                fun(self: t.eve.collection.ICircularStack): t.eve.T[]
----@field public count                  fun(self: t.eve.collection.ICircularStack, filter: t.eve.IFilter): integer
----@field public fork                   fun(self: t.eve.collection.ICircularStack, filter: t.eve.IFilter): t.eve.collection.ICircularStack
----@field public iterator               fun(self: t.eve.collection.ICircularStack): fun(): t.eve.T|nil
----@field public iterator_reverse       fun(self: t.eve.collection.ICircularStack): fun(): t.eve.T|nil
----@field public pop                    fun(self: t.eve.collection.ICircularStack): t.eve.T|nil
----@field public push                   fun(self: t.eve.collection.ICircularStack, element: t.eve.T): nil
----@field public rearrange              fun(self: t.eve.collection.ICircularStack, filter: t.eve.IFilter): fun(): t.eve.T|nil
----@field public reset                  fun(self: t.eve.collection.ICircularStack, elements: t.eve.T[]): boolean): fun(): t.eve.T|nil
----@field public top                    fun(self: t.eve.collection.ICircularStack): t.eve.T|nil
----@field public update                 fun(self: t.eve.collection.ICircularStack, index: integer, value: t.eve.T): nil
+---@class eve.t.collection.ICircularStack
+---@field public capacity               fun(self: eve.t.collection.ICircularStack): integer
+---@field public size                   fun(self: eve.t.collection.ICircularStack): integer
+---@field public at                     fun(self: eve.t.collection.ICircularStack, index: integer): eve.t.T|nil
+---@field public clear                  fun(self: eve.t.collection.ICircularStack): nil
+---@field public collect                fun(self: eve.t.collection.ICircularStack): eve.t.T[]
+---@field public count                  fun(self: eve.t.collection.ICircularStack, filter: eve.t.IFilter): integer
+---@field public fork                   fun(self: eve.t.collection.ICircularStack, filter: eve.t.IFilter): eve.t.collection.ICircularStack
+---@field public iterator               fun(self: eve.t.collection.ICircularStack): fun(): eve.t.T|nil
+---@field public iterator_reverse       fun(self: eve.t.collection.ICircularStack): fun(): eve.t.T|nil
+---@field public pop                    fun(self: eve.t.collection.ICircularStack): eve.t.T|nil
+---@field public push                   fun(self: eve.t.collection.ICircularStack, element: eve.t.T): nil
+---@field public rearrange              fun(self: eve.t.collection.ICircularStack, filter: eve.t.IFilter): fun(): eve.t.T|nil
+---@field public reset                  fun(self: eve.t.collection.ICircularStack, elements: eve.t.T[]): boolean): fun(): eve.t.T|nil
+---@field public top                    fun(self: eve.t.collection.ICircularStack): eve.t.T|nil
+---@field public update                 fun(self: eve.t.collection.ICircularStack, index: integer, value: eve.t.T): nil

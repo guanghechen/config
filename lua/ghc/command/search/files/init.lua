@@ -10,7 +10,7 @@ local function open()
   end
 
   local state = require("ghc.command.search.files.state")
-  local search = state.get_search() ---@type t.fml.ux.search.ISearch
+  local search = state.get_search() ---@type fml.t.ux.search.ISearch
   search:focus()
 end
 

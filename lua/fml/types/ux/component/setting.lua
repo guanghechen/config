@@ -1,11 +1,11 @@
----@class t.fml.ux.ISetting
+---@class fml.t.ux.ISetting
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
----@field public open                   fun(self: t.fml.ux.ISetting, params: t.fml.ux.setting.IOpenParams): nil
----@field public close                  fun(self: t.fml.ux.ISetting): nil
+---@field public open                   fun(self: fml.t.ux.ISetting, params: fml.t.ux.setting.IOpenParams): nil
+---@field public close                  fun(self: fml.t.ux.ISetting): nil
 
----@class t.fml.ux.setting.IOpenParams
----@field public initial_value          t.eve.T
+---@class fml.t.ux.setting.IOpenParams
+---@field public initial_value          eve.t.T
 ---@field public row                    ?number
 ---@field public col                    ?number
 ---@field public width                  ?number

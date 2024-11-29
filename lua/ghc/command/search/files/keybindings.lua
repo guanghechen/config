@@ -1,6 +1,6 @@
 local actions = require("ghc.command.search.files.actions")
 
----@type t.eve.ux.widget.IRawStatuslineItem[]
+---@type eve.t.ux.widget.IRawStatuslineItem[]
 local statusline_items = {
   {
     type = "enum",
@@ -39,7 +39,7 @@ local statusline_items = {
   },
 }
 
----@type t.eve.IKeymap[]
+---@type eve.t.IKeymap[]
 local common_keymaps = {
   {
     modes = { "i", "n", "v" },
@@ -91,7 +91,7 @@ local common_keymaps = {
   },
 }
 
----@type t.eve.IKeymap[]
+---@type eve.t.IKeymap[]
 local input_keymaps = {
   {
     modes = { "n", "v" },
@@ -112,16 +112,16 @@ local input_keymaps = {
 ---@class ghc.command.search.files.keybindings
 local M = {}
 
----@type t.eve.ux.widget.IRawStatuslineItem[]
+---@type eve.t.ux.widget.IRawStatuslineItem[]
 M.statusline_items = vim.list_slice(statusline_items)
 
----@type t.eve.IKeymap[]
+---@type eve.t.IKeymap[]
 M.input_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps)
 
----@type t.eve.IKeymap[]
+---@type eve.t.IKeymap[]
 M.main_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps)
 
----@type t.eve.IKeymap[]
+---@type eve.t.IKeymap[]
 M.preview_keymaps = vim.list_slice(common_keymaps)
 
 return M

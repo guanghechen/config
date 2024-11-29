@@ -7,7 +7,7 @@ local focus_candidates = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }
 ---@return nil
 local function focus(bufid)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+  local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
   if tab == nil or bufid < 1 or bufid > #tab.bufnrs then
     return
   end
@@ -48,7 +48,7 @@ eve.commander
     nargs = "?",
     action = function(args)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+      local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
       if tab == nil then
         return
       end
@@ -72,7 +72,7 @@ eve.commander
     nargs = "?",
     action = function(args)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+      local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
       if tab == nil then
         return
       end

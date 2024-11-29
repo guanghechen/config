@@ -1,7 +1,7 @@
 ---@return string
 local function get_text()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+  local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
   local winnr = tab ~= nil and tab.winnr_cur:snapshot() or 0 ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
@@ -15,7 +15,7 @@ local function get_text()
   return #client_names > 0 and "  " .. table.concat(client_names, "|") or ""
 end
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "lsp",
   condition = function()

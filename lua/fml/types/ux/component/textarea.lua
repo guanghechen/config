@@ -1,12 +1,12 @@
----@class t.fml.ux.ITextarea
+---@class fml.t.ux.ITextarea
 ---@field public get_bufnr              fun(): integer|nil
 ---@field public get_winnr              fun(): integer|nil
 ---@field public on_close               fun(): nil
 ---@field public on_confirm             fun(): nil
----@field public open                   fun(self: t.fml.ux.ITextarea, params: t.fml.ux.textarea.IOpenParams): nil
----@field public close                  fun(self: t.fml.ux.ITextarea): nil
+---@field public open                   fun(self: fml.t.ux.ITextarea, params: fml.t.ux.textarea.IOpenParams): nil
+---@field public close                  fun(self: fml.t.ux.ITextarea): nil
 
----@class t.fml.ux.textarea.IOpenParams
+---@class fml.t.ux.textarea.IOpenParams
 ---@field public initial_lines          string[]
 ---@field public row                    ?number
 ---@field public col                    ?number

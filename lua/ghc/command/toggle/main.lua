@@ -12,7 +12,7 @@ local flag_map = {
     uuid = uuids.toggle_dressing_autopairs,
     title = "dressing autopairs",
     snapshot = function()
-      local observable = eve.context.state.dressing.autopairs ---@type t.eve.collection.IObservable
+      local observable = eve.context.state.dressing.autopairs ---@type eve.t.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -21,7 +21,7 @@ local flag_map = {
     uuid = uuids.toggle_dressing_winsep,
     title = "dressing winsep",
     snapshot = function()
-      local observable = eve.context.state.dressing.winsep ---@type t.eve.collection.IObservable
+      local observable = eve.context.state.dressing.winsep ---@type eve.t.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -37,7 +37,7 @@ local flag_map = {
     uuid = uuids.toggle_relativenumber,
     title = "relativenumber",
     snapshot = function()
-      local observable = eve.context.state.theme.relativenumber ---@type t.eve.collection.IObservable
+      local observable = eve.context.state.theme.relativenumber ---@type eve.t.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -46,7 +46,7 @@ local flag_map = {
     uuid = uuids.toggle_theme,
     title = "theme",
     snapshot = function()
-      local theme = eve.context.state.theme.theme:snapshot() ---@type t.eve.e.Theme
+      local theme = eve.context.state.theme.theme:snapshot() ---@type eve.e.Theme
       return theme, "String"
     end,
   },
@@ -54,7 +54,7 @@ local flag_map = {
     uuid = uuids.toggle_theme_transparency,
     title = "theme transparency",
     snapshot = function()
-      local observable = eve.context.state.theme.transparency ---@type t.eve.collection.IObservable
+      local observable = eve.context.state.theme.transparency ---@type eve.t.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -94,7 +94,7 @@ eve.commander.register({
           width = 50,
         },
         fetch_items = function()
-          local items = {} ---@type t.fml.ux.select.IItem[]
+          local items = {} ---@type fml.t.ux.select.IItem[]
           for _, flag in ipairs(flags) do
             local flag_item = flag_map[flag] ---@type ghc.command.toggle.IItem
             table.insert(items, { uuid = flag_item.uuid, text = flag })
@@ -109,13 +109,13 @@ eve.commander.register({
           local padding = string.rep(" ", width_padding - vim.api.nvim_strwidth(item.text)) ---@type string
           local text = item.text .. padding .. text_flag ---@type string
 
-          ---@type t.eve.IHighlightInline[]
+          ---@type eve.t.IHighlightInline[]
           local highlights = {
             { coll = width_padding, colr = width_padding + #text_flag, hlname = hln_flag },
           }
 
           for _, piece in ipairs(match.matches) do
-            ---@type t.eve.IHighlightInline[]
+            ---@type eve.t.IHighlightInline[]
             local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
             table.insert(highlights, highlight)
           end

@@ -16,18 +16,18 @@ local fn_goto_lsp_pos = eve.G.register_anonymous_fn(function(num)
   end
 end) or ""
 
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "lsp",
   ---@diagnostic disable-next-line: unused-local
   render = function(context, remain_width)
     local winnr = context.winnr ---@type integer
-    local win = eve.context.state.wins[winnr] ---@type t.eve.context.state.win.IItem|nil
+    local win = eve.context.state.wins[winnr] ---@type eve.t.context.state.win.IItem|nil
     if win == nil then
       return "", 0
     end
 
-    local symbols = win.lsp_symbols ---@type t.eve.context.state.lsp.ISymbol[]|nil
+    local symbols = win.lsp_symbols ---@type eve.t.context.state.lsp.ISymbol[]|nil
     if symbols == nil or #symbols < 1 then
       return "", 0
     end

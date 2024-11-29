@@ -1,6 +1,6 @@
 local reporter = require("eve.std.reporter")
 
----@class eve.collection.Scheduler : t.eve.collection.IScheduler
+---@class eve.collection.Scheduler : eve.t.collection.IScheduler
 ---@field public name                   string
 ---
 ---@field protected _delay              integer
@@ -8,7 +8,7 @@ local reporter = require("eve.std.reporter")
 ---@field protected _silent             boolean
 ---
 ---@field protected _result             unknown|nil
----@field protected _task               t.eve.collection.scheduler.ITask
+---@field protected _task               eve.t.collection.scheduler.ITask
 ---
 ---@field protected _tick_alive         integer
 ---@field protected _tick_dirty         integer
@@ -23,7 +23,7 @@ M.__index = M
 ---@field public name                   string
 ---@field public delay                  ?integer
 ---@field public silent                 ?boolean
----@field public task                   t.eve.collection.scheduler.ITask
+---@field public task                   eve.t.collection.scheduler.ITask
 
 ---@param props                         eve.collection.scheduler.IProps
 ---@return eve.collection.Scheduler
@@ -33,7 +33,7 @@ function M.new(props)
   local name = props.name ---@type string
   local silent = not not props.silent ---@type boolean
   local delay = props.delay or 32 ---@type integer
-  local task = props.task ---@type t.eve.collection.scheduler.ITask
+  local task = props.task ---@type eve.t.collection.scheduler.ITask
 
   self.name = name
 
@@ -99,7 +99,7 @@ function M:execute()
 
   local finished = false ---@type boolean
 
-  ---@param settled                     t.eve.collection.promise.ISettled
+  ---@param settled                     eve.t.collection.promise.ISettled
   ---@param value                       unknown
   ---@param reason                      unknown
   ---@return nil

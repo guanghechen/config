@@ -12,14 +12,14 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_terminal_bg",
 }, ",")
 
----@class fml.ux.Terminal : t.fml.ux.ITerminal
+---@class fml.ux.Terminal : fml.t.ux.ITerminal
 ---@field protected _bufnr              integer|nil
 ---@field protected _command            string[]
 ---@field protected _command_cwd        string
 ---@field protected _command_env        table<string, string>|nil
----@field protected _keymaps            t.eve.IKeymap[]
+---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _permanent          boolean
----@field protected _status             t.eve.e.WidgetStatus
+---@field protected _status             eve.e.WidgetStatus
 ---@field protected _term_alive         boolean
 ---@field protected _winnr              integer|nil
 local M = {}
@@ -29,7 +29,7 @@ M.__index = M
 ---@field public command                ?string
 ---@field public command_cwd            ?string
 ---@field public command_env            ?table<string, string>
----@field public keymaps                ?t.eve.IKeymap[]
+---@field public keymaps                ?eve.t.IKeymap[]
 ---@field public permanent              ?boolean
 
 ---@param props                         fml.ux.terminal.IProps
@@ -45,7 +45,7 @@ function M.new(props)
     command = { shell, "-c", props.command }
   end
 
-  local keymaps = widgets.get_keymaps() ---@type t.eve.IKeymap[]
+  local keymaps = widgets.get_keymaps() ---@type eve.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
   local command_cwd = props.command_cwd or path.cwd() ---@type string
@@ -147,7 +147,7 @@ end
 function M:focus()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local winnr = self:get_winnr() ---@type integer|nil
-  local status = self._status ---@type t.eve.e.WidgetStatus
+  local status = self._status ---@type eve.e.WidgetStatus
   local visible = status == "visible" ---@type boolean
 
   if not visible or winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -210,7 +210,7 @@ function M:show()
     return
   end
 
-  self._status = "visible" ---@type t.eve.e.WidgetStatus
+  self._status = "visible" ---@type eve.e.WidgetStatus
 
   local winnr, bufnr = self:create_win_as_needed()
   vim.api.nvim_tabpage_set_win(0, winnr)
@@ -238,7 +238,7 @@ function M:show()
   end)
 end
 
----@return t.eve.e.WidgetStatus
+---@return eve.e.WidgetStatus
 function M:status()
   return self._status
 end

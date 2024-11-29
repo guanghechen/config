@@ -31,7 +31,7 @@ local function get_previous_line_by_hunk(lnum)
   end
 end
 
----@type t.eve.IKeymap[]
+---@type eve.t.IKeymap[]
 local keymaps = {
   {
     modes = { "n" },
@@ -144,7 +144,7 @@ local keymaps = {
       local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, v_lines)
 
-      ---@type t.eve.IKeymap[]
+      ---@type eve.t.IKeymap[]
       local keymaps = {
         {
           modes = { "n" },

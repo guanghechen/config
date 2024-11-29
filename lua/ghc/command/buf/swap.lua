@@ -6,7 +6,7 @@ eve.commander
     desc = "buf: swap left",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+      local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
       if tab == nil then
         return
       end
@@ -31,7 +31,7 @@ eve.commander
     desc = "buf: swap right",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab = fml.api.tab.get(tabnr) ---@type t.eve.context.state.tab.IItem|nil
+      local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
       if tab == nil then
         return
       end

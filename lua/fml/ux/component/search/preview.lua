@@ -2,21 +2,21 @@ local constants = require("eve.std.constants")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
 
----@class fml.ux.search.Preview : t.fml.ux.search.IPreview
+---@class fml.ux.search.Preview : fml.t.ux.search.IPreview
 ---@field protected _bufnr              integer|nil
----@field protected _keymaps            t.eve.IKeymap[]
----@field protected _render_scheduler   t.eve.collection.IScheduler
+---@field protected _keymaps            eve.t.IKeymap[]
+---@field protected _render_scheduler   eve.t.collection.IScheduler
 local M = {}
 M.__index = M
 
 ---@class fml.ux.search.preview.IProps
 ---@field public delay_render           integer
----@field public fetch_data             t.fml.ux.search.IFetchPreviewData
----@field public keymaps                t.eve.IKeymap[]
----@field public patch_data             ?t.fml.ux.search.IPatchPreviewData
----@field public state                  t.fml.ux.search.IState
----@field public on_rendered            ?t.fml.ux.search.IOnPreviewRendered
----@field public update_win_config      fun(opts: t.fml.ux.search.preview.IWinOpts): nil
+---@field public fetch_data             fml.t.ux.search.IFetchPreviewData
+---@field public keymaps                eve.t.IKeymap[]
+---@field public patch_data             ?fml.t.ux.search.IPatchPreviewData
+---@field public state                  fml.t.ux.search.IState
+---@field public on_rendered            ?fml.t.ux.search.IOnPreviewRendered
+---@field public update_win_config      fun(opts: fml.t.ux.search.preview.IWinOpts): nil
 
 ---@param props                         fml.ux.search.preview.IProps
 ---@return fml.ux.search.Preview
@@ -24,19 +24,19 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local delay_render = props.delay_render ---@type integer
-  local _fetch_data = props.fetch_data ---@type t.fml.ux.search.IFetchPreviewData
-  local _patch_data = props.patch_data ---@type t.fml.ux.search.IPatchPreviewData|nil
-  local keymaps = props.keymaps ---@type t.eve.IKeymap[]
-  local state = props.state ---@type t.fml.ux.search.IState
-  local on_rendered = props.on_rendered ---@type t.fml.ux.search.IOnMainRendered|nil
-  local _update_win_config = props.update_win_config ---@type fun(opts: t.fml.ux.search.preview.IWinOpts): nil
+  local _fetch_data = props.fetch_data ---@type fml.t.ux.search.IFetchPreviewData
+  local _patch_data = props.patch_data ---@type fml.t.ux.search.IPatchPreviewData|nil
+  local keymaps = props.keymaps ---@type eve.t.IKeymap[]
+  local state = props.state ---@type fml.t.ux.search.IState
+  local on_rendered = props.on_rendered ---@type fml.t.ux.search.IOnMainRendered|nil
+  local _update_win_config = props.update_win_config ---@type fun(opts: fml.t.ux.search.preview.IWinOpts): nil
 
-  local _last_item = nil ---@type t.fml.ux.search.IItem|nil
-  local _last_data = nil ---@type t.fml.ux.search.preview.IData|nil
+  local _last_item = nil ---@type fml.t.ux.search.IItem|nil
+  local _last_data = nil ---@type fml.t.ux.search.preview.IData|nil
   local _last_drawed_bufnr = nil ---@type integer|nil
 
-  ---@param item                          t.fml.ux.search.IItem|nil
-  ---@return t.fml.ux.search.preview.IData|nil
+  ---@param item                          fml.t.ux.search.IItem|nil
+  ---@return fml.t.ux.search.preview.IData|nil
   local function fetch_data(item)
     if item == nil then
       return nil
@@ -59,9 +59,9 @@ function M.new(props)
   local function render()
     local bufnr = self:create_buf_as_needed() ---@type integer
 
-    local last_data = _last_data ---@type t.fml.ux.search.preview.IData|nil
-    local item = state:get_current() ---@type t.fml.ux.search.IItem|nil
-    local data = fetch_data(item) ---@type t.fml.ux.search.preview.IData|nil
+    local last_data = _last_data ---@type fml.t.ux.search.preview.IData|nil
+    local item = state:get_current() ---@type fml.t.ux.search.IItem|nil
+    local data = fetch_data(item) ---@type fml.t.ux.search.preview.IData|nil
     _last_item = item
     _last_data = data
 
@@ -147,7 +147,7 @@ function M.new(props)
     Subscriber.new({
       on_next = function()
         local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type t.eve.e.WidgetStatus
+        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_preview_dirty then
           _render_scheduler:schedule()

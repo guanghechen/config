@@ -1,10 +1,10 @@
----@class t.fml.ux.IInput
+---@class fml.t.ux.IInput
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
----@field public open                   fun(self: t.fml.ux.IInput, params: t.fml.ux.input.IOpenParams): nil
----@field public close                  fun(self: t.fml.ux.IInput): nil
+---@field public open                   fun(self: fml.t.ux.IInput, params: fml.t.ux.input.IOpenParams): nil
+---@field public close                  fun(self: fml.t.ux.IInput): nil
 
----@class t.fml.ux.input.IOpenParams
+---@class fml.t.ux.input.IOpenParams
 ---@field public initial_value          string
 ---@field public row                    ?number
 ---@field public col                    ?number

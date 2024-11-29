@@ -6,7 +6,7 @@ _G.eve = require("eve")
 do
   local is_git_repo = eve.path.is_git_repo() ---@type boolean
 
-  ---@type t.eve.context.storage
+  ---@type eve.t.context.storage
   local storage = {
     client = eve.path.locate_context_filepath("client.json"),
     session = is_git_repo and eve.path.locate_session_filepath("session.json") or nil,

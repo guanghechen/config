@@ -6,19 +6,19 @@ local hmr = require("eve.fn.hmr")
 local M = {}
 
 ---@class fml.ux.theme.ILoadIntegrationParams
----@field public theme                  t.eve.e.Theme
+---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
----@field public integration            t.fml.e.ux.theme.HighlightIntegration
+---@field public integration            fml.e.ux.theme.HighlightIntegration
 ---@field public nsnr                   ?integer
 
 ---@class fml.ux.theme.ILoadThemeParams
----@field public theme                  t.eve.e.Theme
+---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
 ---@field public persistent             boolean
 ---@field public filepath               ?string
 ---@field public nsnr                   ?integer
 
----@type t.eve.e.Theme[]
+---@type eve.e.Theme[]
 M.themes = {
   "catppuccin-latte",
   "catppuccin-mocha",
@@ -29,7 +29,7 @@ M.themes = {
   "one_half_light",
 }
 
----@type t.fml.e.ux.theme.HighlightIntegration[]
+---@type fml.e.ux.theme.HighlightIntegration[]
 M.integrations = {
   --- orders as needed
   "basic",
@@ -42,10 +42,10 @@ M.integrations = {
   "plugin",
 }
 
----@param scheme                        t.eve.collection.theme.IScheme
+---@param scheme                        eve.t.collection.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette ---@type t.eve.collection.theme.IPalette
+  local c = scheme.palette ---@type eve.t.collection.theme.IPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.neutral_red
   vim.g.terminal_color_2 = c.neutral_green
@@ -64,8 +64,8 @@ function M.set_term_colors(scheme)
   vim.g.terminal_color_15 = c.fg1
 end
 
----@param theme                         t.eve.e.Theme
----@return t.eve.collection.theme.IScheme|nil
+---@param theme                         eve.e.Theme
+---@return eve.t.collection.theme.IScheme|nil
 function M.get_scheme(theme)
   if not vim.tbl_contains(M.themes, theme) then
     reporter.error({
@@ -93,14 +93,14 @@ end
 ---@param params                        fml.ux.theme.ILoadIntegrationParams
 ---@return nil
 function M.apply_integration(params)
-  local theme = params.theme ---@type t.eve.e.Theme
+  local theme = params.theme ---@type eve.e.Theme
   local transparency = params.transparency ---@type boolean
-  local integration = params.integration ---@type t.fml.e.ux.theme.HighlightIntegration
+  local integration = params.integration ---@type fml.e.ux.theme.HighlightIntegration
   local nsnr = params.nsnr or 0 ---@type integer
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    ---@type t.fml.ux.IThemeContext
+    ---@type fml.t.ux.IThemeContext
     local themeContext = {
       theme = scheme.theme,
       scheme = scheme,
@@ -115,9 +115,9 @@ function M.apply_integration(params)
 end
 
 ---@param params                        fml.ux.theme.ILoadThemeParams
----@return t.eve.collection.theme.IScheme|nil
+---@return eve.t.collection.theme.IScheme|nil
 function M.apply_theme(params)
-  local theme = params.theme ---@type t.eve.e.Theme
+  local theme = params.theme ---@type eve.e.Theme
   local transparency = params.transparency ---@type boolean
   local persistent = params.persistent ---@type boolean
   local filepath = params.filepath ---@type string|nil
@@ -137,11 +137,11 @@ function M.apply_theme(params)
     local uxTheme = Theme.new()
     for _, integration in ipairs(M.integrations) do
       local gen_hlgroup_map = hmr("fml.ux.theme.integration." .. integration)
-      ---@return table<string, t.eve.collection.theme.IHlgroup>
+      ---@return table<string, eve.t.collection.theme.IHlgroup>
       local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
       if integration == "plugin" then
-        local additional = {} ---@type table<string, t.eve.collection.theme.IHlgroup>
+        local additional = {} ---@type table<string, eve.t.collection.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if hlname:sub(1, 9) == "MiniIcons" then
             ---! Integrated  with tabline

@@ -40,7 +40,7 @@ eve.commander.register({
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       local initial_text = eve.path.is_under(workspace, filepath) and eve.path.relative(cwd, filepath, true) or filepath ---@type string
 
-      local input ---@type t.fml.ux.IInput
+      local input ---@type fml.t.ux.IInput
       input = fml.ux.Input.new({
         position = "center",
         title = "Save file",

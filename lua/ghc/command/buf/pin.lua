@@ -5,7 +5,7 @@ eve.commander.register({
   desc = "buf: pin",
   action = function()
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    local buf = eve.context.state.bufs[bufnr] ---@type t.eve.context.state.buf.IItem|nil
+    local buf = eve.context.state.bufs[bufnr] ---@type eve.t.context.state.buf.IItem|nil
     if buf ~= nil then
       local pinned = buf.pinned ---@type boolean
       local filepath = buf.filepath ---@type string

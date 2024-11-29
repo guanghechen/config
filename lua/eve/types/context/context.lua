@@ -1,54 +1,54 @@
----@class t.eve.context.data
----@field public dressing               t.eve.context.data.dressing
----@field public theme                  t.eve.context.data.theme
+---@class eve.t.context.data
+---@field public dressing               eve.t.context.data.dressing
+---@field public theme                  eve.t.context.data.theme
 ---
----@field public bookmark               t.eve.context.data.bookmark
----@field public find                   t.eve.context.data.find
----@field public flight                 t.eve.context.data.flight
----@field public search                 t.eve.context.data.search
+---@field public bookmark               eve.t.context.data.bookmark
+---@field public find                   eve.t.context.data.find
+---@field public flight                 eve.t.context.data.flight
+---@field public search                 eve.t.context.data.search
 ---
----@field public bufs                   t.eve.context.data.buf.IItem[]
----@field public tabs                   t.eve.context.data.tab.IItem[]
----@field public wins                   t.eve.context.data.win.IItem[]
----@field public frecency               t.eve.context.data.frecency
----@field public input_history          t.eve.context.data.input_history
----@field public tab_history            t.eve.collection.history.ISerializedData
+---@field public bufs                   eve.t.context.data.buf.IItem[]
+---@field public tabs                   eve.t.context.data.tab.IItem[]
+---@field public wins                   eve.t.context.data.win.IItem[]
+---@field public frecency               eve.t.context.data.frecency
+---@field public input_history          eve.t.context.data.input_history
+---@field public tab_history            eve.t.collection.history.ISerializedData
 
----@class t.eve.context.state
----@field public dressing               t.eve.context.state.dressing
----@field public theme                  t.eve.context.state.theme
+---@class eve.t.context.state
+---@field public dressing               eve.t.context.state.dressing
+---@field public theme                  eve.t.context.state.theme
 ---
----@field public bookmark               t.eve.context.state.bookmark
----@field public find                   t.eve.context.state.find
----@field public flight                 t.eve.context.state.flight
----@field public search                 t.eve.context.state.search
+---@field public bookmark               eve.t.context.state.bookmark
+---@field public find                   eve.t.context.state.find
+---@field public flight                 eve.t.context.state.flight
+---@field public search                 eve.t.context.state.search
 ---
----@field public bufs                   table<integer, t.eve.context.state.buf.IItem>
----@field public tabs                   table<integer, t.eve.context.state.tab.IItem>
----@field public wins                   table<integer, t.eve.context.state.win.IItem>
----@field public status                 t.eve.context.state.status
----@field public frecency               t.eve.context.state.frecency
----@field public input_history          t.eve.context.state.input_history
----@field public tab_history            t.eve.collection.IAdvanceHistory
+---@field public bufs                   table<integer, eve.t.context.state.buf.IItem>
+---@field public tabs                   table<integer, eve.t.context.state.tab.IItem>
+---@field public wins                   table<integer, eve.t.context.state.win.IItem>
+---@field public status                 eve.t.context.state.status
+---@field public frecency               eve.t.context.state.frecency
+---@field public input_history          eve.t.context.state.input_history
+---@field public tab_history            eve.t.collection.IAdvanceHistory
 ---
----@field public client_has_changed     t.eve.collection.ITicker
----@field public session_has_changed    t.eve.collection.ITicker
+---@field public client_has_changed     eve.t.collection.ITicker
+---@field public session_has_changed    eve.t.collection.ITicker
 
----@class t.eve.context.storage
+---@class eve.t.context.storage
 ---@field public client                 ?string
 ---@field public session                ?string
 ---@field public workspace              ?string
 ---@field public nvim_session           ?string
 ---@field public nvim_session_autosaved ?string
 
----@class t.eve.context.IWatchChangeParams
+---@class eve.t.context.IWatchChangeParams
 ---@field public on_theme_changed       ?fun(): nil
 
----@class t.eve.context
----@field public state                  t.eve.context.state
----@field public storage                t.eve.context.storage
----@field public dump                   fun(): t.eve.context.data
----@field public load                   fun(storage: t.eve.context.storage): nil
----@field public save                   fun(storage: t.eve.context.storage): nil
----@field public set_storage            fun(storage: t.eve.context.storage): nil
+---@class eve.t.context
+---@field public state                  eve.t.context.state
+---@field public storage                eve.t.context.storage
+---@field public dump                   fun(): eve.t.context.data
+---@field public load                   fun(storage: eve.t.context.storage): nil
+---@field public save                   fun(storage: eve.t.context.storage): nil
+---@field public set_storage            fun(storage: eve.t.context.storage): nil
 ---@field public watch_changes          fun(): nil

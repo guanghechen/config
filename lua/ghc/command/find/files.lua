@@ -2,7 +2,7 @@ local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 
 local state_find_cwd = Observable.from_value(fml.api.find.get_scope_cwd(eve.path.cwd()))
-local _select = nil ---@type t.fml.ux.IFileSelect|nil
+local _select = nil ---@type fml.t.ux.IFileSelect|nil
 
 ---@return nil
 local function reload()
@@ -35,10 +35,10 @@ eve.mvc.observe({
   reload()
 end, true)
 
----@param scope                         t.eve.e.FindScope
+---@param scope                         eve.e.FindScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = eve.context.state.find.scope:snapshot() ---@type t.eve.e.FindScope
+  local scope_current = eve.context.state.find.scope:snapshot() ---@type eve.e.FindScope
   if scope_current ~= scope then
     eve.context.state.find.scope:next(scope)
   end
@@ -106,11 +106,11 @@ local actions = {
     if _select ~= nil then
       local cwd = eve.path.cwd() ---@type string
       local select_cwd = state_find_cwd:snapshot() ---@type string
-      local quickfix_items = {} ---@type t.eve.IQuickFixItem[]
-      local matched_items = _select:get_matched_items() ---@type t.fml.ux.select.IMatchedItem[]
+      local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
+      local matched_items = _select:get_matched_items() ---@type fml.t.ux.select.IMatchedItem[]
       for _, matched_item in ipairs(matched_items) do
-        local item = _select:get_item(matched_item.uuid) ---@type t.fml.ux.select.IItem|nil
-        ---@cast item t.fml.ux.file_select.IItem
+        local item = _select:get_item(matched_item.uuid) ---@type fml.t.ux.select.IItem|nil
+        ---@cast item fml.t.ux.file_select.IItem
 
         if item ~= nil then
           local absolute_filepath = eve.path.join(select_cwd, item.data.filepath) ---@type string
@@ -150,18 +150,18 @@ local actions = {
   end,
   ---@return nil
   toggle_scope = function()
-    local next_scope = fml.api.find.get_scope_carousel_next() ---@type t.eve.e.FindScope
+    local next_scope = fml.api.find.get_scope_carousel_next() ---@type eve.e.FindScope
     eve.context.state.find.scope:next(next_scope)
   end,
 }
 
----@return t.fml.ux.IFileSelect
+---@return fml.t.ux.IFileSelect
 local function get_select()
   if _select == nil then
-    local frecency = eve.context.state.frecency.files ---@type t.eve.collection.IFrecency
-    local input_history = eve.context.state.input_history.find_files ---@type t.eve.collection.IHistory
+    local frecency = eve.context.state.frecency.files ---@type eve.t.collection.IFrecency
+    local input_history = eve.context.state.input_history.find_files ---@type eve.t.collection.IHistory
 
-    ---@type t.eve.ux.widget.IRawStatuslineItem[]
+    ---@type eve.t.ux.widget.IRawStatuslineItem[]
     local statusline_items = {
       {
         type = "enum",
@@ -200,7 +200,7 @@ local function get_select()
       },
     }
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local common_keymaps = {
       {
         modes = { "n", "v" },
@@ -246,16 +246,16 @@ local function get_select()
       },
     }
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local input_keymaps = vim.list_slice(common_keymaps)
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local main_keymaps = vim.list_slice(common_keymaps)
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local preview_keymaps = vim.list_slice(common_keymaps)
 
-    ---@type t.fml.ux.file_select.IProvider
+    ---@type fml.t.ux.file_select.IProvider
     local provider = {
       fetch_data = function()
         local cwd = state_find_cwd:snapshot() ---@type string
@@ -276,7 +276,7 @@ local function get_select()
         })
         table.sort(filepaths)
 
-        local items = fml.ux.FileSelect.make_items_by_filepaths(filepaths) ---@type t.fml.ux.file_select.IRawItem[]
+        local items = fml.ux.FileSelect.make_items_by_filepaths(filepaths) ---@type fml.t.ux.file_select.IRawItem[]
         local data = { cwd = cwd, items = items }
         return data
       end,
@@ -311,7 +311,7 @@ eve.commander
     uuid = uuids.find_files,
     desc = "find: files",
     action = function()
-      local select = get_select() ---@type t.fml.ux.IFileSelect
+      local select = get_select() ---@type fml.t.ux.IFileSelect
       select:focus()
     end,
   })
@@ -320,7 +320,7 @@ eve.commander
     desc = "find: files (workspace)",
     action = function()
       eve.context.state.find.scope:next("W")
-      local select = get_select() ---@type t.fml.ux.IFileSelect
+      local select = get_select() ---@type fml.t.ux.IFileSelect
       select:focus()
     end,
   })
@@ -329,7 +329,7 @@ eve.commander
     desc = "find: files (cwd)",
     action = function()
       eve.context.state.find.scope:next("C")
-      local select = get_select() ---@type t.fml.ux.IFileSelect
+      local select = get_select() ---@type fml.t.ux.IFileSelect
       select:focus()
     end,
   })
@@ -338,7 +338,7 @@ eve.commander
     desc = "find: files (directory)",
     action = function()
       eve.context.state.find.scope:next("D")
-      local select = get_select() ---@type t.fml.ux.IFileSelect
+      local select = get_select() ---@type fml.t.ux.IFileSelect
       select:focus()
     end,
   })

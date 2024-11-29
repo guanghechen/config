@@ -1,12 +1,12 @@
----@class eve.collection.Disposable : t.eve.collection.IDisposable
+---@class eve.collection.Disposable : eve.t.collection.IDisposable
 ---@field private _on_dispose           fun():nil
 local M = {}
 M.__index = M
 
----@class eve.collection.Disposable.IProps
+---@class eve.collection.disposable.IProps
 ---@field public on_dispose             fun():nil
 
----@param props eve.collection.Disposable.IProps
+---@param props eve.collection.disposable.IProps
 ---@return eve.collection.Disposable
 function M.new(props)
   local self = setmetatable({}, M)
@@ -19,7 +19,7 @@ function M.new(props)
   return self
 end
 
----@param unsubscribable                t.eve.collection.IUnsubscribable
+---@param unsubscribable                eve.t.collection.IUnsubscribable
 function M.from_unsubscribable(unsubscribable)
   return M.new({
     on_dispose = function()

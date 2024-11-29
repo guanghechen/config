@@ -1,12 +1,12 @@
-local _select ---@type t.fml.ux.ISelect
+local _select ---@type fml.t.ux.ISelect
 local _hlnames ---@type string[]|nil
 local _hlgroups ---@type table<string, vim.api.keyset.hl_info>
-local _preview_data ---@type t.fml.ux.search.preview.IData|nil
+local _preview_data ---@type fml.t.ux.search.preview.IData|nil
 
----@class ghc.command.find.highlights.IItem : t.fml.ux.select.IItem
+---@class ghc.command.find.highlights.IItem : fml.t.ux.select.IItem
 ---@field public data                   integer
 
----@type t.fml.ux.select.IProvider
+---@type fml.t.ux.select.IProvider
 local provider = {
   fetch_data = function(force)
     if force or _hlnames == nil then
@@ -23,13 +23,13 @@ local provider = {
       _preview_data = nil
     end
 
-    local items = {} ---@type t.fml.ux.select.IItem[]
+    local items = {} ---@type fml.t.ux.select.IItem[]
     for lnum, hlname in ipairs(_hlnames) do
       ---@type ghc.command.find.highlights.IItem
       local item = { group = "H", uuid = hlname, text = hlname, data = lnum }
       table.insert(items, item)
     end
-    ---@type t.fml.ux.select.IData
+    ---@type fml.t.ux.select.IData
     return { items = items }
   end,
   fetch_preview_data = function(item)
@@ -38,7 +38,7 @@ local provider = {
       local hlgroups = _hlgroups or {} ---@type table<string, vim.api.keyset.hl_info>
 
       local lines = {} ---@type string[]
-      local highlights = {} ---@type t.eve.IHighlight[]
+      local highlights = {} ---@type eve.t.IHighlight[]
 
       local max_hlname_width = 0 ---@type integer
       for _, hlname in ipairs(hlnames) do
@@ -47,7 +47,7 @@ local provider = {
 
       for lnum, hlname in ipairs(hlnames) do
         local line = "xxx   " .. eve.string.pad_end(hlname, max_hlname_width, " ") ---@type string
-        local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type t.eve.IHighlight
+        local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.t.IHighlight
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info
         if hlgroup.fg ~= nil then
@@ -82,7 +82,7 @@ local provider = {
         table.insert(highlights, highlight)
       end
 
-      ---@type t.fml.ux.search.preview.IData
+      ---@type fml.t.ux.search.preview.IData
       _preview_data = {
         lines = lines,
         highlights = highlights,
@@ -95,7 +95,7 @@ local provider = {
     return _preview_data
   end,
   patch_preview_data = function(item, _, last_data)
-    ---@type t.fml.ux.search.preview.IData
+    ---@type fml.t.ux.search.preview.IData
     local data = {
       lines = last_data.lines,
       highlights = last_data.highlights,
@@ -110,9 +110,9 @@ local provider = {
     local text_prefix = "xxx   " ---@type string
     local width_prefix = string.len(text_prefix) ---@type integer
     local text = text_prefix .. item.text
-    local highlights = { { coll = 0, colr = 3, hlname = item.text } } ---@type t.eve.IHighlightInline[]
+    local highlights = { { coll = 0, colr = 3, hlname = item.text } } ---@type eve.t.IHighlightInline[]
     for _, piece in ipairs(match.matches) do
-      ---@type t.eve.IHighlightInline[]
+      ---@type eve.t.IHighlightInline[]
       local highlight = { coll = width_prefix + piece.l, colr = width_prefix + piece.r, hlname = "f_us_main_match" }
       table.insert(highlights, highlight)
     end

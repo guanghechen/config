@@ -3,83 +3,83 @@ local oxi = require("eve.oxi")
 local icons = require("eve.globals.icons")
 local Search = require("fml.ux.component.search.search")
 
----@class fml.ux.Select : t.fml.ux.ISelect
----@field protected _case_sensitive     t.eve.collection.IObservable
----@field protected _cmp                t.fml.ux.select.IMatchedItemCmp|nil
----@field protected _flag_fuzzy         t.eve.collection.IObservable
----@field protected _flag_regex         t.eve.collection.IObservable
----@field protected _frecency           t.eve.collection.IFrecency|nil
----@field protected _full_matches       t.fml.ux.select.IMatchedItem[]
----@field protected _item_map           table<string, t.fml.ux.select.IItem>
+---@class fml.ux.Select : fml.t.ux.ISelect
+---@field protected _case_sensitive     eve.t.collection.IObservable
+---@field protected _cmp                fml.t.ux.select.IMatchedItemCmp|nil
+---@field protected _flag_fuzzy         eve.t.collection.IObservable
+---@field protected _flag_regex         eve.t.collection.IObservable
+---@field protected _frecency           eve.t.collection.IFrecency|nil
+---@field protected _full_matches       fml.t.ux.select.IMatchedItem[]
+---@field protected _item_map           table<string, fml.t.ux.select.IItem>
 ---@field protected _item_uuid_cursor   string|nil
 ---@field protected _item_uuid_present  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
----@field protected _live_data_dirty    t.eve.collection.IObservable
----@field protected _matches            t.fml.ux.select.IMatchedItem[]
----@field protected _provider           t.fml.ux.select.IProvider
----@field protected _get_search         fun(): t.fml.ux.search.ISearch
+---@field protected _live_data_dirty    eve.t.collection.IObservable
+---@field protected _matches            fml.t.ux.select.IMatchedItem[]
+---@field protected _provider           fml.t.ux.select.IProvider
+---@field protected _get_search         fun(): fml.t.ux.search.ISearch
 local M = {}
 M.__index = M
 
----@class t.fml.ux.select.IProps
----@field public case_sensitive         ?t.eve.collection.IObservable
----@field public cmp                    ?t.fml.ux.select.IMatchedItemCmp
+---@class fml.t.ux.select.IProps
+---@field public case_sensitive         ?eve.t.collection.IObservable
+---@field public cmp                    ?fml.t.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
----@field public dimension              ?t.fml.ux.search.IRawDimension
+---@field public dimension              ?fml.t.ux.search.IRawDimension
 ---@field public dirty_on_invisible     ?boolean
 ---@field public preview_enabled        boolean
 ---@field public preview_flag_wrap      ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?t.eve.collection.IObservable
----@field public flag_regex             ?t.eve.collection.IObservable
----@field public frecency               ?t.eve.collection.IFrecency
----@field public input                  ?t.eve.collection.IObservable
----@field public input_history          ?t.eve.collection.IHistory
----@field public input_keymaps          ?t.eve.IKeymap[]
----@field public main_keymaps           ?t.eve.IKeymap[]
+---@field public flag_fuzzy             ?eve.t.collection.IObservable
+---@field public flag_regex             ?eve.t.collection.IObservable
+---@field public frecency               ?eve.t.collection.IFrecency
+---@field public input                  ?eve.t.collection.IObservable
+---@field public input_history          ?eve.t.collection.IHistory
+---@field public input_keymaps          ?eve.t.IKeymap[]
+---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public permanent              ?boolean
----@field public preview_keymaps        ?t.eve.IKeymap[]
----@field public provider               t.fml.ux.select.IProvider
----@field public statusline_items       ?t.eve.ux.widget.IRawStatuslineItem[]
+---@field public preview_keymaps        ?eve.t.IKeymap[]
+---@field public provider               fml.t.ux.select.IProvider
+---@field public statusline_items       ?eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
----@field public on_close               ?t.fml.ux.search.IOnClose
----@field public on_confirm             t.fml.ux.select.IOnConfirm
----@field public on_invisible           ?t.fml.ux.search.IOnInvisible
----@field public on_preview_rendered    ?t.fml.ux.search.IOnPreviewRendered
+---@field public on_close               ?fml.t.ux.search.IOnClose
+---@field public on_confirm             fml.t.ux.select.IOnConfirm
+---@field public on_invisible           ?fml.t.ux.search.IOnInvisible
+---@field public on_preview_rendered    ?fml.t.ux.search.IOnPreviewRendered
 
----@param props                         t.fml.ux.select.IProps
+---@param props                         fml.t.ux.select.IProps
 ---@return fml.ux.Select
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type t.eve.collection.IObservable
-  local cmp = props.cmp ---@type t.fml.ux.select.IMatchedItemCmp|nil
+  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type eve.t.collection.IObservable
+  local cmp = props.cmp ---@type fml.t.ux.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch or 128 ---@type integer
   local delay_render = props.delay_render or 48 ---@type integer
-  local dimension = props.dimension ---@type t.fml.ux.search.IRawDimension|nil
+  local dimension = props.dimension ---@type fml.t.ux.search.IRawDimension|nil
   local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
   local preview_enabled = props.preview_enabled ---@type boolean
   local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
-  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type t.eve.collection.IObservable
-  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type t.eve.collection.IObservable
-  local frecency = props.frecency ---@type t.eve.collection.IFrecency|nil
-  local input = props.input or Observable.from_value("") ---@type t.eve.collection.IObservable
-  local input_history = props.input_history ---@type t.eve.collection.IHistory|nil
-  local input_keymaps = props.input_keymaps ---@type t.eve.IKeymap[]|nil
-  local live_data_dirty = Observable.from_value(true) ---@type t.eve.collection.IObservable
-  local main_keymaps = props.main_keymaps ---@type t.eve.IKeymap[]|nil
+  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.t.collection.IObservable
+  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.t.collection.IObservable
+  local frecency = props.frecency ---@type eve.t.collection.IFrecency|nil
+  local input = props.input or Observable.from_value("") ---@type eve.t.collection.IObservable
+  local input_history = props.input_history ---@type eve.t.collection.IHistory|nil
+  local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
+  local live_data_dirty = Observable.from_value(true) ---@type eve.t.collection.IObservable
+  local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
   local permanent = props.permanent ---@type boolean|nil
-  local preview_keymaps = props.preview_keymaps ---@type t.eve.IKeymap[]|nil
-  local provider = props.provider ---@type t.fml.ux.select.IProvider
-  local statusline_items = props.statusline_items ---@type t.eve.ux.widget.IRawStatuslineItem[]
+  local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
+  local provider = props.provider ---@type fml.t.ux.select.IProvider
+  local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
   local title = props.title ---@type string
-  local on_confirm_from_props = props.on_confirm ---@type t.fml.ux.select.IOnConfirm
-  local on_close_from_props = props.on_close ---@type t.fml.ux.search.IOnClose|nil
-  local on_invisible_from_props = props.on_invisible ---@type t.fml.ux.search.IOnInvisible|nil
-  local on_preview_rendered = props.on_preview_rendered ---@type t.fml.ux.search.IOnPreviewRendered|nil
+  local on_confirm_from_props = props.on_confirm ---@type fml.t.ux.select.IOnConfirm
+  local on_close_from_props = props.on_close ---@type fml.t.ux.search.IOnClose|nil
+  local on_invisible_from_props = props.on_invisible ---@type fml.t.ux.search.IOnInvisible|nil
+  local on_preview_rendered = props.on_preview_rendered ---@type fml.t.ux.search.IOnPreviewRendered|nil
 
   if statusline_items == nil or extend_preset_keymaps then
     ---@return nil
@@ -106,7 +106,7 @@ function M.new(props)
       self:mark_search_state_dirty()
     end
 
-    ---@type t.eve.ux.widget.IRawStatuslineItem[]
+    ---@type eve.t.ux.widget.IRawStatuslineItem[]
     statusline_items = vim.list_extend(statusline_items or {}, {
       {
         type = "flag",
@@ -131,7 +131,7 @@ function M.new(props)
       },
     })
 
-    ---@type t.eve.IKeymap[]
+    ---@type eve.t.IKeymap[]
     local preset_keymaps = {
       {
         modes = { "n", "v" },
@@ -150,32 +150,32 @@ function M.new(props)
     input_keymaps = vim.list_extend(vim.list_slice(preset_keymaps), input_keymaps or {})
     main_keymaps = vim.list_extend(vim.list_slice(preset_keymaps), main_keymaps or {})
     preview_keymaps = vim.list_extend(vim.list_slice(preset_keymaps), preview_keymaps or {})
-  end ---@type t.fml.ux.search.IFetchPreviewData|nil
+  end ---@type fml.t.ux.search.IFetchPreviewData|nil
 
   local fetch_preview_data = nil
   if preview_enabled and provider.fetch_preview_data ~= nil then
     fetch_preview_data = function(item)
       ---@diagnostic disable-next-line: invisible
-      local select_item = self._item_map[item.uuid] ---@type t.fml.ux.select.IItem|nil
+      local select_item = self._item_map[item.uuid] ---@type fml.t.ux.select.IItem|nil
       return select_item ~= nil and provider.fetch_preview_data(select_item) or nil
     end
   end
 
-  ---@type t.fml.ux.search.IPatchPreviewData|nil
+  ---@type fml.t.ux.search.IPatchPreviewData|nil
   local patch_preview_data = nil
   if preview_enabled and provider.patch_preview_data ~= nil then
     patch_preview_data = function(item, last_item, data)
       ---@diagnostic disable-next-line: invisible
-      local select_item = self._item_map[item.uuid] ---@type t.fml.ux.select.IItem
+      local select_item = self._item_map[item.uuid] ---@type fml.t.ux.select.IItem
       ---@diagnostic disable-next-line: invisible
-      local last_select_item = self._item_map[last_item.uuid] ---@type t.fml.ux.select.IItem
+      local last_select_item = self._item_map[last_item.uuid] ---@type fml.t.ux.select.IItem
       return provider.patch_preview_data(select_item, last_select_item, data)
     end
   end
 
   ---@param input_text                  string
   ---@param force                       boolean
-  ---@param callback                    t.fml.ux.search.IFetchDataCallback
+  ---@param callback                    fml.t.ux.search.IFetchDataCallback
   ---@return nil
   local function fetch_data(input_text, force, callback)
     vim.schedule(function()
@@ -184,14 +184,14 @@ function M.new(props)
     end)
   end
 
-  ---@param item                        t.fml.ux.search.IItem
-  ---@return t.eve.e.WidgetConfirmAction|nil
+  ---@param item                        fml.t.ux.search.IItem
+  ---@return eve.e.WidgetConfirmAction|nil
   local function on_confirm(item)
     if frecency ~= nil then
       frecency:access(item.uuid)
     end
     ---@diagnostic disable-next-line: invisible
-    local select_item = self._item_map[item.uuid] ---@type t.fml.ux.select.IItem
+    local select_item = self._item_map[item.uuid] ---@type fml.t.ux.select.IItem
     if select_item ~= nil then
       return on_confirm_from_props(select_item)
     end
@@ -208,9 +208,9 @@ function M.new(props)
     end
   end
 
-  local _search = nil ---@type t.fml.ux.search.ISearch|nil
+  local _search = nil ---@type fml.t.ux.search.ISearch|nil
 
-  ---@return t.fml.ux.search.ISearch
+  ---@return fml.t.ux.search.ISearch
   local function get_search()
     if _search == nil then
       _search = Search.new({
@@ -258,35 +258,35 @@ function M.new(props)
   return self
 end
 
----@param dimension                     t.fml.ux.search.IRawDimension
+---@param dimension                     fml.t.ux.search.IRawDimension
 ---@return nil
 function M:change_dimension(dimension)
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   search:change_dimension(dimension)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   search:change_input_title(title)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   search:change_preview_title(title)
 end
 
 ---@return nil
 function M:close()
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   search:close()
 end
 
----@param item1                         t.fml.ux.select.IMatchedItem
----@param item2                         t.fml.ux.select.IMatchedItem
+---@param item1                         fml.t.ux.select.IMatchedItem
+---@param item2                         fml.t.ux.select.IMatchedItem
 ---@return boolean
 function M.cmp_by_score(item1, item2)
   if item1.score == item2.score then
@@ -295,14 +295,14 @@ function M.cmp_by_score(item1, item2)
   return item1.score > item2.score
 end
 
----@param item                          t.fml.ux.select.IItem
----@param match                         t.fml.ux.select.IMatchedItem
+---@param item                          fml.t.ux.select.IItem
+---@param match                         fml.t.ux.select.IMatchedItem
 ---@return string
----@return t.eve.IHighlightInline[]
+---@return eve.t.IHighlightInline[]
 function M.default_render_item(item, match)
-  local highlights = {} ---@type t.eve.IHighlightInline[]
+  local highlights = {} ---@type eve.t.IHighlightInline[]
   for _, piece in ipairs(match.matches) do
-    ---@type t.eve.IHighlightInline[]
+    ---@type eve.t.IHighlightInline[]
     local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
     table.insert(highlights, highlight)
   end
@@ -311,19 +311,19 @@ end
 
 ---@param input                         string
 ---@param force                         boolean
----@return t.fml.ux.search.IData
+---@return fml.t.ux.search.IData
 function M:fetch_data(input, force)
   local is_data_dirty = force or self._live_data_dirty:snapshot() ---@type boolean
   self._live_data_dirty:next(false)
 
   if is_data_dirty then
-    local frecency = self._frecency ---@type t.eve.collection.IFrecency|nil
-    local data = self._provider.fetch_data(force) ---@type t.fml.ux.select.IData
-    local item_map = {} ---@type table<string, t.fml.ux.select.IItem>
-    local full_matches = {} ---@type t.fml.ux.select.IMatchedItem[]
+    local frecency = self._frecency ---@type eve.t.collection.IFrecency|nil
+    local data = self._provider.fetch_data(force) ---@type fml.t.ux.select.IData
+    local item_map = {} ---@type table<string, fml.t.ux.select.IItem>
+    local full_matches = {} ---@type fml.t.ux.select.IMatchedItem[]
     for order, item in ipairs(data.items) do
       local score = frecency ~= nil and frecency:score(item.uuid) or 0 ---@type integer
-      local match_item = { order = order, uuid = item.uuid, score = score, matches = {} } ---@type t.fml.ux.select.IMatchedItem
+      local match_item = { order = order, uuid = item.uuid, score = score, matches = {} } ---@type fml.t.ux.select.IMatchedItem
       item_map[item.uuid] = item
       table.insert(full_matches, match_item)
     end
@@ -339,29 +339,29 @@ function M:fetch_data(input, force)
     self._matches = full_matches
   end
 
-  local item_map = self._item_map ---@type table<string, t.fml.ux.select.IItem>
-  local matches = self:filter(input) ---@type t.fml.ux.select.IMatchedItem[]
-  local items = {} ---@type t.fml.ux.search.IItem[]
-  local render_item = self._provider.render_item or M.default_render_item ---@type t.fml.ux.select.IRenderItem
+  local item_map = self._item_map ---@type table<string, fml.t.ux.select.IItem>
+  local matches = self:filter(input) ---@type fml.t.ux.select.IMatchedItem[]
+  local items = {} ---@type fml.t.ux.search.IItem[]
+  local render_item = self._provider.render_item or M.default_render_item ---@type fml.t.ux.select.IRenderItem
   for _, match in ipairs(matches) do
-    local item = item_map[match.uuid] ---@type t.fml.ux.select.IItem
+    local item = item_map[match.uuid] ---@type fml.t.ux.select.IItem
     local line, highlights = render_item(item, match)
-    ---@type t.fml.ux.search.IItem
+    ---@type fml.t.ux.search.IItem
     local search_item = { group = item.group, uuid = item.uuid, text = line, highlights = highlights }
     table.insert(items, search_item)
   end
 
-  ---@type t.fml.ux.search.IData
+  ---@type fml.t.ux.search.IData
   return { items = items, present_uuid = self._item_uuid_present, cursor_uuid = self._item_uuid_cursor }
 end
 
 ---@param input                         string
----@return t.fml.ux.select.IMatchedItem[]
+---@return fml.t.ux.select.IMatchedItem[]
 function M:filter(input)
-  local frecency = self._frecency ---@type t.eve.collection.IFrecency|nil
+  local frecency = self._frecency ---@type eve.t.collection.IFrecency|nil
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
 
-  local matches = self._full_matches ---@type t.fml.ux.select.IMatchedItem[]
+  local matches = self._full_matches ---@type fml.t.ux.select.IMatchedItem[]
   if #input < 1 then
     if frecency ~= nil then
       for _, match in ipairs(matches) do
@@ -370,7 +370,7 @@ function M:filter(input)
       end
     end
   else
-    local old_matches = self._full_matches ---@type t.fml.ux.select.IMatchedItem[]
+    local old_matches = self._full_matches ---@type fml.t.ux.select.IMatchedItem[]
     local last_case_sensitive = self._last_case_sensitive ---@type boolean
     local last_input = self._last_input ---@type string|nil
     if last_input ~= nil and case_sensitive == last_case_sensitive or not last_case_sensitive then
@@ -391,7 +391,7 @@ function M:filter(input)
       end
     end
 
-    ---@type t.fml.ux.select.IMatchedItem[]
+    ---@type fml.t.ux.select.IMatchedItem[]
     matches = self:find_matched_items(input, old_matches)
     if frecency ~= nil then
       for _, match in ipairs(matches) do
@@ -412,13 +412,13 @@ function M:filter(input)
 end
 
 ---@param input                         string
----@param old_matches                   t.fml.ux.select.IMatchedItem[]
----@return t.fml.ux.select.IMatchedItem[]
+---@param old_matches                   fml.t.ux.select.IMatchedItem[]
+---@return fml.t.ux.select.IMatchedItem[]
 function M:find_matched_items(input, old_matches)
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
   local flag_fuzzy = self._flag_fuzzy:snapshot() ---@type boolean
   local flag_regex = self._flag_regex:snapshot() ---@type boolean
-  local item_map = self._item_map ---@type table<string, t.fml.ux.select.IItem>
+  local item_map = self._item_map ---@type table<string, fml.t.ux.select.IItem>
 
   local lines = {} ---@type string[]
   if case_sensitive then
@@ -431,7 +431,7 @@ function M:find_matched_items(input, old_matches)
     input = input:lower()
     for _, match in ipairs(old_matches) do
       local uuid = match.uuid ---@type string
-      local item = item_map[uuid] ---@type t.fml.ux.select.IItem|nil
+      local item = item_map[uuid] ---@type fml.t.ux.select.IItem|nil
       if item ~= nil then
         item.text_lower = item.text_lower or item.text:lower()
         table.insert(lines, item.text_lower)
@@ -445,11 +445,11 @@ function M:find_matched_items(input, old_matches)
     return old_matches
   end
 
-  local matches = {} ---@type t.fml.ux.select.IMatchedItem[]
+  local matches = {} ---@type fml.t.ux.select.IMatchedItem[]
   for _, oxi_match in ipairs(oxi_matches) do
-    local old_match = old_matches[oxi_match.lnum] ---@type t.fml.ux.select.IMatchedItem
+    local old_match = old_matches[oxi_match.lnum] ---@type fml.t.ux.select.IMatchedItem
 
-    ---@type t.fml.ux.select.IMatchedItem
+    ---@type fml.t.ux.select.IMatchedItem
     local match = {
       order = old_match.order,
       uuid = old_match.uuid,
@@ -463,61 +463,61 @@ end
 
 ---@return nil
 function M:focus()
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   search:focus()
 end
 
 ---@param uuid                          string
----@return                              t.fml.ux.select.IItem|nil
+---@return                              fml.t.ux.select.IItem|nil
 function M:get_item(uuid)
   return self._item_map[uuid]
 end
 
----@return                              t.fml.ux.select.IMatchedItem[]
+---@return                              fml.t.ux.select.IMatchedItem[]
 function M:get_matched_items()
   return self._matches
 end
 
 ---@return integer|nil
 function M:get_winnr_main()
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   return search:get_winnr_main()
 end
 
 ---@return integer|nil
 function M:get_winnr_input()
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   return search:get_winnr_input()
 end
 
 ---@return integer|nil
 function M:get_winnr_preview()
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   return search:get_winnr_preview()
 end
 
 ---@return nil
 function M:mark_data_dirty()
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   self._live_data_dirty:next(true)
   search.state.dirtier_data:mark_dirty()
 end
 
 ---@return nil
 function M:mark_search_state_dirty()
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   search.state.dirtier_data:mark_dirty()
 end
 
 ---@return nil
 function M:open()
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   search:open()
 end
 
 ---@return nil
 function M:toggle()
-  local search = self._get_search() ---@type t.fml.ux.search.ISearch
+  local search = self._get_search() ---@type fml.t.ux.search.ISearch
   search:toggle()
 end
 

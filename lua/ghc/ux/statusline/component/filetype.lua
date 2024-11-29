@@ -1,4 +1,4 @@
----@type t.fml.ux.nvimbar.IRawComponent
+---@type fml.t.ux.nvimbar.IRawComponent
 local M = {
   name = "filetype",
   will_change = function(context, prev_context)
