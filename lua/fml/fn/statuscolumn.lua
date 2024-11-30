@@ -82,7 +82,7 @@ local function buf_signs(bufnr)
 
   -- Get extmark signs
   local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, { details = true, type = "sign" })
-  for _, extmark in pairs(extmarks) do
+  for _, extmark in ipairs(extmarks) do
     local lnum = extmark[2] + 1
     local name = extmark[4].sign_hl_group or extmark[4].sign_name or ""
 
