@@ -1,5 +1,7 @@
 ---  https://github.com/LazyVim/LazyVim/blob/0f6ff53ce336082869314db11e9dfa487cf83292/lua/lazyvim/util/cmp.lua#L1
 
+local __module_name__ = "guanghechen.util.cmp" ---@type string
+
 ---@class guanghechen.util.cmp
 local M = {}
 
@@ -81,8 +83,8 @@ function M.expand(snippet)
 
     local log = ok and eve.reporter.warn or eve.reporter.error
     log({
-      from = "guanghechen.util.cmp.expand",
-      subject = "vim.snippet",
+      from = __module_name__,
+      subject = "expand",
       message = formatted_msg,
     })
   end

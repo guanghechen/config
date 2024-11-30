@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.command.session" ---@type string
+
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
@@ -44,7 +46,7 @@ eve.commander
         eve.nvim.save_nvim_session(eve.context.storage.nvim_session)
 
         eve.reporter.info({
-          from = "ghc.command.session",
+          from = __module_name__,
           message = "Session saved successfully!",
         })
       end

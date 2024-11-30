@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.command.toggle.theme" ---@type string
+
 local Observable = require("eve.collection.observable")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 local theme_cache_path = eve.path.locate_context_filepath("theme")
@@ -36,8 +38,8 @@ end
 local function apply_theme(theme)
   if not vim.tbl_contains(fml.ux.theme.themes, theme) then
     eve.reporter.error({
-      from = "ghc.command.toggle",
-      subject = "theme",
+      from = __module_name__,
+      subject = "apply_theme",
       message = "Unknown theme.",
       details = { theme = theme },
     })
@@ -51,8 +53,8 @@ local function apply_theme(theme)
   end)
   if not ok then
     eve.reporter.error({
-      from = "ghc.command.toggle",
-      subject = "theme",
+      from = __module_name__,
+      subject = "apply_theme",
       message = "Failed to toggle theme.",
       details = { theme = theme, app_home = app_home, script_path = script_path, error = error },
     })
@@ -69,8 +71,8 @@ local function toggle_theme_variant(theme)
   end)
   if not ok then
     eve.reporter.error({
-      from = "ghc.command.toggle",
-      subject = "theme variant",
+      from = __module_name__,
+      subject = "toggle_theme_variant",
       message = "Failed to toggle theme variant.",
       details = { theme = theme, app_home = app_home, script_path = script_path, error = error },
     })

@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.command.lsp.reference" ---@type string
+
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@param method                        string
@@ -8,7 +10,7 @@ local function fetch_data(method, additional_params, callback)
   local bufnr = eve.locations.get_current_bufnr() or vim.api.nvim_get_current_buf() ---@type integer
   if not eve.lsp.has_support_method(bufnr, method) then
     eve.reporter.error({
-      from = "ghc.command.lsp.reference",
+      from = __module_name__,
       subject = "fetch_data",
       message = "Not support method.",
       details = { bufnr = bufnr, method = method, context = additional_params },
@@ -18,7 +20,7 @@ local function fetch_data(method, additional_params, callback)
   end
 
   local cwd = eve.path.cwd() ---@type string
-  local winnr = fml.api.tab.get_current_winnr() ---@type integer
+  local winnr = eve.tab.get_current_winnr() ---@type integer
   local params = vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr), additional_params)
 
   vim.lsp.buf_request_all(bufnr, method, params, function(results_per_client)
@@ -72,7 +74,7 @@ local function fetch_data(method, additional_params, callback)
 
     if #errors > 0 then
       eve.reporter.error({
-        from = "ghc.command.lsp.reference",
+        from = __module_name__,
         subject = "fetch_data",
         message = "Encountered errors.",
         details = { bufnr = bufnr, method = method, params = params, errors = errors },

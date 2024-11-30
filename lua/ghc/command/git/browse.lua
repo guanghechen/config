@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.command.git.browser" ---@type string
+
 local constant = require("eve.builtin.constant")
 local Observable = require("eve.collection.observable")
 
@@ -13,6 +15,7 @@ local Observable = require("eve.collection.observable")
 ---@class ghc.command.git.browse
 local config = {
   -- patterns to transform remotes to an actual URL
+  -- stylua: ignore start
   remote_patterns = {
     { "^(https?://.*)%.git$"              , "%1" },
     { "^git@(.+):(.+)%.git$"              , "https://%1/%2" },
@@ -27,6 +30,7 @@ local config = {
     { ":%d+"                              , "" },
     { "%.git$"                            , "" },
   },
+  -- stylua: ignore end
   url_patterns = {
     ["github%.com"] = {
       branch = "/tree/{branch}",
@@ -46,7 +50,7 @@ local function system(cmd, err)
   local proc = vim.fn.system(cmd)
   if vim.v.shell_error ~= 0 then
     eve.reporter.error({
-      from = "ghc.command.git.browser",
+      from = __module_name__,
       message = err,
       details = { error = err, proc = proc }
     })
@@ -63,7 +67,7 @@ local function get_last_commit_hash(filename, lnum)
 
   if not handle then
     eve.reporter.error({
-      from = "ghc.command.git.browse",
+      from = __module_name__,
       message = "Failed to run git command to get last commit hash of the filename with specified line number",
     })
     return
@@ -95,7 +99,7 @@ local function get_git_branch_or_commit()
   local handle = io.popen(command)
   if not handle then
     eve.reporter.error({
-      from = "ghc.command.git.browse",
+      from = __module_name__,
       message = "Failed to run git command to get branch",
     })
     return "HEAD"
@@ -117,7 +121,7 @@ local function get_git_branch_or_commit()
     handle = io.popen(command)
     if not handle then
       eve.reporter.error({
-        from = "ghc.command.git.browse",
+        from = __module_name__,
         message = "Failed to run git command to get commit hash",
       })
       return "HEAD"
@@ -191,7 +195,7 @@ end
 local function open_remote(remote)
   if remote then
     eve.reporter.info({
-      from = "ghc.command.git.browse",
+      from = __module_name__,
       message = "Opening " .. "[" .. remote.name.. "]" .. "(" ..remote.url .. ")",
     })
     vim.ui.open(remote.url)
@@ -229,7 +233,7 @@ local function open()
 
   if #remotes == 0 then
     eve.reporter.error({
-      from = "ghc.command.git.browse",
+      from = __module_name__,
       message = "No git remotes found",
       details = { what = scope, workspace = workspace, filepath = filepath }
     })

@@ -1,3 +1,5 @@
+local __module_name__ = "fml.fn.get_clipboard" ---@type string
+
 local constant = require("eve.builtin.constant")
 
 local function wsl_clipboard()
@@ -24,7 +26,7 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
     local file = io.open(clipboard_file, "w")
     if file == nil then
       eve.reporter.error({
-        from = "fml.fn.get_clipboard",
+        from = __module_name__,
         subject = "macos_fake_clipborad",
         message = "Unable to open fake clipboard file for writing.",
         details = {
@@ -50,7 +52,7 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
     local file = io.open(clipboard_file, "r")
     if file == nil then
       eve.reporter.error({
-        from = "fml.fn.get_clipboard",
+        from = __module_name__,
         subject = "macos_fake_clipborad",
         message = "Unable to open fake clipboard file for reading.",
         details = {
@@ -87,7 +89,7 @@ local function get_clipboard()
       local fake_clipboard_filepath = eve.tmux.get_tmux_env_value("ghc_use_fake_clipboard")
       if fake_clipboard_filepath ~= nil and eve.path.is_exist(fake_clipboard_filepath) then
         eve.reporter.info({
-          from = "fml.fn.get_clipboard",
+          from = __module_name__,
           message = "Using fake clipboard:" .. fake_clipboard_filepath,
         })
         return macos_fake_clipborad(fake_clipboard_filepath)

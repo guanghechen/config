@@ -1,3 +1,5 @@
+local __module_name__ = "guanghechen.plugin" ---@type string
+
 ---@class guanghechen.plugin.IRawSpec
 ---@field public name                   string
 ---@field public branch                 ?string
@@ -132,7 +134,7 @@ for index = 1, #specs, 1 do
     spec_details.main = spec_basic.main
   elseif not vim.tbl_contains(no_details_module_names, spec_basic.name) then
     eve.reporter.error({
-      from = "guanghechen.plugin.bootstrap",
+      from = __module_name__,
       subject = "resolve plugin details",
       message = "Failed to resolve the details of plugin: " .. spec_basic.name,
     })

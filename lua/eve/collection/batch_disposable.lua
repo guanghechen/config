@@ -1,3 +1,5 @@
+local __module_name__ = "eve.collection.batch_disposable" ---@type string
+
 local reporter = require("eve.builtin.reporter")
 local BatchHandler = require("eve.collection.batch_handler")
 
@@ -60,7 +62,7 @@ function M:dispose()
 
   if not ok then
     reporter.error({
-      from = "eve.collection.BatchDisposable",
+      from = __module_name__,
       subject = "dispose",
       message = "Failed to dispose all registered disposables.",
       details = { result = result },

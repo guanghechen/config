@@ -1,3 +1,5 @@
+local __module_name__ = "fml.ux.component.nvimbar" ---@type string
+
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local nvimbar = require("eve.std.nvimbar")
@@ -300,7 +302,7 @@ function M:internal_render()
             end
           else
             reporter.error({
-              from = "fml.ux.nvimbar",
+              from = __module_name__,
               subject = "render",
               message = "Bad component position.",
               details = { item = item, component = component },
@@ -309,7 +311,7 @@ function M:internal_render()
         end
       else
         reporter.error({
-          from = "fml.ux.nvimbar",
+          from = __module_name__,
           subject = "render",
           message = "Encounter error while render the nvimbar component.",
           details = { item = item, component = component, error = err },

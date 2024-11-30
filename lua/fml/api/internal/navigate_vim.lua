@@ -1,3 +1,5 @@
+local __module_name__ = "fml.api.internal.nvaigate_vim" ---@type string
+
 local reporter = require("eve.builtin.reporter")
 
 ---@return nil
@@ -30,7 +32,7 @@ local function navigate_vim(direction)
   local ok = pcall(navigate_window, direction)
   if not ok then
     reporter.error({
-      from = "fml.api.internal.nvaigate_vim",
+      from = __module_name__,
       message = "E11: Invalid in command-line window; <CR> executes, CTRL-C quits",
       details = { direction = direction },
     })

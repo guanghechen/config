@@ -1,3 +1,5 @@
+local __module_name__ = "eve.collection.history" ---@type string
+
 local reporter = require("eve.builtin.reporter")
 local util = require("eve.builtin.util")
 local CircularStack = require("eve.collection.circular_stack")
@@ -198,7 +200,7 @@ function M:print()
   local present = self._present ---@type integer
   local stack = self._stack:collect() ---@type eve.t.T
   reporter.info({
-    from = "eve.collection.history",
+    from = __module_name__,
     subject = "print",
     details = { present = present, stack = stack },
   })

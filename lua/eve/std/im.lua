@@ -1,3 +1,5 @@
+local __module_name__ = "eve.std.im" ---@type string
+
 local constant = require("eve.builtin.constant")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
@@ -15,7 +17,7 @@ if constant.IS_MAC then
   function M.get_input_method()
     if not vim.fn.executable(script_path) then
       reporter.error({
-        from = "eve.std.im",
+        from = __module_name__,
         subject = "get_input_method",
         message = "Not a executable file.",
         details = { app_home = app_home, script_path = script_path },
@@ -26,7 +28,7 @@ if constant.IS_MAC then
     local handle = io.popen(vim.fn.fnameescape(script_path))
     if not handle then
       reporter.error({
-        from = "eve.std.im",
+        from = __module_name__,
         subject = "get_input_method",
         message = "Failed to run the executable file.",
         details = { app_home = app_home, script_path = script_path },
@@ -49,7 +51,7 @@ if constant.IS_MAC then
     end
 
     reporter.error({
-      from = "eve.std.im",
+      from = __module_name__,
       subject = "get_input_method",
       message = "Unknown input method.",
       details = { app_home = app_home, script_path = script_path, input_method = input_method },
@@ -61,7 +63,7 @@ if constant.IS_MAC then
   function M.set_input_method(input_method)
     if not vim.fn.executable(script_path) then
       reporter.error({
-        from = "eve.std.im",
+        from = __module_name__,
         subject = "set_input_method",
         message = "Not a executable file.",
         details = { app_home = app_home, script_path = script_path, input_method = input_method },
@@ -76,7 +78,7 @@ if constant.IS_MAC then
       arg = "com.apple.inputmethod.SCIM.ITABC"
     else
       reporter.error({
-        from = "eve.std.im",
+        from = __module_name__,
         subject = "get_input_method",
         message = "Unknown input method.",
         details = { app_home = app_home, script_path = script_path, input_method = input_method },
@@ -87,7 +89,7 @@ if constant.IS_MAC then
     local handle = io.popen(vim.fn.fnameescape(script_path) .. " " .. arg)
     if not handle then
       reporter.error({
-        from = "eve.std.im",
+        from = __module_name__,
         subject = "set_input_method",
         message = "Failed to run the executable file.",
         details = { app_home = app_home, script_path = script_path, input_method = input_method },
@@ -100,7 +102,7 @@ if constant.IS_MAC then
 
     if output ~= nil and output ~= "" then
       reporter.error({
-        from = "eve.std.im",
+        from = __module_name__,
         subject = "set_input_method",
         message = "Unexpected output from the executable file.",
         details = { app_home = app_home, script_path = script_path, input_method = input_method, output = output },

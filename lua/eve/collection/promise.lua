@@ -1,3 +1,5 @@
+local __module_name__ = "eve.collection.promise" ---@type string
+
 local reporter = require("eve.builtin.reporter")
 
 ---@class eve.t.collection.IPromise
@@ -52,7 +54,7 @@ function M.new(fn)
   local function resolve(value)
     if self._settled ~= nil then
       reporter.error({
-        from = "eve.collection.promise",
+        from = __module_name__,
         subject = "new#resolve",
         message = "Promise is already settled.",
         details = { value = value },
@@ -75,7 +77,7 @@ function M.new(fn)
   local function reject(reason)
     if self._settled ~= nil then
       reporter.error({
-        from = "eve.collection.promise",
+        from = __module_name__,
         subject = "new#reject",
         message = "Promise is already settled.",
         details = { reason = reason },
@@ -96,7 +98,7 @@ function M.new(fn)
 
     if not has_catched then
       reporter.error({
-        from = "eve.collection.promise",
+        from = __module_name__,
         subject = "new#reject",
         message = "Uncatched promise rejection.",
         details = { reason = reason },

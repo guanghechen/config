@@ -1,9 +1,11 @@
+local __module_name__ = "ghc.ux.statusline.component.copilot" ---@type string
+
 ---@type string
 local fn_show_message = eve.G.register_anonymous_fn(function()
   if package.loaded["copilot"] then
     local status = require("copilot.api").status.data
     eve.reporter.info({
-      from = "ghc.ux.statusline.component.copilot",
+      from = __module_name__,
       details = { status = status or "nil" },
     })
   end

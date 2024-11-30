@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.command.copy" ---@type string
+
 local Observable = require("eve.collection.observable")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
@@ -20,7 +22,7 @@ local function copy_current_filepath(candidate)
 
     vim.fn.setreg("+", content)
     eve.reporter.info({
-      from = "ghc.command.copy",
+      from = __module_name__,
       message = "Copied current buffer filepath (absolute) to system clipboard!",
     })
   elseif candidate == "relative" then
@@ -30,12 +32,12 @@ local function copy_current_filepath(candidate)
 
     vim.fn.setreg("+", content)
     eve.reporter.info({
-      from = "ghc.command.copy",
+      from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
     })
   else
     eve.reporter.error({
-      from = "ghc.command.copy",
+      from = __module_name__,
       message = "Failed to copy current filepath, unknown candidate!",
       details = { candidate = candidate },
     })

@@ -1,3 +1,5 @@
+local __module_name__ = "fml.ux.theme" ---@type string
+
 local reporter = require("eve.builtin.reporter")
 local Theme = require("eve.collection.theme")
 local hmr = require("eve.fn.hmr")
@@ -69,7 +71,7 @@ end
 function M.get_scheme(theme)
   if not vim.tbl_contains(M.themes, theme) then
     reporter.error({
-      from = "fml.ux.theme",
+      from = __module_name__,
       subject = "get_scheme",
       message = "Unknown theme.",
       details = { theme = theme },
@@ -80,7 +82,7 @@ function M.get_scheme(theme)
   local ok, scheme = pcall(hmr, "fml.ux.theme.scheme." .. theme)
   if not ok then
     reporter.error({
-      from = "fml.ux.theme",
+      from = __module_name__,
       subject = "get_scheme",
       message = "Cannot find scheme.",
       details = { theme = theme },

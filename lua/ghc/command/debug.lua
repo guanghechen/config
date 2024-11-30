@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.command.debug" ---@type string
+
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
@@ -15,7 +17,7 @@ eve.commander
       local bufnr_cur = eve.locations.get_current_bufnr() ---@type integer|nil
 
       eve.reporter.info({
-        from = "ghc.command.debug",
+        from = __module_name__,
         subject = "inspect",
         details = {
           tabnr = tabnr,
@@ -42,7 +44,7 @@ eve.commander
     action = function()
       local data = eve.context.dump() ---@type eve.t.context.data
       eve.reporter.info({
-        from = "ghc.command.inspect",
+        from = __module_name__,
         subject = "inspect_state",
         details = { data = data },
       })

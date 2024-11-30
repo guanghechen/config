@@ -1,3 +1,5 @@
+local __module_name__ = "fml.ux.component.textarea" ---@type string
+
 local reporter = require("eve.builtin.reporter")
 local box = require("eve.std.box")
 
@@ -89,7 +91,7 @@ function M.new(props)
     local bufnr = self:get_bufnr() ---@type integer|nil
     if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
       reporter.warn({
-        from = "fml.ux.textarea",
+        from = __module_name__,
         subject = "confirm",
         message = "The buffer is not valid.",
         details = { bufnr = bufnr, self = self },
@@ -101,7 +103,7 @@ function M.new(props)
     local err_msg = type(validate) == "function" and validate(lines) or nil ---@type string|nil
     if err_msg ~= nil then
       reporter.warn({
-        from = "fml.ux.textarea",
+        from = __module_name__,
         subject = "confirm",
         message = "Validation failed.",
         details = { lines = lines, err_msg = err_msg },

@@ -1,3 +1,5 @@
+local __module_name__ = "guanghechen.plugin.mini-pairs" ---@type string
+
 -- auto pairs
 return {
   name = "mini.pairs",
@@ -27,13 +29,13 @@ return {
         vim.g.minipairs_disable = not vim.g.minipairs_disable
         if vim.g.minipairs_disable then
           eve.reporter.warn({
-            from = "guanghechen.plugin.mini-pairs",
+            from = __module_name__,
             subject = "toggle auto pairs",
             message = "Disabled auto pairs",
           })
         else
           eve.reporter.info({
-            from = "guanghechen.plugin.mini-pairs",
+            from = __module_name__,
             subject = "toggle auto pairs",
             message = "Enable auto pairs",
           })

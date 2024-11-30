@@ -1,3 +1,5 @@
+local __module_name__ = "guanghechen.plugins.CopilotChat" ---@type string
+
 if not eve.context.state.flight.copilot:snapshot() then
   return
 end
@@ -149,7 +151,7 @@ eve.commander
       local prompt_actions = actions["prompt_actions"]()
       if not prompt_actions then
         eve.reporter.warn({
-          from = "guanghechen.plugins.CopilotChat",
+          from = __module_name__,
           subject = "pick",
           message = "No prompt found on the current line",
         })

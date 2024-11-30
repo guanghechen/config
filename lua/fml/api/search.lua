@@ -1,3 +1,5 @@
+local __module_name__ = "fml.api.search" ---@type string
+
 ---@type eve.e.SearchScope[]
 local scopes = { "W", "C", "D", "B" }
 
@@ -34,7 +36,7 @@ function M.get_scope_cwd(dirpath)
   end
 
   eve.reporter.error({
-    from = "fml.api.search",
+    from = __module_name__,
     subject = "get_scope_cwd",
     message = "Unknown scope.",
     details = { scope = scope, dirpath = dirpath },

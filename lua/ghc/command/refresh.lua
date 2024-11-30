@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.command.refresh" ---@type string
+
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander.register({
@@ -32,7 +34,7 @@ eve.commander.register({
     end)
 
     eve.reporter.info({
-      from = "ghc.command.refresh",
+      from = __module_name__,
       message = "Refreshed all!",
     })
   end,

@@ -1,3 +1,5 @@
+local __module_name__ = "fml.api.term" ---@type string
+
 local terminal_map = {} ---@type table<string, fml.t.ux.ITerminal>
 
 ---@class fml.api.term
@@ -26,7 +28,7 @@ function M.create(params)
   local terminal = terminal_map[name] ---@type fml.t.ux.ITerminal|nil
   if terminal ~= nil then
     eve.reporter.error({
-      from = "fml.api.term",
+      from = __module_name__,
       subject = "create",
       message = "The term with the given name already exists.",
       details = { name = name, command = command, cwd = cwd, env = env },
@@ -72,7 +74,7 @@ function M.toggle(name)
   local terminal = terminal_map[name] ---@type fml.t.ux.ITerminal
   if terminal == nil then
     eve.reporter.error({
-      from = "fml.api.term",
+      from = __module_name__,
       subject = "toggle",
       message = "Cannot find the term with the given name.",
       details = { name = name },

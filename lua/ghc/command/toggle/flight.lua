@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.command.toggle.flight" ---@type string
+
 local Observable = require("eve.collection.observable")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
@@ -19,14 +21,14 @@ local function toggle_flight(flight)
     observable:next(enabled)
 
     eve.reporter.info({
-      from = "ghc.command.toggle",
-      subject = "flight",
+      from = __module_name__,
+      subject = "toggle_flight",
       message = flight .. " flight has been " .. (enabled and "enabled" or "disabled") .. ".",
     })
   else
     eve.reporter.error({
-      from = "ghc.command.toggle",
-      subject = "flight",
+      from = __module_name__,
+      subject = "toggle_flight",
       message = "Unknown flight.",
       details = { flight = flight },
     })

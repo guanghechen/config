@@ -1,3 +1,5 @@
+local __module_name__ = "fml.ux.component.search.state" ---@type string
+
 local reporter = require("eve.builtin.reporter")
 local Dirtier = require("eve.collection.dirtier")
 local Observable = require("eve.collection.observable")
@@ -267,7 +269,7 @@ end
 ---@return nil
 function M:show_sate()
   reporter.error({
-    from = "fl.ui.search.state",
+    from = __module_name__,
     subject = "show_state",
     details = {
       dirtier_dimension = self.dirtier_dimension:snapshot(),

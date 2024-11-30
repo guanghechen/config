@@ -1,3 +1,5 @@
+local __module_name__ = "eve.builtin.commander" ---@type string
+
 local reporter = require("eve.builtin.reporter")
 
 ---@class eve.t.builtin.commander.ICommand
@@ -185,7 +187,7 @@ function M.execute(uuid, args, silent)
   if command == nil then
     if not silent then
       reporter.error({
-        from = "eve.builtin.commander",
+        from = __module_name__,
         subject = "execute",
         message = "Cannot resolve the command by the given uuid",
         details = { uuid = uuid },
@@ -209,7 +211,7 @@ function M.register(raw_command, overwrite)
 
   if has_existed and not overwrite then
     reporter.warn({
-      from = "eve.builtin.commander",
+      from = __module_name__,
       subject = "register",
       message = "The command has been registered, please set the `overwrite` param to true if you want to replace it",
       details = { uuid = uuid, overwrite = overwrite },
@@ -261,7 +263,7 @@ function M.resolve(uuid, silent)
   local command = command_map[uuid] ---@type eve.t.builtin.commander.ICommand|nil
   if command == nil and not silent then
     reporter.warn({
-      from = "eve.builtin.commander",
+      from = __module_name__,
       subject = "resolve",
       message = "Cannot resolve the command by the given uuid",
       details = { uuid = uuid },

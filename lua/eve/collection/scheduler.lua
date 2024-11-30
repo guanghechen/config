@@ -1,3 +1,5 @@
+local __module_name__ = "eve.collection.scheduler" ---@type string
+
 local reporter = require("eve.builtin.reporter")
 
 ---@class eve.t.collection.IScheduler
@@ -128,7 +130,7 @@ function M:execute()
     elseif settled == "rejected" then
       if not self._silent then
         reporter.error({
-          from = "eve.collection.scheduler",
+          from = __module_name__,
           subject = "execute",
           message = "Task failed.",
           details = {
