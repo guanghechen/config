@@ -1,3 +1,4 @@
+local fs = require("eve.builtin.fs")
 local reporter = require("eve.builtin.reporter")
 local Disposable = require("eve.collection.disposable")
 local Subscriber = require("eve.collection.subscriber")
@@ -7,7 +8,6 @@ local editor = require("eve.context.editor")
 local session = require("eve.context.session")
 local workspace = require("eve.context.workspace")
 local mvc = require("eve.globals.mvc")
-local fs = require("eve.std.fs")
 local std_nvim = require("eve.std.nvim")
 
 ---@class eve.context : eve.t.context

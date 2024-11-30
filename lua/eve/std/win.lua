@@ -1,5 +1,5 @@
+local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
-local fs = require("eve.std.fs")
 
 ---@class eve.std.win.IDetails
 ---@field public winnr                  integer

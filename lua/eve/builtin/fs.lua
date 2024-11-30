@@ -1,29 +1,31 @@
-local std_json = require("eve.builtin.json")
+local __module_name__ = "eve.builtin.fs" ---@type string
+
+local json = require("eve.builtin.json")
 local reporter = require("eve.builtin.reporter")
 
----@class eve.std.fs
-local M = {}
-
----@class eve.std.fs.IReadFileParams
+---@class eve.t.builtin.fs.IReadFileParams
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class eve.std.fs.IReadFileAsLinesParams
+---@class eve.t.builtin.fs.IReadFileAsLinesParams
 ---@field public filepath               string
 ---@field public max_lines              ?integer
 ---@field public silent                 ?boolean
 
----@class eve.std.fs.IReadJsonParams
+---@class eve.t.builtin.fs.IReadJsonParams
 ---@field public filepath               string
 ---@field public silent_on_bad_path     ?boolean
 ---@field public silent_on_bad_json     ?boolean
+
+---@class eve.builtin.fs
+local M = {}
 
 ---@param filepath                      string
 ---@param err                           any
 ---@param unwatch                       fun():nil
 local function default_watch_on_error(filepath, err, unwatch)
   reporter.error({
-    from = "eve.std.fs",
+    from = __module_name__,
     subject = "watch_file",
     message = "Failed to watch file.",
     details = { filepath = filepath, err = err },
@@ -57,7 +59,7 @@ function M.is_file_or_dir(filepath)
   return "other"
 end
 
----@param params                        eve.std.fs.IReadFileParams
+---@param params                        eve.t.builtin.fs.IReadFileParams
 ---@return string|nil
 function M.read_file(params)
   local filepath = params.filepath ---@type string
@@ -66,7 +68,7 @@ function M.read_file(params)
   if not file then
     if not silent then
       reporter.error({
-        from = "eve.std.fs",
+        from = __module_name__,
         subject = "read_file",
         message = "Failed to open filepath.",
         details = { filepath = filepath },
@@ -80,7 +82,7 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
----@param params                        eve.std.fs.IReadFileAsLinesParams
+---@param params                        eve.t.builtin.fs.IReadFileAsLinesParams
 ---@return string[]
 function M.read_file_as_lines(params)
   local filepath = params.filepath ---@type string
@@ -89,7 +91,7 @@ function M.read_file_as_lines(params)
   if not file then
     if not silent then
       reporter.error({
-        from = "eve.std.fs",
+        from = __module_name__,
         subject = "read_file",
         message = "Failed to open filepath.",
         details = { filepath = filepath },
@@ -111,7 +113,7 @@ function M.read_file_as_lines(params)
   return lines
 end
 
----@param params                        eve.std.fs.IReadJsonParams
+---@param params                        eve.t.builtin.fs.IReadJsonParams
 ---@return any|nil
 function M.read_json(params)
   local filepath = params.filepath ---@type string
@@ -130,7 +132,7 @@ function M.read_json(params)
   if not ok_to_decode_json then
     if not silent_on_bad_json then
       reporter.warn({
-        from = "eve.std.fs",
+        from = __module_name__,
         subject = "read_json",
         message = "Failed to decode json",
         details = { filepath = filepath, json_text = json_text },
@@ -154,7 +156,7 @@ function M.touch(filepath)
       vim.uv.fs_utime(filepath, current_time, current_time, function(err)
         if err then
           reporter.error({
-            from = "eve.std.fs",
+            from = __module_name__,
             subject = "touch",
             message = "Failed to touch file.",
             details = { filepath = filepath, err = err },
@@ -165,12 +167,12 @@ function M.touch(filepath)
   end
 end
 
----@class eve.std.fs.IWatchFileOptions
+---@class eve.builtin.fs.IWatchFileOptions
 ---@field filepath string
 ---@field on_event fun(filepath:string, events: any, unwatch:fun():nil):nil
 ---@field on_error? fun(filepath:string, err: any, unwatch:fun():nil):nil
 
----@param opts eve.std.fs.IWatchFileOptions
+---@param opts                          eve.builtin.fs.IWatchFileOptions
 ---@return fun():nil
 function M.watch_file(opts)
   local filepath = opts.filepath
@@ -216,7 +218,7 @@ function M.write_file(filepath, content)
   local file = io.open(filepath, "wb")
   if not file then
     reporter.error({
-      from = "eve.std.fs",
+      from = __module_name__,
       subject = "write_file",
       message = "Failed to open filepath.",
       details = { filepath = filepath },
@@ -227,7 +229,7 @@ function M.write_file(filepath, content)
   local ok, err = pcall(file.write, file, content)
   if not ok then
     reporter.error({
-      from = "eve.std.fs",
+      from = __module_name__,
       subject = "write_file",
       message = "Failed to write content.",
       details = { filepath = filepath, content = content, err = err },
@@ -242,10 +244,10 @@ end
 ---@param prettier                      boolean
 ---@return nil
 function M.write_json(filepath, data, prettier)
-  local ok_to_encode_json, json_text = pcall(prettier and std_json.stringify_prettier or std_json.stringify, data)
+  local ok_to_encode_json, json_text = pcall(prettier and json.stringify_prettier or json.stringify, data)
   if not ok_to_encode_json then
     reporter.warn({
-      from = "eve.std.fs",
+      from = __module_name__,
       subject = "write_json",
       message = "Failed to encode json data.",
       details = { filepath = filepath, data = data },

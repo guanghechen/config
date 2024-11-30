@@ -1,6 +1,6 @@
+local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
 local qflist = require("eve.globals.qflist")
-local fs = require("eve.std.fs")
 local validator = require("eve.std.validator")
 local Select = require("fml.ux.component.select")
 local api_buf = require("fml.api.buf")
