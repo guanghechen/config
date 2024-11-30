@@ -1,11 +1,13 @@
+local tmux = require("eve.lib.tmux")
+local state = require("eve.state")
 local winline = require("ghc.ux.winline")
 
 ---! Watch the zen mode change on tmux.
 if vim.env.TMUX then
   vim.api.nvim_create_autocmd({ "VimResized" }, {
     callback = function()
-      local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
-      eve.context.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
+      local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
+      state.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
     end,
   })
 end
@@ -24,7 +26,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
 
     local str = progress .. (data.message or "") .. " " .. (data.title or "")
     local lsp_msg = data.kind == "end" and "" or str ---@type string
-    eve.context.state.status.lsp_msg:next(lsp_msg)
+    state.state.status.lsp_msg:next(lsp_msg)
   end,
 })
 

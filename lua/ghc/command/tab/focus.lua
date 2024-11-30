@@ -1,7 +1,18 @@
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@type string[]
 local focus_candidates = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }
+
+---@param tabnr                         integer the stable unique number of the tabpage
+---@return nil
+local function go(tabnr)
+  local tabnr_from = vim.api.nvim_get_current_tabpage() ---@type integer
+  if tabnr_from ~= tabnr then
+    vim.api.nvim_set_current_tabpage(tabnr)
+    state.state.tab_history:push(tabnr)
+  end
+end
 
 ---@param tabid                         integer the index of tab list
 ---@return nil
@@ -10,7 +21,7 @@ local function focus(tabid)
   local tabid_next = eve.util.navigate_limit(0, tabid, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
-  fml.api.tab.go(tabnr_next)
+  go(tabnr_next)
 end
 
 for i = 1, 10, 1 do
@@ -50,7 +61,7 @@ eve.commander
       local tabid_next = eve.util.navigate_circular(tabid_cur, -step, tab_count)
       local tabpages = vim.api.nvim_list_tabpages()
       local tabnr_next = tabpages[tabid_next]
-      fml.api.tab.go(tabnr_next)
+      go(tabnr_next)
     end,
   })
   .register({
@@ -66,6 +77,6 @@ eve.commander
       local tabid_next = eve.util.navigate_circular(tabid_cur, step, tab_count)
       local tabpages = vim.api.nvim_list_tabpages()
       local tabnr_next = tabpages[tabid_next]
-      fml.api.tab.go(tabnr_next)
+      go(tabnr_next)
     end,
   })

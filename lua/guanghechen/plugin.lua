@@ -1,5 +1,10 @@
 local __module_name__ = "guanghechen.plugin" ---@type string
 
+local env = require("eve.lib.env")
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local state = require("eve.state")
+
 ---@class guanghechen.plugin.IRawSpec
 ---@field public name                   string
 ---@field public branch                 ?string
@@ -28,7 +33,7 @@ local conds = {
   end,
   ---@return boolean
   copilot = function()
-    return not vim.g.vscode and eve.context.state.flight.copilot:snapshot()
+    return not vim.g.vscode and state.state.flight.copilot:snapshot()
   end,
   common = function()
     return true
@@ -133,7 +138,7 @@ for index = 1, #specs, 1 do
     spec_details.branch = spec_basic.branch
     spec_details.main = spec_basic.main
   elseif not vim.tbl_contains(no_details_module_names, spec_basic.name) then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       subject = "resolve plugin details",
       message = "Failed to resolve the details of plugin: " .. spec_basic.name,
@@ -143,8 +148,8 @@ end
 
 ---! bootstrap lazy and all plugins
 vim.list_extend(final_specs, require("guanghechen.plugins._extra"))
-local lazypath = eve.path.normalize(eve.constant.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
-if not eve.path.is_exist(lazypath) then
+local lazypath = path.normalize(env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
+if not path.is_exist(lazypath) then
   local repo = "https://github.com/guanghechen/mirror"
   vim.fn.system({
     "git",

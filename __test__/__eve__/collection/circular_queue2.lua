@@ -1,4 +1,4 @@
-local CircularQueue = require("eve.collection.circular_queue")
+local CircularQueue = require("eve.lib.collection.circular_queue")
 local circular = CircularQueue.new({ capacity = 3 })
 circular:enqueue("A")
 circular:enqueue("B")

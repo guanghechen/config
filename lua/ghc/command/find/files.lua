@@ -1,7 +1,49 @@
-local Observable = require("eve.collection.observable")
-local Subscriber = require("eve.collection.subscriber")
+local __module_name__ = "ghc.command.find" ---@type string
 
-local state_find_cwd = Observable.from_value(fml.api.find.get_scope_cwd(eve.path.cwd()))
+local oxi = require("eve.lib.oxi")
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local Observable = require("eve.lib.collection.observable")
+local Subscriber = require("eve.lib.collection.subscriber")
+local state = require("eve.state")
+
+local scopes = { "W", "C", "D" } ---@type eve.e.FindScope[]
+
+---@return eve.e.FindScope
+local function get_scope_carousel_next()
+  local scope = state.state.find.scope:snapshot() ---@type eve.e.FindScope
+  local idx = eve.util.find_index(scopes, scope) or 1 ---@type integer
+  local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
+  return scopes[idx_next]
+end
+
+---@param dirpath                       string
+---@return string
+local function get_scope_cwd(dirpath)
+  local scope = state.state.find.scope:snapshot() ---@type eve.e.FindScope
+
+  if scope == "W" then
+    return path.workspace()
+  end
+
+  if scope == "C" then
+    return path.cwd()
+  end
+
+  if scope == "D" then
+    return dirpath
+  end
+
+  reporter.error({
+    from = __module_name__,
+    subject = "get_scope_cwd",
+    message = "Unknown scope.",
+    details = { scope = scope, dirpath = dirpath },
+  })
+  return path.cwd()
+end
+
+local state_find_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
 local _select = nil ---@type fml.t.ux.IFileSelect|nil
 
 ---@return nil
@@ -11,12 +53,12 @@ local function reload()
   end
 end
 
-eve.context.state.find.scope:subscribe(
+state.state.find.scope:subscribe(
   Subscriber.new({
     on_next = function()
       local current_buf_dirpath = eve.locations.get_current_buf_dirpath() ---@type string
       local current_find_cwd = state_find_cwd:snapshot() ---@type string
-      local next_find_cwd = fml.api.find.get_scope_cwd(current_buf_dirpath) ---@type string
+      local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
       if current_find_cwd ~= next_find_cwd then
         state_find_cwd:next(next_find_cwd)
       end
@@ -25,11 +67,11 @@ eve.context.state.find.scope:subscribe(
   true
 )
 eve.mvc.observe({
-  eve.context.state.find.excludes,
-  eve.context.state.find.flag_case_sensitive,
-  eve.context.state.find.flag_gitignore,
-  eve.context.state.find.flag_fuzzy,
-  eve.context.state.find.flag_regex,
+  state.state.find.excludes,
+  state.state.find.flag_case_sensitive,
+  state.state.find.flag_gitignore,
+  state.state.find.flag_fuzzy,
+  state.state.find.flag_regex,
   state_find_cwd,
 }, function()
   reload()
@@ -38,9 +80,9 @@ end, true)
 ---@param scope                         eve.e.FindScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = eve.context.state.find.scope:snapshot() ---@type eve.e.FindScope
+  local scope_current = state.state.find.scope:snapshot() ---@type eve.e.FindScope
   if scope_current ~= scope then
-    eve.context.state.find.scope:next(scope)
+    state.state.find.scope:next(scope)
   end
 end
 
@@ -51,11 +93,11 @@ local actions = {
     ---@class ghc.command.find.files.actions.IConfigData
     ---@field public exclude_patterns       string[]
 
-    local f_exclude_patterns = eve.context.state.find.excludes:snapshot() ---@type string
+    local f_exclude_patterns = state.state.find.excludes:snapshot() ---@type string
 
     ---@type ghc.command.find.files.actions.IConfigData
     local data = {
-      exclude_patterns = eve.array.parse_comma_list(f_exclude_patterns),
+      exclude_patterns = eve.util.parse_comma_list(f_exclude_patterns),
     }
 
     local setting = fml.ux.Setting.new({
@@ -78,7 +120,7 @@ local actions = {
           ---@cast raw ghc.command.find.files.actions.IConfigData
 
           local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
-          eve.context.state.find.excludes:next(exclude_patterns)
+          state.state.find.excludes:next(exclude_patterns)
           reload()
         end)
         return true
@@ -104,7 +146,7 @@ local actions = {
   end,
   send_to_qflist = function()
     if _select ~= nil then
-      local cwd = eve.path.cwd() ---@type string
+      local cwd = path.cwd() ---@type string
       local select_cwd = state_find_cwd:snapshot() ---@type string
       local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
       local matched_items = _select:get_matched_items() ---@type fml.t.ux.select.IMatchedItem[]
@@ -113,8 +155,8 @@ local actions = {
         ---@cast item fml.t.ux.file_select.IItem
 
         if item ~= nil then
-          local absolute_filepath = eve.path.join(select_cwd, item.data.filepath) ---@type string
-          local relative_filepath = eve.path.relative(cwd, absolute_filepath, false) ---@type string
+          local absolute_filepath = path.join(select_cwd, item.data.filepath) ---@type string
+          local relative_filepath = path.relative(cwd, absolute_filepath, false) ---@type string
           table.insert(quickfix_items, {
             filename = relative_filepath,
             lnum = item.data.lnum or 1,
@@ -132,34 +174,34 @@ local actions = {
     end
   end,
   toggle_case_sensitive = function()
-    local flag = eve.context.state.find.flag_case_sensitive:snapshot() ---@type boolean
-    eve.context.state.find.flag_case_sensitive:next(not flag)
+    local flag = state.state.find.flag_case_sensitive:snapshot() ---@type boolean
+    state.state.find.flag_case_sensitive:next(not flag)
   end,
   toggle_flag_fuzzy = function()
-    local flag = eve.context.state.find.flag_fuzzy:snapshot() ---@type boolean
-    eve.context.state.find.flag_fuzzy:next(not flag)
+    local flag = state.state.find.flag_fuzzy:snapshot() ---@type boolean
+    state.state.find.flag_fuzzy:next(not flag)
   end,
   toggle_flag_regex = function()
-    local flag = eve.context.state.find.flag_regex:snapshot() ---@type boolean
-    eve.context.state.find.flag_regex:next(not flag)
+    local flag = state.state.find.flag_regex:snapshot() ---@type boolean
+    state.state.find.flag_regex:next(not flag)
   end,
   ---@return nil
   toggle_gitignore = function()
-    local flag = eve.context.state.find.flag_gitignore:snapshot() ---@type boolean
-    eve.context.state.find.flag_gitignore:next(not flag)
+    local flag = state.state.find.flag_gitignore:snapshot() ---@type boolean
+    state.state.find.flag_gitignore:next(not flag)
   end,
   ---@return nil
   toggle_scope = function()
-    local next_scope = fml.api.find.get_scope_carousel_next() ---@type eve.e.FindScope
-    eve.context.state.find.scope:next(next_scope)
+    local next_scope = get_scope_carousel_next() ---@type eve.e.FindScope
+    state.state.find.scope:next(next_scope)
   end,
 }
 
 ---@return fml.t.ux.IFileSelect
 local function get_select()
   if _select == nil then
-    local frecency = eve.context.state.frecency.files ---@type eve.t.collection.IFrecency
-    local input_history = eve.context.state.input_history.find_files ---@type eve.t.collection.IHistory
+    local frecency = state.state.frecency.files ---@type eve.lib.collection.IFrecency
+    local input_history = state.state.input_history.find_files ---@type eve.lib.collection.IHistory
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
     local statusline_items = {
@@ -167,35 +209,35 @@ local function get_select()
         type = "enum",
         desc = "find: toggle scope",
         symbol = "",
-        state = eve.context.state.find.scope,
+        state = state.state.find.scope,
         callback = actions.toggle_scope,
       },
       {
         type = "flag",
         desc = "find: toggle gitignore",
         symbol = eve.icons.symbols.flag_gitignore,
-        state = eve.context.state.find.flag_gitignore,
+        state = state.state.find.flag_gitignore,
         callback = actions.toggle_gitignore,
       },
       {
         type = "flag",
         desc = "select: toggle flag fuzzy",
         symbol = eve.icons.symbols.flag_fuzzy,
-        state = eve.context.state.find.flag_fuzzy,
+        state = state.state.find.flag_fuzzy,
         callback = actions.toggle_flag_fuzzy,
       },
       {
         type = "flag",
         desc = "find: toggle case sensitive",
         symbol = eve.icons.symbols.flag_case_sensitive,
-        state = eve.context.state.find.flag_case_sensitive,
+        state = state.state.find.flag_case_sensitive,
         callback = actions.toggle_case_sensitive,
       },
       {
         type = "flag",
         desc = "select: toggle flag regex",
         symbol = eve.icons.symbols.flag_regex,
-        state = eve.context.state.find.flag_regex,
+        state = state.state.find.flag_regex,
         callback = actions.toggle_flag_regex,
       },
     }
@@ -259,12 +301,12 @@ local function get_select()
     local provider = {
       fetch_data = function()
         local cwd = state_find_cwd:snapshot() ---@type string
-        local workspace = eve.path.workspace() ---@type string
-        local flag_gitignore = eve.context.state.find.flag_gitignore:snapshot() ---@type boolean
-        local excludes = eve.context.state.find.excludes:snapshot() ---@type string[]
+        local workspace = path.workspace() ---@type string
+        local flag_gitignore = state.state.find.flag_gitignore:snapshot() ---@type boolean
+        local excludes = state.state.find.excludes:snapshot() ---@type string[]
 
         ---@type string[]
-        local filepaths = eve.oxi.find({
+        local filepaths = oxi.find({
           workspace = workspace,
           cwd = cwd,
           flag_case_sensitive = false,
@@ -283,15 +325,15 @@ local function get_select()
     }
 
     _select = fml.ux.FileSelect.new({
-      case_sensitive = eve.context.state.find.flag_case_sensitive,
+      case_sensitive = state.state.find.flag_case_sensitive,
       cmp = fml.ux.Select.cmp_by_score,
       dirty_on_invisible = false,
       preview_enabled = true,
       extend_preset_keymaps = false,
-      flag_fuzzy = eve.context.state.find.flag_fuzzy,
-      flag_regex = eve.context.state.find.flag_regex,
+      flag_fuzzy = state.state.find.flag_fuzzy,
+      flag_regex = state.state.find.flag_regex,
       frecency = frecency,
-      input = eve.context.state.find.keyword,
+      input = state.state.find.keyword,
       input_history = input_history,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
@@ -319,7 +361,7 @@ eve.commander
     uuid = uuids.find_files_workspace,
     desc = "find: files (workspace)",
     action = function()
-      eve.context.state.find.scope:next("W")
+      state.state.find.scope:next("W")
       local select = get_select() ---@type fml.t.ux.IFileSelect
       select:focus()
     end,
@@ -328,7 +370,7 @@ eve.commander
     uuid = uuids.find_files_cwd,
     desc = "find: files (cwd)",
     action = function()
-      eve.context.state.find.scope:next("C")
+      state.state.find.scope:next("C")
       local select = get_select() ---@type fml.t.ux.IFileSelect
       select:focus()
     end,
@@ -337,7 +379,7 @@ eve.commander
     uuid = uuids.find_files_directory,
     desc = "find: files (directory)",
     action = function()
-      eve.context.state.find.scope:next("D")
+      state.state.find.scope:next("D")
       local select = get_select() ---@type fml.t.ux.IFileSelect
       select:focus()
     end,

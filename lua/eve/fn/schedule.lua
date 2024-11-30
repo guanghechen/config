@@ -1,11 +1,12 @@
-local Scheduler = require("eve.collection.scheduler")
+local Scheduler = require("eve.lib.collection.scheduler")
+local state = require("eve.state")
 
 ---@param name                          string
 ---@param fn                            fun(): nil
 ---@param delay                         ?integer|nil
 ---@return fun(): nil
 local function schedule(name, fn, delay)
-  local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
+  local devmode = state.state.flight.devmode:snapshot() ---@type boolean
   local scheduler = Scheduler.new({
     name = name,
     delay = delay,

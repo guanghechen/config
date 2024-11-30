@@ -1,28 +1,35 @@
+local checks = require("eve.builtin.checks")
+local Observable = require("eve.lib.collection.observable")
+local constant = require("eve.builtin.constant")
+local state = require("eve.state")
+
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@param bufnr                         ?integer
 ---@return integer
 local function create(bufnr)
   vim.cmd("$tabnew")
+  vim.bo.buflisted = false
+  vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  eve.context.state.tab_history:push(tabnr)
+  state.state.tab_history:push(tabnr)
 
-  if bufnr ~= nil then
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+
+  ---@type eve.t.state.state.tab.IMeta
+  local meta = {
+    name = constant.TAB_UNNAMED,
+    bufnrs = {},
+    winnr_cur = Observable.from_value(winnr),
+  }
+
+  if bufnr ~= nil and checks.is_buf_valid(bufnr) then
+    meta.bufnrs = { bufnr }
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end
 
-  vim.schedule(function()
-    fml.api.tab.refresh(tabnr)
-
-    local tab = eve.context.state.tabs[tabnr] ---@type eve.t.context.state.tab.IItem
-    if bufnr ~= nil and tab ~= nil and #tab.bufnrs > 1 then
-      tab.bufnrs = { bufnr }
-      tab.bufnr_set = { [bufnr] = true }
-    end
-  end)
-
+  eve.tab.set_meta(tabnr, meta)
   return tabnr
 end
 

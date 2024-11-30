@@ -1,15 +1,16 @@
 local constant = require("eve.builtin.constant")
-local Subscriber = require("eve.collection.subscriber")
-local Scheduler = require("eve.collection.scheduler")
-local oxi = require("eve.oxi")
-local util = require("fml.util")
+local util = require("eve.builtin.util")
+local Subscriber = require("eve.lib.collection.subscriber")
+local Scheduler = require("eve.lib.collection.scheduler")
+local oxi = require("eve.lib.oxi")
+local state = require("eve.state")
 local signcolumn = require("fml.ux.signcolumn")
 
 ---@class fml.ux.search.Input : fml.t.ux.search.IInput
 ---@field protected _autocmd_group      integer
 ---@field protected _bufnr              integer|nil
 ---@field protected _extmark_nr         integer|nil
----@field protected _input_scheduler    eve.t.collection.IScheduler
+---@field protected _input_scheduler    eve.lib.collection.IScheduler
 ---@field protected _keymaps            eve.t.IKeymap[]
 local M = {}
 M.__index = M
@@ -26,9 +27,9 @@ local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@ty
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local state = props.state ---@type fml.t.ux.search.IState
-  local input_history = state.input_history ---@type eve.t.collection.IHistory|nil
-  local autocmd_group = eve.nvim.augroup(state.uuid .. ":search_input") ---@type integer
+  local search_state = props.state ---@type fml.t.ux.search.IState
+  local input_history = search_state.input_history ---@type eve.lib.collection.IHistory|nil
+  local autocmd_group = eve.nvim.augroup(search_state.uuid .. ":search_input") ---@type integer
 
   local actions = {
     apply_prev_input = function()
@@ -61,7 +62,7 @@ function M.new(props)
     }, props.keymaps)
   end
 
-  local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
+  local devmode = state.state.flight.devmode:snapshot() ---@type boolean
   local input_scheduler = Scheduler.new({
     name = "fml.ux.search.input.on_change",
     delay = 32,
@@ -80,18 +81,18 @@ function M.new(props)
     end,
   })
 
-  self.state = state
+  self.state = search_state
   self._autocmd_group = autocmd_group
   self._bufnr = nil
   self._extmark_nr = nil
   self._input_scheduler = input_scheduler
   self._keymaps = keymaps
 
-  state.dirtier_preview:subscribe(
+  search_state.dirtier_preview:subscribe(
     Subscriber.new({
       on_next = function()
-        local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
+        local is_preview_dirty = search_state.dirtier_preview:is_dirty() ---@type boolean
+        local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_preview_dirty then
           self:set_virtual_text()
@@ -101,11 +102,11 @@ function M.new(props)
     true
   )
 
-  state.input:subscribe(
+  search_state.input:subscribe(
     Subscriber.new({
       on_next = function()
         if input_history ~= nil then
-          local input_cur = state.input:snapshot() ---@type string
+          local input_cur = search_state.input:snapshot() ---@type string
           local input_present = input_history:present() ---@type string|nil, integer
           if input_present ~= input_cur then
             local input_top = input_history:top() ---@type string|nil
@@ -141,10 +142,10 @@ function M:create_buf_as_needed()
 
   eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-  local state = self.state ---@type fml.t.ux.search.IState
-  local input = state.input:snapshot() ---@type string
+  local search_state = self.state ---@type fml.t.ux.search.IState
+  local input = search_state.input:snapshot() ---@type string
   local lines = oxi.parse_lines(input) ---@type string[]
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, search_state.enable_multiline_input and lines or { lines[1] })
   vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
@@ -180,11 +181,11 @@ end
 
 ---@return nil
 function M:set_virtual_text()
-  local state = self.state ---@type fml.t.ux.search.IState
+  local search_state = self.state ---@type fml.t.ux.search.IState
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local total = #state.items or 0 ---@type integer
-    local lnum = state:get_current_lnum() or 1 ---@type integer
+    local total = #search_state.items or 0 ---@type integer
+    local lnum = search_state:get_current_lnum() or 1 ---@type integer
     lnum = lnum > total and total or lnum
 
     if self._extmark_nr then
@@ -203,14 +204,14 @@ end
 ---@param text                          string|nil
 ---@return nil
 function M:reset_input(text)
-  local state = self.state ---@type fml.t.ux.search.IState
-  local next_text = util.unwrap_editing_prefix(text or state.input:snapshot()) ---@type string
-  state.input:next(next_text)
+  local search_state = self.state ---@type fml.t.ux.search.IState
+  local next_text = util.unwrap_editing_prefix(text or search_state.input:snapshot()) ---@type string
+  search_state.input:next(next_text)
 
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     local lines = oxi.parse_lines(next_text) ---@type string[]
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.enable_multiline_input and lines or { lines[1] })
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, search_state.enable_multiline_input and lines or { lines[1] })
   end
 end
 

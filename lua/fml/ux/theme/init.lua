@@ -1,7 +1,7 @@
 local __module_name__ = "fml.ux.theme" ---@type string
 
-local reporter = require("eve.builtin.reporter")
-local Theme = require("eve.collection.theme")
+local Theme = require("eve.lib.collection.theme")
+local reporter = require("eve.lib.reporter")
 local hmr = require("eve.fn.hmr")
 
 ---@class fml.ux.theme
@@ -44,10 +44,10 @@ M.integrations = {
   "plugin",
 }
 
----@param scheme                        eve.t.collection.theme.IScheme
+---@param scheme                        eve.lib.collection.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette ---@type eve.t.collection.theme.IPalette
+  local c = scheme.palette ---@type eve.lib.collection.theme.IPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.neutral_red
   vim.g.terminal_color_2 = c.neutral_green
@@ -67,7 +67,7 @@ function M.set_term_colors(scheme)
 end
 
 ---@param theme                         eve.e.Theme
----@return eve.t.collection.theme.IScheme|nil
+---@return eve.lib.collection.theme.IScheme|nil
 function M.get_scheme(theme)
   if not vim.tbl_contains(M.themes, theme) then
     reporter.error({
@@ -117,7 +117,7 @@ function M.apply_integration(params)
 end
 
 ---@param params                        fml.ux.theme.ILoadThemeParams
----@return eve.t.collection.theme.IScheme|nil
+---@return eve.lib.collection.theme.IScheme|nil
 function M.apply_theme(params)
   local theme = params.theme ---@type eve.e.Theme
   local transparency = params.transparency ---@type boolean
@@ -139,11 +139,11 @@ function M.apply_theme(params)
     local uxTheme = Theme.new()
     for _, integration in ipairs(M.integrations) do
       local gen_hlgroup_map = hmr("fml.ux.theme.integration." .. integration)
-      ---@return table<string, eve.t.collection.theme.IHlgroup>
+      ---@return table<string, eve.lib.collection.theme.IHlgroup>
       local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
       if integration == "plugin" then
-        local additional = {} ---@type table<string, eve.t.collection.theme.IHlgroup>
+        local additional = {} ---@type table<string, eve.lib.collection.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if hlname:sub(1, 9) == "MiniIcons" then
             ---! Integrated  with tabline

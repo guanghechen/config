@@ -1,4 +1,8 @@
-local Subscriber = require("eve.collection.subscriber")
+local __module_name__ = "ghc.ux.winline" ---@type string
+
+local reporter = require("eve.lib.reporter")
+local Subscriber = require("eve.lib.collection.subscriber")
+local state = require("eve.state")
 
 local winline_map = {} ---@type table<string, fml.t.ux.INvimbar>
 
@@ -8,7 +12,7 @@ local M = {}
 ---@param winnr                         integer
 ---@return boolean
 function M.should_show_winline(winnr)
-  if eve.win.is_floating(winnr) then
+  if eve.checks.is_win_floating(winnr) then
     return false
   end
 
@@ -19,7 +23,7 @@ function M.should_show_winline(winnr)
     return filepath:sub(1, 19) ~= "diffview:///panels/"
   end
 
-  if not eve.buf.is_listed(bufnr) then
+  if not eve.checks.is_buf_valid(bufnr) then
     return false
   end
 
@@ -36,7 +40,7 @@ function M.render(winnr, force)
 
   local winline = winline_map[winnr] ---@type fml.t.ux.INvimbar
   if winline == nil then
-    local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
+    local devmode = state.state.flight.devmode:snapshot() ---@type boolean
     winline = fml.ux.Nvimbar.new({
       name = "winline_" .. winnr,
       component_sep = "",
@@ -49,7 +53,7 @@ function M.render(winnr, force)
         return vim.api.nvim_win_get_width(winnr)
       end,
       is_active = function(context)
-        local winnr_cur = fml.api.tab.get_current_winnr() ---@type integer
+        local winnr_cur = eve.locations.get_current_winnr() or 0 ---@type integer
         return winnr_cur == context.winnr
       end,
       trigger_rerender = function()
@@ -98,8 +102,8 @@ function M.update(winnr, force)
         vim.wo[winnr].winbar = result
       end)
       if not ok then
-        eve.reporter.error({
-          from = "ghc.ux.winline",
+        reporter.error({
+          from = __module_name__,
           subject = "update",
           message = "Failed to update winbar.",
           details = { winnr = winnr, result = result, err = err },
@@ -109,7 +113,7 @@ function M.update(winnr, force)
   end
 end
 
-eve.context.state.status.winline_dirty_nr:subscribe(
+state.state.status.winline_dirty_nr:subscribe(
   Subscriber.new({
     on_next = function(winnr)
       if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then

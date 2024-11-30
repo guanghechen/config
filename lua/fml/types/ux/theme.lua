@@ -1,6 +1,6 @@
 ---@class fml.t.ux.IThemeContext
 ---@field public theme                  string
----@field public scheme                 eve.t.collection.theme.IScheme
+---@field public scheme                 eve.lib.collection.theme.IScheme
 ---@field public transparency           boolean
 
 ---@class fml.t.ux.theme.IApp

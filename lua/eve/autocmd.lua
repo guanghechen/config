@@ -1,10 +1,10 @@
-local constant = require("eve.builtin.constant")
+local env = require("eve.lib.env")
 local ft = require("eve.builtin.filetype")
-local locations = require("eve.globals.locations")
-local mvc = require("eve.globals.mvc")
-local widgets = require("eve.globals.widgets")
+local locations = require("eve.builtin.locations")
+local mvc = require("eve.builtin.mvc")
+local widgets = require("eve.builtin.widgets")
 
-if constant.IS_MAC or constant.IS_NIX or constant.IS_WSL then
+if env.IS_MAC or env.IS_NIX or env.IS_WSL then
   vim.opt.shell = "/bin/bash"
 end
 
@@ -30,10 +30,10 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 vim.api.nvim_create_autocmd({ "BufReadPost" }, {
   callback = function(event)
     local bufnr = event.buf ---@type integer
-    if vim.b[bufnr].eve_last_loc then
+    if vim.b[bufnr].ghc_last_loc then
       return
     end
-    vim.b[bufnr].eve_last_loc = true
+    vim.b[bufnr].ghc_last_loc = true
 
     local filetype = vim.bo[bufnr].filetype ---@type string
     if eve.filetype.is_plain_file(filetype) then

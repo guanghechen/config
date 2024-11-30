@@ -1,6 +1,6 @@
 local __module_name__ = "eve.builtin.commander" ---@type string
 
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.lib.reporter")
 
 ---@class eve.t.builtin.commander.ICommand
 ---@field public uuid                   string

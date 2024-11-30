@@ -1,4 +1,7 @@
-local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
+local functional = require("eve.lib.functional")
+local state = require("eve.state")
+
+local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 local tabline_dirty = true ---@type boolean
 
 local tabline ---@type fml.t.ux.INvimbar
@@ -12,7 +15,7 @@ tabline = fml.ux.Nvimbar.new({
   get_max_width = function()
     return vim.o.columns
   end,
-  is_active = eve.util.falsy,
+  is_active = functional.falsy,
   trigger_rerender = function()
     tabline_dirty = false
     vim.cmd("redrawtabline")

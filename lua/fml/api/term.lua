@@ -1,5 +1,11 @@
 local __module_name__ = "fml.api.term" ---@type string
 
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local constant = require("eve.builtin.constant")
+local get_selected_text = require("eve.builtin.nvim").get_selected_text
+local Terminal = require("fml.ux.component.terminal")
+
 local terminal_map = {} ---@type table<string, fml.t.ux.ITerminal>
 
 ---@class fml.api.term
@@ -21,13 +27,13 @@ local M = {}
 function M.create(params)
   local name = params.name ---@type string
   local command = params.command or vim.env.SHELL or vim.o.shell ---@type string
-  local cwd = params.cwd or eve.path.cwd() ---@type string
+  local cwd = params.cwd or path.cwd() ---@type string
   local env = params.env ---@type table<string, string>|nil
   local permanent = params.permanent ---@type boolean|nil
 
   local terminal = terminal_map[name] ---@type fml.t.ux.ITerminal|nil
   if terminal ~= nil then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       subject = "create",
       message = "The term with the given name already exists.",
@@ -56,7 +62,7 @@ function M.create(params)
   end
 
   ---@type fml.t.ux.ITerminal
-  terminal = fml.ux.Terminal.new({
+  terminal = Terminal.new({
     command = command,
     command_cwd = cwd,
     command_env = env,
@@ -73,7 +79,7 @@ end
 function M.toggle(name)
   local terminal = terminal_map[name] ---@type fml.t.ux.ITerminal
   if terminal == nil then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       subject = "toggle",
       message = "Cannot find the term with the given name.",
@@ -94,8 +100,8 @@ function M.toggle_or_create(params)
   if send_selection_to_run then
     local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
     local filetype = vim.bo[bufnr_cur].filetype ---@type string
-    if filetype ~= eve.constant.FT_TERM then
-      selected_text = eve.nvim.get_selected_text() ---@type string
+    if filetype ~= constant.FT_TERM then
+      selected_text = get_selected_text() ---@type string
     end
   end
 

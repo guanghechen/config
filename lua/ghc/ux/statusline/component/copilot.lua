@@ -1,10 +1,12 @@
 local __module_name__ = "ghc.ux.statusline.component.copilot" ---@type string
 
+local reporter = require("eve.lib.reporter")
+
 ---@type string
 local fn_show_message = eve.G.register_anonymous_fn(function()
   if package.loaded["copilot"] then
     local status = require("copilot.api").status.data
-    eve.reporter.info({
+    reporter.info({
       from = __module_name__,
       details = { status = status or "nil" },
     })
@@ -37,8 +39,8 @@ local M = {
     local icon = status_icon_map[status] or eve.icons.cmp.copilot ---@type string
     local text = icon .. " " ---@type string
     local width = vim.api.nvim_strwidth(text) ---@type integer
-    local hl_text = eve.nvimbar.txt(text, (status == nil or #status < 1) and "f_sl_text" or ("f_sl_copilot_" .. status))
-    hl_text = eve.nvimbar.btn(hl_text, fn_show_message)
+    local hl_text = eve.nvim.txt(text, (status == nil or #status < 1) and "f_sl_text" or ("f_sl_copilot_" .. status))
+    hl_text = eve.nvim.btn(hl_text, fn_show_message)
     return hl_text, width
   end,
 }

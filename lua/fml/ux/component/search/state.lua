@@ -1,11 +1,11 @@
 local __module_name__ = "fml.ux.component.search.state" ---@type string
 
-local reporter = require("eve.builtin.reporter")
-local Dirtier = require("eve.collection.dirtier")
-local Observable = require("eve.collection.observable")
-local Scheduler = require("eve.collection.scheduler")
-local Subscriber = require("eve.collection.subscriber")
-local oxi = require("eve.oxi")
+local reporter = require("eve.lib.reporter")
+local Dirtier = require("eve.lib.collection.dirtier")
+local Observable = require("eve.lib.collection.observable")
+local Scheduler = require("eve.lib.collection.scheduler")
+local Subscriber = require("eve.lib.collection.subscriber")
+local oxi = require("eve.lib.oxi")
 
 ---@class fml.ux.search.State : fml.t.ux.search.IState
 ---@field protected _deleted_uuids      table<string, boolean>
@@ -18,8 +18,8 @@ M.__index = M
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             fml.t.ux.search.IFetchData
 ---@field public delay_fetch            integer
----@field public input                  eve.t.collection.IObservable
----@field public input_history          eve.t.collection.IHistory|nil
+---@field public input                  eve.lib.collection.IObservable
+---@field public input_history          eve.lib.collection.IHistory|nil
 ---@field public title                  string
 
 ---@param props                         fml.ux.search.state.IProps
@@ -27,22 +27,22 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local dirtier_dimension = Dirtier.new() ---@type eve.t.collection.IDirtier
-  local dirtier_data = Dirtier.new() ---@type eve.t.collection.IDirtier
-  local dirtier_data_cache = Dirtier.new() ---@type eve.t.collection.IDirtier
-  local dirtier_main = Dirtier.new() ---@type eve.t.collection.IDirtier
-  local dirtier_preview = Dirtier.new() ---@type eve.t.collection.IDirtier
+  local dirtier_dimension = Dirtier.new() ---@type eve.lib.collection.IDirtier
+  local dirtier_data = Dirtier.new() ---@type eve.lib.collection.IDirtier
+  local dirtier_data_cache = Dirtier.new() ---@type eve.lib.collection.IDirtier
+  local dirtier_main = Dirtier.new() ---@type eve.lib.collection.IDirtier
+  local dirtier_preview = Dirtier.new() ---@type eve.lib.collection.IDirtier
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
   local fetch_data = props.fetch_data ---@type fml.t.ux.search.IFetchData
   local delay_fetch = props.delay_fetch ---@type integer
-  local input = props.input ---@type eve.t.collection.IObservable
-  local input_history = props.input_history ---@type eve.t.collection.IHistory|nil
-  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.t.collection.IObservable
+  local input = props.input ---@type eve.lib.collection.IObservable
+  local input_history = props.input_history ---@type eve.lib.collection.IHistory|nil
+  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.lib.collection.IObservable
   local title = props.title ---@type string
   local uuid = oxi.uuid() ---@type string
   local status = Observable.from_value("hidden")
 
-  ---@type eve.t.collection.IScheduler
+  ---@type eve.lib.collection.IScheduler
   local fetch_scheduler = Scheduler.new({
     name = "fml.ux.search.state.fetch",
     delay = delay_fetch,

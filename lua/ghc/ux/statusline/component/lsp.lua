@@ -1,8 +1,8 @@
+local state = require("eve.state")
+
 ---@return string
 local function get_text()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
-  local winnr = tab ~= nil and tab.winnr_cur:snapshot() or 0 ---@type integer
+  local winnr = eve.locations.get_current_winnr() or 0 ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
   local client_names = {} ---@type string[]
@@ -24,11 +24,11 @@ local M = {
   render = function()
     local text = get_text() ---@type string
     local width = vim.api.nvim_strwidth(text) ---@type integer
-    local hl_text = eve.nvimbar.txt(text, "f_sl_text") ---@type string
+    local hl_text = eve.nvim.txt(text, "f_sl_text") ---@type string
 
-    local lsp_msg = eve.context.state.status.lsp_msg:snapshot() ---@type string
+    local lsp_msg = state.state.status.lsp_msg:snapshot() ---@type string
     if lsp_msg ~= "" then
-      hl_text = eve.nvimbar.txt(lsp_msg, "f_sl_text") .. " " .. hl_text
+      hl_text = eve.nvim.txt(lsp_msg, "f_sl_text") .. " " .. hl_text
       width = width + vim.api.nvim_strwidth(lsp_msg) + 1
     end
 

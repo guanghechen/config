@@ -1,20 +1,20 @@
-local Observable = require("eve.collection.observable")
-local oxi = require("eve.oxi")
+local Observable = require("eve.lib.collection.observable")
+local oxi = require("eve.lib.oxi")
 local Search = require("fml.ux.component.search.search")
 
 ---@class fml.ux.Select : fml.t.ux.ISelect
----@field protected _case_sensitive     eve.t.collection.IObservable
+---@field protected _case_sensitive     eve.lib.collection.IObservable
 ---@field protected _cmp                fml.t.ux.select.IMatchedItemCmp|nil
----@field protected _flag_fuzzy         eve.t.collection.IObservable
----@field protected _flag_regex         eve.t.collection.IObservable
----@field protected _frecency           eve.t.collection.IFrecency|nil
+---@field protected _flag_fuzzy         eve.lib.collection.IObservable
+---@field protected _flag_regex         eve.lib.collection.IObservable
+---@field protected _frecency           eve.lib.collection.IFrecency|nil
 ---@field protected _full_matches       fml.t.ux.select.IMatchedItem[]
 ---@field protected _item_map           table<string, fml.t.ux.select.IItem>
 ---@field protected _item_uuid_cursor   string|nil
 ---@field protected _item_uuid_present  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
----@field protected _live_data_dirty    eve.t.collection.IObservable
+---@field protected _live_data_dirty    eve.lib.collection.IObservable
 ---@field protected _matches            fml.t.ux.select.IMatchedItem[]
 ---@field protected _provider           fml.t.ux.select.IProvider
 ---@field protected _get_search         fun(): fml.t.ux.search.ISearch
@@ -22,7 +22,7 @@ local M = {}
 M.__index = M
 
 ---@class fml.t.ux.select.IProps
----@field public case_sensitive         ?eve.t.collection.IObservable
+---@field public case_sensitive         ?eve.lib.collection.IObservable
 ---@field public cmp                    ?fml.t.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
@@ -31,11 +31,11 @@ M.__index = M
 ---@field public preview_enabled        boolean
 ---@field public preview_flag_wrap      ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?eve.t.collection.IObservable
----@field public flag_regex             ?eve.t.collection.IObservable
----@field public frecency               ?eve.t.collection.IFrecency
----@field public input                  ?eve.t.collection.IObservable
----@field public input_history          ?eve.t.collection.IHistory
+---@field public flag_fuzzy             ?eve.lib.collection.IObservable
+---@field public flag_regex             ?eve.lib.collection.IObservable
+---@field public frecency               ?eve.lib.collection.IFrecency
+---@field public input                  ?eve.lib.collection.IObservable
+---@field public input_history          ?eve.lib.collection.IHistory
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public permanent              ?boolean
@@ -53,7 +53,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type eve.t.collection.IObservable
+  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type eve.lib.collection.IObservable
   local cmp = props.cmp ---@type fml.t.ux.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch or 128 ---@type integer
   local delay_render = props.delay_render or 48 ---@type integer
@@ -62,13 +62,13 @@ function M.new(props)
   local preview_enabled = props.preview_enabled ---@type boolean
   local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
-  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.t.collection.IObservable
-  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.t.collection.IObservable
-  local frecency = props.frecency ---@type eve.t.collection.IFrecency|nil
-  local input = props.input or Observable.from_value("") ---@type eve.t.collection.IObservable
-  local input_history = props.input_history ---@type eve.t.collection.IHistory|nil
+  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.lib.collection.IObservable
+  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.lib.collection.IObservable
+  local frecency = props.frecency ---@type eve.lib.collection.IFrecency|nil
+  local input = props.input or Observable.from_value("") ---@type eve.lib.collection.IObservable
+  local input_history = props.input_history ---@type eve.lib.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
-  local live_data_dirty = Observable.from_value(true) ---@type eve.t.collection.IObservable
+  local live_data_dirty = Observable.from_value(true) ---@type eve.lib.collection.IObservable
   local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
   local permanent = props.permanent ---@type boolean|nil
   local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
@@ -316,7 +316,7 @@ function M:fetch_data(input, force)
   self._live_data_dirty:next(false)
 
   if is_data_dirty then
-    local frecency = self._frecency ---@type eve.t.collection.IFrecency|nil
+    local frecency = self._frecency ---@type eve.lib.collection.IFrecency|nil
     local data = self._provider.fetch_data(force) ---@type fml.t.ux.select.IData
     local item_map = {} ---@type table<string, fml.t.ux.select.IItem>
     local full_matches = {} ---@type fml.t.ux.select.IMatchedItem[]
@@ -357,7 +357,7 @@ end
 ---@param input                         string
 ---@return fml.t.ux.select.IMatchedItem[]
 function M:filter(input)
-  local frecency = self._frecency ---@type eve.t.collection.IFrecency|nil
+  local frecency = self._frecency ---@type eve.lib.collection.IFrecency|nil
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
 
   local matches = self._full_matches ---@type fml.t.ux.select.IMatchedItem[]
@@ -438,7 +438,7 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  ---@type eve.oxi.string.ILineMatch[]|nil
+  ---@type eve.lib.oxi.string.ILineMatch[]|nil
   local oxi_matches = oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
   if oxi_matches == nil then
     return old_matches

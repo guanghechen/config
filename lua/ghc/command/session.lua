@@ -1,5 +1,8 @@
 local __module_name__ = "ghc.command.session" ---@type string
 
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
@@ -7,27 +10,21 @@ eve.commander
     uuid = uuids.session_restore,
     desc = "session: restore",
     action = function()
-      if eve.path.is_git_repo() then
+      if path.is_git_repo() then
         local nvim_session_filepath = nil ---@type string|nil
-        if eve.context.storage.nvim_session and vim.fn.filereadable(eve.context.storage.nvim_session) ~= 0 then
-          nvim_session_filepath = eve.context.storage.nvim_session
-        elseif
-          eve.context.storage.nvim_session_autosaved
-          and vim.fn.filereadable(eve.context.storage.nvim_session_autosaved) ~= 0
-        then
-          nvim_session_filepath = eve.context.storage.nvim_session_autosaved
+        local storage = state.get_storage() ---@type eve.t.state.storage
+        if storage.nvim_session and vim.fn.filereadable(storage.nvim_session) ~= 0 then
+          nvim_session_filepath = storage.nvim_session
+        elseif storage.nvim_session_autosaved and vim.fn.filereadable(storage.nvim_session_autosaved) ~= 0 then
+          nvim_session_filepath = storage.nvim_session_autosaved
         end
 
         if nvim_session_filepath then
-          eve.context.set_bufs({})
-          eve.context.set_tabs({})
-          eve.context.set_wins({})
-
           eve.nvim.load_nvim_session(nvim_session_filepath)
-          eve.context.load({
-            editor = eve.context.storage.editor,
-            session = eve.context.storage.session,
-            workspace = eve.context.storage.workspace,
+          state.load({
+            editor = storage.editor,
+            session = storage.session,
+            workspace = storage.workspace,
           })
           fml.fn.refresh_state()
         end
@@ -38,14 +35,15 @@ eve.commander
     uuid = uuids.session_save,
     desc = "session: save",
     action = function()
-      if eve.path.is_git_repo() then
-        eve.context.save({
-          session = eve.context.storage.session,
-          workspace = eve.context.storage.workspace,
+      if path.is_git_repo() then
+        local storage = state.get_storage() ---@type eve.t.state.storage
+        state.save({
+          session = storage.session,
+          workspace = storage.workspace,
         })
-        eve.nvim.save_nvim_session(eve.context.storage.nvim_session)
+        eve.nvim.save_nvim_session(storage.nvim_session)
 
-        eve.reporter.info({
+        reporter.info({
           from = __module_name__,
           message = "Session saved successfully!",
         })

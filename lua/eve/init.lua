@@ -1,66 +1,41 @@
----@type eve.context
-local context = require("eve.context")
-
 ---@class eve.builtin
 local builtin = {
+  G = require("eve.builtin.G"),
+  buf = require("eve.builtin.buf"),
+  checks = require("eve.builtin.checks"),
   commander = require("eve.builtin.commander"),
   constant = require("eve.builtin.constant"),
   debug = require("eve.builtin.debug"),
   filetype = require("eve.builtin.filetype"),
-  fs = require("eve.builtin.fs"),
   icons = require("eve.builtin.icons"),
-  json = require("eve.builtin.json"),
-  md5 = require("eve.builtin.md5"),
-  path = require("eve.builtin.path"),
-  reporter = require("eve.builtin.reporter"),
+  locations = require("eve.builtin.locations"),
+  lsp = require("eve.builtin.lsp"),
+  mvc = require("eve.builtin.mvc"),
+  nvim = require("eve.builtin.nvim"),
+  qflist = require("eve.builtin.qflist"),
+  tab = require("eve.builtin.tab"),
   util = require("eve.builtin.util"),
+  widgets = require("eve.builtin.widgets"),
+  win = require("eve.builtin.win"),
 }
 
 ---@class eve.fn
 local fn = {
   hmr = require("eve.fn.hmr"),
+  navigate = require("eve.fn.navigate"),
   schedule = require("eve.fn.schedule"),
 }
 
----@class eve.globals
-local globals = {
-  locations = require("eve.globals.locations"),
-  mvc = require("eve.globals.mvc"),
-  qflist = require("eve.globals.qflist"),
-  widgets = require("eve.globals.widgets"),
-}
+---@type eve.state
+local state = require("eve.state")
 
----@type eve.oxi
-local oxi = require("eve.oxi")
-
----@class eve.std
-local std = {
-  G = require("eve.std.G"),
-  array = require("eve.std.array"),
-  box = require("eve.std.box"),
-  buf = require("eve.std.buf"),
-  color = require("eve.std.color"),
-  lsp = require("eve.std.lsp"),
-  nvim = require("eve.std.nvim"),
-  nvimbar = require("eve.std.nvimbar"),
-  tab = require("eve.std.tab"),
-  tmux = require("eve.std.tmux"),
-  validator = require("eve.std.validator"),
-  win = require("eve.std.win"),
-}
-
----@class eve : eve.builtin, eve.globals, eve.std
----@field public context                eve.context
+---@class eve : eve.builtin
 ---@field public fn                     eve.fn
----@field public globals                eve.globals
----@field public oxi                    eve.oxi
----@field public std                    eve.std
-local eve = vim.tbl_extend("force", {}, builtin, globals, std, {
-  context = context,
+---@field public state                  eve.state
+local eve = vim.tbl_extend("force", {}, builtin, {
+  context = state,
   fn = fn,
-  globals = globals,
-  oxi = oxi,
-  std = std,
+  state = state,
 })
 
 return eve

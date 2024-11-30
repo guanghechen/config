@@ -1,11 +1,16 @@
+local __module_name__ = "ghc.command.buf.save" ---@type string
+
+local fs = require("eve.lib.fs")
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander.register({
   uuid = uuids.buf_save,
   desc = "buf: save",
   action = function()
-    local cwd = eve.path.cwd() ---@type string
-    local workspace = eve.path.workspace() ---@type string
+    local cwd = path.cwd() ---@type string
+    local workspace = path.workspace() ---@type string
 
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
     local new_file_bufnrs = {} ---@type integer[]
@@ -20,8 +25,8 @@ eve.commander.register({
         modified_count = modified_count + 1
 
         local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath = eve.path.resolve(cwd, filename) ---@type string
-        if eve.fs.is_file_or_dir(filepath) == nil then
+        local filepath = path.resolve(cwd, filename) ---@type string
+        if fs.is_file_or_dir(filepath) == nil then
           new_file_count = new_file_count + 1
           table.insert(new_file_bufnrs, bufnr)
         end
@@ -38,7 +43,7 @@ eve.commander.register({
 
     for _, bufnr in ipairs(new_file_bufnrs) do
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local initial_text = eve.path.is_under(workspace, filepath) and eve.path.relative(cwd, filepath, true) or filepath ---@type string
+      local initial_text = path.is_under(workspace, filepath) and path.relative(cwd, filepath, true) or filepath ---@type string
 
       local input ---@type fml.t.ux.IInput
       input = fml.ux.Input.new({
@@ -46,8 +51,8 @@ eve.commander.register({
         title = "Save file",
         min_width = 40,
         on_confirm = function(text)
-          local next_filepath = eve.path.resolve(cwd, text) ---@type string
-          local filetype = eve.fs.is_file_or_dir(next_filepath)
+          local next_filepath = path.resolve(cwd, text) ---@type string
+          local filetype = fs.is_file_or_dir(next_filepath)
 
           ---@return nil
           local on_save = function()
@@ -72,9 +77,8 @@ eve.commander.register({
           end
 
           if filetype == "directory" then
-            eve.reporter.error({
-              from = "fml.api.buf.create",
-              subject = "save",
+            reporter.error({
+              from = __module_name__,
               message = "Cannot save a file into a directory.",
               details = {
                 bufnr = bufnr,

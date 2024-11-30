@@ -86,19 +86,19 @@
 ---@field public col                    ?integer
 
 ---@class fml.t.ux.search.IState
----@field public dirtier_dimension      eve.t.collection.IDirtier
----@field public dirtier_data           eve.t.collection.IDirtier
----@field public dirtier_data_cache     eve.t.collection.IDirtier
----@field public dirtier_main           eve.t.collection.IDirtier
----@field public dirtier_preview        eve.t.collection.IDirtier
+---@field public dirtier_dimension      eve.lib.collection.IDirtier
+---@field public dirtier_data           eve.lib.collection.IDirtier
+---@field public dirtier_data_cache     eve.lib.collection.IDirtier
+---@field public dirtier_main           eve.lib.collection.IDirtier
+---@field public dirtier_preview        eve.lib.collection.IDirtier
 ---@field public enable_multiline_input boolean
----@field public input                  eve.t.collection.IObservable
----@field public input_history          eve.t.collection.IHistory|nil
----@field public input_line_count       eve.t.collection.IObservable
+---@field public input                  eve.lib.collection.IObservable
+---@field public input_history          eve.lib.collection.IHistory|nil
+---@field public input_line_count       eve.lib.collection.IObservable
 ---@field public item_present_uuid      string|nil
 ---@field public items                  fml.t.ux.search.IItem[]
 ---@field public max_width              integer
----@field public status                 eve.t.collection.IObservable
+---@field public status                 eve.lib.collection.IObservable
 ---@field public title                  string
 ---@field public uuid                   string
 ---@field public get_current            fun(self: fml.t.ux.search.IState): fml.t.ux.search.IItem|nil, integer, string|nil

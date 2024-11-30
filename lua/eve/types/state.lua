@@ -1,0 +1,55 @@
+---@class eve.t.state.state.dirtier
+---@field public editor_states          eve.lib.collection.ITicker
+---@field public session_states         eve.lib.collection.ITicker
+---@field public workspace_states       eve.lib.collection.ITicker
+
+---@class eve.t.state.data
+---@field public dressing               eve.t.state.data.dressing
+---@field public theme                  eve.t.state.data.theme
+---
+---@field public bookmark               eve.t.state.data.bookmark
+---@field public find                   eve.t.state.data.find
+---@field public flight                 eve.t.state.data.flight
+---@field public search                 eve.t.state.data.search
+---
+---@field public bufs                   eve.t.state.data.buf.IMeta[]
+---@field public tabs                   eve.t.state.data.tab.IMeta[]
+---@field public wins                   eve.t.state.data.win.IMeta[]
+---@field public frecency               eve.t.state.data.frecency
+---@field public input_history          eve.t.state.data.input_history
+---@field public tab_history            eve.lib.collection.history.ISerializedData
+
+---@class eve.t.state.state
+---@field public dressing               eve.t.state.state.dressing
+---@field public theme                  eve.t.state.state.theme
+---
+---@field public bookmark               eve.t.state.state.bookmark
+---@field public find                   eve.t.state.state.find
+---@field public flight                 eve.t.state.state.flight
+---@field public search                 eve.t.state.state.search
+---
+---@field public status                 eve.t.state.state.status
+---@field public frecency               eve.t.state.state.frecency
+---@field public input_history          eve.t.state.state.input_history
+---@field public tab_history            eve.lib.collection.IAdvanceHistory
+---
+---@field public dirtier                eve.t.state.state.dirtier
+
+---@class eve.t.state.storage
+---@field public editor                 ?string
+---@field public session                ?string
+---@field public workspace              ?string
+---@field public nvim_session           ?string
+---@field public nvim_session_autosaved ?string
+
+---@class eve.t.state.IWatchChangeParams
+---@field public on_theme_changed       ?fun(): nil
+
+---@class eve.t.state
+---@field public state                  eve.t.state.state
+---@field public dump                   fun(): eve.t.state.data
+---@field public load                   fun(storage: eve.t.state.storage): nil
+---@field public save                   fun(storage: eve.t.state.storage): nil
+---@field public get_storage            fun(): eve.t.state.storage
+---@field public set_storage            fun(storage: eve.t.state.storage): nil
+---@field public watch_changes          fun(): nil

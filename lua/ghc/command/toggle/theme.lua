@@ -1,16 +1,20 @@
 local __module_name__ = "ghc.command.toggle.theme" ---@type string
 
-local Observable = require("eve.collection.observable")
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local Observable = require("eve.lib.collection.observable")
+local state = require("eve.state")
+
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
-local theme_cache_path = eve.path.locate_context_filepath("theme")
+local theme_cache_path = path.locate_context_filepath("theme")
 
 ---@param force                         ?boolean
 ---@return nil
 local function reload_theme(force)
-  local theme = eve.context.state.theme.theme:snapshot() ---@type eve.e.Theme
-  local transparency = eve.context.state.theme.transparency:snapshot() ---@type boolean
+  local theme = state.state.theme.theme:snapshot() ---@type eve.e.Theme
+  local transparency = state.state.theme.transparency:snapshot() ---@type boolean
 
-  if force or not eve.path.is_exist(theme_cache_path) then
+  if force or not path.is_exist(theme_cache_path) then
     fml.ux.theme.apply_theme({
       theme = theme,
       transparency = transparency,
@@ -20,7 +24,7 @@ local function reload_theme(force)
   else
     dofile(theme_cache_path)
 
-    local scheme = fml.ux.theme.get_scheme(theme) ---@type eve.t.collection.theme.IScheme|nil
+    local scheme = fml.ux.theme.get_scheme(theme) ---@type eve.lib.collection.theme.IScheme|nil
     if scheme ~= nil then
       fml.ux.theme.set_term_colors(scheme)
     end
@@ -37,7 +41,7 @@ end
 ---@return nil
 local function apply_theme(theme)
   if not vim.tbl_contains(fml.ux.theme.themes, theme) then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       subject = "apply_theme",
       message = "Unknown theme.",
@@ -46,13 +50,13 @@ local function apply_theme(theme)
     return
   end
 
-  local app_home = eve.path.locate_app_config_home("guanghechen")
-  local script_path = eve.path.join(app_home, "config/theme/apply_theme.mjs")
+  local app_home = path.locate_app_config_home("guanghechen")
+  local script_path = path.join(app_home, "config/theme/apply_theme.mjs")
   local ok, error = pcall(function()
     vim.fn.system({ "node", script_path, theme })
   end)
   if not ok then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       subject = "apply_theme",
       message = "Failed to toggle theme.",
@@ -64,13 +68,13 @@ end
 ---@param theme                         string
 ---@return nil
 local function toggle_theme_variant(theme)
-  local app_home = eve.path.locate_app_config_home("guanghechen")
-  local script_path = eve.path.join(app_home, "config/theme/toggle_theme.mjs")
+  local app_home = path.locate_app_config_home("guanghechen")
+  local script_path = path.join(app_home, "config/theme/toggle_theme.mjs")
   local ok, error = pcall(function()
     vim.fn.system({ "node", script_path, theme })
   end)
   if not ok then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       subject = "toggle_theme_variant",
       message = "Failed to toggle theme variant.",
@@ -109,7 +113,7 @@ eve.commander
             width = 50,
           },
           get_present = function()
-            local theme = eve.context.state.theme.theme:snapshot() ---@type eve.e.Theme
+            local theme = state.state.theme.theme:snapshot() ---@type eve.e.Theme
             return theme
           end,
           fetch_items = function()
@@ -131,7 +135,7 @@ eve.commander
     uuid = uuids.toggle_theme_variant,
     desc = "toggle: theme variant",
     action = function()
-      local theme = eve.context.state.theme.theme:snapshot() ---@type eve.e.Theme
+      local theme = state.state.theme.theme:snapshot() ---@type eve.e.Theme
       toggle_theme_variant(theme)
     end,
   })

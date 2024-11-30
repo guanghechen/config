@@ -1,3 +1,4 @@
+local path = require("eve.lib.path")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander.register({
@@ -13,7 +14,7 @@ eve.commander.register({
     vim.bo[bufnr].readonly = false
     vim.bo[bufnr].modifiable = true
 
-    local cwd = eve.path.cwd() ---@type string
+    local cwd = path.cwd() ---@type string
     local filepath = eve.buf.pick_filepath(cwd) ---@type string|nil
     if filepath ~= nil then
       vim.api.nvim_buf_set_name(bufnr, filepath)

@@ -1,6 +1,9 @@
 local __module_name__ = "ghc.command.toggle.flight" ---@type string
 
-local Observable = require("eve.collection.observable")
+local reporter = require("eve.lib.reporter")
+local Observable = require("eve.lib.collection.observable")
+local state = require("eve.state")
+
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@type string[]
@@ -15,18 +18,18 @@ local flights = {
 ---@param flight                        string
 ---@return nil
 local function toggle_flight(flight)
-  local observable = eve.context.state.flight[flight] ---@type eve.t.collection.IObservable|nil
+  local observable = state.state.flight[flight] ---@type eve.lib.collection.IObservable|nil
   if observable ~= nil then
     local enabled = not observable:snapshot() ---@type boolean
     observable:next(enabled)
 
-    eve.reporter.info({
+    reporter.info({
       from = __module_name__,
       subject = "toggle_flight",
       message = flight .. " flight has been " .. (enabled and "enabled" or "disabled") .. ".",
     })
   else
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       subject = "toggle_flight",
       message = "Unknown flight.",
@@ -63,7 +66,7 @@ eve.commander.register({
         end,
         render_item = function(item, match)
           local flight = item.uuid ---@type string
-          local observable = eve.context.state.flight[flight] ---@type eve.t.collection.IObservable
+          local observable = state.state.flight[flight] ---@type eve.lib.collection.IObservable
           local enabled = observable:snapshot() ---@type boolean
           local text_enabled = enabled and "true" or "false" ---@type string
 

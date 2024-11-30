@@ -1,20 +1,28 @@
-local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
+local __module_name__ = "ghc.command.buf.focus" ---@type string
 
----@type string[]
-local focus_candidates = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }
+local reporter = require("eve.lib.reporter")
+local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
+local focus_candidates = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" } ---@type string[]
 
 ---@param bufid                         integer the index of buffer list
 ---@return nil
 local function focus(bufid)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
-  if tab == nil or bufid < 1 or bufid > #tab.bufnrs then
+  local tab_meta = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+  if tab_meta == nil then
+    reporter.error({
+      from = __module_name__,
+      subject = "focus",
+      message = "Cannot resolve the meta for the current tab.",
+      details = { tabnr = tabnr, bufid = bufid },
+    })
     return
   end
 
-  local bufid_next = eve.util.navigate_circular(0, bufid, #tab.bufnrs)
-  local bufnr_next = tab.bufnrs[bufid_next]
-  fml.api.buf.go(bufnr_next)
+  local tab_bufnrs = tab_meta.bufnrs ---@type integer[]
+  local bufid_next = eve.util.navigate_circular(0, bufid, #tab_bufnrs)
+  local bufnr_next = tab_bufnrs[bufid_next]
+  eve.buf.go(bufnr_next)
 end
 
 for i = 1, 10, 1 do
@@ -48,20 +56,27 @@ eve.commander
     nargs = "?",
     action = function(args)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
-      if tab == nil then
+      local tab_meta = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      if tab_meta == nil then
+        reporter.error({
+          from = __module_name__,
+          subject = "buf_focus_left",
+          message = "Cannot resolve the meta for the current tab.",
+          details = { tabnr = tabnr },
+        })
         return
       end
 
+      local tab_bufnrs = tab_meta.bufnrs ---@type integer[]
+      local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+      local bufid_cur = eve.util.find_index(tab_bufnrs, bufnr_cur) ---@type integer|nil
+
       local _, step = pcall(tonumber, args)
       step = math.max(1, step or vim.v.count1 or 1)
-      local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-      local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
-
       if bufid_cur ~= nil then
-        local bufid_next = eve.util.navigate_circular(bufid_cur, -step, #tab.bufnrs)
-        local bufnr_next = tab.bufnrs[bufid_next]
-        fml.api.buf.go(bufnr_next)
+        local bufid_next = eve.util.navigate_circular(bufid_cur, -step, #tab_bufnrs)
+        local bufnr_next = tab_bufnrs[bufid_next]
+        eve.buf.go(bufnr_next)
       end
     end,
   })
@@ -72,20 +87,27 @@ eve.commander
     nargs = "?",
     action = function(args)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab = fml.api.tab.get(tabnr) ---@type eve.t.context.state.tab.IItem|nil
-      if tab == nil then
+      local tab_meta = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      if tab_meta == nil then
+        reporter.error({
+          from = __module_name__,
+          subject = "buf_focus_right",
+          message = "Cannot resolve the meta for the current tab.",
+          details = { tabnr = tabnr },
+        })
         return
       end
 
+      local tab_bufnrs = tab_meta.bufnrs ---@type integer[]
+      local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+      local bufid_cur = eve.util.find_index(tab_bufnrs, bufnr_cur) ---@type integer|nil
+
       local _, step = pcall(tonumber, args)
       step = math.max(1, step or vim.v.count1 or 1)
-      local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-      local bufid_cur = eve.array.first(tab.bufnrs, bufnr_cur) ---@type integer|nil
-
       if bufid_cur ~= nil then
-        local bufid_next = eve.util.navigate_circular(bufid_cur, step, #tab.bufnrs)
-        local bufnr_next = tab.bufnrs[bufid_next]
-        fml.api.buf.go(bufnr_next)
+        local bufid_next = eve.util.navigate_circular(bufid_cur, step, #tab_bufnrs)
+        local bufnr_next = tab_bufnrs[bufid_next]
+        eve.buf.go(bufnr_next)
       end
     end,
   })

@@ -1,3 +1,6 @@
+local checks = require("eve.builtin.checks")
+local constant = require("eve.builtin.constant")
+local state = require("eve.state")
 local Line = require("ghc.dressing.winsep.line")
 
 ---@param direction                     ghc.dressing.winsep.line.Direction
@@ -36,7 +39,7 @@ function Winsep:show()
 
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nowrite"
-    vim.bo[bufnr].filetype = eve.constant.FT_WINSEP
+    vim.bo[bufnr].filetype = constant.FT_WINSEP
     vim.bo[bufnr].swapfile = false
     vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].readonly = true
@@ -116,12 +119,12 @@ local winsep = Winsep.new() ---@type ghc.dressing.Winsep
 ---@param winnr                         integer
 ---@return boolean
 local function should_show(winnr)
-  local enabled = eve.context.state.dressing.winsep:snapshot() ---@type boolean
+  local enabled = state.state.dressing.winsep:snapshot() ---@type boolean
   if not enabled then
     return false
   end
 
-  if eve.win.is_floating(winnr) then
+  if checks.is_win_floating(winnr) then
     return false
   end
 
@@ -139,7 +142,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
   end,
 })
 
-eve.mvc.observe({ eve.context.state.dressing.winsep }, function()
+eve.mvc.observe({ state.state.dressing.winsep }, function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if not should_show(winnr) then
     winsep:hide()

@@ -1,7 +1,9 @@
 local __module_name__ = "ghc.command.git.browser" ---@type string
 
-local constant = require("eve.builtin.constant")
-local Observable = require("eve.collection.observable")
+local env = require("eve.lib.env")
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local Observable = require("eve.lib.collection.observable")
 
 ---@alias ghc.command.git.browse.TargetScope
 ---|"branch"
@@ -49,7 +51,7 @@ local config = {
 local function system(cmd, err)
   local proc = vim.fn.system(cmd)
   if vim.v.shell_error ~= 0 then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       message = err,
       details = { error = err, proc = proc }
@@ -66,7 +68,7 @@ local function get_last_commit_hash(filename, lnum)
   local handle = io.popen(command)
 
   if not handle then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       message = "Failed to run git command to get last commit hash of the filename with specified line number",
     })
@@ -91,14 +93,14 @@ end
 
 ---@return string
 local function get_git_branch_or_commit()
-  local command = constant.IS_WIN
+  local command = env.IS_WIN
     and 'git rev-parse --abbrev-ref HEAD 2>$null'
     or 'git rev-parse --abbrev-ref HEAD 2>/dev/null'
 
   -- Run the git command to get the branch name
   local handle = io.popen(command)
   if not handle then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       message = "Failed to run git command to get branch",
     })
@@ -114,13 +116,13 @@ local function get_git_branch_or_commit()
 
   -- If not on a branch, try to get the commit hash
   if branch == '' or branch == 'HEAD' then
-    command = constant.IS_WIN
+    command = env.IS_WIN
       and 'git rev-parse HEAD 2>$null'
       or 'git rev-parse HEAD 2>/dev/null'
 
     handle = io.popen(command)
     if not handle then
-      eve.reporter.error({
+      reporter.error({
         from = __module_name__,
         message = "Failed to run git command to get commit hash",
       })
@@ -139,15 +141,15 @@ end
 
 ---@return string|nil
 local function get_filepath()
-  local workspace  = eve.path.workspace() ---@type string
+  local workspace  = path.workspace() ---@type string
   local filepath = vim.api.nvim_buf_get_name(0) ---@type string|nil
 
   if filepath == nil then
     return nil
   end
 
-  if eve.path.is_under(workspace, filepath) then
-    return  eve.path.relative(workspace, filepath, true) ---@type string
+  if path.is_under(workspace, filepath) then
+    return  path.relative(workspace, filepath, true) ---@type string
   end
 
   return  nil
@@ -194,7 +196,7 @@ end
 ---@param remote                        ghc.command.git.browse.IRemote
 local function open_remote(remote)
   if remote then
-    eve.reporter.info({
+    reporter.info({
       from = __module_name__,
       message = "Opening " .. "[" .. remote.name.. "]" .. "(" ..remote.url .. ")",
     })
@@ -204,7 +206,7 @@ end
 
 ---@return nil
 local function open()
-  local workspace  = eve.path.workspace() ---@type string
+  local workspace  = path.workspace() ---@type string
   local filepath = get_filepath() ---@type string|nil
   local remotes = {} ---@type ghc.command.git.browse.IRemote[]
   local fields = {
@@ -232,7 +234,7 @@ local function open()
   end
 
   if #remotes == 0 then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       message = "No git remotes found",
       details = { what = scope, workspace = workspace, filepath = filepath }

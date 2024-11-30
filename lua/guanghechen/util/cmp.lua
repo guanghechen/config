@@ -2,6 +2,8 @@
 
 local __module_name__ = "guanghechen.util.cmp" ---@type string
 
+local reporter = require("eve.lib.reporter")
+
 ---@class guanghechen.util.cmp
 local M = {}
 
@@ -81,7 +83,7 @@ function M.expand(snippet)
 %s
 ```]]):format(msg, vim.bo.filetype, snippet)
 
-    local log = ok and eve.reporter.warn or eve.reporter.error
+    local log = ok and reporter.warn or reporter.error
     log({
       from = __module_name__,
       subject = "expand",

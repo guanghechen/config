@@ -1,13 +1,15 @@
-local Observable = require("eve.collection.observable")
+local path = require("eve.lib.path")
+local Observable = require("eve.lib.collection.observable")
+local locations = require("eve.builtin.locations")
+local state = require("eve.state")
 local FileSelect = require("fml.ux.component.file_select")
-local frecency = eve.context.state.frecency.files ---@type eve.t.collection.IFrecency
 
 ---@class fml.fn.select_files.IParams
 ---@field public cwd                    string
 ---@field public dimension              ?fml.t.ux.search.IRawDimension
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
----@field public input                  ?eve.t.collection.IObservable
+---@field public input                  ?eve.lib.collection.IObservable
 ---@field public title                  string
 ---@field public fetch_filepaths        fun(): string[]
 ---@field public get_present            ?fun(): string|nil
@@ -19,7 +21,7 @@ local function select_files(params)
   local dimension = params.dimension ---@type fml.t.ux.search.IRawDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
-  local input = params.input ---@type eve.t.collection.IObservable | nil
+  local input = params.input ---@type eve.lib.collection.IObservable | nil
   local title = params.title ---@type string
   local fetch_filepaths = params.fetch_filepaths ---@type fun(): string[]
   local get_present = params.get_present ---@type (fun(): string|nil) | nil
@@ -28,11 +30,11 @@ local function select_files(params)
     ---@return string|nil
     get_present = function()
       local present_filepath = nil ---@type string|nil
-      local winnr_cur = eve.locations.get_current_winnr() ---@type integer|nil
+      local winnr_cur = locations.get_current_winnr() ---@type integer|nil
       if winnr_cur ~= nil and vim.api.nvim_win_is_valid(winnr_cur) then
         local bufnr = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
         local absolute_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        present_filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string
+        present_filepath = path.relative(cwd, absolute_filepath, true) ---@type string
       end
       return present_filepath
     end
@@ -78,7 +80,7 @@ local function select_files(params)
     extend_preset_keymaps = true,
     flag_fuzzy = Observable.from_value(flag_fuzzy),
     flag_regex = Observable.from_value(flag_regex),
-    frecency = frecency,
+    frecency = state.state.frecency.files,
     input = input,
     permanent = false,
     provider = provider,

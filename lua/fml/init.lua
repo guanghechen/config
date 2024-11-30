@@ -1,28 +1,17 @@
 ---@class fml.api
 local api = {
-  buf = require("fml.api.buf"),
-  tab = require("fml.api.tab"),
   term = require("fml.api.term"),
-  win = require("fml.api.win"),
-
-  ---
-
-  find = require("fml.api.find"),
-  search = require("fml.api.search"),
 }
 
 ---@class fml.fn
 local fn = {
-  foldexpr = require("fml.fn.foldexpr"),
   get_clipboard = require("fml.fn.get_clipboard"),
+  locate_symbols = require("fml.fn.locate_symbols"),
   refresh_state = require("fml.fn.refresh_state"),
   select = require("fml.fn.select"),
   select_files = require("fml.fn.select_files"),
   statuscolumn = require("fml.fn.statuscolumn"),
 }
-
----@type fml.util
-local util = require("fml.util")
 
 ---@class fml.ux
 local ux = {
@@ -45,12 +34,10 @@ local ux = {
 ---@class fml
 ---@field public api                    fml.api
 ---@field public fn                     fml.fn
----@field public util                   fml.util
 ---@field public ux                     fml.ux
 local fml = {
   api = api,
   fn = fn,
-  util = util,
   ux = ux,
 }
 

@@ -1,7 +1,7 @@
 local __module_name__ = "fml.ux.component.setting" ---@type string
 
-local json = require("eve.builtin.json")
-local reporter = require("eve.builtin.reporter")
+local json = require("eve.lib.json")
+local reporter = require("eve.lib.reporter")
 local Textarea = require("fml.ux.component.textarea")
 
 ---@class fml.ux.Setting : fml.t.ux.ISetting, fml.ux.Textarea

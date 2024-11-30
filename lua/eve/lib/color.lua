@@ -1,0 +1,327 @@
+-- The MIT License (MIT)
+--
+-- Copyright (c) 2022 Leon Heidelbach
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a copy
+-- of this software and associated documentation files (the "Software"), to deal
+-- in the Software without restriction, including without limitation the rights
+-- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-- copies of the Software, and to permit persons to whom the Software is
+-- furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
+
+-- All credits to https://github.com/LeonHeidelbach for making this!
+-- 90% of functions are written by him
+
+---@class eve.lib.color
+local M = {}
+
+-- Convert a hex color value to RGB
+-- @param hex: The hex color value
+-- @return r: Red (0-255)
+-- @return g: Green (0-255)
+-- @return b: Blue (0-255)
+function M.hex2rgb(hex)
+  local hash = string.sub(hex, 1, 1) == "#"
+  local offset = hash and 0 or 1 ---@type integer
+  if string.len(hex) ~= (7 - offset) then
+    return nil
+  end
+
+  local r = tonumber(hex:sub(2 - offset, 3 - offset), 16)
+  local g = tonumber(hex:sub(4 - offset, 5 - offset), 16)
+  local b = tonumber(hex:sub(6 - offset, 7 - offset), 16)
+  return r, g, b
+end
+
+---@param val                           integer
+---@return string
+function M.int2hex(val)
+  local b = val % 256 ---@type integer
+  val = (val - b) / 256 ---@type integer
+
+  local g = val % 256 ---@type integer
+  val = (val - g) / 256 ---@type integer
+
+  return string.format("#%02x%02x%02x", val, g, b)
+end
+
+-- Convert a hex color value to RGB ratio
+-- @param hex: The hex color value
+-- @return r: Red (0-100)
+-- @return g: Green (0-100)
+-- @return b: Blue (0-100)
+function M.hex2rgb_ratio(hex)
+  local r, g, b = M.hex2rgb(hex)
+  return math.floor(r / 255 * 100), math.floor(g / 255 * 100), math.floor(b / 255 * 100)
+end
+
+-- Convert an RGB color value to hex
+-- @param r: Red (0-255)
+-- @param g: Green (0-255)
+-- @param b: Blue (0-255)
+-- @return The hexadecimal string representation of the color
+function M.rgb2hex(r, g, b)
+  return string.format("#%02x%02x%02x", math.floor(r), math.floor(g), math.floor(b))
+end
+
+-- Helper function to convert a HSL color value to RGB
+-- Not to be used directly, use M.hsl2rgb instead
+function M.hsl2rgb_helper(p, q, a)
+  if a < 0 then
+    a = a + 6
+  end
+  if a >= 6 then
+    a = a - 6
+  end
+  if a < 1 then
+    return (q - p) * a + p
+  elseif a < 3 then
+    return q
+  elseif a < 4 then
+    return (q - p) * (4 - a) + p
+  else
+    return p
+  end
+end
+
+-- Convert a HSL color value to RGB
+-- @param h: Hue (0-360)
+-- @param s: Saturation (0-1)
+-- @param l: Lightness (0-1)
+-- @return r: Red (0-255)
+-- @return g: Green (0-255)
+-- @return b: Blue (0-255)
+function M.hsl2rgb(h, s, l)
+  local t1, t2, r, g, b
+
+  h = h / 60
+  if l <= 0.5 then
+    t2 = l * (s + 1)
+  else
+    t2 = l + s - (l * s)
+  end
+
+  t1 = l * 2 - t2
+  r = M.hsl2rgb_helper(t1, t2, h + 2) * 255
+  g = M.hsl2rgb_helper(t1, t2, h) * 255
+  b = M.hsl2rgb_helper(t1, t2, h - 2) * 255
+
+  return r, g, b
+end
+
+-- Convert an RGB color value to HSL
+-- @param r Red (0-255)
+-- @param g Green (0-255)
+-- @param b Blue (0-255)
+-- @return h Hue (0-360)
+-- @return s Saturation (0-1)
+-- @return l Lightness (0-1)
+function M.rgb2hsl(r, g, b)
+  local min, max, l, s, maxcolor, h
+  r, g, b = r / 255, g / 255, b / 255
+
+  min = math.min(r, g, b)
+  max = math.max(r, g, b)
+  maxcolor = 1 + (max == b and 2 or (max == g and 1 or 0))
+
+  if maxcolor == 1 then
+    h = (g - b) / (max - min)
+  elseif maxcolor == 2 then
+    h = 2 + (b - r) / (max - min)
+  elseif maxcolor == 3 then
+    h = 4 + (r - g) / (max - min)
+  end
+
+  if not rawequal(type(h), "number") then
+    h = 0
+  end
+
+  h = h * 60
+
+  if h < 0 then
+    h = h + 360
+  end
+
+  l = (min + max) / 2
+
+  if min == max then
+    s = 0
+  else
+    if l < 0.5 then
+      s = (max - min) / (max + min)
+    else
+      s = (max - min) / (2 - max - min)
+    end
+  end
+
+  return h, s, l
+end
+
+-- Convert a hex color value to HSL
+-- @param hex: The hex color value
+-- @param h: Hue (0-360)
+-- @param s: Saturation (0-1)
+-- @param l: Lightness (0-1)
+function M.hex2hsl(hex)
+  local r, g, b = M.hex2rgb(hex)
+  return M.rgb2hsl(r, g, b)
+end
+
+-- Convert a HSL color value to hex
+-- @param h: Hue (0-360)
+-- @param s: Saturation (0-1)
+-- @param l: Lightness (0-1)
+-- @returns hex color value
+function M.hsl2hex(h, s, l)
+  local r, g, b = M.hsl2rgb(h, s, l)
+  return M.rgb2hex(r, g, b)
+end
+
+-- Change the hue of a color by a given amount
+-- @param hex The hex color value
+-- @param amount The amount to change the hue.
+--               Negative values decrease the hue, positive values increase it.
+-- @return The hex color value
+function M.change_hex_hue(hex, percent)
+  local h, s, l = M.hex2hsl(hex)
+  -- Convert percentage to a degree shift
+  local shift = (percent / 100) * 360
+  h = (h + shift) % 360
+  if h < 0 then
+    h = h + 360
+  end
+  return M.hsl2hex(h, s, l)
+end
+
+-- Desaturate or saturate a color by a given percentage
+-- @param hex The hex color value
+-- @param percent The percentage to desaturate or saturate the color.
+--                Negative values desaturate the color, positive values saturate it
+-- @return The hex color value
+function M.change_hex_saturation(hex, percent)
+  local h, s, l = M.hex2hsl(hex)
+  s = s + (percent / 100)
+  if s > 1 then
+    s = 1
+  end
+  if s < 0 then
+    s = 0
+  end
+  return M.hsl2hex(h, s, l)
+end
+
+-- Lighten or darken a color by a given percentage
+-- @param hex The hex color value
+-- @param percent The percentage to lighten or darken the color.
+--                Negative values darken the color, positive values lighten it
+-- @return The hex color value
+function M.change_hex_lightness(hex, percent)
+  local h, s, l = M.hex2hsl(hex)
+  l = l + (percent / 100)
+  if l > 1 then
+    l = 1
+  end
+  if l < 0 then
+    l = 0
+  end
+  return M.hsl2hex(h, s, l)
+end
+
+-- Compute a gradient between two colors
+-- @param hex1 The first hex color value
+-- @param hex2 The second hex color value
+-- @param steps The number of steps to compute
+-- @return A table of hex color values
+function M.compute_gradient(hex1, hex2, steps)
+  local h1, s1, l1 = M.hex2hsl(hex1)
+  local h2, s2, l2 = M.hex2hsl(hex2)
+  local h, s, l
+  local h_step = (h2 - h1) / (steps - 1)
+  local s_step = (s2 - s1) / (steps - 1)
+  local l_step = (l2 - l1) / (steps - 1)
+  local gradient = {}
+
+  for i = 0, steps - 1 do
+    h = h1 + (h_step * i)
+    s = s1 + (s_step * i)
+    l = l1 + (l_step * i)
+    gradient[i + 1] = M.hsl2hex(h, s, l)
+  end
+
+  return gradient
+end
+
+-- Generate complementary colors
+-- @param hex The hex color value (string)
+-- @param count The number of complementary colors to generate
+-- @return A table containing the complementary colors in hex format
+function M.hex2complementary(hex, count)
+  local h, s, l = M.hex2hsl(hex)
+  local complementary_colors = {}
+
+  -- Calculate the hue for the complementary color (180 degrees shift)
+  local complementary_hue = (h + 180) % 360
+
+  -- Create a gradient of colors by slightly varying the complementary hue
+  local hue_step = 360 / count
+  for i = 0, count - 1 do
+    local new_hue = (complementary_hue + (hue_step * i)) % 360
+    local complementary_hex = M.hsl2hex(new_hue, s, l)
+    table.insert(complementary_colors, complementary_hex)
+  end
+
+  return complementary_colors
+end
+
+-- Mix two colors with a given percentage.
+---@param first                         string    The primary hex color.
+---@param second                        string    The hex color you want to mix into the first color.
+---@param strength                      ?integer  The percentage of second color in the output. [0-100]
+---@return string The mixed color as a hex value
+function M.mix(first, second, strength)
+  strength = strength or 50 ---@type integer
+  if strength <= 0 then
+    return first
+  end
+  if strength >= 100 then
+    return second
+  end
+
+  local t1 = strength / 100 ---@type number
+  local t2 = 1 - t1 ---@type number
+
+  if first == "none" then
+    if second == "none" then
+      return "none"
+    end
+
+    local r2, g2, b2 = M.hex2rgb(second)
+    return M.rgb2hex(r2 * t1, g2 * t1, b2 * t1)
+  end
+
+  if second == "none" then
+    local r1, g1, b1 = M.hex2rgb(first)
+    return M.rgb2hex(r1 * t2, g1 * t2, b1 * t2)
+  end
+
+  local r1, g1, b1 = M.hex2rgb(first)
+  local r2, g2, b2 = M.hex2rgb(second)
+
+  local r3 = r1 * t2 + r2 * t1
+  local g3 = g1 * t2 + g2 * t1
+  local b3 = b1 * t2 + b2 * t1
+  return M.rgb2hex(r3, g3, b3)
+end
+
+return M

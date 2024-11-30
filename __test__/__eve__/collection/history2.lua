@@ -1,4 +1,4 @@
-local AdvanceHistory = require("eve.collection.history_advance")
+local AdvanceHistory = require("eve.lib.collection.history_advance")
 
 local history = AdvanceHistory.new({
   name = "haha",

@@ -32,7 +32,7 @@ require("ghc.command")
 eve.commander.execute(eve.commander.uuids.reload_theme)
 vim.schedule(function()
   eve.commander.execute(eve.commander.uuids.reload_theme)
-  eve.context.watch_changes({
+  eve.state.watch_changes({
     on_theme_changed = function()
       eve.commander.execute(eve.commander.uuids.reload_theme)
     end,
@@ -54,6 +54,7 @@ end
 pcall(require, "integration.local")
 
 ---! Reload session if not specify file and current directory is a git repository.
-if eve.path.is_git_repo() and eve.context.state.flight.autoload:snapshot() then
-  eve.nvim.load_nvim_session(eve.context.storage.nvim_session_autosaved)
+local path = require("eve.lib.path")
+if path.is_git_repo() and eve.state.state.flight.autoload:snapshot() then
+  eve.nvim.load_nvim_session(eve.state.get_storage().nvim_session_autosaved)
 end

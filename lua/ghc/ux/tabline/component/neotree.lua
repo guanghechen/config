@@ -1,11 +1,16 @@
-local indicator_symbol_width = vim.api.nvim_strwidth(eve.icons.symbols.win_indicator_active) ---@type integer
+local checks = require("eve.builtin.checks")
+local constant = require("eve.builtin.constant")
+local icons = require("eve.builtin.icons")
+
+local indicator_symbol_width = vim.api.nvim_strwidth(icons.symbols.win_indicator_active) ---@type integer
 
 ---@return integer
 local function get_pane_width()
-  for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
+  local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
+  for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].ft == eve.constant.FT_NEOTREE then
-      if not eve.win.is_floating(winnr) then
+    if vim.bo[bufnr].filetype == constant.FT_NEOTREE then
+      if not checks.is_win_floating(winnr) then
         return vim.api.nvim_win_get_width(winnr) + 1
       end
     end
@@ -23,13 +28,13 @@ local M = {
       return "", 0
     end
 
-    local winnr_cur = fml.api.tab.get_current_winnr() ---@type integer
+    local winnr_cur = eve.locations.get_current_winnr() or 0 ---@type integer
     local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
-    local is_win_active = vim.bo[bufnr_cur].ft == eve.constant.FT_NEOTREE
-    local indicator = is_win_active and eve.icons.symbols.win_indicator_active or eve.icons.symbols.win_indicator
+    local is_win_active = vim.bo[bufnr_cur].ft == constant.FT_NEOTREE
+    local indicator = is_win_active and icons.symbols.win_indicator_active or icons.symbols.win_indicator
 
     local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
-    local text = eve.icons.ui.Explorer .. " " .. cwd_name ---@type string
+    local text = icons.ui.Explorer .. " " .. cwd_name ---@type string
     local text_width = vim.api.nvim_strwidth(text) ---@type integer
     local text_width_remain = width - text_width - indicator_symbol_width ---@type integer
     local left_width = math.floor(text_width_remain / 2)
@@ -38,11 +43,11 @@ local M = {
     local right_blank = string.rep(" ", right_width)
     local right_split = "│"
 
-    local hl_text = eve.nvimbar.txt(indicator, "f_tl_sidebar_indicator")
-      .. eve.nvimbar.txt(left_blank, "f_tl_sidebar_blank")
-      .. eve.nvimbar.txt(text, "f_tl_sidebar_text")
-      .. eve.nvimbar.txt(right_blank, "f_tl_sidebar_blank")
-      .. eve.nvimbar.txt(right_split, "f_tl_sidebar_split")
+    local hl_text = eve.nvim.txt(indicator, "f_tl_sidebar_indicator")
+      .. eve.nvim.txt(left_blank, "f_tl_sidebar_blank")
+      .. eve.nvim.txt(text, "f_tl_sidebar_text")
+      .. eve.nvim.txt(right_blank, "f_tl_sidebar_blank")
+      .. eve.nvim.txt(right_split, "f_tl_sidebar_split")
     return hl_text, width + 1
   end,
 }

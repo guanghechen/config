@@ -1,11 +1,11 @@
 local constant = require("eve.builtin.constant")
-local Scheduler = require("eve.collection.scheduler")
-local Subscriber = require("eve.collection.subscriber")
+local Scheduler = require("eve.lib.collection.scheduler")
+local Subscriber = require("eve.lib.collection.subscriber")
 
 ---@class fml.ux.search.Preview : fml.t.ux.search.IPreview
 ---@field protected _bufnr              integer|nil
 ---@field protected _keymaps            eve.t.IKeymap[]
----@field protected _render_scheduler   eve.t.collection.IScheduler
+---@field protected _render_scheduler   eve.lib.collection.IScheduler
 local M = {}
 M.__index = M
 

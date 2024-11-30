@@ -1,6 +1,10 @@
 local __module_name__ = "guanghechen.plugins.CopilotChat" ---@type string
 
-if not eve.context.state.flight.copilot:snapshot() then
+local constant = require("eve.builtin.constant")
+local reporter = require("eve.lib.reporter")
+local state = require("eve.state")
+
+if not state.state.flight.copilot:snapshot() then
   return
 end
 
@@ -29,7 +33,7 @@ chat_widget = {
     local winnrs = vim.api.nvim_list_wins() ---@type integer[]
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype == eve.constant.FT_COPILOT_CHAT then
+      if vim.bo[bufnr].filetype == constant.FT_COPILOT_CHAT then
         return winnr
       end
     end
@@ -77,7 +81,7 @@ chat_widget = {
       local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
       vim.api.nvim_win_set_config(winnr, cfg)
 
-      if vim.bo[bufnr].filetype == eve.constant.FT_COPILOT_CHAT then
+      if vim.bo[bufnr].filetype == constant.FT_COPILOT_CHAT then
         chat_widget.internal_winnr = winnr
         chat_widget.internal_status = "visible"
 
@@ -86,9 +90,9 @@ chat_widget = {
         vim.wo[winnr].relativenumber = false
         vim.wo[winnr].signcolumn = "yes"
 
-        if not vim.b[bufnr].guanghechen_key_binded then
-          vim.b[bufnr].guanghechen_key_binded = true
-          local keymaps = eve.globals.widgets.get_keymaps() ---@type eve.t.IKeymap[]
+        if not vim.b[bufnr].ghc_key_bound then
+          vim.b[bufnr].ghc_key_bound = true
+          local keymaps = eve.widgets.get_keymaps() ---@type eve.t.IKeymap[]
           eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 
@@ -133,7 +137,7 @@ chat_widget = {
     if chat_widget.internal_status == "closed" then
       chat_widget.internal_status = "hidden"
     end
-    eve.globals.widgets.open(chat_widget)
+    eve.widgets.open(chat_widget)
   end,
   show = function()
     if chat_widget.internal_status ~= "visible" then
@@ -150,7 +154,7 @@ eve.commander
       local actions = require("CopilotChat.actions")
       local prompt_actions = actions["prompt_actions"]()
       if not prompt_actions then
-        eve.reporter.warn({
+        reporter.warn({
           from = __module_name__,
           subject = "pick",
           message = "No prompt found on the current line",

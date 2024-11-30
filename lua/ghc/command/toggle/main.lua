@@ -1,4 +1,6 @@
-local Observable = require("eve.collection.observable")
+local Observable = require("eve.lib.collection.observable")
+local state = require("eve.state")
+
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@class ghc.command.toggle.IItem
@@ -12,7 +14,7 @@ local flag_map = {
     uuid = uuids.toggle_dressing_autopairs,
     title = "dressing autopairs",
     snapshot = function()
-      local observable = eve.context.state.dressing.autopairs ---@type eve.t.collection.IObservable
+      local observable = state.state.dressing.autopairs ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -21,7 +23,7 @@ local flag_map = {
     uuid = uuids.toggle_dressing_winsep,
     title = "dressing winsep",
     snapshot = function()
-      local observable = eve.context.state.dressing.winsep ---@type eve.t.collection.IObservable
+      local observable = state.state.dressing.winsep ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -37,7 +39,7 @@ local flag_map = {
     uuid = uuids.toggle_relativenumber,
     title = "relativenumber",
     snapshot = function()
-      local observable = eve.context.state.theme.relativenumber ---@type eve.t.collection.IObservable
+      local observable = state.state.theme.relativenumber ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -46,7 +48,7 @@ local flag_map = {
     uuid = uuids.toggle_theme,
     title = "theme",
     snapshot = function()
-      local theme = eve.context.state.theme.theme:snapshot() ---@type eve.e.Theme
+      local theme = state.state.theme.theme:snapshot() ---@type eve.e.Theme
       return theme, "String"
     end,
   },
@@ -54,7 +56,7 @@ local flag_map = {
     uuid = uuids.toggle_theme_transparency,
     title = "theme transparency",
     snapshot = function()
-      local observable = eve.context.state.theme.transparency ---@type eve.t.collection.IObservable
+      local observable = state.state.theme.transparency ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,

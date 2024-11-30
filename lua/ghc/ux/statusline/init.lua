@@ -1,4 +1,7 @@
-local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
+local functional = require("eve.lib.functional")
+local state = require("eve.state")
+
+local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 local statusline_dirty = true ---@type boolean
 
 local statusline ---@type fml.t.ux.INvimbar
@@ -13,7 +16,7 @@ statusline = fml.ux.Nvimbar.new({
   get_max_width = function()
     return vim.o.columns
   end,
-  is_active = eve.util.falsy,
+  is_active = functional.falsy,
   trigger_rerender = function()
     statusline_dirty = false
     vim.cmd.redrawstatus()

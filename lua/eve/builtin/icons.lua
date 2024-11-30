@@ -1,4 +1,4 @@
-local constant = require("eve.builtin.constant")
+local env = require("eve.lib.env")
 
 ---@class eve.builtin.icons
 local M = {}
@@ -129,10 +129,10 @@ M.os = {
   nix = "",
   wsl = "",
   unknown = "",
-  current = (constant.IS_NIX and "")
-    or (constant.IS_MAC and "")
-    or (constant.IS_WIN and "")
-    or (constant.IS_WSL and "")
+  current = (env.IS_NIX and "")
+    or (env.IS_MAC and "")
+    or (env.IS_WIN and "")
+    or (env.IS_WSL and "")
     or "",
 }
 

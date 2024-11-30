@@ -1,7 +1,3 @@
----@alias eve.e.InputMethod
----|"English"
----|"Chinese"
-
 ---@alias eve.e.FindScope
 ---|"W"
 ---|"C"

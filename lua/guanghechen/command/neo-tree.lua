@@ -1,6 +1,7 @@
+local path = require("eve.lib.path")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
-local cwd = eve.path.cwd() ---@type string
+local cwd = path.cwd() ---@type string
 
 ---@param sources ("buffers"|"filesystem"|"git_status")[]
 ---@return nil
@@ -15,9 +16,10 @@ end
 
 ---@return boolean
 local function has_explorer_window_opened()
-  for _, winnr in pairs(vim.api.nvim_tabpage_list_wins(0)) do
+  local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
+  for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].ft == "neo-tree" then
+    if vim.bo[bufnr].filetype == "neo-tree" then
       return true
     end
   end
@@ -26,8 +28,8 @@ end
 
 ---@return boolean
 local function check_could_reveal()
-  local filepath = eve.path.current_filepath() ---@type string
-  return eve.path.is_under(cwd, filepath)
+  local filepath = path.current_filepath() ---@type string
+  return path.is_under(cwd, filepath)
 end
 
 eve.commander
@@ -35,7 +37,7 @@ eve.commander
     uuid = uuids.explorer_filesystem_cwd,
     desc = "explorer: filesystem (cwd)",
     action = function()
-      cwd = eve.path.cwd()
+      cwd = path.cwd()
       close_explorer_sources({ "git_status", "buffers" })
       local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
       local toggle = ft_current == "neo-tree" ---@type boolean
@@ -53,7 +55,7 @@ eve.commander
     uuid = uuids.explorer_filesystem_workspace,
     desc = "explorer: filesystem (workspace)",
     action = function()
-      cwd = eve.path.workspace()
+      cwd = path.workspace()
       close_explorer_sources({ "git_status", "buffers" })
       local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
       local toggle = ft_current == "neo-tree" ---@type boolean
@@ -71,7 +73,7 @@ eve.commander
     uuid = uuids.explorer_git_cwd,
     desc = "explorer: git (cwd)",
     action = function()
-      cwd = eve.path.cwd()
+      cwd = path.cwd()
       close_explorer_sources({ "buffers" })
       require("neo-tree.command").execute({
         action = "focus",
@@ -87,7 +89,7 @@ eve.commander
     uuid = uuids.explorer_git_workspace,
     desc = "explorer: git (workspace)",
     action = function()
-      cwd = eve.path.workspace()
+      cwd = path.workspace()
       close_explorer_sources({ "buffers" })
       require("neo-tree.command").execute({
         action = "focus",

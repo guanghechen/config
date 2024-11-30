@@ -1,3 +1,5 @@
+local icons = require("eve.builtin.icons")
+local state = require("eve.state")
 local actions = require("ghc.command.search.files.actions")
 
 ---@type eve.t.ux.widget.IRawStatuslineItem[]
@@ -6,35 +8,35 @@ local statusline_items = {
     type = "enum",
     desc = "search: toggle scope",
     symbol = "",
-    state = eve.context.state.search.scope,
+    state = state.state.search.scope,
     callback = actions.toggle_scope,
   },
   {
     type = "flag",
     desc = "search: toggle gitignore",
-    symbol = eve.icons.symbols.flag_gitignore,
-    state = eve.context.state.search.flag_gitignore,
+    symbol = icons.symbols.flag_gitignore,
+    state = state.state.search.flag_gitignore,
     callback = actions.toggle_gitignore,
   },
   {
     type = "flag",
     desc = "search: toggle regex",
-    symbol = eve.icons.symbols.flag_regex,
-    state = eve.context.state.search.flag_regex,
+    symbol = icons.symbols.flag_regex,
+    state = state.state.search.flag_regex,
     callback = actions.toggle_regex,
   },
   {
     type = "flag",
     desc = "search: toggle case sensitive",
-    symbol = eve.icons.symbols.flag_case_sensitive,
-    state = eve.context.state.search.flag_case_sensitive,
+    symbol = icons.symbols.flag_case_sensitive,
+    state = state.state.search.flag_case_sensitive,
     callback = actions.toggle_case_sensitive,
   },
   {
     type = "flag",
     desc = "search: toggle mode",
-    symbol = eve.icons.symbols.flag_replace,
-    state = eve.context.state.search.flag_replace,
+    symbol = icons.symbols.flag_replace,
+    state = state.state.search.flag_replace,
     callback = actions.toggle_mode,
   },
 }

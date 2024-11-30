@@ -1,14 +1,9 @@
 local __module_name__ = "fml.ux.component.nvimbar" ---@type string
 
-local path = require("eve.builtin.path")
-local reporter = require("eve.builtin.reporter")
-local nvimbar = require("eve.std.nvimbar")
-local Scheduler = require("eve.collection.scheduler")
-
----@return boolean
-local function truthy()
-  return true
-end
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local functional = require("eve.lib.functional")
+local Scheduler = require("eve.lib.collection.scheduler")
 
 ---@class fml.ux.Nvimbar : fml.t.ux.INvimbar
 ---@field public name                   string
@@ -19,7 +14,7 @@ end
 ---@field private _preset_context       fml.t.ux.nvimbar.IPresetContext
 ---@field private _components           table<string, fml.t.ux.nvimbar.IComponent>
 ---@field private _items                fml.t.ux.nvimbar.IItem[]
----@field private _render_scheduler     eve.t.collection.IScheduler
+---@field private _render_scheduler     eve.lib.collection.IScheduler
 ---@field private _get_max_width        fun(): integer
 ---@field private _is_active            fun(context: fml.t.ux.nvimbar.IContext): boolean
 local M = {}
@@ -142,7 +137,7 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type eve.t.collection.IScheduler
+  ---@type eve.lib.collection.IScheduler
   local _render_scheduler = Scheduler.new({
     name = "fml.ux.component.nvimbar#" .. name,
     delay = render_delay,
@@ -161,8 +156,8 @@ function M.new(props)
   })
 
   self.name = name
-  self._sep = nvimbar.txt(component_sep, component_sep_hlname)
-  self._sep_active = nvimbar.txt(component_sep, component_sep_hlname_active)
+  self._sep = eve.nvim.txt(component_sep, component_sep_hlname)
+  self._sep_active = eve.nvim.txt(component_sep, component_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(component_sep)
   self._last_context = nil
   self._preset_context = preset_context
@@ -232,8 +227,8 @@ function M:register(name, raw_component, enabled)
     last_result_width = 0,
     tight = not not raw_component.tight,
     render = raw_component.render,
-    will_change = raw_component.will_change or truthy,
-    condition = raw_component.condition or truthy,
+    will_change = raw_component.will_change or functional.truthy,
+    condition = raw_component.condition or functional.truthy,
   }
   self._components[name] = component
   return self

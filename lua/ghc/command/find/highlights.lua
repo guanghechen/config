@@ -45,17 +45,18 @@ local provider = {
         max_hlname_width = math.max(max_hlname_width, vim.api.nvim_strwidth(hlname))
       end
 
+      local cs = require("eve.lib.color")
       for lnum, hlname in ipairs(hlnames) do
         local line = "xxx   " .. eve.util.pad_end(hlname, max_hlname_width, " ") ---@type string
         local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.t.IHighlight
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info
         if hlgroup.fg ~= nil then
-          local color_name = eve.std.color.int2hex(hlgroup.fg) ---@type string
+          local color_name = cs.int2hex(hlgroup.fg) ---@type string
           line = line .. " fg=" .. color_name
         end
         if hlgroup.bg ~= nil then
-          local color_name = eve.std.color.int2hex(hlgroup.bg) ---@type string
+          local color_name = cs.int2hex(hlgroup.bg) ---@type string
           line = line .. " bg=" .. color_name
         end
         if hlgroup.link ~= nil then
@@ -72,7 +73,7 @@ local provider = {
         for key, val in pairs(hlgroup) do
           if key ~= "fg" and key ~= "bg" and key ~= "link" and key ~= "cterm" then
             if type(val) ~= "string" then
-              val = eve.json.stringify(val)
+              val = vim.inspect(val)
             end
             line = line .. " " .. key .. "=" .. val
           end

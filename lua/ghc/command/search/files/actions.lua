@@ -1,12 +1,23 @@
+local state = require("eve.state")
 local api = require("ghc.command.search.files.api")
-local state = require("ghc.command.search.files.state")
+local files_state = require("ghc.command.search.files.state")
+
+local scopes = { "W", "C", "D", "B" } ---@type eve.e.SearchScope[]
+
+---@return eve.e.SearchScope
+local function get_scope_carousel_next()
+  local scope = state.state.search.scope:snapshot() ---@type eve.e.SearchScope
+  local idx = eve.util.find_index(scopes, scope) or 1 ---@type integer
+  local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
+  return scopes[idx_next]
+end
 
 ---@param scope                         eve.e.SearchScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = eve.context.state.search.scope:snapshot() ---@type eve.e.SearchScope
+  local scope_current = state.state.search.scope:snapshot() ---@type eve.e.SearchScope
   if scope_current ~= scope then
-    eve.context.state.search.scope:next(scope)
+    state.state.search.scope:next(scope)
   end
 end
 
@@ -44,13 +55,13 @@ function M.edit_config()
   ---@field public includes             string[]
   ---@field public excludes             string[]
 
-  local s_keyword = eve.context.state.search.keyword:snapshot() ---@type string
-  local s_replacement = eve.context.state.search.replacement:snapshot() ---@type string
-  local s_search_paths = eve.context.state.search.search_paths:snapshot() ---@type string[]
-  local s_max_filesize = eve.context.state.search.max_filesize:snapshot() ---@type string
-  local s_max_matches = eve.context.state.search.max_matches:snapshot() ---@type integer
-  local s_includes = eve.context.state.search.includes:snapshot() ---@type string[]
-  local s_excludes = eve.context.state.search.excludes:snapshot() ---@type string[]
+  local s_keyword = state.state.search.keyword:snapshot() ---@type string
+  local s_replacement = state.state.search.replacement:snapshot() ---@type string
+  local s_search_paths = state.state.search.search_paths:snapshot() ---@type string[]
+  local s_max_filesize = state.state.search.max_filesize:snapshot() ---@type string
+  local s_max_matches = state.state.search.max_matches:snapshot() ---@type integer
+  local s_includes = state.state.search.includes:snapshot() ---@type string[]
+  local s_excludes = state.state.search.excludes:snapshot() ---@type string[]
 
   ---@type ghc.command.search.files.IConfigData
   local data = {
@@ -103,7 +114,7 @@ function M.edit_config()
     end,
     on_confirm = function(raw_data)
       vim.schedule(function()
-        local last_search_pattern = eve.context.state.search.keyword:snapshot() ---@type string
+        local last_search_pattern = state.state.search.keyword:snapshot() ---@type string
 
         local raw = vim.tbl_extend("force", data, raw_data)
         ---@cast raw ghc.command.search.files.IConfigData
@@ -116,18 +127,18 @@ function M.edit_config()
         local includes = raw.includes ---@type string[]
         local excludes = raw.excludes ---@type string[]
 
-        eve.context.state.search.keyword:next(keyword)
-        eve.context.state.search.replacement:next(replacement)
-        eve.context.state.search.max_filesize:next(max_filesize)
-        eve.context.state.search.max_matches:next(max_matches)
-        eve.context.state.search.search_paths:next(search_paths)
-        eve.context.state.search.includes:next(includes)
-        eve.context.state.search.excludes:next(excludes)
+        state.state.search.keyword:next(keyword)
+        state.state.search.replacement:next(replacement)
+        state.state.search.max_filesize:next(max_filesize)
+        state.state.search.max_matches:next(max_matches)
+        state.state.search.search_paths:next(search_paths)
+        state.state.search.includes:next(includes)
+        state.state.search.excludes:next(excludes)
 
         if keyword ~= last_search_pattern then
-          state.reset_input(keyword)
+          files_state.reset_input(keyword)
         else
-          state.reload()
+          files_state.reload()
         end
       end)
       return true
@@ -142,7 +153,7 @@ end
 
 ---@return nil
 function M.replace_file()
-  local search = state.get_search() ---@type fml.t.ux.search.ISearch
+  local search = files_state.get_search() ---@type fml.t.ux.search.ISearch
   local item = search.state:get_current() ---@type fml.t.ux.search.IItem|nil
   if item ~= nil then
     api.replace_file(item.uuid)
@@ -159,7 +170,7 @@ end
 function M.send_to_qflist()
   local quickfix_items = api.gen_quickfix_items() ---@type eve.t.IQuickFixItem[]
   if #quickfix_items > 0 then
-    state.close()
+    files_state.close()
 
     eve.qflist.push(quickfix_items)
     eve.qflist.open_qflist(true)
@@ -168,31 +179,31 @@ end
 
 ---@return nil
 function M.toggle_case_sensitive()
-  local flag = eve.context.state.search.flag_case_sensitive:snapshot() ---@type boolean
-  eve.context.state.search.flag_case_sensitive:next(not flag)
+  local flag = state.state.search.flag_case_sensitive:snapshot() ---@type boolean
+  state.state.search.flag_case_sensitive:next(not flag)
 end
 
 ---@return nil
 function M.toggle_gitignore()
-  local flag = eve.context.state.search.flag_gitignore:snapshot() ---@type boolean
-  eve.context.state.search.flag_gitignore:next(not flag)
+  local flag = state.state.search.flag_gitignore:snapshot() ---@type boolean
+  state.state.search.flag_gitignore:next(not flag)
 end
 
 ---@return nil
 function M.toggle_mode()
-  local flag = eve.context.state.search.flag_replace:snapshot() ---@type boolean
-  eve.context.state.search.flag_replace:next(not flag)
+  local flag = state.state.search.flag_replace:snapshot() ---@type boolean
+  state.state.search.flag_replace:next(not flag)
 end
 
 ---@return nil
 function M.toggle_regex()
-  local flag = eve.context.state.search.flag_regex:snapshot() ---@type boolean
-  eve.context.state.search.flag_regex:next(not flag)
+  local flag = state.state.search.flag_regex:snapshot() ---@type boolean
+  state.state.search.flag_regex:next(not flag)
 end
 
 ---@return nil
 function M.toggle_scope()
-  local next_scope = fml.api.search.get_scope_carousel_next() ---@type eve.e.SearchScope
+  local next_scope = get_scope_carousel_next() ---@type eve.e.SearchScope
   change_scope(next_scope)
 end
 

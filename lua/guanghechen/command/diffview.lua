@@ -1,3 +1,4 @@
+local path = require("eve.lib.path")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
@@ -14,7 +15,7 @@ eve.commander
     desc = "git: open file history",
     action = function()
       local diffview = require("diffview") ---@type any
-      local filepath = eve.path.current_filepath()
+      local filepath = path.current_filepath()
       diffview.file_history(nil, filepath)
     end,
   })

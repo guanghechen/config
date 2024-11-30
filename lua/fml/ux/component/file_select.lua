@@ -1,9 +1,8 @@
-local fs = require("eve.builtin.fs")
-local path = require("eve.builtin.path")
-local qflist = require("eve.globals.qflist")
-local validator = require("eve.std.validator")
+local fs = require("eve.lib.fs")
+local path = require("eve.lib.path")
+local checks = require("eve.builtin.checks")
+local qflist = require("eve.builtin.qflist")
 local Select = require("fml.ux.component.select")
-local api_buf = require("fml.api.buf")
 
 ---@class fml.ux.FileSelect : fml.t.ux.IFileSelect
 ---@field public cwd                    string
@@ -12,7 +11,7 @@ local M = {}
 M.__index = M
 
 ---@class fml.ux.file_select.IProps
----@field public case_sensitive         ?eve.t.collection.IObservable
+---@field public case_sensitive         ?eve.lib.collection.IObservable
 ---@field public cmp                    ?fml.t.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
@@ -21,11 +20,11 @@ M.__index = M
 ---@field public preview_enabled        boolean
 ---@field public preview_flag_wrap      ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?eve.t.collection.IObservable
----@field public flag_regex             ?eve.t.collection.IObservable
----@field public frecency               ?eve.t.collection.IFrecency
----@field public input                  ?eve.t.collection.IObservable
----@field public input_history          ?eve.t.collection.IHistory
+---@field public flag_fuzzy             ?eve.lib.collection.IObservable
+---@field public flag_regex             ?eve.lib.collection.IObservable
+---@field public frecency               ?eve.lib.collection.IFrecency
+---@field public input                  ?eve.lib.collection.IObservable
+---@field public input_history          ?eve.lib.collection.IHistory
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public permanent              ?boolean
@@ -42,7 +41,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive ---@type eve.t.collection.IObservable|nil
+  local case_sensitive = props.case_sensitive ---@type eve.lib.collection.IObservable|nil
   local cmp = props.cmp ---@type fml.t.ux.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch ---@type integer|nil
   local delay_render = props.delay_render ---@type integer|nil
@@ -50,11 +49,11 @@ function M.new(props)
   local preview_enabled = props.preview_enabled ---@type boolean
   local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
-  local flag_fuzzy = props.flag_fuzzy ---@type eve.t.collection.IObservable|nil
-  local flag_regex = props.flag_regex ---@type eve.t.collection.IObservable|nil
-  local frecency = props.frecency ---@type eve.t.collection.IFrecency|nil
-  local input = props.input ---@type eve.t.collection.IObservable|nil
-  local input_history = props.input_history ---@type eve.t.collection.IHistory|nil
+  local flag_fuzzy = props.flag_fuzzy ---@type eve.lib.collection.IObservable|nil
+  local flag_regex = props.flag_regex ---@type eve.lib.collection.IObservable|nil
+  local frecency = props.frecency ---@type eve.lib.collection.IFrecency|nil
+  local input = props.input ---@type eve.lib.collection.IObservable|nil
+  local input_history = props.input_history ---@type eve.lib.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
   local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
   local permanent = props.permanent ---@type boolean|nil
@@ -198,7 +197,7 @@ function M.new(props)
         on_close = on_close,
         on_confirm = on_confirm_from_props or function(item)
           local filepath = path.join(self.cwd, item.data.filepath) ---@type string
-          local ok = api_buf.open_filepath_in_current_valid_win(filepath, item.data.lnum, item.data.col)
+          local ok = eve.buf.open_filepath_in_current_valid_win(filepath, item.data.lnum, item.data.col)
           return ok and "hide" or "none"
         end,
         on_preview_rendered = on_preview_rendered,
@@ -218,7 +217,7 @@ end
 function M.fetch_preview_data(cwd, item)
   local filepath = path.join(cwd, item.data.filepath) ---@type string
   local filename = path.basename(filepath) ---@type string
-  local is_text_file = validator.is_printable_file(filename) ---@type boolean
+  local is_text_file = checks.is_printable_file(filename) ---@type boolean
   if is_text_file then
     local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
     local lines = fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]

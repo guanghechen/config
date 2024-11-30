@@ -1,4 +1,9 @@
+local __module_name__ = "ghc.command.win.history" ---@type string
+
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
+local state = require("eve.state")
 
 local _history_select = nil ---@type fml.ux.FileSelect|nil
 
@@ -6,7 +11,7 @@ local _history_select = nil ---@type fml.ux.FileSelect|nil
 local function get_history_select()
   if _history_select == nil then
     local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.constant.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
-    local frecency = eve.context.state.frecency.files ---@type eve.t.collection.IFrecency
+    local frecency = state.state.frecency.files ---@type eve.lib.collection.IFrecency
 
     ---@param ordinal                       integer
     ---@return string
@@ -17,15 +22,15 @@ local function get_history_select()
     ---@type fml.t.ux.file_select.IProvider
     local provider = {
       fetch_data = function()
-        local cwd = eve.path.cwd() ---@type string
+        local cwd = path.cwd() ---@type string
         local items = {} ---@type fml.t.ux.file_select.IRawItem[]
         local present_uuid = "0" ---@type string
         local width = 0 ---@type integer
         local winnr = eve.locations.get_current_winnr() ---@type integer|nil
-        local win = winnr ~= nil and eve.context.state.wins[winnr] or nil ---@type eve.t.context.state.win.IItem|nil
-        if win == nil then
-          eve.reporter.error({
-            from = "ghc.command.win.history",
+        local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+        if meta == nil then
+          reporter.error({
+            from = __module_name__,
             message = "Cannot find window.",
             details = { winnr = winnr },
           })
@@ -33,13 +38,13 @@ local function get_history_select()
           ---@type fml.t.ux.file_select.IData
           return { cwd = cwd, items = {} }
         else
-          local _, present_ordinal = win.filepath_history:present() ---@type string|nil, integer|nil
+          local _, present_ordinal = meta.filepath_history:present() ---@type string|nil, integer|nil
           if present_ordinal ~= nil then
             present_uuid = gen_uuid_from_ordinal(present_ordinal)
           end
 
-          for absolute_filepath, ordinal in win.filepath_history:iterator_reverse() do
-            local filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string
+          for absolute_filepath, ordinal in meta.filepath_history:iterator_reverse() do
+            local filepath = path.relative(cwd, absolute_filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
             local item = { uuid = uuid, filepath = filepath } ---@type fml.t.ux.file_select.IRawItem
             table.insert(items, item)
@@ -98,16 +103,16 @@ local function get_history_select()
         local item_index = tonumber(item.uuid) ---@type integer|nil
         if item_index ~= nil then
           local winnr = eve.locations.get_current_winnr() ---@type integer|nil
-          local win = winnr ~= nil and eve.context.state.wins[winnr] or nil ---@type eve.t.context.state.win.IItem|nil
-          if win ~= nil then
-            win.filepath_history:go(item_index)
+          local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+          if meta ~= nil then
+            meta.filepath_history:go(item_index)
           end
         end
 
         if _history_select ~= nil then
-          local cwd = eve.path.cwd() ---@type string
-          local filepath = eve.path.join(cwd, item.data.filepath) ---@type string
-          local ok = fml.api.buf.open_filepath_in_current_valid_win(filepath)
+          local cwd = path.cwd() ---@type string
+          local filepath = path.join(cwd, item.data.filepath) ---@type string
+          local ok = eve.buf.open_filepath_in_current_valid_win(filepath)
           return ok and "close" or "none"
         end
         return "none"
@@ -131,6 +136,7 @@ eve.commander
     desc = "win: history backward",
     action = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
+
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
       if buftype == eve.constant.BT_QUICKFIX then
@@ -138,10 +144,10 @@ eve.commander
         return
       end
 
-      local win = eve.context.state.wins[winnr]
-      if win == nil then
-        eve.reporter.error({
-          from = "ghc.command.win",
+      local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      if meta == nil then
+        reporter.error({
+          from = __module_name__,
           subject = "history.backward",
           message = "Cannot find window.",
           details = { winnr = winnr },
@@ -149,9 +155,9 @@ eve.commander
         return
       end
 
-      local last_filepath = win.filepath_history:backward() ---@type string|nil
+      local last_filepath = meta.filepath_history:backward() ---@type string|nil
       if last_filepath ~= nil then
-        fml.api.buf.open_filepath(winnr, last_filepath)
+        eve.buf.open_filepath(winnr, last_filepath)
       end
     end,
   })
@@ -160,6 +166,7 @@ eve.commander
     desc = "win: history forward",
     action = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
+
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
       if buftype == eve.constant.BT_QUICKFIX then
@@ -167,10 +174,10 @@ eve.commander
         return
       end
 
-      local win = eve.context.state.wins[winnr]
-      if win == nil then
-        eve.reporter.error({
-          from = "ghc.command.win",
+      local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      if meta == nil then
+        reporter.error({
+          from = __module_name__,
           subject = "history.forward",
           message = "Cannot find window.",
           details = { winnr = winnr },
@@ -178,10 +185,9 @@ eve.commander
         return
       end
 
-      local next_filepath = win.filepath_history:forward() ---@type string|nil
+      local next_filepath = meta.filepath_history:forward() ---@type string|nil
       if next_filepath ~= nil then
-        fml.api.buf.open_filepath(winnr, next_filepath)
-        return
+        eve.buf.open_filepath(winnr, next_filepath)
       end
     end,
   })

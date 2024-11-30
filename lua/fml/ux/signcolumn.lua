@@ -1,4 +1,4 @@
-local oxi = require("eve.oxi")
+local oxi = require("eve.lib.oxi")
 
 ---@class fml.ux.signcolumn
 local M = {}

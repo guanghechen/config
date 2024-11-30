@@ -11,7 +11,7 @@ local M = {
     local git_status = buffer_status_line.gitsigns_status_dict
     local branch_name = git_status.head ---@type string
     local text = " " .. eve.icons.git.Branch .. " " .. branch_name ---@type string
-    local hl_text = eve.nvimbar.txt(text, "f_sl_text") ---@type string
+    local hl_text = eve.nvim.txt(text, "f_sl_text") ---@type string
     local width = vim.api.nvim_strwidth(text) ---@type integer
     return hl_text, width
   end,

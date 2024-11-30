@@ -1,12 +1,11 @@
+local path = require("eve.lib.path")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander.register({
   uuid = uuids.find_buffers,
   desc = "find: buffers",
   action = function()
-    local cwd = eve.path.cwd() ---@type string
-    local workspace = eve.path.workspace() ---@type string
-
+    local cwd = path.cwd() ---@type string
     fml.fn.select_files({
       cwd = cwd,
       title = "Find buffers",
@@ -14,9 +13,11 @@ eve.commander.register({
       flag_regex = false,
       fetch_filepaths = function()
         local filepaths = {} ---@type string[]
-        for _, buf in pairs(eve.context.state.bufs) do
-          if buf.filename ~= eve.constant.BUF_UNTITLED and eve.path.is_under(workspace, buf.filepath) then
-            local relative_filepath = eve.path.relative(cwd, buf.filepath, true) ---@type string
+        local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+        for _, bufnr in ipairs(bufnrs) do
+          local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+          if meta ~= nil then
+            local relative_filepath = path.relative(cwd, meta.filepath, true) ---@type string
             table.insert(filepaths, relative_filepath)
           end
         end

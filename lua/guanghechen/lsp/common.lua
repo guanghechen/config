@@ -1,3 +1,6 @@
+local env = require("eve.lib.env")
+local fs = require("eve.lib.fs")
+local path = require("eve.lib.path")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 local actions = {
@@ -33,8 +36,8 @@ local actions = {
 ---@return string|nil
 local function find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
-    local filepath = dirpath .. eve.constant.PATH_SEP .. filename ---@type string
-    if eve.fs.is_file_or_dir(filepath) == "file" then
+    local filepath = dirpath .. env.PATH_SEP .. filename ---@type string
+    if fs.is_file_or_dir(filepath) == "file" then
       return filepath
     end
   end
@@ -45,7 +48,7 @@ end
 ---@return string|nil
 ---@return string|nil
 local function locate_lsp_root(filepath, config_filenames)
-  local cwd = eve.path.cwd() ---@type string
+  local cwd = path.cwd() ---@type string
   do
     local config_filepath = find_filepath(cwd, config_filenames) ---@type string|nil
     if config_filepath ~= nil then
@@ -53,7 +56,7 @@ local function locate_lsp_root(filepath, config_filenames)
     end
   end
 
-  local workspace = eve.path.workspace() ---@type string
+  local workspace = path.workspace() ---@type string
   if cwd ~= workspace then
     local config_filepath = find_filepath(workspace, config_filenames) ---@type string|nil
     if config_filepath ~= nil then
@@ -61,10 +64,10 @@ local function locate_lsp_root(filepath, config_filenames)
     end
   end
 
-  local pieces = eve.path.split(filepath) ---@type string[]
+  local pieces = path.split(filepath) ---@type string[]
   local k = #pieces - 1 ---@type integer
   while k >= 1 do
-    local dirpath = table.concat(pieces, eve.constant.PATH_SEP, 1, k) ---@type string
+    local dirpath = table.concat(pieces, env.PATH_SEP, 1, k) ---@type string
     if dirpath == cwd then
       break
     end

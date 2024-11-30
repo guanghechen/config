@@ -1,3 +1,5 @@
+local state = require("eve.state")
+
 local on_supports_method = require("fml.fn.on_supports_method")
 
 return {
@@ -42,7 +44,7 @@ return {
     ---@diagnostic disable-next-line: unused-local
     on_supports_method("textDocument/inlayHint", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
-        local enable_lsp_inlay_hints = eve.context.state.flight.lsp_inlay_hints:snapshot() ---@type boolean
+        local enable_lsp_inlay_hints = state.state.flight.lsp_inlay_hints:snapshot() ---@type boolean
         vim.lsp.inlay_hint.enable(enable_lsp_inlay_hints, { bufnr = bufnr })
       end
     end)

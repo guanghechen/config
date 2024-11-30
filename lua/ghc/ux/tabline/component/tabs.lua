@@ -1,13 +1,13 @@
+local commander = require("eve.builtin.commander")
+
 local dirty = true ---@type boolean
 local folded = false ---@type boolean
 local last_tab_cur = 0 ---@type integer
 local last_tab_count = 0 ---@type integer
 
 ---@type string
-local fn_active_tab = eve.G.register_anonymous_fn(function(tabnr)
-  if type(tabnr) == "number" and vim.api.nvim_tabpage_is_valid(tabnr) then
-    fml.api.tab.go(tabnr)
-  end
+local fn_active_tab = eve.G.register_anonymous_fn(function(tabid)
+  commander.execute(commander.uuids.tab_focus, tostring(tabid))
 end) or ""
 
 ---@type string
@@ -39,23 +39,23 @@ local M = {
     if folded then
       local text = " 󰅁 "
       local width = vim.api.nvim_strwidth(text)
-      local hl_text = eve.nvimbar.txt(text, "f_tl_tab_toggle")
-      hl_text = eve.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
+      local hl_text = eve.nvim.txt(text, "f_tl_tab_toggle")
+      hl_text = eve.nvim.btn(hl_text, fn_toggle_tabs_folded)
       return hl_text, width
     end
 
     local text = " 󰅂 " ---@type string
     local width = vim.api.nvim_strwidth(text) ---@type integer
-    local hl_text = eve.nvimbar.txt(text, "f_tl_tab_toggle")
-    hl_text = eve.nvimbar.btn(hl_text, fn_toggle_tabs_folded)
+    local hl_text = eve.nvim.txt(text, "f_tl_tab_toggle")
+    hl_text = eve.nvim.btn(hl_text, fn_toggle_tabs_folded)
 
     local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
     for tabid = 1, last_tab_count, 1 do
       local hlname = last_tab_cur == tabid and "f_tl_tab_item_cur" or "f_tl_tab_item"
       text = " " .. tabid .. " "
       width = width + vim.api.nvim_strwidth(text)
-      local hl_text_inner = eve.nvimbar.txt(text, hlname)
-      hl_text = hl_text .. eve.nvimbar.btn(hl_text_inner, fn_active_tab, tabnrs[tabid])
+      local hl_text_inner = eve.nvim.txt(text, hlname)
+      hl_text = hl_text .. eve.nvim.btn(hl_text_inner, fn_active_tab, tabnrs[tabid])
     end
     return hl_text, width
   end,

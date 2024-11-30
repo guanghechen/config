@@ -14,7 +14,7 @@ M.__index = M
 ---@field public preview_enabled        boolean
 ---@field public preview_flag_wrap      ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public frecency               ?eve.t.collection.IFrecency
+---@field public frecency               ?eve.lib.collection.IFrecency
 ---@field public permanent              ?boolean
 ---@field public provider               fml.t.ux.simple_file_select.IProvider
 ---@field public title                  string
@@ -32,7 +32,7 @@ function M.new(props)
   local preview_enabled = props.preview_enabled ---@type boolean
   local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean|nil
-  local frecency = props.frecency ---@type eve.t.collection.IFrecency|nil
+  local frecency = props.frecency ---@type eve.lib.collection.IFrecency|nil
   local permanent = props.permanent ---@type boolean|nil
   local simple_provider = props.provider ---@type fml.t.ux.simple_file_select.IProvider
   local title = props.title ---@type string

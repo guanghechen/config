@@ -1,0 +1,168 @@
+local constant = require("eve.builtin.constant")
+local BUF_UNTITLED = constant.BUF_UNTITLED ---@type string
+
+---@class eve.builtin.nvim
+local M = {}
+
+---@param name                          string
+---@return integer
+function M.augroup(name)
+  return vim.api.nvim_create_augroup("eve_" .. name, { clear = true })
+end
+
+---@param keymaps                       eve.t.IKeymap[]
+---@param keymap_override               eve.t.IKeymapOverridable
+function M.bindkeys(keymaps, keymap_override)
+  for _, keymap in ipairs(keymaps) do
+    if keymap.active ~= false then
+      local bufnr = keymap_override.bufnr or keymap.bufnr ---@type integer|nil
+      local nowait = keymap_override.nowait or keymap.nowait ---@type boolean|nil
+      local noremap = keymap_override.noremap or keymap.noremap ---@type boolean|nil
+      local silent = keymap_override.silent or keymap.silent ---@type boolean|nil
+
+      vim.keymap.set(keymap.modes, keymap.key, keymap.callback, {
+        buffer = bufnr,
+        nowait = nowait,
+        noremap = noremap,
+        silent = silent,
+        desc = keymap.desc,
+      })
+    end
+  end
+end
+
+---@param fg_hlname                     string
+---@param bg_hlname                     string
+---@return string
+function M.blend_color(fg_hlname, bg_hlname)
+  if type(fg_hlname) == "string" and type(bg_hlname) == "string" then
+    local fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(fg_hlname)), "fg#")
+    local bg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(bg_hlname)), "bg#")
+    local new_hlname = fg_hlname .. "__" .. bg_hlname
+
+    ---! set_hl could stuf the CursorHold trigger, so it should be executed with defer.
+    vim.defer_fn(function()
+      vim.api.nvim_set_hl(0, new_hlname, { fg = fg, bg = bg })
+    end, 10)
+    return new_hlname
+  end
+  return "Error"
+end
+
+---@param filename                      string
+---@return string
+---@return string
+function M.calc_fileicon(filename)
+  local name = (not filename or filename == "") and BUF_UNTITLED or filename
+  local icons_present, icons = pcall(require, "mini.icons")
+  if icons_present and name ~= BUF_UNTITLED then
+    local icon, icon_hl, is_default = icons.get("file", filename)
+    if not is_default then
+      return icon, icon_hl
+    end
+  end
+  return "󰈚", "MiniIconsRed"
+end
+
+---@return string
+function M.get_selected_text()
+  local saved_reg = vim.fn.getreg("v")
+  vim.cmd([[noautocmd sil norm! "vy]])
+
+  local selected_text = vim.fn.getreg("v")
+  vim.fn.setreg("v", saved_reg)
+  return selected_text or ""
+end
+
+---@param filepath                      string
+---@return nil
+function M.load_nvim_session(filepath)
+  if vim.fn.filereadable(filepath) ~= 0 then
+    vim.cmd("silent! source " .. vim.fn.fnameescape(filepath))
+  end
+end
+
+---@param hlname                        string
+---@return string
+function M.make_bg_transparency(hlname)
+  local fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlname)), "fg#")
+  local new_hlname = "_t_" .. hlname
+  vim.schedule(function()
+    vim.api.nvim_set_hl(0, new_hlname, { fg = fg, bg = "none" })
+  end)
+  return new_hlname
+end
+
+---@param filepath                      string
+---@return nil
+function M.save_nvim_session(filepath)
+  vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
+  local tmp = vim.o.sessionoptions
+  vim.o.sessionoptions = constant.SESSION_SAVE_OPTION
+  vim.cmd("mks! " .. vim.fn.fnameescape(filepath))
+  vim.o.sessionoptions = tmp
+end
+
+--[nvimbar]-----------------------------------------------------------------------------------------
+
+---@param num                           integer
+---@return string
+local function encode_int(num)
+  local text = string.format("%o", num) ---@type string
+  return text
+end
+
+---@param text                          string
+---@return integer|nil
+local function decode_int(text)
+  local num = tonumber(text, 8) ---@type integer|nil
+  return num
+end
+
+---@param args                          integer[]
+---@return string
+function M.encode_btn_args(args)
+  local result = "" ---@type string
+  for i, num in ipairs(args) do
+    if i > 1 then
+      result = result .. "9"
+    end
+    result = result .. encode_int(num)
+  end
+  return result
+end
+
+---@param text                          string
+---@return integer[]
+function M.decode_btn_args(text)
+  local argv = vim.split(text, "9") ---@type string[]
+  local result = {} ---@type integer[]
+  for _, arg in ipairs(argv) do
+    local num = decode_int(arg)
+    if num ~= nil then
+      table.insert(result, num)
+    end
+  end
+  return result
+end
+
+---@param text                          string
+---@param callback                      string
+---@param args                          ?integer|integer[]
+function M.btn(text, callback, args)
+  local args_str = args or "" ---@type integer|integer[]|string
+  if type(args) == "table" then
+    args_str = M.encode_btn_args(args)
+  end
+  return "%" .. args_str .. "@v:lua." .. callback .. "@" .. text .. "%T"
+end
+
+---@param text                          string
+---@param hlname                        string
+---@return string
+function M.txt(text, hlname)
+  return "%#" .. hlname .. "#" .. text:gsub("%%", "%%%%")
+end
+-----------------------------------------------------------------------------------------[nvimbar]--
+
+return M

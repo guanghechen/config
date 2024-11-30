@@ -1,4 +1,4 @@
-local constant = require("eve.builtin.constant")
+local env = require("eve.lib.env")
 
 ---@class eve.setup
 local M = {}
@@ -11,7 +11,7 @@ local M = {}
 ---! 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
 ---@return nil
 function M.workspace()
-  local path = require("eve.builtin.path")
+  local path = require("eve.lib.path")
 
   if vim.fn.expand("%") ~= "" then
     local cwd = vim.fn.getcwd()
@@ -29,11 +29,11 @@ end
 
 ---@return nil
 function M.context()
-  local path = require("eve.builtin.path")
-  local context = require("eve.context")
+  local path = require("eve.lib.path")
+  local state = require("eve.state")
   local is_git_repo = path.is_git_repo() ---@type boolean
 
-  ---@type eve.t.context.storage
+  ---@type eve.t.state.storage
   local storage = {
     editor = path.locate_context_filepath("editor.json"),
     session = is_git_repo and path.locate_session_filepath("session.json") or nil,
@@ -41,14 +41,14 @@ function M.context()
     nvim_session = is_git_repo and path.locate_session_filepath("session.vim") or nil,
     nvim_session_autosaved = is_git_repo and path.locate_session_filepath("session.autosaved.vim") or nil,
   }
-  context.set_storage(storage)
-  context.load(storage)
+  state.set_storage(storage)
+  state.load(storage)
 end
 
 ---! Setup the input method auto toggling
 function M.auto_toggle_im()
-  if constant.IS_MAC then
-    local im = require("eve.std.im")
+  if env.IS_MAC then
+    local im = require("eve.lib.im")
     local previous_mode = nil ---@type eve.e.VimMode|nil
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
       callback = function()

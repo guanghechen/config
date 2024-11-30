@@ -1,5 +1,7 @@
 local __module_name__ = "guanghechen.plugin.mini-pairs" ---@type string
 
+local reporter = require("eve.lib.reporter")
+
 -- auto pairs
 return {
   name = "mini.pairs",
@@ -28,13 +30,13 @@ return {
       function()
         vim.g.minipairs_disable = not vim.g.minipairs_disable
         if vim.g.minipairs_disable then
-          eve.reporter.warn({
+          reporter.warn({
             from = __module_name__,
             subject = "toggle auto pairs",
             message = "Disabled auto pairs",
           })
         else
-          eve.reporter.info({
+          reporter.info({
             from = __module_name__,
             subject = "toggle auto pairs",
             message = "Enable auto pairs",

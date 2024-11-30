@@ -1,7 +1,6 @@
+local path = require("eve.lib.path")
 local constant = require("eve.builtin.constant")
-local path = require("eve.builtin.path")
-local widgets = require("eve.globals.widgets")
-local api_tab = require("fml.api.tab")
+local widgets = require("eve.builtin.widgets")
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Cursor:f_us_terminal_current",
@@ -176,8 +175,10 @@ end
 
 ---@return nil
 function M:hide()
-  local winnr_cur = api_tab.get_current_winnr() ---@type integer
-  vim.api.nvim_tabpage_set_win(0, winnr_cur)
+  local winnr_cur = eve.locations.get_current_winnr() or 0 ---@type integer
+  if winnr_cur ~= 0 then
+    vim.api.nvim_tabpage_set_win(0, winnr_cur)
+  end
 
   local winnr = self._winnr ---@type integer|nil
   local visible = self._status == "visible" ---@type boolean

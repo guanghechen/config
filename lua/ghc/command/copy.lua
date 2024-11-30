@@ -1,6 +1,8 @@
 local __module_name__ = "ghc.command.copy" ---@type string
 
-local Observable = require("eve.collection.observable")
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local Observable = require("eve.lib.collection.observable")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@alias ghc.command.copy.current_filepath_candidate
@@ -17,26 +19,26 @@ local copy_current_filepath_candidates = {
 ---@return nil
 local function copy_current_filepath(candidate)
   if candidate == "absolute" then
-    local filepath = eve.path.current_filepath() ---@type string
+    local filepath = path.current_filepath() ---@type string
     local content = filepath ---@type string
 
     vim.fn.setreg("+", content)
-    eve.reporter.info({
+    reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (absolute) to system clipboard!",
     })
   elseif candidate == "relative" then
-    local cwd = eve.path.cwd() ---@type string
-    local filepath = eve.path.current_filepath() ---@type string
-    local content = eve.path.relative(cwd, filepath, true) ---@type string
+    local cwd = path.cwd() ---@type string
+    local filepath = path.current_filepath() ---@type string
+    local content = path.relative(cwd, filepath, true) ---@type string
 
     vim.fn.setreg("+", content)
-    eve.reporter.info({
+    reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
     })
   else
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       message = "Failed to copy current filepath, unknown candidate!",
       details = { candidate = candidate },

@@ -1,3 +1,4 @@
+local path = require("eve.lib.path")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
@@ -7,7 +8,7 @@ eve.commander
     action = function()
       fml.api.term.toggle_or_create({
         name = "workspace",
-        cwd = eve.path.cwd(),
+        cwd = path.cwd(),
         permanent = true,
         send_selection_to_run = true,
       })
@@ -19,7 +20,7 @@ eve.commander
     action = function()
       fml.api.term.toggle_or_create({
         name = "workspace",
-        cwd = eve.path.current_directory(),
+        cwd = path.current_directory(),
         permanent = true,
         send_selection_to_run = true,
       })
@@ -31,7 +32,7 @@ eve.commander
     action = function()
       fml.api.term.toggle_or_create({
         name = "workspace",
-        cwd = eve.path.workspace()(),
+        cwd = path.workspace()(),
         permanent = true,
         send_selection_to_run = true,
       })

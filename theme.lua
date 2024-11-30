@@ -1,12 +1,15 @@
+local path = require("eve.lib.path")
+local state = require("eve.state")
+
 require("eve.setup").workspace()
 
----@type eve.t.context.storage
+---@type eve.t.state.storage
 local storage = {
-  editor = eve.path.locate_context_filepath("editor.json"),
+  editor = path.locate_context_filepath("editor.json"),
 }
 
-eve.context.set_storage(storage)
-eve.context.load(storage)
+state.set_storage(storage)
+state.load(storage)
 
 require("eve.option")
 _G.eve = require("eve")
@@ -19,11 +22,11 @@ if not vim.tbl_contains(uxTheme.themes, theme) then
 else
   uxTheme.apply_theme({
     theme = theme,
-    transparency = eve.context.state.theme.transparency:snapshot(),
+    transparency = state.state.theme.transparency:snapshot(),
     persistent = true,
-    filepath = eve.path.locate_context_filepath("theme"),
+    filepath = path.locate_context_filepath("theme"),
   })
 
-  eve.context.state.theme.theme:next(theme)
-  eve.context.save(storage)
+  state.state.theme.theme:next(theme)
+  state.save(storage)
 end

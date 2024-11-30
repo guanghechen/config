@@ -1,10 +1,18 @@
-local Subscriber = require("eve.collection.subscriber")
+local __module_name__ = "ghc.command.search.files.api" ---@type string
+
+local fs = require("eve.lib.fs")
+local oxi = require("eve.lib.oxi")
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local Subscriber = require("eve.lib.collection.subscriber")
+local checks = require("eve.builtin.checks")
+local context_state = require("eve.state")
 local state = require("ghc.command.search.files.state")
 
 ---@class ghc.command.search.files.IFileItem
 ---@field public children               string[]
 ---@field public fragmentary            boolean
----@field public filematch              ?eve.oxi.search.IFileMatch|nil
+---@field public filematch              ?eve.lib.oxi.search.IFileMatch|nil
 
 ---@class ghc.command.search.files.IItem
 ---@field public filepath               string
@@ -26,9 +34,9 @@ local _fileitem_map = {} ---@type table<string, ghc.command.search.files.IFileIt
 local _item_map = {} ---@type table<string, ghc.command.search.files.IItem>
 local _last_preview_data = nil ---@type ghc.command.search.files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
-local _last_search_result = nil ---@type eve.oxi.search.IResult|nil
+local _last_search_result = nil ---@type eve.lib.oxi.search.IResult|nil
 
-eve.context.state.search.search_paths:subscribe(
+context_state.state.search.search_paths:subscribe(
   Subscriber.new({
     on_next = function()
       state.refresh_title()
@@ -38,14 +46,14 @@ eve.context.state.search.search_paths:subscribe(
 )
 
 eve.mvc.observe({
-  eve.context.state.search.excludes,
-  eve.context.state.search.flag_case_sensitive,
-  eve.context.state.search.flag_gitignore,
-  eve.context.state.search.flag_regex,
-  eve.context.state.search.includes,
-  eve.context.state.search.max_filesize,
-  eve.context.state.search.max_matches,
-  eve.context.state.search.search_paths,
+  context_state.state.search.excludes,
+  context_state.state.search.flag_case_sensitive,
+  context_state.state.search.flag_gitignore,
+  context_state.state.search.flag_regex,
+  context_state.state.search.includes,
+  context_state.state.search.max_filesize,
+  context_state.state.search.max_matches,
+  context_state.state.search.search_paths,
   state.search_cwd,
 }, function()
   _last_preview_data = nil
@@ -54,8 +62,8 @@ eve.mvc.observe({
   state.reload()
 end, true)
 eve.mvc.observe({
-  eve.context.state.search.flag_replace,
-  eve.context.state.search.replacement,
+  context_state.state.search.flag_replace,
+  context_state.state.search.replacement,
 }, function()
   _last_preview_data = nil
   state.reload()
@@ -103,9 +111,9 @@ function M.calc_preview_data(uuid)
   end
 
   local cwd = state.search_cwd:snapshot() ---@type string
-  local filepath = eve.path.resolve(cwd, item.filepath) ---@type string
-  local filename = eve.path.basename(filepath) ---@type string
-  if not eve.validator.is_printable_file(filename) then
+  local filepath = path.resolve(cwd, item.filepath) ---@type string
+  local filename = path.basename(filepath) ---@type string
+  if not checks.is_printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
     ---@type ghc.command.search.files.IHighlight[]
@@ -117,11 +125,11 @@ function M.calc_preview_data(uuid)
   end
 
   local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-  local flag_case_sensitive = eve.context.state.search.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_regex = eve.context.state.search.flag_regex:snapshot() ---@type boolean
-  local flag_replace = eve.context.state.search.flag_replace:snapshot() ---@type boolean
-  local keyword = eve.context.state.search.keyword:snapshot() ---@type string
-  local replacement = eve.context.state.search.replacement:snapshot() ---@type string
+  local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
+  local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
+  local flag_replace = context_state.state.search.flag_replace:snapshot() ---@type boolean
+  local keyword = context_state.state.search.keyword:snapshot() ---@type string
+  local replacement = context_state.state.search.replacement:snapshot() ---@type string
   local match_offset_cur = item.offset ---@type integer
   local match_offsets = M.collect_valid_match_offsets(uuid) ---@type integer[]
   local lines = {} ---@type string[]
@@ -130,8 +138,8 @@ function M.calc_preview_data(uuid)
   local cur_col = 0 ---@type integer
 
   if flag_replace then
-    ---@type eve.oxi.replace.replace_file_preview_advance_by_matches.IResult
-    local preview_result = eve.oxi.replace_file_preview_advance_by_matches({
+    ---@type eve.lib.oxi.replace.replace_file_preview_advance_by_matches.IResult
+    local preview_result = oxi.replace_file_preview_advance_by_matches({
       flag_case_sensitive = flag_case_sensitive,
       flag_regex = flag_regex,
       search_pattern = keyword,
@@ -193,10 +201,10 @@ function M.calc_preview_data(uuid)
       end
     end
   else
-    lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    lines = fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
     highlights = {} ---@type ghc.command.search.files.IHighlight[]
 
-    local filematch = M.get_filematch(item.filepath) ---@type eve.oxi.search.IFileMatch|nil
+    local filematch = M.get_filematch(item.filepath) ---@type eve.lib.oxi.search.IFileMatch|nil
     if filematch ~= nil then
       local order = 0 ---@type integer
       for _, block_match in ipairs(filematch.matches) do
@@ -277,14 +285,14 @@ end
 ---@return nil
 function M.fetch_data(input_text, force, callback)
   local cwd = state.search_cwd:snapshot() ---@type string
-  local scope = eve.context.state.search.scope:snapshot() ---@type eve.e.SearchScope
+  local scope = context_state.state.search.scope:snapshot() ---@type eve.e.SearchScope
   local current_buf_filepath = eve.locations.get_current_buf_filepath() ---@type string|nil
   local is_searching_current_buf = scope == "B" and current_buf_filepath ~= nil ---@type boolean
   local specified_filepath = scope == "B" and current_buf_filepath or nil ---@type string|nil
 
-  if eve.fs.is_file_or_dir(cwd) ~= "directory" then
-    eve.reporter.error({
-      from = "ghc.command.search.files",
+  if fs.is_file_or_dir(cwd) ~= "directory" then
+    reporter.error({
+      from = __module_name__,
       subject = "fetch_data",
       message = "The cwd is not a valid directory path",
       details = { cwd = cwd, scope = scope, current_buf_filepath = current_buf_filepath },
@@ -292,18 +300,18 @@ function M.fetch_data(input_text, force, callback)
     return
   end
 
-  local flag_case_sensitive = eve.context.state.search.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_gitignore = eve.context.state.search.flag_gitignore:snapshot() ---@type boolean
-  local flag_regex = eve.context.state.search.flag_regex:snapshot() ---@type boolean
-  local flag_replace = eve.context.state.search.flag_replace:snapshot() ---@type boolean
-  local max_filesize = eve.context.state.search.max_filesize:snapshot() ---@type string
-  local max_matches = eve.context.state.search.max_matches:snapshot() ---@type integer
-  local search_paths = eve.context.state.search.search_paths:snapshot() ---@type string[]
-  local replacement = eve.context.state.search.replacement:snapshot() ---@type string
-  local includes = eve.context.state.search.includes:snapshot() ---@type string[]
-  local excludes = eve.context.state.search.excludes:snapshot() ---@type string[]
+  local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
+  local flag_gitignore = context_state.state.search.flag_gitignore:snapshot() ---@type boolean
+  local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
+  local flag_replace = context_state.state.search.flag_replace:snapshot() ---@type boolean
+  local max_filesize = context_state.state.search.max_filesize:snapshot() ---@type string
+  local max_matches = context_state.state.search.max_matches:snapshot() ---@type integer
+  local search_paths = context_state.state.search.search_paths:snapshot() ---@type string[]
+  local replacement = context_state.state.search.replacement:snapshot() ---@type string
+  local includes = context_state.state.search.includes:snapshot() ---@type string[]
+  local excludes = context_state.state.search.excludes:snapshot() ---@type string[]
 
-  ---@type eve.oxi.search.IResult|nil
+  ---@type eve.lib.oxi.search.IResult|nil
   local result = (
     not force
     and _last_search_input ~= nil
@@ -311,7 +319,7 @@ function M.fetch_data(input_text, force, callback)
     and _last_search_result ~= nil
   )
       and _last_search_result
-    or eve.oxi.search({
+    or oxi.search({
       cwd = cwd,
       flag_case_sensitive = flag_case_sensitive,
       flag_gitignore = flag_gitignore,
@@ -339,7 +347,7 @@ function M.fetch_data(input_text, force, callback)
   local fileitem_map = {} ---@type table<string, ghc.command.search.files.IFileItem>
   local item_map = {} ---@type table<string, ghc.command.search.files.IItem>
   for _, filepath in ipairs(result.item_orders) do
-    local filematch = result.items[filepath] ---@type eve.oxi.search.IFileMatch|nil
+    local filematch = result.items[filepath] ---@type eve.lib.oxi.search.IFileMatch|nil
     if filematch ~= nil then
       ---@type ghc.command.search.files.IFileItem
       local fileitem = {
@@ -349,7 +357,7 @@ function M.fetch_data(input_text, force, callback)
       }
       fileitem_map[filepath] = fileitem
 
-      local filename = eve.path.basename(filepath) ---@type string
+      local filename = path.basename(filepath) ---@type string
       local icon, icon_hl = eve.nvim.calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
       local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type eve.t.IHighlightInline[]
@@ -381,8 +389,8 @@ function M.fetch_data(input_text, force, callback)
       if flag_replace then
         local lnum_delta = 0 ---@type integer
         for _, block_match in ipairs(filematch.matches) do
-          ---@type eve.oxi.replace.replace_text_preview_advance.IResult
-          local preview_result = eve.oxi.replace_text_preview_advance({
+          ---@type eve.lib.oxi.replace.replace_text_preview_advance.IResult
+          local preview_result = oxi.replace_text_preview_advance({
             flag_case_sensitive = flag_case_sensitive,
             flag_regex = flag_regex,
             keep_search_pieces = true,
@@ -546,13 +554,13 @@ end
 
 ---@return eve.t.IQuickFixItem[]
 function M.gen_quickfix_items()
-  local cwd = eve.path.cwd() ---@type string
+  local cwd = path.cwd() ---@type string
   local search_cwd = state.search_cwd:snapshot() ---@type string
   local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
   for _, item in pairs(_item_map) do
     if item.offset >= 0 then
-      local absolute_filepath = eve.path.resolve(search_cwd, item.filepath) ---@type string
-      local relative_filepath = eve.path.relative(cwd, absolute_filepath, false) ---@type string
+      local absolute_filepath = path.resolve(search_cwd, item.filepath) ---@type string
+      local relative_filepath = path.relative(cwd, absolute_filepath, false) ---@type string
       table.insert(quickfix_items, {
         filename = relative_filepath,
         lnum = item.lnum,
@@ -565,7 +573,7 @@ function M.gen_quickfix_items()
 end
 
 ---@param filepath                      string
----@return eve.oxi.search.IFileMatch|nil
+---@return eve.lib.oxi.search.IFileMatch|nil
 function M.get_filematch(filepath)
   local fileitem = _fileitem_map[filepath] ---@type ghc.command.search.files.IFileItem|nil
   if fileitem == nil then
@@ -579,17 +587,17 @@ function M.get_filematch(filepath)
 end
 
 ---@param item                          fml.t.ux.search.IItem
----@param frecency                      eve.t.collection.IFrecency
+---@param frecency                      eve.lib.collection.IFrecency
 ---@return eve.e.WidgetConfirmAction|nil
 function M.open_file(item, frecency)
   local cwd = state.search_cwd:snapshot() ---@type string
-  local workspace = eve.path.workspace() ---@type string
+  local workspace = path.workspace() ---@type string
   local data = _item_map and _item_map[item.uuid] ---@type ghc.command.search.files.IItem|nil
   if data ~= nil then
-    local absolute_filepath = eve.path.resolve(cwd, data.filepath) ---@type string
-    local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string
+    local absolute_filepath = path.resolve(cwd, data.filepath) ---@type string
+    local relative_filepath = path.relative(workspace, absolute_filepath, true) ---@type string
     frecency:access(relative_filepath)
-    local opened = fml.api.buf.open_filepath_in_current_valid_win(absolute_filepath, data.lnum, data.col) ---@type boolean
+    local opened = eve.buf.open_filepath_in_current_valid_win(absolute_filepath, data.lnum, data.col) ---@type boolean
     return opened and "hide" or "none"
   end
   return "none"
@@ -608,7 +616,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
   local highlights = {} ---@type eve.t.IHighlight[]
   local cur_lnum = -1 ---@type integer
   local cur_col = 0 ---@type integer
-  local flag_replace = eve.context.state.search.flag_replace:snapshot() ---@type boolean
+  local flag_replace = context_state.state.search.flag_replace:snapshot() ---@type boolean
   local match_offset_cur = item.offset ---@type integer
 
   if flag_replace then
@@ -671,19 +679,19 @@ end
 function M.refresh_file_item(filepath)
   if _last_search_result ~= nil then
     local cwd = state.search_cwd:snapshot() ---@type string
-    local flag_case_sensitive = eve.context.state.search.flag_case_sensitive:snapshot() ---@type boolean
-    local flag_gitignore = eve.context.state.search.flag_gitignore:snapshot() ---@type boolean
-    local flag_regex = eve.context.state.search.flag_regex:snapshot() ---@type boolean
-    local max_filesize = eve.context.state.search.max_filesize:snapshot() ---@type string
-    local max_matches = eve.context.state.search.max_matches:snapshot() ---@type integer
-    local search_paths = eve.context.state.search.search_paths:snapshot() ---@type string[]
-    local keyword = eve.context.state.search.keyword:snapshot() ---@type string
-    local includes = eve.context.state.search.includes:snapshot() ---@type string[]
-    local excludes = eve.context.state.search.excludes:snapshot() ---@type string[]
-    local specified_filepath = eve.path.resolve(cwd, filepath) ---@type string
+    local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
+    local flag_gitignore = context_state.state.search.flag_gitignore:snapshot() ---@type boolean
+    local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
+    local max_filesize = context_state.state.search.max_filesize:snapshot() ---@type string
+    local max_matches = context_state.state.search.max_matches:snapshot() ---@type integer
+    local search_paths = context_state.state.search.search_paths:snapshot() ---@type string[]
+    local keyword = context_state.state.search.keyword:snapshot() ---@type string
+    local includes = context_state.state.search.includes:snapshot() ---@type string[]
+    local excludes = context_state.state.search.excludes:snapshot() ---@type string[]
+    local specified_filepath = path.resolve(cwd, filepath) ---@type string
 
-    ---@type eve.oxi.search.IResult|nil
-    local partial_search_result = eve.oxi.search({
+    ---@type eve.lib.oxi.search.IResult|nil
+    local partial_search_result = oxi.search({
       cwd = cwd,
       flag_case_sensitive = flag_case_sensitive,
       flag_gitignore = flag_gitignore,
@@ -700,7 +708,7 @@ function M.refresh_file_item(filepath)
     if partial_search_result ~= nil and partial_search_result.error == nil and partial_search_result.items ~= nil then
       _last_search_result.items[filepath] = nil
       for _, raw_filepath in ipairs(partial_search_result.item_orders) do
-        local filematch = partial_search_result.items[raw_filepath] ---@type eve.oxi.search.IFileMatch|nil
+        local filematch = partial_search_result.items[raw_filepath] ---@type eve.lib.oxi.search.IFileMatch|nil
         if filematch ~= nil then
           _last_search_result.items[raw_filepath] = filematch
         end
@@ -732,10 +740,10 @@ function M.replace_file(uuid)
 
   local cwd = state.search_cwd:snapshot() ---@type string
   local filepath = item.filepath ---@type string
-  local flag_case_sensitive = eve.context.state.search.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_regex = eve.context.state.search.flag_regex:snapshot() ---@type boolean
-  local keyword = eve.context.state.search.keyword:snapshot() ---@type string
-  local replacement = eve.context.state.search.replacement:snapshot() ---@type string
+  local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
+  local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
+  local keyword = context_state.state.search.keyword:snapshot() ---@type string
+  local replacement = context_state.state.search.replacement:snapshot() ---@type string
 
   if item.offset >= 0 then
     local children = fileitem.children ---@type string[]
@@ -752,7 +760,7 @@ function M.replace_file(uuid)
       end
     end
 
-    local succeed, locations = eve.oxi.replace_file_advance_by_matches({
+    local succeed, locations = oxi.replace_file_advance_by_matches({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -768,8 +776,8 @@ function M.replace_file(uuid)
     end
 
     if #locations ~= #remain_offsets then
-      eve.reporter.error({
-        from = "ghc.command.search.files.api",
+      reporter.error({
+        from = __module_name__,
         subject = "replace_file",
         mesage = "Bad locations, the size of locations should match the given remain_offsets.",
         details = {
@@ -826,7 +834,7 @@ function M.replace_file(uuid)
     end
 
     ---@type boolean
-    succeed = eve.oxi.replace_file_by_matches({
+    succeed = oxi.replace_file_by_matches({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -837,7 +845,7 @@ function M.replace_file(uuid)
     })
   else
     ---@type boolean
-    succeed = eve.oxi.replace_file({
+    succeed = oxi.replace_file({
       cwd = cwd,
       filepath = filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -861,10 +869,10 @@ end
 function M.replace_file_all()
   for filepath, fileitem in pairs(_fileitem_map) do
     local cwd = state.search_cwd:snapshot() ---@type string
-    local flag_case_sensitive = eve.context.state.search.flag_case_sensitive:snapshot() ---@type boolean
-    local flag_regex = eve.context.state.search.flag_regex:snapshot() ---@type boolean
-    local keyword = eve.context.state.search.keyword:snapshot() ---@type string
-    local replacement = eve.context.state.search.replacement:snapshot() ---@type string
+    local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
+    local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
+    local keyword = context_state.state.search.keyword:snapshot() ---@type string
+    local replacement = context_state.state.search.replacement:snapshot() ---@type string
 
     if not fileitem.fragmentary then
       for _, child_uuid in ipairs(fileitem.children) do
@@ -884,7 +892,7 @@ function M.replace_file_all()
         end
       end
 
-      eve.oxi.replace_file_by_matches({
+      oxi.replace_file_by_matches({
         cwd = cwd,
         filepath = filepath,
         flag_case_sensitive = flag_case_sensitive,
@@ -895,7 +903,7 @@ function M.replace_file_all()
       })
     else
       ---@type boolean
-      eve.oxi.replace_file({
+      oxi.replace_file({
         cwd = cwd,
         filepath = filepath,
         flag_case_sensitive = flag_case_sensitive,

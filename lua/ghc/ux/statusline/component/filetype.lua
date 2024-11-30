@@ -9,7 +9,7 @@ local M = {
   end,
   render = function(context)
     local text = context.fileicon .. " " .. context.filetype ---@type string
-    local hl_text = eve.nvimbar.txt(text, "f_sl_text") ---@type string
+    local hl_text = eve.nvim.txt(text, "f_sl_text") ---@type string
     local width = vim.api.nvim_strwidth(text)
     return hl_text, width
   end,

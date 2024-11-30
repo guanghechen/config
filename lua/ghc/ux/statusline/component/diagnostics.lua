@@ -17,10 +17,10 @@ local M = {
     local count_info = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.INFO })
     local text_count_info = count_info > 0 and eve.icons.diagnostics.Information .. " " .. count_info .. " " or ""
 
-    local text_hl = eve.nvimbar.txt(text_count_error, "f_sl_diagnostics_error")
-        .. eve.nvimbar.txt(text_count_warn, "f_sl_diagnostics_warn")
-        .. eve.nvimbar.txt(text_count_hint, "f_sl_diagnostics_hint")
-        .. eve.nvimbar.txt(text_count_info, "f_sl_diagnostics_info")
+    local text_hl = eve.nvim.txt(text_count_error, "f_sl_diagnostics_error")
+        .. eve.nvim.txt(text_count_warn, "f_sl_diagnostics_warn")
+        .. eve.nvim.txt(text_count_hint, "f_sl_diagnostics_hint")
+        .. eve.nvim.txt(text_count_info, "f_sl_diagnostics_info")
     local width = vim.api.nvim_strwidth(text_count_error)
         + vim.api.nvim_strwidth(text_count_warn)
         + vim.api.nvim_strwidth(text_count_hint)

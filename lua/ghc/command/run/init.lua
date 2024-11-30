@@ -1,3 +1,4 @@
+local path = require("eve.lib.path")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 local runners = {
@@ -8,8 +9,8 @@ eve.commander.register({
   uuid = uuids.run,
   desc = "run: run codes",
   action = function()
-    local filepath = eve.path.current_filepath()
-    local extname = eve.path.extname(filepath)
+    local filepath = path.current_filepath()
+    local extname = path.extname(filepath)
 
     local runner = runners[extname]
     if runner ~= nil then

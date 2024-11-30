@@ -1,13 +1,14 @@
-local widgets = require("eve.globals.widgets")
-local Subscriber = require("eve.collection.subscriber")
-local Scheduler = require("eve.collection.scheduler")
-local G = require("eve.std.G")
+local functional = require("eve.lib.functional")
+local Subscriber = require("eve.lib.collection.subscriber")
+local Scheduler = require("eve.lib.collection.scheduler")
+local G = require("eve.builtin.G")
+local util = require("eve.builtin.util")
+local widgets = require("eve.builtin.widgets")
+local state = require("eve.state")
 local SearchInput = require("fml.ux.component.search.input")
 local SearchMain = require("fml.ux.component.search.main")
 local SearchPreview = require("fml.ux.component.search.preview")
 local SearchState = require("fml.ux.component.search.state")
-local api_tab = require("fml.api.tab")
-local util = require("fml.util")
 
 ---@type string
 local INPUT_WIN_HIGHLIGHT = table.concat({
@@ -59,8 +60,8 @@ M.__index = M
 ---@field public delay_render           ?integer
 ---@field public fetch_data             fml.t.ux.search.IFetchData
 ---@field public fetch_preview_data     ?fml.t.ux.search.IFetchPreviewData
----@field public input                  eve.t.collection.IObservable
----@field public input_history          eve.t.collection.IHistory|nil
+---@field public input                  eve.lib.collection.IObservable
+---@field public input_history          eve.lib.collection.IHistory|nil
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public patch_preview_data     ?fml.t.ux.search.IPatchPreviewData
@@ -84,13 +85,13 @@ function M.new(props)
 
   local raw_statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
   for idx, item in ipairs(raw_statusline_items) do
-    local state = item.state ---@type eve.t.collection.IObservable
+    local stl_state = item.state ---@type eve.lib.collection.IObservable
     local symbol = item.symbol ---@type string
     local callback = item.callback ---@type fun(): nil
     local callback_fn = G.register_anonymous_fn(callback) or "" ---@type string
 
     ---@type eve.t.ux.widget.IStatuslineItem
-    local statusline_item = { type = item.type, state = state, symbol = symbol, callback_fn = callback_fn }
+    local statusline_item = { type = item.type, state = stl_state, symbol = symbol, callback_fn = callback_fn }
     table.insert(statusline_items, statusline_item)
 
     ---@type eve.t.IKeymap
@@ -119,7 +120,7 @@ function M.new(props)
   local delay_fetch = math.max(0, props.delay_fetch or 128) ---@type integer
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
   local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
-  local input_history = props.input_history ---@type eve.t.collection.IHistory|nil
+  local input_history = props.input_history ---@type eve.lib.collection.IHistory|nil
   local permanent = not not props.permanent ---@type boolean
   local preview_flag_wrap = not not props.preview_flag_wrap ---@type boolean
 
@@ -128,7 +129,7 @@ function M.new(props)
   local on_invisible_from_props = props.on_invisible ---@type fml.t.ux.search.IOnInvisible|nil
 
   ---@type fml.t.ux.search.IState
-  local state = SearchState.new({
+  local search_state = SearchState.new({
     title = props.title,
     input = props.input,
     input_history = input_history,
@@ -139,7 +140,7 @@ function M.new(props)
 
   ---@return nil
   local function on_confirm()
-    local item = state:get_current() ---@type fml.t.ux.search.IItem|nil
+    local item = search_state:get_current() ---@type fml.t.ux.search.IItem|nil
     if item ~= nil then
       local action = on_confirm_from_props(item) ---@type eve.e.WidgetConfirmAction|nil
       if action == "close" or action == "hide" then
@@ -166,7 +167,6 @@ function M.new(props)
 
   ---@class fml.ux.search.search.actions
   local actions = {
-    noop = function() end,
     close = function()
       self:close()
     end,
@@ -185,35 +185,35 @@ function M.new(props)
       end
     end,
     force_refresh = function()
-      state.dirtier_data_cache:mark_dirty()
-      state.dirtier_data:mark_dirty()
+      search_state.dirtier_data_cache:mark_dirty()
+      search_state.dirtier_data:mark_dirty()
     end,
     on_main_G = function()
       local lnum = vim.v.count > 0 and vim.v.count or math.huge ---@type integer
-      state:locate(lnum)
+      search_state:locate(lnum)
       self:sync_main_cursor()
     end,
     on_main_g = function()
       local lnum = vim.v.count1 or 1
-      state:locate(lnum)
+      search_state:locate(lnum)
       self:sync_main_cursor()
     end,
     on_main_gg = function()
-      state:locate(1)
+      search_state:locate(1)
       self:sync_main_cursor()
     end,
     on_main_down = function()
-      state:movedown()
+      search_state:movedown()
       self:sync_main_cursor()
     end,
     on_main_up = function()
-      state:moveup()
+      search_state:moveup()
       self:sync_main_cursor()
     end,
     on_delete_item = function()
-      local uuid = state:get_current_uuid() ---@type string|nil
+      local uuid = search_state:get_current_uuid() ---@type string|nil
       if uuid ~= nil then
-        state:mark_item_deleted(uuid)
+        search_state:mark_item_deleted(uuid)
       end
     end,
     on_main_mouse_click = function()
@@ -224,7 +224,7 @@ function M.new(props)
         local winnr = cursor.winid ---@type integer
         if winnr == winnr_main then
           local lnum = cursor.line ---@type integer
-          lnum = state:locate(lnum)
+          lnum = search_state:locate(lnum)
           self:sync_main_cursor()
           return
         end
@@ -241,7 +241,7 @@ function M.new(props)
         local winnr = cursor.winid ---@type integer
         if winnr == winnr_main then
           local lnum = cursor.line ---@type integer
-          lnum = state:locate(lnum)
+          lnum = search_state:locate(lnum)
           vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
           on_confirm()
           return
@@ -332,8 +332,8 @@ function M.new(props)
       { modes = { "i", "n", "v" }, key = "<Up>", callback = actions.on_main_up, desc = "search: focus prev item" },
       { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
       { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
-      { modes = { "n", "v" }, key = "o", callback = actions.noop },
-      { modes = { "n", "v" }, key = "O", callback = actions.noop },
+      { modes = { "n", "v" }, key = "o", callback = functional.noop },
+      { modes = { "n", "v" }, key = "O", callback = functional.noop },
       { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
       { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
       { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
@@ -374,13 +374,13 @@ function M.new(props)
 
   ---@type fml.t.ux.search.IInput
   local input = SearchInput.new({
-    state = state,
+    state = search_state,
     keymaps = input_keymaps,
   })
 
   ---@type fml.t.ux.search.IMain
   local main = SearchMain.new({
-    state = state,
+    state = search_state,
     keymaps = main_keymaps,
     on_rendered = on_main_renderered,
     delay_render = delay_render,
@@ -390,7 +390,7 @@ function M.new(props)
   local preview = nil
   if props.fetch_preview_data then
     preview = SearchPreview.new({
-      state = state,
+      state = search_state,
       keymaps = preview_keymaps,
       fetch_data = props.fetch_preview_data,
       patch_data = props.patch_preview_data,
@@ -412,7 +412,7 @@ function M.new(props)
     })
   end
 
-  self.state = state
+  self.state = search_state
   self.statusline_items = statusline_items
   self._dimension = dimension
   self._input = input
@@ -427,13 +427,13 @@ function M.new(props)
   self._on_close = on_close_from_props
   self._on_invisible = on_invisible_from_props
 
-  local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
+  local devmode = state.state.flight.devmode:snapshot() ---@type boolean
   local draw_scheduler = Scheduler.new({
     name = "fml.ux.search.search.draw",
     delay = 48,
     silent = not devmode,
     task = function(callback)
-      local status = state.status:snapshot() ---@type eve.e.WidgetStatus
+      local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
       local visible = status == "visible" ---@type boolean
       if visible then
         self:create_wins_as_needed()
@@ -443,10 +443,10 @@ function M.new(props)
     end,
   })
 
-  state.status:subscribe(
+  search_state.status:subscribe(
     Subscriber.new({
       on_next = function()
-        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
+        local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible then
           draw_scheduler:schedule()
@@ -456,11 +456,11 @@ function M.new(props)
     true
   )
 
-  state.dirtier_dimension:subscribe(
+  search_state.dirtier_dimension:subscribe(
     Subscriber.new({
       on_next = function()
-        local is_dimension_dirty = state.dirtier_dimension:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
+        local is_dimension_dirty = search_state.dirtier_dimension:is_dirty() ---@type boolean
+        local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_dimension_dirty then
           draw_scheduler:schedule()
@@ -470,11 +470,11 @@ function M.new(props)
     true
   )
 
-  state.dirtier_main:subscribe(
+  search_state.dirtier_main:subscribe(
     Subscriber.new({
       on_next = function()
-        local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
+        local is_main_dirty = search_state.dirtier_main:is_dirty() ---@type boolean
+        local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_main_dirty then
           draw_scheduler:schedule()
@@ -486,11 +486,11 @@ function M.new(props)
 
   ---! Trigger the preview dirty change when the preview not exist.
   if preview == nil then
-    state.dirtier_preview:subscribe(
+    search_state.dirtier_preview:subscribe(
       Subscriber.new({
         on_next = function()
-          local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-          local status = state.status:snapshot() ---@type eve.e.WidgetStatus
+          local is_preview_dirty = search_state.dirtier_preview:is_dirty() ---@type boolean
+          local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
           local visible = status == "visible" ---@type boolean
           if visible and is_preview_dirty then
             draw_scheduler:schedule()
@@ -502,10 +502,10 @@ function M.new(props)
   end
 
   if enable_multiline_input then
-    state.input_line_count:subscribe(
+    search_state.input_line_count:subscribe(
       Subscriber.new({
         on_next = function()
-          local status = state.status:snapshot() ---@type eve.e.WidgetStatus
+          local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
           local visible = status == "visible" ---@type boolean
           if visible then
             draw_scheduler:schedule()
@@ -532,7 +532,7 @@ end
 
 ---@return nil
 function M:create_wins_as_needed()
-  local state = self.state ---@type fml.t.ux.search.IState
+  local search_state = self.state ---@type fml.t.ux.search.IState
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
   local dimension = self._dimension ---@type fml.t.ux.search.IDimension
@@ -546,16 +546,18 @@ function M:create_wins_as_needed()
   ---@type number
   local max_width = dimension.max_width <= 1 and math.floor(dimension.max_width * screen_width) or dimension.max_width
 
-  local input_height = state.enable_multiline_input and math.max(1, math.min(3, state.input_line_count:snapshot())) or 1
+  local input_height = search_state.enable_multiline_input
+      and math.max(1, math.min(3, search_state.input_line_count:snapshot()))
+    or 1
   local input_height_with_borders = input_height + 2 ---@type integer
 
-  local height = dimension.height or (#state.items + input_height_with_borders) ---@type number
+  local height = dimension.height or (#search_state.items + input_height_with_borders) ---@type number
   if height < 1 then
     height = math.floor(height * screen_height)
   end
   height = math.min(max_height, math.max(input_height_with_borders, height)) ---@type integer
 
-  local width = dimension.width or state.max_width + 10 ---@type number
+  local width = dimension.width or search_state.max_width + 10 ---@type number
   if width < 1 then
     width = math.floor(width * screen_width)
   end
@@ -587,7 +589,7 @@ function M:create_wins_as_needed()
   local winnr_main = self._winnr_main ---@type integer|nil
   local winnr_preview = self._winnr_preview ---@type integer|nil
 
-  local match_count = #state.items ---@type integer
+  local match_count = #search_state.items ---@type integer
   if match_count > 0 or self._preview ~= nil then
     ---@type vim.api.keyset.win_config
     local wincfg_main = {
@@ -684,7 +686,7 @@ function M:create_wins_as_needed()
     row = row,
     col = col,
     focusable = true,
-    title = " " .. state.title .. " ",
+    title = " " .. search_state.title .. " ",
     title_pos = "center",
     border = { " ", " ", " ", " ", " ", " ", " ", " " },
     style = "minimal",
@@ -828,8 +830,10 @@ end
 
 ---@return nil
 function M:hide()
-  local winnr = api_tab.get_current_winnr() ---@type integer
-  vim.api.nvim_tabpage_set_win(0, winnr)
+  local winnr = eve.locations.get_current_winnr() or 0 ---@type integer
+  if winnr ~= 0 then
+    vim.api.nvim_tabpage_set_win(0, winnr)
+  end
 
   local winnr_input = self._winnr_input ---@type integer|nil
   local winnr_main = self._winnr_main ---@type integer|nil

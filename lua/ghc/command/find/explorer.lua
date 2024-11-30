@@ -1,6 +1,11 @@
-local constant = require("eve.builtin.constant")
-local Observable = require("eve.collection.observable")
-local Subscriber = require("eve.collection.subscriber")
+local env = require("eve.lib.env")
+local fs = require("eve.lib.fs")
+local oxi = require("eve.lib.oxi")
+local path = require("eve.lib.path")
+local Observable = require("eve.lib.collection.observable")
+local Subscriber = require("eve.lib.collection.subscriber")
+local checks = require("eve.builtin.checks")
+local state = require("eve.state")
 
 ---@class ghc.command.find.explorer.IDirItem
 ---@field public items                  ghc.command.find.explorer.IFileItem[]
@@ -43,9 +48,9 @@ local function fetch_diritem(dirpath, force)
     local owner_width = 0 ---@type integer
     local group_width = 0 ---@type integer
 
-    local raw_data = eve.oxi.readdir(dirpath) ---@type eve.oxi.IReaddirResult|nil
+    local raw_data = oxi.readdir(dirpath) ---@type eve.lib.oxi.IReaddirResult|nil
     if raw_data ~= nil then
-      local raw_itself = raw_data.itself ---@type eve.oxi.IFileItemWithStatus
+      local raw_itself = raw_data.itself ---@type eve.lib.oxi.IFileItemWithStatus
 
       ---@type ghc.command.find.explorer.IFileItem
       local itself = {
@@ -118,13 +123,13 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = Observable.from_value(eve.path.normalize(initial_dirpath)) ---@type eve.t.collection.IObservable
+local state_cwd = Observable.from_value(path.normalize(initial_dirpath)) ---@type eve.lib.collection.IObservable
 local _select = nil ---@type fml.t.ux.ISelect|nil
 
 ---@return string
 local function gen_title()
   local dirpath = state_cwd:snapshot() ---@type string
-  local relative_dirpath = eve.path.relative(eve.path.cwd(), dirpath, false)
+  local relative_dirpath = path.relative(path.cwd(), dirpath, false)
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "File explorer" ---@type string
   end
@@ -150,8 +155,8 @@ state_cwd:subscribe(
 ---@return fml.t.ux.ISelect
 local function get_select()
   if _select == nil then
-    local frecency = eve.context.state.frecency.files ---@type eve.t.collection.IFrecency
-    local input_history = eve.context.state.input_history.find_files ---@type eve.t.collection.IHistory
+    local frecency = state.state.frecency.files ---@type eve.lib.collection.IFrecency
+    local input_history = state.state.input_history.find_files ---@type eve.lib.collection.IHistory
 
     local main_width = 0.4 ---@type number
     ---@type fml.t.ux.search.IRawDimension
@@ -166,8 +171,8 @@ local function get_select()
     ---@type fml.t.ux.select.IProvider
     local provider = {
       fetch_data = function(force)
-        local dirpath = eve.path.normalize(state_cwd:snapshot()) ---@type string
-        local parent_dirpath = eve.path.dirname(dirpath) ---@type string
+        local dirpath = path.normalize(state_cwd:snapshot()) ---@type string
+        local parent_dirpath = path.dirname(dirpath) ---@type string
         local diritem = fetch_diritem(dirpath, force) ---@type ghc.command.find.explorer.IDirItem
         fetch_diritem(parent_dirpath, force)
 
@@ -206,11 +211,11 @@ local function get_select()
         end
 
         if fileitem.type == "file" then
-          local is_text_file = eve.validator.is_printable_file(fileitem.name) ---@type boolean
+          local is_text_file = checks.is_printable_file(fileitem.name) ---@type boolean
           if is_text_file then
             local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
-            local lines = eve.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
-            local title = eve.path.relative(eve.path.cwd(), item.uuid, false) ---@type string
+            local lines = fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
+            local title = path.relative(path.cwd(), item.uuid, false) ---@type string
 
             ---@type fml.t.ux.search.preview.IData
             return {
@@ -250,7 +255,7 @@ local function get_select()
             text = text .. text_size
             width = width + width_size
 
-            if not constant.IS_WIN then
+            if not env.IS_WIN then
               local sep_owner = string.rep(" ", 1) ---@type string
               local text_owner = eve.util.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
               local width_owner = string.len(text_owner) ---@type integer
@@ -288,9 +293,9 @@ local function get_select()
             table.insert(lines, text)
           end
 
-          local title = eve.path.relative(eve.path.cwd(), item.uuid, false) ---@type string
+          local title = path.relative(path.cwd(), item.uuid, false) ---@type string
           if #title < 1 or title:sub(1, 1) == "." then
-            title = eve.path.normalize(item.uuid)
+            title = path.normalize(item.uuid)
           end
 
           ---@type fml.t.ux.search.preview.IData
@@ -390,7 +395,7 @@ local function get_select()
         modes = { "n", "v" },
         key = "<Backspace>",
         callback = function()
-          local next_cwd = eve.path.dirname(state_cwd:snapshot())
+          local next_cwd = path.dirname(state_cwd:snapshot())
           state_cwd:next(next_cwd)
         end,
         desc = "file explorer: goto the parent dir",
@@ -432,7 +437,7 @@ local function get_select()
         end
 
         if fileitem.type == "file" then
-          local ok = fml.api.buf.open_filepath_in_current_valid_win(fileitem.path)
+          local ok = eve.buf.open_filepath_in_current_valid_win(fileitem.path)
           return ok and "hide" or "none"
         end
 
@@ -450,7 +455,7 @@ eve.commander.register({
   desc = "find: explorer",
   action = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local win_detail = eve.win.get_details(winnr) ---@type eve.std.win.IDetails|nil
+    local win_detail = eve.win.get_details(winnr) ---@type eve.builtin.win.IDetails|nil
     if win_detail ~= nil and win_detail.dirpath ~= nil then
       state_cwd:next(win_detail.dirpath)
     end

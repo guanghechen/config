@@ -1,5 +1,7 @@
 local __module_name__ = "ghc.command.debug" ---@type string
 
+local reporter = require("eve.lib.reporter")
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
@@ -16,7 +18,7 @@ eve.commander
       local winnr_cur = eve.locations.get_current_winnr() ---@type integer|nil
       local bufnr_cur = eve.locations.get_current_bufnr() ---@type integer|nil
 
-      eve.reporter.info({
+      reporter.info({
         from = __module_name__,
         subject = "inspect",
         details = {
@@ -42,8 +44,8 @@ eve.commander
     uuid = uuids.debug_inspect_state,
     desc = "debug: inspect state",
     action = function()
-      local data = eve.context.dump() ---@type eve.t.context.data
-      eve.reporter.info({
+      local data = state.dump() ---@type eve.t.state.data
+      reporter.info({
         from = __module_name__,
         subject = "inspect_state",
         details = { data = data },

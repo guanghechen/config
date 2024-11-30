@@ -10,7 +10,7 @@ local M = {
   render = function()
     local icon = eve.icons.os.current ---@type string
     local text = " " .. icon .. " " .. username .. " " ---@type string
-    local hl_text = eve.nvimbar.txt(text, "f_sl_username") ---@type string
+    local hl_text = eve.nvim.txt(text, "f_sl_username") ---@type string
     local width = vim.api.nvim_strwidth(text) ---@type integer
     return hl_text, width
   end,

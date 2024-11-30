@@ -1,5 +1,7 @@
 local __module_name__ = "ghc.command.lsp.reference" ---@type string
 
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@param method                        string
@@ -9,7 +11,7 @@ local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 local function fetch_data(method, additional_params, callback)
   local bufnr = eve.locations.get_current_bufnr() or vim.api.nvim_get_current_buf() ---@type integer
   if not eve.lsp.has_support_method(bufnr, method) then
-    eve.reporter.error({
+    reporter.error({
       from = __module_name__,
       subject = "fetch_data",
       message = "Not support method.",
@@ -19,8 +21,8 @@ local function fetch_data(method, additional_params, callback)
     return
   end
 
-  local cwd = eve.path.cwd() ---@type string
-  local winnr = eve.tab.get_current_winnr() ---@type integer
+  local cwd = path.cwd() ---@type string
+  local winnr = eve.locations.get_current_winnr() or 0 ---@type integer
   local params = vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr), additional_params)
 
   vim.lsp.buf_request_all(bufnr, method, params, function(results_per_client)
@@ -59,7 +61,7 @@ local function fetch_data(method, additional_params, callback)
           end
 
           for _, raw_item in ipairs(vim.lsp.util.locations_to_items(locations, offset_encoding)) do
-            local filepath = eve.path.relative(cwd, raw_item.filename, true) ---@type string
+            local filepath = path.relative(cwd, raw_item.filename, true) ---@type string
             local lnum = raw_item.lnum ---@type integer
             local col = raw_item.col - 1 ---@type integer
             local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
@@ -73,7 +75,7 @@ local function fetch_data(method, additional_params, callback)
     end
 
     if #errors > 0 then
-      eve.reporter.error({
+      reporter.error({
         from = __module_name__,
         subject = "fetch_data",
         message = "Encountered errors.",
@@ -133,7 +135,7 @@ end
 ---@param additional_params             table<string, any>
 ---@return fun(): nil
 local function create_jump_or_list(title, method, additional_params)
-  local _last_data = { items = {}, cwd = eve.path.cwd() } ---@type fml.t.ux.file_select.IData
+  local _last_data = { items = {}, cwd = path.cwd() } ---@type fml.t.ux.file_select.IData
 
   local select = nil ---@type fml.t.ux.IFileSelect|nil
   select = fml.ux.FileSelect.new({

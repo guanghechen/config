@@ -1,5 +1,7 @@
 local __module_name__ = "ghc.command.refresh" ---@type string
 
+local reporter = require("eve.lib.reporter")
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander.register({
@@ -7,7 +9,7 @@ eve.commander.register({
   desc = "refresh: all",
   action = function()
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    local devmode = eve.context.state.flight.devmode:snapshot() ---@type boolean
+    local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 
     vim.cmd.checktime()
     fml.fn.refresh_state()
@@ -33,7 +35,7 @@ eve.commander.register({
       vim.cmd.redraw()
     end)
 
-    eve.reporter.info({
+    reporter.info({
       from = __module_name__,
       message = "Refreshed all!",
     })

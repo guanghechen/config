@@ -1,7 +1,7 @@
 local __module_name__ = "fml.ux.component.textarea" ---@type string
 
-local reporter = require("eve.builtin.reporter")
-local box = require("eve.std.box")
+local box = require("eve.lib.box")
+local reporter = require("eve.lib.reporter")
 
 ---@type string
 local WIN_HIGHLIGHT = table.concat({
@@ -156,7 +156,7 @@ end
 ---@param params                        fml.t.ux.textarea.IOpenParams
 ---@return nil
 function M:open(params)
-  ---@type eve.t.ux.IBoxRestriction
+  ---@type eve.lib.box.IRestriction
   local restriction = {
     position = self.position,
     rows = vim.o.lines,
@@ -172,7 +172,7 @@ function M:open(params)
   }
   local width = params.width or self.width ---@type number
   local height = box.flat(params.height or self.height, restriction.rows) ---@type integer
-  local rect = box.measure(width, height, restriction) ---@type eve.t.ux.IBoxDimension
+  local rect = box.measure(width, height, restriction) ---@type eve.lib.box.IDimension
 
   if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then
     local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer

@@ -1,3 +1,5 @@
+local path = require("eve.lib.path")
+
 return {
   name = "nvim-snippets",
   opts = {
@@ -5,7 +7,7 @@ return {
     friendly_snippets = true,
     global_snippets = { "all", "global" },
     search_paths = {
-      eve.path.locate_config_filepath("snippets"),
+      path.locate_config_filepath("snippets"),
     },
   },
   dependencies = {

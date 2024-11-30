@@ -5,41 +5,41 @@ eve.commander
     uuid = uuids.win_focus_top,
     desc = "win: focus top",
     action = function()
-      fml.api.win.navigate("k")
+      eve.fn.navigate("k")
     end,
   })
   .register({
     uuid = uuids.win_focus_right,
     desc = "win: focus right",
     action = function()
-      fml.api.win.navigate("l")
+      eve.fn.navigate("l")
     end,
   })
   .register({
     uuid = uuids.win_focus_bottom,
     desc = "win: focus bottom",
     action = function()
-      fml.api.win.navigate("j")
+      eve.fn.navigate("j")
     end,
   })
   .register({
     uuid = uuids.win_focus_left,
     desc = "win: focus left",
     action = function()
-      fml.api.win.navigate("h")
+      eve.fn.navigate("h")
     end,
   })
   .register({
     uuid = uuids.win_focus_prev,
     desc = "win: focus prev",
     action = function()
-      fml.api.win.navigate("p")
+      eve.fn.navigate("p")
     end,
   })
   .register({
     uuid = uuids.win_focus_next,
     desc = "win: focus next",
     action = function()
-      fml.api.win.navigate("n")
+      eve.fn.navigate("n")
     end,
   })

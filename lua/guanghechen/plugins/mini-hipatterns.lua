@@ -3,21 +3,21 @@ local tailwind = require("fml.ux.theme.colors.tailwind")
 ---@type table<string,true>
 local highlighted = {}
 
----@type table<string, boolean>
-local tailwind_filetypes = eve.array.to_set({
-  "astro",
-  "css",
-  "heex",
-  "html",
-  "html-eex",
-  "javascript",
-  "javascriptreact",
-  "rust",
-  "svelte",
-  "typescript",
-  "typescriptreact",
-  "vue",
-})
+---@type table<string, true>
+local tailwind_filetypes = {
+  ["astro"] = true,
+  ["css"] = true,
+  ["heex"] = true,
+  ["html"] = true,
+  ["html-eex"] = true,
+  ["javascript"] = true,
+  ["javascriptreact"] = true,
+  ["rust"] = true,
+  ["svelte"] = true,
+  ["typescript"] = true,
+  ["typescriptreact"] = true,
+  ["vue"] = true,
+}
 
 -- reset hl groups when colorscheme changes
 vim.api.nvim_create_autocmd("ColorScheme", {

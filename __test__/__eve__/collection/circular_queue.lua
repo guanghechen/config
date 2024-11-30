@@ -1,4 +1,5 @@
-local CircularQueue = require("eve.collection.circular_queue")
+local functional = require("eve.lib.functional")
+local CircularQueue = require("eve.lib.collection.circular_queue")
 
 local function circular_queue()
   local circular = CircularQueue.new({ capacity = 3 })
@@ -72,7 +73,7 @@ local function circular_queue()
 
   circular:enqueue("G")
   circular:enqueue("H")
-  circular:rearrange(eve.util.truthy)
+  circular:rearrange(functional.truthy)
   eve.debug.log({
     size = circular:size(),
     at1 = circular:at(1),

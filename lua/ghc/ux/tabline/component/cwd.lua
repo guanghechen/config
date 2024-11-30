@@ -7,7 +7,7 @@ local M = {
   render = function(context)
     local cwd_name = (context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd)
     local text = " " .. eve.icons.ui.Explorer .. " " .. cwd_name .. " " ---@type string
-    local hl_text = eve.nvimbar.txt(text, "f_tl_cwd") ---@type string
+    local hl_text = eve.nvim.txt(text, "f_tl_cwd") ---@type string
     local width = vim.api.nvim_strwidth(text) ---@type integer
     return hl_text, width
   end,
