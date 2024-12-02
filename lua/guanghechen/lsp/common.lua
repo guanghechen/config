@@ -175,7 +175,7 @@ local function on_attach(client, bufnr)
       active = has_support_codeLens,
     },
     {
-      modes = { "n" },
+      modes = { "n", "v" },
       key = "<leader>cC",
       callback = function()
         vim.lsp.codelens.refresh()

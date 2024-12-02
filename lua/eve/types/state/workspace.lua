@@ -38,6 +38,7 @@
 ---@field public copilot                boolean
 ---@field public devmode                boolean
 ---@field public lsp_inlay_hints        boolean
+---@field public lsp_code_lens          boolean
 
 ---@class eve.t.state.state.flight
 ---@field public autoload               eve.lib.collection.IObservable
@@ -45,6 +46,7 @@
 ---@field public copilot                eve.lib.collection.IObservable
 ---@field public devmode                eve.lib.collection.IObservable
 ---@field public lsp_inlay_hints        eve.lib.collection.IObservable
+---@field public lsp_code_lens          eve.lib.collection.IObservable
 
 ---@class eve.t.state.data.frecency
 ---@field public files                  eve.lib.collection.frecency.ISerializedData

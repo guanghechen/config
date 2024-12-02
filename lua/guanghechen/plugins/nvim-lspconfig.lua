@@ -53,11 +53,14 @@ return {
     if vim.lsp.codelens then
       ---@diagnostic disable-next-line: unused-local
       on_supports_method("textDocument/codeLens", function(client, bufnr)
-        vim.lsp.codelens.refresh()
-        vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
-          buffer = bufnr,
-          callback = vim.lsp.codelens.refresh,
-        })
+        local enable_lsp_code_lens = state.state.flight.lsp_code_lens:snapshot() ---@type boolean
+        if enable_lsp_code_lens and vim.bo[bufnr].buftype == "" then
+          vim.lsp.codelens.refresh()
+          vim.api.nvim_create_autocmd({ "InsertLeave" }, {
+            buffer = bufnr,
+            callback = vim.lsp.codelens.refresh,
+          })
+        end
       end)
     end
   end,

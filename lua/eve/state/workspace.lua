@@ -57,6 +57,7 @@ function M.defaults()
     copilot = is_home_config_dir,
     devmode = is_home_config_dir,
     lsp_inlay_hints = is_home_config_dir,
+    lsp_code_lens = is_home_config_dir,
   }
 
   ---@type eve.t.state.data.frecency
@@ -152,6 +153,7 @@ function M.dump()
     copilot = state.flight.copilot:snapshot(),
     devmode = state.flight.devmode:snapshot(),
     lsp_inlay_hints = state.flight.lsp_inlay_hints:snapshot(),
+    lsp_code_lens = state.flight.lsp_code_lens:snapshot(),
   }
 
   ---@type eve.t.state.data.frecency
@@ -228,6 +230,7 @@ function M.load(data)
       copilot = Observable.from_value(data.flight.copilot),
       devmode = Observable.from_value(data.flight.devmode),
       lsp_inlay_hints = Observable.from_value(data.flight.lsp_inlay_hints),
+      lsp_code_lens = Observable.from_value(data.flight.lsp_code_lens),
     }
 
     ---@type eve.t.state.state.frecency
@@ -305,6 +308,7 @@ function M.load(data)
     state.flight.copilot:next(data.flight.copilot)
     state.flight.devmode:next(data.flight.devmode)
     state.flight.lsp_inlay_hints:next(data.flight.lsp_inlay_hints)
+    state.flight.lsp_code_lens:next(data.flight.lsp_code_lens)
 
     ---! frecency
     state.frecency.files:load(data.frecency.files)
@@ -402,6 +406,9 @@ function M.normalize(data)
     end
     if type(data.flight.lsp_inlay_hints) == "boolean" then
       resolved.flight.lsp_inlay_hints = data.flight.lsp_inlay_hints
+    end
+    if type(data.flight.lsp_code_lens) == "boolean" then
+      resolved.flight.lsp_code_lens = data.flight.lsp_code_lens
     end
   end
 

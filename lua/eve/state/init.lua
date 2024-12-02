@@ -189,6 +189,7 @@ function M.watch_changes(params)
     state.flight.copilot,
     state.flight.devmode,
     state.flight.lsp_inlay_hints,
+    state.flight.lsp_code_lens,
 
     ---
     state.search.flag_case_sensitive,
@@ -242,6 +243,7 @@ function M.watch_changes(params)
 
   mvc.observe({
     state.flight.lsp_inlay_hints,
+    state.flight.lsp_code_lens,
   }, function()
     pcall(function()
       vim.cmd("LspRestart")

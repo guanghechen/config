@@ -13,6 +13,7 @@ local flights = {
   "copilot",
   "devmode",
   "lsp_inlay_hints",
+  "lsp_code_lens",
 }
 
 ---@param flight                        string
