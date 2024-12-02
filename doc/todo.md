@@ -1,25 +1,6 @@
+* Color Scheme
+  - catppuccin
 
-## Widgets
+* Git
+  - Better blame line preview, for those committed changes, show the diff of the last change commit.
 
-```typescript
-interface IWidget {
-  readonly uuid: string
-  readonly status: 'closed' | 'hidden' | 'visible'
-  readonly hide: () => void
-  readonly show: () => void
-  readonly close: () => void
-}
-```
-
-
-* Call `.close()` when the widget is out of the scope of the widget history.
-* Call `.hide()` when press `q` or change to other widget.
-
-* Search
-
-  - Support to keep the data to implemented the `hide` / `show` / `close` methods.
-
-
-## Color scheme
-
-1. catppuccin
