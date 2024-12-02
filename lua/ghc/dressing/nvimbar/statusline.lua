@@ -1,12 +1,13 @@
 local functional = require("eve.lib.functional")
 local Nvimbar = require("eve.lib.ux.nvimbar")
+local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
-local c = require("ghc.nvimbar.components")
+local c = require("ghc.dressing.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+local dirtier = state.state.status.statusline_dirtier ---@type eve.lib.collection.IDirtier
 
 local statusline ---@type eve.lib.ux.INvimbar
-
 statusline = Nvimbar.new({
   name = "statusline",
   component_sep = "  ",
@@ -19,7 +20,9 @@ statusline = Nvimbar.new({
   end,
   is_active = functional.falsy,
   trigger_rerender = function()
-    vim.cmd.redrawstatus()
+    local result = statusline and statusline:snapshot() or "" ---@type string
+    vim.opt.statusline = result
+    dirtier:mark_clean()
   end,
   validate = function()
     return nil
@@ -46,13 +49,10 @@ statusline
   :register(c.noice(), "right")
   :register(c.diagnostics(), "right")
 
----@class ghc.nvimbar.statusline
-local M = {}
-
----@return string
-function M.render()
-  local result = statusline:render() ---@type string
-  return result
-end
-
-return M
+dirtier:subscribe(Subscriber.new({
+  on_next = function()
+    if dirtier:is_dirty() then
+      statusline:render()
+    end
+  end,
+}))

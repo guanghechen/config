@@ -85,24 +85,24 @@ function M.new(props)
     local function toggle_case_sensitive()
       local flag = case_sensitive:snapshot() ---@type boolean
       case_sensitive:next(not flag)
-      vim.cmd.redrawstatus()
       self:mark_search_state_dirty()
+      eve.state.state.status.statusline_dirtier:mark_dirty()
     end
 
     ---@return nil
     local function toggle_flag_fuzzy()
       local flag = flag_fuzzy:snapshot() ---@type boolean
       flag_fuzzy:next(not flag)
-      vim.cmd.redrawstatus()
       self:mark_search_state_dirty()
+      eve.state.state.status.statusline_dirtier:mark_dirty()
     end
 
     ---@return nil
     local function toggle_flag_regex()
       local flag = flag_regex:snapshot() ---@type boolean
       flag_regex:next(not flag)
-      vim.cmd.redrawstatus()
       self:mark_search_state_dirty()
+      eve.state.state.status.statusline_dirtier:mark_dirty()
     end
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]

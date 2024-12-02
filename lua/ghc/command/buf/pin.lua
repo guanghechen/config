@@ -24,7 +24,7 @@ eve.commander.register({
       end
 
       meta.pinned = not pinned
-      vim.cmd.redrawtabline()
+      eve.state.state.status.tabline_dirtier:mark_dirty()
     end
   end,
 })

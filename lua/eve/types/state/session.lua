@@ -40,6 +40,8 @@
 ---@field public lsp_msg                eve.lib.collection.IObservable
 ---@field public tmux_zen_mode          eve.lib.collection.IObservable
 ---@field public winline_dirty_nr       eve.lib.collection.IObservable
+---@field public statusline_dirtier     eve.lib.collection.IDirtier
+---@field public tabline_dirtier        eve.lib.collection.IDirtier
 
 ---@class eve.t.state.session.data
 ---@field public bufs                   eve.t.state.data.buf.IMeta[]

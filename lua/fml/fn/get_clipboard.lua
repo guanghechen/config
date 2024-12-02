@@ -1,4 +1,4 @@
-local __module_name__ = "ghc.fn.get_clipboard" ---@type string
+local __module_name__ = "fml.fn.get_clipboard" ---@type string
 
 local env = require("eve.lib.env")
 local path = require("eve.lib.path")

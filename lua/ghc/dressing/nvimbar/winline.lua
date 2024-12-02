@@ -1,20 +1,14 @@
-local __module_name__ = "ghc.nvimbar.winline" ---@type string
-
-local reporter = require("eve.lib.reporter")
 local Nvimbar = require("eve.lib.ux.nvimbar")
 local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
-local c = require("ghc.nvimbar.components")
+local c = require("ghc.dressing.nvimbar.components")
 
 local winline_map = {} ---@type table<string, eve.lib.ux.INvimbar>
 
----@class ghc.nvimbar.winline
-local M = {}
-
 ---@param winnr                         integer
 ---@return boolean
-function M.should_show_winline(winnr)
-  if eve.checks.is_win_floating(winnr) then
+local function should_show_winline(winnr)
+  if winnr == 0 or not vim.api.nvim_win_is_valid(winnr) or eve.checks.is_win_floating(winnr) then
     return false
   end
 
@@ -34,8 +28,8 @@ end
 
 ---@param winnr                         integer
 ---@return string
-function M.render(winnr)
-  if not M.should_show_winline(winnr) then
+local function refresh(winnr)
+  if not should_show_winline(winnr) then
     return ""
   end
 
@@ -60,12 +54,10 @@ function M.render(winnr)
         return winnr_cur == context.winnr
       end,
       trigger_rerender = function()
-        vim.schedule(function()
-          local result = winline and winline:snapshot() or "" ---@type string
-          if #result > 0 then
-            vim.wo[winnr].winbar = result
-          end
-        end)
+        local result = winline and winline:snapshot() or "" ---@type string
+        if #result > 0 and vim.api.nvim_win_is_valid(winnr) then
+          vim.wo[winnr].winbar = result
+        end
       end,
       validate = function()
         if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
@@ -89,36 +81,11 @@ function M.render(winnr)
   return winline:render()
 end
 
----@param winnr                         integer
----@return nil
-function M.update(winnr)
-  if vim.api.nvim_win_is_valid(winnr) then
-    local result = M.render(winnr) ---@type string
-    if #result > 0 then
-      local ok, err = pcall(function()
-        vim.wo[winnr].winbar = result
-      end)
-      if not ok then
-        reporter.error({
-          from = __module_name__,
-          subject = "update",
-          message = "Failed to update winbar.",
-          details = { winnr = winnr, result = result, err = err },
-        })
-      end
-    end
-  end
-end
-
 state.state.status.winline_dirty_nr:subscribe(
   Subscriber.new({
     on_next = function(winnr)
-      if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-        M.update(winnr)
-      end
+      refresh(winnr)
     end,
   }),
   true
 )
-
-return M

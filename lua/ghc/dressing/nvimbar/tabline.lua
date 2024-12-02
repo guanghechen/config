@@ -1,9 +1,11 @@
 local functional = require("eve.lib.functional")
 local Nvimbar = require("eve.lib.ux.nvimbar")
+local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
-local c = require("ghc.nvimbar.components")
+local c = require("ghc.dressing.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+local dirtier = state.state.status.tabline_dirtier ---@type eve.lib.collection.IDirtier
 
 local tabline ---@type eve.lib.ux.INvimbar
 tabline = Nvimbar.new({
@@ -18,7 +20,9 @@ tabline = Nvimbar.new({
   end,
   is_active = functional.falsy,
   trigger_rerender = function()
-    vim.cmd("redrawtabline")
+    local result = tabline and tabline:snapshot() or "" ---@type string
+    vim.opt.tabline = result
+    dirtier:mark_clean()
   end,
   validate = function()
     return nil
@@ -37,13 +41,10 @@ tabline
   :register(c.diffview(), "left")
   :register(c.bufs(), "left")
 
----@class ghc.nvimbar.tabline
-local M = {}
-
----@return string
-function M.render()
-  local result = tabline:render() ---@type string
-  return result
-end
-
-return M
+dirtier:subscribe(Subscriber.new({
+  on_next = function()
+    if dirtier:is_dirty() then
+      tabline:render()
+    end
+  end,
+}))

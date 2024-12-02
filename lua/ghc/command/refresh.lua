@@ -27,13 +27,14 @@ eve.commander.register({
       end
     end)
 
-    vim.schedule(function()
-      if devmode then
-        eve.commander.execute(eve.commander.uuids.reload_theme, "force")
-      end
-      vim.cmd("LspRestart")
-      vim.cmd.redraw()
-    end)
+    if devmode then
+      eve.commander.execute(eve.commander.uuids.reload_theme, "force")
+    end
+
+    vim.cmd("LspRestart")
+    eve.state.state.status.statusline_dirtier:mark_dirty()
+    eve.state.state.status.tabline_dirtier:mark_dirty()
+    vim.cmd.redraw()
 
     reporter.info({
       from = __module_name__,

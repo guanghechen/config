@@ -2,6 +2,7 @@ local path = require("eve.lib.path")
 local functional = require("eve.lib.functional")
 local AdvanceHistory = require("eve.lib.collection.history_advance")
 local Observable = require("eve.lib.collection.observable")
+local Diritier = require("eve.lib.collection.dirtier")
 local tmux = require("eve.lib.tmux")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
@@ -149,6 +150,8 @@ function M.load(data)
       lsp_msg = Observable.from_value(""),
       tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
       winline_dirty_nr = Observable.from_value(0, functional.falsy),
+      statusline_dirtier = Diritier.new(),
+      tabline_dirtier = Diritier.new(),
     }
 
     ---@type eve.lib.collection.IAdvanceHistory
@@ -238,6 +241,8 @@ function M.load(data)
   state.status.lsp_msg:next("")
   state.status.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
   state.status.winline_dirty_nr:next(0)
+  state.status.statusline_dirtier:mark_dirty()
+  state.status.tabline_dirtier:mark_dirty()
 
   ---! tab_history
   local stack = {} ---@type integer[]

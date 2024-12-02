@@ -155,14 +155,18 @@ function M.watch_changes(params)
       params.on_theme_changed()
     end
 
-    vim.cmd.redraw()
     state.dirtier.editor_states:tick()
+    state.status.statusline_dirtier:mark_dirty()
+    state.status.tabline_dirtier:mark_dirty()
+    vim.cmd.redraw()
   end, true)
 
   mvc.observe({
     state.theme.relativenumber,
   }, function()
     state.dirtier.editor_states:tick()
+    state.status.statusline_dirtier:mark_dirty()
+    state.status.tabline_dirtier:mark_dirty()
     vim.cmd.redraw()
   end, true)
 
@@ -206,6 +210,7 @@ function M.watch_changes(params)
     state.search.search_paths,
   }, function()
     state.dirtier.workspace_states:tick()
+    state.status.statusline_dirtier:mark_dirty()
   end, true)
 
   ---! Trigger statusline redraw.
@@ -225,7 +230,7 @@ function M.watch_changes(params)
     ---status
     state.status.lsp_msg,
   }, function()
-    vim.cmd.redrawstatus()
+    state.status.statusline_dirtier:mark_dirty()
   end, true)
 
   ---! Trigger tabline redraw.
@@ -233,7 +238,7 @@ function M.watch_changes(params)
     ---flight
     state.flight.devmode,
   }, function()
-    vim.cmd.redrawtabline()
+    state.status.tabline_dirtier:mark_dirty()
   end, true)
 
   mvc.observe({

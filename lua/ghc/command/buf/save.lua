@@ -37,7 +37,8 @@ eve.commander.register({
     local function check()
       if ready_count == new_file_count then
         vim.cmd("wa")
-        vim.cmd.redrawtabline()
+        eve.state.state.status.statusline_dirtier:mark_dirty()
+        eve.state.state.status.tabline_dirtier:mark_dirty()
       end
     end
 

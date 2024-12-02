@@ -2,7 +2,7 @@
 
 local icons = require("eve.builtin.icons")
 
----@class ghc.fn.statuscolumn.config
+---@class fml.fn.statuscolumn.config
 local config = {
   left = { "mark", "sign" }, -- priority of signs on the left (high to low)
   right = { "fold", "git" }, -- priority of signs on the right (high to low)
@@ -17,21 +17,21 @@ local config = {
   refresh = 50, -- refresh at most every 50ms
 }
 
----@alias ghc.fn.statuscolumn.SignType
+---@alias fml.fn.statuscolumn.SignType
 ---| "mark"
 ---| "sign"
 ---| "fold"
 ---| "git"
 
----@class ghc.fn.statuscolumn.ISign
----@field public type                   ghc.fn.statuscolumn.SignType
+---@class fml.fn.statuscolumn.ISign
+---@field public type                   fml.fn.statuscolumn.SignType
 ---@field public name                   ?string
 ---@field public text                   string
 ---@field public texthl                 ?string
 ---@field public priority               number
 
 -- Cache for signs per buffer and line
----@type table<number,table<number, ghc.fn.statuscolumn.ISign>>
+---@type table<number,table<number, fml.fn.statuscolumn.ISign>>
 local cache = {}
 
 local did_setup = false
@@ -47,9 +47,9 @@ local function setup()
   end
 end
 
----@param signs                         ghc.fn.statuscolumn.ISign[]
----@param types                         ghc.fn.statuscolumn.SignType[]
----@return ghc.fn.statuscolumn.ISign|nil
+---@param signs                         fml.fn.statuscolumn.ISign[]
+---@param types                         fml.fn.statuscolumn.SignType[]
+---@return fml.fn.statuscolumn.ISign|nil
 local function find_sign(signs, types)
   for _, t in ipairs(types) do
     for _, s in ipairs(signs) do
@@ -74,13 +74,13 @@ end
 
 -- Returns a list of regular and extmark signs sorted by priority (low to high)
 ---@param bufnr                         integer
----@return table<integer, ghc.fn.statuscolumn.ISign[]>
+---@return table<integer, fml.fn.statuscolumn.ISign[]>
 local function buf_signs(bufnr)
   if cache[bufnr] then
     return cache[bufnr]
   end
 
-  local signs_map = {} ---@type table<integer, ghc.fn.statuscolumn.ISign[]>
+  local signs_map = {} ---@type table<integer, fml.fn.statuscolumn.ISign[]>
 
   -- Get extmark signs
   local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, { details = true, type = "sign" })
@@ -88,7 +88,7 @@ local function buf_signs(bufnr)
     local lnum = extmark[2] + 1
     local name = extmark[4].sign_hl_group or extmark[4].sign_name or ""
 
-    ---@type ghc.fn.statuscolumn.ISign
+    ---@type fml.fn.statuscolumn.ISign
     local sign = {
       name = name,
       type = is_git_sign(name) and "git" or "sign",
@@ -97,7 +97,7 @@ local function buf_signs(bufnr)
       priority = extmark[4].priority or 0,
     }
 
-    signs_map[lnum] = signs_map[lnum] or {} ---@type ghc.fn.statuscolumn.ISign[]
+    signs_map[lnum] = signs_map[lnum] or {} ---@type fml.fn.statuscolumn.ISign[]
     table.insert(signs_map[lnum], sign)
   end
 
@@ -108,7 +108,7 @@ local function buf_signs(bufnr)
     if mark.pos[1] == bufnr and mark.mark:match("[a-zA-Z]") then
       local lnum = mark.pos[2]
 
-      ---@type ghc.fn.statuscolumn.ISign
+      ---@type fml.fn.statuscolumn.ISign
       local sign = {
         type = "mark",
         text = mark.mark:sub(2),
@@ -116,7 +116,7 @@ local function buf_signs(bufnr)
         priority = 0,
       }
 
-      signs_map[lnum] = signs_map[lnum] or {} ---@type ghc.fn.statuscolumn.ISign[]
+      signs_map[lnum] = signs_map[lnum] or {} ---@type fml.fn.statuscolumn.ISign[]
       table.insert(signs_map[lnum], sign)
     end
   end
@@ -129,14 +129,14 @@ end
 ---@param winnr                         integer
 ---@param bufnr                         integer
 ---@param lnum                          integer
----@return ghc.fn.statuscolumn.ISign[]
+---@return fml.fn.statuscolumn.ISign[]
 local function line_signs(winnr, bufnr, lnum)
-  local signs = buf_signs(bufnr)[lnum] or {} ---@type ghc.fn.statuscolumn.ISign[]
+  local signs = buf_signs(bufnr)[lnum] or {} ---@type fml.fn.statuscolumn.ISign[]
 
   -- Get fold signs
   vim.api.nvim_win_call(winnr, function()
     if vim.fn.foldclosed(vim.v.lnum) >= 0 then
-      ---@type ghc.fn.statuscolumn.ISign
+      ---@type fml.fn.statuscolumn.ISign
       local sign = {
         type = "fold",
         text = icons.fillchars.foldclose,
@@ -145,7 +145,7 @@ local function line_signs(winnr, bufnr, lnum)
       }
       table.insert(signs, sign)
     elseif config.folds.open and tostring(vim.treesitter.foldexpr(vim.v.lnum)):sub(1, 1) == ">" then
-      ---@type ghc.fn.statuscolumn.ISign
+      ---@type fml.fn.statuscolumn.ISign
       local sign = {
         type = "fold",
         text = icons.fillchars.foldopen,
@@ -162,7 +162,7 @@ local function line_signs(winnr, bufnr, lnum)
   return signs
 end
 
----@param sign                          ?ghc.fn.statuscolumn.ISign
+---@param sign                          ?fml.fn.statuscolumn.ISign
 ---@param len                           ?integer
 ---@return string
 local function get_icon(sign, len)

@@ -20,11 +20,13 @@ if vim.g.vscode then
   return
 end
 
-require("ghc.option")
-require("ghc.autocmd")
+require("fml.option")
 require("ghc.command")
 require("ghc.dressing.autopairs")
 require("ghc.dressing.commentstring")
+require("ghc.dressing.nvimbar.statusline")
+require("ghc.dressing.nvimbar.tabline")
+require("ghc.dressing.nvimbar.winline")
 require("ghc.dressing.select")
 require("ghc.dressing.winsep")
 

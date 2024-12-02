@@ -21,7 +21,8 @@ eve.commander
           local bufnr_next = meta.bufnrs[bufid_next]
           meta.bufnrs[bufid_next] = bufnr_cur
           meta.bufnrs[bufid_cur] = bufnr_next
-          vim.cmd("redrawtabline")
+          eve.state.state.status.statusline_dirtier:mark_dirty()
+          eve.state.state.status.tabline_dirtier:mark_dirty()
         end
       end
     end,
@@ -46,7 +47,8 @@ eve.commander
           local bufnr_next = meta.bufnrs[bufid_next]
           meta.bufnrs[bufid_next] = bufnr_cur
           meta.bufnrs[bufid_cur] = bufnr_next
-          vim.cmd("redrawtabline")
+          eve.state.state.status.statusline_dirtier:mark_dirty()
+          eve.state.state.status.tabline_dirtier:mark_dirty()
         end
       end
     end,

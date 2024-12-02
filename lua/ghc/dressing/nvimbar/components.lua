@@ -1,4 +1,4 @@
-local __module_name__ = "ghc.nvimbar.components" ---@type string
+local __module_name__ = "ghc.dressing.nvimbar.components" ---@type string
 
 local env = require("eve.lib.env")
 local oxi = require("eve.lib.oxi")
@@ -18,7 +18,7 @@ local state = require("eve.state")
 local btn = Nvimbar.btn
 local txt = Nvimbar.txt
 
----@class ghc.nvimbar.components
+---@class ghc.dressing.nvimbar.components
 local M = {}
 
 ---@return eve.lib.ux.nvimbar.IRawComponent
@@ -917,7 +917,7 @@ function M.tabs()
   local fn_toggle_tabs_folded = G.register_anonymous_fn(function()
     folded = not folded
     dirty = true
-    vim.cmd("redrawtabline")
+    eve.state.state.status.tabline_dirtier:mark_dirty()
   end) or ""
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
