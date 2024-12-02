@@ -9,10 +9,11 @@ local BatchHandler = require("eve.lib.collection.batch_handler")
 
 ---@class eve.lib.collection.BatchDisposable : eve.lib.collection.IBatchDisposable
 local M = {}
+M.__index = M
 
 ---@return eve.lib.collection.BatchDisposable
 function M.new()
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
 
   ---@type boolean
   self._disposed = false

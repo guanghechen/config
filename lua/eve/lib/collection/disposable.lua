@@ -8,11 +8,12 @@
 ---@class eve.lib.collection.Disposable : eve.lib.collection.IDisposable
 ---@field private _on_dispose           fun():nil
 local M = {}
+M.__index = M
 
 ---@param props eve.lib.collection.disposable.IProps
 ---@return eve.lib.collection.Disposable
 function M.new(props)
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
 
   ---@type function
   self._on_dispose = props.on_dispose

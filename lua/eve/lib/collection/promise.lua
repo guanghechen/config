@@ -40,11 +40,12 @@ local reporter = require("eve.lib.reporter")
 ---@protected _reason                   unknown|nil
 ---@protected _result                   unknown|nil
 local M = {}
+M.__index = M
 
 ---@param fn                            fun(resolve: eve.lib.collection.promise.IResolve, reject: eve.lib.collection.promise.IReject): nil
 ---@return eve.lib.collection.Promise
 function M.new(fn)
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
 
   local callbacks = {} ---@type eve.lib.collection.promise.ICallback[]
 

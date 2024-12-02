@@ -54,6 +54,7 @@ local CircularStack = require("eve.lib.collection.circular_stack")
 ---@field protected _present            integer
 ---@field protected _stack              eve.lib.collection.ICircularStack
 local M = {}
+M.__index = M
 
 ---@param props                         eve.lib.collection.history.IProps
 ---@return eve.lib.collection.History
@@ -62,7 +63,7 @@ function M.new(props)
   local capacity = props.capacity ---@type integer
   local equals = props.equals or functional.equals_shallow ---@type eve.t.IEquals
 
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
   self.name = name
   self.equals = equals
   self._present = 0

@@ -8,10 +8,12 @@ local Observable = require("eve.lib.collection.observable")
 ---@class eve.lib.collection.Dirtier : eve.lib.collection.IDirtier
 ---@field protected _clean_tick         integer
 ---@diagnostic disable-next-line: assign-type-mismatch
-local M = setmetatable({}, { __index = Observable })
+local M = {}
+M.__index = M
+setmetatable(M, Observable)
 
 function M.new()
-  local self = setmetatable(Observable.from_value(0), { __index = M})
+  local self = setmetatable(Observable.from_value(0), M)
   ---@cast self eve.lib.collection.Dirtier
 
   self._clean_tick = 0

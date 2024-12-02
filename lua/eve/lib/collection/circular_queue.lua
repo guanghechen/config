@@ -29,13 +29,14 @@ local _tmp_array = {} ---@type eve.t.T[]
 ---@field private _start                integer
 ---@field private _end                  integer
 local M = {}
+M.__index = M
 
 ---@param props                         eve.lib.collection.circular_queue.IProps
 ---@return eve.lib.collection.CircularQueue
 function M.new(props)
   local capacity = math.max(1, props.capacity) ---@type integer
 
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
   self._elements = {}
   self._capacity = capacity
   self._size = 0

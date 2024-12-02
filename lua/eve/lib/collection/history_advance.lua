@@ -46,6 +46,7 @@ end
 ---@field public validate               eve.t.IValidate
 ---@field private _history              eve.lib.collection.IHistory
 local M = {}
+M.__index = M
 
 ---@param props                         eve.lib.collection.history_advance.IProps
 ---@return eve.lib.collection.AdvanceHistory
@@ -60,7 +61,7 @@ function M.new(props)
     equals = equals,
   })
 
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
   self.name = history.name
   self.equals = history.equals
   self.validate = validate

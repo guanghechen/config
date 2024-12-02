@@ -17,10 +17,11 @@ end
 ---@field protected right                  ghc.dressing.winsep.Line
 ---@field protected bottom                 ghc.dressing.winsep.Line
 local Winsep = {}
+Winsep.__index = Winsep
 
 ---@return ghc.dressing.Winsep
 function Winsep.new()
-  local self = setmetatable({}, { __index = Winsep })
+  local self = setmetatable({}, Winsep)
 
   self.bufnr = nil
   self.left = Line.new("h")

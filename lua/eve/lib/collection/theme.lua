@@ -60,10 +60,11 @@
 ---@class eve.lib.collection.Theme : eve.lib.collection.ITheme
 ---@field private hlgroup_map          table<string, eve.lib.collection.theme.IHlgroup>
 local M = {}
+M.__index = M
 
 ---@return eve.lib.collection.Theme
 function M.new()
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
   self.hlgroup_map = {}
   return self
 end

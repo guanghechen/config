@@ -7,7 +7,7 @@ local Textarea = require("fml.ux.component.textarea")
 ---@class fml.ux.Setting : fml.t.ux.ISetting, fml.ux.Textarea
 local M = {}
 M.__index = M
-setmetatable(M, { __index = Textarea })
+setmetatable(M, Textarea)
 
 ---@class fml.ux.setting.IProps
 ---@field public position               eve.e.BoxPosition

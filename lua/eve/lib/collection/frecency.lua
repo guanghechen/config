@@ -27,11 +27,12 @@ local functional = require("eve.lib.functional")
 ---@field protected _items              table<string, eve.lib.collection.frecency.IItem>
 ---@field protected _normalize          fun(key: string): string
 local M = {}
+M.__index = M
 
 ---@param props                         eve.lib.collection.frecency.IProps
 ---@return eve.lib.collection.Frecency
 function M.new(props)
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
   local items = props.items ---@type table<string, eve.lib.collection.frecency.IItem>

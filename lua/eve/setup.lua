@@ -1,4 +1,5 @@
 local env = require("eve.lib.env")
+local path = require("eve.lib.path")
 
 ---@class eve.setup
 local M = {}
@@ -11,8 +12,6 @@ local M = {}
 ---! 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
 ---@return nil
 function M.workspace()
-  local path = require("eve.lib.path")
-
   if vim.fn.expand("%") ~= "" then
     local cwd = vim.fn.getcwd()
     local p = vim.fn.expand("%:p:h")
@@ -29,7 +28,6 @@ end
 
 ---@return nil
 function M.context()
-  local path = require("eve.lib.path")
   local state = require("eve.state")
   local is_git_repo = path.is_git_repo() ---@type boolean
 

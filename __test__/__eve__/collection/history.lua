@@ -47,3 +47,8 @@ history:print()
 
 history:push("A")
 history:print()
+
+local history_forked = history:fork({})
+history_forked:push("H")
+history_forked:print()
+history:print()

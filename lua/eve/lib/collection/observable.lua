@@ -28,7 +28,9 @@ local noop_unsubscribable = { unsubscribe = functional.noop }
 ---@field private _value_last_notified  eve.t.T|nil
 ---@field private _subscribers          eve.lib.collection.ISubscribers
 ---@diagnostic disable-next-line: assign-type-mismatch
-local M = setmetatable({}, { __index = BatchDisposable })
+local M = {}
+M.__index = M
+setmetatable(M, BatchDisposable)
 
 ---@param props                         eve.lib.collection.observable.IProps
 ---@return eve.lib.collection.Observable
@@ -37,7 +39,7 @@ function M.new(props)
   local normalize = props.normalize or functional.identity ---@type eve.t.INormalize
   local initial_value = props.initial_value ---@type eve.t.T
 
-  local self = setmetatable(BatchDisposable.new(), { __index = M })
+  local self = setmetatable(BatchDisposable.new(), M)
   ---@cast self eve.lib.collection.Observable
 
   self.equals = equals

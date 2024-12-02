@@ -11,11 +11,12 @@ local functional = require("eve.lib.functional")
 ---@field private _on_next              fun(value: any, value_prev: any|nil):nil
 ---@field private _on_dispose           fun():nil
 local M = {}
+M.__index = M
 
 ---@param props eve.lib.collection.subscriber.IProps
 ---@return eve.lib.collection.Subscriber
 function M.new(props)
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
 
   self._disposed = false ---@type boolean
   self._on_dispose = props.on_dispose or functional.noop ---@type fun(): nil

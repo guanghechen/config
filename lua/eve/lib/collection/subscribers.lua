@@ -27,11 +27,12 @@ local noop_unsubscribable = { unsubscribe = functional.noop }
 ---@field private _items                eve.lib.collection.Subscribers.ISubscriberItem[]
 ---@field private _subscribing_count    integer
 local M = {}
+M.__index = M
 
 ---@param props                         ?eve.lib.collection.Subscribers.IProps
 ---@return eve.lib.collection.Subscribers
 function M.new(props)
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
 
   ---@type integer
   self.ARRANGE_THRESHOLD = (props and props.ARRANGE_THRESHOLD) and props.ARRANGE_THRESHOLD or 16

@@ -42,11 +42,12 @@ local config = {
 ---@field public winnr                  integer|nil
 ---@field public direction              ghc.dressing.winsep.line.Direction
 local M = {}
+M.__index = M
 
 ---@param direction                     ghc.dressing.winsep.line.Direction
 ---@return ghc.dressing.winsep.Line
 function M.new(direction)
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
 
   ---@type vim.api.keyset.win_config
   local cfg = {

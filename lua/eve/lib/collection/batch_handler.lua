@@ -5,10 +5,11 @@
 
 ---@class eve.lib.collection.BatchHandler : eve.lib.collection.IBatchHandler
 local M = {}
+M.__index = M
 
 ---@return eve.lib.collection.BatchHandler
 function M.new()
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
 
   ---@type any[]
   self._errors = {}

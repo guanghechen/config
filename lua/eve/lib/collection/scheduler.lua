@@ -35,11 +35,12 @@ local reporter = require("eve.lib.reporter")
 ---@field protected _tick_resolved      integer
 ---@field protected _tick_settled       integer
 local M = {}
+M.__index = M
 
 ---@param props                         eve.lib.collection.scheduler.IProps
 ---@return eve.lib.collection.Scheduler
 function M.new(props)
-  local self = setmetatable({}, { __index = M })
+  local self = setmetatable({}, M)
 
   local name = props.name ---@type string
   local silent = not not props.silent ---@type boolean
