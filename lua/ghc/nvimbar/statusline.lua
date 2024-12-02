@@ -19,7 +19,6 @@ statusline = Nvimbar.new({
   end,
   is_active = functional.falsy,
   trigger_rerender = function()
-    statusline:cancel_next_render()
     vim.cmd.redrawstatus()
   end,
   validate = function()

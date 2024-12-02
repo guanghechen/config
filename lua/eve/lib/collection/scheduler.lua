@@ -1,13 +1,14 @@
 local __module_name__ = "eve.lib.collection.scheduler" ---@type string
 
 local reporter = require("eve.lib.reporter")
+local Observable = require("eve.lib.collection.observable")
 
 ---@class eve.lib.collection.IScheduler
 ---@field public name                   string
 ---@field public cancel                 fun(self: eve.lib.collection.IScheduler): nil
----@field public cancel_next            fun(self: eve.lib.collection.IScheduler): nil
 ---@field public schedule               fun(self: eve.lib.collection.IScheduler): nil
 ---@field public snapshot               fun(self: eve.lib.collection.IScheduler): unknown|nil
+---@field public subscribe              fun(self: eve.lib.collection.IScheduler, subscriber: eve.lib.collection.ISubscriber, ignoreInitial: boolean): eve.lib.collection.IUnsubscribable
 
 ---@alias eve.lib.collection.scheduler.ITask
 ---| fun(callback: eve.lib.collection.promise.IOnFinally): nil
@@ -17,6 +18,7 @@ local reporter = require("eve.lib.reporter")
 ---@field public delay                  ?integer
 ---@field public silent                 ?boolean
 ---@field public task                   eve.lib.collection.scheduler.ITask
+---@field public equals                 ?fun(a: unknown, b: unknown): boolean
 
 ---@class eve.lib.collection.Scheduler : eve.lib.collection.IScheduler
 ---@field public name                   string
@@ -25,8 +27,8 @@ local reporter = require("eve.lib.reporter")
 ---@field protected _immediate          boolean
 ---@field protected _silent             boolean
 ---
----@field protected _result             unknown|nil
 ---@field protected _task               eve.lib.collection.scheduler.ITask
+---@field protected _value              eve.lib.collection.IObservable
 ---
 ---@field protected _tick_alive         integer
 ---@field protected _tick_scheduled     integer
@@ -45,6 +47,7 @@ function M.new(props)
   local silent = not not props.silent ---@type boolean
   local delay = props.delay or 32 ---@type integer
   local task = props.task ---@type eve.lib.collection.scheduler.ITask
+  local equals = props.equals ---@type (fun(a: unknown, b: unknown): boolean)|nil
 
   self.name = name
 
@@ -52,8 +55,8 @@ function M.new(props)
   self._immediate = false
   self._silent = silent
 
-  self._result = nil
   self._task = task
+  self._value = Observable.from_value(nil, equals)
 
   self._tick_alive = 0
   self._tick_scheduled = 1
@@ -67,11 +70,6 @@ end
 ---@return nil
 function M:cancel()
   self._tick_alive = self._tick_scheduled + 1
-end
-
----@return nil
-function M:cancel_next()
-  self._tick_alive = self._tick_scheduled + 2
 end
 
 ---@return nil
@@ -89,7 +87,14 @@ end
 
 ---@return unknown|nil
 function M:snapshot()
-  return self._result
+  return self._value:snapshot()
+end
+
+---@param subscriber                    eve.lib.collection.ISubscriber
+---@param ignoreInitial                 boolean
+---@return eve.lib.collection.IUnsubscribable
+function M:subscribe(subscriber, ignoreInitial)
+  return self._value:subscribe(subscriber, ignoreInitial)
 end
 
 ---@return nil
@@ -122,7 +127,7 @@ function M:execute()
     if settled == "fulfilled" then
       if self._tick_resolved < tick then
         self._tick_resolved = tick
-        self._result = value
+        self._value:next(value)
       end
     elseif settled == "rejected" then
       if not self._silent then

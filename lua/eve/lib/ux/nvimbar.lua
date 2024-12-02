@@ -4,6 +4,7 @@ local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local functional = require("eve.lib.functional")
 local Scheduler = require("eve.lib.collection.scheduler")
+local Subscriber = require("eve.lib.collection.subscriber")
 
 ---@class eve.lib.ux.nvimbar.IPresetContext
 ---@field public winnr                  ?integer
@@ -55,7 +56,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@class eve.lib.ux.INvimbar
 ---@field public btn                    fun(text: string, callback: string, args?: integer|integer[]): string
 ---@field public txt                    fun(text: string, hlname: string): string
----@field public cancel_next_render     fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
+---@field public cancel_render          fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
 ---@field public register               fun(self: eve.lib.ux.INvimbar, component: eve.lib.ux.nvimbar.IRawComponent, position: eve.e.NvimbarCompPosition): eve.lib.ux.INvimbar
 ---@field public render                 fun(self: eve.lib.ux.INvimbar): string
 ---@field public snapshot               fun(self: eve.lib.ux.INvimbar): string
@@ -194,20 +195,23 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type eve.lib.collection.IScheduler
-  local _render_scheduler = Scheduler.new({
+  local _render_scheduler ---@type eve.lib.collection.IScheduler
+  _render_scheduler = Scheduler.new({
     name = "eve.lib.ux.nvimbar#" .. name,
     delay = render_delay,
     silent = silent,
     task = function(callback)
       local validate_message = validate() ---@type string|nil
       if validate_message == nil then
+        local last_result = _render_scheduler:snapshot() ---@type string|nil
         local result = self:internal_render()
         callback("fulfilled", result)
 
-        trigger_rerender()
+        if last_result ~= result then
+          trigger_rerender()
+        end
       else
-        callback("rejected", nil, "[eve.lib.ux.nvimbar#render] Invalid: " .. validate_message)
+        callback("rejected", nil, "[eve.lib.ux.nvimbar#" .. name .. "] Invalid: " .. validate_message)
       end
     end,
   })
@@ -272,8 +276,8 @@ function M.decode_btn_args(text)
 end
 
 ---@return nil
-function M:cancel_next_render()
-  self._render_scheduler:cancel_next()
+function M:cancel_render()
+  self._render_scheduler:cancel()
 end
 
 ---@return string

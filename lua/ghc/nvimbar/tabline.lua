@@ -18,7 +18,6 @@ tabline = Nvimbar.new({
   end,
   is_active = functional.falsy,
   trigger_rerender = function()
-    tabline:cancel_next_render()
     vim.cmd("redrawtabline")
   end,
   validate = function()
