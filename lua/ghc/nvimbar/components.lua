@@ -93,7 +93,8 @@ function M.bufs()
 
       local bufnr_cur = locations.get_current_bufnr() ---@type integer|nil
       local bufid_src = eve.util.find_index(tab_bufnrs, bufnr_cur) ---@type integer|nil
-      local bufid_cur = tab_bufnrs[bufid_src or 1]
+      local bufid_cur = bufid_src or 1
+      bufnr_cur = tab_bufnrs[bufid_cur]
 
       local text, width = render_buf(tab_bufnrs[bufid_cur], bufid_src ~= nil, bufid_cur == 1)
       if remain_width < width then

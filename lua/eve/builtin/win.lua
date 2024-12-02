@@ -37,6 +37,30 @@ end
 
 ---@param winnr                         integer|nil
 ---@return eve.t.state.state.win.IMeta|nil
+function M.fork_meta(winnr)
+  local meta = M.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+  if meta ~= nil then
+    ---@type eve.t.state.state.win.IMeta
+    local meta_forked = {
+      filepath_history = meta.filepath_history:fork({ name = "win_filepath" }),
+      lsp_symbols = vim.list_slice(meta.lsp_symbols),
+    }
+    return meta_forked
+  end
+end
+
+---@param winnr_a                       integer|nil
+---@param winnr_b                       integer|nil
+---@return nil
+function M.swap_meta(winnr_a, winnr_b)
+  local meta_a = M.resolve(winnr_a) ---@type eve.t.state.state.win.IMeta|nil
+  local meta_b = M.resolve(winnr_b) ---@type eve.t.state.state.win.IMeta|nil
+  M.set_meta(winnr_a, meta_b)
+  M.set_meta(winnr_b, meta_a)
+end
+
+---@param winnr                         integer|nil
+---@return eve.t.state.state.win.IMeta|nil
 function M.resolve(winnr)
   if winnr == nil or not checks.is_win_valid(winnr) then
     return nil

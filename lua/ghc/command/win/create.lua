@@ -9,16 +9,10 @@ eve.commander
 
       vim.cmd("split")
 
-      local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-      if meta ~= nil then
-        ---@type eve.t.state.state.win.IMeta
-        local meta_cloned = {
-          filepath_history = meta.filepath_history:fork({ name = "win_filepath" }),
-          lsp_symbols = vim.list_slice(meta.lsp_symbols),
-        }
-
+      local meta_forked = eve.win.fork_meta(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      if meta_forked ~= nil then
         local winnr_new = vim.api.nvim_get_current_win() ---@type integer
-        eve.win.set_meta(winnr_new, meta_cloned)
+        eve.win.set_meta(winnr_new, meta_forked)
       end
     end,
   })
@@ -30,16 +24,10 @@ eve.commander
 
       vim.cmd("vsplit")
 
-      local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-      if meta ~= nil then
-        ---@type eve.t.state.state.win.IMeta
-        local meta_cloned = {
-          filepath_history = meta.filepath_history:fork({ name = "win_filepath" }),
-          lsp_symbols = vim.list_slice(meta.lsp_symbols),
-        }
-
+      local meta_forked = eve.win.fork_meta(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      if meta_forked ~= nil then
         local winnr_new = vim.api.nvim_get_current_win() ---@type integer
-        eve.win.set_meta(winnr_new, meta_cloned)
+        eve.win.set_meta(winnr_new, meta_forked)
       end
     end,
   })

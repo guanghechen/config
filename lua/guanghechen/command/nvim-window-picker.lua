@@ -119,9 +119,6 @@ eve.commander
       vim.api.nvim_win_set_cursor(winnr_target, cursor_current)
       vim.api.nvim_win_set_cursor(winnr_current, cursor_target)
       vim.api.nvim_set_current_win(winnr_target)
-
-      local meta_current = eve.win.get_meta(winnr_current) ---@type eve.t.state.state.win.IMeta|nil
-      eve.win.set_meta(winnr_current, eve.win.get_meta(winnr_target))
-      eve.win.set_meta(winnr_target, meta_current)
+      eve.win.swap_meta(winnr_current, winnr_target)
     end,
   })
