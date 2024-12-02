@@ -1,12 +1,13 @@
-local __module_name__ = "ghc.ux.winline" ---@type string
+local __module_name__ = "ghc.nvimbar.winline" ---@type string
 
 local reporter = require("eve.lib.reporter")
 local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
+local c = require("ghc.nvimbar.components")
 
 local winline_map = {} ---@type table<string, fml.t.ux.INvimbar>
 
----@class ghc.ux.winline
+---@class ghc.nvimbar.winline
 local M = {}
 
 ---@param winnr                         integer
@@ -71,22 +72,19 @@ function M.render(winnr, force)
     })
     winline_map[winnr] = winline
 
-    local c = {
-      dirpath = "dirpath",
-      filename = "filename",
-      indicator = "indicator",
-      lsp = "lsp",
-    }
-    for _, name in pairs(c) do
-      winline:register(name, require("ghc.ux.winline.component." .. name))
-    end
+    winline
+      ---
+      :register(c.dirpath())
+      :register(c.filename())
+      :register(c.win_indicator())
+      :register(c.lsp_symbols())
 
     winline
       ---
-      :place(c.indicator, "left")
-      :place(c.dirpath, "left")
-      :place(c.filename, "left")
-      :place(c.lsp, "left")
+      :place("win_indicator", "left")
+      :place("dirpath", "left")
+      :place("filename", "left")
+      :place("lsp_symbols", "left")
   end
   return winline:render(force)
 end

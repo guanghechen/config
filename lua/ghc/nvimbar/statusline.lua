@@ -1,5 +1,6 @@
 local functional = require("eve.lib.functional")
 local state = require("eve.state")
+local c = require("ghc.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 local statusline_dirty = true ---@type boolean
@@ -29,57 +30,53 @@ statusline = fml.ux.Nvimbar.new({
   end,
 })
 
-local c = {
-  copilot = "copilot",
-  diagnostics = "diagnostics",
-  fileformat = "fileformat",
-  filepath = "filepath",
-  filesize = "filesize",
-  filestatus = "filestatus",
-  filetype = "filetype",
-  git = "git",
-  lsp = "lsp",
-  mode = "mode",
-  noice = "noice",
-  pos = "pos",
-  readonly = "readonly",
-  username = "username",
-  widget = "widget",
-}
-for _, name in pairs(c) do
-  statusline:register(name, require("ghc.ux.statusline.component." .. name))
-end
+statusline
+  :register(c.copilot())
+  :register(c.diagnostics())
+  :register(c.fileformat())
+  :register(c.filepath())
+  :register(c.filesize())
+  :register(c.filestatus())
+  :register(c.filetype())
+  :register(c.git())
+  :register(c.lsp())
+  :register(c.mode())
+  :register(c.noice())
+  :register(c.pos())
+  :register(c.readonly())
+  :register(c.username())
+  :register(c.widget())
 
 statusline
-  :place(c.username, "left")
-  :place(c.mode, "left")
-  :place(c.git, "left")
-  :place(c.filetype, "left")
-  :place(c.filestatus, "left")
-  :place(c.readonly, "left")
+  :place("username", "left")
+  :place("mode", "left")
+  :place("git", "left")
+  :place("filetype", "left")
+  :place("filestatus", "left")
+  :place("readonly", "left")
   --
-  :place(c.widget, "center")
+  :place("widget", "center")
   --
-  :place(c.pos, "right")
-  :place(c.filesize, "right")
-  :place(c.fileformat, "right")
-  :place(c.lsp, "right")
-  :place(c.copilot, "right")
-  :place(c.noice, "right")
-  :place(c.diagnostics, "right")
+  :place("pos", "right")
+  :place("filesize", "right")
+  :place("fileformat", "right")
+  :place("lsp", "right")
+  :place("copilot", "right")
+  :place("noice", "right")
+  :place("diagnostics", "right")
 
----@class ghc.ux.statusline
+---@class ghc.nvimbar.statusline
 local M = { cnames = vim.deepcopy(c) }
 
 ---@param name                          string
----@return ghc.ux.statusline
+---@return ghc.nvimbar.statusline
 function M.disable(name)
   statusline:disable(name)
   return M
 end
 
 ---@param name                          string
----@return ghc.ux.statusline
+---@return ghc.nvimbar.statusline
 function M.enable(name)
   statusline:enable(name)
   return M

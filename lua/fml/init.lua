@@ -5,12 +5,10 @@ local api = {
 
 ---@class fml.fn
 local fn = {
-  get_clipboard = require("fml.fn.get_clipboard"),
   locate_symbols = require("fml.fn.locate_symbols"),
   refresh_state = require("fml.fn.refresh_state"),
   select = require("fml.fn.select"),
   select_files = require("fml.fn.select_files"),
-  statuscolumn = require("fml.fn.statuscolumn"),
 }
 
 ---@class fml.ux

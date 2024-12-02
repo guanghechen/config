@@ -1,5 +1,6 @@
 local functional = require("eve.lib.functional")
 local state = require("eve.state")
+local c = require("ghc.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 local tabline_dirty = true ---@type boolean
@@ -28,29 +29,25 @@ tabline = fml.ux.Nvimbar.new({
   end,
 })
 
-local c = {
-  bufs = "bufs",
-  cwd = "cwd",
-  devmode = "devmode",
-  diffview = "diffview",
-  neotree = "neotree",
-  tabs = "tabs",
-}
-for _, name in pairs(c) do
-  tabline:register(name, require("ghc.ux.tabline.component." .. name))
-end
+tabline
+  :register(c.bufs())
+  :register(c.cwd())
+  :register(c.devmode())
+  :register(c.diffview())
+  :register(c.neotree())
+  :register(c.tabs())
 
 tabline
   ---
-  :place(c.devmode, "right")
-  :place(c.cwd, "right")
-  :place(c.tabs, "right")
+  :place("devmode", "right")
+  :place("cwd", "right")
+  :place("tabs", "right")
   --
-  :place(c.neotree, "left")
-  :place(c.diffview, "left")
-  :place(c.bufs, "left")
+  :place("neotree", "left")
+  :place("diffview", "left")
+  :place("bufs", "left")
 
----@class ghc.ux.tabline
+---@class ghc.nvimbar.tabline
 local M = { cnames = vim.deepcopy(c) }
 
 ---@return string

@@ -214,15 +214,20 @@ function M:render(force)
   return self._render_scheduler:snapshot() or ""
 end
 
----@param name                          string
 ---@param raw_component                 fml.t.ux.nvimbar.IRawComponent
----@param enabled                       boolean
+---@param enabled                       boolean|nil
 ---@return fml.ux.Nvimbar
-function M:register(name, raw_component, enabled)
+function M:register(raw_component, enabled)
+  if enabled == nil then
+    enabled = true
+  end
+
+  local name = raw_component.name ---@type string
+
   ---@type fml.t.ux.nvimbar.IComponent
   local component = {
-    name = raw_component.name,
-    enabled = enabled == nil and true or enabled,
+    name = name,
+    enabled = enabled,
     last_result_text = "",
     last_result_width = 0,
     tight = not not raw_component.tight,

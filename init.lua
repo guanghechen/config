@@ -11,9 +11,6 @@ _G.eve = require("eve")
 require("fml.autocmd")
 _G.fml = require("fml")
 
-require("ghc.autocmd")
-_G.ghc = require("ghc")
-
 if vim.g.vscode then
   require("integration.vscode.autocmd")
   require("integration.vscode.option")
@@ -23,11 +20,13 @@ if vim.g.vscode then
   return
 end
 
+require("ghc.option")
+require("ghc.autocmd")
+require("ghc.command")
 require("ghc.dressing.autopairs")
 require("ghc.dressing.commentstring")
 require("ghc.dressing.select")
 require("ghc.dressing.winsep")
-require("ghc.command")
 
 eve.commander.execute(eve.commander.uuids.reload_theme)
 vim.schedule(function()

@@ -1,6 +1,6 @@
 local tmux = require("eve.lib.tmux")
 local state = require("eve.state")
-local winline = require("ghc.ux.winline")
+local winline = require("ghc.nvimbar.winline")
 
 ---! Watch the zen mode change on tmux.
 if vim.env.TMUX then
