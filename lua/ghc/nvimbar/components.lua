@@ -59,10 +59,10 @@ function M.bufs()
     local text_title = meta.filename ---@type string
     local text_mod = is_pinned and (is_mod and "  " or "  ") or (is_mod and "  " or "  ") ---@type string
 
-    local hl_indicator_or_sep = is_current and "f_tl_buf_indicator" or "f_tl_buf_sep" ---@type string
-    local hl_title = is_current and "f_tl_buf_title_cur" or "f_tl_buf_title" ---@type string
-    local hl_mod = is_current and "f_tl_buf_mod_cur" or "f_tl_buf_mod" ---@type string
-    local hl_icon = meta.fileicon_hl .. (is_current and "_tl_buf_cur" or "_tl_buf") ---@type string
+    local hl_indicator_or_sep = is_current and "f_sl_buf_indicator" or "f_sl_buf_sep" ---@type string
+    local hl_title = is_current and "f_sl_buf_title_cur" or "f_sl_buf_title" ---@type string
+    local hl_mod = is_current and "f_sl_buf_mod_cur" or "f_sl_buf_mod" ---@type string
+    local hl_icon = meta.fileicon_hl .. (is_current and "_sl_buf_cur" or "_sl_buf") ---@type string
 
     local hl_text_indicator = txt(text_indicator_or_sep, hl_indicator_or_sep)
     local hl_text_icon = txt(text_icon, hl_icon)
@@ -167,7 +167,7 @@ function M.bufs()
       if left_omitter_width > 0 then
         local count = math.min(99, left_remain_count) ---@type integer
         local omitter_text = " " .. icons.ui.Left .. "  " .. tostring(count) .. " " ---@type string
-        local omitter_text_hl = txt(omitter_text, "f_tl_buf_ommitter") ---@type string
+        local omitter_text_hl = txt(omitter_text, "f_sl_buf_ommitter") ---@type string
         text = btn(omitter_text_hl, fn_focus_left_buf) .. text
         width = width + vim.api.nvim_strwidth(omitter_text)
       end
@@ -176,8 +176,8 @@ function M.bufs()
       if right_omitter_width > 0 then
         local count = math.min(99, right_remain_count) ---@type integer
         local omitter_text = "▏" .. tostring(count) .. " " .. icons.ui.Right .. "  " ---@type string
-        local omitter_text_hl = txt("▏", "f_tl_buf_ommitter_sep")
-          .. txt(tostring(count) .. " " .. icons.ui.Right .. "  ", "f_tl_buf_ommitter") ---@type string
+        local omitter_text_hl = txt("▏", "f_sl_buf_ommitter_sep")
+          .. txt(tostring(count) .. " " .. icons.ui.Right .. "  ", "f_sl_buf_ommitter") ---@type string
         text = text .. btn(omitter_text_hl, fn_focus_right_buf)
         width = width + vim.api.nvim_strwidth(omitter_text)
       end
@@ -247,7 +247,7 @@ function M.cwd()
     render = function(context)
       local cwd_name = (context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd)
       local text = " " .. icons.ui.Explorer .. " " .. cwd_name .. " " ---@type string
-      local hl_text = txt(text, "f_tl_cwd") ---@type string
+      local hl_text = txt(text, "f_sl_cwd") ---@type string
       local width = vim.api.nvim_strwidth(text) ---@type integer
       return hl_text, width
     end,
@@ -266,7 +266,7 @@ function M.devmode()
     end,
     render = function()
       local text = "  devmode " ---@type string
-      local hl_text = txt(text, "f_tl_devmode") ---@type string
+      local hl_text = txt(text, "f_sl_devmode") ---@type string
       local width = vim.api.nvim_strwidth(text) ---@type integer
       return hl_text, width
     end,
@@ -352,11 +352,11 @@ function M.diffview()
       local right_blank = string.rep(" ", right_width)
       local right_split = "│"
 
-      local hl_text = txt(indicator, "f_wl_indicator")
-        .. txt(left_blank, "f_tl_sidebar_blank")
-        .. txt(text, "f_tl_sidebar_text")
-        .. txt(right_blank, "f_tl_sidebar_blank")
-        .. txt(right_split, "f_tl_sidebar_split")
+      local hl_text = txt(indicator, "f_sl_indicator")
+        .. txt(left_blank, "f_sl_sidebar_blank")
+        .. txt(text, "f_sl_sidebar_text")
+        .. txt(right_blank, "f_sl_sidebar_blank")
+        .. txt(right_split, "f_sl_sidebar_split")
       return hl_text, width + 1
     end,
   }
@@ -378,10 +378,8 @@ function M.dirpath()
         return "", 0
       end
 
-      local winnr_cur = locations.get_current_winnr() or 0 ---@type integer
-      local activated = winnr_cur == winnr ---@type boolean
-      local hln_text_piece = activated and "f_wla_dirpath_text" or "f_wl_dirpath_text" ---@type string
-      local hln_text_sep = activated and "f_wla_dirpath_sep" or "f_wl_dirpath_sep" ---@type string
+      local hln_text_piece = "f_sl_dirpath_text" ---@type string
+      local hln_text_sep = "f_sl_dirpath_sep" ---@type string
 
       local hl_text = "" ---@type string
       local width = 0 ---@type integer
@@ -440,14 +438,12 @@ function M.filename()
       if meta == nil then
         local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local width = vim.api.nvim_strwidth(text) ---@type integer
-        local hl_text = txt(text, "f_wl_filename_text")
+        local hl_text = txt(text, "f_sl_filename_text")
         return hl_text, width
       end
 
-      local winnr_cur = locations.get_current_winnr() or 0 ---@type integer
-      local activated = winnr_cur == winnr ---@type boolean
-      local hln_icon = activated and (meta.fileicon_hl .. "_wla") or (meta.fileicon_hl .. "_wl") ---@type string
-      local hln_text = activated and "f_wla_filename_text" or "f_wl_filename_text" ---@type string
+      local hln_icon = meta.fileicon_hl .. "_sl" ---@type string
+      local hln_text = "f_sl_filename_text" ---@type string
 
       local text_icon = meta.fileicon .. " " ---@type string
       local text_filename = meta.filename ---@type string
@@ -676,11 +672,8 @@ function M.lsp_symbols()
         return "", 0
       end
 
-      local winnr_cur = locations.get_current_winnr() or 0 ---@type integer
-      local activated = winnr_cur == winnr ---@type boolean
-
-      local hln_sep = activated and "f_wla_lsp_sep" or "f_wl_lsp_sep" ---@type string
-      local hln_text = activated and "f_wla_lsp_text" or "f_wl_lsp_text" ---@type string
+      local hln_sep = "f_sl_lsp_sep" ---@type string
+      local hln_text = "f_sl_lsp_text" ---@type string
 
       local hl_text = "" ---@type string
       local width = 0 ---@type integer
@@ -692,7 +685,7 @@ function M.lsp_symbols()
           break
         end
 
-        local hln_icon = activated and "f_wla_lsp_icon" or "f_wl_lsp_icon" ---@type string
+        local hln_icon = "f_sl_lsp_icon" ---@type string
         hln_icon = symbol.kind and hln_icon .. "_" .. symbol.kind or hln_icon
 
         width = next_width
@@ -767,11 +760,11 @@ function M.neotree()
       local right_blank = string.rep(" ", right_width)
       local right_split = "│"
 
-      local hl_text = txt(indicator, "f_tl_sidebar_indicator")
-        .. txt(left_blank, "f_tl_sidebar_blank")
-        .. txt(text, "f_tl_sidebar_text")
-        .. txt(right_blank, "f_tl_sidebar_blank")
-        .. txt(right_split, "f_tl_sidebar_split")
+      local hl_text = txt(indicator, "f_sl_sidebar_indicator")
+        .. txt(left_blank, "f_sl_sidebar_blank")
+        .. txt(text, "f_sl_sidebar_text")
+        .. txt(right_blank, "f_sl_sidebar_blank")
+        .. txt(right_split, "f_sl_sidebar_split")
       return hl_text, width + 1
     end,
   }
@@ -914,19 +907,19 @@ function M.tabs()
       if folded then
         local text = " 󰅁 "
         local width = vim.api.nvim_strwidth(text)
-        local hl_text = txt(text, "f_tl_tab_toggle")
+        local hl_text = txt(text, "f_sl_tab_toggle")
         hl_text = btn(hl_text, fn_toggle_tabs_folded)
         return hl_text, width
       end
 
       local text = " 󰅂 " ---@type string
       local width = vim.api.nvim_strwidth(text) ---@type integer
-      local hl_text = txt(text, "f_tl_tab_toggle")
+      local hl_text = txt(text, "f_sl_tab_toggle")
       hl_text = btn(hl_text, fn_toggle_tabs_folded)
 
       local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
       for tabid = 1, last_tab_count, 1 do
-        local hlname = last_tab_cur == tabid and "f_tl_tab_item_cur" or "f_tl_tab_item"
+        local hlname = last_tab_cur == tabid and "f_sl_tab_item_cur" or "f_sl_tab_item"
         text = " " .. tabid .. " "
         width = width + vim.api.nvim_strwidth(text)
         local hl_text_inner = txt(text, hlname)
@@ -1016,7 +1009,7 @@ function M.win_indicator()
       local winnr_cur = locations.get_current_winnr() or 0 ---@type integer
       local activated = winnr_cur == context.winnr ---@type boolean
       local text = activated and icons.symbols.win_indicator_active or icons.symbols.win_indicator ---@type string
-      local hln_text = activated and "f_wla_indicator" or "f_wl_indicator" ---@type string
+      local hln_text = "f_sl_indicator" ---@type string
 
       local hl_text = txt(text, hln_text)
       local width = vim.api.nvim_strwidth(text) ---@type integer

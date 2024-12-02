@@ -35,10 +35,7 @@ M.themes = {
 M.integrations = {
   --- orders as needed
   "basic",
-  "statusline",
-  "tabline",
-  "winline",
-
+  "nvimbar",
   "widget",
   "treesitter",
   "plugin",
@@ -127,14 +124,10 @@ function M.apply_theme(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    local gen_tabline_hlgroup_map = hmr("fml.ux.theme.integration.tabline")
-    local gen_winline_hlgroup_map = hmr("fml.ux.theme.integration.winline")
+    local gen_nvimbar_hlgroup_map = hmr("fml.ux.theme.integration.nvimbar")
 
-    ---@type fml.ux.theme.integration.tabline.hlgroups
-    local tabline_hlgroup_map = gen_tabline_hlgroup_map({ scheme = scheme, transparency = transparency })
-
-    ---@type fml.ux.theme.integration.winline.hlgroups
-    local winline_hlgroup_map = gen_winline_hlgroup_map({ scheme = scheme, transparency = transparency })
+    ---@type fml.ux.theme.integration.nvimbar.hlgroups
+    local nvimbar_hlgroup_map = gen_nvimbar_hlgroup_map({ scheme = scheme, transparency = transparency })
 
     local uxTheme = Theme.new()
     for _, integration in ipairs(M.integrations) do
@@ -146,13 +139,10 @@ function M.apply_theme(params)
         local additional = {} ---@type table<string, eve.lib.collection.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if hlname:sub(1, 9) == "MiniIcons" then
-            ---! Integrated  with tabline
-            additional[hlname .. "_tl_buf"] = { fg = hlgroup.fg, bg = tabline_hlgroup_map.f_tl_buf_item.bg }
-            additional[hlname .. "_tl_buf_cur"] = { fg = hlgroup.fg, bg = tabline_hlgroup_map.f_tl_buf_item_cur.bg }
-
-            ---! Integrated  with winline
-            additional[hlname .. "_wl"] = { fg = hlgroup.fg, bg = winline_hlgroup_map.f_wl_bg.bg }
-            additional[hlname .. "_wla"] = { fg = hlgroup.fg, bg = winline_hlgroup_map.f_wla_bg.bg }
+            ---! Integrated  with nvimbar
+            additional[hlname .. "_sl"] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bg.bg }
+            additional[hlname .. "_sl_buf"] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_buf_item.bg }
+            additional[hlname .. "_sl_buf_cur"] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_buf_item_cur.bg }
           end
         end
 

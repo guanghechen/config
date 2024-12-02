@@ -4,28 +4,28 @@ local config = {
     border = { " ", " ", "╭", "│", "╰", " ", " ", " " },
     hlgroup = table.concat({
       "FloatBorder:f_winsep_left_border",
-      "Normal:f_winsep_normal",
+      "NormalFloat:f_winsep_normal",
     }, ","),
   },
   k = {
     border = { " ", " ", " ", " ", "╮", "─", "╭", " " },
     hlgroup = table.concat({
       "FloatBorder:f_winsep_top_border",
-      "Normal:f_winsep_normal",
+      "NormalFloat:f_winsep_normal",
     }, ","),
   },
   l = {
     border = { "╮", " ", " ", " ", " ", " ", "╯", "│" },
     hlgroup = table.concat({
       "FloatBorder:f_winsep_right_border",
-      "Normal:f_winsep_normal",
+      "NormalFloat:f_winsep_normal",
     }, ","),
   },
   j = {
     border = { "╰", "─", "╯", " ", " ", " ", " ", " " },
     hlgroup = table.concat({
       "FloatBorder:f_winsep_bottom_border",
-      "Normal:f_winsep_normal",
+      "NormalFloat:f_winsep_normal",
     }, ","),
   },
 }

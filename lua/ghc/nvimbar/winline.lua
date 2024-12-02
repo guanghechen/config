@@ -46,8 +46,8 @@ function M.render(winnr, force)
     winline = Nvimbar.new({
       name = "winline_" .. winnr,
       component_sep = "",
-      component_sep_hlname = "f_wl_bg",
-      component_sep_hlname_active = "f_wla_bg",
+      component_sep_hlname = "f_sl_bg",
+      component_sep_hlname_active = "f_sl_bg",
       preset_context = { winnr = winnr },
       render_delay = 32,
       silent = not devmode,

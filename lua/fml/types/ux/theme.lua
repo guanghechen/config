@@ -10,10 +10,7 @@
 
 ---@alias fml.e.ux.theme.HighlightIntegration
 ---|"basic"
----|"statusline"
----|"tabline"
----|"winline"
----
+---|"nvimbar"
 ---|"widget"
 ---|"treesitter"
 ---|"plugin"

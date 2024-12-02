@@ -10,8 +10,8 @@ local tabline ---@type eve.lib.ux.INvimbar
 tabline = Nvimbar.new({
   name = "tabline",
   component_sep = "",
-  component_sep_hlname = "f_tl_bg",
-  component_sep_hlname_active = "f_tl_bg",
+  component_sep_hlname = "f_sl_bg",
+  component_sep_hlname_active = "f_sl_bg",
   render_delay = 64,
   silent = not devmode,
   get_max_width = function()
