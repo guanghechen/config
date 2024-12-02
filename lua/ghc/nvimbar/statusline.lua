@@ -52,21 +52,7 @@ statusline
   :register(c.diagnostics(), "right")
 
 ---@class ghc.nvimbar.statusline
-local M = { cnames = vim.deepcopy(c) }
-
----@param name                          string
----@return ghc.nvimbar.statusline
-function M.disable(name)
-  statusline:disable(name)
-  return M
-end
-
----@param name                          string
----@return ghc.nvimbar.statusline
-function M.enable(name)
-  statusline:enable(name)
-  return M
-end
+local M = {}
 
 ---@return string
 function M.render()

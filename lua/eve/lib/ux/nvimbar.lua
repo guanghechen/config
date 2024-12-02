@@ -27,7 +27,6 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public will_change            ?fun(context: eve.lib.ux.nvimbar.IContext, prev_context: eve.lib.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
 ---@class eve.lib.ux.nvimbar.IComponent
----@field public enabled                boolean
 ---@field public last_result_text       string
 ---@field public last_result_width      integer
 ---@field public tight                  boolean
@@ -56,10 +55,9 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public btn                    fun(text: string, callback: string, args?: integer|integer[]): string
 ---@field public txt                    fun(text: string, hlname: string): string
 ---@field public cancel_render          fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
----@field public disable                fun(self: eve.lib.ux.INvimbar, name: string): eve.lib.ux.INvimbar
----@field public enable                 fun(self: eve.lib.ux.INvimbar, name: string): eve.lib.ux.INvimbar
----@field public register               fun(self: eve.lib.ux.INvimbar, name: string, component: eve.lib.ux.nvimbar.IRawComponent, enabled?: boolean): eve.lib.ux.INvimbar
+---@field public register               fun(self: eve.lib.ux.INvimbar, component: eve.lib.ux.nvimbar.IRawComponent, position: eve.e.NvimbarCompPosition): eve.lib.ux.INvimbar
 ---@field public render                 fun(self: eve.lib.ux.INvimbar, force: boolean): string
+---@field public snapshot               fun(self: eve.lib.ux.INvimbar): string
 
 ---@class eve.lib.ux.Nvimbar : eve.lib.ux.INvimbar
 ---@field public name                   string
@@ -276,26 +274,6 @@ function M:cancel_render()
   self._render_scheduler:cancel()
 end
 
----@param name                          string
----@return eve.lib.ux.Nvimbar
-function M:disable(name)
-  local component = self._components[name] ---@type eve.lib.ux.nvimbar.IComponent
-  if component ~= nil then
-    component.enabled = false
-  end
-  return self
-end
-
----@param name                          string
----@return eve.lib.ux.Nvimbar
-function M:enable(name)
-  local component = self._components[name] ---@type eve.lib.ux.nvimbar.IComponent
-  if component ~= nil then
-    component.enabled = true
-  end
-  return self
-end
-
 ---@param force                         boolean
 ---@return string
 function M:render(force)
@@ -308,27 +286,21 @@ end
 
 ---@param raw_component                 eve.lib.ux.nvimbar.IRawComponent
 ---@param position                      eve.e.NvimbarCompPosition
----@param enabled                       boolean|nil
 ---@return eve.lib.ux.Nvimbar
-function M:register(raw_component, position, enabled)
-  if enabled == nil then
-    enabled = true
-  end
-
+function M:register(raw_component, position)
   local name = raw_component.name ---@type string
   if self._components[name] ~= nil then
     reporter.warn({
       from = __module_name__,
       subject = "register",
       message = "The component is already registered.",
-      details = { name = name, raw_component = raw_component, position = position, enabled = enabled },
+      details = { name = name, raw_component = raw_component, position = position },
     })
   end
 
   ---@type eve.lib.ux.nvimbar.IComponent
   local component = {
     name = name,
-    enabled = enabled,
     last_result_text = "",
     last_result_width = 0,
     tight = not not raw_component.tight,
@@ -342,6 +314,11 @@ function M:register(raw_component, position, enabled)
   local item = { name = name, position = position }
   table.insert(self._items, item)
   return self
+end
+
+---@return string
+function M:snapshot()
+  return self._render_scheduler:snapshot() or ""
 end
 
 ---@return string
@@ -368,7 +345,7 @@ function M:internal_render()
     local position = item.position ---@type eve.e.NvimbarCompPosition
 
     local component = components[name] ---@type eve.lib.ux.nvimbar.IComponent|nil
-    if component ~= nil and component.enabled then
+    if component ~= nil then
       local ok, err = pcall(render_component, component, context, prev_context, width_remain)
       if ok then
         local text = component.last_result_text ---@type string

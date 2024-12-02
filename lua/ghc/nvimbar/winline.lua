@@ -43,6 +43,8 @@ function M.render(winnr, force)
   local winline = winline_map[winnr] ---@type eve.lib.ux.INvimbar
   if winline == nil then
     local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+
+    ---@type eve.lib.ux.INvimbar
     winline = Nvimbar.new({
       name = "winline_" .. winnr,
       component_sep = "",
@@ -60,7 +62,10 @@ function M.render(winnr, force)
       end,
       trigger_rerender = function()
         vim.schedule(function()
-          M.update(winnr, false)
+          local result = winline and winline:snapshot() or "" ---@type string
+          if #result > 0 then
+            vim.wo[winnr].winbar = result
+          end
         end)
       end,
       validate = function()

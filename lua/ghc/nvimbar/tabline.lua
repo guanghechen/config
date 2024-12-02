@@ -43,7 +43,7 @@ tabline
   :register(c.bufs(), "left")
 
 ---@class ghc.nvimbar.tabline
-local M = { cnames = vim.deepcopy(c) }
+local M = {}
 
 ---@return string
 function M.render()
