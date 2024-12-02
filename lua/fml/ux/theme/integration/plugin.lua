@@ -24,7 +24,7 @@ local function gen_hlgroup_map(context)
     AerialGuide6 = { fg = cs.mix(c.bg2, c.orange, 60) },
     AerialGuide7 = { fg = cs.mix(c.bg2, c.red, 60) },
     AerialLine = { fg = c.yellow },
-    AerialNormal = { bg = c.bg1 },
+    AerialNormal = { bg = t and "none" or c.bg1 },
     AerialNormalNC = { link = "AerialNormal" },
     AerialCursorLine = { bg = c.bg2 },
     AerialCursorLineNr = { link = "AerialCursorLine" },
@@ -168,8 +168,8 @@ local function gen_hlgroup_map(context)
     NeoTreeFloatBorder = { link = "FloatBorder" },
     NeoTreeFloatTitle = { link = "FloatTitle" },
     NeoTreeIndentMarker = { fg = c.bg2 },
-    NeoTreeNormal = { bg = c.bg1 },
-    NeoTreeNormalNC = { bg = c.bg1 },
+    NeoTreeNormal = { bg = t and "none" or c.bg1 },
+    NeoTreeNormalNC = { link = "NeoTreeNormal" },
     NeoTreeRootName = { fg = c.fg1, bold = true },
 
     ---! noice.nvim
