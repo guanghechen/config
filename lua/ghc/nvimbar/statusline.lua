@@ -35,7 +35,7 @@ statusline
   :register(c.username(), "left")
   :register(c.mode(), "left")
   :register(c.git(), "left")
-  :register(c.filetype(), "left")
+  :register(c.filename(), "left")
   :register(c.filestatus(), "left")
   :register(c.readonly(), "left")
   --
@@ -43,6 +43,7 @@ statusline
   --
   :register(c.pos(), "right")
   :register(c.filesize(), "right")
+  :register(c.filetype(), "right")
   :register(c.fileformat(), "right")
   :register(c.lsp(), "right")
   :register(c.copilot(), "right")
