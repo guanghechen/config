@@ -114,7 +114,7 @@ local function gen_hlgroup_map(context)
     f_winsep_top_border = { fg = c.purple, bold = true },
     f_winsep_right_border = { fg = c.purple, bold = true },
     f_winsep_bottom_border = { fg = c.purple, bold = true },
-    f_winsep_normal = {},
+    f_winsep_normal = { fg = c.purple, bold = true },
   }
 end
 

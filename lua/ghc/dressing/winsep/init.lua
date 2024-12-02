@@ -1,5 +1,4 @@
 local checks = require("eve.builtin.checks")
-local constant = require("eve.builtin.constant")
 local state = require("eve.state")
 local Line = require("ghc.dressing.winsep.line")
 
@@ -11,7 +10,6 @@ local function have_border_on_direction(direction)
 end
 
 ---@class ghc.dressing.Winsep
----@field protected bufnr                  integer|nil
 ---@field protected left                   ghc.dressing.winsep.Line
 ---@field protected top                    ghc.dressing.winsep.Line
 ---@field protected right                  ghc.dressing.winsep.Line
@@ -23,7 +21,6 @@ Winsep.__index = Winsep
 function Winsep.new()
   local self = setmetatable({}, Winsep)
 
-  self.bufnr = nil
   self.left = Line.new("h")
   self.top = Line.new("k")
   self.right = Line.new("l")
@@ -33,19 +30,6 @@ end
 
 ---@return nil
 function Winsep:show()
-  local bufnr = self.bufnr ---@type integer
-  if self.bufnr == nil or not vim.api.nvim_buf_is_valid(self.bufnr) then
-    bufnr = vim.api.nvim_create_buf(false, true)
-    self.bufnr = bufnr
-
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].buftype = "nowrite"
-    vim.bo[bufnr].filetype = constant.FT_WINSEP
-    vim.bo[bufnr].swapfile = false
-    vim.bo[bufnr].modifiable = false
-    vim.bo[bufnr].readonly = true
-  end
-
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local win_pos = vim.api.nvim_win_get_position(winnr) ---@type integer[]
   local row = win_pos[1] ---@type integer
@@ -79,29 +63,29 @@ function Winsep:show()
   end
 
   if h_exist then
-    self.left:move(row, col - 2, height)
-    self.left:show(bufnr)
+    self.left:move(row, col, height)
+    self.left:show()
   else
     self.left:hide()
   end
 
   if k_exist then
-    self.top:move(row - 2, col, width)
-    self.top:show(bufnr)
+    self.top:move(row, col, width)
+    self.top:show()
   else
     self.top:hide()
   end
 
   if l_exist then
     self.right:move(row, col + width + 1, height)
-    self.right:show(bufnr)
+    self.right:show()
   else
     self.right:hide()
   end
 
   if j_exist then
     self.bottom:move(row + height + 1, col, width)
-    self.bottom:show(bufnr)
+    self.bottom:show()
   else
     self.bottom:hide()
   end
