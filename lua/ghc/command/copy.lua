@@ -3,7 +3,8 @@ local __module_name__ = "ghc.command.copy" ---@type string
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
-local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
+local commander = require("eve.builtin.commander")
+local uuids = commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@alias ghc.command.copy.current_filepath_candidate
 ---| "absolute"
@@ -16,10 +17,10 @@ local copy_current_filepath_candidates = {
 }
 
 ---@param candidate                     ghc.command.copy.current_filepath_candidate
+---@param filepath                      string
 ---@return nil
-local function copy_current_filepath(candidate)
+local function copy_current_filepath(candidate, filepath)
   if candidate == "absolute" then
-    local filepath = path.current_filepath() ---@type string
     local content = filepath ---@type string
 
     vim.fn.setreg("+", content)
@@ -29,7 +30,6 @@ local function copy_current_filepath(candidate)
     })
   elseif candidate == "relative" then
     local cwd = path.cwd() ---@type string
-    local filepath = path.current_filepath() ---@type string
     local content = path.relative(cwd, filepath, true) ---@type string
 
     vim.fn.setreg("+", content)
@@ -46,7 +46,7 @@ local function copy_current_filepath(candidate)
   end
 end
 
-eve.commander
+commander
   .register({
     uuid = uuids.copy_char_under_cursor,
     desc = "copy: char under cursor",
@@ -62,9 +62,10 @@ eve.commander
     nargs = "?",
     candidates = vim.list_slice(copy_current_filepath_candidates),
     action = function(args)
+      local filepath = path.current_filepath() ---@type string
       local arg = type(args) == "string" and args:lower() or "" ---@type string
       if vim.tbl_contains(copy_current_filepath_candidates, arg) then
-        copy_current_filepath(arg)
+        copy_current_filepath(arg, filepath)
       else
         fml.fn.select({
           title = "Copy current filepath",
@@ -87,7 +88,7 @@ eve.commander
           end,
           on_confirm = function(item)
             local candidate = item.uuid ---@type string
-            copy_current_filepath(candidate)
+            copy_current_filepath(candidate, filepath)
           end,
         })
       end
