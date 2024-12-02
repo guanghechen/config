@@ -1,37 +1,81 @@
-local __module_name__ = "fml.ux.component.nvimbar" ---@type string
+local __module_name__ = "eve.lib.ux.nvimbar" ---@type string
 
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local functional = require("eve.lib.functional")
 local Scheduler = require("eve.lib.collection.scheduler")
 
----@class fml.ux.Nvimbar : fml.t.ux.INvimbar
----@field public name                   string
----@field private _sep                  string
----@field private _sep_active           string
----@field private _sep_width            integer
----@field private _last_context         fml.t.ux.nvimbar.IContext|nil
----@field private _preset_context       fml.t.ux.nvimbar.IPresetContext
----@field private _components           table<string, fml.t.ux.nvimbar.IComponent>
----@field private _items                fml.t.ux.nvimbar.IItem[]
----@field private _render_scheduler     eve.lib.collection.IScheduler
----@field private _get_max_width        fun(): integer
----@field private _is_active            fun(context: fml.t.ux.nvimbar.IContext): boolean
-local M = {}
-M.__index = M
+---@class eve.lib.ux.nvimbar.IPresetContext
+---@field public winnr                  ?integer
 
----@class fml.ux.nvimbar.IProps
+---@class eve.lib.ux.nvimbar.IContext
+---@field public tabnr                  integer
+---@field public winnr                  integer
+---@field public bufnr                  integer
+---@field public cwd                    string
+---@field public filepath               string
+---@field public fileicon               string
+---@field public filetype               string
+---@field public mode                   eve.e.VimModeName
+---@field public mode_name              string
+
+---@class eve.lib.ux.nvimbar.IRawComponent
+---@field public name                   string
+---@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, integer
+---@field public tight                  ?boolean
+---@field public condition              ?fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): boolean
+---@field public will_change            ?fun(context: eve.lib.ux.nvimbar.IContext, prev_context: eve.lib.ux.nvimbar.IContext|nil, remain_width: integer): boolean
+
+---@class eve.lib.ux.nvimbar.IComponent
+---@field public enabled                boolean
+---@field public last_result_text       string
+---@field public last_result_width      integer
+---@field public tight                  boolean
+---@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, integer
+---@field public condition              fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): boolean
+---@field public will_change            fun(context: eve.lib.ux.nvimbar.IContext, prev_context: eve.lib.ux.nvimbar.IContext|nil, remain_width: integer): boolean
+
+---@class eve.lib.ux.nvimbar.IItem
+---@field public name                   string
+---@field public position               eve.e.NvimbarCompPosition
+
+---@class eve.lib.ux.nvimbar.IProps
 ---@field public name                   string
 ---@field public component_sep          string
 ---@field public component_sep_hlname   string
 ---@field public component_sep_hlname_active string
----@field public preset_context         ?fml.t.ux.nvimbar.IPresetContext
+---@field public preset_context         ?eve.lib.ux.nvimbar.IPresetContext
 ---@field public render_delay           ?integer
 ---@field public silent                 ?boolean
 ---@field public get_max_width          fun(): integer
----@field public is_active              fun(context: fml.t.ux.nvimbar.IContext): boolean
+---@field public is_active              fun(context: eve.lib.ux.nvimbar.IContext): boolean
 ---@field public trigger_rerender       fun(): nil
 ---@field public validate               fun(): string|nil
+
+---@class eve.lib.ux.INvimbar
+---@field public btn                    fun(text: string, callback: string, args?: integer|integer[]): string
+---@field public txt                    fun(text: string, hlname: string): string
+---@field public cancel_render          fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
+---@field public disable                fun(self: eve.lib.ux.INvimbar, name: string): eve.lib.ux.INvimbar
+---@field public enable                 fun(self: eve.lib.ux.INvimbar, name: string): eve.lib.ux.INvimbar
+---@field public place                  fun(self: eve.lib.ux.INvimbar, name: string, position: eve.e.NvimbarCompPosition): eve.lib.ux.INvimbar
+---@field public register               fun(self: eve.lib.ux.INvimbar, name: string, component: eve.lib.ux.nvimbar.IRawComponent, enabled?: boolean): eve.lib.ux.INvimbar
+---@field public render                 fun(self: eve.lib.ux.INvimbar, force: boolean): string
+
+---@class eve.lib.ux.Nvimbar : eve.lib.ux.INvimbar
+---@field public name                   string
+---@field private _sep                  string
+---@field private _sep_active           string
+---@field private _sep_width            integer
+---@field private _last_context         eve.lib.ux.nvimbar.IContext|nil
+---@field private _preset_context       eve.lib.ux.nvimbar.IPresetContext
+---@field private _components           table<string, eve.lib.ux.nvimbar.IComponent>
+---@field private _items                eve.lib.ux.nvimbar.IItem[]
+---@field private _render_scheduler     eve.lib.collection.IScheduler
+---@field private _get_max_width        fun(): integer
+---@field private _is_active            fun(context: eve.lib.ux.nvimbar.IContext): boolean
+local M = {}
+M.__index = M
 
 local modes_map = {
   ["n"] = { "normal", "NORMAL" },
@@ -72,8 +116,22 @@ local modes_map = {
   ["!"] = { "terminal", "SHELL" },
 }
 
----@param preset_context                fml.t.ux.nvimbar.IPresetContext
----@return fml.t.ux.nvimbar.IContext
+---@param num                           integer
+---@return string
+local function encode_int(num)
+  local text = string.format("%o", num) ---@type string
+  return text
+end
+
+---@param text                          string
+---@return integer|nil
+local function decode_int(text)
+  local num = tonumber(text, 8) ---@type integer|nil
+  return num
+end
+
+---@param preset_context                eve.lib.ux.nvimbar.IPresetContext
+---@return eve.lib.ux.nvimbar.IContext
 local function build_context(preset_context)
   local m = modes_map[vim.api.nvim_get_mode().mode]
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -85,7 +143,7 @@ local function build_context(preset_context)
   local filetype = vim.bo.filetype ---@type string
   local fileicon = eve.nvim.calc_fileicon(filename) ---@type string
 
-  ---@type fml.t.ux.nvimbar.IContext
+  ---@type eve.lib.ux.nvimbar.IContext
   local context = {
     tabnr = tabnr,
     winnr = winnr,
@@ -100,9 +158,9 @@ local function build_context(preset_context)
   return context
 end
 
----@param component                     fml.t.ux.nvimbar.IComponent
----@param context                       fml.t.ux.nvimbar.IContext
----@param prev_context                  fml.t.ux.nvimbar.IContext|nil
+---@param component                     eve.lib.ux.nvimbar.IComponent
+---@param context                       eve.lib.ux.nvimbar.IContext
+---@param prev_context                  eve.lib.ux.nvimbar.IContext|nil
 ---@return nil
 local function render_component(component, context, prev_context, remain_width)
   if not component.condition(context, remain_width) then
@@ -120,8 +178,8 @@ local function render_component(component, context, prev_context, remain_width)
   component.last_result_width = width
 end
 
----@param props                         fml.ux.nvimbar.IProps
----@return fml.ux.Nvimbar
+---@param props                         eve.lib.ux.nvimbar.IProps
+---@return eve.lib.ux.Nvimbar
 function M.new(props)
   local name = props.name ---@type string
   local component_sep = props.component_sep ---@type string
@@ -129,9 +187,9 @@ function M.new(props)
   local component_sep_hlname_active = props.component_sep_hlname_active ---@type string
   local render_delay = props.render_delay or 20 ---@type integer
   local silent = not not props.silent ---@type boolean
-  local preset_context = props.preset_context or {} ---@type fml.t.ux.nvimbar.IPresetContext
+  local preset_context = props.preset_context or {} ---@type eve.lib.ux.nvimbar.IPresetContext
   local get_max_width = props.get_max_width ---@type fun(): integer
-  local is_active = props.is_active ---@type fun(context: fml.t.ux.nvimbar.IContext): boolean
+  local is_active = props.is_active ---@type fun(context: eve.lib.ux.nvimbar.IContext): boolean
   local validate = props.validate ---@type fun(): string|nil
   local trigger_rerender = props.trigger_rerender ---@type fun(): nil
 
@@ -139,7 +197,7 @@ function M.new(props)
 
   ---@type eve.lib.collection.IScheduler
   local _render_scheduler = Scheduler.new({
-    name = "fml.ux.component.nvimbar#" .. name,
+    name = "eve.lib.ux.nvimbar#" .. name,
     delay = render_delay,
     silent = silent,
     task = function(callback)
@@ -150,14 +208,14 @@ function M.new(props)
 
         trigger_rerender()
       else
-        callback("rejected", nil, "[fml.ux.component.nvimbar#render] Invalid: " .. validate_message)
+        callback("rejected", nil, "[eve.lib.ux.nvimbar#render] Invalid: " .. validate_message)
       end
     end,
   })
 
   self.name = name
-  self._sep = eve.nvim.txt(component_sep, component_sep_hlname)
-  self._sep_active = eve.nvim.txt(component_sep, component_sep_hlname_active)
+  self._sep = M.txt(component_sep, component_sep_hlname)
+  self._sep_active = M.txt(component_sep, component_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(component_sep)
   self._last_context = nil
   self._preset_context = preset_context
@@ -169,15 +227,60 @@ function M.new(props)
   return self
 end
 
+---@param text                          string
+---@param callback                      string
+---@param args                          ?integer|integer[]
+function M.btn(text, callback, args)
+  local args_str = args or "" ---@type integer|integer[]|string
+  if type(args) == "table" then
+    args_str = M.encode_btn_args(args)
+  end
+  return "%" .. args_str .. "@v:lua." .. callback .. "@" .. text .. "%T"
+end
+
+---@param text                          string
+---@param hlname                        string
+---@return string
+function M.txt(text, hlname)
+  return "%#" .. hlname .. "#" .. text:gsub("%%", "%%%%")
+end
+
+---@param args                          integer[]
+---@return string
+function M.encode_btn_args(args)
+  local result = "" ---@type string
+  for i, num in ipairs(args) do
+    if i > 1 then
+      result = result .. "9"
+    end
+    result = result .. encode_int(num)
+  end
+  return result
+end
+
+---@param text                          string
+---@return integer[]
+function M.decode_btn_args(text)
+  local argv = vim.split(text, "9") ---@type string[]
+  local result = {} ---@type integer[]
+  for _, arg in ipairs(argv) do
+    local num = decode_int(arg)
+    if num ~= nil then
+      table.insert(result, num)
+    end
+  end
+  return result
+end
+
 ---@return nil
 function M:cancel_render()
   self._render_scheduler:cancel()
 end
 
 ---@param name                          string
----@return fml.ux.Nvimbar
+---@return eve.lib.ux.Nvimbar
 function M:disable(name)
-  local component = self._components[name] ---@type fml.t.ux.nvimbar.IComponent
+  local component = self._components[name] ---@type eve.lib.ux.nvimbar.IComponent
   if component ~= nil then
     component.enabled = false
   end
@@ -185,9 +288,9 @@ function M:disable(name)
 end
 
 ---@param name                          string
----@return fml.ux.Nvimbar
+---@return eve.lib.ux.Nvimbar
 function M:enable(name)
-  local component = self._components[name] ---@type fml.t.ux.nvimbar.IComponent
+  local component = self._components[name] ---@type eve.lib.ux.nvimbar.IComponent
   if component ~= nil then
     component.enabled = true
   end
@@ -196,9 +299,9 @@ end
 
 ---@param name                          string
 ---@param position                      eve.e.NvimbarCompPosition
----@return fml.ux.Nvimbar
+---@return eve.lib.ux.Nvimbar
 function M:place(name, position)
-  ---@type fml.t.ux.nvimbar.IItem
+  ---@type eve.lib.ux.nvimbar.IItem
   local item = { name = name, position = position }
   table.insert(self._items, item)
   return self
@@ -214,9 +317,9 @@ function M:render(force)
   return self._render_scheduler:snapshot() or ""
 end
 
----@param raw_component                 fml.t.ux.nvimbar.IRawComponent
+---@param raw_component                 eve.lib.ux.nvimbar.IRawComponent
 ---@param enabled                       boolean|nil
----@return fml.ux.Nvimbar
+---@return eve.lib.ux.Nvimbar
 function M:register(raw_component, enabled)
   if enabled == nil then
     enabled = true
@@ -224,7 +327,7 @@ function M:register(raw_component, enabled)
 
   local name = raw_component.name ---@type string
 
-  ---@type fml.t.ux.nvimbar.IComponent
+  ---@type eve.lib.ux.nvimbar.IComponent
   local component = {
     name = name,
     enabled = enabled,
@@ -241,8 +344,8 @@ end
 
 ---@return string
 function M:internal_render()
-  local context = build_context(self._preset_context) ---@type fml.t.ux.nvimbar.IContext
-  local prev_context = self._last_context ---@type fml.t.ux.nvimbar.IContext|nil
+  local context = build_context(self._preset_context) ---@type eve.lib.ux.nvimbar.IContext
+  local prev_context = self._last_context ---@type eve.lib.ux.nvimbar.IContext|nil
 
   local sep = self._is_active(context) and self._sep_active or self._sep ---@type string
   local width_sep = self._sep_width ---@type integer
@@ -255,14 +358,14 @@ function M:internal_render()
   local width_right = width_sep ---@type integer
   local width_center = width_sep + width_sep ---@type integer
   local width_remain = width_full - width_left - width_center - width_right ---@type integer
-  local components = self._components ---@type fml.t.ux.nvimbar.IComponent[]
-  local positions = self._items ---@type fml.t.ux.nvimbar.IItem[]
+  local components = self._components ---@type eve.lib.ux.nvimbar.IComponent[]
+  local positions = self._items ---@type eve.lib.ux.nvimbar.IItem[]
   for i = 1, #positions, 1 do
-    local item = positions[i] ---@type fml.t.ux.nvimbar.IItem
+    local item = positions[i] ---@type eve.lib.ux.nvimbar.IItem
     local name = item.name ---@type string
     local position = item.position ---@type eve.e.NvimbarCompPosition
 
-    local component = components[name] ---@type fml.t.ux.nvimbar.IComponent|nil
+    local component = components[name] ---@type eve.lib.ux.nvimbar.IComponent|nil
     if component ~= nil and component.enabled then
       local ok, err = pcall(render_component, component, context, prev_context, width_remain)
       if ok then

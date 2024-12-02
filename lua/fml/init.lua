@@ -15,7 +15,6 @@ local fn = {
 local ux = {
   FileSelect = require("fml.ux.component.file_select"),
   Input = require("fml.ux.component.input"),
-  Nvimbar = require("fml.ux.component.nvimbar"),
   Select = require("fml.ux.component.select"),
   Setting = require("fml.ux.component.setting"),
   SimpleFileSelect = require("fml.ux.component.simple_file_select"),

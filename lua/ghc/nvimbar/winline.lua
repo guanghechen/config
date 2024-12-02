@@ -1,11 +1,12 @@
 local __module_name__ = "ghc.nvimbar.winline" ---@type string
 
 local reporter = require("eve.lib.reporter")
+local Nvimbar = require("eve.lib.ux.nvimbar")
 local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
 local c = require("ghc.nvimbar.components")
 
-local winline_map = {} ---@type table<string, fml.t.ux.INvimbar>
+local winline_map = {} ---@type table<string, eve.lib.ux.INvimbar>
 
 ---@class ghc.nvimbar.winline
 local M = {}
@@ -39,10 +40,10 @@ function M.render(winnr, force)
     return ""
   end
 
-  local winline = winline_map[winnr] ---@type fml.t.ux.INvimbar
+  local winline = winline_map[winnr] ---@type eve.lib.ux.INvimbar
   if winline == nil then
     local devmode = state.state.flight.devmode:snapshot() ---@type boolean
-    winline = fml.ux.Nvimbar.new({
+    winline = Nvimbar.new({
       name = "winline_" .. winnr,
       component_sep = "",
       component_sep_hlname = "f_wl_bg",

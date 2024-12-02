@@ -4,21 +4,23 @@ local env = require("eve.lib.env")
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
+local Nvimbar = require("eve.lib.ux.nvimbar")
 local G = require("eve.builtin.G")
 local commander = require("eve.builtin.commander")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
 local icons = require("eve.builtin.icons")
 local locations = require("eve.builtin.locations")
-local btn = require("eve.builtin.nvim").btn
-local txt = require("eve.builtin.nvim").txt
 local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
+
+local btn = Nvimbar.btn
+local txt = Nvimbar.txt
 
 ---@class ghc.nvimbar.components
 local M = {}
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.bufs()
   ---@type string
   local fn_active_buf = G.register_anonymous_fn(function(bufnr)
@@ -74,7 +76,7 @@ function M.bufs()
     return btn(hl_text, fn_active_buf, bufnr), width
   end
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "bufs",
     ---@diagnostic disable-next-line: unused-local
@@ -185,7 +187,7 @@ function M.bufs()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.copilot()
   ---@type string
   local fn_show_message = G.register_anonymous_fn(function()
@@ -208,7 +210,7 @@ function M.copilot()
 
   local last_status = nil ---@type string|nil
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "copilot",
     condition = function()
@@ -233,9 +235,9 @@ function M.copilot()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.cwd()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "cwd",
     will_change = function(context, prev_context)
@@ -252,9 +254,9 @@ function M.cwd()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.devmode()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "devmode",
     condition = function()
@@ -271,9 +273,9 @@ function M.devmode()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.diagnostics()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "diagnostics",
     condition = function()
@@ -307,7 +309,7 @@ function M.diagnostics()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.diffview()
   local indicator_symbol_width = vim.api.nvim_strwidth(icons.symbols.win_indicator_active) ---@type integer
 
@@ -325,7 +327,7 @@ function M.diffview()
     return 0
   end
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "diffview",
     ---@diagnostic disable-next-line: unused-local
@@ -360,11 +362,11 @@ function M.diffview()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.dirpath()
   local sep = " " .. env.PATH_SEP .. " "
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "dirpath",
     render = function(context)
@@ -396,7 +398,7 @@ function M.dirpath()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.fileformat()
   local fileformat_text_map = {
     dos = "CRLF",
@@ -404,7 +406,7 @@ function M.fileformat()
     unix = "LF",
   }
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "fileformat",
     condition = function()
@@ -425,9 +427,9 @@ function M.fileformat()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.filename()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filename",
     render = function(context)
@@ -459,9 +461,9 @@ function M.filename()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.filepath()
-  ---@param context                       fml.t.ux.nvimbar.IContext
+  ---@param context                       eve.lib.ux.nvimbar.IContext
   ---@return string
   local function get_filepath(context)
     local cwd = context.cwd ---@type string
@@ -479,7 +481,7 @@ function M.filepath()
     return context.fileicon .. " " .. relative_to_cwd
   end
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filepath",
     condition = function(context)
@@ -495,9 +497,9 @@ function M.filepath()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.filesize()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filesize",
     render = function(context)
@@ -510,7 +512,7 @@ function M.filesize()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.filestatus()
   ---@return string
   local function get_filestatus()
@@ -534,7 +536,7 @@ function M.filestatus()
     return ""
   end
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filestatus",
     tight = true,
@@ -553,9 +555,9 @@ function M.filestatus()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.filetype()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filetype",
     will_change = function(context, prev_context)
@@ -574,9 +576,9 @@ function M.filetype()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.git()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "git",
     tight = true,
@@ -597,7 +599,7 @@ function M.git()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.lsp()
   ---@return string
   local function get_text()
@@ -614,7 +616,7 @@ function M.lsp()
     return #client_names > 0 and "  " .. table.concat(client_names, "|") or ""
   end
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "lsp",
     condition = function()
@@ -637,13 +639,13 @@ function M.lsp()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.lsp_symbols()
   local sep = "  "
 
   ---@type string
   local fn_goto_lsp_pos = G.register_anonymous_fn(function(num)
-    local args = eve.nvim.decode_btn_args(tostring(num)) ---@type integer[]
+    local args = Nvimbar.decode_btn_args(tostring(num)) ---@type integer[]
     if #args == 3 then
       local winnr = args[1] ---@type integer|nil
       local row = args[2] ---@type integer|nil
@@ -657,7 +659,7 @@ function M.lsp_symbols()
     end
   end) or ""
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "lsp_symbols",
     ---@diagnostic disable-next-line: unused-local
@@ -702,9 +704,9 @@ function M.lsp_symbols()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.mode()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "mode",
     tight = true,
@@ -721,7 +723,7 @@ function M.mode()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.neotree()
   local indicator_symbol_width = vim.api.nvim_strwidth(icons.symbols.win_indicator_active) ---@type integer
 
@@ -739,7 +741,7 @@ function M.neotree()
     return 0
   end
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "neotree",
     ---@diagnostic disable-next-line: unused-local
@@ -775,9 +777,9 @@ function M.neotree()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.noice()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "noice",
     condition = function()
@@ -810,7 +812,7 @@ function M.noice()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.pos()
   ---@return integer
   ---@return integer
@@ -832,7 +834,7 @@ function M.pos()
     end
   end
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "pos",
     render = function()
@@ -847,9 +849,9 @@ function M.pos()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.readonly()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "readonly",
     condition = function()
@@ -866,7 +868,7 @@ function M.readonly()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.tabs()
   local dirty = true ---@type boolean
   local folded = false ---@type boolean
@@ -885,7 +887,7 @@ function M.tabs()
     vim.cmd("redrawtabline")
   end) or ""
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "tabs",
     will_change = function()
@@ -931,11 +933,11 @@ function M.tabs()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.username()
   local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
 
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "username",
     ---@diagnostic disable-next-line: unused-local
@@ -953,9 +955,9 @@ function M.username()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.widget()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "widget",
     condition = function()
@@ -999,9 +1001,9 @@ function M.widget()
   return component
 end
 
----@return fml.t.ux.nvimbar.IRawComponent
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.win_indicator()
-  ---@type fml.t.ux.nvimbar.IRawComponent
+  ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "win_indicator",
     ---@diagnostic disable-next-line: unused-local

@@ -1,12 +1,13 @@
 local functional = require("eve.lib.functional")
+local Nvimbar = require("eve.lib.ux.nvimbar")
 local state = require("eve.state")
 local c = require("ghc.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 local tabline_dirty = true ---@type boolean
 
-local tabline ---@type fml.t.ux.INvimbar
-tabline = fml.ux.Nvimbar.new({
+local tabline ---@type eve.lib.ux.INvimbar
+tabline = Nvimbar.new({
   name = "tabline",
   component_sep = "",
   component_sep_hlname = "f_tl_bg",

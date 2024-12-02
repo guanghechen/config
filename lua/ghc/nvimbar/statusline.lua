@@ -1,13 +1,14 @@
 local functional = require("eve.lib.functional")
+local Nvimbar = require("eve.lib.ux.nvimbar")
 local state = require("eve.state")
 local c = require("ghc.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 local statusline_dirty = true ---@type boolean
 
-local statusline ---@type fml.t.ux.INvimbar
+local statusline ---@type eve.lib.ux.INvimbar
 
-statusline = fml.ux.Nvimbar.new({
+statusline = Nvimbar.new({
   name = "statusline",
   component_sep = "  ",
   component_sep_hlname = "f_sl_bg",
