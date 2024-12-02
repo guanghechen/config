@@ -25,6 +25,7 @@ local function gen_hlgroup_map(context)
     f_sl_copilot_Normal = { fg = c.blue, bg = bg_sl },
     f_sl_copilot_Warning = { fg = c.yellow, bg = bg_sl },
     f_sl_cwd = { fg = c.bg0, bg = c.green, bold = true },
+    f_sl_debug_render_count = { fg = c.bg0, bg = c.orange, bold = true },
     f_sl_devmode = { fg = c.bg0, bg = c.yellow, bold = true },
     f_sl_diagnostics_error = { fg = c.red, bg = bg_sl },
     f_sl_diagnostics_hint = { fg = c.purple, bg = bg_sl },

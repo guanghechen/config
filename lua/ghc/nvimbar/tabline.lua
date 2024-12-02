@@ -36,6 +36,8 @@ tabline
   :register(c.cwd(), "right")
   :register(c.tabs(), "right")
   --
+  :register(c.debug_render_count(), "center")
+  --
   :register(c.neotree(), "left")
   :register(c.diffview(), "left")
   :register(c.bufs(), "left")

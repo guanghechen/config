@@ -39,6 +39,7 @@ statusline
   :register(c.filestatus(), "left")
   :register(c.readonly(), "left")
   --
+  :register(c.debug_render_count(), "center")
   :register(c.widget(), "center")
   --
   :register(c.pos(), "right")

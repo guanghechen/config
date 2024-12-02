@@ -79,6 +79,8 @@ function M.render(winnr, force)
       :register(c.dirpath(), "left")
       :register(c.filename(), "left")
       :register(c.lsp_symbols(), "left")
+      ---
+      :register(c.debug_render_count(), "center")
   end
   return winline:render(force)
 end

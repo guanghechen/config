@@ -256,6 +256,28 @@ function M.cwd()
 end
 
 ---@return eve.lib.ux.nvimbar.IRawComponent
+function M.debug_render_count()
+  local count = 0 ---@type integer
+
+  ---@type eve.lib.ux.nvimbar.IRawComponent
+  local component = {
+    name = "debug_render_count",
+    condition = function()
+      local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+      return devmode
+    end,
+    render = function()
+      count = count + 1
+      local text = "  " .. util.pad_start(tostring(count % 10000), 4, "0") .. " " ---@type string
+      local hl_text = txt(text, "f_sl_debug_render_count") ---@type string
+      local width = vim.api.nvim_strwidth(text) ---@type integer
+      return hl_text, width
+    end,
+  }
+  return component
+end
+
+---@return eve.lib.ux.nvimbar.IRawComponent
 function M.devmode()
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
