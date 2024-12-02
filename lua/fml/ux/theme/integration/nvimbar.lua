@@ -85,7 +85,7 @@ local function gen_hlgroup_map(context)
     f_sl_readonly = { fg = c.orange, bg = bg_sl },
     f_sl_sidebar_blank = { fg = c.fg1, bg = bg_sl },
     f_sl_sidebar_indicator = { fg = c.orange, bg = bg_sl },
-    f_sl_sidebar_split = { fg = c.fg4, bg = bg_sl },
+    f_sl_sidebar_split = { fg = c.bg4, bg = bg_sl },
     f_sl_sidebar_text = { fg = c.fg2, bg = bg_sl, bold = true },
     f_sl_tab_add = { fg = c.fg1, bg = c.bg3 },
     f_sl_tab_item = { fg = c.fg1, bg = bg_sl },
