@@ -58,7 +58,6 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public cancel_render          fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
 ---@field public disable                fun(self: eve.lib.ux.INvimbar, name: string): eve.lib.ux.INvimbar
 ---@field public enable                 fun(self: eve.lib.ux.INvimbar, name: string): eve.lib.ux.INvimbar
----@field public place                  fun(self: eve.lib.ux.INvimbar, name: string, position: eve.e.NvimbarCompPosition): eve.lib.ux.INvimbar
 ---@field public register               fun(self: eve.lib.ux.INvimbar, name: string, component: eve.lib.ux.nvimbar.IRawComponent, enabled?: boolean): eve.lib.ux.INvimbar
 ---@field public render                 fun(self: eve.lib.ux.INvimbar, force: boolean): string
 
@@ -297,16 +296,6 @@ function M:enable(name)
   return self
 end
 
----@param name                          string
----@param position                      eve.e.NvimbarCompPosition
----@return eve.lib.ux.Nvimbar
-function M:place(name, position)
-  ---@type eve.lib.ux.nvimbar.IItem
-  local item = { name = name, position = position }
-  table.insert(self._items, item)
-  return self
-end
-
 ---@param force                         boolean
 ---@return string
 function M:render(force)
@@ -318,14 +307,23 @@ function M:render(force)
 end
 
 ---@param raw_component                 eve.lib.ux.nvimbar.IRawComponent
+---@param position                      eve.e.NvimbarCompPosition
 ---@param enabled                       boolean|nil
 ---@return eve.lib.ux.Nvimbar
-function M:register(raw_component, enabled)
+function M:register(raw_component, position, enabled)
   if enabled == nil then
     enabled = true
   end
 
   local name = raw_component.name ---@type string
+  if self._components[name] ~= nil then
+    reporter.warn({
+      from = __module_name__,
+      subject = "register",
+      message = "The component is already registered.",
+      details = { name = name, raw_component = raw_component, position = position, enabled = enabled },
+    })
+  end
 
   ---@type eve.lib.ux.nvimbar.IComponent
   local component = {
@@ -339,6 +337,10 @@ function M:register(raw_component, enabled)
     condition = raw_component.condition or functional.truthy,
   }
   self._components[name] = component
+
+  ---@type eve.lib.ux.nvimbar.IItem
+  local item = { name = name, position = position }
+  table.insert(self._items, item)
   return self
 end
 

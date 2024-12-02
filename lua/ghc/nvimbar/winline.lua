@@ -75,17 +75,10 @@ function M.render(winnr, force)
 
     winline
       ---
-      :register(c.dirpath())
-      :register(c.filename())
-      :register(c.win_indicator())
-      :register(c.lsp_symbols())
-
-    winline
-      ---
-      :place("win_indicator", "left")
-      :place("dirpath", "left")
-      :place("filename", "left")
-      :place("lsp_symbols", "left")
+      :register(c.win_indicator(), "left")
+      :register(c.dirpath(), "left")
+      :register(c.filename(), "left")
+      :register(c.lsp_symbols(), "left")
   end
   return winline:render(force)
 end

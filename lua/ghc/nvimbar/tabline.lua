@@ -31,22 +31,14 @@ tabline = Nvimbar.new({
 })
 
 tabline
-  :register(c.bufs())
-  :register(c.cwd())
-  :register(c.devmode())
-  :register(c.diffview())
-  :register(c.neotree())
-  :register(c.tabs())
-
-tabline
   ---
-  :place("devmode", "right")
-  :place("cwd", "right")
-  :place("tabs", "right")
+  :register(c.devmode(), "right")
+  :register(c.cwd(), "right")
+  :register(c.tabs(), "right")
   --
-  :place("neotree", "left")
-  :place("diffview", "left")
-  :place("bufs", "left")
+  :register(c.neotree(), "left")
+  :register(c.diffview(), "left")
+  :register(c.bufs(), "left")
 
 ---@class ghc.nvimbar.tabline
 local M = { cnames = vim.deepcopy(c) }

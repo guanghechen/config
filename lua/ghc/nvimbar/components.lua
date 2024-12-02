@@ -11,6 +11,7 @@ local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
 local icons = require("eve.builtin.icons")
 local locations = require("eve.builtin.locations")
+local util = require("eve.builtin.util")
 local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
 
@@ -94,7 +95,7 @@ function M.bufs()
       end
 
       local bufnr_cur = locations.get_current_bufnr() ---@type integer|nil
-      local bufid_src = eve.util.find_index(tab_bufnrs, bufnr_cur) ---@type integer|nil
+      local bufid_src = util.find_index(tab_bufnrs, bufnr_cur) ---@type integer|nil
       local bufid_cur = bufid_src or 1
       bufnr_cur = tab_bufnrs[bufid_cur]
 
@@ -829,7 +830,7 @@ function M.pos()
     elseif row == total_lines then
       return row, col, "bot", "f_sl_pos_bot"
     else
-      local text = eve.util.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
+      local text = util.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
       return row, col, text, "f_sl_pos"
     end
   end
@@ -839,7 +840,11 @@ function M.pos()
     name = "pos",
     render = function()
       local row, col, percentage, hl_pos = calc_row_percentage() ---@type integer, integer, string
-      local text_anchor = "" .. row .. "·" .. col .. " " ---@type string
+      local text_anchor = ""
+        .. util.pad_start(tostring(row), 4, " ")
+        .. "·"
+        .. util.pad_end(tostring(col), 3, " ")
+        .. " " ---@type string
       local text_pos = " " .. percentage .. " " ---@type string
       local hl_text = txt(text_anchor, "f_sl_text") .. txt(text_pos, hl_pos) ---@type string
       local width = vim.api.nvim_strwidth(text_anchor .. text_pos) ---@type integer

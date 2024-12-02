@@ -32,39 +32,22 @@ statusline = Nvimbar.new({
 })
 
 statusline
-  :register(c.copilot())
-  :register(c.diagnostics())
-  :register(c.fileformat())
-  :register(c.filepath())
-  :register(c.filesize())
-  :register(c.filestatus())
-  :register(c.filetype())
-  :register(c.git())
-  :register(c.lsp())
-  :register(c.mode())
-  :register(c.noice())
-  :register(c.pos())
-  :register(c.readonly())
-  :register(c.username())
-  :register(c.widget())
-
-statusline
-  :place("username", "left")
-  :place("mode", "left")
-  :place("git", "left")
-  :place("filetype", "left")
-  :place("filestatus", "left")
-  :place("readonly", "left")
+  :register(c.username(), "left")
+  :register(c.mode(), "left")
+  :register(c.git(), "left")
+  :register(c.filetype(), "left")
+  :register(c.filestatus(), "left")
+  :register(c.readonly(), "left")
   --
-  :place("widget", "center")
+  :register(c.widget(), "center")
   --
-  :place("pos", "right")
-  :place("filesize", "right")
-  :place("fileformat", "right")
-  :place("lsp", "right")
-  :place("copilot", "right")
-  :place("noice", "right")
-  :place("diagnostics", "right")
+  :register(c.pos(), "right")
+  :register(c.filesize(), "right")
+  :register(c.fileformat(), "right")
+  :register(c.lsp(), "right")
+  :register(c.copilot(), "right")
+  :register(c.noice(), "right")
+  :register(c.diagnostics(), "right")
 
 ---@class ghc.nvimbar.statusline
 local M = { cnames = vim.deepcopy(c) }
