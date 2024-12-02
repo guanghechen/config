@@ -33,9 +33,8 @@ function M.should_show_winline(winnr)
 end
 
 ---@param winnr                         integer
----@param force                         boolean
 ---@return string
-function M.render(winnr, force)
+function M.render(winnr)
   if not M.should_show_winline(winnr) then
     return ""
   end
@@ -51,7 +50,7 @@ function M.render(winnr, force)
       component_sep_hlname = "f_sl_bg",
       component_sep_hlname_active = "f_sl_bg",
       preset_context = { winnr = winnr },
-      render_delay = 32,
+      render_delay = 64,
       silent = not devmode,
       get_max_width = function()
         return vim.api.nvim_win_get_width(winnr)
@@ -87,15 +86,14 @@ function M.render(winnr, force)
       ---
       :register(c.debug_render_count(), "center")
   end
-  return winline:render(force)
+  return winline:render()
 end
 
 ---@param winnr                         integer
----@param force                         boolean
 ---@return nil
-function M.update(winnr, force)
+function M.update(winnr)
   if vim.api.nvim_win_is_valid(winnr) then
-    local result = M.render(winnr, force) ---@type string
+    local result = M.render(winnr) ---@type string
     if #result > 0 then
       local ok, err = pcall(function()
         vim.wo[winnr].winbar = result
@@ -116,7 +114,7 @@ state.state.status.winline_dirty_nr:subscribe(
   Subscriber.new({
     on_next = function(winnr)
       if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-        M.update(winnr, true)
+        M.update(winnr)
       end
     end,
   }),

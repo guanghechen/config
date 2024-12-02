@@ -13,6 +13,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
 ---@field public cwd                    string
+---@field public filename               string
 ---@field public filepath               string
 ---@field public fileicon               string
 ---@field public filetype               string
@@ -54,9 +55,9 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@class eve.lib.ux.INvimbar
 ---@field public btn                    fun(text: string, callback: string, args?: integer|integer[]): string
 ---@field public txt                    fun(text: string, hlname: string): string
----@field public cancel_render          fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
+---@field public cancel_next_render     fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
 ---@field public register               fun(self: eve.lib.ux.INvimbar, component: eve.lib.ux.nvimbar.IRawComponent, position: eve.e.NvimbarCompPosition): eve.lib.ux.INvimbar
----@field public render                 fun(self: eve.lib.ux.INvimbar, force: boolean): string
+---@field public render                 fun(self: eve.lib.ux.INvimbar): string
 ---@field public snapshot               fun(self: eve.lib.ux.INvimbar): string
 
 ---@class eve.lib.ux.Nvimbar : eve.lib.ux.INvimbar
@@ -146,6 +147,7 @@ local function build_context(preset_context)
     winnr = winnr,
     bufnr = bufnr,
     cwd = cwd,
+    filename = filename,
     filepath = filepath,
     fileicon = fileicon,
     filetype = filetype,
@@ -270,16 +272,12 @@ function M.decode_btn_args(text)
 end
 
 ---@return nil
-function M:cancel_render()
-  self._render_scheduler:cancel()
+function M:cancel_next_render()
+  self._render_scheduler:cancel_next()
 end
 
----@param force                         boolean
 ---@return string
-function M:render(force)
-  if force then
-    self._render_scheduler:mark_dirty()
-  end
+function M:render()
   self._render_scheduler:schedule()
   return self._render_scheduler:snapshot() or ""
 end

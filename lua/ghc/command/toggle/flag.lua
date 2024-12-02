@@ -29,12 +29,9 @@ eve.commander
     action = function()
       local observable = state.state.theme.relativenumber ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
-      observable:next(not flag)
 
-      if vim.o.nu then
-        vim.opt.relativenumber = not flag
-        vim.cmd.redraw()
-      end
+      vim.opt.relativenumber = not flag
+      observable:next(not flag)
     end,
   })
   .register({

@@ -453,12 +453,16 @@ function M.filename()
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filename",
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.filename ~= prev_context.filename
+    end,
     render = function(context)
       local winnr = context.winnr ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
       if meta == nil then
-        local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        local text = path.basename(filepath) ---@type string
         local width = vim.api.nvim_strwidth(text) ---@type integer
         local hl_text = txt(text, "f_sl_filename_text")
         return hl_text, width
@@ -506,6 +510,9 @@ function M.filepath()
     condition = function(context)
       return #context.filepath > 0 and context.filepath ~= "."
     end,
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.filepath ~= prev_context.filepath
+    end,
     render = function(context)
       local text = get_filepath(context) ---@type string
       local hl_text = txt(text, "f_sl_text")
@@ -521,6 +528,9 @@ function M.filesize()
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filesize",
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.filepath ~= prev_context.filepath or context.mode ~= prev_context.mode
+    end,
     render = function(context)
       local text = oxi.get_filesize(context.filepath) or "" ---@type string
       local hl_text = txt(text, "f_sl_text")
@@ -559,6 +569,9 @@ function M.filestatus()
   local component = {
     name = "filestatus",
     tight = true,
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.filepath ~= prev_context.filepath or context.mode ~= prev_context.mode
+    end,
     render = function()
       local status = get_filestatus() ---@type string
       if #status < 1 then

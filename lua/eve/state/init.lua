@@ -211,19 +211,14 @@ function M.watch_changes(params)
   ---! Trigger statusline redraw.
   mvc.observe({
     ---find
-    state.find.flag_case_sensitive,
     state.find.flag_gitignore,
-    state.find.flag_fuzzy,
-    state.find.flag_regex,
     state.find.scope,
 
     ---flight
     state.flight.copilot,
 
     ---search
-    state.search.flag_case_sensitive,
     state.search.flag_gitignore,
-    state.search.flag_regex,
     state.search.flag_replace,
     state.search.scope,
 

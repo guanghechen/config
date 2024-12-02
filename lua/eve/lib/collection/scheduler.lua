@@ -5,7 +5,7 @@ local reporter = require("eve.lib.reporter")
 ---@class eve.lib.collection.IScheduler
 ---@field public name                   string
 ---@field public cancel                 fun(self: eve.lib.collection.IScheduler): nil
----@field public mark_dirty             fun(self: eve.lib.collection.IScheduler): nil
+---@field public cancel_next            fun(self: eve.lib.collection.IScheduler): nil
 ---@field public schedule               fun(self: eve.lib.collection.IScheduler): nil
 ---@field public snapshot               fun(self: eve.lib.collection.IScheduler): unknown|nil
 
@@ -29,7 +29,6 @@ local reporter = require("eve.lib.reporter")
 ---@field protected _task               eve.lib.collection.scheduler.ITask
 ---
 ---@field protected _tick_alive         integer
----@field protected _tick_dirty         integer
 ---@field protected _tick_scheduled     integer
 ---@field protected _tick_resolving     integer
 ---@field protected _tick_resolved      integer
@@ -57,7 +56,6 @@ function M.new(props)
   self._task = task
 
   self._tick_alive = 0
-  self._tick_dirty = 1
   self._tick_scheduled = 1
   self._tick_resolving = 0
   self._tick_resolved = 0
@@ -72,19 +70,21 @@ function M:cancel()
 end
 
 ---@return nil
-function M:mark_dirty()
-  self._tick_dirty = self._tick_scheduled
+function M:cancel_next()
+  self._tick_alive = self._tick_scheduled + 2
 end
 
 ---@return nil
 function M:schedule()
-  local delay = self._tick_dirty > self._tick_resolved and 0 or self._delay ---@type integer
   local tick = self._tick_scheduled + 1 ---@type integer
   self._tick_scheduled = tick
 
-  vim.defer_fn(function()
-    self:execute()
-  end, delay)
+  if self._tick_settled < self._tick_resolving then
+    self._immediate = true
+    return
+  end
+
+  self:execute()
 end
 
 ---@return unknown|nil
@@ -96,7 +96,7 @@ end
 function M:execute()
   local tick = self._tick_scheduled ---@type integer
 
-  if tick < self._tick_alive then
+  if tick < self._tick_alive or tick <= self._tick_resolving then
     return
   end
 
@@ -105,22 +105,19 @@ function M:execute()
     return
   end
 
-  if tick <= self._tick_resolving then
-    return
-  end
+  self._tick_resolving = tick
 
-  local finished = false ---@type boolean
+  local callback_called = false ---@type boolean
 
   ---@param settled                     eve.lib.collection.promise.ISettled
   ---@param value                       unknown
   ---@param reason                      unknown
   ---@return nil
   local function callback(settled, value, reason)
-    if finished then
+    if callback_called then
       return
     end
-
-    finished = true
+    callback_called = true
 
     if settled == "fulfilled" then
       if self._tick_resolved < tick then
@@ -138,7 +135,6 @@ function M:execute()
             reason = reason,
 
             tick = tick,
-            tick_dirty = self._tick_dirty,
             tick_scheduled = self._tick_scheduled,
             tick_resolving = self._tick_resolving,
             tick_resolved = self._tick_settled,
@@ -148,19 +144,18 @@ function M:execute()
       end
     end
 
-    if self._tick_settled < tick then
-      self._tick_settled = tick
+    vim.defer_fn(function()
+      if self._tick_settled < tick then
+        self._tick_settled = tick
 
-      if self._immediate then
-        self._immediate = false
-        vim.schedule(function()
+        if self._immediate then
+          self._immediate = false
           self:execute()
-        end)
+        end
       end
-    end
+    end, self._delay)
   end
 
-  self._tick_resolving = tick
   local ok, reasonOrResult = pcall(self._task, callback)
   if reasonOrResult ~= nil then
     if ok then

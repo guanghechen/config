@@ -57,6 +57,8 @@ eve.commander.register({
           ---@return nil
           local on_save = function()
             vim.api.nvim_buf_set_name(bufnr, next_filepath)
+            eve.buf.refresh(bufnr)
+
             input:close()
 
             ready_count = ready_count + 1

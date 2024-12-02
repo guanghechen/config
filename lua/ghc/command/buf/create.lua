@@ -18,6 +18,7 @@ eve.commander.register({
     local filepath = eve.buf.pick_filepath(cwd) ---@type string|nil
     if filepath ~= nil then
       vim.api.nvim_buf_set_name(bufnr, filepath)
+      eve.buf.refresh(bufnr)
     end
 
     vim.api.nvim_win_set_buf(winnr, bufnr)

@@ -4,7 +4,6 @@ local state = require("eve.state")
 local c = require("ghc.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
-local tabline_dirty = true ---@type boolean
 
 local tabline ---@type eve.lib.ux.INvimbar
 tabline = Nvimbar.new({
@@ -12,18 +11,15 @@ tabline = Nvimbar.new({
   component_sep = "",
   component_sep_hlname = "f_sl_bg",
   component_sep_hlname_active = "f_sl_bg",
-  render_delay = 64,
+  render_delay = 128,
   silent = not devmode,
   get_max_width = function()
     return vim.o.columns
   end,
   is_active = functional.falsy,
   trigger_rerender = function()
-    tabline_dirty = false
+    tabline:cancel_next_render()
     vim.cmd("redrawtabline")
-    vim.schedule(function()
-      tabline:cancel_render()
-    end)
   end,
   validate = function()
     return nil
@@ -47,8 +43,7 @@ local M = {}
 
 ---@return string
 function M.render()
-  local result = tabline:render(tabline_dirty) ---@type string
-  tabline_dirty = true
+  local result = tabline:render() ---@type string
   return result
 end
 
