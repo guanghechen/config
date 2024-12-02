@@ -34,10 +34,10 @@ function M.context()
   ---@type eve.t.state.storage
   local storage = {
     editor = path.locate_context_filepath("editor.json"),
-    session = is_git_repo and path.locate_session_filepath("session.json") or nil,
-    workspace = is_git_repo and path.locate_session_filepath("workspace.json") or nil,
-    nvim_session = is_git_repo and path.locate_session_filepath("session.vim") or nil,
-    nvim_session_autosaved = is_git_repo and path.locate_session_filepath("session.autosaved.vim") or nil,
+    session = is_git_repo and path.locate_workspace_filepath("session.json") or nil,
+    workspace = is_git_repo and path.locate_workspace_filepath("workspace.json") or nil,
+    nvim_session = is_git_repo and path.locate_workspace_filepath("session.vim") or nil,
+    nvim_session_autosaved = is_git_repo and path.locate_workspace_filepath("session.autosaved.vim") or nil,
   }
   state.set_storage(storage)
   state.load(storage)

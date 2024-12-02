@@ -235,8 +235,8 @@ function M.load(data)
 
     ---@type eve.t.state.state.frecency
     local frecency = {
-      files = Frecency.new({
-        items = {},
+      files = Frecency.deserialize({
+        data = data.frecency.files,
         normalize = function(key)
           return md5.sumhexa(key)
         end,
@@ -245,8 +245,16 @@ function M.load(data)
 
     ---@type eve.t.state.state.input_history
     local input_history = {
-      find_files = History.new({ name = "find_files", capacity = 100 }),
-      search_in_files = History.new({ name = "search_in_files", capacity = 300 }),
+      find_files = History.deserialize({
+        name = "find_files",
+        capacity = 100,
+        data = data.input_history.find_files,
+      }),
+      search_in_files = History.deserialize({
+        name = "search_in_files",
+        capacity = 300,
+        data = data.input_history.search_in_files,
+      }),
     }
 
     ---@type eve.t.state.state.search
@@ -415,6 +423,9 @@ function M.normalize(data)
   if type(data.frecency) == "table" then
     for key, frecency in pairs(data.frecency) do
       if data.frecency[key] and type(frecency) == "table" then
+        if type(frecency.MAX_TIMESTAMPS) == "number" then
+          data.frecency[key].MAX_TIMESTAMPS = frecency.MAX_TIMESTAMPS
+        end
         if type(frecency.items) == "table" then
           data.frecency[key].items = frecency.items
         end

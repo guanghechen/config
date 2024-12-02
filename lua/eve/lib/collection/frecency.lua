@@ -11,6 +11,7 @@ local functional = require("eve.lib.functional")
 ---@field public idx                    integer
 
 ---@class eve.lib.collection.frecency.ISerializedData
+---@field public MAX_TIMESTAMPS         integer|nil
 ---@field public items                  eve.lib.collection.frecency.IItem[]
 
 ---@class eve.lib.collection.frecency.IProps
@@ -20,7 +21,7 @@ local functional = require("eve.lib.functional")
 
 ---@class eve.lib.collection.frecency.IDeserializeProps
 ---@field public data                   eve.lib.collection.frecency.ISerializedData
----@field public MAX_TIMESTAMPS         ?integer
+---@field public normalize              ?fun(key: string): string
 
 ---@class eve.lib.collection.Frecency : eve.lib.collection.IFrecency
 ---@field public MAX_TIMESTAMPS         integer
@@ -49,7 +50,12 @@ end
 ---@return eve.lib.collection.Frecency
 function M.deserialize(props)
   local data = props.data ---@type eve.lib.collection.frecency.ISerializedData
-  return M.new({ items = data.items })
+  local normalize = props.normalize ---@type (fun(key: string): string)|nil
+  return M.new({
+    MAX_TIMESTAMP = data.MAX_TIMESTAMPS,
+    items = data.items,
+    normalize = normalize,
+  })
 end
 
 ---@param key                          string
@@ -71,7 +77,10 @@ end
 ---@return eve.lib.collection.frecency.ISerializedData
 function M:dump()
   ---@type eve.lib.collection.frecency.ISerializedData
-  local data = { items = self._items }
+  local data = {
+    MAX_TIMESTAMPS = self.MAX_TIMESTAMPS,
+    items = self._items,
+  }
   return data
 end
 
@@ -118,7 +127,5 @@ function M:score(key)
 
   return score
 end
-
-function M:to_json() end
 
 return M

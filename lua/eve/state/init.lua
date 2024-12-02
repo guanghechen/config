@@ -277,13 +277,12 @@ function M.watch_changes(params)
   ---! Save when leave the editor.
   mvc.add_disposable(Disposable.new({
     on_dispose = function()
-      local workspace_has_changed = state.dirtier.workspace_states:snapshot() > 0 ---@type boolean
       local autosave = state.flight.autosave:snapshot() ---@type boolean
 
       ---@type eve.t.state.storage
       local storage = {
         session = autosave and M._storage.session or nil,
-        workspace = workspace_has_changed and M._storage.workspace or nil,
+        workspace = M._storage.workspace,
       }
 
       if autosave and M._storage.nvim_session_autosaved then

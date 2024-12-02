@@ -267,12 +267,12 @@ end
 
 ---@param filename                      string
 ---@return string
-function M.locate_session_filepath(filename)
+function M.locate_workspace_filepath(filename)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
   local hash = md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
-  return M.locate_context_filepath("sessions" .. SEP .. session_dir .. SEP .. filename)
+  return M.locate_context_filepath("workspaces" .. SEP .. session_dir .. SEP .. filename)
 end
 
 return M

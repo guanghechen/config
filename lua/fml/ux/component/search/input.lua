@@ -54,12 +54,12 @@ function M.new(props)
     end,
   }
 
-  local keymaps = props.keymaps ---@type eve.t.IKeymap[]
+  local keymaps = vim.list_slice(props.keymaps) ---@type eve.t.IKeymap[]
   if input_history ~= nil then
-    vim.list_extend({
+    vim.list_extend(keymaps, {
       { modes = { "i", "n", "v" }, key = "<C-j>", callback = actions.apply_next_input, desc = "search: next input" },
       { modes = { "i", "n", "v" }, key = "<C-k>", callback = actions.apply_prev_input, desc = "search: last input" },
-    }, props.keymaps)
+    })
   end
 
   local devmode = state.state.flight.devmode:snapshot() ---@type boolean

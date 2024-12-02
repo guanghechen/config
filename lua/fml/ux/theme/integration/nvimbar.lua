@@ -33,7 +33,7 @@ local function gen_hlgroup_map(context)
     f_sl_dirpath_sep = { fg = c.fg1, bg = bg_sl },
     f_sl_dirpath_text = { fg = c.blue, bg = bg_sl },
     f_sl_filename_text = { fg = c.fg1, bg = bg_sl },
-    f_sl_flag = { fg = c.fg1, bg = t and "none" or c.bg3 },
+    f_sl_flag = { fg = c.fg1, bg = t and c.bg2 or c.bg3 },
     f_sl_flag_enabled = { fg = c.bg1, bg = c.blue },
     f_sl_flag_scope = { fg = c.bg1, bg = c.orange },
     f_sl_indicator = { fg = c.orange, bg = bg_sl },
