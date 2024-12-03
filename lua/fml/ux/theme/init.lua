@@ -139,10 +139,21 @@ function M.apply_theme(params)
         local additional = {} ---@type table<string, eve.lib.collection.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if hlname:sub(1, 9) == "MiniIcons" then
-            ---! Integrated  with nvimbar
-            additional[hlname .. "_sl"] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bg.bg }
-            additional[hlname .. "_sl_buf"] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_buf_item.bg }
-            additional[hlname .. "_sl_buf_cur"] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_buf_item_cur.bg }
+            additional["f_sl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bg.bg }
+            additional["f_tl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_tl_bg.bg }
+            additional["f_wl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_wl_bg.bg }
+
+            additional["f_sl_buf_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_buf.bg }
+            additional["f_tl_buf_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_tl_buf.bg }
+            additional["f_wl_buf_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_wl_buf.bg }
+
+            additional["f_sl_buf_cur_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_buf_cur.bg }
+            additional["f_tl_buf_cur_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_tl_buf_cur.bg }
+            additional["f_wl_buf_cur_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_wl_buf_cur.bg }
+
+            additional["f_sl_filename_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_filename.bg }
+            additional["f_tl_filename_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_tl_filename.bg }
+            additional["f_wl_filename_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_wl_filename.bg }
           end
         end
 

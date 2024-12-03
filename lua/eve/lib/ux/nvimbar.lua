@@ -5,6 +5,11 @@ local reporter = require("eve.lib.reporter")
 local functional = require("eve.lib.functional")
 local Scheduler = require("eve.lib.collection.scheduler")
 
+---@alias eve.lib.ux.nvimbar.Position
+---| 'f_sl'
+---| 'f_tl'
+---| 'f_wl'
+
 ---@class eve.lib.ux.nvimbar.IPresetContext
 ---@field public winnr                  ?integer
 

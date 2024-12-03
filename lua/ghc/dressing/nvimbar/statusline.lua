@@ -7,13 +7,14 @@ local c = require("ghc.dressing.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 local dirtier = status.statusline_dirtier ---@type eve.lib.collection.IDirtier
+local position = "f_sl" ---@type eve.lib.ux.nvimbar.Position
 
 local statusline ---@type eve.lib.ux.INvimbar
 statusline = Nvimbar.new({
   name = "statusline",
   component_sep = "  ",
-  component_sep_hlname = "f_sl_bg",
-  component_sep_hlname_active = "f_sl_bg",
+  component_sep_hlname = position .. "_bg",
+  component_sep_hlname_active = position .. "_bg",
   render_delay = 128,
   silent = not devmode,
   get_max_width = function()
@@ -31,24 +32,24 @@ statusline = Nvimbar.new({
 })
 
 statusline
-  :register(c.username(), "left")
-  :register(c.mode(), "left")
-  :register(c.git(), "left")
-  :register(c.filename(), "left")
-  :register(c.filestatus(), "left")
-  :register(c.readonly(), "left")
+  :register(c.username(position), "left")
+  :register(c.mode(position), "left")
+  :register(c.git(position), "left")
+  :register(c.filename(position), "left")
+  :register(c.filestatus(position), "left")
+  :register(c.readonly(position), "left")
   --
-  :register(c.debug_render_count(), "center")
-  :register(c.widget(), "center")
+  :register(c.debug_render_count(position), "center")
+  :register(c.widget(position), "center")
   --
-  :register(c.pos(), "right")
-  :register(c.filesize(), "right")
-  :register(c.filetype(), "right")
-  :register(c.fileformat(), "right")
-  :register(c.lsp(), "right")
-  :register(c.copilot(), "right")
-  :register(c.noice(), "right")
-  :register(c.diagnostics(), "right")
+  :register(c.pos(position), "right")
+  :register(c.filesize(position), "right")
+  :register(c.filetype(position), "right")
+  :register(c.fileformat(position), "right")
+  :register(c.lsp(position), "right")
+  :register(c.copilot(position), "right")
+  :register(c.noice(position), "right")
+  :register(c.diagnostics(position), "right")
 
 dirtier:subscribe(Subscriber.new({
   on_next = function()
