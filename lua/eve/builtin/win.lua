@@ -109,6 +109,16 @@ function M.refresh_all()
   for _, winnr in ipairs(winnrs) do
     M.refresh(winnr)
   end
+
+  local invalid_winnrs = {} ---@type integer[]
+  for winnr in pairs(meta_map) do
+    if not vim.api.nvim_win_is_valid(winnr) then
+      table.insert(invalid_winnrs, winnr)
+    end
+  end
+  for _, winnr in ipairs(invalid_winnrs) do
+    M.del_meta(winnr)
+  end
 end
 
 ---@param tabnr                         integer

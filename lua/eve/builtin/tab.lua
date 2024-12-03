@@ -106,7 +106,7 @@ function M.refresh_all()
 
   local invalid_tabnrs = {} ---@type integer[]
   for tabnr in pairs(meta_map) do
-    if not checks.is_tab_valid(tabnr) then
+    if tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
       table.insert(invalid_tabnrs, tabnr)
     end
   end

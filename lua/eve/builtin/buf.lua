@@ -112,7 +112,7 @@ function M.refresh_all()
 
   local invalid_bufnrs = {} ---@type integer[]
   for bufnr in pairs(meta_map) do
-    if not checks.is_buf_valid(bufnr) then
+    if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
       table.insert(invalid_bufnrs, bufnr)
     end
   end
