@@ -34,8 +34,6 @@ M.symbols = {
   flag_gitignore = "",
   flag_regex = "󰑑",
   flag_replace = "",
-  win_indicator = " ",
-  win_indicator_active = "▎",
 }
 
 ---@class eve.builtin.icons.kind

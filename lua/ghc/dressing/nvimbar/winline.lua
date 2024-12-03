@@ -33,7 +33,6 @@ winline = Nvimbar.new({
 
 winline
   ---
-  :register(c.win_indicator(), "left")
   :register(c.dirpath(), "left")
   :register(c.filename(), "left")
   :register(c.lsp_symbols(), "left")

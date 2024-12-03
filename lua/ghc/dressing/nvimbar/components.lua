@@ -335,8 +335,6 @@ end
 
 ---@return eve.lib.ux.nvimbar.IRawComponent
 function M.diffview()
-  local indicator_symbol_width = vim.api.nvim_strwidth(icons.symbols.win_indicator_active) ---@type integer
-
   ---@return integer
   local function get_pane_width()
     local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
@@ -361,23 +359,16 @@ function M.diffview()
         return "", 0
       end
 
-      local bufnr = eve.tab.get_current_bufnr() ---@type integer
-      local is_win_active = bufnr > 0
-        and vim.api.nvim_buf_is_valid(bufnr)
-        and vim.bo[bufnr].ft == constant.FT_DIFFVIEW_FILES
-      local indicator = is_win_active and icons.symbols.win_indicator_active or icons.symbols.win_indicator
-
       local text = icons.git.Git .. " Git Diffview" ---@type string
       local text_width = vim.api.nvim_strwidth(text) ---@type integer
-      local text_width_remain = width - text_width - indicator_symbol_width ---@type integer
+      local text_width_remain = width - text_width ---@type integer
       local left_width = math.floor(text_width_remain / 2)
       local right_width = text_width_remain - left_width - 1
       local left_blank = string.rep(" ", left_width)
       local right_blank = string.rep(" ", right_width)
       local right_split = "│"
 
-      local hl_text = txt(indicator, "f_sl_indicator")
-        .. txt(left_blank, "f_sl_sidebar_blank")
+      local hl_text = txt(left_blank, "f_sl_sidebar_blank")
         .. txt(text, "f_sl_sidebar_text")
         .. txt(right_blank, "f_sl_sidebar_blank")
         .. txt(right_split, "f_sl_sidebar_split")
@@ -761,8 +752,6 @@ end
 
 ---@return eve.lib.ux.nvimbar.IRawComponent
 function M.neotree()
-  local indicator_symbol_width = vim.api.nvim_strwidth(icons.symbols.win_indicator_active) ---@type integer
-
   ---@return integer
   local function get_pane_width()
     local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
@@ -787,22 +776,17 @@ function M.neotree()
         return "", 0
       end
 
-      local bufnr = eve.tab.get_current_bufnr() ---@type integer
-      local is_win_active = bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].ft == constant.FT_NEOTREE
-      local indicator = is_win_active and icons.symbols.win_indicator_active or icons.symbols.win_indicator
-
       local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
       local text = icons.ui.Explorer .. " " .. cwd_name ---@type string
       local text_width = vim.api.nvim_strwidth(text) ---@type integer
-      local text_width_remain = width - text_width - indicator_symbol_width ---@type integer
+      local text_width_remain = width - text_width ---@type integer
       local left_width = math.floor(text_width_remain / 2)
       local right_width = text_width_remain - left_width - 1
       local left_blank = string.rep(" ", left_width)
       local right_blank = string.rep(" ", right_width)
       local right_split = "│"
 
-      local hl_text = txt(indicator, "f_sl_sidebar_indicator")
-        .. txt(left_blank, "f_sl_sidebar_blank")
+      local hl_text = txt(left_blank, "f_sl_sidebar_blank")
         .. txt(text, "f_sl_sidebar_text")
         .. txt(right_blank, "f_sl_sidebar_blank")
         .. txt(right_split, "f_sl_sidebar_split")
@@ -1034,26 +1018,6 @@ function M.widget()
         end
       end
 
-      return hl_text, width
-    end,
-  }
-  return component
-end
-
----@return eve.lib.ux.nvimbar.IRawComponent
-function M.win_indicator()
-  ---@type eve.lib.ux.nvimbar.IRawComponent
-  local component = {
-    name = "win_indicator",
-    ---@diagnostic disable-next-line: unused-local
-    render = function(context, remain_width)
-      local winnr_cur = eve.tab.get_current_winnr() ---@type integer
-      local activated = winnr_cur > 0 and winnr_cur == context.winnr ---@type boolean
-      local text = activated and icons.symbols.win_indicator_active or icons.symbols.win_indicator ---@type string
-      local hln_text = "f_sl_indicator" ---@type string
-
-      local hl_text = txt(text, hln_text)
-      local width = vim.api.nvim_strwidth(text) ---@type integer
       return hl_text, width
     end,
   }
