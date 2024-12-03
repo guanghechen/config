@@ -84,6 +84,13 @@ vim.api.nvim_create_autocmd({ "TabClosed" }, {
   end,
 })
 
+vim.api.nvim_create_autocmd({ "WinClosed" }, {
+  callback = function()
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
+  end,
+})
+
 vim.api.nvim_create_autocmd({ "VimEnter" }, {
   callback = function()
     local cwd = path.cwd() ---@type string
