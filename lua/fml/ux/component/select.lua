@@ -1,5 +1,7 @@
 local Observable = require("eve.lib.collection.observable")
 local oxi = require("eve.lib.oxi")
+local icons = require("eve.builtin.icons")
+local status = require("eve.builtin.status")
 local Search = require("fml.ux.component.search.search")
 
 ---@class fml.ux.Select : fml.t.ux.ISelect
@@ -86,7 +88,7 @@ function M.new(props)
       local flag = case_sensitive:snapshot() ---@type boolean
       case_sensitive:next(not flag)
       self:mark_search_state_dirty()
-      eve.state.state.status.statusline_dirtier:mark_dirty()
+      status.statusline_dirtier:mark_dirty()
     end
 
     ---@return nil
@@ -94,7 +96,7 @@ function M.new(props)
       local flag = flag_fuzzy:snapshot() ---@type boolean
       flag_fuzzy:next(not flag)
       self:mark_search_state_dirty()
-      eve.state.state.status.statusline_dirtier:mark_dirty()
+      status.statusline_dirtier:mark_dirty()
     end
 
     ---@return nil
@@ -102,7 +104,7 @@ function M.new(props)
       local flag = flag_regex:snapshot() ---@type boolean
       flag_regex:next(not flag)
       self:mark_search_state_dirty()
-      eve.state.state.status.statusline_dirtier:mark_dirty()
+      status.statusline_dirtier:mark_dirty()
     end
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
@@ -110,21 +112,21 @@ function M.new(props)
       {
         type = "flag",
         desc = "select: toggle flag fuzzy",
-        symbol = eve.icons.symbols.flag_fuzzy,
+        symbol = icons.symbols.flag_fuzzy,
         state = flag_fuzzy,
         callback = toggle_flag_fuzzy,
       },
       {
         type = "flag",
         desc = "select: toggle case sensitive",
-        symbol = eve.icons.symbols.flag_case_sensitive,
+        symbol = icons.symbols.flag_case_sensitive,
         state = case_sensitive,
         callback = toggle_case_sensitive,
       },
       {
         type = "flag",
         desc = "select: toggle flag regex",
-        symbol = eve.icons.symbols.flag_regex,
+        symbol = icons.symbols.flag_regex,
         state = flag_regex,
         callback = toggle_flag_regex,
       },

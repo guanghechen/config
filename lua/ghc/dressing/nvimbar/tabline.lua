@@ -1,11 +1,12 @@
 local functional = require("eve.lib.functional")
 local Nvimbar = require("eve.lib.ux.nvimbar")
 local Subscriber = require("eve.lib.collection.subscriber")
+local status = require("eve.builtin.status")
 local state = require("eve.state")
 local c = require("ghc.dressing.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
-local dirtier = state.state.status.tabline_dirtier ---@type eve.lib.collection.IDirtier
+local dirtier = status.tabline_dirtier ---@type eve.lib.collection.IDirtier
 
 local tabline ---@type eve.lib.ux.INvimbar
 tabline = Nvimbar.new({

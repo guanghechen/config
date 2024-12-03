@@ -1,10 +1,12 @@
 local __module_name__ = "ghc.command.refresh" ---@type string
 
 local reporter = require("eve.lib.reporter")
+local commander = require("eve.builtin.commander")
+local status = require("eve.builtin.status")
 local state = require("eve.state")
-local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
+local uuids = commander.uuids ---@type eve.builtin.commander.uuids
 
-eve.commander.register({
+commander.register({
   uuid = uuids.refresh_all,
   desc = "refresh: all",
   action = function()
@@ -28,12 +30,12 @@ eve.commander.register({
     end)
 
     if devmode then
-      eve.commander.execute(eve.commander.uuids.reload_theme, "force")
+      commander.execute(uuids.reload_theme, "force")
     end
 
     vim.cmd("LspRestart")
-    eve.state.state.status.statusline_dirtier:mark_dirty()
-    eve.state.state.status.tabline_dirtier:mark_dirty()
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
     vim.cmd.redraw()
 
     reporter.info({

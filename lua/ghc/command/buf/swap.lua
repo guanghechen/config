@@ -1,3 +1,4 @@
+local status = require("eve.builtin.status")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
@@ -21,8 +22,8 @@ eve.commander
           local bufnr_next = meta.bufnrs[bufid_next]
           meta.bufnrs[bufid_next] = bufnr_cur
           meta.bufnrs[bufid_cur] = bufnr_next
-          eve.state.state.status.statusline_dirtier:mark_dirty()
-          eve.state.state.status.tabline_dirtier:mark_dirty()
+          status.statusline_dirtier:mark_dirty()
+          status.tabline_dirtier:mark_dirty()
         end
       end
     end,
@@ -47,8 +48,8 @@ eve.commander
           local bufnr_next = meta.bufnrs[bufid_next]
           meta.bufnrs[bufid_next] = bufnr_cur
           meta.bufnrs[bufid_cur] = bufnr_next
-          eve.state.state.status.statusline_dirtier:mark_dirty()
-          eve.state.state.status.tabline_dirtier:mark_dirty()
+          status.statusline_dirtier:mark_dirty()
+          status.tabline_dirtier:mark_dirty()
         end
       end
     end,

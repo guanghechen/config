@@ -36,13 +36,6 @@
 ---@field public row                    integer
 ---@field public col                    integer
 
----@class eve.t.state.state.status
----@field public lsp_msg                eve.lib.collection.IObservable
----@field public tmux_zen_mode          eve.lib.collection.IObservable
----@field public winline_dirty_nr       eve.lib.collection.IObservable
----@field public statusline_dirtier     eve.lib.collection.IDirtier
----@field public tabline_dirtier        eve.lib.collection.IDirtier
-
 ---@class eve.t.state.session.data
 ---@field public bufs                   eve.t.state.data.buf.IMeta[]
 ---@field public tabs                   eve.t.state.data.tab.IMeta[]
@@ -50,7 +43,6 @@
 ---@field public tab_history            eve.lib.collection.history.ISerializedData
 
 ---@class eve.t.state.session.state
----@field public status                 eve.t.state.state.status
 ---@field public tab_history            eve.lib.collection.IAdvanceHistory
 
 ---@class eve.t.state.session

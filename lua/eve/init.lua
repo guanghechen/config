@@ -13,6 +13,7 @@ local builtin = {
   mvc = require("eve.builtin.mvc"),
   nvim = require("eve.builtin.nvim"),
   qflist = require("eve.builtin.qflist"),
+  status = require("eve.builtin.status"),
   tab = require("eve.builtin.tab"),
   util = require("eve.builtin.util"),
   widgets = require("eve.builtin.widgets"),

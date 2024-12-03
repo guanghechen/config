@@ -1,3 +1,4 @@
+local status = require("eve.builtin.status")
 local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
@@ -24,7 +25,7 @@ eve.commander.register({
       end
 
       meta.pinned = not pinned
-      eve.state.state.status.tabline_dirtier:mark_dirty()
+      status.tabline_dirtier:mark_dirty()
     end
   end,
 })

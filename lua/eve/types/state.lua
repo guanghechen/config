@@ -28,7 +28,6 @@
 ---@field public flight                 eve.t.state.state.flight
 ---@field public search                 eve.t.state.state.search
 ---
----@field public status                 eve.t.state.state.status
 ---@field public frecency               eve.t.state.state.frecency
 ---@field public input_history          eve.t.state.state.input_history
 ---@field public tab_history            eve.lib.collection.IAdvanceHistory

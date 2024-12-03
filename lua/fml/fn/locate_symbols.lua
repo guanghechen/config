@@ -1,8 +1,8 @@
 local __module_name__ = "fml.fn.locate_symbols" ---@type string
 
-local constant = require("eve.builtin.constant")
 local reporter = require("eve.lib.reporter")
-local state = require("eve.state")
+local constant = require("eve.builtin.constant")
+local status = require("eve.builtin.status")
 
 local locating_set = {} ---@type table<integer, boolean>
 local dirty_set = {} ---@type table<integer, boolean>
@@ -94,7 +94,7 @@ local function locate_symbols(winnr, force)
       for i = k + 1, N, 1 do
         pieces[i] = nil
       end
-      state.state.status.winline_dirty_nr:next(winnr)
+      status.winline_dirty_nr:next(winnr)
     end
 
     if dirty_set[winnr] then

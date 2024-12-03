@@ -11,6 +11,7 @@ local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
 local icons = require("eve.builtin.icons")
 local locations = require("eve.builtin.locations")
+local status = require("eve.builtin.status")
 local util = require("eve.builtin.util")
 local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
@@ -193,11 +194,11 @@ function M.copilot()
   ---@type string
   local fn_show_message = G.register_anonymous_fn(function()
     if package.loaded["copilot"] then
-      local status = require("copilot.api").status.data
+      local copilot_status = require("copilot.api").status.data
       reporter.info({
         from = __module_name__,
         subject = "copilot",
-        details = { status = status or "nil" },
+        details = { status = copilot_status or "nil" },
       })
     end
   end)
@@ -218,17 +219,18 @@ function M.copilot()
       return not not package.loaded["copilot"]
     end,
     will_change = function()
-      local status = require("copilot.api").status.data.status ---@type string|nil
-      local changed = status ~= last_status
-      last_status = status
+      local copilot_status = require("copilot.api").status.data.status ---@type string|nil
+      local changed = copilot_status ~= last_status
+      last_status = copilot_status
       return changed
     end,
     render = function()
-      local status = last_status or "Normal" ---@type string
-      local icon = status_icon_map[status] or icons.cmp.copilot ---@type string
+      local copilot_status = last_status or "Normal" ---@type string
+      local icon = status_icon_map[copilot_status] or icons.cmp.copilot ---@type string
       local text = icon .. " " ---@type string
       local width = vim.api.nvim_strwidth(text) ---@type integer
-      local hl_text = txt(text, (status == nil or #status < 1) and "f_sl_text" or ("f_sl_copilot_" .. status))
+      local hl_text =
+        txt(text, (copilot_status == nil or #copilot_status < 1) and "f_sl_text" or ("f_sl_copilot_" .. copilot_status))
       hl_text = btn(hl_text, fn_show_message)
       return hl_text, width
     end,
@@ -268,7 +270,7 @@ function M.debug_render_count()
     end,
     render = function()
       count = count + 1
-      local text = "  " .. util.pad_start(tostring(count % 10000), 4, "0") .. " " ---@type string
+      local text = "  " .. util.pad_start(tostring(count % 100000), 5, "0") .. " " ---@type string
       local hl_text = txt(text, "f_sl_debug_render_count") ---@type string
       local width = vim.api.nvim_strwidth(text) ---@type integer
       return hl_text, width
@@ -573,12 +575,12 @@ function M.filestatus()
       return prev_context == nil or context.filepath ~= prev_context.filepath or context.mode ~= prev_context.mode
     end,
     render = function()
-      local status = get_filestatus() ---@type string
-      if #status < 1 then
+      local filestatus = get_filestatus() ---@type string
+      if #filestatus < 1 then
         return "", 0
       end
 
-      local text_filestatus = " " .. status ---@type string
+      local text_filestatus = " " .. filestatus ---@type string
       local hl_text = txt(text_filestatus, "f_sl_text") ---@type string
       local width = vim.api.nvim_strwidth(text_filestatus)
       return hl_text, width
@@ -659,7 +661,7 @@ function M.lsp()
       local width = vim.api.nvim_strwidth(text) ---@type integer
       local hl_text = txt(text, "f_sl_text") ---@type string
 
-      local lsp_msg = state.state.status.lsp_msg:snapshot() ---@type string
+      local lsp_msg = status.lsp_msg:snapshot() ---@type string
       if lsp_msg ~= "" then
         hl_text = txt(lsp_msg, "f_sl_text") .. " " .. hl_text
         width = width + vim.api.nvim_strwidth(lsp_msg) + 1
@@ -815,17 +817,17 @@ function M.noice()
       return not not package.loaded["noice"]
     end,
     render = function()
-      local status = require("noice").api.status
+      local noice_status = require("noice").api.status
       local hl_text = "" ---@type string
       local width = 0 ---@type integer
 
-      --    local text_noice_command = status.command.get() ---@type string | nil
+      --    local text_noice_command = noice_status.command.get() ---@type string | nil
       --    if text_noice_command ~= nil and #text_noice_command > 0 then
       --      hl_text = txt(text_noice_command, "f_sl_noice_command")
       --      width = vim.api.nvim_strwidth(text_noice_command)
       --    end
 
-      local text_noice_mode = status.mode.get() or ""
+      local text_noice_mode = noice_status.mode.get() or ""
       if text_noice_mode ~= nil and #text_noice_mode > 0 then
         if width > 0 then
           hl_text = hl_text .. txt(" ", "f_sl_bg")
@@ -917,7 +919,7 @@ function M.tabs()
   local fn_toggle_tabs_folded = G.register_anonymous_fn(function()
     folded = not folded
     dirty = true
-    eve.state.state.status.tabline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
   end) or ""
 
   ---@type eve.lib.ux.nvimbar.IRawComponent

@@ -1,5 +1,6 @@
 local Nvimbar = require("eve.lib.ux.nvimbar")
 local Subscriber = require("eve.lib.collection.subscriber")
+local status = require("eve.builtin.status")
 local state = require("eve.state")
 local c = require("ghc.dressing.nvimbar.components")
 
@@ -81,7 +82,7 @@ local function refresh(winnr)
   return winline:render()
 end
 
-state.state.status.winline_dirty_nr:subscribe(
+status.winline_dirty_nr:subscribe(
   Subscriber.new({
     on_next = function(winnr)
       refresh(winnr)

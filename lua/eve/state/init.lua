@@ -8,6 +8,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 local Ticker = require("eve.lib.collection.ticker")
 local mvc = require("eve.builtin.mvc")
 local nvim = require("eve.builtin.nvim")
+local status = require("eve.builtin.status")
 local editor = require("eve.state.editor")
 local session = require("eve.state.session")
 local workspace = require("eve.state.workspace")
@@ -100,7 +101,6 @@ function M.load(storage)
       search = workspace.state.search,
 
       ---! session
-      status = session.state.status,
       tab_history = session.state.tab_history,
 
       ---
@@ -156,8 +156,8 @@ function M.watch_changes(params)
     end
 
     state.dirtier.editor_states:tick()
-    state.status.statusline_dirtier:mark_dirty()
-    state.status.tabline_dirtier:mark_dirty()
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
     vim.cmd.redraw()
   end, true)
 
@@ -165,8 +165,8 @@ function M.watch_changes(params)
     state.theme.relativenumber,
   }, function()
     state.dirtier.editor_states:tick()
-    state.status.statusline_dirtier:mark_dirty()
-    state.status.tabline_dirtier:mark_dirty()
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
     vim.cmd.redraw()
   end, true)
 
@@ -210,7 +210,7 @@ function M.watch_changes(params)
     state.search.search_paths,
   }, function()
     state.dirtier.workspace_states:tick()
-    state.status.statusline_dirtier:mark_dirty()
+    status.statusline_dirtier:mark_dirty()
   end, true)
 
   ---! Trigger statusline redraw.
@@ -228,17 +228,16 @@ function M.watch_changes(params)
     state.search.scope,
 
     ---status
-    state.status.lsp_msg,
+    status.lsp_msg,
   }, function()
-    state.status.statusline_dirtier:mark_dirty()
+    status.statusline_dirtier:mark_dirty()
   end, true)
 
   ---! Trigger tabline redraw.
   mvc.observe({
-    ---flight
     state.flight.devmode,
   }, function()
-    state.status.tabline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
   end, true)
 
   mvc.observe({

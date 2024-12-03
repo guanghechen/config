@@ -1,9 +1,5 @@
 local path = require("eve.lib.path")
-local functional = require("eve.lib.functional")
 local AdvanceHistory = require("eve.lib.collection.history_advance")
-local Observable = require("eve.lib.collection.observable")
-local Diritier = require("eve.lib.collection.dirtier")
-local tmux = require("eve.lib.tmux")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
 local nvim = require("eve.builtin.nvim")
@@ -145,15 +141,6 @@ end
 ---@return nil
 function M.load(data)
   if M.state == nil then
-    ---@type eve.t.state.state.status
-    local status = {
-      lsp_msg = Observable.from_value(""),
-      tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
-      winline_dirty_nr = Observable.from_value(0, functional.falsy),
-      statusline_dirtier = Diritier.new(),
-      tabline_dirtier = Diritier.new(),
-    }
-
     ---@type eve.lib.collection.IAdvanceHistory
     local tab_history = AdvanceHistory.new({
       name = "tabs",
@@ -163,7 +150,6 @@ function M.load(data)
 
     ---@type eve.t.state.session.state
     local state = {
-      status = status,
       tab_history = tab_history,
     }
     M.state = state
@@ -236,13 +222,6 @@ function M.load(data)
   _buf.refresh_all()
   _win.refresh_all()
   _tab.refresh_all()
-
-  ---! status
-  state.status.lsp_msg:next("")
-  state.status.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
-  state.status.winline_dirty_nr:next(0)
-  state.status.statusline_dirtier:mark_dirty()
-  state.status.tabline_dirtier:mark_dirty()
 
   ---! tab_history
   local stack = {} ---@type integer[]
