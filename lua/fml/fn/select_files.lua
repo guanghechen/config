@@ -1,6 +1,6 @@
 local path = require("eve.lib.path")
 local Observable = require("eve.lib.collection.observable")
-local locations = require("eve.builtin.locations")
+local checks = require("eve.builtin.checks")
 local state = require("eve.state")
 local FileSelect = require("fml.ux.component.file_select")
 
@@ -30,11 +30,13 @@ local function select_files(params)
     ---@return string|nil
     get_present = function()
       local present_filepath = nil ---@type string|nil
-      local winnr_cur = locations.get_current_winnr() ---@type integer|nil
-      if winnr_cur ~= nil and vim.api.nvim_win_is_valid(winnr_cur) then
-        local bufnr = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
-        local absolute_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        present_filepath = path.relative(cwd, absolute_filepath, true) ---@type string
+      local winnr = eve.tab.get_current_winnr() ---@type integer
+      if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+        if checks.is_buf_valid(bufnr) then
+          local absolute_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+          present_filepath = path.relative(cwd, absolute_filepath, true) ---@type string
+        end
       end
       return present_filepath
     end

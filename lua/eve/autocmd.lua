@@ -1,6 +1,5 @@
 local env = require("eve.lib.env")
 local ft = require("eve.builtin.filetype")
-local locations = require("eve.builtin.locations")
 local mvc = require("eve.builtin.mvc")
 local widgets = require("eve.builtin.widgets")
 
@@ -41,22 +40,6 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
       local lcount = vim.api.nvim_buf_line_count(bufnr)
       if mark[1] > 0 and mark[1] <= lcount then
         pcall(vim.api.nvim_win_set_cursor, 0, mark)
-      end
-    end
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
-  callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local win_config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-    if win_config.relative == nil or win_config.relative == "" then
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-
-      local filetype = vim.bo[bufnr].filetype
-      if ft.is_plain_file(filetype) then
-        locations.set_current_bufnr(bufnr)
-        locations.set_current_winnr(winnr)
       end
     end
   end,

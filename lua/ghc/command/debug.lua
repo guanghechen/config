@@ -15,8 +15,8 @@ eve.commander
       local buftype = vim.bo[bufnr].buftype ---@type string
       local filetype = vim.bo[bufnr].filetype ---@type string
 
-      local winnr_cur = eve.locations.get_current_winnr() ---@type integer|nil
-      local bufnr_cur = eve.locations.get_current_bufnr() ---@type integer|nil
+      local winnr_cur = eve.tab.get_current_winnr() ---@type integer
+      local bufnr_cur = winnr_cur > 0 and vim.api.nvim_win_get_buf(winnr_cur) or 0 ---@type integer
 
       reporter.info({
         from = __module_name__,

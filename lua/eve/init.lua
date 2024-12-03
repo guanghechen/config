@@ -8,7 +8,6 @@ local builtin = {
   debug = require("eve.builtin.debug"),
   filetype = require("eve.builtin.filetype"),
   icons = require("eve.builtin.icons"),
-  locations = require("eve.builtin.locations"),
   lsp = require("eve.builtin.lsp"),
   mvc = require("eve.builtin.mvc"),
   nvim = require("eve.builtin.nvim"),

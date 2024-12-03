@@ -286,16 +286,30 @@ end
 function M.fetch_data(input_text, force, callback)
   local cwd = state.search_cwd:snapshot() ---@type string
   local scope = context_state.state.search.scope:snapshot() ---@type eve.e.SearchScope
-  local current_buf_filepath = eve.locations.get_current_buf_filepath() ---@type string|nil
-  local is_searching_current_buf = scope == "B" and current_buf_filepath ~= nil ---@type boolean
-  local specified_filepath = scope == "B" and current_buf_filepath or nil ---@type string|nil
+
+  local specified_filepath ---@type string|nil
+  if scope == "B" then
+    local bufnr
+    eve.tab.get_current_bufnr() ---@type integer
+    if checks.is_buf_valid(bufnr) then
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      specified_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
+    end
+  end
+
+  local is_searching_current_buf = specified_filepath ~= nil ---@type boolean
 
   if fs.is_file_or_dir(cwd) ~= "directory" then
     reporter.error({
       from = __module_name__,
       subject = "fetch_data",
       message = "The cwd is not a valid directory path",
-      details = { cwd = cwd, scope = scope, current_buf_filepath = current_buf_filepath },
+      details = {
+        cwd = cwd,
+        scope = scope,
+        specified_filepath = specified_filepath,
+        is_searching_current_buf = is_searching_current_buf,
+      },
     })
     return
   end

@@ -37,18 +37,25 @@ vim.api.nvim_create_autocmd({ "ModeChanged" }, {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
   callback = function(arg)
     local bufnr = arg.buf ---@type integer
     eve.win.on_buf_enter(bufnr)
     eve.tab.on_buf_enter(bufnr)
 
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-    if meta ~= nil then
-      meta.lsp_symbols = {} ---@type eve.t.state.state.lsp.ISymbol[]
+    local meta_win = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+    if meta_win ~= nil then
+      meta_win.lsp_symbols = {} ---@type eve.t.state.state.lsp.ISymbol[]
       status.winline_dirty_nr:next(winnr)
+
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      if meta_tab ~= nil then
+        meta_tab.winnr_listed = winnr
+      end
     end
+
     status.statusline_dirtier:mark_dirty()
     status.tabline_dirtier:mark_dirty()
   end,
@@ -107,8 +114,9 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
 
 vim.api.nvim_create_autocmd({ "CursorHold" }, {
   callback = function()
-    local winnr = eve.locations.get_current_winnr() ---@type integer|nil
-    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    local meta_tab = eve.tab.get_current() ---@type eve.t.state.state.tab.IMeta|nil
+    local winnr = meta_tab and meta_tab.winnr_listed or 0 ---@type integer
+    if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
       vim.schedule(function()
         eve.win.locate_symbols(winnr)
       end)

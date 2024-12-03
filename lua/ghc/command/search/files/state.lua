@@ -4,6 +4,7 @@ local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
 local Subscriber = require("eve.lib.collection.subscriber")
+local checks = require("eve.builtin.checks")
 local state = require("eve.state")
 
 ---@param dirpath                       string
@@ -40,7 +41,12 @@ local state_search_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
 state.state.search.scope:subscribe(
   Subscriber.new({
     on_next = function()
-      local current_buf_dirpath = eve.locations.get_current_buf_dirpath() ---@type string
+      local bufnr = eve.tab.get_current_bufnr() ---@type integer
+      ---@type string
+      local current_buf_dirpath = checks.is_buf_valid(bufnr) --
+          and path.dirname(vim.api.nvim_buf_get_name(bufnr))
+        or path.cwd()
+
       local current_search_cwd = state_search_cwd:snapshot() ---@type string
       local next_search_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
       if current_search_cwd ~= next_search_cwd then

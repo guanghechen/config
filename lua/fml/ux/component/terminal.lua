@@ -175,19 +175,19 @@ end
 
 ---@return nil
 function M:hide()
-  local winnr_cur = eve.locations.get_current_winnr() or 0 ---@type integer
-  if winnr_cur ~= 0 then
-    vim.api.nvim_tabpage_set_win(0, winnr_cur)
+  local winnr = eve.tab.get_current_winnr() ---@type integer
+  if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_tabpage_set_win(0, winnr)
   end
 
-  local winnr = self._winnr ---@type integer|nil
+  local terminal_winnr = self._winnr ---@type integer|nil
   local visible = self._status == "visible" ---@type boolean
 
   self._winnr = nil
   self._status = "hidden"
 
-  if visible and winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    vim.api.nvim_win_close(winnr, true)
+  if visible and terminal_winnr ~= nil and vim.api.nvim_win_is_valid(terminal_winnr) then
+    vim.api.nvim_win_close(terminal_winnr, true)
   end
 end
 

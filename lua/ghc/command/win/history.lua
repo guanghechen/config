@@ -26,7 +26,7 @@ local function get_history_select()
         local items = {} ---@type fml.t.ux.file_select.IRawItem[]
         local present_uuid = "0" ---@type string
         local width = 0 ---@type integer
-        local winnr = eve.locations.get_current_winnr() ---@type integer|nil
+        local winnr = eve.tab.get_current_winnr() ---@type integer
         local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
         if meta == nil then
           reporter.error({
@@ -102,7 +102,7 @@ local function get_history_select()
       on_confirm = function(item)
         local item_index = tonumber(item.uuid) ---@type integer|nil
         if item_index ~= nil then
-          local winnr = eve.locations.get_current_winnr() ---@type integer|nil
+          local winnr = eve.tab.get_current_winnr() ---@type integer
           local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
           if meta ~= nil then
             meta.filepath_history:go(item_index)

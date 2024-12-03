@@ -184,6 +184,10 @@ function M.resolve(winnr)
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  if not checks.is_buf_valid(bufnr) then
+    return nil
+  end
+
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local filepath_history = AdvanceHistory.new({
     name = "win#bufs",

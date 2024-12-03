@@ -10,7 +10,6 @@ local commander = require("eve.builtin.commander")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
 local icons = require("eve.builtin.icons")
-local locations = require("eve.builtin.locations")
 local status = require("eve.builtin.status")
 local util = require("eve.builtin.util")
 local widgets = require("eve.builtin.widgets")
@@ -95,7 +94,7 @@ function M.bufs()
         return "", 0
       end
 
-      local bufnr_cur = locations.get_current_bufnr() ---@type integer|nil
+      local bufnr_cur = eve.tab.get_current_bufnr() ---@type integer
       local bufid_src = util.find_index(tab_bufnrs, bufnr_cur) ---@type integer|nil
       local bufid_cur = bufid_src or 1
       bufnr_cur = tab_bufnrs[bufid_cur]
@@ -362,9 +361,10 @@ function M.diffview()
         return "", 0
       end
 
-      local winnr_cur = locations.get_current_winnr() or 0 ---@type integer
-      local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
-      local is_win_active = vim.bo[bufnr_cur].ft == constant.FT_DIFFVIEW_FILES
+      local bufnr = eve.tab.get_current_bufnr() ---@type integer
+      local is_win_active = bufnr > 0
+        and vim.api.nvim_buf_is_valid(bufnr)
+        and vim.bo[bufnr].ft == constant.FT_DIFFVIEW_FILES
       local indicator = is_win_active and icons.symbols.win_indicator_active or icons.symbols.win_indicator
 
       local text = icons.git.Git .. " Git Diffview" ---@type string
@@ -547,9 +547,12 @@ end
 function M.filestatus()
   ---@return string
   local function get_filestatus()
-    local winnr = locations.get_current_winnr() or 0 ---@type integer
-    local bufnr_status_line = vim.api.nvim_win_get_buf(winnr)
-    local buffer_status_line = vim.b[bufnr_status_line]
+    local bufnr = eve.tab.get_current_bufnr() ---@type integer
+    if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
+      return ""
+    end
+
+    local buffer_status_line = vim.b[bufnr]
     if buffer_status_line and buffer_status_line.gitsigns_head and not buffer_status_line.gitsigns_git_status then
       local texts = {} ---@type string[]
       local git_status = buffer_status_line.gitsigns_status_dict
@@ -637,8 +640,10 @@ end
 function M.lsp()
   ---@return string
   local function get_text()
-    local winnr = locations.get_current_winnr() or 0 ---@type integer
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local bufnr = eve.tab.get_current_bufnr() ---@type integer
+    if bufnr > 0 and not vim.api.nvim_buf_is_valid(bufnr) then
+      return ""
+    end
 
     local client_names = {} ---@type string[]
     for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
@@ -782,9 +787,8 @@ function M.neotree()
         return "", 0
       end
 
-      local winnr_cur = locations.get_current_winnr() or 0 ---@type integer
-      local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
-      local is_win_active = vim.bo[bufnr_cur].ft == constant.FT_NEOTREE
+      local bufnr = eve.tab.get_current_bufnr() ---@type integer
+      local is_win_active = bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].ft == constant.FT_NEOTREE
       local indicator = is_win_active and icons.symbols.win_indicator_active or icons.symbols.win_indicator
 
       local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
@@ -1043,8 +1047,8 @@ function M.win_indicator()
     name = "win_indicator",
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
-      local winnr_cur = locations.get_current_winnr() or 0 ---@type integer
-      local activated = winnr_cur == context.winnr ---@type boolean
+      local winnr_cur = eve.tab.get_current_winnr() ---@type integer
+      local activated = winnr_cur > 0 and winnr_cur == context.winnr ---@type boolean
       local text = activated and icons.symbols.win_indicator_active or icons.symbols.win_indicator ---@type string
       local hln_text = "f_sl_indicator" ---@type string
 

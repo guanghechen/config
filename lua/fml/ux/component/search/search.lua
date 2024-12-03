@@ -830,8 +830,8 @@ end
 
 ---@return nil
 function M:hide()
-  local winnr = eve.locations.get_current_winnr() or 0 ---@type integer
-  if winnr ~= 0 then
+  local winnr = eve.tab.get_current_winnr() ---@type integer
+  if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
   end
 

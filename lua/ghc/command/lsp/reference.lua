@@ -2,6 +2,7 @@ local __module_name__ = "ghc.command.lsp.reference" ---@type string
 
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
+local checks = require("eve.builtin.checks")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@param method                        string
@@ -9,8 +10,9 @@ local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 ---@param callback                      fun(ok: boolean, data: fml.t.ux.file_select.IData|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, additional_params, callback)
-  local bufnr = eve.locations.get_current_bufnr() or vim.api.nvim_get_current_buf() ---@type integer
-  if not eve.lsp.has_support_method(bufnr, method) then
+  local winnr = eve.tab.get_current_winnr() or 0 ---@type integer
+  local bufnr = winnr > 0 and vim.api.nvim_win_get_buf(winnr) or 0 ---@type integer
+  if not checks.is_buf_valid(bufnr) or not eve.lsp.has_support_method(bufnr, method) then
     reporter.error({
       from = __module_name__,
       subject = "fetch_data",
@@ -22,7 +24,6 @@ local function fetch_data(method, additional_params, callback)
   end
 
   local cwd = path.cwd() ---@type string
-  local winnr = eve.locations.get_current_winnr() or 0 ---@type integer
   local params = vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr), additional_params)
 
   vim.lsp.buf_request_all(bufnr, method, params, function(results_per_client)

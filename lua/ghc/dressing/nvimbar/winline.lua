@@ -24,8 +24,8 @@ winline = Nvimbar.new({
     return { winnr = rendering_winnr }
   end,
   is_active = function(context)
-    local winnr_cur = eve.locations.get_current_winnr() or 0 ---@type integer
-    return winnr_cur == context.winnr
+    local winnr_cur = eve.tab.get_current_winnr() or 0 ---@type integer
+    return winnr_cur > 0 and winnr_cur == context.winnr
   end,
   trigger_rerender = functional.noop,
   validate = functional.noop,

@@ -1,8 +1,8 @@
 local path = require("eve.lib.path")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
-local locations = require("eve.builtin.locations")
 local calc_fileicon = require("eve.builtin.nvim").calc_fileicon
+local tab = require("eve.builtin.tab")
 
 local meta_map = {} ---@type table<integer, eve.t.state.state.buf.IMeta>
 
@@ -12,7 +12,7 @@ local M = {}
 ---@param bufnr                         integer|nil
 ---@return eve.t.state.state.buf.IMeta|nil
 function M.get_meta(bufnr)
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+  if bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
     return meta_map[bufnr]
   end
 end
@@ -21,7 +21,7 @@ end
 ---@param meta                          eve.t.state.state.buf.IMeta|nil
 ---@return eve.t.state.state.buf.IMeta|nil
 function M.set_meta(bufnr, meta)
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+  if bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
     meta_map[bufnr] = meta
     return meta
   end
@@ -126,8 +126,9 @@ end
 ---@param bufnr                         integer the stable unique number of the buffer
 ---@return nil
 function M.go(bufnr)
-  local winnr = locations.get_current_winnr() ---@type integer|nil
-  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+  local meta_tab = tab.get_current() ---@type eve.t.state.state.tab.IMeta|nil
+  local winnr = meta_tab and meta_tab.winnr_listed or 0 ---@type integer
+  if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end
 end
@@ -193,8 +194,8 @@ end
 ---@param col                           ?integer
 ---@return boolean
 function M.open_filepath_in_current_valid_win(filepath, lnum, col)
-  local winnr = locations.get_current_winnr() ---@type integer|nil
-  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+  local winnr = tab.get_current_winnr() ---@type integer
+  if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
     return M.open_filepath(winnr, filepath, lnum, col)
   end
   return false

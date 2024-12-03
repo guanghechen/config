@@ -21,6 +21,7 @@
 ---@class eve.t.state.state.tab.IMeta
 ---@field public name                   string
 ---@field public bufnrs                 integer[]
+---@field public winnr_listed           integer
 
 ---@class eve.t.state.data.win.IMeta
 ---@field public winnr                  integer

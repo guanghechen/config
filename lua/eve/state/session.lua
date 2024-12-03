@@ -212,6 +212,7 @@ function M.load(data)
       local meta = {
         name = item.name or constant.TAB_UNNAMED,
         bufnrs = bufnrs,
+        winnr_listed = 0,
       }
       _tab.set_meta(real_tabnr, meta)
     end

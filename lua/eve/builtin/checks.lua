@@ -33,7 +33,7 @@ local M = {}
 ---@param bufnr                         integer
 ---@return boolean
 function M.is_buf_valid(bufnr)
-  if bufnr == 0 or not vim.api.nvim_buf_is_valid(bufnr) then
+  if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
 
@@ -41,18 +41,14 @@ function M.is_buf_valid(bufnr)
     return false
   end
 
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-  if not ft.is_plain_file(filetype) then
-    return false
-  end
-
-  return true
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  return ft.is_plain_file(filetype)
 end
 
 ---@param tabnr                         integer
 ---@return boolean
 function M.is_tab_valid(tabnr)
-  if tabnr == 0 or not vim.api.nvim_tabpage_is_valid(tabnr) then
+  if tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
     return false
   end
 
@@ -69,7 +65,7 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_win_valid(winnr)
-  if winnr == 0 or not vim.api.nvim_win_is_valid(winnr) then
+  if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
     return false
   end
   return not M.is_win_floating(winnr)

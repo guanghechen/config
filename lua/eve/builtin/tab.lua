@@ -32,6 +32,27 @@ function M.del_meta(tabnr)
   end
 end
 
+---@return eve.t.state.state.tab.IMeta|nil
+function M.get_current()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  return M.resolve(tabnr)
+end
+
+---@return integer
+function M.get_current_winnr()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta = M.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+  return meta and meta.winnr_listed or 0
+end
+
+---@return integer
+function M.get_current_bufnr()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta = M.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+  local winnr = meta and meta.winnr_listed or 0 ---@type integer
+  return winnr > 0 and vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) or 0
+end
+
 ---@param tabnr                         integer|nil
 ---@return eve.t.state.state.tab.IMeta|nil
 function M.resolve(tabnr)
@@ -57,6 +78,7 @@ function M.resolve(tabnr)
   meta = {
     name = constant.TAB_UNNAMED,
     bufnrs = bufnrs,
+    winnr_listed = 0,
   }
   return M.set_meta(tabnr, meta)
 end
