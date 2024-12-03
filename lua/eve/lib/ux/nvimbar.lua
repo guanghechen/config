@@ -4,7 +4,6 @@ local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local functional = require("eve.lib.functional")
 local Scheduler = require("eve.lib.collection.scheduler")
-local Subscriber = require("eve.lib.collection.subscriber")
 
 ---@class eve.lib.ux.nvimbar.IPresetContext
 ---@field public winnr                  ?integer
@@ -45,10 +44,10 @@ local Subscriber = require("eve.lib.collection.subscriber")
 ---@field public component_sep          string
 ---@field public component_sep_hlname   string
 ---@field public component_sep_hlname_active string
----@field public preset_context         ?eve.lib.ux.nvimbar.IPresetContext
 ---@field public render_delay           ?integer
 ---@field public silent                 ?boolean
 ---@field public get_max_width          fun(): integer
+---@field public get_preset_context     ?fun(): eve.lib.ux.nvimbar.IPresetContext
 ---@field public is_active              fun(context: eve.lib.ux.nvimbar.IContext): boolean
 ---@field public trigger_rerender       fun(): nil
 ---@field public validate               fun(): string|nil
@@ -59,6 +58,7 @@ local Subscriber = require("eve.lib.collection.subscriber")
 ---@field public cancel_render          fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
 ---@field public register               fun(self: eve.lib.ux.INvimbar, component: eve.lib.ux.nvimbar.IRawComponent, position: eve.e.NvimbarCompPosition): eve.lib.ux.INvimbar
 ---@field public render                 fun(self: eve.lib.ux.INvimbar): string
+---@field public render_sync            fun(self: eve.lib.ux.INvimbar): string
 ---@field public snapshot               fun(self: eve.lib.ux.INvimbar): string
 
 ---@class eve.lib.ux.Nvimbar : eve.lib.ux.INvimbar
@@ -67,11 +67,11 @@ local Subscriber = require("eve.lib.collection.subscriber")
 ---@field private _sep_active           string
 ---@field private _sep_width            integer
 ---@field private _last_context         eve.lib.ux.nvimbar.IContext|nil
----@field private _preset_context       eve.lib.ux.nvimbar.IPresetContext
 ---@field private _components           table<string, eve.lib.ux.nvimbar.IComponent>
 ---@field private _items                eve.lib.ux.nvimbar.IItem[]
 ---@field private _render_scheduler     eve.lib.collection.IScheduler
 ---@field private _get_max_width        fun(): integer
+---@field public  _get_preset_context   fun(): eve.lib.ux.nvimbar.IPresetContext
 ---@field private _is_active            fun(context: eve.lib.ux.nvimbar.IContext): boolean
 local M = {}
 M.__index = M
@@ -187,8 +187,13 @@ function M.new(props)
   local component_sep_hlname_active = props.component_sep_hlname_active ---@type string
   local render_delay = props.render_delay or 20 ---@type integer
   local silent = not not props.silent ---@type boolean
-  local preset_context = props.preset_context or {} ---@type eve.lib.ux.nvimbar.IPresetContext
   local get_max_width = props.get_max_width ---@type fun(): integer
+
+  ---@type fun(): eve.lib.ux.nvimbar.IPresetContext
+  local get_preset_context = props.get_preset_context or function()
+    return {}
+  end
+
   local is_active = props.is_active ---@type fun(context: eve.lib.ux.nvimbar.IContext): boolean
   local validate = props.validate ---@type fun(): string|nil
   local trigger_rerender = props.trigger_rerender ---@type fun(): nil
@@ -204,7 +209,7 @@ function M.new(props)
       local validate_message = validate() ---@type string|nil
       if validate_message == nil then
         local last_result = _render_scheduler:snapshot() ---@type string|nil
-        local result = self:internal_render()
+        local result = self:render_sync()
         callback("fulfilled", result)
 
         if last_result ~= result then
@@ -221,11 +226,11 @@ function M.new(props)
   self._sep_active = M.txt(component_sep, component_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(component_sep)
   self._last_context = nil
-  self._preset_context = preset_context
   self._components = {}
   self._items = {}
   self._render_scheduler = _render_scheduler
   self._get_max_width = get_max_width
+  self._get_preset_context = get_preset_context
   self._is_active = is_active
   return self
 end
@@ -324,8 +329,9 @@ function M:snapshot()
 end
 
 ---@return string
-function M:internal_render()
-  local context = build_context(self._preset_context) ---@type eve.lib.ux.nvimbar.IContext
+function M:render_sync()
+  local preset_context = self._get_preset_context() ---@type eve.lib.ux.nvimbar.IPresetContext
+  local context = build_context(preset_context) ---@type eve.lib.ux.nvimbar.IContext
   local prev_context = self._last_context ---@type eve.lib.ux.nvimbar.IContext|nil
 
   local sep = self._is_active(context) and self._sep_active or self._sep ---@type string

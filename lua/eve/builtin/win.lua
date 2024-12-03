@@ -213,6 +213,7 @@ function M.refresh(winnr)
     return M.resolve(winnr)
   end
 
+  vim.w[winnr][constant.V_WINLINE_SYMBOLS_LOCATING] = false
   M.locate_symbols(winnr)
 end
 

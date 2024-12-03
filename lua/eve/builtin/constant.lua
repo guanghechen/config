@@ -22,6 +22,8 @@ M.BUF_UNTITLED = "untitled"
 
 ---! Variable names
 
+M.V_WINLINE_DIRTY = "ghc_winline_dirty"
+M.V_WINLINE_UPDATING = "ghc_winline_updating"
 M.V_WINLINE_DISABLED = "ghc_winline_disabled"
 M.V_WINLINE_SYMBOLS_LOCATING = "ghc_winline_symbols_locating"
 M.V_WINLINE_SYMBOLS_DIRTY = "ghc_winline_symbols_dirty"
