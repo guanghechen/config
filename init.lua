@@ -20,7 +20,6 @@ if vim.g.vscode then
   return
 end
 
-require("fml.option")
 require("ghc.command")
 require("ghc.dressing.autopairs")
 require("ghc.dressing.commentstring")

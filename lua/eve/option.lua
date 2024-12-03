@@ -1,3 +1,5 @@
+local icons = require("eve.builtin.icons")
+
 vim.g.mapleader = " "
 vim.g.bigfile_size = 1.5 * 1024 * 1024 --- 1.5MB
 vim.g.qf_disable_statusline = true
@@ -23,13 +25,16 @@ vim.opt.cursorline = true -- ggtrue to highlight the row of the cursor.
 vim.opt.cursorlineopt = "number,screenline"
 vim.opt.cursorcolumn = false -- true to highlight the column of the cursor.
 vim.opt.expandtab = true -- use spaces instead of tabs
+vim.opt.fillchars = icons.fillchars
 vim.opt.guifont = { "RobotoMono Nerd Font" }
 vim.opt.linebreak = true -- Wrap lines at convenient points
 vim.opt.list = true -- Show some invisible characters (tabs...
+vim.opt.listchars:append(icons.listchars)
 vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim` experience issues.
 vim.opt.number = true -- Print line number
 vim.opt.pumblend = 10 -- Popup blend
 vim.opt.pumheight = 10 -- Maximum number of entries in a popup
+vim.opt.relativenumber = true
 vim.opt.scrolloff = 4 -- Lines of context
 vim.opt.shiftround = true -- Round indent
 vim.opt.shiftwidth = 2
