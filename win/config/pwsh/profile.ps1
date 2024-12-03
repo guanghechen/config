@@ -1,12 +1,6 @@
 Set-PSReadLineOption -EditMode Vi
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-## Setup fnm
-fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
-
-## Setup zoxide
-Invoke-Expression (& { (zoxide init powershell | Out-String) })
-
 ## Setup on-my-posh
 oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH/catppuccin_mocha.omp.json" | Invoke-Expression
 
@@ -20,3 +14,8 @@ If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
   #  }
 }
 
+## Setup fnm
+fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
+
+## Setup zoxide (need move to the last line. see https://github.com/ajeetdsouza/zoxide/issues/707#issuecomment-1959685345)
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
