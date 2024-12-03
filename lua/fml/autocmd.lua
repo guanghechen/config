@@ -3,7 +3,6 @@ local path = require("eve.lib.path")
 local tmux = require("eve.lib.tmux")
 local status = require("eve.builtin.status")
 local state = require("eve.state")
-local locate_symbols = require("fml.fn.locate_symbols")
 local refresh_state = require("fml.fn.refresh_state")
 
 refresh_state()
@@ -111,7 +110,7 @@ vim.api.nvim_create_autocmd({ "CursorHold" }, {
     local winnr = eve.locations.get_current_winnr() ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       vim.schedule(function()
-        locate_symbols(winnr, true)
+        eve.win.locate_symbols(winnr)
       end)
     end
     status.statusline_dirtier:mark_dirty()

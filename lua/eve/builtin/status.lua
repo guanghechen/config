@@ -15,8 +15,8 @@ local M = {}
 M.lsp_msg = Observable.from_value("")
 M.tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed())
 M.winline_dirty_nr = Observable.from_value(0, functional.falsy)
-M.statusline_dirtier = Diritier.new()
-M.tabline_dirtier = Diritier.new()
+M.statusline_dirtier = Diritier.new({ dirty = true })
+M.tabline_dirtier = Diritier.new({ dirty = true })
 
 ---@return nil
 function M.reset()

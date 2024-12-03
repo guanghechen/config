@@ -5,6 +5,9 @@ local Observable = require("eve.lib.collection.observable")
 ---@field public mark_clean             fun(self: eve.lib.collection.IDirtier): nil
 ---@field public mark_dirty             fun(self: eve.lib.collection.IDirtier): nil
 
+---@class eve.lib.collection.dirtier.IProps
+---@field public dirty                  boolean
+
 ---@class eve.lib.collection.Dirtier : eve.lib.collection.IDirtier
 ---@field protected _clean_tick         integer
 ---@diagnostic disable-next-line: assign-type-mismatch
@@ -12,11 +15,13 @@ local M = {}
 M.__index = M
 setmetatable(M, Observable)
 
-function M.new()
+---@param props eve.lib.collection.dirtier.IProps
+function M.new(props)
   local self = setmetatable(Observable.from_value(0), M)
   ---@cast self eve.lib.collection.Dirtier
 
-  self._clean_tick = 0
+  local initial_dirty = not not props.dirty
+  self._clean_tick = initial_dirty and 1 or 0
   return self
 end
 

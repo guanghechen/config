@@ -27,8 +27,8 @@
 ---@field public filepath_history       eve.lib.collection.history.ISerializedData
 
 ---@class eve.t.state.state.win.IMeta
----@field public lsp_symbols            eve.t.state.state.lsp.ISymbol[]
 ---@field public filepath_history       eve.lib.collection.IAdvanceHistory
+---@field public lsp_symbols            eve.t.state.state.lsp.ISymbol[]
 
 ---@class eve.t.state.state.lsp.ISymbol
 ---@field public kind                   string

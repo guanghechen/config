@@ -27,11 +27,11 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local dirtier_dimension = Dirtier.new() ---@type eve.lib.collection.IDirtier
-  local dirtier_data = Dirtier.new() ---@type eve.lib.collection.IDirtier
-  local dirtier_data_cache = Dirtier.new() ---@type eve.lib.collection.IDirtier
-  local dirtier_main = Dirtier.new() ---@type eve.lib.collection.IDirtier
-  local dirtier_preview = Dirtier.new() ---@type eve.lib.collection.IDirtier
+  local dirtier_dimension = Dirtier.new({ dirty = false }) ---@type eve.lib.collection.IDirtier
+  local dirtier_data = Dirtier.new({ dirty = false }) ---@type eve.lib.collection.IDirtier
+  local dirtier_data_cache = Dirtier.new({ dirty = false }) ---@type eve.lib.collection.IDirtier
+  local dirtier_main = Dirtier.new({ dirty = false }) ---@type eve.lib.collection.IDirtier
+  local dirtier_preview = Dirtier.new({ dirty = false }) ---@type eve.lib.collection.IDirtier
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
   local fetch_data = props.fetch_data ---@type fml.t.ux.search.IFetchData
   local delay_fetch = props.delay_fetch ---@type integer
