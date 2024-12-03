@@ -381,7 +381,7 @@ function M.diffview()
         .. txt(text, "f_sl_sidebar_text")
         .. txt(right_blank, "f_sl_sidebar_blank")
         .. txt(right_split, "f_sl_sidebar_split")
-      return hl_text, width + 1
+      return hl_text, width
     end,
   }
   return component
@@ -806,7 +806,7 @@ function M.neotree()
         .. txt(text, "f_sl_sidebar_text")
         .. txt(right_blank, "f_sl_sidebar_blank")
         .. txt(right_split, "f_sl_sidebar_split")
-      return hl_text, width + 1
+      return hl_text, width
     end,
   }
   return component
