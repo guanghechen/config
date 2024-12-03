@@ -11,7 +11,7 @@ local function gen_hlgroup_map(context)
     --(m == "light" and eve.color.change_hex_lightness(c.black, -6)) or
     "none"
 
-  local bg_noice = c.bg1 ---@type string
+  local bg_noice = t and "none" or c.bg1 ---@type string
 
   return {
     ---! aerial.nvim

@@ -153,7 +153,7 @@ local function gen_hlgroup_map(context)
     MatchParen = { bg = c.bg3, bold = true },
     MatchWord = { fg = c.fg1, bg = c.bg4 },
     Normal = { fg = c.fg1, bg = t and "none" or c.bg0 },
-    NormalFloat = { fg = c.fg1, bg = t and "none" or c.bg1 },
+    NormalFloat = { fg = c.fg1, bg = t and cs.change_hex_saturation(c.bg0, -20) or c.bg1, blend = 50 },
     NormalNC = { link = "Normal" },
     NvimInternalError = { fg = c.red },
     Pmenu = { fg = c.fg1, bg = c.bg2 },
