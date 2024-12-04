@@ -226,9 +226,6 @@ function M.watch_changes(params)
     state.search.flag_gitignore,
     state.search.flag_replace,
     state.search.scope,
-
-    ---status
-    status.lsp_msg,
   }, function()
     status.statusline_dirtier:mark_dirty()
   end, true)

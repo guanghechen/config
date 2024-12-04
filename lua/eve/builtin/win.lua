@@ -4,10 +4,10 @@ local fs = require("eve.lib.fs")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local AdvanceHistory = require("eve.lib.collection.history_advance")
+local Dirtier = require("eve.lib.collection.dirtier")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
 local lsp = require("eve.builtin.lsp")
-local status = require("eve.builtin.status")
 
 local meta_map = {} ---@type table<integer, eve.t.state.state.win.IMeta>
 
@@ -15,7 +15,8 @@ local meta_map = {} ---@type table<integer, eve.t.state.state.win.IMeta>
 local M = {}
 
 ---@param winnr                         integer
-function M.locate_symbols(winnr)
+---@param callback                      function(err: string|nil): nil
+function M.locate_symbols(winnr, callback)
   if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
     return
   end
@@ -25,14 +26,6 @@ function M.locate_symbols(winnr)
   if vim.b[bufnr][constant.V_WINLINE_DISABLED] or not lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
     return
   end
-
-  if vim.w[winnr][constant.V_WINLINE_SYMBOLS_LOCATING] then
-    vim.w[winnr][constant.V_WINLINE_SYMBOLS_DIRTY] = true
-    return
-  end
-
-  vim.w[winnr][constant.V_WINLINE_SYMBOLS_LOCATING] = true
-  vim.w[winnr][constant.V_WINLINE_SYMBOLS_DIRTY] = false
 
   local cursor = vim.api.nvim_win_get_cursor(winnr) or { 1, 1 } ---@type integer[]
   local row = cursor[1] or 1 ---@type integer
@@ -46,8 +39,6 @@ function M.locate_symbols(winnr)
     if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
       return
     end
-
-    vim.w[winnr][constant.V_WINLINE_SYMBOLS_LOCATING] = false
 
     if err then
       if type(err) == "table" and err.message == "trying to get AST for non-added document" then
@@ -63,42 +54,40 @@ function M.locate_symbols(winnr)
         message = "Failed to request document symbols",
         details = { err = err, result = symbols, bufnr = bufnr, winnr = winnr },
       })
-    else
-      local meta = M.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-      if meta ~= nil and type(symbols) == "table" then
-        local cursor_pos = { line = row - 1, character = col }
-        local symbol_path = lsp.find_symbol_path(cursor_pos, symbols)
+      callback("Failed to request document symbols")
+      return
+    end
 
-        local pieces = meta.lsp_symbols ---@type eve.t.state.state.lsp.ISymbol[]
-        local N = #pieces ---@type integer
-        local k = 0 ---@type integer
-        if symbol_path then
-          for _, symbol in ipairs(symbol_path) do
-            local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
-            local name = symbol.name
-            local position = symbol.range and symbol.range.start or symbol.location.range.start
-            ---@type eve.t.state.state.lsp.ISymbol
-            local piece = {
-              kind = kind,
-              name = name,
-              row = position.line + 1,
-              col = position.character + 1,
-            }
+    local meta = M.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+    if meta ~= nil and type(symbols) == "table" then
+      local cursor_pos = { line = row - 1, character = col }
+      local symbol_path = lsp.find_symbol_path(cursor_pos, symbols)
 
-            k = k + 1
-            pieces[k] = piece
-          end
+      local pieces = meta.lsp_symbols ---@type eve.t.state.state.lsp.ISymbol[]
+      local N = #pieces ---@type integer
+      local k = 0 ---@type integer
+      if symbol_path then
+        for _, symbol in ipairs(symbol_path) do
+          local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
+          local name = symbol.name
+          local position = symbol.range and symbol.range.start or symbol.location.range.start
+          ---@type eve.t.state.state.lsp.ISymbol
+          local piece = {
+            kind = kind,
+            name = name,
+            row = position.line + 1,
+            col = position.character + 1,
+          }
+
+          k = k + 1
+          pieces[k] = piece
         end
-        for i = k + 1, N, 1 do
-          pieces[i] = nil
-        end
-        status.winline_dirty_nr:next(winnr)
+      end
+      for i = k + 1, N, 1 do
+        pieces[i] = nil
       end
     end
-
-    if vim.w[winnr][constant.V_WINLINE_SYMBOLS_DIRTY] then
-      M.locate_symbols(winnr)
-    end
+    callback()
   end
 
   ---! Make the request to the LSP server
@@ -119,7 +108,7 @@ function M.get_meta(winnr)
 end
 
 ---@param winnr                         integer|nil
----@param meta                          eve.t.state.state.win.IMeta|nil
+---@param meta                          eve.t.state.state.win.IMeta
 ---@return eve.t.state.state.win.IMeta|nil
 function M.set_meta(winnr, meta)
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -131,8 +120,16 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 function M.del_meta(winnr)
-  if winnr ~= nil then
-    meta_map[winnr] = nil
+  if winnr == nil or meta_map[winnr] == nil then
+    return
+  end
+
+  local meta = meta_map[winnr] ---@type eve.t.state.state.win.IMeta
+  meta_map[winnr] = nil
+  meta.filepath_history:clear()
+  meta.winline_dirtier:dispose()
+  if meta.winline ~= nil then
+    meta.winline:dispose()
   end
 end
 
@@ -145,30 +142,11 @@ function M.fork_meta(winnr)
     local meta_forked = {
       filepath_history = meta.filepath_history:fork({ name = "win_filepath" }),
       lsp_symbols = vim.list_slice(meta.lsp_symbols),
+      winline_dirtier = Dirtier.new({ dirty = true }),
+      winline = nil,
     }
     return meta_forked
   end
-end
-
----@param winnr_a                       integer|nil
----@param winnr_b                       integer|nil
----@return nil
-function M.swap_meta(winnr_a, winnr_b)
-  if
-    winnr_a == nil
-    or winnr_b == nil
-    or not vim.api.nvim_win_is_valid(winnr_a)
-    or not vim.api.nvim_win_is_valid(winnr_b)
-  then
-    return
-  end
-
-  local meta_a = M.resolve(winnr_a) ---@type eve.t.state.state.win.IMeta|nil
-  local meta_b = M.resolve(winnr_b) ---@type eve.t.state.state.win.IMeta|nil
-  M.set_meta(winnr_a, meta_b)
-  M.set_meta(winnr_b, meta_a)
-  M.locate_symbols(winnr_a)
-  M.locate_symbols(winnr_b)
 end
 
 ---@param winnr                         integer|nil
@@ -200,25 +178,24 @@ function M.resolve(winnr)
   meta = {
     filepath_history = filepath_history,
     lsp_symbols = {},
+    winline_dirtier = Dirtier.new({ dirty = true }),
+    winline = nil,
   }
-  M.locate_symbols(winnr)
-  return M.set_meta(winnr, meta)
+  M.set_meta(winnr, meta)
+  return meta
 end
 
 ---@param winnr                         integer|nil
----@return eve.t.state.state.win.IMeta|nil
+---@return nil
 function M.refresh(winnr)
   if winnr == nil then
     return
   end
 
-  local meta = M.get_meta(winnr) ---@type eve.t.state.state.win.IMeta|nil
-  if meta == nil then
-    return M.resolve(winnr)
+  local meta = M.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+  if meta ~= nil then
+    meta.winline_dirtier:mark_dirty()
   end
-
-  vim.w[winnr][constant.V_WINLINE_SYMBOLS_LOCATING] = false
-  M.locate_symbols(winnr)
 end
 
 ---@return nil

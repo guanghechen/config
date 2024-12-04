@@ -108,17 +108,9 @@ eve.commander
         return
       end
 
-      local bufnr_current = vim.api.nvim_win_get_buf(winnr_current)
-      local cursor_current = vim.api.nvim_win_get_cursor(winnr_current)
-
-      local bufnr_target = vim.api.nvim_win_get_buf(winnr_target)
-      local cursor_target = vim.api.nvim_win_get_cursor(winnr_target)
-
-      vim.api.nvim_win_set_buf(winnr_current, bufnr_target)
-      vim.api.nvim_win_set_buf(winnr_target, bufnr_current)
-      vim.api.nvim_win_set_cursor(winnr_target, cursor_current)
-      vim.api.nvim_win_set_cursor(winnr_current, cursor_target)
-      vim.api.nvim_set_current_win(winnr_target)
-      eve.win.swap_meta(winnr_current, winnr_target)
+      local wincfg_current = vim.api.nvim_win_get_config(winnr_current) ---@type vim.api.keyset.win_config
+      local wincfg_target = vim.api.nvim_win_get_config(winnr_current) ---@type vim.api.keyset.win_config
+      vim.api.nvim_win_set_config(winnr_current, wincfg_target)
+      vim.api.nvim_win_set_config(winnr_target, wincfg_current)
     end,
   })

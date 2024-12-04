@@ -54,6 +54,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public get_max_width          fun(): integer
 ---@field public get_preset_context     ?fun(): eve.lib.ux.nvimbar.IPresetContext
 ---@field public is_active              fun(context: eve.lib.ux.nvimbar.IContext): boolean
+---@field public pre_task               ?fun(callback: fun(err: string|nil): nil): nil
 ---@field public trigger_rerender       fun(): nil
 ---@field public validate               fun(): string|nil
 
@@ -61,13 +62,14 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public btn                    fun(text: string, callback: string, args?: integer|integer[]): string
 ---@field public txt                    fun(text: string, hlname: string): string
 ---@field public cancel_render          fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
+---@field public dispose                fun(self: eve.lib.ux.INvimbar): boolean
 ---@field public register               fun(self: eve.lib.ux.INvimbar, component: eve.lib.ux.nvimbar.IRawComponent, position: eve.e.NvimbarCompPosition): eve.lib.ux.INvimbar
 ---@field public render                 fun(self: eve.lib.ux.INvimbar): string
----@field public render_sync            fun(self: eve.lib.ux.INvimbar): string
 ---@field public snapshot               fun(self: eve.lib.ux.INvimbar): string
 
 ---@class eve.lib.ux.Nvimbar : eve.lib.ux.INvimbar
 ---@field public name                   string
+---@field private _disposed             boolean
 ---@field private _sep                  string
 ---@field private _sep_active           string
 ---@field private _sep_width            integer
@@ -200,8 +202,9 @@ function M.new(props)
   end
 
   local is_active = props.is_active ---@type fun(context: eve.lib.ux.nvimbar.IContext): boolean
-  local validate = props.validate ---@type fun(): string|nil
+  local pre_task = props.pre_task ---@type fun(callback: fun(err: string|nil): nil): nil
   local trigger_rerender = props.trigger_rerender ---@type fun(): nil
+  local validate = props.validate ---@type fun(): string|nil
 
   local self = setmetatable({}, M)
 
@@ -212,7 +215,13 @@ function M.new(props)
     silent = silent,
     task = function(callback)
       local validate_message = validate() ---@type string|nil
-      if validate_message == nil then
+      if validate_message ~= nil then
+        callback("rejected", nil, "[eve.lib.ux.nvimbar#" .. name .. "] Invalid: " .. validate_message)
+        return
+      end
+
+      ---@return nil
+      local function handle()
         local last_result = _render_scheduler:snapshot() ---@type string|nil
         local result = self:render_sync()
         callback("fulfilled", result)
@@ -220,13 +229,24 @@ function M.new(props)
         if last_result ~= result then
           trigger_rerender()
         end
+      end
+
+      if pre_task ~= nil then
+        pre_task(function(err)
+          if err then
+            callback("rejected", nil, "[eve.lib.ux.nvimbar#" .. name .. "] " .. err)
+          else
+            handle()
+          end
+        end)
       else
-        callback("rejected", nil, "[eve.lib.ux.nvimbar#" .. name .. "] Invalid: " .. validate_message)
+        handle()
       end
     end,
   })
 
   self.name = name
+  self._disposed = false
   self._sep = M.txt(component_sep, component_sep_hlname)
   self._sep_active = M.txt(component_sep, component_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(component_sep)
@@ -238,6 +258,18 @@ function M.new(props)
   self._get_preset_context = get_preset_context
   self._is_active = is_active
   return self
+end
+
+---@return boolean
+function M:is_disposed()
+  return self._disposed
+end
+
+---@return nil
+function M:dispose()
+  if not self._disposed then
+    self._disposed = true
+  end
 end
 
 ---@param text                          string
@@ -292,6 +324,10 @@ end
 
 ---@return string
 function M:render()
+  if self._disposed then
+    return "!!!Invalid. This nvimbar has been disposed."
+  end
+
   self._render_scheduler:schedule()
   return self._render_scheduler:snapshot() or ""
 end

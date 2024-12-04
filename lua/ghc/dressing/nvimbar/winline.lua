@@ -1,87 +1,92 @@
-local functional = require("eve.lib.functional")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Nvimbar = require("eve.lib.ux.nvimbar")
-local constant = require("eve.builtin.constant")
 local status = require("eve.builtin.status")
 local state = require("eve.state")
 local c = require("ghc.dressing.nvimbar.components")
 
 local devmode = state.state.flight.devmode:snapshot() ---@type boolean
-local rendering_winnr = 0 ---@type integer
 local position = "f_wl" ---@type eve.lib.ux.nvimbar.Position
 
-local winline ---@type eve.lib.ux.INvimbar
-winline = Nvimbar.new({
-  name = "winline",
-  component_sep = "",
-  component_sep_hlname = position .. "_bg",
-  component_sep_hlname_active = position .. "_bg",
-  render_delay = 0,
-  silent = not devmode,
-  get_max_width = function()
-    return vim.api.nvim_win_get_width(rendering_winnr)
-  end,
-  get_preset_context = function()
-    return { winnr = rendering_winnr }
-  end,
-  is_active = function(context)
-    local winnr_cur = eve.tab.get_current_winnr() or 0 ---@type integer
-    return winnr_cur > 0 and winnr_cur == context.winnr
-  end,
-  trigger_rerender = functional.noop,
-  validate = functional.noop,
-})
-
-winline
-  ---
-  :register(c.dirpath(position), "left")
-  :register(c.filename(position), "left")
-  :register(c.lsp_symbols(position), "left")
-  ---
-  :register(c.debug_render_count(position), "center")
-
 ---@param winnr                         integer
----@return boolean
-local function should_show_winline(winnr)
-  if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or eve.checks.is_win_floating(winnr) then
-    return false
+---@return eve.lib.ux.INvimbar|nil
+local function resolve_winline_scheduler(winnr)
+  local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+  if meta == nil then
+    return
   end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  if meta.winline == nil then
+    local winline ---@type eve.lib.ux.INvimbar
+    winline = Nvimbar.new({
+      name = "winline_" .. winnr,
+      component_sep = "",
+      component_sep_hlname = position .. "_bg",
+      component_sep_hlname_active = position .. "_bg",
+      render_delay = 256,
+      silent = not devmode,
+      get_max_width = function()
+        if vim.api.nvim_win_is_valid(winnr) then
+          return vim.api.nvim_win_get_width(winnr)
+        end
+        return 0
+      end,
+      get_preset_context = function()
+        return { winnr = winnr }
+      end,
+      is_active = function(context)
+        local winnr_cur = eve.tab.get_current_winnr() or 0 ---@type integer
+        return winnr_cur > 0 and winnr_cur == context.winnr
+      end,
+      pre_task = function(callback)
+        eve.win.locate_symbols(winnr, callback)
+      end,
+      trigger_rerender = function()
+        if vim.api.nvim_win_is_valid(winnr) then
+          local result = winline:render() ---@type string
+          vim.wo[winnr].winbar = result
+        end
+      end,
+      validate = function()
+        if not vim.api.nvim_win_is_valid(winnr) then
+          return "The window is not valid, winnr=" .. winnr .. "."
+        end
+      end,
+    })
 
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  if filepath:sub(1, 9) == "diffview:" then
-    return filepath:sub(1, 19) ~= "diffview:///panels/"
+    winline
+      ---
+      :register(c.dirpath(position), "left")
+      :register(c.filename(position), "left")
+      :register(c.lsp_symbols(position), "left")
+      ---
+      :register(c.debug_render_count(position), "center")
+    meta.winline = winline
   end
-
-  if not eve.checks.is_buf_valid(bufnr) then
-    return false
-  end
-
-  return true
+  return meta.winline
 end
 
 status.winline_dirty_nr:subscribe(
   Subscriber.new({
     on_next = function(winnr)
-      if should_show_winline(winnr) then
-        if vim.w[winnr][constant.V_WINLINE_UPDATING] then
-          vim.w[winnr][constant.V_WINLINE_DIRTY] = true
-          return
+      if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+        return
+      end
+
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      if filepath:sub(1, 9) == "diffview:" then
+        local should_show_winline = filepath:sub(1, 19) ~= "diffview:///panels/" ---@type boolean
+        if should_show_winline then
+          local winbar = filepath
+          vim.wo[winnr].winbar = winbar
         end
+        return
+      end
 
-        vim.w[winnr][constant.V_WINLINE_UPDATING] = true
-        vim.w[winnr][constant.V_WINLINE_DIRTY] = false
-
-        pcall(function()
-          rendering_winnr = winnr
-          local result = winline:render_sync() ---@type string
-          vim.wo[winnr].winbar = result
-        end)
-
-        vim.defer_fn(function()
-          vim.w[winnr][constant.V_WINLINE_UPDATING] = false
-        end, 256)
+      local winline = resolve_winline_scheduler(winnr) ---@type eve.lib.ux.INvimbar|nil
+      if winline ~= nil then
+        winline:render()
+      else
       end
     end,
   }),

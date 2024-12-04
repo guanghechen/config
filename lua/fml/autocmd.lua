@@ -24,9 +24,10 @@ vim.api.nvim_create_autocmd({ "WinResized" }, {
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
-      vim.schedule(function()
-        status.winline_dirty_nr:next(winnr)
-      end)
+      local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      if meta ~= nil then
+        meta.winline_dirtier:mark_dirty()
+      end
     end
   end,
 })
@@ -46,7 +47,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local meta_win = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
     if meta_win ~= nil then
-      status.winline_dirty_nr:next(winnr)
+      meta_win.winline_dirtier:mark_dirty()
 
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
@@ -107,8 +108,10 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
       if fs.is_file_or_dir(filepath) == "directory" then
         local new_filepath = eve.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
         if new_filepath ~= nil then
-          vim.api.nvim_buf_set_name(bufnr, new_filepath)
-          eve.buf.refresh(bufnr)
+          pcall(function()
+            vim.api.nvim_buf_set_name(bufnr, new_filepath)
+            eve.buf.refresh(bufnr)
+          end)
         end
       end
     end
@@ -122,10 +125,9 @@ vim.api.nvim_create_autocmd({ "CursorHold" }, {
   callback = function()
     local meta_tab = eve.tab.get_current() ---@type eve.t.state.state.tab.IMeta|nil
     local winnr = meta_tab and meta_tab.winnr_listed or 0 ---@type integer
-    if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-      vim.schedule(function()
-        eve.win.locate_symbols(winnr)
-      end)
+    local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+    if meta ~= nil then
+      meta.winline_dirtier:mark_dirty()
     end
     status.statusline_dirtier:mark_dirty()
   end,
@@ -146,5 +148,6 @@ vim.api.nvim_create_autocmd("LspProgress", {
     local str = progress .. (data.message or "") .. " " .. (data.title or "")
     local lsp_msg = data.kind == "end" and "" or str ---@type string
     status.lsp_msg:next(lsp_msg)
+    status.statusline_dirtier:mark_dirty()
   end,
 })
