@@ -96,11 +96,9 @@ function M.new(props)
       local filetype = data and data.filetype or nil ---@type string|nil
       if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
         local lang = vim.treesitter.language.get_lang(filetype) or filetype
-        if lang then
-          local has_ts_parser = pcall(vim.treesitter.language.add, lang)
-          if has_ts_parser then
-            vim.treesitter.start(bufnr, lang)
-          end
+        local has_ts_parser = pcall(vim.treesitter.language.add, lang)
+        if has_ts_parser then
+          vim.treesitter.start(bufnr, lang)
         end
       end
 

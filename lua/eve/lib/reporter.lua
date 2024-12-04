@@ -55,10 +55,16 @@ local function log(options, level)
     vim.notify(text, level, {
       title = title,
       on_open = function(winnr)
-        local bufnr = vim.api.nvim_win_get_buf(winnr)
-        vim.bo[bufnr].filetype = "markdown"
         vim.wo[winnr].conceallevel = 2
         vim.wo[winnr].concealcursor = "n"
+        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+        if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+          local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
+          local has_ts_parser = pcall(vim.treesitter.language.add, lang)
+          if has_ts_parser then
+            vim.treesitter.start(bufnr, lang)
+          end
+        end
       end,
     })
   end)
