@@ -420,6 +420,7 @@ function M.dirpath(position)
   local hln_dirpath_text = position .. "_dirpath_text" ---@type string
   local hln_dirpath_sep = position .. "_dirpath_sep" ---@type string
   local sep = " " .. env.PATH_SEP .. " " ---@type string
+  local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
@@ -440,7 +441,7 @@ function M.dirpath(position)
         local hl_text_piece = txt(piece, hln_dirpath_text) ---@type string
         local hl_text_sep = txt(sep, hln_dirpath_sep) ---@type string
         hl_text = hl_text .. hl_text_piece .. hl_text_sep
-        width = width + vim.api.nvim_strwidth(piece .. sep)
+        width = width + vim.api.nvim_strwidth(piece) + width_sep
       end
       return hl_text, width
     end,
@@ -734,7 +735,8 @@ function M.lsp_symbols(position)
   local hln_lsp_sep = position .. "_lsp_sep" ---@type string
   local hln_lsp_text = position .. "_lsp_text" ---@type string
 
-  local sep = "  "
+  local sep = "  " ---@type string
+  local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
   ---@type string
   local fn_goto_lsp_pos = G.register_anonymous_fn(function(num)
@@ -773,7 +775,7 @@ function M.lsp_symbols(position)
       for _, symbol in ipairs(symbols) do
         local title = symbol.name or "" ---@type string
         local icon = (icons.kind[symbol.kind] or "") .. " " ---@type string
-        local next_width = width + vim.api.nvim_strwidth(sep .. icon .. title) ---@type integer
+        local next_width = width + width_sep + vim.api.nvim_strwidth(icon .. title) ---@type integer
         if next_width > remain_width then
           break
         end

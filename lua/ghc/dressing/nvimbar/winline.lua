@@ -42,7 +42,7 @@ local function resolve_winline_scheduler(winnr)
       end,
       trigger_rerender = function()
         if vim.api.nvim_win_is_valid(winnr) then
-          local result = winline:render() ---@type string
+          local result = winline:snapshot() ---@type string
           vim.wo[winnr].winbar = result
         end
       end,
@@ -86,7 +86,7 @@ status.winline_dirty_nr:subscribe(
       local winline = resolve_winline_scheduler(winnr) ---@type eve.lib.ux.INvimbar|nil
       if winline ~= nil then
         winline:render()
-      else
+        return
       end
     end,
   }),

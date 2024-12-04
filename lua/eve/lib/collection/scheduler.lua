@@ -168,19 +168,23 @@ function M:execute()
     end
   end
 
+  self._tick_resolving = tick
+
   vim.defer_fn(function()
     lock_release_tried = true
     release_lock()
   end, self._delay)
 
-  self._tick_resolving = tick
   local ok, reasonOrResult = pcall(self._task, callback)
+
+  if not ok then
+    callback("rejected", nil, reasonOrResult)
+    return
+  end
+
   if reasonOrResult ~= nil then
-    if ok then
-      callback("fulfilled", reasonOrResult, nil)
-    else
-      callback("rejected", nil, reasonOrResult)
-    end
+    callback("fulfilled", reasonOrResult, nil)
+    return
   end
 end
 

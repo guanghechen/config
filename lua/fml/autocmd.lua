@@ -21,13 +21,9 @@ end
 
 vim.api.nvim_create_autocmd({ "WinResized" }, {
   callback = function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-    for _, winnr in ipairs(winnrs) do
-      local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-      if meta ~= nil then
-        meta.winline_dirtier:mark_dirty()
-      end
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    if eve.win.resolve(winnr) ~= nil then
+      status.winline_dirty_nr:next(winnr)
     end
   end,
 })
@@ -45,15 +41,13 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
     eve.tab.on_buf_enter(bufnr)
 
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local meta_win = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-    if meta_win ~= nil then
-      meta_win.winline_dirtier:mark_dirty()
-
+    if eve.win.resolve(winnr) ~= nil then
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
       if meta_tab ~= nil then
         meta_tab.winnr_listed = winnr
       end
+      status.winline_dirty_nr:next(winnr)
     end
 
     status.statusline_dirtier:mark_dirty()
@@ -123,11 +117,9 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
 
 vim.api.nvim_create_autocmd({ "CursorHold" }, {
   callback = function()
-    local meta_tab = eve.tab.get_current() ---@type eve.t.state.state.tab.IMeta|nil
-    local winnr = meta_tab and meta_tab.winnr_listed or 0 ---@type integer
-    local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-    if meta ~= nil then
-      meta.winline_dirtier:mark_dirty()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    if eve.win.resolve(winnr) ~= nil then
+      status.winline_dirty_nr:next(winnr)
     end
     status.statusline_dirtier:mark_dirty()
   end,

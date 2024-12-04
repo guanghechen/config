@@ -30,7 +30,6 @@
 ---@class eve.t.state.state.win.IMeta
 ---@field public filepath_history       eve.lib.collection.IAdvanceHistory
 ---@field public lsp_symbols            eve.t.state.state.lsp.ISymbol[]
----@field public winline_dirtier        eve.lib.collection.IDirtier
 ---@field public winline                eve.lib.ux.INvimbar|nil
 
 ---@class eve.t.state.state.lsp.ISymbol

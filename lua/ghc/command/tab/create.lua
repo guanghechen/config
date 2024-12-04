@@ -1,5 +1,4 @@
 local checks = require("eve.builtin.checks")
-local Observable = require("eve.lib.collection.observable")
 local constant = require("eve.builtin.constant")
 local state = require("eve.state")
 
@@ -21,12 +20,16 @@ local function create(bufnr)
   local meta = {
     name = constant.TAB_UNNAMED,
     bufnrs = {},
-    winnr_cur = Observable.from_value(winnr),
+    winnr_listed = 0,
   }
 
   if bufnr ~= nil and checks.is_buf_valid(bufnr) then
     meta.bufnrs = { bufnr }
     vim.api.nvim_win_set_buf(winnr, bufnr)
+
+    if checks.is_win_valid(winnr) then
+      meta.winnr_listed = winnr
+    end
   end
 
   eve.tab.set_meta(tabnr, meta)

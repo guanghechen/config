@@ -54,7 +54,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public get_max_width          fun(): integer
 ---@field public get_preset_context     ?fun(): eve.lib.ux.nvimbar.IPresetContext
 ---@field public is_active              fun(context: eve.lib.ux.nvimbar.IContext): boolean
----@field public pre_task               ?fun(callback: fun(err: string|nil): nil): nil
+---@field public pre_task               ?fun(callback: fun(err: string|false|nil): nil): nil
 ---@field public trigger_rerender       fun(): nil
 ---@field public validate               fun(): string|nil
 
@@ -202,7 +202,7 @@ function M.new(props)
   end
 
   local is_active = props.is_active ---@type fun(context: eve.lib.ux.nvimbar.IContext): boolean
-  local pre_task = props.pre_task ---@type fun(callback: fun(err: string|nil): nil): nil
+  local pre_task = props.pre_task ---@type fun(callback: fun(err: string|false|nil): nil): nil
   local trigger_rerender = props.trigger_rerender ---@type fun(): nil
   local validate = props.validate ---@type fun(): string|nil
 
@@ -220,9 +220,14 @@ function M.new(props)
         return
       end
 
+      ---@param cancelled               boolean
       ---@return nil
-      local function handle()
+      local function handle(cancelled)
         local last_result = _render_scheduler:snapshot() ---@type string|nil
+        if cancelled then
+          callback("fulfilled", last_result)
+        end
+
         local result = self:render_sync()
         callback("fulfilled", result)
 
@@ -231,16 +236,18 @@ function M.new(props)
         end
       end
 
-      if pre_task ~= nil then
+      if pre_task == nil then
+        handle(false)
+      else
         pre_task(function(err)
-          if err then
+          if err == false then
+            handle(true)
+          elseif err ~= nil then
             callback("rejected", nil, "[eve.lib.ux.nvimbar#" .. name .. "] " .. err)
           else
-            handle()
+            handle(false)
           end
         end)
-      else
-        handle()
       end
     end,
   })
