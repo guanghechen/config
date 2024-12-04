@@ -32,7 +32,7 @@ function M.log(...)
     text = table.concat(texts, " ")
   end
 
-  vim.notify(text, vim.log.levels.INFO)
+  vim.notify(text, vim.log.levels.INFO, { title = "debug" })
 end
 
 return M

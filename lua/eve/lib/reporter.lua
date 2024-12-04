@@ -1,3 +1,5 @@
+local json = require("eve.lib.json")
+
 ---@class eve.lib.reporter.Levels
 local Levels = {
   DEBUG = vim.log.levels.DEBUG,
@@ -33,20 +35,32 @@ end
 ---@param level                         integer
 ---@return nil
 local function log(options, level)
-  local text = "[" .. options.from .. "]"
+  local title = options.from ---@type string
+  local text = options.message or "" ---@type string
+
   if options.subject ~= nil then
-    text = text .. " " .. options.subject
+    title = title .. " │ " .. options.subject
   end
-  if options.message ~= nil then
-    text = text .. ": " .. options.message
-  end
+
   if options.details ~= nil then
-    local details = vim.inspect(options.details) ---@type string
-    text = text .. "\n\n" .. details
+    local details = "```json\n" .. json.stringify_prettier(options.details) .. "\n```" ---@type string
+    if #text > 0 then
+      text = text .. "\n\n" .. details
+    else
+      text = details
+    end
   end
 
   vim.schedule(function()
-    vim.notify(text, level)
+    vim.notify(text, level, {
+      title = title,
+      on_open = function(winnr)
+        local bufnr = vim.api.nvim_win_get_buf(winnr)
+        vim.bo[bufnr].filetype = "markdown"
+        vim.wo[winnr].conceallevel = 2
+        vim.wo[winnr].concealcursor = "n"
+      end,
+    })
   end)
 end
 
