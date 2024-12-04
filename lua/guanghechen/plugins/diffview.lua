@@ -28,8 +28,8 @@ return {
           },
         },
         win_config = {
-          position = "left",
-          height = vim.o.lines,
+          position = "bottom",
+          height = 20,
         },
       },
       file_panel = {
