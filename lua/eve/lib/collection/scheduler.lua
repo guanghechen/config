@@ -110,46 +110,14 @@ function M:execute()
     return
   end
 
-  self._tick_resolving = tick
+  local task_completed = false ---@type boolean
+  local lock_released = false ---@type boolean
+  local lock_release_tried = false ---@type boolean
 
-  local callback_called = false ---@type boolean
-
-  ---@param settled                     eve.lib.collection.promise.ISettled
-  ---@param value                       unknown
-  ---@param reason                      unknown
   ---@return nil
-  local function callback(settled, value, reason)
-    if callback_called then
-      return
-    end
-    callback_called = true
-
-    if settled == "fulfilled" then
-      if self._tick_resolved < tick then
-        self._tick_resolved = tick
-        self._value:next(value)
-      end
-    elseif settled == "rejected" then
-      if not self._silent then
-        reporter.error({
-          from = __module_name__,
-          subject = "execute",
-          message = "Task failed.",
-          details = {
-            name = self.name,
-            reason = reason,
-
-            tick = tick,
-            tick_scheduled = self._tick_scheduled,
-            tick_resolving = self._tick_resolving,
-            tick_resolved = self._tick_settled,
-            tick_settled = self._tick_settled,
-          },
-        })
-      end
-    end
-
-    vim.defer_fn(function()
+  local release_lock = function()
+    if task_completed and not lock_released then
+      lock_released = true
       if self._tick_settled < tick then
         self._tick_settled = tick
 
@@ -158,9 +126,54 @@ function M:execute()
           self:execute()
         end
       end
-    end, self._delay)
+    end
   end
 
+  ---@param settled                     eve.lib.collection.promise.ISettled
+  ---@param value                       unknown
+  ---@param reason                      unknown
+  ---@return nil
+  local function callback(settled, value, reason)
+    if not task_completed then
+      task_completed = true
+
+      if settled == "fulfilled" then
+        if self._tick_resolved < tick then
+          self._tick_resolved = tick
+          self._value:next(value)
+        end
+      else
+        if not self._silent then
+          reporter.error({
+            from = __module_name__,
+            subject = "execute",
+            message = "Task failed.",
+            details = {
+              name = self.name,
+              reason = reason,
+
+              tick = tick,
+              tick_scheduled = self._tick_scheduled,
+              tick_resolving = self._tick_resolving,
+              tick_resolved = self._tick_settled,
+              tick_settled = self._tick_settled,
+            },
+          })
+        end
+      end
+
+      if lock_release_tried then
+        release_lock()
+      end
+    end
+  end
+
+  vim.defer_fn(function()
+    lock_release_tried = true
+    release_lock()
+  end, self._delay)
+
+  self._tick_resolving = tick
   local ok, reasonOrResult = pcall(self._task, callback)
   if reasonOrResult ~= nil then
     if ok then

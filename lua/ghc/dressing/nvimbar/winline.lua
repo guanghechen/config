@@ -81,7 +81,7 @@ status.winline_dirty_nr:subscribe(
 
         vim.defer_fn(function()
           vim.w[winnr][constant.V_WINLINE_UPDATING] = false
-        end, 128)
+        end, 256)
       end
     end,
   }),
