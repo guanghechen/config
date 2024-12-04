@@ -46,7 +46,6 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local meta_win = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
     if meta_win ~= nil then
-      meta_win.lsp_symbols = {} ---@type eve.t.state.state.lsp.ISymbol[]
       status.winline_dirty_nr:next(winnr)
 
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

@@ -38,7 +38,7 @@ vim.filetype.add({
 })
 
 ---bigfile
-vim.api.nvim_create_autocmd({ "FileType" }, {
+vim.api.nvim_create_autocmd("FileType", {
   pattern = "bigfile",
   callback = function(ev)
     vim.schedule(function()
