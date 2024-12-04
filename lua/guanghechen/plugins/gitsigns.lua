@@ -36,22 +36,6 @@ local keymaps = {
   {
     modes = { "n" },
     key = "[H",
-    desc = "git: goto prev hunk (all)",
-    callback = function()
-      require("gitsigns").nav_hunk("prev", { foldopen = true, target = "all" })
-    end,
-  },
-  {
-    modes = { "n" },
-    key = "]H",
-    desc = "git: goto next hunk (all)",
-    callback = function()
-      require("gitsigns").nav_hunk("next", { foldopen = true, target = "all" })
-    end,
-  },
-  {
-    modes = { "n" },
-    key = "[h",
     desc = "git: goto prev hunk (unstaged)",
     callback = function()
       if vim.wo.diff then
@@ -63,7 +47,7 @@ local keymaps = {
   },
   {
     modes = { "n" },
-    key = "]h",
+    key = "]H",
     desc = "git: goto next hunk (unstaged)",
     callback = function()
       if vim.wo.diff then
@@ -71,6 +55,22 @@ local keymaps = {
       else
         require("gitsigns").nav_hunk("next", { foldopen = true, target = "unstaged" })
       end
+    end,
+  },
+  {
+    modes = { "n" },
+    key = "[h",
+    desc = "git: goto prev hunk (all)",
+    callback = function()
+      require("gitsigns").nav_hunk("prev", { foldopen = true, target = "all" })
+    end,
+  },
+  {
+    modes = { "n" },
+    key = "]h",
+    desc = "git: goto next hunk (all)",
+    callback = function()
+      require("gitsigns").nav_hunk("next", { foldopen = true, target = "all" })
     end,
   },
   {

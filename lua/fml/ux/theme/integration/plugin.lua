@@ -11,8 +11,6 @@ local function gen_hlgroup_map(context)
     --(m == "light" and eve.color.change_hex_lightness(c.black, -6)) or
     "none"
 
-  local bg_noice = t and "none" or c.bg1 ---@type string
-
   return {
     ---! aerial.nvim
     AerialGuide = { fg = c.bg2 },
@@ -173,9 +171,9 @@ local function gen_hlgroup_map(context)
     NeoTreeRootName = { fg = c.fg1, bold = true },
 
     ---! noice.nvim
-    NoiceCmdlineIcon = { fg = c.green, bg = bg_noice },
-    NoiceCmdlinePopup = { bg = bg_noice },
-    NoiceCmdlinePopupBorder = { fg = c.green, bg = bg_noice },
+    NoiceCmdlineIcon = { fg = c.green, bg = "none" },
+    NoiceCmdlinePopup = { bg = "none" },
+    NoiceCmdlinePopupBorder = { fg = c.green, bg = "none" },
 
     ---! nvim-cmp
     CmpBorder = { fg = c.bg4 },
