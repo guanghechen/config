@@ -868,7 +868,7 @@ end
 ---@return eve.lib.ux.nvimbar.IRawComponent
 function M.noice(position)
   local hln_bg = position .. "_bg" ---@type string
-  local hln_noice_command = position .. "_noice_command" ---@type string
+  -- local hln_noice_command = position .. "_noice_command" ---@type string
   local hln_noice_mode = position .. "_noice_mode" ---@type string
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
@@ -882,11 +882,11 @@ function M.noice(position)
       local hl_text = "" ---@type string
       local width = 0 ---@type integer
 
-      local text_noice_command = noice_status.command.get() ---@type string | nil
-      if text_noice_command ~= nil and #text_noice_command > 0 then
-        hl_text = txt(text_noice_command, hln_noice_command)
-        width = vim.api.nvim_strwidth(text_noice_command)
-      end
+      -- local text_noice_command = noice_status.command.get() ---@type string | nil
+      -- if text_noice_command ~= nil and #text_noice_command > 0 then
+      --   hl_text = txt(text_noice_command, hln_noice_command)
+      --   width = vim.api.nvim_strwidth(text_noice_command)
+      -- end
 
       local text_noice_mode = noice_status.mode.get() or ""
       if text_noice_mode ~= nil and #text_noice_mode > 0 then
