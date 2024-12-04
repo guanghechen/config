@@ -289,8 +289,7 @@ function M.fetch_data(input_text, force, callback)
 
   local specified_filepath ---@type string|nil
   if scope == "B" then
-    local bufnr
-    eve.tab.get_current_bufnr() ---@type integer
+    local bufnr = eve.tab.get_current_bufnr() ---@type integer
     if checks.is_buf_valid(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       specified_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
@@ -298,7 +297,6 @@ function M.fetch_data(input_text, force, callback)
   end
 
   local is_searching_current_buf = specified_filepath ~= nil ---@type boolean
-
   if fs.is_file_or_dir(cwd) ~= "directory" then
     reporter.error({
       from = __module_name__,

@@ -40,7 +40,7 @@ end
 local state_search_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
 state.state.search.scope:subscribe(
   Subscriber.new({
-    on_next = function()
+    on_next = function(scope)
       local bufnr = eve.tab.get_current_bufnr() ---@type integer
       ---@type string
       local current_buf_dirpath = checks.is_buf_valid(bufnr) --
@@ -52,7 +52,7 @@ state.state.search.scope:subscribe(
       if current_search_cwd ~= next_search_cwd then
         state_search_cwd:next(next_search_cwd)
       end
-      if state.state.search.scope == "B" then
+      if scope == "B" then
         state_search_cwd:next(next_search_cwd, { force = true })
       end
     end,
