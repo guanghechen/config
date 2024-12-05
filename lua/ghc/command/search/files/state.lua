@@ -99,8 +99,18 @@ function M.get_search()
       delay_render = 64,
       statusline_items = keybindings.statusline_items,
       title = title,
+      on_invisible = function()
+        local scope = state.state.search.scope:snapshot() ---@type eve.e.SearchScope
+        if scope == "B" then
+          M.reload()
+        end
+      end,
       on_close = function()
         vim.cmd.checktime()
+        local scope = state.state.search.scope:snapshot() ---@type eve.e.SearchScope
+        if scope == "B" then
+          M.reload()
+        end
       end,
       on_confirm = function(item)
         return api.open_file(item, frecency)
