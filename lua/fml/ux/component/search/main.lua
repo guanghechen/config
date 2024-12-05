@@ -74,8 +74,12 @@ function M.new(props)
     name = "fml.ux.search.main.render",
     delay = delay_render,
     task = function(callback)
-      render()
-      callback("fulfilled")
+      local ok, reason = pcall(render)
+      if ok then
+        callback("fulfilled")
+      else
+        callback("rejected", nil, reason)
+      end
 
       state.dirtier_main:mark_clean()
       if on_rendered then

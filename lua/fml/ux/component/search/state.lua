@@ -252,18 +252,26 @@ end
 
 ---@return integer
 function M:moveup()
-  local step = vim.v.count1 or 1 ---@type integer
   local items = self.items ---@type fml.t.ux.search.IItem[]
-  local lnum = eve.util.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
-  return self:locate(lnum)
+  if #items < 1 then
+    return 0
+  else
+    local step = vim.v.count1 or 1 ---@type integer
+    local lnum = eve.util.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
+    return self:locate(lnum)
+  end
 end
 
 ---@return integer
 function M:movedown()
-  local step = vim.v.count1 or 1 ---@type integer
   local items = self.items ---@type fml.t.ux.search.IItem[]
-  local lnum = eve.util.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
-  return self:locate(lnum)
+  if #items < 1 then
+    return 0
+  else
+    local step = vim.v.count1 or 1 ---@type integer
+    local lnum = eve.util.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
+    return self:locate(lnum)
+  end
 end
 
 ---@return nil
