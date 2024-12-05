@@ -309,6 +309,7 @@ function M.fetch_data(input_text, force, callback)
         is_searching_current_buf = is_searching_current_buf,
       },
     })
+    callback(false, "The cwd is not a valid directory path")
     return
   end
 

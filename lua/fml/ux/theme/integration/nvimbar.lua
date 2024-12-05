@@ -17,7 +17,7 @@ local function gen_hlgroup_map(context)
     bg = { fg = "bg_bar", bg = "bg_bar" },
     buf = { fg = c.bg4, bg = "bg_bar" },
     buf_cur = { fg = c.bg4, bg = bg_buf_cur },
-    buf_indicator = { fg = c.blue, bg = bg_buf_cur, bold = true },
+    buf_indicator = { fg = c.purple, bg = bg_buf_cur, bold = true },
     buf_mod = { fg = c.red, bg = "bg_bar" },
     buf_mod_cur = { fg = c.green, bg = bg_buf_cur },
     buf_ommitter = { fg = c.blue, bg = "bg_bar" },

@@ -402,7 +402,7 @@ function M.diffview(position)
       local right_width = text_width_remain - left_width - 1
       local left_blank = string.rep(" ", left_width)
       local right_blank = string.rep(" ", right_width)
-      local right_split = "│"
+      local right_split = " " -- "│"
 
       local hl_text = txt(left_blank, hln_sidebar_blank)
         .. txt(text, hln_sidebar_text)
@@ -852,7 +852,7 @@ function M.neotree(position)
       local right_width = text_width_remain - left_width - 1
       local left_blank = string.rep(" ", left_width)
       local right_blank = string.rep(" ", right_width)
-      local right_split = "│"
+      local right_split = " " -- "│"
 
       local hl_text = txt(left_blank, hln_sidebar_blank)
         .. txt(text, hln_sidebar_text)
