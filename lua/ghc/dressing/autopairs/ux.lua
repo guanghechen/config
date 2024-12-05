@@ -18,7 +18,7 @@ local config = {
   },
   left_to_right_pairs = {},
   right_to_left_pairs = {},
-  nested = 3,
+  nested = 1,
   hlgroups = {
     "f_autopairs_1",
     "f_autopairs_2",
