@@ -1,4 +1,19 @@
 {
+  "alwaysOnTop": false,
+  "alwaysShowNotificationIcon": true,
+  "alwaysShowTabs": false,
+  "copyFormatting": "none",
+  "copyOnSelect": true,
+  "language": "en-US",
+  "launchMode": "maximized",
+  "newTabMenu": [
+    {
+      "type": "remainingProfiles"
+    }
+  ],
+  "showTabsInTitlebar": true,
+  "showTerminalTitleInTitlebar": true,
+  "useAcrylicInTabRow": true,
   "actions": [
     {
       "id": "User.sendInput.001b_0001",
