@@ -313,7 +313,7 @@ end
 ---@param text                          string
 ---@return integer[]
 function M.decode_btn_args(text)
-  local argv = vim.split(text, "9") ---@type string[]
+  local argv = vim.split(text, "9", { plain = true }) ---@type string[]
   local result = {} ---@type integer[]
   for _, arg in ipairs(argv) do
     local num = decode_int(arg)

@@ -84,7 +84,7 @@ local function get_comments(filetype)
   end
 
   local comments = {} ---@type string[]
-  local pieces = vim.split(cc, ",") or {} ---@type string[]
+  local pieces = vim.split(cc, ",", { plain = true }) or {} ---@type string[]
   for _, piece in ipairs(pieces) do
     local flags, str = piece:match("^(.-):(.*)$")
     if flags and not flags:match("[fsme]") then

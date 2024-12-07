@@ -31,6 +31,40 @@ local function get_previous_line_by_hunk(lnum)
   end
 end
 
+---@param lnum                          integer
+---@param filepath                      string
+---@return string[]
+---@return string[]
+local function get_diff_lines_from_git(lnum, filepath)
+  local output =
+    vim.fn.system(string.format("git --no-pager log --no-color --oneline -n 1 -u -L %d,+1:%s", lnum, filepath))
+  local lines = vim.split(output, "\n", { plain = true })
+
+  local index = 1 ---@type integer
+  while index <= #lines do
+    if lines[index]:sub(1, 4) == "@@ -" then
+      break
+    end
+    index = index + 1
+  end
+
+  if index > #lines then
+    return {}, {}
+  end
+
+  local dels = {} ---@type string[]
+  local adds = {} ---@type string[]
+  for i = index + 1, #lines, 1 do
+    local line = lines[i]
+    if line:sub(1, 1) == "-" then
+      table.insert(dels, line)
+    elseif line:sub(1, 1) == "+" then
+      table.insert(adds, line)
+    end
+  end
+  return dels, adds
+end
+
 ---@type eve.t.IKeymap[]
 local keymaps = {
   {
@@ -82,7 +116,7 @@ local keymaps = {
       local content_current = vim.fn.getline(lnum) ---@type string
       local filepath = vim.fn.expand("%") ---@type string
       local blame_info = vim.fn.system(string.format("git blame --porcelain -slL %d,%d %s", lnum, lnum, filepath)) ---@type string
-      local lines = vim.split(blame_info, "\n") ---@type string[]
+      local lines = vim.split(blame_info, "\n", { plain = true }) ---@type string[]
 
       local commit_hash = string.match(lines[1], "^([0-9a-fA-F]+)")
 
@@ -107,7 +141,16 @@ local keymaps = {
       -- local committer_timestamp = tonumber(committer_time) - committer_tz_offset_seconds ---@type integer
       -- local committer_date = os.date("%Y-%m-%d %H:%M:%S", committer_timestamp)
 
+      local dels = {} ---@type string[]
+      local adds = {} ---@type string[]
       local content_previous = get_previous_line_by_hunk(lnum) ---@type string|nil
+      if content_previous ~= nil then
+        dels = { "- " .. content_previous } ---@type string[]
+        adds = { "+ " .. content_current } ---@type string[]
+      else
+        dels, adds = get_diff_lines_from_git(lnum, filepath)
+      end
+
       local commit_message = "Uncommitted changes" ---@type string
       if commit_hash ~= "0000000000000000000000000000000000000000" then
         commit_message = vim.trim(vim.fn.system("git log -1 " .. commit_hash .. ' --pretty=format:"%s%n%n%b"')) ---@type string
@@ -126,15 +169,12 @@ local keymaps = {
           { { hlname = "Title", coll = 0, colr = -1 } }
         )
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
-        :lines(vim.split(commit_message, "\n"), { { lnum = -1, hlname = "Comment", coll = 0, colr = -1 } })
-
-      if content_previous ~= nil then
-        printer
-          :line(" - " .. content_previous, { { hlname = "DiffDelRight", coll = 0, colr = -1 } })
-          :line(" + " .. content_current, { { hlname = "DiffAddRight", coll = 0, colr = -1 } })
-      end
-
-      printer
+        :lines(
+          vim.split(commit_message, "\n", { plain = true }),
+          { { lnum = -1, hlname = "Comment", coll = 0, colr = -1 } }
+        )
+        :lines(dels, { { lnum = -1, hlname = "DiffDelRight", coll = 0, colr = -1 } })
+        :lines(adds, { { lnum = -1, hlname = "DiffAddRight", coll = 0, colr = -1 } })
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
         :line(string.format("Changes added in %s | <remote url>", commit_hash), {})
         :lf()

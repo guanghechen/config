@@ -58,7 +58,7 @@ local function system(cmd, err)
     })
     error(err)
   end
-  return vim.split(vim.trim(proc), "\n")
+  return vim.split(vim.trim(proc), "\n", { plain = true })
 end
 
 ---@param filename                      string

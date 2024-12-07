@@ -188,7 +188,7 @@ eve.commander
         end,
         fetch_preview_data = function(item)
           local data = item.data ---@type guanghechen.command.copilot_chat.prompt_actions.IItem
-          local lines = vim.split(data.prompt or "", "\n") ---@type string[]
+          local lines = vim.split(data.prompt or "", "\n", { plain = true }) ---@type string[]
 
           ---@type fml.t.ux.search.preview.IData
           local result = {

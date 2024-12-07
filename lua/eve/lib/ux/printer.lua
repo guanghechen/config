@@ -49,6 +49,10 @@ end
 ---@param highlights                    ?eve.t.IHighlight[]
 ---@return eve.lib.ux.Printer
 function M:lines(lines, highlights)
+  if #lines < 1 then
+    return self
+  end
+
   if highlights ~= nil and #highlights > 0 then
     local offset_lnum = #self._lines ---@type integer
     local offset_col = self._offset_indent ---@type integer

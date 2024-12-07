@@ -64,7 +64,7 @@ end
 ---@return string[]
 function M.parse_comma_list(text)
   local result = {} ---@type string[]
-  local items = vim.split(text, ",")
+  local items = vim.split(text, ",", { plain = true })
   for _, item in ipairs(items) do
     local v = item:match("^%s*(.-)%s*$")
     if #v > 0 then
