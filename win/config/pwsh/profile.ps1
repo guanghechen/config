@@ -1,8 +1,6 @@
 Set-PSReadLineOption -EditMode Vi
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-## Setup on-my-posh
-oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH/catppuccin_mocha.omp.json" | Invoke-Expression
 
 ## Setup conda
 If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
