@@ -1,0 +1,723 @@
+{
+  "actions": [
+    {
+      "id": "User.sendInput.001b_0001",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0001"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0002",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0002"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0003",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0003"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0004",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0004"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0005",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0005"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0006",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0006"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0007",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0007"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0008",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0008"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0009",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0009"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_000a",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u000a"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_000b",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u000b"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_000c",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u000c"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_000d",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u000d"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_000e",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u000e"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_000f",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u000f"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0010",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0010"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0011",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0011"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0012",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0012"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0013",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0013"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0014",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0014"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0015",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0015"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0016",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0016"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0017",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0017"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0018",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0018"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_0019",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u0019"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_001a",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u001a"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_001b",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u001b"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_001c",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u001c"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_001d",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u001d"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_001e",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u001e"
+      }
+    },
+    {
+      "id": "User.sendInput.001b_001f",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\u001f"
+      }
+    },
+    {
+      "id": "User.sendInput.0001_005b",
+      "command": {
+        "action": "sendInput",
+        "input": "\u0001\u005b"
+      }
+    },
+    {
+      "id": "User.sendInput.shift_enter",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[13;2u"
+      }
+    }
+  ],
+  "keybindings": [
+    {
+      "id": null,
+      "keys": "alt+1"
+    },
+    {
+      "id": null,
+      "keys": "alt+2"
+    },
+    {
+      "id": null,
+      "keys": "alt+3"
+    },
+    {
+      "id": null,
+      "keys": "alt+4"
+    },
+    {
+      "id": null,
+      "keys": "alt+5"
+    },
+    {
+      "id": null,
+      "keys": "alt+6"
+    },
+    {
+      "id": null,
+      "keys": "alt+7"
+    },
+    {
+      "id": null,
+      "keys": "alt+8"
+    },
+    {
+      "id": null,
+      "keys": "alt+9"
+    },
+    {
+      "id": null,
+      "keys": "alt+0"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+1"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+2"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+3"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+4"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+5"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+6"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+7"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+8"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+9"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+0"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+1"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+2"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+3"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+4"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+5"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+6"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+7"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+8"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+9"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+0"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+1"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+2"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+3"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+4"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+5"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+6"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+7"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+8"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+9"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+0"
+    },
+
+    {
+      "id": null,
+      "keys": "alt+left"
+    },
+    {
+      "id": null,
+      "keys": "alt+up"
+    },
+    {
+      "id": null,
+      "keys": "alt+right"
+    },
+    {
+      "id": null,
+      "keys": "alt+down"
+    },
+    {
+      "id": null,
+      "keys": "alt+shift+left"
+    },
+    {
+      "id": null,
+      "keys": "alt+shift+up"
+    },
+    {
+      "id": null,
+      "keys": "alt+shift+right"
+    },
+    {
+      "id": null,
+      "keys": "alt+shift+down"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+c"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+v"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+left"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+up"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+right"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+down"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+left"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+up"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+right"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+down"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+left"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+up"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+right"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+down"
+    },
+    {
+      "id": null,
+      "keys": "shift+left"
+    },
+    {
+      "id": null,
+      "keys": "shift+up"
+    },
+    {
+      "id": null,
+      "keys": "shift+right"
+    },
+    {
+      "id": null,
+      "keys": "shift+down"
+    },
+
+    {
+      "id": null,
+      "keys": "win+sc(41)"
+    },
+    {
+      "id": null,
+      "keys": "enter"
+    },
+    {
+      "id": null,
+      "keys": "menu"
+    },
+
+    {
+      "id": null,
+      "keys": "alt+enter"
+    },
+    {
+      "id": null,
+      "keys": "alt+space"
+    },
+    {
+      "id": null,
+      "keys": "alt+shift+minus"
+    },
+    {
+      "id": null,
+      "keys": "alt+shift+plus"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+comma"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+minus"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+numpad0"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+numpad_minus"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+numpad_plus"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+plus"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+tab"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+alt+comma"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+comma"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+end"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+home"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+pgdn"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+pgup"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+space"
+    },
+    {
+      "id": null,
+      "keys": "ctrl+shift+tab"
+    },
+
+    {
+      "id": "User.sendInput.001b_0001",
+      "keys": "ctrl+shift+a"
+    },
+    {
+      "id": "User.sendInput.001b_0002",
+      "keys": "ctrl+shift+b"
+    },
+    {
+      "id": "User.sendInput.001b_0003",
+      "keys": "ctrl+shift+c"
+    },
+    {
+      "id": "User.sendInput.001b_0004",
+      "keys": "ctrl+shift+d"
+    },
+    {
+      "id": "User.sendInput.001b_0005",
+      "keys": "ctrl+shift+e"
+    },
+    {
+      "id": "User.sendInput.001b_0006",
+      "keys": "ctrl+shift+f"
+    },
+    {
+      "id": "User.sendInput.001b_0007",
+      "keys": "ctrl+shift+g"
+    },
+    {
+      "id": "User.sendInput.001b_0008",
+      "keys": "ctrl+shift+h"
+    },
+    {
+      "id": "User.sendInput.001b_0009",
+      "keys": "ctrl+shift+i"
+    },
+    {
+      "id": "User.sendInput.001b_000a",
+      "keys": "ctrl+shift+j"
+    },
+    {
+      "id": "User.sendInput.001b_000b",
+      "keys": "ctrl+shift+k"
+    },
+    {
+      "id": "User.sendInput.001b_000c",
+      "keys": "ctrl+shift+l"
+    },
+    {
+      "id": "User.sendInput.001b_000d",
+      "keys": "ctrl+shift+m"
+    },
+    {
+      "id": "User.sendInput.001b_000e",
+      "keys": "ctrl+shift+n"
+    },
+    {
+      "id": "User.sendInput.001b_000f",
+      "keys": "ctrl+shift+o"
+    },
+    {
+      "id": "User.sendInput.001b_0010",
+      "keys": "ctrl+shift+p"
+    },
+    {
+      "id": "User.sendInput.001b_0011",
+      "keys": "ctrl+shift+q"
+    },
+    {
+      "id": "User.sendInput.001b_0012",
+      "keys": "ctrl+shift+r"
+    },
+    {
+      "id": "User.sendInput.001b_0013",
+      "keys": "ctrl+shift+s"
+    },
+    {
+      "id": "User.sendInput.001b_0014",
+      "keys": "ctrl+shift+t"
+    },
+    {
+      "id": "User.sendInput.001b_0015",
+      "keys": "ctrl+shift+u"
+    },
+    {
+      "id": "User.sendInput.001b_0016",
+      "keys": "ctrl+shift+v"
+    },
+    {
+      "id": "User.sendInput.001b_0017",
+      "keys": "ctrl+shift+w"
+    },
+    {
+      "id": "User.sendInput.001b_0018",
+      "keys": "ctrl+shift+x"
+    },
+    {
+      "id": "User.sendInput.001b_0019",
+      "keys": "ctrl+shift+y"
+    },
+    {
+      "id": "User.sendInput.001b_001a",
+      "keys": "ctrl+shift+z"
+    },
+
+    {
+      "id": "User.sendInput.0001_005b",
+      "keys": "alt+["
+    },
+    {
+      "id": "User.sendInput.shift_enter",
+      "keys": "shift+enter"
+    },
+
+    {
+      "id": "Terminal.PasteFromClipboard",
+      "keys": "alt+v"
+    },
+    {
+      "id": "Terminal.CloseWindow",
+      "keys": "ctrl+alt+shift+w"
+    },
+    {
+      "id": "Terminal.PasteFromClipboard",
+      "keys": "shift+insert"
+    },
+    {
+      "id": "Terminal.OpenNewWindow",
+      "keys": "ctrl+alt+shift+n"
+    }
+  ]
+}
