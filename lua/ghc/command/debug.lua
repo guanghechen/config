@@ -14,6 +14,7 @@ eve.commander
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
       local filetype = vim.bo[bufnr].filetype ---@type string
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
       local winnr_cur = eve.tab.get_current_winnr() ---@type integer
       local bufnr_cur = winnr_cur > 0 and vim.api.nvim_win_get_buf(winnr_cur) or 0 ---@type integer
@@ -27,6 +28,7 @@ eve.commander
           bufnr = bufnr,
           buftype = buftype or "nil",
           filetype = filetype or "nil",
+          filepath = filepath,
           bufnr_cur = bufnr_cur,
           winnr_cur = winnr_cur,
         },

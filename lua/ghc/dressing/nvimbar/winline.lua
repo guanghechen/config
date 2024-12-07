@@ -93,6 +93,12 @@ status.winline_dirty_nr:subscribe(
         winline:render()
         return
       end
+
+      local filetype = vim.bo[bufnr].filetype ---@type string
+      if eve.filetype.is_plain_file(filetype) then
+        vim.wo[winnr].winbar = Nvimbar.txt(filepath, "f_wl_text")
+        return
+      end
     end,
   }),
   true
