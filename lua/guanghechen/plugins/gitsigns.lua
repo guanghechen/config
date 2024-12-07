@@ -115,34 +115,32 @@ local keymaps = {
 
       local width = 84 ---@type integer
       local separate_line = string.rep("─", width - 4) ---@type string
-      local prefix_indent = "  " ---@type string
-      local lines_commit_message = vim.split(commit_message, "\n") ---@type string[]
 
-      ---@type string[]
-      local v_lines = {
-        "",
-        string.format("%s, %s (%s)", author_name, eve.util.time_ago(author_timestamp or os.time()), author_date),
-        separate_line,
-      }
-      vim.list_extend(v_lines, lines_commit_message)
+      local Printer = require("eve.lib.ux.printer")
+      local printer = Printer.new({ name = "blame line", indent = "  " })
+
+      printer
+        :lf()
+        :line(
+          string.format("%s, %s (%s)", author_name, eve.util.time_ago(author_timestamp or os.time()), author_date),
+          { { hlname = "Title", coll = 0, colr = -1 } }
+        )
+        :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
+        :lines(vim.split(commit_message, "\n"), { { lnum = -1, hlname = "Comment", coll = 0, colr = -1 } })
+
       if content_previous ~= nil then
-        vim.list_extend(v_lines, {
-          " - " .. content_previous,
-          " + " .. content_current,
-        })
+        printer
+          :line(" - " .. content_previous, { { hlname = "DiffDelRight", coll = 0, colr = -1 } })
+          :line(" + " .. content_current, { { hlname = "DiffAddRight", coll = 0, colr = -1 } })
       end
-      vim.list_extend(v_lines, {
-        separate_line,
-        string.format("Changes added in %s | <remote url>", commit_hash),
-        "",
-      })
 
-      for index, v_line in ipairs(v_lines) do
-        v_lines[index] = prefix_indent .. v_line
-      end
+      printer
+        :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
+        :line(string.format("Changes added in %s | <remote url>", commit_hash), {})
+        :lf()
 
       local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, v_lines)
+      printer:render(bufnr)
 
       ---@type eve.t.IKeymap[]
       local keymaps = {
@@ -156,24 +154,7 @@ local keymaps = {
       }
       eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-      -- Apply highlights
-      vim.api.nvim_buf_add_highlight(bufnr, 0, "Title", 1, 2, -1)
-      vim.api.nvim_buf_add_highlight(bufnr, 0, "VertSplit", 2, 2, -1)
-      local lnum_offset = 2 ---@type integer
-      for _ = 1, #lines_commit_message do
-        lnum_offset = lnum_offset + 1
-        vim.api.nvim_buf_add_highlight(bufnr, 0, "Comment", lnum_offset, 2, -1)
-      end
-      lnum_offset = lnum_offset + 1
-      if content_previous ~= nil then
-        vim.api.nvim_buf_add_highlight(bufnr, 0, "DiffDelRight", lnum_offset, 2, -1)
-        lnum_offset = lnum_offset + 1
-        vim.api.nvim_buf_add_highlight(bufnr, 0, "DiffAddRight", lnum_offset, 2, -1)
-        lnum_offset = lnum_offset + 1
-      end
-      vim.api.nvim_buf_add_highlight(bufnr, 0, "VertSplit", lnum_offset, 2, -1)
-
-      local height = #v_lines
+      local height = printer:count_lines() ---@type integer
       local opts = {
         relative = "cursor",
         width = width,

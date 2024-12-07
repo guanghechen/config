@@ -175,7 +175,7 @@ local function gen_hlgroup_map(context)
     Title = { fg = c.blue, bold = true },
     TooLong = { fg = c.red },
     UnderLined = { fg = c.blue, underline = true },
-    VertSplit = { fg = c.fg2 },
+    VertSplit = { fg = c.bg2 },
     VertSplitActive = { fg = c.neutral_orange },
     Visual = { bg = cs.mix(bg_main, c.neutral_aqua, 40), blend = 50, reverse = false },
     VisualNOS = { link = "Visual" },
