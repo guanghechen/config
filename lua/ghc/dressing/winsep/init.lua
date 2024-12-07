@@ -117,6 +117,7 @@ local function should_show(winnr)
 end
 
 vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
+  group = eve.nvim.augroup("winsep_refresh"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if not should_show(winnr) then

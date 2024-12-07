@@ -48,6 +48,7 @@ return {
 
     -- also set it after loading ftplugins, since a lot overwrite [[ and ]]
     vim.api.nvim_create_autocmd("FileType", {
+      group = eve.nvim.augroup("reset_illuminate_keymaps"),
       callback = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer|nil
         bindkeys(bufnr)

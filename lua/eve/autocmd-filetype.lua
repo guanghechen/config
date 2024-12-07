@@ -1,4 +1,5 @@
 local constant = require("eve.builtin.constant")
+local augroup = require("eve.builtin.nvim").augroup
 
 vim.filetype.add({
   extension = { rasi = "rasi", rofi = "rasi", wofi = "rasi" },
@@ -39,6 +40,7 @@ vim.filetype.add({
 
 ---bigfile
 vim.api.nvim_create_autocmd("FileType", {
+  group = augroup("filetype_bigfile"),
   pattern = "bigfile",
   callback = function(ev)
     vim.schedule(function()
@@ -49,6 +51,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---gitcommit
 vim.api.nvim_create_autocmd("FileType", {
+  group = augroup("filetype_gitcommit"),
   pattern = "gitcommit",
   callback = function()
     vim.opt_local.wrap = false
@@ -58,6 +61,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---html
 vim.api.nvim_create_autocmd("FileType", {
+  group = augroup("filetype_html"),
   pattern = "html",
   callback = function()
     vim.opt_local.wrap = false
@@ -67,6 +71,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---markdown
 vim.api.nvim_create_autocmd("FileType", {
+  group = augroup("filetype_markdown"),
   pattern = "markdown",
   callback = function()
     vim.opt_local.wrap = true
@@ -84,6 +89,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---text
 vim.api.nvim_create_autocmd("FileType", {
+  group = augroup("filetype_text"),
   pattern = "text",
   callback = function()
     vim.opt_local.wrap = true

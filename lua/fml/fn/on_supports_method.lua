@@ -34,6 +34,7 @@ local function check_methods(client, bufnr)
 end
 
 vim.api.nvim_create_autocmd("LspAttach", {
+  group = eve.nvim.augroup("check_methods_on_lsp_attach"),
   callback = function(args)
     local bufnr = args.buf ---@type integer
     local client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -44,6 +45,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 })
 
 vim.api.nvim_create_autocmd("User", {
+  group = eve.nvim.augroup("check_methods_on_lsp_dynamic_capability"),
   pattern = "LspDynamicCapability",
   callback = function(args)
     local bufnr = args.data.buffer ---@type number
@@ -60,6 +62,7 @@ local function on_supports_method(method, fn)
   supports_method[method] = supports_method[method] or setmetatable({}, { __mode = "k" })
 
   return vim.api.nvim_create_autocmd("User", {
+    group = eve.nvim.augroup("trigger_lsp_supports_method"),
     pattern = "LspSupportsMethod",
     callback = function(args)
       local bufnr = args.data.buffer ---@type number

@@ -324,6 +324,7 @@ return {
     })
     require("neo-tree").setup(opts)
     vim.api.nvim_create_autocmd("TermClose", {
+      group = eve.nvim.augroup("neotree_refresh_gitstatus"),
       pattern = "*lazygit",
       callback = function()
         if package.loaded["neo-tree.sources.git_status"] then

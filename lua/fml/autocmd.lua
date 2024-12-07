@@ -1,91 +1,15 @@
 local fs = require("eve.lib.fs")
 local path = require("eve.lib.path")
-local tmux = require("eve.lib.tmux")
+local augroup = require("eve.builtin.nvim").augroup
 local status = require("eve.builtin.status")
+local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
 local refresh_state = require("fml.fn.refresh_state")
 
 refresh_state()
 
----! Watch the zen mode change on tmux.
-if vim.env.TMUX then
-  vim.api.nvim_create_autocmd({ "VimResized" }, {
-    callback = function()
-      local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
-      status.tmux_zen_mode:next(is_tmux_pane_zoomed)
-      status.statusline_dirtier:mark_dirty()
-      status.tabline_dirtier:mark_dirty()
-    end,
-  })
-end
-
-vim.api.nvim_create_autocmd({ "WinResized" }, {
-  callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    if eve.win.resolve(winnr) ~= nil then
-      status.winline_dirty_nr:next(winnr)
-    end
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-  callback = function()
-    status.statusline_dirtier:mark_dirty()
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
-  callback = function(arg)
-    local bufnr = arg.buf ---@type integer
-    eve.win.on_buf_enter(bufnr)
-    eve.tab.on_buf_enter(bufnr)
-
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    if eve.win.resolve(winnr) ~= nil then
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
-      if meta_tab ~= nil then
-        meta_tab.winnr_listed = winnr
-      end
-      status.winline_dirty_nr:next(winnr)
-    end
-
-    status.statusline_dirtier:mark_dirty()
-    status.tabline_dirtier:mark_dirty()
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "TabEnter" }, {
-  callback = function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    state.state.tab_history:push(tabnr)
-    status.statusline_dirtier:mark_dirty()
-    status.tabline_dirtier:mark_dirty()
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "TabClosed" }, {
-  callback = function()
-    local tabnr_last = state.state.tab_history:present() ---@type integer|nil
-    vim.schedule(function()
-      if tabnr_last ~= nil and vim.api.nvim_tabpage_is_valid(tabnr_last) then
-        vim.api.nvim_set_current_tabpage(tabnr_last)
-      end
-      refresh_state()
-    end)
-    status.statusline_dirtier:mark_dirty()
-    status.tabline_dirtier:mark_dirty()
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "WinClosed" }, {
-  callback = function()
-    status.statusline_dirtier:mark_dirty()
-    status.tabline_dirtier:mark_dirty()
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "VimEnter" }, {
+vim.api.nvim_create_autocmd("VimEnter", {
+  group = augroup("on_vim_enter"),
   callback = function()
     local cwd = path.cwd() ---@type string
     local existed_filepaths = {} ---@type table<string, boolean>
@@ -115,18 +39,80 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "CursorHold" }, {
+vim.api.nvim_create_autocmd("TabEnter", {
+  group = augroup("on_tab_enter"),
   callback = function()
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    state.state.tab_history:push(tabnr)
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
+  end,
+})
+
+vim.api.nvim_create_autocmd("TabClosed", {
+  group = augroup("on_tab_closed"),
+  callback = function()
+    local tabnr_last = state.state.tab_history:present() ---@type integer|nil
+    vim.schedule(function()
+      if tabnr_last ~= nil and vim.api.nvim_tabpage_is_valid(tabnr_last) then
+        vim.api.nvim_set_current_tabpage(tabnr_last)
+      end
+      refresh_state()
+    end)
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
+  group = augroup("on_win_or_buf_enter"),
+  callback = function(arg)
+    local bufnr = arg.buf ---@type integer
+    eve.win.on_buf_enter(bufnr)
+    eve.tab.on_buf_enter(bufnr)
+
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if eve.win.resolve(winnr) ~= nil then
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      if meta_tab ~= nil then
+        meta_tab.winnr_listed = winnr
+      end
       status.winline_dirty_nr:next(winnr)
     end
+
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "WinClosed" }, {
+  group = augroup("on_win_closed"),
+  callback = function()
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
+  end,
+})
+
+vim.api.nvim_create_autocmd("ModeChanged", {
+  group = augroup("on_mode_changed"),
+  callback = function()
+    status.statusline_dirtier:mark_dirty()
+  end,
+})
+
+vim.api.nvim_create_autocmd("CursorHold", {
+  group = augroup("on_cursor_hold"),
+  callback = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    status.winline_dirty_nr:next(winnr)
     status.statusline_dirtier:mark_dirty()
   end,
 })
 
 local lsp_progress_spinners = { "", "", "", "󰪞", "󰪟", "󰪠", "󰪢", "󰪣", "󰪤", "󰪥" }
 vim.api.nvim_create_autocmd("LspProgress", {
+  group = augroup("on_lsp_progress"),
   callback = function(args)
     local data = args.data.params.value
     local progress = ""
@@ -141,5 +127,33 @@ vim.api.nvim_create_autocmd("LspProgress", {
     local lsp_msg = data.kind == "end" and "" or str ---@type string
     status.lsp_msg:next(lsp_msg)
     status.statusline_dirtier:mark_dirty()
+  end,
+})
+
+---! Auto resize splits when window got resized.
+vim.api.nvim_create_autocmd("VimResized", {
+  group = augroup("on_vim_resized"),
+  callback = function()
+    local current_tab = vim.fn.tabpagenr() ---@type integer
+    vim.cmd("tabdo wincmd =")
+    vim.cmd("tabnext " .. current_tab)
+    widgets.resize()
+
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
+
+    if vim.env.TMUX then
+      local tmux = require("eve.lib.tmux")
+      local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
+      status.tmux_zen_mode:next(is_tmux_pane_zoomed)
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd("WinResized", {
+  group = augroup("on_win_resized"),
+  callback = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    status.winline_dirty_nr:next(winnr)
   end,
 })

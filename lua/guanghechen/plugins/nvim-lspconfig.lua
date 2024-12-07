@@ -56,7 +56,7 @@ return {
         local enable_lsp_code_lens = state.state.flight.lsp_code_lens:snapshot() ---@type boolean
         if enable_lsp_code_lens and vim.bo[bufnr].buftype == "" then
           vim.lsp.codelens.refresh()
-          vim.api.nvim_create_autocmd({ "InsertLeave" }, {
+          vim.api.nvim_create_autocmd("InsertLeave", {
             buffer = bufnr,
             callback = vim.lsp.codelens.refresh,
           })

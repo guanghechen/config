@@ -1,10 +1,9 @@
 require("eve.setup").workspace()
 require("eve.setup").context()
-require("eve.setup").clear_jumplist()
 
 require("eve.option")
 require("eve.autocmd")
-require("eve.autocmd_filetype")
+require("eve.autocmd-filetype")
 require("eve.keymap")
 _G.eve = require("eve")
 

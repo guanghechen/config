@@ -1,13 +1,34 @@
 local env = require("eve.lib.env")
 local ft = require("eve.builtin.filetype")
 local mvc = require("eve.builtin.mvc")
-local widgets = require("eve.builtin.widgets")
+local augroup = require("eve.builtin.nvim").augroup
 
 if env.IS_MAC or env.IS_NIX or env.IS_WSL then
   vim.opt.shell = "/bin/bash"
 end
 
+---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
+vim.schedule(function()
+  vim.cmd("clearjumps")
+end)
+
+if env.IS_MAC then
+  local im = require("eve.lib.im")
+  local previous_mode = nil ---@type eve.e.VimMode|nil
+  vim.api.nvim_create_autocmd({ "ModeChanged" }, {
+    group = augroup("auto_toggle_im"),
+    callback = function()
+      local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
+      if previous_mode == "i" and current_mode == "n" then
+        im.set_input_method("English")
+      end
+      previous_mode = current_mode
+    end,
+  })
+end
+
 vim.api.nvim_create_autocmd("VimLeavePre", {
+  group = augroup("on_vim_leave_pre"),
   once = true,
   callback = function()
     mvc.dispose()
@@ -15,7 +36,8 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 })
 
 ---! Auto create dirs when saving a file, in case some intermediate directory does not exist
-vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = augroup("auto_create_dirs"),
   callback = function(event)
     if event.match:match("^%w%w+:[\\/][\\/]") then
       return
@@ -26,7 +48,8 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 })
 
 ---! Go to last loc when opening a buffer
-vim.api.nvim_create_autocmd({ "BufReadPost" }, {
+vim.api.nvim_create_autocmd("BufReadPost", {
+  group = augroup("goto_last_location"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
     if vim.b[bufnr].ghc_last_loc then
@@ -47,6 +70,7 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
 
 ---! Close some filetypes with q
 vim.api.nvim_create_autocmd("FileType", {
+  group = augroup("close_filetypes_with_q"),
   pattern = ft.get_quitable_with_q_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
@@ -61,28 +85,20 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
----! Check if we need to reload the file when it changed
-vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
-  callback = function()
-    if vim.o.buftype ~= "nofile" then
-      vim.cmd.checktime()
-    end
-  end,
-})
-
 ---! Highlight on yank.
-vim.api.nvim_create_autocmd({ "TextYankPost" }, {
+vim.api.nvim_create_autocmd("TextYankPost", {
+  group = augroup("highlight_on_yank"),
   callback = function()
     vim.highlight.on_yank()
   end,
 })
 
----! Auto resize splits when window got resized.
-vim.api.nvim_create_autocmd({ "VimResized" }, {
+---! Check if we need to reload the file when it changed
+vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
+  group = augroup("check_file_change"),
   callback = function()
-    local current_tab = vim.fn.tabpagenr() ---@type integer
-    vim.cmd("tabdo wincmd =")
-    vim.cmd("tabnext " .. current_tab)
-    widgets.resize()
+    if vim.o.buftype ~= "nofile" then
+      vim.cmd.checktime()
+    end
   end,
 })

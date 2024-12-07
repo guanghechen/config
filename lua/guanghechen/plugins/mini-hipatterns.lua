@@ -21,6 +21,7 @@ local tailwind_filetypes = {
 
 -- reset hl groups when colorscheme changes
 vim.api.nvim_create_autocmd("ColorScheme", {
+  group = eve.nvim.augroup("mini-hipatterns_reset_colorscheme"),
   callback = function()
     highlighted = {}
   end,

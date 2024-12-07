@@ -1,4 +1,3 @@
-local env = require("eve.lib.env")
 local path = require("eve.lib.path")
 
 ---@class eve.setup
@@ -41,31 +40,6 @@ function M.context()
   }
   state.set_storage(storage)
   state.load(storage)
-end
-
----! Setup the input method auto toggling
-function M.auto_toggle_im()
-  if env.IS_MAC then
-    local im = require("eve.lib.im")
-    local previous_mode = nil ---@type eve.e.VimMode|nil
-    vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-      callback = function()
-        local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
-        if previous_mode == "i" and current_mode == "n" then
-          im.set_input_method("English")
-        end
-        previous_mode = current_mode
-      end,
-    })
-  end
-end
-
----! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
----@return nil
-function M.clear_jumplist()
-  vim.schedule(function()
-    vim.cmd("clearjumps")
-  end)
 end
 
 return M
