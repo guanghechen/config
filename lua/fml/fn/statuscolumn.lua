@@ -1,4 +1,4 @@
----! see https://github.com/folke/snacks.nvim/blob/be8feef4ab584f50aaa96b69d50b3f86a35aacff/lua/snacks/statuscolumn.lua#L1
+---! see https://github.com/folke/snacks.nvim/blob/974bccb126b6b5d7170c519c380207069d23f557/lua/snacks/statuscolumn.lua#L1
 
 local icons = require("eve.builtin.icons")
 
@@ -31,8 +31,9 @@ local config = {
 ---@field public priority               number
 
 -- Cache for signs per buffer and line
----@type table<number,table<number, fml.fn.statuscolumn.ISign>>
-local cache = {}
+local sign_cache = {} ---@type table<number,table<number, fml.fn.statuscolumn.ISign>>
+local icon_cache = {} ---@type table<string, string>
+local cache = {} ---@type table<string, string>
 
 local did_setup = false
 
@@ -42,6 +43,7 @@ local function setup()
     did_setup = true
     local timer = assert((vim.uv or vim.loop).new_timer())
     timer:start(config.refresh, config.refresh, function()
+      sign_cache = {}
       cache = {}
     end)
   end
@@ -75,11 +77,7 @@ end
 -- Returns a list of regular and extmark signs sorted by priority (low to high)
 ---@param bufnr                         integer
 ---@return table<integer, fml.fn.statuscolumn.ISign[]>
-local function buf_signs(bufnr)
-  if cache[bufnr] then
-    return cache[bufnr]
-  end
-
+local function get_buf_signs(bufnr)
   local signs_map = {} ---@type table<integer, fml.fn.statuscolumn.ISign[]>
 
   -- Get extmark signs
@@ -121,7 +119,6 @@ local function buf_signs(bufnr)
     end
   end
 
-  cache[bufnr] = signs_map
   return signs_map
 end
 
@@ -131,7 +128,12 @@ end
 ---@param lnum                          integer
 ---@return fml.fn.statuscolumn.ISign[]
 local function line_signs(winnr, bufnr, lnum)
-  local signs = buf_signs(bufnr)[lnum] or {} ---@type fml.fn.statuscolumn.ISign[]
+  local buf_signs = sign_cache[bufnr] ---@type table<integer, fml.fn.statuscolumn.ISign[]>|nil
+  if not buf_signs then
+    buf_signs = get_buf_signs(bufnr)
+    sign_cache[bufnr] = buf_signs
+  end
+  local signs = buf_signs[lnum] or {} ---@type fml.fn.statuscolumn.ISign[]
 
   -- Get fold signs
   vim.api.nvim_win_call(winnr, function()
@@ -163,14 +165,20 @@ local function line_signs(winnr, bufnr, lnum)
 end
 
 ---@param sign                          ?fml.fn.statuscolumn.ISign
----@param len                           ?integer
 ---@return string
-local function get_icon(sign, len)
-  sign = sign or {}
-  len = len or 2
-  local text = vim.fn.strcharpart(sign.text or "", 0, len) ---@type string
-  text = text .. string.rep(" ", len - vim.fn.strchars(text))
-  return sign.texthl and ("%#" .. sign.texthl .. "#" .. text .. "%*") or text
+local function get_icon(sign)
+  if not sign then
+    return "  "
+  end
+
+  local key = (sign.text or "") .. (sign.texthl or "")
+  if icon_cache[key] then
+    return icon_cache[key]
+  end
+  local text = vim.fn.strcharpart(sign.text or "", 0, 2) ---@type string
+  text = text .. string.rep(" ", 2 - vim.fn.strchars(text))
+  icon_cache[key] = sign.texthl and ("%#" .. sign.texthl .. "#" .. text .. "%*") or text
+  return icon_cache[key]
 end
 
 ---@return string
@@ -180,7 +188,7 @@ local function statuscolumn()
   local win = vim.g.statusline_winid
   local buf = vim.api.nvim_win_get_buf(win)
   local is_file = vim.bo[buf].buftype == ""
-  local show_signs = vim.wo[win].signcolumn ~= "no"
+  local show_signs = vim.wo[win].signcolumn ~= "no" and vim.v.virtnum == 0
 
   local components = { "", "", "" } -- left, middle, right
 
@@ -200,8 +208,8 @@ local function statuscolumn()
       end
     end
 
-    components[1] = get_icon(left) -- left
-    components[3] = is_file and get_icon(right) or "" -- right
+    components[1] = left and get_icon(left) or "  " -- left
+    components[3] = is_file and (right and get_icon(right) or "  ") or "" -- right
   end
 
   -- Numbers in Neovim are weird
@@ -230,8 +238,19 @@ end
 
 ---@return string
 local function safe_statuscolumn()
+  local win = vim.g.statusline_winid
+  local buf = vim.api.nvim_win_get_buf(win)
+  local key = ("%d:%d:%d:%d:%d"):format(win, buf, vim.v.lnum, vim.v.virtnum, vim.v.relnum)
+  if cache[key] then
+    return cache[key]
+  end
+
   local ok, result = pcall(statuscolumn)
-  return ok and result or ""
+  if ok then
+    cache[key] = result
+    return result
+  end
+  return ""
 end
 
 return safe_statuscolumn
