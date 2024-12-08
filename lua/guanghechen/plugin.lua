@@ -44,7 +44,6 @@ local conds = {
 local raw_specs = {
   { name = "aerial.nvim", main = "aerial", cond = conds.not_vscode },
   { name = "cmp-buffer", main = "cmp_buffer", cond = conds.not_vscode },
-  { name = "cmp-luasnip", main = "cmp_luasnip", cond = conds.not_vscode },
   { name = "cmp-nvim-lsp", main = "cmp_nvim_lsp", cond = conds.not_vscode },
   { name = "cmp-path", main = "cmp_path", cond = conds.not_vscode },
   { name = "conform.nvim", main = "conform", cond = conds.not_vscode },
@@ -57,7 +56,6 @@ local raw_specs = {
   { name = "friendly-snippets", cond = conds.not_vscode },
   { name = "gitsigns.nvim", main = "gitsigns", cond = conds.not_vscode },
   { name = "indent-blankline.nvim", main = "ibl", cond = conds.not_vscode },
-  { name = "luasnip.nvim", main = "luasnip", cond = conds.not_vscode },
   { name = "mason.nvim", main = "mason", cond = conds.not_vscode },
   { name = "mason-lspconfig.nvim", main = "mason-lspconfig", cond = conds.not_vscode },
   { name = "mini.hipatterns", main = "mini.hipatterns", cond = conds.not_vscode },
@@ -71,6 +69,7 @@ local raw_specs = {
   { name = "nvim-cmp", main = "cmp", cond = conds.not_vscode },
   { name = "nvim-lspconfig", main = "lspconfig", cond = conds.not_vscode },
   { name = "nvim-notify", main = "notify", cond = conds.not_vscode },
+  { name = "nvim-snippets", main = "snippets", cond = conds.not_vscode },
   { name = "nvim-treesitter", main = "nvim-treesitter", cond = conds.not_vscode },
   { name = "nvim-treesitter-context", main = "treesitter-context", cond = conds.not_vscode },
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects", cond = conds.not_vscode },
@@ -112,7 +111,6 @@ end
 ---@type string[]
 local no_details_module_names = {
   "cmp-buffer", --
-  "cmp-luasnip", --
   "cmp-nvim-lsp",
   "cmp-path",
   "friendly-snippets",
