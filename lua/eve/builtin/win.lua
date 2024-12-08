@@ -217,14 +217,22 @@ function M.locate_symbols(winnr, callback)
   ---@param symbols                     any[]
   ---@return nil
   local function handler(err, symbols)
-    if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or callback_called then
+    if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+      safe_callback(false)
       return
     end
 
     if err then
-      if type(err) == "table" and err.message == "trying to get AST for non-added document" then
-        if vim.api.nvim_buf_is_valid(bufnr) then
-          vim.b[bufnr][constant.V_WINLINE_DISABLED] = true
+      if type(err) == "table" then
+        if err.message == "Content modified." then
+          safe_callback(false)
+          return
+        end
+
+        if err.message == "trying to get AST for non-added document" then
+          if vim.api.nvim_buf_is_valid(bufnr) then
+            vim.b[bufnr][constant.V_WINLINE_DISABLED] = true
+          end
         end
       end
 
@@ -234,7 +242,7 @@ function M.locate_symbols(winnr, callback)
         message = "Failed to request document symbols",
         details = { err = err, result = symbols, bufnr = bufnr, winnr = winnr },
       })
-      safe_callback("Failed to request document symbols")
+      safe_callback(err.message or "Failed to request document symbols")
       return
     end
 
