@@ -29,16 +29,6 @@ local function mk(modes, key, uuid, desc)
 end
 
 --#enhance------------------------------------------------------------------------------------------
-mk({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", "remove search highlights") -- Clear search with <esc>
-mk({ "t" }, "<C-n>", "<C-\\><C-n>", "terminal: enter normal mode") -- Exit terminal
-
----! Add undo break-points
-mk({ "i" }, "<space>", "<space><c-g>u")
-mk({ "i" }, "<cr>", "<cr><c-g>u")
-mk({ "i" }, ",", ",<c-g>u")
-mk({ "i" }, ".", ".<c-g>u")
-mk({ "i" }, ";", ";<c-g>u")
-
 ---! better indenting
 vim.keymap.set("v", "<", "<gv")
 vim.keymap.set("v", ">", ">gv")
@@ -50,12 +40,27 @@ vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, si
 vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true, desc = "up" })
 
 ---! https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
-vim.keymap.set("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "next Search Result" })
-vim.keymap.set("x", "n", "'Nn'[v:searchforward]", { expr = true, desc = "next Search Result" })
-vim.keymap.set("o", "n", "'Nn'[v:searchforward]", { expr = true, desc = "next Search Result" })
-vim.keymap.set("n", "N", "'nN'[v:searchforward].'zv'", { expr = true, desc = "prev Search Result" })
-vim.keymap.set("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
-vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "prev Search Result" })
+vim.keymap.set("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "search: next result" })
+vim.keymap.set("x", "n", "'Nn'[v:searchforward]", { expr = true, desc = "search: next result" })
+vim.keymap.set("o", "n", "'Nn'[v:searchforward]", { expr = true, desc = "search: next result" })
+vim.keymap.set("n", "N", "'nN'[v:searchforward].'zv'", { expr = true, desc = "search: prev result" })
+vim.keymap.set("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "search: prev result" })
+vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "search: prev result" })
+
+---! commenting
+mk({ "n" }, "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add below")
+mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add above")
+
+---! enhancement
+mk({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", "remove search highlights") -- Clear search with <esc>
+mk({ "t" }, "<C-n>", "<C-\\><C-n>", "terminal: enter normal mode") -- Exit terminal
+
+---! Add undo break-points
+mk({ "i" }, ",", ",<c-g>u")
+mk({ "i" }, ".", ".<c-g>u")
+mk({ "i" }, ";", ";<c-g>u")
+mk({ "i" }, "<cr>", "<cr><c-g>u")
+mk({ "i" }, "<space>", "<space><c-g>u")
 
 ----- better copy/paste list -----
 mk({ "v" }, "<C-a>c", '"+y', "system: copy to clipboard")
