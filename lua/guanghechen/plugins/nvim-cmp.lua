@@ -6,6 +6,9 @@ local cmp_sources_map = {
     { name = "path", group_index = 1, priority = 100 },
     { name = "buffer", group_index = 2, priority = 80 },
   },
+  cmdline = {
+    { name = "path", group_index = 1, priority = 100 },
+  },
   code = {
     { name = "copilot", group_index = 1, priority = 100 },
     { name = "path", group_index = 1, priority = 99 },
@@ -124,16 +127,15 @@ return {
       },
       sources = vim.list_slice(cmp_sources_map.basic),
       window = {
-        completion = {
-          scrollbar = false,
-          side_padding = 1,
-          border = "single",
-          winhighlight = "Normal:CmpPmenu,CursorLine:CmpSel,Search:None,FloatBorder:CmpBorder",
-        },
-        documentation = {
-          border = "single",
-          winhighlight = "Normal:CmpDoc,FloatBorder:CmpDocBorder",
-        },
+        completion = cmp.config.window.bordered({
+          side_padding = 0,
+          border = "rounded",
+          winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:PmenuSel,Search:None",
+        }),
+        documentation = cmp.config.window.bordered({
+          border = "rounded",
+          winhighlight = "Normal:CmpDocNormal,FloatBorder:CmpDocBorder,CursorLine:PmenuSel,Search:None",
+        }),
       },
     }
 
@@ -160,6 +162,9 @@ return {
     end)
 
     cmp.setup(opts)
+    cmp.setup.cmdline("/", {
+      sources = vim.list_slice(cmp_sources_map.cmdline),
+    })
     cmp.setup.filetype(eve.filetype.get_cmp_code_filetypes(), {
       sources = vim.list_slice(cmp_sources_map.code),
     })

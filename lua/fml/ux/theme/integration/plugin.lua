@@ -6,10 +6,7 @@ local function gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   ---@type string
-  local item_kind_bg =
-    --(m == "dark" and eve.color.change_hex_lightness(c.black, 6)) or
-    --(m == "light" and eve.color.change_hex_lightness(c.black, -6)) or
-    "none"
+  local item_kind_bg = "none"
 
   return {
     ---! aerial.nvim
@@ -176,9 +173,10 @@ local function gen_hlgroup_map(context)
     NoiceCmdlinePopupBorder = { fg = c.green, bg = "none" },
 
     ---! nvim-cmp
-    CmpBorder = { fg = c.bg4 },
-    CmpDoc = { bg = c.bg1 },
-    CmpDocBorder = { fg = c.bg4, bg = c.bg1 },
+    CmpBorder = { fg = cs.mix(c.bg0, c.green, 50) },
+    CmpNormal = { bg = c.bg0 },
+    CmpDocBorder = { fg = c.bg2 },
+    CmpDocNormal = { bg = c.bg0 },
     CmpGhostText = { link = "Comment", default = true },
     CmpItemAbbr = { fg = c.fg1 },
     CmpItemAbbrMatch = { fg = c.blue, bold = true },
@@ -214,8 +212,6 @@ local function gen_hlgroup_map(context)
     CmpItemKindValue = { fg = c.aqua, bg = item_kind_bg },
     CmpItemKindVariable = { fg = c.purple, bg = item_kind_bg },
     CmpItemMenu = { fg = c.fg4, italic = true },
-    CmpPmenu = { bg = c.bg1 },
-    CmpSel = { fg = c.bg2, bg = c.green, bold = true },
 
     ---! nvim-dap
     DapBreakpoint = { fg = c.red },
