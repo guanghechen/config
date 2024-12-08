@@ -19,7 +19,8 @@ Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 function prompt {
   Write-Host
-  Write-Host "    `e[1m$env:USERNAME" -nonewline -foregroundcolor Red
+  Write-Host "  " -nonewline -foregroundcolor Blue
+  Write-Host "`e[1m$env:USERNAME" -nonewline -foregroundcolor Red
   Write-Host "@" -nonewline -foregroundcolor Cyan
   Write-Host "`e[1m$env:COMPUTERNAME" -nonewline -foregroundcolor White
   Write-Host " `e[1m$PWD" -nonewline -foregroundcolor DarkBlue
