@@ -1,4 +1,25 @@
+local env = require("eve.lib.env")
 local icons = require("eve.builtin.icons")
+
+if env.IS_MAC or env.IS_NIX or env.IS_WSL then
+  vim.opt.shell = "/bin/bash"
+elseif env.IS_WIN then
+  vim.opt.shell = "pwsh"
+
+  -- Setting shell command flags
+  vim.opt.shellcmdflag =
+    "-NoLogo -NonInteractive -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();$PSDefaultParameterValues['Out-File:Encoding']='utf8';$PSStyle.OutputRendering='plaintext';Remove-Alias -Force -ErrorAction SilentlyContinue tee;"
+
+  -- Setting shell redirection
+  vim.opt.shellredir = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
+
+  -- Setting shell pipe
+  vim.opt.shellpipe = '2>&1 | %%{ "$_" } | tee %s; exit $LastExitCode'
+
+  -- Setting shell quote options
+  vim.opt.shellquote = ""
+  vim.opt.shellxquote = ""
+end
 
 vim.g.mapleader = " "
 vim.g.bigfile_size = 1.5 * 1024 * 1024 --- 1.5MB
