@@ -1,3 +1,4 @@
+local icons = require("eve.lib.icons")
 local util_cmp = require("guanghechen.util.cmp")
 
 local cmp_sources_map = {
@@ -37,7 +38,7 @@ return {
         -- default fields order i.e completion word + item.kind + item.kind icons
         fields = { "abbr", "kind", "menu" },
         format = function(_, item)
-          local icon = eve.icons.kind[item.kind] or eve.icons.kind.Text ---@type string
+          local icon = icons.kind[item.kind] or icons.kind.Text ---@type string
 
           item.abbr = item.abbr .. " "
           item.menu_hl_group = "CmpItemKind" .. (item.kind or "")

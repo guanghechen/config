@@ -1,9 +1,9 @@
 local env = require("eve.lib.env")
 
----@class eve.builtin.icons
+---@class eve.lib.icons
 local M = {}
 
----@class eve.builtin.icons.fillchars
+---@class eve.lib.icons.fillchars
 M.fillchars = {
   diff = " ",
   eob = " ",
@@ -15,7 +15,7 @@ M.fillchars = {
   vert = "│",
 }
 
----@class eve.builtin.icons.listchars
+---@class eve.lib.icons.listchars
 M.listchars = {
   eol = "↲",
   extends = "»",
@@ -27,7 +27,7 @@ M.listchars = {
   trail = "•",
 }
 
----@class eve.builtin.icons.symbols
+---@class eve.lib.icons.symbols
 M.symbols = {
   flag_fuzzy = "󰫳",
   flag_case_sensitive = "",
@@ -36,7 +36,7 @@ M.symbols = {
   flag_replace = "",
 }
 
----@class eve.builtin.icons.kind
+---@class eve.lib.icons.kind
 M.kind = {
   Array = "󰅪",
   Boolean = "󰨙",
@@ -91,7 +91,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class eve.builtin.icons.documents
+---@class eve.lib.icons.documents
 M.documents = {
   Default = "",
   File = "",
@@ -101,7 +101,7 @@ M.documents = {
   Symlink = "",
 }
 
----@class eve.builtin.icons.git
+---@class eve.lib.icons.git
 M.git = {
   Add = "",
   Branch = "",
@@ -120,7 +120,7 @@ M.git = {
   Conflict = "",
 }
 
----@class eve.builtin.icons.os
+---@class eve.lib.icons.os
 M.os = {
   dos = "",
   mac = "",
@@ -134,7 +134,7 @@ M.os = {
     or "",
 }
 
----@class eve.builtin.icons.ui
+---@class eve.lib.icons.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",
@@ -204,7 +204,7 @@ M.ui = {
   Window = "",
 }
 
----@class eve.builtin.icons.diagnostics
+---@class eve.lib.icons.diagnostics
 M.diagnostics = {
   Error = "",
   Warning = "",
@@ -219,7 +219,7 @@ M.diagnostics = {
   Hint_alt = "󰌶",
 }
 
----@class eve.builtin.icons.misc
+---@class eve.lib.icons.misc
 M.misc = {
   Campass = "󰀹",
   Code = "",
@@ -244,7 +244,7 @@ M.misc = {
   Vim = "",
 }
 
----@class eve.builtin.icons.cmp
+---@class eve.lib.icons.cmp
 M.cmp = {
   buffer = "",
   cmp_tabnine = "",
@@ -264,7 +264,7 @@ M.cmp = {
   undefined = "",
 }
 
----@class eve.builtin.icons.dap
+---@class eve.lib.icons.dap
 M.dap = {
   Breakpoint = "",
   BreakpointCondition = "",

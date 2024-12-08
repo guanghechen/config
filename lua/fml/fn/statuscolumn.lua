@@ -1,6 +1,6 @@
 ---! see https://github.com/folke/snacks.nvim/blob/974bccb126b6b5d7170c519c380207069d23f557/lua/snacks/statuscolumn.lua#L1
 
-local icons = require("eve.builtin.icons")
+local icons = require("eve.lib.icons")
 
 ---@class fml.fn.statuscolumn.config
 local config = {

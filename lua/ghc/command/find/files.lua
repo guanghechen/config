@@ -1,5 +1,6 @@
 local __module_name__ = "ghc.command.find" ---@type string
 
+local icons = require("eve.lib.icons")
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
@@ -221,28 +222,28 @@ local function get_select()
       {
         type = "flag",
         desc = "find: toggle gitignore",
-        symbol = eve.icons.symbols.flag_gitignore,
+        symbol = icons.symbols.flag_gitignore,
         state = state.state.find.flag_gitignore,
         callback = actions.toggle_gitignore,
       },
       {
         type = "flag",
         desc = "select: toggle flag fuzzy",
-        symbol = eve.icons.symbols.flag_fuzzy,
+        symbol = icons.symbols.flag_fuzzy,
         state = state.state.find.flag_fuzzy,
         callback = actions.toggle_flag_fuzzy,
       },
       {
         type = "flag",
         desc = "find: toggle case sensitive",
-        symbol = eve.icons.symbols.flag_case_sensitive,
+        symbol = icons.symbols.flag_case_sensitive,
         state = state.state.find.flag_case_sensitive,
         callback = actions.toggle_case_sensitive,
       },
       {
         type = "flag",
         desc = "select: toggle flag regex",
-        symbol = eve.icons.symbols.flag_regex,
+        symbol = icons.symbols.flag_regex,
         state = state.state.find.flag_regex,
         callback = actions.toggle_flag_regex,
       },

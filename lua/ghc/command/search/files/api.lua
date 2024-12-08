@@ -1,6 +1,7 @@
 local __module_name__ = "ghc.command.search.files.api" ---@type string
 
 local fs = require("eve.lib.fs")
+local icons = require("eve.lib.icons")
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
@@ -437,7 +438,7 @@ function M.fetch_data(input_text, force, callback)
             local search_item ---@type fml.t.ux.search.IItem
             if s_k == r_k then
               local prettier_line = line:sub(1, col_end) .. r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
-              local text = text_prefix .. prettier_line .. eve.icons.listchars.eol ---@type string
+              local text = text_prefix .. prettier_line .. icons.listchars.eol ---@type string
 
               ---@type eve.t.IHighlightInline[]
               local highlights = {
@@ -460,7 +461,7 @@ function M.fetch_data(input_text, force, callback)
               }
             else
               local prettier_line = line ---@type string
-              local text = text_prefix .. prettier_line .. eve.icons.listchars.eol ---@type string
+              local text = text_prefix .. prettier_line .. icons.listchars.eol ---@type string
 
               ---@type eve.t.IHighlightInline[]
               local highlights = {
@@ -504,7 +505,7 @@ function M.fetch_data(input_text, force, callback)
             local lnum = block_match.lnum + k - 1 ---@type integer
 
             local text_prefix = "  " .. lnum .. ":" .. col .. " " ---@type string
-            local text = text_prefix .. lines[k] .. eve.icons.listchars.eol ---@type string
+            local text = text_prefix .. lines[k] .. icons.listchars.eol ---@type string
             local width_prefix = string.len(text_prefix) ---@type integer
 
             ---@type eve.t.IHighlightInline[]

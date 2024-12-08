@@ -1,3 +1,5 @@
+local icons = require("eve.lib.icons")
+
 local function recursively_toggle(state, toggle_directory)
   require("guanghechen.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, false)
 end
@@ -36,10 +38,10 @@ return {
       },
       diagnostics = {
         symbols = {
-          hint = eve.icons.diagnostics.Hint .. " ",
-          info = eve.icons.diagnostics.Information .. " ",
-          warn = eve.icons.diagnostics.Warning .. " ",
-          error = eve.icons.diagnostics.Error .. " ",
+          hint = icons.diagnostics.Hint .. " ",
+          info = icons.diagnostics.Information .. " ",
+          warn = icons.diagnostics.Warning .. " ",
+          error = icons.diagnostics.Error .. " ",
         },
         highlights = {
           hint = "DiagnosticSignHint",
@@ -61,14 +63,14 @@ return {
         expander_highlight = "NeoTreeExpander",
       },
       icon = {
-        folder_closed = eve.icons.ui.Folder,
-        folder_open = eve.icons.ui.FolderOpen,
-        folder_empty = eve.icons.ui.EmptyFolder,
-        default = eve.icons.ui.File,
+        folder_closed = icons.ui.Folder,
+        folder_open = icons.ui.FolderOpen,
+        folder_empty = icons.ui.EmptyFolder,
+        default = icons.ui.File,
         highlight = "NeoTreeFileIcon",
       },
       modified = {
-        symbol = eve.icons.ui.Modified,
+        symbol = icons.ui.Modified,
         highlight = "NeoTreeModified",
       },
       name = {
@@ -81,14 +83,14 @@ return {
           -- Change type
           added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
           modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
-          deleted = eve.icons.git.Remove, -- this can only be used in the git_status source
-          renamed = eve.icons.git.Rename, -- this can only be used in the git_status source
+          deleted = icons.git.Remove, -- this can only be used in the git_status source
+          renamed = icons.git.Rename, -- this can only be used in the git_status source
           -- Status type
-          untracked = eve.icons.git.Untracked,
-          ignored = eve.icons.git.Ignore,
-          unstaged = eve.icons.git.Unstaged,
-          staged = eve.icons.git.Staged,
-          conflict = eve.icons.git.Conflict,
+          untracked = icons.git.Untracked,
+          ignored = icons.git.Ignore,
+          unstaged = icons.git.Unstaged,
+          staged = icons.git.Staged,
+          conflict = icons.git.Conflict,
         },
       },
       file_size = {

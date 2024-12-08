@@ -1,3 +1,5 @@
+local icons = require("eve.lib.icons")
+
 return {
   name = "diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },
@@ -75,13 +77,13 @@ return {
         end,
       },
       icons = { -- Only applies when use_icons is true.
-        folder_closed = eve.icons.ui.Folder,
-        folder_open = eve.icons.ui.FolderOpen,
+        folder_closed = icons.ui.Folder,
+        folder_open = icons.ui.FolderOpen,
       },
       signs = {
-        fold_closed = eve.icons.ui.ArrowClosed,
-        fold_open = eve.icons.ui.ArrowOpen,
-        done = eve.icons.ui.Accepted,
+        fold_closed = icons.ui.ArrowClosed,
+        fold_open = icons.ui.ArrowOpen,
+        done = icons.ui.Accepted,
       },
       keymaps = {
         disable_defaults = true, -- Disable the default keymaps

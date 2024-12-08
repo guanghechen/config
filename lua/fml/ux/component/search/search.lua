@@ -1,4 +1,5 @@
 local functional = require("eve.lib.functional")
+local icons = require("eve.lib.icons")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 local G = require("eve.builtin.G")
@@ -669,11 +670,11 @@ function M:create_wins_as_needed()
     vim.wo[winnr_preview].list = true
     vim.wo[winnr_preview].listchars = string.format(
       "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
-      eve.icons.listchars.eol,
-      eve.icons.listchars.lead,
-      eve.icons.listchars.nbsp,
-      eve.icons.listchars.space,
-      eve.icons.listchars.trail
+      icons.listchars.eol,
+      icons.listchars.lead,
+      icons.listchars.nbsp,
+      icons.listchars.space,
+      icons.listchars.trail
     )
   end
 

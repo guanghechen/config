@@ -1,3 +1,5 @@
+local icons = require("eve.lib.icons")
+
 -- Better `vim.notify()`
 return {
   name = "nvim-notify",
@@ -21,11 +23,11 @@ return {
       vim.api.nvim_win_set_config(win, { zindex = 100 })
     end,
     icons = {
-      ERROR = eve.icons.diagnostics.Error,
-      WARN = eve.icons.diagnostics.Warning,
-      INFO = eve.icons.diagnostics.Information,
-      DEBUG = eve.icons.ui.Bug,
-      TRACE = eve.icons.ui.Pencil,
+      ERROR = icons.diagnostics.Error,
+      WARN = icons.diagnostics.Warning,
+      INFO = icons.diagnostics.Information,
+      DEBUG = icons.ui.Bug,
+      TRACE = icons.ui.Pencil,
     },
   },
 }

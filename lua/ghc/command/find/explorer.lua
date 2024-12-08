@@ -1,5 +1,6 @@
 local env = require("eve.lib.env")
 local fs = require("eve.lib.fs")
+local icons = require("eve.lib.icons")
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local Observable = require("eve.lib.collection.observable")
@@ -63,7 +64,7 @@ local function fetch_diritem(dirpath, force)
         owner = raw_itself.owner,
         group = raw_itself.group,
         date = raw_itself.date,
-        icon = eve.icons.kind.Folder,
+        icon = icons.kind.Folder,
         icon_hl = "f_fe_name_dir",
       }
       file_datamap[dirpath] = itself
@@ -73,7 +74,7 @@ local function fetch_diritem(dirpath, force)
         local icon ---@type string
         local icon_hl ---@type string
         if raw_item.type == "directory" then
-          icon = eve.icons.kind.Folder
+          icon = icons.kind.Folder
           icon_hl = "f_fe_name_dir"
         else
           icon, icon_hl = eve.nvim.calc_fileicon(raw_item.name)

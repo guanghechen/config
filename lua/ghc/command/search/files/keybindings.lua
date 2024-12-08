@@ -1,4 +1,4 @@
-local icons = require("eve.builtin.icons")
+local icons = require("eve.lib.icons")
 local state = require("eve.state")
 local actions = require("ghc.command.search.files.actions")
 

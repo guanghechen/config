@@ -1,5 +1,5 @@
 local env = require("eve.lib.env")
-local icons = require("eve.builtin.icons")
+local icons = require("eve.lib.icons")
 
 if env.IS_MAC or env.IS_NIX or env.IS_WSL then
   vim.opt.shell = "/bin/bash"

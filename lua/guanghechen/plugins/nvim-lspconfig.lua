@@ -1,3 +1,4 @@
+local icons = require("eve.lib.icons")
 local state = require("eve.state")
 
 local on_supports_method = require("fml.fn.on_supports_method")
@@ -13,10 +14,10 @@ return {
       },
       signs = {
         text = {
-          [severity.ERROR] = eve.icons.diagnostics.Error,
-          [severity.WARN] = eve.icons.diagnostics.Warning,
-          [severity.INFO] = eve.icons.diagnostics.Information,
-          [severity.HINT] = eve.icons.diagnostics.Hint,
+          [severity.ERROR] = icons.diagnostics.Error,
+          [severity.WARN] = icons.diagnostics.Warning,
+          [severity.INFO] = icons.diagnostics.Information,
+          [severity.HINT] = icons.diagnostics.Hint,
         },
         numhl = {
           [severity.ERROR] = "f_lnum_error",

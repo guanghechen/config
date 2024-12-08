@@ -1,4 +1,6 @@
-local username = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
+local env = require("eve.lib.env")
+local icons = require("eve.lib.icons")
+local username = env.USERNAME ---@type string
 
 return {
   name = "CopilotChat.nvim",
@@ -6,8 +8,8 @@ return {
   opts = {
     allow_insecure = false,
     auto_insert_mode = true,
-    answer_header = " " .. eve.icons.kind.Copilot .. " Copilot ",
-    question_header = " " .. eve.icons.os.current .. " " .. username .. " ",
+    answer_header = " " .. icons.kind.Copilot .. " Copilot ",
+    question_header = " " .. icons.os.current .. " " .. username .. " ",
     -- proxy = os.getenv("http_proxy"),
     window = {
       layout = "float",

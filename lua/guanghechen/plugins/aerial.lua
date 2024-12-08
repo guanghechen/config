@@ -1,5 +1,7 @@
+local _icons = require("eve.lib.icons")
+
 ---@type table<string, string>
-local icons = vim.tbl_extend("force", {}, eve.icons.kind)
+local icons = vim.tbl_extend("force", {}, _icons.kind)
 for name, icon in pairs(icons) do
   icons[name] = icon .. " "
 end
