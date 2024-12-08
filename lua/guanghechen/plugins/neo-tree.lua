@@ -58,8 +58,8 @@ return {
         last_indent_marker = "└",
         highlight = "NeoTreeIndentMarker",
         with_expanders = true,
-        expander_collapsed = "",
-        expander_expanded = "",
+        expander_collapsed = icons.ui.ArrowClosed,
+        expander_expanded = icons.ui.ArrowOpen,
         expander_highlight = "NeoTreeExpander",
       },
       icon = {

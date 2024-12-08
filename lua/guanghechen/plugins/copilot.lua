@@ -8,8 +8,12 @@ return {
   end,
   event = { "InsertEnter" },
   opts = {
-    suggestion = { enabled = false },
-    panel = { enabled = false },
+    suggestion = {
+      enabled = false,
+    },
+    panel = {
+      enabled = false,
+    },
     filetypes = {
       help = true,
       lua = true,
