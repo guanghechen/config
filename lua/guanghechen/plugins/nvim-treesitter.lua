@@ -5,11 +5,7 @@ return {
   name = "nvim-treesitter",
   lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline
   event = { "BufReadPre", "BufWritePost", "VeryLazy" },
-  build = function()
-    vim.defer_fn(function()
-      vim.cmd("TSUpdate")
-    end, 1000)
-  end,
+  build = ":TSUpdate",
   cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
   keys = {
     { "<C-space>", desc = "Increment Selection" },

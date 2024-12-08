@@ -1,11 +1,7 @@
 return {
   name = "copilot.lua",
   cmd = "Copilot",
-  build = function()
-    vim.defer_fn(function()
-      vim.cmd("Copilot auth signin")
-    end, 1000)
-  end,
+  build = ":Copilot auth",
   event = { "InsertEnter" },
   opts = {
     suggestion = {

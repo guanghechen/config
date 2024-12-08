@@ -10,8 +10,8 @@ local cmp_sources_map = {
     { name = "copilot", group_index = 1, priority = 100 },
     { name = "path", group_index = 1, priority = 99 },
     { name = "nvim_lsp", group_index = 1, priority = 98 },
-    { name = "snippets", group_index = 2, priority = 80 },
-    { name = "buffer", group_index = 2, priority = 60 },
+    { name = "buffer", group_index = 2, priority = 80 },
+    { name = "luasnip", group_index = 2, priority = 80 },
   },
 }
 
@@ -70,33 +70,17 @@ return {
           behavior = cmp.ConfirmBehavior.Replace,
           select = true,
         }),
-        ["<Tab>"] = cmp.mapping(function(fallback)
-          if cmp.visible() then
-            cmp.select_next_item()
-          elseif vim.snippet.active({ direction = 1 }) then
-            vim.schedule(function()
-              vim.snippet.jump(1)
-            end)
-          else
-            fallback()
-          end
+        ["<Tab>"] = cmp.mapping(function()
+          require("luasnip").jump(1)
         end, { "i", "s" }),
-        ["<S-Tab>"] = cmp.mapping(function(fallback)
-          if cmp.visible() then
-            cmp.select_prev_item()
-          elseif vim.snippet.active({ direction = -1 }) then
-            vim.schedule(function()
-              vim.snippet.jump(-1)
-            end)
-          else
-            fallback()
-          end
+        ["<S-Tab>"] = cmp.mapping(function()
+          require("luasnip").jump(-1)
         end, { "i", "s" }),
       },
       preselect = cmp.PreselectMode.Item,
       snippet = {
         expand = function(args)
-          util_cmp.expand(args.body)
+          require("luasnip").lsp_expand(args.body)
         end,
       },
       sorting = {
@@ -166,9 +150,9 @@ return {
   end,
   dependencies = {
     "cmp-buffer",
+    "cmp-luasnip",
     "cmp-nvim-lsp",
     "cmp-path",
     "copilot-cmp",
-    "nvim-snippets",
   },
 }

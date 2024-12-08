@@ -3,7 +3,7 @@ local icons = require("eve.lib.icons")
 local username = env.USERNAME ---@type string
 
 return {
-  name = "CopilotChat.nvim",
+  name = "copilot-chat.nvim",
   cmd = "CopilotChat",
   opts = {
     allow_insecure = false,

@@ -51,12 +51,7 @@ end
 return {
   name = "mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },
-  build = function()
-    vim.defer_fn(function()
-      vim.cmd("MasonUpdate")
-      install_all()
-    end, 1000)
-  end,
+  build = ":MasonUpdate",
   opts = {
     PATH = "prepend",
     log_level = vim.log.levels.INFO,
