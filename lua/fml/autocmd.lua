@@ -27,6 +27,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
         local new_filepath = eve.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
         if new_filepath ~= nil then
           pcall(function()
+            vim.bo[bufnr].swapfile = false
             vim.api.nvim_buf_set_name(bufnr, new_filepath)
             eve.buf.refresh(bufnr)
           end)
