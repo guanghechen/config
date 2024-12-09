@@ -53,6 +53,24 @@ function M.get_current_bufnr()
   return winnr > 0 and vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) or 0
 end
 
+---@protected
+---@param tabnr                         integer|nil
+---@return string
+function M.calc_tabtype(tabnr)
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+
+  ---! Check if the diffview tab
+  for _, winnr in ipairs(winnrs) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    if filetype == constant.FT_DIFFVIEW_FILES then
+      return constant.TT_DIFFVIEW
+    end
+  end
+
+  return constant.TT_NORMAL ---@type string
+end
+
 ---@param tabnr                         integer|nil
 ---@return eve.t.state.state.tab.IMeta|nil
 function M.resolve(tabnr)
@@ -68,15 +86,19 @@ function M.resolve(tabnr)
   local bufnrs = {} ---@type integer[]
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in ipairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if not vim.list_contains(bufnrs, bufnr) and checks.is_buf_valid(bufnr) then
-      table.insert(bufnrs, bufnr)
+    if not checks.is_win_floating(winnr) then
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      if not vim.list_contains(bufnrs, bufnr) and checks.is_buf_valid(bufnr) then
+        table.insert(bufnrs, bufnr)
+      end
     end
   end
 
+  local tabtype = M.calc_tabtype(tabnr) ---@type string
+
   ---@type eve.t.state.state.tab.IMeta
   meta = {
-    tabtype = constant.TT_NORMAL,
+    tabtype = tabtype,
     bufnrs = bufnrs,
     winnr_listed = 0,
   }
@@ -116,6 +138,10 @@ function M.refresh(tabnr)
   for i = k, N, 1 do
     bufnrs[i] = nil
   end
+
+  local tabtype = M.calc_tabtype(tabnr) ---@type string
+  meta.tabtype = tabtype
+
   return meta
 end
 
