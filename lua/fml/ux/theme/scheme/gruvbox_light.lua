@@ -2,7 +2,6 @@
 local M = {
   theme = "gruvbox_light",
   variant = "light",
-  -- stylua: ignore 
   palette = {
     bg0 = "#FBF1C7",
     bg1 = "#EBDBB2",
@@ -35,10 +34,10 @@ local M = {
     grey = "#928374",
     pink = "#D3869B",
 
-    diff_del = "#FBBF9A",
-    diff_del_inline = "#E89B7F",
-    diff_add = "#DFDAA1",
-    diff_add_inline = "#CAC586",
+    diff_del = "#FCC19F",
+    diff_del_inline = "#EB9D82",
+    diff_add = "#E8E6B0",
+    diff_add_inline = "#D3D192",
   },
 }
 

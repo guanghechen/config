@@ -33,6 +33,11 @@ local M = {
 
     grey = "#7F849C",
     pink = "#EA76CB",
+
+    diff_del = "#E7BCC8",
+    diff_del_inline = "#EACFD8",
+    diff_add = "#C6DEC4",
+    diff_add_inline = "#D5E5D6",
   },
 }
 
