@@ -1,13 +1,22 @@
 local icons = require("eve.lib.icons")
 
 ---@return nil
-local function recursively_toggle(state, toggle_directory)
-  require("guanghechen.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, false)
-end
+local function recursively_toggle_all(state)
+  local node = state.tree:get_node()
+  if not node then
+    return
+  end
 
----@return nil
-local function recursively_toggle_all(state, toggle_directory)
-  require("guanghechen.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, true)
+  if node.type == "directory" then
+    if node:is_expanded() then
+      state.commands.close_all_subnodes(state)
+    else
+      state.commands.expand_all_nodes(state, node)
+    end
+    return
+  end
+
+  state.commands.open(state)
 end
 
 ---@return nil
@@ -160,9 +169,8 @@ return {
         ["w"] = "open_with_window_picker",
 
         -- Tree node toggle collapse
-        --["<LeftRelease>"] = "open",
         ["<2-LeftMouse>"] = "open",
-        ["<cr>"] = recursively_toggle,
+        ["<cr>"] = "open",
         ["z"] = recursively_toggle_all,
 
         -- Add / Copy / Move
