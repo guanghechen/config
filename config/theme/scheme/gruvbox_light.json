@@ -32,6 +32,11 @@
     "neutral_orange": "#D65D0E",
 
     "grey": "#928374",
-    "pink": "#D3869B"
+    "pink": "#D3869B",
+
+    "diff_del": "#FCC19F",
+    "diff_del_inline": "#EB9D82",
+    "diff_add": "#E8E6B0",
+    "diff_add_inline": "#D3D192"
   }
 }
