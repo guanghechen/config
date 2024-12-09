@@ -1,7 +1,22 @@
 local path = require("eve.lib.path")
+local constant = require("eve.builtin.constant")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
+  .register({
+    uuid = uuids.explorer_filesystem_cwd,
+    tabtype = constant.TT_DIFFVIEW,
+    desc = "diffview: explorer",
+    action = function()
+      local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+      local filetype = vim.bo[bufnr].filetype ---@type string
+      if filetype == constant.FT_DIFFVIEW_FILES or filetype == constant.FT_DIFFVIEW_FILE_HISTORY then
+        vim.cmd("DiffviewToggleFiles")
+      else
+        vim.cmd("DiffviewFocusFiles")
+      end
+    end,
+  })
   .register({
     uuid = uuids.git_diffview,
     desc = "git: open diffview",

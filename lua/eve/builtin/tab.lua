@@ -54,7 +54,7 @@ function M.get_current_bufnr()
 end
 
 ---@protected
----@param tabnr                         integer|nil
+---@param tabnr                         integer
 ---@return string
 function M.calc_tabtype(tabnr)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
@@ -63,7 +63,7 @@ function M.calc_tabtype(tabnr)
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if filetype == constant.FT_DIFFVIEW_FILES then
+    if filetype == constant.FT_DIFFVIEW_FILES or filetype == constant.FT_DIFFVIEW_FILE_HISTORY then
       return constant.TT_DIFFVIEW
     end
   end

@@ -48,7 +48,7 @@ return {
           }
         end,
       },
-      ---https://github.com/sindrets/dotfiles/blob/40e20f7f68cf55f175d94a92b31a64d66ed3c059/.config/nvim/lua/user/plugins/diffview.lua#L71
+      ---https://github.com/sindrets/dotfiles/blob/a3b20937d82519d0ddf806d2c646acf1d0d2c3cb/.config/nvim/lua/user/plugins/diffview.lua#L1
       ---https://github.com/sindrets/diffview.nvim/pull/258#issuecomment-1408689220
       hooks = {
         ---@diagnostic disable-next-line: unused-local
@@ -74,6 +74,10 @@ return {
               }, ",")
             end
           end
+        end,
+        view_opened = function()
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          eve.tab.refresh(tabnr)
         end,
       },
       icons = { -- Only applies when use_icons is true.

@@ -1,4 +1,5 @@
 local path = require("eve.lib.path")
+local constant = require("eve.builtin.constant")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 local cwd = path.cwd() ---@type string
@@ -35,12 +36,15 @@ end
 eve.commander
   .register({
     uuid = uuids.explorer_filesystem_cwd,
+    tabtype = constant.TT_NORMAL,
     desc = "explorer: filesystem (cwd)",
     action = function()
       cwd = path.cwd()
       close_explorer_sources({ "git_status", "buffers" })
-      local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
-      local toggle = ft_current == "neo-tree" ---@type boolean
+
+      local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+      local ft_current = vim.bo[bufnr].filetype ---@type string
+      local toggle = ft_current == constant.FT_NEOTREE ---@type boolean
       require("neo-tree.command").execute({
         action = "focus",
         source = "filesystem",
@@ -53,12 +57,15 @@ eve.commander
   })
   .register({
     uuid = uuids.explorer_filesystem_workspace,
+    tabtype = constant.TT_NORMAL,
     desc = "explorer: filesystem (workspace)",
     action = function()
       cwd = path.workspace()
       close_explorer_sources({ "git_status", "buffers" })
-      local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
-      local toggle = ft_current == "neo-tree" ---@type boolean
+
+      local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+      local ft_current = vim.bo[bufnr].filetype ---@type string
+      local toggle = ft_current == constant.FT_NEOTREE ---@type boolean
       require("neo-tree.command").execute({
         action = "focus",
         source = "filesystem",
