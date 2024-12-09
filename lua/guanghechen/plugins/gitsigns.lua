@@ -250,7 +250,16 @@ local keymaps = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n" },
+    key = "<leader>ghr",
+    desc = "git: reset hunk",
+    callback = function()
+      require("gitsigns").reset_hunk()
+    end,
+  },
+
+  {
+    modes = { "v" },
     key = "<leader>ghr",
     desc = "git: reset hunk",
     callback = function()
@@ -258,7 +267,15 @@ local keymaps = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n" },
+    key = "<leader>ghs",
+    desc = "git: stage hunk",
+    callback = function()
+      require("gitsigns").stage_hunk()
+    end,
+  },
+  {
+    modes = { "v" },
     key = "<leader>ghs",
     desc = "git: stage hunk",
     callback = function()

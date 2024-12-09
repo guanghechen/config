@@ -75,6 +75,7 @@ status.winline_dirty_nr:subscribe(
 
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+
       if filepath:sub(1, 11) == "diffview://" then
         local should_show_winline = filepath:sub(1, 19) ~= "diffview:///panels/" ---@type boolean
         if should_show_winline then
@@ -85,6 +86,16 @@ status.winline_dirty_nr:subscribe(
           local winbar = "diffview://" .. text
           vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")
         end
+        return
+      end
+
+      if filepath:sub(1, 11) == "gitsigns://" then
+        local text = filepath:sub(12) ---@type string
+        if text:sub(1, #env.HOME_NVIM_CONFIG) == env.HOME_NVIM_CONFIG then
+          text = "<NVIM_HOME>" .. text:sub(#env.HOME_NVIM_CONFIG + 1)
+        end
+        local winbar = "gitsigns://" .. text
+        vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")
         return
       end
 
