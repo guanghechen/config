@@ -174,7 +174,7 @@ function M.watch_changes(params)
     state.bookmark.pinned,
 
     ---
-    state.dressing.autopairs,
+    state.dressing.hi_pairs,
     state.dressing.winsep,
 
     ---

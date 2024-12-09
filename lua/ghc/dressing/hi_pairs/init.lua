@@ -1,5 +1,5 @@
 local state = require("eve.state")
-local ux = require("ghc.dressing.autopairs.ux")
+local ux = require("ghc.dressing.hi_pairs.ux")
 
 local timer = nil ---@type any|nil
 local function close_timer()
@@ -22,12 +22,12 @@ vim.api.nvim_create_autocmd({
   "CursorMoved",
   "CursorMovedI",
 }, {
-  desc = "[ghc.dressing.autopairs] render pairs",
-  group = eve.nvim.augroup("autopairs_render"),
+  desc = "[ghc.dressing.hi_pairs] render pairs",
+  group = eve.nvim.augroup("hi_pairs_render"),
   callback = function()
     close_timer()
 
-    local enabled = state.state.dressing.autopairs:snapshot() ---@type boolean
+    local enabled = state.state.dressing.hi_pairs:snapshot() ---@type boolean
     if not enabled then
       return
     end
@@ -39,8 +39,8 @@ vim.api.nvim_create_autocmd({
 
 ---Clean `timer` on `VimLeavePre`
 vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
-  desc = "[ghc.dressing.autopairs] cleanup timer",
-  group = eve.nvim.augroup("autopairs_clear"),
+  desc = "[ghc.dressing.hi_pairs] cleanup timer",
+  group = eve.nvim.augroup("hi_pairs_clear"),
   callback = function()
     close_timer()
   end,

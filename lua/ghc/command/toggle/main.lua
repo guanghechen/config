@@ -10,11 +10,11 @@ local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@type table<string, ghc.command.toggle.IItem>
 local flag_map = {
-  dressing_autopairs = {
-    uuid = uuids.toggle_dressing_autopairs,
-    title = "dressing autopairs",
+  dressing_hi_pairs = {
+    uuid = uuids.toggle_dressing_hi_pairs,
+    title = "dressing hi_pairs",
     snapshot = function()
-      local observable = state.state.dressing.autopairs ---@type eve.lib.collection.IObservable
+      local observable = state.state.dressing.hi_pairs ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,

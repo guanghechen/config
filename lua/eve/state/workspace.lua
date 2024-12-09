@@ -20,7 +20,7 @@ function M.defaults()
 
   ---@type eve.t.state.data.dressing
   local dressing = {
-    autopairs = true,
+    hi_pairs = true,
     winsep = true,
   }
 
@@ -130,7 +130,7 @@ function M.dump()
 
   ---@type eve.t.state.data.dressing
   local dressing = {
-    autopairs = state.dressing.autopairs:snapshot(),
+    hi_pairs = state.dressing.hi_pairs:snapshot(),
     winsep = state.dressing.winsep:snapshot(),
   }
 
@@ -207,7 +207,7 @@ function M.load(data)
 
     ---@type eve.t.state.state.dressing
     local dressing = {
-      autopairs = Observable.from_value(data.dressing.autopairs),
+      hi_pairs = Observable.from_value(data.dressing.hi_pairs),
       winsep = Observable.from_value(data.dressing.winsep),
     }
 
@@ -293,7 +293,7 @@ function M.load(data)
     end
 
     ---! dressing
-    state.dressing.autopairs:next(data.dressing.autopairs)
+    state.dressing.hi_pairs:next(data.dressing.hi_pairs)
     state.dressing.winsep:next(data.dressing.winsep)
 
     ---! find
@@ -364,8 +364,8 @@ function M.normalize(data)
   end
 
   if type(data.dressing) == "table" then
-    if type(data.dressing.autopairs) == "boolean" then
-      resolved.dressing.autopairs = data.dressing.autopairs
+    if type(data.dressing.hi_pairs) == "boolean" then
+      resolved.dressing.hi_pairs = data.dressing.hi_pairs
     end
     if type(data.dressing.winsep) == "boolean" then
       resolved.dressing.winsep = data.dressing.winsep

@@ -5,11 +5,11 @@
 ---@field public pinned                 eve.lib.collection.IObservable
 
 ---@class eve.t.state.data.dressing
----@field public autopairs              boolean
+---@field public hi_pairs               boolean
 ---@field public winsep                 boolean
 
 ---@class eve.t.state.state.dressing
----@field public autopairs              eve.lib.collection.IObservable
+---@field public hi_pairs               eve.lib.collection.IObservable
 ---@field public winsep                 eve.lib.collection.IObservable
 
 ---@class eve.t.state.data.find

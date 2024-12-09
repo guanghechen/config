@@ -25,14 +25,14 @@ local function gen_hlgroup_map(context)
     f_lnum_hint = { fg = c.purple },
     f_transparent = { bg = "none" },
 
-    ---autopairs
-    f_autopairs_1 = { fg = c.red, bg = c.bg4, bold = true },
-    f_autopairs_2 = { fg = c.green, bg = c.bg2, bold = true },
-    f_autopairs_3 = { fg = c.yellow, bg = c.bg2, bold = true },
-    f_autopairs_4 = { fg = c.blue, bg = c.bg2, bold = true },
-    f_autopairs_5 = { fg = c.purple, bg = c.bg2, bold = true },
-    f_autopairs_6 = { fg = c.aqua, bg = c.bg2, bold = true },
-    f_autopairs_7 = { fg = c.orange, bg = c.bg2, bold = true },
+    ---hi_pairs
+    f_hi_pairs_1 = { fg = c.red, bg = c.bg4, bold = true },
+    f_hi_pairs_2 = { fg = c.green, bg = c.bg2, bold = true },
+    f_hi_pairs_3 = { fg = c.yellow, bg = c.bg2, bold = true },
+    f_hi_pairs_4 = { fg = c.blue, bg = c.bg2, bold = true },
+    f_hi_pairs_5 = { fg = c.purple, bg = c.bg2, bold = true },
+    f_hi_pairs_6 = { fg = c.aqua, bg = c.bg2, bold = true },
+    f_hi_pairs_7 = { fg = c.orange, bg = c.bg2, bold = true },
 
     ---diff
     f_diff_add_left = { bg = diff_del, fg = "none" },

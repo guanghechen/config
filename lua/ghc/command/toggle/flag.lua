@@ -4,10 +4,10 @@ local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
   .register({
-    uuid = uuids.toggle_dressing_autopairs,
-    desc = "toggle: dressing autopairs",
+    uuid = uuids.toggle_dressing_hi_pairs,
+    desc = "toggle: dressing hi_pairs",
     action = function()
-      local observable = state.state.dressing.autopairs ---@type eve.lib.collection.IObservable
+      local observable = state.state.dressing.hi_pairs ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
       eve.commander.execute(uuids.reload_theme, "force")

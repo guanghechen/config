@@ -20,7 +20,7 @@ if vim.g.vscode then
 end
 
 require("ghc.command")
-require("ghc.dressing.autopairs")
+require("ghc.dressing.hi_pairs")
 require("ghc.dressing.commentstring")
 require("ghc.dressing.nvimbar.statusline")
 require("ghc.dressing.nvimbar.tabline")
