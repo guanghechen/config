@@ -76,6 +76,7 @@ M.uuids = {
   git_browse = "Fgitbrowse",
   git_diffview = "Fgitdiffview",
   git_file_history = "Fgitfilehistory",
+  git_history = "Fgithistory",
   goto_lsp_definitions = "Fgotolspdefinitions",
   goto_lsp_implementations = "Fgotolspimplementations",
   goto_lsp_references = "Fgotolspreferences",

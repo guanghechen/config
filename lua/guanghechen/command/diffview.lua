@@ -19,3 +19,11 @@ eve.commander
       diffview.file_history(nil, filepath)
     end,
   })
+  .register({
+    uuid = uuids.git_history,
+    desc = "git: open history",
+    action = function()
+      local diffview = require("diffview") ---@type any
+      diffview.file_history()
+    end,
+  })

@@ -1,11 +1,18 @@
 local icons = require("eve.lib.icons")
 
+---@return nil
 local function recursively_toggle(state, toggle_directory)
   require("guanghechen.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, false)
 end
 
+---@return nil
 local function recursively_toggle_all(state, toggle_directory)
   require("guanghechen.util.neo-tree").neotree_recursive_toggle(state, toggle_directory, true)
+end
+
+---@return nil
+local function refresh_filesystem()
+  require("neo-tree.sources.manager").refresh("filesystem")
 end
 
 -- Sorts files and directories descendantly.
@@ -178,6 +185,16 @@ return {
           },
         },
 
+        ---Sort
+        ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
+        ["oc"] = { "order_by_created", nowait = false },
+        ["od"] = { "order_by_diagnostics", nowait = false },
+        ["og"] = { "order_by_git_status", nowait = false },
+        ["om"] = { "order_by_modified", nowait = false },
+        ["on"] = { "order_by_name", nowait = false },
+        ["os"] = { "order_by_size", nowait = false },
+        ["ot"] = { "order_by_type", nowait = false },
+
         -- Misc
         ["<esc>"] = "cancel", -- close preview or floating neo-tree window
         ["O"] = {
@@ -193,8 +210,6 @@ return {
             use_image_nvim = true,
           },
         },
-        ["<M-r>"] = "refresh",
-        ["<C-a>r"] = "refresh",
         ["Y"] = {
           function(state)
             local node = state.tree:get_node()
@@ -242,19 +257,13 @@ return {
       group_empty_dirs = true, -- when true, empty folders will be grouped together
       window = {
         mappings = {
+          ["<M-r>"] = refresh_filesystem,
+          ["<C-a>r"] = refresh_filesystem,
           ["<bs>"] = "navigate_up",
           ["."] = "set_root",
           ["H"] = "toggle_hidden",
           ["/"] = "none",
           ["D"] = "none",
-          ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-          ["oc"] = { "order_by_created", nowait = false },
-          ["od"] = { "order_by_diagnostics", nowait = false },
-          ["og"] = { "order_by_git_status", nowait = false },
-          ["om"] = { "order_by_modified", nowait = false },
-          ["on"] = { "order_by_name", nowait = false },
-          ["os"] = { "order_by_size", nowait = false },
-          ["ot"] = { "order_by_type", nowait = false },
         },
         fuzzy_finder_mappings = { -- define keymaps for filter popup window in fuzzy_finder_mode
           ["<down>"] = "move_cursor_down",
@@ -275,13 +284,6 @@ return {
           ["bd"] = "buffer_delete",
           ["<bs>"] = "navigate_up",
           ["."] = "set_root",
-          ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-          ["oc"] = { "order_by_created", nowait = false },
-          ["od"] = { "order_by_diagnostics", nowait = false },
-          ["om"] = { "order_by_modified", nowait = false },
-          ["on"] = { "order_by_name", nowait = false },
-          ["os"] = { "order_by_size", nowait = false },
-          ["ot"] = { "order_by_type", nowait = false },
         },
       },
     },
@@ -294,20 +296,12 @@ return {
       window = {
         position = "float",
         mappings = {
-          ["A"] = "git_add_all",
-          ["gu"] = "git_unstage_file",
-          ["ga"] = "git_add_file",
-          ["gr"] = "git_revert_file",
-          ["gc"] = "git_commit",
-          ["gp"] = "git_push",
-          ["gg"] = "git_commit_and_push",
-          ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-          ["oc"] = { "order_by_created", nowait = false },
-          ["od"] = { "order_by_diagnostics", nowait = false },
-          ["om"] = { "order_by_modified", nowait = false },
-          ["on"] = { "order_by_name", nowait = false },
-          ["os"] = { "order_by_size", nowait = false },
-          ["ot"] = { "order_by_type", nowait = false },
+          ["gu"] = "none",
+          ["ga"] = "none",
+          ["gr"] = "none",
+          ["gc"] = "none",
+          ["gp"] = "none",
+          ["gg"] = "none",
         },
       },
     },
