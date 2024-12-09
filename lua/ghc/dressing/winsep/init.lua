@@ -135,9 +135,20 @@ local float_winsep = {
     if not enabled or not checks.is_win_floating(winnr) then
       return false
     end
+
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    return filetype == constant.FT_SEARCH_INPUT or filetype == constant.FT_SEARCH_PREVIEW
+    if filetype ~= constant.FT_SEARCH_INPUT and filetype ~= constant.FT_SEARCH_PREVIEW then
+      return false
+    end
+
+    local widget = eve.widgets.get_current_widget() ---@type eve.t.ux.IWidget|nil
+    if widget == nil then
+      return false
+    end
+
+    ---@cast widget fml.t.ux.search.ISearch
+    return widget.get_winnr_preview ~= nil and widget:get_winnr_preview() ~= nil
   end,
 }
 
