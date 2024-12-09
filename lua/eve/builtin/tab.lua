@@ -76,7 +76,7 @@ function M.resolve(tabnr)
 
   ---@type eve.t.state.state.tab.IMeta
   meta = {
-    name = constant.TAB_UNNAMED,
+    tabtype = constant.TT_NORMAL,
     bufnrs = bufnrs,
     winnr_listed = 0,
   }

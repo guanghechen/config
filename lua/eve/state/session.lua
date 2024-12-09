@@ -113,13 +113,13 @@ function M.dump()
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for _, tabnr in ipairs(tabnrs) do
     local meta = _tab.get_meta(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
-    local name = meta and meta.name or constant.TAB_UNNAMED ---@type string
+    local tabtype = meta and meta.tabtype or constant.TT_NORMAL ---@type string
     local tab_bufnrs = meta and meta.bufnrs or {} ---@type integer[]
 
     ---@type eve.t.state.data.tab.IMeta
     local meta_data = {
       tabnr = tabnr,
-      name = name,
+      tabtype = tabtype,
       bufnrs = tab_bufnrs,
     }
     table.insert(tabs, meta_data)
@@ -210,7 +210,7 @@ function M.load(data)
 
       ---@type eve.t.state.state.tab.IMeta
       local meta = {
-        name = item.name or constant.TAB_UNNAMED,
+        tabtype = item.tabtype or constant.TT_NORMAL,
         bufnrs = bufnrs,
         winnr_listed = 0,
       }

@@ -1,14 +1,17 @@
 local __module_name__ = "eve.builtin.commander" ---@type string
 
 local reporter = require("eve.lib.reporter")
+local tab = require("eve.builtin.tab")
 
 ---@class eve.t.builtin.commander.ICommand
+---@field public tabtype                string|"all"
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public action                 fun(args?: string): nil
 ---@field public candidates             ?string[]
 
 ---@class eve.t.builtin.commander.IRawCommand
+---@field public tabtype                string|"all"|nil
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public action                 fun(args?: string): nil
@@ -208,7 +211,9 @@ function M.register(raw_command, overwrite)
   local action = raw_command.action ---@type fun(args?: string): nil
   local candidates = raw_command.candidates ---@type string[]|nil
   local nargs = raw_command.nargs or 0 ---@type 0|1|"?"
-  local has_existed = command_map[uuid] ~= nil ---@type boolean
+  local tabtype = raw_command.tabtype or "all" ---@type string
+  local key = uuid .. ":" .. tabtype ---@type string
+  local has_existed = command_map[key] ~= nil ---@type boolean
 
   if has_existed and not overwrite then
     reporter.warn({
@@ -248,12 +253,13 @@ function M.register(raw_command, overwrite)
 
   ---@type eve.t.builtin.commander.ICommand
   local command = {
+    tabtype = tabtype,
     uuid = uuid,
     desc = desc,
     action = action,
     candidates = candidates,
   }
-  command_map[uuid] = command
+  command_map[key] = command
   return M
 end
 
@@ -261,13 +267,23 @@ end
 ---@param silent                        ?boolean
 ---@return eve.t.builtin.commander.ICommand|nil
 function M.resolve(uuid, silent)
-  local command = command_map[uuid] ---@type eve.t.builtin.commander.ICommand|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta = tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+  if meta ~= nil then
+    local key = uuid .. ":" .. meta.tabtype ---@type string
+    if command_map[key] ~= nil then
+      return command_map[key]
+    end
+  end
+
+  local key = uuid .. ":all" ---@type string
+  local command = command_map[key] ---@type eve.t.builtin.commander.ICommand|nil
   if command == nil and not silent then
     reporter.warn({
       from = __module_name__,
       subject = "resolve",
       message = "Cannot resolve the command by the given uuid",
-      details = { uuid = uuid },
+      details = { key = key, uuid = uuid },
     })
   end
   return command

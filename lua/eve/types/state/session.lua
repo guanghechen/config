@@ -15,11 +15,11 @@
 
 ---@class eve.t.state.data.tab.IMeta
 ---@field public tabnr                  integer
----@field public name                   string
+---@field public tabtype                string
 ---@field public bufnrs                 integer[]
 
 ---@class eve.t.state.state.tab.IMeta
----@field public name                   string
+---@field public tabtype                string
 ---@field public bufnrs                 integer[]
 ---@field public winnr_listed           integer
 

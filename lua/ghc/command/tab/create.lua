@@ -18,7 +18,7 @@ local function create(bufnr)
 
   ---@type eve.t.state.state.tab.IMeta
   local meta = {
-    name = constant.TAB_UNNAMED,
+    tabtype = constant.TT_NORMAL,
     bufnrs = {},
     winnr_listed = 0,
   }

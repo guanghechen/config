@@ -8,8 +8,8 @@ M.SESSION_AUTOSAVE_OPTION = "buffers,curdir,folds,help,resize,tabpages,unix,winp
 
 ---! Tab settings
 
-M.TAB_UNNAMED = "unnamed"
 M.TAB_HISTORY_CAPACITY = 100
+M.TT_NORMAL = "normal"
 
 ---! Window settings
 

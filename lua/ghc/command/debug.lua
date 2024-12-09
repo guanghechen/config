@@ -13,8 +13,10 @@ eve.commander
       local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
-      local filetype = vim.bo[bufnr].filetype ---@type string
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+
+      local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local meta_win = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
 
       local winnr_cur = eve.tab.get_current_winnr() ---@type integer
       local bufnr_cur = winnr_cur > 0 and vim.api.nvim_win_get_buf(winnr_cur) or 0 ---@type integer
@@ -27,10 +29,11 @@ eve.commander
           winnr = winnr,
           bufnr = bufnr,
           buftype = buftype or "nil",
-          filetype = filetype or "nil",
-          filepath = filepath,
           bufnr_cur = bufnr_cur,
           winnr_cur = winnr_cur,
+          meta_tab = meta_tab,
+          meta_win = meta_win,
+          meta_buf = meta_buf,
         },
       })
     end,
