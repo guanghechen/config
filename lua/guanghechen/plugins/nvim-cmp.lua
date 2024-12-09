@@ -1,5 +1,8 @@
+---  https://github.com/LazyVim/LazyVim/blob/0f6ff53ce336082869314db11e9dfa487cf83292/lua/lazyvim/util/cmp.lua#L1
+local __module_name__ = "guanghechen.plugins.nvim-cmp" ---@type string
+
 local icons = require("eve.lib.icons")
-local util_cmp = require("guanghechen.util.cmp")
+local reporter = require("eve.lib.reporter")
 
 local cmp_sources_map = {
   basic = {
@@ -17,6 +20,93 @@ local cmp_sources_map = {
     { name = "buffer", group_index = 2, priority = 80 },
   },
 }
+
+---@class Placeholder
+---@field public n string
+---@field public text string
+
+---@param snippet                       string
+---@param fn                            fun(placeholder: Placeholder):string
+---@return string
+local function snippet_replace(snippet, fn)
+  return snippet:gsub("%$%b{}", function(m)
+    local n, name = m:match("^%${(%d+):(.+)}$")
+    return n and fn({ n = n, text = name }) or m
+  end) or snippet
+end
+
+-- This function resolves nested placeholders in a snippet.
+---@param snippet string
+---@return string
+local function snippet_preview(snippet)
+  local ret = snippet_replace(snippet, function(placeholder)
+    return snippet_preview(placeholder.text)
+  end):gsub("%$0", "")
+  return ret
+end
+
+-- This function replaces nested placeholders in a snippet with LSP placeholders.
+local function snippet_fix(snippet)
+  return snippet_replace(snippet, function(placeholder)
+    return "${" .. placeholder.n .. ":" .. snippet_preview(placeholder.text) .. "}"
+  end)
+end
+
+-- This function adds missing documentation to snippets.
+-- The documentation is a preview of the snippet.
+local function snippet_add_missing_docs(window)
+  local cmp = require("cmp")
+  local Kind = cmp.lsp.CompletionItemKind
+  local entries = window:get_entries()
+  for _, entry in ipairs(entries) do
+    if entry:get_kind() == Kind.Snippet then
+      local item = entry:get_completion_item()
+      if not item.documentation and item.insertText then
+        item.documentation = {
+          kind = cmp.lsp.MarkupKind.Markdown,
+          value = string.format("```%s\n%s\n```", vim.bo.filetype, snippet_preview(item.insertText)),
+        }
+      end
+    end
+  end
+end
+
+---@param snippet                       string
+---@return nil
+local function snippet_expand(snippet)
+  local ok = pcall(vim.snippet.expand, snippet)
+  if not ok then
+    local fixed = snippet_fix(snippet)
+    ok = pcall(vim.snippet.expand, fixed)
+
+    local msg = ok and "Failed to parse snippet,\nbut was able to fix it automatically." or "Failed to parse snippet."
+    local formatted_msg = ([[%s
+```%s
+%s
+```]]):format(msg, vim.bo.filetype, snippet)
+
+    local log = ok and reporter.warn or reporter.error
+    log({
+      from = __module_name__,
+      subject = "expand",
+      message = formatted_msg,
+    })
+  end
+end
+
+local function auto_brackets(entry)
+  local cmp = require("cmp")
+  local Kind = cmp.lsp.CompletionItemKind
+  local item = entry:get_completion_item()
+  if vim.tbl_contains({ Kind.Function, Kind.Method }, item.kind) then
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local prev_char = vim.api.nvim_buf_get_text(0, cursor[1] - 1, cursor[2], cursor[1] - 1, cursor[2] + 1, {})[1]
+    if prev_char ~= "(" and prev_char ~= ")" then
+      local keys = vim.api.nvim_replace_termcodes("()<left>", false, false, true)
+      vim.api.nvim_feedkeys(keys, "i", true)
+    end
+  end
+end
 
 return {
   name = "nvim-cmp",
@@ -99,7 +189,7 @@ return {
       preselect = cmp.PreselectMode.Item,
       snippet = {
         expand = function(args)
-          util_cmp.expand(args.body)
+          snippet_expand(args.body)
         end,
       },
       sorting = {
@@ -148,17 +238,17 @@ return {
       if ok then
         return ret
       end
-      return util_cmp.snippet_preview(input)
+      return snippet_preview(input)
     end
 
     local cmp = require("cmp") ---@type any
     cmp.event:on("confirm_done", function(event)
       if vim.tbl_contains(opts.auto_brackets or {}, vim.bo.filetype) then
-        util_cmp.auto_brackets(event.entry)
+        auto_brackets(event.entry)
       end
     end)
     cmp.event:on("menu_opened", function(event)
-      util_cmp.add_missing_snippet_docs(event.window)
+      snippet_add_missing_docs(event.window)
     end)
 
     cmp.setup(opts)
