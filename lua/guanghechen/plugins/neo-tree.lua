@@ -20,8 +20,8 @@ local function recursively_toggle_all(state)
 end
 
 ---@return nil
-local function refresh_filesystem()
-  require("neo-tree.sources.manager").refresh("filesystem")
+local function refresh_filesystem(state)
+  require("neo-tree.sources.manager").refresh(state.name)
 end
 
 -- Sorts files and directories descendantly.
