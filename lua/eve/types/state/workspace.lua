@@ -6,11 +6,13 @@
 
 ---@class eve.t.state.data.dressing
 ---@field public hi_pairs               boolean
----@field public winsep                 boolean
+---@field public winsep_fixed           boolean
+---@field public winsep_float           boolean
 
 ---@class eve.t.state.state.dressing
 ---@field public hi_pairs               eve.lib.collection.IObservable
----@field public winsep                 eve.lib.collection.IObservable
+---@field public winsep_fixed           eve.lib.collection.IObservable
+---@field public winsep_float           eve.lib.collection.IObservable
 
 ---@class eve.t.state.data.find
 ---@field public flag_case_sensitive    boolean

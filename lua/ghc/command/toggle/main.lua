@@ -20,10 +20,10 @@ local flag_map = {
     end,
   },
   dressing_winsep = {
-    uuid = uuids.toggle_dressing_winsep,
+    uuid = uuids.toggle_dressing_winsep_fixed,
     title = "dressing winsep",
     snapshot = function()
-      local observable = state.state.dressing.winsep ---@type eve.lib.collection.IObservable
+      local observable = state.state.dressing.winsep_fixed ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,

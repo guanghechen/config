@@ -11,32 +11,41 @@ local SearchMain = require("fml.ux.component.search.main")
 local SearchPreview = require("fml.ux.component.search.preview")
 local SearchState = require("fml.ux.component.search.state")
 
----@type string
-local INPUT_WIN_HIGHLIGHT = table.concat({
-  "FloatBorder:f_us_input_border",
-  "FloatTitle:f_us_input_title",
-  "Normal:f_us_input_normal",
-}, ",")
+local highlights = {
+  input = table.concat({
+    "FloatBorder:f_us_border",
+    "FloatTitle:f_us_input_title",
+    "Normal:f_us_input_normal",
+  }, ","),
+  main = table.concat({
+    "Cursor:f_us_main_current",
+    "CursorColumn:f_us_main_current",
+    "CursorLine:f_us_main_current",
+    "CursorLineNr:f_us_main_current",
+    "FloatBorder:f_us_border",
+    "Normal:f_us_main_normal",
+  }, ","),
+  preview = table.concat({
+    "Cursor:f_us_preview_current",
+    "CursorColumn:f_us_preview_current",
+    "CursorLine:f_us_preview_current",
+    "CursorLineNr:f_us_preview_current",
+    "FloatBorder:f_us_border",
+    "FloatTitle:f_us_preview_title",
+    "Normal:f_us_preview_normal",
+  }, ","),
+}
 
----@type string
-local MAIN_WIN_HIGHLIGHT = table.concat({
-  "Cursor:f_us_main_current",
-  "CursorColumn:f_us_main_current",
-  "CursorLine:f_us_main_current",
-  "CursorLineNr:f_us_main_current",
-  "FloatBorder:f_us_main_border",
-  "Normal:f_us_main_normal",
-}, ",")
-
-local PREVIEW_WIN_HIGHLIGHT = table.concat({
-  "Cursor:f_us_preview_current",
-  "CursorColumn:f_us_preview_current",
-  "CursorLine:f_us_preview_current",
-  "CursorLineNr:f_us_preview_current",
-  "FloatBorder:f_us_preview_border",
-  "FloatTitle:f_us_preview_title",
-  "Normal:f_us_preview_normal",
-}, ",")
+local borders = {
+  -- stylua: ignore start
+  input =               { "╭", "─", "╮", "│", "┤", "─", "├", "│" },
+  input_with_preview =  { "╭", "─", "┬", "│", "┤", "─", "├", "│" },
+  input_without_main =  { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+  main =                { "├", "─", "┤", "│", "╯", "─", "╰", "│" },
+  main_with_preview =   { "├", "─", "┤", "│", "┴", "─", "╰", "│" },
+  preview =             { "┬", "─", "╮", "│", "╯", "─", "┴", "│" },
+  -- stylua: ignore end
+}
 
 ---@class fml.ux.search.Search : fml.t.ux.search.ISearch
 ---@field protected _dimension          fml.t.ux.search.IDimension
@@ -550,7 +559,7 @@ function M:create_wins_as_needed()
   local input_height = search_state.enable_multiline_input
       and math.max(1, math.min(3, search_state.input_line_count:snapshot()))
     or 1
-  local input_height_with_borders = input_height + 2 ---@type integer
+  local input_height_with_borders = input_height + 1 ---@type integer
 
   local height = dimension.height or (#search_state.items + input_height_with_borders) ---@type number
   if height < 1 then
@@ -576,7 +585,9 @@ function M:create_wins_as_needed()
   end
   prefer_col = math.min(screen_width, math.max(0, prefer_col)) ---@type integer
 
+  local match_count = #search_state.items ---@type integer
   local has_preview = self._preview ~= nil ---@type boolean
+  local has_main = match_count > 0 or has_preview ---@type boolean
 
   local width_preview = dimension.width_preview or width ---@type integer
   if width_preview < 1 then
@@ -590,8 +601,7 @@ function M:create_wins_as_needed()
   local winnr_main = self._winnr_main ---@type integer|nil
   local winnr_preview = self._winnr_preview ---@type integer|nil
 
-  local match_count = #search_state.items ---@type integer
-  if match_count > 0 or self._preview ~= nil then
+  if has_main then
     ---@type vim.api.keyset.win_config
     local wincfg_main = {
       relative = "editor",
@@ -603,7 +613,7 @@ function M:create_wins_as_needed()
       col = col,
       focusable = true,
       title = "",
-      border = { " ", " ", " ", " ", " ", " ", " ", " " },
+      border = has_preview and borders.main_with_preview or borders.main,
       style = "minimal",
     }
     if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
@@ -619,7 +629,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_main].relativenumber = false
     vim.wo[winnr_main].signcolumn = "yes"
     vim.wo[winnr_main].winblend = 10
-    vim.wo[winnr_main].winhighlight = MAIN_WIN_HIGHLIGHT
+    vim.wo[winnr_main].winhighlight = highlights.main
     vim.wo[winnr_main].wrap = false
     self:sync_main_cursor()
   else
@@ -637,11 +647,11 @@ function M:create_wins_as_needed()
       height = height,
       width = width_preview,
       row = row,
-      col = col + width + 2,
+      col = col + width + 1,
       focusable = true,
       title = " " .. self._preview_title .. " ",
       title_pos = "center",
-      border = { " ", " ", " ", " ", " ", " ", " ", " " },
+      border = borders.preview,
       style = "minimal",
     }
 
@@ -665,7 +675,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_preview].relativenumber = false
     vim.wo[winnr_preview].signcolumn = "yes:1"
     vim.wo[winnr_preview].winblend = 10
-    vim.wo[winnr_preview].winhighlight = PREVIEW_WIN_HIGHLIGHT
+    vim.wo[winnr_preview].winhighlight = highlights.preview
     vim.wo[winnr_preview].wrap = self._preview_flag_wrap
     vim.wo[winnr_preview].list = true
     vim.wo[winnr_preview].listchars = string.format(
@@ -689,7 +699,7 @@ function M:create_wins_as_needed()
     focusable = true,
     title = " " .. search_state.title .. " ",
     title_pos = "center",
-    border = { " ", " ", " ", " ", " ", " ", " ", " " },
+    border = has_main and (has_preview and borders.input_with_preview or borders.input) or borders.input_without_main,
     style = "minimal",
   }
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
@@ -704,7 +714,7 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].relativenumber = false
   vim.wo[winnr_input].signcolumn = "yes:1"
   vim.wo[winnr_input].winblend = 10
-  vim.wo[winnr_input].winhighlight = INPUT_WIN_HIGHLIGHT
+  vim.wo[winnr_input].winhighlight = highlights.input
   vim.wo[winnr_input].wrap = false
 
   if winnr_cur ~= winnr_input and winnr_cur ~= winnr_preview then

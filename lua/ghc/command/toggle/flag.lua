@@ -14,10 +14,20 @@ eve.commander
     end,
   })
   .register({
-    uuid = uuids.toggle_dressing_winsep,
-    desc = "toggle: dressing winsep",
+    uuid = uuids.toggle_dressing_winsep_fixed,
+    desc = "toggle: dressing winsep (fixed)",
     action = function()
-      local observable = state.state.dressing.winsep ---@type eve.lib.collection.IObservable
+      local observable = state.state.dressing.winsep_fixed ---@type eve.lib.collection.IObservable
+      local flag = observable:snapshot() ---@type boolean
+      observable:next(not flag)
+      eve.commander.execute(uuids.reload_theme, "force")
+    end,
+  })
+  .register({
+    uuid = uuids.toggle_dressing_winsep_float,
+    desc = "toggle: dressing winsep (float)",
+    action = function()
+      local observable = state.state.dressing.winsep_float ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
       eve.commander.execute(uuids.reload_theme, "force")

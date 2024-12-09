@@ -21,7 +21,8 @@ function M.defaults()
   ---@type eve.t.state.data.dressing
   local dressing = {
     hi_pairs = true,
-    winsep = true,
+    winsep_fixed = true,
+    winsep_float = true,
   }
 
   ---@type eve.t.state.data.find
@@ -131,7 +132,8 @@ function M.dump()
   ---@type eve.t.state.data.dressing
   local dressing = {
     hi_pairs = state.dressing.hi_pairs:snapshot(),
-    winsep = state.dressing.winsep:snapshot(),
+    winsep_fixed = state.dressing.winsep_fixed:snapshot(),
+    winsep_float = state.dressing.winsep_float:snapshot(),
   }
 
   ---@type eve.t.state.data.find
@@ -208,7 +210,8 @@ function M.load(data)
     ---@type eve.t.state.state.dressing
     local dressing = {
       hi_pairs = Observable.from_value(data.dressing.hi_pairs),
-      winsep = Observable.from_value(data.dressing.winsep),
+      winsep_fixed = Observable.from_value(data.dressing.winsep_fixed),
+      winsep_float = Observable.from_value(data.dressing.winsep_float),
     }
 
     ---@type eve.t.state.state.find
@@ -294,7 +297,8 @@ function M.load(data)
 
     ---! dressing
     state.dressing.hi_pairs:next(data.dressing.hi_pairs)
-    state.dressing.winsep:next(data.dressing.winsep)
+    state.dressing.winsep_fixed:next(data.dressing.winsep_fixed)
+    state.dressing.winsep_float:next(data.dressing.winsep_float)
 
     ---! find
     state.find.flag_case_sensitive:next(data.find.flag_case_sensitive)
@@ -367,8 +371,11 @@ function M.normalize(data)
     if type(data.dressing.hi_pairs) == "boolean" then
       resolved.dressing.hi_pairs = data.dressing.hi_pairs
     end
-    if type(data.dressing.winsep) == "boolean" then
-      resolved.dressing.winsep = data.dressing.winsep
+    if type(data.dressing.winsep_fixed) == "boolean" then
+      resolved.dressing.winsep_fixed = data.dressing.winsep_fixed
+    end
+    if type(data.dressing.winsep_float) == "boolean" then
+      resolved.dressing.winsep_float = data.dressing.winsep_float
     end
   end
 

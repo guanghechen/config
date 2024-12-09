@@ -4,28 +4,28 @@ local constant = require("eve.builtin.constant")
 local config = {
   h = {
     border = { " ", " ", "╭", "│", "╰", " ", " ", " " },
-    hlgroup = table.concat({
+    winhighlight = table.concat({
       "FloatBorder:f_winsep_left_border",
       "NormalFloat:f_winsep_normal",
     }, ","),
   },
   k = {
     border = { " ", " ", " ", " ", "╮", "─", "╭", " " },
-    hlgroup = table.concat({
+    winhighlight = table.concat({
       "FloatBorder:f_winsep_top_border",
       "NormalFloat:f_winsep_normal",
     }, ","),
   },
   l = {
     border = { "╮", " ", " ", " ", " ", " ", "╯", "│" },
-    hlgroup = table.concat({
+    winhighlight = table.concat({
       "FloatBorder:f_winsep_right_border",
       "NormalFloat:f_winsep_normal",
     }, ","),
   },
   j = {
     border = { "╰", "─", "╯", " ", " ", " ", " ", " " },
-    hlgroup = table.concat({
+    winhighlight = table.concat({
       "FloatBorder:f_winsep_bottom_border",
       "NormalFloat:f_winsep_normal",
     }, ","),
@@ -38,6 +38,11 @@ local config = {
 ---| "l" right
 ---| "j" bottom
 
+---@class ghc.dressing.winsep.line.IProps
+---@field public direction              ghc.dressing.winsep.line.Direction
+---@field public zindex                 integer
+---@field public winhighlight           ?string
+
 ---@class ghc.dressing.winsep.Line
 ---@field public cfg                    vim.api.keyset.win_config
 ---@field public winhighlight           string
@@ -47,15 +52,19 @@ local config = {
 local M = {}
 M.__index = M
 
----@param direction                     ghc.dressing.winsep.line.Direction
+---@param props                         ghc.dressing.winsep.line.IProps
 ---@return ghc.dressing.winsep.Line
-function M.new(direction)
+function M.new(props)
   local self = setmetatable({}, M)
+
+  local direction = props.direction ---@type ghc.dressing.winsep.line.Direction
+  local winhighlight = props.winhighlight or config[direction].winhighlight ---@type string
+  local zindex = props.zindex ---@type integer
 
   ---@type vim.api.keyset.win_config
   local cfg = {
     relative = "editor",
-    zindex = 1,
+    zindex = zindex,
     width = 1,
     height = 1,
     row = 0,
@@ -69,6 +78,7 @@ function M.new(direction)
   self.winnr = nil
   self.bufnr = nil
   self.direction = direction
+  self.winhighlight = winhighlight
   return self
 end
 
@@ -157,7 +167,7 @@ end
 function M:show()
   local bufnr = self:create_buf_as_needed() ---@type integer
   local winnr = self.winnr ---@type integer|nil
-  local direction = self.direction ---@type ghc.dressing.winsep.line.Direction
+  local winhighlight = self.winhighlight ---@type string
   local cfg = self.cfg ---@type vim.api.keyset.win_config
 
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -165,7 +175,7 @@ function M:show()
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].number = false
     vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].winhighlight = config[direction].hlgroup
+    vim.wo[winnr].winhighlight = winhighlight
     vim.wo[winnr].wrap = false
     self.winnr = winnr
   else

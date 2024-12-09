@@ -175,7 +175,8 @@ function M.watch_changes(params)
 
     ---
     state.dressing.hi_pairs,
-    state.dressing.winsep,
+    state.dressing.winsep_fixed,
+    state.dressing.winsep_float,
 
     ---
     state.find.flag_case_sensitive,

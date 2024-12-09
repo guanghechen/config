@@ -3,19 +3,15 @@
 local function gen_hlgroup_map(context)
   local cs = require("eve.lib.color")
   local c = context.scheme.palette ---@type eve.lib.collection.theme.IPalette
-  local variant = context.scheme.variant ---@type eve.e.ThemeVariant
+  local t = context.transparency ---@type boolean
 
   local diff_del = c.red ---@type string
   local diff_add = c.green ---@type string
   local diff_del_word = c.neutral_red ---@type string
   local diff_add_word = c.neutral_green ---@type string
 
-  local bg_input = c.bg2 ---@type string
-  local bg_preview = c.bg1
-
-  local bg_main = c.bg0 --@type string
-  bg_main = cs.change_hex_saturation(bg_main, -20) ---@type string
-  bg_main = cs.change_hex_lightness(bg_main, (variant == "light" and -1 or 1) * 4) ---@type string
+  local bg_main = c.bg0 ---@type string
+  local bg_preview = c.bg0 ---@type string
 
   return {
     ---common
@@ -62,12 +58,12 @@ local function gen_hlgroup_map(context)
     f_ghp_normal = { bg = c.bg1 },
 
     ---search
-    f_us_input_border = { fg = c.fg1, bg = bg_input },
-    f_us_input_normal = { fg = c.fg1, bg = bg_input },
-    f_us_input_prompt = { fg = c.red, bg = bg_input },
-    f_us_input_title = { fg = c.bg0, bg = c.red },
+    f_us_border = { fg = c.bg2, bg = t and c.bg0 or "none" },
+    f_us_border_active = { fg = c.purple, bg = t and c.bg0 or "none" },
+    f_us_input_normal = { fg = c.fg1, bg = t and c.bg0 or "none" },
+    f_us_input_prompt = { fg = c.red, bg = t and c.bg0 or "none" },
+    f_us_input_title = { fg = c.red, bg = t and c.bg0 or "none" },
     f_us_main_bg = { bg = bg_main },
-    f_us_main_border = { fg = bg_main, bg = bg_main },
     f_us_main_current = { bg = c.bg3 },
     f_us_main_match = { fg = c.blue },
     f_us_main_match_lnum = { fg = c.fg4 },
@@ -77,14 +73,13 @@ local function gen_hlgroup_map(context)
     f_us_main_replace = { fg = diff_add_word },
     f_us_main_search = { fg = diff_del_word, strikethrough = true },
     f_us_preview_current = { bg = c.bg2 },
-    f_us_preview_border = { fg = c.bg1, bg = bg_preview },
     f_us_preview_error = { fg = c.red, bold = true },
     f_us_preview_normal = { bg = bg_preview },
     f_us_preview_search = { fg = c.fg1, bg = diff_del, strikethrough = true },
     f_us_preview_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
     f_us_preview_replace = { fg = c.bg1, bg = diff_add },
     f_us_preview_replace_cur = { fg = c.bg1, bg = c.green, bold = true },
-    f_us_preview_title = { fg = c.bg0, bg = c.green },
+    f_us_preview_title = { fg = c.green, bg = t and c.bg0 or "none" },
     f_us_match = { fg = c.bg1, bg = c.yellow },
     f_us_match_cur = { fg = c.bg1, bg = c.red, bold = true, underline = true },
 
@@ -114,7 +109,8 @@ local function gen_hlgroup_map(context)
     f_winsep_top_border = { fg = c.purple, bold = true },
     f_winsep_right_border = { fg = c.purple, bold = true },
     f_winsep_bottom_border = { fg = c.purple, bold = true },
-    f_winsep_normal = { fg = c.purple, bold = true },
+    f_winsep_fixed = { fg = c.purple, bold = true },
+    f_winsep_float = { fg = cs.mix(c.bg0, c.purple, 70), bg = t and c.bg0 or "none", bold = false },
   }
 end
 
