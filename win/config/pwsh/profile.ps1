@@ -22,23 +22,35 @@ function prompt {
   $addedCount = 0
   $modifiedCount = 0
   $untrackedCount = 0
-  if (Test-Path ".git") {
-    try {
-      $gitBranch = git rev-parse --abbrev-ref HEAD 2>$null
-      $gitStatus = git status --porcelain 2>$null
-      foreach ($line in $gitStatus) {
-        $line_status = $line.TrimStart()
-        if ($line_status.StartsWith("A")) {
-          $addedCount++
+
+  $currentDir = Get-Location
+  while ($true) {
+    if (Test-Path (Join-Path $currentDir ".git")) {
+      try {
+        $gitBranch = git -C $currentDir rev-parse --abbrev-ref HEAD 2>$null
+        $gitStatus = git -C $currentDir status --porcelain 2>$null
+        foreach ($line in $gitStatus) {
+          $line_status = $line.TrimStart()
+          if ($line_status.StartsWith("A")) {
+            $addedCount++
+          }
+          if ($line_status.StartsWith("M") -or $line_status.StartsWith("D")) {
+            $modifiedCount++
+          }
+          if ($line_status.StartsWith("??")) {
+            $untrackedCount++
+          }
         }
-        if ($line_status.StartsWith("M") -or $line_status.StartsWith("D")) {
-          $modifiedCount++
-        }
-        if ($line_status.StartsWith("??")) {
-          $untrackedCount++
-        }
-      }
-    } catch {}
+      } catch {}
+      break
+    }
+
+    $parentDir = [System.IO.Directory]::GetParent($currentDir)
+    if (-not $parentDir) {
+      break
+    }
+    $currentDir = $parentDir.FullName
+
   }
 
   Write-Host
