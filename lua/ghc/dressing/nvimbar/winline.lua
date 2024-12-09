@@ -56,7 +56,7 @@ local function resolve_winline_scheduler(winnr)
 
     winline
       ---
-      :register(c.dirpath(position), "left")
+      -- :register(c.dirpath(position), "left")
       :register(c.filename(position), "left")
       :register(c.lsp_symbols(position), "left")
       ---

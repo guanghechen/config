@@ -37,12 +37,15 @@ function M.is_buf_valid(bufnr)
     return false
   end
 
-  if vim.fn.buflisted(bufnr) ~= 1 then
+  if not vim.bo[bufnr].buflisted then
     return false
   end
 
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  return ft.is_plain_file(filetype)
+  if not ft.is_plain_file(vim.bo[bufnr].filetype) then
+    return false
+  end
+
+  return true
 end
 
 ---@param tabnr                         integer|nil

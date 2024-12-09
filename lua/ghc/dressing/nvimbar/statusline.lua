@@ -35,21 +35,22 @@ statusline
   :register(c.username(position), "left")
   :register(c.mode(position), "left")
   :register(c.git(position), "left")
-  :register(c.filename(position), "left")
-  :register(c.filestatus(position), "left")
   :register(c.readonly(position), "left")
+  :register(c.filepath(position), "left")
+  :register(c.filesize(position), "left")
+  :register(c.filestatus(position), "left")
   --
   :register(c.debug_render_count(position), "center")
   :register(c.widget(position), "center")
   --
   :register(c.pos(position), "right")
-  :register(c.filesize(position), "right")
-  :register(c.filetype(position), "right")
   :register(c.fileformat(position), "right")
+  :register(c.filetype(position), "right")
+  :register(c.lsp_message(position), "right")
   :register(c.lsp(position), "right")
   :register(c.copilot(position), "right")
-  :register(c.noice(position), "right")
   :register(c.diagnostics(position), "right")
+  :register(c.noice(position), "right")
 
 dirtier:subscribe(Subscriber.new({
   on_next = function()

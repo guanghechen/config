@@ -406,7 +406,7 @@ function M:render_sync()
       if ok then
         local text = component.last_result_text ---@type string
         local width = component.last_result_width ---@type integer
-        if width > 0 then
+        if width > 0 and width <= width_remain then
           local tight = component.tight ---@type boolean
           if position == "left" then
             if #lc < 1 or tight then

@@ -425,6 +425,9 @@ function M.dirpath(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "dirpath",
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.filepath ~= prev_context.filepath
+    end,
     render = function(context)
       local winnr = context.winnr ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -715,13 +718,27 @@ function M.lsp(position)
       local text = get_text() ---@type string
       local width = vim.api.nvim_strwidth(text) ---@type integer
       local hl_text = txt(text, hln_text) ---@type string
+      return hl_text, width
+    end,
+  }
+  return component
+end
 
-      local lsp_msg = status.lsp_msg:snapshot() ---@type string
-      if lsp_msg ~= "" then
-        hl_text = txt(lsp_msg, hln_text) .. " " .. hl_text
-        width = width + vim.api.nvim_strwidth(lsp_msg) + 1
-      end
+---@param position                      eve.lib.ux.nvimbar.Position
+---@return eve.lib.ux.nvimbar.IRawComponent
+function M.lsp_message(position)
+  local hln_text = position .. "_text" ---@type string
 
+  ---@type eve.lib.ux.nvimbar.IRawComponent
+  local component = {
+    name = "lsp_message",
+    condition = function()
+      return not not rawget(vim, "lsp") and #status.lsp_msg:snapshot() > 0
+    end,
+    render = function()
+      local text = status.lsp_msg:snapshot() ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+      local width = vim.api.nvim_strwidth(text) ---@type integer
       return hl_text, width
     end,
   }
