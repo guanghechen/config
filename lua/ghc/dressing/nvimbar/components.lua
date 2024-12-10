@@ -24,16 +24,20 @@ local M = {}
 ---@param position                      eve.lib.ux.nvimbar.Position
 ---@return eve.lib.ux.nvimbar.IRawComponent
 function M.bufs(position)
-  -- local hln_buf = position .. "_buf" ---@type string
-  local hln_buf_cur = position .. "_buf_cur" ---@type string
+  local hln_buf = position .. "_buf" ---@type string
   local hln_buf_indicator = position .. "_buf_indicator" ---@type string
   local hln_buf_mod = position .. "_buf_mod" ---@type string
-  local hln_buf_mod_cur = position .. "_buf_mod_cur" ---@type string
   local hln_buf_ommitter = position .. "_buf_ommitter" ---@type string
   local hln_buf_ommitter_sep = position .. "_buf_ommitter_sep" ---@type string
   local hln_buf_sep = position .. "_buf_sep" ---@type string
-  local hln_buf_title = position .. "_buf_title" ---@type string
-  local hln_buf_title_cur = position .. "_buf_title_cur" ---@type string
+  local hln_buf_cur = position .. "_buf_cur" ---@type string
+  local hln_buf_text = position .. "_buf_text" ---@type string
+  local hln_buf_cur_mod = position .. "_buf_cur_mod" ---@type string
+  local hln_buf_cur_text = position .. "_buf_cur_text" ---@type string
+  local hln_buf_cur_error = position .. "_buf_cur_error" ---@type string
+  local hln_buf_cur_warn = position .. "_buf_cur_warn" ---@type string
+  local hln_buf_cur_hint = position .. "_buf_cur_hint" ---@type string
+  local hln_buf_cur_info = position .. "_buf_cur_info" ---@type string
 
   ---@type string
   local fn_active_buf = G.register_anonymous_fn(function(bufnr)
@@ -66,27 +70,67 @@ function M.bufs(position)
     local is_mod = vim.bo[bufnr].modified ---@type boolean
     local is_pinned = meta.pinned ---@type boolean
 
+    local count_error = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type integer
+    local count_warn = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type integer
+    local count_hint = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT }) ---@type integer
+    local count_info = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO }) ---@type integer
+
+    local text_diagnostic = "" ---@type string
+    local slots = 0 ---@type integer
+    if count_error > 0 then
+      text_diagnostic = text_diagnostic .. " " .. icons.diagnostics.Error .. " " .. count_error
+      slots = slots + 1
+    end
+    if count_warn > 0 then
+      text_diagnostic = text_diagnostic .. " " .. icons.diagnostics.Warning .. " " .. count_warn
+      slots = slots + 1
+    end
+    if count_hint > 0 and slots < 2 then
+      text_diagnostic = text_diagnostic .. " " .. icons.diagnostics.Hint .. " " .. count_hint
+      slots = slots + 1
+    end
+    if count_info > 0 and slots < 2 then
+      text_diagnostic = text_diagnostic .. " " .. icons.diagnostics.Information .. " " .. count_info
+      slots = slots + 1
+    end
+
+    local hl_title = hln_buf_text ---@type string
+    if is_current then
+      if count_error > 0 then
+        hl_title = hln_buf_cur_error ---@type string
+      elseif count_warn > 0 then
+        hl_title = hln_buf_cur_warn ---@type string
+      elseif count_hint > 0 then
+        hl_title = hln_buf_cur_hint ---@type string
+      elseif count_info > 0 then
+        hl_title = hln_buf_cur_info ---@type string
+      else
+        hl_title = hln_buf_cur_text ---@type string
+      end
+    end
+
     local text_indicator_or_sep = is_current and "▎" or (is_first and " " or "▏") ---@type string
     local text_icon = meta.fileicon .. " " ---@type string
     local text_title = meta.filename ---@type string
     local text_mod = is_pinned and (is_mod and "  " or "  ") or (is_mod and "  " or "  ") ---@type string
 
     local hl_indicator_or_sep = is_current and hln_buf_indicator or hln_buf_sep ---@type string
-    local hl_title = is_current and hln_buf_title_cur or hln_buf_title ---@type string
-    local hl_mod = is_current and hln_buf_mod_cur or hln_buf_mod ---@type string
-    -- local hl_icon = (is_current and hln_buf_cur or hln_buf) .. "_" .. meta.fileicon_hl ---@type string
-    local hl_icon = (is_current and hln_buf_cur .. "_" .. meta.fileicon_hl) or hln_buf_title ---@type string
+    local hl_mod = is_current and hln_buf_cur_mod or hln_buf_mod ---@type string
+    local hl_icon = (is_current and hln_buf_cur or hln_buf) .. "_" .. meta.fileicon_hl ---@type string
+    -- local hl_icon = (is_current and hln_buf_cur .. "_" .. meta.fileicon_hl) or hln_buf_title ---@type string
 
     local hl_text_indicator = txt(text_indicator_or_sep, hl_indicator_or_sep)
     local hl_text_icon = txt(text_icon, hl_icon)
     local hl_text_title = txt(text_title, hl_title)
+    local hl_text_diagnostic = txt(text_diagnostic, hl_title) ---@type string
     local hl_text_mod = is_mod and txt(text_mod, hl_mod) or text_mod
 
     local width = vim.api.nvim_strwidth(text_indicator_or_sep)
       + vim.api.nvim_strwidth(text_icon)
       + vim.api.nvim_strwidth(text_title)
+      + vim.api.nvim_strwidth(text_diagnostic)
       + vim.api.nvim_strwidth(text_mod)
-    local hl_text = hl_text_indicator .. hl_text_icon .. hl_text_title .. hl_text_mod ---@type string
+    local hl_text = hl_text_indicator .. hl_text_icon .. hl_text_title .. hl_text_diagnostic .. hl_text_mod ---@type string
     return btn(hl_text, fn_active_buf, bufnr), width
   end
 

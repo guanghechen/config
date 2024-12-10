@@ -87,7 +87,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "WinClosed" }, {
+vim.api.nvim_create_autocmd("WinClosed", {
   group = augroup("on_win_closed"),
   callback = function()
     status.statusline_dirtier:mark_dirty()
@@ -102,8 +102,16 @@ vim.api.nvim_create_autocmd("ModeChanged", {
   end,
 })
 
+vim.api.nvim_create_autocmd("DiagnosticChanged", {
+  group = augroup("on_diagnostic_changed"),
+  callback = function()
+    status.statusline_dirtier:mark_dirty()
+    status.tabline_dirtier:mark_dirty()
+  end,
+})
+
 vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "BufWritePost" }, {
-  group = augroup("on_text_changed"),
+  group = augroup("on_content_changed"),
   callback = function()
     status.statusline_dirtier:mark_dirty()
     status.tabline_dirtier:mark_dirty()
