@@ -18,9 +18,10 @@ printf "\n\e[34m  [setup homebrew] installing nvim...\e[0m\n"
 brew install nvim fd git-delta lazygit ripgrep
 
 ### Install tmux
-printf "\n\e[34m  [setup homebrew] installing tmux...\e[0m\n"
-brew install $HOME/.config/guanghechen/config/homebrew/tmux.rb
-brew pin tmux
+brew install tmux
+# printf "\n\e[34m  [setup homebrew] installing tmux...\e[0m\n"
+# brew install $HOME/.config/guanghechen/config/homebrew/tmux.rb
+# brew pin tmux
 
 ### Install yazi
 printf "\n\e[34m  [setup homebrew] installing yazi...\e[0m\n"
