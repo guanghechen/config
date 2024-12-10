@@ -1,46 +1,52 @@
+local functional = require("eve.lib.functional")
 local Observable = require("eve.lib.collection.observable")
 
 ---@class eve.lib.collection.IDirtier : eve.lib.collection.IObservable
+---@field public is_clean               fun(self: eve.lib.collection.IDirtier): boolean
 ---@field public is_dirty               fun(self: eve.lib.collection.IDirtier): boolean
 ---@field public mark_clean             fun(self: eve.lib.collection.IDirtier): nil
 ---@field public mark_dirty             fun(self: eve.lib.collection.IDirtier): nil
 
 ---@class eve.lib.collection.dirtier.IProps
 ---@field public dirty                  boolean
+---@field public equals                 ?fun(a: unknown, b: unknown): boolean
 
 ---@class eve.lib.collection.Dirtier : eve.lib.collection.IDirtier
----@field protected _clean_tick         integer
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
 setmetatable(M, Observable)
 
 ---@param props eve.lib.collection.dirtier.IProps
+---@return eve.lib.collection.Dirtier
 function M.new(props)
-  local self = setmetatable(Observable.from_value(0), M)
+  local dirty = props.dirty ---@type boolean
+  local equals = props.equals or functional.falsy
+
+  local self = setmetatable(Observable.new({ initial_value = dirty, equals = equals }), M)
   ---@cast self eve.lib.collection.Dirtier
 
-  local initial_dirty = not not props.dirty
-  self._clean_tick = initial_dirty and 1 or 0
   return self
 end
 
 ---@return boolean
+function M:is_clean()
+  return not self:snapshot() ---@type boolean
+end
+
+---@return boolean
 function M:is_dirty()
-  local dirty_tick = self:snapshot() ---@type integer
-  return self._clean_tick < dirty_tick
+  return self:snapshot() ---@type boolean
 end
 
 ---@return nil
 function M:mark_clean()
-  local val = self:snapshot()
-  self._clean_tick = val
+  self:next(false)
 end
 
 ---@return nil
 function M:mark_dirty()
-  local val = self:snapshot()
-  self:next(val + 1)
+  self:next(true)
 end
 
 return M

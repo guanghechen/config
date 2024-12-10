@@ -12,7 +12,6 @@ local function close(bufnrs)
 
   eve.tab.on_bufs_close(bufnrs)
   eve.tab.remove_unrefereced_bufs(bufnrs) ---@type integer
-  eve.status.tabline_dirtier:mark_dirty()
 end
 
 ---@param tabnr                         integer

@@ -1,5 +1,6 @@
 local fs = require("eve.lib.fs")
 local path = require("eve.lib.path")
+local constant = require("eve.builtin.constant")
 local augroup = require("eve.builtin.nvim").augroup
 local status = require("eve.builtin.status")
 local widgets = require("eve.builtin.widgets")
@@ -99,6 +100,22 @@ vim.api.nvim_create_autocmd("ModeChanged", {
   group = augroup("on_mode_changed"),
   callback = function()
     status.statusline_dirtier:mark_dirty()
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "BufWritePost" }, {
+  group = augroup("on_text_changed"),
+  callback = function()
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local modified = vim.bo[bufnr].modified ---@type boolean
+    local last_modified = vim.b[bufnr][constant.V_BUF_LAST_MODIFIED] ---@type boolean|nil
+    vim.b[bufnr][constant.V_BUF_LAST_MODIFIED] = modified
+    if modified ~= last_modified then
+      vim.schedule(function()
+        status.statusline_dirtier:mark_dirty()
+        status.tabline_dirtier:mark_dirty()
+      end)
+    end
   end,
 })
 

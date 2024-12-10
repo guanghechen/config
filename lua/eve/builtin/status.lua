@@ -1,7 +1,7 @@
 local functional = require("eve.lib.functional")
 local tmux = require("eve.lib.tmux")
 local Observable = require("eve.lib.collection.observable")
-local Diritier = require("eve.lib.collection.dirtier")
+local Dirtier = require("eve.lib.collection.dirtier")
 
 ---@class eve.builtin.status
 ---@field public lsp_msg                eve.lib.collection.IObservable
@@ -14,8 +14,8 @@ local M = {}
 
 M.lsp_msg = Observable.from_value("")
 M.tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed())
-M.statusline_dirtier = Diritier.new({ dirty = true })
-M.tabline_dirtier = Diritier.new({ dirty = true })
+M.statusline_dirtier = Dirtier.new({ dirty = true })
+M.tabline_dirtier = Dirtier.new({ dirty = true })
 M.winline_dirty_nr = Observable.from_value(0, functional.falsy)
 
 ---@return nil

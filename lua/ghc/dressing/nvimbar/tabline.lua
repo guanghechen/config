@@ -15,19 +15,16 @@ tabline = Nvimbar.new({
   component_sep = "",
   component_sep_hlname = position .. "_bg",
   component_sep_hlname_active = position .. "_bg",
-  render_delay = 256,
+  render_delay = 64,
   silent = not devmode,
   get_max_width = function()
     return vim.o.columns
   end,
   is_active = functional.falsy,
   trigger_rerender = function()
-    local result = tabline and tabline:snapshot() or "" ---@type string
+    local result = tabline:snapshot() or "" ---@type string
     vim.opt.tabline = result
     dirtier:mark_clean()
-  end,
-  validate = function()
-    return nil
   end,
 })
 

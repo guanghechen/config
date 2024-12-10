@@ -15,19 +15,16 @@ statusline = Nvimbar.new({
   component_sep = "  ",
   component_sep_hlname = position .. "_bg",
   component_sep_hlname_active = position .. "_bg",
-  render_delay = 256,
+  render_delay = 128,
   silent = not devmode,
   get_max_width = function()
     return vim.o.columns
   end,
   is_active = functional.falsy,
   trigger_rerender = function()
-    local result = statusline and statusline:snapshot() or "" ---@type string
+    local result = statusline:snapshot() or "" ---@type string
     vim.opt.statusline = result
     dirtier:mark_clean()
-  end,
-  validate = function()
-    return nil
   end,
 })
 

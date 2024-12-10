@@ -63,7 +63,7 @@ function M.bufs(position)
       return "", 0
     end
 
-    local is_mod = vim.api.nvim_get_option_value("mod", { buf = bufnr }) ---@type boolean
+    local is_mod = vim.bo[bufnr].modified ---@type boolean
     local is_pinned = meta.pinned ---@type boolean
 
     local text_indicator_or_sep = is_current and "▎" or (is_first and " " or "▏") ---@type string

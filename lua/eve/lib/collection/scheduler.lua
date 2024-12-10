@@ -100,7 +100,6 @@ end
 ---@return nil
 function M:execute()
   local tick = self._tick_scheduled ---@type integer
-
   if tick < self._tick_alive or tick <= self._tick_resolving then
     return
   end

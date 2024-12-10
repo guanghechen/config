@@ -55,8 +55,8 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public get_preset_context     ?fun(): eve.lib.ux.nvimbar.IPresetContext
 ---@field public is_active              fun(context: eve.lib.ux.nvimbar.IContext): boolean
 ---@field public pre_task               ?fun(callback: fun(err: string|false|nil): nil): nil
----@field public trigger_rerender       fun(): nil
----@field public validate               fun(): string|nil
+---@field public trigger_rerender       ?fun(): nil
+---@field public validate               ?fun(): string|nil
 
 ---@class eve.lib.ux.INvimbar
 ---@field public btn                    fun(text: string, callback: string, args?: integer|integer[]): string
@@ -203,8 +203,8 @@ function M.new(props)
 
   local is_active = props.is_active ---@type fun(context: eve.lib.ux.nvimbar.IContext): boolean
   local pre_task = props.pre_task ---@type fun(callback: fun(err: string|false|nil): nil): nil
-  local trigger_rerender = props.trigger_rerender ---@type fun(): nil
-  local validate = props.validate ---@type fun(): string|nil
+  local trigger_rerender = props.trigger_rerender or functional.noop ---@type fun(): nil
+  local validate = props.validate or functional.noop ---@type fun(): string|nil
 
   local self = setmetatable({}, M)
 
@@ -229,11 +229,11 @@ function M.new(props)
         end
 
         local result = self:render_sync()
-        callback("fulfilled", result)
-
         if last_result ~= result then
           trigger_rerender()
         end
+
+        callback("fulfilled", result)
       end
 
       if pre_task == nil then
@@ -335,8 +335,9 @@ function M:render()
     return "!!!Invalid. This nvimbar has been disposed."
   end
 
-  self._render_scheduler:schedule()
-  return self._render_scheduler:snapshot() or ""
+  local scheduler = self._render_scheduler
+  scheduler:schedule()
+  return scheduler:snapshot() or ""
 end
 
 ---@param raw_component                 eve.lib.ux.nvimbar.IRawComponent
