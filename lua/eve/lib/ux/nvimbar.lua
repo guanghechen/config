@@ -229,11 +229,13 @@ function M.new(props)
         end
 
         local result = self:render_sync()
+        callback("fulfilled", result)
+
+        --- Trigger rerender need called after the callback executed,
+        --- so we can get the latest value from the :snapshot()
         if last_result ~= result then
           trigger_rerender()
         end
-
-        callback("fulfilled", result)
       end
 
       if pre_task == nil then

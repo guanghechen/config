@@ -15,7 +15,7 @@ statusline = Nvimbar.new({
   component_sep = "  ",
   component_sep_hlname = position .. "_bg",
   component_sep_hlname_active = position .. "_bg",
-  render_delay = 128,
+  render_delay = 256,
   silent = not devmode,
   get_max_width = function()
     return vim.o.columns

@@ -15,16 +15,14 @@ tabline = Nvimbar.new({
   component_sep = "",
   component_sep_hlname = position .. "_bg",
   component_sep_hlname_active = position .. "_bg",
-  render_delay = 32,
+  render_delay = 256,
   silent = not devmode,
   get_max_width = function()
     return vim.o.columns
   end,
   is_active = functional.falsy,
   trigger_rerender = function()
-    local result = tabline:snapshot() or "" ---@type string
-    vim.opt.tabline = result
-    dirtier:mark_clean()
+    vim.opt.tabline = tabline:snapshot()
   end,
 })
 
@@ -42,8 +40,6 @@ tabline
 
 dirtier:subscribe(Subscriber.new({
   on_next = function()
-    if dirtier:is_dirty() then
-      tabline:render()
-    end
+    tabline:render()
   end,
 }))
