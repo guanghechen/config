@@ -139,6 +139,20 @@ function M.refresh(tabnr)
     bufnrs[i] = nil
   end
 
+  if not checks.is_win_valid(meta.winnr_listed) then
+    local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+    if checks.is_win_valid(winnr_cur) then
+      meta.winnr_listed = winnr_cur
+    else
+      for _, winnr in ipairs(winnrs) do
+        if checks.is_win_valid(winnr_cur) then
+          meta.winnr_listed = winnr
+          break
+        end
+      end
+    end
+  end
+
   local tabtype = M.calc_tabtype(tabnr) ---@type string
   meta.tabtype = tabtype
 
