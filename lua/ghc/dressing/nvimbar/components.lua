@@ -60,11 +60,11 @@ function M.bufs(position)
   ---@param is_current                    boolean
   ---@param is_first                      boolean
   ---@return string
-  ---@return integer
+  ---@return string
   local function render_buf(bufnr, is_current, is_first)
     local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
     if meta == nil then
-      return "", 0
+      return "", ""
     end
 
     local is_mod = vim.bo[bufnr].modified ---@type boolean
@@ -125,13 +125,9 @@ function M.bufs(position)
     local hl_text_diagnostic = txt(text_diagnostic, hl_title) ---@type string
     local hl_text_mod = is_mod and txt(text_mod, hl_mod) or text_mod
 
-    local width = vim.api.nvim_strwidth(text_indicator_or_sep)
-      + vim.api.nvim_strwidth(text_icon)
-      + vim.api.nvim_strwidth(text_title)
-      + vim.api.nvim_strwidth(text_diagnostic)
-      + vim.api.nvim_strwidth(text_mod)
+    local text = text_indicator_or_sep .. text_icon .. text_title .. text_diagnostic .. text_mod ---@type string
     local hl_text = hl_text_indicator .. hl_text_icon .. hl_text_title .. hl_text_diagnostic .. hl_text_mod ---@type string
-    return btn(hl_text, fn_active_buf, bufnr), width
+    return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
@@ -141,13 +137,13 @@ function M.bufs(position)
     render = function(context, remain_width)
       local meta = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
       if meta == nil then
-        return "", 0
+        return "", ""
       end
 
       local tab_bufnrs = meta.bufnrs ---@type integer[]
       local N = #tab_bufnrs ---@type integer
       if N < 1 then
-        return "", 0
+        return "", ""
       end
 
       local bufnr_cur = eve.tab.get_current_bufnr() ---@type integer
@@ -155,90 +151,88 @@ function M.bufs(position)
       local bufid_cur = bufid_src or 1
       bufnr_cur = tab_bufnrs[bufid_cur]
 
-      local text, width = render_buf(tab_bufnrs[bufid_cur], bufid_src ~= nil, bufid_cur == 1)
-      if remain_width < width then
-        return "", 0
+      local text, hl_text = render_buf(tab_bufnrs[bufid_cur], bufid_src ~= nil, bufid_cur == 1)
+      remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
+      if remain_width < 0 then
+        return "", ""
       end
 
       local left_remain_count = bufid_cur - 1 ---@type integer
       local right_remain_count = N - bufid_cur ---@type integer
       local left_omitter_width = bufid_cur == 1 and 0 or 7 ---@type integer
       local right_omitter_width = bufid_cur == N and 0 or 7 ---@type integer
+      remain_width = remain_width - left_omitter_width - right_omitter_width ---@type integer
 
       ---! Render left bufs as many as possible.
       do
-        local available_width = remain_width - left_omitter_width - right_omitter_width ---@type integer
         for i = bufid_cur - 1, 1, -1 do
-          local t, w = render_buf(tab_bufnrs[i], false, i == 1)
-          local width_next = width + w ---@type integer
+          local t, hl_t = render_buf(tab_bufnrs[i], false, i == 1)
+          local w = vim.api.nvim_strwidth(t) ---@type integer
 
-          if i == 1 then
-            if available_width + left_omitter_width >= width_next then
-              text = t .. text
-              width = width_next
-              left_remain_count = 0
-              left_omitter_width = 0
-            end
+          if i == 1 and remain_width + left_omitter_width >= w then
+            text = t .. text
+            hl_text = hl_t .. hl_text
+            left_remain_count = 0
+            remain_width = remain_width + left_omitter_width
             break
           end
 
-          if available_width < width_next then
+          if remain_width < w then
             break
           end
 
           text = t .. text
-          width = width_next
+          hl_text = hl_t .. hl_text
+          remain_width = remain_width - w
           left_remain_count = left_remain_count - 1
         end
       end
 
       ---! Render right bufs as many as possible.
       do
-        local available_width = remain_width - left_omitter_width - right_omitter_width ---@type integer
         for i = bufid_cur + 1, N, 1 do
-          local t, w = render_buf(tab_bufnrs[i], false, false)
-          local width_next = width + w ---@type integer
+          local t, hl_t = render_buf(tab_bufnrs[i], false, false)
+          local w = vim.api.nvim_strwidth(t) ---@type integer
 
-          if i == N then
-            if available_width + right_omitter_width >= width_next then
-              text = text .. t
-              width = width_next
-              right_remain_count = 0
-              right_omitter_width = 0
-            end
+          if i == N and remain_width + right_omitter_width >= w then
+            text = text .. t
+            hl_text = hl_text .. hl_t
+            right_remain_count = 0
+            remain_width = remain_width + right_omitter_width
             break
           end
 
-          if available_width < width_next then
+          if remain_width < w then
             break
           end
 
           text = text .. t
-          width = width_next
+          hl_text = hl_text .. hl_t
+          remain_width = remain_width - w
           right_remain_count = right_remain_count - 1
         end
       end
 
       ---! Render left omitter.
-      if left_omitter_width > 0 then
+      if left_remain_count > 0 then
         local count = math.min(99, left_remain_count) ---@type integer
         local omitter_text = " " .. icons.ui.Left .. "  " .. tostring(count) .. " " ---@type string
         local omitter_text_hl = txt(omitter_text, hln_buf_ommitter) ---@type string
-        text = btn(omitter_text_hl, fn_focus_left_buf) .. text
-        width = width + vim.api.nvim_strwidth(omitter_text)
+        text = omitter_text .. text
+        hl_text = btn(omitter_text_hl, fn_focus_left_buf) .. hl_text
       end
 
       ---! Render right omitter.
-      if right_omitter_width > 0 then
+      if right_remain_count > 0 then
         local count = math.min(99, right_remain_count) ---@type integer
         local omitter_text = "▏" .. tostring(count) .. " " .. icons.ui.Right .. "  " ---@type string
         local omitter_text_hl = txt("▏", hln_buf_ommitter_sep)
           .. txt(tostring(count) .. " " .. icons.ui.Right .. "  ", hln_buf_ommitter) ---@type string
-        text = text .. btn(omitter_text_hl, fn_focus_right_buf)
-        width = width + vim.api.nvim_strwidth(omitter_text)
+        text = text .. omitter_text
+        hl_text = hl_text .. btn(omitter_text_hl, fn_focus_right_buf)
       end
 
-      return text, width
+      return text, hl_text
     end,
   }
   return component
@@ -286,12 +280,12 @@ function M.copilot(position)
     render = function()
       local copilot_status = last_status or "Normal" ---@type string
       local icon = status_icon_map[copilot_status] or icons.cmp.copilot ---@type string
+      local hln_icon = (copilot_status == nil or #copilot_status < 1) and hln_text
+        or (hln_copilot .. "_" .. copilot_status) ---@type string
+
       local text = icon .. " " ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      local hl_text =
-        txt(text, (copilot_status == nil or #copilot_status < 1) and hln_text or (hln_copilot .. "_" .. copilot_status))
-      hl_text = btn(hl_text, fn_show_message)
-      return hl_text, width
+      local hl_text = btn(txt(text, hln_icon), fn_show_message)
+      return text, hl_text
     end,
   }
   return component
@@ -309,11 +303,11 @@ function M.cwd(position)
       return prev_context == nil or context.cwd ~= prev_context.cwd
     end,
     render = function(context)
-      local cwd_name = (context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd)
+      local cwd_name = path.basename(context.cwd) ---@type string
+
       local text = " " .. icons.ui.Explorer .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_cwd) ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -334,10 +328,10 @@ function M.debug_render_count(position)
     end,
     render = function()
       count = count + 1
+
       local text = "  " .. util.pad_start(tostring(count % 100000), 5, "0") .. " " ---@type string
       local hl_text = txt(text, hln_debug_render_count) ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -358,8 +352,7 @@ function M.devmode(position)
     render = function()
       local text = "  devmode " ---@type string
       local hl_text = txt(text, hln_devmode) ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -392,16 +385,12 @@ function M.diagnostics(position)
       local count_info = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.INFO })
       local text_count_info = count_info > 0 and icons.diagnostics.Information .. " " .. count_info .. " " or ""
 
+      local text = text_count_error .. text_count_warn .. text_count_hint .. text_count_info
       local text_hl = txt(text_count_error, hln_diagnostics_error)
         .. txt(text_count_warn, hln_diagnostics_warn)
         .. txt(text_count_hint, hln_diagnostics_hint)
         .. txt(text_count_info, hln_diagnostics_info)
-      local width = vim.api.nvim_strwidth(text_count_error)
-        + vim.api.nvim_strwidth(text_count_warn)
-        + vim.api.nvim_strwidth(text_count_hint)
-        + vim.api.nvim_strwidth(text_count_info)
-
-      return text_hl, width
+      return text, text_hl
     end,
   }
   return component
@@ -435,23 +424,24 @@ function M.diffview(position)
     render = function(context, remain_width)
       local width = math.min(remain_width, get_pane_width()) ---@type integer
       if width <= 20 then
-        return "", 0
+        return "", ""
       end
 
-      local text = icons.git.Git .. " Git Diffview" ---@type string
-      local text_width = vim.api.nvim_strwidth(text) ---@type integer
-      local text_width_remain = width - text_width ---@type integer
-      local left_width = math.floor(text_width_remain / 2)
-      local right_width = text_width_remain - left_width - 1
+      local title = icons.git.Git .. " Git Diffview" ---@type string
+      local title_width = vim.api.nvim_strwidth(title) ---@type integer
+      local width_remain = width - title_width ---@type integer
+      local left_width = math.floor(width_remain / 2)
+      local right_width = width_remain - left_width - 1
       local left_blank = string.rep(" ", left_width)
       local right_blank = string.rep(" ", right_width)
       local right_split = " " -- "│"
 
+      local text = left_blank .. title .. right_blank .. right_split ---@type string
       local hl_text = txt(left_blank, hln_sidebar_blank)
-        .. txt(text, hln_sidebar_text)
+        .. txt(title, hln_sidebar_text)
         .. txt(right_blank, hln_sidebar_blank)
         .. txt(right_split, hln_sidebar_split)
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -463,7 +453,6 @@ function M.dirpath(position)
   local hln_dirpath_text = position .. "_dirpath_text" ---@type string
   local hln_dirpath_sep = position .. "_dirpath_sep" ---@type string
   local sep = " " .. env.PATH_SEP .. " " ---@type string
-  local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
@@ -480,20 +469,21 @@ function M.dirpath(position)
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
       if meta == nil then
-        return "", 0
+        return "", ""
       end
 
+      local text = "" ---@type string
       local hl_text = "" ---@type string
-      local width = 0 ---@type integer
       local N = #meta.relpath_pieces - 1 ---@type integer
       for i = 1, N, 1 do
         local piece = meta.relpath_pieces[i] ---@type string
         local hl_text_piece = txt(piece, hln_dirpath_text) ---@type string
         local hl_text_sep = txt(sep, hln_dirpath_sep) ---@type string
+
+        text = text .. piece .. sep
         hl_text = hl_text .. hl_text_piece .. hl_text_sep
-        width = width + vim.api.nvim_strwidth(piece) + width_sep
       end
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -522,10 +512,10 @@ function M.fileformat(position)
       local text_fileformat = fileformat_text_map[vim.bo.fileformat] or "UNKNOWN"
       local icon_tab = icons.ui.Tab .. " "
       local text_tab = vim.api.nvim_get_option_value("shiftwidth", { scope = "local" })
+
       local text = text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab
       local hl_text = txt(text, hln_text)
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -558,9 +548,8 @@ function M.filename(position)
       local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
       if meta_buf == nil then
         local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local width = vim.api.nvim_strwidth(text) ---@type integer
-        local hl_text = txt(text, hln_filename_text)
-        return hl_text, width
+        local hl_text = txt(text, hln_filename_text) ---@type string
+        return text, hl_text
       end
 
       local text_icon = meta_buf.fileicon .. " " ---@type string
@@ -568,9 +557,9 @@ function M.filename(position)
       local hl_text_icon = txt(text_icon, hln_filename .. "_" .. meta_buf.fileicon_hl) ---@type string
       local hl_text_title = txt(text_filename, is_win_cur and filename_text_cur or hln_filename_text) ---@type string
 
-      local hl_text = hl_text_icon .. hl_text_title
-      local width = vim.api.nvim_strwidth(text_icon .. text_filename) ---@type integer
-      return hl_text, width
+      local text = text_icon .. text_filename ---@type string
+      local hl_text = hl_text_icon .. hl_text_title ---@type string
+      return text, hl_text
     end,
   }
   return component
@@ -594,10 +583,10 @@ function M.filepath(position)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
       local filepath = meta_buf and meta_buf.relpath or context.filepath
+
       local text = context.fileicon .. " " .. filepath ---@type string
       local hl_text = txt(text, hln_text)
-      local width = vim.api.nvim_strwidth(text)
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -617,8 +606,7 @@ function M.filesize(position)
     render = function(context)
       local text = oxi.get_filesize(context.filepath) or "" ---@type string
       local hl_text = txt(text, hln_text)
-      local width = vim.api.nvim_strwidth(text)
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -629,25 +617,23 @@ end
 function M.filestatus(position)
   local hln_text = position .. "_text" ---@type string
 
+  ---@param bufnr                       integer
   ---@return string
-  local function get_filestatus()
-    local bufnr = eve.tab.get_current_bufnr() ---@type integer
-    if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
-      return ""
-    end
+  local function get_filestatus(bufnr)
+    local gitsigns_head = vim.b[bufnr].gitsigns_head
+    local gitsigns_git_status = vim.b[bufnr].gitsigns_git_status
+    local gitsigns_status_dict = vim.b[bufnr].gitsigns_status_dict
 
-    local buffer_status_line = vim.b[bufnr]
-    if buffer_status_line and buffer_status_line.gitsigns_head and not buffer_status_line.gitsigns_git_status then
+    if gitsigns_head and gitsigns_status_dict and not gitsigns_git_status then
       local texts = {} ---@type string[]
-      local git_status = buffer_status_line.gitsigns_status_dict
-      if git_status.added and git_status.added > 0 then
-        table.insert(texts, icons.git.Add .. " " .. git_status.added)
+      if gitsigns_status_dict.added and gitsigns_status_dict.added > 0 then
+        table.insert(texts, icons.git.Add .. " " .. gitsigns_status_dict.added)
       end
-      if git_status.changed and git_status.changed > 0 then
-        table.insert(texts, icons.git.Mod_alt .. " " .. git_status.changed)
+      if gitsigns_status_dict.changed and gitsigns_status_dict.changed > 0 then
+        table.insert(texts, icons.git.Mod_alt .. " " .. gitsigns_status_dict.changed)
       end
-      if git_status.removed and git_status.removed > 0 then
-        table.insert(texts, icons.git.Remove .. " " .. git_status.removed)
+      if gitsigns_status_dict.removed and gitsigns_status_dict.removed > 0 then
+        table.insert(texts, icons.git.Remove .. " " .. gitsigns_status_dict.removed)
       end
       return table.concat(texts, " ")
     end
@@ -657,20 +643,14 @@ function M.filestatus(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filestatus",
-    tight = true,
-    will_change = function(context, prev_context)
-      return prev_context == nil or context.filepath ~= prev_context.filepath or context.mode ~= prev_context.mode
-    end,
-    render = function()
-      local filestatus = get_filestatus() ---@type string
-      if #filestatus < 1 then
-        return "", 0
+    render = function(context)
+      local text = get_filestatus(context.bufnr) ---@type string
+      if #text < 1 then
+        return "", ""
       end
 
-      local text_filestatus = " " .. filestatus ---@type string
-      local hl_text = txt(text_filestatus, hln_text) ---@type string
-      local width = vim.api.nvim_strwidth(text_filestatus)
-      return hl_text, width
+      local hl_text = txt(text, hln_text) ---@type string
+      return text, hl_text
     end,
   }
   return component
@@ -693,8 +673,7 @@ function M.filetype(position)
     render = function(context)
       local text = context.fileicon .. " " .. context.filetype ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      local width = vim.api.nvim_strwidth(text)
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -717,10 +696,10 @@ function M.git(position)
       local buffer_status_line = vim.b[context.bufnr]
       local git_status = buffer_status_line.gitsigns_status_dict
       local branch_name = git_status.head ---@type string
+
       local text = " " .. icons.git.Branch .. " " .. branch_name ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -756,9 +735,8 @@ function M.lsp(position)
     end,
     render = function()
       local text = get_text() ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
       local hl_text = txt(text, hln_text) ---@type string
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -778,8 +756,7 @@ function M.lsp_message(position)
     render = function()
       local text = status.lsp_msg:snapshot() ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -819,30 +796,35 @@ function M.lsp_symbols(position)
       local winnr = context.winnr ---@type integer
       local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
       if meta == nil then
-        return "", 0
+        return "", ""
       end
 
       local symbols = meta.lsp_symbols ---@type eve.t.state.state.lsp.ISymbol[]|nil
       if symbols == nil or #symbols < 1 then
-        return "", 0
+        return "", ""
       end
 
+      local text = "" ---@type string
       local hl_text = "" ---@type string
-      local width = 0 ---@type integer
+
       for _, symbol in ipairs(symbols) do
         local title = symbol.name or "" ---@type string
         local icon = (icons.kind[symbol.kind] or "") .. " " ---@type string
-        local next_width = width + width_sep + vim.api.nvim_strwidth(icon .. title) ---@type integer
-        if next_width > remain_width then
+        local width = width_sep + vim.api.nvim_strwidth(icon .. title) ---@type integer
+        if width > remain_width then
           break
         end
 
-        width = next_width
-        local hln_icon = symbol.kind and hln_lsp_icon .. "_" .. symbol.kind or hln_lsp_icon
-        local hl_lsp_piece = txt(sep, hln_lsp_sep) .. txt(icon, hln_icon) .. txt(title, hln_lsp_text)
+        remain_width = remain_width - width
+        local hln_icon = symbol.kind and hln_lsp_icon .. "_" .. symbol.kind or hln_lsp_icon ---@type string
+
+        local lsp_piece = sep .. icon .. title ---@type string
+        local hl_lsp_piece = txt(sep, hln_lsp_sep) .. txt(icon, hln_icon) .. txt(title, hln_lsp_text) ---@type string
+
+        text = text .. lsp_piece
         hl_text = hl_text .. btn(hl_lsp_piece, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
       end
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -863,8 +845,7 @@ function M.mode(position)
     render = function(context)
       local text = "  " .. context.mode_name .. " " ---@type string
       local hl_text = txt(text, hln_text .. "_" .. context.mode) ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -898,24 +879,25 @@ function M.neotree(position)
     render = function(context, remain_width)
       local width = math.min(remain_width, get_pane_width()) ---@type integer
       if width <= 20 then
-        return "", 0
+        return "", ""
       end
 
       local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
-      local text = icons.ui.Explorer .. " " .. cwd_name ---@type string
-      local text_width = vim.api.nvim_strwidth(text) ---@type integer
-      local text_width_remain = width - text_width ---@type integer
-      local left_width = math.floor(text_width_remain / 2)
-      local right_width = text_width_remain - left_width - 1
-      local left_blank = string.rep(" ", left_width)
-      local right_blank = string.rep(" ", right_width)
-      local right_split = " " -- "│"
+      local title = icons.ui.Explorer .. " " .. cwd_name ---@type string
+      local title_width = vim.api.nvim_strwidth(title) ---@type integer
+      local width_remain = width - title_width ---@type integer
+      local left_width = math.floor(width_remain / 2) ---@type integer
+      local right_width = width_remain - left_width - 1 ---@type integer
+      local left_blank = string.rep(" ", left_width) ---@type string
+      local right_blank = string.rep(" ", right_width) ---@type string
+      local right_split = " " ---@type string -- "│"
 
+      local text = left_blank .. title .. right_blank .. right_split ---@type string
       local hl_text = txt(left_blank, hln_sidebar_blank)
-        .. txt(text, hln_sidebar_text)
+        .. txt(title, hln_sidebar_text)
         .. txt(right_blank, hln_sidebar_blank)
         .. txt(right_split, hln_sidebar_split)
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -923,39 +905,49 @@ end
 
 ---@param position                      eve.lib.ux.nvimbar.Position
 ---@return eve.lib.ux.nvimbar.IRawComponent
-function M.noice(position)
-  local hln_bg = position .. "_bg" ---@type string
-  -- local hln_noice_command = position .. "_noice_command" ---@type string
-  local hln_noice_mode = position .. "_noice_mode" ---@type string
+function M.noice_command(position)
+  local hln_noice_command = position .. "_noice_command" ---@type string
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
-    name = "noice",
+    name = "noice_command",
     condition = function()
       return not not package.loaded["noice"]
     end,
     render = function()
       local noice_status = require("noice").api.status
-      local hl_text = "" ---@type string
-      local width = 0 ---@type integer
-
-      -- local text_noice_command = noice_status.command.get() ---@type string | nil
-      -- if text_noice_command ~= nil and #text_noice_command > 0 then
-      --   hl_text = txt(text_noice_command, hln_noice_command)
-      --   width = vim.api.nvim_strwidth(text_noice_command)
-      -- end
-
-      local text_noice_mode = noice_status.mode.get() or ""
-      if text_noice_mode ~= nil and #text_noice_mode > 0 then
-        if width > 0 then
-          hl_text = hl_text .. txt(" ", hln_bg)
-          width = width + 1
-        end
-
-        hl_text = hl_text .. txt(text_noice_mode, hln_noice_mode)
-        width = width + vim.api.nvim_strwidth(text_noice_mode)
+      local text = noice_status.command.get() or "" ---@type string
+      if text == nil and #text == 0 then
+        return "", ""
       end
-      return hl_text, width
+
+      local hl_text = txt(text, hln_noice_command)
+      return text, hl_text
+    end,
+  }
+  return component
+end
+
+---@param position                      eve.lib.ux.nvimbar.Position
+---@return eve.lib.ux.nvimbar.IRawComponent
+function M.noice_mode(position)
+  local hln_noice_mode = position .. "_noice_mode" ---@type string
+
+  ---@type eve.lib.ux.nvimbar.IRawComponent
+  local component = {
+    name = "noice_mode",
+    condition = function()
+      return not not package.loaded["noice"]
+    end,
+    render = function()
+      local noice_status = require("noice").api.status
+      local text = noice_status.mode.get() or "" ---@type string
+      if text == nil or #text == 0 then
+        return "", ""
+      end
+
+      local hl_text = txt(text, hln_noice_mode) ---@type string
+      return text, hl_text
     end,
   }
   return component
@@ -1000,9 +992,10 @@ function M.pos(position)
         .. util.pad_end(tostring(col), 3, " ")
         .. " " ---@type string
       local text_pos = " " .. percentage .. " " ---@type string
+
+      local text = text_anchor .. text_pos ---@type string
       local hl_text = txt(text_anchor, hln_text) .. txt(text_pos, hl_pos) ---@type string
-      local width = vim.api.nvim_strwidth(text_anchor .. text_pos) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -1022,8 +1015,7 @@ function M.readonly(position)
     render = function()
       local text = icons.ui.Lock .. " [RO]" ---@type string
       local hl_text = txt(text, hln_readonly) ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -1069,31 +1061,30 @@ function M.tabs(position)
       dirty = false
 
       if last_tab_count <= 1 then
-        return "", 0
+        return "", ""
       end
 
       if folded then
         local text = " 󰅁 "
-        local width = vim.api.nvim_strwidth(text)
         local hl_text = txt(text, hln_toggle)
         hl_text = btn(hl_text, fn_toggle_tabs_folded)
-        return hl_text, width
+        return text, hl_text
       end
 
       local text = " 󰅂 " ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
       local hl_text = txt(text, hln_toggle)
       hl_text = btn(hl_text, fn_toggle_tabs_folded)
 
       local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
       for tabid = 1, last_tab_count, 1 do
         local hlname = last_tab_cur == tabid and hln_tab_item_cur or hln_tab_item
-        text = " " .. tabid .. " "
-        width = width + vim.api.nvim_strwidth(text)
-        local hl_text_inner = txt(text, hlname)
-        hl_text = hl_text .. btn(hl_text_inner, fn_active_tab, tabnrs[tabid])
+        local text_btn = " " .. tabid .. " "
+        local hl_text_btn = txt(text_btn, hlname)
+
+        text = text .. text_btn
+        hl_text = hl_text .. btn(hl_text_btn, fn_active_tab, tabnrs[tabid])
       end
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -1115,8 +1106,7 @@ function M.username(position)
       local icon = icons.os.current ---@type string
       local text = " " .. icon .. " " .. env.USERNAME .. " " ---@type string
       local hl_text = txt(text, hln_username) ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component
@@ -1139,33 +1129,31 @@ function M.widget(position)
     render = function()
       local widget = widgets.get_current_widget() ---@type eve.t.ux.IWidget|nil
       if widget == nil then
-        return "", 0
+        return "", ""
       end
 
       local items = widget.statusline_items ---@type eve.t.ux.widget.IStatuslineItem[]|nil
       if items == nil or #items < 1 then
-        return "", 0
+        return "", ""
       end
 
+      local text = "" ---@type string
       local hl_text = "" ---@type string
-      local width = 0 ---@type integer
-
       for _, item in ipairs(items) do
         local fn = item.callback_fn ---@type string
         if item.type == "flag" then
           local flag = item.state:snapshot() ---@type boolean
-          local text = " " .. item.symbol .. " " ---@type string
-          width = width + vim.api.nvim_strwidth(text)
-          hl_text = hl_text .. btn(txt(text, flag and hln_flag_enabled or hln_flag), fn)
+          local text_flag = " " .. item.symbol .. " " ---@type string
+          text = text .. text_flag
+          hl_text = hl_text .. btn(txt(text_flag, flag and hln_flag_enabled or hln_flag), fn)
         elseif item.type == "enum" then
           local flag = item.state:snapshot() ---@type boolean
-          local text = " " .. flag .. " " ---@type string
-          width = width + vim.api.nvim_strwidth(text)
-          hl_text = hl_text .. btn(txt(text, hln_scope), fn)
+          local text_flag = " " .. flag .. " " ---@type string
+          text = text .. text_flag
+          hl_text = hl_text .. btn(txt(text_flag, hln_scope), fn)
         end
       end
-
-      return hl_text, width
+      return text, hl_text
     end,
   }
   return component

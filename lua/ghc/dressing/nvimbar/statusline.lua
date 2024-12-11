@@ -47,7 +47,7 @@ statusline
   :register(c.lsp(position), "right")
   :register(c.copilot(position), "right")
   :register(c.diagnostics(position), "right")
-  :register(c.noice(position), "right")
+  :register(c.noice_mode(position), "right")
 
 dirtier:subscribe(Subscriber.new({
   on_next = function()

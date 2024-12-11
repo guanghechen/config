@@ -27,17 +27,18 @@ local Scheduler = require("eve.lib.collection.scheduler")
 
 ---@class eve.lib.ux.nvimbar.IRawComponent
 ---@field public name                   string
----@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, integer
+---@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string
 ---@field public tight                  ?boolean
 ---@field public condition              ?fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): boolean
 ---@field public will_change            ?fun(context: eve.lib.ux.nvimbar.IContext, prev_context: eve.lib.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
 ---@class eve.lib.ux.nvimbar.IComponent
+---@field public last_result_hl_text    string
 ---@field public last_result_text       string
 ---@field public last_result_width      integer
 ---@field public last_render_context    eve.lib.ux.nvimbar.IContext|nil
 ---@field public tight                  boolean
----@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, integer
+---@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string
 ---@field public condition              fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): boolean
 ---@field public will_change            fun(context: eve.lib.ux.nvimbar.IContext, prev_context: eve.lib.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
@@ -176,13 +177,14 @@ local function render_component(component, context, remain_width)
   end
 
   if component.will_change(context, component.last_render_context, remain_width) then
-    local text, width = component.render(context, remain_width)
+    local text, hl_text = component.render(context, remain_width)
+    local width = vim.api.nvim_strwidth(text) ---@type integer
+    component.last_result_hl_text = hl_text
     component.last_result_text = text
     component.last_result_width = width
     component.last_render_context = context
   end
-
-  return component.last_result_text, component.last_result_width
+  return component.last_result_hl_text, component.last_result_width
 end
 
 ---@param props                         eve.lib.ux.nvimbar.IProps
@@ -359,6 +361,7 @@ function M:register(raw_component, position)
   ---@type eve.lib.ux.nvimbar.IComponent
   local component = {
     name = name,
+    last_result_hl_text = "",
     last_result_text = "",
     last_result_width = 0,
     tight = not not raw_component.tight,
