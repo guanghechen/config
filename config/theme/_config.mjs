@@ -129,8 +129,19 @@ export const apps = [
         settings.schemes = [color_scheme];
       }
 
-      if (settings?.profiles?.defaults?.colorScheme) {
+      if (settings?.profiles?.defaults && typeof settings.profiles.defaults === 'object') {
         settings.profiles.defaults.colorScheme = color_scheme.name;
+        switch (scheme.variant) {
+          case 'dark':
+            settings.profiles.defaults.backgroundImage = "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Flowerlit-Prayers.jpg";
+            break
+          case 'light':
+            settings.profiles.defaults.backgroundImage = "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Barrett-Girl.jpg";
+            break
+          case 'neutral':
+            break
+          default:
+        }
       }
 
       return JSON.stringify(settings, null, 2);

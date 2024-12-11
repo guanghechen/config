@@ -53,7 +53,7 @@ export const themes = readdirSync(HOME_THEME_SCHEME).map((p) =>
  *
  * @typedef {Object} IThemeScheme
  * @property {string}                   theme
- * @property {string}                   variant
+ * @property {'variant'|'dark'|'neutral'} variant
  * @property {string}                   opposite
  * @property {ITehemePalette}           palette
  *
