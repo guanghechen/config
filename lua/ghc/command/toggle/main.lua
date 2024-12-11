@@ -19,15 +19,25 @@ local flag_map = {
       return flag and "true" or "false", "Boolean"
     end,
   },
-  dressing_winsep = {
+  dressing_winsep_fixed = {
     uuid = uuids.toggle_dressing_winsep_fixed,
-    title = "dressing winsep",
+    title = "dressing winsep (fixed)",
     snapshot = function()
       local observable = state.state.dressing.winsep_fixed ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
   },
+  dressing_winsep_float = {
+    uuid = uuids.toggle_dressing_winsep_float,
+    title = "dressing winsep (float)",
+    snapshot = function()
+      local observable = state.state.dressing.winsep_float ---@type eve.lib.collection.IObservable
+      local flag = observable:snapshot()
+      return flag and "true" or "false", "Boolean"
+    end,
+  },
+
   flight = {
     uuid = uuids.toggle_flight,
     title = "flight",
