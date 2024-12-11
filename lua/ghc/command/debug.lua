@@ -25,15 +25,17 @@ eve.commander
         from = __module_name__,
         subject = "inspect",
         details = {
+          bufnr = bufnr,
+          bufnr_cur = bufnr_cur,
+          buftype = buftype or "nil",
           tabnr = tabnr,
           winnr = winnr,
-          bufnr = bufnr,
-          buftype = buftype or "nil",
-          bufnr_cur = bufnr_cur,
           winnr_cur = winnr_cur,
-          meta_tab = meta_tab,
-          meta_win = meta_win,
-          meta_buf = meta_buf,
+          z_details = {
+            meta_buf = meta_buf,
+            meta_tab = meta_tab,
+            meta_win = meta_win,
+          },
         },
       })
     end,

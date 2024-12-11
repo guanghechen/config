@@ -177,10 +177,11 @@ function M.refresh_all()
   end
 end
 
----@param bufnr                        integer|nil
+---@param winnr                        integer
+---@param bufnr                        integer
 ---@return nil
-function M.on_buf_enter(bufnr)
-  if bufnr == nil or not checks.is_buf_valid(bufnr) then
+function M.on_buf_enter(winnr, bufnr)
+  if not checks.is_win_valid(winnr) or not checks.is_buf_valid(bufnr) then
     return
   end
 
@@ -190,6 +191,7 @@ function M.on_buf_enter(bufnr)
     return
   end
 
+  meta.winnr_listed = winnr
   if not vim.list_contains(meta.bufnrs, bufnr) then
     table.insert(meta.bufnrs, bufnr)
   end

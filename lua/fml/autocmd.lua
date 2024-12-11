@@ -69,18 +69,10 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
   group = augroup("on_win_or_buf_enter"),
   callback = function(arg)
     local bufnr = arg.buf ---@type integer
-    eve.win.on_buf_enter(bufnr)
-    eve.tab.on_buf_enter(bufnr)
-
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    if eve.win.resolve(winnr) ~= nil then
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
-      if meta_tab ~= nil then
-        meta_tab.winnr_listed = winnr
-      end
-      status.winline_dirty_nr:next(winnr)
-    end
+
+    eve.win.on_buf_enter(winnr, bufnr)
+    eve.tab.on_buf_enter(winnr, bufnr)
 
     status.statusline_dirtier:mark_dirty()
     status.tabline_dirtier:mark_dirty()

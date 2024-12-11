@@ -137,21 +137,21 @@ function M.refresh_tabpage_wins(tabnr)
   end
 end
 
+---@param winnr                         integer
 ---@param bufnr                         integer
 ---@return nil
-function M.on_buf_enter(bufnr)
-  if bufnr == nil or not checks.is_buf_valid(bufnr) then
+function M.on_buf_enter(winnr, bufnr)
+  if not checks.is_win_valid(winnr) or not checks.is_buf_valid(bufnr) then
     return
   end
 
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local meta = M.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-  if meta == nil then
-    return
+  local meta = M.get_meta(winnr) ---@type eve.t.state.state.win.IMeta|nil
+  if meta ~= nil then
+    meta.lsp_symbols = {}
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    meta.filepath_history:push(filepath)
+    status.winline_dirty_nr:next(winnr)
   end
-
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  meta.filepath_history:push(filepath)
 end
 
 ----------------------------------------------------------------------------------------------------

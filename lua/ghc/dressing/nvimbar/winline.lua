@@ -39,7 +39,19 @@ local function resolve_winline_scheduler(winnr)
         return winnr_cur > 0 and winnr_cur == context.winnr
       end,
       pre_task = function(callback)
-        eve.win.locate_symbols(winnr, callback)
+        eve.win.locate_symbols(winnr, function(err)
+          if err == nil then
+            callback()
+            return
+          end
+
+          meta.lsp_symbols = {}
+          if err == false then
+            callback()
+          else
+            callback(err)
+          end
+        end)
       end,
       trigger_rerender = function()
         if vim.api.nvim_win_is_valid(winnr) then

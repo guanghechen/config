@@ -226,6 +226,7 @@ function M.new(props)
         local last_result = _render_scheduler:snapshot() ---@type string|nil
         if cancelled then
           callback("fulfilled", last_result)
+          return
         end
 
         local result = self:render_sync()

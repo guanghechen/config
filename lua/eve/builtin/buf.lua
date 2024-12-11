@@ -175,13 +175,15 @@ function M.open_filepath(winnr, filepath, lnum, col)
 
     vim.schedule(function()
       vim.cmd("stopinsert")
-      local bufnr_created = vim.api.nvim_get_current_buf() ---@type integer
-      vim.bo[bufnr_created].buflisted = true
-      tab.on_buf_enter(bufnr_created)
+
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      local bufnr_cur = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      vim.bo[bufnr_cur].buflisted = true
+      tab.on_buf_enter(winnr_cur, bufnr_cur)
 
       if lnum ~= nil and col ~= nil then
         pcall(function()
-          vim.api.nvim_win_set_cursor(winnr, { lnum, col })
+          vim.api.nvim_win_set_cursor(winnr_cur, { lnum, col })
         end)
       end
     end)

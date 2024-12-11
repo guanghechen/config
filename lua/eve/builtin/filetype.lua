@@ -239,7 +239,7 @@ end
 ---@param filetype                      string|nil
 ---@return boolean
 function M.is_plain_file(filetype)
-  if filetypes.not_plain[filetype] then
+  if filetype == nil or filetypes.not_plain[filetype] then
     return false
   end
   return true
