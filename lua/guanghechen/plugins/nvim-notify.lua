@@ -18,9 +18,9 @@ return {
     max_width = function()
       return math.floor(vim.o.columns * 0.75)
     end,
-    on_open = function(win)
-      vim.api.nvim_set_option_value("winblend", 0, { scope = "local", win = win })
-      vim.api.nvim_win_set_config(win, { zindex = 100 })
+    on_open = function(winnr)
+      vim.wo[winnr].winblend = 10
+      vim.api.nvim_win_set_config(winnr, { zindex = 10 })
     end,
     icons = {
       ERROR = icons.diagnostics.Error,
