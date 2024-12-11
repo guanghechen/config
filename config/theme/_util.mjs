@@ -27,12 +27,11 @@ export function is_file(filepath) {
 }
 
 /**
- * @param {string}  template
- * @param {string}  raw_scheme
+ * @param {string}                            template
+ * @param {import('./_env.mjs').IThemeScheme} scheme
  * @return {string}
  */
-export function render_template(template, raw_scheme) {
-  const scheme = JSON.parse(raw_scheme);
+export function render_template(template, scheme) {
   const variant = scheme.variant;
   const c = scheme.palette;
 
@@ -114,26 +113,30 @@ export async function safe_exec(cmd, args, extendedEnv) {
 }
 
 /**
- * @param {string}      theme
- * @return {Promise<string|undefined>}
+ * @param {string}                      theme
+ * @return {Promise<import('./_env.mjs').IThemeScheme|undefined>}
  */
 export async function load_theme_scheme(theme) {
-  const scheme_filepath = path.join(HOME_THEME_SCHEME, `${theme}.json`);
-  if (!existsSync(scheme_filepath)) {
+  const filepath = path.join(HOME_THEME_SCHEME, `${theme}.json`);
+  if (!existsSync(filepath)) {
     console.error("[load_theme_scheme] unknown theme.", { theme });
     return;
   }
-  const scheme = await fs.readFile(scheme_filepath, "utf8");
-  return scheme;
+  const content = await fs.readFile(filepath, "utf8");
+  try {
+    return JSON.parse(content)
+  } catch (error) {
+    console.error('[load_theme_scheme] Bad scheme, not a valid json.', { theme, filepath, content })
+    return
+  }
 }
 
 /**
- * @param {string}      theme
- * @param {string}      scheme
- * @param {IAppConfig}  app
+ * @param {IAppConfig}                  app
+ * @param {import('./_env.mjs').IThemeScheme} scheme
  * @return {Promise<void>}
  */
-export async function apply_theme_per_app(theme, scheme, app) {
+export async function apply_theme_per_app(app, scheme) {
   if (!app.active(app)) return;
 
   if (app.local) {
@@ -150,7 +153,7 @@ export async function apply_theme_per_app(theme, scheme, app) {
     await fs.writeFile(theme_filepath, content, "utf8");
   }
 
-  await app.after_apply?.(app, theme);
+  await app.after_apply?.(app, scheme);
 }
 
 /**
@@ -176,6 +179,7 @@ export async function gen_themes_per_app(app) {
    * @return {Promise<void>}
    */
   async function gen_theme(theme) {
+    /** @type {import('./_env.mjs').IThemeScheme|undefined} */
     const scheme = await load_theme_scheme(theme);
     if (!scheme) return;
 

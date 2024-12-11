@@ -9,17 +9,7 @@ import {
   safe_exec,
 } from "./_util.mjs";
 
-/**
- * @typedef {Object} IAppConfig
- * @property {string}                                                         name
- * @property {string|null}                                                    themes
- * @property {string}                                                         extname
- * @property {string|null}                                                    local
- * @property {(app: IAppConfig) => boolean}                                   active
- * @property {(app: IAppConfig, template: string, scheme: string) => string}  render
- * @property {?((app: IAppConfig, theme: string) => Promise<void>)}           after_apply
- */
-
+/** @type {import("./_env.mjs").IAppConfig[]} */
 export const apps = [
   {
     name: "alacritty",
@@ -52,7 +42,7 @@ export const apps = [
     local: null,
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
-    after_apply: async (app, theme) => {
+    after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(
         HOME_CONFIG,
         app.name,
@@ -61,7 +51,7 @@ export const apps = [
       await safe_exec("nvim", [
         "--headless",
         "-c",
-        `let g:ghc_theme='${theme}'`,
+        `let g:ghc_theme='${scheme.theme}'`,
         "-c",
         `source ${theme_config_filepath}`,
         "+q",
@@ -75,7 +65,7 @@ export const apps = [
     local: null,
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
-    after_apply: async (app, theme) => {
+    after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(
         HOME_CONFIG,
         app.name,
@@ -86,7 +76,7 @@ export const apps = [
         [
           "--headless",
           "-c",
-          `let g:ghc_theme='${theme}'`,
+          `let g:ghc_theme='${scheme.theme}'`,
           "-c",
           `source ${theme_config_filepath}`,
           "+q",

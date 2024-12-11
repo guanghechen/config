@@ -11,17 +11,15 @@ async function handle() {
     return;
   }
 
+  /** @type {import('./_env.mjs').IThemeScheme|undefined} */
   let scheme = await load_theme_scheme(theme);
   if (!scheme) return;
 
-  const scheme_data = JSON.parse(scheme);
-  if (scheme_data.opposite && scheme_data.opposite !== theme) {
-    theme = scheme_data.opposite;
+  if (scheme.opposite && scheme.opposite !== theme) {
+    theme = scheme.opposite;
     scheme = await load_theme_scheme(theme);
   }
 
-  if (scheme) {
-    const tasks = apps.map((app) => apply_theme_per_app(theme, scheme, app));
-    await Promise.allSettled(tasks);
-  }
+  const tasks = apps.map((app) => apply_theme_per_app(app, scheme));
+  await Promise.allSettled(tasks);
 }
