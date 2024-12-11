@@ -35,6 +35,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@class eve.lib.ux.nvimbar.IComponent
 ---@field public last_result_text       string
 ---@field public last_result_width      integer
+---@field public last_render_context    eve.lib.ux.nvimbar.IContext|nil
 ---@field public tight                  boolean
 ---@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, integer
 ---@field public condition              fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): boolean
@@ -73,7 +74,6 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field private _sep                  string
 ---@field private _sep_active           string
 ---@field private _sep_width            integer
----@field private _last_context         eve.lib.ux.nvimbar.IContext|nil
 ---@field private _components           table<string, eve.lib.ux.nvimbar.IComponent>
 ---@field private _items                eve.lib.ux.nvimbar.IItem[]
 ---@field private _render_scheduler     eve.lib.collection.IScheduler
@@ -167,22 +167,22 @@ end
 
 ---@param component                     eve.lib.ux.nvimbar.IComponent
 ---@param context                       eve.lib.ux.nvimbar.IContext
----@param prev_context                  eve.lib.ux.nvimbar.IContext|nil
----@return nil
-local function render_component(component, context, prev_context, remain_width)
+---@param remain_width                  integer
+---@return string
+---@return integer
+local function render_component(component, context, remain_width)
   if not component.condition(context, remain_width) then
-    component.last_result_text = ""
-    component.last_result_width = 0
-    return
+    return "", 0
   end
 
-  if not component.will_change(context, prev_context, remain_width) then
-    return
+  if component.will_change(context, component.last_render_context, remain_width) then
+    local text, width = component.render(context, remain_width)
+    component.last_result_text = text
+    component.last_result_width = width
+    component.last_render_context = context
   end
 
-  local text, width = component.render(context, remain_width)
-  component.last_result_text = text
-  component.last_result_width = width
+  return component.last_result_text, component.last_result_width
 end
 
 ---@param props                         eve.lib.ux.nvimbar.IProps
@@ -260,7 +260,6 @@ function M.new(props)
   self._sep = M.txt(component_sep, component_sep_hlname)
   self._sep_active = M.txt(component_sep, component_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(component_sep)
-  self._last_context = nil
   self._components = {}
   self._items = {}
   self._render_scheduler = _render_scheduler
@@ -384,7 +383,6 @@ end
 function M:render_sync()
   local preset_context = self._get_preset_context() ---@type eve.lib.ux.nvimbar.IPresetContext
   local context = build_context(preset_context) ---@type eve.lib.ux.nvimbar.IContext
-  local prev_context = self._last_context ---@type eve.lib.ux.nvimbar.IContext|nil
 
   local sep = self._is_active(context) and self._sep_active or self._sep ---@type string
   local width_sep = self._sep_width ---@type integer
@@ -406,10 +404,8 @@ function M:render_sync()
 
     local component = components[name] ---@type eve.lib.ux.nvimbar.IComponent|nil
     if component ~= nil then
-      local ok, err = pcall(render_component, component, context, prev_context, width_remain)
+      local ok, text, width = pcall(render_component, component, context, width_remain)
       if ok then
-        local text = component.last_result_text ---@type string
-        local width = component.last_result_width ---@type integer
         if width > 0 and width <= width_remain then
           local tight = component.tight ---@type boolean
           if position == "left" then
@@ -456,13 +452,11 @@ function M:render_sync()
           from = __module_name__,
           subject = "render",
           message = "Encounter error while render the nvimbar component.",
-          details = { item = item, component = component, error = err },
+          details = { item = item, component = component, error = text },
         })
       end
     end
   end
-
-  self._last_context = context
 
   local width_half_left = math.floor(width_full / 2) ---@type integer
   local width_padding_left = width_half_left - width_left - math.floor(width_center / 2) ---@type integer

@@ -22,7 +22,7 @@ function M.defaults()
   local dressing = {
     hi_pairs = true,
     winsep_fixed = true,
-    winsep_float = true,
+    winsep_float = false,
   }
 
   ---@type eve.t.state.data.find

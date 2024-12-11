@@ -74,6 +74,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
     eve.win.on_buf_enter(winnr, bufnr)
     eve.tab.on_buf_enter(winnr, bufnr)
 
+    status.winline_dirty_nr:next(winnr)
     status.statusline_dirtier:mark_dirty()
     status.tabline_dirtier:mark_dirty()
   end,

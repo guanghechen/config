@@ -78,49 +78,58 @@ local function resolve_winline_scheduler(winnr)
   return meta.winline
 end
 
+---@param winnr                         integer|nil
+---@return nil
+local function render(winnr)
+  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+
+  if filepath:sub(1, 11) == "diffview://" then
+    local should_show_winline = filepath:sub(1, 19) ~= "diffview:///panels/" ---@type boolean
+    if should_show_winline then
+      local text = filepath:sub(12) ---@type string
+      if text:sub(1, #env.HOME_NVIM_CONFIG) == env.HOME_NVIM_CONFIG then
+        text = "<NVIM_HOME>" .. text:sub(#env.HOME_NVIM_CONFIG + 1)
+      end
+      local winbar = "diffview://" .. text
+      vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")
+    end
+    return
+  end
+
+  if filepath:sub(1, 11) == "gitsigns://" then
+    local text = filepath:sub(12) ---@type string
+    if text:sub(1, #env.HOME_NVIM_CONFIG) == env.HOME_NVIM_CONFIG then
+      text = "<NVIM_HOME>" .. text:sub(#env.HOME_NVIM_CONFIG + 1)
+    end
+    local winbar = "gitsigns://" .. text
+    vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")
+    return
+  end
+
+  local winline = resolve_winline_scheduler(winnr) ---@type eve.lib.ux.INvimbar|nil
+  if winline ~= nil then
+    winline:render()
+    return
+  end
+
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  if eve.filetype.is_plain_file(filetype) then
+    vim.wo[winnr].winbar = Nvimbar.txt(filepath, "f_wl_text")
+    return
+  end
+end
+
 status.winline_dirty_nr:subscribe(
   Subscriber.new({
-    on_next = function(winnr)
-      if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
-        return
-      end
-
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-
-      if filepath:sub(1, 11) == "diffview://" then
-        local should_show_winline = filepath:sub(1, 19) ~= "diffview:///panels/" ---@type boolean
-        if should_show_winline then
-          local text = filepath:sub(12) ---@type string
-          if text:sub(1, #env.HOME_NVIM_CONFIG) == env.HOME_NVIM_CONFIG then
-            text = "<NVIM_HOME>" .. text:sub(#env.HOME_NVIM_CONFIG + 1)
-          end
-          local winbar = "diffview://" .. text
-          vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")
-        end
-        return
-      end
-
-      if filepath:sub(1, 11) == "gitsigns://" then
-        local text = filepath:sub(12) ---@type string
-        if text:sub(1, #env.HOME_NVIM_CONFIG) == env.HOME_NVIM_CONFIG then
-          text = "<NVIM_HOME>" .. text:sub(#env.HOME_NVIM_CONFIG + 1)
-        end
-        local winbar = "gitsigns://" .. text
-        vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")
-        return
-      end
-
-      local winline = resolve_winline_scheduler(winnr) ---@type eve.lib.ux.INvimbar|nil
-      if winline ~= nil then
-        winline:render()
-        return
-      end
-
-      local filetype = vim.bo[bufnr].filetype ---@type string
-      if eve.filetype.is_plain_file(filetype) then
-        vim.wo[winnr].winbar = Nvimbar.txt(filepath, "f_wl_text")
-        return
+    on_next = function(winnr, winnr_prev)
+      render(winnr)
+      if winnr_prev ~= winnr then
+        render(winnr_prev)
       end
     end,
   }),

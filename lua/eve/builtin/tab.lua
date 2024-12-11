@@ -74,13 +74,13 @@ end
 ---@param tabnr                         integer|nil
 ---@return eve.t.state.state.tab.IMeta|nil
 function M.resolve(tabnr)
-  if tabnr == nil or not checks.is_tab_valid(tabnr) then
-    return nil
-  end
-
   local meta = M.get_meta(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
   if meta ~= nil then
     return meta
+  end
+
+  if tabnr == nil or not checks.is_tab_valid(tabnr) then
+    return nil
   end
 
   local bufnrs = {} ---@type integer[]

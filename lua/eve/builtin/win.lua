@@ -65,13 +65,13 @@ end
 ---@param winnr                         integer|nil
 ---@return eve.t.state.state.win.IMeta|nil
 function M.resolve(winnr)
-  if winnr == nil or not checks.is_win_valid(winnr) then
-    return nil
-  end
-
   local meta = M.get_meta(winnr) ---@type eve.t.state.state.win.IMeta|nil
   if meta ~= nil then
     return meta
+  end
+
+  if winnr == nil or not checks.is_win_valid(winnr) then
+    return nil
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -97,17 +97,11 @@ function M.resolve(winnr)
   return meta
 end
 
----@param winnr                         integer|nil
+---@param winnr                         integer
 ---@return nil
 function M.refresh(winnr)
-  if winnr == nil then
-    return
-  end
-
-  local meta = M.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-  if meta ~= nil then
-    status.winline_dirty_nr:next(winnr)
-  end
+  M.resolve(winnr)
+  status.winline_dirty_nr:next(winnr)
 end
 
 ---@return nil
@@ -147,10 +141,8 @@ function M.on_buf_enter(winnr, bufnr)
 
   local meta = M.get_meta(winnr) ---@type eve.t.state.state.win.IMeta|nil
   if meta ~= nil then
-    meta.lsp_symbols = {}
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     meta.filepath_history:push(filepath)
-    status.winline_dirty_nr:next(winnr)
   end
 end
 

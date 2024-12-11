@@ -139,8 +139,7 @@ function M.bufs(position)
     name = "bufs",
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local meta = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
       if meta == nil then
         return "", 0
       end
@@ -469,6 +468,10 @@ function M.dirpath(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "dirpath",
+    condition = function(context)
+      local meta = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      return meta ~= nil and context.winnr ~= meta.winnr_listed
+    end,
     will_change = function(context, prev_context)
       return prev_context == nil or context.filepath ~= prev_context.filepath
     end,

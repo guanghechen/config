@@ -38,13 +38,13 @@ end
 ---@param bufnr                         integer|nil
 ---@return eve.t.state.state.buf.IMeta|nil
 function M.resolve(bufnr)
-  if bufnr == nil or not checks.is_buf_valid(bufnr) then
-    return nil
-  end
-
   local meta = M.get_meta(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
   if meta ~= nil then
     return meta
+  end
+
+  if bufnr == nil or not checks.is_buf_valid(bufnr) then
+    return nil
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
