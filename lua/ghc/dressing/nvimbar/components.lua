@@ -547,13 +547,13 @@ function M.filename(position)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
       if meta_buf == nil then
-        local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        local text = vim.api.nvim_buf_get_name(bufnr) or "NIL" ---@type string
         local hl_text = txt(text, hln_filename_text) ---@type string
         return text, hl_text
       end
 
       local text_icon = meta_buf.fileicon .. " " ---@type string
-      local text_filename = is_win_cur and meta_buf.filename or meta_buf.relpath ---@type string
+      local text_filename = (is_win_cur and meta_buf.filename or meta_buf.relpath) or "NIL" ---@type string
       local hl_text_icon = txt(text_icon, hln_filename .. "_" .. meta_buf.fileicon_hl) ---@type string
       local hl_text_title = txt(text_filename, is_win_cur and filename_text_cur or hln_filename_text) ---@type string
 
