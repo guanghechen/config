@@ -485,9 +485,9 @@ function M.dirpath(position)
 
       local hl_text = "" ---@type string
       local width = 0 ---@type integer
-      local N = #meta.relpath - 1 ---@type integer
+      local N = #meta.relpath_pieces - 1 ---@type integer
       for i = 1, N, 1 do
-        local piece = meta.relpath[i] ---@type string
+        local piece = meta.relpath_pieces[i] ---@type string
         local hl_text_piece = txt(piece, hln_dirpath_text) ---@type string
         local hl_text_sep = txt(sep, hln_dirpath_sep) ---@type string
         hl_text = hl_text .. hl_text_piece .. hl_text_sep
@@ -536,29 +536,37 @@ end
 function M.filename(position)
   local hln_filename = position .. "_filename" ---@type string
   local hln_filename_text = position .. "_filename_text" ---@type string
+  local filename_text_cur = position .. "_filename_text_cur" ---@type string
+  local last_winnr_listed = -1 ---@type integer
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filename",
     will_change = function(context, prev_context)
-      return prev_context == nil or context.filename ~= prev_context.filename
+      if prev_context == nil or context.filename ~= prev_context.filename then
+        return true
+      end
+      local meta_tab = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      return meta_tab == nil or meta_tab.winnr_listed ~= last_winnr_listed
     end,
     render = function(context)
-      local winnr = context.winnr ---@type integer
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
-      if meta == nil then
-        local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local text = path.basename(filepath) ---@type string
+      local meta_tab = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local is_win_cur = meta_tab ~= nil and context.winnr == meta_tab.winnr_listed ---@type boolean
+      last_winnr_listed = meta_tab ~= nil and meta_tab.winnr_listed or -1 ---@type integer
+
+      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
+      local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+      if meta_buf == nil then
+        local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local width = vim.api.nvim_strwidth(text) ---@type integer
         local hl_text = txt(text, hln_filename_text)
         return hl_text, width
       end
 
-      local text_icon = meta.fileicon .. " " ---@type string
-      local text_filename = meta.filename ---@type string
-      local hl_text_icon = txt(text_icon, hln_filename .. "_" .. meta.fileicon_hl) ---@type string
-      local hl_text_title = txt(text_filename, hln_filename_text) ---@type string
+      local text_icon = meta_buf.fileicon .. " " ---@type string
+      local text_filename = is_win_cur and meta_buf.filename or meta_buf.relpath ---@type string
+      local hl_text_icon = txt(text_icon, hln_filename .. "_" .. meta_buf.fileicon_hl) ---@type string
+      local hl_text_title = txt(text_filename, is_win_cur and filename_text_cur or hln_filename_text) ---@type string
 
       local hl_text = hl_text_icon .. hl_text_title
       local width = vim.api.nvim_strwidth(text_icon .. text_filename) ---@type integer
@@ -573,24 +581,6 @@ end
 function M.filepath(position)
   local hln_text = position .. "_text" ---@type string
 
-  ---@param context                       eve.lib.ux.nvimbar.IContext
-  ---@return string
-  local function get_filepath(context)
-    local cwd = context.cwd ---@type string
-    local filepath = context.filepath ---@type string
-    local relative_to_cwd = path.relative(cwd, filepath, false) ---@type string
-    if string.sub(relative_to_cwd, 1, 1) == "." and path.is_absolute(filepath) then
-      local workspace = path.workspace() ---@type string
-      if cwd ~= workspace then
-        local relative_to_workspace = path.relative(workspace, filepath, false)
-        if string.sub(relative_to_workspace, 1, 1) == "." then
-          relative_to_cwd = path.normalize(filepath)
-        end
-      end
-    end
-    return context.fileicon .. " " .. relative_to_cwd
-  end
-
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filepath",
@@ -601,7 +591,10 @@ function M.filepath(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context)
-      local text = get_filepath(context) ---@type string
+      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
+      local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+      local filepath = meta_buf and meta_buf.relpath or context.filepath
+      local text = context.fileicon .. " " .. filepath ---@type string
       local hl_text = txt(text, hln_text)
       local width = vim.api.nvim_strwidth(text)
       return hl_text, width

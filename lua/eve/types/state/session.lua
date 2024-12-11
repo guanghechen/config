@@ -10,7 +10,8 @@
 ---@field public filename               string
 ---@field public filepath               string
 ---@field public filetype               string
----@field public relpath                string[]
+---@field public relpath                string
+---@field public relpath_pieces         string[]
 ---@field public pinned                 boolean
 
 ---@class eve.t.state.data.tab.IMeta

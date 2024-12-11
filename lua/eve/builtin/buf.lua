@@ -1,3 +1,4 @@
+local env = require("eve.lib.env")
 local path = require("eve.lib.path")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
@@ -55,7 +56,8 @@ function M.resolve(bufnr)
 
   local workspace_pieces = path.split(path.workspace()) ---@type string[]
   local cwd_pieces = path.split(path.cwd()) ---@type string[]
-  local relpath = path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
+  local relpath_pieces = path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
+  local relpath = table.concat(relpath_pieces, env.PATH_SEP)
 
   ---@type eve.t.state.state.buf.IMeta
   meta = {
@@ -65,6 +67,7 @@ function M.resolve(bufnr)
     filepath = filepath,
     filetype = filetype,
     relpath = relpath,
+    relpath_pieces = relpath_pieces,
     pinned = false,
   }
   return M.set_meta(bufnr, meta)
@@ -91,7 +94,8 @@ function M.refresh(bufnr)
 
     local workspace_pieces = path.split(path.workspace()) ---@type string[]
     local cwd_pieces = path.split(path.cwd()) ---@type string[]
-    local relpath = path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
+    local relpath_pieces = path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
+    local relpath = table.concat(relpath_pieces, env.PATH_SEP)
 
     meta.fileicon = fileicon
     meta.fileicon_hl = fileicon_hl
@@ -99,6 +103,7 @@ function M.refresh(bufnr)
     meta.filepath = filepath
     meta.filetype = filetype
     meta.relpath = relpath
+    meta.relpath_pieces = relpath_pieces
   end
   return meta
 end

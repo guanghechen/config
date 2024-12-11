@@ -177,7 +177,7 @@ function M.load(data)
         filename = item.filename,
         filepath = item.filepath,
         filetype = filetype,
-        relpath = path.split_prettier(workspace_pieces, cwd_pieces, item.filepath),
+        relpath_pieces = path.split_prettier(workspace_pieces, cwd_pieces, item.filepath),
         pinned = item.pinned,
       }
       _buf.set_meta(real_bufnr, meta)
