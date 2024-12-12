@@ -12,6 +12,7 @@ return {
     stages = "static",
     timeout = 3000,
     level = "INFO",
+    background_colour = "NotifyBackground",
     max_height = function()
       return math.floor(vim.o.lines * 0.75)
     end,
@@ -19,8 +20,9 @@ return {
       return math.floor(vim.o.columns * 0.75)
     end,
     on_open = function(winnr)
-      vim.wo[winnr].winblend = 10
-      vim.api.nvim_win_set_config(winnr, { zindex = 10 })
+      local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+      vim.wo[winnr].winblend = winblend
+      vim.api.nvim_win_set_config(winnr, { zindex = 100 })
     end,
     icons = {
       ERROR = icons.diagnostics.Error,

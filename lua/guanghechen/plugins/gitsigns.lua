@@ -236,11 +236,12 @@ local keymaps = {
             and type(wincfg.title[1]) == "table"
             and wincfg.title[1][1] == config.win.preview_hunk.title
           then
+            local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
             vim.api.nvim_set_current_win(winnr)
             vim.wo[winnr].number = false
             vim.wo[winnr].relativenumber = false
             vim.wo[winnr].signcolumn = "yes"
-            vim.wo[winnr].winblend = 10
+            vim.wo[winnr].winblend = winblend
             vim.wo[winnr].winhighlight = config.win.preview_hunk.highlight
             vim.wo[winnr].wrap = false
             return

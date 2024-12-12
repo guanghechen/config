@@ -90,6 +90,7 @@ function M:create_win_as_needed()
   local height = math.ceil(0.9 * vim.o.lines) ---@type integer
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
   local col = math.floor((vim.o.columns - width) / 2) ---@type integer
+  local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
@@ -119,7 +120,7 @@ function M:create_win_as_needed()
   vim.wo[winnr].number = false
   vim.wo[winnr].signcolumn = "no"
   vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
-  vim.wo[winnr].winblend = 10
+  vim.wo[winnr].winblend = winblend
   vim.wo[winnr].wrap = true
   vim.wo[winnr].list = false
   return winnr, bufnr

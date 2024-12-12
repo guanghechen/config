@@ -549,6 +549,7 @@ function M:create_wins_as_needed()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local screen_height = vim.o.lines ---@type integer
   local screen_width = vim.o.columns ---@type integer
+  local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
   ---@type number
   local max_height = dimension.max_height <= 1 and math.floor(dimension.max_height * screen_height)
@@ -628,7 +629,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_main].number = false
     vim.wo[winnr_main].relativenumber = false
     vim.wo[winnr_main].signcolumn = "yes"
-    vim.wo[winnr_main].winblend = 10
+    vim.wo[winnr_main].winblend = winblend
     vim.wo[winnr_main].winhighlight = highlights.main
     vim.wo[winnr_main].wrap = false
     self:sync_main_cursor()
@@ -674,7 +675,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_preview].number = true
     vim.wo[winnr_preview].relativenumber = false
     vim.wo[winnr_preview].signcolumn = "yes:1"
-    vim.wo[winnr_preview].winblend = 10
+    vim.wo[winnr_preview].winblend = winblend
     vim.wo[winnr_preview].winhighlight = highlights.preview
     vim.wo[winnr_preview].wrap = self._preview_flag_wrap
     vim.wo[winnr_preview].list = true
@@ -713,7 +714,7 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].number = false
   vim.wo[winnr_input].relativenumber = false
   vim.wo[winnr_input].signcolumn = "yes:1"
-  vim.wo[winnr_input].winblend = 10
+  vim.wo[winnr_input].winblend = winblend
   vim.wo[winnr_input].winhighlight = highlights.input
   vim.wo[winnr_input].wrap = false
 

@@ -10,8 +10,8 @@ local function gen_hlgroup_map(context)
   local diff_del_word = c.neutral_red ---@type string
   local diff_add_word = c.neutral_green ---@type string
 
-  local bg_main = c.bg0 ---@type string
-  local bg_preview = c.bg0 ---@type string
+  local bg_main = t and c.bg0 or "none" ---@type string
+  local bg_preview = t and c.bg0 or "none" ---@type string
 
   return {
     ---common

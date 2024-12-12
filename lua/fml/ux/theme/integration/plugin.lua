@@ -173,9 +173,9 @@ local function gen_hlgroup_map(context)
     NoiceCmdlinePopupBorder = { fg = c.green, bg = "none" },
 
     ---! nvim-cmp
-    CmpBorder = { fg = cs.mix(c.bg0, c.green, 50) },
+    CmpBorder = { link = "FloatBorder" },
     CmpNormal = { bg = c.bg0 },
-    CmpDocBorder = { fg = c.bg2 },
+    CmpDocBorder = { link = "FloatBorder" },
     CmpDocNormal = { bg = c.bg0 },
     CmpGhostText = { link = "Comment", default = true },
     CmpItemAbbr = { fg = c.fg1 },
@@ -256,21 +256,29 @@ local function gen_hlgroup_map(context)
     DapUIWatchesValue = { fg = c.green },
 
     ---! nvim-notify
-    NotifyDEBUGBorder = { fg = c.bg4 },
-    NotifyDEBUGIcon = { fg = c.fg4 },
-    NotifyDEBUGTitle = { fg = c.fg4 },
-    NotifyERRORBorder = { fg = c.red },
+    NotifyERRORBorder = { fg = c.red, bg = t and c.bg0 or "none" },
+    NotifyWARNBorder = { fg = c.yellow, bg = t and c.bg0 or "none" },
+    NotifyINFOBorder = { fg = c.green, bg = t and c.bg0 or "none" },
+    NotifyDEBUGBorder = { fg = c.aqua, bg = t and c.bg0 or "none" },
+    NotifyTRACEBorder = { fg = c.bg4, bg = t and c.bg0 or "none" },
+
+    NotifyERRORBody = { link = "NormalFloat" },
+    NotifyWARNBody = { link = "NormalFloat" },
+    NotifyINFOBody = { link = "NormalFloat" },
+    NotifyDEBUGBody = { link = "NormalFloat" },
+    NotifyTRACEBody = { link = "NormalFloat" },
+
     NotifyERRORIcon = { fg = c.red },
-    NotifyERRORTitle = { fg = c.red },
-    NotifyINFOBorder = { fg = c.green },
+    NotifyWARNIcon = { fg = c.yellow },
     NotifyINFOIcon = { fg = c.green },
-    NotifyINFOTitle = { fg = c.green },
-    NotifyTRACEBorder = { fg = c.purple },
-    NotifyTRACEIcon = { fg = c.purple },
-    NotifyTRACETitle = { fg = c.purple },
-    NotifyWARNBorder = { fg = c.orange },
-    NotifyWARNIcon = { fg = c.orange },
-    NotifyWARNTitle = { fg = c.orange },
+    NotifyDEBUGIcon = { fg = c.aqua },
+    NotifyTRACEIcon = { fg = c.bg4 },
+
+    NotifyERRORTitle = { link = "NotifyERRORIcon" },
+    NotifyWARNTitle = { link = "NotifyWARNIcon" },
+    NotifyINFOTitle = { link = "NotifyINFOIcon" },
+    NotifyDEBUGTitle = { link = "NotifyDEBUGIcon" },
+    NotifyTRACETitle = { link = "NotifyTRACEIcon" },
 
     ---! nvim-treesitter-context
     TreesitterContext = { fg = c.fg1, bg = c.bg2 },

@@ -59,6 +59,7 @@ function M.new(props)
   local min_width = props.min_width ---@type number|nil
   local min_height = props.min_height ---@type number|nil
   local filetype = props.filetype ---@type string|nil
+  local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
   ---@type table<string, any>
   local win_opts = vim.tbl_extend("force", {
@@ -67,7 +68,7 @@ function M.new(props)
     relativenumber = true,
     signcolumn = "no",
     wrap = false,
-    winblend = 10,
+    winblend = winblend,
     winhighlight = WIN_HIGHLIGHT,
   }, props.win_opts or {})
 
