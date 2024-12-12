@@ -80,6 +80,10 @@ function M.bufs(position)
   ---@return string
   local function render_buf(buf, is_current, is_first)
     local bufnr = buf.bufnr ---@type integer
+    if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
+      return "", ""
+    end
+
     local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
 
