@@ -16,6 +16,7 @@ $config_repo_branch = @(
   "lazygit",
   "lsd",
   "nvim",
+  "pwsh",
   "ripgrep",
   "yazi"
 )
@@ -46,7 +47,7 @@ foreach ($branch in $config_repo_branch) {
 
 # Define the source and destination paths
 Write-ColoredMessage "[setup config] copying pwsh profile.ps1..." Blue
-$source = "$env:XDG_CONFIG_HOME\guanghechen\win\config\pwsh\profile.ps1"
+$source = "$env:XDG_CONFIG_HOME\pwsh\profile.ps1"
 $destination = $PROFILE
 Copy-Item -Path $source -Destination $destination -Force
 
