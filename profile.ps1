@@ -18,4 +18,4 @@ fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 . "$env:XDG_CONFIG_HOME\pwsh\functions\prompt.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc-upgrade.ps1"
+. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc.ps1"
