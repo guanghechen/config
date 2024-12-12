@@ -193,7 +193,7 @@ function M.bufs(position)
             text = t .. text
             hl_text = hl_t .. hl_text
             left_remain_count = 0
-            remain_width = remain_width + left_omitter_width
+            remain_width = remain_width + left_omitter_width - w
             break
           end
 
@@ -218,7 +218,7 @@ function M.bufs(position)
             text = text .. t
             hl_text = hl_text .. hl_t
             right_remain_count = 0
-            remain_width = remain_width + right_omitter_width
+            remain_width = remain_width + right_omitter_width - w
             break
           end
 
