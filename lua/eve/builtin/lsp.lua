@@ -48,7 +48,7 @@ function M.find_symbol_path(cursor, symbols)
           local child_path = M.find_symbol_path(cursor, symbol.children)
           if child_path then
             for _, child_symbol in ipairs(child_path) do
-              table.insert(path, child_symbol)
+              path[#path + 1] = child_symbol
             end
           end
         end

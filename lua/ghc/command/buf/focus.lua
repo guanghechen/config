@@ -19,10 +19,9 @@ local function focus(bufid)
     return
   end
 
-  local tab_bufnrs = tab_meta.bufnrs ---@type integer[]
-  local bufid_next = eve.util.navigate_circular(0, bufid, #tab_bufnrs)
-  local bufnr_next = tab_bufnrs[bufid_next]
-  eve.buf.go(bufnr_next)
+  local bufs = tab_meta.bufs ---@type eve.t.state.state.tab.meta.IBuf[]
+  local bufid_next = eve.util.navigate_circular(0, bufid, #bufs) ---@type integer
+  eve.buf.go(bufs[bufid_next].bufnr)
 end
 
 for i = 1, 10, 1 do
@@ -67,16 +66,15 @@ eve.commander
         return
       end
 
-      local tab_bufnrs = tab_meta.bufnrs ---@type integer[]
+      local bufs = tab_meta.bufs ---@type eve.t.state.state.tab.meta.IBuf[]
       local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-      local bufid_cur = eve.util.find_index(tab_bufnrs, bufnr_cur) ---@type integer|nil
+      local _, bufid_cur = tab_meta:find_buf(bufnr_cur)
 
-      local _, step = pcall(tonumber, args)
-      step = math.max(1, step or vim.v.count1 or 1)
       if bufid_cur ~= nil then
-        local bufid_next = eve.util.navigate_circular(bufid_cur, -step, #tab_bufnrs)
-        local bufnr_next = tab_bufnrs[bufid_next]
-        eve.buf.go(bufnr_next)
+        local _, step = pcall(tonumber, args)
+        step = math.max(1, step or vim.v.count1 or 1)
+        local bufid_next = eve.util.navigate_circular(bufid_cur, -step, #bufs)
+        eve.buf.go(bufs[bufid_next].bufnr)
       end
     end,
   })
@@ -98,16 +96,15 @@ eve.commander
         return
       end
 
-      local tab_bufnrs = tab_meta.bufnrs ---@type integer[]
+      local bufs = tab_meta.bufs ---@type eve.t.state.state.tab.meta.IBuf[]
       local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
-      local bufid_cur = eve.util.find_index(tab_bufnrs, bufnr_cur) ---@type integer|nil
+      local _, bufid_cur = tab_meta:find_buf(bufnr_cur)
 
-      local _, step = pcall(tonumber, args)
-      step = math.max(1, step or vim.v.count1 or 1)
       if bufid_cur ~= nil then
-        local bufid_next = eve.util.navigate_circular(bufid_cur, step, #tab_bufnrs)
-        local bufnr_next = tab_bufnrs[bufid_next]
-        eve.buf.go(bufnr_next)
+        local _, step = pcall(tonumber, args)
+        step = math.max(1, step or vim.v.count1 or 1)
+        local bufid_next = eve.util.navigate_circular(bufid_cur, step, #bufs)
+        eve.buf.go(bufs[bufid_next].bufnr)
       end
     end,
   })

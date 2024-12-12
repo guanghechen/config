@@ -2,7 +2,6 @@
 ---@field public bufnr                  integer
 ---@field public filename               string
 ---@field public filepath               string
----@field public pinned                 boolean
 
 ---@class eve.t.state.state.buf.IMeta
 ---@field public fileicon               string
@@ -12,17 +11,27 @@
 ---@field public filetype               string
 ---@field public relpath                string
 ---@field public relpath_pieces         string[]
+
+---@class eve.t.state.data.tab.meta.IBuf
+---@field public bufnr                  integer
 ---@field public pinned                 boolean
 
 ---@class eve.t.state.data.tab.IMeta
 ---@field public tabnr                  integer
 ---@field public tabtype                string
----@field public bufnrs                 integer[]
+---@field public bufs                   eve.t.state.data.tab.meta.IBuf[]
+
+---@class eve.t.state.state.tab.meta.IBuf
+---@field public bufnr                  integer
+---@field public pinned                 boolean
 
 ---@class eve.t.state.state.tab.IMeta
 ---@field public tabtype                string
----@field public bufnrs                 integer[]
+---@field public bufs                   eve.t.state.state.tab.meta.IBuf[]
 ---@field public winnr_listed           integer
+---@field public dump                   fun(self: eve.t.state.state.tab.IMeta): eve.t.state.data.tab.IMeta
+---@field public find_buf               fun(self: eve.t.state.state.tab.IMeta, bufnr: integer): eve.t.state.state.tab.meta.IBuf|nil, integer|nil
+---@field public toggle_pin             fun(self: eve.t.state.state.tab.IMeta, bufnr: integer): nil
 
 ---@class eve.t.state.data.win.IMeta
 ---@field public winnr                  integer

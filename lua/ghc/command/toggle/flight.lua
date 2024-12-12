@@ -61,7 +61,7 @@ eve.commander.register({
         fetch_items = function()
           local items = {} ---@type fml.t.ux.select.IItem[]
           for _, flight in ipairs(flights) do
-            table.insert(items, { uuid = flight, text = flight })
+            items[#items + 1] = { uuid = flight, text = flight }
           end
           return items
         end,
@@ -81,9 +81,7 @@ eve.commander.register({
           }
 
           for _, piece in ipairs(match.matches) do
-            ---@type eve.t.IHighlightInline[]
-            local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-            table.insert(highlights, highlight)
+            highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
           end
           return text, highlights
         end,

@@ -28,7 +28,7 @@ local function list_other_availables(ignored_buftypes, ignored_filetypes)
   local tabnr_cur = vim.api.nvim_get_current_tabpage()
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr_cur)
   local winnr_current = vim.api.nvim_get_current_win()
-  local results = {} ---@type integer[]
+  local bufnrs = {} ---@type integer[]
 
   for _, winnr in ipairs(winnrs) do
     if winnr ~= winnr_current then
@@ -36,11 +36,11 @@ local function list_other_availables(ignored_buftypes, ignored_filetypes)
       local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr })
       local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
       if not vim.tbl_contains(ignored_buftypes, buftype) and not vim.tbl_contains(ignored_filetypes, filetype) then
-        table.insert(results, bufnr)
+        bufnrs[#bufnrs + 1] = bufnr
       end
     end
   end
-  return results
+  return bufnrs
 end
 
 ---@param motivation                    "focus" | "swap" | "project"

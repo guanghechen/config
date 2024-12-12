@@ -109,7 +109,7 @@ eve.commander.register({
           local items = {} ---@type fml.t.ux.select.IItem[]
           for _, flag in ipairs(flags) do
             local flag_item = flag_map[flag] ---@type ghc.command.toggle.IItem
-            table.insert(items, { uuid = flag_item.uuid, text = flag })
+            items[#items + 1] = { uuid = flag_item.uuid, text = flag }
           end
           return items
         end,
@@ -127,9 +127,7 @@ eve.commander.register({
           }
 
           for _, piece in ipairs(match.matches) do
-            ---@type eve.t.IHighlightInline[]
-            local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-            table.insert(highlights, highlight)
+            highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
           end
           return text, highlights
         end,

@@ -57,9 +57,9 @@ local function get_diff_lines_from_git(lnum, filepath)
   for i = index + 1, #lines, 1 do
     local line = lines[i]
     if line:sub(1, 1) == "-" then
-      table.insert(dels, line)
+      dels[#dels + 1] = line
     elseif line:sub(1, 1) == "+" then
-      table.insert(adds, line)
+      adds[#adds + 1] = line
     end
   end
   return dels, adds

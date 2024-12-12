@@ -89,14 +89,14 @@ for _, raw_spec in ipairs(raw_specs) do
   local branch = raw_spec.branch or ("nvim@" .. name) ---@type string
   local cond = raw_spec.cond ---@type fun(): boolean
   ---@type guanghechen.plugin.ISpec
-  local meta = {
+  local spec = {
     url = url,
     branch = branch,
     name = name,
     main = main,
     cond = cond,
   }
-  table.insert(specs, meta)
+  specs[#specs + 1] = spec
 end
 
 ---extend specs------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ local final_specs = {} ---@type guanghechen.plugin.ISpecDetails[]
 for _, spec in ipairs(specs) do
   ---@type guanghechen.plugin.ISpecDetails
   local spec_basic = vim.tbl_deep_extend("force", {}, spec)
-  table.insert(final_specs, spec_basic)
+  final_specs[#final_specs+1] = spec_basic
 end
 
 ---@type string[]
@@ -126,7 +126,7 @@ for index = 1, #specs, 1 do
   local ok, spec_module = pcall(require, spec_module_name)
   if ok then
     local spec_details = vim.tbl_deep_extend("force", {}, spec_basic, spec_module)
-    table.insert(final_specs, spec_details)
+    final_specs[#final_specs + 1] = spec_details
 
     spec_basic.cmd = spec_details.cmd
     spec_basic.enabled = spec_details.enabled

@@ -68,7 +68,6 @@ function M.resolve(bufnr)
     filetype = filetype,
     relpath = relpath,
     relpath_pieces = relpath_pieces,
-    pinned = false,
   }
   return M.set_meta(bufnr, meta)
 end
@@ -118,7 +117,7 @@ function M.refresh_all()
   local invalid_bufnrs = {} ---@type integer[]
   for bufnr in pairs(meta_map) do
     if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
-      table.insert(invalid_bufnrs, bufnr)
+      invalid_bufnrs[#invalid_bufnrs + 1] = bufnr
     end
   end
   for _, bufnr in ipairs(invalid_bufnrs) do

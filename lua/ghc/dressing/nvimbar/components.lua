@@ -10,6 +10,7 @@ local G = require("eve.builtin.G")
 local commander = require("eve.builtin.commander")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
+local calc_fileicon = require("eve.builtin.nvim").calc_fileicon
 local status = require("eve.builtin.status")
 local util = require("eve.builtin.util")
 local widgets = require("eve.builtin.widgets")
@@ -56,19 +57,31 @@ function M.bufs(position)
     commander.execute(commander.uuids.buf_focus_right)
   end) or ""
 
-  ---@param bufnr                         integer
+  ---@param bufnr                       integer
+  ---@return string
+  ---@return string
+  ---@return string
+  local function resolve_buf_info(bufnr)
+    local buf_meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+    if buf_meta then
+      return buf_meta.filename, buf_meta.fileicon, buf_meta.fileicon_hl
+    end
+
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    local filename = path.basename(filepath) ---@type string
+    local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
+    return filename, fileicon, fileicon_hl
+  end
+
+  ---@param buf                           eve.t.state.state.tab.meta.IBuf
   ---@param is_current                    boolean
   ---@param is_first                      boolean
   ---@return string
   ---@return string
-  local function render_buf(bufnr, is_current, is_first)
-    local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
-    if meta == nil then
-      return "", ""
-    end
-
+  local function render_buf(buf, is_current, is_first)
+    local bufnr = buf.bufnr ---@type integer
+    local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
-    local is_pinned = meta.pinned ---@type boolean
 
     local count_error = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type integer
     local count_warn = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type integer
@@ -109,14 +122,15 @@ function M.bufs(position)
       end
     end
 
+    local filename, fileicon, fileicon_hl = resolve_buf_info(bufnr)
     local text_indicator_or_sep = is_current and "▎" or (is_first and " " or "▏") ---@type string
-    local text_icon = meta.fileicon .. " " ---@type string
-    local text_title = meta.filename ---@type string
+    local text_icon = fileicon .. " " ---@type string
+    local text_title = filename ---@type string
     local text_mod = is_pinned and (is_mod and "  " or "  ") or (is_mod and "  " or "  ") ---@type string
 
     local hl_indicator_or_sep = is_current and hln_buf_indicator or hln_buf_sep ---@type string
     local hl_mod = is_current and hln_buf_cur_mod or hln_buf_mod ---@type string
-    local hl_icon = (is_current and hln_buf_cur or hln_buf) .. "_" .. meta.fileicon_hl ---@type string
+    local hl_icon = (is_current and hln_buf_cur or hln_buf) .. "_" .. fileicon_hl ---@type string
     -- local hl_icon = (is_current and hln_buf_cur .. "_" .. meta.fileicon_hl) or hln_buf_title ---@type string
 
     local hl_text_indicator = txt(text_indicator_or_sep, hl_indicator_or_sep)
@@ -135,23 +149,24 @@ function M.bufs(position)
     name = "bufs",
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
-      local meta = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
-      if meta == nil then
+      local meta_tab = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      if meta_tab == nil or #meta_tab.bufs < 1 then
         return "", ""
       end
 
-      local tab_bufnrs = meta.bufnrs ---@type integer[]
-      local N = #tab_bufnrs ---@type integer
-      if N < 1 then
-        return "", ""
-      end
+      local bufs = meta_tab.bufs ---@type eve.t.state.state.tab.meta.IBuf[]
+      local N = #bufs ---@type integer
 
-      local bufnr_cur = eve.tab.get_current_bufnr() ---@type integer
-      local bufid_src = util.find_index(tab_bufnrs, bufnr_cur) ---@type integer|nil
-      local bufid_cur = bufid_src or 1
-      bufnr_cur = tab_bufnrs[bufid_cur]
+      local winnr_cur = meta_tab.winnr_listed ---@type integer
+      local bufnr_cur = winnr_cur > 0 ---@type integer
+          and vim.api.nvim_win_is_valid(winnr_cur)
+          and vim.api.nvim_win_get_buf(winnr_cur)
+        or 0
 
-      local text, hl_text = render_buf(tab_bufnrs[bufid_cur], bufid_src ~= nil, bufid_cur == 1)
+      local buf_cur, bufid_cur = meta_tab:find_buf(bufnr_cur)
+      bufid_cur = bufid_cur or 1
+
+      local text, hl_text = render_buf(bufs[bufid_cur], buf_cur ~= nil, bufid_cur == 1)
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
       if remain_width < 0 then
         return "", ""
@@ -166,7 +181,7 @@ function M.bufs(position)
       ---! Render left bufs as many as possible.
       do
         for i = bufid_cur - 1, 1, -1 do
-          local t, hl_t = render_buf(tab_bufnrs[i], false, i == 1)
+          local t, hl_t = render_buf(bufs[i], false, i == 1)
           local w = vim.api.nvim_strwidth(t) ---@type integer
 
           if i == 1 and remain_width + left_omitter_width >= w then
@@ -191,7 +206,7 @@ function M.bufs(position)
       ---! Render right bufs as many as possible.
       do
         for i = bufid_cur + 1, N, 1 do
-          local t, hl_t = render_buf(tab_bufnrs[i], false, false)
+          local t, hl_t = render_buf(bufs[i], false, false)
           local w = vim.api.nvim_strwidth(t) ---@type integer
 
           if i == N and remain_width + right_omitter_width >= w then
@@ -547,13 +562,13 @@ function M.filename(position)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
       if meta_buf == nil then
-        local text = vim.api.nvim_buf_get_name(bufnr) or "NIL" ---@type string
+        local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local hl_text = txt(text, hln_filename_text) ---@type string
         return text, hl_text
       end
 
       local text_icon = meta_buf.fileicon .. " " ---@type string
-      local text_filename = (is_win_cur and meta_buf.filename or meta_buf.relpath) or "NIL" ---@type string
+      local text_filename = is_win_cur and meta_buf.filename or meta_buf.relpath ---@type string
       local hl_text_icon = txt(text_icon, hln_filename .. "_" .. meta_buf.fileicon_hl) ---@type string
       local hl_text_title = txt(text_filename, is_win_cur and filename_text_cur or hln_filename_text) ---@type string
 
@@ -624,20 +639,19 @@ function M.filestatus(position)
     local gitsigns_git_status = vim.b[bufnr].gitsigns_git_status
     local gitsigns_status_dict = vim.b[bufnr].gitsigns_status_dict
 
+    local text = "" ---@type string
     if gitsigns_head and gitsigns_status_dict and not gitsigns_git_status then
-      local texts = {} ---@type string[]
       if gitsigns_status_dict.added and gitsigns_status_dict.added > 0 then
-        table.insert(texts, icons.git.Add .. " " .. gitsigns_status_dict.added)
+        text = text .. " " .. icons.git.Add .. " " .. gitsigns_status_dict.added ---@type string
       end
       if gitsigns_status_dict.changed and gitsigns_status_dict.changed > 0 then
-        table.insert(texts, icons.git.Mod_alt .. " " .. gitsigns_status_dict.changed)
+        text = text .. " " .. icons.git.Mod_alt .. " " .. gitsigns_status_dict.changed ---@type string
       end
       if gitsigns_status_dict.removed and gitsigns_status_dict.removed > 0 then
-        table.insert(texts, icons.git.Remove .. " " .. gitsigns_status_dict.removed)
+        text = text .. " " .. icons.git.Remove .. " " .. gitsigns_status_dict.removed ---@type string
       end
-      return table.concat(texts, " ")
     end
-    return ""
+    return #text > 0 and text:sub(1) or ""
   end
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
@@ -720,7 +734,7 @@ function M.lsp(position)
     local client_names = {} ---@type string[]
     for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
       if client.attached_buffers[bufnr] and client.name ~= "null-ls" and client.name ~= "copilot" then
-        table.insert(client_names, client.name)
+        client_names[#client_names] = client.name
       end
     end
 

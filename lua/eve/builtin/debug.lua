@@ -21,15 +21,13 @@ function M.log(...)
   end
 
   local text = "" ---@type string
-
   if #elements == 1 then
     text = better_stringify(elements[1])
   else
-    local texts = {} ---@type string[]
     for _, element in ipairs(elements) do
-      table.insert(texts, better_stringify(element))
+      text = text .. " " .. better_stringify(element) ---@type string
     end
-    text = table.concat(texts, " ")
+    text = #text > 0 and text:sub(1) or "" ---@type string
   end
 
   vim.notify(text, vim.log.levels.INFO, { title = "debug" })

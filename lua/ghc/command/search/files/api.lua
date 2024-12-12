@@ -191,9 +191,8 @@ function M.calc_preview_data(uuid)
         local col_end = math.min(lwidth, r - offset) ---@type integer
         l = offset + lwidth ---@type integer
 
-        ---@type ghc.command.search.files.IHighlight
-        local highlight = { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
-        table.insert(highlights, highlight)
+        highlights[#highlights + 1] =
+          { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
 
         if is_match_cur and cur_lnum < 0 then
           cur_lnum = lnum
@@ -236,9 +235,8 @@ function M.calc_preview_data(uuid)
               local col_end = math.min(lwidth, r - offset) ---@type integer
               l = offset + lwidth ---@type integer
 
-              ---@type ghc.command.search.files.IHighlight
-              local highlight = { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
-              table.insert(highlights, highlight)
+              highlights[#highlights + 1] =
+                { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
 
               if is_match_cur and cur_lnum < 0 then
                 cur_lnum = lnum
@@ -273,8 +271,7 @@ function M.collect_valid_match_offsets(uuid)
   local offsets = {} ---@type integer[]
   for _, child_uuid in ipairs(fileitem.children) do
     if not state.has_item_deleted(child_uuid) then
-      local child_item = _item_map[child_uuid]
-      table.insert(offsets, child_item.offset)
+      offsets[#offsets + 1] = _item_map[child_uuid].offset
     end
   end
   return offsets

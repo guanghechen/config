@@ -242,7 +242,7 @@ function M.register(raw_command, overwrite)
               local matches = {}
               for _, option in ipairs(options) do
                 if option:match(pattern) then
-                  table.insert(matches, option)
+                  matches[#matches + 1] = option
                 end
               end
               return matches

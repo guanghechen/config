@@ -14,18 +14,6 @@ local function close(bufnrs)
   eve.tab.remove_unrefereced_bufs(bufnrs) ---@type integer
 end
 
----@param tabnr                         integer
----@return table<integer, boolean>
-local function list_visible_bufnrs(tabnr)
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  local bufnrs = {} ---@type table<integer, boolean>
-  for _, winnr in ipairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    bufnrs[bufnr] = true
-  end
-  return bufnrs
-end
-
 eve.commander
   .register({
     uuid = uuids.buf_close,
@@ -65,18 +53,14 @@ eve.commander
 
       local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
       local bufnrs_to_remove = {} ---@type integer[]
-      local bufnrs_visible = list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
-      local tab_bufnrs = tab_meta.bufnrs ---@type integer[]
+      local bufnrs_visible = eve.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
-      for index = 1, tab_bufnrs, 1 do
-        local bufnr = tab_bufnrs[index] ---@type integer
-        if bufnr == bufnr_cur then
-          break
-        end
-        if not bufnrs_visible[bufnr] then
-          local buf_meta = eve.buf.get_meta(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
-          if buf_meta == nil or not buf_meta.pinned then
-            table.insert(bufnrs_to_remove, bufnr)
+      local _, index = tab_meta:find_buf(bufnr_cur)
+      if index ~= nil then
+        for i = index - 1, 1, -1 do
+          local buf = tab_meta.bufs[i] ---@type eve.t.state.state.tab.meta.IBuf
+          if not buf.pinned and not bufnrs_visible[buf.bufnr] then
+            table.insert(bufnrs_to_remove, buf.bufnr)
           end
         end
       end
@@ -102,24 +86,14 @@ eve.commander
 
       local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
       local bufnrs_to_remove = {} ---@type integer[]
-      local bufnrs_visible = list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
-      local tab_bufnrs = tab_meta.bufnrs ---@type integer[]
+      local bufnrs_visible = eve.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
-      local index = 1 ---@type integer
-      while index <= #tab_bufnrs do
-        local bufnr = tab_bufnrs[index] ---@type integer
-        if bufnr == bufnr_cur then
-          break
-        end
-        index = index + 1
-      end
-
-      for id = index + 1, #tab_bufnrs, 1 do
-        local bufnr = tab_bufnrs[id] ---@type integer
-        if not bufnrs_visible[bufnr] then
-          local buf_meta = eve.buf.get_meta(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
-          if buf_meta == nil or not buf_meta.pinned then
-            table.insert(bufnrs_to_remove, bufnr)
+      local _, index = tab_meta:find_buf(bufnr_cur)
+      if index ~= nil then
+        for i = index + 1, #tab_meta.bufs, 1 do
+          local buf = tab_meta.bufs[i] ---@type eve.t.state.state.tab.meta.IBuf
+          if not buf.pinned and not bufnrs_visible[buf.bufnr] then
+            table.insert(bufnrs_to_remove, buf.bufnr)
           end
         end
       end
@@ -144,15 +118,11 @@ eve.commander
       end
 
       local bufnrs_to_remove = {} ---@type integer[]
-      local bufnrs_visible = list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
-      local tab_bufnrs = tab_meta.bufnrs ---@type integer[]
+      local bufnrs_visible = eve.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
-      for _, bufnr in ipairs(tab_bufnrs) do
-        if not bufnrs_visible[bufnr] then
-          local buf_meta = eve.buf.get_meta(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
-          if buf_meta == nil or not buf_meta.pinned then
-            table.insert(bufnrs_to_remove, bufnr)
-          end
+      for _, buf in ipairs(tab_meta.bufs) do
+        if not buf.pinned and not bufnrs_visible[buf.bufnr] then
+          table.insert(bufnrs_to_remove, buf.bufnr)
         end
       end
 

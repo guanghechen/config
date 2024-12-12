@@ -130,9 +130,9 @@ function M:move(row, col, size)
     if not new_created or cfg.height ~= size then
       local lines = { "╭" } ---@type string[]
       for _ = 1, size, 1 do
-        table.insert(lines, "│")
+        lines[#lines + 1] = "│"
       end
-      table.insert(lines, "╰")
+      lines[#lines + 1] = "╰"
 
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
       cfg.height = size + 2
@@ -147,9 +147,9 @@ function M:move(row, col, size)
     if not new_created or cfg.height ~= size then
       local lines = { "╮" } ---@type string[]
       for _ = 1, size, 1 do
-        table.insert(lines, "│")
+        lines[#lines + 1] = "│"
       end
-      table.insert(lines, "╯")
+      lines[#lines + 1] = "╯"
 
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
       cfg.height = size + 2

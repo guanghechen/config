@@ -66,7 +66,7 @@ local function codeaction_provider(items)
       order_client = order_client,
       order_type = order_type,
     }
-    table.insert(item_data_list, item_data)
+    item_data_list[#item_data_list + 1] = item_data
   end
 
   table.sort(item_data_list, function(a, b)
@@ -96,7 +96,7 @@ local function codeaction_provider(items)
       text = text,
       data = item_data,
     }
-    table.insert(select_items, select_item)
+    select_items[#select_items + 1] = select_item
   end
 
   ---@type fml.t.ux.select.IProvider
@@ -125,7 +125,7 @@ local function codeaction_provider(items)
       for _, piece in ipairs(match.matches) do
         ---@type eve.t.IHighlightInline[]
         local highlight = { coll = offset + piece.l, colr = offset + piece.r, hlname = "f_us_main_match" }
-        table.insert(highlights, highlight)
+        highlights[#highlights + 1] = highlight
       end
 
       return text, highlights

@@ -119,7 +119,7 @@ eve.commander
           fetch_items = function()
             local items = {} ---@type fml.t.ux.select.IItem[]
             for _, theme in ipairs(fml.ux.theme.themes) do
-              table.insert(items, { uuid = theme, text = theme })
+              items[#items + 1] = { uuid = theme, text = theme }
             end
             return items
           end,

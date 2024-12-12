@@ -47,7 +47,7 @@ local function get_history_select()
             local filepath = path.relative(cwd, absolute_filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
             local item = { uuid = uuid, filepath = filepath } ---@type fml.t.ux.file_select.IRawItem
-            table.insert(items, item)
+            items[#item + 1] = item
           end
 
           for _, item in ipairs(items) do
@@ -85,7 +85,7 @@ local function get_history_select()
             colr = width_prefix + width_icon + piece.r,
             hlname = "f_us_main_match",
           }
-          table.insert(highlights, highlight)
+          highlights[#highlights + 1] = highlight
         end
         return text, highlights
       end,

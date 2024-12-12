@@ -15,11 +15,9 @@ eve.commander.register({
         local filepaths = {} ---@type string[]
         local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
         for _, bufnr in ipairs(bufnrs) do
-          local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
-          if meta ~= nil then
-            local relative_filepath = path.relative(cwd, meta.filepath, true) ---@type string
-            table.insert(filepaths, relative_filepath)
-          end
+          local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+          local relative_filepath = path.relative(cwd, filepath, true) ---@type string
+          table.insert(filepaths, relative_filepath)
         end
         return filepaths
       end,

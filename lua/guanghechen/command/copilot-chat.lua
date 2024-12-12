@@ -179,7 +179,7 @@ eve.commander
               text = name,
               data = action,
             }
-            table.insert(select_items, item)
+            select_items[select_items + 1] = item
           end
           table.sort(select_items, function(a, b)
             return a.text < b.text

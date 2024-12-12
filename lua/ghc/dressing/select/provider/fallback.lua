@@ -12,7 +12,7 @@ local function normal_provider(items, opts)
     local data = { original_item = item } ---@type ghc.dressing.select.IItemData
     local select_item = { uuid = uuid, text = text, data = data } ---@type fml.t.ux.select.IItem
     width = width < #text and #text or width ---@type integer
-    table.insert(select_items, select_item)
+    select_items[#select_items + 1] = select_item
   end
 
   ---@type fml.t.ux.select.IProvider

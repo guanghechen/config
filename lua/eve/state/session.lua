@@ -1,3 +1,4 @@
+local env = require("eve.lib.env")
 local path = require("eve.lib.path")
 local AdvanceHistory = require("eve.lib.collection.history_advance")
 local checks = require("eve.builtin.checks")
@@ -94,17 +95,14 @@ function M.dump()
   local bufs = {} ---@type eve.t.state.data.buf.IMeta[]
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    local meta = _buf.get_meta(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local filename = path.basename(filepath) ---@type string
-    local pinned = meta and meta.pinned or false ---@type boolean
 
     ---@type eve.t.state.data.buf.IMeta
     local meta_data = {
       bufnr = bufnr,
       filename = filename,
       filepath = filepath,
-      pinned = pinned,
     }
     table.insert(bufs, meta_data)
   end
@@ -113,16 +111,10 @@ function M.dump()
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for _, tabnr in ipairs(tabnrs) do
     local meta = _tab.get_meta(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
-    local tabtype = meta and meta.tabtype or constant.TT_NORMAL ---@type string
-    local tab_bufnrs = meta and meta.bufnrs or {} ---@type integer[]
-
-    ---@type eve.t.state.data.tab.IMeta
-    local meta_data = {
-      tabnr = tabnr,
-      tabtype = tabtype,
-      bufnrs = tab_bufnrs,
-    }
-    table.insert(tabs, meta_data)
+    if meta ~= nil then
+      local meta_data = meta:dump() ---@type eve.t.state.data.tab.IMeta
+      tabs[#tabs + 1] = meta_data
+    end
   end
 
   local tab_history = state.tab_history:dump() ---@type eve.lib.collection.history.ISerializedData
@@ -169,6 +161,8 @@ function M.load(data)
       local filename = item.filename ---@type string
       local filetype = vim.bo[real_bufnr].filetype ---@type string
       local fileicon, fileicon_hl = nvim.calc_fileicon(filename) ---@type string, string
+      local relpath_pieces = path.split_prettier(workspace_pieces, cwd_pieces, item.filepath) ---@type string[]
+      local relpath = table.concat(relpath_pieces, env.PATH_SEP)
 
       ---@type eve.t.state.state.buf.IMeta
       local meta = {
@@ -177,8 +171,8 @@ function M.load(data)
         filename = item.filename,
         filepath = item.filepath,
         filetype = filetype,
-        relpath_pieces = path.split_prettier(workspace_pieces, cwd_pieces, item.filepath),
-        pinned = item.pinned,
+        relpath = relpath,
+        relpath_pieces = relpath_pieces,
       }
       _buf.set_meta(real_bufnr, meta)
     end
@@ -188,12 +182,14 @@ function M.load(data)
   for _, item in ipairs(data.tabs) do
     local real_tabnr = type(item.tabnr) == "number" and tabnr_2_real_tabnr[item.tabnr] or nil
     if real_tabnr ~= nil then
-      local bufnrs = {} ---@type integer[]
-      if type(item.bufnrs) == "table" then
-        for _, bufnr in ipairs(item.bufnrs) do
-          local real_bufnr = bufnr_2_real_bufnr[bufnr]
-          if real_bufnr ~= nil then
-            table.insert(bufnrs, real_bufnr)
+      local bufs = {} ---@type eve.t.state.state.tab.meta.IBuf[]
+      local real_bufnr_set = {} ---@type table<integer, boolean>
+      if type(item.bufs) == "table" then
+        for _, buf in ipairs(item.bufs) do
+          local real_bufnr = bufnr_2_real_bufnr[buf.bufnr]
+          if real_bufnr ~= nil and not real_bufnr_set[real_bufnr] then
+            real_bufnr_set[real_bufnr] = true
+            bufs[#bufs + 1] = { bufnr = real_bufnr, pinned = not not buf.pinned } ---@type eve.t.state.state.tab.meta.IBuf
           end
         end
       end
@@ -201,19 +197,16 @@ function M.load(data)
       local winnrs = vim.api.nvim_tabpage_list_wins(real_tabnr) ---@type integer[]
       for _, winnr in ipairs(winnrs) do
         if checks.is_win_valid(winnr) then
-          local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          if not vim.list_contains(bufnrs, bufnr) then
-            table.insert(bufnrs, bufnr)
+          local real_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+          if not real_bufnr_set[real_bufnr] and checks.is_buf_valid(real_bufnr) then
+            real_bufnr_set[real_bufnr] = true
+            bufs[#bufs + 1] = { bufnr = real_bufnr, pinned = false } ---@type eve.t.state.state.tab.meta.IBuf
           end
         end
       end
 
       ---@type eve.t.state.state.tab.IMeta
-      local meta = {
-        tabtype = item.tabtype or constant.TT_NORMAL,
-        bufnrs = bufnrs,
-        winnr_listed = 0,
-      }
+      local meta = _tab.Meta.new(real_tabnr, item.tabtype or constant.TT_NORMAL, 0, bufs)
       _tab.set_meta(real_tabnr, meta)
     end
   end
