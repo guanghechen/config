@@ -1,5 +1,13 @@
-Set-PSReadLineOption -EditMode Vi
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+Set-PSReadLineOption -EditMode Vi
+Set-PSReadLineOption -Colors @{
+  InlinePrediction        = "DarkGray"
+  Command                 = "Yellow"
+  Parameter               = "Cyan"
+  Variable                = "Cyan"
+  String                  = "Green"
+  Default                 = "White"
+}
 
 ## Setup conda
 If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
