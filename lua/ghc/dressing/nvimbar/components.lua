@@ -151,6 +151,7 @@ function M.bufs(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "bufs",
+    atomic = false,
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local meta_tab = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
@@ -287,6 +288,7 @@ function M.copilot(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "copilot",
+    atomic = true,
     condition = function()
       return not not package.loaded["copilot"]
     end,
@@ -318,6 +320,7 @@ function M.cwd(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "cwd",
+    atomic = true,
     will_change = function(context, prev_context)
       return prev_context == nil or context.cwd ~= prev_context.cwd
     end,
@@ -341,6 +344,7 @@ function M.debug_render_count(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "debug_render_count",
+    atomic = true,
     condition = function()
       local devmode = state.state.flight.devmode:snapshot() ---@type boolean
       return devmode
@@ -364,6 +368,7 @@ function M.devmode(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "devmode",
+    atomic = true,
     condition = function()
       local devmode = state.state.flight.devmode:snapshot() ---@type boolean
       return devmode
@@ -388,6 +393,7 @@ function M.diagnostics(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "diagnostics",
+    atomic = true,
     condition = function()
       return not not rawget(vim, "lsp")
     end,
@@ -439,6 +445,7 @@ function M.diffview(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "diffview",
+    atomic = true,
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local width = math.min(remain_width, get_pane_width()) ---@type integer
@@ -476,6 +483,7 @@ function M.dirpath(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "dirpath",
+    atomic = true,
     condition = function(context)
       local meta = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
       return meta ~= nil and context.winnr ~= meta.winnr_listed
@@ -522,6 +530,7 @@ function M.fileformat(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "fileformat",
+    atomic = true,
     condition = function()
       return vim.o.columns > 100
     end,
@@ -551,6 +560,7 @@ function M.filename(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filename",
+    atomic = true,
     will_change = function(context, prev_context)
       if prev_context == nil or context.filename ~= prev_context.filename then
         return true
@@ -592,6 +602,7 @@ function M.filepath(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filepath",
+    atomic = true,
     condition = function(context)
       return #context.filepath > 0 and context.filepath ~= "."
     end,
@@ -619,6 +630,7 @@ function M.filesize(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filesize",
+    atomic = true,
     will_change = function(context, prev_context)
       return prev_context == nil or context.filepath ~= prev_context.filepath or context.mode ~= prev_context.mode
     end,
@@ -661,6 +673,7 @@ function M.filestatus(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filestatus",
+    atomic = true,
     render = function(context)
       local text = get_filestatus(context.bufnr) ---@type string
       if #text < 1 then
@@ -682,6 +695,7 @@ function M.filetype(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "filetype",
+    atomic = true,
     will_change = function(context, prev_context)
       return prev_context == nil or context.filetype ~= prev_context.filetype
     end,
@@ -705,6 +719,7 @@ function M.git(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "git",
+    atomic = true,
     tight = true,
     condition = function(context)
       local buffer_status_line = vim.b[context.bufnr]
@@ -748,6 +763,7 @@ function M.lsp(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "lsp",
+    atomic = true,
     condition = function()
       return not not rawget(vim, "lsp")
     end,
@@ -768,6 +784,7 @@ function M.lsp_message(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "lsp_message",
+    atomic = true,
     condition = function()
       return not not rawget(vim, "lsp") and #status.lsp_msg:snapshot() > 0
     end,
@@ -809,6 +826,7 @@ function M.lsp_symbols(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "lsp_symbols",
+    atomic = false,
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local winnr = context.winnr ---@type integer
@@ -856,6 +874,7 @@ function M.mode(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "mode",
+    atomic = true,
     tight = true,
     will_change = function(context, prev_context)
       return prev_context == nil or context.mode ~= prev_context.mode
@@ -893,6 +912,7 @@ function M.neotree(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "neotree",
+    atomic = true,
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local width = math.min(remain_width, get_pane_width()) ---@type integer
@@ -929,6 +949,7 @@ function M.noice_command(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "noice_command",
+    atomic = true,
     condition = function()
       return not not package.loaded["noice"]
     end,
@@ -954,6 +975,7 @@ function M.noice_mode(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "noice_mode",
+    atomic = true,
     condition = function()
       return not not package.loaded["noice"]
     end,
@@ -1002,6 +1024,7 @@ function M.pos(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "pos",
+    atomic = true,
     render = function()
       local row, col, percentage, hl_pos = calc_row_percentage() ---@type integer, integer, string
       local text_anchor = ""
@@ -1027,6 +1050,7 @@ function M.readonly(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "readonly",
+    atomic = true,
     condition = function()
       return vim.bo.readonly
     end,
@@ -1066,6 +1090,7 @@ function M.tabs(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "tabs",
+    atomic = true,
     will_change = function()
       local tab_cur = vim.fn.tabpagenr() ---@type integer
       local tab_count = vim.fn.tabpagenr("$") ---@type integer
@@ -1116,6 +1141,7 @@ function M.username(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "username",
+    atomic = true,
     ---@diagnostic disable-next-line: unused-local
     will_change = function(context, prev_context)
       return prev_context == nil
@@ -1140,6 +1166,7 @@ function M.widget(position)
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "widget",
+    atomic = true,
     condition = function()
       local widget = widgets.get_current_widget() ---@type eve.t.ux.IWidget|nil
       return widget ~= nil and widget:status() == "visible"
