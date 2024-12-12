@@ -62,6 +62,12 @@ function prompt {
   }
 
   Write-Host (Get-Date -Format "HH:mm:ss") -nonewline -foregroundcolor DarkGray
+
+  $conda_env_name = $env:CONDA_DEFAULT_ENV
+  if ($conda_env_name -and $conda_env_name -ne "") {
+    Write-Host " `e[1m($conda_env_name) " -nonewline -foregroundcolor Green
+  }
+
   Write-Host
   Write-Host "PS>" -nonewline -foregroundcolor Cyan
   return " "
