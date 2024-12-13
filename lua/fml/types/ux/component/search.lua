@@ -91,6 +91,7 @@
 ---@field public dirtier_data_cache     eve.lib.collection.IDirtier
 ---@field public dirtier_main           eve.lib.collection.IDirtier
 ---@field public dirtier_preview        eve.lib.collection.IDirtier
+---@field public state_has_matched      eve.lib.collection.IObservable
 ---@field public enable_multiline_input boolean
 ---@field public input                  eve.lib.collection.IObservable
 ---@field public input_history          eve.lib.collection.IHistory|nil

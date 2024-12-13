@@ -1,11 +1,13 @@
 local __module_name__ = "fml.ux.component.search.state" ---@type string
 
+local functional = require("eve.lib.functional")
 local reporter = require("eve.lib.reporter")
 local Dirtier = require("eve.lib.collection.dirtier")
 local Observable = require("eve.lib.collection.observable")
 local Scheduler = require("eve.lib.collection.scheduler")
 local Subscriber = require("eve.lib.collection.subscriber")
 local oxi = require("eve.lib.oxi")
+local util = require("eve.builtin.util")
 
 ---@class fml.ux.search.State : fml.t.ux.search.IState
 ---@field protected _deleted_uuids      table<string, boolean>
@@ -32,6 +34,7 @@ function M.new(props)
   local dirtier_data_cache = Dirtier.new({ dirty = false }) ---@type eve.lib.collection.IDirtier
   local dirtier_main = Dirtier.new({ dirty = false }) ---@type eve.lib.collection.IDirtier
   local dirtier_preview = Dirtier.new({ dirty = false }) ---@type eve.lib.collection.IDirtier
+  local state_has_matched = Observable.new({ value = false, equals = functional.falsy }) ---@type eve.lib.collection.IObservable
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
   local fetch_data = props.fetch_data ---@type fml.t.ux.search.IFetchData
   local delay_fetch = props.delay_fetch ---@type integer
@@ -84,6 +87,7 @@ function M.new(props)
           self._deleted_uuids = {} ---@type table<string, boolean>
           self.dirtier_main:mark_dirty()
           self.dirtier_preview:mark_dirty()
+          self.state_has_matched:next(#data.items > 0)
         end
       end)
     end,
@@ -113,6 +117,7 @@ function M.new(props)
   self.dirtier_data_cache = dirtier_data_cache
   self.dirtier_main = dirtier_main
   self.dirtier_preview = dirtier_preview
+  self.state_has_matched = state_has_matched
   self.enable_multiline_input = enable_multiline_input
   self.input = input
   self.input_history = input_history
@@ -139,6 +144,7 @@ function M:dispose()
   self.dirtier_data:dispose()
   self.dirtier_main:dispose()
   self.dirtier_preview:dispose()
+  self.state_has_matched:dispose()
   self.input_line_count:dispose()
   self.status:dispose()
 end
@@ -247,6 +253,7 @@ function M:mark_all_items_deleted()
   vim.schedule(function()
     self.dirtier_main:mark_dirty()
     self.dirtier_preview:mark_dirty()
+    self.state_has_matched:next(false)
   end)
 end
 
@@ -257,7 +264,7 @@ function M:moveup()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = eve.util.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
+    local lnum = util.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
     return self:locate(lnum)
   end
 end
@@ -269,7 +276,7 @@ function M:movedown()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = eve.util.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
+    local lnum = util.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
     return self:locate(lnum)
   end
 end
@@ -284,6 +291,7 @@ function M:show_sate()
       dirtier_data = self.dirtier_data:snapshot(),
       dirtier_main = self.dirtier_main:snapshot(),
       dirtier_preview = self.dirtier_preview:snapshot(),
+      has_matched = self.state_has_matched:snapshot(),
       enable_multiline_input = self.enable_multiline_input,
       input = self.input:snapshot(),
       input_history = self.input_history and self.input_history:collect() or "nil",

@@ -438,9 +438,9 @@ function M.new(props)
   self._on_invisible = on_invisible_from_props
 
   local devmode = state.state.flight.devmode:snapshot() ---@type boolean
-  local draw_scheduler = Scheduler.new({
+  local draw_wins_scheduler = Scheduler.new({
     name = "fml.ux.search.search.draw",
-    delay = 48,
+    delay = 64,
     silent = not devmode,
     task = function(callback)
       local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
@@ -453,14 +453,28 @@ function M.new(props)
     end,
   })
 
+  ---@return nil
+  local function trigger_draw_wins()
+    local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
+    local visible = status == "visible" ---@type boolean
+    if visible then
+      draw_wins_scheduler:schedule()
+    end
+  end
+
   search_state.status:subscribe(
     Subscriber.new({
       on_next = function()
-        local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
-        local visible = status == "visible" ---@type boolean
-        if visible then
-          draw_scheduler:schedule()
-        end
+        trigger_draw_wins()
+      end,
+    }),
+    true
+  )
+
+  search_state.state_has_matched:subscribe(
+    Subscriber.new({
+      on_next = function()
+        trigger_draw_wins()
       end,
     }),
     true
@@ -470,10 +484,8 @@ function M.new(props)
     Subscriber.new({
       on_next = function()
         local is_dimension_dirty = search_state.dirtier_dimension:is_dirty() ---@type boolean
-        local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
-        local visible = status == "visible" ---@type boolean
-        if visible and is_dimension_dirty then
-          draw_scheduler:schedule()
+        if is_dimension_dirty then
+          trigger_draw_wins()
         end
       end,
     }),
@@ -484,10 +496,8 @@ function M.new(props)
     Subscriber.new({
       on_next = function()
         local is_main_dirty = search_state.dirtier_main:is_dirty() ---@type boolean
-        local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
-        local visible = status == "visible" ---@type boolean
-        if visible and is_main_dirty then
-          draw_scheduler:schedule()
+        if is_main_dirty then
+          trigger_draw_wins()
         end
       end,
     }),
@@ -500,10 +510,8 @@ function M.new(props)
       Subscriber.new({
         on_next = function()
           local is_preview_dirty = search_state.dirtier_preview:is_dirty() ---@type boolean
-          local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
-          local visible = status == "visible" ---@type boolean
-          if visible and is_preview_dirty then
-            draw_scheduler:schedule()
+          if is_preview_dirty then
+            trigger_draw_wins()
           end
         end,
       }),
@@ -515,11 +523,7 @@ function M.new(props)
     search_state.input_line_count:subscribe(
       Subscriber.new({
         on_next = function()
-          local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
-          local visible = status == "visible" ---@type boolean
-          if visible then
-            draw_scheduler:schedule()
-          end
+          trigger_draw_wins()
         end,
       }),
       true
