@@ -1,5 +1,6 @@
 local __module_name__ = "eve.lib.collection.scheduler" ---@type string
 
+local functional = require("eve.lib.functional")
 local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
 
@@ -16,9 +17,9 @@ local Observable = require("eve.lib.collection.observable")
 
 ---@class eve.lib.collection.scheduler.IProps
 ---@field public name                   string
----@field public delay                  ?integer
----@field public silent                 ?boolean
 ---@field public task                   eve.lib.collection.scheduler.ITask
+---@field public delay                  ?integer
+---@field public silent                 ?fun(): boolean
 ---@field public equals                 ?fun(a: unknown, b: unknown): boolean
 
 ---@class eve.lib.collection.Scheduler : eve.lib.collection.IScheduler
@@ -26,7 +27,7 @@ local Observable = require("eve.lib.collection.observable")
 ---
 ---@field protected _delay              integer
 ---@field protected _immediate          boolean
----@field protected _silent             boolean
+---@field protected _silent             fun(): boolean
 ---
 ---@field protected _task               eve.lib.collection.scheduler.ITask
 ---@field protected _value              eve.lib.collection.IObservable
@@ -45,7 +46,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local name = props.name ---@type string
-  local silent = not not props.silent ---@type boolean
+  local silent = props.silent or functional.truthy ---@type fun(): boolean
   local delay = props.delay or 32 ---@type integer
   local task = props.task ---@type eve.lib.collection.scheduler.ITask
   local equals = props.equals ---@type (fun(a: unknown, b: unknown): boolean)|nil
@@ -143,7 +144,8 @@ function M:execute()
           self._value:next(value)
         end
       else
-        if not self._silent then
+        local silent = self._silent() ---@type boolean
+        if not silent then
           reporter.error({
             from = __module_name__,
             subject = "execute",
@@ -207,7 +209,8 @@ function M:execute_immediately()
           self._value:next(value)
         end
       else
-        if not self._silent then
+        local silent = self._silent() ---@type boolean
+        if not silent then
           reporter.error({
             from = __module_name__,
             subject = "execute",

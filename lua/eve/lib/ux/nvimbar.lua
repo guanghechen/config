@@ -55,7 +55,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public component_sep_hlname   string
 ---@field public component_sep_hlname_active string
 ---@field public render_delay           ?integer
----@field public silent                 ?boolean
+---@field public silent                 ?fun(): boolean
 ---@field public get_max_width          fun(): integer
 ---@field public get_preset_context     ?fun(): eve.lib.ux.nvimbar.IPresetContext
 ---@field public is_active              fun(context: eve.lib.ux.nvimbar.IContext): boolean
@@ -205,7 +205,7 @@ function M.new(props)
   local component_sep_hlname = props.component_sep_hlname ---@type string
   local component_sep_hlname_active = props.component_sep_hlname_active ---@type string
   local render_delay = props.render_delay or 20 ---@type integer
-  local silent = not not props.silent ---@type boolean
+  local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
 
   ---@type fun(): eve.lib.ux.nvimbar.IPresetContext

@@ -3,7 +3,6 @@ local util = require("eve.builtin.util")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 local oxi = require("eve.lib.oxi")
-local state = require("eve.state")
 local signcolumn = require("fml.ux.signcolumn")
 
 ---@class fml.ux.search.Input : fml.t.ux.search.IInput
@@ -62,11 +61,9 @@ function M.new(props)
     })
   end
 
-  local devmode = state.state.flight.devmode:snapshot() ---@type boolean
   local input_scheduler = Scheduler.new({
     name = "fml.ux.search.input.on_change",
     delay = 32,
-    silent = not devmode,
     task = function(callback)
       ---@diagnostic disable-next-line: invisible
       local bufnr = self._bufnr ---@type integer|nil

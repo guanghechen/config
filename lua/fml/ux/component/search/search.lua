@@ -5,7 +5,6 @@ local Scheduler = require("eve.lib.collection.scheduler")
 local G = require("eve.builtin.G")
 local util = require("eve.builtin.util")
 local widgets = require("eve.builtin.widgets")
-local state = require("eve.state")
 local SearchInput = require("fml.ux.component.search.input")
 local SearchMain = require("fml.ux.component.search.main")
 local SearchPreview = require("fml.ux.component.search.preview")
@@ -437,11 +436,9 @@ function M.new(props)
   self._on_close = on_close_from_props
   self._on_invisible = on_invisible_from_props
 
-  local devmode = state.state.flight.devmode:snapshot() ---@type boolean
   local draw_wins_scheduler = Scheduler.new({
     name = "fml.ux.search.search.draw",
     delay = 64,
-    silent = not devmode,
     task = function(callback)
       local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
       local visible = status == "visible" ---@type boolean

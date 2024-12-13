@@ -250,7 +250,6 @@ function M.watch_changes(params)
   local editor_states_save_scheduler = Scheduler.new({
     name = "eve.state#editor/save",
     delay = 200,
-    silent = not state.flight.devmode:snapshot(),
     task = function(callback)
       local raw_data_snapshot = M._storage.editor
           and fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true })

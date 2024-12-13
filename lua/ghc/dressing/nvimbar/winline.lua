@@ -5,7 +5,6 @@ local status = require("eve.builtin.status")
 local state = require("eve.state")
 local c = require("ghc.dressing.nvimbar.components")
 
-local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 local position = "f_wl" ---@type eve.lib.ux.nvimbar.Position
 
 ---@param winnr                         integer
@@ -24,7 +23,10 @@ local function resolve_winline_scheduler(winnr)
       component_sep_hlname = position .. "_bg",
       component_sep_hlname_active = position .. "_bg",
       render_delay = 256,
-      silent = not devmode,
+      silent = function()
+        local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+        return not devmode
+      end,
       get_max_width = function()
         if vim.api.nvim_win_is_valid(winnr) then
           return vim.api.nvim_win_get_width(winnr)

@@ -22,7 +22,6 @@ local builtin = {
 local fn = {
   hmr = require("eve.fn.hmr"),
   navigate = require("eve.fn.navigate"),
-  schedule = require("eve.fn.schedule"),
 }
 
 ---@type eve.state

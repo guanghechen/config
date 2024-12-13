@@ -5,7 +5,6 @@ local status = require("eve.builtin.status")
 local state = require("eve.state")
 local c = require("ghc.dressing.nvimbar.components")
 
-local devmode = state.state.flight.devmode:snapshot() ---@type boolean
 local dirtier = status.statusline_dirtier ---@type eve.lib.collection.IDirtier
 local position = "f_sl" ---@type eve.lib.ux.nvimbar.Position
 
@@ -16,7 +15,10 @@ statusline = Nvimbar.new({
   component_sep_hlname = position .. "_bg",
   component_sep_hlname_active = position .. "_bg",
   render_delay = 256,
-  silent = not devmode,
+  silent = function()
+    local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+    return not devmode
+  end,
   get_max_width = function()
     return vim.o.columns
   end,
