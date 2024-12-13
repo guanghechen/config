@@ -486,7 +486,7 @@ function M.dirpath(position)
     atomic = true,
     condition = function(context)
       local meta = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
-      return meta ~= nil and context.winnr ~= meta.winnr_listed
+      return meta ~= nil and context.winnr == meta.winnr_listed
     end,
     will_change = function(context, prev_context)
       return prev_context == nil or context.filepath ~= prev_context.filepath
