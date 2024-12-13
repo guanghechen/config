@@ -1,12 +1,4 @@
-function Write-ColoredMessage {
-    param (
-        [string]$Message,
-        [string]$ColorCode
-    )
-    Write-Host "`n$Message" -ForegroundColor $ColorCode
-}
-
-Write-ColoredMessage "[setup winget] preparing..." Green
+Write-Host "[setup winget] preparing..." -ForegroundColor Green
 
 winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
 winget install -e --source winget --id Microsoft.PowerShell
@@ -24,4 +16,4 @@ winget install -e --source winget --id ajeetdsouza.zoxide
 winget install -e --source winget --id sxyazi.yazi
 winget install -e --source winget --id ImageMagick.ImageMagick
 
-Write-ColoredMessage "[setup winget] done." Green
+Write-Host "[setup winget] done." -ForegroundColor Green

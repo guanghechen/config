@@ -1,12 +1,4 @@
-function Write-ColoredMessage {
-    param (
-        [string]$Message,
-        [string]$ColorCode
-    )
-    Write-Host "`n$Message" -ForegroundColor $ColorCode
-}
-
-Write-ColoredMessage "[setup config] preparing" Green
+Write-Host "[setup config] preparing" -ForegroundColor Green
 
 $config_root_dir = "$env:XDG_CONFIG_HOME"
 $config_repo_branch = @(
@@ -30,11 +22,11 @@ function CloneOrUpdateRepo {
 
   # Check if the directory exists
   if (Test-Path $repo_path) {
-    Write-ColoredMessage "[setup config] fetching $branch into $repo_path..." Blue
+    Write-Host "[setup config] fetching $branch into $repo_path..." -ForegroundColor Blue
     Set-Location -Path $repo_path
     git pull origin $branch
   } else {
-    Write-ColoredMessage "[setup config] cloning $branch into $repo_path..." Blue
+    Write-Host "[setup config] cloning $branch into $repo_path..." -ForegroundColor Blue
     Set-Location -Path $config_root_dir
     git clone $repo_url --single-branch --branch=$branch $repo_path
   }
@@ -46,15 +38,13 @@ foreach ($branch in $config_repo_branch) {
 }
 
 # Define the source and destination paths
-Write-ColoredMessage "[setup config] copying pwsh profile.ps1..." Blue
+Write-Host "[setup config] copying pwsh profile.ps1..." -ForegroundColor Blue
 $source = "$env:XDG_CONFIG_HOME\pwsh\profile.ps1"
-$destination = $PROFILE
-Copy-Item -Path $source -Destination $destination -Force
+Copy-Item -Path $source -Destination $PROFILE -Force
 
 # Setup nvim
-Write-ColoredMessage "[setup config] setup nvim..." Blue
+Write-Host "[setup config] setup nvim..." -ForegroundColor Blue
 $nvim_repo_path = Join-Path $config_root_dir "nvim"
-Set-Location -Path $nvim_repo_path
-. rust/nvim_tools/build.ps1
+. "$nvim_repo_path/rust/nvim_tools/build.ps1"
 
-Write-ColoredMessage "[setup config] done." Green
+Write-Host "[setup config] done." -ForegroundColor Green
