@@ -528,7 +528,7 @@ function M.dirpath_prominent(position)
   local hln_dirpath_icon = position .. "_dirpath_prominent_icon" ---@type string
   local hln_dirpath_text = position .. "_dirpath_prominent_text" ---@type string
 
-  local icon = " " .. icons.ui.FolderWithHeart .. " " ---@type string
+  local icon = " " .. icons.os.current .. " " ---@type string
   local sep = env.PATH_SEP ---@type string
   local hl_icon = txt(icon, hln_dirpath_icon) ---@type string
 
