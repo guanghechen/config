@@ -70,6 +70,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public dispose                fun(self: eve.lib.ux.INvimbar): boolean
 ---@field public register               fun(self: eve.lib.ux.INvimbar, component: eve.lib.ux.nvimbar.IRawComponent, position: eve.e.NvimbarCompPosition): eve.lib.ux.INvimbar
 ---@field public render                 fun(self: eve.lib.ux.INvimbar): string
+---@field public render_immedately      fun(self: eve.lib.ux.INvimbar): string
 ---@field public snapshot               fun(self: eve.lib.ux.INvimbar): string
 
 ---@class eve.lib.ux.Nvimbar : eve.lib.ux.INvimbar
@@ -172,15 +173,17 @@ end
 ---@param component                     eve.lib.ux.nvimbar.IComponent
 ---@param context                       eve.lib.ux.nvimbar.IContext
 ---@param remain_width                  integer
+---@param force                         boolean
 ---@return string
 ---@return integer
-local function render_component(component, context, remain_width)
+local function render_component(component, context, remain_width, force)
   if not component.condition(context, remain_width) then
     return "", 0
   end
 
   if
-    (not component.atomic and (not component.last_result_full or component.last_result_width > remain_width))
+    force
+    or (not component.atomic and (not component.last_result_full or component.last_result_width > remain_width))
     or component.will_change(context, component.last_render_context, remain_width)
   then
     local text, hl_text, full = component.render(context, remain_width)
@@ -238,7 +241,7 @@ function M.new(props)
           return
         end
 
-        local result = self:render_sync()
+        local result = self:render_sync(false)
         callback("fulfilled", result)
 
         --- Trigger rerender need called after the callback executed,
@@ -351,6 +354,15 @@ function M:render()
   return scheduler:snapshot() or ""
 end
 
+---@return string
+function M:render_immedately()
+  if self._disposed then
+    return "!!!Invalid. This nvimbar has been disposed."
+  end
+
+  return self:render_sync(true) ---@type string
+end
+
 ---@param raw_component                 eve.lib.ux.nvimbar.IRawComponent
 ---@param position                      eve.e.NvimbarCompPosition
 ---@return eve.lib.ux.Nvimbar
@@ -391,8 +403,9 @@ function M:snapshot()
   return self._render_scheduler:snapshot() or ""
 end
 
+---@param force                         boolean
 ---@return string
-function M:render_sync()
+function M:render_sync(force)
   local preset_context = self._get_preset_context() ---@type eve.lib.ux.nvimbar.IPresetContext
   local context = build_context(preset_context) ---@type eve.lib.ux.nvimbar.IContext
 
@@ -416,7 +429,7 @@ function M:render_sync()
 
     local component = components[name] ---@type eve.lib.ux.nvimbar.IComponent|nil
     if component ~= nil then
-      local ok, text, width = pcall(render_component, component, context, width_remain)
+      local ok, text, width = pcall(render_component, component, context, width_remain, force)
       if ok then
         if width > 0 and width <= width_remain then
           local tight = component.tight ---@type boolean

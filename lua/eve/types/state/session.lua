@@ -41,6 +41,7 @@
 ---@field public filepath_history       eve.lib.collection.IAdvanceHistory
 ---@field public lsp_symbols            eve.t.state.state.lsp.ISymbol[]
 ---@field public winline                eve.lib.ux.INvimbar|nil
+---@field public winline_bufnr          integer
 
 ---@class eve.t.state.state.lsp.ISymbol
 ---@field public kind                   string

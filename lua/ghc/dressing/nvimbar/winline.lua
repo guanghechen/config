@@ -46,7 +46,6 @@ local function resolve_winline_scheduler(winnr)
               return
             end
 
-            meta.lsp_symbols = {}
             if err == false then
               callback()
             else
@@ -80,6 +79,14 @@ local function resolve_winline_scheduler(winnr)
       :register(c.dirpath_prominent(position), "right")
     meta.winline = winline
   end
+
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  if meta.winline_bufnr ~= bufnr then
+    meta.lsp_symbols = {}
+    meta.winline_bufnr = bufnr
+    vim.wo[winnr].winbar = meta.winline:render_immedately()
+  end
+
   return meta.winline
 end
 

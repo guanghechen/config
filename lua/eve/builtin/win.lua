@@ -57,6 +57,7 @@ function M.fork_meta(winnr)
       filepath_history = meta.filepath_history:fork({ name = "win_filepath" }),
       lsp_symbols = vim.list_slice(meta.lsp_symbols),
       winline = nil,
+      winline_bufnr = meta.winline_bufnr,
     }
     return meta_forked
   end
@@ -92,6 +93,7 @@ function M.resolve(winnr)
     filepath_history = filepath_history,
     lsp_symbols = {},
     winline = nil,
+    winline_bufnr = 0,
   }
   M.set_meta(winnr, meta)
   return meta
@@ -246,33 +248,36 @@ function M.locate_symbols(winnr, callback)
     end
 
     local meta = M.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-    if meta ~= nil and type(symbols) == "table" then
-      local cursor_pos = { line = row - 1, character = col }
-      local symbol_path = lsp.find_symbol_path(cursor_pos, symbols)
+    if meta == nil or type(symbols) ~= "table" then
+      safe_callback(false)
+      return
+    end
 
-      local pieces = meta.lsp_symbols ---@type eve.t.state.state.lsp.ISymbol[]
-      local N = #pieces ---@type integer
-      local k = 0 ---@type integer
-      if symbol_path then
-        for _, symbol in ipairs(symbol_path) do
-          local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
-          local name = symbol.name
-          local position = symbol.range and symbol.range.start or symbol.location.range.start
-          ---@type eve.t.state.state.lsp.ISymbol
-          local piece = {
-            kind = kind,
-            name = name,
-            row = position.line + 1,
-            col = position.character + 1,
-          }
+    local cursor_pos = { line = row - 1, character = col }
+    local symbol_path = lsp.find_symbol_path(cursor_pos, symbols)
 
-          k = k + 1
-          pieces[k] = piece
-        end
+    local pieces = meta.lsp_symbols ---@type eve.t.state.state.lsp.ISymbol[]
+    local N = #pieces ---@type integer
+    local k = 0 ---@type integer
+    if symbol_path then
+      for _, symbol in ipairs(symbol_path) do
+        local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
+        local name = symbol.name
+        local position = symbol.range and symbol.range.start or symbol.location.range.start
+        ---@type eve.t.state.state.lsp.ISymbol
+        local piece = {
+          kind = kind,
+          name = name,
+          row = position.line + 1,
+          col = position.character + 1,
+        }
+
+        k = k + 1
+        pieces[k] = piece
       end
-      for i = k + 1, N, 1 do
-        pieces[i] = nil
-      end
+    end
+    for i = k + 1, N, 1 do
+      pieces[i] = nil
     end
     safe_callback()
   end

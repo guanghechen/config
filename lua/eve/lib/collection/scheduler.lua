@@ -6,6 +6,7 @@ local Observable = require("eve.lib.collection.observable")
 ---@class eve.lib.collection.IScheduler
 ---@field public name                   string
 ---@field public cancel                 fun(self: eve.lib.collection.IScheduler): nil
+---@field public execute_immediately    fun(self: eve.lib.collection.IScheduler): nil
 ---@field public schedule               fun(self: eve.lib.collection.IScheduler): nil
 ---@field public snapshot               fun(self: eve.lib.collection.IScheduler): unknown|nil
 ---@field public subscribe              fun(self: eve.lib.collection.IScheduler, subscriber: eve.lib.collection.ISubscriber, ignoreInitial: boolean): eve.lib.collection.IUnsubscribable
@@ -72,6 +73,18 @@ function M:cancel()
   self._tick_alive = self._tick_scheduled + 1
 end
 
+---@return unknown|nil
+function M:snapshot()
+  return self._value:snapshot()
+end
+
+---@param subscriber                    eve.lib.collection.ISubscriber
+---@param ignoreInitial                 boolean
+---@return eve.lib.collection.IUnsubscribable
+function M:subscribe(subscriber, ignoreInitial)
+  return self._value:subscribe(subscriber, ignoreInitial)
+end
+
 ---@return nil
 function M:schedule()
   local tick = self._tick_scheduled + 1 ---@type integer
@@ -83,18 +96,6 @@ function M:schedule()
   end
 
   self:execute()
-end
-
----@return unknown|nil
-function M:snapshot()
-  return self._value:snapshot()
-end
-
----@param subscriber                    eve.lib.collection.ISubscriber
----@param ignoreInitial                 boolean
----@return eve.lib.collection.IUnsubscribable
-function M:subscribe(subscriber, ignoreInitial)
-  return self._value:subscribe(subscriber, ignoreInitial)
 end
 
 ---@return nil
@@ -175,15 +176,65 @@ function M:execute()
   end, self._delay)
 
   local ok, reasonOrResult = pcall(self._task, callback)
-
   if not ok then
     callback("rejected", nil, reasonOrResult)
-    return
+  elseif reasonOrResult ~= nil then
+    ---! Only trigger when the reasonOrResult is not nil,
+    ---! otherwise, the task should call the `callback` by itself.
+    callback("fulfilled", reasonOrResult, nil)
+  end
+end
+
+---@return nil
+function M:execute_immediately()
+  self._immediate = false ---@type boolean
+  self._tick_scheduled = self._tick_scheduled + 1 ---@type integer
+
+  local tick = self._tick_scheduled + 1 ---@type integer
+  local task_completed = false ---@type boolean
+
+  ---@param settled                     eve.lib.collection.promise.ISettled
+  ---@param value                       unknown
+  ---@param reason                      unknown
+  ---@return nil
+  local function callback(settled, value, reason)
+    if not task_completed then
+      task_completed = true
+
+      if settled == "fulfilled" then
+        if self._tick_resolved < tick then
+          self._tick_resolved = tick
+          self._value:next(value)
+        end
+      else
+        if not self._silent then
+          reporter.error({
+            from = __module_name__,
+            subject = "execute",
+            message = "Task failed.",
+            details = {
+              name = self.name,
+              reason = reason,
+
+              tick = tick,
+              tick_scheduled = self._tick_scheduled,
+              tick_resolving = self._tick_resolving,
+              tick_resolved = self._tick_settled,
+              tick_settled = self._tick_settled,
+            },
+          })
+        end
+      end
+    end
   end
 
-  if reasonOrResult ~= nil then
+  local ok, reasonOrResult = pcall(self._task, callback)
+  if not ok then
+    callback("rejected", nil, reasonOrResult)
+  elseif reasonOrResult ~= nil then
+    ---! Only trigger when the reasonOrResult is not nil,
+    ---! otherwise, the task should call the `callback` by itself.
     callback("fulfilled", reasonOrResult, nil)
-    return
   end
 end
 
