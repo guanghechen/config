@@ -29,7 +29,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public name                   string
 ---@field public atomic                 boolean
 ---@field public tight                  ?boolean
----@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string
+---@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
 ---@field public condition              ?fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): boolean
 ---@field public will_change            ?fun(context: eve.lib.ux.nvimbar.IContext, prev_context: eve.lib.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
@@ -37,10 +37,11 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public last_result_hl_text    string
 ---@field public last_result_text       string
 ---@field public last_result_width      integer
+---@field public last_result_full       boolean
 ---@field public last_render_context    eve.lib.ux.nvimbar.IContext|nil
 ---@field public atomic                 boolean
 ---@field public tight                  boolean
----@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string
+---@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
 ---@field public condition              fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): boolean
 ---@field public will_change            fun(context: eve.lib.ux.nvimbar.IContext, prev_context: eve.lib.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
@@ -179,14 +180,15 @@ local function render_component(component, context, remain_width)
   end
 
   if
-    (not component.atomic and component.last_result_width > remain_width)
+    (not component.atomic and (not component.last_result_full or component.last_result_width > remain_width))
     or component.will_change(context, component.last_render_context, remain_width)
   then
-    local text, hl_text = component.render(context, remain_width)
+    local text, hl_text, full = component.render(context, remain_width)
     local width = vim.api.nvim_strwidth(text) ---@type integer
     component.last_result_hl_text = hl_text
     component.last_result_text = text
     component.last_result_width = width
+    component.last_result_full = full
     component.last_render_context = context
   end
   return component.last_result_hl_text, component.last_result_width
@@ -369,6 +371,7 @@ function M:register(raw_component, position)
     last_result_hl_text = "",
     last_result_text = "",
     last_result_width = 0,
+    last_result_full = false,
     atomic = raw_component.atomic,
     tight = not not raw_component.tight,
     render = raw_component.render,

@@ -39,19 +39,21 @@ local function resolve_winline_scheduler(winnr)
         return winnr_cur > 0 and winnr_cur == context.winnr
       end,
       pre_task = function(callback)
-        eve.win.locate_symbols(winnr, function(err)
-          if err == nil then
-            callback()
-            return
-          end
+        if vim.api.nvim_win_is_valid(winnr) then
+          eve.win.locate_symbols(winnr, function(err)
+            if err == nil then
+              callback()
+              return
+            end
 
-          meta.lsp_symbols = {}
-          if err == false then
-            callback()
-          else
-            callback(err)
-          end
-        end)
+            meta.lsp_symbols = {}
+            if err == false then
+              callback()
+            else
+              callback(err)
+            end
+          end)
+        end
       end,
       trigger_rerender = function()
         if vim.api.nvim_win_is_valid(winnr) then
@@ -68,11 +70,14 @@ local function resolve_winline_scheduler(winnr)
 
     winline
       ---
-      :register(c.dirpath(position), "left")
+      -- :register(c.dirpath(position), "left")
       :register(c.filename(position), "left")
-      :register(c.lsp_symbols(position), "left")
       ---
       :register(c.debug_render_count(position), "center")
+      :register(c.lsp_symbols(position), "left")
+      ---
+      ---
+      :register(c.dirpath_prominent(position), "right")
     meta.winline = winline
   end
   return meta.winline

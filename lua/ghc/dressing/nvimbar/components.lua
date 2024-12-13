@@ -156,7 +156,7 @@ function M.bufs(position)
     render = function(context, remain_width)
       local meta_tab = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
       if meta_tab == nil or #meta_tab.bufs < 1 then
-        return "", ""
+        return "", "", false
       end
 
       local bufs = meta_tab.bufs ---@type eve.t.state.state.tab.meta.IBuf[]
@@ -174,7 +174,7 @@ function M.bufs(position)
       local text, hl_text = render_buf(bufs[bufid_cur], buf_cur ~= nil, bufid_cur == 1)
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
       if remain_width < 0 then
-        return "", ""
+        return "", "", false
       end
 
       local left_remain_count = bufid_cur - 1 ---@type integer
@@ -252,7 +252,7 @@ function M.bufs(position)
         hl_text = hl_text .. btn(omitter_text_hl, fn_focus_right_buf)
       end
 
-      return text, hl_text
+      return text, hl_text, (left_remain_count < 1 and right_remain_count < 1)
     end,
   }
   return component
@@ -306,7 +306,7 @@ function M.copilot(position)
 
       local text = icon .. " " ---@type string
       local hl_text = btn(txt(text, hln_icon), fn_show_message)
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -329,7 +329,7 @@ function M.cwd(position)
 
       local text = " " .. icons.ui.Explorer .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_cwd) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -354,7 +354,7 @@ function M.debug_render_count(position)
 
       local text = "  " .. util.pad_start(tostring(count % 100000), 5, "0") .. " " ---@type string
       local hl_text = txt(text, hln_debug_render_count) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -376,7 +376,7 @@ function M.devmode(position)
     render = function()
       local text = "  devmode " ---@type string
       local hl_text = txt(text, hln_devmode) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -415,7 +415,7 @@ function M.diagnostics(position)
         .. txt(text_count_warn, hln_diagnostics_warn)
         .. txt(text_count_hint, hln_diagnostics_hint)
         .. txt(text_count_info, hln_diagnostics_info)
-      return text, text_hl
+      return text, text_hl, true
     end,
   }
   return component
@@ -449,8 +449,14 @@ function M.diffview(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local width = math.min(remain_width, get_pane_width()) ---@type integer
-      if width <= 20 then
-        return "", ""
+      if width < 1 then
+        return "", "", true
+      end
+
+      if width < 20 then
+        local text = string.rep(" ", width) ---@type string
+        local hl_text = txt(text, hln_sidebar_blank)
+        return text, hl_text, true
       end
 
       local title = icons.git.Git .. " Git Diffview" ---@type string
@@ -467,7 +473,7 @@ function M.diffview(position)
         .. txt(title, hln_sidebar_text)
         .. txt(right_blank, hln_sidebar_blank)
         .. txt(right_split, hln_sidebar_split)
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -496,7 +502,7 @@ function M.dirpath(position)
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
       if meta == nil then
-        return "", ""
+        return "", "", true
       end
 
       local text = "" ---@type string
@@ -510,7 +516,95 @@ function M.dirpath(position)
         text = text .. piece .. sep
         hl_text = hl_text .. hl_text_piece .. hl_text_sep
       end
-      return text, hl_text
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      eve.lib.ux.nvimbar.Position
+---@return eve.lib.ux.nvimbar.IRawComponent
+function M.dirpath_prominent(position)
+  local hln_dirpath_icon = position .. "_dirpath_prominent_icon" ---@type string
+  local hln_dirpath_text = position .. "_dirpath_prominent_text" ---@type string
+
+  local icon = " " .. icons.ui.FolderWithHeart .. " " ---@type string
+  local sep = env.PATH_SEP ---@type string
+  local hl_icon = txt(icon, hln_dirpath_icon) ---@type string
+
+  local width_icon = vim.api.nvim_strwidth(icon) ---@type integer
+  local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
+
+  ---@type eve.lib.ux.nvimbar.IRawComponent
+  local component = {
+    name = "dirpath_prominent",
+    atomic = false,
+    condition = function(context)
+      local meta = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      return meta ~= nil and context.winnr == meta.winnr_listed
+    end,
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.filepath ~= prev_context.filepath
+    end,
+    render = function(context, remain_width)
+      local winnr = context.winnr ---@type integer
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+      if meta == nil then
+        return "", "", false
+      end
+
+      local N = #meta.relpath_pieces - 1 ---@type integer
+      if N < 1 then
+        local text = icon .. " " ---@type string
+        local hl_text = txt(icon, hln_dirpath_icon) ---@type string
+        return text, hl_text, true
+      end
+
+      local text = meta.relpath_pieces[N] .. " " ---@type string
+      remain_width = remain_width - width_icon - vim.api.nvim_strwidth(text) ---@type integer
+      if remain_width < 1 then
+        return "", "", false
+      end
+
+      if N == 1 then
+        local hl_text = hl_icon .. txt(text, hln_dirpath_text) ---@type string
+        text = icon .. text
+        return text, hl_text, true
+      end
+
+      remain_width = remain_width - (N - 1) - width_sep
+      if remain_width < 0 then
+        return "", "", false
+      end
+
+      local _start_index = meta.relpath_pieces[1] == "" and 2 or 1
+      local remain_count = N - _start_index ---@type integer
+      remain_width = remain_width - N - 1 ---@type integer
+      for i = N - 1, _start_index, -1 do
+        local piece = meta.relpath_pieces[i] ---@type string
+        local w = vim.api.nvim_strwidth(piece) + width_sep ---@type integer
+        if remain_width <= w then
+          break
+        end
+
+        text = piece .. sep .. text
+        remain_width = remain_width - w + 1
+        remain_count = remain_count - 1
+      end
+
+      if remain_count > 0 then
+        local ommiter = string.rep(".", remain_count)
+        text = ommiter .. sep .. text
+      end
+
+      if _start_index > 1 then
+        text = sep .. text
+      end
+
+      local hl_text = hl_icon .. txt(text, hln_dirpath_text)
+      text = icon .. text
+      return text, hl_text, remain_count < 1
     end,
   }
   return component
@@ -543,7 +637,7 @@ function M.fileformat(position)
 
       local text = text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab
       local hl_text = txt(text, hln_text)
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -578,7 +672,7 @@ function M.filename(position)
       if meta_buf == nil then
         local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local hl_text = txt(text, hln_filename_text) ---@type string
-        return text, hl_text
+        return text, hl_text, true
       end
 
       local text_icon = meta_buf.fileicon .. " " ---@type string
@@ -588,7 +682,7 @@ function M.filename(position)
 
       local text = text_icon .. text_filename ---@type string
       local hl_text = hl_text_icon .. hl_text_title ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -616,7 +710,7 @@ function M.filepath(position)
 
       local text = context.fileicon .. " " .. filepath ---@type string
       local hl_text = txt(text, hln_text)
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -637,7 +731,7 @@ function M.filesize(position)
     render = function(context)
       local text = oxi.get_filesize(context.filepath) or "" ---@type string
       local hl_text = txt(text, hln_text)
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -677,11 +771,11 @@ function M.filestatus(position)
     render = function(context)
       local text = get_filestatus(context.bufnr) ---@type string
       if #text < 1 then
-        return "", ""
+        return "", "", true
       end
 
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -705,7 +799,7 @@ function M.filetype(position)
     render = function(context)
       local text = context.fileicon .. " " .. context.filetype ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -732,7 +826,7 @@ function M.git(position)
 
       local text = " " .. icons.git.Branch .. " " .. branch_name ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -770,7 +864,7 @@ function M.lsp(position)
     render = function()
       local text = get_text() ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -791,7 +885,7 @@ function M.lsp_message(position)
     render = function()
       local text = status.lsp_msg:snapshot() ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -832,22 +926,24 @@ function M.lsp_symbols(position)
       local winnr = context.winnr ---@type integer
       local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
       if meta == nil then
-        return "", ""
+        return "", "", false
       end
 
       local symbols = meta.lsp_symbols ---@type eve.t.state.state.lsp.ISymbol[]|nil
       if symbols == nil or #symbols < 1 then
-        return "", ""
+        return "", "", false
       end
 
       local text = "" ---@type string
       local hl_text = "" ---@type string
 
+      local has_remain = false ---@type boolean
       for _, symbol in ipairs(symbols) do
         local title = symbol.name or "" ---@type string
         local icon = (icons.kind[symbol.kind] or "") .. " " ---@type string
         local width = width_sep + vim.api.nvim_strwidth(icon .. title) ---@type integer
         if width > remain_width then
+          has_remain = true
           break
         end
 
@@ -860,7 +956,7 @@ function M.lsp_symbols(position)
         text = text .. lsp_piece
         hl_text = hl_text .. btn(hl_lsp_piece, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
       end
-      return text, hl_text
+      return text, hl_text, not has_remain
     end,
   }
   return component
@@ -882,7 +978,7 @@ function M.mode(position)
     render = function(context)
       local text = "  " .. context.mode_name .. " " ---@type string
       local hl_text = txt(text, hln_text .. "_" .. context.mode) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -916,8 +1012,14 @@ function M.neotree(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local width = math.min(remain_width, get_pane_width()) ---@type integer
-      if width <= 20 then
-        return "", ""
+      if width < 1 then
+        return "", "", true
+      end
+
+      if width < 20 then
+        local text = string.rep(" ", width) ---@type string
+        local hl_text = txt(text, hln_sidebar_blank)
+        return text, hl_text, true
       end
 
       local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
@@ -935,7 +1037,7 @@ function M.neotree(position)
         .. txt(title, hln_sidebar_text)
         .. txt(right_blank, hln_sidebar_blank)
         .. txt(right_split, hln_sidebar_split)
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -957,11 +1059,11 @@ function M.noice_command(position)
       local noice_status = require("noice").api.status
       local text = noice_status.command.get() or "" ---@type string
       if text == nil and #text == 0 then
-        return "", ""
+        return "", "", true
       end
 
       local hl_text = txt(text, hln_noice_command)
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -983,11 +1085,11 @@ function M.noice_mode(position)
       local noice_status = require("noice").api.status
       local text = noice_status.mode.get() or "" ---@type string
       if text == nil or #text == 0 then
-        return "", ""
+        return "", "", true
       end
 
       local hl_text = txt(text, hln_noice_mode) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -1036,7 +1138,7 @@ function M.pos(position)
 
       local text = text_anchor .. text_pos ---@type string
       local hl_text = txt(text_anchor, hln_text) .. txt(text_pos, hl_pos) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -1057,7 +1159,7 @@ function M.readonly(position)
     render = function()
       local text = icons.ui.Lock .. " [RO]" ---@type string
       local hl_text = txt(text, hln_readonly) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -1104,14 +1206,14 @@ function M.tabs(position)
       dirty = false
 
       if last_tab_count <= 1 then
-        return "", ""
+        return "", "", true
       end
 
       if folded then
         local text = " 󰅁 "
         local hl_text = txt(text, hln_toggle)
         hl_text = btn(hl_text, fn_toggle_tabs_folded)
-        return text, hl_text
+        return text, hl_text, true
       end
 
       local text = " 󰅂 " ---@type string
@@ -1127,7 +1229,7 @@ function M.tabs(position)
         text = text .. text_btn
         hl_text = hl_text .. btn(hl_text_btn, fn_active_tab, tabnrs[tabid])
       end
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -1150,7 +1252,7 @@ function M.username(position)
       local icon = icons.os.current ---@type string
       local text = " " .. icon .. " " .. env.USERNAME .. " " ---@type string
       local hl_text = txt(text, hln_username) ---@type string
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component
@@ -1174,12 +1276,12 @@ function M.widget(position)
     render = function()
       local widget = widgets.get_current_widget() ---@type eve.t.ux.IWidget|nil
       if widget == nil then
-        return "", ""
+        return "", "", true
       end
 
       local items = widget.statusline_items ---@type eve.t.ux.widget.IStatuslineItem[]|nil
       if items == nil or #items < 1 then
-        return "", ""
+        return "", "", true
       end
 
       local text = "" ---@type string
@@ -1198,7 +1300,7 @@ function M.widget(position)
           hl_text = hl_text .. btn(txt(text_flag, hln_scope), fn)
         end
       end
-      return text, hl_text
+      return text, hl_text, true
     end,
   }
   return component

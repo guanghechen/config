@@ -101,6 +101,44 @@ end
 ---@param from                          string
 ---@param to                            string
 ---@param prefer_slash                  boolean
+function M.relative_dir(from, to, prefer_slash)
+  local is_from_absolute = M.is_absolute(from) ---@type boolean
+  local is_to_absolute = M.is_absolute(to) ---@type boolean
+
+  if is_from_absolute and not is_to_absolute then
+    return M.normalize(to)
+  end
+
+  if is_to_absolute and not is_from_absolute then
+    return M.normalize(to)
+  end
+
+  local from_pieces = M.split(from) ---@type string[]
+  local to_pieces = M.split(to) ---@type string[]
+  local L = #from_pieces < #to_pieces and #from_pieces or #to_pieces
+
+  local i = 1
+  while i < L do
+    if from_pieces[i] ~= to_pieces[i] then
+      break
+    end
+    i = i + 1
+  end
+
+  local sep = prefer_slash and "/" or SEP ---@type string
+  local p = "" ---@type string
+  for _ = i, #from_pieces do
+    p = p .. sep .. ".." ---@type string
+  end
+  for j = i, #to_pieces - 1 do
+    p = p .. sep .. to_pieces[j] ---@type string
+  end
+  return #p > 1 and p:sub(2) or p
+end
+
+---@param from                          string
+---@param to                            string
+---@param prefer_slash                  boolean
 ---@return string
 function M.relative(from, to, prefer_slash)
   local is_from_absolute = M.is_absolute(from) ---@type boolean
@@ -126,16 +164,15 @@ function M.relative(from, to, prefer_slash)
     i = i + 1
   end
 
-  local pieces = {} --
+  local sep = prefer_slash and "/" or SEP
+  local p = "" ---@type string
   for _ = i, #from_pieces do
-    table.insert(pieces, "..")
+    p = p .. sep .. ".." ---@type string
   end
   for j = i, #to_pieces do
-    table.insert(pieces, to_pieces[j])
+    p = p .. sep .. to_pieces[j] ---@type string
   end
-
-  local sep = prefer_slash and "/" or SEP
-  return table.concat(pieces, sep)
+  return #p > 1 and p:sub(2) or p
 end
 
 ---@param cwd                           string

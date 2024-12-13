@@ -42,6 +42,8 @@ local function gen_hlgroup_map(context)
     diagnostics_info = { fg = c.green, bg = "bg_bar" },
     dirpath_sep = { fg = c.fg1, bg = "bg_bar" },
     dirpath_text = { fg = c.blue, bg = "bg_bar" },
+    dirpath_prominent_icon = { fg = c.bg0, bg = c.pink, bold = true },
+    dirpath_prominent_text = { fg = c.bg0, bg = c.pink, bold = true },
     filename = { fg = c.fg1, bg = "bg_bar" },
     filename_text = { fg = c.fg3, bg = "bg_bar" },
     filename_text_cur = { fg = c.fg2, bg = "bg_bar", bold = true, italic = true },
