@@ -482,8 +482,8 @@ end
 ---@param position                      eve.lib.ux.nvimbar.Position
 ---@return eve.lib.ux.nvimbar.IRawComponent
 function M.dirpath(position)
-  local hln_dirpath_text = position .. "_dirpath_text" ---@type string
-  local hln_dirpath_sep = position .. "_dirpath_sep" ---@type string
+  local hln_text = position .. "_dirpath_text" ---@type string
+  local hln_sep = position .. "_dirpath_sep" ---@type string
   local sep = " " .. env.PATH_SEP .. " " ---@type string
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
@@ -510,8 +510,8 @@ function M.dirpath(position)
       local N = #meta.relpath_pieces - 1 ---@type integer
       for i = 1, N, 1 do
         local piece = meta.relpath_pieces[i] ---@type string
-        local hl_text_piece = txt(piece, hln_dirpath_text) ---@type string
-        local hl_text_sep = txt(sep, hln_dirpath_sep) ---@type string
+        local hl_text_piece = txt(piece, hln_text) ---@type string
+        local hl_text_sep = txt(sep, hln_sep) ---@type string
 
         text = text .. piece .. sep
         hl_text = hl_text .. hl_text_piece .. hl_text_sep
@@ -525,12 +525,12 @@ end
 ---@param position                      eve.lib.ux.nvimbar.Position
 ---@return eve.lib.ux.nvimbar.IRawComponent
 function M.dirpath_prominent(position)
-  local hln_dirpath_icon = position .. "_dirpath_prominent_icon" ---@type string
-  local hln_dirpath_text = position .. "_dirpath_prominent_text" ---@type string
+  local hln_icon = position .. "_dirpath_prominent_icon" ---@type string
+  local hln_text = position .. "_dirpath_prominent_text" ---@type string
 
   local icon = " " .. icons.os.current .. " " ---@type string
   local sep = env.PATH_SEP ---@type string
-  local hl_icon = txt(icon, hln_dirpath_icon) ---@type string
+  local hl_icon = txt(icon, hln_icon) ---@type string
 
   local width_icon = vim.api.nvim_strwidth(icon) ---@type integer
   local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
@@ -554,55 +554,53 @@ function M.dirpath_prominent(position)
         return "", "", false
       end
 
+      local cwd_name = path.basename(context.cwd) ---@type string
       local N = #meta.relpath_pieces - 1 ---@type integer
       if N < 1 then
-        local text = icon .. " " ---@type string
-        local hl_text = txt(icon, hln_dirpath_icon) ---@type string
-        return text, hl_text, true
-      end
-
-      local text = meta.relpath_pieces[N] .. " " ---@type string
-      remain_width = remain_width - width_icon - vim.api.nvim_strwidth(text) ---@type integer
-      if remain_width < 1 then
-        return "", "", false
-      end
-
-      if N == 1 then
-        local hl_text = hl_icon .. txt(text, hln_dirpath_text) ---@type string
+        local text = cwd_name .. " " ---@type string
+        local hl_text = hl_icon .. txt(text, hln_text) ---@type string
         text = icon .. text
         return text, hl_text, true
       end
 
-      remain_width = remain_width - (N - 1) - width_sep
-      if remain_width < 0 then
-        return "", "", false
+      local is_absolute = meta.relpath_pieces[1] == "" ---@type boolean
+      local left_text = is_absolute and "" or cwd_name ---@type string
+
+      local remain_count = is_absolute and N - 1 or N ---@type integer
+      remain_width = remain_width - vim.api.nvim_strwidth(left_text) - width_icon - width_sep - N
+      if remain_width < 1 then
+        local text = cwd_name .. " " ---@type string
+        local hl_text = hl_icon .. txt(text, hln_text) ---@type string
+        text = icon .. text
+        return text, hl_text, false
       end
 
-      local _start_index = meta.relpath_pieces[1] == "" and 2 or 1
-      local remain_count = N - _start_index ---@type integer
-      remain_width = remain_width - N - 1 ---@type integer
-      for i = N - 1, _start_index, -1 do
+      local right_text = "" ---@type string
+      local _start_index = is_absolute and 2 or 1 ---@type integer
+      for i = N, _start_index, -1 do
         local piece = meta.relpath_pieces[i] ---@type string
         local w = vim.api.nvim_strwidth(piece) + width_sep ---@type integer
         if remain_width <= w then
           break
         end
 
-        text = piece .. sep .. text
-        remain_width = remain_width - w + 1
+        if i == N then
+          right_text = piece .. " "
+        else
+          right_text = piece .. sep .. right_text
+        end
+
+        remain_width = remain_width - w
         remain_count = remain_count - 1
       end
 
       if remain_count > 0 then
         local ommiter = string.rep(".", remain_count)
-        text = ommiter .. sep .. text
+        right_text = ommiter .. sep .. right_text
       end
 
-      if _start_index > 1 then
-        text = sep .. text
-      end
-
-      local hl_text = hl_icon .. txt(text, hln_dirpath_text)
+      local text = left_text .. sep .. right_text ---@type string
+      local hl_text = hl_icon .. txt(text, hln_text)
       text = icon .. text
       return text, hl_text, remain_count < 1
     end,

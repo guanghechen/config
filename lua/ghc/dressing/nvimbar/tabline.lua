@@ -29,7 +29,7 @@ tabline = Nvimbar.new({
 tabline
   ---
   :register(c.devmode(position), "right")
-  :register(c.cwd(position), "right")
+  -- :register(c.cwd(position), "right")
   :register(c.tabs(position), "right")
   --
   :register(c.debug_render_count(position), "center")
