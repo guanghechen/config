@@ -8,6 +8,23 @@ local c = require("ghc.dressing.nvimbar.components")
 local dirtier = status.tabline_dirtier ---@type eve.lib.collection.IDirtier
 local position = "f_tl" ---@type eve.lib.ux.nvimbar.Position
 
+---@return boolean
+local function should_show_tabline()
+  local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+  if devmode then
+    return true
+  end
+
+  local tab_count = vim.fn.tabpagenr("$") ---@type integer
+  if tab_count > 1 then
+    return true
+  end
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta = eve.tab.resolve(tabnr)
+  return meta == nil or #meta.bufs > 1
+end
+
 local tabline ---@type eve.lib.ux.INvimbar
 tabline = Nvimbar.new({
   name = "tabline",
@@ -24,7 +41,7 @@ tabline = Nvimbar.new({
   end,
   is_active = functional.falsy,
   trigger_rerender = function()
-    vim.opt.tabline = tabline:snapshot()
+    vim.o.tabline = tabline:snapshot()
   end,
 })
 
@@ -42,6 +59,11 @@ tabline
 
 dirtier:subscribe(Subscriber.new({
   on_next = function()
-    tabline:render()
+    if should_show_tabline() then
+      vim.o.showtabline = 2
+      tabline:render()
+    else
+      vim.o.showtabline = 0
+    end
   end,
 }))
