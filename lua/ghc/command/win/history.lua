@@ -47,7 +47,7 @@ local function get_history_select()
             local filepath = path.relative(cwd, absolute_filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
             local item = { uuid = uuid, filepath = filepath } ---@type fml.t.ux.file_select.IRawItem
-            items[#item + 1] = item
+            items[#items + 1] = item
           end
 
           for _, item in ipairs(items) do
