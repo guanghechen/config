@@ -26,23 +26,26 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public mode_name              string
 
 ---@class eve.lib.ux.nvimbar.IRawComponent
----@field public name                   string
 ---@field public atomic                 boolean
+---@field public name                   string
 ---@field public tight                  ?boolean
----@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
 ---@field public condition              ?fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): boolean
+---@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
 ---@field public will_change            ?fun(context: eve.lib.ux.nvimbar.IContext, prev_context: eve.lib.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
 ---@class eve.lib.ux.nvimbar.IComponent
----@field public last_result_hl_text    string
+---@field public last_render_context    eve.lib.ux.nvimbar.IContext|nil
+---@field public last_result_full       boolean
+---@field public last_result_hltext     string
 ---@field public last_result_text       string
 ---@field public last_result_width      integer
----@field public last_result_full       boolean
----@field public last_render_context    eve.lib.ux.nvimbar.IContext|nil
 ---@field public atomic                 boolean
+---@field public name                   string
+---@field public position               eve.e.NvimbarCompPosition
+---@field public priority               integer
 ---@field public tight                  boolean
----@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
 ---@field public condition              fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): boolean
+---@field public render                 fun(context: eve.lib.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
 ---@field public will_change            fun(context: eve.lib.ux.nvimbar.IContext, prev_context: eve.lib.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
 ---@class eve.lib.ux.nvimbar.IItem
@@ -51,9 +54,9 @@ local Scheduler = require("eve.lib.collection.scheduler")
 
 ---@class eve.lib.ux.nvimbar.IProps
 ---@field public name                   string
----@field public component_sep          string
----@field public component_sep_hlname   string
----@field public component_sep_hlname_active string
+---@field public comp_sep               string
+---@field public comp_sep_hlname        string
+---@field public comp_sep_hlname_active string
 ---@field public render_delay           ?integer
 ---@field public silent                 ?fun(): boolean
 ---@field public get_max_width          fun(): integer
@@ -68,7 +71,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field public txt                    fun(text: string, hlname: string): string
 ---@field public cancel_render          fun(self: eve.lib.ux.INvimbar): eve.lib.ux.INvimbar
 ---@field public dispose                fun(self: eve.lib.ux.INvimbar): boolean
----@field public register               fun(self: eve.lib.ux.INvimbar, component: eve.lib.ux.nvimbar.IRawComponent, position: eve.e.NvimbarCompPosition): eve.lib.ux.INvimbar
+---@field public place                  fun(self: eve.lib.ux.INvimbar, position: eve.e.NvimbarCompPosition, component: eve.lib.ux.nvimbar.IRawComponent, priority?: integer): eve.lib.ux.INvimbar
 ---@field public render                 fun(self: eve.lib.ux.INvimbar): string
 ---@field public render_immedately      fun(self: eve.lib.ux.INvimbar): string
 ---@field public snapshot               fun(self: eve.lib.ux.INvimbar): string
@@ -79,8 +82,8 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field private _sep                  string
 ---@field private _sep_active           string
 ---@field private _sep_width            integer
----@field private _components           table<string, eve.lib.ux.nvimbar.IComponent>
----@field private _items                eve.lib.ux.nvimbar.IItem[]
+---@field private _components           eve.lib.ux.nvimbar.IComponent[]
+---@field private _orders               integer[]
 ---@field private _render_scheduler     eve.lib.collection.IScheduler
 ---@field private _get_max_width        fun(): integer
 ---@field public  _get_preset_context   fun(): eve.lib.ux.nvimbar.IPresetContext
@@ -170,40 +173,13 @@ local function build_context(preset_context)
   return context
 end
 
----@param component                     eve.lib.ux.nvimbar.IComponent
----@param context                       eve.lib.ux.nvimbar.IContext
----@param remain_width                  integer
----@param force                         boolean
----@return string
----@return integer
-local function render_component(component, context, remain_width, force)
-  if not component.condition(context, remain_width) then
-    return "", 0
-  end
-
-  if
-    force
-    or (not component.atomic and (not component.last_result_full or component.last_result_width > remain_width))
-    or component.will_change(context, component.last_render_context, remain_width)
-  then
-    local text, hl_text, full = component.render(context, remain_width)
-    local width = vim.api.nvim_strwidth(text) ---@type integer
-    component.last_result_hl_text = hl_text
-    component.last_result_text = text
-    component.last_result_width = width
-    component.last_result_full = full
-    component.last_render_context = context
-  end
-  return component.last_result_hl_text, component.last_result_width
-end
-
 ---@param props                         eve.lib.ux.nvimbar.IProps
 ---@return eve.lib.ux.Nvimbar
 function M.new(props)
   local name = props.name ---@type string
-  local component_sep = props.component_sep ---@type string
-  local component_sep_hlname = props.component_sep_hlname ---@type string
-  local component_sep_hlname_active = props.component_sep_hlname_active ---@type string
+  local comp_sep = props.comp_sep ---@type string
+  local comp_sep_hlname = props.comp_sep_hlname ---@type string
+  local comp_sep_hlname_active = props.comp_sep_hlname_active ---@type string
   local render_delay = props.render_delay or 20 ---@type integer
   local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
@@ -269,11 +245,11 @@ function M.new(props)
 
   self.name = name
   self._disposed = false
-  self._sep = M.txt(component_sep, component_sep_hlname)
-  self._sep_active = M.txt(component_sep, component_sep_hlname_active)
-  self._sep_width = vim.api.nvim_strwidth(component_sep)
+  self._sep = M.txt(comp_sep, comp_sep_hlname)
+  self._sep_active = M.txt(comp_sep, comp_sep_hlname_active)
+  self._sep_width = vim.api.nvim_strwidth(comp_sep)
   self._components = {}
-  self._items = {}
+  self._orders = {}
   self._render_scheduler = _render_scheduler
   self._get_max_width = get_max_width
   self._get_preset_context = get_preset_context
@@ -363,38 +339,56 @@ function M:render_immedately()
   return self:render_sync(true) ---@type string
 end
 
----@param raw_component                 eve.lib.ux.nvimbar.IRawComponent
 ---@param position                      eve.e.NvimbarCompPosition
+---@param raw_component                 eve.lib.ux.nvimbar.IRawComponent
+---@param priority                      ?integer
 ---@return eve.lib.ux.Nvimbar
-function M:register(raw_component, position)
+function M:place(position, raw_component, priority)
+  priority = priority or 1 ---@type integer
   local name = raw_component.name ---@type string
-  if self._components[name] ~= nil then
-    reporter.warn({
+
+  if position ~= "left" and position ~= "center" and position ~= "right" then
+    reporter.error({
       from = __module_name__,
-      subject = "register",
-      message = "The component is already registered.",
-      details = { name = name, raw_component = raw_component, position = position },
+      subject = "place",
+      message = "Bad component position.",
+      details = { name = name, position = position, priority = priority, component = raw_component },
     })
+    return self
   end
+
+  local components = self._components ---@type eve.lib.ux.nvimbar.IComponent[]
+  local orders = self._orders ---@type integer[]
+  local k = #components ---@type integer
 
   ---@type eve.lib.ux.nvimbar.IComponent
   local component = {
-    name = name,
-    last_result_hl_text = "",
+    last_result_full = false,
+    last_render_context = nil,
+    last_result_hltext = "",
     last_result_text = "",
     last_result_width = 0,
-    last_result_full = false,
     atomic = raw_component.atomic,
+    name = name,
+    position = position,
+    priority = priority,
     tight = not not raw_component.tight,
     render = raw_component.render,
     will_change = raw_component.will_change or functional.truthy,
     condition = raw_component.condition or functional.truthy,
   }
-  self._components[name] = component
+  components[k + 1] = component
 
-  ---@type eve.lib.ux.nvimbar.IItem
-  local item = { name = name, position = position }
-  table.insert(self._items, item)
+  while k >= 1 do
+    local order = orders[k] ---@type integer
+    if components[order].priority >= priority then
+      break
+    end
+    orders[k + 1] = order
+    k = k - 1
+  end
+  orders[k + 1] = #components
+
   return self
 end
 
@@ -413,85 +407,113 @@ function M:render_sync(force)
   local width_sep = self._sep_width ---@type integer
   local width_full = self._get_max_width() ---@type integer
 
-  local lc = "" ---@type string
-  local cc = "" ---@type string
-  local rc = "" ---@type string
-  local width_left = width_sep ---@type integer
-  local width_right = width_sep ---@type integer
-  local width_center = width_sep + width_sep ---@type integer
-  local width_remain = width_full - width_left - width_center - width_right ---@type integer
-  local components = self._components ---@type eve.lib.ux.nvimbar.IComponent[]
-  local positions = self._items ---@type eve.lib.ux.nvimbar.IItem[]
-  for i = 1, #positions, 1 do
-    local item = positions[i] ---@type eve.lib.ux.nvimbar.IItem
-    local name = item.name ---@type string
-    local position = item.position ---@type eve.e.NvimbarCompPosition
+  local wl = width_sep ---@type integer
+  local wc = width_sep + width_sep ---@type integer
+  local wr = width_sep ---@type integer
+  local width_remain = width_full - wl - wc - wr ---@type integer
 
-    local component = components[name] ---@type eve.lib.ux.nvimbar.IComponent|nil
-    if component ~= nil then
-      local ok, text, width = pcall(render_component, component, context, width_remain, force)
-      if ok then
-        if width > 0 and width <= width_remain then
-          local tight = component.tight ---@type boolean
-          if position == "left" then
-            if #lc < 1 or tight then
-              lc = lc .. text
-              width_left = width_left + width
-              width_remain = width_remain - width
-            else
-              lc = lc .. sep .. text
-              width_left = width_left + width + width_sep
-              width_remain = width_remain - width - width_sep
-            end
-          elseif position == "center" then
-            if #cc < 1 or tight then
-              cc = cc .. text
-              width_center = width_center + width
-              width_remain = width_remain - width
-            else
-              cc = cc .. sep .. text
-              width_center = width_center + width + width_sep
-              width_remain = width_remain - width - width_sep
-            end
-          elseif position == "right" then
-            if #rc < 1 or tight then
-              rc = text .. rc
-              width_right = width_right + width
-              width_remain = width_remain - width
-            else
-              rc = text .. sep .. rc
-              width_right = width_right + width + width_sep
-              width_remain = width_remain - width - width_sep
-            end
+  local components = self._components ---@type eve.lib.ux.nvimbar.IComponent[]
+  local orders = self._orders ---@type integer[]
+  local hltexts = {} ---@type string[]
+
+  local N = #orders ---@type integer
+  local hl, hc, hr = false, false, false ---@type boolean, boolean, boolean
+  for _, order in ipairs(orders) do
+    hltexts[order] = ""
+    local component = components[order] ---@type eve.lib.ux.nvimbar.IComponent
+    local ok, hltext, width = pcall(function()
+      if not component.condition(context, width_remain) then
+        return "", 0
+      end
+
+      if
+        force
+        or (not component.atomic and (not component.last_result_full or component.last_result_width > width_remain))
+        or component.will_change(context, component.last_render_context, width_remain)
+      then
+        local text, hltext, full = component.render(context, width_remain)
+        local width = vim.api.nvim_strwidth(text) ---@type integer
+        component.last_result_hltext = hltext
+        component.last_result_text = text
+        component.last_result_width = width
+        component.last_result_full = full
+        component.last_render_context = context
+      end
+      return component.last_result_hltext, component.last_result_width
+    end)
+
+    if ok then
+      if width > 0 and width <= width_remain then
+        local tight = component.tight ---@type boolean
+        local position = component.position ---@type eve.e.NvimbarCompPosition
+        if position == "left" then
+          if not hl or tight then
+            hl = true
+            hltexts[order] = hltext
+            wl = wl + width
+            width_remain = width_remain - width
           else
-            reporter.error({
-              from = __module_name__,
-              subject = "render",
-              message = "Bad component position.",
-              details = { item = item, component = component },
-            })
+            hltexts[order] = sep .. hltext
+            wl = wl + width + width_sep
+            width_remain = width_remain - width - width_sep
+          end
+        elseif position == "center" then
+          if not hc or tight then
+            hc = true
+            hltexts[order] = hltext
+            wc = wc + width
+            width_remain = width_remain - width
+          else
+            hltexts[order] = sep .. hltext
+            wc = wc + width + width_sep
+            width_remain = width_remain - width - width_sep
+          end
+        elseif position == "right" then
+          if not hr or tight then
+            hr = true
+            hltexts[order] = hltext
+            wr = wr + width
+            width_remain = width_remain - width
+          else
+            hltexts[order] = hltext .. sep
+            wr = wr + width + width_sep
+            width_remain = width_remain - width - width_sep
           end
         end
-      else
-        reporter.error({
-          from = __module_name__,
-          subject = "render",
-          message = "Encounter error while render the nvimbar component.",
-          details = { context = context, item = item, component = component, error = text },
-        })
       end
+    else
+      reporter.error({
+        from = __module_name__,
+        subject = "render",
+        message = "Encounter error while render the nvimbar component.",
+        details = { context = context, component = component },
+      })
+    end
+  end
+
+  local tl, tc, tr = "", "", "" ---@type string, string, string
+  for i = 1, N, 1 do
+    local hltext = hltexts[i] ---@type string
+    local component = components[i] ---@type eve.lib.ux.nvimbar.IComponent
+    local position = component.position ---@type eve.e.NvimbarCompPosition
+    if position == "left" then
+      tl = tl .. hltext
+    elseif position == "center" then
+      tc = tc .. hltext
+    elseif position == "right" then
+      tr = hltext .. tr
     end
   end
 
   local width_half_left = math.floor(width_full / 2) ---@type integer
-  local width_padding_left = width_half_left - width_left - math.floor(width_center / 2) ---@type integer
+  local width_padding_left = width_half_left - wl - math.floor(wc / 2) ---@type integer
   if width_padding_left > 0 and width_padding_left + 1 < width_remain then
     local width_padding_right = width_remain - width_padding_left ---@type integer
     local padding_left = string.rep(" ", width_padding_left) ---@type string
     local padding_right = string.rep(" ", width_padding_right) ---@type string
-    return lc .. sep .. padding_left .. sep .. cc .. sep .. padding_right .. sep .. rc
+    return tl .. sep .. padding_left .. sep .. tc .. sep .. padding_right .. sep .. tr
   else
-    return lc .. sep .. "%=" .. sep .. cc .. sep .. "%=" .. sep .. rc
+    return tl .. sep .. "%=" .. sep .. tc .. sep .. "%=" .. sep .. tr
   end
 end
 

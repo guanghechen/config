@@ -19,9 +19,9 @@ local function resolve_winline_scheduler(winnr)
     local winline ---@type eve.lib.ux.INvimbar
     winline = Nvimbar.new({
       name = "winline_" .. winnr,
-      component_sep = "",
-      component_sep_hlname = position .. "_bg",
-      component_sep_hlname_active = position .. "_bg",
+      comp_sep = "",
+      comp_sep_hlname = position .. "_bg",
+      comp_sep_hlname_active = position .. "_bg",
       render_delay = 256,
       silent = function()
         local devmode = state.state.flight.devmode:snapshot() ---@type boolean
@@ -71,14 +71,13 @@ local function resolve_winline_scheduler(winnr)
 
     winline
       ---
-      -- :register(c.dirpath(position), "left")
-      :register(c.filename(position), "left")
+      -- :place("left", c.dirpath(position), 95)
+      :place("left", c.filename(position), 100)
+      :place("left", c.lsp_symbols(position), 90)
       ---
-      :register(c.debug_render_count(position), "center")
-      :register(c.lsp_symbols(position), "left")
+      :place("center", c.debug_render_count(position), 100)
       ---
-      ---
-      :register(c.dirpath_prominent(position), "right")
+      :place("right", c.dirpath_prominent(position), 100)
     meta.winline = winline
   end
 

@@ -28,9 +28,9 @@ end
 local tabline ---@type eve.lib.ux.INvimbar
 tabline = Nvimbar.new({
   name = "tabline",
-  component_sep = "",
-  component_sep_hlname = position .. "_bg",
-  component_sep_hlname_active = position .. "_bg",
+  comp_sep = "",
+  comp_sep_hlname = position .. "_bg",
+  comp_sep_hlname_active = position .. "_bg",
   render_delay = 256,
   silent = function()
     local devmode = state.state.flight.devmode:snapshot() ---@type boolean
@@ -46,16 +46,16 @@ tabline = Nvimbar.new({
 })
 
 tabline
-  ---
-  :register(c.devmode(position), "right")
-  -- :register(c.cwd(position), "right")
-  :register(c.tabs(position), "right")
+  :place("left", c.neotree(position), 90)
+  :place("left", c.diffview(position), 90)
+  :place("left", c.bufs(position), 95)
   --
-  :register(c.debug_render_count(position), "center")
+  :place("center", c.debug_render_count(position), 100)
   --
-  :register(c.neotree(position), "left")
-  :register(c.diffview(position), "left")
-  :register(c.bufs(position), "left")
+  -- :place("right", c.devmode(position), 100)
+  :place("right", c.tabs(position), 100)
+--
+-- :place("right", c.cwd(position), 100)
 
 dirtier:subscribe(Subscriber.new({
   on_next = function()
