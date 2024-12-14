@@ -13,10 +13,9 @@ Set-PSReadLineOption -Colors @{
 If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
   (& "$env:APP_HOME_MINIFORGE\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
 
-  #  conda config --set auto_activate_base false
-  #  if (conda env list | Select-String -Pattern "^lemon\s") {
-  #    conda activate lemon
-  #  }
+  if (-not $env:CONDA_DEFAULT_ENV) {
+    conda activate lemon
+  }
 }
 
 ## Setup fnm
