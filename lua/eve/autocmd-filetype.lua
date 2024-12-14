@@ -42,9 +42,10 @@ vim.filetype.add({
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("filetype_bigfile"),
   pattern = "bigfile",
-  callback = function(ev)
-    vim.schedule(function()
-      vim.bo[ev.buf].syntax = vim.filetype.match({ buf = ev.buf }) or ""
+  callback = function(evt)
+    local bufnr = evt.buf ---@type integer
+    vim.api.nvim_buf_call(bufnr, function()
+      vim.opts.setup({ buf = bufnr, ft = vim.filetype.match({ buf = bufnr }) or "" })
     end)
   end,
 })
