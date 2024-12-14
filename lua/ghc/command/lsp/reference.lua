@@ -61,7 +61,8 @@ local function fetch_data(method, additional_params, callback)
             first_location = locations[1]
           end
 
-          for _, raw_item in ipairs(vim.lsp.util.locations_to_items(locations, offset_encoding)) do
+          local raw_items = vim.lsp.util.locations_to_items(locations, offset_encoding)
+          for _, raw_item in ipairs(raw_items) do
             local filepath = path.relative(cwd, raw_item.filename, true) ---@type string
             local lnum = raw_item.lnum ---@type integer
             local col = raw_item.col - 1 ---@type integer

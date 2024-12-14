@@ -36,7 +36,7 @@ end
 ---@return boolean
 function M.is_absolute(filepath)
   if env.IS_WIN then
-    return string.match(filepath, "^[%a]:[\\/].*$") ~= nil
+    return #filepath > 1 and filepath:sub(2, 2) == ":"
   end
   return string.sub(filepath, 1, 1) == SEP
 end
@@ -199,6 +199,10 @@ function M.split(filepath)
   end
   if has_prefix_sep then
     table.insert(pieces, 1, "")
+  end
+
+  if env.IS_WIN and #filepath > 1 and filepath:sub(2, 2) == ":" then
+    pieces[1] = pieces[1]:upper()
   end
   return pieces
 end
