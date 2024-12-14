@@ -48,6 +48,7 @@ M.uuids = {
   buf_save = "Fbufsave",
   buf_swap_left = "Fbufswapleft",
   buf_swap_right = "Fbufswapright",
+  code_swap_conditional_branches = "Fcodeswapternarybranches",
   copilot_chat_prompt = "Fcopilotchatprompt",
   copilot_chat_quick = "Fcopilotchatquick",
   copilot_chat_reset = "Fcopilotchatreset",

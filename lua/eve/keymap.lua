@@ -125,6 +125,7 @@ mk({ "n", "v" }, "<leader>bp", uuids.buf_pin, "buf: toggle pin")
 --#[c]ode-------------------------------------------------------------------------------------------
 mk({ "n" }, "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "code: add comment below")
 mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "code: add comment above")
+mk({ "n" }, "<leader>cs", uuids.code_swap_conditional_branches, "code: swap conditional branches")
 -------------------------------------------------------------------------------------------#[c]ode--
 
 --#[c]opy-------------------------------------------------------------------------------------------
