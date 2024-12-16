@@ -842,23 +842,29 @@ function M.lsp(position)
       return ""
     end
 
-    local client_names = {} ---@type string[]
+    local has_client = false ---@type boolean
+    local client_names = "" ---@type string
     for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
       if client.attached_buffers[bufnr] and client.name ~= "null-ls" and client.name ~= "copilot" then
-        client_names[#client_names] = client.name
+        if has_client then
+          client_names = client_names .. "|" .. client.name
+        else
+          has_client = true
+          client_names = client.name
+        end
       end
     end
 
-    return #client_names > 0 and "  " .. table.concat(client_names, "|") or ""
+    if not has_client then
+      return ""
+    end
+    return "  " .. client_names
   end
 
   ---@type eve.lib.ux.nvimbar.IRawComponent
   local component = {
     name = "lsp",
     atomic = true,
-    condition = function()
-      return not not rawget(vim, "lsp")
-    end,
     render = function()
       local text = get_text() ---@type string
       local hl_text = txt(text, hln_text) ---@type string

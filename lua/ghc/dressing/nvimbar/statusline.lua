@@ -46,7 +46,7 @@ statusline
   :place("right", c.fileformat(position), 95)
   :place("right", c.filetype(position), 95)
   :place("right", c.lsp_message(position), 90)
-  :place("right", c.lsp(position), 95)
+  :place("right", c.lsp(position), 100)
   :place("right", c.copilot(position), 95)
   :place("right", c.diagnostics(position), 95)
   :place("right", c.noice_mode(position), 95)
