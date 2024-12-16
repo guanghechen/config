@@ -1,6 +1,7 @@
+local capabilities = require("guanghechen.lsp.common").capabilities
+local handlers = require("guanghechen.lsp.common").handlers
 local basic_on_attach = require("guanghechen.lsp.common").on_attach
 local on_init = require("guanghechen.lsp.common").on_init
-local capabilities = require("guanghechen.lsp.common").capabilities
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
@@ -102,9 +103,10 @@ local function on_attach(client, bufnr)
 end
 
 return {
+  capabilities = capabilities,
+  handlers = handlers,
   on_attach = on_attach,
   on_init = on_init,
-  capabilities = capabilities,
   filetypes = {
     "javascript",
     "javascriptreact",

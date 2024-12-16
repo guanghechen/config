@@ -3,9 +3,6 @@ local fs = require("eve.lib.fs")
 local path = require("eve.lib.path")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
----@class guanghechen.lsp.common
-local M = {}
-
 local actions = {
   rename = function()
     vim.lsp.buf.rename()
@@ -32,6 +29,63 @@ local actions = {
       vim.cmd("stopinsert")
     end)
   end,
+}
+
+---@class guanghechen.lsp.common
+local M = {}
+
+local register_capability = vim.lsp.handlers["client/registerCapability"]
+M.handlers = {
+  ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+    border = "rounded",
+    focusable = true,
+    silent = true,
+  }),
+  ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
+    border = "rounded",
+    focusable = true,
+    silent = true,
+  }),
+  ["client/registerCapability"] = function(err, res, ctx)
+    ---@diagnostic disable-next-line: no-unknown
+    local ret = register_capability(err, res, ctx)
+    local client = vim.lsp.get_client_by_id(ctx.client_id)
+    if client then
+      for bufnr in pairs(client.attached_buffers) do
+        vim.api.nvim_exec_autocmds("User", {
+          pattern = "LspDynamicCapability",
+          data = { client_id = client.id, buffer = bufnr },
+        })
+      end
+    end
+    return ret
+  end,
+}
+
+local has_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
+M.capabilities = vim.tbl_deep_extend(
+  "force",
+  {},
+  vim.lsp.protocol.make_client_capabilities(),
+  has_cmp and cmp_nvim_lsp.default_capabilities() or {},
+  {}
+)
+M.capabilities.textDocument.completion.completionItem = {
+  documentationFormat = { "markdown", "plaintext" },
+  snippetSupport = true,
+  preselectSupport = true,
+  insertReplaceSupport = true,
+  labelDetailsSupport = true,
+  deprecatedSupport = true,
+  commitCharactersSupport = true,
+  tagSupport = { valueSet = { 1 } },
+  resolveSupport = {
+    properties = {
+      "documentation",
+      "detail",
+      "additionalTextEdits",
+    },
+  },
 }
 
 ---@param dirpath                       string
@@ -229,31 +283,5 @@ function M.on_rename(from, to, rename)
     end
   end
 end
-
-local has_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-M.capabilities = vim.tbl_deep_extend(
-  "force",
-  {},
-  vim.lsp.protocol.make_client_capabilities(),
-  has_cmp and cmp_nvim_lsp.default_capabilities() or {},
-  {}
-)
-M.capabilities.textDocument.completion.completionItem = {
-  documentationFormat = { "markdown", "plaintext" },
-  snippetSupport = true,
-  preselectSupport = true,
-  insertReplaceSupport = true,
-  labelDetailsSupport = true,
-  deprecatedSupport = true,
-  commitCharactersSupport = true,
-  tagSupport = { valueSet = { 1 } },
-  resolveSupport = {
-    properties = {
-      "documentation",
-      "detail",
-      "additionalTextEdits",
-    },
-  },
-}
 
 return M

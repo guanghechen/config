@@ -57,8 +57,8 @@ function M.defaults()
     autosave = true,
     copilot = is_home_config_dir,
     devmode = is_home_config_dir,
-    lsp_inlay_hints = is_home_config_dir,
-    lsp_code_lens = is_home_config_dir,
+    lsp_inlay_hints = true,
+    lsp_code_lens = true,
   }
 
   ---@type eve.t.state.data.frecency

@@ -75,6 +75,13 @@ eve.commander
     uuid = uuids.open_line_diagnostic,
     desc = "diagnostic: open float window (line)",
     action = function()
-      vim.diagnostic.open_float()
+      local _, winnr = vim.diagnostic.open_float({
+        header = "diagnostic (line)",
+        scope = "line",
+        focus = true,
+        focusable = true,
+        border = "rounded",
+      })
+      fml.fn.dressing_float_win(winnr, 100)
     end,
   })

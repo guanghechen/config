@@ -1,6 +1,7 @@
 local env = require("eve.lib.env")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Nvimbar = require("eve.lib.ux.nvimbar")
+local checks = require("eve.builtin.checks")
 local status = require("eve.builtin.status")
 local state = require("eve.state")
 local c = require("ghc.dressing.nvimbar.components")
@@ -94,7 +95,7 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 local function render(winnr)
-  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+  if winnr == nil or winnr < 1 or not checks.is_win_valid(winnr) then
     return
   end
 

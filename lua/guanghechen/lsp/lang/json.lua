@@ -1,13 +1,15 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/master/lua/lspconfig/server_configurations/jsonls.lua
 
+local capabilities = require("guanghechen.lsp.common").capabilities
+local handlers = require("guanghechen.lsp.common").handlers
 local on_attach = require("guanghechen.lsp.common").on_attach
 local on_init = require("guanghechen.lsp.common").on_init
-local capabilities = require("guanghechen.lsp.common").capabilities
 
 return {
+  capabilities = capabilities,
+  handlers = handlers,
   on_attach = on_attach,
   on_init = on_init,
-  capabilities = capabilities,
   flags = { debounce_text_changes = 500 },
   settings = {
     json = {

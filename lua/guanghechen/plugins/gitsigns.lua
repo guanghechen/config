@@ -225,29 +225,27 @@ local keymaps = {
     desc = "git: preview hunk inline",
     callback = function()
       require("gitsigns").preview_hunk()
-      vim.defer_fn(function()
-        local winnrs = vim.api.nvim_list_wins() ---@type integer[]
-        for _, winnr in ipairs(winnrs) do
-          local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-          if
-            wincfg.relative ~= nil
-            and wincfg.relative ~= ""
-            and type(wincfg.title) == "table"
-            and type(wincfg.title[1]) == "table"
-            and wincfg.title[1][1] == config.win.preview_hunk.title
-          then
-            local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
-            vim.api.nvim_set_current_win(winnr)
-            vim.wo[winnr].number = false
-            vim.wo[winnr].relativenumber = false
-            vim.wo[winnr].signcolumn = "yes"
-            vim.wo[winnr].winblend = winblend
-            vim.wo[winnr].winhighlight = config.win.preview_hunk.highlight
-            vim.wo[winnr].wrap = false
-            return
-          end
-        end
-      end, 50)
+      require("gitsigns").preview_hunk() ---! Second call for trigger the focus
+
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+      if
+        wincfg.relative ~= nil
+        and wincfg.relative ~= ""
+        and type(wincfg.title) == "table"
+        and type(wincfg.title[1]) == "table"
+        and wincfg.title[1][1] == config.win.preview_hunk.title
+      then
+        local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+        vim.wo[winnr].number = false
+        vim.wo[winnr].relativenumber = false
+        vim.wo[winnr].signcolumn = "yes"
+        vim.wo[winnr].winblend = winblend
+        vim.wo[winnr].winhighlight = config.win.preview_hunk.highlight
+        vim.wo[winnr].wrap = false
+
+        vim.api.nvim_set_current_win(winnr)
+      end
     end,
   },
   {

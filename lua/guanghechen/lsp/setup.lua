@@ -1,28 +1,16 @@
-local register_capability = vim.lsp.handlers["client/registerCapability"]
-vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
-  ---@diagnostic disable-next-line: no-unknown
-  local ret = register_capability(err, res, ctx)
-  local client = vim.lsp.get_client_by_id(ctx.client_id)
-  if client then
-    for bufnr in pairs(client.attached_buffers) do
-      vim.api.nvim_exec_autocmds("User", {
-        pattern = "LspDynamicCapability",
-        data = { client_id = client.id, buffer = bufnr },
-      })
-    end
-  end
-  return ret
-end
-
-vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-  border = "rounded",
-  focusable = false,
-  silent = true,
-})
+local capabilities = require("guanghechen.lsp.common").capabilities
+local handlers = require("guanghechen.lsp.common").handlers
+local on_attach = require("guanghechen.lsp.common").on_attach
+local on_init = require("guanghechen.lsp.common").on_init
 
 local setup = {
   function(server_name)
-    require("lspconfig")[server_name].setup({})
+    require("lspconfig")[server_name].setup({
+      capabilities = capabilities,
+      handlers = handlers,
+      on_attach = on_attach,
+      on_init = on_init,
+    })
   end,
   clangd = function()
     require("lspconfig").clangd.setup(require("guanghechen.lsp.lang.cpp"))

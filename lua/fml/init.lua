@@ -5,6 +5,7 @@ local api = {
 
 ---@class fml.fn
 local fn = {
+  dressing_float_win = require("fml.fn.dressing_float_win"),
   foldexpr = require("fml.fn.foldexpr"),
   get_clipboard = require("fml.fn.get_clipboard"),
   refresh_state = require("fml.fn.refresh_state"),
