@@ -1,3 +1,5 @@
+local functional = require("eve.lib.functional")
+local path = require("eve.lib.path")
 local capabilities = require("guanghechen.lsp.common").capabilities
 local handlers = require("guanghechen.lsp.common").handlers
 local basic_on_attach = require("guanghechen.lsp.common").on_attach
@@ -102,6 +104,10 @@ local function on_attach(client, bufnr)
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end
 
+local plugins = {
+  vue = path.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
+}
+
 return {
   capabilities = capabilities,
   handlers = handlers,
@@ -132,6 +138,17 @@ return {
           completion = {
             enableServerSideFuzzyMatch = true,
           },
+        },
+        tsserver = {
+          globalPlugins = vim.tbl_filter(functional.booleanify, {
+            plugins.vue and {
+              name = "@vue/typescript-plugin",
+              location = plugins.vue,
+              languages = { "vue" },
+              configNamespace = "typescript",
+              enableForWorkspaceTypeScriptVersions = true,
+            },
+          }),
         },
       },
       typescript = {

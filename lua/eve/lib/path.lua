@@ -1,5 +1,8 @@
+local __module_name__ = "eve.lib.path" ---@type string
+
 local env = require("eve.lib.env")
 local md5 = require("eve.lib.md5")
+local reporter = require("eve.lib.reporter")
 
 local SEP = env.PATH_SEP ---@type string
 local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG --[[@as string]]
@@ -314,6 +317,33 @@ function M.locate_workspace_filepath(filename)
   local hash = md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   return M.locate_context_filepath("workspaces" .. SEP .. session_dir .. SEP .. filename)
+end
+
+---@param pkg                           string
+---@param path                          string
+---@param silent                        ?boolean
+---@return string|nil
+function M.locate_mason_pkg_path(pkg, path, silent)
+  pcall(require, "mason") -- make sure Mason is loaded. Will fail when generating docs
+  local root = vim.env.MASON or (env.HOME_NVIM_DATA .. env.PATH_SEP .. "mason")
+  local filepath = root .. "/packages/" .. pkg .. "/" .. path
+
+  if not vim.uv.fs_stat(filepath) and not require("lazy.core.config").headless() then
+    if not silent then
+      reporter.warn({
+        from = __module_name__,
+        subject = "locate_mason_pkg_path",
+        message = string.format(
+          "Mason package path not found for **%s**:\n- `%s`\nYou may need to force update the package.",
+          pkg,
+          path
+        ),
+      })
+    end
+    return nil
+  end
+
+  return filepath
 end
 
 return M

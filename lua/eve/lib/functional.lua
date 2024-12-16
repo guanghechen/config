@@ -25,6 +25,12 @@ end
 ---@return any
 function M.noop(...) end
 
+---@param value                         unknown
+---@return boolean
+function M.booleanify(value)
+  return not not value
+end
+
 ---@param min                           number
 ---@param max                           number
 ---@param value                         number
