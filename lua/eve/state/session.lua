@@ -95,22 +95,22 @@ function M.dump()
   local bufs = {} ---@type eve.t.state.data.buf.IMeta[]
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filename = path.basename(filepath) ---@type string
-
-    ---@type eve.t.state.data.buf.IMeta
-    local meta_data = {
-      bufnr = bufnr,
-      filename = filename,
-      filepath = filepath,
-    }
-    table.insert(bufs, meta_data)
+    local meta = _buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+    if meta ~= nil then
+      ---@type eve.t.state.data.buf.IMeta
+      local meta_data = {
+        bufnr = bufnr,
+        filename = meta.filename,
+        filepath = meta.filepath,
+      }
+      table.insert(bufs, meta_data)
+    end
   end
 
   local tabs = {} ---@type eve.t.state.data.tab.IMeta[]
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for _, tabnr in ipairs(tabnrs) do
-    local meta = _tab.get_meta(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+    local meta = _tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
     if meta ~= nil then
       local meta_data = meta:dump() ---@type eve.t.state.data.tab.IMeta
       tabs[#tabs + 1] = meta_data

@@ -2,9 +2,9 @@
 ---@param desc                          string
 ---@param nargs                         ?0|1|"?"
 ---@param candidates                    ?string[]
----@return eve.builtin.command.ICommand
+---@return eve.builtin.command.IDefinition
 local function mc(uuid, desc, nargs, candidates)
-  ---@type eve.builtin.command.ICommand
+  ---@type eve.builtin.command.IDefinition
   local definition = {
     uuid = uuid,
     desc = desc,

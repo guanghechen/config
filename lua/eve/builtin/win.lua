@@ -13,6 +13,7 @@ local meta_map = {} ---@type table<integer, eve.t.state.state.win.IMeta>
 
 ---@class eve.builtin.win
 local M = {}
+M.__meta_map__ = meta_map
 
 ---@param winnr                         integer|nil
 ---@return eve.t.state.state.win.IMeta|nil

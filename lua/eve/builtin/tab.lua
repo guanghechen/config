@@ -90,6 +90,7 @@ local meta_map = {} ---@type table<integer, eve.t.state.state.tab.IMeta>
 ---@class eve.builtin.tab
 ---@field public Meta                     eve.builtin.tab.Meta
 local M = { Meta = Meta }
+M.__meta_map__ = meta_map
 
 ---@param tabnr                         integer|nil
 ---@return eve.t.state.state.tab.IMeta|nil

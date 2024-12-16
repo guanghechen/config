@@ -9,6 +9,7 @@ local meta_map = {} ---@type table<integer, eve.t.state.state.buf.IMeta>
 
 ---@class eve.builtin.buf
 local M = {}
+M.__meta_map__ = meta_map
 
 ---@param bufnr                         integer|nil
 ---@return eve.t.state.state.buf.IMeta|nil
@@ -120,6 +121,7 @@ function M.refresh_all()
       invalid_bufnrs[#invalid_bufnrs + 1] = bufnr
     end
   end
+
   for _, bufnr in ipairs(invalid_bufnrs) do
     M.del_meta(bufnr)
   end
