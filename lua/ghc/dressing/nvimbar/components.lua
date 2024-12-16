@@ -95,19 +95,19 @@ function M.bufs(position)
     local text_diagnostic = "" ---@type string
     local slots = 0 ---@type integer
     if count_error > 0 then
-      text_diagnostic = text_diagnostic .. " " .. icons.diagnostics.Error .. " " .. count_error
+      text_diagnostic = text_diagnostic .. " " .. icons.diagnostic.Error .. " " .. count_error
       slots = slots + 1
     end
     if count_warn > 0 then
-      text_diagnostic = text_diagnostic .. " " .. icons.diagnostics.Warning .. " " .. count_warn
+      text_diagnostic = text_diagnostic .. " " .. icons.diagnostic.Warning .. " " .. count_warn
       slots = slots + 1
     end
     if count_hint > 0 and slots < 2 then
-      text_diagnostic = text_diagnostic .. " " .. icons.diagnostics.Hint .. " " .. count_hint
+      text_diagnostic = text_diagnostic .. " " .. icons.diagnostic.Hint .. " " .. count_hint
       slots = slots + 1
     end
     if count_info > 0 and slots < 2 then
-      text_diagnostic = text_diagnostic .. " " .. icons.diagnostics.Information .. " " .. count_info
+      text_diagnostic = text_diagnostic .. " " .. icons.diagnostic.Information .. " " .. count_info
       slots = slots + 1
     end
 
@@ -277,10 +277,10 @@ function M.copilot(position)
   end)
 
   local status_icon_map = {
-    Inactive = icons.cmp.copilot_error,
-    InProgress = icons.cmp.copilot,
-    Normal = icons.cmp.copilot,
-    Warning = icons.cmp.copilot_warn,
+    Inactive = icons.app.CopilotError,
+    InProgress = icons.app.Copilot,
+    Normal = icons.app.Copilot,
+    Warning = icons.app.CopilotWarn,
   }
 
   local last_status = nil ---@type string|nil
@@ -300,7 +300,7 @@ function M.copilot(position)
     end,
     render = function()
       local copilot_status = last_status or "Normal" ---@type string
-      local icon = status_icon_map[copilot_status] or icons.cmp.copilot ---@type string
+      local icon = status_icon_map[copilot_status] or icons.app.Copilot ---@type string
       local hln_icon = (copilot_status == nil or #copilot_status < 1) and hln_text
         or (hln_copilot .. "_" .. copilot_status) ---@type string
 
@@ -327,7 +327,7 @@ function M.cwd(position)
     render = function(context)
       local cwd_name = path.basename(context.cwd) ---@type string
 
-      local text = " " .. icons.ui.Explorer .. " " .. cwd_name .. " " ---@type string
+      local text = " " .. icons.ft.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_cwd) ---@type string
       return text, hl_text, true
     end,
@@ -399,16 +399,16 @@ function M.diagnostics(position)
     end,
     render = function(context)
       local count_error = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.ERROR })
-      local text_count_error = count_error > 0 and icons.diagnostics.Error .. " " .. count_error .. " " or ""
+      local text_count_error = count_error > 0 and icons.diagnostic.Error .. " " .. count_error .. " " or ""
 
       local count_warn = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.WARN })
-      local text_count_warn = count_warn > 0 and icons.diagnostics.Warning .. " " .. count_warn .. " " or ""
+      local text_count_warn = count_warn > 0 and icons.diagnostic.Warning .. " " .. count_warn .. " " or ""
 
       local count_hint = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.HINT })
-      local text_count_hint = count_hint > 0 and icons.diagnostics.Hint .. " " .. count_hint .. " " or ""
+      local text_count_hint = count_hint > 0 and icons.diagnostic.Hint .. " " .. count_hint .. " " or ""
 
       local count_info = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.INFO })
-      local text_count_info = count_info > 0 and icons.diagnostics.Information .. " " .. count_info .. " " or ""
+      local text_count_info = count_info > 0 and icons.diagnostic.Information .. " " .. count_info .. " " or ""
 
       local text = text_count_error .. text_count_warn .. text_count_hint .. text_count_info
       local text_hl = txt(text_count_error, hln_diagnostics_error)
@@ -1021,7 +1021,7 @@ function M.neotree(position)
       end
 
       local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
-      local title = icons.ui.Explorer .. " " .. cwd_name ---@type string
+      local title = icons.ft.FolderRootOpened .. " " .. cwd_name ---@type string
       local title_width = vim.api.nvim_strwidth(title) ---@type integer
       local width_remain = width - title_width ---@type integer
       local left_width = math.floor(width_remain / 2) ---@type integer

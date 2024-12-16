@@ -14,10 +14,10 @@ return {
       },
       signs = {
         text = {
-          [severity.ERROR] = icons.diagnostics.Error,
-          [severity.WARN] = icons.diagnostics.Warning,
-          [severity.INFO] = icons.diagnostics.Information,
-          [severity.HINT] = icons.diagnostics.Hint,
+          [severity.ERROR] = icons.diagnostic.Error,
+          [severity.WARN] = icons.diagnostic.Warning,
+          [severity.INFO] = icons.diagnostic.Information,
+          [severity.HINT] = icons.diagnostic.Hint,
         },
         numhl = {
           [severity.ERROR] = "f_lnum_error",

@@ -25,9 +25,9 @@ return {
       vim.api.nvim_win_set_config(winnr, { zindex = 100 })
     end,
     icons = {
-      ERROR = icons.diagnostics.Error,
-      WARN = icons.diagnostics.Warning,
-      INFO = icons.diagnostics.Information,
+      ERROR = icons.diagnostic.Error,
+      WARN = icons.diagnostic.Warning,
+      INFO = icons.diagnostic.Information,
       DEBUG = icons.ui.Bug,
       TRACE = icons.ui.Pencil,
     },

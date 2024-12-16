@@ -30,7 +30,7 @@ return {
           },
         },
         win_config = {
-          position = "bottom",
+          position = "top",
           height = 20,
         },
       },
@@ -81,8 +81,8 @@ return {
         end,
       },
       icons = { -- Only applies when use_icons is true.
-        folder_closed = icons.ui.Folder,
-        folder_open = icons.ui.FolderOpen,
+        folder_closed = icons.ft.Folder,
+        folder_open = icons.ft.FolderOpen,
       },
       signs = {
         fold_closed = icons.ui.ArrowClosed,

@@ -20,8 +20,8 @@ return {
         fold_closed = icons.ui.ArrowClosed .. " ",
         ws = "  ",
       },
-      folder_closed = icons.ui.Folder .. " ",
-      folder_open = icons.ui.FolderOpen .. " ",
+      folder_closed = icons.ft.Folder .. " ",
+      folder_open = icons.ft.FolderOpen .. " ",
       fold_open = icons.ui.ArrowOpen .. " ", -- icon used for open folds
       fold_closed = icons.ui.ArrowClosed .. " ", -- icon used for closed folds
       kinds = kinds,

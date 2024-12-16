@@ -36,23 +36,118 @@ M.symbols = {
   flag_replace = "",
 }
 
+----------------------------------------------------------------------------------------------------
+
+---@class eve.lib.icons.app
+M.app = {
+  Copilot = "",
+  CopilotError = "",
+  CopilotWarn = "",
+  Neovim = "",
+  Vim = "",
+}
+
+---@class eve.lib.icons.ft
+M.ft = {
+  Default = "",
+  File = "",
+  Files = "",
+  FileTree = "󰙅",
+  Folder = "",
+  FolderEmpty = "",
+  FolderEmptyOpen = "",
+  FolderOpen = "",
+  FolderRootOpened = "",
+  FolderWithHeart = "󱃪",
+  Import = "",
+  Symlink = "",
+}
+
+---@class eve.lib.icons.os
+M.os = {
+  dos = "",
+  mac = "",
+  nix = "",
+  wsl = "",
+  unknown = "",
+  current = (env.IS_NIX and "")
+    or (env.IS_MAC and "")
+    or (env.IS_WIN and "")
+    or (env.IS_WSL and "")
+    or "",
+}
+
+----------------------------------------------------------------------------------------------------
+
+---@class eve.lib.icons.dap
+M.dap = {
+  Breakpoint = "",
+  BreakpointCondition = "",
+  BreakpointRejected = "",
+  LogPoint = ".>",
+  Pause = "",
+  Play = "",
+  RunLast = "↻",
+  StepBack = "",
+  StepInto = "󰆹",
+  StepOut = "󰆸",
+  StepOver = "󰆷",
+  Stopped = "",
+  Terminate = "󰝤",
+}
+
+---@class eve.lib.icons.diagnostic
+M.diagnostic = {
+  Error = "",
+  Error_alt = "󰅚",
+  Hint = "󰌵", -- 󰛩
+  Hint_alt = "󰌶",
+  Information = "",
+  Information_alt = "",
+  Question = "",
+  Question_alt = "",
+  Warning = "",
+  Warning_alt = "󰀪",
+}
+
+---@class eve.lib.icons.git
+M.git = {
+  Add = "",
+  Branch = "",
+  Diff = "",
+  Git = "󰊢",
+  Ignore = "",
+  Mod = "M",
+  Mod_alt = "",
+  Remove = "",
+  Rename = "",
+  Repo = "",
+  Unmerged = "󰘬",
+  Untracked = "󰄱",
+  Unstaged = "",
+  Staged = "",
+  Conflict = "",
+}
+
+----------------------------------------------------------------------------------------------------
+
 ---@class eve.lib.icons.kind
 M.kind = {
   Array = "󰅪",
   Boolean = "󰨙",
   Calendar = "",
   Class = "",
-  Codeium = "",
+  Codeium = "󰘦",
   Collapsed = M.fillchars.foldclose,
   Color = "",
   Constant = "󰏿",
   Constructor = "",
   Control = "",
-  Copilot = "",
+  Copilot = M.app.Copilot,
   Enum = "",
   EnumMember = "",
   Event = "",
-  Field = "", --"󰇽",
+  Field = "",
   File = "",
   Folder = "󰉋",
   Fragment = "",
@@ -71,11 +166,11 @@ M.kind = {
   Operator = "",
   Package = "",
   Parameter = "",
-  Property = "",
+  Property = "",
   Reference = "",
-  Snippet = "",
+  Snippet = "󱄽",
   StaticMethod = "",
-  String = "󰀬",
+  String = "",
   Struct = "󰙅",
   Supermaven = "",
   Table = "",
@@ -91,49 +186,6 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class eve.lib.icons.documents
-M.documents = {
-  Default = "",
-  File = "",
-  Files = "",
-  FileTree = "󰙅",
-  Import = "",
-  Symlink = "",
-}
-
----@class eve.lib.icons.git
-M.git = {
-  Add = "",
-  Branch = "",
-  Diff = "",
-  Git = "󰊢",
-  Ignore = "",
-  Mod = "M",
-  Mod_alt = "",
-  Remove = "",
-  Rename = "",
-  Repo = "",
-  Unmerged = "󰘬",
-  Untracked = "󰄱", -- "󰞋",
-  Unstaged = "",
-  Staged = "",
-  Conflict = "",
-}
-
----@class eve.lib.icons.os
-M.os = {
-  dos = "",
-  mac = "",
-  nix = "",
-  wsl = "",
-  unknown = "",
-  current = (env.IS_NIX and "")
-    or (env.IS_MAC and "")
-    or (env.IS_WIN and "")
-    or (env.IS_WSL and "")
-    or "",
-}
-
 ---@class eve.lib.icons.ui
 M.ui = {
   Accepted = "",
@@ -143,7 +195,7 @@ M.ui = {
   BigCircle = "",
   BigUnfilledCircle = "",
   BookMark = "󰃃",
-  Buffer = "󰓩",
+  buffer = "",
   Bug = "",
   Calendar = "",
   Character = "",
@@ -156,14 +208,7 @@ M.ui = {
   Comment = "󰅺",
   Dashboard = "",
   Emoji = "󰱫",
-  EmptyFolder = "",
-  EmptyFolderOpen = "",
-  Explorer = "",
-  File = "󰈤",
   Fire = "",
-  Folder = "",
-  FolderOpen = "",
-  FolderWithHeart = "󱃪",
   Gear = "",
   History = "󰄉",
   Incoming = "󰏷",
@@ -172,7 +217,6 @@ M.ui = {
   Left = "",
   List = "",
   Location = "",
-  Square = "",
   SymlinkFolder = "",
   Lock = "󰍁",
   Modified = "✥",
@@ -187,7 +231,6 @@ M.ui = {
   Play = "",
   Project = "",
   Right = "",
-  RootFolderOpened = "",
   Search = "󰍉",
   Separator = "",
   DoubleSeparator = "󰄾",
@@ -195,88 +238,10 @@ M.ui = {
   SignOut = "",
   Sort = "",
   Spell = "󰓆",
-  Symlink = "",
   Tab = "",
   Table = "",
   Telescope = "",
   Window = "",
-}
-
----@class eve.lib.icons.diagnostics
-M.diagnostics = {
-  Error = "",
-  Warning = "",
-  Information = "",
-  Question = "",
-  Hint = "󰌵", -- 󰛩
-  -- Holo version
-  Error_alt = "󰅚",
-  Warning_alt = "󰀪",
-  Information_alt = "",
-  Question_alt = "",
-  Hint_alt = "󰌶",
-}
-
----@class eve.lib.icons.misc
-M.misc = {
-  Campass = "󰀹",
-  Code = "",
-  Gavel = "",
-  Glass = "󰂖",
-  NoActiveLsp = "󱚧",
-  PyEnv = "󰢩",
-  Separator_left = "",
-  Separator_right = "",
-  Squirrel = "",
-  Tag = "",
-  Tree = "",
-  Watch = "",
-  Lego = "",
-  LspAvailable = "󱜙",
-  Vbar = "│",
-  Add = "+",
-  Added = "",
-  Ghost = "󰊠",
-  ManUp = "",
-  Neovim = "",
-  Vim = "",
-}
-
----@class eve.lib.icons.cmp
-M.cmp = {
-  buffer = "",
-  cmp_tabnine = "",
-  codeium = "",
-  copilot = "",
-  copilot_error = "",
-  copilot_warn = "",
-  latex_symbols = "",
-  snippet = "󰃐",
-  nvim_lsp = "",
-  nvim_lua = "",
-  orgmode = "",
-  path = "",
-  spell = "󰓆",
-  tmux = "",
-  treesitter = "",
-  undefined = "",
-}
-
----@class eve.lib.icons.dap
-M.dap = {
-  Breakpoint = "",
-  BreakpointCondition = "",
-  BreakpointRejected = "",
-  LogPoint = ".>",
-  Pause = "",
-  Play = "",
-  RunLast = "↻",
-  StepBack = "",
-  StepInto = "󰆹",
-  StepOut = "󰆸",
-  StepOver = "󰆷",
-  Stopped = "",
-  Terminate = "󰝤",
 }
 
 return M

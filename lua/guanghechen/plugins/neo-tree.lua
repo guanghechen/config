@@ -54,10 +54,10 @@ return {
       },
       diagnostics = {
         symbols = {
-          hint = icons.diagnostics.Hint .. " ",
-          info = icons.diagnostics.Information .. " ",
-          warn = icons.diagnostics.Warning .. " ",
-          error = icons.diagnostics.Error .. " ",
+          hint = icons.diagnostic.Hint .. " ",
+          info = icons.diagnostic.Information .. " ",
+          warn = icons.diagnostic.Warning .. " ",
+          error = icons.diagnostic.Error .. " ",
         },
         highlights = {
           hint = "DiagnosticSignHint",
@@ -79,10 +79,10 @@ return {
         expander_highlight = "NeoTreeExpander",
       },
       icon = {
-        folder_closed = icons.ui.Folder,
-        folder_open = icons.ui.FolderOpen,
-        folder_empty = icons.ui.EmptyFolder,
-        default = icons.ui.File,
+        folder_closed = icons.ft.Folder,
+        folder_open = icons.ft.FolderOpen,
+        folder_empty = icons.ft.FolderEmpty,
+        default = icons.ft.File,
         highlight = "NeoTreeFileIcon",
       },
       modified = {
