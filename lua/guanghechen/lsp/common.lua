@@ -99,7 +99,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.buf.hover()
       end,
-      desc = "lsp: Hover",
+      desc = "lsp: hover",
     },
     {
       modes = { "n" },
@@ -107,7 +107,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.buf.declaration()
       end,
-      desc = "lsp: Goto declaration",
+      desc = "lsp: goto declaration",
     },
     {
       modes = { "n" },
@@ -115,7 +115,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.buf.signature_help()
       end,
-      desc = "lsp: Show signature help",
+      desc = "lsp: show signature help",
     },
     {
       modes = { "n" },
@@ -123,7 +123,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         eve.commander.execute(uuids.goto_lsp_definitions)
       end,
-      desc = "lsp: Goto definition",
+      desc = "lsp: goto definition",
     },
     {
       modes = { "n" },
@@ -131,7 +131,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         eve.commander.execute(uuids.goto_lsp_implementations)
       end,
-      desc = "lsp: Goto implementation",
+      desc = "lsp: goto implementation",
     },
     {
       modes = { "n" },
@@ -139,7 +139,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         eve.commander.execute(uuids.goto_lsp_references)
       end,
-      desc = "lsp: Show references",
+      desc = "lsp: show references",
     },
     {
       modes = { "n" },
@@ -147,7 +147,14 @@ function M.on_attach(client, bufnr)
       callback = function()
         eve.commander.execute(uuids.goto_lsp_type_definitions)
       end,
-      desc = "lsp: Goto type definition",
+      desc = "lsp: goto type definition",
+    },
+    {
+      modes = { "n", "v" },
+      key = "<M-cr>",
+      callback = actions.show_code_action,
+      desc = "lsp: code action",
+      active = has_support_codeAction,
     },
     {
       modes = { "n", "v" },
@@ -155,7 +162,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.codelens.run()
       end,
-      desc = "lsp: CodeLens",
+      desc = "lsp: codelens",
       active = has_support_codeLens,
     },
     {
@@ -164,35 +171,21 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.codelens.refresh()
       end,
-      desc = "lsp: Refresh & Display Codelens",
+      desc = "lsp: refresh & display codelens",
       active = has_support_codeLens,
     },
     {
-      modes = { "n", "v" },
-      key = "<leader>ca",
-      callback = actions.show_code_action,
-      desc = "lsp: Code action",
-      active = has_support_codeAction,
-    },
-    {
-      modes = { "n", "v" },
-      key = "<M-cr>",
-      callback = actions.show_code_action,
-      desc = "lsp: Code action",
-      active = has_support_codeAction,
-    },
-    {
       modes = { "n" },
-      key = "<leader>cA",
+      key = "<leader>ca",
       callback = actions.show_code_action_source,
-      desc = "lsp: Source action",
+      desc = "lsp: source action",
       active = has_support_codeAction,
     },
     {
       modes = { "n" },
       key = "<leader>cr",
       callback = actions.rename,
-      desc = "lsp: Rename",
+      desc = "lsp: rename",
       active = has_support_rename,
     },
   }

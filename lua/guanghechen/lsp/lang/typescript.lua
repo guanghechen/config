@@ -22,7 +22,7 @@ local function on_attach(client, bufnr)
           },
         })
       end,
-      desc = "lsp: Goto source definition",
+      desc = "lsp: goto source definition",
     },
     {
       modes = { "n" },
@@ -36,7 +36,7 @@ local function on_attach(client, bufnr)
           },
         })
       end,
-      desc = "lsp: Find all references",
+      desc = "lsp: find all references",
     },
     {
       modes = { "n", "v" },
