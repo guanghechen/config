@@ -163,6 +163,14 @@ function M.load(data)
       local relpath_pieces = path.split_prettier(workspace_pieces, cwd_pieces, item.filepath) ---@type string[]
       local relpath = table.concat(relpath_pieces, env.PATH_SEP)
 
+      if #vim.bo[real_bufnr].filetype < 1 then
+        local extname = filename:match("%.[^.]+$") or ""
+        local filetype = vim.filetype.match({ buf = real_bufnr, filename = filename, extension = extname })
+        if filetype then
+          vim.bo[real_bufnr].filetype = filetype
+        end
+      end
+
       ---@type eve.t.state.state.buf.IMeta
       local meta = {
         fileicon_hl = fileicon_hl,

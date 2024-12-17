@@ -57,7 +57,7 @@ function M.defaults()
     flag_fuzzy = true,
     flag_regex = false,
     keyword = "",
-    scope = "A",
+    scope = "P",
   }
 
   ---@type eve.t.state.data.flight
