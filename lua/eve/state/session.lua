@@ -159,7 +159,6 @@ function M.load(data)
     local real_bufnr = type(item.bufnr) == "number" and bufnr_2_real_bufnr[item.bufnr] or nil
     if real_bufnr ~= nil and vim.api.nvim_buf_is_valid(real_bufnr) then
       local filename = item.filename ---@type string
-      local filetype = vim.bo[real_bufnr].filetype ---@type string
       local fileicon, fileicon_hl = nvim.calc_fileicon(filename) ---@type string, string
       local relpath_pieces = path.split_prettier(workspace_pieces, cwd_pieces, item.filepath) ---@type string[]
       local relpath = table.concat(relpath_pieces, env.PATH_SEP)
@@ -170,7 +169,6 @@ function M.load(data)
         fileicon = fileicon,
         filename = item.filename,
         filepath = item.filepath,
-        filetype = filetype,
         relpath = relpath,
         relpath_pieces = relpath_pieces,
       }

@@ -8,7 +8,6 @@
 ---@field public fileicon_hl            string
 ---@field public filename               string
 ---@field public filepath               string
----@field public filetype               string
 ---@field public relpath                string
 ---@field public relpath_pieces         string[]
 

@@ -50,7 +50,6 @@ function M.resolve(bufnr)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local filetype = vim.bo[bufnr].filetype ---@type string
   local filename = path.basename(filepath) ---@type string
   filename = (not filename or filename == "") and constant.BUF_UNTITLED or filename
   local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
@@ -66,7 +65,6 @@ function M.resolve(bufnr)
     fileicon_hl = fileicon_hl,
     filename = filename,
     filepath = filepath,
-    filetype = filetype,
     relpath = relpath,
     relpath_pieces = relpath_pieces,
   }
@@ -86,8 +84,7 @@ function M.refresh(bufnr)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if meta.filepath ~= filepath or meta.filetype ~= filetype then
+  if meta.filepath ~= filepath then
     local filename = path.basename(filepath) ---@type string
     filename = #filename > 0 and filename or constant.BUF_UNTITLED
     local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
@@ -101,7 +98,6 @@ function M.refresh(bufnr)
     meta.fileicon_hl = fileicon_hl
     meta.filename = filename
     meta.filepath = filepath
-    meta.filetype = filetype
     meta.relpath = relpath
     meta.relpath_pieces = relpath_pieces
   end

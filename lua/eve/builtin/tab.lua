@@ -214,24 +214,25 @@ function M.refresh(tabnr)
   end
 
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+  local bufs = meta.bufs ---@type eve.t.state.state.tab.meta.IBuf[]
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if not meta:find_buf(bufnr) then
-      meta.bufs[#meta.bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.state.tab.meta.IBuf
+      bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.state.tab.meta.IBuf
     end
   end
 
   local k = 1 ---@type integer
-  local N = #meta.bufs ---@type integer
+  local N = #bufs ---@type integer
   for i = 1, N, 1 do
-    local buf = meta.bufs[i] ---@type eve.t.state.state.tab.meta.IBuf
+    local buf = bufs[i] ---@type eve.t.state.state.tab.meta.IBuf
     if checks.is_buf_valid(buf.bufnr) then
-      meta.bufs[k] = buf
+      bufs[k] = buf
       k = k + 1
     end
   end
   for i = k, N, 1 do
-    meta.bufs[i] = nil
+    bufs[i] = nil
   end
 
   if not checks.is_win_valid(meta.winnr_listed) then
@@ -287,8 +288,9 @@ function M.on_buf_enter(winnr, bufnr)
   end
 
   meta.winnr_listed = winnr
+  local bufs = meta.bufs ---@type eve.t.state.state.tab.meta.IBuf[]
   if not meta:find_buf(bufnr) then
-    meta.bufs[#meta.bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.state.tab.meta.IBuf
+    bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.state.tab.meta.IBuf
   end
 end
 
@@ -305,17 +307,18 @@ function M.on_bufs_close(bufnrs)
     return
   end
 
+  local bufs = meta.bufs ---@type eve.t.state.state.tab.meta.IBuf[]
   local k = 1 ---@type integer
-  local N = #meta.bufs ---@type integer
+  local N = #bufs ---@type integer
   for i = 1, N, 1 do
-    local buf = meta.bufs[i] ---@type eve.t.state.state.tab.meta.IBuf
+    local buf = bufs[i] ---@type eve.t.state.state.tab.meta.IBuf
     if not vim.list_contains(bufnrs, buf.bufnr) then
-      meta.bufs[k] = buf
+      bufs[k] = buf
       k = k + 1
     end
   end
   for i = k, N, 1 do
-    meta.bufs[i] = nil
+    bufs[i] = nil
   end
 end
 

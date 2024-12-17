@@ -21,6 +21,12 @@ eve.commander
       local winnr_cur = eve.tab.get_current_winnr() ---@type integer
       local bufnr_cur = winnr_cur > 0 and vim.api.nvim_win_get_buf(winnr_cur) or 0 ---@type integer
 
+      local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+      local bufs = {} ---@type { bufnr: integer, filetype: string, filepath: string }[]
+      for _, nr in ipairs(bufnrs) do
+        bufs[#bufs + 1] = { bufnr = nr, filetype = vim.bo[nr].filetype, filepath = vim.api.nvim_buf_get_name(nr) }
+      end
+
       reporter.info({
         from = __module_name__,
         subject = "inspect",
@@ -32,6 +38,7 @@ eve.commander
           winnr = winnr,
           winnr_cur = winnr_cur,
           z_details = {
+            bufs = bufs,
             meta_buf = meta_buf,
             meta_tab = meta_tab,
             meta_win = meta_win,

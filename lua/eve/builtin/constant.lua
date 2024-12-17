@@ -3,8 +3,8 @@ local M = {}
 
 ---! Session settings
 
-M.SESSION_SAVE_OPTION = "buffers,curdir,folds,help,resize,tabpages,unix,winpos,winsize"
-M.SESSION_AUTOSAVE_OPTION = "buffers,curdir,folds,help,resize,tabpages,unix,winpos,winsize"
+M.SESSION_SAVE_OPTION = "blank,buffers,curdir,folds,globals,help,resize,slash,skiprtp,tabpages,unix,winpos,winsize"
+M.SESSION_AUTOSAVE_OPTION = "blank,buffers,curdir,folds,globals,help,resize,slash,skiprtp,tabpages,unix,winpos,winsize"
 
 ---! Tab settings
 
