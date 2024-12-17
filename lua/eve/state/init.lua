@@ -34,6 +34,7 @@ function M.dump()
     bookmark = data_workspace.bookmark,
     dressing = data_workspace.dressing,
     find = data_workspace.find,
+    find_buffer = data_workspace.find_buffer,
     flight = data_workspace.flight,
     frecency = data_workspace.frecency,
     input_history = data_workspace.input_history,
@@ -95,6 +96,7 @@ function M.load(storage)
       bookmark = workspace.state.bookmark,
       dressing = workspace.state.dressing,
       find = workspace.state.find,
+      find_buffer = workspace.state.find_buffer,
       flight = workspace.state.flight,
       frecency = workspace.state.frecency,
       input_history = workspace.state.input_history,
@@ -189,6 +191,13 @@ function M.watch_changes(params)
     state.find.scope,
 
     ---
+    state.find_buffer.flag_case_sensitive,
+    state.find_buffer.flag_fuzzy,
+    state.find_buffer.flag_regex,
+    state.find_buffer.keyword,
+    state.find_buffer.scope,
+
+    ---
     state.flight.autoload,
     state.flight.autosave,
     state.flight.copilot,
@@ -211,23 +220,6 @@ function M.watch_changes(params)
     state.search.search_paths,
   }, function()
     state.dirtier.workspace_states:tick()
-    status.statusline_dirtier:mark_dirty()
-  end, true)
-
-  ---! Trigger statusline redraw.
-  mvc.observe({
-    ---find
-    state.find.flag_gitignore,
-    state.find.scope,
-
-    ---flight
-    state.flight.copilot,
-
-    ---search
-    state.search.flag_gitignore,
-    state.search.flag_replace,
-    state.search.scope,
-  }, function()
     status.statusline_dirtier:mark_dirty()
   end, true)
 

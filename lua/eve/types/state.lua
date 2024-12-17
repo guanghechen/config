@@ -9,6 +9,7 @@
 ---
 ---@field public bookmark               eve.t.state.data.bookmark
 ---@field public find                   eve.t.state.data.find
+---@field public find_buffer            eve.t.state.data.find_buffer
 ---@field public flight                 eve.t.state.data.flight
 ---@field public search                 eve.t.state.data.search
 ---
@@ -25,6 +26,7 @@
 ---
 ---@field public bookmark               eve.t.state.state.bookmark
 ---@field public find                   eve.t.state.state.find
+---@field public find_buffer            eve.t.state.state.find_buffer
 ---@field public flight                 eve.t.state.state.flight
 ---@field public search                 eve.t.state.state.search
 ---

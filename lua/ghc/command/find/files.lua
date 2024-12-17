@@ -208,7 +208,7 @@ local actions = {
 local function get_select()
   if _select == nil then
     local frecency = state.state.frecency.files ---@type eve.lib.collection.IFrecency
-    local input_history = state.state.input_history.find_files ---@type eve.lib.collection.IHistory
+    local input_history = state.state.input_history.find_file ---@type eve.lib.collection.IHistory
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
     local statusline_items = {

@@ -3,6 +3,10 @@
 ---|"C"
 ---|"D"
 
+---@alias eve.e.FindBufferScope
+---| "A"
+---| "P"
+
 ---@alias eve.e.SearchScope
 ---|"W"
 ---|"C"

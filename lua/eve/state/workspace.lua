@@ -51,6 +51,15 @@ function M.defaults()
     scope = "C",
   }
 
+  ---@type eve.t.state.data.find_buffer
+  local find_buffer = {
+    flag_case_sensitive = false,
+    flag_fuzzy = true,
+    flag_regex = false,
+    keyword = "",
+    scope = "A",
+  }
+
   ---@type eve.t.state.data.flight
   local flight = {
     autoload = false,
@@ -68,8 +77,9 @@ function M.defaults()
 
   ---@type eve.t.state.data.input_history
   local input_history = {
-    find_files = { present = 0, stack = {} },
-    search_in_files = { present = 0, stack = {} },
+    find_buffer = { present = 0, stack = {} },
+    find_file = { present = 0, stack = {} },
+    search_in_file = { present = 0, stack = {} },
   }
 
   ---@type eve.t.state.data.search
@@ -107,6 +117,7 @@ function M.defaults()
     bookmark = bookmark,
     dressing = dressing,
     find = find,
+    find_buffer = find_buffer,
     flight = flight,
     frecency = frecency,
     input_history = input_history,
@@ -148,6 +159,15 @@ function M.dump()
     scope = state.find.scope:snapshot(),
   }
 
+  ---@type eve.t.state.data.find_buffer
+  local find_buffer = {
+    flag_case_sensitive = state.find_buffer.flag_case_sensitive:snapshot(),
+    flag_fuzzy = state.find_buffer.flag_fuzzy:snapshot(),
+    flag_regex = state.find_buffer.flag_regex:snapshot(),
+    keyword = state.find_buffer.keyword:snapshot(),
+    scope = state.find_buffer.scope:snapshot(),
+  }
+
   ---@type eve.t.state.data.flight
   local flight = {
     autoload = state.flight.autoload:snapshot(),
@@ -165,8 +185,9 @@ function M.dump()
 
   ---@type eve.t.state.data.input_history
   local input_history = {
-    find_files = state.input_history.find_files:dump(),
-    search_in_files = state.input_history.search_in_files:dump(),
+    find_buffer = state.input_history.find_buffer:dump(),
+    find_file = state.input_history.find_file:dump(),
+    search_in_file = state.input_history.search_in_file:dump(),
   }
 
   ---@type eve.t.state.data.search
@@ -190,6 +211,7 @@ function M.dump()
     bookmark = bookmark,
     dressing = dressing,
     find = find,
+    find_buffer = find_buffer,
     flight = flight,
     frecency = frecency,
     input_history = input_history,
@@ -226,6 +248,15 @@ function M.load(data)
       scope = Observable.from_value(data.find.scope),
     }
 
+    ---@type eve.t.state.state.find_buffer
+    local find_buffer = {
+      flag_case_sensitive = Observable.from_value(data.find_buffer.flag_case_sensitive),
+      flag_fuzzy = Observable.from_value(data.find_buffer.flag_fuzzy),
+      flag_regex = Observable.from_value(data.find_buffer.flag_regex),
+      keyword = Observable.from_value(data.find_buffer.keyword),
+      scope = Observable.from_value(data.find_buffer.scope),
+    }
+
     ---@type eve.t.state.state.flight
     local flight = {
       autoload = Observable.from_value(data.flight.autoload),
@@ -248,15 +279,20 @@ function M.load(data)
 
     ---@type eve.t.state.state.input_history
     local input_history = {
-      find_files = History.deserialize({
-        name = "find_files",
+      find_buffer = History.deserialize({
+        name = "find_buffer",
         capacity = 100,
-        data = data.input_history.find_files,
+        data = data.input_history.find_buffer,
       }),
-      search_in_files = History.deserialize({
+      find_file = History.deserialize({
+        name = "find_file",
+        capacity = 100,
+        data = data.input_history.find_file,
+      }),
+      search_in_file = History.deserialize({
         name = "search_in_files",
         capacity = 300,
-        data = data.input_history.search_in_files,
+        data = data.input_history.search_in_file,
       }),
     }
 
@@ -281,6 +317,7 @@ function M.load(data)
       bookmark = bookmark,
       dressing = dressing,
       find = find,
+      find_buffer = find_buffer,
       flight = flight,
       frecency = frecency,
       input_history = input_history,
@@ -314,6 +351,13 @@ function M.load(data)
     state.find.keyword:next(data.find.keyword)
     state.find.scope:next(data.find.scope)
 
+    ---! find_buffer
+    state.find_buffer.flag_case_sensitive:next(data.find_buffer.flag_case_sensitive)
+    state.find_buffer.flag_fuzzy:next(data.find_buffer.flag_fuzzy)
+    state.find_buffer.flag_regex:next(data.find_buffer.flag_regex)
+    state.find_buffer.keyword:next(data.find_buffer.keyword)
+    state.find_buffer.scope:next(data.find_buffer.scope)
+
     ---! flight
     state.flight.autoload:next(data.flight.autoload)
     state.flight.autosave:next(data.flight.autosave)
@@ -326,8 +370,9 @@ function M.load(data)
     state.frecency.files:load(data.frecency.files)
 
     ---! input_history
-    state.input_history.find_files:load(data.input_history.find_files)
-    state.input_history.search_in_files:load(data.input_history.search_in_files)
+    state.input_history.find_buffer:load(data.input_history.find_buffer)
+    state.input_history.find_file:load(data.input_history.find_file)
+    state.input_history.search_in_file:load(data.input_history.search_in_file)
 
     ---! search
     state.search.flag_case_sensitive:next(data.search.flag_case_sensitive)
@@ -406,6 +451,24 @@ function M.normalize(data)
     end
   end
 
+  if type(data.find_buffer) == "table" then
+    if type(data.find_buffer.flag_case_sensitive) == "boolean" then
+      resolved.find_buffer.flag_case_sensitive = data.find_buffer.flag_case_sensitive
+    end
+    if type(data.find_buffer.flag_fuzzy) == "boolean" then
+      resolved.find_buffer.flag_fuzzy = data.find_buffer.flag_fuzzy
+    end
+    if type(data.find_buffer.flag_regex) == "boolean" then
+      resolved.find_buffer.flag_regex = data.find_buffer.flag_regex
+    end
+    if type(data.find_buffer.keyword) == "string" then
+      resolved.find_buffer.keyword = data.find_buffer.keyword
+    end
+    if type(data.find_buffer.scope) == "string" then
+      resolved.find_buffer.scope = data.find_buffer.scope
+    end
+  end
+
   if type(data.flight) == "table" then
     if type(data.flight.autoload) == "boolean" then
       resolved.flight.autoload = data.flight.autoload
@@ -428,20 +491,20 @@ function M.normalize(data)
   end
 
   if type(data.frecency) == "table" then
-    for key, frecency in pairs(data.frecency) do
+    for key, frecency in pairs(resolved.frecency) do
       if data.frecency[key] and type(frecency) == "table" then
         if type(frecency.MAX_TIMESTAMPS) == "number" then
-          data.frecency[key].MAX_TIMESTAMPS = frecency.MAX_TIMESTAMPS
+          resolved.frecency[key].MAX_TIMESTAMPS = frecency.MAX_TIMESTAMPS
         end
         if type(frecency.items) == "table" then
-          data.frecency[key].items = frecency.items
+          resolved.frecency[key].items = frecency.items
         end
       end
     end
   end
 
   if type(data.input_history) == "table" then
-    for key, history in pairs(data.input_history) do
+    for key, history in pairs(resolved.input_history) do
       if data.input_history[key] and type(history) == "table" then
         if type(history.present) == "number" then
           resolved.input_history[key].present = history.present

@@ -1,6 +1,8 @@
 local path = require("eve.lib.path")
 local checks = require("eve.builtin.checks")
+local constant = require("eve.builtin.constant")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
+local state = eve.state.state.find_buffer ---@type eve.t.state.state.find_buffer
 
 ---@class ghc.command.find.buffers.IItemData
 ---@field public bufnr                  integer
@@ -10,36 +12,77 @@ local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 ---@field public icon                   string
 ---@field public icon_hl                string
 
-local cwd = path.cwd() ---@type string
+---@type fml.t.ux.ISelect|nil
+local select
+
+local scopes = { "A", "P" } ---@type eve.e.FindBufferScope[]
+
+---@type eve.t.ux.widget.IRawStatuslineItem[]
+local statusline_items = {
+  {
+    type = "enum",
+    desc = "find(buffer): toggle scope",
+    symbol = "",
+    state = state.scope,
+    callback = function()
+      local scope = state.scope:snapshot() ---@type eve.e.FindBufferScope
+      local idx = eve.util.find_index(scopes, scope) or 1 ---@type integer
+      local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
+      local next_scope = scopes[idx_next] ---@type eve.e.FindBufferScope
+      state.scope:next(next_scope)
+
+      if select ~= nil then
+        select:mark_data_dirty()
+      end
+    end,
+  },
+}
 
 ---@type fml.t.ux.select.IProvider
 local provider = {
   fetch_data = function()
-    cwd = path.cwd() ---@type string
+    local cwd = path.cwd() ---@type string
+    local scope = state.scope:snapshot() ---@type eve.e.FindBufferScope
+
+    ---@param bufnr                     integer
+    local function should_show(bufnr)
+      local filetype = vim.bo[bufnr].filetype ---@type string
+      if
+        filetype == constant.FT_SEARCH_INPUT
+        or filetype == constant.FT_SEARCH_MAIN
+        or filetype == constant.FT_SEARCH_PREVIEW
+        or filetype == constant.FT_WINSEP
+      then
+        return false
+      end
+      return true
+    end
 
     local items = {} ---@type fml.t.ux.select.IItem[]
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
-      local filetype = vim.bo[bufnr].filetype ---@type string
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local relative_filepath = path.relative(cwd, filepath, true) ---@type string
-      local filename = path.basename(filepath)
-      local icon, icon_hl = eve.nvim.calc_fileicon(filename)
+      if scope == "A" or should_show(bufnr) then
+        local filetype = vim.bo[bufnr].filetype ---@type string
+        local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        local relative_filepath = path.relative(cwd, filepath, true) ---@type string
+        local filename = path.basename(filepath)
+        local icon, icon_hl = eve.nvim.calc_fileicon(filename)
 
-      ---@type ghc.command.find.buffers.IItemData
-      local data = {
-        bufnr = bufnr,
-        filetype = filetype,
-        filepath = relative_filepath,
-        filename = filename,
-        icon = icon,
-        icon_hl = icon_hl,
-      }
+        ---@type ghc.command.find.buffers.IItemData
+        local data = {
+          bufnr = bufnr,
+          filetype = filetype,
+          filepath = relative_filepath,
+          filename = filename,
+          icon = icon,
+          icon_hl = icon_hl,
+        }
 
-      local text =
-        string.format("%-5d  %-18s  %s %s", bufnr, filetype, #filepath > 0 and icon or " ", relative_filepath)
-      local item = { uuid = tostring(bufnr), text = text, data = data }
-      items[#items + 1] = item
+        local text =
+          string.format("%-5d  %-18s  %s %s", bufnr, filetype, #filepath > 0 and icon or " ", relative_filepath)
+        local item = { uuid = tostring(bufnr), text = text, data = data }
+        items[#items + 1] = item
+      end
     end
 
     table.sort(items, function(a, b)
@@ -70,7 +113,7 @@ local provider = {
 }
 
 ---@type fml.t.ux.ISelect
-local select = fml.ux.Select.new({
+select = fml.ux.Select.new({
   dimension = {
     height = 0.8,
     max_height = 1,
@@ -78,8 +121,14 @@ local select = fml.ux.Select.new({
     width = 120,
   },
   dirty_on_invisible = true,
+  flag_case_sensitive = state.flag_case_sensitive,
+  flag_fuzzy = state.flag_fuzzy,
+  flag_regex = state.flag_regex,
+  input = state.keyword,
+  input_history = eve.state.state.input_history.find_buffer,
   preview_enabled = false,
   extend_preset_keymaps = true,
+  statusline_items = statusline_items,
   provider = provider,
   title = "Find buffers",
   on_confirm = function(item)

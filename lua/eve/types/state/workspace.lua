@@ -34,6 +34,20 @@
 ---@field public keyword                eve.lib.collection.IObservable
 ---@field public scope                  eve.lib.collection.IObservable
 
+---@class eve.t.state.data.find_buffer
+---@field public flag_case_sensitive    boolean
+---@field public flag_fuzzy             boolean
+---@field public flag_regex             boolean
+---@field public keyword                string
+---@field public scope                  eve.e.FindBufferScope
+
+---@class eve.t.state.state.find_buffer
+---@field public flag_case_sensitive    eve.lib.collection.IObservable
+---@field public flag_fuzzy             eve.lib.collection.IObservable
+---@field public flag_regex             eve.lib.collection.IObservable
+---@field public keyword                eve.lib.collection.IObservable
+---@field public scope                  eve.lib.collection.IObservable
+
 ---@class eve.t.state.data.flight
 ---@field public autoload               boolean
 ---@field public autosave               boolean
@@ -57,12 +71,14 @@
 ---@field public files                  eve.lib.collection.IFrecency
 
 ---@class eve.t.state.data.input_history
----@field public find_files             eve.lib.collection.history.ISerializedData
----@field public search_in_files        eve.lib.collection.history.ISerializedData
+---@field public find_buffer            eve.lib.collection.history.ISerializedData
+---@field public find_file              eve.lib.collection.history.ISerializedData
+---@field public search_in_file         eve.lib.collection.history.ISerializedData
 
 ---@class eve.t.state.state.input_history
----@field public find_files             eve.lib.collection.IHistory
----@field public search_in_files        eve.lib.collection.IHistory
+---@field public find_buffer            eve.lib.collection.IHistory
+---@field public find_file              eve.lib.collection.IHistory
+---@field public search_in_file         eve.lib.collection.IHistory
 
 ---@class eve.t.state.data.search
 ---@field public flag_case_sensitive    boolean
@@ -96,6 +112,7 @@
 ---@field public bookmark               eve.t.state.data.bookmark
 ---@field public dressing               eve.t.state.data.dressing
 ---@field public find                   eve.t.state.data.find
+---@field public find_buffer            eve.t.state.data.find_buffer
 ---@field public flight                 eve.t.state.data.flight
 ---@field public frecency               eve.t.state.data.frecency
 ---@field public input_history          eve.t.state.data.input_history
@@ -105,6 +122,7 @@
 ---@field public bookmark               eve.t.state.state.bookmark
 ---@field public dressing               eve.t.state.state.dressing
 ---@field public find                   eve.t.state.state.find
+---@field public find_buffer            eve.t.state.state.find_buffer
 ---@field public flight                 eve.t.state.state.flight
 ---@field public frecency               eve.t.state.state.frecency
 ---@field public input_history          eve.t.state.state.input_history

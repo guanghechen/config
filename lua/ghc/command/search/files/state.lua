@@ -74,7 +74,7 @@ function M.get_search()
     local keybindings = require("ghc.command.search.files.keybindings")
 
     local frecency = state.state.frecency.files ---@type eve.lib.collection.IFrecency
-    local input_history = state.state.input_history.search_in_files ---@type eve.lib.collection.IHistory
+    local input_history = state.state.input_history.search_in_file ---@type eve.lib.collection.IHistory
     local title = M.get_title() ---@type string
 
     _search = fml.ux.search.Search.new({
