@@ -112,3 +112,11 @@ vim.api.nvim_create_autocmd("TermOpen", {
     vim.cmd("startinsert") -- Start in insert mode
   end,
 })
+
+vim.api.nvim_create_autocmd("SessionLoadPost", {
+  group = augroup("auto_detect_filetypes"),
+  pattern = "*",
+  callback = function()
+    vim.cmd("filetype detect")
+  end,
+})

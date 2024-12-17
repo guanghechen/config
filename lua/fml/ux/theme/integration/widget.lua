@@ -21,6 +21,11 @@ local function gen_hlgroup_map(context)
     f_lnum_hint = { fg = c.purple },
     f_transparent = { bg = "none" },
 
+    ---buffers
+    f_buf_nr = { fg = c.fg4 },
+    f_buf_filetype = { fg = c.fg3 },
+    f_buf_filepath = { fg = c.fg2 },
+
     ---hi_pairs
     f_hi_pairs_1 = { fg = c.red, bg = c.bg4, bold = true },
     f_hi_pairs_2 = { fg = c.green, bg = c.bg2, bold = true },
