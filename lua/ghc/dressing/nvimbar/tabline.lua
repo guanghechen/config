@@ -46,8 +46,8 @@ tabline = Nvimbar.new({
 })
 
 tabline
-  :place("left", c.neotree(position), 90)
-  :place("left", c.diffview(position), 90)
+  :place("left", c.neotree(position), 95)
+  :place("left", c.diffview(position), 95)
   :place("left", c.bufs(position), 95)
   --
   :place("center", c.debug_render_count(position), 100)
