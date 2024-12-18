@@ -156,8 +156,8 @@ state_cwd:subscribe(
 ---@return fml.t.ux.ISelect
 local function get_select()
   if _select == nil then
-    local frecency = state.state.frecency.files ---@type eve.lib.collection.IFrecency
-    local input_history = state.state.input_history.find_file ---@type eve.lib.collection.IHistory
+    local frecency = state.frecency.files ---@type eve.lib.collection.IFrecency
+    local input_history = state.input_history.find_file ---@type eve.lib.collection.IHistory
 
     local main_width = 0.4 ---@type number
     ---@type fml.t.ux.search.IRawDimension
@@ -438,8 +438,12 @@ local function get_select()
         end
 
         if fileitem.type == "file" then
-          local ok = eve.buf.open_filepath_in_current_valid_win(fileitem.path)
-          return ok and "hide" or "none"
+          local winnr = state.tab.get_current_winnr() ---@type integer
+          if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+            state.buf.open_filepath(winnr, fileitem.path)
+            return "hide"
+          end
+          return "none"
         end
 
         return "none"
@@ -455,10 +459,17 @@ eve.commander.register({
   uuid = uuids.find_explorer,
   desc = "find: explorer",
   action = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local win_detail = eve.win.get_details(winnr) ---@type eve.builtin.win.IDetails|nil
-    if win_detail ~= nil and win_detail.dirpath ~= nil then
-      state_cwd:next(win_detail.dirpath)
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+    if meta_tab ~= nil then
+      local winnr = meta_tab.winnr_listed ---@type integer
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      if #filepath > 0 then
+        local doctype = fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
+        local dirpath = doctype == "file" and path.dirname(filepath) or filepath ---@type string
+        state_cwd:next(dirpath)
+      end
     end
 
     local select = get_select() ---@type fml.t.ux.ISelect

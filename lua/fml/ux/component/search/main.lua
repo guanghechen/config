@@ -13,7 +13,7 @@ M.__index = M
 ---@class fml.ux.search.main.IProps
 ---@field public delay_render           integer
 ---@field public keymaps                eve.t.IKeymap[]
----@field public state                  fml.t.ux.search.IState
+---@field public context                fml.t.ux.search.IContext
 ---@field public on_rendered            ?fml.t.ux.search.IOnMainRendered
 
 ---@param props                         fml.ux.search.main.IProps
@@ -23,7 +23,7 @@ function M.new(props)
 
   local delay_render = props.delay_render ---@type integer
   local keymaps = props.keymaps ---@type eve.t.IKeymap[]
-  local state = props.state ---@type fml.t.ux.search.IState
+  local context = props.context ---@type fml.t.ux.search.IContext
   local on_rendered = props.on_rendered ---@type fml.t.ux.search.IOnMainRendered|nil
 
   local _last_items = nil ---@type fml.t.ux.search.IItem[]|nil
@@ -35,21 +35,21 @@ function M.new(props)
     local bufnr = self:create_buf_as_needed() ---@type integer
     local last_items = _last_items ---@type fml.t.ux.search.IItem[]|nil
     local last_items_count = _last_items_count ---@type integer
-    _last_items = state.items
-    _last_items_count = #state.items
+    _last_items = context.items
+    _last_items_count = #context.items
 
     ---@type boolean
     local has_content_changed = bufnr ~= _last_drawed_bufnr
       or last_items == nil
-      or last_items ~= state.items
-      or last_items_count ~= #state.items
+      or last_items ~= context.items
+      or last_items_count ~= #context.items
 
     if has_content_changed then
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
 
       local lines = {} ---@type string[]
-      for i, item in ipairs(state.items) do
+      for i, item in ipairs(context.items) do
         lines[i] = item.text
       end
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
@@ -58,7 +58,7 @@ function M.new(props)
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 
-      local items = state.items ---@type fml.t.ux.search.IItem[]
+      local items = context.items ---@type fml.t.ux.search.IItem[]
       for lnum, item in ipairs(items) do
         local highlights = item.highlights ---@type eve.t.IHighlightInline[]
         for _, hl in ipairs(highlights) do
@@ -81,23 +81,23 @@ function M.new(props)
         callback("rejected", nil, reason)
       end
 
-      state.dirtier_main:mark_clean()
+      context.dirtier_main:mark_clean()
       if on_rendered then
         on_rendered()
       end
     end,
   })
 
-  self.state = state
+  self.state = context
   self._bufnr = nil
   self._keymaps = keymaps
   self._render_scheduler = render_scheduler
 
-  state.dirtier_main:subscribe(
+  context.dirtier_main:subscribe(
     Subscriber.new({
       on_next = function()
-        local is_main_dirty = state.dirtier_main:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
+        local is_main_dirty = context.dirtier_main:is_dirty() ---@type boolean
+        local status = context.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_main_dirty then
           render_scheduler:schedule()

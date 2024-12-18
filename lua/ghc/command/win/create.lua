@@ -1,3 +1,4 @@
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
@@ -9,10 +10,10 @@ eve.commander
 
       vim.cmd("split")
 
-      local meta_forked = eve.win.fork_meta(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      local meta_forked = state.win.fork(winnr) ---@type eve.t.state.win.meta.state|nil
       if meta_forked ~= nil then
         local winnr_new = vim.api.nvim_get_current_win() ---@type integer
-        eve.win.set_meta(winnr_new, meta_forked)
+        state.win.set(winnr_new, meta_forked)
       end
     end,
   })
@@ -24,10 +25,10 @@ eve.commander
 
       vim.cmd("vsplit")
 
-      local meta_forked = eve.win.fork_meta(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      local meta_forked = state.win.fork(winnr) ---@type eve.t.state.win.meta.state|nil
       if meta_forked ~= nil then
         local winnr_new = vim.api.nvim_get_current_win() ---@type integer
-        eve.win.set_meta(winnr_new, meta_forked)
+        state.win.set(winnr_new, meta_forked)
       end
     end,
   })

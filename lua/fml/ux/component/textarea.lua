@@ -2,6 +2,7 @@ local __module_name__ = "fml.ux.component.textarea" ---@type string
 
 local box = require("eve.lib.box")
 local reporter = require("eve.lib.reporter")
+local state = require("eve.state")
 
 ---@type string
 local WIN_HIGHLIGHT = table.concat({
@@ -59,7 +60,7 @@ function M.new(props)
   local min_width = props.min_width ---@type number|nil
   local min_height = props.min_height ---@type number|nil
   local filetype = props.filetype ---@type string|nil
-  local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+  local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
   ---@type table<string, any>
   local win_opts = vim.tbl_extend("force", {

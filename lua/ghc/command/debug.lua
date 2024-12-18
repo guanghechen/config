@@ -14,11 +14,11 @@ eve.commander
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
 
-      local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
-      local meta_win = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
-      local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+      local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+      local meta_win = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
+      local meta_buf = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
 
-      local winnr_cur = eve.tab.get_current_winnr() ---@type integer
+      local winnr_cur = state.tab.get_current_winnr() ---@type integer
       local bufnr_cur = winnr_cur > 0 and vim.api.nvim_win_get_buf(winnr_cur) or 0 ---@type integer
 
       reporter.info({
@@ -51,7 +51,7 @@ eve.commander
     uuid = uuids.debug_inspect_state,
     desc = "debug: inspect state",
     action = function()
-      local data = state.dump() ---@type eve.t.state.data
+      local data = state.dump() ---@type eve.state.data
       reporter.info({
         from = __module_name__,
         subject = "inspect_state",

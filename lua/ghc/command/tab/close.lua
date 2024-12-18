@@ -48,7 +48,7 @@ eve.commander
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       vim.cmd("tabonly")
-      state.state.tab_history:clear()
-      state.state.tab_history:push(tabnr)
+      state.tab.tab_history:clear()
+      state.tab.tab_history:push(tabnr)
     end,
   })

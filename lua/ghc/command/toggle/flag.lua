@@ -7,7 +7,7 @@ eve.commander
     uuid = uuids.toggle_dressing_hi_pairs,
     desc = "toggle: dressing hi_pairs",
     action = function()
-      local observable = state.state.dressing.hi_pairs ---@type eve.lib.collection.IObservable
+      local observable = state.flight.dressing_hi_pairs ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
       eve.commander.execute(uuids.reload_theme, "force")
@@ -17,7 +17,7 @@ eve.commander
     uuid = uuids.toggle_dressing_winsep_fixed,
     desc = "toggle: dressing winsep (fixed)",
     action = function()
-      local observable = state.state.dressing.winsep_fixed ---@type eve.lib.collection.IObservable
+      local observable = state.flight.dressing_winsep_fixed ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
       eve.commander.execute(uuids.reload_theme, "force")
@@ -27,7 +27,7 @@ eve.commander
     uuid = uuids.toggle_dressing_winsep_float,
     desc = "toggle: dressing winsep (float)",
     action = function()
-      local observable = state.state.dressing.winsep_float ---@type eve.lib.collection.IObservable
+      local observable = state.flight.dressing_winsep_float ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
       eve.commander.execute(uuids.reload_theme, "force")
@@ -37,7 +37,7 @@ eve.commander
     uuid = uuids.toggle_relativenumber,
     desc = "toggle: relativenumber",
     action = function()
-      local observable = state.state.theme.relativenumber ---@type eve.lib.collection.IObservable
+      local observable = state.theme.relativenumber ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
 
       vim.opt.relativenumber = not flag
@@ -48,7 +48,7 @@ eve.commander
     uuid = uuids.toggle_theme_transparency,
     desc = "toggle: theme transparency",
     action = function()
-      local observable = state.state.theme.transparency ---@type eve.lib.collection.IObservable
+      local observable = state.theme.transparency ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot() ---@type boolean
       observable:next(not flag)
       eve.commander.execute(uuids.reload_theme, "force")

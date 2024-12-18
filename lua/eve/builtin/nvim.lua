@@ -64,6 +64,37 @@ function M.calc_fileicon(filename)
   return "󰈚", "MiniIconsRed"
 end
 
+---@param tabnr                         integer
+---@return string
+function M.calc_tabtype(tabnr)
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+
+  ---! Check if the diffview tab
+  for _, winnr in ipairs(winnrs) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    if filetype == constant.FT_DIFFVIEW_FILES or filetype == constant.FT_DIFFVIEW_FILE_HISTORY then
+      return constant.TT_DIFFVIEW
+    end
+  end
+
+  return constant.TT_NORMAL ---@type string
+end
+
+---@return table<string, integer>
+function M.gen_filepath2bufnr()
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  local filepath2bufnr = {} ---@type table<string, integer>
+
+  for _, bufnr in ipairs(bufnrs) do
+    local filepath = vim.api.nvim_buf_get_name(bufnr)
+    if filepath ~= nil and #filepath > 0 then
+      filepath2bufnr[filepath] = bufnr
+    end
+  end
+  return filepath2bufnr
+end
+
 ---@return string
 function M.get_selected_text()
   local saved_reg = vim.fn.getreg("v")

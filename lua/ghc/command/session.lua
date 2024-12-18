@@ -12,7 +12,7 @@ eve.commander
     action = function()
       if path.is_git_repo() then
         local nvim_session_filepath = nil ---@type string|nil
-        local storage = state.get_storage() ---@type eve.t.state.storage
+        local storage = state.get_storage() ---@type eve.state.storage
         if storage.nvim_session and vim.fn.filereadable(storage.nvim_session) ~= 0 then
           nvim_session_filepath = storage.nvim_session
         elseif storage.nvim_session_autosaved and vim.fn.filereadable(storage.nvim_session_autosaved) ~= 0 then
@@ -36,7 +36,7 @@ eve.commander
     desc = "session: save",
     action = function()
       if path.is_git_repo() then
-        local storage = state.get_storage() ---@type eve.t.state.storage
+        local storage = state.get_storage() ---@type eve.state.storage
         state.save({
           session = storage.session,
           workspace = storage.workspace,

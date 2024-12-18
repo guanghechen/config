@@ -7,8 +7,8 @@ local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Subscriber = require("eve.lib.collection.subscriber")
 local checks = require("eve.builtin.checks")
-local context_state = require("eve.state")
-local state = require("ghc.command.search.files.state")
+local state = require("eve.state")
+local context = require("ghc.command.search.files.context")
 
 ---@class ghc.command.search.files.IFileItem
 ---@field public children               string[]
@@ -37,37 +37,37 @@ local _last_preview_data = nil ---@type ghc.command.search.files.IPreviewData|ni
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.lib.oxi.search.IResult|nil
 
-context_state.state.search.search_paths:subscribe(
+state.search.search_paths:subscribe(
   Subscriber.new({
     on_next = function()
-      state.refresh_title()
+      context.refresh_title()
     end,
   }),
   true
 )
 
 eve.mvc.observe({
-  context_state.state.search.excludes,
-  context_state.state.search.flag_case_sensitive,
-  context_state.state.search.flag_gitignore,
-  context_state.state.search.flag_regex,
-  context_state.state.search.includes,
-  context_state.state.search.max_filesize,
-  context_state.state.search.max_matches,
-  context_state.state.search.search_paths,
-  state.search_cwd,
+  state.search.excludes,
+  state.search.flag_case_sensitive,
+  state.search.flag_gitignore,
+  state.search.flag_regex,
+  state.search.includes,
+  state.search.max_filesize,
+  state.search.max_matches,
+  state.search.search_paths,
+  context.search_cwd,
 }, function()
   _last_preview_data = nil
   _last_search_input = nil
   _last_search_result = nil
-  state.reload()
+  context.reload()
 end, true)
 eve.mvc.observe({
-  context_state.state.search.flag_replace,
-  context_state.state.search.replacement,
+  state.search.flag_replace,
+  state.search.replacement,
 }, function()
   _last_preview_data = nil
-  state.reload()
+  context.reload()
 end, true)
 
 ---@param lwidths                       integer[]
@@ -111,7 +111,7 @@ function M.calc_preview_data(uuid)
     return result, 1, 0
   end
 
-  local cwd = state.search_cwd:snapshot() ---@type string
+  local cwd = context.search_cwd:snapshot() ---@type string
   local filepath = path.resolve(cwd, item.filepath) ---@type string
   local filename = path.basename(filepath) ---@type string
   if not checks.is_printable_file(filename) then
@@ -126,11 +126,11 @@ function M.calc_preview_data(uuid)
   end
 
   local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-  local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
-  local flag_replace = context_state.state.search.flag_replace:snapshot() ---@type boolean
-  local keyword = context_state.state.search.keyword:snapshot() ---@type string
-  local replacement = context_state.state.search.replacement:snapshot() ---@type string
+  local flag_case_sensitive = state.search.flag_case_sensitive:snapshot() ---@type boolean
+  local flag_regex = state.search.flag_regex:snapshot() ---@type boolean
+  local flag_replace = state.search.flag_replace:snapshot() ---@type boolean
+  local keyword = state.search.keyword:snapshot() ---@type string
+  local replacement = state.search.replacement:snapshot() ---@type string
   local match_offset_cur = item.offset ---@type integer
   local match_offsets = M.collect_valid_match_offsets(uuid) ---@type integer[]
   local lines = {} ---@type string[]
@@ -270,7 +270,7 @@ function M.collect_valid_match_offsets(uuid)
   local fileitem = _fileitem_map[item.filepath] ---@type ghc.command.search.files.IFileItem
   local offsets = {} ---@type integer[]
   for _, child_uuid in ipairs(fileitem.children) do
-    if not state.has_item_deleted(child_uuid) then
+    if not context.has_item_deleted(child_uuid) then
       offsets[#offsets + 1] = _item_map[child_uuid].offset
     end
   end
@@ -282,12 +282,12 @@ end
 ---@param callback                    fml.t.ux.search.IFetchDataCallback
 ---@return nil
 function M.fetch_data(input_text, force, callback)
-  local cwd = state.search_cwd:snapshot() ---@type string
-  local scope = context_state.state.search.scope:snapshot() ---@type eve.e.SearchScope
+  local cwd = context.search_cwd:snapshot() ---@type string
+  local scope = state.search.scope:snapshot() ---@type eve.e.SearchScope
 
   local specified_filepath ---@type string|nil
   if scope == "B" then
-    local bufnr = eve.tab.get_current_bufnr() ---@type integer
+    local bufnr = state.tab.get_current_bufnr() ---@type integer
     if checks.is_buf_valid(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       specified_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
@@ -311,16 +311,16 @@ function M.fetch_data(input_text, force, callback)
     return
   end
 
-  local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_gitignore = context_state.state.search.flag_gitignore:snapshot() ---@type boolean
-  local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
-  local flag_replace = context_state.state.search.flag_replace:snapshot() ---@type boolean
-  local max_filesize = context_state.state.search.max_filesize:snapshot() ---@type string
-  local max_matches = context_state.state.search.max_matches:snapshot() ---@type integer
-  local search_paths = context_state.state.search.search_paths:snapshot() ---@type string[]
-  local replacement = context_state.state.search.replacement:snapshot() ---@type string
-  local includes = context_state.state.search.includes:snapshot() ---@type string[]
-  local excludes = context_state.state.search.excludes:snapshot() ---@type string[]
+  local flag_case_sensitive = state.search.flag_case_sensitive:snapshot() ---@type boolean
+  local flag_gitignore = state.search.flag_gitignore:snapshot() ---@type boolean
+  local flag_regex = state.search.flag_regex:snapshot() ---@type boolean
+  local flag_replace = state.search.flag_replace:snapshot() ---@type boolean
+  local max_filesize = state.search.max_filesize:snapshot() ---@type string
+  local max_matches = state.search.max_matches:snapshot() ---@type integer
+  local search_paths = state.search.search_paths:snapshot() ---@type string[]
+  local replacement = state.search.replacement:snapshot() ---@type string
+  local includes = state.search.includes:snapshot() ---@type string[]
+  local excludes = state.search.excludes:snapshot() ---@type string[]
 
   ---@type eve.lib.oxi.search.IResult|nil
   local result = (
@@ -566,7 +566,7 @@ end
 ---@return eve.t.IQuickFixItem[]
 function M.gen_quickfix_items()
   local cwd = path.cwd() ---@type string
-  local search_cwd = state.search_cwd:snapshot() ---@type string
+  local search_cwd = context.search_cwd:snapshot() ---@type string
   local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
   for _, item in pairs(_item_map) do
     if item.offset >= 0 then
@@ -601,15 +601,19 @@ end
 ---@param frecency                      eve.lib.collection.IFrecency
 ---@return eve.e.WidgetConfirmAction|nil
 function M.open_file(item, frecency)
-  local cwd = state.search_cwd:snapshot() ---@type string
+  local cwd = context.search_cwd:snapshot() ---@type string
   local workspace = path.workspace() ---@type string
   local data = _item_map and _item_map[item.uuid] ---@type ghc.command.search.files.IItem|nil
   if data ~= nil then
     local absolute_filepath = path.resolve(cwd, data.filepath) ---@type string
     local relative_filepath = path.relative(workspace, absolute_filepath, true) ---@type string
     frecency:access(relative_filepath)
-    local opened = eve.buf.open_filepath_in_current_valid_win(absolute_filepath, data.lnum, data.col) ---@type boolean
-    return opened and "hide" or "none"
+    local winnr = state.tab.get_current_winnr() ---@type integer
+    if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+      local opened = state.buf.open_filepath(winnr, absolute_filepath, data.lnum, data.col) ---@type boolean
+      return opened and "hide" or "none"
+    end
+    return "none"
   end
   return "none"
 end
@@ -627,7 +631,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
   local highlights = {} ---@type eve.t.IHighlight[]
   local cur_lnum = -1 ---@type integer
   local cur_col = 0 ---@type integer
-  local flag_replace = context_state.state.search.flag_replace:snapshot() ---@type boolean
+  local flag_replace = state.search.flag_replace:snapshot() ---@type boolean
   local match_offset_cur = item.offset ---@type integer
 
   if flag_replace then
@@ -689,16 +693,16 @@ end
 ---@return nil
 function M.refresh_file_item(filepath)
   if _last_search_result ~= nil then
-    local cwd = state.search_cwd:snapshot() ---@type string
-    local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
-    local flag_gitignore = context_state.state.search.flag_gitignore:snapshot() ---@type boolean
-    local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
-    local max_filesize = context_state.state.search.max_filesize:snapshot() ---@type string
-    local max_matches = context_state.state.search.max_matches:snapshot() ---@type integer
-    local search_paths = context_state.state.search.search_paths:snapshot() ---@type string[]
-    local keyword = context_state.state.search.keyword:snapshot() ---@type string
-    local includes = context_state.state.search.includes:snapshot() ---@type string[]
-    local excludes = context_state.state.search.excludes:snapshot() ---@type string[]
+    local cwd = context.search_cwd:snapshot() ---@type string
+    local flag_case_sensitive = state.search.flag_case_sensitive:snapshot() ---@type boolean
+    local flag_gitignore = state.search.flag_gitignore:snapshot() ---@type boolean
+    local flag_regex = state.search.flag_regex:snapshot() ---@type boolean
+    local max_filesize = state.search.max_filesize:snapshot() ---@type string
+    local max_matches = state.search.max_matches:snapshot() ---@type integer
+    local search_paths = state.search.search_paths:snapshot() ---@type string[]
+    local keyword = state.search.keyword:snapshot() ---@type string
+    local includes = state.search.includes:snapshot() ---@type string[]
+    local excludes = state.search.excludes:snapshot() ---@type string[]
     local specified_filepath = path.resolve(cwd, filepath) ---@type string
 
     ---@type eve.lib.oxi.search.IResult|nil
@@ -749,12 +753,12 @@ function M.replace_file(uuid)
     return
   end
 
-  local cwd = state.search_cwd:snapshot() ---@type string
+  local cwd = context.search_cwd:snapshot() ---@type string
   local filepath = item.filepath ---@type string
-  local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
-  local keyword = context_state.state.search.keyword:snapshot() ---@type string
-  local replacement = context_state.state.search.replacement:snapshot() ---@type string
+  local flag_case_sensitive = state.search.flag_case_sensitive:snapshot() ---@type boolean
+  local flag_regex = state.search.flag_regex:snapshot() ---@type boolean
+  local keyword = state.search.keyword:snapshot() ---@type string
+  local replacement = state.search.replacement:snapshot() ---@type string
 
   if item.offset >= 0 then
     local children = fileitem.children ---@type string[]
@@ -764,7 +768,7 @@ function M.replace_file(uuid)
     local k = 1 ---@type integer
     for i = 1, N, 1 do
       local child_uuid = children[i] ---@type string
-      if child_uuid ~= uuid and not state.has_item_deleted(child_uuid) then
+      if child_uuid ~= uuid and not context.has_item_deleted(child_uuid) then
         remain_child_uuids[k] = child_uuid
         remain_offsets[k] = _item_map[child_uuid].offset
         k = k + 1
@@ -821,13 +825,13 @@ function M.replace_file(uuid)
 
     ---! Refresh the filematch and preview data and lnum/cols
     _last_preview_data = M.calc_preview_data(uuid)
-    state.mark_item_deleted(uuid)
+    context.mark_item_deleted(uuid)
     return
   end
 
   if not fileitem.fragmentary then
     for _, child_uuid in ipairs(fileitem.children) do
-      if state.has_item_deleted(child_uuid) then
+      if context.has_item_deleted(child_uuid) then
         fileitem.fragmentary = true
         break
       end
@@ -838,7 +842,7 @@ function M.replace_file(uuid)
   if fileitem.fragmentary then
     local match_offsets = {} ---@type string[]
     for _, child_uuid in ipairs(fileitem.children) do
-      if not state.has_item_deleted(child_uuid) then
+      if not context.has_item_deleted(child_uuid) then
         local child_item = _item_map[child_uuid]
         table.insert(match_offsets, child_item.offset)
       end
@@ -872,22 +876,22 @@ function M.replace_file(uuid)
     end
     _fileitem_map[item.filepath] = nil
     _item_map[uuid] = nil
-    state.mark_item_deleted(uuid)
+    context.mark_item_deleted(uuid)
   end
 end
 
 ---@return nil
 function M.replace_file_all()
   for filepath, fileitem in pairs(_fileitem_map) do
-    local cwd = state.search_cwd:snapshot() ---@type string
-    local flag_case_sensitive = context_state.state.search.flag_case_sensitive:snapshot() ---@type boolean
-    local flag_regex = context_state.state.search.flag_regex:snapshot() ---@type boolean
-    local keyword = context_state.state.search.keyword:snapshot() ---@type string
-    local replacement = context_state.state.search.replacement:snapshot() ---@type string
+    local cwd = context.search_cwd:snapshot() ---@type string
+    local flag_case_sensitive = state.search.flag_case_sensitive:snapshot() ---@type boolean
+    local flag_regex = state.search.flag_regex:snapshot() ---@type boolean
+    local keyword = state.search.keyword:snapshot() ---@type string
+    local replacement = state.search.replacement:snapshot() ---@type string
 
     if not fileitem.fragmentary then
       for _, child_uuid in ipairs(fileitem.children) do
-        if state.has_item_deleted(child_uuid) then
+        if context.has_item_deleted(child_uuid) then
           fileitem.fragmentary = true
           break
         end
@@ -897,7 +901,7 @@ function M.replace_file_all()
     if fileitem.fragmentary then
       local match_offsets = {} ---@type string[]
       for _, child_uuid in ipairs(fileitem.children) do
-        if not state.has_item_deleted(child_uuid) then
+        if not context.has_item_deleted(child_uuid) then
           local child_item = _item_map[child_uuid]
           table.insert(match_offsets, child_item.offset)
         end
@@ -930,7 +934,7 @@ function M.replace_file_all()
   _last_preview_data = nil
   _last_search_input = nil
   _last_search_result = nil
-  state:mark_all_items_deleted()
+  context:mark_all_items_deleted()
 end
 
 return M

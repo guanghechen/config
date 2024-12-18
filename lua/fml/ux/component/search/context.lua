@@ -9,7 +9,7 @@ local Subscriber = require("eve.lib.collection.subscriber")
 local oxi = require("eve.lib.oxi")
 local util = require("eve.builtin.util")
 
----@class fml.ux.search.State : fml.t.ux.search.IState
+---@class fml.ux.search.Context : fml.t.ux.search.IContext
 ---@field protected _deleted_uuids      table<string, boolean>
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
@@ -25,7 +25,7 @@ M.__index = M
 ---@field public title                  string
 
 ---@param props                         fml.ux.search.state.IProps
----@return fml.ux.search.State
+---@return fml.ux.search.Context
 function M.new(props)
   local self = setmetatable({}, M)
 

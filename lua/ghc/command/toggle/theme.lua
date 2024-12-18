@@ -11,8 +11,8 @@ local theme_cache_path = path.locate_context_filepath("theme")
 ---@param force                         ?boolean
 ---@return nil
 local function reload_theme(force)
-  local theme = state.state.theme.theme:snapshot() ---@type eve.e.Theme
-  local transparency = state.state.theme.transparency:snapshot() ---@type boolean
+  local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
+  local transparency = state.theme.transparency:snapshot() ---@type boolean
 
   if force or not path.is_exist(theme_cache_path) then
     fml.ux.theme.apply_theme({
@@ -113,7 +113,7 @@ eve.commander
             width = 50,
           },
           get_present = function()
-            local theme = state.state.theme.theme:snapshot() ---@type eve.e.Theme
+            local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
             return theme
           end,
           fetch_items = function()
@@ -135,7 +135,7 @@ eve.commander
     uuid = uuids.toggle_theme_variant,
     desc = "toggle: theme variant",
     action = function()
-      local theme = state.state.theme.theme:snapshot() ---@type eve.e.Theme
+      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
       toggle_theme_variant(theme)
     end,
   })

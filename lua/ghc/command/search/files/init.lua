@@ -1,4 +1,5 @@
 local state = require("eve.state")
+local context = require("ghc.command.search.files.context")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@return nil
@@ -6,12 +7,11 @@ local function open()
   local selected_text = eve.nvim.get_selected_text()
   if selected_text and #selected_text > 1 then
     local next_search_pattern = selected_text ---@type string
-    state.state.search.flag_regex:next(false)
-    state.state.search.keyword:next(next_search_pattern)
+    state.search.flag_regex:next(false)
+    state.search.keyword:next(next_search_pattern)
   end
 
-  local files_state = require("ghc.command.search.files.state")
-  local search = files_state.get_search() ---@type fml.t.ux.search.ISearch
+  local search = context.get_search() ---@type fml.t.ux.search.ISearch
   search:focus()
 end
 
@@ -20,7 +20,7 @@ eve.commander
     uuid = uuids.search_files,
     desc = "search: files",
     action = function()
-      state.state.search.flag_replace:next(false)
+      state.search.flag_replace:next(false)
       open()
     end,
   })
@@ -28,8 +28,8 @@ eve.commander
     uuid = uuids.search_files_buffer,
     desc = "search: files (buffer)",
     action = function()
-      state.state.search.flag_replace:next(false)
-      state.state.search.scope:next("B")
+      state.search.flag_replace:next(false)
+      state.search.scope:next("B")
       open()
     end,
   })
@@ -37,8 +37,8 @@ eve.commander
     uuid = uuids.search_files_cwd,
     desc = "search: files (cwd)",
     action = function()
-      state.state.search.flag_replace:next(false)
-      state.state.search.scope:next("C")
+      state.search.flag_replace:next(false)
+      state.search.scope:next("C")
       open()
     end,
   })
@@ -46,8 +46,8 @@ eve.commander
     uuid = uuids.search_files_directory,
     desc = "search: files (directory)",
     action = function()
-      state.state.search.flag_replace:next(false)
-      state.state.search.scope:next("D")
+      state.search.flag_replace:next(false)
+      state.search.scope:next("D")
       open()
     end,
   })
@@ -55,8 +55,8 @@ eve.commander
     uuid = uuids.search_files_workspace,
     desc = "search: files (workspace)",
     action = function()
-      state.state.search.flag_replace:next(false)
-      state.state.search.scope:next("W")
+      state.search.flag_replace:next(false)
+      state.search.scope:next("W")
       open()
     end,
   })
@@ -64,7 +64,7 @@ eve.commander
     uuid = uuids.replace_files,
     desc = "replace: files",
     action = function()
-      state.state.search.flag_replace:next(true)
+      state.search.flag_replace:next(true)
       open()
     end,
   })
@@ -72,8 +72,8 @@ eve.commander
     uuid = uuids.replace_files_buffer,
     desc = "replace: files (buffer)",
     action = function()
-      state.state.search.flag_replace:next(true)
-      state.state.search.scope:next("B")
+      state.search.flag_replace:next(true)
+      state.search.scope:next("B")
       open()
     end,
   })
@@ -81,8 +81,8 @@ eve.commander
     uuid = uuids.replace_files_cwd,
     desc = "replace: files (cwd)",
     action = function()
-      state.state.search.flag_replace:next(true)
-      state.state.search.scope:next("C")
+      state.search.flag_replace:next(true)
+      state.search.scope:next("C")
       open()
     end,
   })
@@ -90,8 +90,8 @@ eve.commander
     uuid = uuids.replace_files_directory,
     desc = "replace: files (directory)",
     action = function()
-      state.state.search.flag_replace:next(true)
-      state.state.search.scope:next("D")
+      state.search.flag_replace:next(true)
+      state.search.scope:next("D")
       open()
     end,
   })
@@ -99,8 +99,8 @@ eve.commander
     uuid = uuids.replace_files_workspace,
     desc = "replace: files (workspace)",
     action = function()
-      state.state.search.flag_replace:next(true)
-      state.state.search.scope:next("W")
+      state.search.flag_replace:next(true)
+      state.search.scope:next("W")
       open()
     end,
   })

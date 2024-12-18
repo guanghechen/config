@@ -1,4 +1,4 @@
-local status = require("eve.builtin.status")
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander
@@ -7,7 +7,7 @@ eve.commander
     desc = "buf: swap left",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
       if meta_tab == nil then
         return
       end
@@ -24,7 +24,7 @@ eve.commander
         return
       end
 
-      local buf_next = meta_tab.bufs[bufid_next] ---@type eve.t.state.state.tab.meta.IBuf
+      local buf_next = meta_tab.bufs[bufid_next] ---@type eve.t.state.tab.buf.state
 
       ---! Don't swap the two buffers if their's pinned status not equal.
       if buf_cur.pinned ~= buf_next.pinned then
@@ -33,8 +33,8 @@ eve.commander
 
       meta_tab.bufs[bufid_next] = buf_cur
       meta_tab.bufs[bufid_cur] = buf_next
-      status.statusline_dirtier:mark_dirty()
-      status.tabline_dirtier:mark_dirty()
+      state.status.dirtier_statusline:mark_dirty()
+      state.status.dirtier_tabline:mark_dirty()
     end,
   })
   .register({
@@ -42,7 +42,7 @@ eve.commander
     desc = "buf: swap right",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta_tab = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
       if meta_tab == nil then
         return
       end
@@ -59,7 +59,7 @@ eve.commander
         return
       end
 
-      local buf_next = meta_tab.bufs[bufid_next] ---@type eve.t.state.state.tab.meta.IBuf
+      local buf_next = meta_tab.bufs[bufid_next] ---@type eve.t.state.tab.buf.state
 
       ---! Don't swap the two buffers if their's pinned status not equal.
       if buf_cur.pinned ~= buf_next.pinned then
@@ -68,7 +68,7 @@ eve.commander
 
       meta_tab.bufs[bufid_next] = buf_cur
       meta_tab.bufs[bufid_cur] = buf_next
-      status.statusline_dirtier:mark_dirty()
-      status.tabline_dirtier:mark_dirty()
+      state.status.dirtier_statusline:mark_dirty()
+      state.status.dirtier_tabline:mark_dirty()
     end,
   })

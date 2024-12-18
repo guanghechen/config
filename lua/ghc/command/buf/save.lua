@@ -3,7 +3,7 @@ local __module_name__ = "ghc.command.buf.save" ---@type string
 local fs = require("eve.lib.fs")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
-local status = require("eve.builtin.status")
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander.register({
@@ -38,8 +38,8 @@ eve.commander.register({
     local function check()
       if ready_count == new_file_count then
         vim.cmd("wa")
-        status.statusline_dirtier:mark_dirty()
-        status.tabline_dirtier:mark_dirty()
+        state.status.dirtier_statusline:mark_dirty()
+        state.status.dirtier_tabline:mark_dirty()
       end
     end
 
@@ -59,7 +59,7 @@ eve.commander.register({
           ---@return nil
           local on_save = function()
             vim.api.nvim_buf_set_name(bufnr, next_filepath)
-            eve.buf.refresh(bufnr)
+            state.buf.refresh(bufnr)
 
             input:close()
 

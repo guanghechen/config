@@ -3,6 +3,7 @@ local __module_name__ = "ghc.command.lsp.reference" ---@type string
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local checks = require("eve.builtin.checks")
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@param method                        string
@@ -10,7 +11,7 @@ local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 ---@param callback                      fun(ok: boolean, data: fml.t.ux.file_select.IData|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, additional_params, callback)
-  local winnr = eve.tab.get_current_winnr() or 0 ---@type integer
+  local winnr = state.tab.get_current_winnr() or 0 ---@type integer
   local bufnr = winnr > 0 and vim.api.nvim_win_get_buf(winnr) or 0 ---@type integer
   if not checks.is_buf_valid(bufnr) or not eve.lsp.has_support_method(bufnr, method) then
     reporter.error({

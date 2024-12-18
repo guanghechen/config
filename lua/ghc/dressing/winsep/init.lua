@@ -92,7 +92,7 @@ local fixed_winsep = {
   end,
   ---@diagnostic disable-next-line: unused-local
   should_show = function(self, winnr)
-    local enabled = state.state.dressing.winsep_fixed:snapshot() ---@type boolean
+    local enabled = state.flight.dressing_winsep_fixed:snapshot() ---@type boolean
     return enabled and not checks.is_win_floating(winnr)
   end,
 }
@@ -131,7 +131,7 @@ local float_winsep = {
   end,
   ---@diagnostic disable-next-line: unused-local
   should_show = function(self, winnr)
-    local enabled = state.state.dressing.winsep_float:snapshot() ---@type boolean
+    local enabled = state.flight.dressing_winsep_float:snapshot() ---@type boolean
     if not enabled or not checks.is_win_floating(winnr) then
       return false
     end
@@ -167,7 +167,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
   end,
 })
 
-eve.mvc.observe({ state.state.dressing.winsep_fixed }, function()
+eve.mvc.observe({ state.flight.dressing_winsep_fixed }, function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if fixed_winsep:should_show(winnr) then
     fixed_winsep:show()
@@ -176,7 +176,7 @@ eve.mvc.observe({ state.state.dressing.winsep_fixed }, function()
   end
 end)
 
-eve.mvc.observe({ state.state.dressing.winsep_float }, function()
+eve.mvc.observe({ state.flight.dressing_winsep_float }, function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if float_winsep:should_show(winnr) then
     float_winsep:show()

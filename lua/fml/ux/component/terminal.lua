@@ -1,6 +1,7 @@
 local path = require("eve.lib.path")
 local constant = require("eve.builtin.constant")
 local widgets = require("eve.builtin.widgets")
+local state = require("eve.state")
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Cursor:f_us_terminal_current",
@@ -90,7 +91,7 @@ function M:create_win_as_needed()
   local height = math.ceil(0.9 * vim.o.lines) ---@type integer
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
   local col = math.floor((vim.o.columns - width) / 2) ---@type integer
-  local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+  local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
@@ -176,7 +177,7 @@ end
 
 ---@return nil
 function M:hide()
-  local winnr = eve.tab.get_current_winnr() ---@type integer
+  local winnr = state.tab.get_current_winnr() ---@type integer
   if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
   end

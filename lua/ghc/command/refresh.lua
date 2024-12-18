@@ -2,7 +2,6 @@ local __module_name__ = "ghc.command.refresh" ---@type string
 
 local reporter = require("eve.lib.reporter")
 local commander = require("eve.builtin.commander")
-local status = require("eve.builtin.status")
 local state = require("eve.state")
 local uuids = commander.uuids ---@type eve.builtin.commander.uuids
 
@@ -11,7 +10,7 @@ commander.register({
   desc = "refresh: all",
   action = function()
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+    local devmode = state.flight.devmode:snapshot() ---@type boolean
 
     vim.cmd.checktime()
     fml.fn.refresh_state()
@@ -34,8 +33,8 @@ commander.register({
     end
 
     vim.cmd("LspRestart")
-    status.statusline_dirtier:mark_dirty()
-    status.tabline_dirtier:mark_dirty()
+    state.status.dirtier_statusline:mark_dirty()
+    state.status.dirtier_tabline:mark_dirty()
     vim.cmd.redraw()
 
     reporter.info({

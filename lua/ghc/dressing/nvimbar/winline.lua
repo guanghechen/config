@@ -2,7 +2,6 @@ local env = require("eve.lib.env")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Nvimbar = require("eve.lib.ux.nvimbar")
 local checks = require("eve.builtin.checks")
-local status = require("eve.builtin.status")
 local state = require("eve.state")
 local c = require("ghc.dressing.nvimbar.components")
 
@@ -11,7 +10,7 @@ local position = "f_wl" ---@type eve.lib.ux.nvimbar.Position
 ---@param winnr                         integer
 ---@return eve.lib.ux.INvimbar|nil
 local function resolve_winline_scheduler(winnr)
-  local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+  local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
   if meta == nil then
     return
   end
@@ -25,7 +24,7 @@ local function resolve_winline_scheduler(winnr)
       comp_sep_hlname_active = position .. "_bg",
       render_delay = 256,
       silent = function()
-        local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+        local devmode = state.flight.devmode:snapshot() ---@type boolean
         return not devmode
       end,
       get_max_width = function()
@@ -38,12 +37,12 @@ local function resolve_winline_scheduler(winnr)
         return { winnr = winnr }
       end,
       is_active = function(context)
-        local winnr_cur = eve.tab.get_current_winnr() or 0 ---@type integer
+        local winnr_cur = state.tab.get_current_winnr() or 0 ---@type integer
         return winnr_cur > 0 and winnr_cur == context.winnr
       end,
       pre_task = function(callback)
         if vim.api.nvim_win_is_valid(winnr) then
-          eve.win.locate_symbols(winnr, function(err)
+          state.win.locate_symbols(winnr, function(err)
             if err == nil then
               callback()
               return
@@ -138,7 +137,7 @@ local function render(winnr)
   end
 end
 
-status.winline_dirty_nr:subscribe(
+state.status.dirty_winline_nr:subscribe(
   Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)

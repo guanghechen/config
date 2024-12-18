@@ -12,6 +12,11 @@ local flights = {
   "autosave",
   "copilot",
   "devmode",
+
+  "dressing_hi_pairs",
+  "dressing_winsep_fixed",
+  "dressing_winsep_float",
+
   "lsp_inlay_hints",
   "lsp_code_lens",
 }
@@ -19,7 +24,7 @@ local flights = {
 ---@param flight                        string
 ---@return nil
 local function toggle_flight(flight)
-  local observable = state.state.flight[flight] ---@type eve.lib.collection.IObservable|nil
+  local observable = state.flight[flight] ---@type eve.lib.collection.IObservable|nil
   if observable ~= nil then
     local enabled = not observable:snapshot() ---@type boolean
     observable:next(enabled)
@@ -67,7 +72,7 @@ eve.commander.register({
         end,
         render_item = function(item, match)
           local flight = item.uuid ---@type string
-          local observable = state.state.flight[flight] ---@type eve.lib.collection.IObservable
+          local observable = state.flight[flight] ---@type eve.lib.collection.IObservable
           local enabled = observable:snapshot() ---@type boolean
           local text_enabled = enabled and "true" or "false" ---@type string
 

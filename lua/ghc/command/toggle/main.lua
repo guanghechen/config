@@ -10,34 +10,6 @@ local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@type table<string, ghc.command.toggle.IItem>
 local flag_map = {
-  dressing_hi_pairs = {
-    uuid = uuids.toggle_dressing_hi_pairs,
-    title = "dressing hi_pairs",
-    snapshot = function()
-      local observable = state.state.dressing.hi_pairs ---@type eve.lib.collection.IObservable
-      local flag = observable:snapshot()
-      return flag and "true" or "false", "Boolean"
-    end,
-  },
-  dressing_winsep_fixed = {
-    uuid = uuids.toggle_dressing_winsep_fixed,
-    title = "dressing winsep (fixed)",
-    snapshot = function()
-      local observable = state.state.dressing.winsep_fixed ---@type eve.lib.collection.IObservable
-      local flag = observable:snapshot()
-      return flag and "true" or "false", "Boolean"
-    end,
-  },
-  dressing_winsep_float = {
-    uuid = uuids.toggle_dressing_winsep_float,
-    title = "dressing winsep (float)",
-    snapshot = function()
-      local observable = state.state.dressing.winsep_float ---@type eve.lib.collection.IObservable
-      local flag = observable:snapshot()
-      return flag and "true" or "false", "Boolean"
-    end,
-  },
-
   flight = {
     uuid = uuids.toggle_flight,
     title = "flight",
@@ -49,7 +21,7 @@ local flag_map = {
     uuid = uuids.toggle_relativenumber,
     title = "relativenumber",
     snapshot = function()
-      local observable = state.state.theme.relativenumber ---@type eve.lib.collection.IObservable
+      local observable = state.theme.relativenumber ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -58,7 +30,7 @@ local flag_map = {
     uuid = uuids.toggle_theme,
     title = "theme",
     snapshot = function()
-      local theme = state.state.theme.theme:snapshot() ---@type eve.e.Theme
+      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
       return theme, "String"
     end,
   },
@@ -66,7 +38,7 @@ local flag_map = {
     uuid = uuids.toggle_theme_transparency,
     title = "theme transparency",
     snapshot = function()
-      local observable = state.state.theme.transparency ---@type eve.lib.collection.IObservable
+      local observable = state.theme.transparency ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,

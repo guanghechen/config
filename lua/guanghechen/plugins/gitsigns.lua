@@ -1,3 +1,8 @@
+local Printer = require("eve.lib.ux.printer")
+local bindkeys = require("eve.builtin.nvim").bindkeys
+local util = require("eve.builtin.util")
+local state = require("eve.state")
+
 ---@class guanghechen.plugins.gitsigns.config
 local config = {
   win = {
@@ -159,13 +164,12 @@ local keymaps = {
       local width = 84 ---@type integer
       local separate_line = string.rep("─", width - 4) ---@type string
 
-      local Printer = require("eve.lib.ux.printer")
       local printer = Printer.new({ name = "blame line", indent = "  " })
 
       printer
         :lf()
         :line(
-          string.format("%s, %s (%s)", author_name, eve.util.time_ago(author_timestamp or os.time()), author_date),
+          string.format("%s, %s (%s)", author_name, util.time_ago(author_timestamp or os.time()), author_date),
           { { hlname = "Title", coll = 0, colr = -1 } }
         )
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
@@ -192,7 +196,7 @@ local keymaps = {
           end,
         },
       }
-      eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+      bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
       local height = printer:count_lines() ---@type integer
       local opts = {
@@ -236,7 +240,7 @@ local keymaps = {
         and type(wincfg.title[1]) == "table"
         and wincfg.title[1][1] == config.win.preview_hunk.title
       then
-        local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+        local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
         vim.wo[winnr].number = false
         vim.wo[winnr].relativenumber = false
         vim.wo[winnr].signcolumn = "yes"
@@ -344,7 +348,7 @@ return {
       untracked = { text = "┆" },
     },
     on_attach = function(bufnr)
-      eve.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
+      bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
       vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", {
         buffer = bufnr,
         noremap = true,

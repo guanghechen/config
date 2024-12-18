@@ -1,3 +1,5 @@
+local state = require("eve.state")
+
 ---@param winnr                         integer|nil
 ---@param width                         integer|nil
 ---@return nil
@@ -15,7 +17,7 @@ local function dressing_float_win(winnr, width)
     wrap_count = wrap_count + math.ceil(#line / width)
   end
 
-  local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+  local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
   vim.wo[winnr].number = false
   vim.wo[winnr].relativenumber = false

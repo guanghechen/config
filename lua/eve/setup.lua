@@ -30,7 +30,7 @@ function M.context()
   local state = require("eve.state")
   local is_git_repo = path.is_git_repo() ---@type boolean
 
-  ---@type eve.t.state.storage
+  ---@type eve.state.storage
   local storage = {
     editor = path.locate_context_filepath("editor.json"),
     session = is_git_repo and path.locate_workspace_filepath("session.json") or nil,

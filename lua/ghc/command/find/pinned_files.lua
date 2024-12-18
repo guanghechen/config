@@ -15,7 +15,7 @@ eve.commander.register({
       flag_regex = false,
       fetch_filepaths = function()
         local filepaths = {} ---@type string[]
-        local pinned_filepaths = state.state.bookmark.pinned:snapshot() ---@type string[]
+        local pinned_filepaths = state.bookmark.pinned:snapshot() ---@type string[]
         for _, filepath in ipairs(pinned_filepaths) do
           local relative_filepath = path.relative(cwd, filepath, true) ---@type string
           table.insert(filepaths, relative_filepath)

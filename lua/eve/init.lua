@@ -1,7 +1,6 @@
 ---@class eve.builtin
 local builtin = {
   G = require("eve.builtin.G"),
-  buf = require("eve.builtin.buf"),
   checks = require("eve.builtin.checks"),
   commander = require("eve.builtin.commander"),
   constant = require("eve.builtin.constant"),
@@ -11,11 +10,8 @@ local builtin = {
   mvc = require("eve.builtin.mvc"),
   nvim = require("eve.builtin.nvim"),
   qflist = require("eve.builtin.qflist"),
-  status = require("eve.builtin.status"),
-  tab = require("eve.builtin.tab"),
   util = require("eve.builtin.util"),
   widgets = require("eve.builtin.widgets"),
-  win = require("eve.builtin.win"),
 }
 
 ---@class eve.fn

@@ -1,4 +1,5 @@
 local icons = require("eve.lib.icons")
+local state = require("eve.state")
 
 return {
   name = "diffview.nvim",
@@ -77,7 +78,7 @@ return {
         end,
         view_opened = function()
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          eve.tab.refresh(tabnr)
+          state.tab.refresh(tabnr)
         end,
       },
       icons = { -- Only applies when use_icons is true.

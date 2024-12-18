@@ -1,8 +1,9 @@
+local functional = require("eve.lib.functional")
 local path = require("eve.lib.path")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
-local state = eve.state.state.find_buffer ---@type eve.t.state.state.find_buffer
 
 ---@class ghc.command.find.buffers.IItemData
 ---@field public bufnr                  integer
@@ -23,13 +24,13 @@ local statusline_items = {
     type = "enum",
     desc = "find(buffer): toggle scope",
     symbol = "",
-    state = state.scope,
+    state = state.find_buffer.scope,
     callback = function()
-      local scope = state.scope:snapshot() ---@type eve.e.FindBufferScope
-      local idx = eve.util.find_index(scopes, scope) or 1 ---@type integer
+      local scope = state.find_buffer.scope:snapshot() ---@type eve.e.FindBufferScope
+      local idx = functional.find_index(scopes, scope) or 1 ---@type integer
       local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
       local next_scope = scopes[idx_next] ---@type eve.e.FindBufferScope
-      state.scope:next(next_scope)
+      state.find_buffer.scope:next(next_scope)
 
       if select ~= nil then
         select:mark_data_dirty()
@@ -42,7 +43,7 @@ local statusline_items = {
 local provider = {
   fetch_data = function()
     local cwd = path.cwd() ---@type string
-    local scope = state.scope:snapshot() ---@type eve.e.FindBufferScope
+    local scope = state.find_buffer.scope:snapshot() ---@type eve.e.FindBufferScope
 
     ---@param bufnr                     integer
     local function should_show(bufnr)
@@ -121,11 +122,11 @@ select = fml.ux.Select.new({
     width = 120,
   },
   dirty_on_invisible = true,
-  flag_case_sensitive = state.flag_case_sensitive,
-  flag_fuzzy = state.flag_fuzzy,
-  flag_regex = state.flag_regex,
-  input = state.keyword,
-  input_history = eve.state.state.input_history.find_buffer,
+  flag_case_sensitive = state.find_buffer.flag_case_sensitive,
+  flag_fuzzy = state.find_buffer.flag_fuzzy,
+  flag_regex = state.find_buffer.flag_regex,
+  input = state.find_buffer.keyword,
+  input_history = state.input_history.find_buffer,
   preview_enabled = false,
   extend_preset_keymaps = true,
   statusline_items = statusline_items,
@@ -133,7 +134,7 @@ select = fml.ux.Select.new({
   title = "Find buffers",
   on_confirm = function(item)
     local data = item.data ---@type ghc.command.find.buffers.IItemData
-    local winnr = eve.tab.get_current_winnr() ---@type integer | nil
+    local winnr = state.tab.get_current_winnr() ---@type integer | nil
     if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_set_buf(winnr, data.bufnr)
     else

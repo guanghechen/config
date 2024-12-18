@@ -5,10 +5,11 @@ local Scheduler = require("eve.lib.collection.scheduler")
 local G = require("eve.builtin.G")
 local util = require("eve.builtin.util")
 local widgets = require("eve.builtin.widgets")
+local state = require("eve.state")
 local SearchInput = require("fml.ux.component.search.input")
 local SearchMain = require("fml.ux.component.search.main")
 local SearchPreview = require("fml.ux.component.search.preview")
-local SearchState = require("fml.ux.component.search.state")
+local SearchContext = require("fml.ux.component.search.context")
 
 local highlights = {
   input = table.concat({
@@ -137,8 +138,8 @@ function M.new(props)
   local on_close_from_props = props.on_close ---@type fml.t.ux.search.IOnClose|nil
   local on_invisible_from_props = props.on_invisible ---@type fml.t.ux.search.IOnInvisible|nil
 
-  ---@type fml.t.ux.search.IState
-  local search_state = SearchState.new({
+  ---@type fml.t.ux.search.IContext
+  local context = SearchContext.new({
     title = props.title,
     input = props.input,
     input_history = input_history,
@@ -149,7 +150,7 @@ function M.new(props)
 
   ---@return nil
   local function on_confirm()
-    local item = search_state:get_current() ---@type fml.t.ux.search.IItem|nil
+    local item = context:get_current() ---@type fml.t.ux.search.IItem|nil
     if item ~= nil then
       local action = on_confirm_from_props(item) ---@type eve.e.WidgetConfirmAction|nil
       if action == "close" or action == "hide" then
@@ -194,35 +195,35 @@ function M.new(props)
       end
     end,
     force_refresh = function()
-      search_state.dirtier_data_cache:mark_dirty()
-      search_state.dirtier_data:mark_dirty()
+      context.dirtier_data_cache:mark_dirty()
+      context.dirtier_data:mark_dirty()
     end,
     on_main_G = function()
       local lnum = vim.v.count > 0 and vim.v.count or math.huge ---@type integer
-      search_state:locate(lnum)
+      context:locate(lnum)
       self:sync_main_cursor()
     end,
     on_main_g = function()
       local lnum = vim.v.count1 or 1
-      search_state:locate(lnum)
+      context:locate(lnum)
       self:sync_main_cursor()
     end,
     on_main_gg = function()
-      search_state:locate(1)
+      context:locate(1)
       self:sync_main_cursor()
     end,
     on_main_down = function()
-      search_state:movedown()
+      context:movedown()
       self:sync_main_cursor()
     end,
     on_main_up = function()
-      search_state:moveup()
+      context:moveup()
       self:sync_main_cursor()
     end,
     on_delete_item = function()
-      local uuid = search_state:get_current_uuid() ---@type string|nil
+      local uuid = context:get_current_uuid() ---@type string|nil
       if uuid ~= nil then
-        search_state:mark_item_deleted(uuid)
+        context:mark_item_deleted(uuid)
       end
     end,
     on_main_mouse_click = function()
@@ -233,7 +234,7 @@ function M.new(props)
         local winnr = cursor.winid ---@type integer
         if winnr == winnr_main then
           local lnum = cursor.line ---@type integer
-          lnum = search_state:locate(lnum)
+          lnum = context:locate(lnum)
           self:sync_main_cursor()
           return
         end
@@ -250,7 +251,7 @@ function M.new(props)
         local winnr = cursor.winid ---@type integer
         if winnr == winnr_main then
           local lnum = cursor.line ---@type integer
-          lnum = search_state:locate(lnum)
+          lnum = context:locate(lnum)
           vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
           on_confirm()
           return
@@ -383,13 +384,13 @@ function M.new(props)
 
   ---@type fml.t.ux.search.IInput
   local input = SearchInput.new({
-    state = search_state,
+    state = context,
     keymaps = input_keymaps,
   })
 
   ---@type fml.t.ux.search.IMain
   local main = SearchMain.new({
-    state = search_state,
+    context = context,
     keymaps = main_keymaps,
     on_rendered = on_main_renderered,
     delay_render = delay_render,
@@ -399,7 +400,7 @@ function M.new(props)
   local preview = nil
   if props.fetch_preview_data then
     preview = SearchPreview.new({
-      state = search_state,
+      context = context,
       keymaps = preview_keymaps,
       fetch_data = props.fetch_preview_data,
       patch_data = props.patch_preview_data,
@@ -421,7 +422,7 @@ function M.new(props)
     })
   end
 
-  self.state = search_state
+  self.state = context
   self.statusline_items = statusline_items
   self._dimension = dimension
   self._input = input
@@ -440,7 +441,7 @@ function M.new(props)
     name = "fml.ux.search.search.draw",
     delay = 64,
     task = function(callback)
-      local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
+      local status = context.status:snapshot() ---@type eve.e.WidgetStatus
       local visible = status == "visible" ---@type boolean
       if visible then
         self:create_wins_as_needed()
@@ -452,14 +453,14 @@ function M.new(props)
 
   ---@return nil
   local function trigger_draw_wins()
-    local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
+    local status = context.status:snapshot() ---@type eve.e.WidgetStatus
     local visible = status == "visible" ---@type boolean
     if visible then
       draw_wins_scheduler:schedule()
     end
   end
 
-  search_state.status:subscribe(
+  context.status:subscribe(
     Subscriber.new({
       on_next = function()
         trigger_draw_wins()
@@ -468,7 +469,7 @@ function M.new(props)
     true
   )
 
-  search_state.state_has_matched:subscribe(
+  context.state_has_matched:subscribe(
     Subscriber.new({
       on_next = function(flag)
         local winnr_main = self:get_winnr_main() ---@type integer|nil
@@ -485,10 +486,10 @@ function M.new(props)
     true
   )
 
-  search_state.dirtier_dimension:subscribe(
+  context.dirtier_dimension:subscribe(
     Subscriber.new({
       on_next = function()
-        local is_dimension_dirty = search_state.dirtier_dimension:is_dirty() ---@type boolean
+        local is_dimension_dirty = context.dirtier_dimension:is_dirty() ---@type boolean
         if is_dimension_dirty then
           trigger_draw_wins()
         end
@@ -497,10 +498,10 @@ function M.new(props)
     true
   )
 
-  search_state.dirtier_main:subscribe(
+  context.dirtier_main:subscribe(
     Subscriber.new({
       on_next = function()
-        local is_main_dirty = search_state.dirtier_main:is_dirty() ---@type boolean
+        local is_main_dirty = context.dirtier_main:is_dirty() ---@type boolean
         if is_main_dirty then
           trigger_draw_wins()
         end
@@ -511,10 +512,10 @@ function M.new(props)
 
   ---! Trigger the preview dirty change when the preview not exist.
   if preview == nil then
-    search_state.dirtier_preview:subscribe(
+    context.dirtier_preview:subscribe(
       Subscriber.new({
         on_next = function()
-          local is_preview_dirty = search_state.dirtier_preview:is_dirty() ---@type boolean
+          local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
           if is_preview_dirty then
             trigger_draw_wins()
           end
@@ -525,7 +526,7 @@ function M.new(props)
   end
 
   if enable_multiline_input then
-    search_state.input_line_count:subscribe(
+    context.input_line_count:subscribe(
       Subscriber.new({
         on_next = function()
           trigger_draw_wins()
@@ -551,14 +552,14 @@ end
 
 ---@return nil
 function M:create_wins_as_needed()
-  local search_state = self.state ---@type fml.t.ux.search.IState
+  local search_state = self.state ---@type fml.t.ux.search.IContext
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
   local dimension = self._dimension ---@type fml.t.ux.search.IDimension
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local screen_height = vim.o.lines ---@type integer
   local screen_width = vim.o.columns ---@type integer
-  local winblend = eve.state.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+  local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
   ---@type number
   local max_height = dimension.max_height <= 1 and math.floor(dimension.max_height * screen_height)
@@ -854,7 +855,7 @@ end
 
 ---@return nil
 function M:hide()
-  local winnr = eve.tab.get_current_winnr() ---@type integer
+  local winnr = state.tab.get_current_winnr() ---@type integer
   if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
   end

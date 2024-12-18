@@ -11,7 +11,6 @@ local commander = require("eve.builtin.commander")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
 local calc_fileicon = require("eve.builtin.nvim").calc_fileicon
-local status = require("eve.builtin.status")
 local util = require("eve.builtin.util")
 local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
@@ -43,7 +42,10 @@ function M.bufs(position)
   ---@type string
   local fn_active_buf = G.register_anonymous_fn(function(bufnr)
     if type(bufnr) == "number" and vim.api.nvim_buf_is_valid(bufnr) then
-      eve.buf.go(bufnr)
+      local winnr = state.tab.get_current_winnr() ---@type integer
+      if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+        vim.api.nvim_win_set_buf(winnr, bufnr)
+      end
     end
   end) or ""
 
@@ -62,7 +64,7 @@ function M.bufs(position)
   ---@return string
   ---@return string
   local function resolve_buf_info(bufnr)
-    local buf_meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+    local buf_meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
     if buf_meta then
       return buf_meta.filename, buf_meta.fileicon, buf_meta.fileicon_hl
     end
@@ -73,7 +75,7 @@ function M.bufs(position)
     return filename, fileicon, fileicon_hl
   end
 
-  ---@param buf                           eve.t.state.state.tab.meta.IBuf
+  ---@param buf                           eve.t.state.tab.buf.state
   ---@param is_current                    boolean
   ---@param is_first                      boolean
   ---@return string
@@ -154,12 +156,12 @@ function M.bufs(position)
     atomic = false,
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
-      local meta_tab = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local meta_tab = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
       if meta_tab == nil or #meta_tab.bufs < 1 then
         return "", "", false
       end
 
-      local bufs = meta_tab.bufs ---@type eve.t.state.state.tab.meta.IBuf[]
+      local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
       local N = #bufs ---@type integer
 
       local winnr_cur = meta_tab.winnr_listed ---@type integer
@@ -346,7 +348,7 @@ function M.debug_render_count(position)
     name = "debug_render_count",
     atomic = true,
     condition = function()
-      local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+      local devmode = state.flight.devmode:snapshot() ---@type boolean
       return devmode
     end,
     render = function()
@@ -370,7 +372,7 @@ function M.devmode(position)
     name = "devmode",
     atomic = true,
     condition = function()
-      local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+      local devmode = state.flight.devmode:snapshot() ---@type boolean
       return devmode
     end,
     render = function()
@@ -491,7 +493,7 @@ function M.dirpath(position)
     name = "dirpath",
     atomic = true,
     condition = function(context)
-      local meta = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local meta = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
       return meta ~= nil and context.winnr == meta.winnr_listed
     end,
     will_change = function(context, prev_context)
@@ -500,7 +502,7 @@ function M.dirpath(position)
     render = function(context)
       local winnr = context.winnr ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+      local meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
       if meta == nil then
         return "", "", true
       end
@@ -540,7 +542,7 @@ function M.dirpath_prominent(position)
     name = "dirpath_prominent",
     atomic = false,
     condition = function(context)
-      local meta = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local meta = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
       return meta ~= nil and context.winnr == meta.winnr_listed
     end,
     will_change = function(context, prev_context)
@@ -549,7 +551,7 @@ function M.dirpath_prominent(position)
     render = function(context, remain_width)
       local winnr = context.winnr ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local meta = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+      local meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
       if meta == nil then
         return "", "", false
       end
@@ -657,16 +659,16 @@ function M.filename(position)
       if prev_context == nil or context.filename ~= prev_context.filename then
         return true
       end
-      local meta_tab = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local meta_tab = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
       return meta_tab == nil or meta_tab.winnr_listed ~= last_winnr_listed
     end,
     render = function(context)
-      local meta_tab = eve.tab.resolve(context.tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local meta_tab = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
       local is_win_cur = meta_tab ~= nil and context.winnr == meta_tab.winnr_listed ---@type boolean
       last_winnr_listed = meta_tab ~= nil and meta_tab.winnr_listed or -1 ---@type integer
 
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
-      local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+      local meta_buf = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
       if meta_buf == nil then
         local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local hl_text = txt(text, hln_filename_text) ---@type string
@@ -703,7 +705,7 @@ function M.filepath(position)
     end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
-      local meta_buf = eve.buf.resolve(bufnr) ---@type eve.t.state.state.buf.IMeta|nil
+      local meta_buf = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
       local filepath = meta_buf and meta_buf.relpath or context.filepath
 
       local text = context.fileicon .. " " .. filepath ---@type string
@@ -837,7 +839,7 @@ function M.lsp(position)
 
   ---@return string
   local function get_text()
-    local bufnr = eve.tab.get_current_bufnr() ---@type integer
+    local bufnr = state.tab.get_current_bufnr() ---@type integer
     if bufnr > 0 and not vim.api.nvim_buf_is_valid(bufnr) then
       return ""
     end
@@ -884,10 +886,10 @@ function M.lsp_message(position)
     name = "lsp_message",
     atomic = true,
     condition = function()
-      return not not rawget(vim, "lsp") and #status.lsp_msg:snapshot() > 0
+      return not not rawget(vim, "lsp") and #state.status.lsp_msg:snapshot() > 0
     end,
     render = function()
-      local text = status.lsp_msg:snapshot() ---@type string
+      local text = state.status.lsp_msg:snapshot() ---@type string
       local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,
@@ -928,12 +930,12 @@ function M.lsp_symbols(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local winnr = context.winnr ---@type integer
-      local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
       if meta == nil then
         return "", "", false
       end
 
-      local symbols = meta.lsp_symbols ---@type eve.t.state.state.lsp.ISymbol[]|nil
+      local symbols = meta.lsp_symbols ---@type eve.t.state.buf.lsp.ISymbol[]|nil
       if symbols == nil or #symbols < 1 then
         return "", "", false
       end
@@ -1190,7 +1192,7 @@ function M.tabs(position)
   local fn_toggle_tabs_folded = G.register_anonymous_fn(function()
     folded = not folded
     dirty = true
-    status.tabline_dirtier:mark_dirty()
+    state.status.dirtier_tabline:mark_dirty()
   end) or ""
 
   ---@type eve.lib.ux.nvimbar.IRawComponent

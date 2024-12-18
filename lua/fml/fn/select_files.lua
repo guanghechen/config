@@ -30,7 +30,7 @@ local function select_files(params)
     ---@return string|nil
     get_present = function()
       local present_filepath = nil ---@type string|nil
-      local winnr = eve.tab.get_current_winnr() ---@type integer
+      local winnr = state.tab.get_current_winnr() ---@type integer
       if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if checks.is_buf_valid(bufnr) then
@@ -82,7 +82,7 @@ local function select_files(params)
     extend_preset_keymaps = true,
     flag_fuzzy = Observable.from_value(flag_fuzzy),
     flag_regex = Observable.from_value(flag_regex),
-    frecency = state.state.frecency.files,
+    frecency = state.frecency.files,
     input = input,
     permanent = false,
     provider = provider,

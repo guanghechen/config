@@ -1,7 +1,7 @@
 local __module_name__ = "eve.builtin.commander" ---@type string
 
 local reporter = require("eve.lib.reporter")
-local tab = require("eve.builtin.tab")
+local state = require("eve.state")
 
 ---@class eve.t.builtin.commander.ICommand
 ---@field public tabtype                string|"all"
@@ -270,7 +270,7 @@ end
 ---@return eve.t.builtin.commander.ICommand|nil
 function M.resolve(uuid, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+  local meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta ~= nil then
     local key = uuid .. ":" .. meta.tabtype ---@type string
     if command_map[key] ~= nil then

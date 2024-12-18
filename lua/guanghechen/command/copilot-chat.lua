@@ -4,7 +4,7 @@ local constant = require("eve.builtin.constant")
 local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
 
-if not state.state.flight.copilot:snapshot() then
+if not state.flight.copilot:snapshot() then
   return
 end
 

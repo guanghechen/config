@@ -1,5 +1,5 @@
 ---@class fml.t.ux.search.ISearch : eve.t.ux.IWidget
----@field public state                  fml.t.ux.search.IState
+---@field public state                  fml.t.ux.search.IContext
 ---@field public change_dimension       fun(self: fml.t.ux.search.ISearch, dimension: fml.t.ux.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.t.ux.search.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: fml.t.ux.search.ISearch, title: string): nil
@@ -85,7 +85,7 @@
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class fml.t.ux.search.IState
+---@class fml.t.ux.search.IContext
 ---@field public dirtier_dimension      eve.lib.collection.IDirtier
 ---@field public dirtier_data           eve.lib.collection.IDirtier
 ---@field public dirtier_data_cache     eve.lib.collection.IDirtier
@@ -102,33 +102,33 @@
 ---@field public status                 eve.lib.collection.IObservable
 ---@field public title                  string
 ---@field public uuid                   string
----@field public get_current            fun(self: fml.t.ux.search.IState): fml.t.ux.search.IItem|nil, integer, string|nil
----@field public get_current_lnum       fun(self: fml.t.ux.search.IState): integer
----@field public get_current_uuid       fun(self: fml.t.ux.search.IState): string|nil
----@field public has_item_deleted       fun(self: fml.t.ux.search.IState, uuid: string): boolean
----@field public locate                 fun(self: fml.t.ux.search.IState, lnum: integer): integer
----@field public mark_item_deleted      fun(self: fml.t.ux.search.IState, uuid: string): nil
----@field public mark_all_items_deleted fun(self: fml.t.ux.search.IState): nil
----@field public moveup                 fun(self: fml.t.ux.search.IState): integer
----@field public movedown               fun(self: fml.t.ux.search.IState): integer
----@field public show_state             fun(self: fml.t.ux.search.IState): nil
+---@field public get_current            fun(self: fml.t.ux.search.IContext): fml.t.ux.search.IItem|nil, integer, string|nil
+---@field public get_current_lnum       fun(self: fml.t.ux.search.IContext): integer
+---@field public get_current_uuid       fun(self: fml.t.ux.search.IContext): string|nil
+---@field public has_item_deleted       fun(self: fml.t.ux.search.IContext, uuid: string): boolean
+---@field public locate                 fun(self: fml.t.ux.search.IContext, lnum: integer): integer
+---@field public mark_item_deleted      fun(self: fml.t.ux.search.IContext, uuid: string): nil
+---@field public mark_all_items_deleted fun(self: fml.t.ux.search.IContext): nil
+---@field public moveup                 fun(self: fml.t.ux.search.IContext): integer
+---@field public movedown               fun(self: fml.t.ux.search.IContext): integer
+---@field public show_state             fun(self: fml.t.ux.search.IContext): nil
 
 ---@class fml.t.ux.search.IInput
----@field public state                  fml.t.ux.search.IState
+---@field public state                  fml.t.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.t.ux.search.IInput): integer
 ---@field public destroy                fun(self: fml.t.ux.search.IInput): nil
 ---@field public reset_input            fun(self: fml.t.ux.search.IInput, input?: string): nil
 ---@field public set_virtual_text       fun(self: fml.t.ux.search.IInput): nil
 
 ---@class fml.t.ux.search.IMain
----@field public state                  fml.t.ux.search.IState
+---@field public state                  fml.t.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.t.ux.search.IMain): integer
 ---@field public destroy                fun(self: fml.t.ux.search.IMain): nil
 ---@field public place_lnum_sign        fun(self: fml.t.ux.search.IMain): integer|nil
 ---@field public render                 fun(self: fml.t.ux.search.IMain): nil
 
 ---@class fml.t.ux.search.IPreview
----@field public state                  fml.t.ux.search.IState
+---@field public state                  fml.t.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.t.ux.search.IPreview): integer
 ---@field public destroy                fun(self: fml.t.ux.search.IPreview): nil
 ---@field public get_current_location   fun(self: fml.t.ux.search.IPreview): integer|nil, integer|nil

@@ -10,7 +10,7 @@ local state = require("eve.state")
 ---@param dirpath                       string
 ---@return string
 local function get_scope_cwd(dirpath)
-  local scope = state.state.search.scope:snapshot() ---@type eve.e.SearchScope
+  local scope = state.search.scope:snapshot() ---@type eve.e.SearchScope
 
   if scope == "W" then
     return path.workspace()
@@ -38,10 +38,10 @@ local function get_scope_cwd(dirpath)
 end
 
 local state_search_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
-state.state.search.scope:subscribe(
+state.search.scope:subscribe(
   Subscriber.new({
     on_next = function(scope, prev_scope)
-      local bufnr = eve.tab.get_current_bufnr() ---@type integer
+      local bufnr = state.tab.get_current_bufnr() ---@type integer
       ---@type string
       local current_buf_dirpath = checks.is_buf_valid(bufnr) --
           and path.dirname(vim.api.nvim_buf_get_name(bufnr))
@@ -62,7 +62,7 @@ state.state.search.scope:subscribe(
 
 local _search = nil ---@type fml.t.ux.search.ISearch|nil
 
----@class ghc.command.search.files.state
+---@class ghc.command.search.files.context
 local M = {}
 
 M.search_cwd = state_search_cwd
@@ -73,8 +73,8 @@ function M.get_search()
     local api = require("ghc.command.search.files.api")
     local keybindings = require("ghc.command.search.files.keybindings")
 
-    local frecency = state.state.frecency.files ---@type eve.lib.collection.IFrecency
-    local input_history = state.state.input_history.search_in_file ---@type eve.lib.collection.IHistory
+    local frecency = state.frecency.files ---@type eve.lib.collection.IFrecency
+    local input_history = state.input_history.search_in_file ---@type eve.lib.collection.IHistory
     local title = M.get_title() ---@type string
 
     _search = fml.ux.search.Search.new({
@@ -89,7 +89,7 @@ function M.get_search()
       fetch_data = api.fetch_data,
       delay_fetch = 512,
       fetch_preview_data = api.fetch_preview_data,
-      input = state.state.search.keyword,
+      input = state.search.keyword,
       input_history = input_history,
       input_keymaps = keybindings.input_keymaps,
       main_keymaps = keybindings.main_keymaps,
@@ -100,14 +100,14 @@ function M.get_search()
       statusline_items = keybindings.statusline_items,
       title = title,
       on_invisible = function()
-        local scope = state.state.search.scope:snapshot() ---@type eve.e.SearchScope
+        local scope = state.search.scope:snapshot() ---@type eve.e.SearchScope
         if scope == "B" then
           M.reload()
         end
       end,
       on_close = function()
         vim.cmd.checktime()
-        local scope = state.state.search.scope:snapshot() ---@type eve.e.SearchScope
+        local scope = state.search.scope:snapshot() ---@type eve.e.SearchScope
         if scope == "B" then
           M.reload()
         end
@@ -165,7 +165,7 @@ end
 
 ---@return string
 function M.get_title()
-  local search_paths = state.state.search.search_paths:snapshot() ---@type string[]
+  local search_paths = state.search.search_paths:snapshot() ---@type string[]
   local title = (search_paths ~= nil and #search_paths > 0) --
       and "Search in files (" .. table.concat(search_paths, ",") .. ")"
     or "Search in files"

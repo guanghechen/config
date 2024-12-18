@@ -3,6 +3,7 @@ local __module_name__ = "ghc.command.lazygit" ---@type string
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local checks = require("eve.builtin.checks")
+local state = require("eve.state")
 
 ---! Function to check clipboard with retries
 ---@param cwd                           string
@@ -40,7 +41,7 @@ end
 ---@param cwd                           string
 ---@return nil
 local function edit_lazygit_file_in_buffer(cwd)
-  local bufnr = eve.tab.get_current_bufnr() ----@type integer
+  local bufnr = state.tab.get_current_bufnr() ----@type integer
   if not checks.is_buf_valid(bufnr) then
     reporter.error({
       from = __module_name__,
@@ -74,7 +75,7 @@ local function edit_lazygit_file_in_buffer(cwd)
     return
   end
 
-  local winnr = eve.tab.get_current_winnr() ---@type integer
+  local winnr = state.tab.get_current_winnr() ---@type integer
   if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
     reporter.error({
       from = __module_name__,

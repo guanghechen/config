@@ -11,7 +11,7 @@ local _history_select = nil ---@type fml.ux.FileSelect|nil
 local function get_history_select()
   if _history_select == nil then
     local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.constant.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
-    local frecency = state.state.frecency.files ---@type eve.lib.collection.IFrecency
+    local frecency = state.frecency.files ---@type eve.lib.collection.IFrecency
 
     ---@param ordinal                       integer
     ---@return string
@@ -26,8 +26,8 @@ local function get_history_select()
         local items = {} ---@type fml.t.ux.file_select.IRawItem[]
         local present_uuid = "0" ---@type string
         local width = 0 ---@type integer
-        local winnr = eve.tab.get_current_winnr() ---@type integer
-        local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+        local winnr = state.tab.get_current_winnr() ---@type integer
+        local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
         if meta == nil then
           reporter.error({
             from = __module_name__,
@@ -102,8 +102,8 @@ local function get_history_select()
       on_confirm = function(item)
         local item_index = tonumber(item.uuid) ---@type integer|nil
         if item_index ~= nil then
-          local winnr = eve.tab.get_current_winnr() ---@type integer
-          local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+          local winnr = state.tab.get_current_winnr() ---@type integer
+          local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
           if meta ~= nil then
             meta.filepath_history:go(item_index)
           end
@@ -112,8 +112,12 @@ local function get_history_select()
         if _history_select ~= nil then
           local cwd = path.cwd() ---@type string
           local filepath = path.join(cwd, item.data.filepath) ---@type string
-          local ok = eve.buf.open_filepath_in_current_valid_win(filepath)
-          return ok and "close" or "none"
+          local winnr = state.tab.get_current_winnr() ---@type integer
+          if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+            local ok = state.buf.open_filepath(winnr, filepath)
+            return ok and "close" or "none"
+          end
+          return "none"
         end
         return "none"
       end,
@@ -144,7 +148,7 @@ eve.commander
         return
       end
 
-      local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
       if meta == nil then
         reporter.error({
           from = __module_name__,
@@ -157,7 +161,7 @@ eve.commander
 
       local last_filepath = meta.filepath_history:backward() ---@type string|nil
       if last_filepath ~= nil then
-        eve.buf.open_filepath(winnr, last_filepath)
+        state.buf.open_filepath(winnr, last_filepath)
       end
     end,
   })
@@ -174,7 +178,7 @@ eve.commander
         return
       end
 
-      local meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
       if meta == nil then
         reporter.error({
           from = __module_name__,
@@ -187,7 +191,7 @@ eve.commander
 
       local next_filepath = meta.filepath_history:forward() ---@type string|nil
       if next_filepath ~= nil then
-        eve.buf.open_filepath(winnr, next_filepath)
+        state.buf.open_filepath(winnr, next_filepath)
       end
     end,
   })

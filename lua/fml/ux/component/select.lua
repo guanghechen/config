@@ -1,7 +1,7 @@
 local Observable = require("eve.lib.collection.observable")
 local icons = require("eve.lib.icons")
 local oxi = require("eve.lib.oxi")
-local status = require("eve.builtin.status")
+local state = require("eve.state")
 local Search = require("fml.ux.component.search.search")
 
 ---@class fml.ux.Select : fml.t.ux.ISelect
@@ -88,7 +88,7 @@ function M.new(props)
       local flag = case_sensitive:snapshot() ---@type boolean
       case_sensitive:next(not flag)
       self:mark_search_state_dirty()
-      status.statusline_dirtier:mark_dirty()
+      state.status.dirtier_statusline:mark_dirty()
     end
 
     ---@return nil
@@ -96,7 +96,7 @@ function M.new(props)
       local flag = flag_fuzzy:snapshot() ---@type boolean
       flag_fuzzy:next(not flag)
       self:mark_search_state_dirty()
-      status.statusline_dirtier:mark_dirty()
+      state.status.dirtier_statusline:mark_dirty()
     end
 
     ---@return nil
@@ -104,7 +104,7 @@ function M.new(props)
       local flag = flag_regex:snapshot() ---@type boolean
       flag_regex:next(not flag)
       self:mark_search_state_dirty()
-      status.statusline_dirtier:mark_dirty()
+      state.status.dirtier_statusline:mark_dirty()
     end
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]

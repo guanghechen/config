@@ -2,7 +2,7 @@ local __module_name__ = "eve.fn.nvaigate" ---@type string
 
 local reporter = require("eve.lib.reporter")
 local tmux = require("eve.lib.tmux")
-local status = require("eve.builtin.status")
+local state = require("eve.state")
 
 ---@return nil
 local function vim_navigate_window_prev()
@@ -95,7 +95,7 @@ local function tmux_navigate(direction)
 
     -- if we're in the same window and zoom is not disabled, tmux should take control
     -- if should_by_tmux and not tmux.is_tmux_pane_corner(direction) and tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
-    local is_zen_mode = status.tmux_zen_mode:snapshot() ---@type boolean
+    local is_zen_mode = state.status.tmux_zen_mode:snapshot() ---@type boolean
     if should_by_tmux and (not DISABLE_WHEN_ZOOMED or not is_zen_mode) then
       tmux.change_pane(direction)
       tmux_control = true

@@ -33,7 +33,7 @@ local conds = {
   end,
   ---@return boolean
   copilot = function()
-    return not vim.g.vscode and state.state.flight.copilot:snapshot()
+    return not vim.g.vscode and state.flight.copilot:snapshot()
   end,
   common = function()
     return true
@@ -105,7 +105,7 @@ local final_specs = {} ---@type guanghechen.plugin.ISpecDetails[]
 for _, spec in ipairs(specs) do
   ---@type guanghechen.plugin.ISpecDetails
   local spec_basic = vim.tbl_deep_extend("force", {}, spec)
-  final_specs[#final_specs+1] = spec_basic
+  final_specs[#final_specs + 1] = spec_basic
 end
 
 ---@type string[]

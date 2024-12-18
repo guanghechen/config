@@ -12,11 +12,11 @@ local function create(bufnr)
   vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  state.state.tab_history:push(tabnr)
+  state.tab.tab_history:push(tabnr)
 
   local tabtype = constant.TT_NORMAL ---@type string
   local winnr_listed = 0 ---@type integer
-  local bufs = {} ---@type eve.t.state.state.tab.meta.IBuf[]
+  local bufs = {} ---@type eve.t.state.tab.buf.state[]
 
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if checks.is_win_valid(winnr) then
@@ -24,12 +24,12 @@ local function create(bufnr)
   end
 
   if bufnr ~= nil and checks.is_buf_valid(bufnr) then
-    bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.state.tab.meta.IBuf
+    bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end
 
-  local meta = eve.tab.Meta.new(tabnr, tabtype, winnr_listed, bufs)
-  eve.tab.set_meta(tabnr, meta)
+  local meta = state.tab.Meta.new(tabnr, tabtype, winnr_listed, bufs)
+  state.tab.set(tabnr, meta)
   return tabnr
 end
 

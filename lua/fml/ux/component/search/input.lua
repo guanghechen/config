@@ -18,7 +18,7 @@ local EDITING_PREFIX = constant.EDITING_INPUT_PREFIX ---@type string
 local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@type integer
 
 ---@class fml.ux.search.input.IProps
----@field public state                  fml.t.ux.search.IState
+---@field public state                  fml.t.ux.search.IContext
 ---@field public keymaps                eve.t.IKeymap[]
 
 ---@param props                         fml.ux.search.input.IProps
@@ -26,7 +26,7 @@ local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@ty
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local search_state = props.state ---@type fml.t.ux.search.IState
+  local search_state = props.state ---@type fml.t.ux.search.IContext
   local input_history = search_state.input_history ---@type eve.lib.collection.IHistory|nil
   local autocmd_group = eve.nvim.augroup(search_state.uuid .. ":search_input") ---@type integer
 
@@ -139,7 +139,7 @@ function M:create_buf_as_needed()
 
   eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-  local search_state = self.state ---@type fml.t.ux.search.IState
+  local search_state = self.state ---@type fml.t.ux.search.IContext
   local input = search_state.input:snapshot() ---@type string
   local lines = oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, search_state.enable_multiline_input and lines or { lines[1] })
@@ -178,7 +178,7 @@ end
 
 ---@return nil
 function M:set_virtual_text()
-  local search_state = self.state ---@type fml.t.ux.search.IState
+  local search_state = self.state ---@type fml.t.ux.search.IContext
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     local total = #search_state.items or 0 ---@type integer
@@ -201,7 +201,7 @@ end
 ---@param text                          string|nil
 ---@return nil
 function M:reset_input(text)
-  local search_state = self.state ---@type fml.t.ux.search.IState
+  local search_state = self.state ---@type fml.t.ux.search.IContext
   local next_text = util.unwrap_editing_prefix(text or search_state.input:snapshot()) ---@type string
   search_state.input:next(next_text)
 

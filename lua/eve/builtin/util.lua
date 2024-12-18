@@ -3,18 +3,6 @@ local EDITING_PREFIX = constant.EDITING_INPUT_PREFIX ---@type string
 
 local M = {}
 
----@generic T
----@param elements                      T[]
----@param element                       T
----@return integer|nil
-function M.find_index(elements, element)
-  for i = 1, #elements, 1 do
-    if elements[i] == element then
-      return i
-    end
-  end
-end
-
 ---@param current                       integer  current index
 ---@param step                          integer  moving step
 ---@param total                         integer  total index.

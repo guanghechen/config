@@ -1,16 +1,15 @@
 local functional = require("eve.lib.functional")
 local Nvimbar = require("eve.lib.ux.nvimbar")
 local Subscriber = require("eve.lib.collection.subscriber")
-local status = require("eve.builtin.status")
 local state = require("eve.state")
 local c = require("ghc.dressing.nvimbar.components")
 
-local dirtier = status.tabline_dirtier ---@type eve.lib.collection.IDirtier
+local dirtier = state.status.dirtier_tabline ---@type eve.lib.collection.IDirtier
 local position = "f_tl" ---@type eve.lib.ux.nvimbar.Position
 
 ---@return boolean
 local function should_show_tabline()
-  local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+  local devmode = state.flight.devmode:snapshot() ---@type boolean
   if devmode then
     return true
   end
@@ -21,7 +20,7 @@ local function should_show_tabline()
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr)
+  local meta = state.tab.resolve(tabnr)
   return meta == nil or #meta.bufs > 1
 end
 
@@ -33,7 +32,7 @@ tabline = Nvimbar.new({
   comp_sep_hlname_active = position .. "_bg",
   render_delay = 256,
   silent = function()
-    local devmode = state.state.flight.devmode:snapshot() ---@type boolean
+    local devmode = state.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   get_max_width = function()

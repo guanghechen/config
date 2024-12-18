@@ -2,6 +2,7 @@ local fs = require("eve.lib.fs")
 local path = require("eve.lib.path")
 local checks = require("eve.builtin.checks")
 local qflist = require("eve.builtin.qflist")
+local state = require("eve.state")
 local Select = require("fml.ux.component.select")
 
 ---@class fml.ux.FileSelect : fml.t.ux.IFileSelect
@@ -197,8 +198,12 @@ function M.new(props)
         on_close = on_close,
         on_confirm = on_confirm_from_props or function(item)
           local filepath = path.join(self.cwd, item.data.filepath) ---@type string
-          local ok = eve.buf.open_filepath_in_current_valid_win(filepath, item.data.lnum, item.data.col)
-          return ok and "hide" or "none"
+          local winnr = state.tab.get_current_winnr() ---@type integer
+          if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+            state.buf.open_filepath(winnr, filepath, item.data.lnum, item.data.col)
+            return "hide"
+          end
+          return "none"
         end,
         on_preview_rendered = on_preview_rendered,
       })

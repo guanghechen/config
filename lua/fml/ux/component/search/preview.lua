@@ -14,7 +14,7 @@ M.__index = M
 ---@field public fetch_data             fml.t.ux.search.IFetchPreviewData
 ---@field public keymaps                eve.t.IKeymap[]
 ---@field public patch_data             ?fml.t.ux.search.IPatchPreviewData
----@field public state                  fml.t.ux.search.IState
+---@field public context                fml.t.ux.search.IContext
 ---@field public on_rendered            ?fml.t.ux.search.IOnPreviewRendered
 ---@field public update_win_config      fun(opts: fml.t.ux.search.preview.IWinOpts): nil
 
@@ -27,7 +27,7 @@ function M.new(props)
   local _fetch_data = props.fetch_data ---@type fml.t.ux.search.IFetchPreviewData
   local _patch_data = props.patch_data ---@type fml.t.ux.search.IPatchPreviewData|nil
   local keymaps = props.keymaps ---@type eve.t.IKeymap[]
-  local state = props.state ---@type fml.t.ux.search.IState
+  local context = props.context ---@type fml.t.ux.search.IContext
   local on_rendered = props.on_rendered ---@type fml.t.ux.search.IOnMainRendered|nil
   local _update_win_config = props.update_win_config ---@type fun(opts: fml.t.ux.search.preview.IWinOpts): nil
 
@@ -47,7 +47,7 @@ function M.new(props)
       and _last_item ~= nil
       and _last_data ~= nil
       and _last_item.group == item.group
-      and not state:has_item_deleted(_last_item.uuid)
+      and not context:has_item_deleted(_last_item.uuid)
       and item.group ~= nil
     then
       return _patch_data(item, _last_item, _last_data)
@@ -60,7 +60,7 @@ function M.new(props)
     local bufnr = self:create_buf_as_needed() ---@type integer
 
     local last_data = _last_data ---@type fml.t.ux.search.preview.IData|nil
-    local item = state:get_current() ---@type fml.t.ux.search.IItem|nil
+    local item = context:get_current() ---@type fml.t.ux.search.IItem|nil
     local data = fetch_data(item) ---@type fml.t.ux.search.preview.IData|nil
     _last_item = item
     _last_data = data
@@ -120,14 +120,14 @@ function M.new(props)
       render()
       callback("fulfilled")
 
-      state.dirtier_preview:mark_clean()
+      context.dirtier_preview:mark_clean()
       if on_rendered then
         on_rendered()
       end
     end,
   })
 
-  self.state = state
+  self.state = context
   self._bufnr = nil
   self._keymaps = keymaps
   self._render_scheduler = _render_scheduler
@@ -141,11 +141,11 @@ function M.new(props)
     return _last_data.lnum, _last_data.col
   end
 
-  state.dirtier_preview:subscribe(
+  context.dirtier_preview:subscribe(
     Subscriber.new({
       on_next = function()
-        local is_preview_dirty = state.dirtier_preview:is_dirty() ---@type boolean
-        local status = state.status:snapshot() ---@type eve.e.WidgetStatus
+        local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
+        local status = context.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_preview_dirty then
           _render_scheduler:schedule()

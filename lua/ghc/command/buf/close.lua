@@ -1,6 +1,7 @@
 local __module_name__ = "ghc.command.buf.close" ---@type string
 
 local reporter = require("eve.lib.reporter")
+local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 ---@param bufnrs                        integer[]
@@ -10,8 +11,12 @@ local function close(bufnrs)
     return
   end
 
-  eve.tab.on_bufs_close(bufnrs)
-  eve.tab.remove_unrefereced_bufs(bufnrs) ---@type integer
+  state.tab.on_bufs_close(bufnrs)
+
+  local unrefereced_bufnrs = state.tab.get_unrefereced_bufnrs() ---@type integer[]
+  for _, bufnr in ipairs(unrefereced_bufnrs) do
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
 end
 
 eve.commander
@@ -21,12 +26,12 @@ eve.commander
     action = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-      local win_meta = eve.win.resolve(winnr) ---@type eve.t.state.state.win.IMeta|nil
+      local win_meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
 
       ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.
       if win_meta ~= nil then
         local last_filepath = win_meta.filepath_history:backward() ---@type string|nil
-        local bufnr_last = eve.buf.locate_by_filepath(last_filepath) ---@type integer|nil
+        local bufnr_last = state.buf.locate_by_filepath(last_filepath) ---@type integer|nil
         if bufnr_last ~= nil and vim.api.nvim_buf_is_valid(bufnr_last) then
           vim.api.nvim_win_set_buf(winnr, bufnr_last)
         end
@@ -40,7 +45,7 @@ eve.commander
     desc = "buf: close to leftest",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab_meta = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
       if tab_meta == nil then
         reporter.error({
           from = __module_name__,
@@ -53,12 +58,12 @@ eve.commander
 
       local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
       local bufnrs_to_remove = {} ---@type integer[]
-      local bufnrs_visible = eve.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+      local bufnrs_visible = state.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
       local _, index = tab_meta:find_buf(bufnr_cur)
       if index ~= nil then
         for i = index - 1, 1, -1 do
-          local buf = tab_meta.bufs[i] ---@type eve.t.state.state.tab.meta.IBuf
+          local buf = tab_meta.bufs[i] ---@type eve.t.state.tab.buf.state
           if not buf.pinned and not bufnrs_visible[buf.bufnr] then
             table.insert(bufnrs_to_remove, buf.bufnr)
           end
@@ -73,7 +78,7 @@ eve.commander
     desc = "buf: close to rightest",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab_meta = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
       if tab_meta == nil then
         reporter.error({
           from = __module_name__,
@@ -86,12 +91,12 @@ eve.commander
 
       local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
       local bufnrs_to_remove = {} ---@type integer[]
-      local bufnrs_visible = eve.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+      local bufnrs_visible = state.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
       local _, index = tab_meta:find_buf(bufnr_cur)
       if index ~= nil then
         for i = index + 1, #tab_meta.bufs, 1 do
-          local buf = tab_meta.bufs[i] ---@type eve.t.state.state.tab.meta.IBuf
+          local buf = tab_meta.bufs[i] ---@type eve.t.state.tab.buf.state
           if not buf.pinned and not bufnrs_visible[buf.bufnr] then
             table.insert(bufnrs_to_remove, buf.bufnr)
           end
@@ -106,7 +111,7 @@ eve.commander
     desc = "buf: close others",
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tab_meta = eve.tab.resolve(tabnr) ---@type eve.t.state.state.tab.IMeta|nil
+      local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
       if tab_meta == nil then
         reporter.error({
           from = __module_name__,
@@ -118,7 +123,7 @@ eve.commander
       end
 
       local bufnrs_to_remove = {} ---@type integer[]
-      local bufnrs_visible = eve.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+      local bufnrs_visible = state.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
       for _, buf in ipairs(tab_meta.bufs) do
         if not buf.pinned and not bufnrs_visible[buf.bufnr] then
