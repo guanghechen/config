@@ -19,21 +19,21 @@
 ---@field public aqua                   string
 ---@field public orange                 string
 ---
----@field public neutral_red            string
----@field public neutral_green          string
----@field public neutral_yellow         string
----@field public neutral_blue           string
----@field public neutral_purple         string
----@field public neutral_aqua           string
----@field public neutral_orange         string
+---@field public brightRed              string
+---@field public brightGreen            string
+---@field public brightYellow           string
+---@field public brightBlue             string
+---@field public brightPurple           string
+---@field public brightAqua             string
+---@field public brightOrange           string
 ---
 ---@field public grey                   string
 ---@field public pink                   string
 ---
----@field public diff_del               string
----@field public diff_del_inline        string
----@field public diff_add               string
----@field public diff_add_inline        string
+---@field public diffDel                string
+---@field public diffDelInline          string
+---@field public diffAdd                string
+---@field public diffAddInline          string
 
 ---@class eve.lib.collection.theme.IScheme
 ---@field public theme                  eve.e.Theme

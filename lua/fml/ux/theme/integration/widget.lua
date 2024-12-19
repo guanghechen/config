@@ -5,11 +5,6 @@ local function gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type eve.lib.collection.theme.IPalette
   local t = context.transparency ---@type boolean
 
-  local diff_del = c.red ---@type string
-  local diff_add = c.green ---@type string
-  local diff_del_word = c.neutral_red ---@type string
-  local diff_add_word = c.neutral_green ---@type string
-
   local bg_main = t and c.bg0 or "none" ---@type string
   local bg_preview = t and c.bg0 or "none" ---@type string
 
@@ -36,14 +31,14 @@ local function gen_hlgroup_map(context)
     f_hi_pairs_7 = { fg = c.orange, bg = c.bg2, bold = true },
 
     ---diff
-    f_diff_add_left = { bg = diff_del, fg = "none" },
-    f_diff_add_right = { bg = diff_add, fg = "none" },
-    f_diff_del_left = { bg = diff_del, fg = "none" },
-    f_diff_del_right = { bg = diff_del, fg = "none" },
-    f_diff_mod_left = { bg = diff_del, fg = "none" },
-    f_diff_mod_right = { bg = diff_add, fg = "none" },
-    f_diff_word_left = { bg = diff_del_word, fg = "none" },
-    f_diff_word_right = { bg = diff_add_word, fg = "none" },
+    f_diff_add_left = { bg = c.diffDel, fg = "none" },
+    f_diff_add_right = { bg = c.diffAdd, fg = "none" },
+    f_diff_del_left = { bg = c.diffDel, fg = "none" },
+    f_diff_del_right = { bg = c.diffDel, fg = "none" },
+    f_diff_mod_left = { bg = c.diffDel, fg = "none" },
+    f_diff_mod_right = { bg = c.diffAdd, fg = "none" },
+    f_diff_word_left = { bg = c.diffDelInline, fg = "none" },
+    f_diff_word_right = { bg = c.diffAddInline, fg = "none" },
 
     ---file explorer
     f_fe_date = { fg = c.fg4 },
@@ -75,14 +70,14 @@ local function gen_hlgroup_map(context)
     f_us_main_present = { fg = c.blue, bg = "none" },
     f_us_main_present_cur = { fg = c.blue, bg = c.bg3 },
     f_us_main_normal = { bg = bg_main },
-    f_us_main_replace = { fg = diff_add_word },
-    f_us_main_search = { fg = diff_del_word, strikethrough = true },
+    f_us_main_replace = { fg = c.diffAddInline },
+    f_us_main_search = { fg = c.diffDelInline, strikethrough = true },
     f_us_preview_current = { bg = c.bg2 },
     f_us_preview_error = { fg = c.red, bold = true },
     f_us_preview_normal = { bg = bg_preview },
-    f_us_preview_search = { fg = c.fg1, bg = diff_del, strikethrough = true },
+    f_us_preview_search = { fg = c.fg1, bg = c.diffDel, strikethrough = true },
     f_us_preview_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
-    f_us_preview_replace = { fg = c.bg1, bg = diff_add },
+    f_us_preview_replace = { fg = c.bg1, bg = c.diffAdd },
     f_us_preview_replace_cur = { fg = c.bg1, bg = c.green, bold = true },
     f_us_preview_title = { fg = c.green, bg = t and c.bg0 or "none" },
     f_us_match = { fg = c.bg1, bg = c.yellow },
@@ -100,7 +95,7 @@ local function gen_hlgroup_map(context)
 
     ---textarea
     f_ut_current = { bg = c.bg3 },
-    f_ut_border = { fg = c.neutral_orange },
+    f_ut_border = { fg = c.brightOrange },
     f_ut_normal = { bg = c.bg1 },
 
     ---vim options

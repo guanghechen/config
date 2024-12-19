@@ -113,7 +113,7 @@ local function gen_hlgroup_map(context)
     LazyReasonEvent = { fg = c.yellow },
     LazyReasonFt = { fg = c.purple },
     LazyReasonImport = { fg = c.fg0 },
-    LazyReasonKeys = { fg = c.neutral_aqua },
+    LazyReasonKeys = { fg = c.brightAqua },
     LazyReasonPlugin = { fg = c.red },
     LazyReasonRuntime = { fg = c.purple },
     LazyReasonSource = { fg = c.aqua },
@@ -121,7 +121,7 @@ local function gen_hlgroup_map(context)
     LazySpecial = { fg = c.blue },
     LazyTaskOutput = { fg = c.fg0 },
     LazyUrl = { fg = c.fg0 },
-    LazyValue = { fg = c.neutral_aqua },
+    LazyValue = { fg = c.brightAqua },
 
     ---! mason.nvim
     MasonHeader = { fg = c.bg0, bg = c.red },
@@ -246,7 +246,7 @@ local function gen_hlgroup_map(context)
     DapUIStopNC = { fg = c.red },
     DapUIStoppedThread = { fg = c.aqua },
     DapUIThread = { fg = c.green },
-    DAPUIType = { fg = c.neutral_purple },
+    DAPUIType = { fg = c.brightPurple },
     DapUIUnavailable = { fg = c.bg2 },
     DapUIUnavailableNC = { fg = c.bg2 },
     DAPUIValue = { fg = c.aqua },

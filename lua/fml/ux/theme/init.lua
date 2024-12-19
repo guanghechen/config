@@ -46,20 +46,20 @@ M.integrations = {
 function M.set_term_colors(scheme)
   local c = scheme.palette ---@type eve.lib.collection.theme.IPalette
   vim.g.terminal_color_0 = c.bg0
-  vim.g.terminal_color_1 = c.neutral_red
-  vim.g.terminal_color_2 = c.neutral_green
-  vim.g.terminal_color_3 = c.neutral_yellow
-  vim.g.terminal_color_4 = c.neutral_blue
-  vim.g.terminal_color_5 = c.neutral_purple
-  vim.g.terminal_color_6 = c.neutral_aqua
+  vim.g.terminal_color_1 = c.red
+  vim.g.terminal_color_2 = c.green
+  vim.g.terminal_color_3 = c.yellow
+  vim.g.terminal_color_4 = c.blue
+  vim.g.terminal_color_5 = c.purple
+  vim.g.terminal_color_6 = c.aqua
   vim.g.terminal_color_7 = c.fg4
   vim.g.terminal_color_8 = c.grey
-  vim.g.terminal_color_9 = c.red
-  vim.g.terminal_color_10 = c.green
-  vim.g.terminal_color_11 = c.yellow
-  vim.g.terminal_color_12 = c.blue
-  vim.g.terminal_color_13 = c.purple
-  vim.g.terminal_color_14 = c.aqua
+  vim.g.terminal_color_9 = c.brightRed
+  vim.g.terminal_color_10 = c.brightGreen
+  vim.g.terminal_color_11 = c.brightYellow
+  vim.g.terminal_color_12 = c.brightBlue
+  vim.g.terminal_color_13 = c.brightPurple
+  vim.g.terminal_color_14 = c.brightAqua
   vim.g.terminal_color_15 = c.fg1
 end
 

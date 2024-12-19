@@ -4,7 +4,7 @@ local function gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type eve.lib.collection.theme.IPalette
 
   return {
-    ["@annotation"] = { fg = c.neutral_red },
+    ["@annotation"] = { fg = c.brightRed },
     ["@attribute"] = { link = "PreProc" },
     ["@boolean"] = { link = "Boolean" },
     ["@character"] = { link = "Character" },
@@ -85,7 +85,7 @@ local function gen_hlgroup_map(context)
     ["@punctuation.bracket"] = { link = "Delimiter" },
     ["@punctuation.special"] = { link = "Delimiter" },
     ["@reference"] = { fg = c.fg0 },
-    ["@regexp"] = { fg = c.neutral_red },
+    ["@regexp"] = { fg = c.brightRed },
     ["@repeat"] = { link = "Repeat" },
     ["@scope"] = { bold = true },
     ["@string"] = { link = "String" },

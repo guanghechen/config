@@ -43,14 +43,14 @@ local function gen_hlgroup_map(context)
     DiagnosticSignWarn = { fg = c.yellow },
 
     ---diff
-    DiffAddLeft = { bg = c.diff_del or cs.mix(bg_main, c.red, 30) },
-    DiffAddRight = { bg = c.diff_add or cs.mix(bg_main, c.aqua, 30) },
-    DiffDelLeft = { bg = c.diff_del or cs.mix(bg_main, c.red, 30) },
-    DiffDelRight = { bg = c.diff_del or cs.mix(bg_main, c.red, 30) },
-    DiffModLeft = { bg = c.diff_del or cs.mix(bg_main, c.red, 30) },
-    DiffModRight = { bg = c.diff_add or cs.mix(bg_main, c.aqua, 30) },
-    DiffWordLeft = { bg = c.diff_del_inline or cs.mix(bg_main, c.neutral_red, 60) },
-    DiffWordRight = { bg = c.diff_add_inline or cs.mix(bg_main, c.neutral_green, 60) },
+    DiffAddLeft = { bg = c.diffDel or cs.mix(bg_main, c.red, 30) },
+    DiffAddRight = { bg = c.diffAdd or cs.mix(bg_main, c.aqua, 30) },
+    DiffDelLeft = { bg = c.diffDel or cs.mix(bg_main, c.red, 30) },
+    DiffDelRight = { bg = c.diffDel or cs.mix(bg_main, c.red, 30) },
+    DiffModLeft = { bg = c.diffDel or cs.mix(bg_main, c.red, 30) },
+    DiffModRight = { bg = c.diffAdd or cs.mix(bg_main, c.aqua, 30) },
+    DiffWordLeft = { bg = c.diffDelInline or cs.mix(bg_main, c.brightRed, 60) },
+    DiffWordRight = { bg = c.diffAddInline or cs.mix(bg_main, c.brightGreen, 60) },
 
     DiffAdd = { link = "DiffAddRight" },
     DiffChange = { link = "DiffModRight" },
@@ -67,9 +67,9 @@ local function gen_hlgroup_map(context)
 
     ---lsp
     LspInlayHint = { fg = c.fg4, bg = c.bg1 },
-    LspReferenceRead = { bg = c.bg2, underline = true, sp = c.neutral_purple },
-    LspReferenceText = { bg = c.bg2, underline = true, sp = c.neutral_purple },
-    LspReferenceWrite = { bg = c.bg2, underline = true, sp = c.neutral_purple },
+    LspReferenceRead = { bg = c.bg2, underline = true, sp = c.brightPurple },
+    LspReferenceText = { bg = c.bg2, underline = true, sp = c.brightPurple },
+    LspReferenceWrite = { bg = c.bg2, underline = true, sp = c.brightPurple },
     LspSignatureActiveParameter = { fg = c.bg1, bg = c.green },
     RenamerBorder = { fg = c.red },
     RenamerTitle = { fg = c.bg0, bg = c.red },
@@ -117,7 +117,7 @@ local function gen_hlgroup_map(context)
     PreProc = { fg = c.yellow },
     Repeat = { fg = c.red },
     Special = { fg = c.aqua },
-    SpecialChar = { fg = c.neutral_red },
+    SpecialChar = { fg = c.brightRed },
     Statement = { fg = c.red },
     StorageClass = { fg = c.orange },
     String = { fg = c.green },
@@ -176,14 +176,14 @@ local function gen_hlgroup_map(context)
     TooLong = { fg = c.red },
     UnderLined = { fg = c.blue, underline = true },
     VertSplit = { fg = c.bg2 },
-    VertSplitActive = { fg = c.neutral_orange },
-    Visual = { bg = cs.mix(bg_main, c.neutral_aqua, 40), blend = 50, reverse = false },
+    VertSplitActive = { fg = c.brightOrange },
+    Visual = { bg = cs.mix(bg_main, c.brightAqua, 40), blend = 50, reverse = false },
     VisualNOS = { link = "Visual" },
     WildMenu = { fg = c.blue, bg = c.bg2, bold = true },
     WinBar = { fg = c.bg2, bg = c.bg2 },
     WinBarNC = { fg = c.fg3, bg = c.bg3 },
     WinSeparator = { fg = c.bg4, bg = t and "none" or c.bg0 },
-    WinSeparatorActive = { fg = c.neutral_orange, bg = t and "none" or c.bg0 },
+    WinSeparatorActive = { fg = c.brightOrange, bg = t and "none" or c.bg0 },
   }
 
   if theme == "gruvbox" then
