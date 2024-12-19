@@ -23,20 +23,20 @@
     "aqua": "#0B8EC6",
     "orange": "#FF6A00",
 
-    "neutral_red": "#E06C75",
-    "neutral_green": "#7ECA9C",
-    "neutral_yellow": "#D19A66",
-    "neutral_blue": "#61AFEF",
-    "neutral_purple": "#B294BB",
-    "neutral_aqua": "#4EC9B0",
-    "neutral_orange": "#FE8655",
+    "brightRed": "#E06C75",
+    "brightGreen": "#7ECA9C",
+    "brightYellow": "#D19A66",
+    "brightBlue": "#61AFEF",
+    "brightPurple": "#B294BB",
+    "brightAqua": "#4EC9B0",
+    "brightOrange": "#FE8655",
 
     "grey": "#B7B7B7",
     "pink": "#F07178",
 
-    "diff_del": "#FBBBBE",
-    "diff_del_inline": "#FBC8C8",
-    "diff_add": "#E7EDD9",
-    "diff_add_inline": "#D4ECCD"
+    "diffDel": "#FBBBBE",
+    "diffDelInline": "#FBC8C8",
+    "diffAdd": "#E7EDD9",
+    "diffAddInline": "#D4ECCD"
   }
 }

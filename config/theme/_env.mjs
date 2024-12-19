@@ -35,21 +35,21 @@ export const themes = readdirSync(HOME_THEME_SCHEME).map((p) =>
  * @property {string}                   aqua
  * @property {string}                   orange
  *
- * @property {string}                   neutral_red
- * @property {string}                   neutral_green
- * @property {string}                   neutral_yellow
- * @property {string}                   neutral_blue
- * @property {string}                   neutral_purple
- * @property {string}                   neutral_aqua
- * @property {string}                   neutral_orange
+ * @property {string}                   brightRed
+ * @property {string}                   brightGreen
+ * @property {string}                   brightYellow
+ * @property {string}                   brightBlue
+ * @property {string}                   brightPurple
+ * @property {string}                   brightAqua
+ * @property {string}                   brightOrange
  *
  * @property {string}                   grey
  * @property {string}                   pink
  *
- * @property {string}                   diff_del
- * @property {string}                   diff_del_inline
- * @property {string}                   diff_add
- * @property {string}                   diff_add_inline
+ * @property {string}                   diffDel
+ * @property {string}                   diffDelInline
+ * @property {string}                   diffAdd
+ * @property {string}                   diffAddInline
  *
  * @typedef {Object} IThemeScheme
  * @property {string}                   theme
