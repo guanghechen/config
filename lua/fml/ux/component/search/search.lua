@@ -47,21 +47,79 @@ local borders = {
   -- stylua: ignore end
 }
 
----@class fml.ux.search.Search : fml.t.ux.search.ISearch
----@field protected _dimension          fml.t.ux.search.IDimension
----@field protected _input              fml.t.ux.search.IInput
----@field protected _main               fml.t.ux.search.IMain
----@field protected _permanent          boolean
----@field protected _preview            fml.t.ux.search.IPreview|nil
----@field protected _preview_title      string
----@field protected _preview_flag_wrap  ?boolean
----@field protected _winnr_input        integer|nil
----@field protected _winnr_main         integer|nil
----@field protected _winnr_preview      integer|nil
----@field protected _on_close           ?fml.t.ux.search.IOnClose
----@field protected _on_invisible       ?fml.t.ux.search.IOnInvisible
-local M = {}
-M.__index = M
+---@class fml.t.ux.search.ISearch : eve.t.ux.IWidget
+---@field public state                  fml.t.ux.search.IContext
+---@field public change_dimension       fun(self: fml.t.ux.search.ISearch, dimension: fml.t.ux.search.IRawDimension): nil
+---@field public change_input_title     fun(self: fml.t.ux.search.ISearch, title: string): nil
+---@field public change_preview_title   fun(self: fml.t.ux.search.ISearch, title: string): nil
+---@field public focus                  fun(self: fml.t.ux.search.ISearch): nil
+---@field public get_winnr_input        fun(self: fml.t.ux.search.ISearch): integer|nil
+---@field public get_winnr_main         fun(self: fml.t.ux.search.ISearch): integer|nil
+---@field public get_winnr_preview      fun(self: fml.t.ux.search.ISearch): integer|nil
+---@field public open                   fun(self: fml.t.ux.search.ISearch): nil
+---@field public reset_input            fun(self: fml.t.ux.search.ISearch, text: string): nil
+---@field public toggle                 fun(self: fml.t.ux.search.ISearch): nil
+
+---@alias fml.t.ux.search.IOnClose
+---| fun(): nil
+
+---@alias fml.t.ux.search.IOnConfirm
+---| fun(item: fml.t.ux.search.IItem): eve.e.WidgetConfirmAction|nil
+
+---@alias fml.t.ux.search.IOnInvisible
+---| fun(): nil
+
+---@alias fml.t.ux.search.IOnMainRendered
+---| fun(): nil
+
+---@alias fml.t.ux.search.IOnPreviewRendered
+---| fun(): nil
+
+---@alias fml.t.ux.search.IOnResume
+---| fun(): nil
+
+---@alias fml.t.ux.search.IFetchPreviewData
+---| fun(item: fml.t.ux.search.IItem): fml.t.ux.search.preview.IData|nil
+
+---@alias fml.t.ux.search.IPatchPreviewData
+---| fun(item: fml.t.ux.search.IItem, last_item: fml.t.ux.search.IItem, last_data: fml.t.ux.search.preview.IData): fml.t.ux.search.preview.IData
+
+---@alias fml.t.ux.search.IFetchDataCallback
+---| fun(ok: true, data: fml.t.ux.search.IData|nil): nil
+---| fun(ok: false, error: string|nil): nil
+
+---@alias fml.t.ux.search.IFetchData
+---| fun(input: string, force: boolean, callback: fml.t.ux.search.IFetchDataCallback): nil
+
+---@class fml.t.ux.search.IData
+---@field public items                  fml.t.ux.search.IItem[]
+---@field public present_uuid           ?string
+---@field public cursor_uuid            ?string
+
+---@class fml.t.ux.search.IItem
+---@field public group                  string|nil
+---@field public parent                 string|nil
+---@field public uuid                   string
+---@field public text                   string
+---@field public highlights             eve.t.IHighlightInline[]
+
+---@class fml.t.ux.search.IRawDimension
+---@field public height                 ?number
+---@field public max_width              ?number
+---@field public max_height             ?number
+---@field public row                    ?number
+---@field public col                    ?number
+---@field public width                  ?number
+---@field public width_preview          ?number
+
+---@class fml.t.ux.search.IDimension
+---@field public height                 ?number
+---@field public max_width              number
+---@field public max_height             number
+---@field public row                    ?number
+---@field public col                    ?number
+---@field public width                  ?number
+---@field public width_preview          ?number
 
 ---@class fml.t.ux.search.IProps
 ---@field public dimension              ?fml.t.ux.search.IRawDimension
@@ -84,6 +142,22 @@ M.__index = M
 ---@field public on_invisible           ?fml.t.ux.search.IOnInvisible
 ---@field public on_confirm             fml.t.ux.search.IOnConfirm
 ---@field public on_preview_rendered    ?fml.t.ux.search.IOnPreviewRendered
+
+---@class fml.ux.search.Search : fml.t.ux.search.ISearch
+---@field protected _dimension          fml.t.ux.search.IDimension
+---@field protected _input              fml.t.ux.search.IInput
+---@field protected _main               fml.t.ux.search.IMain
+---@field protected _permanent          boolean
+---@field protected _preview            fml.t.ux.search.IPreview|nil
+---@field protected _preview_title      string
+---@field protected _preview_flag_wrap  ?boolean
+---@field protected _winnr_input        integer|nil
+---@field protected _winnr_main         integer|nil
+---@field protected _winnr_preview      integer|nil
+---@field protected _on_close           ?fml.t.ux.search.IOnClose
+---@field protected _on_invisible       ?fml.t.ux.search.IOnInvisible
+local M = {}
+M.__index = M
 
 ---@param props                         fml.t.ux.search.IProps
 ---@return fml.ux.search.Search

@@ -3,6 +3,13 @@ local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 local signcolumn = require("fml.ux.signcolumn")
 
+---@class fml.t.ux.search.IMain
+---@field public state                  fml.t.ux.search.IContext
+---@field public create_buf_as_needed   fun(self: fml.t.ux.search.IMain): integer
+---@field public destroy                fun(self: fml.t.ux.search.IMain): nil
+---@field public place_lnum_sign        fun(self: fml.t.ux.search.IMain): integer|nil
+---@field public render                 fun(self: fml.t.ux.search.IMain): nil
+
 ---@class fml.ux.search.Main : fml.t.ux.search.IMain
 ---@field protected _bufnr              integer|nil
 ---@field protected _keymaps            eve.t.IKeymap[]

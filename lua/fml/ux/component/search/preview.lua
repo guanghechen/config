@@ -2,6 +2,26 @@ local constant = require("eve.builtin.constant")
 local Scheduler = require("eve.lib.collection.scheduler")
 local Subscriber = require("eve.lib.collection.subscriber")
 
+---@class fml.t.ux.search.IPreview
+---@field public state                  fml.t.ux.search.IContext
+---@field public create_buf_as_needed   fun(self: fml.t.ux.search.IPreview): integer
+---@field public destroy                fun(self: fml.t.ux.search.IPreview): nil
+---@field public get_current_location   fun(self: fml.t.ux.search.IPreview): integer|nil, integer|nil
+---@field public render                 fun(self: fml.t.ux.search.IPreview): nil
+
+---@class fml.t.ux.search.preview.IData
+---@field public lines                  string[]
+---@field public highlights             eve.t.IHighlight[]
+---@field public filetype               string|nil
+---@field public title                  string
+---@field public lnum                   integer|nil
+---@field public col                    integer|nil
+
+---@class fml.t.ux.search.preview.IWinOpts
+---@field public title                  string
+---@field public lnum                   ?integer
+---@field public col                    ?integer
+
 ---@class fml.ux.search.Preview : fml.t.ux.search.IPreview
 ---@field protected _bufnr              integer|nil
 ---@field protected _keymaps            eve.t.IKeymap[]

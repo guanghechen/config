@@ -1,3 +1,5 @@
+local functional = require("eve.lib.functional")
+
 local _select ---@type fml.t.ux.ISelect
 local _hlnames ---@type string[]|nil
 local _hlgroups ---@type table<string, vim.api.keyset.hl_info>
@@ -47,7 +49,7 @@ local provider = {
 
       local cs = require("eve.lib.color")
       for lnum, hlname in ipairs(hlnames) do
-        local line = "xxx   " .. eve.util.pad_end(hlname, max_hlname_width, " ") ---@type string
+        local line = "xxx   " .. functional.pad_end(hlname, max_hlname_width, " ") ---@type string
         local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.t.IHighlight
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info

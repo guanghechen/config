@@ -1,3 +1,4 @@
+local functional = require("eve.lib.functional")
 local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
@@ -19,7 +20,7 @@ eve.commander
       end
 
       local step = math.max(1, vim.v.count1 or 1) ---@type integer
-      local bufid_next = eve.util.navigate_circular(bufid_cur, -step, #meta_tab.bufs) ---@type integer
+      local bufid_next = functional.navigate_circular(bufid_cur, -step, #meta_tab.bufs) ---@type integer
       if bufid_cur == bufid_next then
         return
       end
@@ -54,7 +55,7 @@ eve.commander
       end
 
       local step = math.max(1, vim.v.count1 or 1) ---@type integer
-      local bufid_next = eve.util.navigate_circular(bufid_cur, step, #meta_tab.bufs) ---@type integer
+      local bufid_next = functional.navigate_circular(bufid_cur, step, #meta_tab.bufs) ---@type integer
       if bufid_cur == bufid_next then
         return
       end

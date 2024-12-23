@@ -1,5 +1,22 @@
 local Textarea = require("fml.ux.component.textarea")
 
+---@class fml.t.ux.IInput
+---@field public bufnr                  integer|nil
+---@field public winnr                  integer|nil
+---@field public open                   fun(self: fml.t.ux.IInput, params: fml.t.ux.input.IOpenParams): nil
+---@field public close                  fun(self: fml.t.ux.IInput): nil
+
+---@class fml.t.ux.input.IOpenParams
+---@field public initial_value          string
+---@field public row                    ?number
+---@field public col                    ?number
+---@field public width                  ?number
+---@field public max_width              ?number
+---@field public min_width              ?number
+---@field public text_cursor_col        ?integer
+---@field public win_cursor_row         ?integer
+---@field public win_cursor_col         ?integer
+
 ---@class fml.ux.Input : fml.t.ux.IInput, fml.ux.Textarea
 local M = {}
 M.__index = M

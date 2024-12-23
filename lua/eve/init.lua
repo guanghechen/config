@@ -16,8 +16,11 @@ local builtin = {
 
 ---@class eve.fn
 local fn = {
+  foldexpr = require("eve.fn.foldexpr"),
+  get_clipboard = require("eve.fn.get_clipboard"),
   hmr = require("eve.fn.hmr"),
   navigate = require("eve.fn.navigate"),
+  refresh_state = require("eve.fn.refresh_state"),
 }
 
 ---@type eve.state

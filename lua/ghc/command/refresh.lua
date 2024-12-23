@@ -13,7 +13,7 @@ commander.register({
     local devmode = state.flight.devmode:snapshot() ---@type boolean
 
     vim.cmd.checktime()
-    fml.fn.refresh_state()
+    eve.fn.refresh_state()
 
     pcall(function()
       require("gitsigns").refresh()

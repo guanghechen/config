@@ -1,5 +1,6 @@
 local __module_name__ = "ghc.command.buf.focus" ---@type string
 
+local functional = require("eve.lib.functional")
 local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
@@ -30,7 +31,7 @@ local function focus(bufid)
   end
 
   local bufs = tab_meta.bufs ---@type eve.t.state.tab.buf.state[]
-  local bufid_next = eve.util.navigate_circular(0, bufid, #bufs) ---@type integer
+  local bufid_next = functional.navigate_circular(0, bufid, #bufs) ---@type integer
   go(bufs[bufid_next].bufnr)
 end
 
@@ -83,7 +84,7 @@ eve.commander
       if bufid_cur ~= nil then
         local _, step = pcall(tonumber, args)
         step = math.max(1, step or vim.v.count1 or 1)
-        local bufid_next = eve.util.navigate_circular(bufid_cur, -step, #bufs)
+        local bufid_next = functional.navigate_circular(bufid_cur, -step, #bufs)
         go(bufs[bufid_next].bufnr)
       end
     end,
@@ -113,7 +114,7 @@ eve.commander
       if bufid_cur ~= nil then
         local _, step = pcall(tonumber, args)
         step = math.max(1, step or vim.v.count1 or 1)
-        local bufid_next = eve.util.navigate_circular(bufid_cur, step, #bufs)
+        local bufid_next = functional.navigate_circular(bufid_cur, step, #bufs)
         go(bufs[bufid_next].bufnr)
       end
     end,

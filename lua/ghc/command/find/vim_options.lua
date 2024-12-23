@@ -1,3 +1,5 @@
+local functional = require("eve.lib.functional")
+
 ---@class ghc.command.find.vim_options.IItemData
 ---@field public name                   string
 ---@field public type                   string
@@ -34,9 +36,9 @@ local provider = {
         value = info.default
       end
 
-      local text_name = eve.util.pad_end(info.name, WIDTH_NAME, " ") ---type string
-      local text_type = eve.util.pad_end(info.type, WIDTH_TYPE, " ") ---type string
-      local text_scope = eve.util.pad_end(info.scope, WIDTH_SCOPE, " ") ---type string
+      local text_name = functional.pad_end(info.name, WIDTH_NAME, " ") ---type string
+      local text_type = functional.pad_end(info.type, WIDTH_TYPE, " ") ---type string
+      local text_scope = functional.pad_end(info.scope, WIDTH_SCOPE, " ") ---type string
       local text_value = make_termcodes_visible(tostring(value)) ---@type string
       local text = text_name .. text_type .. text_scope .. text_value ---@type string
       local text_for_search = text_name .. string.rep(" ", WIDTH_TYPE + WIDTH_SCOPE) .. text_value ---@type string

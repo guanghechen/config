@@ -5,6 +5,13 @@ local Scheduler = require("eve.lib.collection.scheduler")
 local oxi = require("eve.lib.oxi")
 local signcolumn = require("fml.ux.signcolumn")
 
+---@class fml.t.ux.search.IInput
+---@field public state                  fml.t.ux.search.IContext
+---@field public create_buf_as_needed   fun(self: fml.t.ux.search.IInput): integer
+---@field public destroy                fun(self: fml.t.ux.search.IInput): nil
+---@field public reset_input            fun(self: fml.t.ux.search.IInput, input?: string): nil
+---@field public set_virtual_text       fun(self: fml.t.ux.search.IInput): nil
+
 ---@class fml.ux.search.Input : fml.t.ux.search.IInput
 ---@field protected _autocmd_group      integer
 ---@field protected _bufnr              integer|nil

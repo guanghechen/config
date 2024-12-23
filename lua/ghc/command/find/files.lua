@@ -105,7 +105,7 @@ local actions = {
 
     ---@type ghc.command.find.files.actions.IConfigData
     local data = {
-      exclude_patterns = eve.util.parse_comma_list(f_exclude_patterns),
+      exclude_patterns = functional.parse_comma_list(f_exclude_patterns),
     }
 
     local setting = fml.ux.Setting.new({

@@ -3,9 +3,8 @@ local path = require("eve.lib.path")
 local augroup = require("eve.builtin.nvim").augroup
 local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
-local refresh_state = require("fml.fn.refresh_state")
 
-refresh_state()
+eve.fn.refresh_state()
 
 vim.api.nvim_create_autocmd("VimEnter", {
   group = augroup("on_vim_enter"),
@@ -57,7 +56,7 @@ vim.api.nvim_create_autocmd("TabClosed", {
       if tabnr_last ~= nil and vim.api.nvim_tabpage_is_valid(tabnr_last) then
         vim.api.nvim_set_current_tabpage(tabnr_last)
       end
-      refresh_state()
+      eve.fn.refresh_state()
     end)
     state.status.dirtier_statusline:mark_dirty()
     state.status.dirtier_tabline:mark_dirty()

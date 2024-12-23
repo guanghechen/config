@@ -1,13 +1,40 @@
 local __module_name__ = "fml.ux.component.search.state" ---@type string
 
 local functional = require("eve.lib.functional")
+local oxi = require("eve.lib.oxi")
 local reporter = require("eve.lib.reporter")
 local Dirtier = require("eve.lib.collection.dirtier")
 local Observable = require("eve.lib.collection.observable")
 local Scheduler = require("eve.lib.collection.scheduler")
 local Subscriber = require("eve.lib.collection.subscriber")
-local oxi = require("eve.lib.oxi")
-local util = require("eve.builtin.util")
+
+---@class fml.t.ux.search.IContext
+---@field public dirtier_dimension      eve.lib.collection.IDirtier
+---@field public dirtier_data           eve.lib.collection.IDirtier
+---@field public dirtier_data_cache     eve.lib.collection.IDirtier
+---@field public dirtier_main           eve.lib.collection.IDirtier
+---@field public dirtier_preview        eve.lib.collection.IDirtier
+---@field public state_has_matched      eve.lib.collection.IObservable
+---@field public enable_multiline_input boolean
+---@field public input                  eve.lib.collection.IObservable
+---@field public input_history          eve.lib.collection.IHistory|nil
+---@field public input_line_count       eve.lib.collection.IObservable
+---@field public item_present_uuid      string|nil
+---@field public items                  fml.t.ux.search.IItem[]
+---@field public max_width              integer
+---@field public status                 eve.lib.collection.IObservable
+---@field public title                  string
+---@field public uuid                   string
+---@field public get_current            fun(self: fml.t.ux.search.IContext): fml.t.ux.search.IItem|nil, integer, string|nil
+---@field public get_current_lnum       fun(self: fml.t.ux.search.IContext): integer
+---@field public get_current_uuid       fun(self: fml.t.ux.search.IContext): string|nil
+---@field public has_item_deleted       fun(self: fml.t.ux.search.IContext, uuid: string): boolean
+---@field public locate                 fun(self: fml.t.ux.search.IContext, lnum: integer): integer
+---@field public mark_item_deleted      fun(self: fml.t.ux.search.IContext, uuid: string): nil
+---@field public mark_all_items_deleted fun(self: fml.t.ux.search.IContext): nil
+---@field public moveup                 fun(self: fml.t.ux.search.IContext): integer
+---@field public movedown               fun(self: fml.t.ux.search.IContext): integer
+---@field public show_state             fun(self: fml.t.ux.search.IContext): nil
 
 ---@class fml.ux.search.Context : fml.t.ux.search.IContext
 ---@field protected _deleted_uuids      table<string, boolean>
@@ -264,7 +291,7 @@ function M:moveup()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = util.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
+    local lnum = functional.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
     return self:locate(lnum)
   end
 end
@@ -276,7 +303,7 @@ function M:movedown()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = util.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
+    local lnum = functional.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
     return self:locate(lnum)
   end
 end

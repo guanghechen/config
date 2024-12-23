@@ -26,7 +26,7 @@ eve.commander
             session = storage.session,
             workspace = storage.workspace,
           })
-          fml.fn.refresh_state()
+          eve.fn.refresh_state()
         end
       end
     end,

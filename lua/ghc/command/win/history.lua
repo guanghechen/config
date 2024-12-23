@@ -1,5 +1,6 @@
 local __module_name__ = "ghc.command.win.history" ---@type string
 
+local functional = require("eve.lib.functional")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
@@ -16,7 +17,7 @@ local function get_history_select()
     ---@param ordinal                       integer
     ---@return string
     local function gen_uuid_from_ordinal(ordinal)
-      return eve.util.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
+      return functional.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
     end
 
     ---@type fml.t.ux.file_select.IProvider

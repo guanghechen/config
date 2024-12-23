@@ -1,6 +1,7 @@
 local __module_name__ = "ghc.dressing.nvimbar.components" ---@type string
 
 local env = require("eve.lib.env")
+local functional = require("eve.lib.functional")
 local icons = require("eve.lib.icons")
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
@@ -11,7 +12,6 @@ local commander = require("eve.builtin.commander")
 local checks = require("eve.builtin.checks")
 local constant = require("eve.builtin.constant")
 local calc_fileicon = require("eve.builtin.nvim").calc_fileicon
-local util = require("eve.builtin.util")
 local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
 
@@ -354,7 +354,7 @@ function M.debug_render_count(position)
     render = function()
       count = count + 1
 
-      local text = "  " .. util.pad_start(tostring(count % 100000), 5, "0") .. " " ---@type string
+      local text = "  " .. functional.pad_start(tostring(count % 100000), 5, "0") .. " " ---@type string
       local hl_text = txt(text, hln_debug_render_count) ---@type string
       return text, hl_text, true
     end,
@@ -1124,7 +1124,7 @@ function M.pos(position)
     elseif row == total_lines then
       return row, col, "bot", hln_pos_bot
     else
-      local text = util.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
+      local text = functional.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
       return row, col, text, hln_pos
     end
   end
@@ -1136,9 +1136,9 @@ function M.pos(position)
     render = function()
       local row, col, percentage, hl_pos = calc_row_percentage() ---@type integer, integer, string
       local text_anchor = ""
-        .. util.pad_start(tostring(row), 4, " ")
+        .. functional.pad_start(tostring(row), 4, " ")
         .. "·"
-        .. util.pad_end(tostring(col), 3, " ")
+        .. functional.pad_end(tostring(col), 3, " ")
         .. " " ---@type string
       local text_pos = " " .. percentage .. " " ---@type string
 

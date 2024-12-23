@@ -117,6 +117,16 @@ function M.open(widget)
   widget:show()
 end
 
+---@return nil
+function M.resize()
+  for widget in _widgets:iterator() do
+    local status = widget:status() ---@type eve.e.WidgetStatus
+    if status ~= "closed" then
+      widget:resize()
+    end
+  end
+end
+
 ---@return boolean
 function M.resume()
   local present = M.get_current_widget() ---@type eve.t.ux.IWidget|nil
@@ -133,16 +143,6 @@ function M.resume()
     end
   end)
   return true
-end
-
----@return nil
-function M.resize()
-  for widget in _widgets:iterator() do
-    local status = widget:status() ---@type eve.e.WidgetStatus
-    if status ~= "closed" then
-      widget:resize()
-    end
-  end
 end
 
 return M

@@ -1,9 +1,11 @@
+local functional = require("eve.lib.functional")
+
 ---@param items                         any[]
 ---@param opts                          ghc.dressing.select.IOptions
 ---@return fml.t.ux.select.IProvider
 ---@return integer
 local function normal_provider(items, opts)
-  local format_item = opts.format_item or eve.util.identity ---@type fun(item): string
+  local format_item = opts.format_item or functional.identity ---@type fun(item): string
   local width = 0 ---@type integer
   local select_items = {} ---@type fml.t.ux.select.IItem[]
   for index, item in ipairs(items) do

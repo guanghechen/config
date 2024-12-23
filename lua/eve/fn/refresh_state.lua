@@ -14,7 +14,7 @@ local function refresh_state()
 end
 
 local scheduler = Scheduler.new({
-  name = "fml.fn.refresh_state",
+  name = "eve.fn.refresh_state",
   delay = 16,
   silent = function()
     local devmode = state.flight.devmode:snapshot() ---@type boolean

@@ -1,6 +1,6 @@
+local functional = require("eve.lib.functional")
 local Printer = require("eve.lib.ux.printer")
 local bindkeys = require("eve.builtin.nvim").bindkeys
-local util = require("eve.builtin.util")
 local state = require("eve.state")
 
 ---@class guanghechen.plugins.gitsigns.config
@@ -169,7 +169,7 @@ local keymaps = {
       printer
         :lf()
         :line(
-          string.format("%s, %s (%s)", author_name, util.time_ago(author_timestamp or os.time()), author_date),
+          string.format("%s, %s (%s)", author_name, functional.time_ago(author_timestamp or os.time()), author_date),
           { { hlname = "Title", coll = 0, colr = -1 } }
         )
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
