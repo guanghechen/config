@@ -1,6 +1,6 @@
+local checks = require("eve.lib.checks")
 local fs = require("eve.lib.fs")
 local path = require("eve.lib.path")
-local checks = require("eve.builtin.checks")
 local qflist = require("eve.builtin.qflist")
 local state = require("eve.state")
 local Select = require("fml.ux.component.select")

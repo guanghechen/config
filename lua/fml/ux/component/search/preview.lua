@@ -1,4 +1,4 @@
-local constant = require("eve.builtin.constant")
+local constant = require("eve.lib.constant")
 local Scheduler = require("eve.lib.collection.scheduler")
 local Subscriber = require("eve.lib.collection.subscriber")
 

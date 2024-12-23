@@ -1,5 +1,5 @@
-local checks = require("eve.builtin.checks")
-local constant = require("eve.builtin.constant")
+local checks = require("eve.lib.checks")
+local constant = require("eve.lib.constant")
 local state = require("eve.state")
 
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids

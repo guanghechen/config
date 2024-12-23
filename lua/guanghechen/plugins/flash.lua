@@ -1,3 +1,5 @@
+local ft = require("eve.lib.filetype")
+
 -- Flash enhances the built-in search functionality by showing labels
 -- at the end of each match, letting you quickly jump to a specific location.
 return {
@@ -41,7 +43,7 @@ return {
     },
     search = {
       mode = "exact",
-      exclude = eve.filetype.get_no_flash_filetypes(),
+      exclude = ft.get_no_flash_filetypes(),
     },
   },
 }

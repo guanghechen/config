@@ -1,3 +1,6 @@
+local constant = require("eve.lib.constant")
+local ft = require("eve.lib.filetype")
+
 ---@class ghc.dressing.hi_pairs.config
 local config = {
   DELAY = 50, ---How much (in milliseconds) should the cursor stay still to calculate and render a pair.
@@ -175,7 +178,7 @@ function M.render(winnr)
     end
 
     local filetype = vim.bo[bufnr].filetype
-    if filetype == eve.constant.FT_BIGFILE or not eve.filetype.is_plain_file(filetype) then
+    if filetype == constant.FT_BIGFILE or not ft.is_plain_file(filetype) then
       return
     end
 

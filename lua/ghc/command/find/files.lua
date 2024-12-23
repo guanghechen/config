@@ -1,5 +1,6 @@
 local __module_name__ = "ghc.command.find" ---@type string
 
+local checks = require("eve.lib.checks")
 local functional = require("eve.lib.functional")
 local icons = require("eve.lib.icons")
 local oxi = require("eve.lib.oxi")
@@ -7,7 +8,6 @@ local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
 local Subscriber = require("eve.lib.collection.subscriber")
-local checks = require("eve.builtin.checks")
 local state = require("eve.state")
 
 local scopes = { "W", "C", "D" } ---@type eve.e.FindScope[]

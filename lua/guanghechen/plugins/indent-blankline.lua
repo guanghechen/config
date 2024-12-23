@@ -1,3 +1,5 @@
+local ft = require("eve.lib.filetype")
+
 -- indent guides for Neovim
 return {
   name = "indent-blankline.nvim",
@@ -15,7 +17,7 @@ return {
       highlight = "IblScopeChar",
     },
     exclude = {
-      filetypes = eve.filetype.get_no_ibl_filetypes(),
+      filetypes = ft.get_no_ibl_filetypes(),
     },
   },
   config = function(_, opts)

@@ -1,8 +1,8 @@
 local __module_name__ = "ghc.command.lazygit" ---@type string
 
+local checks = require("eve.lib.checks")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
-local checks = require("eve.builtin.checks")
 local state = require("eve.state")
 
 ---! Function to check clipboard with retries

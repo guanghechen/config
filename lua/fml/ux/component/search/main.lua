@@ -1,4 +1,4 @@
-local constant = require("eve.builtin.constant")
+local constant = require("eve.lib.constant")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 local signcolumn = require("fml.ux.signcolumn")

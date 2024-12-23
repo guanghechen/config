@@ -1,21 +1,22 @@
+local ft = require("eve.lib.filetype")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 local pick_config_map = {
   focus = {
     bo = {
-      filetype = eve.filetype.get_no_window_picker_focusable_filetypes(),
+      filetype = ft.get_no_window_picker_focusable_filetypes(),
       buftype = {},
     },
   },
   swap = {
     bo = {
-      filetype = eve.filetype.get_no_window_picker_swappable_filetypes(),
+      filetype = ft.get_no_window_picker_swappable_filetypes(),
       buftype = { "terminal", "quickfix" },
     },
   },
   project = {
     bo = {
-      filetype = eve.filetype.get_no_window_picker_projectable_filetypes(),
+      filetype = ft.get_no_window_picker_projectable_filetypes(),
       buftype = { "terminal", "quickfix" },
     },
   },

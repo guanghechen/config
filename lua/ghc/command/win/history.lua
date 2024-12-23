@@ -1,5 +1,6 @@
 local __module_name__ = "ghc.command.win.history" ---@type string
 
+local constant = require("eve.lib.constant")
 local functional = require("eve.lib.functional")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
@@ -11,7 +12,7 @@ local _history_select = nil ---@type fml.ux.FileSelect|nil
 ---@return fml.ux.FileSelect
 local function get_history_select()
   if _history_select == nil then
-    local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.constant.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
+    local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(constant.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
     local frecency = state.frecency.files ---@type eve.lib.collection.IFrecency
 
     ---@param ordinal                       integer
@@ -144,7 +145,7 @@ eve.commander
 
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
-      if buftype == eve.constant.BT_QUICKFIX then
+      if buftype == constant.BT_QUICKFIX then
         eve.qflist.backward()
         return
       end
@@ -174,7 +175,7 @@ eve.commander
 
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
-      if buftype == eve.constant.BT_QUICKFIX then
+      if buftype == constant.BT_QUICKFIX then
         eve.qflist.forward()
         return
       end

@@ -1,3 +1,5 @@
+local constant = require("eve.lib.constant")
+
 return {
   name = "which-key.nvim",
   event = { "VeryLazy" },
@@ -5,8 +7,8 @@ return {
   opts = {
     disable = {
       ft = {
-        eve.constant.FT_TERM,
-        eve.constant.FT_WINSEP,
+        constant.FT_TERM,
+        constant.FT_WINSEP,
       },
     },
     spec = {

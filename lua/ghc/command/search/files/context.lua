@@ -1,10 +1,10 @@
 local __module_name__ = "ghc.command.search.files" ---@type string
 
+local checks = require("eve.lib.checks")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
 local Subscriber = require("eve.lib.collection.subscriber")
-local checks = require("eve.builtin.checks")
 local state = require("eve.state")
 
 ---@param dirpath                       string

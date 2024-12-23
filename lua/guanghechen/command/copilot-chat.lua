@@ -1,6 +1,6 @@
 local __module_name__ = "guanghechen.plugins.CopilotChat" ---@type string
 
-local constant = require("eve.builtin.constant")
+local constant = require("eve.lib.constant")
 local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
 

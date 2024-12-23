@@ -1,4 +1,4 @@
-local constant = require("eve.builtin.constant")
+local constant = require("eve.lib.constant")
 
 ---@class ghc.dressing.winsep.line.highlights
 local config = {

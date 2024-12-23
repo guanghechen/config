@@ -1,6 +1,6 @@
+local constant = require("eve.lib.constant")
+local ft = require("eve.lib.filetype")
 local fs = require("eve.lib.fs")
-local constant = require("eve.builtin.constant")
-local ft = require("eve.builtin.filetype")
 
 ---@type table<string, true>
 local NON_TEXT_EXTNAME_SET = {
@@ -27,7 +27,7 @@ local TEXT_FILENAME_SET = {
   ["sshd_config"] = true,
 }
 
----@class eve.builtin.checks
+---@class eve.lib.checks
 local M = {}
 
 ---@param bufnr                         integer|nil

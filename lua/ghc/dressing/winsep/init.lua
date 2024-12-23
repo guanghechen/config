@@ -1,5 +1,5 @@
-local constant = require("eve.builtin.constant")
-local checks = require("eve.builtin.checks")
+local checks = require("eve.lib.checks")
+local constant = require("eve.lib.constant")
 local state = require("eve.state")
 local Line = require("ghc.dressing.winsep.line")
 

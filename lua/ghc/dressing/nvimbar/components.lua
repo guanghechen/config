@@ -1,5 +1,7 @@
 local __module_name__ = "ghc.dressing.nvimbar.components" ---@type string
 
+local checks = require("eve.lib.checks")
+local constant = require("eve.lib.constant")
 local env = require("eve.lib.env")
 local functional = require("eve.lib.functional")
 local icons = require("eve.lib.icons")
@@ -9,8 +11,6 @@ local reporter = require("eve.lib.reporter")
 local Nvimbar = require("eve.lib.ux.nvimbar")
 local G = require("eve.builtin.G")
 local commander = require("eve.builtin.commander")
-local checks = require("eve.builtin.checks")
-local constant = require("eve.builtin.constant")
 local calc_fileicon = require("eve.builtin.nvim").calc_fileicon
 local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")

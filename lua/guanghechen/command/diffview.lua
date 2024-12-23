@@ -1,5 +1,5 @@
+local constant = require("eve.lib.constant")
 local path = require("eve.lib.path")
-local constant = require("eve.builtin.constant")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
 eve.commander

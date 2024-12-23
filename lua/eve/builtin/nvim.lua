@@ -1,4 +1,4 @@
-local constant = require("eve.builtin.constant")
+local constant = require("eve.lib.constant")
 local BUF_UNTITLED = constant.BUF_UNTITLED ---@type string
 
 ---@class eve.builtin.nvim

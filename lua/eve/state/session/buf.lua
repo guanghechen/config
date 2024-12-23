@@ -1,7 +1,7 @@
+local checks = require("eve.lib.checks")
+local constant = require("eve.lib.constant")
 local env = require("eve.lib.env")
 local path = require("eve.lib.path")
-local checks = require("eve.builtin.checks")
-local constant = require("eve.builtin.constant")
 local calc_fileicon = require("eve.builtin.nvim").calc_fileicon
 local gen_filepath2bufnr = require("eve.builtin.nvim").gen_filepath2bufnr
 

@@ -3,7 +3,6 @@ local icons = require("eve.lib.icons")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 local G = require("eve.builtin.G")
-local util = require("eve.builtin.util")
 local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
 local SearchInput = require("fml.ux.component.search.input")
@@ -231,7 +230,7 @@ function M.new(props)
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
           if top ~= nil then
-            top = util.unwrap_editing_prefix(top)
+            top = functional.unwrap_editing_prefix(top)
             input_history:update_top(top)
           end
         end

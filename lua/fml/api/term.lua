@@ -1,8 +1,8 @@
 local __module_name__ = "fml.api.term" ---@type string
 
+local constant = require("eve.lib.constant")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
-local constant = require("eve.builtin.constant")
 local get_selected_text = require("eve.builtin.nvim").get_selected_text
 local Terminal = require("fml.ux.component.terminal")
 

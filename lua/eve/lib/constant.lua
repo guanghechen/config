@@ -1,4 +1,4 @@
----@class eve.builtin.constant
+---@class eve.lib.constant
 local M = {}
 
 ---! Session settings

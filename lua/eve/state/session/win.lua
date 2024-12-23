@@ -1,9 +1,9 @@
 local __module_name__ = "eve.state.session.win"
 
+local checks = require("eve.lib.checks")
+local constant = require("eve.lib.constant")
 local reporter = require("eve.lib.reporter")
 local AdvanceHistory = require("eve.lib.collection.history_advance")
-local checks = require("eve.builtin.checks")
-local constant = require("eve.builtin.constant")
 local lsp = require("eve.builtin.lsp")
 local state_status = require("eve.state.session.status")
 

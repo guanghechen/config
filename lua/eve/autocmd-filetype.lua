@@ -1,4 +1,4 @@
-local constant = require("eve.builtin.constant")
+local constant = require("eve.lib.constant")
 local augroup = require("eve.builtin.nvim").augroup
 
 vim.filetype.add({

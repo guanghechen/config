@@ -1,3 +1,5 @@
+local ft = require("eve.lib.filetype")
+
 return {
   name = "nvim-window-picker",
   opts = {
@@ -7,7 +9,7 @@ return {
       autoselect_one = true,
       include_current_win = false,
       bo = {
-        filetype = eve.filetype.get_no_window_picker_focusable_filetypes(),
+        filetype = ft.get_no_window_picker_focusable_filetypes(),
         buftype = { "terminal", "quickfix" },
       },
     },

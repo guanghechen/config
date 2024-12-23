@@ -1,8 +1,8 @@
-local constant = require("eve.builtin.constant")
-local util = require("eve.builtin.util")
+local constant = require("eve.lib.constant")
+local functional = require("eve.lib.functional")
+local oxi = require("eve.lib.oxi")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
-local oxi = require("eve.lib.oxi")
 local signcolumn = require("fml.ux.signcolumn")
 
 ---@class fml.t.ux.search.IInput
@@ -114,7 +114,7 @@ function M.new(props)
           local input_present = input_history:present() ---@type string|nil, integer
           if input_present ~= input_cur then
             local input_top = input_history:top() ---@type string|nil
-            if input_top ~= nil and util.is_editing_text(input_top) then
+            if input_top ~= nil and functional.is_editing_text(input_top) then
               input_history:update_top(EDITING_PREFIX .. input_cur)
             else
               input_history:go(math.huge)
@@ -209,7 +209,7 @@ end
 ---@return nil
 function M:reset_input(text)
   local search_state = self.state ---@type fml.t.ux.search.IContext
-  local next_text = util.unwrap_editing_prefix(text or search_state.input:snapshot()) ---@type string
+  local next_text = functional.unwrap_editing_prefix(text or search_state.input:snapshot()) ---@type string
   search_state.input:next(next_text)
 
   local bufnr = self._bufnr ---@type integer|nil

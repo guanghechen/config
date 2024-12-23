@@ -1,3 +1,4 @@
+local checks = require("eve.lib.checks")
 local env = require("eve.lib.env")
 local fs = require("eve.lib.fs")
 local functional = require("eve.lib.functional")
@@ -6,7 +7,6 @@ local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local Observable = require("eve.lib.collection.observable")
 local Subscriber = require("eve.lib.collection.subscriber")
-local checks = require("eve.builtin.checks")
 local state = require("eve.state")
 
 ---@class ghc.command.find.explorer.IDirItem

@@ -1,4 +1,4 @@
-local constant = require("eve.builtin.constant")
+local constant = require("eve.lib.constant")
 
 ---@type table<string, table<string, true>>
 local filetypes = {
@@ -193,7 +193,7 @@ local filetypes = {
   },
 }
 
----@class eve.builtin.filetype
+---@class eve.lib.filetype
 local M = {}
 
 ---@return string[]

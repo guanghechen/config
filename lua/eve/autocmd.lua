@@ -1,5 +1,5 @@
 local env = require("eve.lib.env")
-local ft = require("eve.builtin.filetype")
+local ft = require("eve.lib.filetype")
 local mvc = require("eve.builtin.mvc")
 local augroup = require("eve.builtin.nvim").augroup
 
@@ -54,7 +54,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     vim.b[bufnr].ghc_last_loc = true
 
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if eve.filetype.is_plain_file(filetype) then
+    if ft.is_plain_file(filetype) then
       local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
       local lcount = vim.api.nvim_buf_line_count(bufnr)
       if mark[1] > 0 and mark[1] <= lcount then

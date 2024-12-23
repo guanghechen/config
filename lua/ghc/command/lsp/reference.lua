@@ -1,8 +1,8 @@
 local __module_name__ = "ghc.command.lsp.reference" ---@type string
 
+local checks = require("eve.lib.checks")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
-local checks = require("eve.builtin.checks")
 local state = require("eve.state")
 local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
 
