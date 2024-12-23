@@ -42,6 +42,7 @@ Meta.__index = Meta
 ---@field public set                    fun(tabnr: integer|nil, meta: eve.state.tab.meta.state): eve.state.tab.meta.state|nil
 ---@field public del                    fun(tabnr: integer|nil): nil
 ---@field public resolve                fun(tabnr: integer|nil): eve.state.tab.meta.state|nil
+---@field public resolve_winnr_listed   fun(tabnr: integer|nil): integer
 ---@field public refresh                fun(tabnr: integer|nil): nil
 ---@field public refresh_all            fun(): nil
 ---
@@ -70,7 +71,7 @@ function Meta.new(tabnr, tabtype, winnr_listed, bufs)
   local self = setmetatable({}, Meta)
   self.tabnr = tabnr ---@type integer
   self.tabtype = tabtype or constant.TT_NORMAL ---@type string
-  self.winnr_listed = winnr_listed or 0 ---@type integer
+  self.winnr_listed = winnr_listed or S.resolve_winnr_listed() ---@type integer
   self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
   return self
 end
@@ -216,19 +217,7 @@ S = {
       bufs[i] = nil
     end
 
-    if not checks.is_win_valid(meta.winnr_listed) then
-      local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-      if checks.is_win_valid(winnr_cur) then
-        meta.winnr_listed = winnr_cur
-      else
-        for _, winnr in ipairs(winnrs) do
-          if checks.is_win_valid(winnr_cur) then
-            meta.winnr_listed = winnr
-            break
-          end
-        end
-      end
-    end
+    S.resolve_winnr_listed(tabnr)
 
     local tabtype = calc_tabtype(tabnr) ---@type string
     meta.tabtype = tabtype
@@ -249,6 +238,35 @@ S = {
       S.__meta_map__[tabnr] = nil
     end
   end,
+  resolve_winnr_listed = function(tabnr)
+    if tabnr == nil or tabnr < 1 then
+      return 0
+    end
+
+    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+    if meta == nil then
+      return 0
+    end
+
+    if checks.is_win_valid(meta.winnr_listed) then
+      return 0
+    end
+
+    local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+    if checks.is_win_valid(winnr_cur) then
+      meta.winnr_listed = winnr_cur
+      return winnr_cur
+    end
+
+    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+    for _, winnr in ipairs(winnrs) do
+      if checks.is_win_valid(winnr) then
+        meta.winnr_listed = winnr
+        return winnr
+      end
+    end
+    return 0
+  end,
   on_buf_enter = function(winnr, bufnr)
     if not checks.is_win_valid(winnr) or not checks.is_buf_valid(bufnr) then
       return
@@ -260,7 +278,9 @@ S = {
       return
     end
 
-    meta.winnr_listed = winnr
+    local winnr_listed = checks.is_win_valid(winnr) and winnr or S.resolve_winnr_listed(tabnr) ---@type integer
+    meta.winnr_listed = winnr_listed
+
     local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
     if not meta:find_buf(bufnr) then
       bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
