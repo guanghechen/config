@@ -31,7 +31,7 @@ local function gen_hlgroup_map(context)
     buf_cur_info = { fg = c.green, bg = bg_buf_cur, bold = true, italic = true },
     copilot_InProgress = { fg = c.aqua, bg = "bg_bar" },
     copilot_Inactive = { fg = c.red, bg = "bg_bar" },
-    copilot_Normal = { fg = c.blue, bg = "bg_bar" },
+    copilot_Normal = { fg = c.fg1, bg = "bg_bar" },
     copilot_Warning = { fg = c.yellow, bg = "bg_bar" },
     cwd = { fg = c.bg0, bg = c.green, bold = true },
     debug_render_count = { fg = c.bg0, bg = c.orange, bold = true },
@@ -115,7 +115,7 @@ local function gen_hlgroup_map(context)
     text_select = { fg = c.blue, bg = bg_mode, bold = true },
     text_terminal = { fg = c.green, bg = bg_mode, bold = true },
     text_visual = { fg = c.aqua, bg = bg_mode },
-    username = { fg = c.bg1, bg = c.blue },
+    username = { fg = c.bg1, bg = c.blue, bold = true },
   }
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type eve.lib.ux.nvimbar.Position[]
