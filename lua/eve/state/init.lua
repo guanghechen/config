@@ -330,7 +330,9 @@ function M.watch_changes(params)
       ---@diagnostic disable-next-line: unused-local
       on_event = function(p, event)
         if type(event) == "table" and event.change == true then
-          M.load({ editor = M._storage.editor })
+          vim.schedule(function()
+            M.load({ editor = M._storage.editor })
+          end)
         end
       end,
       on_error = function(p, err)

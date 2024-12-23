@@ -12,7 +12,7 @@ local M = {}
 ---@return nil
 function M.workspace()
   if vim.fn.expand("%") ~= "" then
-    local cwd = vim.fn.getcwd()
+    local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
     local A = path.locate_git_repo(p)
     local B = path.locate_git_repo(cwd)

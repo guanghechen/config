@@ -241,19 +241,19 @@ end
 
 ---@return boolean
 function M.is_git_repo()
-  local cwd = vim.fn.getcwd()
+  local cwd = vim.uv.cwd() ---@type string|nil
   return M.locate_git_repo(cwd) ~= nil
 end
 
 ---@return string
 function M.workspace()
-  local cwd = vim.fn.getcwd()
+  local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
   return M.locate_git_repo(cwd) or cwd
 end
 
 ---@return string
 function M.cwd()
-  local cwd = vim.fn.getcwd()
+  local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
   return cwd
 end
 
