@@ -1,7 +1,0 @@
-require("guanghechen.command.aerial")
-require("guanghechen.command.copilot-chat")
-require("guanghechen.command.diffview")
-require("guanghechen.command.neo-tree")
-require("guanghechen.command.nvim-notify")
-require("guanghechen.command.nvim-treesitter")
-require("guanghechen.command.nvim-window-picker")

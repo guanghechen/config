@@ -1,7 +1,7 @@
 local env = require("eve.lib.env")
 local fs = require("eve.lib.fs")
 local path = require("eve.lib.path")
-local uuids = eve.commander.uuids ---@type eve.builtin.commander.uuids
+local command = require("eve.builtin.command")
 
 local actions = {
   rename = function()
@@ -175,7 +175,7 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "gd",
       callback = function()
-        eve.commander.execute(uuids.goto_lsp_definitions)
+        command.execute(command.definitions.lsp.goto_definitions.uuid)
       end,
       desc = "lsp: goto definition",
     },
@@ -183,7 +183,7 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "gi",
       callback = function()
-        eve.commander.execute(uuids.goto_lsp_implementations)
+        command.execute(command.definitions.lsp.goto_implementations.uuid)
       end,
       desc = "lsp: goto implementation",
     },
@@ -191,7 +191,7 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "gr",
       callback = function()
-        eve.commander.execute(uuids.goto_lsp_references)
+        command.execute(command.definitions.lsp.goto_references.uuid)
       end,
       desc = "lsp: show references",
     },
@@ -199,7 +199,7 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "gt",
       callback = function()
-        eve.commander.execute(uuids.goto_lsp_type_definitions)
+        command.execute(command.definitions.lsp.goto_type_definitions.uuid)
       end,
       desc = "lsp: goto type definition",
     },

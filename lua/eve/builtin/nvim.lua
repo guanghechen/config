@@ -65,7 +65,7 @@ function M.calc_fileicon(filename)
 end
 
 ---@param tabnr                         integer
----@return string
+---@return eve.e.state.tab.meta.TabType
 function M.calc_tabtype(tabnr)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
 

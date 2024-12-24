@@ -29,12 +29,13 @@ require("ghc.dressing.select")
 require("ghc.dressing.winsep")
 
 local state = require("eve.state")
-eve.commander.execute(eve.commander.uuids.reload_theme)
+local command = require("eve.builtin.command")
+command.execute(command.definitions.ux.reload_theme.uuid)
 vim.schedule(function()
-  eve.commander.execute(eve.commander.uuids.reload_theme)
+  command.execute(command.definitions.ux.reload_theme.uuid)
   state.watch_changes({
     on_theme_changed = function()
-      eve.commander.execute(eve.commander.uuids.reload_theme)
+      command.execute(command.definitions.ux.reload_theme.uuid)
     end,
   })
 end)

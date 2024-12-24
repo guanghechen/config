@@ -10,7 +10,7 @@ local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Nvimbar = require("eve.lib.ux.nvimbar")
 local G = require("eve.builtin.G")
-local commander = require("eve.builtin.commander")
+local command = require("eve.builtin.command")
 local calc_fileicon = require("eve.builtin.nvim").calc_fileicon
 local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
@@ -41,22 +41,17 @@ function M.bufs(position)
 
   ---@type string
   local fn_active_buf = G.register_anonymous_fn(function(bufnr)
-    if type(bufnr) == "number" and vim.api.nvim_buf_is_valid(bufnr) then
-      local winnr = state.tab.get_current_winnr() ---@type integer
-      if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_win_set_buf(winnr, bufnr)
-      end
-    end
+    command.execute(command.definitions.buf.open.uuid, tostring(bufnr))
   end) or ""
 
   ---@type string
   local fn_focus_left_buf = G.register_anonymous_fn(function()
-    commander.execute(commander.uuids.buf_focus_left)
+    command.execute(command.definitions.buf.focus_left.uuid)
   end) or ""
 
   ---@type string
   local fn_focus_right_buf = G.register_anonymous_fn(function()
-    commander.execute(commander.uuids.buf_focus_right)
+    command.execute(command.definitions.buf.focus_right.uuid)
   end) or ""
 
   ---@param bufnr                       integer
@@ -1185,7 +1180,7 @@ function M.tabs(position)
 
   ---@type string
   local fn_active_tab = G.register_anonymous_fn(function(tabid)
-    commander.execute(commander.uuids.tab_focus, tostring(tabid))
+    command.execute(command.definitions.tab.focus.uuid, tostring(tabid))
   end) or ""
 
   ---@type string

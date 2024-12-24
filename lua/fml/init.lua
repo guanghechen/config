@@ -1,8 +1,3 @@
----@class fml.api
-local api = {
-  term = require("fml.api.term"),
-}
-
 ---@class fml.fn
 local fn = {
   dressing_float_win = require("fml.fn.dressing_float_win"),
@@ -29,11 +24,9 @@ local ux = {
 }
 
 ---@class fml
----@field public api                    fml.api
 ---@field public fn                     fml.fn
 ---@field public ux                     fml.ux
 local fml = {
-  api = api,
   fn = fn,
   ux = ux,
 }

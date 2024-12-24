@@ -1,92 +1,460 @@
 local __module_name__ = "eve.builtin.command" ---@type string
 
+local constant = require("eve.lib.constant")
 local reporter = require("eve.lib.reporter")
+
+---@alias eve.builitin.command.definitions.copy.Scope
+---| "absolute"
+---| "relative"
 
 ---@class eve.builtin.command.IDefinition
 ---@field public uuid                   string
 ---@field public desc                   string
----@field public nargs                  ?0|1|"?"
+---@field public nargs                  0|1|"?"
 ---@field public candidates             ?string[]
+
+---@class eve.builtin.command.IDefinitionWithCandidates
+---@field public uuid                   string
+---@field public desc                   string
+---@field public nargs                  1|"?"
+---@field public candidates             string[]
 
 ---@class eve.builtin.command.ICommand
 ---@field public uuid                   string
----@field public desc                   string
----@field public implemented            boolean
----@field public nargs                  0|1|"?"
----@field public candidates             ?string[]
+---@field public tabtype                eve.e.state.tab.meta.TabType
 ---@field public action                 fun(args?: string): nil
 
+---@class eve.builtin.command.IImplementation
+---@field public uuid                  string
+---@field public tabtype               ?eve.e.state.tab.meta.TabType
+---@field public action                 fun(args?: string): nil
+
+local definition_map = {} ---@type table<string, eve.builtin.command.IDefinition>
 local command_map = {} ---@type table<string, eve.builtin.command.ICommand>
 
 ---@class eve.builtin.command
 local M = {}
+M.__definition_map__ = definition_map
+M.__command_map__ = command_map
 
----@param definition                eve.builtin.command.IDefinition
+---@param raw_definition                eve.builtin.command.IDefinition | eve.builtin.command.IDefinitionWithCandidates
+---@param overwrite                     boolean|nil
 ---@return eve.builtin.command
-function M.define(definition)
-  if command_map[definition.uuid] ~= nil then
+function M.define(raw_definition, overwrite)
+  if definition_map[raw_definition.uuid] ~= nil and not overwrite then
     reporter.warn({
       from = __module_name__,
       subject = "define",
-      message = "The definition with the uuid is already exists.",
-      details = { definition = definition },
+      message = "The definition with the uuid has already existed.",
+      details = { definition = raw_definition },
+    })
+    return M
+  end
+
+  ---@type eve.builtin.command.IDefinition
+  local definition = {
+    uuid = raw_definition.uuid,
+    desc = raw_definition.desc,
+    nargs = raw_definition.nargs,
+    candidates = raw_definition.candidates,
+  }
+  definition_map[definition.uuid] = definition
+
+  ---@param opts                        { name: string, args: string, fargs: string[] }
+  ---@return nil
+  local function handle(opts)
+    M.execute(definition.uuid, opts.args, false)
+  end
+
+  ---@param argLead                     string
+  ---@return string[]
+  local function complete(argLead)
+    if definition.candidates ~= nil then
+      local options = definition.candidates ---@type string[]
+      local pattern = "^" .. argLead ---@type string
+      local matches = {} ---@type string[]
+      for _, option in ipairs(options) do
+        if option:match(pattern) then
+          matches[#matches + 1] = option
+        end
+      end
+      return matches
+    end
+    return {}
+  end
+
+  vim.api.nvim_create_user_command(definition.uuid, handle, {
+    desc = definition.desc,
+    nargs = definition.nargs,
+    complete = definition.nargs ~= 0 and complete or nil,
+  })
+  return M
+end
+
+---@param implementation                 eve.builtin.command.IImplementation
+---@return eve.builtin.command
+function M.implement(implementation)
+  local uuid = implementation.uuid ---@type string
+  local tabtype = implementation.tabtype or constant.TT_ALL ---@type string
+  local action = implementation.action ---@type fun(args?: string): nil
+  local definition = definition_map[uuid] ---@type eve.builtin.command.IDefinition|nil
+  if definition == nil then
+    reporter.warn({
+      from = __module_name__,
+      subject = "implement",
+      message = "Cannot find the definition by the given uuid.",
+      details = { uuid = uuid, tabtype = tabtype, action = action },
+    })
+    return M
+  end
+
+  local key = tabtype == constant.TT_ALL and uuid or (uuid .. ":" .. tabtype) ---@type string
+  if command_map[key] ~= nil then
+    reporter.error({
+      from = __module_name__,
+      subject = "implement",
+      message = "The command has already been implemented.",
+      details = { key = key, uuid = uuid, tabtype = tabtype, action = action },
     })
     return M
   end
 
   ---@type eve.builtin.command.ICommand
   local command = {
-    uuid = definition.uuid,
-    desc = definition.desc,
-    implemented = false,
-    nargs = definition.nargs or 0,
-    candidates = definition.candidates,
-    action = function()
-      reporter.error({
-        from = __module_name__,
-        subject = "action",
-        message = "The action is not implemented.",
-        details = { definition = definition },
-      })
-    end,
+    uuid = uuid,
+    tabtype = tabtype,
+    action = action,
   }
-
-  command_map[command.uuid] = command
+  command_map[key] = command
   return M
 end
 
 ---@param uuid                          string
----@param action                        fun(args?: string): nil
----@return eve.builtin.command
-function M.implement(uuid, action)
-  local command = command_map[uuid] ---@type eve.builtin.command.ICommand|nil
+---@param args                          ?string
+---@param silent                        ?boolean
+---@return nil
+function M.execute(uuid, args, silent)
+  local command = M.resolve(uuid, true) ---@type eve.builtin.command.ICommand|nil
+
   if command == nil then
-    reporter.error({
-      from = __module_name__,
-      subject = "register",
-      message = "The definition with the uuid is already exists.",
-      details = { uuid = uuid, action = action },
-    })
-    return M
+    if not silent then
+      reporter.warn({
+        from = __module_name__,
+        subject = "execute",
+        message = "Cannot resolve the command by the given uuid",
+        details = { uuid = uuid, args = args },
+      })
+    end
+    return
   end
 
-  if command.implemented then
+  command.action(args)
+end
+
+---@param uuid                          string
+---@param silent                        ?boolean
+---@return eve.builtin.command.ICommand|nil
+function M.resolve(uuid, silent)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta = require("eve.state").tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  local tabtype = meta and meta.tabtype or constant.TT_NORMAL ---@type eve.e.state.tab.meta.TabType
+
+  local key = uuid .. ":" .. tabtype ---@type string
+  if command_map[key] ~= nil then
+    return command_map[key]
+  end
+
+  if command_map[uuid] ~= nil then
+    return command_map[uuid]
+  end
+
+  if not silent then
     reporter.warn({
       from = __module_name__,
-      subject = "implement",
-      message = "The command has been implemented. skipped",
-      details = { uuid = uuid, action = action, command = command },
+      subject = "resolve",
+      message = "Cannot resolve the command by the given uuid",
+      details = { uuid = uuid, tabtype = tabtype },
     })
-    return M
   end
-
-  command.action = action
-  command.implemented = true
-  return M
+  return nil
 end
 
-function M.execute(uuid, args, silent)
-  return M
+---@param uuid                          string
+---@param desc                          string
+---@param nargs                         ?0|1|"?"
+---@param candidates                    ?string[]
+---@return eve.builtin.command.IDefinition
+local function def(uuid, desc, nargs, candidates)
+  ---@type eve.builtin.command.IDefinition
+  local definition = {
+    uuid = uuid,
+    desc = desc,
+    nargs = nargs or 0,
+    candidates = candidates,
+  }
+  M.define(definition)
+  return definition
 end
+
+---@param uuid                          string
+---@param desc                          string
+---@param nargs                         1|"?"
+---@param candidates                    string[]
+---@return eve.builtin.command.IDefinitionWithCandidates
+local function defc(uuid, desc, nargs, candidates)
+  ---@type eve.builtin.command.IDefinitionWithCandidates
+  local definition = {
+    uuid = uuid,
+    desc = desc,
+    nargs = nargs,
+    candidates = candidates,
+  }
+  M.define(definition)
+  return definition
+end
+
+---@class eve.builtin.command.definitions
+M.definitions = {}
+
+---@class M.eve.builtin.command.definitions.ai
+M.definitions.ai = {
+  copilot_chat_prompt = def("Faicopilotchatprompt", "ai: copilot chat prompt"),
+  copilot_chat_quick = def("Faicopilotchatquick", "ai: copilot chat quick"),
+  copilot_chat_reset = def("Faicopilotchatreset", "ai: copilot chat reset"),
+  copilot_chat_stop = def("Faicopilotchatstop", "ai: copilot chat stop"),
+  copilot_chat_toggle = def("Faicopilotchattoggle", "ai: copilot chat toggle"),
+}
+
+---@class M.eve.builtin.command.definitions.buf
+M.definitions.buf = {
+  close = def("Fbufclose", "buf: close"),
+  close_to_leftest = def("Fbufclosetoleftest", "buf: close to leftest"),
+  close_to_rightest = def("Fbufclosetorightest", "buf: close to rightest"),
+  close_others = def("Fbufcloseothers", "buf: close others"),
+
+  focus_1 = def("Fbuffocus1", "buf: focus 1"),
+  focus_2 = def("Fbuffocus2", "buf: focus 2"),
+  focus_3 = def("Fbuffocus3", "buf: focus 3"),
+  focus_4 = def("Fbuffocus4", "buf: focus 4"),
+  focus_5 = def("Fbuffocus5", "buf: focus 5"),
+  focus_6 = def("Fbuffocus6", "buf: focus 6"),
+  focus_7 = def("Fbuffocus7", "buf: focus 7"),
+  focus_8 = def("Fbuffocus8", "buf: focus 8"),
+  focus_9 = def("Fbuffocus9", "buf: focus 9"),
+  focus_10 = def("Fbuffocus10", "buf: focus 10"),
+  open = def("Fopen", "buf: open (bufnr)", 1),
+  focus = def("Fbuffocus", "buf: focus (bufid)", 1),
+  focus_left = def("Fbuffocusleft", "buf: focus left", "?"),
+  focus_right = def("Fbuffocusright", "buf: focus right", "?"),
+
+  swap_left = def("Fbufswapleft", "buf: swap left"),
+  swap_right = def("Fbufswapright", "buf: swap right"),
+
+  new = def("Fbufnew", "buf: new"),
+  pin = def("Fbufpin", "buf: pin"),
+  save = def("Fbufsave", "buf: save"),
+}
+
+---@class M.eve.builtin.command.definitions.code
+M.definitions.code = {
+  run = def("Fcoderun", "code: run"),
+
+  swap_conditional_branches = def("Fcodeswapconditionalbranches", "code: swap conditional branches"),
+}
+
+---@class M.eve.builtin.command.definitions.copy
+M.definitions.copy = {
+  char_under_cursor = def("Fcopycharundercursor", "copy: char under cursor"),
+
+  filepath = defc("Fcopyfilepath", "copy: current filepath", "?", { "absolute", "relative" }),
+  filepath_absolute = def("Fcopyfilepathabsolute", "copy: current filepath (absolute)"),
+  filepath_relative = def("Fcopyfilepathrelative", "copy: current filepath (relative)"),
+}
+
+---@class M.eve.builtin.command.definitions.debug
+M.definitions.debug = {
+  inspect = def("Fdebuginspect", "debug: inspect"),
+  inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
+  inspect_state = def("Fdebuginspectstate", "debug: inspect state"),
+  inspect_tree = def("Fdebuginspecttree", "debug: inspect tree"),
+}
+
+---@class M.eve.builtin.command.definitions.diagnostic
+M.definitions.diagnostic = {
+  goto_next = def("Fdiagnosticgotonext", "diagnostic: goto next"),
+  goto_next_error = def("Fdiagnosticgotonexterror", "diagnostic: goto next (error)"),
+  goto_next_warn = def("Fdiagnosticgotonextwarn", "diagnostic: goto next (warn)"),
+  goto_next_hint = def("Fdiagnosticgotonexthint", "diagnostic: goto next (hint)"),
+  goto_next_quickfix = def("Fdiagnosticgotonextquickfix", "diagnostic: goto next (quickfix)"),
+
+  goto_prev = def("Fdiagnosticgotoprev", "diagnostic: goto prev"),
+  goto_prev_error = def("Fdiagnosticgotopreverror", "diagnostic: goto prev (error)"),
+  goto_prev_warn = def("Fdiagnosticgotoprevwarn", "diagnostic: goto prev (warn)"),
+  goto_prev_hint = def("Fdiagnosticgotoprevhint", "diagnostic: goto prev (hint)"),
+  goto_prev_quickfix = def("Fdiagnosticgotoprevquickfix", "diagnostic: goto prev (quickfix)"),
+
+  line = def("Fdiagnosticline", "diagnostic: line"),
+  outline = def("Fdiagnosticoutline", "diagnostic: outline"),
+}
+
+---@class M.eve.builtin.command.definitions.explorer
+M.definitions.explorer = {
+  fs_cwd = def("Fexplorerfscwd", "explorer: filesystem (cwd)"),
+  fs_workspace = def("Fexplorerfsworkspace", "explorer: filesystem (workspace)"),
+  fs_reveal = def("Fexplorerfsreveal", "explorer: filesystem (reveal)"),
+
+  git_cwd = def("Fexplorergitcwd", "explorer: git (cwd)"),
+  git_workspace = def("Fexplorergitworkspace", "explorer: git (workspace)"),
+
+  last = def("Fexplorerlast", "explorer: last"),
+  toggle = def("Fexplorertoggle", "explorer: toggle"),
+}
+
+---@class M.eve.builtin.command.definitions.find
+M.definitions.find = {
+  buffers = def("Ffindbuffers", "find: buffers"),
+  explorer = def("Ffindexplorer", "find: explorer"),
+  files = def("Ffindfiles", "find: files"),
+  files_cwd = def("Ffindfilescwd", "find: files (cwd)"),
+  files_directory = def("Ffindfilesdirectory", "find: files (directory)"),
+  files_workspace = def("Ffindfilesworkspace", "find: files (workspace)"),
+  git_not_committed = def("Ffindgitnotcommitted", "find: git not committed"),
+  highlights = def("Ffindhighlights", "find: highlights"),
+  pinned_files = def("Ffindpinnedfiles", "find: pinned files"),
+  vim_options = def("Ffindvimoptions", "find: vim options"),
+}
+
+---@class M.eve.builtin.command.definitions.git
+M.definitions.git = {
+  browse = def("Fgitbrowse", "git: browse"),
+  diffview = def("Fgitdiffview", "git: diffview"),
+  history = def("Fgithistory", "git: history (commits)"),
+  history_file = def("Fgithistoryfile", "git: history (file)"),
+}
+
+---@class M.eve.builtin.command.definitions.lsp
+M.definitions.lsp = {
+  goto_definitions = def("Flspgotodefinitions", "lsp: goto definitions"),
+  goto_implementations = def("Flspgotoimplementations", "lsp: goto implementations"),
+  goto_references = def("Flspgotoreferences", "lsp: goto references"),
+  goto_type_definitions = def("Flspgototypedefinitions", "lsp: goto type definitions"),
+}
+
+---@class M.eve.builtin.command.definitions.refresh
+M.definitions.refresh = {
+  all = def("Frefreshall", "refresh: all"),
+}
+
+---@class M.eve.builtin.command.definitions.replace
+M.definitions.replace = {
+  files = def("Freplacefiles", "replace: files"),
+  files_in_buffer = def("Freplacefilesinbuffer", "replace: files (buffer)"),
+  files_in_cwd = def("Freplacefilesincwd", "replace: files (cwd)"),
+  files_in_directory = def("Freplacefilesindirectory", "replace: files (directory)"),
+  files_in_workspace = def("Freplacefilesinworkspace", "replace: files (workspace)"),
+}
+
+---@class M.eve.builtin.command.definitions.search
+M.definitions.search = {
+  files = def("Fsearchfiles", "search: files"),
+  files_in_buffer = def("Fsearchfilesinbuffer", "search: files (buffer)"),
+  files_in_cwd = def("Fsearchfilesincwd", "search: files (cwd)"),
+  files_in_directory = def("Fsearchfilesindirectory", "search: files (directory)"),
+  files_in_workspace = def("Fsearchfilesinworkspace", "search: files (workspace)"),
+}
+
+---@class M.eve.builtin.command.definitions.session
+M.definitions.session = {
+  restore = def("Fsessionrestore", "session: restore"),
+  restore_autosaved = def("Fsessionrestoreautosaved", "session: restore autosaved"),
+
+  save = def("Fsessionsave", "session: save"),
+}
+
+---@class M.eve.builtin.command.definitions.tab
+M.definitions.tab = {
+  close = def("Ftabclose", "tab: close"),
+  close_others = def("Ftabcloseothers", "tab: close others"),
+  close_to_leftest = def("Ftabclosetoleftest", "tab: close to leftest"),
+  close_to_rightest = def("Ftabclosetorightest", "tab: close to rightest"),
+
+  focus_1 = def("Ftabfocus1", "tab: focus 1"),
+  focus_2 = def("Ftabfocus2", "tab: focus 2"),
+  focus_3 = def("Ftabfocus3", "tab: focus 3"),
+  focus_4 = def("Ftabfocus4", "tab: focus 4"),
+  focus_5 = def("Ftabfocus5", "tab: focus 5"),
+  focus_6 = def("Ftabfocus6", "tab: focus 6"),
+  focus_7 = def("Ftabfocus7", "tab: focus 7"),
+  focus_8 = def("Ftabfocus8", "tab: focus 8"),
+  focus_9 = def("Ftabfocus9", "tab: focus 9"),
+  focus_10 = def("Ftabfocus10", "tab: focus 10"),
+  focus = def("Ftabfocus", "tab: focus", 1),
+  focus_left = def("Ftabfocusleft", "tab: focus left", "?"),
+  focus_right = def("Ftabfocusright", "tab: focus right", "?"),
+
+  new = def("Ftabnew", "tab: new"),
+  new_with_buf = def("Ftabnewwithbuf", "tab: new with buf"),
+}
+
+---@class M.eve.builtin.command.definitions.term
+M.definitions.term = {
+  toggle_cwd = def("Ftermcwd", "term: toggle (cwd)"),
+  toggle_directory = def("Ftermdirectory", "term: toggle (directory)"),
+  toggle_workspace = def("Ftermworkspace", "term: toggle (workspace)"),
+
+  lazygit_cwd = def("Ftermlazygitcwd", "term: lazygit (cwd)"),
+  lazygit_workspace = def("Ftermlazygitworkspace", "term: lazygit (workspace)"),
+  lazygit_file_history = def("Ftermlazygitfilehistory", "term: lazygit (file history)"),
+}
+
+---@class M.eve.builtin.command.definitions.toggle
+M.definitions.toggle = {
+  list = defc("Ftoggle", "toggle: select", "?", {}),
+  flight = defc("Ftoggleflight", "toggle: flight", "?", {}),
+  relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),
+  theme = defc("Ftoggletheme", "toggle: theme", "?", {}),
+  theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),
+  transparency = def("Ftoggletransparency", "toggle: transparency"),
+  wrap = def("Ftogglewrap", "toggle: wrap"),
+}
+
+---@class M.eve.builtin.command.definitions.ux
+M.definitions.ux = {
+  dismiss_notifications = def("Fuxdismissnotifications", "ux: dismiss notifications"),
+  reload_theme = def("Fuxreloadtheme", "ux: reload theme", "?"),
+  resume_last_widget = def("Fuxresume", "ux: resume last widget"),
+}
+
+---@class M.eve.builtin.command.definitions.win
+M.definitions.win = {
+  close = def("Fwinclose", "win: close"),
+  close_others = def("Fwincloseothers", "win: close others"),
+
+  focus_top = def("Fwinfocustop", "win: focus top"),
+  focus_right = def("Fwinfocusright", "win: focus right"),
+  focus_bottom = def("Fwinfocusbottom", "win: focus bottom"),
+  focus_left = def("Fwinfocusleft", "win: focus left"),
+  focus_prev = def("Fwinfocusprev", "win: focus prev"),
+  focus_next = def("Fwinfocusnext", "win: focus next"),
+
+  history = def("Fwinhistory", "win: history"),
+  history_backward = def("Fwinhistorybackward", "win: history backward"),
+  history_forward = def("Fwinhistoryforward", "win: history forward"),
+
+  resize_horizontal_minus = def("Fwinresizehorizontalminus", "win: resize horizontal (minus)"),
+  resize_horizontal_plus = def("Fwinresizehorizontalplus", "win: resize horizontal (plus)"),
+  resize_vertical_minus = def("Fwinresizeverticalminus", "win: resize vertical (minus)"),
+  resize_vertical_plus = def("Fwinresizeverticalplus", "win: resize vertical (plus)"),
+
+  split_horizontal = def("Fwinsplithorizontal", "win: split horizontal"),
+  split_vertical = def("Fwinsplitvertical", "win: split vertical"),
+
+  focus = def("Fwinfocus", "win: focus (with picker)"),
+  project = def("Fwinproject", "win: project (with picker)"),
+  swap = def("Fwinswap", "win: swap (with picker)"),
+
+  scroll_down = def("Fwinscrolldown", "win: scroll down"),
+  scroll_up = def("Fwinscrollup", "win: scroll up"),
+}
 
 return M

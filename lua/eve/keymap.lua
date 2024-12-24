@@ -1,30 +1,31 @@
-local commander = require("eve.builtin.commander")
-local uuids = commander.uuids ---@type eve.builtin.commander.uuids
+local command = require("eve.builtin.command")
+local K = command.definitions ---@type eve.builtin.command.definitions
 
 ---@param modes                         string[]
 ---@param key                           string
----@param uuid                          string
+---@param cmd                           string
 ---@param desc                          ?string
-local function mk(modes, key, uuid, desc)
-  local action = uuid ---@type string|fun():nil
-
-  if commander.should_be_command(uuid) then
-    if desc == nil then
-      local command = commander.resolve(uuid, true) ---@type eve.t.builtin.commander.ICommand|nil
-      desc = command ~= nil and command.desc or nil ---@type string|nil
-    end
-
-    ---@return nil
-    action = function()
-      commander.execute(uuid)
-    end
-  end
-
-  vim.keymap.set(modes, key, action, {
+local function mk(modes, key, cmd, desc)
+  vim.keymap.set(modes, key, cmd, {
     noremap = true,
     silent = true,
     nowait = true,
     desc = desc,
+  })
+end
+
+---@param modes                         string[]
+---@param key                           string
+---@param definition                    eve.builtin.command.IDefinition|eve.builtin.command.IDefinitionWithCandidates
+---@return nil
+local function kk(modes, key, definition)
+  vim.keymap.set(modes, key, function()
+    command.execute(definition.uuid)
+  end, {
+    noremap = true,
+    silent = true,
+    nowait = true,
+    desc = definition.desc,
   })
 end
 
@@ -62,242 +63,230 @@ mk({ "i" }, ";", ";<c-g>u")
 mk({ "i" }, "<cr>", "<cr><c-g>u")
 mk({ "i" }, "<space>", "<space><c-g>u")
 
+----- better jump list -----
+mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back")
+mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward")
+
 ----- better copy/paste list -----
-mk({ "v" }, "<C-a>c", '"+y', "system: copy to clipboard")
-mk({ "v" }, "<M-c>", '"+y', "system: copy to clipboard")
-mk({ "v" }, "<C-a>x", '"+x', "system: cut to clipboard")
-mk({ "v" }, "<M-x>", '"+x', "system: cut to clipboard")
-mk({ "n" }, "<C-a>c", uuids.copy_char_under_cursor, "system: copy char under curosr to clipboard")
-mk({ "n" }, "<M-c>", uuids.copy_char_under_cursor, "system: copy char under curosr to clipboard")
 mk({ "i", "n", "v" }, "<C-a>a", "<esc>gg0vG$", "system: select all")
 mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "system: select all")
 mk({ "i", "n", "v" }, "<C-a>v", '<esc>"+p', "system: paste from clipboard")
 mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "system: paste from clipboard")
-
------ jump list -----
-mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back")
-mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward")
+mk({ "v" }, "<C-a>c", '"+y', "system: copy to clipboard")
+mk({ "v" }, "<M-c>", '"+y', "system: copy to clipboard")
+mk({ "v" }, "<C-a>x", '"+x', "system: cut to clipboard")
+mk({ "v" }, "<M-x>", '"+x', "system: cut to clipboard")
+kk({ "n" }, "<C-a>c", K.copy.char_under_cursor)
+kk({ "n" }, "<M-c>", K.copy.char_under_cursor)
 
 --- quick access widgets (diagnostic, explorer, terminal) -----
-mk({ "n", "t", "v" }, "<leader>`", uuids.resume, "resume: widgets")
-mk({ "n", "v" }, "<leader>1", uuids.explorer_filesystem_cwd, "explorer: filesystem (cwd)")
-mk({ "n", "v" }, "<leader>2", uuids.search_files, "search: files")
-mk({ "n", "v" }, "<leader>3", uuids.explorer_git_cwd, "explorer: git (cwd)")
+kk({ "n", "t", "v" }, "<leader>`", K.ux.resume_last_widget)
+kk({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
+kk({ "n", "v" }, "<leader>2", K.search.files)
+kk({ "n", "v" }, "<leader>3", K.explorer.git_cwd)
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[a]i---------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>aa", uuids.copilot_chat_toggle, "copilot chat: toggle")
-mk({ "n", "v" }, "<leader>ap", uuids.copilot_chat_prompt, "copilot chat: prompt actions")
-mk({ "n", "v" }, "<leader>aq", uuids.copilot_chat_quick, "copilot chat: quick chat")
-mk({ "n", "v" }, "<leader>as", uuids.copilot_chat_stop, "copilot chat: stop output")
-mk({ "n", "v" }, "<leader>ax", uuids.copilot_chat_reset, "copilot chat: reset")
+kk({ "n", "v" }, "<leader>aa", K.ai.copilot_chat_toggle)
+kk({ "n", "v" }, "<leader>ap", K.ai.copilot_chat_prompt)
+kk({ "n", "v" }, "<leader>aq", K.ai.copilot_chat_quick)
+kk({ "n", "v" }, "<leader>as", K.ai.copilot_chat_stop)
+kk({ "n", "v" }, "<leader>ax", K.ai.copilot_chat_reset)
 ---------------------------------------------------------------------------------------------#[a]i--
 
 --#[b]uf--------------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<C-a>s", uuids.buf_save, "buf: save changes")
-mk({ "i", "n", "v" }, "<M-s>", uuids.buf_save, "buf: save changes")
-mk({ "n", "v" }, "<leader>[", uuids.buf_focus_left, "buf: focus left")
-mk({ "n", "v" }, "<leader>]", uuids.buf_focus_right, "buf: focus right")
-mk({ "n", "v" }, "<leader>{", uuids.buf_swap_left, "buf: swap left")
-mk({ "n", "v" }, "<leader>}", uuids.buf_swap_right, "buf: swap right")
-mk({ "n", "v" }, "<leader>b[", uuids.buf_focus_left, "buf: focus left")
-mk({ "n", "v" }, "<leader>b]", uuids.buf_focus_right, "buf: focus right")
-mk({ "n", "v" }, "<leader>b{", uuids.buf_swap_left, "buf: swap left")
-mk({ "n", "v" }, "<leader>b}", uuids.buf_swap_right, "buf: swap right")
-mk({ "n", "v" }, "<leader>b1", uuids.buf_focus_1, "buf: focus 1")
-mk({ "n", "v" }, "<leader>b2", uuids.buf_focus_2, "buf: focus 2")
-mk({ "n", "v" }, "<leader>b3", uuids.buf_focus_3, "buf: focus 3")
-mk({ "n", "v" }, "<leader>b4", uuids.buf_focus_4, "buf: focus 4")
-mk({ "n", "v" }, "<leader>b5", uuids.buf_focus_5, "buf: focus 5")
-mk({ "n", "v" }, "<leader>b6", uuids.buf_focus_6, "buf: focus 6")
-mk({ "n", "v" }, "<leader>b7", uuids.buf_focus_7, "buf: focus 7")
-mk({ "n", "v" }, "<leader>b8", uuids.buf_focus_8, "buf: focus 8")
-mk({ "n", "v" }, "<leader>b9", uuids.buf_focus_9, "buf: focus 9")
-mk({ "n", "v" }, "<leader>b0", uuids.buf_focus_10, "buf: focus 10")
-mk({ "n", "v" }, "<leader>bd", uuids.buf_close, "buf: close current")
-mk({ "n", "v" }, "<leader>bh", uuids.buf_close_to_leftest, "buf: close to the leftest")
-mk({ "n", "v" }, "<leader>bl", uuids.buf_close_to_rightest, "buf: close to the rightest")
-mk({ "n", "v" }, "<leader>bn", uuids.buf_new, "buf: new")
-mk({ "n", "v" }, "<leader>bo", uuids.buf_close_others, "buf: close others")
-mk({ "n", "v" }, "<leader>bp", uuids.buf_pin, "buf: toggle pin")
+kk({ "i", "n", "v" }, "<C-a>s", K.buf.save)
+kk({ "i", "n", "v" }, "<M-s>", K.buf.save)
+kk({ "n", "v" }, "<leader>[", K.buf.focus_left)
+kk({ "n", "v" }, "<leader>]", K.buf.focus_right)
+kk({ "n", "v" }, "<leader>{", K.buf.swap_left)
+kk({ "n", "v" }, "<leader>}", K.buf.swap_right)
+kk({ "n", "v" }, "<leader>b[", K.buf.focus_left)
+kk({ "n", "v" }, "<leader>b]", K.buf.focus_right)
+kk({ "n", "v" }, "<leader>b{", K.buf.swap_left)
+kk({ "n", "v" }, "<leader>b}", K.buf.swap_right)
+kk({ "n", "v" }, "<leader>b1", K.buf.focus_1)
+kk({ "n", "v" }, "<leader>b2", K.buf.focus_2)
+kk({ "n", "v" }, "<leader>b3", K.buf.focus_3)
+kk({ "n", "v" }, "<leader>b4", K.buf.focus_4)
+kk({ "n", "v" }, "<leader>b5", K.buf.focus_5)
+kk({ "n", "v" }, "<leader>b6", K.buf.focus_6)
+kk({ "n", "v" }, "<leader>b7", K.buf.focus_7)
+kk({ "n", "v" }, "<leader>b8", K.buf.focus_8)
+kk({ "n", "v" }, "<leader>b9", K.buf.focus_9)
+kk({ "n", "v" }, "<leader>b0", K.buf.focus_10)
+kk({ "n", "v" }, "<leader>bd", K.buf.close)
+kk({ "n", "v" }, "<leader>bh", K.buf.close_to_leftest)
+kk({ "n", "v" }, "<leader>bl", K.buf.close_to_rightest)
+kk({ "n", "v" }, "<leader>bn", K.buf.new)
+kk({ "n", "v" }, "<leader>bo", K.buf.close_others)
+kk({ "n", "v" }, "<leader>bp", K.buf.pin)
 --------------------------------------------------------------------------------------------#[b]uf--
 
 --#[c]ode-------------------------------------------------------------------------------------------
 mk({ "n" }, "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "code: add comment below")
 mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "code: add comment above")
-mk({ "n" }, "<leader>cs", uuids.code_swap_conditional_branches, "code: swap conditional branches")
+kk({ "i", "n", "v" }, "<F5>", K.code.run)
+kk({ "n" }, "<leader>cs", K.code.swap_conditional_branches)
 -------------------------------------------------------------------------------------------#[c]ode--
 
 --#[c]opy-------------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<C-a>C", uuids.copy_current_filepath, "copy: current filepath")
-mk({ "i", "n", "v" }, "<M-C>", uuids.copy_current_filepath, "copy: current filepath")
+kk({ "i", "n", "v" }, "<C-a>C", K.copy.filepath)
+kk({ "i", "n", "v" }, "<M-C>", K.copy.filepath)
 -----------------------------------------------------------------------------------------#[c]opy----
 
 --#[d]ebug------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>dd", uuids.debug_inspect, "debug: inspect")
-mk({ "n", "v" }, "<leader>dI", uuids.debug_inspect_tree, "debug: inspect tree")
-mk({ "n", "v" }, "<leader>di", uuids.debug_inspect_pos, "debug: inspect pos")
-mk({ "n", "v" }, "<leader>ds", uuids.debug_inspect_state, "debug: inspect state")
+kk({ "n", "v" }, "<leader>dd", K.debug.inspect)
+kk({ "n", "v" }, "<leader>dI", K.debug.inspect_tree)
+kk({ "n", "v" }, "<leader>di", K.debug.inspect_pos)
+kk({ "n", "v" }, "<leader>ds", K.debug.inspect_state)
 ------------------------------------------------------------------------------------------#[d]ebug--
 
 --#[e]xplorer---------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>ee", uuids.explorer_last, "explorer: last")
-mk({ "n", "v" }, "<leader>eF", uuids.explorer_filesystem_workspace, "explorer: filesystem (workspace)")
-mk({ "n", "v" }, "<leader>ef", uuids.explorer_filesystem_cwd, "explorer: filesystem (cwd)")
-mk({ "n", "v" }, "<leader>eG", uuids.explorer_git_workspace, "explorer: git (workspace)")
-mk({ "n", "v" }, "<leader>eg", uuids.explorer_git_cwd, "explorer: git (cwd)")
-mk({ "n", "v" }, "<leader>er", uuids.explorer_reveal, "explorer: reveal")
-mk({ "n", "v" }, "<leader>et", uuids.explorer_toggle, "explorer: toggle")
+kk({ "n", "v" }, "<leader>ee", K.explorer.last)
+kk({ "n", "v" }, "<leader>eF", K.explorer.fs_workspace)
+kk({ "n", "v" }, "<leader>ef", K.explorer.fs_cwd)
+kk({ "n", "v" }, "<leader>eG", K.explorer.git_workspace)
+kk({ "n", "v" }, "<leader>eg", K.explorer.git_cwd)
+kk({ "n", "v" }, "<leader>er", K.explorer.fs_reveal)
+kk({ "n", "v" }, "<leader>et", K.explorer.toggle)
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ind-------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader><leader>", uuids.find_files, "find: files")
-mk({ "n", "v" }, "<leader>fb", uuids.find_buffers, "find: buffers")
-mk({ "n", "v" }, "<leader>fc", uuids.find_files_cwd, "find: files (cwd)")
-mk({ "n", "v" }, "<leader>fe", uuids.find_explorer, "find: explorer")
-mk({ "n", "v" }, "<leader>fd", uuids.find_files_directory, "find: files (directory)")
-mk({ "n", "v" }, "<leader>ff", uuids.find_files, "find: files")
-mk({ "n", "v" }, "<leader>fg", uuids.find_git_not_committed, "find: files (git not committed)")
-mk({ "n", "v" }, "<leader>fh", uuids.find_highlights, "find: highlights")
-mk({ "n", "v" }, "<leader>fp", uuids.find_pinned_files, "find: files (pinned)")
-mk({ "n", "v" }, "<leader>fv", uuids.find_vim_options, "find: vim options")
-mk({ "n", "v" }, "<leader>fw", uuids.find_files_workspace, "find: files (workspace)")
+kk({ "n", "v" }, "<leader><leader>", K.find.files)
+kk({ "n", "v" }, "<leader>fb", K.find.buffers)
+kk({ "n", "v" }, "<leader>fc", K.find.files_cwd)
+kk({ "n", "v" }, "<leader>fe", K.find.explorer)
+kk({ "n", "v" }, "<leader>fd", K.find.files_directory)
+kk({ "n", "v" }, "<leader>ff", K.find.files)
+kk({ "n", "v" }, "<leader>fg", K.find.git_not_committed)
+kk({ "n", "v" }, "<leader>fh", K.find.highlights)
+kk({ "n", "v" }, "<leader>fp", K.find.pinned_files)
+kk({ "n", "v" }, "<leader>fv", K.find.vim_options)
+kk({ "n", "v" }, "<leader>fw", K.find.files_workspace)
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
-mk({ "i", "n", "t", "v" }, "<C-a>g", uuids.lazygit_cwd, "git: toggle lazygit (cwd)")
-mk({ "i", "n", "t", "v" }, "<M-g>", uuids.lazygit_cwd, "git: toggle lazygit (cwd)")
-mk({ "n", "v" }, "<leader>gB", uuids.git_browse, "git: browse")
-mk({ "n", "v" }, "<leader>gf", uuids.git_file_history, "git: open file history")
-mk({ "n", "v" }, "<leader>gG", uuids.git_history, "git: open history")
-mk({ "n", "v" }, "<leader>gg", uuids.git_diffview, "git: open diffview")
+kk({ "n", "v" }, "<leader>gB", K.git.browse)
+kk({ "n", "v" }, "<leader>gf", K.git.history_file)
+kk({ "n", "v" }, "<leader>gG", K.git.history)
+kk({ "n", "v" }, "<leader>gg", K.git.diffview)
 --------------------------------------------------------------------------------------------#[g]it--
 
 --#[q]uit-------------------------------------------------------------------------------------------
 mk({ "n", "v" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")
-mk({ "n", "v" }, "<leader>ql", uuids.session_restore, "session: restore")
-mk({ "n", "v" }, "<leader>qs", uuids.session_save, "session: save")
+kk({ "n", "v" }, "<leader>qL", K.session.restore_autosaved)
+kk({ "n", "v" }, "<leader>ql", K.session.restore)
+kk({ "n", "v" }, "<leader>qs", K.session.save)
 -------------------------------------------------------------------------------------------#[q]uit--
 
 --#[r]efresh----------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<C-a>r", uuids.refresh_all, "refresh: all")
-mk({ "i", "n", "v" }, "<M-r>", uuids.refresh_all, "refresh: all")
+kk({ "i", "n", "v" }, "<C-a>r", K.refresh.all)
+kk({ "i", "n", "v" }, "<M-r>", K.refresh.all)
 ---------------------------------------------------------------------------------------#[r]efresh---
 
 --#[r]eplace----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>rr", uuids.replace_files, "replace: files")
-mk({ "n", "v" }, "<leader>rb", uuids.replace_files_buffer, "replace: files (buffer)")
-mk({ "n", "v" }, "<leader>rd", uuids.replace_files_directory, "replace: files (directory)")
-mk({ "n", "v" }, "<leader>rc", uuids.replace_files_cwd, "replace: files (cwd)")
-mk({ "n", "v" }, "<leader>rw", uuids.replace_files_workspace, "replace: files (workspace)")
+kk({ "n", "v" }, "<leader>rr", K.replace.files)
+kk({ "n", "v" }, "<leader>rb", K.replace.files_in_buffer)
+kk({ "n", "v" }, "<leader>rd", K.replace.files_in_directory)
+kk({ "n", "v" }, "<leader>rc", K.replace.files_in_cwd)
+kk({ "n", "v" }, "<leader>rw", K.replace.files_in_workspace)
 ---------------------------------------------------------------------------------------#[r]eplace---
 
---#[r]run-------------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<F5>", uuids.run, "run: run codes")
--------------------------------------------------------------------------------------------#[r]run--
-
---#[s]croll-----------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>sj", uuids.scroll_down_half_window, "scroll: down (half window)")
-mk({ "n", "v" }, "<leader>sk", uuids.scroll_up_half_window, "scroll: up (half window)")
------------------------------------------------------------------------------------------#[s]croll--
-
 --#[s]earch-----------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<C-a>f", uuids.search_files_buffer, "search: files (buffer)")
-mk({ "i", "n", "v" }, "<M-f>", uuids.search_files_buffer, "search: files (buffer)")
-mk({ "n", "v" }, "<leader>ss", uuids.search_files, "search: files")
-mk({ "n", "v" }, "<leader>sb", uuids.search_files_buffer, "search: files (buffer)")
-mk({ "n", "v" }, "<leader>sc", uuids.search_files_cwd, "search: files (cwd)")
-mk({ "n", "v" }, "<leader>sd", uuids.search_files_directory, "search: files (directory)")
-mk({ "n", "v" }, "<leader>sw", uuids.search_files_workspace, "search: files (workspace)")
+kk({ "i", "n", "v" }, "<C-a>f", K.search.files_in_buffer)
+kk({ "i", "n", "v" }, "<M-f>", K.search.files_in_buffer)
+kk({ "n", "v" }, "<leader>ss", K.search.files)
+kk({ "n", "v" }, "<leader>sb", K.search.files_in_buffer)
+kk({ "n", "v" }, "<leader>sc", K.search.files_in_cwd)
+kk({ "n", "v" }, "<leader>sd", K.search.files_in_directory)
+kk({ "n", "v" }, "<leader>sw", K.search.files_in_workspace)
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[t]ab--------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "[t", uuids.tab_focus_left, "tab: focus left")
-mk({ "n", "v" }, "]t", uuids.tab_focus_right, "tab: focus right")
-mk({ "n", "v" }, "<leader>,", uuids.tab_focus_left, "tab: focus left")
-mk({ "n", "v" }, "<leader>.", uuids.tab_focus_right, "tab: focus right")
-mk({ "n", "v" }, "<leader>t[", uuids.tab_focus_left, "tab: focus left")
-mk({ "n", "v" }, "<leader>t]", uuids.tab_focus_right, "tab: focus right")
-mk({ "n", "v" }, "<leader>t1", uuids.tab_focus_1, "tab: focus 1")
-mk({ "n", "v" }, "<leader>t2", uuids.tab_focus_2, "tab: focus 2")
-mk({ "n", "v" }, "<leader>t3", uuids.tab_focus_3, "tab: focus 3")
-mk({ "n", "v" }, "<leader>t4", uuids.tab_focus_4, "tab: focus 4")
-mk({ "n", "v" }, "<leader>t5", uuids.tab_focus_5, "tab: focus 5")
-mk({ "n", "v" }, "<leader>t6", uuids.tab_focus_6, "tab: focus 6")
-mk({ "n", "v" }, "<leader>t7", uuids.tab_focus_7, "tab: focus 7")
-mk({ "n", "v" }, "<leader>t8", uuids.tab_focus_8, "tab: focus 8")
-mk({ "n", "v" }, "<leader>t9", uuids.tab_focus_9, "tab: focus 9")
-mk({ "n", "v" }, "<leader>t0", uuids.tab_focus_10, "tab: focus 10")
-mk({ "n", "v" }, "<leader>td", uuids.tab_close, "tab: close current")
-mk({ "n", "v" }, "<leader>th", uuids.tab_close_to_leftest, "tab: close to the leftest")
-mk({ "n", "v" }, "<leader>tl", uuids.tab_close_to_rightest, "tab: close to the rightest")
-mk({ "n", "v" }, "<leader>to", uuids.tab_close_others, "tab: close other tabs")
-mk({ "n", "v" }, "<leader>tN", uuids.tab_new, "tab: new")
-mk({ "n", "v" }, "<leader>tn", uuids.tab_new_with_buf, "tab: new (with current buf)")
+kk({ "n", "v" }, "[t", K.tab.focus_left)
+kk({ "n", "v" }, "]t", K.tab.focus_right)
+kk({ "n", "v" }, "<leader>,", K.tab.focus_left)
+kk({ "n", "v" }, "<leader>.", K.tab.focus_right)
+kk({ "n", "v" }, "<leader>t[", K.tab.focus_left)
+kk({ "n", "v" }, "<leader>t]", K.tab.focus_right)
+kk({ "n", "v" }, "<leader>t1", K.tab.focus_1)
+kk({ "n", "v" }, "<leader>t2", K.tab.focus_2)
+kk({ "n", "v" }, "<leader>t3", K.tab.focus_3)
+kk({ "n", "v" }, "<leader>t4", K.tab.focus_4)
+kk({ "n", "v" }, "<leader>t5", K.tab.focus_5)
+kk({ "n", "v" }, "<leader>t6", K.tab.focus_6)
+kk({ "n", "v" }, "<leader>t7", K.tab.focus_7)
+kk({ "n", "v" }, "<leader>t8", K.tab.focus_8)
+kk({ "n", "v" }, "<leader>t9", K.tab.focus_9)
+kk({ "n", "v" }, "<leader>t0", K.tab.focus_10)
+kk({ "n", "v" }, "<leader>td", K.tab.close)
+kk({ "n", "v" }, "<leader>th", K.tab.close_to_leftest)
+kk({ "n", "v" }, "<leader>tl", K.tab.close_to_rightest)
+kk({ "n", "v" }, "<leader>to", K.tab.close_others)
+kk({ "n", "v" }, "<leader>tN", K.tab.new)
+kk({ "n", "v" }, "<leader>tn", K.tab.new_with_buf)
 --------------------------------------------------------------------------------------------#[t]ab--
 
 --#[t]erminal---------------------------------------------------------------------------------------
-mk({ "i", "n", "t", "v" }, "<C-a>t", uuids.term_cwd, "terminal: toggle (cwd)")
-mk({ "i", "n", "t", "v" }, "<M-t>", uuids.term_cwd, "terminal: toggle (cwd)")
-mk({ "n", "t" }, "<leader>tT", uuids.term_workspace, "terminal: toggle (workspace)")
-mk({ "n", "t" }, "<leader>tt", uuids.term_cwd, "terminal: toggle (cwd)")
+kk({ "i", "n", "t", "v" }, "<C-a>g", K.term.lazygit_cwd)
+kk({ "i", "n", "t", "v" }, "<M-g>", K.term.lazygit_cwd)
+kk({ "i", "n", "t", "v" }, "<C-a>t", K.term.toggle_cwd)
+kk({ "i", "n", "t", "v" }, "<M-t>", K.term.toggle_cwd)
+kk({ "n", "t" }, "<leader>tT", K.term.toggle_workspace)
+kk({ "n", "t" }, "<leader>tt", K.term.toggle_cwd)
 ---------------------------------------------------------------------------------------#[t]erminal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<C-a>T", uuids.toggle_theme_variant, "theme: toggle variant")
-mk({ "i", "n", "v" }, "<M-T>", uuids.toggle_theme_variant, "theme: toggle variant")
-mk({ "n", "v" }, "<leader>tt", uuids.toggle, "toggle")
-mk({ "n", "v" }, "<leader>tuf", uuids.toggle_flight, "toggle: flight")
-mk({ "n", "v" }, "<leader>tul", uuids.toggle_relativenumber, "toggle: relativenumber")
-mk({ "n", "v" }, "<leader>tuT", uuids.toggle_theme_transparency, "toggle: theme transparency")
-mk({ "n", "v" }, "<leader>tut", uuids.toggle_theme, "toggle: theme")
-mk({ "n", "v" }, "<leader>tuw", uuids.toggle_wrap, "toggle: wrap (temporary)")
+kk({ "i", "n", "v" }, "<C-a>T", K.toggle.theme_variant)
+kk({ "i", "n", "v" }, "<M-T>", K.toggle.theme_variant)
+kk({ "n", "v" }, "<leader>tF", K.toggle.flight)
+kk({ "n", "v" }, "<leader>tR", K.toggle.relativenumber)
+kk({ "n", "v" }, "<leader>tS", K.toggle.theme)
+kk({ "n", "v" }, "<leader>tT", K.toggle.transparency)
+kk({ "n", "v" }, "<leader>tW", K.toggle.wrap)
+kk({ "n", "v" }, "<leader>tt", K.toggle.list)
 -----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[u]x---------------------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>un", uuids.notification_dismiss_all, "notification: dismiss all")
+kk({ "n", "v" }, "<leader>un", K.ux.dismiss_notifications)
 ---------------------------------------------------------------------------------------------#[u]x--
 
 --#[w]in--------------------------------------------------------------------------------------------
-mk({ "i", "n", "v" }, "<C-a><Left>", uuids.win_resize_vertical_minus, "win: resize vertical (minus)")
-mk({ "i", "n", "v" }, "<C-a><Down>", uuids.win_resize_horizontal_minus, "win: resize horizontal (minus)")
-mk({ "i", "n", "v" }, "<C-a><Up>", uuids.win_resize_horizontal_plus, "win: resize horizontal (plus)")
-mk({ "i", "n", "v" }, "<C-a><Right>", uuids.win_resize_vertical_plus, "win: resize vertical (plus)")
-mk({ "i", "n", "v" }, "<M-Left>", uuids.win_resize_vertical_minus, "win: resize vertical (minus)")
-mk({ "i", "n", "v" }, "<M-Down>", uuids.win_resize_horizontal_minus, "win: resize horizontal (minus)")
-mk({ "i", "n", "v" }, "<M-Up>", uuids.win_resize_horizontal_plus, "win: resize horizontal (plus)")
-mk({ "i", "n", "v" }, "<M-Right>", uuids.win_resize_vertical_plus, "win: resize vertical (plus)")
-mk({ "i", "n", "v" }, "<C-a>i", uuids.win_history_backward, "win: history backward")
-mk({ "i", "n", "v" }, "<C-a>o", uuids.win_history_forward, "win: history forward")
-mk({ "i", "n", "v" }, "<M-i>", uuids.win_history_backward, "win: history backward")
-mk({ "i", "n", "v" }, "<M-o>", uuids.win_history_forward, "win: history forward")
-mk({ "i", "n", "t", "v" }, "<C-a>h", uuids.win_focus_left, "win: focus left")
-mk({ "i", "n", "t", "v" }, "<C-a>j", uuids.win_focus_bottom, "win: focus bottom")
-mk({ "i", "n", "t", "v" }, "<C-a>k", uuids.win_focus_top, "win: focus top")
-mk({ "i", "n", "t", "v" }, "<C-a>l", uuids.win_focus_right, "win: focus right")
-mk({ "i", "n", "t", "v" }, "<M-h>", uuids.win_focus_left, "win: focus left")
-mk({ "i", "n", "t", "v" }, "<M-j>", uuids.win_focus_bottom, "win: focus bottom")
-mk({ "i", "n", "t", "v" }, "<M-k>", uuids.win_focus_top, "win: focus top")
-mk({ "i", "n", "t", "v" }, "<M-l>", uuids.win_focus_right, "win: focus right")
-mk({ "n", "v" }, "<leader>wd", uuids.win_close, "win: close current")
-mk({ "n", "v" }, "<leader>wh", uuids.win_history, "win: history")
-mk({ "n", "v" }, "<leader>wj", uuids.win_split_horizontal, "win: split horizontal")
-mk({ "n", "v" }, "<leader>wl", uuids.win_split_vertical, "win: split vertical")
-mk({ "n", "v" }, "<leader>wo", uuids.win_close_others, "win: close others")
-mk({ "n", "v" }, "<leader>wp", uuids.win_project, "win: project (with picker)")
-mk({ "n", "v" }, "<leader>ws", uuids.win_swap, "win: swap (with picker)")
-mk({ "n", "v" }, "<leader>ww", uuids.win_focus, "win: focus (with picker)")
+kk({ "i", "n", "v" }, "<C-a><Left>", K.win.resize_vertical_minus)
+kk({ "i", "n", "v" }, "<C-a><Down>", K.win.resize_horizontal_minus)
+kk({ "i", "n", "v" }, "<C-a><Up>", K.win.resize_horizontal_plus)
+kk({ "i", "n", "v" }, "<C-a><Right>", K.win.resize_vertical_plus)
+kk({ "i", "n", "v" }, "<M-Left>", K.win.resize_vertical_minus)
+kk({ "i", "n", "v" }, "<M-Down>", K.win.resize_horizontal_minus)
+kk({ "i", "n", "v" }, "<M-Up>", K.win.resize_horizontal_plus)
+kk({ "i", "n", "v" }, "<M-Right>", K.win.resize_vertical_plus)
+kk({ "i", "n", "v" }, "<C-a>i", K.win.history_backward)
+kk({ "i", "n", "v" }, "<C-a>o", K.win.history_forward)
+kk({ "i", "n", "v" }, "<M-i>", K.win.history_backward)
+kk({ "i", "n", "v" }, "<M-o>", K.win.history_forward)
+kk({ "i", "n", "t", "v" }, "<C-a>h", K.win.focus_left)
+kk({ "i", "n", "t", "v" }, "<C-a>j", K.win.focus_bottom)
+kk({ "i", "n", "t", "v" }, "<C-a>k", K.win.focus_top)
+kk({ "i", "n", "t", "v" }, "<C-a>l", K.win.focus_right)
+kk({ "i", "n", "t", "v" }, "<M-h>", K.win.focus_left)
+kk({ "i", "n", "t", "v" }, "<M-j>", K.win.focus_bottom)
+kk({ "i", "n", "t", "v" }, "<M-k>", K.win.focus_top)
+kk({ "i", "n", "t", "v" }, "<M-l>", K.win.focus_right)
+kk({ "n", "v" }, "<leader>wd", K.win.close)
+kk({ "n", "v" }, "<leader>wh", K.win.history)
+kk({ "n", "v" }, "<leader>wj", K.win.split_horizontal)
+kk({ "n", "v" }, "<leader>wl", K.win.split_vertical)
+kk({ "n", "v" }, "<leader>wo", K.win.close_others)
+kk({ "n", "v" }, "<leader>wp", K.win.project)
+kk({ "n", "v" }, "<leader>ws", K.win.swap)
+kk({ "n", "v" }, "<leader>ww", K.win.focus)
+kk({ "n", "v" }, "<leader>sj", K.win.scroll_down)
+kk({ "n", "v" }, "<leader>sk", K.win.scroll_up)
 --------------------------------------------------------------------------------------------#[w]in--
 
 --#[x] diagnostic-----------------------------------------------------------------------------------
-mk({ "n", "v" }, "[d", uuids.goto_prev_diagnostic, "diagnostic: goto prev")
-mk({ "n", "v" }, "]d", uuids.goto_next_diagnostic, "diagnostic: goto next")
-mk({ "n", "v" }, "[e", uuids.goto_prev_error, "diagnostic: goto prev error")
-mk({ "n", "v" }, "]e", uuids.goto_next_error, "diagnostic: goto next error")
-mk({ "n", "v" }, "[q", uuids.goto_prev_quickfix_item, "diagnostic: goto prev quickfix item")
-mk({ "n", "v" }, "]q", uuids.goto_next_quickfix_item, "diagnostic: goto next quickfix item")
-mk({ "n", "v" }, "[w", uuids.goto_prev_warn, "diagnostic: goto prev warning")
-mk({ "n", "v" }, "]w", uuids.goto_next_warn, "diagnostic: goto next warning")
+
 mk({ "n", "v" }, "<leader>xD", "<cmd>Trouble diagnostics toggle<cr>", "diagnostic: open diagnostics (workspace)")
 mk(
   { "n", "v" },
@@ -306,7 +295,15 @@ mk(
   "diagnostic: open diagnostics (document)"
 )
 mk({ "n", "v" }, "<leader>xL", "<cmd>Trouble loclist toggle<cr>", "diagnostic: open location list (Trouble)")
-mk({ "n", "v" }, "<leader>xl", uuids.open_line_diagnostic, "diagnostic: open float window")
-mk({ "n", "v" }, "<leader>xo", uuids.outline_toggle, "code: toggle outline")
 mk({ "n", "v" }, "<leader>xq", "<cmd>Trouble qflist toggle<cr>", "diagnostic: open quickfix list (Trouble)")
+kk({ "n", "v" }, "[d", K.diagnostic.goto_prev)
+kk({ "n", "v" }, "]d", K.diagnostic.goto_next)
+kk({ "n", "v" }, "[e", K.diagnostic.goto_prev_error)
+kk({ "n", "v" }, "]e", K.diagnostic.goto_next_error)
+kk({ "n", "v" }, "[q", K.diagnostic.goto_prev_quickfix)
+kk({ "n", "v" }, "]q", K.diagnostic.goto_next_quickfix)
+kk({ "n", "v" }, "[w", K.diagnostic.goto_prev_warn)
+kk({ "n", "v" }, "]w", K.diagnostic.goto_next_warn)
+kk({ "n", "v" }, "<leader>xl", K.diagnostic.line)
+kk({ "n", "v" }, "<leader>xo", K.diagnostic.outline)
 -----------------------------------------------------------------------------------#[x] diagnostic--

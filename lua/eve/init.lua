@@ -1,7 +1,6 @@
 ---@class eve.builtin
 local builtin = {
   G = require("eve.builtin.G"),
-  commander = require("eve.builtin.commander"),
   debug = require("eve.builtin.debug"),
   lsp = require("eve.builtin.lsp"),
   mvc = require("eve.builtin.mvc"),
@@ -15,7 +14,6 @@ local fn = {
   foldexpr = require("eve.fn.foldexpr"),
   get_clipboard = require("eve.fn.get_clipboard"),
   hmr = require("eve.fn.hmr"),
-  navigate = require("eve.fn.navigate"),
   refresh_state = require("eve.fn.refresh_state"),
 }
 

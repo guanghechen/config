@@ -1,0 +1,143 @@
+local __module_name__ = "ghc.action.term" ---@type string
+
+local constant = require("eve.lib.constant")
+local path = require("eve.lib.path")
+local reporter = require("eve.lib.reporter")
+local get_selected_text = require("eve.builtin.nvim").get_selected_text
+local Terminal = require("fml.ux.component.terminal")
+
+local terminal_map = {} ---@type table<string, fml.t.ux.ITerminal>
+
+---@class ghc.action.term.IProps
+---@field public name                   string
+---@field public command                ?string
+---@field public cwd                    ?string
+---@field public env                    ?table<string, string>
+---@field public flag_quit_on_q         ?boolean
+---@field public permanent              ?boolean
+
+---@class ghc.action.term.toggle.IParams : ghc.action.term.IProps
+---@field public send_selection_to_run  ?boolean
+
+---@class ghc.action.term
+local M = {}
+
+---@param props                        ghc.action.term.IProps
+---@return fml.t.ux.ITerminal
+function M.new(props)
+  local name = props.name ---@type string
+  local command = props.command or vim.env.SHELL or vim.o.shell ---@type string
+  local cwd = props.cwd or path.cwd() ---@type string
+  local env = props.env ---@type table<string, string>|nil
+  local permanent = props.permanent ---@type boolean|nil
+
+  local terminal = terminal_map[name] ---@type fml.t.ux.ITerminal|nil
+  if terminal ~= nil then
+    reporter.error({
+      from = __module_name__,
+      subject = "new",
+      message = "The term with the given name already exists.",
+      details = { name = name, command = command, cwd = cwd, env = env },
+    })
+    return terminal
+  end
+
+  local keymaps = {} ---@type eve.t.IKeymap[]
+
+  local flag_quit_on_q = not not props.flag_quit_on_q ---@type boolean
+  if flag_quit_on_q then
+    ---@type eve.t.IKeymap[]
+    local keymap = {
+      modes = { "n" },
+      key = "q",
+      desc = "terminal: quit",
+      callback = function()
+        if terminal ~= nil then
+          ---@cast terminal fml.t.ux.ITerminal
+          terminal:close()
+        end
+      end,
+    }
+    table.insert(keymaps, keymap)
+  end
+
+  ---@type fml.t.ux.ITerminal
+  terminal = Terminal.new({
+    command = command,
+    command_cwd = cwd,
+    command_env = env,
+    keymaps = keymaps,
+    permanent = permanent,
+  })
+  terminal_map[name] = terminal
+
+  terminal:open()
+  return terminal
+end
+
+---@param params                        ghc.action.term.toggle.IParams
+---@return nil
+function M.toggle(params)
+  local name = params.name ---@type string
+  local send_selection_to_run = not not params.send_selection_to_run ---@type boolean
+
+  local selected_text = "" ---@type string'
+  if send_selection_to_run then
+    local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+    local filetype = vim.bo[bufnr_cur].filetype ---@type string
+    if filetype ~= constant.FT_TERM then
+      selected_text = get_selected_text() ---@type string
+    end
+  end
+
+  local terminal = terminal_map[name] ---@type fml.t.ux.ITerminal|nil
+  if terminal == nil then
+    terminal = M.new(params)
+  else
+    terminal:toggle()
+  end
+
+  if selected_text and #selected_text > 1 then
+    local winnr = terminal:get_winnr() ---@type integer|nil
+    local bufnr = terminal:get_bufnr() ---@type integer|nil
+    if winnr ~= nil and bufnr ~= nil then
+      if selected_text and #selected_text > 1 then
+        vim.api.nvim_set_current_win(winnr)
+        vim.api.nvim_win_set_buf(winnr, bufnr)
+        vim.api.nvim_feedkeys("i" .. selected_text, "n", true) -- Insert the text without newline
+      end
+    end
+  end
+end
+
+---@return nil
+function M.toggle_cwd()
+  M.toggle({
+    name = "cwd",
+    cwd = path.cwd(),
+    permanent = true,
+    send_selection_to_run = true,
+  })
+end
+
+---@return nil
+function M.toggle_directory()
+  M.toggle({
+    name = "directory",
+    cwd = path.current_directory(),
+    permanent = true,
+    send_selection_to_run = true,
+  })
+end
+
+---@return nil
+function M.toggle_workspace()
+  M.toggle({
+    name = "workspace",
+    cwd = path.workspace(),
+    permanent = true,
+    send_selection_to_run = true,
+  })
+end
+
+return M

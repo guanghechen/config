@@ -5,6 +5,10 @@ local AdvanceHistory = require("eve.lib.collection.history_advance")
 local calc_tabtype = require("eve.builtin.nvim").calc_tabtype
 local gen_filepath2bufnr = require("eve.builtin.nvim").gen_filepath2bufnr
 
+---@alias eve.e.state.tab.meta.TabType
+---| "normal"
+---| "diffview"
+
 ---@class eve.t.state.tab.buf.data
 ---@field public filepath               string
 ---@field public pinned                 boolean
@@ -15,12 +19,12 @@ local gen_filepath2bufnr = require("eve.builtin.nvim").gen_filepath2bufnr
 
 ---@class eve.t.state.tab.meta.data
 ---@field public tabid                  integer
----@field public tabtype                string
+---@field public tabtype                eve.e.state.tab.meta.TabType
 ---@field public bufs                   eve.t.state.tab.buf.data[]
 
 ---@class eve.state.tab.meta.state
 ---@field public tabnr                  integer
----@field public tabtype                string
+---@field public tabtype                eve.e.state.tab.meta.TabType
 ---@field public winnr_listed           integer
 ---@field public bufs                   eve.t.state.tab.buf.state[]
 ---@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.t.state.tab.buf.state|nil, integer|nil
@@ -63,7 +67,7 @@ local S = {}
 local M = {}
 
 ---@param tabnr                        integer
----@param tabtype                      string|nil
+---@param tabtype                      eve.e.state.tab.meta.TabType|nil
 ---@param winnr_listed                 integer|nil
 ---@param bufs                         eve.t.state.tab.buf.state[]|nil
 ---@return eve.state.tab.meta.state
@@ -313,8 +317,7 @@ S = {
   end,
   get_current_winnr = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta.winnr_listed or 0
+    return S.resolve_winnr_listed(tabnr) ---@type integer
   end,
   get_current_bufnr = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

@@ -10,6 +10,7 @@ M.SESSION_AUTOSAVE_OPTION = "blank,buffers,curdir,folds,globals,help,resize,slas
 
 M.TAB_HISTORY_CAPACITY = 100
 
+M.TT_ALL = "all"
 M.TT_DIFFVIEW = "diffview"
 M.TT_NORMAL = "normal"
 
