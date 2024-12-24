@@ -248,12 +248,8 @@ S = {
     end
 
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta == nil then
-      return 0
-    end
-
-    if checks.is_win_valid(meta.winnr_listed) then
-      return 0
+    if meta ~= nil and checks.is_win_valid(meta.winnr_listed) then
+      return meta.winnr_listed
     end
 
     local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer

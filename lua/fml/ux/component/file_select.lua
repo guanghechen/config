@@ -1,3 +1,4 @@
+local constant = require("eve.lib.constant")
 local checks = require("eve.lib.checks")
 local fs = require("eve.lib.fs")
 local path = require("eve.lib.path")
@@ -255,10 +256,33 @@ function M.new(props)
         on_close = on_close,
         on_confirm = on_confirm_from_props or function(item)
           local filepath = path.join(self.cwd, item.data.filepath) ---@type string
-          local winnr = state.tab.get_current_winnr() ---@type integer
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          local winnr = state.tab.resolve_winnr_listed(tabnr) ---@type integer
           if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
             state.buf.open_filepath(winnr, filepath, item.data.lnum, item.data.col)
             return "hide"
+          else
+            local meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+            if meta ~= nil and meta.tabtype == constant.TT_NORMAL then
+              local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+              local non_floating_winnr = 0 ---@type integer
+              for _, winnr0 in ipairs(winnrs) do
+                local config = vim.api.nvim_win_get_config(winnr0)
+                if not config.relative or config.relative == "" then
+                  non_floating_winnr = winnr0
+                  break
+                end
+              end
+
+              if non_floating_winnr > 0 then
+                vim.api.nvim_set_current_win(non_floating_winnr)
+                vim.cmd("vsplit")
+
+                local winnr2 = vim.api.nvim_get_current_win() ---@type integer
+                state.buf.open_filepath(winnr2, filepath, item.data.lnum, item.data.col)
+                return "hide"
+              end
+            end
           end
           return "none"
         end,
