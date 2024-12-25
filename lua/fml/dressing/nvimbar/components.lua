@@ -431,7 +431,7 @@ function M.diffview(position)
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if vim.bo[bufnr].filetype == constant.FT_DIFFVIEW_FILES then
         if not checks.is_win_floating(winnr) then
-          return vim.api.nvim_win_get_width(winnr) + 1
+          return vim.api.nvim_win_get_width(winnr)
         end
       end
     end
@@ -998,7 +998,7 @@ function M.neotree(position)
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if vim.bo[bufnr].filetype == constant.FT_NEOTREE then
         if not checks.is_win_floating(winnr) then
-          return vim.api.nvim_win_get_width(winnr) + 1
+          return vim.api.nvim_win_get_width(winnr)
         end
       end
     end
