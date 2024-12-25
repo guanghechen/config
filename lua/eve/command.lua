@@ -2,12 +2,10 @@ local __module_name__ = "eve.command" ---@type string
 
 local constant = require("eve.lib.constant")
 local reporter = require("eve.lib.reporter")
-local state = require("eve.state")
-local themes = require("eve.theme").themes
 
 local candidates_map = {
-  flights = vim.tbl_keys(state.flight),
-  themes = themes,
+  flights = vim.tbl_keys(require("eve.state.workspace.flight").dump()),
+  themes = require("eve.theme").themes,
   toggle_list = {
     "flight",
     "relativenumber",
@@ -30,6 +28,8 @@ table.sort(candidates_map.toggle_list)
 ---@field public tabnr                  integer
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
+---
+---@field public tabtype                eve.e.state.tab.meta.TabType
 
 ---@class eve.command.IDefinition
 ---@field public uuid                   string
@@ -90,7 +90,18 @@ function M.define(raw_definition, overwrite)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local context = { tabnr = tabnr, winnr = winnr, bufnr = bufnr } ---@type eve.command.IContext
+
+    local state = require("eve.state")
+    local tabtype = state.tab.resolve_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabType
+
+    ---@type eve.command.IContext
+    local context = {
+      tabnr = tabnr,
+      winnr = winnr,
+      bufnr = bufnr,
+
+      tabtype = tabtype,
+    }
     M.execute(definition.uuid, context, opts.args, false)
   end
 
@@ -163,7 +174,9 @@ end
 ---@param silent                        ?boolean
 ---@return nil
 function M.execute(uuid, context, args, silent)
-  local command = M.resolve(uuid, true) ---@type eve.command.ICommand|nil
+  local tabtype = context.tabtype ---@type eve.e.state.tab.meta.TabType
+  local key = uuid .. ":" .. tabtype ---@type string
+  local command = command_map[key] or command_map[uuid] ---@type eve.command.ICommand|nil
 
   if command == nil then
     if not silent then
@@ -178,34 +191,6 @@ function M.execute(uuid, context, args, silent)
   end
 
   command.action(context, args)
-end
-
----@param uuid                          string
----@param silent                        ?boolean
----@return eve.command.ICommand|nil
-function M.resolve(uuid, silent)
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  local tabtype = meta and meta.tabtype or constant.TT_NORMAL ---@type eve.e.state.tab.meta.TabType
-
-  local key = uuid .. ":" .. tabtype ---@type string
-  if command_map[key] ~= nil then
-    return command_map[key]
-  end
-
-  if command_map[uuid] ~= nil then
-    return command_map[uuid]
-  end
-
-  if not silent then
-    reporter.warn({
-      from = __module_name__,
-      subject = "resolve",
-      message = "Cannot resolve the command by the given uuid",
-      details = { uuid = uuid, tabtype = tabtype },
-    })
-  end
-  return nil
 end
 
 ---@param uuid                          string

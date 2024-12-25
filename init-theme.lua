@@ -17,7 +17,7 @@ else
     theme = theme,
     transparency = state.theme.transparency:snapshot(),
     persistent = true,
-    filepath = path.locate_context_filepath("theme"),
+    filepath = require("eve.theme").cache_path,
   })
 
   state.theme.theme:next(theme)
