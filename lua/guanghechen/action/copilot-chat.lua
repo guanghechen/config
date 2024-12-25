@@ -1,6 +1,7 @@
 local __module_name__ = "guanghechen.action.copilot-chat" ---@type string
 
 local constant = require("eve.lib.constant")
+local bindkeys = require("eve.lib.nvim").bindkeys
 local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
 
@@ -90,8 +91,8 @@ chat_widget = {
 
         if not vim.b[bufnr].ghc_key_bound then
           vim.b[bufnr].ghc_key_bound = true
-          local keymaps = eve.widgets.get_keymaps() ---@type eve.t.IKeymap[]
-          eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+          local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
+          bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 
         vim.schedule(function()
@@ -135,7 +136,7 @@ chat_widget = {
     if chat_widget.internal_status == "closed" then
       chat_widget.internal_status = "hidden"
     end
-    eve.widgets.open(chat_widget)
+    state.widget.open(chat_widget)
   end,
   show = function()
     if chat_widget.internal_status ~= "visible" then

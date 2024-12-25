@@ -1,32 +1,51 @@
----@class eve.builtin
-local builtin = {
-  G = require("eve.builtin.G"),
-  debug = require("eve.builtin.debug"),
-  lsp = require("eve.builtin.lsp"),
-  mvc = require("eve.builtin.mvc"),
-  nvim = require("eve.builtin.nvim"),
-  qflist = require("eve.builtin.qflist"),
-  widgets = require("eve.builtin.widgets"),
+---@class eve
+local M = {
+  G = require("eve.lib.G"),
+  debug = require("eve.lib.debug"),
 }
 
----@class eve.fn
-local fn = {
-  foldexpr = require("eve.fn.foldexpr"),
-  get_clipboard = require("eve.fn.get_clipboard"),
-  hmr = require("eve.fn.hmr"),
-  refresh_state = require("eve.fn.refresh_state"),
-}
+---! Auto cd the directory:
+---! 1. the opend file is under a git repo, let's remember the the git repo path as A,
+---!    and assume the git repo directory of the shell cwd is B.
+---!      a) If A is different from B, then auto cd the A.
+---!      b) If A is the same as B, then no action needed.
+---! 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
+---@return nil
+function M.setup_workspace()
+  local path = require("eve.lib.path")
+  if vim.fn.expand("%") ~= "" then
+    local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
+    local p = vim.fn.expand("%:p:h")
+    local A = path.locate_git_repo(p)
+    local B = path.locate_git_repo(cwd)
 
----@type eve.state
-local state = require("eve.state")
+    if A == nil then
+      vim.api.nvim_set_current_dir(p)
+    elseif A ~= B then
+      vim.api.nvim_set_current_dir(A)
+    end
+  end
+end
 
----@class eve : eve.builtin
----@field public fn                     eve.fn
----@field public state                  eve.state
-local eve = vim.tbl_extend("force", {}, builtin, {
-  context = state,
-  fn = fn,
-  state = state,
-})
+---@param storage                       eve.state.storage|nil
+---@return nil
+function M.setup_state(storage)
+  local path = require("eve.lib.path")
+  local state = require("eve.state")
+  local is_git_repo = path.is_git_repo() ---@type boolean
 
-return eve
+  ---@type eve.state.storage
+  storage = storage
+    or {
+      editor = path.locate_context_filepath("editor.json"),
+      session = is_git_repo and path.locate_workspace_filepath("session.json") or nil,
+      workspace = is_git_repo and path.locate_workspace_filepath("workspace.json") or nil,
+      nvim_session = is_git_repo and path.locate_workspace_filepath("session.vim") or nil,
+      nvim_session_autosaved = is_git_repo and path.locate_workspace_filepath("session.autosaved.vim") or nil,
+    }
+
+  state.set_storage(storage)
+  state.load(storage)
+end
+
+return M

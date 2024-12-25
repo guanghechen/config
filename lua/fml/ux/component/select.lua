@@ -558,13 +558,13 @@ end
 function M:mark_data_dirty()
   local search = self._get_search() ---@type fml.t.ux.search.ISearch
   self._live_data_dirty:next(true)
-  search.state.dirtier_data:mark_dirty()
+  search.context.dirtier_data:mark_dirty()
 end
 
 ---@return nil
 function M:mark_search_state_dirty()
   local search = self._get_search() ---@type fml.t.ux.search.ISearch
-  search.state.dirtier_data:mark_dirty()
+  search.context.dirtier_data:mark_dirty()
 end
 
 ---@return nil

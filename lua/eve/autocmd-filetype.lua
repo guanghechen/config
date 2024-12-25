@@ -1,5 +1,5 @@
 local constant = require("eve.lib.constant")
-local augroup = require("eve.builtin.nvim").augroup
+local augroup = require("eve.lib.nvim").augroup
 
 vim.filetype.add({
   extension = { rasi = "rasi", rofi = "rasi", wofi = "rasi" },

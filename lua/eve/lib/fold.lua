@@ -1,5 +1,8 @@
+---@class eve.lib.fold
+local M = {}
+
 ---@return string
-local function foldexpr()
+function M.foldexpr()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
 
   -- as long as we don't have a filetype, don't bother checking if treesitter is available (it won't)
@@ -18,4 +21,4 @@ local function foldexpr()
   return vim.b[bufnr].ts_folds and vim.treesitter.foldexpr() or "0"
 end
 
-return foldexpr
+return M

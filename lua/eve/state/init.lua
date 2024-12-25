@@ -1,12 +1,12 @@
 local __module_name__ = "eve.state" ---@type string
 
 local fs = require("eve.lib.fs")
+local save_nvim_session = require("eve.lib.nvim").save_nvim_session
 local reporter = require("eve.lib.reporter")
+local BatchDisposable = require("eve.lib.collection.batch_disposable")
 local Disposable = require("eve.lib.collection.disposable")
 local Scheduler = require("eve.lib.collection.scheduler")
 local Subscriber = require("eve.lib.collection.subscriber")
-local mvc = require("eve.builtin.mvc")
-local save_nvim_session = require("eve.builtin.nvim").save_nvim_session
 
 local state_bookmark = require("eve.state.workspace.bookmark")
 local state_buf = require("eve.state.session.buf")
@@ -15,10 +15,12 @@ local state_find_buffer = require("eve.state.workspace.find_buffer")
 local state_flight = require("eve.state.workspace.flight")
 local state_frecency = require("eve.state.workspace.frecency")
 local state_input_history = require("eve.state.workspace.input_history")
+local state_qflist = require("eve.state.session.qflist")
 local state_search = require("eve.state.workspace.search")
 local state_status = require("eve.state.session.status")
 local state_tab = require("eve.state.session.tab")
 local state_theme = require("eve.state.editor.theme")
+local state_widget = require("eve.state.session.widget")
 local state_win = require("eve.state.session.win")
 
 ---@class eve.state.state.IWatchChangeParams
@@ -53,7 +55,9 @@ local state_win = require("eve.state.session.win")
 ---@field public buf                    eve.state.buf.state
 ---@field public tab                    eve.state.tab.state
 ---@field public win                    eve.state.win.state
+---@field public qflist                 eve.state.qflist.state
 ---@field public status                 eve.state.win.state
+---@field public widget                 eve.state.widget.state
 ---
 ---@field public bookmark               eve.state.bookmark.state
 ---@field public find                   eve.state.find.state
@@ -68,12 +72,21 @@ local state_win = require("eve.state.session.win")
 ---@field public save                   fun(storage: eve.state.storage): nil
 ---@field public get_storage            fun(): eve.state.storage
 ---@field public set_storage            fun(storage: eve.state.storage): nil
+---
+---@field public add_disposable         fun(disposable: eve.lib.collection.IDisposable): nil
+---@field public dispose                fun(): nil
+---@field public observe                fun(observables: eve.lib.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
+---
+---@field public hmr                    fun(module_name: string): unknown
+---@field public refresh                fun(): nil
 ---@field public watch_changes          fun(params: eve.state.state.IWatchChangeParams): nil
 
 ---@class eve.state : eve.state.state
 ---@field private _storage              eve.state.storage
+---@field private _disposables          eve.lib.collection.BatchDisposable
 local M = {
   _storage = {},
+  _disposables = BatchDisposable.new(),
 }
 
 ---@return eve.state.data
@@ -85,7 +98,9 @@ function M.dump()
     buf = state_buf.dump(),
     tab = state_tab.dump(),
     win = state_win.dump(),
+    qflist = state_qflist.dump(),
     status = state_status.dump(),
+    widget = state_widget.dump(),
 
     bookmark = state_bookmark.dump(),
     find = state_find.dump(),
@@ -129,7 +144,9 @@ function M.load(storage)
   M.buf = state_buf.load(data_session.buf)
   M.tab = state_tab.load(data_session.tab)
   M.win = state_win.load(data_session.win)
+  M.qflist = state_qflist.load(data_session.qflist)
   M.status = state_status.load(data_session.status)
+  M.widget = state_widget.load(data_session.widget)
 
   M.buf.refresh_all()
   M.win.refresh_all()
@@ -180,10 +197,58 @@ function M.set_storage(storage)
   M._storage = storage
 end
 
+---@param disposable                    eve.lib.collection.IDisposable
+---@return nil
+function M.add_disposable(disposable)
+  M._disposables:add_disposable(disposable)
+end
+
+---@return nil
+function M.dispose()
+  M._disposables:dispose()
+end
+
+---@param observables                   eve.lib.collection.IObservable[]
+---@param callback                      fun(): nil
+---@param ignore_initial                ?boolean
+---@return nil
+function M.observe(observables, callback, ignore_initial)
+  for _, observable in ipairs(observables) do
+    local subscriber = Subscriber.new({
+      on_next = function()
+        vim.schedule(callback)
+      end,
+    })
+    observable:subscribe(subscriber, ignore_initial)
+  end
+end
+
+---@param module_name                   string
+---@return unknown
+function M.hmr(module_name)
+  local devmode = M.flight.devmode:snapshot() ---@type boolean
+  if devmode then
+    package.loaded[module_name] = nil
+  end
+  return require(module_name)
+end
+
+---@return nil
+function M.refresh()
+  M.buf.refresh_all()
+  M.win.refresh_all()
+  M.tab.refresh_all()
+
+  local unrefereced_bufnrs = M.tab.get_unrefereced_bufnrs() ---@type integer[]
+  for _, bufnr in ipairs(unrefereced_bufnrs) do
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+end
+
 ---@param params                        eve.state.state.IWatchChangeParams
 ---@return nil
 function M.watch_changes(params)
-  mvc.observe({
+  M.observe({
     M.theme.theme,
     M.theme.transparency,
   }, function()
@@ -197,7 +262,7 @@ function M.watch_changes(params)
     vim.cmd.redraw()
   end, true)
 
-  mvc.observe({
+  M.observe({
     M.theme.relativenumber,
   }, function()
     M.status.ticker_editor:tick()
@@ -206,7 +271,7 @@ function M.watch_changes(params)
     vim.cmd.redraw()
   end, true)
 
-  mvc.observe({
+  M.observe({
     M.bookmark.pinned,
 
     ---
@@ -231,7 +296,7 @@ function M.watch_changes(params)
     M.flight.autosave,
     M.flight.copilot,
     M.flight.devmode,
-    M.flight.dressing_hi_pairs,
+    M.flight.dressing_hipairs,
     M.flight.dressing_winsep_fixed,
     M.flight.dressing_winsep_float,
     M.flight.lsp_inlay_hints,
@@ -256,13 +321,13 @@ function M.watch_changes(params)
   end, true)
 
   ---! Trigger tabline redraw.
-  mvc.observe({
+  M.observe({
     M.flight.devmode,
   }, function()
     M.status.dirtier_tabline:mark_dirty()
   end, true)
 
-  mvc.observe({
+  M.observe({
     M.flight.lsp_inlay_hints,
     M.flight.lsp_code_lens,
   }, function()
@@ -305,7 +370,7 @@ function M.watch_changes(params)
   )
 
   ---! Save when leave the editor.
-  mvc.add_disposable(Disposable.new({
+  M.add_disposable(Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -344,7 +409,7 @@ function M.watch_changes(params)
         })
       end,
     })
-    mvc.add_disposable(Disposable.new({ on_dispose = unwatch }))
+    M.add_disposable(Disposable.new({ on_dispose = unwatch }))
   end
 end
 

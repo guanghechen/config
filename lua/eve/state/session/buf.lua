@@ -1,9 +1,9 @@
 local checks = require("eve.lib.checks")
 local constant = require("eve.lib.constant")
 local env = require("eve.lib.env")
+local calc_fileicon = require("eve.lib.nvim").calc_fileicon
+local gen_filepath2bufnr = require("eve.lib.nvim").gen_filepath2bufnr
 local path = require("eve.lib.path")
-local calc_fileicon = require("eve.builtin.nvim").calc_fileicon
-local gen_filepath2bufnr = require("eve.builtin.nvim").gen_filepath2bufnr
 
 ---@class eve.t.state.buf.lsp.ISymbol
 ---@field public kind                   string

@@ -1,10 +1,11 @@
 local constant = require("eve.lib.constant")
+local bindkeys = require("eve.lib.nvim").bindkeys
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 local signcolumn = require("fml.ux.signcolumn")
 
 ---@class fml.t.ux.search.IMain
----@field public state                  fml.t.ux.search.IContext
+---@field public context                fml.t.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.t.ux.search.IMain): integer
 ---@field public destroy                fun(self: fml.t.ux.search.IMain): nil
 ---@field public place_lnum_sign        fun(self: fml.t.ux.search.IMain): integer|nil
@@ -95,7 +96,7 @@ function M.new(props)
     end,
   })
 
-  self.state = context
+  self.context = context
   self._bufnr = nil
   self._keymaps = keymaps
   self._render_scheduler = render_scheduler
@@ -134,7 +135,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
-  eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.schedule(function()
     vim.cmd("stopinsert")
@@ -147,7 +148,7 @@ function M:destroy()
   local bufnr = self._bufnr ---@type integer|nil
   self._bufnr = nil
   self._render_scheduler:cancel()
-  self.state.dirtier_main:mark_clean()
+  self.context.dirtier_main:mark_clean()
 
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -163,9 +164,9 @@ function M:place_lnum_sign()
 
     local present_lnum = 0 ---@type integer
     do
-      local item_present_uuid = self.state.item_present_uuid ---@type string|nil
+      local item_present_uuid = self.context.item_present_uuid ---@type string|nil
       if item_present_uuid ~= nil then
-        for lnum, item in ipairs(self.state.items) do
+        for lnum, item in ipairs(self.context.items) do
           if item.uuid == item_present_uuid then
             present_lnum = lnum
             break
@@ -176,7 +177,7 @@ function M:place_lnum_sign()
 
     local current_lnum = 0 ---@type integer
     do
-      local _, lnum, uuid = self.state:get_current()
+      local _, lnum, uuid = self.context:get_current()
       local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
       if uuid ~= nil and linecount > 0 and lnum > 0 and lnum <= linecount then
         current_lnum = lnum
@@ -212,7 +213,7 @@ end
 
 ---@return nil
 function M:render()
-  self.state.dirtier_main:mark_dirty()
+  self.context.dirtier_main:mark_dirty()
 end
 
 return M

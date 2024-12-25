@@ -1,4 +1,6 @@
 local icons = require("eve.lib.icons")
+local augroup = require("eve.lib.nvim").augroup
+local bindkeys = require("eve.lib.nvim").bindkeys
 
 ---@return nil
 local function recursively_toggle_all(state)
@@ -136,7 +138,7 @@ return {
           local keymaps = {
             { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert },
           }
-          eve.nvim.bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
+          bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
         end,
       },
     },
@@ -328,7 +330,7 @@ return {
     })
     require("neo-tree").setup(opts)
     vim.api.nvim_create_autocmd("TermClose", {
-      group = eve.nvim.augroup("neotree_refresh_gitstatus"),
+      group = augroup("neotree_refresh_gitstatus"),
       pattern = "*lazygit",
       callback = function()
         if package.loaded["neo-tree.sources.git_status"] then

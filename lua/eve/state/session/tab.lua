@@ -1,9 +1,9 @@
 local checks = require("eve.lib.checks")
 local constant = require("eve.lib.constant")
 local functional = require("eve.lib.functional")
+local calc_tabtype = require("eve.lib.nvim").calc_tabtype
+local gen_filepath2bufnr = require("eve.lib.nvim").gen_filepath2bufnr
 local AdvanceHistory = require("eve.lib.collection.history_advance")
-local calc_tabtype = require("eve.builtin.nvim").calc_tabtype
-local gen_filepath2bufnr = require("eve.builtin.nvim").gen_filepath2bufnr
 
 ---@alias eve.e.state.tab.meta.TabType
 ---| "normal"

@@ -1,9 +1,10 @@
 local constant = require("eve.lib.constant")
+local bindkeys = require("eve.lib.nvim").bindkeys
 local Scheduler = require("eve.lib.collection.scheduler")
 local Subscriber = require("eve.lib.collection.subscriber")
 
 ---@class fml.t.ux.search.IPreview
----@field public state                  fml.t.ux.search.IContext
+---@field public context                fml.t.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.t.ux.search.IPreview): integer
 ---@field public destroy                fun(self: fml.t.ux.search.IPreview): nil
 ---@field public get_current_location   fun(self: fml.t.ux.search.IPreview): integer|nil, integer|nil
@@ -147,7 +148,7 @@ function M.new(props)
     end,
   })
 
-  self.state = context
+  self.context = context
   self._bufnr = nil
   self._keymaps = keymaps
   self._render_scheduler = _render_scheduler
@@ -193,7 +194,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
-  eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.schedule(function()
     vim.cmd("stopinsert")
@@ -214,7 +215,7 @@ end
 
 ---@return nil
 function M:render()
-  self.state.dirtier_preview:mark_dirty()
+  self.context.dirtier_preview:mark_dirty()
 end
 
 return M

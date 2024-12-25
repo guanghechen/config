@@ -1,5 +1,5 @@
 local path = require("eve.lib.path")
-local command = require("eve.builtin.command")
+local command = require("eve.lib.command")
 
 --[buf] close---------------------------------------------------------------------------------------
 command

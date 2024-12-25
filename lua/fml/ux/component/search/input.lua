@@ -1,12 +1,14 @@
 local constant = require("eve.lib.constant")
 local functional = require("eve.lib.functional")
+local augroup = require("eve.lib.nvim").augroup
+local bindkeys = require("eve.lib.nvim").bindkeys
 local oxi = require("eve.lib.oxi")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 local signcolumn = require("fml.ux.signcolumn")
 
 ---@class fml.t.ux.search.IInput
----@field public state                  fml.t.ux.search.IContext
+---@field public context                fml.t.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.t.ux.search.IInput): integer
 ---@field public destroy                fun(self: fml.t.ux.search.IInput): nil
 ---@field public reset_input            fun(self: fml.t.ux.search.IInput, input?: string): nil
@@ -35,7 +37,7 @@ function M.new(props)
 
   local search_state = props.state ---@type fml.t.ux.search.IContext
   local input_history = search_state.input_history ---@type eve.lib.collection.IHistory|nil
-  local autocmd_group = eve.nvim.augroup(search_state.uuid .. ":search_input") ---@type integer
+  local autocmd_group = augroup(search_state.uuid .. ":search_input") ---@type integer
 
   local actions = {
     apply_prev_input = function()
@@ -78,14 +80,14 @@ function M.new(props)
         if vim.api.nvim_buf_is_valid(bufnr) then
           local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
           local next_input = table.concat(lines, "\n") ---@type string
-          self.state.input:next(next_input)
+          self.context.input:next(next_input)
         end
       end
       callback("fulfilled")
     end,
   })
 
-  self.state = search_state
+  self.context = search_state
   self._autocmd_group = autocmd_group
   self._bufnr = nil
   self._extmark_nr = nil
@@ -144,9 +146,9 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].filetype = constant.FT_SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
 
-  eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-  local search_state = self.state ---@type fml.t.ux.search.IContext
+  local search_state = self.context ---@type fml.t.ux.search.IContext
   local input = search_state.input:snapshot() ---@type string
   local lines = oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, search_state.enable_multiline_input and lines or { lines[1] })
@@ -185,7 +187,7 @@ end
 
 ---@return nil
 function M:set_virtual_text()
-  local search_state = self.state ---@type fml.t.ux.search.IContext
+  local search_state = self.context ---@type fml.t.ux.search.IContext
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     local total = #search_state.items or 0 ---@type integer
@@ -208,7 +210,7 @@ end
 ---@param text                          string|nil
 ---@return nil
 function M:reset_input(text)
-  local search_state = self.state ---@type fml.t.ux.search.IContext
+  local search_state = self.context ---@type fml.t.ux.search.IContext
   local next_text = functional.unwrap_editing_prefix(text or search_state.input:snapshot()) ---@type string
   search_state.input:next(next_text)
 

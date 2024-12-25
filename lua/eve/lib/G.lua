@@ -1,7 +1,7 @@
 local id = 0 ---@type integer
 local gfn = {} ---@type table<string, fun(...): nil>
 
----@class eve.builtin.G
+---@class eve.lib.G
 local M = {}
 setmetatable(M, { __index = gfn })
 

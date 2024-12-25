@@ -1,9 +1,8 @@
+local G = require("eve.lib.G")
 local functional = require("eve.lib.functional")
 local icons = require("eve.lib.icons")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
-local G = require("eve.builtin.G")
-local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
 local SearchInput = require("fml.ux.component.search.input")
 local SearchMain = require("fml.ux.component.search.main")
@@ -47,7 +46,7 @@ local borders = {
 }
 
 ---@class fml.t.ux.search.ISearch : eve.t.ux.IWidget
----@field public state                  fml.t.ux.search.IContext
+---@field public context                fml.t.ux.search.IContext
 ---@field public change_dimension       fun(self: fml.t.ux.search.ISearch, dimension: fml.t.ux.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.t.ux.search.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: fml.t.ux.search.ISearch, title: string): nil
@@ -163,7 +162,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local common_keymaps = widgets.get_keymaps() ---@type eve.t.IKeymap[]
+  local common_keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
 
   local raw_statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
@@ -495,7 +494,7 @@ function M.new(props)
     })
   end
 
-  self.state = context
+  self.context = context
   self.statusline_items = statusline_items
   self._dimension = dimension
   self._input = input
@@ -518,7 +517,7 @@ function M.new(props)
       local visible = status == "visible" ---@type boolean
       if visible then
         self:create_wins_as_needed()
-        self.state.dirtier_dimension:mark_clean()
+        self.context.dirtier_dimension:mark_clean()
       end
       callback("fulfilled")
     end,
@@ -625,7 +624,7 @@ end
 
 ---@return nil
 function M:create_wins_as_needed()
-  local search_state = self.state ---@type fml.t.ux.search.IContext
+  local search_state = self.context ---@type fml.t.ux.search.IContext
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
   local dimension = self._dimension ---@type fml.t.ux.search.IDimension
@@ -833,14 +832,14 @@ function M:change_dimension(raw_dimension)
     or dimension.width ~= old_dimension.width
     or dimension.width_preview ~= old_dimension.width_preview
   then
-    self.state.dirtier_dimension:mark_dirty()
+    self.context.dirtier_dimension:mark_dirty()
   end
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  self.state.title = title
+  self.context.title = title
   local winnr = self:get_winnr_input() ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     ---@type vim.api.keyset.win_config
@@ -868,7 +867,7 @@ function M:close()
   self:hide()
 
   if not self._permanent then
-    self.state.status:next("closed")
+    self.context.status:next("closed")
     self._input:destroy()
     self._main:destroy()
 
@@ -887,7 +886,7 @@ function M:focus()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local winnr_input = self:get_winnr_input() ---@type integer|nil
   local winnr_main = self:get_winnr_main() ---@type integer|nil
-  local status = self.state.status:snapshot() ---@type eve.e.WidgetStatus
+  local status = self.context.status:snapshot() ---@type eve.e.WidgetStatus
   local visible = status == "visible" ---@type boolean
 
   if
@@ -940,7 +939,7 @@ function M:hide()
   self._winnr_input = nil
   self._winnr_main = nil
   self._winnr_preview = nil
-  self.state.status:next("hidden")
+  self.context.status:next("hidden")
 
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
     vim.api.nvim_win_close(winnr_input, true)
@@ -961,7 +960,7 @@ end
 
 ---@return nil
 function M:open()
-  widgets.open(self)
+  state.widget.open(self)
 end
 
 ---@return nil
@@ -971,15 +970,15 @@ end
 
 ---@return nil
 function M:resize()
-  self.state.dirtier_dimension:mark_dirty()
+  self.context.dirtier_dimension:mark_dirty()
 end
 
 ---@return nil
 function M:show()
-  local status = self.state.status:snapshot() ---@type eve.e.WidgetStatus
+  local status = self.context.status:snapshot() ---@type eve.e.WidgetStatus
   if status == "closed" then
-    self.state.dirtier_data_cache:mark_dirty()
-    self.state.dirtier_data:mark_dirty()
+    self.context.dirtier_data_cache:mark_dirty()
+    self.context.dirtier_data:mark_dirty()
   end
 
   if status ~= "visible" then
@@ -989,19 +988,19 @@ function M:show()
       self._preview:render()
     end
     self._input:reset_input()
-    self.state.status:next("visible")
+    self.context.status:next("visible")
   end
 end
 
 ---@return eve.e.WidgetStatus
 function M:status()
-  local status = self.state.status:snapshot() ---@type eve.e.WidgetStatus
+  local status = self.context.status:snapshot() ---@type eve.e.WidgetStatus
   return status
 end
 
 ---@return nil
 function M:toggle()
-  local status = self.state.status:snapshot() ---@type eve.e.WidgetStatus
+  local status = self.context.status:snapshot() ---@type eve.e.WidgetStatus
   local visible = status == "visible" ---@type boolean
   if visible then
     self:hide()

@@ -1,4 +1,4 @@
----@class eve.builtin.debug
+---@class eve.lib.debug
 local M = {}
 
 ---@param value any|nil

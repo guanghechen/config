@@ -3,9 +3,9 @@ local __module_name__ = "ghc.action.copy" ---@type string
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
-local command = require("eve.builtin.command")
+local command = require("eve.lib.command")
 
----@param candidate                     eve.builitin.command.definitions.copy.Scope
+---@param candidate                     eve.lib.command.definitions.copy.Scope
 ---@param filepath                      string
 ---@return nil
 local function copy_current_filepath(candidate, filepath)

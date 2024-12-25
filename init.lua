@@ -1,11 +1,12 @@
-require("eve.setup").workspace()
-require("eve.setup").context()
+_G.eve = require("eve")
 
+eve.setup_workspace()
 require("eve.option")
+require("eve.keymap")
+
+eve.setup_state()
 require("eve.autocmd")
 require("eve.autocmd-filetype")
-require("eve.keymap")
-_G.eve = require("eve")
 
 require("fml.autocmd")
 _G.fml = require("fml")
@@ -20,7 +21,7 @@ if vim.g.vscode then
 end
 
 require("ghc.command")
-require("ghc.dressing.hi_pairs")
+require("ghc.dressing.hipairs")
 require("ghc.dressing.commentstring")
 require("ghc.dressing.nvimbar.statusline")
 require("ghc.dressing.nvimbar.tabline")
@@ -29,7 +30,7 @@ require("ghc.dressing.select")
 require("ghc.dressing.winsep")
 
 local state = require("eve.state")
-local command = require("eve.builtin.command")
+local command = require("eve.lib.command")
 command.execute(command.definitions.ux.reload_theme.uuid)
 vim.schedule(function()
   command.execute(command.definitions.ux.reload_theme.uuid)
@@ -57,5 +58,5 @@ pcall(require, "integration.local")
 ---! Reload session if not specify file and current directory is a git repository.
 local path = require("eve.lib.path")
 if path.is_git_repo() and state.flight.autoload:snapshot() then
-  eve.nvim.load_nvim_session(state.get_storage().nvim_session_autosaved)
+  require("eve.lib.nvim").load_nvim_session(state.get_storage().nvim_session_autosaved)
 end

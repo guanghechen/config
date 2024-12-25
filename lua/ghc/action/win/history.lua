@@ -143,7 +143,7 @@ function M.history_backward()
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == constant.BT_QUICKFIX then
-    eve.qflist.backward()
+    state.qflist.backward()
     return
   end
 
@@ -171,7 +171,7 @@ function M.history_forward()
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == constant.BT_QUICKFIX then
-    eve.qflist.forward()
+    state.qflist.forward()
     return
   end
 

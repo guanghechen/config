@@ -53,6 +53,8 @@ end
 
 ---@return nil
 function M.line()
+  local dressing_float_win = require("eve.lib.nvim").dressing_float_win
+
   local _, winnr = vim.diagnostic.open_float({
     header = "diagnostic (line)",
     scope = "line",
@@ -60,7 +62,7 @@ function M.line()
     focusable = true,
     border = "rounded",
   })
-  fml.fn.dressing_float_win(winnr, 100)
+  dressing_float_win(winnr, 100)
 end
 
 return M

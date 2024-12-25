@@ -1,7 +1,7 @@
 local env = require("eve.lib.env")
 local ft = require("eve.lib.filetype")
-local mvc = require("eve.builtin.mvc")
-local augroup = require("eve.builtin.nvim").augroup
+local augroup = require("eve.lib.nvim").augroup
+local state = require("eve.state")
 
 ---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
 vim.schedule(function()
@@ -27,7 +27,7 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   group = augroup("on_vim_leave_pre"),
   once = true,
   callback = function()
-    mvc.dispose()
+    state.dispose()
   end,
 })
 

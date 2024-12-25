@@ -1,4 +1,4 @@
-local __module_name__ = "eve.fn.get_clipboard" ---@type string
+local __module_name__ = "eve.lib.clipboard" ---@type string
 
 local env = require("eve.lib.env")
 local path = require("eve.lib.path")
@@ -84,7 +84,10 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   }
 end
 
-local function get_clipboard()
+---@class ghc.lib.clipboard
+local M = {}
+
+function M.get_clipboard()
   if env.IS_WSL then
     return wsl_clipboard()
   elseif env.IS_MAC then
@@ -103,4 +106,4 @@ local function get_clipboard()
   return nil
 end
 
-return get_clipboard
+return M

@@ -1,9 +1,7 @@
 ---@class fml.fn
 local fn = {
-  dressing_float_win = require("fml.fn.dressing_float_win"),
   select = require("fml.fn.select"),
   select_files = require("fml.fn.select_files"),
-  statuscolumn = require("eve.fn.statuscolumn"),
 }
 
 ---@class fml.ux

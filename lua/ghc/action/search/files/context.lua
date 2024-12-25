@@ -294,35 +294,35 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M.has_item_deleted(uuid)
-  return _search ~= nil and _search.state:has_item_deleted(uuid)
+  return _search ~= nil and _search.context:has_item_deleted(uuid)
 end
 
 ---@param uuid                          string
 ---@return nil
 function M.mark_item_deleted(uuid)
   if _search ~= nil then
-    _search.state:mark_item_deleted(uuid)
+    _search.context:mark_item_deleted(uuid)
   end
 end
 
 ---@return nil
 function M.mark_all_items_deleted()
   if _search ~= nil then
-    _search.state:mark_all_items_deleted()
+    _search.context:mark_all_items_deleted()
   end
 end
 
 ---@return nil
 function M.reload()
   if _search ~= nil then
-    _search.state.dirtier_data:mark_dirty()
+    _search.context.dirtier_data:mark_dirty()
   end
 end
 
 ---@return nil
 function M.replace_file()
   local search = M.get_search() ---@type fml.t.ux.search.ISearch
-  local item = search.state:get_current() ---@type fml.t.ux.search.IItem|nil
+  local item = search.context:get_current() ---@type fml.t.ux.search.IItem|nil
   if item ~= nil then
     local api = require("ghc.action.search.files.api")
     api.replace_file(item.uuid)
@@ -351,8 +351,8 @@ function M.send_to_qflist()
   if #quickfix_items > 0 then
     M.close()
 
-    eve.qflist.push(quickfix_items)
-    eve.qflist.open_qflist(true)
+    state.qflist.push(quickfix_items)
+    state.qflist.open_qflist(true)
   end
 end
 

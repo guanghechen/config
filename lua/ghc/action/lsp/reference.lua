@@ -1,6 +1,7 @@
 local __module_name__ = "ghc.action.lsp" ---@type string
 
 local checks = require("eve.lib.checks")
+local lsp = require("eve.lib.lsp")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
@@ -12,7 +13,7 @@ local state = require("eve.state")
 local function fetch_data(method, additional_params, callback)
   local winnr = state.tab.get_current_winnr() or 0 ---@type integer
   local bufnr = winnr > 0 and vim.api.nvim_win_get_buf(winnr) or 0 ---@type integer
-  if not checks.is_buf_valid(bufnr) or not eve.lsp.has_support_method(bufnr, method) then
+  if not checks.is_buf_valid(bufnr) or not lsp.has_support_method(bufnr, method) then
     reporter.error({
       from = __module_name__,
       subject = "fetch_data",

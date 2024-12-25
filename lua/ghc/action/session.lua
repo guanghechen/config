@@ -1,5 +1,7 @@
 local __module_name__ = "ghc.action.session" ---@type string
 
+local load_nvim_session = require("eve.lib.nvim").load_nvim_session
+local save_nvim_session = require("eve.lib.nvim").save_nvim_session
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
@@ -20,13 +22,13 @@ function M.restore()
     end
 
     if nvim_session_filepath then
-      eve.nvim.load_nvim_session(nvim_session_filepath)
+      load_nvim_session(nvim_session_filepath)
       state.load({
         editor = storage.editor,
         session = storage.session,
         workspace = storage.workspace,
       })
-      eve.fn.refresh_state()
+      state.refresh()
     end
   end
 end
@@ -42,13 +44,13 @@ function M.restore_autosaved()
     end
 
     if nvim_session_filepath then
-      eve.nvim.load_nvim_session(nvim_session_filepath)
+      load_nvim_session(nvim_session_filepath)
       state.load({
         editor = storage.editor,
         session = storage.session,
         workspace = storage.workspace,
       })
-      eve.fn.refresh_state()
+      state.refresh()
     end
   end
 end
@@ -61,7 +63,7 @@ function M.save()
       session = storage.session,
       workspace = storage.workspace,
     })
-    eve.nvim.save_nvim_session(storage.nvim_session)
+    save_nvim_session(storage.nvim_session)
 
     reporter.info({
       from = __module_name__,

@@ -21,14 +21,14 @@ local function gen_hlgroup_map(context)
     f_buf_filetype = { fg = c.fg3 },
     f_buf_filepath = { fg = c.fg2 },
 
-    ---hi_pairs
-    f_hi_pairs_1 = { fg = c.red, bg = c.bg4, bold = true },
-    f_hi_pairs_2 = { fg = c.green, bg = c.bg2, bold = true },
-    f_hi_pairs_3 = { fg = c.yellow, bg = c.bg2, bold = true },
-    f_hi_pairs_4 = { fg = c.blue, bg = c.bg2, bold = true },
-    f_hi_pairs_5 = { fg = c.purple, bg = c.bg2, bold = true },
-    f_hi_pairs_6 = { fg = c.aqua, bg = c.bg2, bold = true },
-    f_hi_pairs_7 = { fg = c.orange, bg = c.bg2, bold = true },
+    ---hipairs
+    f_hipairs_1 = { fg = c.red, bg = c.bg4, bold = true },
+    f_hipairs_2 = { fg = c.green, bg = c.bg2, bold = true },
+    f_hipairs_3 = { fg = c.yellow, bg = c.bg2, bold = true },
+    f_hipairs_4 = { fg = c.blue, bg = c.bg2, bold = true },
+    f_hipairs_5 = { fg = c.purple, bg = c.bg2, bold = true },
+    f_hipairs_6 = { fg = c.aqua, bg = c.bg2, bold = true },
+    f_hipairs_7 = { fg = c.orange, bg = c.bg2, bold = true },
 
     ---diff
     f_diff_add_left = { bg = c.diffDel, fg = "none" },
@@ -70,8 +70,8 @@ local function gen_hlgroup_map(context)
     f_us_main_present = { fg = c.blue, bg = "none" },
     f_us_main_present_cur = { fg = c.blue, bg = c.bg3 },
     f_us_main_normal = { bg = bg_main },
-    f_us_main_replace = { fg = c.diffAddInline },
-    f_us_main_search = { fg = c.diffDelInline, strikethrough = true },
+    f_us_main_replace = { fg = c.green },
+    f_us_main_search = { fg = c.red, strikethrough = true },
     f_us_preview_current = { bg = c.bg2 },
     f_us_preview_error = { fg = c.red, bold = true },
     f_us_preview_normal = { bg = bg_preview },

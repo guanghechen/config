@@ -1,9 +1,9 @@
 local __module_name__ = "ghc.action.term" ---@type string
 
 local constant = require("eve.lib.constant")
+local get_selected_text = require("eve.lib.nvim").get_selected_text
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
-local get_selected_text = require("eve.builtin.nvim").get_selected_text
 local Terminal = require("fml.ux.component.terminal")
 
 local terminal_map = {} ---@type table<string, fml.t.ux.ITerminal>

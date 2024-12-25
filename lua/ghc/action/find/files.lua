@@ -74,7 +74,7 @@ state.find.scope:subscribe(
   }),
   true
 )
-eve.mvc.observe({
+state.observe({
   state.find.excludes,
   state.find.flag_case_sensitive,
   state.find.flag_gitignore,
@@ -176,8 +176,8 @@ local actions = {
       if #quickfix_items > 0 then
         _select:close()
 
-        eve.qflist.push(quickfix_items)
-        eve.qflist.open_qflist(false)
+        state.qflist.push(quickfix_items)
+        state.qflist.open_qflist(false)
       end
     end
   end,

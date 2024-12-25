@@ -3,7 +3,7 @@ local __module_name__ = "ghc.action.toggle" ---@type string
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
-local command = require("eve.builtin.command")
+local command = require("eve.lib.command")
 local state = require("eve.state")
 
 ---@class ghc.action.toggle.IItem
@@ -35,6 +35,15 @@ local flag_map = {
     snapshot = function()
       local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
       return theme, "String"
+    end,
+  },
+  theme_variant = {
+    uuid = command.definitions.toggle.theme_variant.uuid,
+    title = "theme variant",
+    snapshot = function()
+      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
+      local scheme = require("fml.ux.theme").get_scheme(theme) ---@type eve.lib.collection.theme.IScheme|nil
+      return scheme and scheme.variant or "", "String"
     end,
   },
   transparency = {

@@ -1,7 +1,7 @@
 local __module_name__ = "ghc.action.refresh" ---@type string
 
 local reporter = require("eve.lib.reporter")
-local command = require("eve.builtin.command")
+local command = require("eve.lib.command")
 local state = require("eve.state")
 
 ---@class ghc.action.refresh
@@ -13,7 +13,7 @@ function M.refresh_all()
   local devmode = state.flight.devmode:snapshot() ---@type boolean
 
   vim.cmd.checktime()
-  eve.fn.refresh_state()
+  state.refresh()
 
   pcall(function()
     require("gitsigns").refresh()

@@ -1,5 +1,6 @@
 local checks = require("eve.lib.checks")
 local constant = require("eve.lib.constant")
+local augroup = require("eve.lib.nvim").augroup
 local state = require("eve.state")
 local Line = require("ghc.dressing.winsep.line")
 
@@ -142,7 +143,7 @@ local float_winsep = {
       return false
     end
 
-    local widget = eve.widgets.get_current_widget() ---@type eve.t.ux.IWidget|nil
+    local widget = state.widget.get_current_widget() ---@type eve.t.ux.IWidget|nil
     if widget == nil then
       return false
     end
@@ -153,7 +154,7 @@ local float_winsep = {
 }
 
 vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
-  group = eve.nvim.augroup("winsep_refresh"),
+  group = augroup("winsep_refresh"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if fixed_winsep:should_show(winnr) then
@@ -167,7 +168,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
   end,
 })
 
-eve.mvc.observe({ state.flight.dressing_winsep_fixed }, function()
+state.observe({ state.flight.dressing_winsep_fixed }, function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if fixed_winsep:should_show(winnr) then
     fixed_winsep:show()
@@ -176,7 +177,7 @@ eve.mvc.observe({ state.flight.dressing_winsep_fixed }, function()
   end
 end)
 
-eve.mvc.observe({ state.flight.dressing_winsep_float }, function()
+state.observe({ state.flight.dressing_winsep_float }, function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if float_winsep:should_show(winnr) then
     float_winsep:show()

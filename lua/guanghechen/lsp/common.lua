@@ -1,7 +1,9 @@
 local env = require("eve.lib.env")
 local fs = require("eve.lib.fs")
+local lsp = require("eve.lib.lsp")
+local bindkeys = require("eve.lib.nvim").bindkeys
 local path = require("eve.lib.path")
-local command = require("eve.builtin.command")
+local command = require("eve.lib.command")
 
 local actions = {
   rename = function()
@@ -141,9 +143,9 @@ end
 ---@param bufnr                         integer
 ---@diagnostic disable-next-line: unused-local
 function M.on_attach(client, bufnr)
-  local has_support_codeLens = eve.lsp.has_support_method(bufnr, "codeLens") ---@type boolean
-  local has_support_codeAction = eve.lsp.has_support_method(bufnr, "codeAction") ---@type boolean
-  local has_support_rename = eve.lsp.has_support_method(bufnr, "rename") ---@type boolean
+  local has_support_codeLens = lsp.has_support_method(bufnr, "codeLens") ---@type boolean
+  local has_support_codeAction = lsp.has_support_method(bufnr, "codeAction") ---@type boolean
+  local has_support_rename = lsp.has_support_method(bufnr, "rename") ---@type boolean
 
   ---@type eve.t.IKeymap[]
   local keymaps = {
@@ -243,7 +245,7 @@ function M.on_attach(client, bufnr)
       active = has_support_rename,
     },
   }
-  eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
+  bindkeys(keymaps, { bufnr = bufnr })
 end
 
 function M.on_init(client, _)

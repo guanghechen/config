@@ -1,8 +1,8 @@
 local constant = require("eve.lib.constant")
 local checks = require("eve.lib.checks")
 local fs = require("eve.lib.fs")
+local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local path = require("eve.lib.path")
-local qflist = require("eve.builtin.qflist")
 local state = require("eve.state")
 local Select = require("fml.ux.component.select")
 
@@ -152,8 +152,8 @@ function M.new(props)
         if #quickfix_items > 0 then
           _select:close()
 
-          qflist.push(quickfix_items)
-          qflist.open_qflist(false)
+          state.qflist.push(quickfix_items)
+          state.qflist.open_qflist(false)
         end
       end
     end
@@ -184,7 +184,7 @@ function M.new(props)
       for _, raw_item in ipairs(raw_items) do
         local filepath = raw_item.filepath ---@type string
         local filename = path.basename(raw_item.filepath)
-        local icon, icon_hl = eve.nvim.calc_fileicon(filename)
+        local icon, icon_hl = calc_fileicon(filename)
 
         ---@type fml.t.ux.file_select.IItem
         local item = {

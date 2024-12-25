@@ -1,8 +1,9 @@
 local __module_name__ = "eve.lib.ux.nvimbar" ---@type string
 
+local functional = require("eve.lib.functional")
+local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
-local functional = require("eve.lib.functional")
 local Scheduler = require("eve.lib.collection.scheduler")
 
 ---@alias eve.lib.ux.nvimbar.Position
@@ -155,7 +156,7 @@ local function build_context(preset_context)
   local filepath = vim.fn.expand("%:p") ---@type string
   local filename = vim.fn.expand("%:t") ---@type string
   local filetype = vim.bo.filetype ---@type string
-  local fileicon = eve.nvim.calc_fileicon(filename) ---@type string
+  local fileicon = calc_fileicon(filename) ---@type string
 
   ---@type eve.lib.ux.nvimbar.IContext
   local context = {

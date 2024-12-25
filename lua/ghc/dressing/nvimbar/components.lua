@@ -1,18 +1,17 @@
 local __module_name__ = "ghc.dressing.nvimbar.components" ---@type string
 
+local G = require("eve.lib.G")
 local checks = require("eve.lib.checks")
 local constant = require("eve.lib.constant")
 local env = require("eve.lib.env")
 local functional = require("eve.lib.functional")
 local icons = require("eve.lib.icons")
+local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Nvimbar = require("eve.lib.ux.nvimbar")
-local G = require("eve.builtin.G")
-local command = require("eve.builtin.command")
-local calc_fileicon = require("eve.builtin.nvim").calc_fileicon
-local widgets = require("eve.builtin.widgets")
+local command = require("eve.lib.command")
 local state = require("eve.state")
 
 local btn = Nvimbar.btn
@@ -1271,11 +1270,11 @@ function M.widget(position)
     name = "widget",
     atomic = true,
     condition = function()
-      local widget = widgets.get_current_widget() ---@type eve.t.ux.IWidget|nil
+      local widget = state.widget.get_current_widget() ---@type eve.t.ux.IWidget|nil
       return widget ~= nil and widget:status() == "visible"
     end,
     render = function()
-      local widget = widgets.get_current_widget() ---@type eve.t.ux.IWidget|nil
+      local widget = state.widget.get_current_widget() ---@type eve.t.ux.IWidget|nil
       if widget == nil then
         return "", "", true
       end

@@ -3,6 +3,7 @@ local __module_name__ = "ghc.action.search.files" ---@type string
 local checks = require("eve.lib.checks")
 local fs = require("eve.lib.fs")
 local icons = require("eve.lib.icons")
+local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
@@ -46,7 +47,7 @@ state.search.search_paths:subscribe(
   true
 )
 
-eve.mvc.observe({
+state.observe({
   state.search.excludes,
   state.search.flag_case_sensitive,
   state.search.flag_gitignore,
@@ -62,7 +63,7 @@ eve.mvc.observe({
   _last_search_result = nil
   context.reload()
 end, true)
-eve.mvc.observe({
+state.observe({
   state.search.flag_replace,
   state.search.replacement,
 }, function()
@@ -369,7 +370,7 @@ function M.fetch_data(input_text, force, callback)
       fileitem_map[filepath] = fileitem
 
       local filename = path.basename(filepath) ---@type string
-      local icon, icon_hl = eve.nvim.calc_fileicon(filename)
+      local icon, icon_hl = calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
       local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type eve.t.IHighlightInline[]
 

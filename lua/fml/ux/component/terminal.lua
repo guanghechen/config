@@ -1,6 +1,6 @@
 local constant = require("eve.lib.constant")
+local bindkeys = require("eve.lib.nvim").bindkeys
 local path = require("eve.lib.path")
-local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
@@ -64,7 +64,7 @@ function M.new(props)
     command = { shell, "-c", props.command }
   end
 
-  local keymaps = widgets.get_keymaps() ---@type eve.t.IKeymap[]
+  local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
   local command_cwd = props.command_cwd or path.cwd() ---@type string
@@ -99,7 +99,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].buftype = "nowrite"
   vim.bo[bufnr].filetype = constant.FT_TERM
   vim.bo[bufnr].swapfile = false
-  eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
   return bufnr, true
 end
 
@@ -214,7 +214,7 @@ end
 
 ---@return nil
 function M:open()
-  widgets.open(self)
+  state.widget.open(self)
 end
 
 ---@return nil

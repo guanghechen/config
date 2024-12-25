@@ -3,6 +3,7 @@ local env = require("eve.lib.env")
 local fs = require("eve.lib.fs")
 local functional = require("eve.lib.functional")
 local icons = require("eve.lib.icons")
+local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local Observable = require("eve.lib.collection.observable")
@@ -78,7 +79,7 @@ local function fetch_diritem(dirpath, force)
           icon = icons.kind.Folder
           icon_hl = "f_fe_name_dir"
         else
-          icon, icon_hl = eve.nvim.calc_fileicon(raw_item.name)
+          icon, icon_hl = calc_fileicon(raw_item.name)
         end
 
         ---@type ghc.action.find.explorer.IFileItem

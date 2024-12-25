@@ -3,16 +3,16 @@ local __module_name__ = "eve.lib.fs" ---@type string
 local json = require("eve.lib.json")
 local reporter = require("eve.lib.reporter")
 
----@class eve.t.builtin.fs.IReadFileParams
+---@class eve.lib.fs.IReadFileParams
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class eve.t.builtin.fs.IReadFileAsLinesParams
+---@class eve.lib.fs.IReadFileAsLinesParams
 ---@field public filepath               string
 ---@field public max_lines              ?integer
 ---@field public silent                 ?boolean
 
----@class eve.t.builtin.fs.IReadJsonParams
+---@class eve.lib.fs.IReadJsonParams
 ---@field public filepath               string
 ---@field public silent_on_bad_path     ?boolean
 ---@field public silent_on_bad_json     ?boolean
@@ -59,7 +59,7 @@ function M.is_file_or_dir(filepath)
   return "other"
 end
 
----@param params                        eve.t.builtin.fs.IReadFileParams
+---@param params                        eve.lib.fs.IReadFileParams
 ---@return string|nil
 function M.read_file(params)
   local filepath = params.filepath ---@type string
@@ -82,7 +82,7 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
----@param params                        eve.t.builtin.fs.IReadFileAsLinesParams
+---@param params                        eve.lib.fs.IReadFileAsLinesParams
 ---@return string[]
 function M.read_file_as_lines(params)
   local filepath = params.filepath ---@type string
@@ -113,7 +113,7 @@ function M.read_file_as_lines(params)
   return lines
 end
 
----@param params                        eve.t.builtin.fs.IReadJsonParams
+---@param params                        eve.lib.fs.IReadJsonParams
 ---@return any|nil
 function M.read_json(params)
   local filepath = params.filepath ---@type string

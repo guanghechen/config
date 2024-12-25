@@ -2,7 +2,7 @@ local __module_name__ = "fml.ux.theme" ---@type string
 
 local Theme = require("eve.lib.collection.theme")
 local reporter = require("eve.lib.reporter")
-local hmr = require("eve.fn.hmr")
+local state = require("eve.state")
 
 ---@class fml.ux.theme
 local M = {}
@@ -93,7 +93,7 @@ function M.get_scheme(theme)
     return nil
   end
 
-  local ok, scheme = pcall(hmr, "fml.ux.theme.scheme." .. theme)
+  local ok, scheme = pcall(state.hmr, "fml.ux.theme.scheme." .. theme)
   if not ok then
     reporter.error({
       from = __module_name__,
@@ -122,7 +122,7 @@ function M.apply_integration(params)
       scheme = scheme,
       transparency = transparency,
     }
-    local gen_hlgroup_map = hmr("fml.ux.theme.integration." .. integration)
+    local gen_hlgroup_map = state.hmr("fml.ux.theme.integration." .. integration)
     local hlgroup_map = gen_hlgroup_map(themeContext)
     local uxTheme = Theme.new()
     uxTheme:registers(hlgroup_map)
@@ -141,14 +141,14 @@ function M.apply_theme(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    local gen_nvimbar_hlgroup_map = hmr("fml.ux.theme.integration.nvimbar")
+    local gen_nvimbar_hlgroup_map = state.hmr("fml.ux.theme.integration.nvimbar")
 
     ---@type fml.ux.theme.integration.nvimbar.hlgroups
     local nvimbar_hlgroup_map = gen_nvimbar_hlgroup_map({ scheme = scheme, transparency = transparency })
 
     local uxTheme = Theme.new()
     for _, integration in ipairs(M.integrations) do
-      local gen_hlgroup_map = hmr("fml.ux.theme.integration." .. integration)
+      local gen_hlgroup_map = state.hmr("fml.ux.theme.integration." .. integration)
       ---@return table<string, eve.lib.collection.theme.IHlgroup>
       local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 

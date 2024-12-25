@@ -1,6 +1,7 @@
 local checks = require("eve.lib.checks")
 local constant = require("eve.lib.constant")
 local functional = require("eve.lib.functional")
+local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local path = require("eve.lib.path")
 local state = require("eve.state")
 
@@ -66,7 +67,7 @@ local provider = {
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local relative_filepath = path.relative(cwd, filepath, true) ---@type string
         local filename = path.basename(filepath)
-        local icon, icon_hl = eve.nvim.calc_fileicon(filename)
+        local icon, icon_hl = calc_fileicon(filename)
 
         ---@type ghc.action.find.buffers.IItemData
         local data = {

@@ -8,7 +8,7 @@ local Observable = require("eve.lib.collection.observable")
 ---@field public copilot                boolean
 ---@field public devmode                boolean
 ---
----@field public dressing_hi_pairs      boolean
+---@field public dressing_hipairs      boolean
 ---@field public dressing_winsep_fixed  boolean
 ---@field public dressing_winsep_float  boolean
 ---
@@ -21,7 +21,7 @@ local Observable = require("eve.lib.collection.observable")
 ---@field public copilot                eve.lib.collection.IObservable
 ---@field public devmode                eve.lib.collection.IObservable
 ---
----@field public dressing_hi_pairs      eve.lib.collection.IObservable
+---@field public dressing_hipairs      eve.lib.collection.IObservable
 ---@field public dressing_winsep_fixed  eve.lib.collection.IObservable
 ---@field public dressing_winsep_float  eve.lib.collection.IObservable
 ---
@@ -48,7 +48,7 @@ function M.defaults()
     copilot = is_home_config_dir,
     devmode = is_home_config_dir,
 
-    dressing_hi_pairs = true,
+    dressing_hipairs = true,
     dressing_winsep_fixed = true,
     dressing_winsep_float = false,
 
@@ -75,8 +75,8 @@ function M.normalize(data)
       resolved.devmode = data.devmode
     end
 
-    if type(data.dressing_hi_pairs) == "boolean" then
-      resolved.dressing_hi_pairs = data.dressing_hi_pairs
+    if type(data.dressing_hipairs) == "boolean" then
+      resolved.dressing_hipairs = data.dressing_hipairs
     end
     if type(data.dressing_winsep_fixed) == "boolean" then
       resolved.dressing_winsep_fixed = data.dressing_winsep_fixed
@@ -111,7 +111,7 @@ function M.dump()
     copilot = _state.copilot:snapshot(),
     devmode = _state.devmode:snapshot(),
 
-    dressing_hi_pairs = _state.dressing_hi_pairs:snapshot(),
+    dressing_hipairs = _state.dressing_hipairs:snapshot(),
     dressing_winsep_fixed = _state.dressing_winsep_fixed:snapshot(),
     dressing_winsep_float = _state.dressing_winsep_float:snapshot(),
 
@@ -133,7 +133,7 @@ function M.load(raw_data)
       copilot = Observable.from_value(data.copilot),
       devmode = Observable.from_value(data.devmode),
 
-      dressing_hi_pairs = Observable.from_value(data.dressing_hi_pairs),
+      dressing_hipairs = Observable.from_value(data.dressing_hipairs),
       dressing_winsep_fixed = Observable.from_value(data.dressing_winsep_fixed),
       dressing_winsep_float = Observable.from_value(data.dressing_winsep_float),
 
@@ -148,7 +148,7 @@ function M.load(raw_data)
   _state.copilot:next(data.copilot)
   _state.devmode:next(data.devmode)
 
-  _state.dressing_hi_pairs:next(data.dressing_hi_pairs)
+  _state.dressing_hipairs:next(data.dressing_hipairs)
   _state.dressing_winsep_fixed:next(data.dressing_winsep_fixed)
   _state.dressing_winsep_float:next(data.dressing_winsep_float)
 

@@ -1,7 +1,7 @@
 local constant = require("eve.lib.constant")
 local ft = require("eve.lib.filetype")
 
----@class ghc.dressing.hi_pairs.config
+---@class ghc.dressing.hipairs.config
 local config = {
   DELAY = 50, ---How much (in milliseconds) should the cursor stay still to calculate and render a pair.
   SEARCH_WINDOW_HEIGHT = vim.o.lines, ---How many lines to look backwards/forwards to find a pair.
@@ -9,7 +9,7 @@ local config = {
     i = true,
     n = true,
   },
-  nsnr = vim.api.nvim_create_namespace("ghc.dressing.hi_pairs.namespace"),
+  nsnr = vim.api.nvim_create_namespace("ghc.dressing.hipairs.namespace"),
   all_pairs = {
     { "(", ")" },
     { "[", "]" },
@@ -23,13 +23,13 @@ local config = {
   right_to_left_pairs = {},
   nested = 1,
   hlgroups = {
-    "f_hi_pairs_1",
-    "f_hi_pairs_2",
-    "f_hi_pairs_3",
-    "f_hi_pairs_4",
-    "f_hi_pairs_5",
-    "f_hi_pairs_6",
-    "f_hi_pairs_7",
+    "f_hipairs_1",
+    "f_hipairs_2",
+    "f_hipairs_3",
+    "f_hipairs_4",
+    "f_hipairs_5",
+    "f_hipairs_6",
+    "f_hipairs_7",
   },
 }
 
@@ -42,18 +42,18 @@ do
   end
 end
 
----@class ghc.dressing.hi_pairs.IPos
+---@class ghc.dressing.hipairs.IPos
 ---@field public row                    integer
 ---@field public col                    integer
 
----@class ghc.dressing.hi_pairs.IPair
----@field public left                   ghc.dressing.hi_pairs.IPos
----@field public right                  ghc.dressing.hi_pairs.IPos
+---@class ghc.dressing.hipairs.IPair
+---@field public left                   ghc.dressing.hipairs.IPos
+---@field public right                  ghc.dressing.hipairs.IPos
 
 ---@param bufnr                         integer
 ---@param row                    integer
 ---@param col                    integer
----@return ghc.dressing.hi_pairs.IPair[]
+---@return ghc.dressing.hipairs.IPair[]
 local function find_sorrounds(bufnr, row, col)
   local ok_parser, parser = pcall(vim.treesitter.get_parser, bufnr)
   if not ok_parser or not parser then
@@ -72,7 +72,7 @@ local function find_sorrounds(bufnr, row, col)
 
   local top = math.max(1, row - vim.o.lines) ---@type integer
   local bot = math.min(vim.api.nvim_buf_line_count(bufnr), row + vim.o.lines) ---@type integer
-  local surrounds = {} ---@type ghc.dressing.hi_pairs.IPair[]
+  local surrounds = {} ---@type ghc.dressing.hipairs.IPair[]
 
   local function find_node(node)
     for child in node:iter_children() do
@@ -94,12 +94,12 @@ local function find_sorrounds(bufnr, row, col)
             local right_delimiter = config.left_to_right_pairs[left_char] ---@type string
 
             if left_char == left_delimiter and right_char == right_delimiter then
-              local left = { row = start_row + 1, col = start_col + 1 } ---@type ghc.dressing.hi_pairs.IPos
-              local right = { row = end_row + 1, col = end_col } ---@type ghc.dressing.hi_pairs.IPos
+              local left = { row = start_row + 1, col = start_col + 1 } ---@type ghc.dressing.hipairs.IPos
+              local right = { row = end_row + 1, col = end_col } ---@type ghc.dressing.hipairs.IPos
               if #surrounds < 1 then
                 surrounds[#surrounds + 1] = { left = left, right = right }
               else
-                local last_pair = surrounds[#surrounds] ---@type ghc.dressing.hi_pairs.IPair
+                local last_pair = surrounds[#surrounds] ---@type ghc.dressing.hipairs.IPair
                 if
                   (last_pair.left.row ~= left.row or last_pair.left.col ~= left.col)
                   and (last_pair.right.row ~= right.row or last_pair.right.col ~= right.col)
@@ -120,7 +120,7 @@ local function find_sorrounds(bufnr, row, col)
   return surrounds
 end
 
----@class ghc.dressing.hi_pairs.ux
+---@class ghc.dressing.hipairs.ux
 local M = {}
 
 ---Clear `Pair` highlights.
@@ -128,12 +128,12 @@ local M = {}
 ---@param bufnr                         integer
 ---@return nil
 function M.clear(bufnr)
-  local viewport = vim.b[bufnr].hi_pairs_viewport
+  local viewport = vim.b[bufnr].hipairs_viewport
   if viewport ~= nil then
     local top = math.max(0, viewport.top - 1) ---@type integer
     local bot = math.min(vim.api.nvim_buf_line_count(bufnr), viewport.bot)
     vim.api.nvim_buf_clear_namespace(bufnr, config.nsnr, top, bot)
-    vim.b[bufnr].hi_pairs_viewport = nil
+    vim.b[bufnr].hipairs_viewport = nil
   end
 end
 
@@ -150,8 +150,8 @@ function M.render(winnr)
   local snapshot_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local snapshot_curosr = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
 
-  local hi_pairs_rendering_tick = (vim.b[snapshot_bufnr].hi_pairs_rendering_tick or 0) + 1 ---@type integer
-  vim.b[snapshot_bufnr].hi_pairs_rendering_tick = hi_pairs_rendering_tick
+  local hipairs_rendering_tick = (vim.b[snapshot_bufnr].hipairs_rendering_tick or 0) + 1 ---@type integer
+  vim.b[snapshot_bufnr].hipairs_rendering_tick = hipairs_rendering_tick
 
   return vim.defer_fn(function()
     if not vim.api.nvim_win_is_valid(winnr) then
@@ -163,8 +163,8 @@ function M.render(winnr)
       return
     end
 
-    local rendering_tick = (vim.b[bufnr].hi_pairs_rendering_tick or 0) ---@type integer
-    if rendering_tick ~= hi_pairs_rendering_tick then
+    local rendering_tick = (vim.b[bufnr].hipairs_rendering_tick or 0) ---@type integer
+    if rendering_tick ~= hipairs_rendering_tick then
       return
     end
 
@@ -184,17 +184,17 @@ function M.render(winnr)
 
     M.clear(bufnr)
 
-    local surrounds = find_sorrounds(bufnr, cursor[1] - 1, cursor[2]) ---@type ghc.dressing.hi_pairs.IPair[]
+    local surrounds = find_sorrounds(bufnr, cursor[1] - 1, cursor[2]) ---@type ghc.dressing.hipairs.IPair[]
     if #surrounds > 0 then
-      local outerest_surround = surrounds[#surrounds] ---@type ghc.dressing.hi_pairs.IPair
-      vim.b[bufnr].hi_pairs_viewport = {
+      local outerest_surround = surrounds[#surrounds] ---@type ghc.dressing.hipairs.IPair
+      vim.b[bufnr].hipairs_viewport = {
         top = outerest_surround.left.row,
         bot = outerest_surround.right.row,
       }
 
       for index, pair in ipairs(surrounds) do
-        local left = pair.left ---@type ghc.dressing.hi_pairs.IPos
-        local right = pair.right ---@type ghc.dressing.hi_pairs.IPos
+        local left = pair.left ---@type ghc.dressing.hipairs.IPos
+        local right = pair.right ---@type ghc.dressing.hipairs.IPos
         local hlgroup = config.hlgroups[index] ---@type string
         vim.api.nvim_buf_add_highlight( --
           bufnr,

@@ -1,5 +1,4 @@
 local path = require("eve.lib.path")
-local widgets = require("eve.builtin.widgets")
 local state = require("eve.state")
 local find_files = require("ghc.action.find.files")
 
@@ -40,7 +39,7 @@ end
 
 ---@return nil
 function M.resume_last_widget()
-  if not widgets.resume() then
+  if not state.widget.resume() then
     find_files.find_files()
   end
 end

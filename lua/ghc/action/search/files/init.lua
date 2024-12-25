@@ -1,9 +1,10 @@
+local get_selected_text = require("eve.lib.nvim").get_selected_text
 local state = require("eve.state")
 local context = require("ghc.action.search.files.context")
 
 ---@return nil
 local function focus()
-  local selected_text = eve.nvim.get_selected_text()
+  local selected_text = get_selected_text()
   if selected_text and #selected_text > 1 then
     local next_search_pattern = selected_text ---@type string
     state.search.flag_regex:next(false)

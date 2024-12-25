@@ -1,7 +1,6 @@
 local icons = require("eve.lib.icons")
+local lsp = require("eve.lib.lsp")
 local state = require("eve.state")
-
-local on_supports_method = require("fml.fn.on_supports_method")
 
 return {
   name = "nvim-lspconfig",
@@ -43,7 +42,7 @@ return {
 
     -- inlay hints
     ---@diagnostic disable-next-line: unused-local
-    on_supports_method("textDocument/inlayHint", function(client, bufnr)
+    lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
         local enable_lsp_inlay_hints = state.flight.lsp_inlay_hints:snapshot() ---@type boolean
         vim.lsp.inlay_hint.enable(enable_lsp_inlay_hints, { bufnr = bufnr })
@@ -53,7 +52,7 @@ return {
     -- code lens
     if vim.lsp.codelens then
       ---@diagnostic disable-next-line: unused-local
-      on_supports_method("textDocument/codeLens", function(client, bufnr)
+      lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
         local enable_lsp_code_lens = state.flight.lsp_code_lens:snapshot() ---@type boolean
         if enable_lsp_code_lens and vim.bo[bufnr].buftype == "" then
           vim.lsp.codelens.refresh()

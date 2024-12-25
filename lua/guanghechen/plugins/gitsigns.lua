@@ -1,6 +1,6 @@
 local functional = require("eve.lib.functional")
+local bindkeys = require("eve.lib.nvim").bindkeys
 local Printer = require("eve.lib.ux.printer")
-local bindkeys = require("eve.builtin.nvim").bindkeys
 local state = require("eve.state")
 
 ---@class guanghechen.plugins.gitsigns.config

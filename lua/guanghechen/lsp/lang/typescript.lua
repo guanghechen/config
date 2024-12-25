@@ -1,4 +1,5 @@
 local functional = require("eve.lib.functional")
+local bindkeys = require("eve.lib.nvim").bindkeys
 local path = require("eve.lib.path")
 local capabilities = require("guanghechen.lsp.common").capabilities
 local handlers = require("guanghechen.lsp.common").handlers
@@ -101,7 +102,7 @@ local function on_attach(client, bufnr)
       desc = "lsp: fix all",
     },
   }
-  eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
+  bindkeys(keymaps, { bufnr = bufnr })
 end
 
 local plugins = {
