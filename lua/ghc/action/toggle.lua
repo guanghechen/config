@@ -24,7 +24,7 @@ local flag_map = {
     uuid = command.definitions.toggle.relativenumber.uuid,
     title = "relativenumber",
     snapshot = function()
-      local observable = state.theme.relativenumber ---@type eve.lib.collection.IObservable
+      local observable = state.option.relativenumber ---@type eve.lib.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -250,10 +250,8 @@ end
 
 ---@return nil
 function M.toggle_relativenumber()
-  local observable = state.theme.relativenumber ---@type eve.lib.collection.IObservable
+  local observable = state.option.relativenumber ---@type eve.lib.collection.IObservable
   local flag = observable:snapshot() ---@type boolean
-
-  vim.opt.relativenumber = not flag
   observable:next(not flag)
 end
 

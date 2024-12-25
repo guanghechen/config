@@ -3,12 +3,10 @@ local Observable = require("eve.lib.collection.observable")
 ---@class eve.state.theme.data
 ---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
----@field public relativenumber         boolean
 
 ---@class eve.state.theme.state
 ---@field public theme                  eve.lib.collection.IObservable
 ---@field public transparency           eve.lib.collection.IObservable
----@field public relativenumber         eve.lib.collection.IObservable
 
 ---@class eve.state.theme
 ---@field public defaults               fun(): eve.state.theme.data
@@ -25,7 +23,6 @@ function M.defaults()
   return {
     theme = "gruvbox_dark",
     transparency = false,
-    relativenumber = true,
   }
 end
 
@@ -39,9 +36,6 @@ function M.normalize(data)
     end
     if type(data.transparency) == "boolean" then
       resolved.transparency = data.transparency
-    end
-    if type(data.relativenumber) == "boolean" then
-      resolved.relativenumber = data.relativenumber
     end
   end
 
@@ -60,7 +54,6 @@ function M.dump()
   return {
     theme = _state.theme:snapshot(),
     transparency = _state.transparency:snapshot(),
-    relativenumber = _state.relativenumber:snapshot(),
   }
 end
 
@@ -73,14 +66,12 @@ function M.load(raw_data)
     _state = {
       theme = Observable.from_value(data.theme),
       transparency = Observable.from_value(data.transparency),
-      relativenumber = Observable.from_value(data.relativenumber),
     }
     return _state
   end
 
   _state.theme:next(data.theme)
   _state.transparency:next(data.transparency)
-  _state.relativenumber:next(data.relativenumber)
   return _state
 end
 

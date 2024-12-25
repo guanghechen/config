@@ -15,6 +15,7 @@ local state_find_buffer = require("eve.state.workspace.find_buffer")
 local state_flight = require("eve.state.workspace.flight")
 local state_frecency = require("eve.state.workspace.frecency")
 local state_input_history = require("eve.state.workspace.input_history")
+local state_option = require("eve.state.workspace.option")
 local state_qflist = require("eve.state.session.qflist")
 local state_search = require("eve.state.workspace.search")
 local state_status = require("eve.state.session.status")
@@ -47,6 +48,7 @@ local state_win = require("eve.state.session.win")
 ---@field public flight                 eve.state.flight.data
 ---@field public frecency               eve.state.frecency.data
 ---@field public input_history          eve.state.input_history.data
+---@field public option                 eve.state.option.data
 ---@field public search                 eve.state.search.data
 
 ---@class eve.state.state
@@ -65,6 +67,7 @@ local state_win = require("eve.state.session.win")
 ---@field public flight                 eve.state.flight.state
 ---@field public frecency               eve.state.frecency.state
 ---@field public input_history          eve.state.input_history.state
+---@field public option                 eve.state.option.state
 ---@field public search                 eve.state.search.state
 ---
 ---@field public dump                   fun(): eve.state.data
@@ -108,6 +111,7 @@ function M.dump()
     flight = state_flight.dump(),
     frecency = state_frecency.dump(),
     input_history = state_input_history.dump(),
+    option = state_option.dump(),
     search = state_search.dump(),
   }
   return data
@@ -134,6 +138,7 @@ function M.load(storage)
   M.flight = state_flight.load(data_workspace.flight)
   M.frecency = state_frecency.load(data_workspace.frecency)
   M.input_history = state_input_history.load(data_workspace.input_history)
+  M.option = state_option.load(data_workspace.option)
   M.search = state_search.load(data_workspace.search)
 
   local data_session = (
@@ -180,6 +185,7 @@ function M.save(storage)
       flight = state_flight.dump(),
       frecency = state_frecency.dump(),
       input_history = state_input_history.dump(),
+      option = state_option.dump(),
       search = state_search.dump(),
     }
     fs.write_json(storage.workspace, data, true)
@@ -263,12 +269,14 @@ function M.watch_changes(params)
   end, true)
 
   M.observe({
-    M.theme.relativenumber,
+    M.option.relativenumber,
   }, function()
     M.status.ticker_editor:tick()
     M.status.dirtier_statusline:mark_dirty()
     M.status.dirtier_tabline:mark_dirty()
-    vim.cmd.redraw()
+
+    vim.o.relativenumber = M.option.relativenumber:snapshot()
+    vim.cmd("redraw!")
   end, true)
 
   M.observe({
@@ -349,11 +357,7 @@ function M.watch_changes(params)
           theme = state_theme.dump(),
         }
 
-        if
-          data.theme.theme ~= snapshot.theme.theme
-          or data.theme.transparency ~= snapshot.theme.transparency
-          or data.theme.relativenumber ~= snapshot.theme.relativenumber
-        then
+        if data.theme.theme ~= snapshot.theme.theme or data.theme.transparency ~= snapshot.theme.transparency then
           M.save({ editor = M._storage.editor })
         end
       end
