@@ -1,17 +1,32 @@
 function ghc-proxy
-  if test "$argv[1]" = "on"
-    set -gx http_proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
-    set -gx https_proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
-  else if test "$argv[1]" = "off"
-    set -e http_proxy
-    set -e https_proxy
-  else
-    if test -z "$http_proxy"
-      set -gx http_proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
-      set -gx https_proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
+    if test "$argv[1]" = on
+        set -gx http_proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
+        set -gx https_proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
+
+        npm config set proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
+        npm config set https-proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
+    else if test "$argv[1]" = off
+        set -e http_proxy
+        set -e https_proxy
+
+        npm config delete proxy
+        npm config delete https-proxy
     else
-      set -e http_proxy
-      set -e https_proxy
+        if test -z "$http_proxy"
+            set -gx http_proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
+            set -gx https_proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
+        else
+            set -e http_proxy
+            set -e https_proxy
+        end
+
+        set config_value (npm config get proxy)
+        if test -n "$config_value" -a "$config_value" != null
+            npm config delete proxy
+            npm config delete https-proxy
+        else
+            npm config set proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
+            npm config set https-proxy "http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
+        end
     end
-  end
 end
