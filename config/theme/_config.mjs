@@ -46,7 +46,7 @@ export const apps = [
       const theme_config_filepath = path.join(
         HOME_CONFIG,
         app.name,
-        "theme.lua",
+        "init-theme.lua",
       );
       await safe_exec("nvim", [
         "--headless",
@@ -69,7 +69,7 @@ export const apps = [
       const theme_config_filepath = path.join(
         HOME_CONFIG,
         app.name,
-        "theme.lua",
+        "init-theme.lua",
       );
       await safe_exec(
         "nvim",
