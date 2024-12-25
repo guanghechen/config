@@ -6,7 +6,7 @@ local state = require("eve.state")
 ---@class fml.action.tab
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.close(context)
@@ -22,7 +22,7 @@ function M.close(context)
   vim.cmd.tabclose()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.close_to_leftest(context)
@@ -32,7 +32,7 @@ function M.close_to_leftest(context)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.close_to_rightest(context)
@@ -43,7 +43,7 @@ function M.close_to_rightest(context)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.close_others(context)
   local tabnr = context.tabnr ---@type integer

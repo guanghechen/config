@@ -1,13 +1,13 @@
----@param context                       fml.ux.IThemeContext
----@return table<string, eve.lib.collection.theme.IHlgroup>
+---@param context                       eve.theme.IContext
+---@return table<string, eve.theme.IHlgroup>
 local function gen_hlgroup_map(context)
   local cs = require("eve.lib.color")
   local theme = context.scheme.theme ---@type eve.e.Theme
-  local c = context.scheme.palette ---@type eve.lib.collection.theme.IPalette
+  local c = context.scheme.palette ---@type eve.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_main = c.bg0 ---@type string
 
-  ---@type table<string, eve.lib.collection.theme.IHlgroup>
+  ---@type table<string, eve.theme.IHlgroup>
   local hlgroup_map = {
     ---cursor
     Cursor = { fg = c.bg1, bg = c.fg1 },

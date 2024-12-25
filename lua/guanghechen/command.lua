@@ -1,5 +1,5 @@
 local constant = require("eve.lib.constant")
-local command = require("eve.lib.command")
+local command = require("eve.command")
 
 --[ai] copilot -------------------------------------------------------------------------------------
 command

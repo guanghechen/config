@@ -9,7 +9,7 @@ local Input = require("fml.ux.input")
 ---@class fml.action.buf
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.save(context)

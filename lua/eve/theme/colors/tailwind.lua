@@ -1,7 +1,7 @@
----@class fml.ux.theme.colors.tailwind
+---@class eve.theme.colors.tailwind
 local M = {}
 
----@class fml.ux.theme.colors.tailwind.colors
+---@class eve.theme.colors.tailwind.colors
 M.colors = {
   slate = {
     [50] = "#F8FAFC",

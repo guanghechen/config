@@ -71,7 +71,7 @@ end
 ---@class guanghechen.action.nvim_window_picker
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.focus(context)
   local winnr_cur = context.winnr ---@type integer
@@ -81,7 +81,7 @@ function M.focus(context)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.project(context)
   local winnr_cur = context.winnr ---@type integer
@@ -98,7 +98,7 @@ function M.project(context)
   vim.api.nvim_set_current_win(winnr_target)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.swap(context)
   local winnr_cur = context.winnr ---@type integer

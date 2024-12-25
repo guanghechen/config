@@ -1,5 +1,5 @@
-local command = require("eve.lib.command")
-local K = command.definitions ---@type eve.lib.command.definitions
+local command = require("eve.command")
+local K = command.definitions ---@type eve.command.definitions
 
 ---@param modes                         string[]
 ---@param key                           string
@@ -16,7 +16,7 @@ end
 
 ---@param modes                         string[]
 ---@param key                           string
----@param definition                    eve.lib.command.IDefinition|eve.lib.command.IDefinitionWithCandidates
+---@param definition                    eve.command.IDefinition|eve.command.IDefinitionWithCandidates
 ---@return nil
 local function kk(modes, key, definition)
   vim.keymap.set(modes, key, function()

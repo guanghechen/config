@@ -1,4 +1,4 @@
----@type eve.lib.collection.theme.IScheme
+---@type eve.theme.IScheme
 local M = {
   theme = "one_half_light",
   variant = "light",

@@ -21,7 +21,7 @@ end
 ---@class fml.action.buf
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.close(context)
   local winnr = context.winnr ---@type integer
@@ -40,7 +40,7 @@ function M.close(context)
   close({ bufnr })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.close_to_leftest(context)
   local tabnr = context.tabnr ---@type integer
@@ -72,7 +72,7 @@ function M.close_to_leftest(context)
   close(bufnrs_to_remove)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.close_to_rightest(context)
   local tabnr = context.tabnr ---@type integer
@@ -104,7 +104,7 @@ function M.close_to_rightest(context)
   close(bufnrs_to_remove)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.close_others(context)
   local tabnr = context.tabnr ---@type integer

@@ -14,7 +14,7 @@ end
 ---@class fml.action.tab
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param tabid                         integer the index of tab list
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
@@ -26,7 +26,7 @@ function M.focus(context, tabid)
   go(tabnr_next)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param step                          integer|nil
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
@@ -40,7 +40,7 @@ function M.focus_left(context, step)
   go(tabnr_next)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param step                          integer|nil
 ---@return nil
 ---@diagnostic disable-next-line: unused-local

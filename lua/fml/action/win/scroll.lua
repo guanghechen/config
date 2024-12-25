@@ -1,7 +1,7 @@
 ---@class fml.action.win
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.scroll_down(context)
   local winnr = context.winnr ---@type integer
@@ -11,7 +11,7 @@ function M.scroll_down(context)
   vim.api.nvim_feedkeys(keys, "n", true)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.scroll_up(context)
   local winnr = context.winnr ---@type integer

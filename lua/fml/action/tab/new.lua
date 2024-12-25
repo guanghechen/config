@@ -5,7 +5,7 @@ local state = require("eve.state")
 ---@class fml.action.tab
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return integer
 ---@diagnostic disable-next-line: unused-local
 function M.new(context)

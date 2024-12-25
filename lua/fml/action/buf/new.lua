@@ -4,7 +4,7 @@ local state = require("eve.state")
 ---@class fml.action.buf
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.new(context)
   local winnr = context.winnr ---@type integer

@@ -3,17 +3,17 @@ local __module_name__ = "fml.action.toggle" ---@type string
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
-local command = require("eve.lib.command")
+local command = require("eve.command")
 local state = require("eve.state")
 local select = require("fml.fn.select")
 
 ---@class fml.action.toggle.IItem
 ---@field public title                  string
----@field public snapshot               fun(context: eve.lib.command.IContext): string, string
----@field public action                 fun(context: eve.lib.command.IContext): nil
+---@field public snapshot               fun(context: eve.command.IContext): string, string
+---@field public action                 fun(context: eve.command.IContext): nil
 
-local flights = vim.tbl_keys(state.flight) ---@type string[]
-table.sort(flights)
+local flights = command.definitions.toggle.flight.candidates ---@type string[]
+local themes = command.definitions.toggle.theme.candidates ---@type string[]
 
 ---@param flight                        string
 ---@return nil
@@ -87,7 +87,7 @@ local flag_map = {
     title = "theme variant",
     snapshot = function()
       local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
-      local scheme = require("fml.ux.theme").get_scheme(theme) ---@type eve.lib.collection.theme.IScheme|nil
+      local scheme = require("eve.theme").get_scheme(theme) ---@type eve.theme.IScheme|nil
       return scheme and scheme.variant or "", "String"
     end,
     action = function(context)
@@ -105,7 +105,7 @@ local flag_map = {
       command.execute(command.definitions.toggle.transparency.uuid, context)
     end,
   },
-  wrap = {
+  wrap_local = {
     title = "wrap (local)",
     snapshot = function(context)
       local winnr = context.winnr ---@type integer
@@ -122,8 +122,6 @@ local flag_map = {
 
 local flags = vim.tbl_keys(flag_map) ---@type string[]
 table.sort(flags)
-
-local themes = require("fml.ux.theme").themes ---@type eve.e.Theme[]
 
 ---@param theme                         string
 ---@return nil
@@ -153,30 +151,17 @@ local function apply_theme(theme)
   end
 end
 
-command
-  .define({
-    uuid = command.definitions.toggle.list.uuid,
-    desc = command.definitions.toggle.list.desc,
-    nargs = "?",
-    candidates = flags,
-  }, true)
-  .define({
-    uuid = command.definitions.toggle.flight.uuid,
-    desc = command.definitions.toggle.flight.desc,
-    nargs = "?",
-    candidates = flights,
-  }, true)
-  .define({
-    uuid = command.definitions.toggle.theme.uuid,
-    desc = command.definitions.toggle.theme.desc,
-    nargs = "?",
-    candidates = themes,
-  }, true)
+command.define({
+  uuid = command.definitions.toggle.list.uuid,
+  desc = command.definitions.toggle.list.desc,
+  nargs = "?",
+  candidates = flags,
+}, true)
 
 ---@class fml.action.ux
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param arg                           string|nil
 ---@return nil
 function M.list(context, arg)
@@ -227,7 +212,7 @@ function M.list(context, arg)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param arg                           string|nil
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
@@ -280,7 +265,7 @@ function M.toggle_flight(context, arg)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.toggle_relativenumber(context)
@@ -289,7 +274,7 @@ function M.toggle_relativenumber(context)
   observable:next(not flag)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param arg                           unknown|nil
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
@@ -326,7 +311,7 @@ function M.toggle_theme(context, arg)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.toggle_theme_variant(context)
@@ -346,7 +331,7 @@ function M.toggle_theme_variant(context)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.toggle_transparency(context)
   local observable = state.theme.transparency ---@type eve.lib.collection.IObservable

@@ -112,42 +112,42 @@ local navigate = vim.env.TMUX and tmux_navigate or vim_navigate
 ---@class fml.action.win
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.focus_top(context)
   navigate("k")
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.focus_right(context)
   navigate("l")
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.focus_bottom(context)
   navigate("j")
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.focus_left(context)
   navigate("h")
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.focus_prev(context)
   navigate("p")
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.focus_next(context)

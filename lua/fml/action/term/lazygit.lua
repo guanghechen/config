@@ -119,7 +119,7 @@ end
 ---@class fml.action.term
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.lazygit_cwd(context)
@@ -127,7 +127,7 @@ function M.lazygit_cwd(context)
   open_lazygit("lazygit_cwd", cwd)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.lazygit_workspace(context)
@@ -135,7 +135,7 @@ function M.lazygit_workspace(context)
   open_lazygit("lazygit_workspace", cwd)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.lazygit_file_history(context)

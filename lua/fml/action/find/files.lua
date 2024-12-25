@@ -361,7 +361,7 @@ end
 ---@class fml.action.find
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_files(context)
@@ -369,7 +369,7 @@ function M.find_files(context)
   select:focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_files_cwd(context)
@@ -378,7 +378,7 @@ function M.find_files_cwd(context)
   select:focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_files_directory(context)
@@ -387,7 +387,7 @@ function M.find_files_directory(context)
   select:focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_files_workspace(context)

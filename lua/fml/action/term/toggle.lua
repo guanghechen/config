@@ -110,7 +110,7 @@ function M.toggle(params)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.toggle_cwd(context)
@@ -124,7 +124,7 @@ function M.toggle_cwd(context)
   })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.toggle_directory(context)
   local bufnr = context.bufnr ---@type integer
@@ -139,7 +139,7 @@ function M.toggle_directory(context)
   })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.toggle_workspace(context)

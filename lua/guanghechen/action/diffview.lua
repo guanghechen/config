@@ -3,7 +3,7 @@ local constant = require("eve.lib.constant")
 ---@class guanghechen.action.diffview
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.diffview(context)
@@ -11,7 +11,7 @@ function M.diffview(context)
   diffview.open()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.history(context)
@@ -19,7 +19,7 @@ function M.history(context)
   diffview.file_history()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.history_file(context)
   local bufnr = context.bufnr ---@type integer
@@ -29,7 +29,7 @@ function M.history_file(context)
   diffview.file_history(nil, filepath)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.fs_cwd(context)
   local bufnr = context.bufnr ---@type integer

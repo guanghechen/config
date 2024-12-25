@@ -3,7 +3,7 @@ local fs = require("eve.lib.fs")
 local lsp = require("eve.lib.lsp")
 local bindkeys = require("eve.lib.nvim").bindkeys
 local path = require("eve.lib.path")
-local command = require("eve.lib.command")
+local command = require("eve.command")
 
 local actions = {
   rename = function()

@@ -9,7 +9,7 @@ local state = require("eve.state")
 ---@class fml.action.session
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.restore(context)
@@ -35,7 +35,7 @@ function M.restore(context)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.restore_autosaved(context)
@@ -59,7 +59,7 @@ function M.restore_autosaved(context)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.save(context)

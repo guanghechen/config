@@ -1,7 +1,7 @@
 ---@class fml.action.win
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.resize_horizontal_minus(context)
@@ -9,7 +9,7 @@ function M.resize_horizontal_minus(context)
   vim.cmd("resize -" .. step)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.resize_horizontal_plus(context)
@@ -17,7 +17,7 @@ function M.resize_horizontal_plus(context)
   vim.cmd("resize +" .. step)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.resize_vertical_minus(context)
@@ -25,7 +25,7 @@ function M.resize_vertical_minus(context)
   vim.cmd("vertical resize -" .. step)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.resize_vertical_plus(context)

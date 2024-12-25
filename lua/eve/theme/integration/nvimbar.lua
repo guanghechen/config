@@ -1,7 +1,7 @@
----@param context                       fml.ux.IThemeContext
----@return fml.ux.theme.integration.nvimbar.hlgroups
+---@param context                       eve.theme.IContext
+---@return eve.theme.integration.nvimbar.hlgroups
 local function gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type eve.lib.collection.theme.IPalette
+  local c = context.scheme.palette ---@type eve.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_buf_cur = t and "none" or c.bg0 ---@type string
   local bg_mode = t and "none" or c.bg2 ---@type string
@@ -12,7 +12,7 @@ local function gen_hlgroup_map(context)
     f_wl = "none",
   }
 
-  ---@type table<string, eve.lib.collection.theme.IHlgroup>
+  ---@type table<string, eve.theme.IHlgroup>
   local hlgroup_map = {
     bg = { fg = "bg_bar", bg = "bg_bar" },
     buf = { fg = c.bg4, bg = "bg_bar" },
@@ -120,7 +120,7 @@ local function gen_hlgroup_map(context)
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type fml.ux.nvimbar.Position[]
 
-  ---@class fml.ux.theme.integration.nvimbar.hlgroups : table<string, eve.lib.collection.theme.IHlgroup>
+  ---@class eve.theme.integration.nvimbar.hlgroups : table<string, eve.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string }
   ---@field public f_tl_bg              { bg: string }
   ---@field public f_wl_bg              { bg: string }

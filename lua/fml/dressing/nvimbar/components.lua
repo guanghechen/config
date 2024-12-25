@@ -11,7 +11,7 @@ local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Nvimbar = require("fml.ux.nvimbar")
-local command = require("eve.lib.command")
+local command = require("eve.command")
 local state = require("eve.state")
 
 local btn = Nvimbar.btn

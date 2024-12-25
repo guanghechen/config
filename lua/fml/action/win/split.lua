@@ -3,7 +3,7 @@ local state = require("eve.state")
 ---@class fml.action.win
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.split_horizontal(context)
   local winnr = context.winnr ---@type integer
@@ -17,7 +17,7 @@ function M.split_horizontal(context)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.split_vertical(context)
   local winnr = context.winnr ---@type integer

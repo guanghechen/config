@@ -35,7 +35,7 @@ end
 ---@class guanghechen.action.neo_tree
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.fs_cwd(context)
   local bufnr = context.bufnr ---@type integer
@@ -54,7 +54,7 @@ function M.fs_cwd(context)
   })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.fs_workspace(context)
   local bufnr = context.bufnr ---@type integer
@@ -73,7 +73,7 @@ function M.fs_workspace(context)
   })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.fs_reveal(context)
   local bufnr = context.bufnr ---@type integer
@@ -92,7 +92,7 @@ function M.fs_reveal(context)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.git_cwd(context)
@@ -108,7 +108,7 @@ function M.git_cwd(context)
   })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.git_workspace(context)
@@ -124,7 +124,7 @@ function M.git_workspace(context)
   })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.last(context)
@@ -137,7 +137,7 @@ function M.last(context)
   })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.toggle(context)
   if has_explorer_window_opened() then

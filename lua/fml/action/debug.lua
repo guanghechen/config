@@ -6,7 +6,7 @@ local state = require("eve.state")
 ---@class fml.action.debug
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.inspect(context)
   local tabnr = context.tabnr ---@type integer
@@ -40,14 +40,14 @@ function M.inspect(context)
   })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.inspect_pos(context)
   vim.show_pos()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.inspect_state(context)
@@ -59,7 +59,7 @@ function M.inspect_state(context)
   })
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.inspect_tree(context)

@@ -1,13 +1,13 @@
 local __module_name__ = "fml.action.refresh" ---@type string
 
 local reporter = require("eve.lib.reporter")
-local command = require("eve.lib.command")
+local command = require("eve.command")
 local state = require("eve.state")
 
 ---@class fml.action.refresh
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.refresh_all(context)
   local bufnr = context.bufnr ---@type integer

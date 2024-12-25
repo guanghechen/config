@@ -21,7 +21,7 @@ local runners = {
 ---@class fml.action.code
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.run(context)
   local bufnr = context.bufnr ---@type integer

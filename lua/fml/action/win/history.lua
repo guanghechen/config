@@ -131,7 +131,7 @@ end
 ---@class fml.action.win
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.history(context)
@@ -139,7 +139,7 @@ function M.history(context)
   select:focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.history_backward(context)
   local winnr = context.winnr ---@type integer
@@ -168,7 +168,7 @@ function M.history_backward(context)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.history_forward(context)
   local winnr = context.winnr ---@type integer

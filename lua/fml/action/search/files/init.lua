@@ -18,7 +18,7 @@ end
 ---@class fml.action.search
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.search_files(context)
@@ -26,7 +26,7 @@ function M.search_files(context)
   focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.search_files_in_buffer(context)
@@ -35,7 +35,7 @@ function M.search_files_in_buffer(context)
   focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.search_files_in_cwd(context)
@@ -44,7 +44,7 @@ function M.search_files_in_cwd(context)
   focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.search_files_in_directory(context)
@@ -53,7 +53,7 @@ function M.search_files_in_directory(context)
   focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.search_files_in_workspace(context)
@@ -62,7 +62,7 @@ function M.search_files_in_workspace(context)
   focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.replace_files(context)
@@ -70,7 +70,7 @@ function M.replace_files(context)
   focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.replace_files_in_buffer(context)
@@ -79,7 +79,7 @@ function M.replace_files_in_buffer(context)
   focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.replace_files_in_cwd(context)
@@ -88,7 +88,7 @@ function M.replace_files_in_cwd(context)
   focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.replace_files_in_directory(context)
@@ -97,7 +97,7 @@ function M.replace_files_in_directory(context)
   focus()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.replace_files_in_workspace(context)

@@ -460,7 +460,7 @@ end
 ---@class fml.action.find
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.find_explorer(context)
   local tabnr = context.tabnr ---@type integer

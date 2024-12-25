@@ -1,4 +1,4 @@
-local command = require("eve.lib.command")
+local command = require("eve.command")
 
 --[buf] close---------------------------------------------------------------------------------------
 command

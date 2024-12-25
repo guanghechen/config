@@ -1,4 +1,4 @@
----@class eve.lib.collection.theme.IPalette
+---@class eve.theme.IPalette
 ---@field public bg0                    string
 ---@field public bg1                    string
 ---@field public bg2                    string
@@ -35,41 +35,42 @@
 ---@field public diffAdd                string
 ---@field public diffAddInline          string
 
----@class eve.lib.collection.theme.IScheme
+---@class eve.theme.IScheme
 ---@field public theme                  eve.e.Theme
 ---@field public variant                eve.e.ThemeVariant
----@field public palette                eve.lib.collection.theme.IPalette
+---@field public palette                eve.theme.IPalette
 
----@class eve.lib.collection.theme.IHlgroup : vim.api.keyset.highlight
+---@class eve.theme.IHlgroup : vim.api.keyset.highlight
 
----@class eve.lib.collection.theme.IApplyParams
----@field public scheme                 eve.lib.collection.theme.IScheme
+---@class eve.theme.IApplyParams
+---@field public scheme                 eve.theme.IScheme
 ---@field public nsnr                   integer
 
----@class eve.lib.collection.theme.ICompileParams
----@field public scheme                 eve.lib.collection.theme.IScheme
+---@class eve.theme.ICompileParams
+---@field public scheme                 eve.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
----@class eve.lib.collection.ITheme
----@field public apply                  fun(self: eve.lib.collection.ITheme, params: eve.lib.collection.theme.IApplyParams): nil
----@field public compile                fun(self: eve.lib.collection.ITheme, params: eve.lib.collection.theme.ICompileParams): nil
----@field public register               fun(self: eve.lib.collection.ITheme, hlname: string, hlgroup: eve.lib.collection.theme.IHlgroup): eve.lib.collection.ITheme
----@field public registers              fun(self: eve.lib.collection.ITheme, hlgroup_map: table<string, eve.lib.collection.theme.IHlgroup | nil>): eve.lib.collection.ITheme
+---@class eve.theme.ITheme
+---@field public apply                  fun(self: eve.theme.ITheme, params: eve.theme.IApplyParams): nil
+---@field public compile                fun(self: eve.theme.ITheme, params: eve.theme.ICompileParams): nil
+---@field public register               fun(self: eve.theme.ITheme, hlname: string, hlgroup: eve.theme.IHlgroup): eve.theme.ITheme
+---@field public registers              fun(self: eve.theme.ITheme, hlgroup_map: table<string, eve.theme.IHlgroup | nil>): eve.theme.ITheme
 
----@class eve.lib.collection.Theme : eve.lib.collection.ITheme
----@field private hlgroup_map          table<string, eve.lib.collection.theme.IHlgroup>
+---@class eve.theme.Theme : eve.theme.ITheme
+---@field public themes                 eve.e.Theme[]
+---@field private hlgroup_map          table<string, eve.theme.IHlgroup>
 local M = {}
 M.__index = M
 
----@return eve.lib.collection.Theme
+---@return eve.theme.Theme
 function M.new()
   local self = setmetatable({}, M)
   self.hlgroup_map = {}
   return self
 end
 
----@param params                        eve.lib.collection.theme.IApplyParams
+---@param params                        eve.theme.IApplyParams
 ---@return nil
 function M:apply(params)
   local nsnr = params.nsnr ---@type integer
@@ -79,15 +80,15 @@ function M:apply(params)
 end
 
 ---@param hlname                        string
----@param hlgroup                       eve.lib.collection.theme.IHlgroup
----@return eve.lib.collection.Theme
+---@param hlgroup                       eve.theme.IHlgroup
+---@return eve.theme.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlgroup_map                   table<string, eve.lib.collection.theme.IHlgroup|nil>
----@return eve.lib.collection.Theme
+---@param hlgroup_map                   table<string, eve.theme.IHlgroup|nil>
+---@return eve.theme.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do
     if hlgroup ~= nil then
@@ -97,7 +98,7 @@ function M:registers(hlgroup_map)
   return self
 end
 
----@param params                        eve.lib.collection.theme.ICompileParams
+---@param params                        eve.theme.ICompileParams
 ---@return nil
 function M:compile(params)
   local filepath = params.filepath ---@type string

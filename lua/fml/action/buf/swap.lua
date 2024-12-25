@@ -4,7 +4,7 @@ local state = require("eve.state")
 ---@class fml.action.buf
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.swap_left(context)
   local tabnr = context.tabnr ---@type integer
@@ -38,7 +38,7 @@ function M.swap_left(context)
   state.status.dirtier_tabline:mark_dirty()
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.swap_right(context)
   local tabnr = context.tabnr ---@type integer

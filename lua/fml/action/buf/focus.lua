@@ -7,7 +7,7 @@ local state = require("eve.state")
 ---@class fml.action.buf
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param bufnr                         integer the stable unique number of the buffer
 ---@return nil
 function M.open(context, bufnr)
@@ -17,7 +17,7 @@ function M.open(context, bufnr)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param bufid                         integer the index of buffer list
 ---@return nil
 function M.focus(context, bufid)
@@ -38,7 +38,7 @@ function M.focus(context, bufid)
   M.open(context, bufs[bufid_next].bufnr)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param step                          integer|nil
 ---@return nil
 function M.focus_left(context, step)
@@ -65,7 +65,7 @@ function M.focus_left(context, step)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param step                          integer|nil
 ---@return nil
 function M.focus_right(context, step)

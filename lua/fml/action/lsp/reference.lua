@@ -6,7 +6,7 @@ local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local FileSelect = require("fml.ux.file_select")
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param method                        string
 ---@param additional_params             table<string, any>
 ---@param callback                      fun(ok: boolean, data: fml.ux.file_select.IData|nil): nil
@@ -137,7 +137,7 @@ end
 ---@param title                         string
 ---@param method                        string
 ---@param additional_params             table<string, any>
----@return fun(context: eve.lib.command.IContext): nil
+---@return fun(context: eve.command.IContext): nil
 local function create_jump_or_list(title, method, additional_params)
   local _last_data = { items = {}, cwd = path.cwd() } ---@type fml.ux.file_select.IData
 
@@ -155,7 +155,7 @@ local function create_jump_or_list(title, method, additional_params)
     },
   })
 
-  ---@param context                     eve.lib.command.IContext
+  ---@param context                     eve.command.IContext
   local function jump_or_list(context)
     fetch_data(context, method, additional_params, function(ok, data)
       if ok then
@@ -187,25 +187,25 @@ local jump_or_lists = {
 ---@class fml.action.lsp
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_definitions(context)
   jump_or_lists.definitions(context)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_implementations(context)
   jump_or_lists.implementations(context)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_references(context)
   jump_or_lists.references(context)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_type_definitions(context)
   jump_or_lists.type_definitions(context)

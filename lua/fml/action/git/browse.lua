@@ -199,7 +199,7 @@ end
 ---@class fml.action.git
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.browse(context)
   local bufnr = context.bufnr ---@type integer

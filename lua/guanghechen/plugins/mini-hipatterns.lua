@@ -1,5 +1,5 @@
 local augroup = require("eve.lib.nvim").augroup
-local tailwind = require("fml.ux.theme.colors.tailwind")
+local tailwind = require("eve.theme.colors.tailwind")
 
 ---@type table<string,true>
 local highlighted = {}

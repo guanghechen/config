@@ -3,10 +3,10 @@ local __module_name__ = "fml.action.copy" ---@type string
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
-local command = require("eve.lib.command")
+local command = require("eve.command")
 local select = require("fml.fn.select")
 
----@param candidate                     eve.lib.command.definitions.copy.Scope
+---@param candidate                     eve.command.definitions.copy.Scope
 ---@param filepath                      string
 ---@return nil
 local function copy_current_filepath(candidate, filepath)
@@ -39,7 +39,7 @@ end
 ---@class fml.action.copy
 local M = {}
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.copy_char_under_cursor(context)
@@ -48,7 +48,7 @@ function M.copy_char_under_cursor(context)
   vim.fn.setreg("+", char)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@param arg                           unknown|nil
 ---@return nil
 function M.copy_filepath(context, arg)
@@ -86,7 +86,7 @@ function M.copy_filepath(context, arg)
   end
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.copy_filepath_absolute(context)
   local bufnr = context.bufnr ---@type integer
@@ -94,7 +94,7 @@ function M.copy_filepath_absolute(context)
   copy_current_filepath("absolute", filepath)
 end
 
----@param context                       eve.lib.command.IContext
+---@param context                       eve.command.IContext
 ---@return nil
 function M.copy_filepath_relative(context)
   local bufnr = context.bufnr ---@type integer

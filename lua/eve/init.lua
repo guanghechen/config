@@ -48,4 +48,20 @@ function M.setup_state(storage)
   state.load(storage)
 end
 
+---@return nil
+function M.setup_theme()
+  local state = require("eve.state")
+  local reload_theme = require("eve.theme").reload_theme
+  reload_theme(false)
+  vim.schedule(function()
+    reload_theme(false)
+
+    state.watch_changes({
+      on_theme_changed = function()
+        reload_theme(false)
+      end,
+    })
+  end)
+end
+
 return M
