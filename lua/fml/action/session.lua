@@ -9,8 +9,10 @@ local state = require("eve.state")
 ---@class fml.action.session
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.restore()
+---@diagnostic disable-next-line: unused-local
+function M.restore(context)
   if path.is_git_repo() then
     local storage = state.get_storage() ---@type eve.state.storage
 
@@ -33,8 +35,10 @@ function M.restore()
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.restore_autosaved()
+---@diagnostic disable-next-line: unused-local
+function M.restore_autosaved(context)
   if path.is_git_repo() then
     local storage = state.get_storage() ---@type eve.state.storage
 
@@ -55,8 +59,10 @@ function M.restore_autosaved()
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.save()
+---@diagnostic disable-next-line: unused-local
+function M.save(context)
   if path.is_git_repo() then
     local storage = state.get_storage() ---@type eve.state.storage
     state.save({

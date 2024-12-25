@@ -7,9 +7,10 @@ local state = require("eve.state")
 ---@class fml.action.refresh
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.refresh_all()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+function M.refresh_all(context)
+  local bufnr = context.bufnr ---@type integer
   local devmode = state.flight.devmode:snapshot() ---@type boolean
 
   vim.cmd.checktime()
@@ -29,7 +30,7 @@ function M.refresh_all()
   end)
 
   if devmode then
-    command.execute(command.definitions.ux.reload_theme.uuid, "force")
+    vim.cmd(command.definitions.ux.reload_theme.uuid .. " force")
   end
 
   vim.cmd("LspRestart")

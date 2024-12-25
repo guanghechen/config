@@ -110,31 +110,44 @@ function M.toggle(params)
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.toggle_cwd()
+---@diagnostic disable-next-line: unused-local
+function M.toggle_cwd(context)
+  local cwd = path.cwd()
+
   M.toggle({
     name = "cwd",
-    cwd = path.cwd(),
+    cwd = cwd,
     permanent = true,
     send_selection_to_run = true,
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.toggle_directory()
+function M.toggle_directory(context)
+  local bufnr = context.bufnr ---@type integer
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local cwd = path.dirname(filepath) ---@type string
+
   M.toggle({
     name = "directory",
-    cwd = path.current_directory(),
+    cwd = cwd,
     permanent = true,
     send_selection_to_run = true,
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.toggle_workspace()
+---@diagnostic disable-next-line: unused-local
+function M.toggle_workspace(context)
+  local cwd = path.workspace()
+
   M.toggle({
     name = "workspace",
-    cwd = path.workspace(),
+    cwd = cwd,
     permanent = true,
     send_selection_to_run = true,
   })

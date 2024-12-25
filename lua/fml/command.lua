@@ -1,30 +1,29 @@
-local path = require("eve.lib.path")
 local command = require("eve.lib.command")
 
 --[buf] close---------------------------------------------------------------------------------------
 command
   .implement({
     uuid = command.definitions.buf.close.uuid,
-    action = function()
-      require("fml.action.buf.close").close()
+    action = function(context)
+      require("fml.action.buf.close").close(context)
     end,
   })
   .implement({
     uuid = command.definitions.buf.close_to_leftest.uuid,
-    action = function()
-      require("fml.action.buf.close").close_to_leftest()
+    action = function(context)
+      require("fml.action.buf.close").close_to_leftest(context)
     end,
   })
   .implement({
     uuid = command.definitions.buf.close_to_rightest.uuid,
-    action = function()
-      require("fml.action.buf.close").close_to_rightest()
+    action = function(context)
+      require("fml.action.buf.close").close_to_rightest(context)
     end,
   })
   .implement({
     uuid = command.definitions.buf.close_others.uuid,
-    action = function()
-      require("fml.action.buf.close").close_others()
+    action = function(context)
+      require("fml.action.buf.close").close_others(context)
     end,
   })
 
@@ -32,8 +31,8 @@ command
 for i = 1, 10, 1 do
   command.implement({
     uuid = command.definitions.buf["focus_" .. tostring(i)].uuid,
-    action = function()
-      require("fml.action.buf.focus").focus(i)
+    action = function(context)
+      require("fml.action.buf.focus").focus(context, i)
     end,
   })
 end
@@ -41,58 +40,58 @@ end
 command
   .implement({
     uuid = command.definitions.buf.open.uuid,
-    action = function(args)
+    action = function(context, args)
       local bufnr = tonumber(args) ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-        require("fml.action.buf.focus").open(bufnr)
+        require("fml.action.buf.focus").open(context, bufnr)
       end
     end,
   })
   .implement({
     uuid = command.definitions.buf.focus.uuid,
-    action = function(args)
+    action = function(context, args)
       local bufid = tonumber(args) ---@type integer|nil
       if bufid ~= nil then
-        require("fml.action.buf.focus").focus(bufid)
+        require("fml.action.buf.focus").focus(context, bufid)
       end
     end,
   })
   .implement({
     uuid = command.definitions.buf.focus_left.uuid,
-    action = function(args)
+    action = function(context, args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.buf.focus").focus_left(ok and step or nil)
+      require("fml.action.buf.focus").focus_left(context, ok and step or nil)
     end,
   })
   .implement({
     uuid = command.definitions.buf.focus_right.uuid,
-    action = function(args)
+    action = function(context, args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.buf.focus").focus_right(ok and step or nil)
+      require("fml.action.buf.focus").focus_right(context, ok and step or nil)
     end,
   })
 
 --[buf] new-----------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.buf.new.uuid,
-  action = function()
-    require("fml.action.buf.new").new()
+  action = function(context)
+    require("fml.action.buf.new").new(context)
   end,
 })
 
 --[buf] pin-----------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.buf.pin.uuid,
-  action = function()
-    require("fml.action.buf.pin").toggle_pin()
+  action = function(context)
+    require("fml.action.buf.pin").toggle_pin(context)
   end,
 })
 
 --[buf] save----------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.buf.save.uuid,
-  action = function()
-    require("fml.action.buf.save").save()
+  action = function(context)
+    require("fml.action.buf.save").save(context)
   end,
 })
 
@@ -100,23 +99,22 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.buf.swap_left.uuid,
-    action = function()
-      require("fml.action.buf.swap").swap_left()
+    action = function(context)
+      require("fml.action.buf.swap").swap_left(context)
     end,
   })
   .implement({
     uuid = command.definitions.buf.swap_right.uuid,
-    action = function()
-      require("fml.action.buf.swap").swap_right()
+    action = function(context)
+      require("fml.action.buf.swap").swap_right(context)
     end,
   })
 
 --[code] run----------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.code.run.uuid,
-  action = function()
-    local filepath = path.current_filepath() ---@type string
-    require("fml.action.code.run").run(filepath)
+  action = function(context)
+    require("fml.action.code.run").run(context)
   end,
 })
 
@@ -124,31 +122,28 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.copy.filepath.uuid,
-    action = function(arg)
-      local filepath = path.current_filepath() ---@type string
-      require("fml.action.copy").copy_filepath(filepath, arg)
+    action = function(context, arg)
+      require("fml.action.copy").copy_filepath(context, arg)
     end,
   })
   .implement({
     uuid = command.definitions.copy.filepath_absolute.uuid,
-    action = function()
-      local filepath = path.current_filepath() ---@type string
-      require("fml.action.copy").copy_filepath_absolute(filepath)
+    action = function(context)
+      require("fml.action.copy").copy_filepath_absolute(context)
     end,
   })
   .implement({
     uuid = command.definitions.copy.filepath_relative.uuid,
-    action = function()
-      local filepath = path.current_filepath() ---@type string
-      require("fml.action.copy").copy_filepath_relative(filepath)
+    action = function(context)
+      require("fml.action.copy").copy_filepath_relative(context)
     end,
   })
 
 --[copy] text---------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.copy.char_under_cursor.uuid,
-  action = function()
-    require("fml.action.copy").copy_char_under_cursor()
+  action = function(context)
+    require("fml.action.copy").copy_char_under_cursor(context)
   end,
 })
 
@@ -156,26 +151,26 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.debug.inspect.uuid,
-    action = function()
-      require("fml.action.debug").inspect()
+    action = function(context)
+      require("fml.action.debug").inspect(context)
     end,
   })
   .implement({
     uuid = command.definitions.debug.inspect_pos.uuid,
-    action = function()
-      require("fml.action.debug").inspect_pos()
+    action = function(context)
+      require("fml.action.debug").inspect_pos(context)
     end,
   })
   .implement({
     uuid = command.definitions.debug.inspect_state.uuid,
-    action = function()
-      require("fml.action.debug").inspect_state()
+    action = function(context)
+      require("fml.action.debug").inspect_state(context)
     end,
   })
   .implement({
     uuid = command.definitions.debug.inspect_tree.uuid,
-    action = function()
-      require("fml.action.debug").inspect_tree()
+    action = function(context)
+      require("fml.action.debug").inspect_tree(context)
     end,
   })
 
@@ -183,68 +178,68 @@ command
 command
   .implement({
     uuid = command.definitions.diagnostic.goto_next.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_next()
+    action = function(context)
+      require("fml.action.diagnostic").goto_next(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.goto_next_error.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_next_error()
+    action = function(context)
+      require("fml.action.diagnostic").goto_next_error(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.goto_next_warn.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_next_warn()
+    action = function(context)
+      require("fml.action.diagnostic").goto_next_warn(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.goto_next_hint.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_next_hint()
+    action = function(context)
+      require("fml.action.diagnostic").goto_next_hint(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.goto_next_quickfix.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_next_quickfix()
+    action = function(context)
+      require("fml.action.diagnostic").goto_next_quickfix(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.goto_prev.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_prev()
+    action = function(context)
+      require("fml.action.diagnostic").goto_prev(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.goto_prev_error.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_prev_error()
+    action = function(context)
+      require("fml.action.diagnostic").goto_prev_error(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.goto_prev_warn.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_prev_warn()
+    action = function(context)
+      require("fml.action.diagnostic").goto_prev_warn(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.goto_prev_hint.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_prev_hint()
+    action = function(context)
+      require("fml.action.diagnostic").goto_prev_hint(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.goto_prev_quickfix.uuid,
-    action = function()
-      require("fml.action.diagnostic").goto_prev_quickfix()
+    action = function(context)
+      require("fml.action.diagnostic").goto_prev_quickfix(context)
     end,
   })
   .implement({
     uuid = command.definitions.diagnostic.line.uuid,
-    action = function()
-      require("fml.action.diagnostic").line()
+    action = function(context)
+      require("fml.action.diagnostic").line(context)
     end,
   })
 
@@ -252,70 +247,70 @@ command
 command
   .implement({
     uuid = command.definitions.find.buffers.uuid,
-    action = function()
-      require("fml.action.find.buffers").find_buffers()
+    action = function(context)
+      require("fml.action.find.buffers").find_buffers(context)
     end,
   })
   .implement({
     uuid = command.definitions.find.explorer.uuid,
-    action = function()
-      require("fml.action.find.explorer").find_explorer()
+    action = function(context)
+      require("fml.action.find.explorer").find_explorer(context)
     end,
   })
   .implement({
     uuid = command.definitions.find.files.uuid,
-    action = function()
-      require("fml.action.find.files").find_files()
+    action = function(context)
+      require("fml.action.find.files").find_files(context)
     end,
   })
   .implement({
     uuid = command.definitions.find.files_cwd.uuid,
-    action = function()
-      require("fml.action.find.files").find_files_cwd()
+    action = function(context)
+      require("fml.action.find.files").find_files_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.find.files_directory.uuid,
-    action = function()
-      require("fml.action.find.files").find_files_directory()
+    action = function(context)
+      require("fml.action.find.files").find_files_directory(context)
     end,
   })
   .implement({
     uuid = command.definitions.find.files_workspace.uuid,
-    action = function()
-      require("fml.action.find.files").find_files_workspace()
+    action = function(context)
+      require("fml.action.find.files").find_files_workspace(context)
     end,
   })
   .implement({
     uuid = command.definitions.find.git_not_committed.uuid,
-    action = function()
-      require("fml.action.find.git").find_git_not_committed()
+    action = function(context)
+      require("fml.action.find.git").find_git_not_committed(context)
     end,
   })
   .implement({
     uuid = command.definitions.find.highlights.uuid,
-    action = function()
-      require("fml.action.find.highlights").find_highlights()
+    action = function(context)
+      require("fml.action.find.highlights").find_highlights(context)
     end,
   })
   .implement({
     uuid = command.definitions.find.pinned_files.uuid,
-    action = function()
-      require("fml.action.find.pinned_files").find_pinned_files()
+    action = function(context)
+      require("fml.action.find.pinned_files").find_pinned_files(context)
     end,
   })
   .implement({
     uuid = command.definitions.find.vim_options.uuid,
-    action = function()
-      require("fml.action.find.vim_options").find_vim_options()
+    action = function(context)
+      require("fml.action.find.vim_options").find_vim_options(context)
     end,
   })
 
 --[git] browse--------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.git.browse.uuid,
-  action = function()
-    require("fml.action.git.browse").browse()
+  action = function(context)
+    require("fml.action.git.browse").browse(context)
   end,
 })
 
@@ -323,34 +318,34 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.lsp.goto_definitions.uuid,
-    action = function()
-      require("fml.action.lsp.reference").goto_definitions()
+    action = function(context)
+      require("fml.action.lsp.reference").goto_definitions(context)
     end,
   })
   .implement({
     uuid = command.definitions.lsp.goto_implementations.uuid,
-    action = function()
-      require("fml.action.lsp.reference").goto_implementations()
+    action = function(context)
+      require("fml.action.lsp.reference").goto_implementations(context)
     end,
   })
   .implement({
     uuid = command.definitions.lsp.goto_references.uuid,
-    action = function()
-      require("fml.action.lsp.reference").goto_references()
+    action = function(context)
+      require("fml.action.lsp.reference").goto_references(context)
     end,
   })
   .implement({
     uuid = command.definitions.lsp.goto_type_definitions.uuid,
-    action = function()
-      require("fml.action.lsp.reference").goto_type_definitions()
+    action = function(context)
+      require("fml.action.lsp.reference").goto_type_definitions(context)
     end,
   })
 
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.refresh.all.uuid,
-  action = function()
-    require("fml.action.refresh").refresh_all()
+  action = function(context)
+    require("fml.action.refresh").refresh_all(context)
   end,
 })
 
@@ -358,32 +353,32 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.replace.files.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files()
+    action = function(context)
+      require("fml.action.search.files").replace_files(context)
     end,
   })
   .implement({
     uuid = command.definitions.replace.files_in_buffer.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files_in_buffer()
+    action = function(context)
+      require("fml.action.search.files").replace_files_in_buffer(context)
     end,
   })
   .implement({
     uuid = command.definitions.replace.files_in_cwd.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files_in_cwd()
+    action = function(context)
+      require("fml.action.search.files").replace_files_in_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.replace.files_in_directory.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files_in_directory()
+    action = function(context)
+      require("fml.action.search.files").replace_files_in_directory(context)
     end,
   })
   .implement({
     uuid = command.definitions.replace.files_in_workspace.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files_in_workspace()
+    action = function(context)
+      require("fml.action.search.files").replace_files_in_workspace(context)
     end,
   })
 
@@ -391,32 +386,32 @@ command
 command
   .implement({
     uuid = command.definitions.search.files.uuid,
-    action = function()
-      require("fml.action.search.files").search_files()
+    action = function(context)
+      require("fml.action.search.files").search_files(context)
     end,
   })
   .implement({
     uuid = command.definitions.search.files_in_buffer.uuid,
-    action = function()
-      require("fml.action.search.files").search_files_in_buffer()
+    action = function(context)
+      require("fml.action.search.files").search_files_in_buffer(context)
     end,
   })
   .implement({
     uuid = command.definitions.search.files_in_cwd.uuid,
-    action = function()
-      require("fml.action.search.files").search_files_in_cwd()
+    action = function(context)
+      require("fml.action.search.files").search_files_in_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.search.files_in_directory.uuid,
-    action = function()
-      require("fml.action.search.files").search_files_in_directory()
+    action = function(context)
+      require("fml.action.search.files").search_files_in_directory(context)
     end,
   })
   .implement({
     uuid = command.definitions.search.files_in_workspace.uuid,
-    action = function()
-      require("fml.action.search.files").search_files_in_workspace()
+    action = function(context)
+      require("fml.action.search.files").search_files_in_workspace(context)
     end,
   })
 
@@ -424,20 +419,20 @@ command
 command
   .implement({
     uuid = command.definitions.session.restore.uuid,
-    action = function()
-      require("fml.action.session").restore()
+    action = function(context)
+      require("fml.action.session").restore(context)
     end,
   })
   .implement({
     uuid = command.definitions.session.restore_autosaved.uuid,
-    action = function()
-      require("fml.action.session").restore_autosaved()
+    action = function(context)
+      require("fml.action.session").restore_autosaved(context)
     end,
   })
   .implement({
     uuid = command.definitions.session.save.uuid,
-    action = function()
-      require("fml.action.session").save()
+    action = function(context)
+      require("fml.action.session").save(context)
     end,
   })
 
@@ -445,26 +440,26 @@ command
 command
   .implement({
     uuid = command.definitions.tab.close.uuid,
-    action = function()
-      require("fml.action.tab.close").close()
+    action = function(context)
+      require("fml.action.tab.close").close(context)
     end,
   })
   .implement({
     uuid = command.definitions.tab.close_to_leftest.uuid,
-    action = function()
-      require("fml.action.tab.close").close_to_leftest()
+    action = function(context)
+      require("fml.action.tab.close").close_to_leftest(context)
     end,
   })
   .implement({
     uuid = command.definitions.tab.close_to_rightest.uuid,
-    action = function()
-      require("fml.action.tab.close").close_to_rightest()
+    action = function(context)
+      require("fml.action.tab.close").close_to_rightest(context)
     end,
   })
   .implement({
     uuid = command.definitions.tab.close_others.uuid,
-    action = function()
-      require("fml.action.tab.close").close_others()
+    action = function(context)
+      require("fml.action.tab.close").close_others(context)
     end,
   })
 
@@ -472,8 +467,8 @@ command
 for i = 1, 10, 1 do
   command.implement({
     uuid = command.definitions.tab["focus_" .. tostring(i)].uuid,
-    action = function()
-      require("fml.action.tab.focus").focus(i)
+    action = function(context)
+      require("fml.action.tab.focus").focus(context, i)
     end,
   })
 end
@@ -481,25 +476,25 @@ end
 command
   .implement({
     uuid = command.definitions.tab.focus.uuid,
-    action = function(args)
+    action = function(context, args)
       local tabid = tonumber(args) ---@type integer|nil
       if tabid ~= nil then
-        require("fml.action.tab.focus").focus(tabid)
+        require("fml.action.tab.focus").focus(context, tabid)
       end
     end,
   })
   .implement({
     uuid = command.definitions.tab.focus_left.uuid,
-    action = function(args)
+    action = function(context, args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.tab.focus").focus_left(ok and step or nil)
+      require("fml.action.tab.focus").focus_left(context, ok and step or nil)
     end,
   })
   .implement({
     uuid = command.definitions.tab.focus_right.uuid,
-    action = function(args)
+    action = function(context, args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.tab.focus").focus_right(ok and step or nil)
+      require("fml.action.tab.focus").focus_right(context, ok and step or nil)
     end,
   })
 
@@ -507,19 +502,14 @@ command
 command
   .implement({
     uuid = command.definitions.tab.new.uuid,
-    action = function()
-      require("fml.action.tab.new").new()
+    action = function(context)
+      require("fml.action.tab.new").new(context)
     end,
   })
   .implement({
     uuid = command.definitions.tab.new_with_buf.uuid,
-    action = function()
-      local winnr = vim.api.nvim_get_current_win()
-      local bufnr = vim.api.nvim_win_get_buf(winnr)
-      local cursor = vim.api.nvim_win_get_cursor(winnr)
-
-      require("fml.action.tab.new").new(bufnr)
-      vim.api.nvim_win_set_cursor(winnr, cursor)
+    action = function(context)
+      require("fml.action.tab.new").new_with_buf(context)
     end,
   })
 
@@ -527,38 +517,38 @@ command
 command
   .implement({
     uuid = command.definitions.term.toggle_cwd.uuid,
-    action = function()
-      require("fml.action.term.toggle").toggle_cwd()
+    action = function(context)
+      require("fml.action.term.toggle").toggle_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.term.toggle_directory.uuid,
-    action = function()
-      require("fml.action.term.toggle").toggle_directory()
+    action = function(context)
+      require("fml.action.term.toggle").toggle_directory(context)
     end,
   })
   .implement({
     uuid = command.definitions.term.toggle_workspace.uuid,
-    action = function()
-      require("fml.action.term.toggle").toggle_workspace()
+    action = function(context)
+      require("fml.action.term.toggle").toggle_workspace(context)
     end,
   })
   .implement({
     uuid = command.definitions.term.lazygit_cwd.uuid,
-    action = function()
-      require("fml.action.term.lazygit").lazygit_cwd()
+    action = function(context)
+      require("fml.action.term.lazygit").lazygit_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.term.lazygit_workspace.uuid,
-    action = function()
-      require("fml.action.term.lazygit").lazygit_workspace()
+    action = function(context)
+      require("fml.action.term.lazygit").lazygit_workspace(context)
     end,
   })
   .implement({
     uuid = command.definitions.term.lazygit_file_history.uuid,
-    action = function()
-      require("fml.action.term.lazygit").lazygit_file_history()
+    action = function(context)
+      require("fml.action.term.lazygit").lazygit_file_history(context)
     end,
   })
 
@@ -566,44 +556,38 @@ command
 command
   .implement({
     uuid = command.definitions.toggle.list.uuid,
-    action = function(arg)
-      require("fml.action.toggle").list(arg)
+    action = function(context, arg)
+      require("fml.action.toggle").list(context, arg)
     end,
   })
   .implement({
     uuid = command.definitions.toggle.flight.uuid,
-    action = function(arg)
-      require("fml.action.toggle").toggle_flight(arg)
+    action = function(context, arg)
+      require("fml.action.toggle").toggle_flight(context, arg)
     end,
   })
   .implement({
     uuid = command.definitions.toggle.relativenumber.uuid,
-    action = function()
-      require("fml.action.toggle").toggle_relativenumber()
+    action = function(context)
+      require("fml.action.toggle").toggle_relativenumber(context)
     end,
   })
   .implement({
     uuid = command.definitions.toggle.theme.uuid,
-    action = function(arg)
-      require("fml.action.toggle").toggle_theme(arg)
+    action = function(context, arg)
+      require("fml.action.toggle").toggle_theme(context, arg)
     end,
   })
   .implement({
     uuid = command.definitions.toggle.theme_variant.uuid,
-    action = function()
-      require("fml.action.toggle").toggle_theme_variant()
+    action = function(context)
+      require("fml.action.toggle").toggle_theme_variant(context)
     end,
   })
   .implement({
     uuid = command.definitions.toggle.transparency.uuid,
-    action = function()
-      require("fml.action.toggle").toggle_transparency()
-    end,
-  })
-  .implement({
-    uuid = command.definitions.toggle.wrap.uuid,
-    action = function()
-      require("fml.action.toggle").toggle_wrap()
+    action = function(context)
+      require("fml.action.toggle").toggle_transparency(context)
     end,
   })
 
@@ -611,14 +595,14 @@ command
 command
   .implement({
     uuid = command.definitions.ux.reload_theme.uuid,
-    action = function(arg)
-      require("fml.action.ux").reload_theme(arg)
+    action = function(context, arg)
+      require("fml.action.ux").reload_theme(context, arg)
     end,
   })
   .implement({
     uuid = command.definitions.ux.resume_last_widget.uuid,
-    action = function()
-      require("fml.action.ux").resume_last_widget()
+    action = function(context)
+      require("fml.action.ux").resume_last_widget(context)
     end,
   })
 
@@ -626,14 +610,14 @@ command
 command
   .implement({
     uuid = command.definitions.win.close.uuid,
-    action = function()
-      require("fml.action.win.close").close()
+    action = function(context)
+      require("fml.action.win.close").close(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.close_others.uuid,
-    action = function()
-      require("fml.action.win.close").close_others()
+    action = function(context)
+      require("fml.action.win.close").close_others(context)
     end,
   })
 
@@ -641,38 +625,38 @@ command
 command
   .implement({
     uuid = command.definitions.win.focus_top.uuid,
-    action = function()
-      require("fml.action.win.focus").focus_top()
+    action = function(context)
+      require("fml.action.win.focus").focus_top(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.focus_right.uuid,
-    action = function()
-      require("fml.action.win.focus").focus_right()
+    action = function(context)
+      require("fml.action.win.focus").focus_right(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.focus_bottom.uuid,
-    action = function()
-      require("fml.action.win.focus").focus_bottom()
+    action = function(context)
+      require("fml.action.win.focus").focus_bottom(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.focus_left.uuid,
-    action = function()
-      require("fml.action.win.focus").focus_left()
+    action = function(context)
+      require("fml.action.win.focus").focus_left(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.focus_prev.uuid,
-    action = function()
-      require("fml.action.win.focus").focus_prev()
+    action = function(context)
+      require("fml.action.win.focus").focus_prev(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.focus_next.uuid,
-    action = function()
-      require("fml.action.win.focus").focus_next()
+    action = function(context)
+      require("fml.action.win.focus").focus_next(context)
     end,
   })
 
@@ -680,20 +664,20 @@ command
 command
   .implement({
     uuid = command.definitions.win.history.uuid,
-    action = function()
-      require("fml.action.win.history").history()
+    action = function(context)
+      require("fml.action.win.history").history(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.history_backward.uuid,
-    action = function()
-      require("fml.action.win.history").history_backward()
+    action = function(context)
+      require("fml.action.win.history").history_backward(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.history_forward.uuid,
-    action = function()
-      require("fml.action.win.history").history_forward()
+    action = function(context)
+      require("fml.action.win.history").history_forward(context)
     end,
   })
 
@@ -701,26 +685,26 @@ command
 command
   .implement({
     uuid = command.definitions.win.resize_horizontal_minus.uuid,
-    action = function()
-      require("fml.action.win.resize").resize_horizontal_minus()
+    action = function(context)
+      require("fml.action.win.resize").resize_horizontal_minus(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.resize_horizontal_plus.uuid,
-    action = function()
-      require("fml.action.win.resize").resize_horizontal_plus()
+    action = function(context)
+      require("fml.action.win.resize").resize_horizontal_plus(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.resize_vertical_minus.uuid,
-    action = function()
-      require("fml.action.win.resize").resize_vertical_minus()
+    action = function(context)
+      require("fml.action.win.resize").resize_vertical_minus(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.resize_vertical_plus.uuid,
-    action = function()
-      require("fml.action.win.resize").resize_vertical_plus()
+    action = function(context)
+      require("fml.action.win.resize").resize_vertical_plus(context)
     end,
   })
 
@@ -728,14 +712,14 @@ command
 command
   .implement({
     uuid = command.definitions.win.scroll_down.uuid,
-    action = function()
-      require("fml.action.win.scroll").scroll_down()
+    action = function(context)
+      require("fml.action.win.scroll").scroll_down(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.scroll_up.uuid,
-    action = function()
-      require("fml.action.win.scroll").scroll_up()
+    action = function(context)
+      require("fml.action.win.scroll").scroll_up(context)
     end,
   })
 
@@ -743,13 +727,13 @@ command
 command
   .implement({
     uuid = command.definitions.win.split_horizontal.uuid,
-    action = function()
-      require("fml.action.win.split").split_horizontal()
+    action = function(context)
+      require("fml.action.win.split").split_horizontal(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.split_vertical.uuid,
-    action = function()
-      require("fml.action.win.split").split_vertical()
+    action = function(context)
+      require("fml.action.win.split").split_vertical(context)
     end,
   })

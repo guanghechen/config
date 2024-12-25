@@ -119,20 +119,26 @@ end
 ---@class fml.action.term
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.lazygit_cwd()
+---@diagnostic disable-next-line: unused-local
+function M.lazygit_cwd(context)
   local cwd = path.cwd() ---@type string
   open_lazygit("lazygit_cwd", cwd)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.lazygit_workspace()
+---@diagnostic disable-next-line: unused-local
+function M.lazygit_workspace(context)
   local cwd = path.workspace() ---@type string
   open_lazygit("lazygit_workspace", cwd)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.lazygit_file_history()
+---@diagnostic disable-next-line: unused-local
+function M.lazygit_file_history(context)
   local cwd = path.cwd() ---@type string
   local filepath = path.current_filepath() ---@type string
   local args = { "-f", vim.fn.fnameescape(filepath) } ---@type string[]

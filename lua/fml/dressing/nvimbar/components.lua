@@ -40,17 +40,17 @@ function M.bufs(position)
 
   ---@type string
   local fn_active_buf = G.register_anonymous_fn(function(bufnr)
-    command.execute(command.definitions.buf.open.uuid, tostring(bufnr))
+    vim.cmd(command.definitions.buf.open.uuid .. " " .. tostring(bufnr))
   end) or ""
 
   ---@type string
   local fn_focus_left_buf = G.register_anonymous_fn(function()
-    command.execute(command.definitions.buf.focus_left.uuid)
+    vim.cmd(command.definitions.buf.focus_left.uuid)
   end) or ""
 
   ---@type string
   local fn_focus_right_buf = G.register_anonymous_fn(function()
-    command.execute(command.definitions.buf.focus_right.uuid)
+    vim.cmd(command.definitions.buf.focus_right.uuid)
   end) or ""
 
   ---@param bufnr                       integer
@@ -1179,7 +1179,7 @@ function M.tabs(position)
 
   ---@type string
   local fn_active_tab = G.register_anonymous_fn(function(tabid)
-    command.execute(command.definitions.tab.focus.uuid, tostring(tabid))
+    vim.cmd(command.definitions.tab.focus.uuid .. " " .. tostring(tabid))
   end) or ""
 
   ---@type string

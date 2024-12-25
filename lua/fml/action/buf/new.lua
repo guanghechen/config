@@ -4,9 +4,10 @@ local state = require("eve.state")
 ---@class fml.action.buf
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.new()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
+function M.new(context)
+  local winnr = context.winnr ---@type integer
   local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
 
   vim.bo[bufnr].buflisted = true

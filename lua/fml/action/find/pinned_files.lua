@@ -5,8 +5,10 @@ local select_files = require("fml.fn.select_files")
 ---@class fml.action.find
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.find_pinned_files()
+---@diagnostic disable-next-line: unused-local
+function M.find_pinned_files(context)
   local cwd = path.cwd() ---@type string
 
   select_files({

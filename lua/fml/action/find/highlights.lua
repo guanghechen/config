@@ -147,8 +147,10 @@ _select = Select.new({
 ---@class fml.action.find
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.find_highlights()
+---@diagnostic disable-next-line: unused-local
+function M.find_highlights(context)
   _select:toggle()
 end
 

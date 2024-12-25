@@ -1,15 +1,17 @@
+local command = require("eve.lib.command")
 local path = require("eve.lib.path")
 local state = require("eve.state")
-local find_files = require("fml.action.find.files")
 
 local theme_cache_path = path.locate_context_filepath("theme")
 
 ---@class fml.action.ux
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@param arg                           unknown|nil
 ---@return nil
-function M.reload_theme(arg)
+---@diagnostic disable-next-line: unused-local
+function M.reload_theme(context, arg)
   local force = type(arg) == "string" and arg:lower() == "force" ---@type boolean
   local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
   local transparency = state.theme.transparency:snapshot() ---@type boolean
@@ -37,10 +39,11 @@ function M.reload_theme(arg)
   end)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.resume_last_widget()
+function M.resume_last_widget(context)
   if not state.widget.resume() then
-    find_files.find_files()
+    command.execute(command.definitions.find.files.uuid, context)
   end
 end
 

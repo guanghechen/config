@@ -4,9 +4,12 @@ local state = require("eve.state")
 ---@class fml.action.buf
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.toggle_pin()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+function M.toggle_pin(context)
+  local tabnr = context.tabnr ---@type integer
+  local bufnr = context.bufnr ---@type integer
+
   local meta_buf = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
   if meta_buf ~= nil then
     local filepath = meta_buf.filepath ---@type string
@@ -23,7 +26,6 @@ function M.toggle_pin()
       pinned_list[k] = nil
     end
 
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
     if meta_tab ~= nil then
       meta_tab:toggle_pin(bufnr)

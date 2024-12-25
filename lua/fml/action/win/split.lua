@@ -3,9 +3,10 @@ local state = require("eve.state")
 ---@class fml.action.win
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.split_horizontal()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
+function M.split_horizontal(context)
+  local winnr = context.winnr ---@type integer
 
   vim.cmd("split")
 
@@ -16,9 +17,10 @@ function M.split_horizontal()
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.split_vertical()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
+function M.split_vertical(context)
+  local winnr = context.winnr ---@type integer
 
   vim.cmd("vsplit")
 

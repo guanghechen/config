@@ -9,8 +9,10 @@ local Input = require("fml.ux.input")
 ---@class fml.action.buf
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.save()
+---@diagnostic disable-next-line: unused-local
+function M.save(context)
   local cwd = path.cwd() ---@type string
   local workspace = path.workspace() ---@type string
 
@@ -22,7 +24,7 @@ function M.save()
   local ready_count = 0 ---@type integer
 
   for _, bufnr in ipairs(bufnrs) do
-    local is_mod = vim.api.nvim_get_option_value("mod", { buf = bufnr }) ---@type boolean
+    local is_mod = vim.bo[bufnr].mod ---@type boolean
     if is_mod then
       modified_count = modified_count + 1
 

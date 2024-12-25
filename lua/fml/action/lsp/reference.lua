@@ -4,16 +4,16 @@ local checks = require("eve.lib.checks")
 local lsp = require("eve.lib.lsp")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
-local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 
+---@param context                       eve.lib.command.IContext
 ---@param method                        string
 ---@param additional_params             table<string, any>
 ---@param callback                      fun(ok: boolean, data: fml.ux.file_select.IData|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
-local function fetch_data(method, additional_params, callback)
-  local winnr = state.tab.get_current_winnr() or 0 ---@type integer
-  local bufnr = winnr > 0 and vim.api.nvim_win_get_buf(winnr) or 0 ---@type integer
+local function fetch_data(context, method, additional_params, callback)
+  local winnr = context.winnr ---@type integer
+  local bufnr = context.bufnr ---@type integer
   if not checks.is_buf_valid(bufnr) or not lsp.has_support_method(bufnr, method) then
     reporter.error({
       from = __module_name__,
@@ -137,7 +137,7 @@ end
 ---@param title                         string
 ---@param method                        string
 ---@param additional_params             table<string, any>
----@return fun(): nil
+---@return fun(context: eve.lib.command.IContext): nil
 local function create_jump_or_list(title, method, additional_params)
   local _last_data = { items = {}, cwd = path.cwd() } ---@type fml.ux.file_select.IData
 
@@ -155,8 +155,9 @@ local function create_jump_or_list(title, method, additional_params)
     },
   })
 
-  local function jump_or_list()
-    fetch_data(method, additional_params, function(ok, data)
+  ---@param context                     eve.lib.command.IContext
+  local function jump_or_list(context)
+    fetch_data(context, method, additional_params, function(ok, data)
       if ok then
         if data ~= nil then
           _last_data = data
@@ -186,24 +187,28 @@ local jump_or_lists = {
 ---@class fml.action.lsp
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.goto_definitions()
-  jump_or_lists.definitions()
+function M.goto_definitions(context)
+  jump_or_lists.definitions(context)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.goto_implementations()
-  jump_or_lists.implementations()
+function M.goto_implementations(context)
+  jump_or_lists.implementations(context)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.goto_references()
-  jump_or_lists.references()
+function M.goto_references(context)
+  jump_or_lists.references(context)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.goto_type_definitions()
-  jump_or_lists.type_definitions()
+function M.goto_type_definitions(context)
+  jump_or_lists.type_definitions(context)
 end
 
 return M

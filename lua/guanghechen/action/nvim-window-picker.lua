@@ -71,24 +71,26 @@ end
 ---@class guanghechen.action.nvim_window_picker
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.focus()
-  local winnr_cur = vim.api.nvim_get_current_win()
+function M.focus(context)
+  local winnr_cur = context.winnr ---@type integer
   local winnr_target = pick("focus")
   if winnr_target and winnr_cur ~= winnr_target then
     vim.api.nvim_set_current_win(winnr_target)
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.project()
-  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+function M.project(context)
+  local winnr_cur = context.winnr ---@type integer
   local winnr_target = pick("project") ---@type integer|nil
   if not winnr_target or winnr_cur == winnr_target then
     return
   end
 
-  local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
+  local bufnr_cur = context.bufnr ---@type integer
   local cursor_current = vim.api.nvim_win_get_cursor(winnr_cur)
 
   vim.api.nvim_win_set_buf(winnr_target, bufnr_cur)
@@ -96,17 +98,18 @@ function M.project()
   vim.api.nvim_set_current_win(winnr_target)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.swap()
-  local winnr_current = vim.api.nvim_get_current_win()
+function M.swap(context)
+  local winnr_cur = context.winnr ---@type integer
   local winnr_target = pick("swap")
-  if not winnr_target or winnr_current == winnr_target then
+  if not winnr_target or winnr_cur == winnr_target then
     return
   end
 
-  local wincfg_current = vim.api.nvim_win_get_config(winnr_current) ---@type vim.api.keyset.win_config
-  local wincfg_target = vim.api.nvim_win_get_config(winnr_current) ---@type vim.api.keyset.win_config
-  vim.api.nvim_win_set_config(winnr_current, wincfg_target)
+  local wincfg_current = vim.api.nvim_win_get_config(winnr_cur) ---@type vim.api.keyset.win_config
+  local wincfg_target = vim.api.nvim_win_get_config(winnr_cur) ---@type vim.api.keyset.win_config
+  vim.api.nvim_win_set_config(winnr_cur, wincfg_target)
   vim.api.nvim_win_set_config(winnr_target, wincfg_current)
 end
 

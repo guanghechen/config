@@ -39,17 +39,21 @@ end
 ---@class fml.action.copy
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.copy_char_under_cursor()
+---@diagnostic disable-next-line: unused-local
+function M.copy_char_under_cursor(context)
   local col = vim.fn.col(".")
   local char = vim.fn.getline("."):sub(col, col)
   vim.fn.setreg("+", char)
 end
 
----@param filepath                      string
+---@param context                       eve.lib.command.IContext
 ---@param arg                           unknown|nil
 ---@return nil
-function M.copy_filepath(filepath, arg)
+function M.copy_filepath(context, arg)
+  local bufnr = context.bufnr ---@type integer
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local scopes = command.definitions.copy.filepath.candidates
   local scope = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.tbl_contains(scopes, scope) then
@@ -82,15 +86,19 @@ function M.copy_filepath(filepath, arg)
   end
 end
 
----@param filepath                      string
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.copy_filepath_absolute(filepath)
+function M.copy_filepath_absolute(context)
+  local bufnr = context.bufnr ---@type integer
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   copy_current_filepath("absolute", filepath)
 end
 
----@param filepath                      string
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.copy_filepath_relative(filepath)
+function M.copy_filepath_relative(context)
+  local bufnr = context.bufnr ---@type integer
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   copy_current_filepath("relative", filepath)
 end
 

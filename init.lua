@@ -29,12 +29,12 @@ require("fml.dressing.winsep")
 
 local state = require("eve.state")
 local command = require("eve.lib.command")
-command.execute(command.definitions.ux.reload_theme.uuid)
+vim.cmd(command.definitions.ux.reload_theme.uuid)
 vim.schedule(function()
-  command.execute(command.definitions.ux.reload_theme.uuid)
+  vim.cmd(command.definitions.ux.reload_theme.uuid)
   state.watch_changes({
     on_theme_changed = function()
-      command.execute(command.definitions.ux.reload_theme.uuid)
+      vim.cmd(command.definitions.ux.reload_theme.uuid)
     end,
   })
 end)

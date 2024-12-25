@@ -15,9 +15,10 @@ end
 ---@class guanghechen.action.nvim_treesitter
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.swap_conditional_branches()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+function M.swap_conditional_branches(context)
+  local bufnr = context.bufnr ---@type integer
 
   local ts_parsers = require("nvim-treesitter.parsers")
   local lang = ts_parsers.get_buf_lang(bufnr) ---@return string

@@ -131,17 +131,20 @@ end
 ---@class fml.action.win
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.history()
+---@diagnostic disable-next-line: unused-local
+function M.history(context)
   local select = get_history_select() ---@type fml.ux.FileSelect
   select:focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.history_backward()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
+function M.history_backward(context)
+  local winnr = context.winnr ---@type integer
+  local bufnr = context.bufnr ---@type integer
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == constant.BT_QUICKFIX then
     state.qflist.backward()
@@ -165,11 +168,12 @@ function M.history_backward()
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.history_forward()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
+function M.history_forward(context)
+  local winnr = context.winnr ---@type integer
+  local bufnr = context.bufnr ---@type integer
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == constant.BT_QUICKFIX then
     state.qflist.forward()

@@ -6,11 +6,12 @@ local state = require("eve.state")
 ---@class fml.action.debug
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.inspect()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+function M.inspect(context)
+  local tabnr = context.tabnr ---@type integer
+  local winnr = context.winnr ---@type integer
+  local bufnr = context.bufnr ---@type integer
   local buftype = vim.bo[bufnr].buftype ---@type string
 
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
@@ -39,13 +40,17 @@ function M.inspect()
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.inspect_pos()
+---@diagnostic disable-next-line: unused-local
+function M.inspect_pos(context)
   vim.show_pos()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.inspect_state()
+---@diagnostic disable-next-line: unused-local
+function M.inspect_state(context)
   local data = state.dump() ---@type eve.state.data
   reporter.info({
     from = __module_name__,
@@ -54,8 +59,10 @@ function M.inspect_state()
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.inspect_tree()
+---@diagnostic disable-next-line: unused-local
+function M.inspect_tree(context)
   vim.cmd.InspectTree()
 end
 

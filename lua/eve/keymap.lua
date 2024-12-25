@@ -20,7 +20,7 @@ end
 ---@return nil
 local function kk(modes, key, definition)
   vim.keymap.set(modes, key, function()
-    command.execute(definition.uuid)
+    vim.cmd(definition.uuid)
   end, {
     noremap = true,
     silent = true,
@@ -244,7 +244,6 @@ kk({ "n", "v" }, "<leader>tF", K.toggle.flight)
 kk({ "n", "v" }, "<leader>tR", K.toggle.relativenumber)
 kk({ "n", "v" }, "<leader>tS", K.toggle.theme)
 kk({ "n", "v" }, "<leader>tT", K.toggle.transparency)
-kk({ "n", "v" }, "<leader>tW", K.toggle.wrap)
 kk({ "n", "v" }, "<leader>tt", K.toggle.list)
 -----------------------------------------------------------------------------------------#[t]oggle--
 

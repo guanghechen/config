@@ -1,31 +1,38 @@
 local constant = require("eve.lib.constant")
-local path = require("eve.lib.path")
 
 ---@class guanghechen.action.diffview
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.diffview()
+---@diagnostic disable-next-line: unused-local
+function M.diffview(context)
   local diffview = require("diffview") ---@type any
   diffview.open()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.history()
+---@diagnostic disable-next-line: unused-local
+function M.history(context)
   local diffview = require("diffview") ---@type any
   diffview.file_history()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.history_file()
+function M.history_file(context)
+  local bufnr = context.bufnr ---@type integer
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+
   local diffview = require("diffview") ---@type any
-  local filepath = path.current_filepath()
   diffview.file_history(nil, filepath)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.fs_cwd()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+function M.fs_cwd(context)
+  local bufnr = context.bufnr ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
   if filetype == constant.FT_DIFFVIEW_FILES or filetype == constant.FT_DIFFVIEW_FILE_HISTORY then
     vim.cmd("DiffviewToggleFiles")

@@ -35,14 +35,15 @@ end
 ---@class guanghechen.action.neo_tree
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.fs_cwd()
+function M.fs_cwd(context)
+  local bufnr = context.bufnr ---@type integer
+  local ft_current = vim.bo[bufnr].filetype ---@type string
+  local toggle = ft_current == constant.FT_NEOTREE ---@type boolean
+
   cwd = path.cwd()
   close_explorer_sources({ "git_status", "buffers" })
-
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local ft_current = vim.bo[bufnr].filetype ---@type string
-  local toggle = ft_current == constant.FT_NEOTREE ---@type boolean
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
@@ -53,14 +54,15 @@ function M.fs_cwd()
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.fs_workspace()
+function M.fs_workspace(context)
+  local bufnr = context.bufnr ---@type integer
+  local ft_current = vim.bo[bufnr].filetype ---@type string
+  local toggle = ft_current == constant.FT_NEOTREE ---@type boolean
+
   cwd = path.workspace()
   close_explorer_sources({ "git_status", "buffers" })
-
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local ft_current = vim.bo[bufnr].filetype ---@type string
-  local toggle = ft_current == constant.FT_NEOTREE ---@type boolean
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
@@ -71,9 +73,11 @@ function M.fs_workspace()
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.fs_reveal()
-  local ft_current = vim.api.nvim_get_option_value("filetype", { buf = 0 })
+function M.fs_reveal(context)
+  local bufnr = context.bufnr ---@type integer
+  local ft_current = vim.bo[bufnr].filetype ---@type string
   if ft_current == "neo-tree" then
     require("neo-tree.command").execute({
       action = "close",
@@ -88,8 +92,10 @@ function M.fs_reveal()
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.git_cwd()
+---@diagnostic disable-next-line: unused-local
+function M.git_cwd(context)
   cwd = path.cwd()
   close_explorer_sources({ "buffers" })
   require("neo-tree.command").execute({
@@ -102,8 +108,10 @@ function M.git_cwd()
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.git_workspace()
+---@diagnostic disable-next-line: unused-local
+function M.git_workspace(context)
   cwd = path.workspace()
   close_explorer_sources({ "buffers" })
   require("neo-tree.command").execute({
@@ -116,8 +124,10 @@ function M.git_workspace()
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.last()
+---@diagnostic disable-next-line: unused-local
+function M.last(context)
   require("neo-tree.command").execute({
     action = "focus",
     source = "last",
@@ -127,8 +137,9 @@ function M.last()
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.toggle()
+function M.toggle(context)
   if has_explorer_window_opened() then
     require("neo-tree.command").execute({
       action = "close",
@@ -145,7 +156,7 @@ function M.toggle()
       source = "git_status",
     })
   else
-    M.last()
+    M.last(context)
   end
 end
 

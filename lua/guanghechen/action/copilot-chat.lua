@@ -149,8 +149,10 @@ chat_widget = {
 ---@class guanghechen.action.copilot_chat
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.prompt()
+---@diagnostic disable-next-line: unused-local
+function M.prompt(context)
   local actions = require("CopilotChat.actions")
   local prompt_actions = actions["prompt_actions"]()
   if not prompt_actions then
@@ -211,8 +213,10 @@ function M.prompt()
   })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.quick()
+---@diagnostic disable-next-line: unused-local
+function M.quick(context)
   local input = vim.fn.input("Quick Chat: ") ---@type string
   if input ~= "" then
     chat_widget:open()
@@ -223,18 +227,24 @@ function M.quick()
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.reset()
+---@diagnostic disable-next-line: unused-local
+function M.reset(context)
   require("CopilotChat").reset()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.stop()
+---@diagnostic disable-next-line: unused-local
+function M.stop(context)
   require("CopilotChat").stop()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.toggle()
+---@diagnostic disable-next-line: unused-local
+function M.toggle(context)
   if chat_widget.internal_status == "visible" then
     chat_widget:hide()
   else

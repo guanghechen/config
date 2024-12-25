@@ -21,8 +21,11 @@ local runners = {
 ---@class fml.action.code
 local M = {}
 
----@param filepath                      string
-function M.run(filepath)
+---@param context                       eve.lib.command.IContext
+---@return nil
+function M.run(context)
+  local bufnr = context.bufnr ---@type integer
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local extname = path.extname(filepath) ---@type string
   local key = extname:sub(2) ---@type string
 

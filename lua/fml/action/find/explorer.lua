@@ -460,9 +460,10 @@ end
 ---@class fml.action.find
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.find_explorer()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+function M.find_explorer(context)
+  local tabnr = context.tabnr ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab ~= nil then
     local winnr = meta_tab.winnr_listed ---@type integer

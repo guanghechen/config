@@ -4,15 +4,16 @@ local state = require("eve.state")
 ---@class fml.action.buf
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.swap_left()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+function M.swap_left(context)
+  local tabnr = context.tabnr ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
     return
   end
 
-  local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+  local bufnr_cur = context.bufnr ---@type integer
   local buf_cur, bufid_cur = meta_tab:find_buf(bufnr_cur)
   if buf_cur == nil or bufid_cur == nil then
     return
@@ -37,15 +38,16 @@ function M.swap_left()
   state.status.dirtier_tabline:mark_dirty()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.swap_right()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+function M.swap_right(context)
+  local tabnr = context.tabnr ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
     return
   end
 
-  local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+  local bufnr_cur = context.bufnr ---@type integer
   local buf_cur, bufid_cur = meta_tab:find_buf(bufnr_cur)
   if buf_cur == nil or bufid_cur == nil then
     return

@@ -1,5 +1,6 @@
 local __module_name__ = "eve.state" ---@type string
 
+local checks = require("eve.lib.checks")
 local fs = require("eve.lib.fs")
 local save_nvim_session = require("eve.lib.nvim").save_nvim_session
 local reporter = require("eve.lib.reporter")
@@ -275,7 +276,16 @@ function M.watch_changes(params)
     M.status.dirtier_statusline:mark_dirty()
     M.status.dirtier_tabline:mark_dirty()
 
-    vim.o.relativenumber = M.option.relativenumber:snapshot()
+    local flag = M.option.relativenumber:snapshot() ---@type boolean
+    local winnrs = vim.api.nvim_list_wins() ---@type integer[]
+    vim.o.relativenumber = flag
+    for _, winnr in ipairs(winnrs) do
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      if checks.is_buf_valid(bufnr) then
+        vim.wo[winnr].relativenumber = flag
+      end
+    end
+
     vim.cmd("redraw!")
   end, true)
 

@@ -8,72 +8,12 @@ local state = require("eve.state")
 local select = require("fml.fn.select")
 
 ---@class fml.action.toggle.IItem
----@field public uuid                   string
 ---@field public title                  string
----@field public snapshot               fun(): string, string
-
----@type table<string, fml.action.toggle.IItem>
-local flag_map = {
-  flight = {
-    uuid = command.definitions.toggle.flight.uuid,
-    title = "flight",
-    snapshot = function()
-      return "", "String"
-    end,
-  },
-  relativenumber = {
-    uuid = command.definitions.toggle.relativenumber.uuid,
-    title = "relativenumber",
-    snapshot = function()
-      local observable = state.option.relativenumber ---@type eve.lib.collection.IObservable
-      local flag = observable:snapshot()
-      return flag and "true" or "false", "Boolean"
-    end,
-  },
-  theme = {
-    uuid = command.definitions.toggle.theme.uuid,
-    title = "theme",
-    snapshot = function()
-      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
-      return theme, "String"
-    end,
-  },
-  theme_variant = {
-    uuid = command.definitions.toggle.theme_variant.uuid,
-    title = "theme variant",
-    snapshot = function()
-      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
-      local scheme = require("fml.ux.theme").get_scheme(theme) ---@type eve.lib.collection.theme.IScheme|nil
-      return scheme and scheme.variant or "", "String"
-    end,
-  },
-  transparency = {
-    uuid = command.definitions.toggle.transparency.uuid,
-    title = "theme transparency",
-    snapshot = function()
-      local observable = state.theme.transparency ---@type eve.lib.collection.IObservable
-      local flag = observable:snapshot()
-      return flag and "true" or "false", "Boolean"
-    end,
-  },
-  wrap = {
-    uuid = command.definitions.toggle.wrap.uuid,
-    title = "wrap",
-    snapshot = function()
-      ---@diagnostic disable-next-line: undefined-field
-      local flag = vim.opt_local.wrap:get() ---@type boolean
-      return flag and "true" or "false", "Boolean"
-    end,
-  },
-}
-
-local flags = vim.tbl_keys(flag_map) ---@type string[]
-table.sort(flags)
+---@field public snapshot               fun(context: eve.lib.command.IContext): string, string
+---@field public action                 fun(context: eve.lib.command.IContext): nil
 
 local flights = vim.tbl_keys(state.flight) ---@type string[]
 table.sort(flights)
-
-local themes = require("fml.ux.theme").themes ---@type eve.e.Theme[]
 
 ---@param flight                        string
 ---@return nil
@@ -97,6 +37,93 @@ local function toggle_flight(flight)
     })
   end
 end
+
+---@type table<string, fml.action.toggle.IItem>
+local flag_map = {
+  flight = {
+    title = "flight",
+    snapshot = function()
+      return "", "String"
+    end,
+    action = function(context)
+      command.execute(command.definitions.toggle.flight.uuid, context)
+    end,
+  },
+  relativenumber = {
+    title = "relativenumber",
+    snapshot = function()
+      local observable = state.option.relativenumber ---@type eve.lib.collection.IObservable
+      local flag = observable:snapshot()
+      return flag and "true" or "false", "Boolean"
+    end,
+    action = function(context)
+      command.execute(command.definitions.toggle.relativenumber.uuid, context)
+    end,
+  },
+  relativenumber_local = {
+    title = "relativenumber (local)",
+    snapshot = function(context)
+      local winnr = context.winnr ---@type integer
+      local flag = vim.wo[winnr].relativenumber ---@type boolean
+      return flag and "true" or "false", "Boolean"
+    end,
+    action = function(context)
+      local winnr = context.winnr ---@type integer
+      local flag = vim.wo[winnr].relativenumber ---@type boolean
+      vim.wo[winnr].relativenumber = not flag
+    end,
+  },
+  theme = {
+    title = "theme",
+    snapshot = function()
+      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
+      return theme, "String"
+    end,
+    action = function(context)
+      command.execute(command.definitions.toggle.theme.uuid, context)
+    end,
+  },
+  theme_variant = {
+    title = "theme variant",
+    snapshot = function()
+      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
+      local scheme = require("fml.ux.theme").get_scheme(theme) ---@type eve.lib.collection.theme.IScheme|nil
+      return scheme and scheme.variant or "", "String"
+    end,
+    action = function(context)
+      command.execute(command.definitions.toggle.theme_variant.uuid, context)
+    end,
+  },
+  transparency = {
+    title = "theme transparency",
+    snapshot = function()
+      local observable = state.theme.transparency ---@type eve.lib.collection.IObservable
+      local flag = observable:snapshot()
+      return flag and "true" or "false", "Boolean"
+    end,
+    action = function(context)
+      command.execute(command.definitions.toggle.transparency.uuid, context)
+    end,
+  },
+  wrap = {
+    title = "wrap (local)",
+    snapshot = function(context)
+      local winnr = context.winnr ---@type integer
+      local flag = vim.wo[winnr].wrap ---@type boolean
+      return flag and "true" or "false", "Boolean"
+    end,
+    action = function(context)
+      local winnr = context.winnr ---@type integer
+      local flag = vim.wo[winnr].wrap ---@type boolean
+      vim.wo[winnr].wrap = not flag
+    end,
+  },
+}
+
+local flags = vim.tbl_keys(flag_map) ---@type string[]
+table.sort(flags)
+
+local themes = require("fml.ux.theme").themes ---@type eve.e.Theme[]
 
 ---@param theme                         string
 ---@return nil
@@ -149,12 +176,14 @@ command
 ---@class fml.action.ux
 local M = {}
 
+---@param context                       eve.lib.command.IContext
+---@param arg                           string|nil
 ---@return nil
-function M.list(arg)
+function M.list(context, arg)
   local flag_name = type(arg) == "string" and arg:lower() or "" ---@type string
   if flag_map[flag_name] ~= nil then
     local item = flag_map[flag_name] ---@type fml.action.toggle.IItem
-    command.execute(item.uuid)
+    item.action(context)
   else
     select({
       title = "Toggle Select",
@@ -168,14 +197,14 @@ function M.list(arg)
       fetch_items = function()
         local items = {} ---@type fml.ux.select.IItem[]
         for _, flag in ipairs(flags) do
-          local flag_item = flag_map[flag] ---@type fml.action.toggle.IItem
-          items[#items + 1] = { uuid = flag_item.uuid, text = flag }
+          local item = flag_map[flag] ---@type fml.action.toggle.IItem
+          items[#items + 1] = { uuid = item.title, text = flag, data = item }
         end
         return items
       end,
       render_item = function(item, match)
         local flag_item = flag_map[item.text] ---@type fml.action.toggle.IItem
-        local text_flag, hln_flag = flag_item.snapshot()
+        local text_flag, hln_flag = flag_item.snapshot(context)
 
         local width_padding = 32 ---@type integer
         local padding = string.rep(" ", width_padding - vim.api.nvim_strwidth(item.text)) ---@type string
@@ -192,15 +221,17 @@ function M.list(arg)
         return text, highlights
       end,
       on_confirm = function(item)
-        command.execute(item.uuid)
+        item.data.action(context)
       end,
     })
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@param arg                           string|nil
 ---@return nil
-function M.toggle_flight(arg)
+---@diagnostic disable-next-line: unused-local
+function M.toggle_flight(context, arg)
   local flight_name = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.tbl_contains(flights, flight_name) then
     toggle_flight(flight_name)
@@ -249,16 +280,20 @@ function M.toggle_flight(arg)
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.toggle_relativenumber()
+---@diagnostic disable-next-line: unused-local
+function M.toggle_relativenumber(context)
   local observable = state.option.relativenumber ---@type eve.lib.collection.IObservable
   local flag = observable:snapshot() ---@type boolean
   observable:next(not flag)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@param arg                           unknown|nil
 ---@return nil
-function M.toggle_theme(arg)
+---@diagnostic disable-next-line: unused-local
+function M.toggle_theme(context, arg)
   local theme_name = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.tbl_contains(themes, theme_name) then
     apply_theme(theme_name)
@@ -291,8 +326,10 @@ function M.toggle_theme(arg)
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.toggle_theme_variant()
+---@diagnostic disable-next-line: unused-local
+function M.toggle_theme_variant(context)
   local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
   local app_home = path.locate_app_config_home("guanghechen")
   local script_path = path.join(app_home, "config/theme/toggle_theme.mjs")
@@ -309,19 +346,13 @@ function M.toggle_theme_variant()
   end
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.toggle_transparency()
+function M.toggle_transparency(context)
   local observable = state.theme.transparency ---@type eve.lib.collection.IObservable
   local flag = observable:snapshot() ---@type boolean
   observable:next(not flag)
-  command.execute(command.definitions.ux.reload_theme.uuid, "force")
-end
-
----@return nil
-function M.toggle_wrap()
-  ---@diagnostic disable-next-line: undefined-field
-  local wrap = vim.opt_local.wrap:get() ---@type boolean
-  vim.opt_local.wrap = not wrap
+  command.execute(command.definitions.ux.reload_theme.uuid, context, "force")
 end
 
 return M

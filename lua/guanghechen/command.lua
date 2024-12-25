@@ -5,40 +5,40 @@ local command = require("eve.lib.command")
 command
   .implement({
     uuid = command.definitions.ai.copilot_chat_prompt.uuid,
-    action = function()
-      require("guanghechen.action.copilot-chat").prompt()
+    action = function(context)
+      require("guanghechen.action.copilot-chat").prompt(context)
     end,
   })
   .implement({
     uuid = command.definitions.ai.copilot_chat_quick.uuid,
-    action = function()
-      require("guanghechen.action.copilot-chat").quick()
+    action = function(context)
+      require("guanghechen.action.copilot-chat").quick(context)
     end,
   })
   .implement({
     uuid = command.definitions.ai.copilot_chat_reset.uuid,
-    action = function()
-      require("guanghechen.action.copilot-chat").reset()
+    action = function(context)
+      require("guanghechen.action.copilot-chat").reset(context)
     end,
   })
   .implement({
     uuid = command.definitions.ai.copilot_chat_stop.uuid,
-    action = function()
-      require("guanghechen.action.copilot-chat").stop()
+    action = function(context)
+      require("guanghechen.action.copilot-chat").stop(context)
     end,
   })
   .implement({
     uuid = command.definitions.ai.copilot_chat_toggle.uuid,
-    action = function()
-      require("guanghechen.action.copilot-chat").toggle()
+    action = function(context)
+      require("guanghechen.action.copilot-chat").toggle(context)
     end,
   })
 
 --[code] -------------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.code.swap_conditional_branches.uuid,
-  action = function()
-    require("guanghechen.action.nvim-treesitter").swap_conditional_branches()
+  action = function(context)
+    require("guanghechen.action.nvim-treesitter").swap_conditional_branches(context)
   end,
 })
 
@@ -55,53 +55,53 @@ command
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
     tabtype = constant.TT_DIFFVIEW,
-    action = function()
-      require("guanghechen.action.diffview").fs_cwd()
+    action = function(context)
+      require("guanghechen.action.diffview").fs_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
     tabtype = constant.TT_NORMAL,
-    action = function()
-      require("guanghechen.action.neo-tree").fs_cwd()
+    action = function(context)
+      require("guanghechen.action.neo-tree").fs_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_workspace.uuid,
     tabtype = constant.TT_NORMAL,
-    action = function()
-      require("guanghechen.action.neo-tree").fs_workspace()
+    action = function(context)
+      require("guanghechen.action.neo-tree").fs_workspace(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_reveal.uuid,
     tabtype = constant.TT_NORMAL,
-    action = function()
-      require("guanghechen.action.neo-tree").fs_reveal()
+    action = function(context)
+      require("guanghechen.action.neo-tree").fs_reveal(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.git_cwd.uuid,
-    action = function()
-      require("guanghechen.action.neo-tree").git_cwd()
+    action = function(context)
+      require("guanghechen.action.neo-tree").git_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.git_workspace.uuid,
-    action = function()
-      require("guanghechen.action.neo-tree").git_workspace()
+    action = function(context)
+      require("guanghechen.action.neo-tree").git_workspace(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.last.uuid,
-    action = function()
-      require("guanghechen.action.neo-tree").last()
+    action = function(context)
+      require("guanghechen.action.neo-tree").last(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.toggle.uuid,
-    action = function()
-      require("guanghechen.action.neo-tree").toggle()
+    action = function(context)
+      require("guanghechen.action.neo-tree").toggle(context)
     end,
   })
 
@@ -109,20 +109,20 @@ command
 command
   .implement({
     uuid = command.definitions.git.diffview.uuid,
-    action = function()
-      require("guanghechen.action.diffview").diffview()
+    action = function(context)
+      require("guanghechen.action.diffview").diffview(context)
     end,
   })
   .implement({
     uuid = command.definitions.git.history.uuid,
-    action = function()
-      require("guanghechen.action.diffview").history()
+    action = function(context)
+      require("guanghechen.action.diffview").history(context)
     end,
   })
   .implement({
     uuid = command.definitions.git.history_file.uuid,
-    action = function()
-      require("guanghechen.action.diffview").history_file()
+    action = function(context)
+      require("guanghechen.action.diffview").history_file(context)
     end,
   })
 
@@ -141,19 +141,19 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.win.focus.uuid,
-    action = function()
-      require("guanghechen.action.nvim-window-picker").focus()
+    action = function(context)
+      require("guanghechen.action.nvim-window-picker").focus(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.project.uuid,
-    action = function()
-      require("guanghechen.action.nvim-window-picker").project()
+    action = function(context)
+      require("guanghechen.action.nvim-window-picker").project(context)
     end,
   })
   .implement({
     uuid = command.definitions.win.swap.uuid,
-    action = function()
-      require("guanghechen.action.nvim-window-picker").swap()
+    action = function(context)
+      require("guanghechen.action.nvim-window-picker").swap(context)
     end,
   })

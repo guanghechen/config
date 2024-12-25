@@ -6,8 +6,10 @@ local select_files = require("fml.fn.select_files")
 ---@class fml.action.find
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.find_git_not_committed()
+---@diagnostic disable-next-line: unused-local
+function M.find_git_not_committed(context)
   local cwd = path.cwd() ---@type string
   local workspace = path.workspace() ---@type string
 

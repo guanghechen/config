@@ -154,8 +154,10 @@ select = Select.new({
 ---@class fml.action.find
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.find_buffers()
+---@diagnostic disable-next-line: unused-local
+function M.find_buffers(context)
   select:toggle()
 end
 

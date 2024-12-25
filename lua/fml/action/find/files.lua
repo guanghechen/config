@@ -361,29 +361,37 @@ end
 ---@class fml.action.find
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.find_files()
+---@diagnostic disable-next-line: unused-local
+function M.find_files(context)
   local select = get_select() ---@type fml.ux.IFileSelect
   select:focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.find_files_workspace()
-  state.find.scope:next("W")
-  local select = get_select() ---@type fml.ux.IFileSelect
-  select:focus()
-end
-
----@return nil
-function M.find_files_cwd()
+---@diagnostic disable-next-line: unused-local
+function M.find_files_cwd(context)
   state.find.scope:next("C")
   local select = get_select() ---@type fml.ux.IFileSelect
   select:focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.find_files_directory()
+---@diagnostic disable-next-line: unused-local
+function M.find_files_directory(context)
   state.find.scope:next("D")
+  local select = get_select() ---@type fml.ux.IFileSelect
+  select:focus()
+end
+
+---@param context                       eve.lib.command.IContext
+---@return nil
+---@diagnostic disable-next-line: unused-local
+function M.find_files_workspace(context)
+  state.find.scope:next("W")
   local select = get_select() ---@type fml.ux.IFileSelect
   select:focus()
 end

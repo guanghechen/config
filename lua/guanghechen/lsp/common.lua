@@ -177,7 +177,7 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "gd",
       callback = function()
-        command.execute(command.definitions.lsp.goto_definitions.uuid)
+        vim.cmd(command.definitions.lsp.goto_definitions.uuid)
       end,
       desc = "lsp: goto definition",
     },
@@ -185,7 +185,7 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "gi",
       callback = function()
-        command.execute(command.definitions.lsp.goto_implementations.uuid)
+        vim.cmd(command.definitions.lsp.goto_implementations.uuid)
       end,
       desc = "lsp: goto implementation",
     },
@@ -193,7 +193,7 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "gr",
       callback = function()
-        command.execute(command.definitions.lsp.goto_references.uuid)
+        vim.cmd(command.definitions.lsp.goto_references.uuid)
       end,
       desc = "lsp: show references",
     },
@@ -201,7 +201,7 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "gt",
       callback = function()
-        command.execute(command.definitions.lsp.goto_type_definitions.uuid)
+        vim.cmd(command.definitions.lsp.goto_type_definitions.uuid)
       end,
       desc = "lsp: goto type definition",
     },

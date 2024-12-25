@@ -21,10 +21,11 @@ end
 ---@class fml.action.buf
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.close()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+function M.close(context)
+  local winnr = context.winnr ---@type integer
+  local bufnr = context.bufnr ---@type integer
   local win_meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
 
   ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.
@@ -39,9 +40,10 @@ function M.close()
   close({ bufnr })
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.close_to_leftest()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+function M.close_to_leftest(context)
+  local tabnr = context.tabnr ---@type integer
   local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if tab_meta == nil then
     reporter.error({
@@ -53,7 +55,7 @@ function M.close_to_leftest()
     return
   end
 
-  local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+  local bufnr_cur = context.bufnr ---@type integer
   local bufnrs_to_remove = {} ---@type integer[]
   local bufnrs_visible = state.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
@@ -70,9 +72,10 @@ function M.close_to_leftest()
   close(bufnrs_to_remove)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.close_to_rightest()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+function M.close_to_rightest(context)
+  local tabnr = context.tabnr ---@type integer
   local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if tab_meta == nil then
     reporter.error({
@@ -84,7 +87,7 @@ function M.close_to_rightest()
     return
   end
 
-  local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
+  local bufnr_cur = context.bufnr ---@type integer
   local bufnrs_to_remove = {} ---@type integer[]
   local bufnrs_visible = state.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
@@ -101,9 +104,10 @@ function M.close_to_rightest()
   close(bufnrs_to_remove)
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.close_others()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+function M.close_others(context)
+  local tabnr = context.tabnr ---@type integer
   local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if tab_meta == nil then
     reporter.error({

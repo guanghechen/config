@@ -1,6 +1,5 @@
 local get_selected_text = require("eve.lib.nvim").get_selected_text
 local state = require("eve.state")
-local context = require("fml.action.search.files.context")
 
 ---@return nil
 local function focus()
@@ -11,6 +10,7 @@ local function focus()
     state.search.keyword:next(next_search_pattern)
   end
 
+  local context = require("fml.action.search.files.context")
   local search = context.get_search() ---@type fml.ux.search.ISearch
   search:focus()
 end
@@ -18,69 +18,89 @@ end
 ---@class fml.action.search
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.search_files()
+---@diagnostic disable-next-line: unused-local
+function M.search_files(context)
   state.search.flag_replace:next(false)
   focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.search_files_in_buffer()
+---@diagnostic disable-next-line: unused-local
+function M.search_files_in_buffer(context)
   state.search.flag_replace:next(false)
   state.search.scope:next("B")
   focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.search_files_in_cwd()
+---@diagnostic disable-next-line: unused-local
+function M.search_files_in_cwd(context)
   state.search.flag_replace:next(false)
   state.search.scope:next("C")
   focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.search_files_in_directory()
+---@diagnostic disable-next-line: unused-local
+function M.search_files_in_directory(context)
   state.search.flag_replace:next(false)
   state.search.scope:next("D")
   focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.search_files_in_workspace()
+---@diagnostic disable-next-line: unused-local
+function M.search_files_in_workspace(context)
   state.search.flag_replace:next(false)
   state.search.scope:next("W")
   focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.replace_files()
+---@diagnostic disable-next-line: unused-local
+function M.replace_files(context)
   state.search.flag_replace:next(true)
   focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.replace_files_in_buffer()
+---@diagnostic disable-next-line: unused-local
+function M.replace_files_in_buffer(context)
   state.search.flag_replace:next(true)
   state.search.scope:next("B")
   focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.replace_files_in_cwd()
+---@diagnostic disable-next-line: unused-local
+function M.replace_files_in_cwd(context)
   state.search.flag_replace:next(true)
   state.search.scope:next("C")
   focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.replace_files_in_directory()
+---@diagnostic disable-next-line: unused-local
+function M.replace_files_in_directory(context)
   state.search.flag_replace:next(true)
   state.search.scope:next("D")
   focus()
 end
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.replace_files_in_workspace()
+---@diagnostic disable-next-line: unused-local
+function M.replace_files_in_workspace(context)
   state.search.flag_replace:next(true)
   state.search.scope:next("W")
   focus()

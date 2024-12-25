@@ -7,6 +7,11 @@ local reporter = require("eve.lib.reporter")
 ---| "absolute"
 ---| "relative"
 
+---@class eve.lib.command.IContext
+---@field public tabnr                  integer
+---@field public winnr                  integer
+---@field public bufnr                  integer
+
 ---@class eve.lib.command.IDefinition
 ---@field public uuid                   string
 ---@field public desc                   string
@@ -22,12 +27,12 @@ local reporter = require("eve.lib.reporter")
 ---@class eve.lib.command.ICommand
 ---@field public uuid                   string
 ---@field public tabtype                eve.e.state.tab.meta.TabType
----@field public action                 fun(args?: string): nil
+---@field public action                 fun(context: eve.lib.command.IContext, args?: string): nil
 
 ---@class eve.lib.command.IImplementation
----@field public uuid                  string
----@field public tabtype               ?eve.e.state.tab.meta.TabType
----@field public action                 fun(args?: string): nil
+---@field public uuid                   string
+---@field public tabtype                ?eve.e.state.tab.meta.TabType
+---@field public action                 fun(context: eve.lib.command.IContext, args?: string): nil
 
 local definition_map = {} ---@type table<string, eve.lib.command.IDefinition>
 local command_map = {} ---@type table<string, eve.lib.command.ICommand>
@@ -63,7 +68,11 @@ function M.define(raw_definition, overwrite)
   ---@param opts                        { name: string, args: string, fargs: string[] }
   ---@return nil
   local function handle(opts)
-    M.execute(definition.uuid, opts.args, false)
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local context = { tabnr = tabnr, winnr = winnr, bufnr = bufnr } ---@type eve.lib.command.IContext
+    M.execute(definition.uuid, context, opts.args, false)
   end
 
   ---@param argLead                     string
@@ -130,10 +139,11 @@ function M.implement(implementation)
 end
 
 ---@param uuid                          string
+---@param context                       eve.lib.command.IContext
 ---@param args                          ?string
 ---@param silent                        ?boolean
 ---@return nil
-function M.execute(uuid, args, silent)
+function M.execute(uuid, context, args, silent)
   local command = M.resolve(uuid, true) ---@type eve.lib.command.ICommand|nil
 
   if command == nil then
@@ -148,7 +158,7 @@ function M.execute(uuid, args, silent)
     return
   end
 
-  command.action(args)
+  command.action(context, args)
 end
 
 ---@param uuid                          string
@@ -415,7 +425,6 @@ M.definitions.toggle = {
   theme = defc("Ftoggletheme", "toggle: theme", "?", {}),
   theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),
   transparency = def("Ftoggletransparency", "toggle: transparency"),
-  wrap = def("Ftogglewrap", "toggle: wrap"),
 }
 
 ---@class M.eve.lib.command.definitions.ux

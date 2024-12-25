@@ -145,22 +145,6 @@ local function get_git_branch_or_commit()
 end
 
 ---@return string|nil
-local function get_filepath()
-  local workspace  = path.workspace() ---@type string
-  local filepath = vim.api.nvim_buf_get_name(0) ---@type string|nil
-
-  if filepath == nil then
-    return nil
-  end
-
-  if path.is_under(workspace, filepath) then
-    return  path.relative(workspace, filepath, true) ---@type string
-  end
-
-  return  nil
-end
-
----@return string|nil
 local function get_file_line()
   local mode = vim.fn.mode()
   if  mode ~= "v" and mode ~= "V" then
@@ -215,10 +199,14 @@ end
 ---@class fml.action.git
 local M = {}
 
+---@param context                       eve.lib.command.IContext
 ---@return nil
-function M.browse()
-  local workspace  = path.workspace() ---@type string
-  local filepath = get_filepath() ---@type string|nil
+function M.browse(context)
+  local bufnr = context.bufnr ---@type integer
+  local workspace = path.workspace() ---@type string
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string|nil
+  filepath = filepath ~= nil and path.is_under(workspace, filepath) and path.relative(workspace, filepath, true) or nil
+
   local remotes = {} ---@type fml.action.git.browse.IRemote[]
   local fields = {
     branch = get_git_branch_or_commit(),
