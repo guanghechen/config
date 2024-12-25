@@ -1,4 +1,4 @@
----@param context                       fml.t.ux.IThemeContext
+---@param context                       fml.ux.IThemeContext
 ---@return fml.ux.theme.integration.nvimbar.hlgroups
 local function gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type eve.lib.collection.theme.IPalette
@@ -118,7 +118,7 @@ local function gen_hlgroup_map(context)
     username = { fg = c.bg1, bg = c.blue, bold = true },
   }
 
-  local positions = { "f_sl", "f_tl", "f_wl" } ---@type eve.lib.ux.nvimbar.Position[]
+  local positions = { "f_sl", "f_tl", "f_wl" } ---@type fml.ux.nvimbar.Position[]
 
   ---@class fml.ux.theme.integration.nvimbar.hlgroups : table<string, eve.lib.collection.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string }

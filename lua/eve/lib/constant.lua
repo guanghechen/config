@@ -25,7 +25,7 @@ M.BUF_UNTITLED = "untitled"
 
 ---! Variable names
 
-M.V_WINLINE_DISABLED = "ghc_winline_disabled"
+M.V_WINLINE_DISABLED = "fml_winline_disabled"
 
 ---! Buffer types
 

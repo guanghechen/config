@@ -4,6 +4,7 @@ local constant = require("eve.lib.constant")
 local bindkeys = require("eve.lib.nvim").bindkeys
 local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
+local select = require("fml.fn.select")
 
 if not state.flight.copilot:snapshot() then
   return
@@ -89,8 +90,8 @@ chat_widget = {
         vim.wo[winnr].relativenumber = false
         vim.wo[winnr].signcolumn = "yes"
 
-        if not vim.b[bufnr].ghc_key_bound then
-          vim.b[bufnr].ghc_key_bound = true
+        if not vim.b[bufnr].fml_key_bound then
+          vim.b[bufnr].fml_key_bound = true
           local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
           bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
@@ -161,7 +162,7 @@ function M.prompt()
     return
   end
 
-  fml.fn.select({
+  select({
     title = prompt_actions.prompt,
     dimension = {
       width = 40,
@@ -170,9 +171,9 @@ function M.prompt()
     },
     preview_flag_wrap = true,
     fetch_items = function()
-      local select_items = {} ---@type fml.t.ux.select.IItem[]
+      local select_items = {} ---@type fml.ux.select.IItem[]
       for name, action in pairs(prompt_actions.actions) do
-        ---@type fml.t.ux.select.IItem
+        ---@type fml.ux.select.IItem
         local item = {
           uuid = name,
           text = name,
@@ -189,7 +190,7 @@ function M.prompt()
       local data = item.data ---@type guanghechen.action.copilot_chat.prompt_actions.IItem
       local lines = vim.split(data.prompt or "", "\n", { plain = true }) ---@type string[]
 
-      ---@type fml.t.ux.search.preview.IData
+      ---@type fml.ux.search.preview.IData
       local result = {
         title = "Prompt",
         lines = lines,

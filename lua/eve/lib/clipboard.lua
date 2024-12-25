@@ -84,7 +84,7 @@ local function macos_fake_clipborad(fake_clipboard_filepath)
   }
 end
 
----@class ghc.lib.clipboard
+---@class fml.lib.clipboard
 local M = {}
 
 function M.get_clipboard()

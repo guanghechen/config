@@ -2,11 +2,12 @@ local checks = require("eve.lib.checks")
 local path = require("eve.lib.path")
 local Observable = require("eve.lib.collection.observable")
 local state = require("eve.state")
-local FileSelect = require("fml.ux.component.file_select")
+local FileSelect = require("fml.ux.file_select")
+local Select = require("fml.ux.select")
 
 ---@class fml.fn.select_files.IParams
 ---@field public cwd                    string
----@field public dimension              ?fml.t.ux.search.IRawDimension
+---@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
 ---@field public input                  ?eve.lib.collection.IObservable
@@ -18,7 +19,7 @@ local FileSelect = require("fml.ux.component.file_select")
 ---@return nil
 local function select_files(params)
   local cwd = params.cwd ---@type string
-  local dimension = params.dimension ---@type fml.t.ux.search.IRawDimension|nil
+  local dimension = params.dimension ---@type fml.ux.search.IRawDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
   local input = params.input ---@type eve.lib.collection.IObservable | nil
@@ -42,18 +43,18 @@ local function select_files(params)
     end
   end
 
-  local file_select = nil ---@type fml.t.ux.IFileSelect|nil
-  local last_data = nil ---@type fml.t.ux.file_select.IData|nil
+  local file_select = nil ---@type fml.ux.IFileSelect|nil
+  local last_data = nil ---@type fml.ux.file_select.IData|nil
 
-  ---@type fml.t.ux.file_select.IProvider
+  ---@type fml.ux.file_select.IProvider
   local provider = {
     fetch_data = function(force)
       if force or last_data == nil then
         local filepaths = fetch_filepaths() ---@type string[]
         table.sort(filepaths)
 
-        local items = FileSelect.make_items_by_filepaths(filepaths) ---@type fml.t.ux.file_select.IRawItem[]
-        last_data = { cwd = cwd, items = items } ---@type fml.t.ux.file_select.IData
+        local items = FileSelect.make_items_by_filepaths(filepaths) ---@type fml.ux.file_select.IRawItem[]
+        last_data = { cwd = cwd, items = items } ---@type fml.ux.file_select.IData
 
         if file_select ~= nil then
           local width = 0 ---@type integer
@@ -68,14 +69,14 @@ local function select_files(params)
 
       local present = get_present ~= nil and get_present() or nil ---@type string|nil
 
-      ---@type fml.t.ux.file_select.IData
+      ---@type fml.ux.file_select.IData
       local data = { cwd = cwd, items = last_data.items, present_uuid = present }
       return data
     end,
   }
 
   file_select = FileSelect.new({
-    cmp = fml.ux.Select.cmp_by_score,
+    cmp = Select.cmp_by_score,
     dimension = dimension,
     dirty_on_invisible = true,
     preview_enabled = false,

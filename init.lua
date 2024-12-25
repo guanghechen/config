@@ -3,13 +3,11 @@ _G.eve = require("eve")
 eve.setup_workspace()
 require("eve.option")
 require("eve.keymap")
-
-eve.setup_state()
 require("eve.autocmd")
 require("eve.autocmd-filetype")
 
-require("fml.autocmd")
-_G.fml = require("fml")
+eve.setup_state()
+require("eve.autocmd-state")
 
 if vim.g.vscode then
   require("integration.vscode.autocmd")
@@ -20,14 +18,14 @@ if vim.g.vscode then
   return
 end
 
-require("ghc.command")
-require("ghc.dressing.hipairs")
-require("ghc.dressing.commentstring")
-require("ghc.dressing.nvimbar.statusline")
-require("ghc.dressing.nvimbar.tabline")
-require("ghc.dressing.nvimbar.winline")
-require("ghc.dressing.select")
-require("ghc.dressing.winsep")
+require("fml.command")
+require("fml.dressing.hipairs")
+require("fml.dressing.commentstring")
+require("fml.dressing.nvimbar.statusline")
+require("fml.dressing.nvimbar.tabline")
+require("fml.dressing.nvimbar.winline")
+require("fml.dressing.select")
+require("fml.dressing.winsep")
 
 local state = require("eve.state")
 local command = require("eve.lib.command")

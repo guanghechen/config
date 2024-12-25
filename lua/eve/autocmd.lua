@@ -1,7 +1,6 @@
 local env = require("eve.lib.env")
 local ft = require("eve.lib.filetype")
 local augroup = require("eve.lib.nvim").augroup
-local state = require("eve.state")
 
 ---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
 vim.schedule(function()
@@ -23,14 +22,6 @@ if env.IS_MAC then
   })
 end
 
-vim.api.nvim_create_autocmd("VimLeavePre", {
-  group = augroup("on_vim_leave_pre"),
-  once = true,
-  callback = function()
-    state.dispose()
-  end,
-})
-
 ---! Auto create dirs when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd("BufWritePre", {
   group = augroup("auto_create_dirs"),
@@ -48,10 +39,10 @@ vim.api.nvim_create_autocmd("BufReadPost", {
   group = augroup("goto_last_location"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
-    if vim.b[bufnr].ghc_last_loc then
+    if vim.b[bufnr].eve_last_loc then
       return
     end
-    vim.b[bufnr].ghc_last_loc = true
+    vim.b[bufnr].eve_last_loc = true
 
     local filetype = vim.bo[bufnr].filetype ---@type string
     if ft.is_plain_file(filetype) then

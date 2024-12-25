@@ -14,7 +14,7 @@ local state_status = require("eve.state.session.status")
 ---@class eve.t.state.win.meta.state
 ---@field public filepath_history       eve.lib.collection.IAdvanceHistory
 ---@field public lsp_symbols            eve.t.state.buf.lsp.ISymbol[]
----@field public winline                eve.lib.ux.INvimbar|nil
+---@field public winline                fml.ux.INvimbar|nil
 ---@field public winline_bufnr          integer
 
 ---@class eve.state.win.data

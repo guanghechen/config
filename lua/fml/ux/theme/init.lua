@@ -7,15 +7,15 @@ local state = require("eve.state")
 ---@class fml.ux.theme
 local M = {}
 
----@class fml.t.ux.IThemeContext
+---@class fml.ux.IThemeContext
 ---@field public theme                  string
 ---@field public scheme                 eve.lib.collection.theme.IScheme
 ---@field public transparency           boolean
 
----@class fml.t.ux.theme.IApp
----@field public get_filepaths          fun(context: fml.t.ux.IThemeContext): string[]
----@field public gen_theme              fun(context: fml.t.ux.IThemeContext): string
----@field public after_written          ?fun(context: fml.t.ux.IThemeContext): nil
+---@class fml.ux.theme.IApp
+---@field public get_filepaths          fun(context: fml.ux.IThemeContext): string[]
+---@field public gen_theme              fun(context: fml.ux.IThemeContext): string
+---@field public after_written          ?fun(context: fml.ux.IThemeContext): nil
 
 ---@alias fml.e.ux.theme.HighlightIntegration
 ---|"basic"
@@ -116,7 +116,7 @@ function M.apply_integration(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    ---@type fml.t.ux.IThemeContext
+    ---@type fml.ux.IThemeContext
     local themeContext = {
       theme = scheme.theme,
       scheme = scheme,

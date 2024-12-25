@@ -1,4 +1,4 @@
----@param context                       fml.t.ux.IThemeContext
+---@param context                       fml.ux.IThemeContext
 ---@return table<string, eve.lib.collection.theme.IHlgroup>
 local function gen_hlgroup_map(context)
   local cs = require("eve.lib.color")
