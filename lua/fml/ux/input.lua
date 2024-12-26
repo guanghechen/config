@@ -56,7 +56,7 @@ function M.new(props)
   local on_confirm_from_props = props.on_confirm ---@type fun(text: string): boolean
 
   local self
-  ---@cast self fml.ux.Input
+  ---@cast self                         fml.ux.Input
 
   ---@return nil
   local handle_close = function()
@@ -109,7 +109,7 @@ function M.new(props)
   })
 
   self = setmetatable(textarea, M)
-  ---@cast self fml.ux.Input
+  ---@cast self                         fml.ux.Input
 
   return self
 end

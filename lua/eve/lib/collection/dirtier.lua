@@ -24,7 +24,7 @@ function M.new(props)
   local equals = props.equals or functional.falsy
 
   local self = setmetatable(Observable.new({ initial_value = dirty, equals = equals }), M)
-  ---@cast self eve.lib.collection.Dirtier
+  ---@cast self                         eve.lib.collection.Dirtier
 
   return self
 end

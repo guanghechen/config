@@ -17,7 +17,7 @@ setmetatable(M, Observable)
 function M.new(props)
   local start = props and props.start or 0 ---@type integer
   local self = setmetatable(Observable.from_value(start), M)
-  ---@cast self eve.lib.collection.Ticker
+  ---@cast self                         eve.lib.collection.Ticker
   return self
 end
 

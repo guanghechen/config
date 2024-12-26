@@ -113,7 +113,7 @@ function M.new(props)
   })
 
   local self = setmetatable(textarea, M)
-  ---@cast self fml.ux.Setting
+  ---@cast self                         fml.ux.Setting
 
   return self
 end

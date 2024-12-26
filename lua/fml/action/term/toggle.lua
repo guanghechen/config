@@ -53,7 +53,7 @@ function M.new(props)
       desc = "terminal: quit",
       callback = function()
         if terminal ~= nil then
-          ---@cast terminal fml.ux.ITerminal
+          ---@cast terminal             fml.ux.ITerminal
           terminal:close()
         end
       end,

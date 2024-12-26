@@ -40,7 +40,7 @@ function M.new(props)
   local initial_value = props.initial_value ---@type eve.t.T
 
   local self = setmetatable(BatchDisposable.new(), M)
-  ---@cast self eve.lib.collection.Observable
+  ---@cast self                         eve.lib.collection.Observable
 
   self.equals = equals
   self.normalize = normalize
@@ -79,8 +79,7 @@ end
 ---@param options? eve.lib.collection.observable.INextOptions
 ---@return boolean Indicate whether if the value changed.
 function M:next(value, options)
-  options = options or {}
-  ---@cast options eve.lib.collection.observable.INextOptions
+  options = options or {} ---@type eve.lib.collection.observable.INextOptions
 
   if self:is_disposed() then
     local strict = options.strict ~= false ---@type boolean

@@ -44,7 +44,7 @@ function M.resolve_cmd_result(subject, result_str)
     return false, nil
   end
 
-  ---@cast result eve.lib.oxi.ICmdResult
+  ---@cast result                       eve.lib.oxi.ICmdResult
   return true, result.data
 end
 
@@ -64,7 +64,7 @@ function M.resolve_fun_result(subject, result_str)
     return false, nil
   end
 
-  ---@cast result eve.lib.oxi.IFunResult
+  ---@cast result                       eve.lib.oxi.IFunResult
   return true, result.data
 end
 
@@ -148,7 +148,7 @@ function M.find(params)
   local result_str = nvim_tools.find(options_stringified)
   local ok, data = M.resolve_cmd_result("find", result_str)
   if ok and data ~= nil then
-    ---@cast data eve.lib.oxi.find.IResult
+    ---@cast data                       eve.lib.oxi.find.IResult
     return data.filepaths
   end
   return {}
@@ -413,7 +413,7 @@ function M.replace_file_by_matches(params)
   }
   local payload = json.stringify(resolved_params)
   local ok, data = M.run_fun("replace_file_by_matches", nvim_tools.replace_file_advance_by_matches, payload)
-  ---@cast data eve.lib.oxi.replace.replace_file_by_matches.IResult
+  ---@cast data                         eve.lib.oxi.replace.replace_file_by_matches.IResult
 
   return ok, data
 end
@@ -441,7 +441,7 @@ function M.replace_file_advance_by_matches(params)
   }
   local payload = json.stringify(resolved_params)
   local ok, data = M.run_fun("replace_file_advance_by_matches", nvim_tools.replace_file_advance_by_matches, payload)
-  ---@cast data eve.lib.oxi.replace.replace_file_advance_by_matches.IResult
+  ---@cast data                         eve.lib.oxi.replace.replace_file_advance_by_matches.IResult
 
   return ok, ok and data.locations or {}
 end
@@ -466,7 +466,7 @@ function M.replace_file_preview(params)
   )
 
   if ok then
-    ---@cast data string
+    ---@cast data                       string
 
     local text = data ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -507,7 +507,7 @@ function M.replace_file_preview_by_matches(params)
   )
 
   if ok then
-    ---@cast data string
+    ---@cast data                       string
 
     local text = data ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -543,7 +543,7 @@ function M.replace_file_preview_advance(params)
   )
 
   if ok then
-    ---@cast data eve.lib.oxi.replace.replace_file_preview_advance.IRawResult
+    ---@cast data                       eve.lib.oxi.replace.replace_file_preview_advance.IRawResult
 
     local text = data.text ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -581,7 +581,7 @@ function M.replace_file_preview_advance_by_matches(params)
     M.run_fun("replace_file_preview_advance_by_matches", nvim_tools.replace_file_preview_advance_by_matches, payload)
 
   if ok then
-    ---@cast data eve.lib.oxi.replace.replace_file_preview_advance_by_matches.IRawResult
+    ---@cast data                       eve.lib.oxi.replace.replace_file_preview_advance_by_matches.IRawResult
 
     local text = data.text ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -617,7 +617,7 @@ function M.replace_text_preview(params)
   )
 
   if ok then
-    ---@cast data string
+    ---@cast data                       string
 
     local text = data ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -658,7 +658,7 @@ function M.replace_text_preview_by_matches(params)
   )
 
   if ok then
-    ---@cast data string
+    ---@cast data                       string
 
     local text = data ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -694,7 +694,7 @@ function M.replace_text_preview_advance(params)
   )
 
   if ok then
-    ---@cast data eve.lib.oxi.replace.replace_text_preview_advance.IRawResult
+    ---@cast data                       eve.lib.oxi.replace.replace_text_preview_advance.IRawResult
 
     local text = data.text ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -739,7 +739,7 @@ function M.replace_text_preview_advance_by_matches(params)
   )
 
   if ok then
-    ---@cast data eve.lib.oxi.replace.replace_text_preview_advance_by_matches.IRawResult
+    ---@cast data                       eve.lib.oxi.replace.replace_text_preview_advance_by_matches.IRawResult
 
     local text = data.text ---@type string
     local lwidths = M.get_line_widths(text) ---@type integer[]
@@ -851,7 +851,7 @@ function M.find_match_points_line_by_line(pattern, lines, flag_fuzzy, flag_regex
   )
 
   if ok then
-    ---@cast data eve.lib.oxi.string.ILineMatch[]
+    ---@cast data                       eve.lib.oxi.string.ILineMatch[]
     return data
   end
   return nil
@@ -862,7 +862,7 @@ end
 function M.get_line_widths(text)
   local str = nvim_tools.get_line_widths(text)
   local raw_result = json.parse(str)
-  ---@cast raw_result integer[]
+  ---@cast raw_result                   integer[]
 
   local result = raw_result ---@type integer[]
   return result

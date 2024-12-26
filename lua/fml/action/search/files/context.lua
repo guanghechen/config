@@ -162,7 +162,7 @@ function M.edit_config()
       if type(raw_data) ~= "table" then
         return "Invalid search_files configuration, expect an object."
       end
-      ---@cast raw_data fml.action.search.files.IConfigData
+      ---@cast raw_data                 fml.action.search.files.IConfigData
 
       if raw_data.keyword == nil or type(raw_data.keyword) ~= "string" then
         return "Invalid data.search_pattern, expect an string."
@@ -197,7 +197,7 @@ function M.edit_config()
         local last_search_pattern = state.search.keyword:snapshot() ---@type string
 
         local raw = vim.tbl_extend("force", data, raw_data)
-        ---@cast raw fml.action.search.files.IConfigData
+        ---@cast raw                    fml.action.search.files.IConfigData
 
         local keyword = raw.keyword ---@type string
         local replacement = raw.replacement ---@type string

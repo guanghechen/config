@@ -148,7 +148,7 @@ local float_winsep = {
       return false
     end
 
-    ---@cast widget fml.ux.search.ISearch
+    ---@cast widget                     fml.ux.search.ISearch
     return widget.get_winnr_preview ~= nil and widget:get_winnr_preview() ~= nil
   end,
 }

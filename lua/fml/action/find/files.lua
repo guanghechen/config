@@ -119,7 +119,7 @@ local actions = {
         if type(raw_data) ~= "table" then
           return "Invalid find_files configuration, expect an object."
         end
-        ---@cast raw_data fml.action.find.files.actions.IConfigData
+        ---@cast raw_data               fml.action.find.files.actions.IConfigData
 
         if raw_data.exclude_patterns == nil or not vim.islist(raw_data.exclude_patterns) then
           return "Invalid data.exclude_patterns, expect an array."
@@ -128,7 +128,7 @@ local actions = {
       on_confirm = function(raw_data)
         vim.schedule(function()
           local raw = vim.tbl_extend("force", data, raw_data)
-          ---@cast raw fml.action.find.files.actions.IConfigData
+          ---@cast raw                  fml.action.find.files.actions.IConfigData
 
           local exclude_patterns = table.concat(raw.exclude_patterns, ",") ---@type string
           state.find.excludes:next(exclude_patterns)
@@ -163,7 +163,7 @@ local actions = {
       local matched_items = _select:get_matched_items() ---@type fml.ux.select.IMatchedItem[]
       for _, matched_item in ipairs(matched_items) do
         local item = _select:get_item(matched_item.uuid) ---@type fml.ux.select.IItem|nil
-        ---@cast item fml.ux.file_select.IItem
+        ---@cast item                   fml.ux.file_select.IItem
 
         if item ~= nil then
           local absolute_filepath = path.join(select_cwd, item.data.filepath) ---@type string

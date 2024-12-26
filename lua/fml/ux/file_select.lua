@@ -136,7 +136,7 @@ function M.new(props)
         local matched_items = _select:get_matched_items() ---@type fml.ux.select.IMatchedItem[]
         for _, matched_item in ipairs(matched_items) do
           local item = _select:get_item(matched_item.uuid) ---@type fml.ux.select.IItem|nil
-          ---@cast item fml.ux.file_select.IItem
+          ---@cast item                 fml.ux.file_select.IItem
 
           if item ~= nil then
             local absolute_filepath = path.join(select_cwd, item.data.filepath) ---@type string

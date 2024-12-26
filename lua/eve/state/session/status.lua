@@ -112,7 +112,7 @@ function M.load(raw_data)
       tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
 
       reset = function()
-        ---@cast _state eve.state.status.state
+        ---@cast _state                 eve.state.status.state
 
         _state.lsp_msg:next("")
         _state.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
