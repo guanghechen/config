@@ -7,7 +7,7 @@ local storage = { editor = path.locate_context_filepath("editor.json") } ---@typ
 eve.setup_state(storage)
 
 local themes = require("eve.theme").themes ---@type eve.e.Theme[]
-local theme = vim.g.ghc_theme or "gruvbox_light" ---@type eve.e.Theme
+local theme = vim.env.GHC_THEME or "gruvbox_dark" ---@type eve.e.Theme
 
 if not vim.tbl_contains(themes, theme) then
   print("Unknown theme: " .. theme)
