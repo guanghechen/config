@@ -1,52 +1,5 @@
----@type string[]
-local ensure_installed = {
-  -- lsp
-  "bash-language-server", -- bashls
-  "clangd", -- clangd
-  "css-lsp", -- cssls
-  "dockerfile-language-server", -- docker
-  "docker-compose-language-service", -- docker_compose_language_service
-  "eslint-lsp", -- eslint
-  "html-lsp", -- html
-  "json-lsp", -- jsonls
-  "lua-language-server", -- lua_ls
-  "pyright", -- pyright
-  "rust-analyzer", -- rust_analyzer
-  -- "sqls", -- sqls
-  "tailwindcss-language-server", --  tailwindcss
-  "taplo", -- taplo
-  "vtsls", -- vtsls
-  "vetur-vls", -- vuels
-  "yaml-language-server", -- yamlls
-
-  -- formatter
-  "codespell",
-  "prettier",
-  "shfmt",
-  "stylua",
-}
-
----@return nil
-local function install_all()
-  vim.cmd("Mason")
-  local mr = require("mason-registry")
-  for _, pkgName in ipairs(ensure_installed) do
-    local p = mr.get_package(pkgName)
-    if not p:is_installed() then
-      p:install()
-    end
-  end
-end
-
----@return nil
-local function install_all_force()
-  vim.cmd("Mason")
-  local mr = require("mason-registry")
-  for _, pkgName in ipairs(ensure_installed) do
-    local p = mr.get_package(pkgName)
-    p:install()
-  end
-end
+local functional = require("eve.lib.functional")
+local action = require("guanghechen.action.mason")
 
 return {
   name = "mason.nvim",
@@ -68,32 +21,18 @@ return {
   config = function(_, opts)
     require("mason").setup(opts)
     require("mason-lspconfig").setup({
-      ensure_installed = {
-        "bashls", -- bash
-        "clangd", -- c/c++
-        "cssls", -- css -- by microsoft
-        "dockerls", -- docker
-        "docker_compose_language_service", --docker compose -- by microsoft
-        "eslint", -- eslint -- by microsoft
-        "html", -- html -- by microsoft
-        "jsonls", -- json
-        "lua_ls", -- lua
-        "pyright", -- python -- by microsoft
-        "rust_analyzer", -- rust -- by rust official
-        -- "sqls", -- sql
-        "tailwindcss",
-        "taplo", -- toml
-        "vtsls", -- javascript/typescript
-        "vuels", -- vue -- by vuejs official
-        "yamlls", -- yaml -- by redhat
-      },
+      ensure_installed = action.get_mason_lspconfig_ensure_installed(),
       automatic_installation = false,
       handlers = require("guanghechen.lsp.setup"),
     })
 
     -- custom cmd to install all mason binaries listed
-    vim.api.nvim_create_user_command("MasonInstallAll", install_all, {})
-    vim.api.nvim_create_user_command("MasonInstallAllForce", install_all_force, {})
+    vim.api.nvim_create_user_command("MasonInstallAll", function()
+      action.install_all(false, functional.noop)
+    end, {})
+    vim.api.nvim_create_user_command("MasonInstallAllForce", function()
+      action.install_all(true, functional.noop)
+    end, {})
   end,
   dependencies = {
     "mason-lspconfig.nvim",
