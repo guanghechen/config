@@ -7,6 +7,9 @@ local augroup = require("eve.lib.nvim").augroup
 ---@type table<string, table<vim.lsp.Client, table<number, boolean>>>
 local supports_method = {}
 
+---@class eve.lib.lsp
+local M = {}
+
 ---! Check if cursor is within range
 ---@param cursor                      eve.lib.lsp.ISymbolPos
 ---@param range                       { start: eve.lib.lsp.ISymbolPos, end: eve.lib.lsp.ISymbolPos }
@@ -20,7 +23,7 @@ end
 
 ---@param client                        vim.lsp.Client
 ---@return nil
-local function check_methods(client, bufnr)
+function M.check_methods(client, bufnr)
   -- don't trigger on invalid buffers
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
@@ -49,32 +52,6 @@ local function check_methods(client, bufnr)
     end
   end
 end
-
-vim.api.nvim_create_autocmd("LspAttach", {
-  group = augroup("check_methods_on_lsp_attach"),
-  callback = function(args)
-    local bufnr = args.buf ---@type integer
-    local client = vim.lsp.get_client_by_id(args.data.client_id)
-    if client then
-      check_methods(client, bufnr)
-    end
-  end,
-})
-
-vim.api.nvim_create_autocmd("User", {
-  group = augroup("check_methods_on_lsp_dynamic_capability"),
-  pattern = "LspDynamicCapability",
-  callback = function(args)
-    local bufnr = args.data.buffer ---@type number
-    local client = vim.lsp.get_client_by_id(args.data.client_id)
-    if client then
-      check_methods(client, bufnr)
-    end
-  end,
-})
-
----@class eve.lib.lsp
-local M = {}
 
 ---@param method                        string
 ---@param fn                            fun(client: vim.lsp.Client, bufnr: integer): nil

@@ -1,7 +1,7 @@
 local functional = require("eve.lib.functional")
 local bindkeys = require("eve.lib.nvim").bindkeys
 local path = require("eve.lib.path")
-local capabilities = require("guanghechen.lsp.common").capabilities
+local get_capabilities = require("guanghechen.lsp.common").get_capabilities
 local handlers = require("guanghechen.lsp.common").handlers
 local basic_on_attach = require("guanghechen.lsp.common").on_attach
 local on_init = require("guanghechen.lsp.common").on_init
@@ -9,6 +9,57 @@ local on_init = require("guanghechen.lsp.common").on_init
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
+  client.commands["_typescript.moveToFileRefactoring"] = function(lsp_command)
+    local action, uri, range = unpack(lsp_command.arguments)
+    ---@cast action                     string
+    ---@cast uri                        string
+    ---@cast range                      lsp.Range
+
+    local function move(newf)
+      client.request("workspace/executeCommand", {
+        command = lsp_command.command,
+        arguments = { action, uri, range, newf },
+      })
+    end
+
+    local fname = vim.uri_to_fname(uri)
+    client.request("workspace/executeCommand", {
+      command = "typescript.tsserverRequest",
+      arguments = {
+        "getMoveToRefactoringFileSuggestions",
+        {
+          file = fname,
+          startLine = range.start.line + 1,
+          startOffset = range.start.character + 1,
+          endLine = range["end"].line + 1,
+          endOffset = range["end"].character + 1,
+        },
+      },
+    }, function(_, result)
+      ---@type string[]
+      local files = result.body.files
+      table.insert(files, 1, "Enter new path...")
+      vim.ui.select(files, {
+        prompt = "Select move destination:",
+        format_item = function(f)
+          return vim.fn.fnamemodify(f, ":~:.")
+        end,
+      }, function(f)
+        if f and f:find("^Enter new path") then
+          vim.ui.input({
+            prompt = "Enter move destination:",
+            default = vim.fn.fnamemodify(fname, ":h") .. "/",
+            completion = "file",
+          }, function(newf)
+            return newf and move(newf)
+          end)
+        elseif f then
+          move(f)
+        end
+      end)
+    end)
+  end
+
   basic_on_attach(client, bufnr)
 
   ---@type eve.t.IKeymap[]
@@ -109,63 +160,82 @@ local plugins = {
   vue = path.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
 }
 
-return {
-  capabilities = capabilities,
-  handlers = handlers,
-  on_attach = on_attach,
-  on_init = on_init,
-  filetypes = {
-    "javascript",
-    "javascriptreact",
-    "javascript.jsx",
-    "typescript",
-    "typescriptreact",
-    "typescript.tsx",
-  },
-  root_dir = function(filename)
-    local util = require("lspconfig.util")
-    return util.root_pattern(".git")(filename)
-      or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
-  end,
-  settings = {
-    complete_function_calls = true,
-    vtsls = {
+return function()
+  local capabilities = get_capabilities()
+
+  return {
+    capabilities = capabilities,
+    handlers = handlers,
+    on_attach = on_attach,
+    on_init = on_init,
+    filetypes = {
+      "javascript",
+      "javascriptreact",
+      "javascript.jsx",
+      "typescript",
+      "typescriptreact",
+      "typescript.tsx",
+      "vue",
+    },
+    root_dir = function(filename)
+      local util = require("lspconfig.util")
+      return util.root_pattern(".git")(filename)
+        or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
+    end,
+    settings = {
       complete_function_calls = true,
       vtsls = {
-        enableMoveToFileCodeAction = true,
-        autoUseWorkspaceTsdk = true,
-        experimental = {
-          maxInlayHintLength = 30,
-          completion = {
-            enableServerSideFuzzyMatch = true,
+        complete_function_calls = true,
+        vtsls = {
+          enableMoveToFileCodeAction = true,
+          autoUseWorkspaceTsdk = true,
+          experimental = {
+            maxInlayHintLength = 30,
+            completion = {
+              enableServerSideFuzzyMatch = true,
+            },
+          },
+          tsserver = {
+            globalPlugins = vim.tbl_filter(functional.booleanify, {
+              plugins.vue and {
+                name = "@vue/typescript-plugin",
+                location = plugins.vue,
+                languages = { "vue" },
+                configNamespace = "typescript",
+                enableForWorkspaceTypeScriptVersions = true,
+              },
+            }),
           },
         },
-        tsserver = {
-          globalPlugins = vim.tbl_filter(functional.booleanify, {
-            plugins.vue and {
-              name = "@vue/typescript-plugin",
-              location = plugins.vue,
-              languages = { "vue" },
-              configNamespace = "typescript",
-              enableForWorkspaceTypeScriptVersions = true,
-            },
-          }),
+        typescript = {
+          updateImportsOnFileMove = { enabled = "always" },
+          suggest = {
+            completeFunctionCalls = true,
+          },
+          inlayHints = {
+            enumMemberValues = { enabled = true },
+            functionLikeReturnTypes = { enabled = true },
+            parameterNames = { enabled = "literals" },
+            parameterTypes = { enabled = true },
+            propertyDeclarationTypes = { enabled = true },
+            variableTypes = { enabled = false },
+          },
         },
-      },
-      typescript = {
-        updateImportsOnFileMove = { enabled = "always" },
-        suggest = {
-          completeFunctionCalls = true,
-        },
-        inlayHints = {
-          enumMemberValues = { enabled = true },
-          functionLikeReturnTypes = { enabled = true },
-          parameterNames = { enabled = "literals" },
-          parameterTypes = { enabled = true },
-          propertyDeclarationTypes = { enabled = true },
-          variableTypes = { enabled = false },
+        javascript = {
+          updateImportsOnFileMove = { enabled = "always" },
+          suggest = {
+            completeFunctionCalls = true,
+          },
+          inlayHints = {
+            enumMemberValues = { enabled = true },
+            functionLikeReturnTypes = { enabled = true },
+            parameterNames = { enabled = "literals" },
+            parameterTypes = { enabled = true },
+            propertyDeclarationTypes = { enabled = true },
+            variableTypes = { enabled = false },
+          },
         },
       },
     },
-  },
-}
+  }
+end

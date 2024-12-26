@@ -114,7 +114,6 @@ local no_details_module_names = {
   "cmp-nvim-lsp",
   "cmp-path",
   "friendly-snippets",
-  "mason-lspconfig.nvim",
   "nui.nvim",
   "plenary.nvim",
 }

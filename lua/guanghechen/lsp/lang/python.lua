@@ -1,16 +1,20 @@
-local capabilities = require("guanghechen.lsp.common").capabilities
+local get_capabilities = require("guanghechen.lsp.common").get_capabilities
 local handlers = require("guanghechen.lsp.common").handlers
 local on_attach = require("guanghechen.lsp.common").on_attach
 local on_init = require("guanghechen.lsp.common").on_init
 
-return {
-  on_attach = on_attach,
-  on_init = on_init,
-  capabilities = capabilities,
-  handlers = handlers,
-  settings = {
-    pyright = {
-      enabled = true,
+return function()
+  local capabilities = get_capabilities()
+
+  return {
+    capabilities = capabilities,
+    handlers = handlers,
+    on_attach = on_attach,
+    on_init = on_init,
+    settings = {
+      pyright = {
+        enabled = true,
+      },
     },
-  },
-}
+  }
+end

@@ -36,7 +36,6 @@ local actions = {
 ---@class guanghechen.lsp.common
 local M = {}
 
-local register_capability = vim.lsp.handlers["client/registerCapability"]
 M.handlers = {
   ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
     border = "rounded",
@@ -48,47 +47,43 @@ M.handlers = {
     focusable = true,
     silent = true,
   }),
-  ["client/registerCapability"] = function(err, res, ctx)
-    ---@diagnostic disable-next-line: no-unknown
-    local ret = register_capability(err, res, ctx)
-    local client = vim.lsp.get_client_by_id(ctx.client_id)
-    if client then
-      for bufnr in pairs(client.attached_buffers) do
-        vim.api.nvim_exec_autocmds("User", {
-          pattern = "LspDynamicCapability",
-          data = { client_id = client.id, buffer = bufnr },
-        })
-      end
-    end
-    return ret
-  end,
 }
 
-local has_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-M.capabilities = vim.tbl_deep_extend(
-  "force",
-  {},
-  vim.lsp.protocol.make_client_capabilities(),
-  has_cmp and cmp_nvim_lsp.default_capabilities() or {},
-  {}
-)
-M.capabilities.textDocument.completion.completionItem = {
-  documentationFormat = { "markdown", "plaintext" },
-  snippetSupport = true,
-  preselectSupport = true,
-  insertReplaceSupport = true,
-  labelDetailsSupport = true,
-  deprecatedSupport = true,
-  commitCharactersSupport = true,
-  tagSupport = { valueSet = { 1 } },
-  resolveSupport = {
-    properties = {
-      "documentation",
-      "detail",
-      "additionalTextEdits",
+M.get_capabilities = function()
+  local has_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
+  local capabilities = vim.tbl_deep_extend(
+    "force",
+    {},
+    vim.lsp.protocol.make_client_capabilities(),
+    has_cmp and cmp_nvim_lsp.default_capabilities() or {},
+    {
+      workspace = {
+        fileOperations = {
+          didRename = true,
+          willRename = true,
+        },
+      },
+    }
+  )
+  capabilities.textDocument.completion.completionItem = {
+    documentationFormat = { "markdown", "plaintext" },
+    snippetSupport = true,
+    preselectSupport = true,
+    insertReplaceSupport = true,
+    labelDetailsSupport = true,
+    deprecatedSupport = true,
+    commitCharactersSupport = true,
+    tagSupport = { valueSet = { 1 } },
+    resolveSupport = {
+      properties = {
+        "documentation",
+        "detail",
+        "additionalTextEdits",
+      },
     },
-  },
-}
+  }
+  return capabilities
+end
 
 ---@param dirpath                       string
 ---@param config_filenames              string[]
@@ -147,6 +142,10 @@ function M.on_attach(client, bufnr)
   local has_support_codeAction = lsp.has_support_method(bufnr, "codeAction") ---@type boolean
   local has_support_rename = lsp.has_support_method(bufnr, "rename") ---@type boolean
 
+  if client then
+    lsp.check_methods(client, bufnr)
+  end
+
   ---@type eve.t.IKeymap[]
   local keymaps = {
     {
@@ -154,6 +153,10 @@ function M.on_attach(client, bufnr)
       key = "K",
       callback = function()
         vim.lsp.buf.hover()
+
+        vim.defer_fn(function()
+          vim.lsp.buf.hover()
+        end, 100)
       end,
       desc = "lsp: hover",
     },
@@ -162,6 +165,10 @@ function M.on_attach(client, bufnr)
       key = "gD",
       callback = function()
         vim.lsp.buf.declaration()
+
+        vim.defer_fn(function()
+          vim.lsp.buf.declaration()
+        end, 100)
       end,
       desc = "lsp: goto declaration",
     },
@@ -170,6 +177,10 @@ function M.on_attach(client, bufnr)
       key = "gK",
       callback = function()
         vim.lsp.buf.signature_help()
+
+        vim.defer_fn(function()
+          vim.lsp.buf.signature_help()
+        end, 100)
       end,
       desc = "lsp: show signature help",
     },

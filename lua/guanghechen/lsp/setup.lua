@@ -1,10 +1,12 @@
-local capabilities = require("guanghechen.lsp.common").capabilities
+local get_capabilities = require("guanghechen.lsp.common").get_capabilities
 local handlers = require("guanghechen.lsp.common").handlers
 local on_attach = require("guanghechen.lsp.common").on_attach
 local on_init = require("guanghechen.lsp.common").on_init
 
 local setup = {
   function(server_name)
+    local capabilities = get_capabilities()
+
     require("lspconfig")[server_name].setup({
       capabilities = capabilities,
       handlers = handlers,
@@ -13,31 +15,40 @@ local setup = {
     })
   end,
   clangd = function()
-    require("lspconfig").clangd.setup(require("guanghechen.lsp.lang.cpp"))
+    local get_config = require("guanghechen.lsp.lang.cpp")
+    require("lspconfig").clangd.setup(get_config())
   end,
   eslint = function()
-    require("lspconfig").eslint.setup(require("guanghechen.lsp.lang.eslint"))
+    local get_config = require("guanghechen.lsp.lang.eslint")
+    require("lspconfig").eslint.setup(get_config())
   end,
   html = function()
-    require("lspconfig").html.setup(require("guanghechen.lsp.lang.html"))
+    local get_config = require("guanghechen.lsp.lang.html")
+    require("lspconfig").html.setup(get_config())
   end,
   jsonls = function()
-    require("lspconfig").jsonls.setup(require("guanghechen.lsp.lang.json"))
+    local get_config = require("guanghechen.lsp.lang.json")
+    require("lspconfig").jsonls.setup(get_config())
   end,
   lua_ls = function()
-    require("lspconfig").lua_ls.setup(require("guanghechen.lsp.lang.lua"))
+    local get_config = require("guanghechen.lsp.lang.lua")
+    require("lspconfig").lua_ls.setup(get_config())
   end,
   pyright = function()
-    require("lspconfig").pyright.setup(require("guanghechen.lsp.lang.python"))
+    local get_config = require("guanghechen.lsp.lang.python")
+    require("lspconfig").pyright.setup(get_config())
   end,
   rust_analyzer = function()
-    require("lspconfig").rust_analyzer.setup(require("guanghechen.lsp.lang.rust"))
+    local get_config = require("guanghechen.lsp.lang.rust")
+    require("lspconfig").rust_analyzer.setup(get_config())
   end,
   tailwindcss = function()
-    require("lspconfig").tailwindcss.setup(require("guanghechen.lsp.lang.tailwindcss"))
+    local get_config = require("guanghechen.lsp.lang.tailwindcss")
+    require("lspconfig").tailwindcss.setup(get_config())
   end,
   ts_ls = function()
-    require("lspconfig").ts_ls.setup(require("guanghechen.lsp.lang.typescript"))
+    local get_config = require("guanghechen.lsp.lang.typescript")
+    require("lspconfig").ts_ls.setup(get_config())
   end,
 }
 
