@@ -57,9 +57,14 @@ local definition_map = {} ---@type table<string, eve.command.IDefinition>
 local command_map = {} ---@type table<string, eve.command.ICommand>
 
 ---@class eve.command
-local M = {}
-M.__definition_map__ = definition_map
-M.__command_map__ = command_map
+---@field protected __context__         eve.command.IContext|nil
+---@field protected __definition_map__  table<string, eve.command.IDefinition>
+---@field protected __command_map__     table<string, eve.command.ICommand>
+local M = {
+  __context__ = nil,
+  __definition_map__ = definition_map,
+  __command_map__ = command_map,
+}
 
 ---@param raw_definition                eve.command.IDefinition | eve.command.IDefinitionWithCandidates
 ---@param overwrite                     boolean|nil
@@ -174,6 +179,8 @@ end
 ---@param silent                        ?boolean
 ---@return nil
 function M.execute(uuid, context, args, silent)
+  M.__context__ = context
+
   local tabtype = context.tabtype ---@type eve.e.state.tab.meta.TabType
   local key = uuid .. ":" .. tabtype ---@type string
   local command = command_map[key] or command_map[uuid] ---@type eve.command.ICommand|nil
@@ -191,6 +198,11 @@ function M.execute(uuid, context, args, silent)
   end
 
   command.action(context, args)
+end
+
+---@return eve.command.IContext|nil
+function M.context_snapshot()
+  return M.__context__
 end
 
 ---@param uuid                          string
