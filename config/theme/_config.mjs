@@ -48,14 +48,13 @@ export const apps = [
         app.name,
         "init-theme.lua",
       );
-      await safe_exec("nvim", [
-        "--headless",
-        "-c",
-        `let g:ghc_theme='${scheme.theme}'`,
-        "-c",
-        `source ${theme_config_filepath}`,
-        "+q",
-      ]);
+      await safe_exec(
+        "nvim",
+        ["--headless", "-u", theme_config_filepath, "+q"],
+        {
+          GHC_THEME: scheme.theme,
+        }
+      );
     },
   },
   {
@@ -73,16 +72,10 @@ export const apps = [
       );
       await safe_exec(
         "nvim",
-        [
-          "--headless",
-          "-c",
-          `let g:ghc_theme='${scheme.theme}'`,
-          "-c",
-          `source ${theme_config_filepath}`,
-          "+q",
-        ],
+        ["--headless", "-u", theme_config_filepath, "+q"],
         {
           NVIM_APPNAME: app.name,
+          GHC_THEME: scheme.theme,
         },
       );
     },
