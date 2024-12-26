@@ -46,5 +46,6 @@ Copy-Item -Path $source -Destination $PROFILE -Force
 Write-Host "[setup config] setup nvim..." -ForegroundColor Blue
 $nvim_repo_path = Join-Path $config_root_dir "nvim"
 . "$nvim_repo_path/rust/nvim_tools/build.ps1"
+nvim --headless -u "$nvim_repo_path/init-update.lua"
 
 Write-Host "[setup config] done." -ForegroundColor Green
