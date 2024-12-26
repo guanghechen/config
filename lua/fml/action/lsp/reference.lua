@@ -57,17 +57,11 @@ local function fetch_data(context, method, additional_params, callback)
             end
           end
 
-          local offset_encoding = vim.lsp.get_client_by_id(client_id).offset_encoding
-          if first_encoding == nil and #locations > 0 then
-            first_encoding = offset_encoding
-            first_location = locations[1]
-          end
-
-          local raw_items = vim.lsp.util.locations_to_items(locations, offset_encoding)
-          for _, raw_item in ipairs(raw_items) do
-            local filepath = path.relative(cwd, raw_item.filename, true) ---@type string
-            local lnum = raw_item.lnum ---@type integer
-            local col = raw_item.col - 1 ---@type integer
+          for _, location in ipairs(locations) do
+            local filepath = location.uri:gsub("^file://", "") ---@type string
+            filepath = path.relative(cwd, filepath, true) ---@type string
+            local lnum = location.range.start.line + 1 ---@type integer
+            local col = location.range.start.character ---@type integer
             local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
 
             ---@type fml.ux.file_select.IRawItem
