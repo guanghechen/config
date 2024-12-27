@@ -11,20 +11,29 @@ $config_repo_branch = @(
   "ripgrep",
   "yazi"
 )
+$optinal_config_repo_branch = @(
+  "alacritty",
+  "kitty",
+  "nvim-nvchad"
+)
 
 # Function to clone or update a repository
 function CloneOrUpdateRepo {
-  param ([string]$branch)
+  param (
+    [string]$branch,
+    [bool]$required
+  )
 
   $repo_url = "https://github.com/guanghechen/config.git"
   $repo_path = Join-Path $config_root_dir $branch
+  $repo_path_git_dir = Join-Path $repo_path ".git"
 
   # Check if the directory exists
-  if (Test-Path $repo_path) {
+  if (Test-Path $repo_path_git_dir) {
     Write-Host "[setup config] fetching $branch into $repo_path..." -ForegroundColor Blue
     Set-Location -Path $repo_path
     git pull origin $branch
-  } else {
+  } elseif ($required) {
     Write-Host "[setup config] cloning $branch into $repo_path..." -ForegroundColor Blue
     Set-Location -Path $config_root_dir
     git clone $repo_url --single-branch --branch=$branch $repo_path
@@ -33,8 +42,12 @@ function CloneOrUpdateRepo {
 
 # Loop through the repositories and clone or update each one
 foreach ($branch in $config_repo_branch) {
-  CloneOrUpdateRepo -branch $branch
+  CloneOrUpdateRepo -branch $branch true
 }
+foreach ($branch in $config_repo_branch) {
+  CloneOrUpdateRepo -branch $branch false
+}
+
 
 # Define the source and destination paths
 Write-Host "[setup config] copying pwsh profile.ps1..." -ForegroundColor Blue
