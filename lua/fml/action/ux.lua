@@ -9,7 +9,7 @@ local M = {}
 ---@diagnostic disable-next-line: unused-local
 function M.reload_theme(context, arg)
   local force = type(arg) == "string" and arg:lower() == "force" ---@type boolean
-  require("eve.theme").reload_theme(force)
+  require("eve.theme").reload_theme(force, true)
 end
 
 ---@param context                       eve.command.IContext

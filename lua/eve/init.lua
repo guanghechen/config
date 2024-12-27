@@ -52,13 +52,13 @@ end
 function M.setup_theme()
   local state = require("eve.state")
   local reload_theme = require("eve.theme").reload_theme
-  reload_theme(false)
+  reload_theme(false, false)
   vim.schedule(function()
-    reload_theme(false)
+    reload_theme(false, false)
 
     state.watch_changes({
       on_theme_changed = function()
-        reload_theme(false)
+        reload_theme(false, true)
       end,
     })
   end)

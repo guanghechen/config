@@ -172,8 +172,9 @@ function M.get_scheme(theme)
 end
 
 ---@param force                         boolean
+---@param reload_plugins                boolean
 ---@return nil
-function M.reload_theme(force)
+function M.reload_theme(force, reload_plugins)
   local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
   local transparency = state.theme.transparency:snapshot() ---@type boolean
   local theme_cache_path = M.cache_path ---@type string
@@ -195,10 +196,11 @@ function M.reload_theme(force)
   end
 
   ---! Reload the plugins to trigger it to apply the new highlights.
-  pcall(function()
-    ---! Reload the indent-blankline.nvim plugin.
-    vim.cmd("Lazy reload indent-blankline.nvim")
-  end)
+  if reload_plugins then
+    pcall(function()
+      vim.cmd("Lazy reload indent-blankline.nvim")
+    end)
+  end
 end
 
 ---@param scheme                        eve.theme.IScheme
