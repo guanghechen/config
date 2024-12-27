@@ -28,6 +28,22 @@ export const apps = [
     },
   },
   {
+    name: "kitty",
+    themes: "theme/",
+    extname: ".conf",
+    local: "local/theme.conf",
+    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    render: (_, template, scheme) => render_template(template, scheme),
+    after_apply: async (app) => {
+      const main_config_filepath = path.join(
+        HOME_CONFIG,
+        app.name,
+        "kitty.conf",
+      );
+      await touch(main_config_filepath);
+    },
+  },
+  {
     name: "lazygit",
     themes: "theme/",
     extname: ".yml",
