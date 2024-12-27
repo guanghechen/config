@@ -40,6 +40,7 @@ local formatters_by_ft = {
 
 local ignored = {
   filetypes = {
+    conf = true,
     text = true,
     tmux = true,
     toml = true,
