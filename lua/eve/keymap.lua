@@ -60,6 +60,10 @@ mk({ "t" }, "<C-n>", "<C-\\><C-n>", "terminal: enter normal mode") -- Exit termi
 mk({ "i" }, ",", ",<c-g>u")
 mk({ "i" }, ".", ".<c-g>u")
 mk({ "i" }, ";", ";<c-g>u")
+mk({ "i" }, "<", "<<c-g>u")
+mk({ "i" }, "(", "(<c-g>u")
+mk({ "i" }, "[", "[<c-g>u")
+mk({ "i" }, "{", "{<c-g>u")
 mk({ "i" }, "<cr>", "<cr><c-g>u")
 mk({ "i" }, "<space>", "<space><c-g>u")
 

@@ -1,6 +1,7 @@
 local __module_name__ = "eve.state" ---@type string
 
 local checks = require("eve.lib.checks")
+local constant = require("eve.lib.constant")
 local fs = require("eve.lib.fs")
 local save_nvim_session = require("eve.lib.nvim").save_nvim_session
 local reporter = require("eve.lib.reporter")
@@ -82,6 +83,7 @@ local state_win = require("eve.state.session.win")
 ---@field public observe                fun(observables: eve.lib.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public hmr                    fun(module_name: string): unknown
+---@field public open_filepath          fun(filepath: string, lnum?: integer, col?: integer): boolean
 ---@field public refresh                fun(): nil
 ---@field public watch_changes          fun(params: eve.state.state.IWatchChangeParams): nil
 
@@ -238,6 +240,42 @@ function M.hmr(module_name)
     package.loaded[module_name] = nil
   end
   return require(module_name)
+end
+
+---@param filepath                      string
+---@param lnum                          ?integer
+---@param col                           ?integer
+---@return boolean
+function M.open_filepath(filepath, lnum, col)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_listed = M.tab.resolve_winnr_listed(tabnr) ---@type integer
+  if winnr_listed > 0 and vim.api.nvim_win_is_valid(winnr_listed) then
+    M.buf.open_filepath(winnr_listed, filepath, lnum, col)
+    return true
+  end
+
+  local meta_tab = M.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta_tab ~= nil and meta_tab.tabtype == constant.TT_NORMAL then
+    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+    local non_floating_winnr = 0 ---@type integer
+    for _, winnr in ipairs(winnrs) do
+      local config = vim.api.nvim_win_get_config(winnr)
+      if not config.relative or config.relative == "" then
+        non_floating_winnr = winnr
+        break
+      end
+    end
+
+    if non_floating_winnr > 0 then
+      vim.api.nvim_set_current_win(non_floating_winnr)
+      vim.cmd("vsplit")
+
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      M.buf.open_filepath(winnr, filepath, lnum, col)
+      return true
+    end
+  end
+  return false
 end
 
 ---@return nil

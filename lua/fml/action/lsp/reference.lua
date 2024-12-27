@@ -4,6 +4,7 @@ local checks = require("eve.lib.checks")
 local lsp = require("eve.lib.lsp")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
+local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 
 ---@param context                       eve.command.IContext
@@ -30,8 +31,6 @@ local function fetch_data(context, method, additional_params, callback)
 
   vim.lsp.buf_request_all(bufnr, method, params, function(results_per_client)
     local items = {}
-    local first_encoding = nil ---@type string|nil
-    local first_location = nil ---@type lsp.Location|nil
     local errors = {} ---@type string[]
 
     local uri_cur = params.textDocument.uri ---@type string
@@ -58,15 +57,24 @@ local function fetch_data(context, method, additional_params, callback)
           end
 
           for _, location in ipairs(locations) do
-            local filepath = location.uri:gsub("^file://", "") ---@type string
-            filepath = path.relative(cwd, filepath, true) ---@type string
-            local lnum = location.range.start.line + 1 ---@type integer
-            local col = location.range.start.character ---@type integer
-            local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
+            ---@diagnostic disable-next-line: undefined-field
+            local uri = location.targetUri or location.uri
+            ---@diagnostic disable-next-line: undefined-field
+            local range = location.targetRange or location.range
+            if uri ~= nil and range ~= nil then
+              local filepath = (uri):gsub("^file://", "") ---@type string
+              filepath = path.relative(cwd, filepath, true) ---@type string
+              local lnum = range.start.line + 1 ---@type integer
+              local col = range.start.character ---@type integer
 
-            ---@type fml.ux.file_select.IRawItem
-            local item = { group = filepath, filepath = filepath, uuid = uuid, lnum = lnum, col = col }
-            table.insert(items, item)
+              local last_item = items[#items] ---@type fml.ux.file_select.IRawItem|nil
+              if last_item == nil or last_item.filepath ~= filepath or last_item.lnum ~= lnum then
+                local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
+                ---@type fml.ux.file_select.IRawItem
+                local item = { group = filepath, filepath = filepath, uuid = uuid, lnum = lnum, col = col }
+                table.insert(items, item)
+              end
+            end
           end
         end
       end
@@ -88,42 +96,39 @@ local function fetch_data(context, method, additional_params, callback)
       return
     end
 
-    if #items > 1 then
-      table.sort(items, function(a, b)
-        if a.filepath == b.filepath then
-          if a.lnum == b.lnum then
-            return a.col < b.col
-          end
-          return a.lnum < b.lnum
-        end
-        return a.filepath < b.filepath
-      end)
-
-      local k = 1 ---@type integer
-      local last_item = items[k] ---@type fml.ux.file_select.IRawItem
-      local N = #items ---@type integer
-      for i = 2, N, 1 do
-        local item = items[i] ---@type fml.ux.file_select.IRawItem
-
-        if item.filepath ~= last_item.filepath or item.lnum ~= last_item.lnum then
-          k = k + 1
-          items[k] = item
-          last_item = item
-        end
-      end
-      for i = k + 1, N, 1 do
-        items[i] = nil
-      end
-    end
-
-    if #items == 1 and first_location ~= nil then
-      vim.lsp.util.jump_to_location(first_location, first_encoding, false)
+    if #items == 1 then
+      local item = items[1] ---@type fml.ux.file_select.IRawItem
+      state.open_filepath(item.filepath, item.lnum, item.col)
       callback(true, nil)
       return
     end
 
-    ---@type fml.ux.file_select.IData
-    local data = { items = items, cwd = cwd }
+    table.sort(items, function(a, b)
+      if a.filepath == b.filepath then
+        if a.lnum == b.lnum then
+          return a.col < b.col
+        end
+        return a.lnum < b.lnum
+      end
+      return a.filepath < b.filepath
+    end)
+
+    local k = 1 ---@type integer
+    local last_item = items[k] ---@type fml.ux.file_select.IRawItem
+    local N = #items ---@type integer
+    for i = 2, N, 1 do
+      local item = items[i] ---@type fml.ux.file_select.IRawItem
+
+      if item.filepath ~= last_item.filepath or item.lnum ~= last_item.lnum then
+        k = k + 1
+        items[k] = item
+        last_item = item
+      end
+    end
+    for i = k + 1, N, 1 do
+      items[i] = nil
+    end
+    local data = { items = items, cwd = cwd } ---@type fml.ux.file_select.IData
     callback(true, data)
   end)
 end
