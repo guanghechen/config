@@ -2,7 +2,6 @@ Write-Host "[setup config] preparing" -ForegroundColor Green
 
 $config_root_dir = "$env:XDG_CONFIG_HOME"
 $config_repo_branch = @(
-  "alacritty",
   "fzf",
   "helix",
   "lazygit",

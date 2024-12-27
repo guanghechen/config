@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import fs from 'node:fs/promises'
 import path from "node:path";
 import { HOME_CONFIG } from "./_env.mjs";
 import {
@@ -34,13 +35,16 @@ export const apps = [
     local: "local/theme.conf",
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
-    after_apply: async (app) => {
-      const main_config_filepath = path.join(
-        HOME_CONFIG,
-        app.name,
-        "kitty.conf",
-      );
-      await touch(main_config_filepath);
+    after_apply: async (app, scheme) => {
+      const backgroundImagePath =
+        scheme.variant === "light"
+          ? path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
+          : path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
+
+      const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
+      let content = await fs.readFile(theme_filepath, 'utf8')
+      content += '\n\n' + `background_image ${backgroundImagePath}\n`
+      await fs.writeFile(theme_filepath, content, 'utf8')
     },
   },
   {

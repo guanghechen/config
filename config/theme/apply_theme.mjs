@@ -19,5 +19,12 @@ async function handle() {
   if (!scheme) return;
 
   const tasks = apps.map((app) => apply_theme_per_app(app, scheme));
-  await Promise.allSettled(tasks);
+  const errors = await Promise.allSettled(tasks).then(results =>
+    results.filter(result => result.status === 'rejected')
+      .map(result => result.reason || result.message || result.stack || result)
+  );
+
+  if (errors.length > 0) {
+    console.error("Errors encountered:", errors)
+  }
 }
