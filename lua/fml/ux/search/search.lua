@@ -699,22 +699,25 @@ function M:create_wins_as_needed()
       border = has_preview and borders.main_with_preview or borders.main,
       style = "minimal",
     }
-    if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-      vim.api.nvim_win_set_config(winnr_main, wincfg_main)
-      vim.api.nvim_win_set_buf(winnr_main, bufnr_main)
-    else
+
+    if winnr_main == nil or not vim.api.nvim_win_is_valid(winnr_main) then
       winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
       self._winnr_main = winnr_main
 
       vim.wo[winnr_main].number = false
       vim.wo[winnr_main].relativenumber = false
       vim.wo[winnr_main].signcolumn = "yes"
-      vim.wo[winnr_main].winhighlight = highlights.main
       vim.wo[winnr_main].wrap = false
+    else
+      vim.wo[winnr_main].winfixbuf = false
+      vim.api.nvim_win_set_config(winnr_main, wincfg_main)
+      vim.api.nvim_win_set_buf(winnr_main, bufnr_main)
     end
 
     vim.wo[winnr_main].cursorline = match_count > 0
     vim.wo[winnr_main].winblend = winblend
+    vim.wo[winnr_main].winhighlight = highlights.main
+    vim.wo[winnr_main].winfixbuf = true
     self:sync_main_cursor()
   else
     self._winnr_main = nil
@@ -740,10 +743,7 @@ function M:create_wins_as_needed()
     }
 
     local bufnr_preview = self._preview:create_buf_as_needed() ---@type integer
-    if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
-      vim.api.nvim_win_set_config(winnr_preview, wincfg_preview)
-      vim.api.nvim_win_set_buf(winnr_preview, bufnr_preview)
-    else
+    if winnr_preview == nil or not vim.api.nvim_win_is_valid(winnr_preview) then
       winnr_preview = vim.api.nvim_open_win(bufnr_preview, true, wincfg_preview)
       self._winnr_preview = winnr_preview
 
@@ -756,7 +756,6 @@ function M:create_wins_as_needed()
       vim.wo[winnr_preview].number = true
       vim.wo[winnr_preview].relativenumber = false
       vim.wo[winnr_preview].signcolumn = "yes:1"
-      vim.wo[winnr_preview].winhighlight = highlights.preview
       vim.wo[winnr_preview].list = true
       vim.wo[winnr_preview].listchars = string.format(
         "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
@@ -766,10 +765,16 @@ function M:create_wins_as_needed()
         icons.listchars.space,
         icons.listchars.trail
       )
+    else
+      vim.wo[winnr_preview].winfixbuf = false
+      vim.api.nvim_win_set_config(winnr_preview, wincfg_preview)
+      vim.api.nvim_win_set_buf(winnr_preview, bufnr_preview)
     end
 
     vim.wo[winnr_preview].cursorline = match_count > 0
     vim.wo[winnr_preview].winblend = winblend
+    vim.wo[winnr_preview].winhighlight = highlights.preview
+    vim.wo[winnr_preview].winfixbuf = true
     vim.wo[winnr_preview].wrap = self._preview_flag_wrap
   end
 
@@ -787,21 +792,23 @@ function M:create_wins_as_needed()
     border = has_main and (has_preview and borders.input_with_preview or borders.input) or borders.input_without_main,
     style = "minimal",
   }
-  if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-    vim.api.nvim_win_set_config(winnr_input, wincfg_input)
-    vim.api.nvim_win_set_buf(winnr_input, bufnr_input)
-  else
+  if winnr_input == nil or not vim.api.nvim_win_is_valid(winnr_input) then
     winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_input)
     self._winnr_input = winnr_input
 
     vim.wo[winnr_input].number = false
     vim.wo[winnr_input].relativenumber = false
     vim.wo[winnr_input].signcolumn = "yes:1"
-    vim.wo[winnr_input].winhighlight = highlights.input
     vim.wo[winnr_input].wrap = false
+  else
+    vim.wo[winnr_input].winfixbuf = false
+    vim.api.nvim_win_set_config(winnr_input, wincfg_input)
+    vim.api.nvim_win_set_buf(winnr_input, bufnr_input)
   end
 
   vim.wo[winnr_input].winblend = winblend
+  vim.wo[winnr_input].winhighlight = highlights.input
+  vim.wo[winnr_input].winfixbuf = true
 
   if winnr_cur ~= winnr_input and winnr_cur ~= winnr_preview then
     vim.api.nvim_tabpage_set_win(0, winnr_input)

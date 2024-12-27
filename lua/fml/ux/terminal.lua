@@ -128,21 +128,23 @@ function M:create_win_as_needed()
 
   local winnr = self._winnr ---@type integer|nil
   local bufnr = self:create_buf_as_needed() ---@type integer
-  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    winnr = vim.api.nvim_open_win(bufnr, true, wincfg)
+    vim.wo[winnr].cursorline = false
+    vim.wo[winnr].number = false
+    vim.wo[winnr].signcolumn = "no"
+    vim.wo[winnr].wrap = true
+    vim.wo[winnr].list = false
+    self._winnr = winnr
+  else
+    vim.wo[winnr].winfixbuf = false
     vim.api.nvim_win_set_config(winnr, wincfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
-  else
-    winnr = vim.api.nvim_open_win(bufnr, true, wincfg)
-    self._winnr = winnr
   end
 
-  vim.wo[winnr].cursorline = false
-  vim.wo[winnr].number = false
-  vim.wo[winnr].signcolumn = "no"
-  vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
   vim.wo[winnr].winblend = winblend
-  vim.wo[winnr].wrap = true
-  vim.wo[winnr].list = false
+  vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
+  vim.wo[winnr].winfixbuf = true
   return winnr, bufnr
 end
 
