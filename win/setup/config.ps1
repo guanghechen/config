@@ -42,10 +42,10 @@ function CloneOrUpdateRepo {
 
 # Loop through the repositories and clone or update each one
 foreach ($branch in $config_repo_branch) {
-  CloneOrUpdateRepo -branch $branch true
+  CloneOrUpdateRepo -branch $branch $True
 }
 foreach ($branch in $config_repo_branch) {
-  CloneOrUpdateRepo -branch $branch false
+  CloneOrUpdateRepo -branch $branch $False
 }
 
 
