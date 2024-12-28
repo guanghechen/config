@@ -1,9 +1,8 @@
-local augroup = require("eve.lib.nvim").augroup
-
 return {
   name = "copilot-cmp",
   opts = {},
   config = function(_, opts)
+    local augroup = require("eve.lib.nvim").augroup
     local copilot_cmp = require("copilot_cmp")
     copilot_cmp.setup(opts)
 
