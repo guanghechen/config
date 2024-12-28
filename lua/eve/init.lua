@@ -4,6 +4,21 @@ local M = {
   debug = require("eve.lib.debug"),
 }
 
+---@return eve.state.storage
+function M.get_default_storage()
+  local path = require("eve.lib.path")
+  local is_git_repo = path.is_git_repo() ---@type boolean
+
+  ---@type eve.state.storage
+  return {
+    editor = path.locate_context_filepath("editor.json"),
+    session = is_git_repo and path.locate_workspace_filepath("session.json") or nil,
+    workspace = is_git_repo and path.locate_workspace_filepath("workspace.json") or nil,
+    nvim_session = is_git_repo and path.locate_workspace_filepath("session.vim") or nil,
+    nvim_session_autosaved = is_git_repo and path.locate_workspace_filepath("session.autosaved.vim") or nil,
+  }
+end
+
 ---! Auto cd the directory:
 ---! 1. the opend file is under a git repo, let's remember the the git repo path as A,
 ---!    and assume the git repo directory of the shell cwd is B.
@@ -30,20 +45,9 @@ end
 ---@param storage                       eve.state.storage|nil
 ---@return nil
 function M.setup_state(storage)
-  local path = require("eve.lib.path")
+  storage = storage or M.get_default_storage() ---@type eve.state.storage
+
   local state = require("eve.state")
-  local is_git_repo = path.is_git_repo() ---@type boolean
-
-  ---@type eve.state.storage
-  storage = storage
-    or {
-      editor = path.locate_context_filepath("editor.json"),
-      session = is_git_repo and path.locate_workspace_filepath("session.json") or nil,
-      workspace = is_git_repo and path.locate_workspace_filepath("workspace.json") or nil,
-      nvim_session = is_git_repo and path.locate_workspace_filepath("session.vim") or nil,
-      nvim_session_autosaved = is_git_repo and path.locate_workspace_filepath("session.autosaved.vim") or nil,
-    }
-
   state.set_storage(storage)
   state.load(storage)
 end

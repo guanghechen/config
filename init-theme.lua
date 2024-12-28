@@ -2,8 +2,8 @@ _G.eve = require("eve")
 eve.setup_workspace()
 require("eve.option")
 
-local path = require("eve.lib.path")
-local storage = { editor = path.locate_context_filepath("editor.json") } ---@type eve.state.storage
+local default_storage = eve.get_default_storage() ---@type eve.state.storage
+local storage = { editor = default_storage.editor } ---@type eve.state.storage
 eve.setup_state(storage)
 
 local themes = require("eve.theme").themes ---@type eve.e.Theme[]

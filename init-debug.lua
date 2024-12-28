@@ -1,9 +1,23 @@
-local Observable = require("eve.lib.collection.observable")
-local count = Observable.from_value(1)
+_G.eve = require("eve")
 
-vim.keymap.set({ "n", "v" }, "<leader>qq", "<cmd>qa<cr>")
-require("eve.lib.debug").log({ count1 = count })
+eve.setup_workspace()
+require("eve.option")
+require("eve.autocmd")
+require("eve.autocmd-filetype")
 
-vim.b.count = count
-require("eve.lib.debug").log({ count2 = vim.b.count })
-require("eve.lib.debug").log({ count3 = count })
+local default_storage = eve.get_default_storage() ---@type eve.state.storage
+local storage = { editor = default_storage.editor } ---@type eve.state.storage
+eve.setup_state(storage)
+require("eve.autocmd-state")
+require("eve.keymap")
+
+eve.setup_theme()
+
+require("fml.command")
+require("fml.dressing.hipairs")
+require("fml.dressing.commentstring")
+require("fml.dressing.nvimbar.statusline")
+require("fml.dressing.nvimbar.tabline")
+require("fml.dressing.nvimbar.winline")
+require("fml.dressing.select")
+require("fml.dressing.winsep")
