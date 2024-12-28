@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.win" ---@type string
 
 local reporter = require("eve.lib.reporter")
-local tmux = require("eve.lib.tmux")
 local state = require("eve.state")
 
 ---@return nil
@@ -58,6 +57,7 @@ end
 ---@param direction                     "p"|"n"|"h"|"j"|"k"|"l"
 ---@return nil
 local function tmux_navigate(direction)
+  local tmux = require("eve.lib.tmux")
   if direction == "n" then
     local is_last_win = (vim.fn.winnr() == vim.fn.winnr("$"))
 
