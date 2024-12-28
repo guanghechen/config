@@ -62,8 +62,8 @@ local function fetch_data(context, method, additional_params, callback)
             ---@diagnostic disable-next-line: undefined-field
             local range = location.targetRange or location.range
             if uri ~= nil and range ~= nil then
-              local filepath = (uri):gsub("^file://", "") ---@type string
-              filepath = path.relative(cwd, filepath, true) ---@type string
+              local filepath = uri:gsub("^file://", "") ---@type string
+              filepath = path.normalize(filepath)
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
 

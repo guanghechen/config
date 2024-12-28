@@ -98,6 +98,9 @@ end
 ---@param filepath                      string
 ---@return string
 function M.normalize(filepath)
+  filepath = filepath:gsub("%%(%x%x)", function(hex)
+    return string.char(tonumber(hex, 16))
+  end)
   return table.concat(M.split(filepath), SEP)
 end
 
