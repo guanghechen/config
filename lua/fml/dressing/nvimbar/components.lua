@@ -479,8 +479,15 @@ end
 ---@return fml.ux.nvimbar.IRawComponent
 function M.dirpath(position)
   local hln_text = position .. "_dirpath_text" ---@type string
+
+  -- local icon = icons.ft.Folder .. " " ---@type string
+  -- local hln_icon = position .. "_dirpath_icon" ---@type string
+  -- local hl_icon = txt(icon, hln_icon) ---@type string
+
+  -- local sep = " " .. env.PATH_SEP .. " " ---@type string
+  local sep = icons.fillchars.foldclose .. " " ---@type string
   local hln_sep = position .. "_dirpath_sep" ---@type string
-  local sep = " " .. env.PATH_SEP .. " " ---@type string
+  local hl_text_sep = txt(sep, hln_sep) ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -507,7 +514,6 @@ function M.dirpath(position)
       for i = 1, N, 1 do
         local piece = meta.relpath_pieces[i] ---@type string
         local hl_text_piece = txt(piece, hln_text) ---@type string
-        local hl_text_sep = txt(sep, hln_sep) ---@type string
 
         text = text .. piece .. sep
         hl_text = hl_text .. hl_text_piece .. hl_text_sep
@@ -792,6 +798,31 @@ function M.filetype(position)
     end,
     render = function(context)
       local text = context.fileicon .. " " .. context.filetype ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      fml.ux.nvimbar.Position
+---@return fml.ux.nvimbar.IRawComponent
+function M.focused_indicator(position)
+  local hln_text = position .. "_focused_indicator" ---@type string
+
+  ---@type fml.ux.nvimbar.IRawComponent
+  local component = {
+    name = "filetype",
+    atomic = true,
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.filetype ~= prev_context.filetype
+    end,
+    condition = function(context)
+      local meta = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
+      return meta ~= nil and context.winnr == meta.winnr_listed
+    end,
+    render = function(context)
+      local text = " " .. context.fileicon .. " " .. context.filetype .. " " ---@type string
       local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,

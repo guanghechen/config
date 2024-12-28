@@ -72,13 +72,14 @@ local function resolve_winline_scheduler(winnr)
 
     winline
       ---
-      -- :place("left", c.dirpath(position), 95)
+      :place("left", c.dirpath(position), 95)
       :place("left", c.filename(position), 100)
       :place("left", c.lsp_symbols(position), 90)
       ---
       :place("center", c.debug_render_count(position), 100)
       ---
-      :place("right", c.dirpath_prominent(position), 100)
+      :place("right", c.focused_indicator(position), 100)
+    -- :place("right", c.dirpath_prominent(position), 100)
     meta.winline = winline
   end
 

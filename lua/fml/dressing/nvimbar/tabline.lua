@@ -51,6 +51,7 @@ tabline
   --
   :place("center", c.debug_render_count(position), 100)
   --
+  :place("right", c.cwd(position), 100)
   -- :place("right", c.devmode(position), 100)
   :place("right", c.tabs(position), 100)
 --
