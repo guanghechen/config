@@ -96,7 +96,6 @@ return {
           ["]b"] = "@block.outer",
           ["]c"] = "@class.outer",
           ["]f"] = "@function.outer",
-          ["]s"] = { query = "@local.scope", query_group = "locals", desc = "goto: next scope" },
           ["]z"] = { query = "@fold", query_group = "folds", desc = "goto: next fold" },
         },
         goto_next_end = {
@@ -109,7 +108,6 @@ return {
           ["[b"] = "@block.outer",
           ["[c"] = "@class.outer",
           ["[f"] = "@function.outer",
-          ["[s"] = { query = "@local.scope", query_group = "locals", desc = "goto: prev scope" },
           ["[z"] = { query = "@fold", query_group = "folds", desc = "goto: prev fold" },
         },
         goto_previous_end = {
