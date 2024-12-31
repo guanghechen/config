@@ -357,6 +357,7 @@ function M.watch_changes(params)
     M.flight.dressing_winsep_float,
     M.flight.lsp_inlay_hints,
     M.flight.lsp_code_lens,
+    M.flight.spellcheck,
 
     ---
     M.search.flag_case_sensitive,
@@ -386,6 +387,7 @@ function M.watch_changes(params)
   M.observe({
     M.flight.lsp_inlay_hints,
     M.flight.lsp_code_lens,
+    M.flight.spellcheck,
   }, function()
     pcall(function()
       vim.cmd("LspRestart")

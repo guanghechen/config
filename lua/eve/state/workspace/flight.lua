@@ -8,12 +8,14 @@ local Observable = require("eve.lib.collection.observable")
 ---@field public copilot                boolean
 ---@field public devmode                boolean
 ---
----@field public dressing_hipairs      boolean
+---@field public dressing_hipairs       boolean
 ---@field public dressing_winsep_fixed  boolean
 ---@field public dressing_winsep_float  boolean
 ---
 ---@field public lsp_inlay_hints        boolean
 ---@field public lsp_code_lens          boolean
+---
+---@field public spellcheck             boolean
 
 ---@class eve.state.flight.state
 ---@field public autoload               eve.lib.collection.IObservable
@@ -21,12 +23,14 @@ local Observable = require("eve.lib.collection.observable")
 ---@field public copilot                eve.lib.collection.IObservable
 ---@field public devmode                eve.lib.collection.IObservable
 ---
----@field public dressing_hipairs      eve.lib.collection.IObservable
+---@field public dressing_hipairs       eve.lib.collection.IObservable
 ---@field public dressing_winsep_fixed  eve.lib.collection.IObservable
 ---@field public dressing_winsep_float  eve.lib.collection.IObservable
 ---
 ---@field public lsp_inlay_hints        eve.lib.collection.IObservable
 ---@field public lsp_code_lens          eve.lib.collection.IObservable
+---
+---@field public spellcheck             eve.lib.collection.IObservable
 
 ---@class eve.state.flight
 ---@field public defaults               fun(): eve.state.flight.data
@@ -54,6 +58,8 @@ function M.defaults()
 
     lsp_inlay_hints = true,
     lsp_code_lens = true,
+
+    spellcheck = false,
   }
 end
 
@@ -91,6 +97,10 @@ function M.normalize(data)
     if type(data.lsp_code_lens) == "boolean" then
       resolved.lsp_code_lens = data.lsp_code_lens
     end
+
+    if type(data.spellcheck) == "boolean" then
+      resolved.spellcheck = data.spellcheck
+    end
   end
 
   ---@type eve.state.flight.data
@@ -117,6 +127,8 @@ function M.dump()
 
     lsp_inlay_hints = _state.lsp_inlay_hints:snapshot(),
     lsp_code_lens = _state.lsp_code_lens:snapshot(),
+
+    spellcheck = _state.spellcheck:snapshot(),
   }
 end
 
@@ -139,6 +151,8 @@ function M.load(raw_data)
 
       lsp_inlay_hints = Observable.from_value(data.lsp_inlay_hints),
       lsp_code_lens = Observable.from_value(data.lsp_code_lens),
+
+      spellcheck = Observable.from_value(data.spellcheck),
     }
     return _state
   end
@@ -154,6 +168,8 @@ function M.load(raw_data)
 
   _state.lsp_inlay_hints:next(data.lsp_inlay_hints)
   _state.lsp_code_lens:next(data.lsp_code_lens)
+
+  _state.spellcheck:next(data.spellcheck)
   return _state
 end
 
