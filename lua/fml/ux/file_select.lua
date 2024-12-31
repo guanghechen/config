@@ -33,21 +33,22 @@ local Select = require("fml.ux.select")
 ---| fun(item: fml.ux.file_select.IItem, match: fml.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
 
 ---@class fml.ux.file_select.IData
----@field public cwd                    string
 ---@field public items                  fml.ux.file_select.IRawItem[]
 ---@field public present_uuid           ?string
 
 ---@class fml.ux.file_select.IRawItem
 ---
 ---@field public filepath               string
+---@field public filepath_relative      string
 ---@field public group                  ?string
 ---@field public uuid                   ?string
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
 ---@class fml.ux.file_select.IItemData
----@field public filepath               string
 ---@field public filename               string
+---@field public filepath               string
+---@field public filepath_relative      string
 ---@field public icon                   string
 ---@field public icon_hl                string
 ---@field public lnum                   ?integer
@@ -63,7 +64,6 @@ local Select = require("fml.ux.select")
 ---@field public render_item            ?fml.ux.file_select.IRenderItem
 
 ---@class fml.ux.FileSelect : fml.ux.IFileSelect
----@field public cwd                    string
 ---@field protected _get_select         fun(): fml.ux.ISelect
 local M = {}
 M.__index = M
@@ -129,8 +129,6 @@ function M.new(props)
     ---@return nil
     local function send_to_qflist()
       if _select ~= nil then
-        local cwd = path.cwd() ---@type string
-        local select_cwd = self.cwd ---@type string
         local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
         local matched_items = _select:get_matched_items() ---@type fml.ux.select.IMatchedItem[]
         for _, matched_item in ipairs(matched_items) do
@@ -138,10 +136,8 @@ function M.new(props)
           ---@cast item                 fml.ux.file_select.IItem
 
           if item ~= nil then
-            local absolute_filepath = path.join(select_cwd, item.data.filepath) ---@type string
-            local relative_filepath = path.relative(cwd, absolute_filepath, false) ---@type string
             table.insert(quickfix_items, {
-              filename = relative_filepath,
+              filename = item.data.filepath_relative,
               lnum = item.data.lnum or 1,
               col = item.data.col or 0,
             })
@@ -175,13 +171,13 @@ function M.new(props)
   local file_select_provider = {
     fetch_data = function(force)
       local raw_data = provider.fetch_data(force) ---@type fml.ux.file_select.IData
-      local next_cwd = raw_data.cwd ---@type string
       local raw_items = raw_data.items ---@type fml.ux.file_select.IRawItem[]
       local present_uuid = raw_data.present_uuid ---@type string|nil
 
       local items = {} ---@type fml.ux.file_select.IItem[]
       for _, raw_item in ipairs(raw_items) do
         local filepath = raw_item.filepath ---@type string
+        local filepath_relative = raw_item.filepath_relative ---@type string
         local filename = path.basename(raw_item.filepath)
         local icon, icon_hl = calc_fileicon(filename)
 
@@ -189,10 +185,11 @@ function M.new(props)
         local item = {
           group = raw_item.group or filepath,
           uuid = raw_item.uuid or filepath,
-          text = filepath,
+          text = filepath_relative,
           data = {
-            filepath = filepath,
             filename = filename,
+            filepath = filepath,
+            filepath_relative = filepath_relative,
             icon = icon .. " ",
             icon_hl = icon_hl,
             lnum = raw_item.lnum,
@@ -202,13 +199,11 @@ function M.new(props)
         table.insert(items, item)
       end
 
-      self.cwd = next_cwd
-
       ---@type fml.ux.select.IData
       return { items = items, present_uuid = present_uuid }
     end,
     fetch_preview_data = preview_enabled and function(item)
-      return self.fetch_preview_data(self.cwd, item)
+      return self.fetch_preview_data(item)
     end or nil,
     patch_preview_data = preview_enabled and M.patch_preview_data or nil,
     render_item = provider.render_item or M.render_item,
@@ -254,7 +249,7 @@ function M.new(props)
         title = title,
         on_close = on_close,
         on_confirm = on_confirm_from_props or function(item)
-          local filepath = path.join(self.cwd, item.data.filepath) ---@type string
+          local filepath = item.data.filepath ---@type string
           local ret = state.open_filepath(filepath, item.data.lnum, item.data.col) ---@type boolean
           return ret and "hide" or "none"
         end,
@@ -264,17 +259,15 @@ function M.new(props)
     return _select
   end
 
-  self.cwd = path.cwd() ---! initial cwd
   self._get_select = get_select
   return self
 end
 
----@param cwd                           string
 ---@param item                          fml.ux.file_select.IItem
 ---@return fml.ux.search.preview.IData
-function M.fetch_preview_data(cwd, item)
-  local filepath = path.join(cwd, item.data.filepath) ---@type string
-  local filename = path.basename(filepath) ---@type string
+function M.fetch_preview_data(item)
+  local filepath = item.data.filepath ---@type string
+  local filename = item.data.filename ---@type string
   local is_text_file = checks.is_printable_file(filename) ---@type boolean
   if is_text_file then
     local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
@@ -320,7 +313,7 @@ end
 ---@return eve.t.IHighlightInline[]
 function M.render_item(item, match)
   local icon_width = string.len(item.data.icon) ---@type integer
-  local text = item.data.icon .. item.data.filepath ---@type string
+  local text = item.data.icon .. item.data.filepath_relative ---@type string
 
   if item.data.lnum ~= nil and item.data.col ~= nil then
     text = text .. ":" .. item.data.lnum .. ":" .. item.data.col
@@ -406,14 +399,18 @@ function M:mark_data_dirty()
   select:mark_data_dirty()
 end
 
+---@param cwd                           string
 ---@param filepaths                     string[]
 ---@return fml.ux.file_select.IRawItem[]
-function M.make_items_by_filepaths(filepaths)
-  ---@type fml.ux.file_select.IRawItem[]
-  local items = {}
+function M.make_items_by_filepaths(cwd, filepaths)
+  local items = {} ---@type fml.ux.file_select.IRawItem[]
   for _, filepath in ipairs(filepaths) do
+    local relative_filepath = path.relative(cwd, filepath, true) ---@type string
     ---@type fml.ux.file_select.IRawItem
-    local item = { filepath = filepath }
+    local item = {
+      filepath = filepath,
+      filepath_relative = relative_filepath,
+    }
     table.insert(items, item)
   end
   return items

@@ -329,8 +329,17 @@ local function get_select()
         })
         table.sort(filepaths)
 
-        local items = FileSelect.make_items_by_filepaths(filepaths) ---@type fml.ux.file_select.IRawItem[]
-        local data = { cwd = cwd, items = items }
+        local items = {} ---@type fml.ux.file_select.IRawItem[]
+        for _, relative_filepath in ipairs(filepaths) do
+          local filepath = path.resolve(cwd, relative_filepath) ---@type string
+          ---@type fml.ux.file_select.IRawItem
+          local item = {
+            filepath = filepath,
+            filepath_relative = relative_filepath,
+          }
+          table.insert(items, item)
+        end
+        local data = { items = items } ---@type fml.ux.file_select.IData
         return data
       end,
     }

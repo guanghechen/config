@@ -771,6 +771,7 @@ function M:create_wins_as_needed()
       vim.api.nvim_win_set_buf(winnr_preview, bufnr_preview)
     end
 
+    vim.wo[winnr_preview].number = true
     vim.wo[winnr_preview].cursorline = match_count > 0
     vim.wo[winnr_preview].winblend = winblend
     vim.wo[winnr_preview].winhighlight = highlights.preview

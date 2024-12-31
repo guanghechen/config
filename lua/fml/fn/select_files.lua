@@ -53,7 +53,7 @@ local function select_files(params)
         local filepaths = fetch_filepaths() ---@type string[]
         table.sort(filepaths)
 
-        local items = FileSelect.make_items_by_filepaths(filepaths) ---@type fml.ux.file_select.IRawItem[]
+        local items = FileSelect.make_items_by_filepaths(cwd, filepaths) ---@type fml.ux.file_select.IRawItem[]
         last_data = { cwd = cwd, items = items } ---@type fml.ux.file_select.IData
 
         if file_select ~= nil then
@@ -70,7 +70,7 @@ local function select_files(params)
       local present = get_present ~= nil and get_present() or nil ---@type string|nil
 
       ---@type fml.ux.file_select.IData
-      local data = { cwd = cwd, items = last_data.items, present_uuid = present }
+      local data = { items = last_data.items, present_uuid = present }
       return data
     end,
   }

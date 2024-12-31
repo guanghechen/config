@@ -62,8 +62,8 @@ local function fetch_data(context, method, additional_params, callback)
             ---@diagnostic disable-next-line: undefined-field
             local range = location.targetRange or location.range
             if uri ~= nil and range ~= nil then
-              local filepath = uri:gsub("^file://", "") ---@type string
-              filepath = path.normalize(filepath)
+              local filepath = path.normalize(uri:gsub("^file://", "")) ---@type string
+              local filepath_relative = path.relative(cwd, filepath, true) ---@type string
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
 
@@ -71,7 +71,14 @@ local function fetch_data(context, method, additional_params, callback)
               if last_item == nil or last_item.filepath ~= filepath or last_item.lnum ~= lnum then
                 local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
                 ---@type fml.ux.file_select.IRawItem
-                local item = { group = filepath, filepath = filepath, uuid = uuid, lnum = lnum, col = col }
+                local item = {
+                  group = filepath,
+                  filepath = filepath,
+                  filepath_relative = filepath_relative,
+                  uuid = uuid,
+                  lnum = lnum,
+                  col = col,
+                }
                 table.insert(items, item)
               end
             end

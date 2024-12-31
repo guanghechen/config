@@ -45,10 +45,15 @@ local function get_history_select()
             present_uuid = gen_uuid_from_ordinal(present_ordinal)
           end
 
-          for absolute_filepath, ordinal in meta.filepath_history:iterator_reverse() do
-            local filepath = path.relative(cwd, absolute_filepath, true) ---@type string
+          for filepath, ordinal in meta.filepath_history:iterator_reverse() do
+            local relative_filepath = path.relative(cwd, filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-            local item = { uuid = uuid, filepath = filepath } ---@type fml.ux.file_select.IRawItem
+            ---@type fml.ux.file_select.IRawItem
+            local item = {
+              uuid = uuid,
+              filepath = filepath,
+              filepath_relative = relative_filepath,
+            }
             items[#items + 1] = item
           end
 
@@ -70,7 +75,7 @@ local function get_history_select()
         local text_prefix = item.uuid .. " " ---@type string
         local width_prefix = ORIDINAL_WIDTH + 1 ---@type integer
         local width_icon = string.len(item.data.icon) ---@type integer
-        local text = text_prefix .. item.data.icon .. item.data.filepath ---@type string
+        local text = text_prefix .. item.data.icon .. item.data.filepath_relative ---@type string
 
         ---@type eve.t.IHighlightInline[]
         local highlights = {
