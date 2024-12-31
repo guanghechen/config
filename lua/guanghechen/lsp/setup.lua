@@ -46,9 +46,9 @@ local setup = {
     local get_config = require("guanghechen.lsp.lang.tailwindcss")
     require("lspconfig").tailwindcss.setup(get_config())
   end,
-  ts_ls = function()
+  vtsls = function()
     local get_config = require("guanghechen.lsp.lang.typescript")
-    require("lspconfig").ts_ls.setup(get_config())
+    require("lspconfig").vtsls.setup(get_config())
   end,
 }
 

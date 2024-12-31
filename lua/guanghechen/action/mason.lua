@@ -4,7 +4,7 @@ local M = {}
 ---@return string[]
 function M.get_mason_ensure_installed()
   return {
-    -- lsp
+    -- lsp --
     "bash-language-server", -- bashls
     "clangd", -- clangd
     "css-lsp", -- cssls
@@ -23,8 +23,10 @@ function M.get_mason_ensure_installed()
     "vetur-vls", -- vuels
     "yaml-language-server", -- yamlls
 
-    -- formatter
-    "codespell",
+    -- lint --
+    "cspell",
+
+    -- formatter --
     "prettier",
     "shfmt",
     "stylua",

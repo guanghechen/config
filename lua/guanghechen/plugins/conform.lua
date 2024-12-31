@@ -1,42 +1,43 @@
+-- stylua: ignore start
 local formatters_by_ft = {
   -- web --
-  css = { "prettier" },
-  graphql = { "prettier" },
-  handlebars = { "prettier" },
-  html = { "prettier" },
-  json = { "prettier" },
-  jsonc = { "prettier" },
-  javascript = { "prettier" },
-  javascriptreact = { "prettier" },
-  less = { "prettier" },
-  markdown = { "prettier" },
-  ["markdown.mdx"] = { "prettier" },
-  svelte = { "prettier" },
-  typescript = { "prettier" },
-  typescriptreact = { "prettier" },
-  yaml = { "prettier" },
+  css               = { "prettier" },
+  graphql           = { "prettier" },
+  handlebars        = { "prettier" },
+  html              = { "prettier" },
+  json              = { "prettier" },
+  jsonc             = { "prettier" },
+  javascript        = { "prettier" },
+  javascriptreact   = { "prettier" },
+  less              = { "prettier" },
+  markdown          = { "prettier" },
+  ["markdown.mdx"]  = { "prettier" },
+  svelte            = { "prettier" },
+  typescript        = { "prettier" },
+  typescriptreact   = { "prettier" },
+  yaml              = { "prettier" },
 
   -- shell --
-  bash = { "shfmt" },
-  fish = { "fish_indent" },
-  sh = { "shfmt" },
-  zsh = { "shfmt" },
+  bash              = { "shfmt" },
+  fish              = { "fish_indent" },
+  sh                = { "shfmt" },
+  zsh               = { "shfmt" },
 
-  -- lua --
-  lua = { "stylua" },
-
-  -- python --
-  python = { "isort", "black" },
-
-  -- rust --
-  rust = { "rustfmt", lsp_format = "fallback" },
+  -- lang --
+  lua               = { "stylua" },
+  python            = { "isort", "black" },
+  rust              = { "rustfmt", lsp_format = "fallback" },
 
   -- app --
-  tmux = { "shfmt" },
+  tmux              = { "shfmt" },
 
-  --      ["*"] = { "codespell" },
-  ["_"] = { "trim_whitespace" },
+  -- global --
+  -- ["*"]             = { "cspell" },
+
+  -- fallback --
+  ["_"]             = { "trim_whitespace" },
 }
+-- stylua: ignore end
 
 local ignored = {
   filetypes = {

@@ -67,6 +67,7 @@ local raw_specs = {
   { name = "noice.nvim", main = "noice", cond = conds.not_vscode },
   { name = "nui.nvim", main = "nui", cond = conds.not_vscode },
   { name = "nvim-cmp", main = "cmp", cond = conds.not_vscode },
+  { name = "nvim-lint", main = "lint", cond = conds.not_vscode },
   { name = "nvim-lspconfig", main = "lspconfig", cond = conds.not_vscode },
   { name = "nvim-notify", main = "notify", cond = conds.not_vscode },
   { name = "nvim-snippets", main = "snippets", cond = conds.not_vscode },

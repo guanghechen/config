@@ -31,7 +31,7 @@ local LSP_CLIENT_NAME_ORDERS = {
   rust_analyzer = 5,
   tailwindcss = 3,
   taplo = 5,
-  ts_ls = 5,
+  vtsls = 5,
   vuels = 7,
   yamlls = 5,
 }
