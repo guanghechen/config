@@ -51,6 +51,13 @@ function M.is_exist(filepath)
   return stat ~= nil and not vim.tbl_isempty(stat)
 end
 
+---@param filepath                      string
+---@return boolean
+function M.is_git_ignored(filepath)
+  vim.fn.system({ "git", "check-ignore", "-q", filepath })
+  return vim.v.shell_error == 0
+end
+
 ---! Check if the `to` path is under the `from` path.
 ---@param from                          string
 ---@param to                            string

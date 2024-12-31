@@ -56,7 +56,6 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "gitcommit",
   callback = function()
     vim.opt_local.wrap = false
-    vim.opt_local.spell = true
   end,
 })
 
@@ -66,7 +65,6 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "html",
   callback = function()
     vim.opt_local.wrap = false
-    vim.opt_local.spell = true
   end,
 })
 
@@ -77,7 +75,6 @@ vim.api.nvim_create_autocmd("FileType", {
   callback = function()
     vim.opt_local.wrap = true
     vim.opt_local.linebreak = true
-    vim.opt_local.spell = true
     vim.opt_local.textwidth = 0
     vim.opt_local.wrapmargin = 0
     vim.opt_local.formatoptions:append("t")
@@ -95,7 +92,6 @@ vim.api.nvim_create_autocmd("FileType", {
   callback = function()
     vim.opt_local.wrap = true
     vim.opt_local.linebreak = true
-    vim.opt_local.spell = true
     vim.opt_local.textwidth = 0
     vim.opt_local.wrapmargin = 0
     vim.opt_local.formatoptions:append("t")

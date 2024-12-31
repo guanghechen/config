@@ -129,7 +129,7 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true -- Don't ignore case with capitals
 
 -- spell
-vim.opt.spell = true
+vim.opt.spell = false
 vim.opt.spelllang = { "en" }
 vim.opt.spelloptions:append("noplainbuffer")
 

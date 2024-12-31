@@ -1,5 +1,7 @@
 local __module_name__ = "guanghechen.plugins.nvim-lint" ---@type string
 
+local ft = require("eve.lib.filetype")
+local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Scheduler = require("eve.lib.collection.scheduler")
 local state = require("eve.state")
@@ -32,7 +34,7 @@ local linters_by_ft = {
   rust              = { "cspell" },
 
   -- fallback --
-  -- ["_"] = { "cspell" },
+  -- ["_"]             = { "cspell" },
 }
 -- stylua: ignore end
 
@@ -40,7 +42,7 @@ local linters = {}
 
 return {
   name = "nvim-lint",
-  event = { "BufReadPost" },
+  event = { "VeryLazy" },
   config = function()
     local lint = require("lint")
     for name, linter in pairs(linters) do
@@ -65,7 +67,18 @@ return {
       end,
       task = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+        local filetype = vim.bo[bufnr].filetype ---@type string
+        if ft.is_not_plain_file(filetype) then
+          return "done"
+        end
+
+        local workspace = path.workspace() ---@type string
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        local filepath_relative = path.relative(workspace, filepath, true) ---@type string
+        if path.is_absolute(filepath_relative) then
+          return "done"
+        end
+
         local dirpath = vim.fn.fnamemodify(filepath, ":h") ---@type string
 
         -- Use nvim-lint's logic first:
@@ -87,21 +100,31 @@ return {
 
         -- Filter out linters that don't exist or don't match the condition.
         local ctx = { filename = filepath, dirname = dirpath }
-        names = vim.tbl_filter(function(name)
+
+        local k = 1 ---@type integer
+        for i = 1, #names, 1 do
+          local name = names[i] ---@type string
+
           local linter = lint.linters[name]
           if not linter then
             reporter.warn({
               from = __module_name__,
               message = "Linter not found: " .. name,
             })
+          elseif type(linter) ~= "table" or not linter.condition or linter.condition(ctx) then
+            names[k] = name
+            k = k + 1
           end
-          return linter and not (type(linter) == "table" and linter.condition and not linter.condition(ctx))
-        end, names)
+        end
+        for i = k, #names, 1 do
+          names[i] = nil
+        end
 
         -- Run linters.
         if #names > 0 then
           lint.try_lint(names)
         end
+        return "done"
       end,
     })
 

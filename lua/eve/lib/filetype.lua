@@ -236,6 +236,14 @@ function M.get_quitable_with_q_filetypes()
   return vim.tbl_keys(filetypes.quitable_with_q)
 end
 
+---@return boolean
+function M.is_no_ibl_filetype(filetype)
+  if filetype == nil or #filetype < 1 then
+    return true
+  end
+  return filetypes.no_ibl[filetype]
+end
+
 ---@param filetype                      string|nil
 ---@return boolean
 function M.is_plain_file(filetype)
@@ -245,12 +253,10 @@ function M.is_plain_file(filetype)
   return true
 end
 
+---@param filetype                      string|nil
 ---@return boolean
-function M.is_no_ibl_filetype(filetype)
-  if filetype == nil or #filetype < 1 then
-    return true
-  end
-  return filetypes.no_ibl[filetype]
+function M.is_not_plain_file(filetype)
+  return filetype == nil or #filetype < 1 or filetypes.not_plain[filetype]
 end
 
 return M

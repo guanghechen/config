@@ -27,6 +27,12 @@ end
 
 ---@param context                       eve.command.IContext
 ---@return nil
+function M.goto_next_info(context)
+  vim.diagnostic.goto_next({ win_id = context.winnr, sererity = vim.diagnostic.severity.INFO })
+end
+
+---@param context                       eve.command.IContext
+---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.goto_next_quickfix(context)
   vim.cmd.cnext()
@@ -54,6 +60,12 @@ end
 ---@return nil
 function M.goto_prev_hint(context)
   vim.diagnostic.goto_prev({ win_id = context.winnr, sererity = vim.diagnostic.severity.HINT })
+end
+
+---@param context                       eve.command.IContext
+---@return nil
+function M.goto_prev_info(context)
+  vim.diagnostic.goto_prev({ win_id = context.winnr, sererity = vim.diagnostic.severity.INFO })
 end
 
 ---@param context                       eve.command.IContext

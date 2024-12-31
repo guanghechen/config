@@ -311,12 +311,14 @@ M.definitions.diagnostic = {
   goto_next_error = def("Fdiagnosticgotonexterror", "diagnostic: goto next (error)"),
   goto_next_warn = def("Fdiagnosticgotonextwarn", "diagnostic: goto next (warn)"),
   goto_next_hint = def("Fdiagnosticgotonexthint", "diagnostic: goto next (hint)"),
+  goto_next_info = def("Fdiagnosticgotonextinfo", "diagnostic: goto next (info)"),
   goto_next_quickfix = def("Fdiagnosticgotonextquickfix", "diagnostic: goto next (quickfix)"),
 
   goto_prev = def("Fdiagnosticgotoprev", "diagnostic: goto prev"),
   goto_prev_error = def("Fdiagnosticgotopreverror", "diagnostic: goto prev (error)"),
   goto_prev_warn = def("Fdiagnosticgotoprevwarn", "diagnostic: goto prev (warn)"),
   goto_prev_hint = def("Fdiagnosticgotoprevhint", "diagnostic: goto prev (hint)"),
+  goto_prev_info = def("Fdiagnosticgotoprevinfo", "diagnostic: goto prev (info)"),
   goto_prev_quickfix = def("Fdiagnosticgotoprevquickfix", "diagnostic: goto prev (quickfix)"),
 
   line = def("Fdiagnosticline", "diagnostic: line"),
