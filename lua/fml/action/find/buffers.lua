@@ -40,6 +40,41 @@ local statusline_items = {
   },
 }
 
+---@type eve.t.IKeymap[]
+local main_keymaps = {
+  {
+    modes = { "i", "n", "v" },
+    key = "<c-d>",
+    desc = "buffer: close",
+    callback = function()
+      if select ~= nil then
+        local item = select:get_item_selected()
+        if item ~= nil then
+          local bufnr = item.data.bufnr ---@type integer
+          if not checks.is_buf_valid(bufnr) then
+            vim.api.nvim_buf_delete(bufnr, { force = true })
+            select:mark_data_dirty()
+            return
+          end
+
+          local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+          for _, tabnr in ipairs(tabnrs) do
+            state.tab.on_bufs_close(tabnr, { bufnr })
+          end
+
+          local unrefereced_bufnrs = state.tab.get_unrefereced_bufnrs() ---@type integer[]
+          if #unrefereced_bufnrs > 0 then
+            for _, unreferenced_bufnr in ipairs(unrefereced_bufnrs) do
+              vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
+            end
+            select:mark_data_dirty()
+          end
+        end
+      end
+    end,
+  },
+}
+
 ---@type fml.ux.select.IProvider
 local provider = {
   fetch_data = function()
@@ -128,6 +163,8 @@ select = Select.new({
   flag_regex = state.find_buffer.flag_regex,
   input = state.find_buffer.keyword,
   input_history = state.input_history.find_buffer,
+  input_keymaps = main_keymaps,
+  main_keymaps = main_keymaps,
   preview_enabled = false,
   extend_preset_keymaps = true,
   statusline_items = statusline_items,

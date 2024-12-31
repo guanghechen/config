@@ -3,14 +3,15 @@ local __module_name__ = "fml.action.buf" ---@type string
 local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
 
+---@param tabnr                         integer
 ---@param bufnrs                        integer[]
 ---@return nil
-local function close(bufnrs)
+local function close(tabnr, bufnrs)
   if #bufnrs < 1 then
     return
   end
 
-  state.tab.on_bufs_close(bufnrs)
+  state.tab.on_bufs_close(tabnr, bufnrs)
 
   local unrefereced_bufnrs = state.tab.get_unrefereced_bufnrs() ---@type integer[]
   for _, bufnr in ipairs(unrefereced_bufnrs) do
@@ -24,6 +25,7 @@ local M = {}
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.close(context)
+  local tabnr = context.tabnr ---@type integer
   local winnr = context.winnr ---@type integer
   local bufnr = context.bufnr ---@type integer
   local win_meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
@@ -37,7 +39,7 @@ function M.close(context)
     end
   end
 
-  close({ bufnr })
+  close(tabnr, { bufnr })
 end
 
 ---@param context                       eve.command.IContext
@@ -69,7 +71,7 @@ function M.close_to_leftest(context)
     end
   end
 
-  close(bufnrs_to_remove)
+  close(tabnr, bufnrs_to_remove)
 end
 
 ---@param context                       eve.command.IContext
@@ -101,7 +103,7 @@ function M.close_to_rightest(context)
     end
   end
 
-  close(bufnrs_to_remove)
+  close(tabnr, bufnrs_to_remove)
 end
 
 ---@param context                       eve.command.IContext
@@ -128,7 +130,7 @@ function M.close_others(context)
     end
   end
 
-  close(bufnrs_to_remove)
+  close(tabnr, bufnrs_to_remove)
 end
 
 return M

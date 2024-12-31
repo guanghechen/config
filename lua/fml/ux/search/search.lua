@@ -51,6 +51,7 @@ local borders = {
 ---@field public change_input_title     fun(self: fml.ux.search.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: fml.ux.search.ISearch, title: string): nil
 ---@field public focus                  fun(self: fml.ux.search.ISearch): nil
+---@field public get_item_selected      fun(self: fml.ux.search.ISearch): fml.ux.search.IItem|nil, integer, string|nil
 ---@field public get_winnr_input        fun(self: fml.ux.search.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: fml.ux.search.ISearch): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.ux.search.ISearch): integer|nil
@@ -916,6 +917,13 @@ function M:focus()
       end
     end)
   end
+end
+
+---@return fml.ux.search.IItem|nil
+---@return integer
+---@return string|nil
+function M:get_item_selected()
+  return self.context:get_current()
 end
 
 ---@return integer|nil

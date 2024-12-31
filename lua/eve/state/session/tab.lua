@@ -52,7 +52,7 @@ Meta.__index = Meta
 ---@field public refresh_all            fun(): nil
 ---
 ---@field public on_buf_enter           fun(winnr: integer, bufnr: integer): nil
----@field public on_bufs_close          fun(bufnrs: integer[]): nil
+---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
 ---
 ---@field public get_current_winnr      fun(): integer
 ---@field public get_current_bufnr      fun(): integer
@@ -295,12 +295,11 @@ S = {
       bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
     end
   end,
-  on_bufs_close = function(bufnrs)
+  on_bufs_close = function(tabnr, bufnrs)
     if #bufnrs < 1 then
       return
     end
 
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
     if meta == nil then
       return

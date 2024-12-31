@@ -11,6 +11,7 @@ local Search = require("fml.ux.search.search")
 ---@field public close                  fun(self: fml.ux.ISelect): nil
 ---@field public focus                  fun(self: fml.ux.ISelect): nil
 ---@field public get_item               fun(self: fml.ux.ISelect, uuid: string): fml.ux.select.IItem|nil
+---@field public get_item_selected      fun(self: fml.ux.ISelect): fml.ux.select.IItem|nil, integer, string|nil
 ---@field public get_matched_items      fun(self: fml.ux.ISelect): fml.ux.select.IMatchedItem[]
 ---@field public get_winnr_input        fun(self: fml.ux.ISelect): integer|nil
 ---@field public get_winnr_main         fun(self: fml.ux.ISelect): integer|nil
@@ -529,6 +530,16 @@ end
 ---@return                              fml.ux.select.IItem|nil
 function M:get_item(uuid)
   return self._item_map[uuid]
+end
+
+---@return fml.ux.select.IItem|nil
+---@return integer
+---@return string|nil
+function M:get_item_selected()
+  local search = self._get_search() ---@type fml.ux.search.ISearch
+  local _, lnum, uuid = search:get_item_selected() ---@type fml.ux.search.IItem|nil, integer, string|nil
+  local item = uuid ~= nil and self._item_map[uuid] or nil ---@type fml.ux.select.IItem|nil
+  return item, lnum, uuid
 end
 
 ---@return                              fml.ux.select.IMatchedItem[]
