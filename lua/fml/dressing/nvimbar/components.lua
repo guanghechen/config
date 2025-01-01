@@ -26,17 +26,20 @@ function M.bufs(position)
   local hln_buf = position .. "_buf" ---@type string
   local hln_buf_indicator = position .. "_buf_indicator" ---@type string
   local hln_buf_mod = position .. "_buf_mod" ---@type string
-  local hln_buf_ommitter = position .. "_buf_ommitter" ---@type string
-  local hln_buf_ommitter_sep = position .. "_buf_ommitter_sep" ---@type string
+  local hln_buf_omitter = position .. "_buf_omitter" ---@type string
+  local hln_buf_omitter_sep = position .. "_buf_omitter_sep" ---@type string
+  local hln_buf_pinned = position .. "_buf_pinned" ---@type string
   local hln_buf_sep = position .. "_buf_sep" ---@type string
-  local hln_buf_cur = position .. "_buf_cur" ---@type string
   local hln_buf_text = position .. "_buf_text" ---@type string
-  local hln_buf_cur_mod = position .. "_buf_cur_mod" ---@type string
-  local hln_buf_cur_text = position .. "_buf_cur_text" ---@type string
-  local hln_buf_cur_error = position .. "_buf_cur_error" ---@type string
-  local hln_buf_cur_warn = position .. "_buf_cur_warn" ---@type string
-  local hln_buf_cur_hint = position .. "_buf_cur_hint" ---@type string
-  local hln_buf_cur_info = position .. "_buf_cur_info" ---@type string
+
+  local hln_bufc = position .. "_bufc" ---@type string
+  local hln_bufc_mod = position .. "_bufc_mod" ---@type string
+  local hln_bufc_pinned = position .. "_bufc_pinned" ---@type string
+  local hln_bufc_text = position .. "_bufc_text" ---@type string
+  local hln_bufc_error = position .. "_bufc_error" ---@type string
+  local hln_bufc_warn = position .. "_bufc_warn" ---@type string
+  local hln_bufc_hint = position .. "_bufc_hint" ---@type string
+  local hln_bufc_info = position .. "_bufc_info" ---@type string
 
   ---@type string
   local fn_active_buf = G.register_anonymous_fn(function(bufnr)
@@ -110,15 +113,15 @@ function M.bufs(position)
     local hl_title = hln_buf_text ---@type string
     if is_current then
       if count_error > 0 then
-        hl_title = hln_buf_cur_error ---@type string
+        hl_title = hln_bufc_error ---@type string
       elseif count_warn > 0 then
-        hl_title = hln_buf_cur_warn ---@type string
+        hl_title = hln_bufc_warn ---@type string
       elseif count_hint > 0 then
-        hl_title = hln_buf_cur_hint ---@type string
+        hl_title = hln_bufc_hint ---@type string
       elseif count_info > 0 then
-        hl_title = hln_buf_cur_info ---@type string
+        hl_title = hln_bufc_info ---@type string
       else
-        hl_title = hln_buf_cur_text ---@type string
+        hl_title = hln_bufc_text ---@type string
       end
     end
 
@@ -126,21 +129,25 @@ function M.bufs(position)
     local text_indicator_or_sep = is_current and "▎" or (is_first and " " or "▏") ---@type string
     local text_icon = fileicon .. " " ---@type string
     local text_title = filename ---@type string
-    local text_mod = is_pinned and (is_mod and "  " or "  ") or (is_mod and "  " or "  ") ---@type string
+    local text_mod = is_mod and "  " or "  " ---@type string
+    local text_pinned = is_mod and "  " or "  " ---@type string
+    local text_status = is_pinned and text_pinned or text_mod ---@type string
 
-    local hl_indicator_or_sep = is_current and hln_buf_indicator or hln_buf_sep ---@type string
-    local hl_mod = is_current and hln_buf_cur_mod or hln_buf_mod ---@type string
-    local hl_icon = (is_current and hln_buf_cur or hln_buf) .. "_" .. fileicon_hl ---@type string
-    -- local hl_icon = (is_current and hln_buf_cur .. "_" .. meta.fileicon_hl) or hln_buf_title ---@type string
+    local hln_indicator_or_sep = is_current and hln_buf_indicator or hln_buf_sep ---@type string
+    local hln_icon = (is_current and hln_bufc or hln_buf) .. "_" .. fileicon_hl ---@type string
+    -- local hl_icon = (is_current and hln_bufc .. "_" .. meta.fileicon_hl) or hln_buf_title ---@type string
+    local hln_mod = is_current and hln_bufc_mod or hln_buf_mod ---@type string
+    local hln_pinned = is_current and hln_bufc_pinned or hln_buf_pinned ---@type string
+    local hln_status = is_pinned and hln_pinned or hln_mod ---@type string
 
-    local hl_text_indicator = txt(text_indicator_or_sep, hl_indicator_or_sep)
-    local hl_text_icon = txt(text_icon, hl_icon)
+    local hl_text_indicator = txt(text_indicator_or_sep, hln_indicator_or_sep)
+    local hl_text_icon = txt(text_icon, hln_icon)
     local hl_text_title = txt(text_title, hl_title)
     local hl_text_diagnostic = txt(text_diagnostic, hl_title) ---@type string
-    local hl_text_mod = is_mod and txt(text_mod, hl_mod) or text_mod
+    local hl_text_status = txt(text_status, hln_status) ---@type string
 
-    local text = text_indicator_or_sep .. text_icon .. text_title .. text_diagnostic .. text_mod ---@type string
-    local hl_text = hl_text_indicator .. hl_text_icon .. hl_text_title .. hl_text_diagnostic .. hl_text_mod ---@type string
+    local text = text_indicator_or_sep .. text_icon .. text_title .. text_diagnostic .. text_status ---@type string
+    local hl_text = hl_text_indicator .. hl_text_icon .. hl_text_title .. hl_text_diagnostic .. hl_text_status ---@type string
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
@@ -164,10 +171,10 @@ function M.bufs(position)
           and vim.api.nvim_win_get_buf(winnr_cur)
         or 0
 
-      local buf_cur, bufid_cur = meta_tab:find_buf(bufnr_cur)
+      local bufc, bufid_cur = meta_tab:find_buf(bufnr_cur)
       bufid_cur = bufid_cur or 1
 
-      local text, hl_text = render_buf(bufs[bufid_cur], buf_cur ~= nil, bufid_cur == 1)
+      local text, hl_text = render_buf(bufs[bufid_cur], bufc ~= nil, bufid_cur == 1)
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
       if remain_width < 0 then
         return "", "", false
@@ -233,7 +240,7 @@ function M.bufs(position)
       if left_remain_count > 0 then
         local count = math.min(99, left_remain_count) ---@type integer
         local omitter_text = " " .. icons.ui.Left .. "  " .. tostring(count) .. " " ---@type string
-        local omitter_text_hl = txt(omitter_text, hln_buf_ommitter) ---@type string
+        local omitter_text_hl = txt(omitter_text, hln_buf_omitter) ---@type string
         text = omitter_text .. text
         hl_text = btn(omitter_text_hl, fn_focus_left_buf) .. hl_text
       end
@@ -242,8 +249,8 @@ function M.bufs(position)
       if right_remain_count > 0 then
         local count = math.min(99, right_remain_count) ---@type integer
         local omitter_text = "▏" .. tostring(count) .. " " .. icons.ui.Right .. "  " ---@type string
-        local omitter_text_hl = txt("▏", hln_buf_ommitter_sep)
-          .. txt(tostring(count) .. " " .. icons.ui.Right .. "  ", hln_buf_ommitter) ---@type string
+        local omitter_text_hl = txt("▏", hln_buf_omitter_sep)
+          .. txt(tostring(count) .. " " .. icons.ui.Right .. "  ", hln_buf_omitter) ---@type string
         text = text .. omitter_text
         hl_text = hl_text .. btn(omitter_text_hl, fn_focus_right_buf)
       end
@@ -597,8 +604,8 @@ function M.dirpath_prominent(position)
       end
 
       if remain_count > 0 then
-        local ommiter = string.rep(".", remain_count)
-        right_text = ommiter .. sep .. right_text
+        local omitter = string.rep(".", remain_count)
+        right_text = omitter .. sep .. right_text
       end
 
       local text = left_text .. sep .. right_text ---@type string

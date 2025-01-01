@@ -3,7 +3,7 @@
 local function gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type eve.theme.IPalette
   local t = context.transparency ---@type boolean
-  local bg_buf_cur = t and "none" or c.bg0 ---@type string
+  local bg_bufc = t and "none" or c.bg0 ---@type string
   local bg_mode = t and "none" or c.bg2 ---@type string
 
   local bgs = {
@@ -16,19 +16,21 @@ local function gen_hlgroup_map(context)
   local hlgroup_map = {
     bg = { fg = "bg_bar", bg = "bg_bar" },
     buf = { fg = c.bg4, bg = "bg_bar" },
-    buf_indicator = { fg = c.purple, bg = bg_buf_cur, bold = true },
+    buf_indicator = { fg = c.purple, bg = bg_bufc, bold = true },
     buf_mod = { fg = c.red, bg = "bg_bar" },
-    buf_ommitter = { fg = c.blue, bg = "bg_bar" },
-    buf_ommitter_sep = { fg = c.bg4, bg = "bg_bar" },
+    buf_omitter = { fg = c.blue, bg = "bg_bar" },
+    buf_omitter_sep = { fg = c.bg4, bg = "bg_bar" },
+    buf_pinned = { fg = c.fg4, bg = "bg_bar" },
     buf_sep = { fg = c.fg4, bg = "bg_bar" },
     buf_text = { fg = c.fg4, bg = "bg_bar" },
-    buf_cur = { fg = c.fg2, bg = bg_buf_cur },
-    buf_cur_mod = { fg = c.green, bg = bg_buf_cur },
-    buf_cur_text = { fg = c.fg2, bg = bg_buf_cur, bold = true, italic = true },
-    buf_cur_error = { fg = c.red, bg = bg_buf_cur, bold = true, italic = true },
-    buf_cur_warn = { fg = c.yellow, bg = bg_buf_cur, bold = true, italic = true },
-    buf_cur_hint = { fg = c.purple, bg = bg_buf_cur, bold = true, italic = true },
-    buf_cur_info = { fg = c.green, bg = bg_buf_cur, bold = true, italic = true },
+    bufc = { fg = c.fg2, bg = bg_bufc },
+    bufc_mod = { fg = c.green, bg = bg_bufc },
+    bufc_pinned = { fg = c.fg0, bg = "bg_bar" },
+    bufc_text = { fg = c.fg2, bg = bg_bufc, bold = true, italic = true },
+    bufc_error = { fg = c.red, bg = bg_bufc, bold = true, italic = true },
+    bufc_warn = { fg = c.yellow, bg = bg_bufc, bold = true, italic = true },
+    bufc_hint = { fg = c.purple, bg = bg_bufc, bold = true, italic = true },
+    bufc_info = { fg = c.green, bg = bg_bufc, bold = true, italic = true },
     copilot_InProgress = { fg = c.aqua, bg = "bg_bar" },
     copilot_Inactive = { fg = c.red, bg = "bg_bar" },
     copilot_Normal = { fg = c.fg1, bg = "bg_bar" },
@@ -105,7 +107,7 @@ local function gen_hlgroup_map(context)
     sidebar_text = { fg = c.fg2, bg = "bg_bar", bold = true },
     tab_add = { fg = c.fg1, bg = c.bg3 },
     tab_item = { fg = c.fg1, bg = "bg_bar" },
-    tab_item_cur = { fg = c.red, bg = bg_buf_cur },
+    tab_item_cur = { fg = c.red, bg = bg_bufc },
     tab_toggle = { fg = c.bg1, bg = c.green },
     text = { fg = c.fg2, bg = "bg_bar" },
     text_command = { fg = c.green, bg = bg_mode, bold = true },
@@ -129,9 +131,9 @@ local function gen_hlgroup_map(context)
   ---@field public f_sl_buf             { bg: string }
   ---@field public f_tl_buf             { bg: string }
   ---@field public f_wl_buf             { bg: string }
-  ---@field public f_sl_buf_cur         { bg: string }
-  ---@field public f_tl_buf_cur         { bg: string }
-  ---@field public f_wl_buf_cur         { bg: string }
+  ---@field public f_sl_bufc         { bg: string }
+  ---@field public f_tl_bufc         { bg: string }
+  ---@field public f_wl_bufc         { bg: string }
   ---@field public f_sl_filename        { bg: string }
   ---@field public f_tl_filename        { bg: string }
   ---@field public f_wl_filename        { bg: string }
