@@ -47,6 +47,9 @@ unset_main = { bg = "red", bold = true }
 unset_alt  = { fg = "red", bg = "gray" }
 
 [status]
+mode_normal = { bg = "blue", bold = true }
+mode_select = { bg = "red", bold = true }
+mode_unset  = { bg = "yellow", bold = true }
 separator_open  = ""
 separator_close = ""
 
