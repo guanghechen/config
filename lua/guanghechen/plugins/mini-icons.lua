@@ -3,10 +3,6 @@ return {
   lazy = true,
   opts = {
     file = {
-      [".chezmoiignore"] = { glyph = "", hl = "MiniIconsGrey" },
-      [".chezmoiremove"] = { glyph = "", hl = "MiniIconsGrey" },
-      [".chezmoiroot"] = { glyph = "", hl = "MiniIconsGrey" },
-      [".chezmoiversion"] = { glyph = "", hl = "MiniIconsGrey" },
       [".eslintignore"] = { glyph = "󰱺", hl = "MiniIconsPurple" },
       [".eslintrc"] = { glyph = "󰱺", hl = "MiniIconsPurple" },
       [".eslintrc.js"] = { glyph = "󰱺", hl = "MiniIconsPurple" },
