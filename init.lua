@@ -1,12 +1,20 @@
 require("full-border"):setup({ type = ui.Border.ROUNDED })
+require("starship"):setup({ config_file = "~/.config/yazi/starship.toml" })
 require("git"):setup()
 
-Header:children_add(function()
-	if ya.target_family() ~= "unix" then
-		return ""
-	end
-	return ui.Span(ya.user_name() .. "@" .. ya.host_name() .. ":"):fg("blue")
-end, 500, Header.LEFT)
+-- ~/.config/yazi/init.lua
+THEME.git = THEME.git or {}
+THEME.git.modified = ui.Style():fg("blue")
+THEME.git.deleted = ui.Style():fg("red"):bold()
+THEME.git.modified_sign = "M"
+THEME.git.deleted_sign = "D"
+
+-- Header:children_add(function()
+-- 	if ya.target_family() ~= "unix" then
+-- 		return ""
+-- 	end
+-- 	return ui.Span(ya.user_name() .. "@" .. ya.host_name() .. ":"):fg("blue")
+-- end, 500, Header.LEFT)
 
 function Status:name()
 	local h = self._current.hovered
