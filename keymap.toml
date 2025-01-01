@@ -1,0 +1,8 @@
+[manager]
+prepend_keymap = [
+  { on = "!", run  = 'shell "$SHELL" --block', desc = "Open shell here" },
+  { on = "p", run  = "plugin smart-paste", desc = "Paste into the hovered directory or CWD" },
+  { on = "t", run  = "plugin smart-tab", desc = "Create a tab and enter the hovered directory" },
+  { on = "1", run  = "plugin smart-switch --args=1", desc = "Switch or create tab 1" },
+  { on = "2", run  = "plugin smart-switch --args=1", desc = "Switch or create tab 2" },
+]
