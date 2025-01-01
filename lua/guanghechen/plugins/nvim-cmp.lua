@@ -8,7 +8,7 @@ local reporter = require("eve.lib.reporter")
 local cmp_sources_map = {
   basic = {
     { name = "path", group_index = 1, priority = 100 },
-    { name = "buffer", group_index = 2, priority = 80 },
+    -- { name = "buffer", group_index = 2, priority = 80 },
   },
   cmdline = {
     { name = "path", group_index = 1, priority = 100 },
@@ -19,6 +19,9 @@ local cmp_sources_map = {
     { name = "nvim_lsp", group_index = 1, priority = 98 },
     { name = "snippets", group_index = 2, priority = 80 },
     { name = "buffer", group_index = 2, priority = 80 },
+  },
+  search = {
+    { name = "path", group_index = 1, priority = 100 },
   },
 }
 
@@ -258,6 +261,9 @@ return {
     })
     cmp.setup.filetype(ft.get_cmp_code_filetypes(), {
       sources = vim.list_slice(cmp_sources_map.code),
+    })
+    cmp.setup.filetype(ft.get_cmp_search_filetypes(), {
+      sources = vim.list_slice(cmp_sources_map.search),
     })
   end,
   dependencies = {

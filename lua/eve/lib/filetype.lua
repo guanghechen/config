@@ -54,6 +54,9 @@ local filetypes = {
     ["xml"]              = true,
     ["yaml"]             = true,
   },
+  cmp_search = {
+    [constant.FT_SEARCH_INPUT] = true,
+  },
   not_plain = {
     [constant.FT_AERIAL] = true,
     [constant.FT_CHECKHEALTH] = true,
@@ -199,6 +202,11 @@ local M = {}
 ---@return string[]
 function M.get_cmp_code_filetypes()
   return vim.tbl_keys(filetypes.cmp_code)
+end
+
+---@return string[]
+function M.get_cmp_search_filetypes()
+  return vim.tbl_keys(filetypes.cmp_search)
 end
 
 ---@return string[]
