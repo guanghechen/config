@@ -25,7 +25,7 @@ brew install tmux
 
 ### Install yazi
 printf "\n\e[34m  [setup homebrew] installing yazi...\e[0m\n"
-brew install yazi ffmpegthumbnailer jq imagemagick
+brew install yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship jstkdng/programs/ueberzugpp
 
 ### Install hardware utilities (cpu/memo/disk/network)
 printf "\n\e[34m  [setup homebrew] installing hardware utilities (cpu/memo/disk/network)...\e[0m\n"
