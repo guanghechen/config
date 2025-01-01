@@ -59,7 +59,7 @@ function M.defaults()
     lsp_inlay_hints = true,
     lsp_code_lens = true,
 
-    spellcheck = false,
+    spellcheck = is_home_config_dir,
   }
 end
 
