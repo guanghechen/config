@@ -51,3 +51,5 @@ source ~/.config/fish/conf.d/fzf.fish
 if test -f "$HOME/.config/fish/local/config.fish"
   source "$HOME/.config/fish/local/config.fish"
 end
+
+complete -c ghc-theme-apply -a "catppuccin-latte catppuccin-mocha gruvbox_dark gruvbox_light nord one_half_dark one_half_light"
