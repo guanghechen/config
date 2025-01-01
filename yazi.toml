@@ -1,4 +1,7 @@
 [manager]
+image_quality = 90
+linemode = "permissions"
+ratio = [1, 4, 3]
 show_hidden = true
 show_symlink = true
 sort_by = "natural"
@@ -6,6 +9,9 @@ sort_dir_first = true
 sort_reverse = false
 sort_sensitive = true
 sort_translit = true
+tab_size = 2
+title_format = ""
+wrap = false
 
 [opener]
 edit = [
@@ -20,6 +26,19 @@ open = [
 	{ run = 'xdg-open "$@"', desc = "Open" },
 ]
 
+[open]
+prepend_rules = [
+  { name = "*.json", use = [ "edit" ] },
+  { name = "*.html", use = [ "edit" ] },
+]
+append_rules = [
+  { name = "*", use = [ "edit" ]},
+]
+
 [preview]
 tab_size = 2
 wrap = "no"
+
+[input]
+cursor_blink = true
+origin = "top-center"
