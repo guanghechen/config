@@ -10,25 +10,25 @@ end
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_next_error(context)
-  vim.diagnostic.goto_next({ win_id = context.winnr, sererity = vim.diagnostic.severity.ERROR })
+  vim.diagnostic.goto_next({ win_id = context.winnr, severity = vim.diagnostic.severity.ERROR })
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_next_warn(context)
-  vim.diagnostic.goto_next({ win_id = context.winnr, sererity = vim.diagnostic.severity.WARN })
+  vim.diagnostic.goto_next({ win_id = context.winnr, severity = vim.diagnostic.severity.WARN })
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_next_hint(context)
-  vim.diagnostic.goto_next({ win_id = context.winnr, sererity = vim.diagnostic.severity.HINT })
+  vim.diagnostic.goto_next({ win_id = context.winnr, severity = vim.diagnostic.severity.HINT })
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_next_info(context)
-  vim.diagnostic.goto_next({ win_id = context.winnr, sererity = vim.diagnostic.severity.INFO })
+  vim.diagnostic.goto_next({ win_id = context.winnr, severity = vim.diagnostic.severity.INFO })
 end
 
 ---@param context                       eve.command.IContext
@@ -47,25 +47,25 @@ end
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_prev_error(context)
-  vim.diagnostic.goto_prev({ win_id = context.winnr, sererity = vim.diagnostic.severity.ERROR })
+  vim.diagnostic.goto_prev({ win_id = context.winnr, severity = vim.diagnostic.severity.ERROR })
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_prev_warn(context)
-  vim.diagnostic.goto_prev({ win_id = context.winnr, sererity = vim.diagnostic.severity.WARN })
+  vim.diagnostic.goto_prev({ win_id = context.winnr, severity = vim.diagnostic.severity.WARN })
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_prev_hint(context)
-  vim.diagnostic.goto_prev({ win_id = context.winnr, sererity = vim.diagnostic.severity.HINT })
+  vim.diagnostic.goto_prev({ win_id = context.winnr, severity = vim.diagnostic.severity.HINT })
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.goto_prev_info(context)
-  vim.diagnostic.goto_prev({ win_id = context.winnr, sererity = vim.diagnostic.severity.INFO })
+  vim.diagnostic.goto_prev({ win_id = context.winnr, severity = vim.diagnostic.severity.INFO })
 end
 
 ---@param context                       eve.command.IContext
