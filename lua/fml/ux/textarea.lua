@@ -1,8 +1,9 @@
 local __module_name__ = "fml.ux.textarea" ---@type string
 
+local reporter = require("eve.builtin.reporter")
+
 local box = require("eve.lib.box")
 local bindkeys = require("eve.lib.nvim").bindkeys
-local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
 
 ---@type string

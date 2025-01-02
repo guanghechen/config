@@ -1,7 +1,8 @@
 local __module_name__ = "eve.lib.collection.history" ---@type string
 
+local reporter = require("eve.builtin.reporter")
+
 local functional = require("eve.lib.functional")
-local reporter = require("eve.lib.reporter")
 local CircularStack = require("eve.lib.collection.circular_stack")
 
 ---@class eve.lib.collection.IHistory

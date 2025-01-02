@@ -1,8 +1,7 @@
 local __module_name__ = "eve.lib.fs" ---@type string
 
 local json = require("eve.builtin.json")
-
-local reporter = require("eve.lib.reporter")
+local reporter = require("eve.builtin.reporter")
 
 ---@class eve.lib.fs.IReadFileParams
 ---@field public filepath               string

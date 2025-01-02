@@ -1,10 +1,9 @@
 ---  https://github.com/LazyVim/LazyVim/blob/0f6ff53ce336082869314db11e9dfa487cf83292/lua/lazyvim/util/cmp.lua#L1
 local __module_name__ = "guanghechen.plugins.nvim-cmp" ---@type string
 
+local reporter = require("eve.builtin.reporter")
 local fts = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
-
-local reporter = require("eve.lib.reporter")
 
 local cmp_sources_map = {
   basic = {

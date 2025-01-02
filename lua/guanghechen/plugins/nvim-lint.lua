@@ -1,8 +1,9 @@
 local __module_name__ = "guanghechen.plugins.nvim-lint" ---@type string
 
+local reporter = require("eve.builtin.reporter")
 local fts = require("eve.constant.filetype")
+
 local path = require("eve.lib.path")
-local reporter = require("eve.lib.reporter")
 local Scheduler = require("eve.lib.collection.scheduler")
 local state = require("eve.state")
 

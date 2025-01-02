@@ -1,8 +1,7 @@
 local __module_name__ = "eve.command" ---@type string
 
+local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
-
-local reporter = require("eve.lib.reporter")
 
 local candidates_map = {
   flights = vim.tbl_keys(require("eve.state.workspace.flight").dump()),

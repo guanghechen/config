@@ -1,6 +1,6 @@
 local __module_name__ = "guanghechen.plugin.mini-pairs" ---@type string
 
-local reporter = require("eve.lib.reporter")
+local reporter = require("eve.builtin.reporter")
 
 -- auto pairs
 return {

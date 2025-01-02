@@ -1,6 +1,7 @@
 local __module_name__ = "eve.module.winpicker" ---@type string
 
-local reporter = require("eve.lib.reporter")
+local reporter = require("eve.builtin.reporter")
+
 local Renderer = require("eve.module.winpicker.renderer")
 
 ---@type string[]

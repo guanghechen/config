@@ -1,6 +1,6 @@
 local __module_name__ = "guanghechen.action.nvim-treesitter" ---@type string
 
-local reporter = require("eve.lib.reporter")
+local reporter = require("eve.builtin.reporter")
 
 local function find_conditional_node(node)
   local node_type = node:type() ---@type string

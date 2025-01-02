@@ -1,10 +1,10 @@
 local __module_name__ = "eve.lib.clipboard" ---@type string
 
+local reporter = require("eve.builtin.reporter")
 local tmux = require("eve.builtin.tmux")
 local env = require("eve.constant.env")
 
 local path = require("eve.lib.path")
-local reporter = require("eve.lib.reporter")
 
 local function wsl_clipboard()
   return {

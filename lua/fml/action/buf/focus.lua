@@ -1,7 +1,8 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
+local reporter = require("eve.builtin.reporter")
+
 local functional = require("eve.lib.functional")
-local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
 
 ---@class fml.action.buf

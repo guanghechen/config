@@ -1,8 +1,9 @@
 local __module_name__ = "fml.action.git" ---@type string
 
 local env = require("eve.constant.env")
+local reporter = require("eve.builtin.reporter")
+
 local path = require("eve.lib.path")
-local reporter = require("eve.lib.reporter")
 local Observable = require("eve.lib.collection.observable")
 local select = require("fml.fn.select")
 

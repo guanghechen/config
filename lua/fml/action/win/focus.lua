@@ -1,8 +1,8 @@
 local __module_name__ = "fml.action.win" ---@type string
 
+local reporter = require("eve.builtin.reporter")
 local tmux = require("eve.builtin.tmux")
 
-local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
 
 ---@return nil

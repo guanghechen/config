@@ -1,9 +1,8 @@
 local __module_name__ = "eve.lib.path" ---@type string
 
 local md5 = require("eve.builtin.md5")
+local reporter = require("eve.builtin.reporter")
 local env = require("eve.constant.env")
-
-local reporter = require("eve.lib.reporter")
 
 local SEP = env.PATH_SEP ---@type string
 local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG --[[@as string]]

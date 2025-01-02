@@ -1,9 +1,10 @@
 local __module_name__ = "fml.ux.nvimbar" ---@type string
 
+local reporter = require("eve.builtin.reporter")
+
 local functional = require("eve.lib.functional")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local path = require("eve.lib.path")
-local reporter = require("eve.lib.reporter")
 local Scheduler = require("eve.lib.collection.scheduler")
 
 ---@alias fml.ux.nvimbar.Position

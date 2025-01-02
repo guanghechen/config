@@ -1,8 +1,9 @@
 local __module_name__ = "guanghechen.action.copilot-chat" ---@type string
 
+local reporter = require("eve.builtin.reporter")
 local fts = require("eve.constant.filetype")
+
 local bindkeys = require("eve.lib.nvim").bindkeys
-local reporter = require("eve.lib.reporter")
 local state = require("eve.state")
 local select = require("fml.fn.select")
 

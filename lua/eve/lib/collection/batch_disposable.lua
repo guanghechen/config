@@ -1,6 +1,7 @@
 local __module_name__ = "eve.lib.collection.batch_disposable" ---@type string
 
-local reporter = require("eve.lib.reporter")
+local reporter = require("eve.builtin.reporter")
+
 local BatchHandler = require("eve.lib.collection.batch_handler")
 
 ---@class eve.lib.collection.IBatchDisposable : eve.lib.collection.IDisposable
