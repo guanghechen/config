@@ -1,4 +1,4 @@
-local env = require("eve.constant.env")
+local env = require("eve.builtin.env")
 local icons = require("eve.constant.icon")
 
 local username = env.USERNAME ---@type string

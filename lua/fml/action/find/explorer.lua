@@ -1,6 +1,6 @@
+local env = require("eve.builtin.env")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
-local env = require("eve.constant.env")
 local icons = require("eve.constant.icon")
 
 local checks = require("eve.lib.checks")

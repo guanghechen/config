@@ -1,6 +1,6 @@
 local __module_name__ = "eve.lib.im" ---@type string
 
-local env = require("eve.constant.env")
+local env = require("eve.builtin.env")
 local reporter = require("eve.builtin.reporter")
 
 local path = require("eve.lib.path")

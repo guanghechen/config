@@ -1,4 +1,4 @@
-local env = require("eve.constant.env")
+local env = require("eve.builtin.env")
 local fts = require("eve.constant.filetype")
 local augroup = require("eve.lib.nvim").augroup
 

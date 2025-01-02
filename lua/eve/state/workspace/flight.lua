@@ -1,5 +1,5 @@
+local env = require("eve.builtin.env")
 local Observable = require("eve.collection.observable")
-local env = require("eve.constant.env")
 
 local path = require("eve.lib.path")
 
