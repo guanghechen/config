@@ -1,7 +1,7 @@
+local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
 local tmux = require("eve.builtin.tmux")
 
-local fs = require("eve.lib.fs")
 local augroup = require("eve.lib.nvim").augroup
 local state = require("eve.state")
 

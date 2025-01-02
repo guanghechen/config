@@ -1,4 +1,5 @@
 local env = require("eve.builtin.env")
+local fs = require("eve.builtin.fs")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
@@ -6,7 +7,6 @@ local Subscriber = require("eve.collection.subscriber")
 local icons = require("eve.constant.icon")
 
 local checks = require("eve.lib.checks")
-local fs = require("eve.lib.fs")
 local functional = require("eve.lib.functional")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local state = require("eve.state")

@@ -1,5 +1,6 @@
 local __module_name__ = "eve.state" ---@type string
 
+local fs = require("eve.builtin.fs")
 local reporter = require("eve.builtin.reporter")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Disposable = require("eve.collection.disposable")
@@ -8,7 +9,6 @@ local Subscriber = require("eve.collection.subscriber")
 local setting = require("eve.constant.setting")
 
 local checks = require("eve.lib.checks")
-local fs = require("eve.lib.fs")
 local save_nvim_session = require("eve.lib.nvim").save_nvim_session
 
 local state_bookmark = require("eve.state.workspace.bookmark")

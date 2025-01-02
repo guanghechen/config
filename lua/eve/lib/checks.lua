@@ -1,7 +1,6 @@
+local fs = require("eve.builtin.fs")
 local fts = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
-
-local fs = require("eve.lib.fs")
 
 ---@type table<string, true>
 local NON_TEXT_EXTNAME_SET = {

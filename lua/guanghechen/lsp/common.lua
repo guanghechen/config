@@ -1,7 +1,7 @@
 local env = require("eve.builtin.env")
+local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
 
-local fs = require("eve.lib.fs")
 local lsp = require("eve.lib.lsp")
 local bindkeys = require("eve.lib.nvim").bindkeys
 local command = require("eve.command")

@@ -1,23 +1,23 @@
-local __module_name__ = "eve.lib.fs" ---@type string
+local __module_name__ = "eve.builtin.fs" ---@type string
 
 local json = require("eve.builtin.json")
 local reporter = require("eve.builtin.reporter")
 
----@class eve.lib.fs.IReadFileParams
+---@class eve.builtin.fs.IReadFileParams
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class eve.lib.fs.IReadFileAsLinesParams
+---@class eve.builtin.fs.IReadFileAsLinesParams
 ---@field public filepath               string
 ---@field public max_lines              ?integer
 ---@field public silent                 ?boolean
 
----@class eve.lib.fs.IReadJsonParams
+---@class eve.builtin.fs.IReadJsonParams
 ---@field public filepath               string
 ---@field public silent_on_bad_path     ?boolean
 ---@field public silent_on_bad_json     ?boolean
 
----@class eve.lib.fs
+---@class eve.builtin.fs
 local M = {}
 
 ---@param filepath                      string
@@ -59,7 +59,7 @@ function M.is_file_or_dir(filepath)
   return "other"
 end
 
----@param params                        eve.lib.fs.IReadFileParams
+---@param params                        eve.builtin.fs.IReadFileParams
 ---@return string|nil
 function M.read_file(params)
   local filepath = params.filepath ---@type string
@@ -82,7 +82,7 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
----@param params                        eve.lib.fs.IReadFileAsLinesParams
+---@param params                        eve.builtin.fs.IReadFileAsLinesParams
 ---@return string[]
 function M.read_file_as_lines(params)
   local filepath = params.filepath ---@type string
@@ -113,7 +113,7 @@ function M.read_file_as_lines(params)
   return lines
 end
 
----@param params                        eve.lib.fs.IReadJsonParams
+---@param params                        eve.builtin.fs.IReadJsonParams
 ---@return any|nil
 function M.read_json(params)
   local filepath = params.filepath ---@type string
@@ -167,12 +167,12 @@ function M.touch(filepath)
   end
 end
 
----@class eve.lib.fs.IWatchFileOptions
+---@class eve.builtin.fs.IWatchFileOptions
 ---@field filepath string
 ---@field on_event fun(filepath:string, events: any, unwatch:fun():nil):nil
 ---@field on_error? fun(filepath:string, err: any, unwatch:fun():nil):nil
 
----@param opts                          eve.lib.fs.IWatchFileOptions
+---@param opts                          eve.builtin.fs.IWatchFileOptions
 ---@return fun():nil
 function M.watch_file(opts)
   local filepath = opts.filepath

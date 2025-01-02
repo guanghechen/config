@@ -1,7 +1,7 @@
+local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
 
 local checks = require("eve.lib.checks")
-local fs = require("eve.lib.fs")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local state = require("eve.state")
 local Select = require("fml.ux.select")

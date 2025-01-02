@@ -1,5 +1,6 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
+local fs = require("eve.builtin.fs")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
@@ -7,7 +8,6 @@ local Subscriber = require("eve.collection.subscriber")
 local icons = require("eve.constant.icon")
 
 local checks = require("eve.lib.checks")
-local fs = require("eve.lib.fs")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local state = require("eve.state")
 local context = require("fml.action.search.files.context")
