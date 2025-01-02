@@ -1,7 +1,7 @@
 ---@class eve
 local M = {
   G = require("eve.lib.G"),
-  debug = require("eve.lib.debug"),
+  debug = require("eve.builtin.debug"),
 }
 
 ---@return eve.state.storage
