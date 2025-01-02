@@ -1,4 +1,4 @@
----@class eve.lib.fold
+---@class eve.module.foldexpr
 local M = {}
 
 ---@return string
