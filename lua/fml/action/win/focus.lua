@@ -50,7 +50,7 @@ local tmux_control = true ---@type boolean
 local DISABLE_WHEN_ZOOMED = true ---@type boolean
 
 ---@return nil
-local function tmux_navigate_window_topest()
+local function tmux_navigate_window_topmost()
   vim.cmd("wincmd t")
 end
 
@@ -62,7 +62,7 @@ local function tmux_navigate(direction)
     local is_last_win = (vim.fn.winnr() == vim.fn.winnr("$"))
 
     if is_last_win then
-      pcall(tmux_navigate_window_topest)
+      pcall(tmux_navigate_window_topmost)
       tmux.change_pane(direction)
     else
       vim_navigate(direction)

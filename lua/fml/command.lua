@@ -681,6 +681,27 @@ command
     end,
   })
 
+--[win] picker--------------------------------------------------------------------------------------
+command
+  .implement({
+    uuid = command.definitions.win.focus.uuid,
+    action = function(context)
+      require("fml.action.win.picker").focus(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.win.project.uuid,
+    action = function(context)
+      require("fml.action.win.picker").project(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.win.swap.uuid,
+    action = function(context)
+      require("fml.action.win.picker").swap(context)
+    end,
+  })
+
 --[win] resize--------------------------------------------------------------------------------------
 command
   .implement({

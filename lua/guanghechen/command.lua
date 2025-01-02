@@ -136,24 +136,3 @@ command.implement({
     })
   end,
 })
-
---[win] picker -------------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = command.definitions.win.focus.uuid,
-    action = function(context)
-      require("guanghechen.action.nvim-window-picker").focus(context)
-    end,
-  })
-  .implement({
-    uuid = command.definitions.win.project.uuid,
-    action = function(context)
-      require("guanghechen.action.nvim-window-picker").project(context)
-    end,
-  })
-  .implement({
-    uuid = command.definitions.win.swap.uuid,
-    action = function(context)
-      require("guanghechen.action.nvim-window-picker").swap(context)
-    end,
-  })

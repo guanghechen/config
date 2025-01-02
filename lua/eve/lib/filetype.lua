@@ -267,4 +267,16 @@ function M.is_not_plain_file(filetype)
   return filetype == nil or #filetype < 1 or filetypes.not_plain[filetype]
 end
 
+---@param filetype                      string|nil
+---@return boolean
+function M.is_not_focusable_filetype(filetype)
+  return filetype == nil or filetypes.no_window_picker_focusable[filetype]
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_not_projectable_filetype(filetype)
+  return filetype == nil or filetypes.no_window_picker_projectable[filetype]
+end
+
 return M
