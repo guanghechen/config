@@ -1,4 +1,5 @@
-local constant = require("eve.lib.constant")
+local setting = require("eve.constant.setting")
+
 local command = require("eve.command")
 
 --[ai] copilot -------------------------------------------------------------------------------------
@@ -54,28 +55,28 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
-    tabtype = constant.TT_DIFFVIEW,
+    tabtype = setting.TT_DIFFVIEW,
     action = function(context)
       require("guanghechen.action.diffview").fs_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
-    tabtype = constant.TT_NORMAL,
+    tabtype = setting.TT_NORMAL,
     action = function(context)
       require("guanghechen.action.neo-tree").fs_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_workspace.uuid,
-    tabtype = constant.TT_NORMAL,
+    tabtype = setting.TT_NORMAL,
     action = function(context)
       require("guanghechen.action.neo-tree").fs_workspace(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_reveal.uuid,
-    tabtype = constant.TT_NORMAL,
+    tabtype = setting.TT_NORMAL,
     action = function(context)
       require("guanghechen.action.neo-tree").fs_reveal(context)
     end,

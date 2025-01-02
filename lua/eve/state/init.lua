@@ -1,7 +1,8 @@
 local __module_name__ = "eve.state" ---@type string
 
+local setting = require("eve.constant.setting")
+
 local checks = require("eve.lib.checks")
-local constant = require("eve.lib.constant")
 local fs = require("eve.lib.fs")
 local save_nvim_session = require("eve.lib.nvim").save_nvim_session
 local reporter = require("eve.lib.reporter")
@@ -255,7 +256,7 @@ function M.open_filepath(filepath, lnum, col)
   end
 
   local meta_tab = M.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta_tab ~= nil and meta_tab.tabtype == constant.TT_NORMAL then
+  if meta_tab ~= nil and meta_tab.tabtype == setting.TT_NORMAL then
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
     local non_floating_winnr = 0 ---@type integer
     for _, winnr in ipairs(winnrs) do

@@ -1,7 +1,7 @@
 local fts = require("eve.constant.filetype")
+local setting = require("eve.constant.setting")
 local signs = require("eve.constant.sign")
 
-local constant = require("eve.lib.constant")
 local functional = require("eve.lib.functional")
 local augroup = require("eve.lib.nvim").augroup
 local bindkeys = require("eve.lib.nvim").bindkeys
@@ -25,7 +25,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 local M = {}
 M.__index = M
 
-local EDITING_PREFIX = constant.EDITING_INPUT_PREFIX ---@type string
+local EDITING_PREFIX = setting.EDITING_INPUT_PREFIX ---@type string
 local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@type integer
 
 ---@class fml.ux.search.input.IProps

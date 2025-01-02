@@ -1,5 +1,6 @@
+local setting = require("eve.constant.setting")
+
 local checks = require("eve.lib.checks")
-local constant = require("eve.lib.constant")
 local state = require("eve.state")
 
 ---@class fml.action.tab
@@ -27,7 +28,7 @@ function M.new_with_buf(context)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   state.tab.tab_history:push(tabnr)
 
-  local tabtype = constant.TT_NORMAL ---@type string
+  local tabtype = setting.TT_NORMAL ---@type string
   local bufs = {} ---@type eve.t.state.tab.buf.state[]
 
   local bufnr = context.bufnr ---@type integer

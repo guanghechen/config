@@ -1,5 +1,6 @@
+local setting = require("eve.constant.setting")
+
 local checks = require("eve.lib.checks")
-local constant = require("eve.lib.constant")
 local functional = require("eve.lib.functional")
 local calc_tabtype = require("eve.lib.nvim").calc_tabtype
 local gen_filepath2bufnr = require("eve.lib.nvim").gen_filepath2bufnr
@@ -75,7 +76,7 @@ local M = {}
 function Meta.new(tabnr, tabtype, winnr_listed, bufs)
   local self = setmetatable({}, Meta)
   self.tabnr = tabnr ---@type integer
-  self.tabtype = tabtype or constant.TT_NORMAL ---@type string
+  self.tabtype = tabtype or setting.TT_NORMAL ---@type string
   self.winnr_listed = winnr_listed or S.resolve_winnr_listed() ---@type integer
   self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
   return self
@@ -135,7 +136,7 @@ S = {
 
   tab_history = AdvanceHistory.new({
     name = "tabs",
-    capacity = constant.TAB_HISTORY_CAPACITY,
+    capacity = setting.TAB_HISTORY_CAPACITY,
     validate = checks.is_tab_valid,
   }),
 
@@ -191,11 +192,11 @@ S = {
   end,
   resolve_tabtype = function(tabnr)
     if tabnr == nil or tabnr < 1 then
-      return constant.TT_NORMAL
+      return setting.TT_NORMAL
     end
 
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta.tabtype or constant.TT_NORMAL
+    return meta and meta.tabtype or setting.TT_NORMAL
   end,
   resolve_winnr_listed = function(tabnr)
     if tabnr == nil or tabnr < 1 then
@@ -479,7 +480,7 @@ function M.load(raw_data)
   local tab_history = S.tab_history
     or AdvanceHistory.new({
       name = "tabs",
-      capacity = constant.TAB_HISTORY_CAPACITY,
+      capacity = setting.TAB_HISTORY_CAPACITY,
       validate = checks.is_tab_valid,
     })
 
@@ -521,7 +522,7 @@ function M.load(raw_data)
       end
 
       ---@type eve.state.tab.meta.state
-      local meta = Meta.new(tabnr, data_tab.tabtype or constant.TT_NORMAL, 0, bufs)
+      local meta = Meta.new(tabnr, data_tab.tabtype or setting.TT_NORMAL, 0, bufs)
       S.set(tabnr, meta)
     end
   end

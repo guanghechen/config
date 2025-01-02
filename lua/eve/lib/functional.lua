@@ -1,5 +1,5 @@
-local constant = require("eve.lib.constant")
-local EDITING_PREFIX = constant.EDITING_INPUT_PREFIX ---@type string
+local setting = require("eve.constant.setting")
+local EDITING_PREFIX = setting.EDITING_INPUT_PREFIX ---@type string
 
 ---@class eve.lib.functional
 local M = {}

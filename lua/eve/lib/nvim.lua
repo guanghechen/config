@@ -1,6 +1,5 @@
 local fts = require("eve.constant.filetype")
-local constant = require("eve.lib.constant")
-local BUF_UNTITLED = constant.BUF_UNTITLED ---@type string
+local setting = require("eve.constant.setting")
 
 ---@class eve.lib.nvim
 local M = {}
@@ -54,9 +53,9 @@ end
 ---@return string
 ---@return string
 function M.calc_fileicon(filename)
-  local name = (not filename or filename == "") and BUF_UNTITLED or filename
+  local name = (not filename or filename == "") and setting.BUF_UNTITLED or filename
   local icons_present, icons = pcall(require, "mini.icons")
-  if icons_present and name ~= BUF_UNTITLED then
+  if icons_present and name ~= setting.BUF_UNTITLED then
     local icon, icon_hl, is_default = icons.get("file", filename)
     if not is_default then
       return icon, icon_hl
@@ -75,11 +74,11 @@ function M.calc_tabtype(tabnr)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     if filetype == fts.DIFFVIEW_FILES or filetype == fts.DIFFVIEW_FILE_HISTORY then
-      return constant.TT_DIFFVIEW
+      return setting.TT_DIFFVIEW
     end
   end
 
-  return constant.TT_NORMAL ---@type string
+  return setting.TT_NORMAL ---@type string
 end
 
 ---@param winnr                         integer|nil
@@ -160,7 +159,7 @@ end
 function M.save_nvim_session(filepath)
   vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = constant.SESSION_SAVE_OPTION
+  vim.o.sessionoptions = setting.SESSION_SAVE_OPTION
   vim.cmd("mks! " .. vim.fn.fnameescape(filepath))
   vim.o.sessionoptions = tmp
 end

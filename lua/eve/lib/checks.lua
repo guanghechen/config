@@ -1,5 +1,6 @@
 local fts = require("eve.constant.filetype")
-local constant = require("eve.lib.constant")
+local setting = require("eve.constant.setting")
+
 local fs = require("eve.lib.fs")
 
 ---@type table<string, true>
@@ -117,7 +118,7 @@ end
 ---@param filepath                      string|nil
 ---@return boolean
 function M.is_valid_filepath(filepath)
-  if filepath == nil or filepath == "" or filepath == constant.BUF_UNTITLED then
+  if filepath == nil or filepath == "" or filepath == setting.BUF_UNTITLED then
     return false
   end
   return fs.is_file_or_dir(filepath) == "file"

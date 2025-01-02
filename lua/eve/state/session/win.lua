@@ -1,7 +1,8 @@
 local __module_name__ = "eve.state.session.win"
 
+local setting = require("eve.constant.setting")
+
 local checks = require("eve.lib.checks")
-local constant = require("eve.lib.constant")
 local lsp = require("eve.lib.lsp")
 local reporter = require("eve.lib.reporter")
 local AdvanceHistory = require("eve.lib.collection.history_advance")
@@ -102,7 +103,7 @@ S = {
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local filepath_history = AdvanceHistory.new({
       name = "win#bufs",
-      capacity = constant.WIN_BUF_HISTORY_CAPACITY,
+      capacity = setting.WIN_BUF_HISTORY_CAPACITY,
       validate = checks.is_valid_filepath,
     })
     filepath_history:push(filepath)
@@ -154,9 +155,7 @@ S = {
 
     ---! Make the request to the LSP server
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if
-      vim.b[bufnr][constant.V_WINLINE_DISABLED] or not lsp.has_support_method(bufnr, "textDocument/documentSymbol")
-    then
+    if vim.b[bufnr][setting.V_WINLINE_DISABLED] or not lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
       callback(false)
       return
     end
@@ -203,7 +202,7 @@ S = {
 
           if err.message == "trying to get AST for non-added document" then
             if vim.api.nvim_buf_is_valid(bufnr) then
-              vim.b[bufnr][constant.V_WINLINE_DISABLED] = true
+              vim.b[bufnr][setting.V_WINLINE_DISABLED] = true
             end
           end
         end

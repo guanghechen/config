@@ -1,4 +1,4 @@
----@class eve.lib.constant
+---@class eve.constant.setting
 local M = {}
 
 ---! Session settings
@@ -25,12 +25,6 @@ M.BUF_UNTITLED = "untitled"
 ---! Variable names
 
 M.V_WINLINE_DISABLED = "fml_winline_disabled"
-
----! Buffer types
-
-M.BT_NOWRITE = "nowrite"
-M.BT_NOFILE = "nofile"
-M.BT_QUICKFIX = "quickfix"
 
 ---! Special symbols.
 
