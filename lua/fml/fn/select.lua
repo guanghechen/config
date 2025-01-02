@@ -1,4 +1,5 @@
-local Observable = require("eve.lib.collection.observable")
+local Observable = require("eve.collection.observable")
+
 local Select = require("fml.ux.select")
 
 ---@class fml.fn.select.IParams
@@ -6,7 +7,7 @@ local Select = require("fml.ux.select")
 ---@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
----@field public input                  ?eve.lib.collection.IObservable
+---@field public input                  ?eve.collection.IObservable
 ---@field public preview_flag_wrap      ?boolean
 ---@field public fetch_items            fun(): fml.ux.select.IItem[]
 ---@field public on_confirm             fun(item: fml.ux.select.IItem): eve.e.WidgetConfirmAction|nil
@@ -22,7 +23,7 @@ local function select(params)
   local dimension = params.dimension ---@type fml.ux.search.IRawDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
-  local input = params.input ---@type eve.lib.collection.IObservable | nil
+  local input = params.input ---@type eve.collection.IObservable | nil
   local preview_flag_wrap = params.preview_flag_wrap ---@type boolean|nil
   local fetch_items = params.fetch_items ---@type fun(): fml.ux.select.IItem[]
   local on_confirm = params.on_confirm ---@type fun(item: fml.ux.select.IItem): nil

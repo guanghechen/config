@@ -1,30 +1,31 @@
+local Observable = require("eve.collection.observable")
+
 local functional = require("eve.lib.functional")
-local Observable = require("eve.lib.collection.observable")
 
----@class eve.lib.collection.IDirtier : eve.lib.collection.IObservable
----@field public is_clean               fun(self: eve.lib.collection.IDirtier): boolean
----@field public is_dirty               fun(self: eve.lib.collection.IDirtier): boolean
----@field public mark_clean             fun(self: eve.lib.collection.IDirtier): nil
----@field public mark_dirty             fun(self: eve.lib.collection.IDirtier): nil
+---@class eve.collection.IDirtier : eve.collection.IObservable
+---@field public is_clean               fun(self: eve.collection.IDirtier): boolean
+---@field public is_dirty               fun(self: eve.collection.IDirtier): boolean
+---@field public mark_clean             fun(self: eve.collection.IDirtier): nil
+---@field public mark_dirty             fun(self: eve.collection.IDirtier): nil
 
----@class eve.lib.collection.dirtier.IProps
+---@class eve.collection.dirtier.IProps
 ---@field public dirty                  boolean
 ---@field public equals                 ?fun(a: unknown, b: unknown): boolean
 
----@class eve.lib.collection.Dirtier : eve.lib.collection.IDirtier
+---@class eve.collection.Dirtier : eve.collection.IDirtier
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
 setmetatable(M, Observable)
 
----@param props eve.lib.collection.dirtier.IProps
----@return eve.lib.collection.Dirtier
+---@param props eve.collection.dirtier.IProps
+---@return eve.collection.Dirtier
 function M.new(props)
   local dirty = props.dirty ---@type boolean
   local equals = props.equals or functional.falsy
 
   local self = setmetatable(Observable.new({ initial_value = dirty, equals = equals }), M)
-  ---@cast self                         eve.lib.collection.Dirtier
+  ---@cast self                         eve.collection.Dirtier
 
   return self
 end

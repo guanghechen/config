@@ -1,9 +1,9 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local Observable = require("eve.collection.observable")
 
 local path = require("eve.lib.path")
-local Observable = require("eve.lib.collection.observable")
 local command = require("eve.command")
 local state = require("eve.state")
 local select = require("fml.fn.select")
@@ -19,7 +19,7 @@ local themes = command.definitions.toggle.theme.candidates ---@type string[]
 ---@param flight                        string
 ---@return nil
 local function toggle_flight(flight)
-  local observable = state.flight[flight] ---@type eve.lib.collection.IObservable|nil
+  local observable = state.flight[flight] ---@type eve.collection.IObservable|nil
   if observable ~= nil then
     local enabled = not observable:snapshot() ---@type boolean
     observable:next(enabled)
@@ -53,7 +53,7 @@ local flag_map = {
   relativenumber = {
     title = "relativenumber",
     snapshot = function()
-      local observable = state.option.relativenumber ---@type eve.lib.collection.IObservable
+      local observable = state.option.relativenumber ---@type eve.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -98,7 +98,7 @@ local flag_map = {
   transparency = {
     title = "theme transparency",
     snapshot = function()
-      local observable = state.theme.transparency ---@type eve.lib.collection.IObservable
+      local observable = state.theme.transparency ---@type eve.collection.IObservable
       local flag = observable:snapshot()
       return flag and "true" or "false", "Boolean"
     end,
@@ -240,7 +240,7 @@ function M.toggle_flight(context, arg)
       end,
       render_item = function(item, match)
         local flight = item.uuid ---@type string
-        local observable = state.flight[flight] ---@type eve.lib.collection.IObservable
+        local observable = state.flight[flight] ---@type eve.collection.IObservable
         local enabled = observable:snapshot() ---@type boolean
         local text_enabled = enabled and "true" or "false" ---@type string
 
@@ -270,7 +270,7 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.toggle_relativenumber(context)
-  local observable = state.option.relativenumber ---@type eve.lib.collection.IObservable
+  local observable = state.option.relativenumber ---@type eve.collection.IObservable
   local flag = observable:snapshot() ---@type boolean
   observable:next(not flag)
 end
@@ -335,7 +335,7 @@ end
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.toggle_transparency(context)
-  local observable = state.theme.transparency ---@type eve.lib.collection.IObservable
+  local observable = state.theme.transparency ---@type eve.collection.IObservable
   local flag = observable:snapshot() ---@type boolean
   observable:next(not flag)
   command.execute(command.definitions.ux.reload_theme.uuid, context, "force")

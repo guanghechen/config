@@ -1,10 +1,10 @@
+local AdvanceHistory = require("eve.collection.history_advance")
 local setting = require("eve.constant.setting")
 
 local checks = require("eve.lib.checks")
 local functional = require("eve.lib.functional")
 local calc_tabtype = require("eve.lib.nvim").calc_tabtype
 local gen_filepath2bufnr = require("eve.lib.nvim").gen_filepath2bufnr
-local AdvanceHistory = require("eve.lib.collection.history_advance")
 
 ---@alias eve.e.state.tab.meta.TabType
 ---| "normal"
@@ -35,13 +35,13 @@ Meta.__index = Meta
 
 ---@class eve.state.tab.data
 ---@field public list                   eve.t.state.tab.meta.data[]
----@field public tab_history            eve.lib.collection.history.ISerializedData
+---@field public tab_history            eve.collection.history.ISerializedData
 
 ---@class eve.state.tab.state
 ---@field public Meta                   eve.state.tab.meta.state
 ---@field public __meta_map__           table<integer, eve.state.tab.meta.state>
 ---
----@field public tab_history            eve.lib.collection.IAdvanceHistory
+---@field public tab_history            eve.collection.IAdvanceHistory
 ---
 ---@field public get                    fun(tabnr: integer|nil): eve.state.tab.meta.state|nil
 ---@field public set                    fun(tabnr: integer|nil, meta: eve.state.tab.meta.state): eve.state.tab.meta.state|nil
@@ -449,7 +449,7 @@ function M.dump()
     end
   end
 
-  ---@type eve.lib.collection.history.ISerializedData
+  ---@type eve.collection.history.ISerializedData
   local tab_history = S.tab_history and S.tab_history:dump() or { present = 0, stack = {} }
 
   local stack = {} ---@type integer[]
@@ -476,7 +476,7 @@ function M.load(raw_data)
 
   local data = M.normalize(raw_data) ---@type eve.state.tab.data
 
-  ---@type eve.lib.collection.IAdvanceHistory
+  ---@type eve.collection.IAdvanceHistory
   local tab_history = S.tab_history
     or AdvanceHistory.new({
       name = "tabs",

@@ -1,14 +1,14 @@
-local History = require("eve.lib.collection.history")
+local History = require("eve.collection.history")
 
 ---@class eve.state.input_history.data
----@field public find_buffer            eve.lib.collection.history.ISerializedData
----@field public find_file              eve.lib.collection.history.ISerializedData
----@field public search_in_file         eve.lib.collection.history.ISerializedData
+---@field public find_buffer            eve.collection.history.ISerializedData
+---@field public find_file              eve.collection.history.ISerializedData
+---@field public search_in_file         eve.collection.history.ISerializedData
 
 ---@class eve.state.input_history.state
----@field public find_buffer            eve.lib.collection.IHistory
----@field public find_file              eve.lib.collection.IHistory
----@field public search_in_file         eve.lib.collection.IHistory
+---@field public find_buffer            eve.collection.IHistory
+---@field public find_file              eve.collection.IHistory
+---@field public search_in_file         eve.collection.IHistory
 
 ---@class eve.state.input_history
 ---@field public defaults               fun(): eve.state.input_history.data
@@ -35,7 +35,7 @@ function M.normalize(data)
   local resolved = M.defaults() ---@type eve.state.input_history.data
   if type(data) == "table" then
     for key, history in pairs(resolved) do
-      local data_history = data[key] ---@type eve.lib.collection.history.ISerializedData|nil
+      local data_history = data[key] ---@type eve.collection.history.ISerializedData|nil
       if type(data_history) == "table" then
         if type(data_history.present) == "number" then
           history.present = data_history.present

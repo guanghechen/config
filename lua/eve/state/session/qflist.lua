@@ -1,11 +1,12 @@
+local History = require("eve.collection.history")
+
 local functional = require("eve.lib.functional")
-local History = require("eve.lib.collection.history")
 
 ---@class eve.state.qflist.data
----@field public history                eve.lib.collection.history.ISerializedData
+---@field public history                eve.collection.history.ISerializedData
 
 ---@class eve.state.qflist.state
----@field public history                eve.lib.collection.IHistory
+---@field public history                eve.collection.IHistory
 ---
 ---@field public backward               fun(): nil
 ---@field public forward                fun(): nil
@@ -129,7 +130,7 @@ end
 
 ---@return eve.state.qflist.data
 function M.dump()
-  ---@type eve.lib.collection.history.ISerializedData
+  ---@type eve.collection.history.ISerializedData
   local history = S.history and S.history:dump() or { present = 0, stack = {} }
 
   ---@type eve.state.qflist.data
@@ -143,7 +144,7 @@ end
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.qflist.data
 
-  ---@type eve.lib.collection.IHistory
+  ---@type eve.collection.IHistory
   local history = S.history or History.new({
     name = "qflist",
     capacity = 100,

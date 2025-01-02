@@ -1,11 +1,11 @@
 local __module_name__ = "fml.ux.nvimbar" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local Scheduler = require("eve.collection.scheduler")
 
 local functional = require("eve.lib.functional")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local path = require("eve.lib.path")
-local Scheduler = require("eve.lib.collection.scheduler")
 
 ---@alias fml.ux.nvimbar.Position
 ---| 'f_sl'
@@ -86,7 +86,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field private _sep_width            integer
 ---@field private _components           fml.ux.nvimbar.IComponent[]
 ---@field private _orders               integer[]
----@field private _render_scheduler     eve.lib.collection.IScheduler
+---@field private _render_scheduler     eve.collection.IScheduler
 ---@field private _get_max_width        fun(): integer
 ---@field public  _get_preset_context   fun(): fml.ux.nvimbar.IPresetContext
 ---@field private _is_active            fun(context: fml.ux.nvimbar.IContext): boolean
@@ -198,7 +198,7 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  local _render_scheduler ---@type eve.lib.collection.IScheduler
+  local _render_scheduler ---@type eve.collection.IScheduler
   _render_scheduler = Scheduler.new({
     name = "fml.ux.nvimbar#" .. name,
     delay = render_delay,

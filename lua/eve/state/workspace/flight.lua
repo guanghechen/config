@@ -1,6 +1,7 @@
+local Observable = require("eve.collection.observable")
 local env = require("eve.constant.env")
+
 local path = require("eve.lib.path")
-local Observable = require("eve.lib.collection.observable")
 
 ---@class eve.state.flight.data
 ---@field public autoload               boolean
@@ -18,19 +19,19 @@ local Observable = require("eve.lib.collection.observable")
 ---@field public spellcheck             boolean
 
 ---@class eve.state.flight.state
----@field public autoload               eve.lib.collection.IObservable
----@field public autosave               eve.lib.collection.IObservable
----@field public copilot                eve.lib.collection.IObservable
----@field public devmode                eve.lib.collection.IObservable
+---@field public autoload               eve.collection.IObservable
+---@field public autosave               eve.collection.IObservable
+---@field public copilot                eve.collection.IObservable
+---@field public devmode                eve.collection.IObservable
 ---
----@field public dressing_hipairs       eve.lib.collection.IObservable
----@field public dressing_winsep_fixed  eve.lib.collection.IObservable
----@field public dressing_winsep_float  eve.lib.collection.IObservable
+---@field public dressing_hipairs       eve.collection.IObservable
+---@field public dressing_winsep_fixed  eve.collection.IObservable
+---@field public dressing_winsep_float  eve.collection.IObservable
 ---
----@field public lsp_inlay_hints        eve.lib.collection.IObservable
----@field public lsp_code_lens          eve.lib.collection.IObservable
+---@field public lsp_inlay_hints        eve.collection.IObservable
+---@field public lsp_code_lens          eve.collection.IObservable
 ---
----@field public spellcheck             eve.lib.collection.IObservable
+---@field public spellcheck             eve.collection.IObservable
 
 ---@class eve.state.flight
 ---@field public defaults               fun(): eve.state.flight.data

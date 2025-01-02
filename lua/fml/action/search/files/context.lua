@@ -1,12 +1,12 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local Observable = require("eve.collection.observable")
+local Subscriber = require("eve.collection.subscriber")
 
 local checks = require("eve.lib.checks")
 local functional = require("eve.lib.functional")
 local path = require("eve.lib.path")
-local Observable = require("eve.lib.collection.observable")
-local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
 local Setting = require("fml.ux.setting")
 local Search = require("fml.ux.search.search")
@@ -238,8 +238,8 @@ function M.get_search()
     local api = require("fml.action.search.files.api")
     local keybindings = require("fml.action.search.files.keybindings")
 
-    local frecency = state.frecency.files ---@type eve.lib.collection.IFrecency
-    local input_history = state.input_history.search_in_file ---@type eve.lib.collection.IHistory
+    local frecency = state.frecency.files ---@type eve.collection.IFrecency
+    local input_history = state.input_history.search_in_file ---@type eve.collection.IHistory
     local title = M.get_title() ---@type string
 
     _search = Search.new({

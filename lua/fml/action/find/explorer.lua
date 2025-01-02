@@ -1,3 +1,5 @@
+local Observable = require("eve.collection.observable")
+local Subscriber = require("eve.collection.subscriber")
 local env = require("eve.constant.env")
 local icons = require("eve.constant.icon")
 
@@ -7,8 +9,6 @@ local functional = require("eve.lib.functional")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
-local Observable = require("eve.lib.collection.observable")
-local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
 local Select = require("fml.ux.select")
 
@@ -128,7 +128,7 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = Observable.from_value(path.normalize(initial_dirpath)) ---@type eve.lib.collection.IObservable
+local state_cwd = Observable.from_value(path.normalize(initial_dirpath)) ---@type eve.collection.IObservable
 local _select = nil ---@type fml.ux.ISelect|nil
 
 ---@return string
@@ -160,8 +160,8 @@ state_cwd:subscribe(
 ---@return fml.ux.ISelect
 local function get_select()
   if _select == nil then
-    local frecency = state.frecency.files ---@type eve.lib.collection.IFrecency
-    local input_history = state.input_history.find_file ---@type eve.lib.collection.IHistory
+    local frecency = state.frecency.files ---@type eve.collection.IFrecency
+    local input_history = state.input_history.find_file ---@type eve.collection.IHistory
 
     local main_width = 0.4 ---@type number
     ---@type fml.ux.search.IRawDimension

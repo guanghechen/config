@@ -1,5 +1,6 @@
+local Observable = require("eve.collection.observable")
+
 local functional = require("eve.lib.functional")
-local Observable = require("eve.lib.collection.observable")
 
 ---@class eve.state.search.data
 ---@field public flag_case_sensitive    boolean
@@ -16,18 +17,18 @@ local Observable = require("eve.lib.collection.observable")
 ---@field public search_paths           string[]
 
 ---@class eve.state.search.state
----@field public flag_case_sensitive    eve.lib.collection.IObservable
----@field public flag_gitignore         eve.lib.collection.IObservable
----@field public flag_regex             eve.lib.collection.IObservable
----@field public flag_replace           eve.lib.collection.IObservable
----@field public max_filesize           eve.lib.collection.IObservable
----@field public max_matches            eve.lib.collection.IObservable
----@field public includes               eve.lib.collection.IObservable
----@field public excludes               eve.lib.collection.IObservable
----@field public keyword                eve.lib.collection.IObservable
----@field public replacement            eve.lib.collection.IObservable
----@field public scope                  eve.lib.collection.IObservable
----@field public search_paths           eve.lib.collection.IObservable
+---@field public flag_case_sensitive    eve.collection.IObservable
+---@field public flag_gitignore         eve.collection.IObservable
+---@field public flag_regex             eve.collection.IObservable
+---@field public flag_replace           eve.collection.IObservable
+---@field public max_filesize           eve.collection.IObservable
+---@field public max_matches            eve.collection.IObservable
+---@field public includes               eve.collection.IObservable
+---@field public excludes               eve.collection.IObservable
+---@field public keyword                eve.collection.IObservable
+---@field public replacement            eve.collection.IObservable
+---@field public scope                  eve.collection.IObservable
+---@field public search_paths           eve.collection.IObservable
 
 ---@class eve.state.search
 ---@field public defaults               fun(): eve.state.search.data

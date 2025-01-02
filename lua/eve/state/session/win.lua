@@ -1,19 +1,19 @@
 local __module_name__ = "eve.state.session.win"
 
 local reporter = require("eve.builtin.reporter")
+local AdvanceHistory = require("eve.collection.history_advance")
 local setting = require("eve.constant.setting")
 
 local checks = require("eve.lib.checks")
 local lsp = require("eve.lib.lsp")
-local AdvanceHistory = require("eve.lib.collection.history_advance")
 local state_status = require("eve.state.session.status")
 
 ---@class eve.t.state.win.meta.data
 ---@field public winnr                  integer
----@field public filepath_history       eve.lib.collection.history.ISerializedData
+---@field public filepath_history       eve.collection.history.ISerializedData
 
 ---@class eve.t.state.win.meta.state
----@field public filepath_history       eve.lib.collection.IAdvanceHistory
+---@field public filepath_history       eve.collection.IAdvanceHistory
 ---@field public lsp_symbols            eve.t.state.buf.lsp.ISymbol[]
 ---@field public winline                fml.ux.INvimbar|nil
 ---@field public winline_bufnr          integer

@@ -1,11 +1,12 @@
+local Observable = require("eve.collection.observable")
+
 local functional = require("eve.lib.functional")
-local Observable = require("eve.lib.collection.observable")
 
 ---@class eve.state.bookmark.data
 ---@field public pinned                 string[]
 
 ---@class eve.state.bookmark.state
----@field public pinned                 eve.lib.collection.IObservable
+---@field public pinned                 eve.collection.IObservable
 
 ---@class eve.state.bookmark
 ---@field public defaults               fun(): eve.state.bookmark.data

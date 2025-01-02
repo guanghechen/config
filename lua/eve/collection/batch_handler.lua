@@ -1,13 +1,13 @@
----@class eve.lib.collection.IBatchHandler
----@field public cleanup                fun(self: eve.lib.collection.IBatchHandler): nil
----@field public run                    fun(self: eve.lib.collection.IBatchHandler, action: fun(): nil): nil
----@field public summary                fun(self: eve.lib.collection.IBatchHandler, title: string): nil): nil
+---@class eve.collection.IBatchHandler
+---@field public cleanup                fun(self: eve.collection.IBatchHandler): nil
+---@field public run                    fun(self: eve.collection.IBatchHandler, action: fun(): nil): nil
+---@field public summary                fun(self: eve.collection.IBatchHandler, title: string): nil): nil
 
----@class eve.lib.collection.BatchHandler : eve.lib.collection.IBatchHandler
+---@class eve.collection.BatchHandler : eve.collection.IBatchHandler
 local M = {}
 M.__index = M
 
----@return eve.lib.collection.BatchHandler
+---@return eve.collection.BatchHandler
 function M.new()
   local self = setmetatable({}, M)
 

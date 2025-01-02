@@ -1,9 +1,9 @@
+local Subscriber = require("eve.collection.subscriber")
+local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
 
 local G = require("eve.lib.G")
 local functional = require("eve.lib.functional")
-local Subscriber = require("eve.lib.collection.subscriber")
-local Scheduler = require("eve.lib.collection.scheduler")
 local state = require("eve.state")
 local SearchInput = require("fml.ux.search.input")
 local SearchMain = require("fml.ux.search.main")
@@ -128,8 +128,8 @@ local borders = {
 ---@field public delay_render           ?integer
 ---@field public fetch_data             fml.ux.search.IFetchData
 ---@field public fetch_preview_data     ?fml.ux.search.IFetchPreviewData
----@field public input                  eve.lib.collection.IObservable
----@field public input_history          eve.lib.collection.IHistory|nil
+---@field public input                  eve.collection.IObservable
+---@field public input_history          eve.collection.IHistory|nil
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public patch_preview_data     ?fml.ux.search.IPatchPreviewData
@@ -169,7 +169,7 @@ function M.new(props)
 
   local raw_statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
   for idx, item in ipairs(raw_statusline_items) do
-    local stl_state = item.state ---@type eve.lib.collection.IObservable
+    local stl_state = item.state ---@type eve.collection.IObservable
     local symbol = item.symbol ---@type string
     local callback = item.callback ---@type fun(): nil
     local callback_fn = G.register_anonymous_fn(callback) or "" ---@type string
@@ -204,7 +204,7 @@ function M.new(props)
   local delay_fetch = math.max(0, props.delay_fetch or 128) ---@type integer
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
   local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
-  local input_history = props.input_history ---@type eve.lib.collection.IHistory|nil
+  local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local permanent = not not props.permanent ---@type boolean
   local preview_flag_wrap = not not props.preview_flag_wrap ---@type boolean
 

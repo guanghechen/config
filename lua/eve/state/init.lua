@@ -1,15 +1,15 @@
 local __module_name__ = "eve.state" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local BatchDisposable = require("eve.collection.batch_disposable")
+local Disposable = require("eve.collection.disposable")
+local Scheduler = require("eve.collection.scheduler")
+local Subscriber = require("eve.collection.subscriber")
 local setting = require("eve.constant.setting")
 
 local checks = require("eve.lib.checks")
 local fs = require("eve.lib.fs")
 local save_nvim_session = require("eve.lib.nvim").save_nvim_session
-local BatchDisposable = require("eve.lib.collection.batch_disposable")
-local Disposable = require("eve.lib.collection.disposable")
-local Scheduler = require("eve.lib.collection.scheduler")
-local Subscriber = require("eve.lib.collection.subscriber")
 
 local state_bookmark = require("eve.state.workspace.bookmark")
 local state_buf = require("eve.state.session.buf")
@@ -79,9 +79,9 @@ local state_win = require("eve.state.session.win")
 ---@field public get_storage            fun(): eve.state.storage
 ---@field public set_storage            fun(storage: eve.state.storage): nil
 ---
----@field public add_disposable         fun(disposable: eve.lib.collection.IDisposable): nil
+---@field public add_disposable         fun(disposable: eve.collection.IDisposable): nil
 ---@field public dispose                fun(): nil
----@field public observe                fun(observables: eve.lib.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
+---@field public observe                fun(observables: eve.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public hmr                    fun(module_name: string): unknown
 ---@field public open_filepath          fun(filepath: string, lnum?: integer, col?: integer): boolean
@@ -90,7 +90,7 @@ local state_win = require("eve.state.session.win")
 
 ---@class eve.state : eve.state.state
 ---@field private _storage              eve.state.storage
----@field private _disposables          eve.lib.collection.BatchDisposable
+---@field private _disposables          eve.collection.BatchDisposable
 local M = {
   _storage = {},
   _disposables = BatchDisposable.new(),
@@ -207,7 +207,7 @@ function M.set_storage(storage)
   M._storage = storage
 end
 
----@param disposable                    eve.lib.collection.IDisposable
+---@param disposable                    eve.collection.IDisposable
 ---@return nil
 function M.add_disposable(disposable)
   M._disposables:add_disposable(disposable)
@@ -218,7 +218,7 @@ function M.dispose()
   M._disposables:dispose()
 end
 
----@param observables                   eve.lib.collection.IObservable[]
+---@param observables                   eve.collection.IObservable[]
 ---@param callback                      fun(): nil
 ---@param ignore_initial                ?boolean
 ---@return nil

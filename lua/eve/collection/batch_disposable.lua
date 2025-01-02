@@ -1,30 +1,29 @@
-local __module_name__ = "eve.lib.collection.batch_disposable" ---@type string
+local __module_name__ = "eve.collection.batch_disposable" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local BatchHandler = require("eve.collection.batch_handler")
 
-local BatchHandler = require("eve.lib.collection.batch_handler")
+---@class eve.collection.IBatchDisposable : eve.collection.IDisposable
+---@field public dispose_all            fun(disposables: eve.collection.IDisposable[]): nil
+---@field public add_disposable         fun(self: eve.collection.IBatchDisposable, disposable: eve.collection.IDisposable): nil
 
----@class eve.lib.collection.IBatchDisposable : eve.lib.collection.IDisposable
----@field public dispose_all            fun(disposables: eve.lib.collection.IDisposable[]): nil
----@field public add_disposable         fun(self: eve.lib.collection.IBatchDisposable, disposable: eve.lib.collection.IDisposable): nil
-
----@class eve.lib.collection.BatchDisposable : eve.lib.collection.IBatchDisposable
+---@class eve.collection.BatchDisposable : eve.collection.IBatchDisposable
 local M = {}
 M.__index = M
 
----@return eve.lib.collection.BatchDisposable
+---@return eve.collection.BatchDisposable
 function M.new()
   local self = setmetatable({}, M)
 
   ---@type boolean
   self._disposed = false
 
-  ---@type eve.lib.collection.IDisposable[]
+  ---@type eve.collection.IDisposable[]
   self._disposables = {}
   return self
 end
 
----@param disposables                   eve.lib.collection.IDisposable[]
+---@param disposables                   eve.collection.IDisposable[]
 ---@return nil
 function M.dispose_all(disposables)
   if #disposables <= 0 then
@@ -37,7 +36,7 @@ function M.dispose_all(disposables)
       disposable:dispose()
     end)
   end
-  handler:summary("[eve.lib.collection.batch_disposable.dispose_all] Encountered error(s) while disposing.")
+  handler:summary("[eve.collection.batch_disposable.dispose_all] Encountered error(s) while disposing.")
 end
 
 ---@return boolean
@@ -72,7 +71,7 @@ function M:dispose()
   end
 end
 
----@param disposable eve.lib.collection.IDisposable
+---@param disposable eve.collection.IDisposable
 ---@return nil
 function M:add_disposable(disposable)
   if disposable:is_disposed() then

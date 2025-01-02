@@ -1,10 +1,11 @@
+local Subscriber = require("eve.collection.subscriber")
+
 local functional = require("eve.lib.functional")
 local Nvimbar = require("fml.ux.nvimbar")
-local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
 local c = require("fml.dressing.nvimbar.components")
 
-local dirtier = state.status.dirtier_tabline ---@type eve.lib.collection.IDirtier
+local dirtier = state.status.dirtier_tabline ---@type eve.collection.IDirtier
 local position = "f_tl" ---@type fml.ux.nvimbar.Position
 
 ---@return boolean

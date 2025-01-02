@@ -1,6 +1,7 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local Subscriber = require("eve.collection.subscriber")
 local icons = require("eve.constant.icon")
 
 local checks = require("eve.lib.checks")
@@ -8,7 +9,6 @@ local fs = require("eve.lib.fs")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
-local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
 local context = require("fml.action.search.files.context")
 
@@ -600,7 +600,7 @@ function M.get_filematch(filepath)
 end
 
 ---@param item                          fml.ux.search.IItem
----@param frecency                      eve.lib.collection.IFrecency
+---@param frecency                      eve.collection.IFrecency
 ---@return eve.e.WidgetConfirmAction|nil
 function M.open_file(item, frecency)
   local cwd = context.search_cwd:snapshot() ---@type string

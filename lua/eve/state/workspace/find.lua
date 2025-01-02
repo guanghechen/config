@@ -1,5 +1,6 @@
+local Observable = require("eve.collection.observable")
+
 local functional = require("eve.lib.functional")
-local Observable = require("eve.lib.collection.observable")
 
 ---@class eve.state.find.data
 ---@field public flag_case_sensitive    boolean
@@ -12,14 +13,14 @@ local Observable = require("eve.lib.collection.observable")
 ---@field public scope                  eve.e.FindScope
 
 ---@class eve.state.find.state
----@field public flag_case_sensitive    eve.lib.collection.IObservable
----@field public flag_gitignore         eve.lib.collection.IObservable
----@field public flag_fuzzy             eve.lib.collection.IObservable
----@field public flag_regex             eve.lib.collection.IObservable
----@field public includes               eve.lib.collection.IObservable
----@field public excludes               eve.lib.collection.IObservable
----@field public keyword                eve.lib.collection.IObservable
----@field public scope                  eve.lib.collection.IObservable
+---@field public flag_case_sensitive    eve.collection.IObservable
+---@field public flag_gitignore         eve.collection.IObservable
+---@field public flag_fuzzy             eve.collection.IObservable
+---@field public flag_regex             eve.collection.IObservable
+---@field public includes               eve.collection.IObservable
+---@field public excludes               eve.collection.IObservable
+---@field public keyword                eve.collection.IObservable
+---@field public scope                  eve.collection.IObservable
 
 ---@class eve.state.find
 ---@field public defaults               fun(): eve.state.find.data

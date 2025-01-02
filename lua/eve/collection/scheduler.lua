@@ -1,37 +1,37 @@
-local __module_name__ = "eve.lib.collection.scheduler" ---@type string
+local __module_name__ = "eve.collection.scheduler" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local Observable = require("eve.collection.observable")
 
 local functional = require("eve.lib.functional")
-local Observable = require("eve.lib.collection.observable")
 
----@class eve.lib.collection.IScheduler
+---@class eve.collection.IScheduler
 ---@field public name                   string
----@field public cancel                 fun(self: eve.lib.collection.IScheduler): nil
----@field public execute_immediately    fun(self: eve.lib.collection.IScheduler): nil
----@field public schedule               fun(self: eve.lib.collection.IScheduler): nil
----@field public snapshot               fun(self: eve.lib.collection.IScheduler): unknown|nil
----@field public subscribe              fun(self: eve.lib.collection.IScheduler, subscriber: eve.lib.collection.ISubscriber, ignoreInitial: boolean): eve.lib.collection.IUnsubscribable
+---@field public cancel                 fun(self: eve.collection.IScheduler): nil
+---@field public execute_immediately    fun(self: eve.collection.IScheduler): nil
+---@field public schedule               fun(self: eve.collection.IScheduler): nil
+---@field public snapshot               fun(self: eve.collection.IScheduler): unknown|nil
+---@field public subscribe              fun(self: eve.collection.IScheduler, subscriber: eve.collection.ISubscriber, ignoreInitial: boolean): eve.collection.IUnsubscribable
 
----@alias eve.lib.collection.scheduler.ITask
----| fun(callback: eve.lib.collection.promise.IOnFinally): nil
+---@alias eve.collection.scheduler.ITask
+---| fun(callback: eve.collection.promise.IOnFinally): nil
 
----@class eve.lib.collection.scheduler.IProps
+---@class eve.collection.scheduler.IProps
 ---@field public name                   string
----@field public task                   eve.lib.collection.scheduler.ITask
+---@field public task                   eve.collection.scheduler.ITask
 ---@field public delay                  ?integer
 ---@field public silent                 ?fun(): boolean
 ---@field public equals                 ?fun(a: unknown, b: unknown): boolean
 
----@class eve.lib.collection.Scheduler : eve.lib.collection.IScheduler
+---@class eve.collection.Scheduler : eve.collection.IScheduler
 ---@field public name                   string
 ---
 ---@field protected _delay              integer
 ---@field protected _immediate          boolean
 ---@field protected _silent             fun(): boolean
 ---
----@field protected _task               eve.lib.collection.scheduler.ITask
----@field protected _value              eve.lib.collection.IObservable
+---@field protected _task               eve.collection.scheduler.ITask
+---@field protected _value              eve.collection.IObservable
 ---
 ---@field protected _tick_alive         integer
 ---@field protected _tick_scheduled     integer
@@ -41,15 +41,15 @@ local Observable = require("eve.lib.collection.observable")
 local M = {}
 M.__index = M
 
----@param props                         eve.lib.collection.scheduler.IProps
----@return eve.lib.collection.Scheduler
+---@param props                         eve.collection.scheduler.IProps
+---@return eve.collection.Scheduler
 function M.new(props)
   local self = setmetatable({}, M)
 
   local name = props.name ---@type string
   local silent = props.silent or functional.truthy ---@type fun(): boolean
   local delay = props.delay or 32 ---@type integer
-  local task = props.task ---@type eve.lib.collection.scheduler.ITask
+  local task = props.task ---@type eve.collection.scheduler.ITask
   local equals = props.equals ---@type (fun(a: unknown, b: unknown): boolean)|nil
 
   self.name = name
@@ -80,9 +80,9 @@ function M:snapshot()
   return self._value:snapshot()
 end
 
----@param subscriber                    eve.lib.collection.ISubscriber
+---@param subscriber                    eve.collection.ISubscriber
 ---@param ignoreInitial                 boolean
----@return eve.lib.collection.IUnsubscribable
+---@return eve.collection.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)
   return self._value:subscribe(subscriber, ignoreInitial)
 end
@@ -131,7 +131,7 @@ function M:execute()
     end
   end
 
-  ---@param settled                     eve.lib.collection.promise.ISettled
+  ---@param settled                     eve.collection.promise.ISettled
   ---@param value                       unknown
   ---@param reason                      unknown
   ---@return nil
@@ -196,7 +196,7 @@ function M:execute_immediately()
   local tick = self._tick_scheduled + 1 ---@type integer
   local task_completed = false ---@type boolean
 
-  ---@param settled                     eve.lib.collection.promise.ISettled
+  ---@param settled                     eve.collection.promise.ISettled
   ---@param value                       unknown
   ---@param reason                      unknown
   ---@return nil

@@ -1,6 +1,6 @@
+local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 
-local Observable = require("eve.lib.collection.observable")
 local oxi = require("eve.lib.oxi")
 local state = require("eve.state")
 local Search = require("fml.ux.search.search")
@@ -64,18 +64,18 @@ local Search = require("fml.ux.search.search")
 ---@field public render_item            ?fml.ux.select.IRenderItem
 
 ---@class fml.ux.Select : fml.ux.ISelect
----@field protected _case_sensitive     eve.lib.collection.IObservable
+---@field protected _case_sensitive     eve.collection.IObservable
 ---@field protected _cmp                fml.ux.select.IMatchedItemCmp|nil
----@field protected _flag_fuzzy         eve.lib.collection.IObservable
----@field protected _flag_regex         eve.lib.collection.IObservable
----@field protected _frecency           eve.lib.collection.IFrecency|nil
+---@field protected _flag_fuzzy         eve.collection.IObservable
+---@field protected _flag_regex         eve.collection.IObservable
+---@field protected _frecency           eve.collection.IFrecency|nil
 ---@field protected _full_matches       fml.ux.select.IMatchedItem[]
 ---@field protected _item_map           table<string, fml.ux.select.IItem>
 ---@field protected _item_uuid_cursor   string|nil
 ---@field protected _item_uuid_present  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
----@field protected _live_data_dirty    eve.lib.collection.IObservable
+---@field protected _live_data_dirty    eve.collection.IObservable
 ---@field protected _matches            fml.ux.select.IMatchedItem[]
 ---@field protected _provider           fml.ux.select.IProvider
 ---@field protected _get_search         fun(): fml.ux.search.ISearch
@@ -83,7 +83,7 @@ local M = {}
 M.__index = M
 
 ---@class fml.ux.select.IProps
----@field public case_sensitive         ?eve.lib.collection.IObservable
+---@field public case_sensitive         ?eve.collection.IObservable
 ---@field public cmp                    ?fml.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
@@ -92,11 +92,11 @@ M.__index = M
 ---@field public preview_enabled        boolean
 ---@field public preview_flag_wrap      ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?eve.lib.collection.IObservable
----@field public flag_regex             ?eve.lib.collection.IObservable
----@field public frecency               ?eve.lib.collection.IFrecency
----@field public input                  ?eve.lib.collection.IObservable
----@field public input_history          ?eve.lib.collection.IHistory
+---@field public flag_fuzzy             ?eve.collection.IObservable
+---@field public flag_regex             ?eve.collection.IObservable
+---@field public frecency               ?eve.collection.IFrecency
+---@field public input                  ?eve.collection.IObservable
+---@field public input_history          ?eve.collection.IHistory
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public permanent              ?boolean
@@ -114,7 +114,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type eve.lib.collection.IObservable
+  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type eve.collection.IObservable
   local cmp = props.cmp ---@type fml.ux.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch or 128 ---@type integer
   local delay_render = props.delay_render or 48 ---@type integer
@@ -123,13 +123,13 @@ function M.new(props)
   local preview_enabled = props.preview_enabled ---@type boolean
   local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
-  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.lib.collection.IObservable
-  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.lib.collection.IObservable
-  local frecency = props.frecency ---@type eve.lib.collection.IFrecency|nil
-  local input = props.input or Observable.from_value("") ---@type eve.lib.collection.IObservable
-  local input_history = props.input_history ---@type eve.lib.collection.IHistory|nil
+  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.collection.IObservable
+  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.collection.IObservable
+  local frecency = props.frecency ---@type eve.collection.IFrecency|nil
+  local input = props.input or Observable.from_value("") ---@type eve.collection.IObservable
+  local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
-  local live_data_dirty = Observable.from_value(true) ---@type eve.lib.collection.IObservable
+  local live_data_dirty = Observable.from_value(true) ---@type eve.collection.IObservable
   local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
   local permanent = props.permanent ---@type boolean|nil
   local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
@@ -377,7 +377,7 @@ function M:fetch_data(input, force)
   self._live_data_dirty:next(false)
 
   if is_data_dirty then
-    local frecency = self._frecency ---@type eve.lib.collection.IFrecency|nil
+    local frecency = self._frecency ---@type eve.collection.IFrecency|nil
     local data = self._provider.fetch_data(force) ---@type fml.ux.select.IData
     local item_map = {} ---@type table<string, fml.ux.select.IItem>
     local full_matches = {} ---@type fml.ux.select.IMatchedItem[]
@@ -418,7 +418,7 @@ end
 ---@param input                         string
 ---@return fml.ux.select.IMatchedItem[]
 function M:filter(input)
-  local frecency = self._frecency ---@type eve.lib.collection.IFrecency|nil
+  local frecency = self._frecency ---@type eve.collection.IFrecency|nil
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
 
   local matches = self._full_matches ---@type fml.ux.select.IMatchedItem[]

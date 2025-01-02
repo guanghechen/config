@@ -1,9 +1,9 @@
 local tmux = require("eve.builtin.tmux")
+local Dirtier = require("eve.collection.dirtier")
+local Observable = require("eve.collection.observable")
+local Ticker = require("eve.collection.ticker")
 
 local functional = require("eve.lib.functional")
-local Dirtier = require("eve.lib.collection.dirtier")
-local Observable = require("eve.lib.collection.observable")
-local Ticker = require("eve.lib.collection.ticker")
 
 ---@class eve.state.status.data
 ---@field public tick_editor            integer
@@ -18,16 +18,16 @@ local Ticker = require("eve.lib.collection.ticker")
 ---@field public tmux_zen_mode          boolean
 
 ---@class eve.state.status.state
----@field public ticker_editor          eve.lib.collection.ITicker
----@field public ticker_session         eve.lib.collection.ITicker
----@field public ticker_workspace       eve.lib.collection.ITicker
+---@field public ticker_editor          eve.collection.ITicker
+---@field public ticker_session         eve.collection.ITicker
+---@field public ticker_workspace       eve.collection.ITicker
 ---
----@field public dirtier_statusline     eve.lib.collection.IDirtier
----@field public dirtier_tabline        eve.lib.collection.IDirtier
----@field public dirty_winline_nr       eve.lib.collection.IObservable
+---@field public dirtier_statusline     eve.collection.IDirtier
+---@field public dirtier_tabline        eve.collection.IDirtier
+---@field public dirty_winline_nr       eve.collection.IObservable
 ---
----@field public lsp_msg                eve.lib.collection.IObservable
----@field public tmux_zen_mode          eve.lib.collection.IObservable
+---@field public lsp_msg                eve.collection.IObservable
+---@field public tmux_zen_mode          eve.collection.IObservable
 ---
 ---@field public reset                  fun(): nil
 

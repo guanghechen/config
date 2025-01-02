@@ -1,3 +1,5 @@
+local Subscriber = require("eve.collection.subscriber")
+local Scheduler = require("eve.collection.scheduler")
 local fts = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 local signs = require("eve.constant.sign")
@@ -6,8 +8,6 @@ local functional = require("eve.lib.functional")
 local augroup = require("eve.lib.nvim").augroup
 local bindkeys = require("eve.lib.nvim").bindkeys
 local oxi = require("eve.lib.oxi")
-local Subscriber = require("eve.lib.collection.subscriber")
-local Scheduler = require("eve.lib.collection.scheduler")
 
 ---@class fml.ux.search.IInput
 ---@field public context                fml.ux.search.IContext
@@ -20,7 +20,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@field protected _autocmd_group      integer
 ---@field protected _bufnr              integer|nil
 ---@field protected _extmark_nr         integer|nil
----@field protected _input_scheduler    eve.lib.collection.IScheduler
+---@field protected _input_scheduler    eve.collection.IScheduler
 ---@field protected _keymaps            eve.t.IKeymap[]
 local M = {}
 M.__index = M
@@ -38,7 +38,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local search_state = props.state ---@type fml.ux.search.IContext
-  local input_history = search_state.input_history ---@type eve.lib.collection.IHistory|nil
+  local input_history = search_state.input_history ---@type eve.collection.IHistory|nil
   local autocmd_group = augroup(search_state.uuid .. ":search_input") ---@type integer
 
   local actions = {

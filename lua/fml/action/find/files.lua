@@ -1,14 +1,14 @@
 local __module_name__ = "fml.action.find" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local Observable = require("eve.collection.observable")
+local Subscriber = require("eve.collection.subscriber")
 local icons = require("eve.constant.icon")
 
 local checks = require("eve.lib.checks")
 local functional = require("eve.lib.functional")
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
-local Observable = require("eve.lib.collection.observable")
-local Subscriber = require("eve.lib.collection.subscriber")
 local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
@@ -212,8 +212,8 @@ local actions = {
 ---@return fml.ux.IFileSelect
 local function get_select()
   if _select == nil then
-    local frecency = state.frecency.files ---@type eve.lib.collection.IFrecency
-    local input_history = state.input_history.find_file ---@type eve.lib.collection.IHistory
+    local frecency = state.frecency.files ---@type eve.collection.IFrecency
+    local input_history = state.input_history.find_file ---@type eve.collection.IHistory
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
     local statusline_items = {

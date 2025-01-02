@@ -1,9 +1,9 @@
+local Subscriber = require("eve.collection.subscriber")
+local Scheduler = require("eve.collection.scheduler")
 local fts = require("eve.constant.filetype")
 local signs = require("eve.constant.sign")
 
 local bindkeys = require("eve.lib.nvim").bindkeys
-local Subscriber = require("eve.lib.collection.subscriber")
-local Scheduler = require("eve.lib.collection.scheduler")
 
 ---@class fml.ux.search.IMain
 ---@field public context                fml.ux.search.IContext
@@ -15,7 +15,7 @@ local Scheduler = require("eve.lib.collection.scheduler")
 ---@class fml.ux.search.Main : fml.ux.search.IMain
 ---@field protected _bufnr              integer|nil
 ---@field protected _keymaps            eve.t.IKeymap[]
----@field protected _render_scheduler   eve.lib.collection.IScheduler
+---@field protected _render_scheduler   eve.collection.IScheduler
 local M = {}
 M.__index = M
 

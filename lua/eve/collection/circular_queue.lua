@@ -1,26 +1,28 @@
----@class eve.lib.collection.ICircularStack
----@field public capacity               fun(self: eve.lib.collection.ICircularStack): integer
----@field public size                   fun(self: eve.lib.collection.ICircularStack): integer
----@field public at                     fun(self: eve.lib.collection.ICircularStack, index: integer): eve.t.T|nil
----@field public clear                  fun(self: eve.lib.collection.ICircularStack): nil
----@field public collect                fun(self: eve.lib.collection.ICircularStack): eve.t.T[]
----@field public count                  fun(self: eve.lib.collection.ICircularStack, filter: eve.t.IFilter): integer
----@field public fork                   fun(self: eve.lib.collection.ICircularStack, filter: eve.t.IFilter): eve.lib.collection.ICircularStack
----@field public iterator               fun(self: eve.lib.collection.ICircularStack): fun(): eve.t.T|nil
----@field public iterator_reverse       fun(self: eve.lib.collection.ICircularStack): fun(): eve.t.T|nil
----@field public pop                    fun(self: eve.lib.collection.ICircularStack): eve.t.T|nil
----@field public push                   fun(self: eve.lib.collection.ICircularStack, element: eve.t.T): nil
----@field public rearrange              fun(self: eve.lib.collection.ICircularStack, filter: eve.t.IFilter): fun(): eve.t.T|nil
----@field public reset                  fun(self: eve.lib.collection.ICircularStack, elements: eve.t.T[]): boolean): fun(): eve.t.T|nil
----@field public top                    fun(self: eve.lib.collection.ICircularStack): eve.t.T|nil
----@field public update                 fun(self: eve.lib.collection.ICircularStack, index: integer, value: eve.t.T): nil
+---@class eve.collection.ICircularQueue
+---@field public capacity               fun(self: eve.collection.ICircularQueue): integer
+---@field public size                   fun(self: eve.collection.ICircularQueue): integer
+---@field public at                     fun(self: eve.collection.ICircularQueue, index: integer): eve.t.T|nil
+---@field public back                   fun(self: eve.collection.ICircularQueue): eve.t.T|nil
+---@field public clear                  fun(self: eve.collection.ICircularQueue): nil
+---@field public collect                fun(self: eve.collection.ICircularQueue): eve.t.T[]
+---@field public count                  fun(self: eve.collection.ICircularQueue, filter: eve.t.IFilter): integer
+---@field public dequeue                fun(self: eve.collection.ICircularQueue): eve.t.T|nil
+---@field public dequeue_back           fun(self: eve.collection.ICircularQueue): eve.t.T|nil
+---@field public enqueue                fun(self: eve.collection.ICircularQueue, element: eve.t.T): nil
+---@field public fork                   fun(self: eve.collection.ICircularQueue, filter: eve.t.IFilter): eve.collection.ICircularQueue
+---@field public front                  fun(self: eve.collection.ICircularQueue): eve.t.T|nil
+---@field public iterator               fun(self: eve.collection.ICircularQueue): fun(): eve.t.T|nil
+---@field public iterator_reverse       fun(self: eve.collection.ICircularQueue): fun(): eve.t.T|nil
+---@field public rearrange              fun(self: eve.collection.ICircularQueue, filter: eve.t.IFilter): fun(): eve.t.T|nil
+---@field public reset                  fun(self: eve.collection.ICircularQueue, elements: eve.t.T[]): boolean): fun(): eve.t.T|nil
+---@field public update                 fun(self: eve.collection.ICircularQueue, index: integer, value: eve.t.T): nil
 
----@class eve.lib.collection.circular_stack.IProps
+---@class eve.collection.circular_queue.IProps
 ---@field public capacity               integer
 
 local _tmp_array = {} ---@type eve.t.T[]
 
----@class eve.lib.collection.CircularStack : eve.lib.collection.ICircularStack
+---@class eve.collection.CircularQueue : eve.collection.ICircularQueue
 ---@field private _elements             eve.t.T[]
 ---@field private _capacity             integer
 ---@field private _size                 integer
@@ -29,8 +31,8 @@ local _tmp_array = {} ---@type eve.t.T[]
 local M = {}
 M.__index = M
 
----@param props                         eve.lib.collection.circular_stack.IProps
----@return eve.lib.collection.CircularStack
+---@param props                         eve.collection.circular_queue.IProps
+---@return eve.collection.CircularQueue
 function M.new(props)
   local capacity = math.max(1, props.capacity) ---@type integer
 
@@ -43,8 +45,8 @@ function M.new(props)
   return self
 end
 
----@param queue                         eve.lib.collection.ICircularStack
----@return eve.lib.collection.CircularStack
+---@param queue                         eve.collection.ICircularQueue
+---@return eve.collection.CircularQueue
 function M.from(queue)
   local elements = {} ---@type eve.t.T[]
   local size = 0 ---@type integer
@@ -64,7 +66,7 @@ end
 
 ---@param arr                          eve.t.T[]
 ---@param capacity                     integer
----@return eve.lib.collection.CircularStack
+---@return eve.collection.CircularQueue
 function M.from_array(arr, capacity)
   capacity = math.max(1, capacity) ---@type integer
   local elements = {} ---@type eve.t.T[]
@@ -104,6 +106,11 @@ function M:at(index)
   local idx = self._start + index - 1 ---@type integer
   idx = idx <= self._capacity and idx or idx - self._capacity ---@type integer
   return self._elements[idx]
+end
+
+---@return eve.t.T|nil
+function M:back()
+  return self._size > 0 and self._elements[self._end] or nil
 end
 
 ---@return nil
@@ -148,11 +155,65 @@ function M:count(filter)
   return count
 end
 
+---@return eve.t.T|nil
+function M:dequeue()
+  if self._size < 1 then
+    return nil
+  end
+
+  local target = self._elements[self._start] ---@type eve.t.T|nil
+  if self._size == 1 then
+    self._size = 0
+    self._start = 1
+    self._end = 0
+  else
+    self._size = self._size - 1
+    self._start = self._start == self._capacity and 1 or self._start + 1
+  end
+  return target
+end
+
+---@return eve.t.T|nil
+function M:dequeue_back()
+  if self._size < 1 then
+    return nil
+  end
+
+  local target = self._elements[self._end] ---@type eve.t.T|nil
+  if self._size == 1 then
+    self._size = 0
+    self._start = 1
+    self._end = 0
+  else
+    self._size = self._size - 1
+    self._end = self._end == 1 and self._capacity or self._end - 1
+  end
+  return target
+end
+
+---@param element                       eve.t.T
+---@return nil
+function M:enqueue(element)
+  self._end = self._end == self._capacity and 1 or self._end + 1
+  self._elements[self._end] = element
+
+  if self._size < self._capacity then
+    self._size = self._size + 1
+  else
+    self._start = self._start == self._capacity and 1 or self._start + 1
+  end
+end
+
 ---@param filter                        fun(element: eve.t.T, index: integer): boolean
----@return eve.lib.collection.CircularStack
+---@return eve.collection.CircularQueue
 function M:fork(filter)
   self:rearrange(filter)
   return M.from(self)
+end
+
+---@return eve.t.T|nil
+function M:front()
+  return self._size > 0 and self._elements[self._start] or nil
 end
 
 ---@return fun(): eve.t.T|nil, integer|nil
@@ -192,37 +253,6 @@ function M:iterator_reverse()
       idx = idx == 1 and capacity or idx - 1
       return elements[idx], index
     end
-  end
-end
-
----@return eve.t.T|nil
-function M:pop()
-  if self._size < 1 then
-    return nil
-  end
-
-  local target = self._elements[self._end] ---@type eve.t.T|nil
-  if self._size == 1 then
-    self._size = 0
-    self._start = 1
-    self._end = 0
-  else
-    self._size = self._size - 1
-    self._end = self._end == 1 and self._capacity or self._end - 1
-  end
-  return target
-end
-
----@param element                       eve.t.T
----@return nil
-function M:push(element)
-  self._end = self._end == self._capacity and 1 or self._end + 1
-  self._elements[self._end] = element
-
-  if self._size < self._capacity then
-    self._size = self._size + 1
-  else
-    self._start = self._start == self._capacity and 1 or self._start + 1
   end
 end
 
@@ -294,11 +324,6 @@ function M:reset(arr)
   self._size = size
   self._start = 1
   self._end = size
-end
-
----@return eve.t.T|nil
-function M:top()
-  return self._size > 0 and self._elements[self._end] or nil
 end
 
 ---@param index                         integer

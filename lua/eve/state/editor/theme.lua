@@ -1,12 +1,12 @@
-local Observable = require("eve.lib.collection.observable")
+local Observable = require("eve.collection.observable")
 
 ---@class eve.state.theme.data
 ---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
 
 ---@class eve.state.theme.state
----@field public theme                  eve.lib.collection.IObservable
----@field public transparency           eve.lib.collection.IObservable
+---@field public theme                  eve.collection.IObservable
+---@field public transparency           eve.collection.IObservable
 
 ---@class eve.state.theme
 ---@field public defaults               fun(): eve.state.theme.data

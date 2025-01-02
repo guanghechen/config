@@ -1,17 +1,17 @@
----@class eve.lib.collection.IDisposable
----@field public is_disposed            fun(self: eve.lib.collection.IDisposable): boolean Check if the disposable disposed.
----@field public dispose                fun(self: eve.lib.collection.IDisposable): boolean Dispose the disposable.
+---@class eve.collection.IDisposable
+---@field public is_disposed            fun(self: eve.collection.IDisposable): boolean Check if the disposable disposed.
+---@field public dispose                fun(self: eve.collection.IDisposable): boolean Dispose the disposable.
 
----@class eve.lib.collection.disposable.IProps
+---@class eve.collection.disposable.IProps
 ---@field public on_dispose             fun():nil
 
----@class eve.lib.collection.Disposable : eve.lib.collection.IDisposable
+---@class eve.collection.Disposable : eve.collection.IDisposable
 ---@field private _on_dispose           fun():nil
 local M = {}
 M.__index = M
 
----@param props eve.lib.collection.disposable.IProps
----@return eve.lib.collection.Disposable
+---@param props eve.collection.disposable.IProps
+---@return eve.collection.Disposable
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -23,7 +23,7 @@ function M.new(props)
   return self
 end
 
----@param unsubscribable                eve.lib.collection.IUnsubscribable
+---@param unsubscribable                eve.collection.IUnsubscribable
 function M.from_unsubscribable(unsubscribable)
   return M.new({
     on_dispose = function()

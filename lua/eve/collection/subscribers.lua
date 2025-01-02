@@ -1,36 +1,37 @@
+local BatchHandler = require("eve.collection.batch_handler")
+
 local functional = require("eve.lib.functional")
-local BatchHandler = require("eve.lib.collection.batch_handler")
 
----@class eve.lib.collection.IUnsubscribable
----@field public unsubscribe            fun(self: eve.lib.collection.IUnsubscribable):nil
+---@class eve.collection.IUnsubscribable
+---@field public unsubscribe            fun(self: eve.collection.IUnsubscribable):nil
 
----@class eve.lib.collection.ISubscribable
----@field public subscribe              fun(self: eve.lib.collection.ISubscribable, subscriber: eve.lib.collection.ISubscriber, ignoreInitial?: boolean): eve.lib.collection.IUnsubscribable
+---@class eve.collection.ISubscribable
+---@field public subscribe              fun(self: eve.collection.ISubscribable, subscriber: eve.collection.ISubscriber, ignoreInitial?: boolean): eve.collection.IUnsubscribable
 
----@class eve.lib.collection.ISubscribers : eve.lib.collection.ISubscribable, eve.lib.collection.IDisposable
----@field public count                  fun(self: eve.lib.collection.ISubscribers): nil
----@field public notify                 fun(self: eve.lib.collection.ISubscribers, value: eve.t.T, value_prev: eve.t.T | nil): nil
+---@class eve.collection.ISubscribers : eve.collection.ISubscribable, eve.collection.IDisposable
+---@field public count                  fun(self: eve.collection.ISubscribers): nil
+---@field public notify                 fun(self: eve.collection.ISubscribers, value: eve.t.T, value_prev: eve.t.T | nil): nil
 
----@class eve.lib.collection.Subscribers.IProps
+---@class eve.collection.Subscribers.IProps
 ---@field public ARRANGE_THRESHOLD      ?number
 
----@class eve.lib.collection.Subscribers.ISubscriberItem
----@field subscriber                    eve.lib.collection.ISubscriber
+---@class eve.collection.Subscribers.ISubscriberItem
+---@field subscriber                    eve.collection.ISubscriber
 ---@field unsubscribed                  boolean
 
----@type eve.lib.collection.IUnsubscribable
+---@type eve.collection.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = functional.noop }
 
----@class eve.lib.collection.Subscribers : eve.lib.collection.ISubscribers
+---@class eve.collection.Subscribers : eve.collection.ISubscribers
 ---@field private ARRANGE_THRESHOLD     number
 ---@field private _disposed             boolean
----@field private _items                eve.lib.collection.Subscribers.ISubscriberItem[]
+---@field private _items                eve.collection.Subscribers.ISubscriberItem[]
 ---@field private _subscribing_count    integer
 local M = {}
 M.__index = M
 
----@param props                         ?eve.lib.collection.Subscribers.IProps
----@return eve.lib.collection.Subscribers
+---@param props                         ?eve.collection.Subscribers.IProps
+---@return eve.collection.Subscribers
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -40,7 +41,7 @@ function M.new(props)
   ---@type boolean
   self._disposed = false
 
-  ---@type eve.lib.collection.Subscribers.ISubscriberItem[]
+  ---@type eve.collection.Subscribers.ISubscriberItem[]
   self._items = {}
 
   ---@type integer
@@ -123,8 +124,8 @@ function M:notify(value, value_prev)
   handler:cleanup()
 end
 
----@param subscriber                    eve.lib.collection.ISubscriber
----@return eve.lib.collection.IUnsubscribable
+---@param subscriber                    eve.collection.ISubscriber
+---@return eve.collection.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:is_disposed() then
     return noop_unsubscribable
@@ -135,13 +136,13 @@ function M:subscribe(subscriber)
     return noop_unsubscribable
   end
 
-  ---@type eve.lib.collection.Subscribers.ISubscriberItem
+  ---@type eve.collection.Subscribers.ISubscriberItem
   local item = { subscriber = subscriber, unsubscribed = false }
 
   table.insert(self._items, item)
   self._subscribing_count = self._subscribing_count + 1
 
-  ---@type eve.lib.collection.IUnsubscribable
+  ---@type eve.collection.IUnsubscribable
   local unsubscribe = {
     unsubscribe = function()
       if item.unsubscribed then
@@ -160,7 +161,7 @@ end
 function M:_arrange()
   local items = self._items
   if #items >= self.ARRANGE_THRESHOLD and self._subscribing_count * 2 <= #items then
-    ---@type eve.lib.collection.Subscribers.ISubscriberItem[]
+    ---@type eve.collection.Subscribers.ISubscriberItem[]
     local next_items = {}
 
     local i = 1

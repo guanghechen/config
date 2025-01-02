@@ -1,5 +1,6 @@
+local CircularQueue = require("eve.collection.circular_queue")
+
 local functional = require("eve.lib.functional")
-local CircularQueue = require("eve.lib.collection.circular_queue")
 
 local function circular_queue()
   local circular = CircularQueue.new({ capacity = 3 })

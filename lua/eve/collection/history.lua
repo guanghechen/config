@@ -1,64 +1,64 @@
-local __module_name__ = "eve.lib.collection.history" ---@type string
+local __module_name__ = "eve.collection.history" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local CircularStack = require("eve.collection.circular_stack")
 
 local functional = require("eve.lib.functional")
-local CircularStack = require("eve.lib.collection.circular_stack")
 
----@class eve.lib.collection.IHistory
+---@class eve.collection.IHistory
 ---@field public name                   string
 ---@field public equals                 eve.t.IEquals
----@field public backward               fun(self: eve.lib.collection.IHistory, step?: integer): eve.t.T|nil, boolean
----@field public bottom                 fun(self: eve.lib.collection.IHistory): eve.t.T|nil
----@field public capacity               fun(self: eve.lib.collection.IHistory): integer
----@field public clear                  fun(self: eve.lib.collection.IHistory): nil
----@field public collect                fun(self: eve.lib.collection.IHistory): eve.t.T[]
----@field public dump                   fun(self: eve.lib.collection.IHistory): eve.lib.collection.history.ISerializedData
----@field public fork                   fun(self: eve.lib.collection.IHistory, params: eve.lib.collection.history.IForkParams): eve.lib.collection.IHistory
----@field public forward                fun(self: eve.lib.collection.IHistory, step?: integer): eve.t.T|nil, boolean
----@field public go                     fun(self: eve.lib.collection.IHistory, index: integer): eve.t.T|nil, integer
----@field public is_bottom              fun(self: eve.lib.collection.IHistory): boolean
----@field public is_empty               fun(self: eve.lib.collection.IHistory): boolean
----@field public is_top                 fun(self: eve.lib.collection.IHistory): boolean
----@field public iterator               fun(self: eve.lib.collection.IHistory): fun(): eve.t.T|nil, integer|nil
----@field public iterator_reverse       fun(self: eve.lib.collection.IHistory): fun(): eve.t.T|nil, integer|nil
----@field public load                   fun(self: eve.lib.collection.IHistory, data: eve.lib.collection.history.ISerializedData): nil
----@field public present                fun(self: eve.lib.collection.IHistory): eve.t.T|nil, integer
----@field public print                  fun(self: eve.lib.collection.IHistory): nil
----@field public push                   fun(self: eve.lib.collection.IHistory, element: eve.t.T): nil
----@field public rearrange              fun(self: eve.lib.collection.IHistory, filter: eve.t.IFilter): nil
----@field public size                   fun(self: eve.lib.collection.IHistory): integer
----@field public top                    fun(self: eve.lib.collection.IHistory): eve.t.T|nil, integer
----@field public update_top             fun(self: eve.lib.collection.IHistory, element: eve.t.T): nil
+---@field public backward               fun(self: eve.collection.IHistory, step?: integer): eve.t.T|nil, boolean
+---@field public bottom                 fun(self: eve.collection.IHistory): eve.t.T|nil
+---@field public capacity               fun(self: eve.collection.IHistory): integer
+---@field public clear                  fun(self: eve.collection.IHistory): nil
+---@field public collect                fun(self: eve.collection.IHistory): eve.t.T[]
+---@field public dump                   fun(self: eve.collection.IHistory): eve.collection.history.ISerializedData
+---@field public fork                   fun(self: eve.collection.IHistory, params: eve.collection.history.IForkParams): eve.collection.IHistory
+---@field public forward                fun(self: eve.collection.IHistory, step?: integer): eve.t.T|nil, boolean
+---@field public go                     fun(self: eve.collection.IHistory, index: integer): eve.t.T|nil, integer
+---@field public is_bottom              fun(self: eve.collection.IHistory): boolean
+---@field public is_empty               fun(self: eve.collection.IHistory): boolean
+---@field public is_top                 fun(self: eve.collection.IHistory): boolean
+---@field public iterator               fun(self: eve.collection.IHistory): fun(): eve.t.T|nil, integer|nil
+---@field public iterator_reverse       fun(self: eve.collection.IHistory): fun(): eve.t.T|nil, integer|nil
+---@field public load                   fun(self: eve.collection.IHistory, data: eve.collection.history.ISerializedData): nil
+---@field public present                fun(self: eve.collection.IHistory): eve.t.T|nil, integer
+---@field public print                  fun(self: eve.collection.IHistory): nil
+---@field public push                   fun(self: eve.collection.IHistory, element: eve.t.T): nil
+---@field public rearrange              fun(self: eve.collection.IHistory, filter: eve.t.IFilter): nil
+---@field public size                   fun(self: eve.collection.IHistory): integer
+---@field public top                    fun(self: eve.collection.IHistory): eve.t.T|nil, integer
+---@field public update_top             fun(self: eve.collection.IHistory, element: eve.t.T): nil
 
----@class eve.lib.collection.history.IForkParams
+---@class eve.collection.history.IForkParams
 ---@field public name                   ?string
 
----@class eve.lib.collection.history.ISerializedData
+---@class eve.collection.history.ISerializedData
 ---@field public present                integer
 ---@field public stack                  eve.t.T[]
 
----@class eve.lib.collection.history.IDeserializeProps
----@field public data                   eve.lib.collection.history.ISerializedData
+---@class eve.collection.history.IDeserializeProps
+---@field public data                   eve.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?eve.t.IEquals
 
----@class eve.lib.collection.history.IProps
+---@class eve.collection.history.IProps
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?eve.t.IEquals
 
----@class eve.lib.collection.History : eve.lib.collection.IHistory
+---@class eve.collection.History : eve.collection.IHistory
 ---@field public name                   string
 ---@field public equals                 eve.t.IEquals
 ---@field protected _present            integer
----@field protected _stack              eve.lib.collection.ICircularStack
+---@field protected _stack              eve.collection.ICircularStack
 local M = {}
 M.__index = M
 
----@param props                         eve.lib.collection.history.IProps
----@return eve.lib.collection.History
+---@param props                         eve.collection.history.IProps
+---@return eve.collection.History
 function M.new(props)
   local name = props.name ---@type string
   local capacity = props.capacity ---@type integer
@@ -72,10 +72,10 @@ function M.new(props)
   return self
 end
 
----@param props                         eve.lib.collection.history.IDeserializeProps
----@return eve.lib.collection.History
+---@param props                         eve.collection.history.IDeserializeProps
+---@return eve.collection.History
 function M.deserialize(props)
-  local data = props.data ---@type eve.lib.collection.history.ISerializedData
+  local data = props.data ---@type eve.collection.history.ISerializedData
 
   local self = setmetatable({}, M)
   self.name = props.name
@@ -115,17 +115,17 @@ function M:collect()
   return self._stack:collect()
 end
 
----@return eve.lib.collection.history.ISerializedData
+---@return eve.collection.history.ISerializedData
 function M:dump()
-  ---@type eve.lib.collection.history.ISerializedData
+  ---@type eve.collection.history.ISerializedData
   return {
     present = self._present,
     stack = self._stack:collect(),
   }
 end
 
----@param params                        eve.lib.collection.history.IForkParams
----@return eve.lib.collection.History
+---@param params                        eve.collection.history.IForkParams
+---@return eve.collection.History
 function M:fork(params)
   local instance = setmetatable({}, M)
   instance.name = params.name
@@ -148,7 +148,7 @@ end
 ---@return eve.t.T|nil
 ---@return integer
 function M:go(index)
-  local stack = self._stack ---@type eve.lib.collection.ICircularStack
+  local stack = self._stack ---@type eve.collection.ICircularStack
   local present = math.min(stack:size(), math.max(1, index)) ---@type integer
   self._present = present
   return stack:at(present), present
@@ -171,17 +171,17 @@ end
 
 ---@return fun(): eve.t.T, integer
 function M:iterator()
-  local stack = self._stack ---@type eve.lib.collection.ICircularStack
+  local stack = self._stack ---@type eve.collection.ICircularStack
   return stack:iterator()
 end
 
 ---@return fun(): eve.t.T, integer
 function M:iterator_reverse()
-  local stack = self._stack ---@type eve.lib.collection.ICircularStack
+  local stack = self._stack ---@type eve.collection.ICircularStack
   return stack:iterator_reverse()
 end
 
----@param data                          eve.lib.collection.history.ISerializedData
+---@param data                          eve.collection.history.ISerializedData
 ---@return nil
 function M:load(data)
   local stack = data.stack ---@type eve.t.T[]
@@ -211,7 +211,7 @@ end
 ---@return nil
 function M:push(element)
   local present = self._present ---@type integer
-  local stack = self._stack ---@type eve.lib.collection.ICircularStack
+  local stack = self._stack ---@type eve.collection.ICircularStack
   local el_present = stack:at(present) ---@type eve.t.T|nil
   if el_present ~= nil and self.equals(el_present, element) then
     return
@@ -235,7 +235,7 @@ end
 ---@param filter                        eve.t.IFilter
 ---@return nil
 function M:rearrange(filter)
-  local stack = self._stack ---@type eve.lib.collection.ICircularStack
+  local stack = self._stack ---@type eve.collection.ICircularStack
   local old_present = self._present ---@type integer
   local new_present = 0 ---@type integer
   local idx = 0 ---@type integer
@@ -263,14 +263,14 @@ end
 ---@return eve.t.T|nil
 ---@return integer
 function M:top()
-  local stack = self._stack ---@type eve.lib.collection.ICircularStack
+  local stack = self._stack ---@type eve.collection.ICircularStack
   return stack:top(), stack:size()
 end
 
 ---@param element                       eve.t.T
 ---@return nil
 function M:update_top(element)
-  local stack = self._stack ---@type eve.lib.collection.ICircularStack
+  local stack = self._stack ---@type eve.collection.ICircularStack
   local present = stack:size()
   self._present = present
   stack:update(present, element)

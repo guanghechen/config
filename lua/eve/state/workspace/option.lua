@@ -1,10 +1,10 @@
-local Observable = require("eve.lib.collection.observable")
+local Observable = require("eve.collection.observable")
 
 ---@class eve.state.option.data
 ---@field public relativenumber         boolean
 
 ---@class eve.state.option.state
----@field public relativenumber         eve.lib.collection.IObservable
+---@field public relativenumber         eve.collection.IObservable
 
 ---@class eve.state.option
 ---@field public defaults               fun(): eve.state.option.data

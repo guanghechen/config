@@ -1,20 +1,20 @@
 local functional = require("eve.lib.functional")
 
----@class eve.lib.collection.ISubscriber : eve.lib.collection.IDisposable
----@field public next                   fun(self: eve.lib.collection.ISubscriber, value: eve.t.T, value_prev: eve.t.T| nil): nil
+---@class eve.collection.ISubscriber : eve.collection.IDisposable
+---@field public next                   fun(self: eve.collection.ISubscriber, value: eve.t.T, value_prev: eve.t.T| nil): nil
 
----@class eve.lib.collection.subscriber.IProps
+---@class eve.collection.subscriber.IProps
 ---@field on_next                       fun(value: any, value_prev: any|nil):nil
 ---@field on_dispose                    ?fun():nil
 
----@class eve.lib.collection.Subscriber : eve.lib.collection.ISubscriber
+---@class eve.collection.Subscriber : eve.collection.ISubscriber
 ---@field private _on_next              fun(value: any, value_prev: any|nil):nil
 ---@field private _on_dispose           fun():nil
 local M = {}
 M.__index = M
 
----@param props eve.lib.collection.subscriber.IProps
----@return eve.lib.collection.Subscriber
+---@param props eve.collection.subscriber.IProps
+---@return eve.collection.Subscriber
 function M.new(props)
   local self = setmetatable({}, M)
 

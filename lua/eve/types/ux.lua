@@ -9,13 +9,13 @@
 
 ---@class eve.t.ux.widget.IStatuslineItem
 ---@field public type                   eve.e.WidgetStatuslineItemType
----@field public state                  eve.lib.collection.IObservable
+---@field public state                  eve.collection.IObservable
 ---@field public symbol                 string
 ---@field public callback_fn            string
 
 ---@class eve.t.ux.widget.IRawStatuslineItem
 ---@field public type                   eve.e.WidgetStatuslineItemType
 ---@field public desc                   string
----@field public state                  eve.lib.collection.IObservable
+---@field public state                  eve.collection.IObservable
 ---@field public symbol                 string
 ---@field public callback               fun(): nil

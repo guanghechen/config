@@ -1,7 +1,8 @@
+local Subscriber = require("eve.collection.subscriber")
 local fts = require("eve.constant.filetype")
+
 local checks = require("eve.lib.checks")
 local env = require("eve.constant.env")
-local Subscriber = require("eve.lib.collection.subscriber")
 local Nvimbar = require("fml.ux.nvimbar")
 local state = require("eve.state")
 local c = require("fml.dressing.nvimbar.components")

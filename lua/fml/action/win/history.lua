@@ -14,7 +14,7 @@ local _history_select = nil ---@type fml.ux.FileSelect|nil
 local function get_history_select()
   if _history_select == nil then
     local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(setting.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
-    local frecency = state.frecency.files ---@type eve.lib.collection.IFrecency
+    local frecency = state.frecency.files ---@type eve.collection.IFrecency
 
     ---@param ordinal                       integer
     ---@return string

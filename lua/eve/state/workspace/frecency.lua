@@ -1,12 +1,11 @@
 local md5 = require("eve.builtin.md5")
-
-local Frecency = require("eve.lib.collection.frecency")
+local Frecency = require("eve.collection.frecency")
 
 ---@class eve.state.frecency.data
----@field public files                  eve.lib.collection.frecency.ISerializedData
+---@field public files                  eve.collection.frecency.ISerializedData
 
 ---@class eve.state.frecency.state
----@field public files                  eve.lib.collection.IFrecency
+---@field public files                  eve.collection.IFrecency
 
 ---@class eve.state.frecency
 ---@field public defaults               fun(): eve.state.frecency.data
@@ -31,7 +30,7 @@ function M.normalize(data)
   local resolved = M.defaults() ---@type eve.state.frecency.data
   if type(data) == "table" then
     for key, frecency in pairs(resolved) do
-      local data_frecency = data[key] ---@type eve.lib.collection.frecency.ISerializedData|nil
+      local data_frecency = data[key] ---@type eve.collection.frecency.ISerializedData|nil
       if type(data_frecency) == "table" then
         if type(data_frecency.MAX_TIMESTAMPS) == "number" then
           frecency.MAX_TIMESTAMPS = data_frecency.MAX_TIMESTAMPS

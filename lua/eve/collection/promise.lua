@@ -1,53 +1,53 @@
-local __module_name__ = "eve.lib.collection.promise" ---@type string
+local __module_name__ = "eve.collection.promise" ---@type string
 
 local reporter = require("eve.builtin.reporter")
 
----@class eve.lib.collection.IPromise
----@field public resolve                fun(value: unknown): eve.lib.collection.IPromise
----@field public reject                 fun(reason: unknown): eve.lib.collection.IPromise
----@field public settled                fun(self: eve.lib.collection.IPromise): boolean
----@field public snapshot               fun(self: eve.lib.collection.IPromise): unknown, unknown
----@field public xthen                  fun(self: eve.lib.collection.IPromise, on_fulfilled: eve.lib.collection.promise.IOnFulfilled): eve.lib.collection.IPromise
----@field public xcatch                 fun(self: eve.lib.collection.IPromise, on_rejected: eve.lib.collection.promise.IOnRejected): eve.lib.collection.IPromise
----@field public xfinally               fun(self: eve.lib.collection.IPromise, on_finally: eve.lib.collection.promise.IOnFinally): eve.lib.collection.IPromise
+---@class eve.collection.IPromise
+---@field public resolve                fun(value: unknown): eve.collection.IPromise
+---@field public reject                 fun(reason: unknown): eve.collection.IPromise
+---@field public settled                fun(self: eve.collection.IPromise): boolean
+---@field public snapshot               fun(self: eve.collection.IPromise): unknown, unknown
+---@field public xthen                  fun(self: eve.collection.IPromise, on_fulfilled: eve.collection.promise.IOnFulfilled): eve.collection.IPromise
+---@field public xcatch                 fun(self: eve.collection.IPromise, on_rejected: eve.collection.promise.IOnRejected): eve.collection.IPromise
+---@field public xfinally               fun(self: eve.collection.IPromise, on_finally: eve.collection.promise.IOnFinally): eve.collection.IPromise
 
----@alias eve.lib.collection.promise.ISettled
+---@alias eve.collection.promise.ISettled
 ---| 'fulfilled'
 ---|'rejected'
 
----@alias eve.lib.collection.promise.IOnFulfilled
+---@alias eve.collection.promise.IOnFulfilled
 ---| fun(value: unknown): unknown
 
----@alias eve.lib.collection.promise.IOnRejected
+---@alias eve.collection.promise.IOnRejected
 ---| fun(reason: unknown): unknown
 
----@alias eve.lib.collection.promise.IOnFinally
----| fun(settled: eve.lib.collection.promise.ISettled, value: unknown|nil, reason: unknown|nil): nil
+---@alias eve.collection.promise.IOnFinally
+---| fun(settled: eve.collection.promise.ISettled, value: unknown|nil, reason: unknown|nil): nil
 
----@alias eve.lib.collection.promise.IResolve
+---@alias eve.collection.promise.IResolve
 ---| fun(value: unknown): nil
 
----@alias eve.lib.collection.promise.IReject
+---@alias eve.collection.promise.IReject
 ---| fun(reason: unknown): nil
 
----@class eve.lib.collection.promise.ICallback
+---@class eve.collection.promise.ICallback
 ---@field public type                   'fulfilled'|'rejected'|'finally'
 ---@field public callback               fun(): nil
 
----@class eve.lib.collection.Promise: eve.lib.collection.IPromise
----@protected _callbacks                eve.lib.collection.promise.ICallback[]
----@protected _settled                  eve.lib.collection.promise.ISettled|nil
+---@class eve.collection.Promise: eve.collection.IPromise
+---@protected _callbacks                eve.collection.promise.ICallback[]
+---@protected _settled                  eve.collection.promise.ISettled|nil
 ---@protected _reason                   unknown|nil
 ---@protected _result                   unknown|nil
 local M = {}
 M.__index = M
 
----@param fn                            fun(resolve: eve.lib.collection.promise.IResolve, reject: eve.lib.collection.promise.IReject): nil
----@return eve.lib.collection.Promise
+---@param fn                            fun(resolve: eve.collection.promise.IResolve, reject: eve.collection.promise.IReject): nil
+---@return eve.collection.Promise
 function M.new(fn)
   local self = setmetatable({}, M)
 
-  local callbacks = {} ---@type eve.lib.collection.promise.ICallback[]
+  local callbacks = {} ---@type eve.collection.promise.ICallback[]
 
   ---@param value                       unknown
   ---@return nil
@@ -115,7 +115,7 @@ function M.new(fn)
 end
 
 ---@param value                         unknown
----@return eve.lib.collection.Promise
+---@return eve.collection.Promise
 function M.resolve(value)
   return M.new(function(resolve)
     resolve(value)
@@ -123,7 +123,7 @@ function M.resolve(value)
 end
 
 ---@param reason                        unknown
----@return eve.lib.collection.Promise
+---@return eve.collection.Promise
 function M.reject(reason)
   return M.new(function(_, reject)
     reject(reason)
@@ -141,8 +141,8 @@ function M:snapshot()
   return self._result, self._reason
 end
 
----@param on_fulfilled                  eve.lib.collection.promise.IOnFulfilled
----@return eve.lib.collection.Promise
+---@param on_fulfilled                  eve.collection.promise.IOnFulfilled
+---@return eve.collection.Promise
 function M:xthen(on_fulfilled)
   if self._settled ~= nil then
     return M.new(function(resolve, reject)
@@ -154,14 +154,14 @@ function M:xthen(on_fulfilled)
     end)
   end
 
-  local _resolve ---@type eve.lib.collection.promise.IResolve
-  local _reject ---@type eve.lib.collection.promise.IReject
+  local _resolve ---@type eve.collection.promise.IResolve
+  local _reject ---@type eve.collection.promise.IReject
   local promise = M.new(function(resolve, reject)
     _resolve = resolve
     _reject = reject
   end)
 
-  ---@type eve.lib.collection.promise.ICallback
+  ---@type eve.collection.promise.ICallback
   local callback = {
     type = "fulfilled",
     callback = function()
@@ -176,8 +176,8 @@ function M:xthen(on_fulfilled)
   return promise
 end
 
----@param on_rejected                  eve.lib.collection.promise.IOnRejected
----@return eve.lib.collection.Promise
+---@param on_rejected                  eve.collection.promise.IOnRejected
+---@return eve.collection.Promise
 function M:xcatch(on_rejected)
   if self._settled ~= nil then
     return M.new(function(resolve)
@@ -189,12 +189,12 @@ function M:xcatch(on_rejected)
     end)
   end
 
-  local _resolve ---@type eve.lib.collection.promise.IResolve
+  local _resolve ---@type eve.collection.promise.IResolve
   local promise = M.new(function(resolve)
     _resolve = resolve
   end)
 
-  ---@type eve.lib.collection.promise.ICallback
+  ---@type eve.collection.promise.ICallback
   local callback = {
     type = "rejected",
     callback = function()
@@ -209,8 +209,8 @@ function M:xcatch(on_rejected)
   return promise
 end
 
----@param on_finally                  eve.lib.collection.promise.IOnFinally
----@return eve.lib.collection.Promise
+---@param on_finally                  eve.collection.promise.IOnFinally
+---@return eve.collection.Promise
 function M:xfinally(on_finally)
   if self._settled ~= nil then
     return M.new(function(resolve)
@@ -218,11 +218,11 @@ function M:xfinally(on_finally)
     end)
   end
 
-  local _resolve ---@type eve.lib.collection.promise.IResolve
+  local _resolve ---@type eve.collection.promise.IResolve
   local promise = M.new(function(resolve)
     _resolve = resolve
   end)
-  ---@type eve.lib.collection.promise.ICallback
+  ---@type eve.collection.promise.ICallback
   local callback = {
     type = "finally",
     callback = function()
