@@ -1,4 +1,5 @@
-local icons = require("eve.lib.icons")
+local icons = require("eve.constant.icon")
+
 local lsp = require("eve.lib.lsp")
 local state = require("eve.state")
 

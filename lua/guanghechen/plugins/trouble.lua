@@ -1,4 +1,4 @@
-local icons = require("eve.lib.icons")
+local icons = require("eve.constant.icon")
 
 local kinds = {}
 for key, val in pairs(icons.kind) do

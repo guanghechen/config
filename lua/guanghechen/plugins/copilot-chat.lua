@@ -1,5 +1,6 @@
 local env = require("eve.constant.env")
-local icons = require("eve.lib.icons")
+local icons = require("eve.constant.icon")
+
 local username = env.USERNAME ---@type string
 
 return {

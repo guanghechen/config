@@ -1,9 +1,9 @@
 local env = require("eve.constant.env")
 
----@class eve.lib.icons
+---@class eve.constant.icon
 local M = {}
 
----@class eve.lib.icons.fillchars
+---@class eve.constant.icon.fillchars
 M.fillchars = {
   diff = " ",
   eob = " ",
@@ -15,7 +15,7 @@ M.fillchars = {
   vert = "│",
 }
 
----@class eve.lib.icons.listchars
+---@class eve.constant.icon.listchars
 M.listchars = {
   eol = "↲",
   extends = "»",
@@ -27,7 +27,7 @@ M.listchars = {
   trail = "•",
 }
 
----@class eve.lib.icons.symbols
+---@class eve.constant.icon.symbols
 M.symbols = {
   flag_fuzzy = "󰫳",
   flag_case_sensitive = "",
@@ -38,7 +38,7 @@ M.symbols = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.lib.icons.app
+---@class eve.constant.icon.app
 M.app = {
   Copilot = "",
   CopilotError = "",
@@ -47,7 +47,7 @@ M.app = {
   Vim = "",
 }
 
----@class eve.lib.icons.ft
+---@class eve.constant.icon.ft
 M.ft = {
   Default = "",
   File = "",
@@ -63,7 +63,7 @@ M.ft = {
   Symlink = "",
 }
 
----@class eve.lib.icons.os
+---@class eve.constant.icon.os
 M.os = {
   dos = "",
   mac = "",
@@ -79,7 +79,7 @@ M.os = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.lib.icons.dap
+---@class eve.constant.icon.dap
 M.dap = {
   Breakpoint = "",
   BreakpointCondition = "",
@@ -96,7 +96,7 @@ M.dap = {
   Terminate = "󰝤",
 }
 
----@class eve.lib.icons.diagnostic
+---@class eve.constant.icon.diagnostic
 M.diagnostic = {
   Error = "",
   Error_alt = "󰅚",
@@ -110,7 +110,7 @@ M.diagnostic = {
   Warning_alt = "󰀪",
 }
 
----@class eve.lib.icons.git
+---@class eve.constant.icon.git
 M.git = {
   Add = "",
   Branch = "",
@@ -131,7 +131,7 @@ M.git = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.lib.icons.kind
+---@class eve.constant.icon.kind
 M.kind = {
   Array = "󰅪",
   Boolean = "󰨙",
@@ -186,7 +186,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class eve.lib.icons.ui
+---@class eve.constant.icon.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",

@@ -1,8 +1,9 @@
 local env = require("eve.constant.env")
+local icons = require("eve.constant.icon")
+
 local checks = require("eve.lib.checks")
 local fs = require("eve.lib.fs")
 local functional = require("eve.lib.functional")
-local icons = require("eve.lib.icons")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")

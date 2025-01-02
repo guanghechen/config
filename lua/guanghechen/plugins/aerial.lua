@@ -1,8 +1,8 @@
 local fts = require("eve.constant.filetype")
-local _icons = require("eve.lib.icons")
+local kinds = require("eve.constant.icon").kind
 
 ---@type table<string, string>
-local icons = vim.tbl_extend("force", {}, _icons.kind)
+local icons = vim.tbl_extend("force", {}, kinds)
 for name, icon in pairs(icons) do
   icons[name] = icon .. " "
 end

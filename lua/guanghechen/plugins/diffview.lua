@@ -1,8 +1,9 @@
+local icons = require("eve.constant.icon")
+
 return {
   name = "diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },
   opts = function()
-    local icons = require("eve.lib.icons")
     local state = require("eve.state")
     local actions = require("diffview.actions")
 

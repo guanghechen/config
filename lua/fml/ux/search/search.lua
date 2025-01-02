@@ -1,6 +1,7 @@
+local icons = require("eve.constant.icon")
+
 local G = require("eve.lib.G")
 local functional = require("eve.lib.functional")
-local icons = require("eve.lib.icons")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 local state = require("eve.state")

@@ -1,8 +1,9 @@
 local __module_name__ = "fml.action.find" ---@type string
 
+local icons = require("eve.constant.icon")
+
 local checks = require("eve.lib.checks")
 local functional = require("eve.lib.functional")
-local icons = require("eve.lib.icons")
 local oxi = require("eve.lib.oxi")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")

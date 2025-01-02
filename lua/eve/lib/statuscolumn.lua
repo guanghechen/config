@@ -1,6 +1,6 @@
 ---! see https://github.com/folke/snacks.nvim/blob/140204fde53531dd5dc5bd222975a9ff350747ad/lua/snacks/statuscolumn.lua#L1
 
-local icons = require("eve.lib.icons")
+local icons = require("eve.constant.icon")
 
 -- Numbers in Neovim are weird: They show when either number or relativenumber is true
 local LINE_NR = "%=%{%(&number || &relativenumber) && v:virtnum == 0 ? ("

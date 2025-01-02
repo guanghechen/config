@@ -1,5 +1,6 @@
 local fts = require("eve.constant.filetype")
-local icons = require("eve.lib.icons")
+local icons = require("eve.constant.icon")
+
 local augroup = require("eve.lib.nvim").augroup
 local bindkeys = require("eve.lib.nvim").bindkeys
 

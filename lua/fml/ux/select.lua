@@ -1,5 +1,6 @@
+local icons = require("eve.constant.icon")
+
 local Observable = require("eve.lib.collection.observable")
-local icons = require("eve.lib.icons")
 local oxi = require("eve.lib.oxi")
 local state = require("eve.state")
 local Search = require("fml.ux.search.search")
