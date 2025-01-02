@@ -44,7 +44,7 @@ end
 pcall(require, "integration.local")
 
 ---! Reload session if not specify file and current directory is a git repository.
-local path = require("eve.lib.path")
+local path = require("eve.builtin.path")
 if path.is_git_repo() then
   local state = require("eve.state")
   if state.flight.autoload:snapshot() then

@@ -2,6 +2,7 @@ local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
 local G = require("eve.builtin.G")
 local env = require("eve.builtin.env")
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local fts = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
@@ -10,7 +11,6 @@ local checks = require("eve.lib.checks")
 local functional = require("eve.lib.functional")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local oxi = require("eve.lib.oxi")
-local path = require("eve.lib.path")
 local Nvimbar = require("fml.ux.nvimbar")
 local command = require("eve.command")
 local state = require("eve.state")

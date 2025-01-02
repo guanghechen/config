@@ -1,4 +1,4 @@
-local __module_name__ = "eve.lib.path" ---@type string
+local __module_name__ = "eve.builtin.path" ---@type string
 
 local env = require("eve.builtin.env")
 local md5 = require("eve.builtin.md5")
@@ -8,7 +8,7 @@ local SEP = env.PATH_SEP ---@type string
 local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG --[[@as string]]
 local HOME_CONTEXT = env.HOME_CONTEXT ---@type string
 
----@class eve.lib.path
+---@class eve.builtin.path
 local M = {}
 
 ---@param filepath                      string

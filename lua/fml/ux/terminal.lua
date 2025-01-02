@@ -1,6 +1,7 @@
+local path = require("eve.builtin.path")
 local fts = require("eve.constant.filetype")
+
 local bindkeys = require("eve.lib.nvim").bindkeys
-local path = require("eve.lib.path")
 local state = require("eve.state")
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({

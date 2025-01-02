@@ -1,5 +1,5 @@
 local debug = require("eve.builtin.debug")
-local path = require("eve.lib.path")
+local path = require("eve.builtin.path")
 
 debug.log({
   path.is_absolute("/a/b/c"),

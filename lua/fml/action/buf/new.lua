@@ -1,4 +1,5 @@
-local path = require("eve.lib.path")
+local path = require("eve.builtin.path")
+
 local state = require("eve.state")
 
 ---@class fml.action.buf

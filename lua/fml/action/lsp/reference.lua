@@ -1,10 +1,10 @@
 local __module_name__ = "fml.action.lsp" ---@type string
 
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 
 local checks = require("eve.lib.checks")
 local lsp = require("eve.lib.lsp")
-local path = require("eve.lib.path")
 local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 

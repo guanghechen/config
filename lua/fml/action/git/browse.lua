@@ -1,10 +1,10 @@
 local __module_name__ = "fml.action.git" ---@type string
 
 local env = require("eve.builtin.env")
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 
-local path = require("eve.lib.path")
 local select = require("fml.fn.select")
 
 ---@alias fml.action.git.browse.TargetScope

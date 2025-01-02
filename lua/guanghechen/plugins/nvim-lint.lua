@@ -1,10 +1,10 @@
 local __module_name__ = "guanghechen.plugins.nvim-lint" ---@type string
 
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Scheduler = require("eve.collection.scheduler")
 local fts = require("eve.constant.filetype")
 
-local path = require("eve.lib.path")
 local state = require("eve.state")
 
 -- stylua: ignore start

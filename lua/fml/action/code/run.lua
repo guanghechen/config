@@ -1,8 +1,7 @@
 local __module_name__ = "fml.action.code" ---@type string
 
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-
-local path = require("eve.lib.path")
 
 ---@class fml.action.code.IRunner
 ---@field public run                    fun(filepath: string): nil

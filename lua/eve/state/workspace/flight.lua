@@ -1,7 +1,6 @@
 local env = require("eve.builtin.env")
+local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
-
-local path = require("eve.lib.path")
 
 ---@class eve.state.flight.data
 ---@field public autoload               boolean

@@ -1,5 +1,5 @@
+local path = require("eve.builtin.path")
 local fts = require("eve.constant.filetype")
-local path = require("eve.lib.path")
 
 local cwd = path.cwd() ---@type string
 

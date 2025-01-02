@@ -1,10 +1,10 @@
 local __module_name__ = "fml.action.session" ---@type string
 
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 
 local load_nvim_session = require("eve.lib.nvim").load_nvim_session
 local save_nvim_session = require("eve.lib.nvim").save_nvim_session
-local path = require("eve.lib.path")
 local state = require("eve.state")
 
 ---@class fml.action.session

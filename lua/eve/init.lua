@@ -7,7 +7,7 @@ local M = {
 
 ---@return eve.state.storage
 function M.get_default_storage()
-  local path = require("eve.lib.path")
+  local path = require("eve.builtin.path")
   local is_git_repo = path.is_git_repo() ---@type boolean
 
   ---@type eve.state.storage
@@ -28,7 +28,7 @@ end
 ---! 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
 ---@return nil
 function M.setup_workspace()
-  local path = require("eve.lib.path")
+  local path = require("eve.builtin.path")
   if vim.fn.expand("%") ~= "" then
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")

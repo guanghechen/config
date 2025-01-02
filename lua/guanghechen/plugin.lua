@@ -1,9 +1,9 @@
 local __module_name__ = "guanghechen.plugin" ---@type string
 
 local env = require("eve.builtin.env")
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 
-local path = require("eve.lib.path")
 local state = require("eve.state")
 
 ---@class guanghechen.plugin.IRawSpec

@@ -1,8 +1,8 @@
 local __module_name__ = "eve.theme" ---@type string
 
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 
-local path = require("eve.lib.path")
 local state = require("eve.state")
 local Theme = require("eve.theme.theme")
 

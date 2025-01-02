@@ -1,6 +1,7 @@
+local path = require("eve.builtin.path")
+
 local functional = require("eve.lib.functional")
 local bindkeys = require("eve.lib.nvim").bindkeys
-local path = require("eve.lib.path")
 local get_capabilities = require("guanghechen.lsp.common").get_capabilities
 local handlers = require("guanghechen.lsp.common").handlers
 local basic_on_attach = require("guanghechen.lsp.common").on_attach

@@ -1,7 +1,7 @@
+local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
 
 local checks = require("eve.lib.checks")
-local path = require("eve.lib.path")
 local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")

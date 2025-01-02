@@ -1,10 +1,10 @@
 local __module_name__ = "fml.action.term" ---@type string
 
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-
 local fts = require("eve.constant.filetype")
+
 local get_selected_text = require("eve.lib.nvim").get_selected_text
-local path = require("eve.lib.path")
 local Terminal = require("fml.ux.terminal")
 
 local terminal_map = {} ---@type table<string, fml.ux.ITerminal>

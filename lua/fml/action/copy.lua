@@ -1,9 +1,9 @@
 local __module_name__ = "fml.action.copy" ---@type string
 
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 
-local path = require("eve.lib.path")
 local command = require("eve.command")
 local select = require("fml.fn.select")
 

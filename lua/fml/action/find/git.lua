@@ -1,6 +1,7 @@
+local path = require("eve.builtin.path")
+
 local checks = require("eve.lib.checks")
 local oxi = require("eve.lib.oxi")
-local path = require("eve.lib.path")
 local select_files = require("fml.fn.select_files")
 
 ---@class fml.action.find
