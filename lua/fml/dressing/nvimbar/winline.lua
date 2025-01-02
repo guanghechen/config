@@ -88,7 +88,7 @@ local function resolve_winline_scheduler(winnr)
   if meta.winline_bufnr ~= bufnr then
     meta.lsp_symbols = {}
     meta.winline_bufnr = bufnr
-    vim.wo[winnr].winbar = meta.winline:render_immedately()
+    vim.wo[winnr].winbar = meta.winline:render_immediately()
   end
 
   return meta.winline

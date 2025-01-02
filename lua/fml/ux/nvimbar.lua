@@ -75,7 +75,7 @@ local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 ---@field public dispose                fun(self: fml.ux.INvimbar): boolean
 ---@field public place                  fun(self: fml.ux.INvimbar, position: eve.e.NvimbarCompPosition, component: fml.ux.nvimbar.IRawComponent, priority?: integer): fml.ux.INvimbar
 ---@field public render                 fun(self: fml.ux.INvimbar): string
----@field public render_immedately      fun(self: fml.ux.INvimbar): string
+---@field public render_immediately     fun(self: fml.ux.INvimbar): string
 ---@field public snapshot               fun(self: fml.ux.INvimbar): string
 
 ---@class fml.ux.Nvimbar : fml.ux.INvimbar
@@ -333,7 +333,7 @@ function M:render()
 end
 
 ---@return string
-function M:render_immedately()
+function M:render_immediately()
   if self._disposed then
     return "!!!Invalid. This nvimbar has been disposed."
   end

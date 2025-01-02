@@ -53,7 +53,7 @@ end
 ---@param row                    integer
 ---@param col                    integer
 ---@return fml.dressing.hipairs.IPair[]
-local function find_sorrounds(bufnr, row, col)
+local function find_surrounds(bufnr, row, col)
   local ok_parser, parser = pcall(vim.treesitter.get_parser, bufnr)
   if not ok_parser or not parser then
     return {}
@@ -147,7 +147,7 @@ function M.render(winnr)
   end
 
   local snapshot_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local snapshot_curosr = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+  local snapshot_cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
 
   local hipairs_rendering_tick = (vim.b[snapshot_bufnr].hipairs_rendering_tick or 0) + 1 ---@type integer
   vim.b[snapshot_bufnr].hipairs_rendering_tick = hipairs_rendering_tick
@@ -168,7 +168,7 @@ function M.render(winnr)
     end
 
     local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-    if cursor[1] ~= snapshot_curosr[1] or cursor[2] ~= snapshot_curosr[2] then
+    if cursor[1] ~= snapshot_cursor[1] or cursor[2] ~= snapshot_cursor[2] then
       return
     end
 
@@ -183,12 +183,12 @@ function M.render(winnr)
 
     M.clear(bufnr)
 
-    local surrounds = find_sorrounds(bufnr, cursor[1] - 1, cursor[2]) ---@type fml.dressing.hipairs.IPair[]
+    local surrounds = find_surrounds(bufnr, cursor[1] - 1, cursor[2]) ---@type fml.dressing.hipairs.IPair[]
     if #surrounds > 0 then
-      local outerest_surround = surrounds[#surrounds] ---@type fml.dressing.hipairs.IPair
+      local outermost_surround = surrounds[#surrounds] ---@type fml.dressing.hipairs.IPair
       vim.b[bufnr].hipairs_viewport = {
-        top = outerest_surround.left.row,
-        bot = outerest_surround.right.row,
+        top = outermost_surround.left.row,
+        bot = outermost_surround.right.row,
       }
 
       for index, pair in ipairs(surrounds) do
