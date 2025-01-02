@@ -1,6 +1,6 @@
 ---@class eve
 local M = {
-  G = require("eve.lib.G"),
+  G = require("eve.builtin.G"),
   debug = require("eve.builtin.debug"),
 }
 

@@ -1,8 +1,8 @@
+local G = require("eve.builtin.G")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
 
-local G = require("eve.lib.G")
 local functional = require("eve.lib.functional")
 local state = require("eve.state")
 local SearchInput = require("fml.ux.search.input")

@@ -1,10 +1,10 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
+local G = require("eve.builtin.G")
 local reporter = require("eve.builtin.reporter")
 local fts = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 
-local G = require("eve.lib.G")
 local checks = require("eve.lib.checks")
 local env = require("eve.constant.env")
 local functional = require("eve.lib.functional")
