@@ -40,7 +40,7 @@ function M.blend_color(fg_hlname, bg_hlname)
     local bg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(bg_hlname)), "bg#")
     local new_hlname = fg_hlname .. "__" .. bg_hlname
 
-    ---! set_hl could stuf the CursorHold trigger, so it should be executed with defer.
+    ---! set_hl could stuff the CursorHold trigger, so it should be executed with defer.
     vim.defer_fn(function()
       vim.api.nvim_set_hl(0, new_hlname, { fg = fg, bg = bg })
     end, 10)

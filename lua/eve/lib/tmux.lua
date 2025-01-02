@@ -19,12 +19,12 @@ local function is_tmux_pane_leftest()
 end
 
 ---@return boolean
-local function is_tmux_pane_topest()
+local function is_tmux_pane_topmost()
   return tonumber(tmux_command("display-message -p '#{pane_at_top}'")) == 1
 end
 
 ---@return boolean
-local function is_tmux_pane_bottomest()
+local function is_tmux_pane_bottommost()
   return tonumber(tmux_command("display-message -p '#{pane_at_bottom}'")) == 1
 end
 
@@ -49,10 +49,10 @@ if vim.env.TMUX ~= nil then
       return is_tmux_pane_leftest()
     end
     if direction == "j" then
-      return is_tmux_pane_bottomest()
+      return is_tmux_pane_bottommost()
     end
     if direction == "k" then
-      return is_tmux_pane_topest()
+      return is_tmux_pane_topmost()
     end
     if direction == "l" then
       return is_tmux_pane_rightest()
