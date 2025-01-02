@@ -1,4 +1,4 @@
-local __module_name__ = "eve.lib.clipboard" ---@type string
+local __module_name__ = "eve.module.clipboard" ---@type string
 
 local env = require("eve.builtin.env")
 local path = require("eve.builtin.path")

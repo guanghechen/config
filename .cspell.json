@@ -203,6 +203,7 @@
     "foldexpr",
     "foldopen",
     "foldsep",
+    "formatexpr",
     "frecency",
     "ftplugins",
     "getchar",

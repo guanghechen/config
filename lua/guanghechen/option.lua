@@ -1,4 +1,4 @@
-local clipboard = require("eve.lib.clipboard")
+local clipboard = require("eve.module.clipboard")
 local state = require("eve.state")
 
 vim.g.clipboard = clipboard.get_clipboard()
