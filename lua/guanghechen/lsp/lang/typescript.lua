@@ -1,10 +1,8 @@
-local path = require("eve.builtin.path")
-
-local functional = require("eve.lib.functional")
 local bindkeys = require("eve.lib.nvim").bindkeys
 local get_capabilities = require("guanghechen.lsp.common").get_capabilities
 local handlers = require("guanghechen.lsp.common").handlers
 local basic_on_attach = require("guanghechen.lsp.common").on_attach
+local locate_mason_pkg_path = require("guanghechen.lsp.common").locate_mason_pkg_path
 local on_init = require("guanghechen.lsp.common").on_init
 
 ---@param client                        vim.lsp.Client
@@ -158,7 +156,7 @@ local function on_attach(client, bufnr)
 end
 
 local plugins = {
-  vue = path.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
+  vue = locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
 }
 
 return function()

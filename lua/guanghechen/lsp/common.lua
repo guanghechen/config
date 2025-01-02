@@ -1,6 +1,9 @@
+local __module_name__ = "guanghechen.lsp.common" ---@type string
+
 local env = require("eve.builtin.env")
 local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
+local reporter = require("eve.builtin.reporter")
 
 local lsp = require("eve.lib.lsp")
 local bindkeys = require("eve.lib.nvim").bindkeys
@@ -133,6 +136,33 @@ function M.locate_lsp_root(filepath, config_filenames)
     end
     k = k - 1
   end
+end
+
+---@param pkg                           string
+---@param path                          string
+---@param silent                        ?boolean
+---@return string|nil
+function M.locate_mason_pkg_path(pkg, path, silent)
+  pcall(require, "mason") -- make sure Mason is loaded. Will fail when generating docs
+  local root = vim.env.MASON or (env.HOME_NVIM_DATA .. env.PATH_SEP .. "mason")
+  local filepath = root .. "/packages/" .. pkg .. "/" .. path
+
+  if not vim.uv.fs_stat(filepath) and not require("lazy.core.config").headless() then
+    if not silent then
+      reporter.warn({
+        from = __module_name__,
+        subject = "locate_mason_pkg_path",
+        message = string.format(
+          "Mason package path not found for **%s**:\n- `%s`\nYou may need to force update the package.",
+          pkg,
+          path
+        ),
+      })
+    end
+    return nil
+  end
+
+  return filepath
 end
 
 ---@param client                        vim.lsp.Client
