@@ -1,4 +1,4 @@
----@class eve.lib.json
+---@class eve.builtin.json
 local M = {}
 
 ---@param json                          any
