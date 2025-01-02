@@ -1,4 +1,4 @@
-local hints = require("eve.module.winpicker.constant").hints
+local hints = require("eve.constant.hint")
 
 local winhighlight = table.concat({
   "FloatBorder:FloatBorder",

@@ -1,8 +1,5 @@
----@class eve.module.winpicker.constant
-local M = {}
-
----@class eve.module.winpicker.constant.hints
-M.hints = {
+---@class eve.constant.hint
+local M = {
   a = {
     "    █████╗    ",
     "   ██╔══██╗   ",
@@ -299,4 +296,5 @@ M.hints = {
     "      ▀═╝     ",
   },
 }
+
 return M
