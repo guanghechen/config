@@ -1,6 +1,23 @@
+local ft = require("eve.lib.filetype")
 local icons = require("eve.lib.icons")
 local augroup = require("eve.lib.nvim").augroup
 local bindkeys = require("eve.lib.nvim").bindkeys
+
+---@param winnr                         integer
+---@return boolean
+local filter = function(winnr)
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  return not ft.is_not_focusable_filetype(filetype)
+end
+
+package.loaded["window-picker"] = {
+  pick_window = function()
+    local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+    local winpicker = require("eve.module.winpicker")
+    return winpicker.pick_window(filter, winnr_cur)
+  end,
+}
 
 ---@return nil
 local function recursively_toggle_all(state)
@@ -343,6 +360,5 @@ return {
     "mini.icons",
     "nui.nvim",
     "plenary.nvim",
-    "nvim-window-picker",
   },
 }

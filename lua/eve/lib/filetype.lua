@@ -149,31 +149,6 @@ local filetypes = {
     [constant.FT_TROUBLE] = true,
     [constant.FT_WINSEP] = true,
   },
-  no_window_picker_swappable = {
-    [constant.FT_AERIAL] = true,
-    [constant.FT_CHECKHEALTH] = true,
-    [constant.FT_COPILOT_CHAT] = true,
-    [constant.FT_DIFFVIEW_FILE_HISTORY] = true,
-    [constant.FT_DIFFVIEW_FILES] = true,
-    [constant.FT_GITCOMMIT] = true,
-    [constant.FT_HELP] = true,
-    [constant.FT_LAZY] = true,
-    [constant.FT_MASON] = true,
-    [constant.FT_NEOTREE] = true,
-    [constant.FT_NEOTREE_POPUP] = true,
-    [constant.FT_NOICE] = true,
-    [constant.FT_NOTIFY] = true,
-    [constant.FT_LSPINFO] = true,
-    [constant.FT_PLENARY_TEST_POPUP] = true,
-    [constant.FT_QUICKFIX] = true,
-    [constant.FT_SEARCH_INPUT] = true,
-    [constant.FT_SEARCH_MAIN] = true,
-    [constant.FT_SEARCH_PREVIEW] = true,
-    [constant.FT_STARTUPTIME] = true,
-    [constant.FT_TERM] = true,
-    [constant.FT_TROUBLE] = true,
-    [constant.FT_WINSEP] = true,
-  },
   quitable_with_q = {
     [constant.FT_AERIAL] = true,
     [constant.FT_CHECKHEALTH] = true,
@@ -222,21 +197,6 @@ end
 ---@return string[]
 function M.get_no_illuminate_filetypes()
   return vim.tbl_keys(filetypes.no_ibl)
-end
-
----@return string[]
-function M.get_no_window_picker_focusable_filetypes()
-  return vim.tbl_keys(filetypes.no_window_picker_focusable)
-end
-
----@return string[]
-function M.get_no_window_picker_projectable_filetypes()
-  return vim.tbl_keys(filetypes.no_window_picker_projectable)
-end
-
----@return string[]
-function M.get_no_window_picker_swappable_filetypes()
-  return vim.tbl_keys(filetypes.no_window_picker_swappable)
 end
 
 ---@return string[]
