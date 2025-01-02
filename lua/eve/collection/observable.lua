@@ -1,10 +1,9 @@
 local __module_name__ = "eve.collection.observable" ---@type string
 
+local functional = require("eve.builtin.functional")
 local reporter = require("eve.builtin.reporter")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
-
-local functional = require("eve.lib.functional")
 
 ---@class eve.collection.observable.INextOptions
 ---@field public strict                 ?boolean Whether to throw an error if the observable disposed.

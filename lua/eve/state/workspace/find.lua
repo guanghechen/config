@@ -1,6 +1,5 @@
+local functional = require("eve.builtin.functional")
 local Observable = require("eve.collection.observable")
-
-local functional = require("eve.lib.functional")
 
 ---@class eve.state.find.data
 ---@field public flag_case_sensitive    boolean

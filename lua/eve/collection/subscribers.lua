@@ -1,6 +1,5 @@
+local functional = require("eve.builtin.functional")
 local BatchHandler = require("eve.collection.batch_handler")
-
-local functional = require("eve.lib.functional")
 
 ---@class eve.collection.IUnsubscribable
 ---@field public unsubscribe            fun(self: eve.collection.IUnsubscribable):nil

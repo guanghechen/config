@@ -196,7 +196,9 @@ return function()
             },
           },
           tsserver = {
-            globalPlugins = vim.tbl_filter(functional.booleanify, {
+            globalPlugins = vim.tbl_filter(function(v)
+              return not not v
+            end, {
               plugins.vue and {
                 name = "@vue/typescript-plugin",
                 location = plugins.vue,

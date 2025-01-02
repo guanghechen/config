@@ -1,4 +1,5 @@
-local functional = require("eve.lib.functional")
+local functional = require("eve.builtin.functional")
+
 local state = require("eve.state")
 
 ---@param tabnr                         integer the stable unique number of the tabpage

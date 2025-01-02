@@ -1,4 +1,4 @@
-local functional = require("eve.lib.functional")
+local functional = require("eve.builtin.functional")
 
 ---@param items                         any[]
 ---@param opts                          fml.dressing.select.IOptions

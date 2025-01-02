@@ -1,9 +1,8 @@
 local __module_name__ = "eve.collection.scheduler" ---@type string
 
+local functional = require("eve.builtin.functional")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
-
-local functional = require("eve.lib.functional")
 
 ---@class eve.collection.IScheduler
 ---@field public name                   string

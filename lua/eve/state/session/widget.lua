@@ -1,6 +1,5 @@
+local functional = require("eve.builtin.functional")
 local History = require("eve.collection.history")
-
-local functional = require("eve.lib.functional")
 
 ---@class eve.state.widget.data
 ---@field public history                eve.collection.history.ISerializedData

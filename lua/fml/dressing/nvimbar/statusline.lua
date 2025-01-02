@@ -1,6 +1,6 @@
+local functional = require("eve.builtin.functional")
 local Subscriber = require("eve.collection.subscriber")
 
-local functional = require("eve.lib.functional")
 local Nvimbar = require("fml.ux.nvimbar")
 local state = require("eve.state")
 local c = require("fml.dressing.nvimbar.components")

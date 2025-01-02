@@ -1,4 +1,4 @@
-local functional = require("eve.lib.functional")
+local functional = require("eve.builtin.functional")
 
 ---@class eve.collection.IFrecency
 ---@field public access                 fun(self: eve.collection.IFrecency, key: string): nil

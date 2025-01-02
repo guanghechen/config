@@ -1,4 +1,5 @@
-local functional = require("eve.lib.functional")
+local functional = require("eve.builtin.functional")
+
 local state = require("eve.state")
 
 ---@class fml.action.buf

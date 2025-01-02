@@ -1,9 +1,8 @@
+local functional = require("eve.builtin.functional")
 local tmux = require("eve.builtin.tmux")
 local Dirtier = require("eve.collection.dirtier")
 local Observable = require("eve.collection.observable")
 local Ticker = require("eve.collection.ticker")
-
-local functional = require("eve.lib.functional")
 
 ---@class eve.state.status.data
 ---@field public tick_editor            integer

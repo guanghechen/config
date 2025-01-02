@@ -1,6 +1,5 @@
+local functional = require("eve.builtin.functional")
 local Observable = require("eve.collection.observable")
-
-local functional = require("eve.lib.functional")
 
 ---@class eve.collection.IDirtier : eve.collection.IObservable
 ---@field public is_clean               fun(self: eve.collection.IDirtier): boolean
