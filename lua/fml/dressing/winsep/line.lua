@@ -1,4 +1,4 @@
-local constant = require("eve.lib.constant")
+local fts = require("eve.constant.filetype")
 
 ---@class fml.dressing.winsep.line.highlights
 local config = {
@@ -100,7 +100,7 @@ function M:create_buf_as_needed()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nowrite"
-  vim.bo[bufnr].filetype = constant.FT_WINSEP
+  vim.bo[bufnr].filetype = fts.WINSEP
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = true
   vim.bo[bufnr].readonly = true

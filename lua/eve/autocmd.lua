@@ -1,5 +1,5 @@
+local fts = require("eve.constant.filetype")
 local env = require("eve.lib.env")
-local ft = require("eve.lib.filetype")
 local augroup = require("eve.lib.nvim").augroup
 
 ---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
@@ -45,10 +45,10 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     vim.b[bufnr].eve_last_loc = true
 
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if ft.is_plain_file(filetype) then
+    if fts.is_plain_file(filetype) then
       local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
-      local lcount = vim.api.nvim_buf_line_count(bufnr)
-      if mark[1] > 0 and mark[1] <= lcount then
+      local count = vim.api.nvim_buf_line_count(bufnr)
+      if mark[1] > 0 and mark[1] <= count then
         pcall(vim.api.nvim_win_set_cursor, 0, mark)
       end
     end
@@ -58,7 +58,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 ---! Close some filetypes with q
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("close_filetypes_with_q"),
-  pattern = ft.get_quitable_with_q_filetypes(),
+  pattern = fts.get_quitable_with_q_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
     if bufnr ~= nil then

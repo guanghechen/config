@@ -1,4 +1,4 @@
-local ft = require("eve.lib.filetype")
+local fts = require("eve.constant.filetype")
 local icons = require("eve.lib.icons")
 local augroup = require("eve.lib.nvim").augroup
 local bindkeys = require("eve.lib.nvim").bindkeys
@@ -8,7 +8,7 @@ local bindkeys = require("eve.lib.nvim").bindkeys
 local filter = function(winnr)
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
-  return not ft.is_not_focusable_filetype(filetype)
+  return not fts.is_not_focusable_filetype(filetype)
 end
 
 package.loaded["window-picker"] = {

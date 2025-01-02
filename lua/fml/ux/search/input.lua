@@ -1,3 +1,4 @@
+local fts = require("eve.constant.filetype")
 local constant = require("eve.lib.constant")
 local functional = require("eve.lib.functional")
 local augroup = require("eve.lib.nvim").augroup
@@ -143,7 +144,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = constant.FT_SEARCH_INPUT
+  vim.bo[bufnr].filetype = fts.SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
 
   bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })

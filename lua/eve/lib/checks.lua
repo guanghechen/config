@@ -1,5 +1,5 @@
+local fts = require("eve.constant.filetype")
 local constant = require("eve.lib.constant")
-local ft = require("eve.lib.filetype")
 local fs = require("eve.lib.fs")
 
 ---@type table<string, true>
@@ -41,7 +41,7 @@ function M.is_buf_valid(bufnr)
     return false
   end
 
-  if not ft.is_plain_file(vim.bo[bufnr].filetype) then
+  if not fts.is_plain_file(vim.bo[bufnr].filetype) then
     return false
   end
 

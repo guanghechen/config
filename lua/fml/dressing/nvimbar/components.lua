@@ -1,8 +1,8 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
+local fts = require("eve.constant.filetype")
 local G = require("eve.lib.G")
 local checks = require("eve.lib.checks")
-local constant = require("eve.lib.constant")
 local env = require("eve.lib.env")
 local functional = require("eve.lib.functional")
 local icons = require("eve.lib.icons")
@@ -165,7 +165,7 @@ function M.bufs(position)
       local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
       local N = #bufs ---@type integer
 
-      local winnr_cur = meta_tab.winnr_listed ---@type integer
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
       local bufnr_cur = winnr_cur > 0 ---@type integer
           and vim.api.nvim_win_is_valid(winnr_cur)
           and vim.api.nvim_win_get_buf(winnr_cur)
@@ -436,7 +436,7 @@ function M.diffview(position)
     local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype == constant.FT_DIFFVIEW_FILES then
+      if vim.bo[bufnr].filetype == fts.DIFFVIEW_FILES then
         if not checks.is_win_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end
@@ -501,8 +501,8 @@ function M.dirpath(position)
     name = "dirpath",
     atomic = true,
     condition = function(context)
-      local meta = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
-      return meta ~= nil and context.winnr == meta.winnr_listed
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      return context.winnr == winnr_cur
     end,
     will_change = function(context, prev_context)
       return prev_context == nil or context.filepath ~= prev_context.filepath
@@ -549,8 +549,8 @@ function M.dirpath_prominent(position)
     name = "dirpath_prominent",
     atomic = false,
     condition = function(context)
-      local meta = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
-      return meta ~= nil and context.winnr == meta.winnr_listed
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      return context.winnr == winnr_cur
     end,
     will_change = function(context, prev_context)
       return prev_context == nil or context.filepath ~= prev_context.filepath
@@ -656,7 +656,7 @@ function M.filename(position)
   local hln_filename = position .. "_filename" ---@type string
   local hln_filename_text = position .. "_filename_text" ---@type string
   local filename_text_cur = position .. "_filename_text_cur" ---@type string
-  local last_winnr_listed = -1 ---@type integer
+  local last_winnr = -1 ---@type integer
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -666,13 +666,13 @@ function M.filename(position)
       if prev_context == nil or context.filename ~= prev_context.filename then
         return true
       end
-      local meta_tab = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
-      return meta_tab == nil or meta_tab.winnr_listed ~= last_winnr_listed
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      return winnr_cur ~= last_winnr
     end,
     render = function(context)
-      local meta_tab = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
-      local is_win_cur = meta_tab ~= nil and context.winnr == meta_tab.winnr_listed ---@type boolean
-      last_winnr_listed = meta_tab ~= nil and meta_tab.winnr_listed or -1 ---@type integer
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      local is_win_cur = context.winnr == winnr_cur ---@type boolean
+      last_winnr = winnr_cur ---@type integer
 
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local meta_buf = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
@@ -825,8 +825,8 @@ function M.focused_indicator(position)
       return prev_context == nil or context.filetype ~= prev_context.filetype
     end,
     condition = function(context)
-      local meta = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
-      return meta ~= nil and context.winnr == meta.winnr_listed
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      return context.winnr == winnr_cur
     end,
     render = function(context)
       local text = " " .. context.fileicon .. " " .. context.filetype .. " " ---@type string
@@ -1034,7 +1034,7 @@ function M.neotree(position)
     local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype == constant.FT_NEOTREE then
+      if vim.bo[bufnr].filetype == fts.NEOTREE then
         if not checks.is_win_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end

@@ -1,6 +1,6 @@
 local __module_name__ = "fml.action.term" ---@type string
 
-local constant = require("eve.lib.constant")
+local fts = require("eve.constant.filetype")
 local get_selected_text = require("eve.lib.nvim").get_selected_text
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
@@ -85,7 +85,7 @@ function M.toggle(params)
   if send_selection_to_run then
     local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
     local filetype = vim.bo[bufnr_cur].filetype ---@type string
-    if filetype ~= constant.FT_TERM then
+    if filetype ~= fts.TERM then
       selected_text = get_selected_text() ---@type string
     end
   end

@@ -1,5 +1,5 @@
+local fts = require("eve.constant.filetype")
 local checks = require("eve.lib.checks")
-local constant = require("eve.lib.constant")
 local functional = require("eve.lib.functional")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local path = require("eve.lib.path")
@@ -85,10 +85,10 @@ local provider = {
     local function should_show(bufnr)
       local filetype = vim.bo[bufnr].filetype ---@type string
       if
-        filetype == constant.FT_SEARCH_INPUT
-        or filetype == constant.FT_SEARCH_MAIN
-        or filetype == constant.FT_SEARCH_PREVIEW
-        or filetype == constant.FT_WINSEP
+        filetype == fts.SEARCH_INPUT
+        or filetype == fts.SEARCH_MAIN
+        or filetype == fts.SEARCH_PREVIEW
+        or filetype == fts.WINSEP
       then
         return false
       end

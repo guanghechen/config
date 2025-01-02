@@ -1,3 +1,4 @@
+local fts = require("eve.constant.filetype")
 local constant = require("eve.lib.constant")
 local BUF_UNTITLED = constant.BUF_UNTITLED ---@type string
 
@@ -73,7 +74,7 @@ function M.calc_tabtype(tabnr)
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if filetype == constant.FT_DIFFVIEW_FILES or filetype == constant.FT_DIFFVIEW_FILE_HISTORY then
+    if filetype == fts.DIFFVIEW_FILES or filetype == fts.DIFFVIEW_FILE_HISTORY then
       return constant.TT_DIFFVIEW
     end
   end

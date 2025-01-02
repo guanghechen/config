@@ -1,4 +1,4 @@
-local constant = require("eve.lib.constant")
+local fts = require("eve.constant.filetype")
 local augroup = require("eve.lib.nvim").augroup
 
 vim.filetype.add({
@@ -10,10 +10,10 @@ vim.filetype.add({
     [".*"] = {
       function(filepath, bufnr)
         return vim.bo[bufnr]
-            and vim.bo[bufnr].filetype ~= constant.FT_BIGFILE
+            and vim.bo[bufnr].filetype ~= fts.BIGFILE
             and filepath
             and vim.fn.getfsize(filepath) > vim.g.bigfile_size
-            and constant.FT_BIGFILE
+            and fts.BIGFILE
           or nil
       end,
     },

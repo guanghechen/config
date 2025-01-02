@@ -31,7 +31,7 @@ function M.new_with_buf(context)
   local bufs = {} ---@type eve.t.state.tab.buf.state[]
 
   local bufnr = context.bufnr ---@type integer
-  local winnr = state.tab.resolve_winnr_listed(tabnr) or 0 ---@type integer
+  local winnr = context.winnr ---@type integer
   if checks.is_buf_valid(bufnr) then
     bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
     vim.api.nvim_win_set_buf(winnr, bufnr)

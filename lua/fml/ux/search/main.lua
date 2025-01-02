@@ -1,3 +1,4 @@
+local fts = require("eve.constant.filetype")
 local constant = require("eve.lib.constant")
 local bindkeys = require("eve.lib.nvim").bindkeys
 local signcolumn = require("eve.lib.signcolumn")
@@ -131,7 +132,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nowrite"
-  vim.bo[bufnr].filetype = constant.FT_SEARCH_MAIN
+  vim.bo[bufnr].filetype = fts.SEARCH_MAIN
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

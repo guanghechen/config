@@ -1,6 +1,6 @@
+local fts = require("eve.constant.filetype")
 local checks = require("eve.lib.checks")
 local env = require("eve.lib.env")
-local ft = require("eve.lib.filetype")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Nvimbar = require("fml.ux.nvimbar")
 local state = require("eve.state")
@@ -133,7 +133,7 @@ local function render(winnr)
   end
 
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if ft.is_plain_file(filetype) then
+  if fts.is_plain_file(filetype) then
     vim.wo[winnr].winbar = Nvimbar.txt(filepath, "f_wl_text")
     return
   end

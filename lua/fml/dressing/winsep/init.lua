@@ -1,5 +1,5 @@
+local fts = require("eve.constant.filetype")
 local checks = require("eve.lib.checks")
-local constant = require("eve.lib.constant")
 local augroup = require("eve.lib.nvim").augroup
 local state = require("eve.state")
 local Line = require("fml.dressing.winsep.line")
@@ -139,7 +139,7 @@ local float_winsep = {
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if filetype ~= constant.FT_SEARCH_INPUT and filetype ~= constant.FT_SEARCH_PREVIEW then
+    if filetype ~= fts.SEARCH_INPUT and filetype ~= fts.SEARCH_PREVIEW then
       return false
     end
 

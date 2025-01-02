@@ -1,6 +1,6 @@
 local __module_name__ = "guanghechen.plugins.nvim-lint" ---@type string
 
-local ft = require("eve.lib.filetype")
+local fts = require("eve.constant.filetype")
 local path = require("eve.lib.path")
 local reporter = require("eve.lib.reporter")
 local Scheduler = require("eve.lib.collection.scheduler")
@@ -68,7 +68,7 @@ return {
       task = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer
         local filetype = vim.bo[bufnr].filetype ---@type string
-        if ft.is_not_plain_file(filetype) then
+        if fts.is_not_plain_file(filetype) then
           return "done"
         end
 
