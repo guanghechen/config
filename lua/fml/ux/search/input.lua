@@ -1,10 +1,11 @@
 local fts = require("eve.constant.filetype")
+local signs = require("eve.constant.sign")
+
 local constant = require("eve.lib.constant")
 local functional = require("eve.lib.functional")
 local augroup = require("eve.lib.nvim").augroup
 local bindkeys = require("eve.lib.nvim").bindkeys
 local oxi = require("eve.lib.oxi")
-local signcolumn = require("eve.lib.signcolumn")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 
@@ -153,13 +154,13 @@ function M:create_buf_as_needed()
   local input = search_state.input:snapshot() ---@type string
   local lines = oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, search_state.enable_multiline_input and lines or { lines[1] })
-  vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
+  vim.fn.sign_place(bufnr, "", signs.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     group = self._autocmd_group,
     buffer = bufnr,
     callback = function()
-      vim.fn.sign_place(bufnr, "", signcolumn.names.search_input_cursor, bufnr, { lnum = 1 })
+      vim.fn.sign_place(bufnr, "", signs.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1 })
       self._input_scheduler:schedule()
     end,
   })

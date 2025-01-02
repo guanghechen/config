@@ -4,7 +4,6 @@ local M = {}
 ---! Session settings
 
 M.SESSION_SAVE_OPTION = "blank,buffers,curdir,folds,globals,help,resize,slash,skiprtp,tabpages,unix,winpos,winsize"
-M.SESSION_AUTOSAVE_OPTION = "blank,buffers,curdir,folds,globals,help,resize,slash,skiprtp,tabpages,unix,winpos,winsize"
 
 ---! Tab settings
 
@@ -32,11 +31,6 @@ M.V_WINLINE_DISABLED = "fml_winline_disabled"
 M.BT_NOWRITE = "nowrite"
 M.BT_NOFILE = "nofile"
 M.BT_QUICKFIX = "quickfix"
-
----! sign_ids
-
-M.SIGN_NR_SEARCH_MAIN_CURRENT = 2333
-M.SIGN_NR_SEARCH_MAIN_PRESENT = 2334
 
 ---! Special symbols.
 

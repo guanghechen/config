@@ -1,7 +1,7 @@
 local fts = require("eve.constant.filetype")
-local constant = require("eve.lib.constant")
+local signs = require("eve.constant.sign")
+
 local bindkeys = require("eve.lib.nvim").bindkeys
-local signcolumn = require("eve.lib.signcolumn")
 local Subscriber = require("eve.lib.collection.subscriber")
 local Scheduler = require("eve.lib.collection.scheduler")
 
@@ -160,8 +160,8 @@ end
 function M:place_lnum_sign()
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_CURRENT })
-    vim.fn.sign_unplace("", { buffer = bufnr, id = constant.SIGN_NR_SEARCH_MAIN_PRESENT })
+    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_CURRENT })
+    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_PRESENT })
 
     local present_lnum = 0 ---@type integer
     do
@@ -187,10 +187,9 @@ function M:place_lnum_sign()
 
     if present_lnum > 0 then
       vim.fn.sign_place(
-        constant.SIGN_NR_SEARCH_MAIN_PRESENT,
+        signs.NR_SEARCH_MAIN_PRESENT,
         "",
-        present_lnum == current_lnum and signcolumn.names.search_main_present_cur
-          or signcolumn.names.search_main_present,
+        present_lnum == current_lnum and signs.SEARCH_MAIN_PRESENT_CUR or signs.SEARCH_MAIN_PRESENT,
         bufnr,
         { lnum = present_lnum }
       )
@@ -198,13 +197,7 @@ function M:place_lnum_sign()
 
     if current_lnum > 0 then
       if current_lnum ~= present_lnum then
-        vim.fn.sign_place(
-          constant.SIGN_NR_SEARCH_MAIN_CURRENT,
-          "",
-          signcolumn.names.search_main_current,
-          bufnr,
-          { lnum = current_lnum }
-        )
+        vim.fn.sign_place(signs.NR_SEARCH_MAIN_CURRENT, "", signs.SEARCH_MAIN_CURRENT, bufnr, { lnum = current_lnum })
       end
       return current_lnum
     end
