@@ -1,5 +1,5 @@
+local env = require("eve.constant.env")
 local checks = require("eve.lib.checks")
-local env = require("eve.lib.env")
 local fs = require("eve.lib.fs")
 local functional = require("eve.lib.functional")
 local icons = require("eve.lib.icons")

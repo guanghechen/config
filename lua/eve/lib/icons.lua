@@ -1,4 +1,4 @@
-local env = require("eve.lib.env")
+local env = require("eve.constant.env")
 
 ---@class eve.lib.icons
 local M = {}

@@ -1,4 +1,4 @@
-local env = require("eve.lib.env")
+local env = require("eve.constant.env")
 local fs = require("eve.lib.fs")
 local lsp = require("eve.lib.lsp")
 local bindkeys = require("eve.lib.nvim").bindkeys

@@ -1,5 +1,5 @@
+local env = require("eve.constant.env")
 local fts = require("eve.constant.filetype")
-local env = require("eve.lib.env")
 local augroup = require("eve.lib.nvim").augroup
 
 ---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist

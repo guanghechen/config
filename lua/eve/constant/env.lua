@@ -1,6 +1,6 @@
 local os_name = vim.uv.os_uname().sysname ---@type string|nil
 
----@class eve.lib.env
+---@class eve.constant.env
 local M = {}
 
 ---! OS settings

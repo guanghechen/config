@@ -1,4 +1,4 @@
-local env = require("eve.lib.env")
+local env = require("eve.constant.env")
 local icons = require("eve.lib.icons")
 
 if env.IS_MAC or env.IS_NIX or env.IS_WSL then
