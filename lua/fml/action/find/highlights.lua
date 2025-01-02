@@ -1,3 +1,5 @@
+local cs = require("eve.builtin.color")
+
 local functional = require("eve.lib.functional")
 local Select = require("fml.ux.select")
 
@@ -48,7 +50,6 @@ local provider = {
         max_hlname_width = math.max(max_hlname_width, vim.api.nvim_strwidth(hlname))
       end
 
-      local cs = require("eve.lib.color")
       for lnum, hlname in ipairs(hlnames) do
         local line = "xxx   " .. functional.pad_end(hlname, max_hlname_width, " ") ---@type string
         local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.t.IHighlight

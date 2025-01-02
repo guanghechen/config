@@ -23,7 +23,7 @@
 -- All credits to https://github.com/LeonHeidelbach for making this!
 -- 90% of functions are written by him
 
----@class eve.lib.color
+---@class eve.builtin.color
 local M = {}
 
 -- Convert a hex color value to RGB
