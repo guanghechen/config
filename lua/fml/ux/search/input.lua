@@ -1,3 +1,4 @@
+local oxi = require("eve.builtin.oxi")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local fts = require("eve.constant.filetype")
@@ -7,7 +8,6 @@ local signs = require("eve.constant.sign")
 local functional = require("eve.lib.functional")
 local augroup = require("eve.lib.nvim").augroup
 local bindkeys = require("eve.lib.nvim").bindkeys
-local oxi = require("eve.lib.oxi")
 
 ---@class fml.ux.search.IInput
 ---@field public context                fml.ux.search.IContext

@@ -1,4 +1,5 @@
 local env = require("eve.builtin.env")
+local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
@@ -8,7 +9,6 @@ local checks = require("eve.lib.checks")
 local fs = require("eve.lib.fs")
 local functional = require("eve.lib.functional")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
-local oxi = require("eve.lib.oxi")
 local state = require("eve.state")
 local Select = require("fml.ux.select")
 
@@ -53,9 +53,9 @@ local function fetch_diritem(dirpath, force)
     local owner_width = 0 ---@type integer
     local group_width = 0 ---@type integer
 
-    local raw_data = oxi.readdir(dirpath) ---@type eve.lib.oxi.IReaddirResult|nil
+    local raw_data = oxi.readdir(dirpath) ---@type eve.builtin.oxi.IReaddirResult|nil
     if raw_data ~= nil then
-      local raw_itself = raw_data.itself ---@type eve.lib.oxi.IFileItemWithStatus
+      local raw_itself = raw_data.itself ---@type eve.builtin.oxi.IFileItemWithStatus
 
       ---@type fml.action.find.explorer.IFileItem
       local itself = {

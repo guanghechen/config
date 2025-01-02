@@ -1,13 +1,12 @@
 local __module_name__ = "fml.ux.search.context" ---@type string
 
 local functional = require("eve.builtin.functional")
+local oxi = require("eve.builtin.oxi")
 local reporter = require("eve.builtin.reporter")
 local Dirtier = require("eve.collection.dirtier")
 local Observable = require("eve.collection.observable")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
-
-local oxi = require("eve.lib.oxi")
 
 ---@class fml.ux.search.IContext
 ---@field public dirtier_dimension      eve.collection.IDirtier

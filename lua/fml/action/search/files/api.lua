@@ -1,5 +1,6 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
+local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Subscriber = require("eve.collection.subscriber")
@@ -8,14 +9,13 @@ local icons = require("eve.constant.icon")
 local checks = require("eve.lib.checks")
 local fs = require("eve.lib.fs")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
-local oxi = require("eve.lib.oxi")
 local state = require("eve.state")
 local context = require("fml.action.search.files.context")
 
 ---@class fml.action.search.files.IFileItem
 ---@field public children               string[]
 ---@field public fragmentary            boolean
----@field public filematch              ?eve.lib.oxi.search.IFileMatch|nil
+---@field public filematch              ?eve.builtin.oxi.search.IFileMatch|nil
 
 ---@class fml.action.search.files.IItem
 ---@field public filepath               string
@@ -37,7 +37,7 @@ local _fileitem_map = {} ---@type table<string, fml.action.search.files.IFileIte
 local _item_map = {} ---@type table<string, fml.action.search.files.IItem>
 local _last_preview_data = nil ---@type fml.action.search.files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
-local _last_search_result = nil ---@type eve.lib.oxi.search.IResult|nil
+local _last_search_result = nil ---@type eve.builtin.oxi.search.IResult|nil
 
 state.search.search_paths:subscribe(
   Subscriber.new({
@@ -141,7 +141,7 @@ function M.calc_preview_data(uuid)
   local cur_col = 0 ---@type integer
 
   if flag_replace then
-    ---@type eve.lib.oxi.replace.replace_file_preview_advance_by_matches.IResult
+    ---@type eve.builtin.oxi.replace.replace_file_preview_advance_by_matches.IResult
     local preview_result = oxi.replace_file_preview_advance_by_matches({
       flag_case_sensitive = flag_case_sensitive,
       flag_regex = flag_regex,
@@ -206,7 +206,7 @@ function M.calc_preview_data(uuid)
     lines = fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
     highlights = {} ---@type fml.action.search.files.IHighlight[]
 
-    local filematch = M.get_filematch(item.filepath) ---@type eve.lib.oxi.search.IFileMatch|nil
+    local filematch = M.get_filematch(item.filepath) ---@type eve.builtin.oxi.search.IFileMatch|nil
     if filematch ~= nil then
       local order = 0 ---@type integer
       for _, block_match in ipairs(filematch.matches) do
@@ -324,7 +324,7 @@ function M.fetch_data(input_text, force, callback)
   local includes = state.search.includes:snapshot() ---@type string[]
   local excludes = state.search.excludes:snapshot() ---@type string[]
 
-  ---@type eve.lib.oxi.search.IResult|nil
+  ---@type eve.builtin.oxi.search.IResult|nil
   local result = (
     not force
     and _last_search_input ~= nil
@@ -360,7 +360,7 @@ function M.fetch_data(input_text, force, callback)
   local fileitem_map = {} ---@type table<string, fml.action.search.files.IFileItem>
   local item_map = {} ---@type table<string, fml.action.search.files.IItem>
   for _, filepath in ipairs(result.item_orders) do
-    local filematch = result.items[filepath] ---@type eve.lib.oxi.search.IFileMatch|nil
+    local filematch = result.items[filepath] ---@type eve.builtin.oxi.search.IFileMatch|nil
     if filematch ~= nil then
       ---@type fml.action.search.files.IFileItem
       local fileitem = {
@@ -402,7 +402,7 @@ function M.fetch_data(input_text, force, callback)
       if flag_replace then
         local lnum_delta = 0 ---@type integer
         for _, block_match in ipairs(filematch.matches) do
-          ---@type eve.lib.oxi.replace.replace_text_preview_advance.IResult
+          ---@type eve.builtin.oxi.replace.replace_text_preview_advance.IResult
           local preview_result = oxi.replace_text_preview_advance({
             flag_case_sensitive = flag_case_sensitive,
             flag_regex = flag_regex,
@@ -586,7 +586,7 @@ function M.gen_quickfix_items()
 end
 
 ---@param filepath                      string
----@return eve.lib.oxi.search.IFileMatch|nil
+---@return eve.builtin.oxi.search.IFileMatch|nil
 function M.get_filematch(filepath)
   local fileitem = _fileitem_map[filepath] ---@type fml.action.search.files.IFileItem|nil
   if fileitem == nil then
@@ -707,7 +707,7 @@ function M.refresh_file_item(filepath)
     local excludes = state.search.excludes:snapshot() ---@type string[]
     local specified_filepath = path.resolve(cwd, filepath) ---@type string
 
-    ---@type eve.lib.oxi.search.IResult|nil
+    ---@type eve.builtin.oxi.search.IResult|nil
     local partial_search_result = oxi.search({
       cwd = cwd,
       flag_case_sensitive = flag_case_sensitive,
@@ -725,7 +725,7 @@ function M.refresh_file_item(filepath)
     if partial_search_result ~= nil and partial_search_result.error == nil and partial_search_result.items ~= nil then
       _last_search_result.items[filepath] = nil
       for _, raw_filepath in ipairs(partial_search_result.item_orders) do
-        local filematch = partial_search_result.items[raw_filepath] ---@type eve.lib.oxi.search.IFileMatch|nil
+        local filematch = partial_search_result.items[raw_filepath] ---@type eve.builtin.oxi.search.IFileMatch|nil
         if filematch ~= nil then
           _last_search_result.items[raw_filepath] = filematch
         end

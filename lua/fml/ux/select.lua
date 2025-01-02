@@ -1,7 +1,7 @@
+local oxi = require("eve.builtin.oxi")
 local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 
-local oxi = require("eve.lib.oxi")
 local state = require("eve.state")
 local Search = require("fml.ux.search.search")
 
@@ -499,7 +499,7 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  ---@type eve.lib.oxi.string.ILineMatch[]|nil
+  ---@type eve.builtin.oxi.string.ILineMatch[]|nil
   local oxi_matches = oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
   if oxi_matches == nil then
     return old_matches
