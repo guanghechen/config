@@ -1,3 +1,5 @@
+local tmux = require("eve.builtin.tmux")
+
 local fs = require("eve.lib.fs")
 local augroup = require("eve.lib.nvim").augroup
 local path = require("eve.lib.path")
@@ -158,7 +160,6 @@ vim.api.nvim_create_autocmd("VimResized", {
     state.status.dirtier_tabline:mark_dirty()
 
     if vim.env.TMUX then
-      local tmux = require("eve.lib.tmux")
       local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
       state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
     end

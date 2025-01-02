@@ -1,5 +1,6 @@
+local tmux = require("eve.builtin.tmux")
+
 local functional = require("eve.lib.functional")
-local tmux = require("eve.lib.tmux")
 local Dirtier = require("eve.lib.collection.dirtier")
 local Observable = require("eve.lib.collection.observable")
 local Ticker = require("eve.lib.collection.ticker")
