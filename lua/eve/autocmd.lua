@@ -8,7 +8,7 @@ vim.schedule(function()
 end)
 
 if env.IS_MAC then
-  local im = require("eve.lib.im")
+  local im = require("eve.builtin.im")
   local previous_mode = nil ---@type eve.e.VimMode|nil
   vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     group = augroup("auto_toggle_im"),
