@@ -1,6 +1,5 @@
+local functional = require("eve.builtin.functional")
 local tailwind = require("eve.constant.palette.tailwind")
-
-local augroup = require("eve.lib.nvim").augroup
 
 ---@type table<string,true>
 local highlighted = {}
@@ -20,14 +19,6 @@ local tailwind_filetypes = {
   ["typescriptreact"] = true,
   ["vue"] = true,
 }
-
--- reset hl groups when colorscheme changes
-vim.api.nvim_create_autocmd("ColorScheme", {
-  group = augroup("mini-hipatterns_reset_colorscheme"),
-  callback = function()
-    highlighted = {}
-  end,
-})
 
 return {
   name = "mini.hipatterns",
@@ -85,6 +76,14 @@ return {
         },
         hex_color = hipatterns.gen_highlighter.hex_color({ priority = 2000 }),
       },
+    })
+
+    -- reset hl groups when colorscheme changes
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      group = functional.augroup("mini-hipatterns_reset_colorscheme"),
+      callback = function()
+        highlighted = {}
+      end,
     })
   end,
 }

@@ -4,12 +4,6 @@ local setting = require("eve.constant.setting")
 ---@class eve.lib.nvim
 local M = {}
 
----@param name                          string
----@return integer
-function M.augroup(name)
-  return vim.api.nvim_create_augroup("eve_" .. name, { clear = true })
-end
-
 ---@param keymaps                       eve.t.IKeymap[]
 ---@param keymap_override               eve.t.IKeymapOverridable
 function M.bindkeys(keymaps, keymap_override)

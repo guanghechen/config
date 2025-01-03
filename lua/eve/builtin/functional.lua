@@ -225,4 +225,12 @@ function M.time_ago(timestamp)
   end
 end
 
+----------------------------------------------------------------------------------------------------
+
+---@param name                          string
+---@return integer
+function M.augroup(name)
+  return vim.api.nvim_create_augroup("eve_" .. name, { clear = true })
+end
+
 return M

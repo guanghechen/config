@@ -1,4 +1,4 @@
-local augroup = require("eve.lib.nvim").augroup
+local functional = require("eve.builtin.functional")
 
 ---@class eve.lib.lsp.ISymbolPos
 ---@field public line                   integer
@@ -59,7 +59,7 @@ function M.on_supports_method(method, fn)
   supports_method[method] = supports_method[method] or setmetatable({}, { __mode = "k" })
 
   return vim.api.nvim_create_autocmd("User", {
-    group = augroup("trigger_lsp_supports_method"),
+    group = functional.augroup("trigger_lsp_supports_method"),
     pattern = "LspSupportsMethod",
     callback = function(args)
       local bufnr = args.data.buffer ---@type number

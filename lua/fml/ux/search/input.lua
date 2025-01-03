@@ -6,7 +6,6 @@ local fts = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 local signs = require("eve.constant.sign")
 
-local augroup = require("eve.lib.nvim").augroup
 local bindkeys = require("eve.lib.nvim").bindkeys
 
 ---@class fml.ux.search.IInput
@@ -39,7 +38,7 @@ function M.new(props)
 
   local search_state = props.state ---@type fml.ux.search.IContext
   local input_history = search_state.input_history ---@type eve.collection.IHistory|nil
-  local autocmd_group = augroup(search_state.uuid .. ":search_input") ---@type integer
+  local autocmd_group = functional.augroup(search_state.uuid .. ":search_input") ---@type integer
 
   local actions = {
     apply_prev_input = function()

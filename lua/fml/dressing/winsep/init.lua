@@ -1,6 +1,7 @@
+local functional = require("eve.builtin.functional")
 local fts = require("eve.constant.filetype")
+
 local checks = require("eve.lib.checks")
-local augroup = require("eve.lib.nvim").augroup
 local state = require("eve.state")
 local Line = require("fml.dressing.winsep.line")
 
@@ -154,7 +155,7 @@ local float_winsep = {
 }
 
 vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
-  group = augroup("winsep_refresh"),
+  group = functional.augroup("winsep_refresh"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if fixed_winsep:should_show(winnr) then

@@ -1,6 +1,6 @@
 local env = require("eve.builtin.env")
+local functional = require("eve.builtin.functional")
 local fts = require("eve.constant.filetype")
-local augroup = require("eve.lib.nvim").augroup
 
 ---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
 vim.schedule(function()
@@ -11,7 +11,7 @@ if env.IS_MAC then
   local im = require("eve.builtin.im")
   local previous_mode = nil ---@type eve.e.VimMode|nil
   vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-    group = augroup("auto_toggle_im"),
+    group = functional.augroup("auto_toggle_im"),
     callback = function()
       local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
       if previous_mode == "i" and current_mode == "n" then
@@ -24,7 +24,7 @@ end
 
 ---! Auto create dirs when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd("BufWritePre", {
-  group = augroup("auto_create_dirs"),
+  group = functional.augroup("auto_create_dirs"),
   callback = function(event)
     if event.match:match("^%w%w+:[\\/][\\/]") then
       return
@@ -36,7 +36,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
 ---! Go to last loc when opening a buffer
 vim.api.nvim_create_autocmd("BufReadPost", {
-  group = augroup("goto_last_location"),
+  group = functional.augroup("goto_last_location"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
     if vim.b[bufnr].eve_last_loc then
@@ -57,7 +57,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 
 ---! Close some filetypes with q
 vim.api.nvim_create_autocmd("FileType", {
-  group = augroup("close_filetypes_with_q"),
+  group = functional.augroup("close_filetypes_with_q"),
   pattern = fts.get_quitable_with_q_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
@@ -74,7 +74,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---! Highlight on yank.
 vim.api.nvim_create_autocmd("TextYankPost", {
-  group = augroup("highlight_on_yank"),
+  group = functional.augroup("highlight_on_yank"),
   callback = function()
     vim.highlight.on_yank()
   end,
@@ -82,7 +82,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 
 ---! Check if we need to reload the file when it changed
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
-  group = augroup("check_file_change"),
+  group = functional.augroup("check_file_change"),
   callback = function()
     if vim.o.buftype ~= "nofile" then
       vim.cmd.checktime()
