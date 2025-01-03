@@ -6,8 +6,6 @@ local fts = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 local signs = require("eve.constant.sign")
 
-local bindkeys = require("eve.lib.nvim").bindkeys
-
 ---@class fml.ux.search.IInput
 ---@field public context                fml.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.ux.search.IInput): integer
@@ -147,7 +145,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].filetype = fts.SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
 
-  bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  functional.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local search_state = self.context ---@type fml.ux.search.IContext
   local input = search_state.input:snapshot() ---@type string

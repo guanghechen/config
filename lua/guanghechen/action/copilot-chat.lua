@@ -1,9 +1,9 @@
 local __module_name__ = "guanghechen.action.copilot-chat" ---@type string
 
+local functional = require("eve.builtin.functional")
 local reporter = require("eve.builtin.reporter")
 local fts = require("eve.constant.filetype")
 
-local bindkeys = require("eve.lib.nvim").bindkeys
 local state = require("eve.state")
 local select = require("fml.fn.select")
 
@@ -21,7 +21,7 @@ end
 ---@field public internal_status        eve.e.WidgetStatus
 ---@field public internal_win_find      fun(): integer|nil
 ---@field public internal_win_cfg       fun(): vim.api.keyset.win_config
----@field public internal_win_clsoe     fun(): nil
+---@field public internal_win_close     fun(): nil
 ---@field public internal_win_open      fun(): nil
 ---@field public internal_win_resize    fun(): nil
 local chat_widget
@@ -59,7 +59,7 @@ chat_widget = {
     }
     return wincfg
   end,
-  internal_win_clsoe = function()
+  internal_win_close = function()
     local winnr = chat_widget.internal_winnr ---@type integer|nil
     chat_widget.internal_winnr = nil
 
@@ -94,7 +94,7 @@ chat_widget = {
         if not vim.b[bufnr].fml_key_bound then
           vim.b[bufnr].fml_key_bound = true
           local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
-          bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+          functional.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 
         vim.schedule(function()
@@ -118,18 +118,18 @@ chat_widget = {
 
   ----
 
-  name = "copitlot-chat",
+  name = "copilot-chat",
   statusline_items = nil,
   status = function()
     return chat_widget.internal_status
   end,
   close = function()
     chat_widget.internal_status = "closed"
-    chat_widget.internal_win_clsoe()
+    chat_widget.internal_win_close()
   end,
   hide = function()
     chat_widget.internal_status = "hidden"
-    chat_widget.internal_win_clsoe()
+    chat_widget.internal_win_close()
   end,
   resize = function()
     chat_widget.internal_win_resize()

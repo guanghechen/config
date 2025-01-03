@@ -1,9 +1,9 @@
 local __module_name__ = "fml.ux.textarea" ---@type string
 
 local box = require("eve.builtin.box")
+local functional = require("eve.builtin.functional")
 local reporter = require("eve.builtin.reporter")
 
-local bindkeys = require("eve.lib.nvim").bindkeys
 local state = require("eve.state")
 
 ---@type string
@@ -209,7 +209,7 @@ function M:open(params)
     vim.bo[bufnr].buftype = "nofile"
     vim.bo[bufnr].filetype = self.filetype
     vim.bo[bufnr].swapfile = false
-    bindkeys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
+    functional.bindkeys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
     vim.api.nvim_create_autocmd("BufDelete", {
       once = true,

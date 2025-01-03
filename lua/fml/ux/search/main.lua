@@ -1,9 +1,8 @@
+local functional = require("eve.builtin.functional")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local fts = require("eve.constant.filetype")
 local signs = require("eve.constant.sign")
-
-local bindkeys = require("eve.lib.nvim").bindkeys
 
 ---@class fml.ux.search.IMain
 ---@field public context                fml.ux.search.IContext
@@ -136,7 +135,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
-  bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  functional.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.schedule(function()
     vim.cmd("stopinsert")

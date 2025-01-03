@@ -1,7 +1,7 @@
+local functional = require("eve.builtin.functional")
 local path = require("eve.builtin.path")
 local fts = require("eve.constant.filetype")
 
-local bindkeys = require("eve.lib.nvim").bindkeys
 local state = require("eve.state")
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
@@ -100,7 +100,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].buftype = "nowrite"
   vim.bo[bufnr].filetype = fts.TERM
   vim.bo[bufnr].swapfile = false
-  bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  functional.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
   return bufnr, true
 end
 

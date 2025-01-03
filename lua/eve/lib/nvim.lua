@@ -4,27 +4,6 @@ local setting = require("eve.constant.setting")
 ---@class eve.lib.nvim
 local M = {}
 
----@param keymaps                       eve.t.IKeymap[]
----@param keymap_override               eve.t.IKeymapOverridable
-function M.bindkeys(keymaps, keymap_override)
-  for _, keymap in ipairs(keymaps) do
-    if keymap.active ~= false then
-      local bufnr = keymap_override.bufnr or keymap.bufnr ---@type integer|nil
-      local nowait = keymap_override.nowait or keymap.nowait ---@type boolean|nil
-      local noremap = keymap_override.noremap or keymap.noremap ---@type boolean|nil
-      local silent = keymap_override.silent or keymap.silent ---@type boolean|nil
-
-      vim.keymap.set(keymap.modes, keymap.key, keymap.callback, {
-        buffer = bufnr,
-        nowait = nowait,
-        noremap = noremap,
-        silent = silent,
-        desc = keymap.desc,
-      })
-    end
-  end
-end
-
 ---@param fg_hlname                     string
 ---@param bg_hlname                     string
 ---@return string

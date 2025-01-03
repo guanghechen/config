@@ -1,6 +1,5 @@
 local functional = require("eve.builtin.functional")
 
-local bindkeys = require("eve.lib.nvim").bindkeys
 local Printer = require("fml.ux.printer")
 local state = require("eve.state")
 
@@ -197,7 +196,7 @@ local keymaps = {
           end,
         },
       }
-      bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+      functional.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
       local height = printer:count_lines() ---@type integer
       local opts = {
@@ -349,7 +348,7 @@ return {
       untracked = { text = "┆" },
     },
     on_attach = function(bufnr)
-      bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
+      functional.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
       vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", {
         buffer = bufnr,
         noremap = true,

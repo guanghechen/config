@@ -2,8 +2,6 @@ local functional = require("eve.builtin.functional")
 local fts = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 
-local bindkeys = require("eve.lib.nvim").bindkeys
-
 ---@param winnr                         integer
 ---@return boolean
 local filter = function(winnr)
@@ -156,7 +154,7 @@ return {
           local keymaps = {
             { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert },
           }
-          bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
+          functional.bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
         end,
       },
     },
