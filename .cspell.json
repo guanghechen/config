@@ -98,6 +98,9 @@
     "Ftermlazygitcwd",
     "Ftermlazygitworkspace",
     "Ftermlazygitfilehistory",
+    "Ftermyazicwd",
+    "Ftermyazireveal",
+    "Ftermyaziworkspace",
     "Ftoggle",
     "Ftoggleflight",
     "Ftogglerelativenumber",
@@ -264,6 +267,7 @@
     "loadstring",
     "lspinfo",
     "lspconfig",
+    "luafile",
     "luap",
     "lwidth",
     "lwidths",
@@ -346,6 +350,7 @@
     "tabpages",
     "tabs",
     "tabtype",
+    "tempname",
     "termcodes",
     "termopen",
     "texthl",
@@ -392,6 +397,7 @@
     "xplorer",
     "yamlls",
     "yarnrc",
+    "yazi",
     "zindex"
   ]
 }

@@ -94,19 +94,23 @@ end
 
 ---@param name                          string
 ---@param cwd                           string
+---@param context                       eve.command.IContext
 ---@param args                          ?string[]
-local function open_lazygit(name, cwd, args)
+---@return nil
+local function open_lazygit(name, cwd, context, args)
   local config_path = get_lazygit_config_filepath() ---@type string|nil
-  local bufnr = toggle_term({
+  local terminal = toggle_term({
     name = name,
     command = config_path
         and "lazygit -ucf " .. vim.fn.fnameescape(config_path) .. " " .. table.concat(args or {}, " ")
       or "lazygit " .. table.concat(args or {}, " "),
     cwd = cwd,
     permanent = false,
+    bufnr_cur = context.bufnr,
   })
 
-  if bufnr ~= nil then
+  local bufnr = terminal:get_bufnr() ---@type integer|nil
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) and terminal:is_visible() then
     local function edit()
       edit_lazygit_file_in_buffer(cwd)
     end
@@ -122,28 +126,25 @@ local M = {}
 
 ---@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
 function M.lazygit_cwd(context)
   local cwd = path.cwd() ---@type string
-  open_lazygit("lazygit_cwd", cwd)
+  open_lazygit("lazygit_cwd", cwd, context)
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
 function M.lazygit_workspace(context)
   local cwd = path.workspace() ---@type string
-  open_lazygit("lazygit_workspace", cwd)
+  open_lazygit("lazygit_workspace", cwd, context)
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
 function M.lazygit_file_history(context)
   local cwd = path.cwd() ---@type string
   local filepath = path.current_filepath() ---@type string
   local args = { "-f", vim.fn.fnameescape(filepath) } ---@type string[]
-  open_lazygit("lazygit_file_history", cwd, args)
+  open_lazygit("lazygit_file_history", cwd, context, args)
 end
 
 return M

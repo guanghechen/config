@@ -1,6 +1,7 @@
 local fs = require("eve.builtin.fs")
 local ft = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
+local winpicker = require("eve.module.winpicker")
 
 ---@class eve.module.editor
 local M = {}
@@ -72,6 +73,29 @@ function M.is_valid_filepath(filepath)
     return false
   end
   return fs.is_file_or_dir(filepath) == "file"
+end
+
+---@param winnr_source                  integer
+---@param filepaths                     string[]
+---@return nil
+function M.open_filepaths(winnr_source, filepaths)
+  if #filepaths < 1 then
+    return
+  end
+
+  local winnr = M.is_win_valid(winnr_source) and winnr_source or nil ---@type integer|nil
+  if winnr == nil then
+    winnr = winpicker.pick_window(winpicker.filters.focus, winnr_source) ---@type integer|nil
+  end
+
+  if winnr == nil then
+    return
+  end
+
+  vim.api.nvim_set_current_win(winnr)
+  for _, filepath in ipairs(filepaths) do
+    vim.cmd("edit " .. filepath)
+  end
 end
 
 return M

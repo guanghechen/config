@@ -1,53 +1,4 @@
-local fn = require("eve.builtin.fn")
-local ft = require("eve.constant.filetype")
-
-local filters = {
-  ---@param winnr                       integer
-  ---@return boolean
-  focus = function(winnr)
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    return not ft.is_not_focusable_filetype(filetype)
-  end,
-  ---@param winnr                       integer
-  ---@return boolean
-  swap = function(winnr)
-    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
-      return false
-    end
-
-    if fn.is_win_floating(winnr) then
-      return false
-    end
-
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    return not ft.is_not_projectable_filetype(filetype)
-  end,
-  ---@param winnr                       integer
-  ---@return boolean
-  project = function(winnr)
-    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
-      return false
-    end
-
-    if fn.is_win_floating(winnr) then
-      return false
-    end
-
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    return not ft.is_not_projectable_filetype(filetype)
-  end,
-}
-
----@param filter                        fun(winnr: integer): boolean
----@param winnr_cur                     integer
----@return integer|nil
-local function pick(filter, winnr_cur)
-  local winpicker = require("eve.module.winpicker")
-  return winpicker.pick_window(filter, winnr_cur)
-end
+local winpicker = require("eve.module.winpicker")
 
 ---@class fml.action.win.picker
 local M = {}
@@ -55,9 +6,9 @@ local M = {}
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.focus(context)
-  local winnr_cur = context.winnr ---@type integer
-  local winnr_target = pick(filters.focus, winnr_cur) ---@type integer|nil
-  if winnr_target and winnr_cur ~= winnr_target then
+  local winnr_source = context.winnr
+  local winnr_target = winpicker.pick_window(winpicker.filters.focus, winnr_source) ---@type integer|nil
+  if winnr_target and winnr_target ~= winnr_source then
     vim.api.nvim_set_current_win(winnr_target)
   end
 end
@@ -65,33 +16,30 @@ end
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.project(context)
-  local winnr_cur = context.winnr ---@type integer
-  local winnr_target = pick(filters.project, winnr_cur) ---@type integer|nil
-  if not winnr_target or winnr_cur == winnr_target then
-    return
+  local winnr_source = context.winnr
+  local winnr_target = winpicker.pick_window(winpicker.filters.project, winnr_source) ---@type integer|nil
+  if winnr_target and winnr_target ~= winnr_source then
+    local cursor_source = vim.api.nvim_win_get_cursor(winnr_source)
+    local bufnr = context.bufnr ---@type integer
+
+    vim.api.nvim_win_set_buf(winnr_target, bufnr)
+    vim.api.nvim_win_set_cursor(winnr_target, cursor_source)
+    vim.api.nvim_set_current_win(winnr_target)
   end
-
-  local bufnr_cur = context.bufnr ---@type integer
-  local cursor_current = vim.api.nvim_win_get_cursor(winnr_cur)
-
-  vim.api.nvim_win_set_buf(winnr_target, bufnr_cur)
-  vim.api.nvim_win_set_cursor(winnr_target, cursor_current)
-  vim.api.nvim_set_current_win(winnr_target)
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.swap(context)
-  local winnr_cur = context.winnr ---@type integer
-  local winnr_target = pick(filters.project, winnr_cur) ---@type integer|nil
-  if not winnr_target or winnr_cur == winnr_target then
-    return
-  end
+  local winnr_source = context.winnr
+  local winnr_target = winpicker.pick_window(winpicker.filters.project, winnr_source) ---@type integer|nil
+  if winnr_target and winnr_target ~= winnr_source then
+    local wincfg_source = vim.api.nvim_win_get_config(winnr_source) ---@type vim.api.keyset.win_config
+    local wincfg_target = vim.api.nvim_win_get_config(winnr_target) ---@type vim.api.keyset.win_config
 
-  local wincfg_current = vim.api.nvim_win_get_config(winnr_cur) ---@type vim.api.keyset.win_config
-  local wincfg_target = vim.api.nvim_win_get_config(winnr_cur) ---@type vim.api.keyset.win_config
-  vim.api.nvim_win_set_config(winnr_cur, wincfg_target)
-  vim.api.nvim_win_set_config(winnr_target, wincfg_current)
+    vim.api.nvim_win_set_config(winnr_source, wincfg_target)
+    vim.api.nvim_win_set_config(winnr_target, wincfg_source)
+  end
 end
 
 return M

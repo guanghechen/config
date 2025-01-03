@@ -551,6 +551,24 @@ command
       require("fml.action.term.lazygit").lazygit_file_history(context)
     end,
   })
+  .implement({
+    uuid = command.definitions.term.yazi_cwd.uuid,
+    action = function(context)
+      require("fml.action.term.yazi").yazi_cwd(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.term.yazi_workspace.uuid,
+    action = function(context)
+      require("fml.action.term.yazi").yazi_workspace(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.term.yazi_reveal.uuid,
+    action = function(context)
+      require("fml.action.term.yazi").yazi_reveal(context)
+    end,
+  })
 
 --[toggle] -----------------------------------------------------------------------------------------
 command

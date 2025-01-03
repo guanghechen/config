@@ -416,6 +416,10 @@ M.definitions.term = {
   lazygit_cwd = def("Ftermlazygitcwd", "term: lazygit (cwd)"),
   lazygit_workspace = def("Ftermlazygitworkspace", "term: lazygit (workspace)"),
   lazygit_file_history = def("Ftermlazygitfilehistory", "term: lazygit (file history)"),
+
+  yazi_cwd = def("Ftermyazicwd", "term: yazi (cwd)"),
+  yazi_reveal = def("Ftermyazireveal", "term: yazi (reveal)"),
+  yazi_workspace = def("Ftermyaziworkspace", "term: yazi (workspace)"),
 }
 
 ---@class eve.command.definitions.toggle

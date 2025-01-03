@@ -1,7 +1,6 @@
 local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
-
 local state = require("eve.state")
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
@@ -13,12 +12,27 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_terminal_bg",
 }, ",")
 
+---@param cmd                           string|nil
+local function format_command(cmd)
+  local command = {} ---@type string[]
+  local shell = vim.env.SHELL or vim.o.shell ---@type string
+  if cmd == nil or #cmd < 1 then
+    command = { shell }
+  else
+    command = { shell, "-c", cmd }
+  end
+  return command
+end
+
 ---@class fml.ux.ITerminal : eve.t.ux.IWidget
+---@field public close                  fun(self: fml.ux.ITerminal): nil
 ---@field public focus                  fun(self: fml.ux.ITerminal): nil
 ---@field public get_winnr              fun(self: fml.ux.ITerminal): integer|nil
 ---@field public get_bufnr              fun(self: fml.ux.ITerminal): integer|nil
+---@field public is_visible             fun(self: fml.ux.ITerminal): boolean
 ---@field public open                   fun(self: fml.ux.ITerminal): nil
 ---@field public toggle                 fun(self: fml.ux.ITerminal): nil
+---@field public update                 fun(self: fml.ux.ITerminal, props: fml.ux.terminal.IProps): nil
 
 ---@class fml.ux.terminal.IDimension
 ---@field public height                 ?number
@@ -42,6 +56,7 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
 ---@field protected _status             eve.e.WidgetStatus
 ---@field protected _term_alive         boolean
 ---@field protected _winnr              integer|nil
+---@field protected _on_exit            fun(): nil
 local M = {}
 M.__index = M
 
@@ -51,27 +66,20 @@ M.__index = M
 ---@field public command_env            ?table<string, string>
 ---@field public keymaps                ?eve.t.IKeymap[]
 ---@field public permanent              ?boolean
+---@field public on_exit                ?fun(): nil
 
 ---@param props                         fml.ux.terminal.IProps
 ---@return fml.ux.Terminal
 function M.new(props)
-  local self = setmetatable({}, M)
-
-  local command = {} ---@type string[]
-  local shell = vim.env.SHELL or vim.o.shell ---@type string
-  if props.command == nil or #props.command < 1 then
-    command = { shell }
-  else
-    command = { shell, "-c", props.command }
-  end
-
   local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
+  local command = format_command(props.command) ---@type string[]
   local command_cwd = props.command_cwd or path.cwd() ---@type string
   local command_env = props.command_env ---@type table<string, string>|nil
   local permanent = not not props.permanent ---@type boolean
 
+  local self = setmetatable({}, M)
   self._bufnr = nil
   self._command = command
   self._command_cwd = command_cwd
@@ -81,7 +89,7 @@ function M.new(props)
   self._status = "closed"
   self._term_alive = false
   self._winnr = nil
-
+  self._on_exit = props.on_exit or fn.noop
   return self
 end
 
@@ -199,20 +207,18 @@ end
 
 ---@return nil
 function M:hide()
-  local winnr = state.tab.get_current_winnr() ---@type integer
-  if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-    vim.api.nvim_tabpage_set_win(0, winnr)
-  end
-
-  local terminal_winnr = self._winnr ---@type integer|nil
-  local visible = self._status == "visible" ---@type boolean
-
+  local winnr = self._winnr ---@type integer|nil
   self._winnr = nil
   self._status = "hidden"
 
-  if visible and terminal_winnr ~= nil and vim.api.nvim_win_is_valid(terminal_winnr) then
-    vim.api.nvim_win_close(terminal_winnr, true)
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_win_close(winnr, true)
   end
+end
+
+---@return boolean
+function M:is_visible()
+  return self._status == "visible"
 end
 
 ---@return nil
@@ -241,7 +247,11 @@ function M:show()
   vim.api.nvim_tabpage_set_win(0, winnr)
   if not self._term_alive then
     self._term_alive = true
-    vim.fn.termopen(self._command, { cwd = self._command_cwd, env = self._command_env })
+    vim.fn.termopen(self._command, {
+      cwd = self._command_cwd,
+      env = self._command_env,
+      on_exit = self._on_exit,
+    })
     vim.api.nvim_create_autocmd("TermClose", {
       once = true,
       buffer = bufnr,
@@ -276,6 +286,16 @@ function M:toggle()
   else
     self:open()
   end
+end
+
+---@param props                         fml.ux.terminal.IProps
+---@return nil
+function M:update(props)
+  local command = format_command(props.command) ---@type string[]
+  self._command = command ---@type string[]
+  self._command_cwd = props.command_cwd or self._command_cwd ---@type string
+  self._command_env = props.command_env or self._command_env ---@type table<string, string>|nil
+  self._on_exit = props.on_exit or self._on_exit
 end
 
 return M

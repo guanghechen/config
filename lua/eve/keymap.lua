@@ -86,7 +86,7 @@ kk({ "n" }, "<M-c>", K.copy.char_under_cursor)
 --- quick access widgets (diagnostic, explorer, terminal) -----
 kk({ "n", "t", "v" }, "<leader>`", K.ux.resume_last_widget)
 kk({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
-kk({ "n", "v" }, "<leader>2", K.search.files)
+kk({ "n", "v" }, "<leader>2", K.term.yazi_reveal)
 kk({ "n", "v" }, "<leader>3", K.explorer.git_cwd)
 ------------------------------------------------------------------------------------------#enhance--
 
@@ -237,8 +237,8 @@ kk({ "i", "n", "t", "v" }, "<C-a>g", K.term.lazygit_cwd)
 kk({ "i", "n", "t", "v" }, "<M-g>", K.term.lazygit_cwd)
 kk({ "i", "n", "t", "v" }, "<C-a>t", K.term.toggle_cwd)
 kk({ "i", "n", "t", "v" }, "<M-t>", K.term.toggle_cwd)
-kk({ "n", "t" }, "<leader>tT", K.term.toggle_workspace)
-kk({ "n", "t" }, "<leader>tt", K.term.toggle_cwd)
+kk({ "i", "n", "t", "v" }, "<C-a>y", K.term.yazi_cwd)
+kk({ "i", "n", "t", "v" }, "<M-y>", K.term.yazi_cwd)
 ---------------------------------------------------------------------------------------#[t]erminal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------

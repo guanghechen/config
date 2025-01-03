@@ -1,6 +1,8 @@
 local __module_name__ = "eve.module.winpicker" ---@type string
 
+local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
+local ft = require("eve.constant.filetype")
 local Mask = require("eve.module.winpicker.mask")
 
 ---@class eve.module.winpicker.config
@@ -45,11 +47,52 @@ end
 ---@class eve.module.winpicker
 local M = {}
 
+---@class eve.module.winpicker.filters
+M.filters = {
+  ---@param winnr                       integer
+  ---@return boolean
+  focus = function(winnr)
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    return not ft.is_not_focusable_filetype(filetype)
+  end,
+  ---@param winnr                       integer
+  ---@return boolean
+  swap = function(winnr)
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+      return false
+    end
+
+    if fn.is_win_floating(winnr) then
+      return false
+    end
+
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    return not ft.is_not_projectable_filetype(filetype)
+  end,
+  ---@param winnr                       integer
+  ---@return boolean
+  project = function(winnr)
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+      return false
+    end
+
+    if fn.is_win_floating(winnr) then
+      return false
+    end
+
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    return not ft.is_not_projectable_filetype(filetype)
+  end,
+}
+
 ---@param filter                        fun(winnr: integer): boolean
 ---@param winnr_cur                     integer|nil
 ---@return integer|nil
 function M.pick_window(filter, winnr_cur)
-  local winnrs = vim.api.nvim_list_wins() ---@type integer[]
+  local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   local N = 0 ---@type integer
   for i = 1, #winnrs, 1 do
     local winnr = winnrs[i] ---@type integer
