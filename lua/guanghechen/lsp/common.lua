@@ -5,8 +5,8 @@ local fs = require("eve.builtin.fs")
 local functional = require("eve.builtin.functional")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
+local lsp = require("eve.module.lsp")
 
-local lsp = require("eve.lib.lsp")
 local command = require("eve.command")
 
 local actions = {

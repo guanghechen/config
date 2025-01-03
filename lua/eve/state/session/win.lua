@@ -3,9 +3,9 @@ local __module_name__ = "eve.state.session.win"
 local reporter = require("eve.builtin.reporter")
 local AdvanceHistory = require("eve.collection.history_advance")
 local setting = require("eve.constant.setting")
+local lsp = require("eve.module.lsp")
 
 local checks = require("eve.lib.checks")
-local lsp = require("eve.lib.lsp")
 local state_status = require("eve.state.session.status")
 
 ---@class eve.t.state.win.meta.data
