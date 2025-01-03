@@ -58,7 +58,7 @@ end
 ---@return nil
 function M.project(context)
   local winnr_cur = context.winnr ---@type integer
-  local winnr_target = pick(filters.focus, winnr_cur) ---@type integer|nil
+  local winnr_target = pick(filters.project, winnr_cur) ---@type integer|nil
   if not winnr_target or winnr_cur == winnr_target then
     return
   end
@@ -75,7 +75,7 @@ end
 ---@return nil
 function M.swap(context)
   local winnr_cur = context.winnr ---@type integer
-  local winnr_target = pick(filters.focus, winnr_cur) ---@type integer|nil
+  local winnr_target = pick(filters.project, winnr_cur) ---@type integer|nil
   if not winnr_target or winnr_cur == winnr_target then
     return
   end
