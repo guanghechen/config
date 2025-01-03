@@ -58,21 +58,6 @@ function M.is_win_valid(winnr)
   return true
 end
 
----@param value                         any
----@return boolean
-function M.is_disposable(value)
-  return type(value) == "table" and type(value.isDisposable) == "function" and type(value.dispose) == "function"
-end
-
----@param value                         any
----@return boolean
-function M.is_observable(value)
-  return type(value) == "table"
-    and type(value.snapshot) == "function"
-    and type(value.next) == "function"
-    and type(value.subscribe) == "function"
-end
-
 ---@param filepath                      string|nil
 ---@return boolean
 function M.is_valid_filepath(filepath)

@@ -105,6 +105,23 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param value                         any
+---@return boolean
+function M.is_disposable(value)
+  return type(value) == "table" and type(value.isDisposable) == "function" and type(value.dispose) == "function"
+end
+
+---@param value                         any
+---@return boolean
+function M.is_observable(value)
+  return type(value) == "table"
+    and type(value.snapshot) == "function"
+    and type(value.next) == "function"
+    and type(value.subscribe) == "function"
+end
+
+----------------------------------------------------------------------------------------------------
+
 ---@generic T
 ---@param elements                      T[]
 ---@param element                       T
