@@ -1,4 +1,3 @@
-local fts = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 
 ---@class eve.lib.nvim
@@ -17,23 +16,6 @@ function M.calc_fileicon(filename)
     end
   end
   return "󰈚", "MiniIconsRed"
-end
-
----@param tabnr                         integer
----@return eve.e.state.tab.meta.TabType
-function M.calc_tabtype(tabnr)
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-
-  ---! Check if the diffview tab
-  for _, winnr in ipairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    if filetype == fts.DIFFVIEW_FILES or filetype == fts.DIFFVIEW_FILE_HISTORY then
-      return setting.TT_DIFFVIEW
-    end
-  end
-
-  return setting.TT_NORMAL ---@type string
 end
 
 ---@param winnr                         integer|nil

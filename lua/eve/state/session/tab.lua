@@ -1,9 +1,9 @@
 local functional = require("eve.builtin.functional")
 local AdvanceHistory = require("eve.collection.history_advance")
+local fts = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 
 local checks = require("eve.lib.checks")
-local calc_tabtype = require("eve.lib.nvim").calc_tabtype
 
 ---@alias eve.e.state.tab.meta.TabType
 ---| "normal"
@@ -54,6 +54,7 @@ Meta.__index = Meta
 ---@field public on_buf_enter           fun(winnr: integer, bufnr: integer): nil
 ---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
 ---
+---@field public calc_tabtype           fun(tabnr: integer): eve.e.state.tab.meta.TabType
 ---@field public get_current_winnr      fun(): integer
 ---@field public get_current_bufnr      fun(): integer
 ---@field public get_visible_bufnrs     fun(tabnr: integer|nil): integer[]
@@ -169,7 +170,7 @@ S = {
       return nil
     end
 
-    local tabtype = calc_tabtype(tabnr) ---@type string
+    local tabtype = S.calc_tabtype(tabnr) ---@type string
 
     local bufs = {} ---@type eve.t.state.tab.buf.data[]
     local bufnr_set = {} ---@type table<integer, true>
@@ -257,7 +258,7 @@ S = {
 
     S.resolve_winnr_listed(tabnr)
 
-    local tabtype = calc_tabtype(tabnr) ---@type string
+    local tabtype = S.calc_tabtype(tabnr) ---@type string
     meta.tabtype = tabtype
   end,
   refresh_all = function()
@@ -318,6 +319,20 @@ S = {
     for i = k, N, 1 do
       bufs[i] = nil
     end
+  end,
+  calc_tabtype = function(tabnr)
+    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+
+    ---! Check if the diffview tab
+    for _, winnr in ipairs(winnrs) do
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local filetype = vim.bo[bufnr].filetype ---@type string
+      if filetype == fts.DIFFVIEW_FILES or filetype == fts.DIFFVIEW_FILE_HISTORY then
+        return setting.TT_DIFFVIEW
+      end
+    end
+
+    return setting.TT_NORMAL ---@type string
   end,
   get_current_winnr = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
