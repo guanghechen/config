@@ -152,7 +152,7 @@ function M.touch(filepath)
     local file = io.open(filepath, "a")
     if file then
       file:close() -- Close the file immediately
-      local current_time = vim.loop.hrtime() / 1e9 -- Get current time in seconds
+      local current_time = vim.uv.hrtime() / 1e9 -- Get current time in seconds
       vim.uv.fs_utime(filepath, current_time, current_time, function(err)
         if err then
           reporter.error({
