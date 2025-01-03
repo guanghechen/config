@@ -272,6 +272,20 @@ function M.blend_color(fg_hlname, bg_hlname)
   return "Error"
 end
 
+---@return table<string, integer>
+function M.filepath2bufnr()
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  local filepath2bufnr = {} ---@type table<string, integer>
+
+  for _, bufnr in ipairs(bufnrs) do
+    local filepath = vim.api.nvim_buf_get_name(bufnr)
+    if filepath ~= nil and #filepath > 0 then
+      filepath2bufnr[filepath] = bufnr
+    end
+  end
+  return filepath2bufnr
+end
+
 ---@return string
 function M.get_selected_text()
   local saved_reg = vim.fn.getreg("v")

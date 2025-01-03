@@ -66,18 +66,4 @@ function M.dressing_float_win(winnr, width)
   vim.api.nvim_set_current_win(winnr)
 end
 
----@return table<string, integer>
-function M.gen_filepath2bufnr()
-  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  local filepath2bufnr = {} ---@type table<string, integer>
-
-  for _, bufnr in ipairs(bufnrs) do
-    local filepath = vim.api.nvim_buf_get_name(bufnr)
-    if filepath ~= nil and #filepath > 0 then
-      filepath2bufnr[filepath] = bufnr
-    end
-  end
-  return filepath2bufnr
-end
-
 return M

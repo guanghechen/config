@@ -4,7 +4,6 @@ local setting = require("eve.constant.setting")
 
 local checks = require("eve.lib.checks")
 local calc_tabtype = require("eve.lib.nvim").calc_tabtype
-local gen_filepath2bufnr = require("eve.lib.nvim").gen_filepath2bufnr
 
 ---@alias eve.e.state.tab.meta.TabType
 ---| "normal"
@@ -493,7 +492,7 @@ function M.load(raw_data)
   tab_history:load({ present = #stack, stack = stack })
   S.tab_history = tab_history
 
-  local filepath2bufnr = gen_filepath2bufnr() ---@type table<string, integer>
+  local filepath2bufnr = functional.filepath2bufnr() ---@type table<string, integer>
   for _, data_tab in ipairs(data.list) do
     local tabnr = tabnrs[data_tab.tabid] ---@type integer|nil
     if tabnr ~= nil then

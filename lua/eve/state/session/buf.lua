@@ -1,10 +1,10 @@
 local env = require("eve.builtin.env")
+local functional = require("eve.builtin.functional")
 local path = require("eve.builtin.path")
 local setting = require("eve.constant.setting")
 
 local checks = require("eve.lib.checks")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
-local gen_filepath2bufnr = require("eve.lib.nvim").gen_filepath2bufnr
 
 ---@class eve.t.state.buf.lsp.ISymbol
 ---@field public kind                   string
@@ -276,7 +276,7 @@ function M.load(raw_data)
 
   local workspace_pieces = path.split(path.workspace()) ---@type string[]
   local cwd_pieces = path.split(path.cwd()) ---@type string[]
-  local filepath2bufnr = gen_filepath2bufnr() ---@type table<string, integer>
+  local filepath2bufnr = functional.filepath2bufnr() ---@type table<string, integer>
   for _, item in ipairs(data.list) do
     local bufnr = filepath2bufnr[item.filepath] ---@type integer|nil
     if bufnr ~= nil then
