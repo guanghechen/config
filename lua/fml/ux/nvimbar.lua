@@ -4,8 +4,7 @@ local functional = require("eve.builtin.functional")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Scheduler = require("eve.collection.scheduler")
-
-local calc_fileicon = require("eve.lib.nvim").calc_fileicon
+local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
 ---@alias fml.ux.nvimbar.Position
 ---| 'f_sl'

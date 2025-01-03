@@ -1,6 +1,6 @@
 local setting = require("eve.constant.setting")
 
----@class eve.lib.nvim
+---@class eve.module.fileicon
 local M = {}
 
 ---@param filename                      string

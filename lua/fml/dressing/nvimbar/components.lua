@@ -8,9 +8,9 @@ local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local fts = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
+local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
 local checks = require("eve.lib.checks")
-local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local Nvimbar = require("fml.ux.nvimbar")
 local command = require("eve.command")
 local state = require("eve.state")

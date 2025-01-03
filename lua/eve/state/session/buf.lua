@@ -2,9 +2,9 @@ local env = require("eve.builtin.env")
 local functional = require("eve.builtin.functional")
 local path = require("eve.builtin.path")
 local setting = require("eve.constant.setting")
+local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
 local checks = require("eve.lib.checks")
-local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 
 ---@class eve.t.state.buf.lsp.ISymbol
 ---@field public kind                   string
