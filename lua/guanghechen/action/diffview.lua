@@ -1,4 +1,4 @@
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 
 ---@class guanghechen.action.diffview
 local M = {}
@@ -34,7 +34,7 @@ end
 function M.fs_cwd(context)
   local bufnr = context.bufnr ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if filetype == fts.DIFFVIEW_FILES or filetype == fts.DIFFVIEW_FILE_HISTORY then
+  if filetype == ft.DIFFVIEW_FILES or filetype == ft.DIFFVIEW_FILE_HISTORY then
     vim.cmd("DiffviewToggleFiles")
   else
     vim.cmd("DiffviewFocusFiles")

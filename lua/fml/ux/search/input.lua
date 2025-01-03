@@ -2,7 +2,7 @@ local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 local signs = require("eve.constant.sign")
 
@@ -142,7 +142,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = fts.SEARCH_INPUT
+  vim.bo[bufnr].filetype = ft.SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
 
   fn.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })

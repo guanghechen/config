@@ -1,4 +1,4 @@
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 
 ---@class fml.dressing.hipairs.config
 local config = {
@@ -177,7 +177,7 @@ function M.render(winnr)
     end
 
     local filetype = vim.bo[bufnr].filetype
-    if filetype == fts.BIGFILE or not fts.is_plain_file(filetype) then
+    if filetype == ft.BIGFILE or not ft.is_plain_file(filetype) then
       return
     end
 

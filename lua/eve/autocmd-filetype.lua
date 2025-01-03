@@ -1,5 +1,5 @@
 local fn = require("eve.builtin.fn")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 
 vim.filetype.add({
   extension = { rasi = "rasi", rofi = "rasi", wofi = "rasi" },
@@ -10,10 +10,10 @@ vim.filetype.add({
     [".*"] = {
       function(filepath, bufnr)
         return vim.bo[bufnr]
-            and vim.bo[bufnr].filetype ~= fts.BIGFILE
+            and vim.bo[bufnr].filetype ~= ft.BIGFILE
             and filepath
             and vim.fn.getfsize(filepath) > vim.g.bigfile_size
-            and fts.BIGFILE
+            and ft.BIGFILE
           or nil
       end,
     },
@@ -45,7 +45,10 @@ vim.api.nvim_create_autocmd("FileType", {
   callback = function(evt)
     local bufnr = evt.buf ---@type integer
     vim.api.nvim_buf_call(bufnr, function()
-      vim.opts.setup({ buf = bufnr, ft = vim.filetype.match({ buf = bufnr }) or "" })
+      vim.opts.setup({
+        buf = bufnr,
+        ft = vim.filetype.match({ buf = bufnr }) or "",
+      })
     end)
   end,
 })

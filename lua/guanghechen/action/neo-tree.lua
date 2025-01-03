@@ -1,5 +1,5 @@
 local path = require("eve.builtin.path")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 
 local cwd = path.cwd() ---@type string
 
@@ -40,7 +40,7 @@ local M = {}
 function M.fs_cwd(context)
   local bufnr = context.bufnr ---@type integer
   local ft_current = vim.bo[bufnr].filetype ---@type string
-  local toggle = ft_current == fts.NEOTREE ---@type boolean
+  local toggle = ft_current == ft.NEOTREE ---@type boolean
 
   cwd = path.cwd()
   close_explorer_sources({ "git_status", "buffers" })
@@ -59,7 +59,7 @@ end
 function M.fs_workspace(context)
   local bufnr = context.bufnr ---@type integer
   local ft_current = vim.bo[bufnr].filetype ---@type string
-  local toggle = ft_current == fts.NEOTREE ---@type boolean
+  local toggle = ft_current == ft.NEOTREE ---@type boolean
 
   cwd = path.workspace()
   close_explorer_sources({ "git_status", "buffers" })

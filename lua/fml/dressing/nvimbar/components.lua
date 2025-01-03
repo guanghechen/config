@@ -6,7 +6,7 @@ local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
@@ -330,7 +330,7 @@ function M.cwd(position)
     render = function(context)
       local cwd_name = path.basename(context.cwd) ---@type string
 
-      local text = " " .. icons.ft.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
+      local text = " " .. icons.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_cwd) ---@type string
       return text, hl_text, true
     end,
@@ -436,7 +436,7 @@ function M.diffview(position)
     local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype == fts.DIFFVIEW_FILES then
+      if vim.bo[bufnr].filetype == ft.DIFFVIEW_FILES then
         if not fn.is_win_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end
@@ -487,7 +487,7 @@ end
 function M.dirpath(position)
   local hln_text = position .. "_dirpath_text" ---@type string
 
-  -- local icon = icons.ft.Folder .. " " ---@type string
+  -- local icon = icons.filetype.Folder .. " " ---@type string
   -- local hln_icon = position .. "_dirpath_icon" ---@type string
   -- local hl_icon = txt(icon, hln_icon) ---@type string
 
@@ -1034,7 +1034,7 @@ function M.neotree(position)
     local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype == fts.NEOTREE then
+      if vim.bo[bufnr].filetype == ft.NEOTREE then
         if not fn.is_win_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end
@@ -1061,7 +1061,7 @@ function M.neotree(position)
       end
 
       local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
-      local title = icons.ft.FolderRootOpened .. " " .. cwd_name ---@type string
+      local title = icons.filetype.FolderRootOpened .. " " .. cwd_name ---@type string
       local title_width = vim.api.nvim_strwidth(title) ---@type integer
       local width_remain = width - title_width ---@type integer
       local left_width = math.floor(width_remain / 2) ---@type integer

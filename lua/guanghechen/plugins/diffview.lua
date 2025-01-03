@@ -82,8 +82,8 @@ return {
         end,
       },
       icons = { -- Only applies when use_icons is true.
-        folder_closed = icons.ft.Folder,
-        folder_open = icons.ft.FolderOpen,
+        folder_closed = icons.filetype.Folder,
+        folder_open = icons.filetype.FolderOpen,
       },
       signs = {
         fold_closed = icons.ui.ArrowClosed,

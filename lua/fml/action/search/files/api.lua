@@ -5,7 +5,7 @@ local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Subscriber = require("eve.collection.subscriber")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
@@ -117,7 +117,7 @@ function M.calc_preview_data(uuid)
   local cwd = context.search_cwd:snapshot() ---@type string
   local filepath = path.resolve(cwd, item.filepath) ---@type string
   local filename = path.basename(filepath) ---@type string
-  if not fts.is_printable_file(filename) then
+  if not ft.is_printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
     ---@type fml.action.search.files.IHighlight[]

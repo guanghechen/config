@@ -1,4 +1,4 @@
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 
 return {
   name = "which-key.nvim",
@@ -7,8 +7,8 @@ return {
   opts = {
     disable = {
       ft = {
-        fts.TERM,
-        fts.WINSEP,
+        ft.TERM,
+        ft.WINSEP,
       },
     },
     spec = {

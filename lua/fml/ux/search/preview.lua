@@ -1,7 +1,7 @@
 local fn = require("eve.builtin.fn")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 
 ---@class fml.ux.search.IPreview
 ---@field public context                fml.ux.search.IContext
@@ -190,7 +190,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nowrite"
-  vim.bo[bufnr].filetype = fts.SEARCH_PREVIEW
+  vim.bo[bufnr].filetype = ft.SEARCH_PREVIEW
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

@@ -47,8 +47,8 @@ M.app = {
   Vim = "",
 }
 
----@class eve.constant.icon.ft
-M.ft = {
+---@class eve.constant.icon.filetype
+M.filetype = {
   Default = "",
   File = "",
   Files = "",

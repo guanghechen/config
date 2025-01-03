@@ -1,4 +1,4 @@
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 local kinds = require("eve.constant.icon").kind
 
 ---@type table<string, string>
@@ -48,7 +48,7 @@ return {
     ignore = {
       buftypes = "special",
       wintypes = "special",
-      filetypes = fts.get_no_illuminate_filetypes(),
+      filetypes = ft.get_no_illuminate_filetypes(),
       diff_windows = true,
       unlisted_buffers = true,
     },

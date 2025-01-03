@@ -1,7 +1,7 @@
 local fn = require("eve.builtin.fn")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 local signs = require("eve.constant.sign")
 
 ---@class fml.ux.search.IMain
@@ -131,7 +131,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nowrite"
-  vim.bo[bufnr].filetype = fts.SEARCH_MAIN
+  vim.bo[bufnr].filetype = ft.SEARCH_MAIN
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

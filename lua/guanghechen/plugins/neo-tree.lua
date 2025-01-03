@@ -1,5 +1,5 @@
 local fn = require("eve.builtin.fn")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 
 ---@param winnr                         integer
@@ -7,7 +7,7 @@ local icons = require("eve.constant.icon")
 local filter = function(winnr)
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
-  return not fts.is_not_focusable_filetype(filetype)
+  return not ft.is_not_focusable_filetype(filetype)
 end
 
 package.loaded["window-picker"] = {
@@ -97,10 +97,10 @@ return {
         expander_highlight = "NeoTreeExpander",
       },
       icon = {
-        folder_closed = icons.ft.Folder,
-        folder_open = icons.ft.FolderOpen,
-        folder_empty = icons.ft.FolderEmpty,
-        default = icons.ft.File,
+        folder_closed = icons.filetype.Folder,
+        folder_open = icons.filetype.FolderOpen,
+        folder_empty = icons.filetype.FolderEmpty,
+        default = icons.filetype.File,
         highlight = "NeoTreeFileIcon",
       },
       modified = {

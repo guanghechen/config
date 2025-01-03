@@ -1,6 +1,6 @@
 local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 
 local state = require("eve.state")
 
@@ -98,7 +98,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nowrite"
-  vim.bo[bufnr].filetype = fts.TERM
+  vim.bo[bufnr].filetype = ft.TERM
   vim.bo[bufnr].swapfile = false
   fn.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
   return bufnr, true

@@ -2,7 +2,7 @@
 local __module_name__ = "guanghechen.plugins.nvim-cmp" ---@type string
 
 local reporter = require("eve.builtin.reporter")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 
 local cmp_sources_map = {
@@ -259,10 +259,10 @@ return {
     cmp.setup.cmdline("/", {
       sources = vim.list_slice(cmp_sources_map.cmdline),
     })
-    cmp.setup.filetype(fts.get_cmp_code_filetypes(), {
+    cmp.setup.filetype(ft.get_cmp_code_filetypes(), {
       sources = vim.list_slice(cmp_sources_map.code),
     })
-    cmp.setup.filetype(fts.get_cmp_search_filetypes(), {
+    cmp.setup.filetype(ft.get_cmp_search_filetypes(), {
       sources = vim.list_slice(cmp_sources_map.search),
     })
   end,

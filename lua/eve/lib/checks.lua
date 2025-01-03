@@ -1,5 +1,5 @@
 local fs = require("eve.builtin.fs")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 
 ---@class eve.lib.checks
@@ -16,7 +16,7 @@ function M.is_buf_valid(bufnr)
     return false
   end
 
-  if not fts.is_plain_file(vim.bo[bufnr].filetype) then
+  if not ft.is_plain_file(vim.bo[bufnr].filetype) then
     return false
   end
 

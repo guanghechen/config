@@ -1,5 +1,5 @@
 local fn = require("eve.builtin.fn")
-local fts = require("eve.constant.filetype")
+local ft = require("eve.constant.filetype")
 
 ---@type eve.t.IKeymap[]
 local keymaps = {
@@ -32,7 +32,7 @@ return {
   },
   opts = {
     delay = 200,
-    filetypes_denylist = fts.get_no_illuminate_filetypes(),
+    filetypes_denylist = ft.get_no_illuminate_filetypes(),
     large_file_cutoff = 2000,
     large_file_overrides = {
       providers = { "lsp" },
