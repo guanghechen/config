@@ -137,4 +137,22 @@ function M.navigate_limit(current, step, total)
   return candidate
 end
 
+---@param text                          string
+---@param width                         integer
+---@param pad                           string
+---@return string
+function M.pad_end(text, width, pad)
+  local delta = width - vim.api.nvim_strwidth(text) ---@type integer
+  return delta <= 0 and text or (text .. string.rep(pad, delta))
+end
+
+---@param text                          string
+---@param width                         integer
+---@param pad                           string
+---@return string
+function M.pad_start(text, width, pad)
+  local delta = width - vim.api.nvim_strwidth(text) ---@type integer
+  return delta <= 0 and text or (string.rep(pad, delta) .. text)
+end
+
 return M

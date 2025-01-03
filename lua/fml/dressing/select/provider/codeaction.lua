@@ -1,4 +1,4 @@
-local functional = require("eve.lib.functional")
+local functional = require("eve.builtin.functional")
 
 ---@class fml.dressing.provider.codeaction.IItemData : fml.dressing.select.IItemData
 ---@field public index                  integer

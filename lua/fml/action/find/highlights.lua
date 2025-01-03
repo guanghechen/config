@@ -1,6 +1,6 @@
 local cs = require("eve.builtin.color")
+local functional = require("eve.builtin.functional")
 
-local functional = require("eve.lib.functional")
 local Select = require("fml.ux.select")
 
 local _select ---@type fml.ux.ISelect

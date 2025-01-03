@@ -1,3 +1,5 @@
+local functional = require("eve.builtin.functional")
+
 return {
   name = "mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },
@@ -16,7 +18,6 @@ return {
     },
   },
   config = function(_, opts)
-    local functional = require("eve.lib.functional")
     local action = require("guanghechen.action.mason")
     local handlers = require("guanghechen.lsp.setup")
 

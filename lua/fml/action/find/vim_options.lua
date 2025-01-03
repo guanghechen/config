@@ -1,4 +1,5 @@
-local functional = require("eve.lib.functional")
+local functional = require("eve.builtin.functional")
+
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.vim_options.IItemData
