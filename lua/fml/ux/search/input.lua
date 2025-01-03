@@ -1,3 +1,4 @@
+local functional = require("eve.builtin.functional")
 local oxi = require("eve.builtin.oxi")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
@@ -5,7 +6,6 @@ local fts = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 local signs = require("eve.constant.sign")
 
-local functional = require("eve.lib.functional")
 local augroup = require("eve.lib.nvim").augroup
 local bindkeys = require("eve.lib.nvim").bindkeys
 
@@ -118,7 +118,7 @@ function M.new(props)
           local input_present = input_history:present() ---@type string|nil, integer
           if input_present ~= input_cur then
             local input_top = input_history:top() ---@type string|nil
-            if input_top ~= nil and functional.is_editing_text(input_top) then
+            if input_top ~= nil and functional.starts_with(input_top, EDITING_PREFIX) then
               input_history:update_top(EDITING_PREFIX .. input_cur)
             else
               input_history:go(math.huge)
@@ -213,7 +213,8 @@ end
 ---@return nil
 function M:reset_input(text)
   local search_state = self.context ---@type fml.ux.search.IContext
-  local next_text = functional.unwrap_editing_prefix(text or search_state.input:snapshot()) ---@type string
+  local next_text = text or search_state.input:snapshot() ---@type string
+  next_text = functional.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
   search_state.input:next(next_text)
 
   local bufnr = self._bufnr ---@type integer|nil

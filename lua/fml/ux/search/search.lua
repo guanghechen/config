@@ -1,14 +1,17 @@
 local G = require("eve.builtin.G")
+local functional = require("eve.builtin.functional")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
+local setting = require("eve.constant.setting")
 
-local functional = require("eve.lib.functional")
 local state = require("eve.state")
 local SearchInput = require("fml.ux.search.input")
 local SearchMain = require("fml.ux.search.main")
 local SearchPreview = require("fml.ux.search.preview")
 local SearchContext = require("fml.ux.search.context")
+
+local EDITING_PREFIX = setting.EDITING_INPUT_PREFIX ---@type string
 
 local highlights = {
   input = table.concat({
@@ -231,7 +234,7 @@ function M.new(props)
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
           if top ~= nil then
-            top = functional.unwrap_editing_prefix(top)
+            top = functional.starts_with(top, EDITING_PREFIX) and top:sub(#EDITING_PREFIX + 1) or top ---@type string
             input_history:update_top(top)
           end
         end
