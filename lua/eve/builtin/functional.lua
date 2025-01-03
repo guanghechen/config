@@ -254,4 +254,22 @@ function M.bindkeys(keymaps, keymap_override)
   end
 end
 
+---@param fg_hlname                     string
+---@param bg_hlname                     string
+---@return string
+function M.blend_color(fg_hlname, bg_hlname)
+  if type(fg_hlname) == "string" and type(bg_hlname) == "string" then
+    local fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(fg_hlname)), "fg#")
+    local bg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(bg_hlname)), "bg#")
+    local new_hlname = fg_hlname .. "__" .. bg_hlname
+
+    ---! set_hl could stuff the CursorHold trigger, so it should be executed with defer.
+    vim.defer_fn(function()
+      vim.api.nvim_set_hl(0, new_hlname, { fg = fg, bg = bg })
+    end, 10)
+    return new_hlname
+  end
+  return "Error"
+end
+
 return M
