@@ -14,14 +14,40 @@ M.themes = {
   "one_half_light",
 }
 
+---@class eve.constant.setting.togglers
+M.togglers = {
+  "flight",
+  "relativenumber",
+  "relativenumber_local",
+  "theme",
+  "theme_variant",
+  "transparency",
+  "wrap_local",
+}
+
 ---@class eve.constant.setting.paths
 M.paths = {
   theme = path.locate_context_filepath("theme"),
 }
 
----! Session settings
-
-M.SESSION_SAVE_OPTION = "blank,buffers,curdir,folds,globals,help,resize,slash,skiprtp,tabpages,unix,winpos,winsize"
+---@class eve.constant.setting.sessions
+M.sessions = {
+  persistent_options = table.concat({
+    "blank",
+    "buffers",
+    "curdir",
+    "folds",
+    "globals",
+    "help",
+    "resize",
+    "slash",
+    "skiprtp",
+    "tabpages",
+    "unix",
+    "winpos",
+    "winsize",
+  }, ","),
+}
 
 ---! Tab settings
 

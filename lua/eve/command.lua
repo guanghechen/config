@@ -6,19 +6,9 @@ local setting = require("eve.constant.setting")
 local candidates_map = {
   flights = vim.tbl_keys(require("eve.state.workspace.flight").dump()),
   themes = setting.themes,
-  toggle_list = {
-    "flight",
-    "relativenumber",
-    "relativenumber_local",
-    "theme",
-    "theme_variant",
-    "transparency",
-    "wrap_local",
-  },
+  togglers = setting.togglers,
 }
 table.sort(candidates_map.flights)
-table.sort(candidates_map.themes)
-table.sort(candidates_map.toggle_list)
 
 ---@alias eve.command.definitions.copy.Scope
 ---| "absolute"
@@ -437,7 +427,7 @@ M.definitions.term = {
 
 ---@class eve.command.definitions.toggle
 M.definitions.toggle = {
-  list = defc("Ftoggle", "toggle: select", "?", candidates_map.toggle_list),
+  list = defc("Ftoggle", "toggle: select", "?", candidates_map.togglers),
   flight = defc("Ftoggleflight", "toggle: flight", "?", candidates_map.flights),
   relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),
   theme = defc("Ftoggletheme", "toggle: theme", "?", candidates_map.themes),

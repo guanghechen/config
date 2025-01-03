@@ -16,7 +16,7 @@ end
 function M.save_session(filepath)
   vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = setting.SESSION_SAVE_OPTION
+  vim.o.sessionoptions = setting.sessions.persistent_options
   vim.cmd("mks! " .. vim.fn.fnameescape(filepath))
   vim.o.sessionoptions = tmp
 end
