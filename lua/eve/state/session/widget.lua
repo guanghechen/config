@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local History = require("eve.collection.history")
 
 ---@class eve.state.widget.data
@@ -31,9 +31,9 @@ S = {
   history = History.new({
     name = "widget",
     capacity = 20,
-    equals = functional.equals_shallow,
+    equals = fn.equals_shallow,
   }),
-  equals = functional.equals_shallow,
+  equals = fn.equals_shallow,
   backward = function()
     local present, present_index = S.history:present() ---@type eve.t.ux.IWidget|nil, integer|nil
     if present == nil or present_index <= 1 then

@@ -1,6 +1,6 @@
 local __module_name__ = "fml.action.win" ---@type string
 
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
@@ -19,7 +19,7 @@ local function get_history_select()
     ---@param ordinal                       integer
     ---@return string
     local function gen_uuid_from_ordinal(ordinal)
-      return functional.pad_start(tostring(ordinal), ORDINAL_WIDTH, " ")
+      return fn.pad_start(tostring(ordinal), ORDINAL_WIDTH, " ")
     end
 
     ---@type fml.ux.file_select.IProvider

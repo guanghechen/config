@@ -1,6 +1,6 @@
 local __module_name__ = "fml.ux.search.context" ---@type string
 
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
 local reporter = require("eve.builtin.reporter")
 local Dirtier = require("eve.collection.dirtier")
@@ -61,7 +61,7 @@ function M.new(props)
   local dirtier_data_cache = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local dirtier_main = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local dirtier_preview = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local state_has_matched = Observable.new({ value = false, equals = functional.falsy }) ---@type eve.collection.IObservable
+  local state_has_matched = Observable.new({ value = false, equals = fn.falsy }) ---@type eve.collection.IObservable
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
   local fetch_data = props.fetch_data ---@type fml.ux.search.IFetchData
   local delay_fetch = props.delay_fetch ---@type integer
@@ -291,7 +291,7 @@ function M:moveup()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = functional.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
+    local lnum = fn.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
     return self:locate(lnum)
   end
 end
@@ -303,7 +303,7 @@ function M:movedown()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = functional.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
+    local lnum = fn.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
     return self:locate(lnum)
   end
 end

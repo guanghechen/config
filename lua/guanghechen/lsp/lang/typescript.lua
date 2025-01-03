@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 
 local get_capabilities = require("guanghechen.lsp.common").get_capabilities
 local handlers = require("guanghechen.lsp.common").handlers
@@ -153,7 +153,7 @@ local function on_attach(client, bufnr)
       desc = "lsp: fix all",
     },
   }
-  functional.bindkeys(keymaps, { bufnr = bufnr })
+  fn.bindkeys(keymaps, { bufnr = bufnr })
 end
 
 local plugins = {

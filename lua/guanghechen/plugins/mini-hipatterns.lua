@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local tailwind = require("eve.constant.palette.tailwind")
 
 ---@type table<string,true>
@@ -80,7 +80,7 @@ return {
 
     -- reset hl groups when colorscheme changes
     vim.api.nvim_create_autocmd("ColorScheme", {
-      group = functional.augroup("mini-hipatterns_reset_colorscheme"),
+      group = fn.augroup("mini-hipatterns_reset_colorscheme"),
       callback = function()
         highlighted = {}
       end,

@@ -1,6 +1,6 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
 
 local state = require("eve.state")
@@ -35,7 +35,7 @@ function M.focus(context, bufid)
   end
 
   local bufs = tab_meta.bufs ---@type eve.t.state.tab.buf.state[]
-  local bufid_next = functional.navigate_circular(0, bufid, #bufs) ---@type integer
+  local bufid_next = fn.navigate_circular(0, bufid, #bufs) ---@type integer
   M.open(context, bufs[bufid_next].bufnr)
 end
 
@@ -61,7 +61,7 @@ function M.focus_left(context, step)
 
   if bufid_cur ~= nil then
     step = math.max(1, step or vim.v.count1 or 1)
-    local bufid_next = functional.navigate_circular(bufid_cur, -step, #bufs)
+    local bufid_next = fn.navigate_circular(bufid_cur, -step, #bufs)
     M.open(context, bufs[bufid_next].bufnr)
   end
 end
@@ -88,7 +88,7 @@ function M.focus_right(context, step)
 
   if bufid_cur ~= nil then
     step = math.max(1, step or vim.v.count1 or 1)
-    local bufid_next = functional.navigate_circular(bufid_cur, step, #bufs)
+    local bufid_next = fn.navigate_circular(bufid_cur, step, #bufs)
     M.open(context, bufs[bufid_next].bufnr)
   end
 end

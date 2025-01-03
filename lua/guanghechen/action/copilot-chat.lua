@@ -1,10 +1,10 @@
 local __module_name__ = "guanghechen.action.copilot-chat" ---@type string
 
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
 local fts = require("eve.constant.filetype")
-
 local state = require("eve.state")
+
 local select = require("fml.fn.select")
 
 if not state.flight.copilot:snapshot() then
@@ -94,7 +94,7 @@ chat_widget = {
         if not vim.b[bufnr].fml_key_bound then
           vim.b[bufnr].fml_key_bound = true
           local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
-          functional.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+          fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 
         vim.schedule(function()

@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 
 return {
   name = "mason.nvim",
@@ -23,10 +23,10 @@ return {
 
     -- custom cmd to install all mason binaries listed
     vim.api.nvim_create_user_command("MasonInstallAll", function()
-      action.install_all(false, functional.noop)
+      action.install_all(false, fn.noop)
     end, {})
     vim.api.nvim_create_user_command("MasonInstallAllForce", function()
-      action.install_all(true, functional.noop)
+      action.install_all(true, fn.noop)
     end, {})
 
     require("mason").setup(opts)

@@ -2,17 +2,17 @@ local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
 local G = require("eve.builtin.G")
 local env = require("eve.builtin.env")
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local fts = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
+local state = require("eve.state")
 
 local Nvimbar = require("fml.ux.nvimbar")
 local command = require("eve.command")
-local state = require("eve.state")
 
 local btn = Nvimbar.btn
 local txt = Nvimbar.txt
@@ -355,7 +355,7 @@ function M.debug_render_count(position)
     render = function()
       count = count + 1
 
-      local text = "  " .. functional.pad_start(tostring(count % 100000), 5, "0") .. " " ---@type string
+      local text = "  " .. fn.pad_start(tostring(count % 100000), 5, "0") .. " " ---@type string
       local hl_text = txt(text, hln_debug_render_count) ---@type string
       return text, hl_text, true
     end,
@@ -437,7 +437,7 @@ function M.diffview(position)
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if vim.bo[bufnr].filetype == fts.DIFFVIEW_FILES then
-        if not functional.is_win_floating(winnr) then
+        if not fn.is_win_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end
       end
@@ -1035,7 +1035,7 @@ function M.neotree(position)
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if vim.bo[bufnr].filetype == fts.NEOTREE then
-        if not functional.is_win_floating(winnr) then
+        if not fn.is_win_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end
       end
@@ -1156,7 +1156,7 @@ function M.pos(position)
     elseif row == total_lines then
       return row, col, "bot", hln_pos_bot
     else
-      local text = functional.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
+      local text = fn.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
       return row, col, text, hln_pos
     end
   end
@@ -1167,11 +1167,7 @@ function M.pos(position)
     atomic = true,
     render = function()
       local row, col, percentage, hl_pos = calc_row_percentage() ---@type integer, integer, string
-      local text_anchor = ""
-        .. functional.pad_start(tostring(row), 4, " ")
-        .. "·"
-        .. functional.pad_end(tostring(col), 3, " ")
-        .. " " ---@type string
+      local text_anchor = "" .. fn.pad_start(tostring(row), 4, " ") .. "·" .. fn.pad_end(tostring(col), 3, " ") .. " " ---@type string
       local text_pos = " " .. percentage .. " " ---@type string
 
       local text = text_anchor .. text_pos ---@type string

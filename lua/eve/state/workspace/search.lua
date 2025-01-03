@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local Observable = require("eve.collection.observable")
 
 ---@class eve.state.search.data
@@ -172,16 +172,16 @@ function M.load(raw_data)
   _state.flag_replace:next(data.flag_replace)
   _state.max_filesize:next(data.max_filesize)
   _state.max_matches:next(data.max_matches)
-  if not functional.equals_list(_state.includes:snapshot(), data.includes) then
+  if not fn.equals_list(_state.includes:snapshot(), data.includes) then
     _state.includes:next(data.includes)
   end
-  if not functional.equals_list(_state.excludes:snapshot(), data.excludes) then
+  if not fn.equals_list(_state.excludes:snapshot(), data.excludes) then
     _state.excludes:next(data.excludes)
   end
   _state.keyword:next(data.keyword)
   _state.replacement:next(data.replacement)
   _state.scope:next(data.scope)
-  if not functional.equals_list(_state.search_paths:snapshot(), data.search_paths) then
+  if not fn.equals_list(_state.search_paths:snapshot(), data.search_paths) then
     _state.search_paths:next(data.search_paths)
   end
   return _state

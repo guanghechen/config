@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local Observable = require("eve.collection.observable")
 
 ---@class eve.state.find.data
@@ -138,10 +138,10 @@ function M.load(raw_data)
   _state.flag_gitignore:next(data.flag_gitignore)
   _state.flag_fuzzy:next(data.flag_fuzzy)
   _state.flag_regex:next(data.flag_regex)
-  if not functional.equals_list(_state.includes:snapshot(), data.includes) then
+  if not fn.equals_list(_state.includes:snapshot(), data.includes) then
     _state.includes:next(data.includes)
   end
-  if not functional.equals_list(_state.excludes:snapshot(), data.excludes) then
+  if not fn.equals_list(_state.excludes:snapshot(), data.excludes) then
     _state.excludes:next(data.excludes)
   end
   _state.keyword:next(data.keyword)

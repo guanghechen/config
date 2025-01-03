@@ -1,7 +1,7 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
+local state = require("eve.state")
 
 local Printer = require("fml.ux.printer")
-local state = require("eve.state")
 
 ---@class guanghechen.plugins.gitsigns.config
 local config = {
@@ -169,7 +169,7 @@ local keymaps = {
       printer
         :lf()
         :line(
-          string.format("%s, %s (%s)", author_name, functional.time_ago(author_timestamp or os.time()), author_date),
+          string.format("%s, %s (%s)", author_name, fn.time_ago(author_timestamp or os.time()), author_date),
           { { hlname = "Title", coll = 0, colr = -1 } }
         )
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
@@ -196,7 +196,7 @@ local keymaps = {
           end,
         },
       }
-      functional.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+      fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
       local height = printer:count_lines() ---@type integer
       local opts = {
@@ -348,7 +348,7 @@ return {
       untracked = { text = "┆" },
     },
     on_attach = function(bufnr)
-      functional.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
+      fn.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
       vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", {
         buffer = bufnr,
         noremap = true,

@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local fts = require("eve.constant.filetype")
 
 vim.filetype.add({
@@ -40,7 +40,7 @@ vim.filetype.add({
 
 ---bigfile
 vim.api.nvim_create_autocmd("FileType", {
-  group = functional.augroup("filetype_bigfile"),
+  group = fn.augroup("filetype_bigfile"),
   pattern = "bigfile",
   callback = function(evt)
     local bufnr = evt.buf ---@type integer
@@ -52,7 +52,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---gitcommit
 vim.api.nvim_create_autocmd("FileType", {
-  group = functional.augroup("filetype_gitcommit"),
+  group = fn.augroup("filetype_gitcommit"),
   pattern = "gitcommit",
   callback = function()
     vim.opt_local.wrap = false
@@ -61,7 +61,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---html
 vim.api.nvim_create_autocmd("FileType", {
-  group = functional.augroup("filetype_html"),
+  group = fn.augroup("filetype_html"),
   pattern = "html",
   callback = function()
     vim.opt_local.wrap = false
@@ -70,7 +70,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---markdown
 vim.api.nvim_create_autocmd("FileType", {
-  group = functional.augroup("filetype_markdown"),
+  group = fn.augroup("filetype_markdown"),
   pattern = "markdown",
   callback = function()
     vim.opt_local.wrap = true
@@ -87,7 +87,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---text
 vim.api.nvim_create_autocmd("FileType", {
-  group = functional.augroup("filetype_text"),
+  group = fn.augroup("filetype_text"),
   pattern = "text",
   callback = function()
     vim.opt_local.wrap = true
@@ -100,7 +100,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---terminal
 vim.api.nvim_create_autocmd("TermOpen", {
-  group = functional.augroup("terminal"),
+  group = fn.augroup("terminal"),
   callback = function()
     vim.opt_local.number = false -- Disable line numbers
     vim.opt_local.relativenumber = false -- Disable relative numbers
@@ -110,7 +110,7 @@ vim.api.nvim_create_autocmd("TermOpen", {
 })
 
 vim.api.nvim_create_autocmd("SessionLoadPost", {
-  group = functional.augroup("auto_detect_filetypes"),
+  group = fn.augroup("auto_detect_filetypes"),
   pattern = "*",
   callback = function()
     vim.cmd("filetype detect")

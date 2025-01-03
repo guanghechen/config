@@ -1,5 +1,4 @@
-local functional = require("eve.builtin.functional")
-
+local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 
 ---@class fml.action.buf
@@ -21,7 +20,7 @@ function M.swap_left(context)
   end
 
   local step = math.max(1, vim.v.count1 or 1) ---@type integer
-  local bufid_next = functional.navigate_circular(bufid_cur, -step, #meta_tab.bufs) ---@type integer
+  local bufid_next = fn.navigate_circular(bufid_cur, -step, #meta_tab.bufs) ---@type integer
   if bufid_cur == bufid_next then
     return
   end
@@ -55,7 +54,7 @@ function M.swap_right(context)
   end
 
   local step = math.max(1, vim.v.count1 or 1) ---@type integer
-  local bufid_next = functional.navigate_circular(bufid_cur, step, #meta_tab.bufs) ---@type integer
+  local bufid_next = fn.navigate_circular(bufid_cur, step, #meta_tab.bufs) ---@type integer
   if bufid_cur == bufid_next then
     return
   end

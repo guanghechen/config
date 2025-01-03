@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
@@ -36,7 +36,7 @@ function M.new(props)
 
   local search_state = props.state ---@type fml.ux.search.IContext
   local input_history = search_state.input_history ---@type eve.collection.IHistory|nil
-  local autocmd_group = functional.augroup(search_state.uuid .. ":search_input") ---@type integer
+  local autocmd_group = fn.augroup(search_state.uuid .. ":search_input") ---@type integer
 
   local actions = {
     apply_prev_input = function()
@@ -115,7 +115,7 @@ function M.new(props)
           local input_present = input_history:present() ---@type string|nil, integer
           if input_present ~= input_cur then
             local input_top = input_history:top() ---@type string|nil
-            if input_top ~= nil and functional.starts_with(input_top, EDITING_PREFIX) then
+            if input_top ~= nil and fn.starts_with(input_top, EDITING_PREFIX) then
               input_history:update_top(EDITING_PREFIX .. input_cur)
             else
               input_history:go(math.huge)
@@ -145,7 +145,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].filetype = fts.SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
 
-  functional.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  fn.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local search_state = self.context ---@type fml.ux.search.IContext
   local input = search_state.input:snapshot() ---@type string
@@ -211,7 +211,7 @@ end
 function M:reset_input(text)
   local search_state = self.context ---@type fml.ux.search.IContext
   local next_text = text or search_state.input:snapshot() ---@type string
-  next_text = functional.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
+  next_text = fn.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
   search_state.input:next(next_text)
 
   local bufnr = self._bufnr ---@type integer|nil

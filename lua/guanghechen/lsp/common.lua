@@ -2,7 +2,7 @@ local __module_name__ = "guanghechen.lsp.common" ---@type string
 
 local env = require("eve.builtin.env")
 local fs = require("eve.builtin.fs")
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local lsp = require("eve.module.lsp")
@@ -287,7 +287,7 @@ function M.on_attach(client, bufnr)
       active = has_support_rename,
     },
   }
-  functional.bindkeys(keymaps, { bufnr = bufnr })
+  fn.bindkeys(keymaps, { bufnr = bufnr })
 end
 
 function M.on_init(client, _)

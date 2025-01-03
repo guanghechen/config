@@ -1,6 +1,6 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
@@ -16,7 +16,7 @@ local scopes = { "W", "C", "D", "B" } ---@type eve.e.SearchScope[]
 ---@return eve.e.SearchScope
 local function get_scope_carousel_next()
   local scope = state.search.scope:snapshot() ---@type eve.e.SearchScope
-  local idx = functional.find_index(scopes, scope) or 1 ---@type integer
+  local idx = fn.find_index(scopes, scope) or 1 ---@type integer
   local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
   return scopes[idx_next]
 end

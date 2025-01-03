@@ -1,7 +1,7 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local fts = require("eve.constant.filetype")
-
 local state = require("eve.state")
+
 local Line = require("fml.dressing.winsep.line")
 
 ---@class fml.dressing.Winsep
@@ -101,7 +101,7 @@ local fixed_winsep = {
     if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
       return false
     end
-    return not functional.is_win_floating(winnr)
+    return not fn.is_win_floating(winnr)
   end,
 }
 
@@ -144,7 +144,7 @@ local float_winsep = {
       return false
     end
 
-    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or not functional.is_win_floating(winnr) then
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or not fn.is_win_floating(winnr) then
       return false
     end
 
@@ -165,7 +165,7 @@ local float_winsep = {
 }
 
 vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
-  group = functional.augroup("winsep_refresh"),
+  group = fn.augroup("winsep_refresh"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if fixed_winsep:should_show(winnr) then

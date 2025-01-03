@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local fts = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 
@@ -154,7 +154,7 @@ return {
           local keymaps = {
             { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert },
           }
-          functional.bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
+          fn.bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
         end,
       },
     },
@@ -346,7 +346,7 @@ return {
     })
     require("neo-tree").setup(opts)
     vim.api.nvim_create_autocmd("TermClose", {
-      group = functional.augroup("neotree_refresh_gitstatus"),
+      group = fn.augroup("neotree_refresh_gitstatus"),
       pattern = "*lazygit",
       callback = function()
         if package.loaded["neo-tree.sources.git_status"] then

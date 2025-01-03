@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local fts = require("eve.constant.filetype")
 
 ---@type eve.t.IKeymap[]
@@ -40,14 +40,14 @@ return {
   },
   config = function(_, opts)
     require("illuminate").configure(opts)
-    functional.bindkeys(keymaps, { noremap = true, silent = true, nowait = true })
+    fn.bindkeys(keymaps, { noremap = true, silent = true, nowait = true })
 
     -- also set it after loading ftplugins, since a lot overwrite [[ and ]]
     vim.api.nvim_create_autocmd("FileType", {
-      group = functional.augroup("reset_illuminate_keymaps"),
+      group = fn.augroup("reset_illuminate_keymaps"),
       callback = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer|nil
-        functional.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true, nowait = true })
+        fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true, nowait = true })
       end,
     })
   end,

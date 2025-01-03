@@ -1,6 +1,6 @@
 local env = require("eve.builtin.env")
+local fn = require("eve.builtin.fn")
 local fs = require("eve.builtin.fs")
-local functional = require("eve.builtin.functional")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
@@ -8,8 +8,8 @@ local Subscriber = require("eve.collection.subscriber")
 local fts = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
-
 local state = require("eve.state")
+
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.explorer.IDirItem
@@ -241,7 +241,7 @@ local function get_select()
             local text = "" ---@type string
 
             local sep_perm = string.rep(" ", 2) ---@type string
-            local text_perm = functional.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. sep_perm
+            local text_perm = fn.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. sep_perm
             local width_perm = string.len(text_perm) ---@type integer
             table.insert(highlights, {
               lnum = lnum,
@@ -254,7 +254,7 @@ local function get_select()
             width = width + width_perm
 
             local sep_size = string.rep(" ", 2) ---@type string
-            local text_size = functional.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. sep_size
+            local text_size = fn.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. sep_size
             local width_size = string.len(text_size) ---@type integer
             table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_size, hlname = "f_fe_size" })
             text = text .. text_size
@@ -262,14 +262,14 @@ local function get_select()
 
             if not env.IS_WIN then
               local sep_owner = string.rep(" ", 1) ---@type string
-              local text_owner = functional.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
+              local text_owner = fn.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
               local width_owner = string.len(text_owner) ---@type integer
               table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_owner, hlname = "f_fe_owner" })
               text = text .. text_owner
               width = width + width_owner
 
               local sep_group = string.rep(" ", 2) ---@type string
-              local text_group = functional.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group
+              local text_group = fn.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group
               local width_group = string.len(text_group) ---@type integer
               table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_group, hlname = "f_fe_group" })
               text = text .. text_group
@@ -277,14 +277,14 @@ local function get_select()
             end
 
             local sep_date = string.rep(" ", 2) ---@type string
-            local text_date = functional.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. sep_date
+            local text_date = fn.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. sep_date
             local width_date = string.len(text_date) ---@type integer
             table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_date, hlname = "f_fe_date" })
             text = text .. text_date
             width = width + width_date
 
             local sep_name = string.rep(" ", 10) ---@type string
-            local text_name = functional.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. sep_name
+            local text_name = fn.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. sep_name
             local width_name = string.len(text_name) ---@type integer
             table.insert(highlights, {
               lnum = lnum,
@@ -342,14 +342,14 @@ local function get_select()
           - (diritem.date_width + 2)
 
         local sep_icon = string.rep(" ", 2) ---@type string
-        local text_icon = functional.pad_start(fileitem.icon, diritem.icon_width, " ") .. sep_icon ---@type string
+        local text_icon = fn.pad_start(fileitem.icon, diritem.icon_width, " ") .. sep_icon ---@type string
         local width_icon = string.len(text_icon) ---@type integer
         table.insert(highlights, { coll = width, colr = width + width_icon, hlname = fileitem.icon_hl })
         text = text .. text_icon
         width = width + width_icon
 
         local sep_name = string.rep(" ", filename_sep_width) ---@type string
-        local text_name = functional.pad_end(filename, diritem.name_width + 1, " ") .. sep_name ---@type string
+        local text_name = fn.pad_end(filename, diritem.name_width + 1, " ") .. sep_name ---@type string
         local width_name = string.len(text_name) ---@type integer
         table.insert(highlights, {
           coll = width,
@@ -365,7 +365,7 @@ local function get_select()
         width = width + width_name
 
         local sep_perm = string.rep(" ", 2) ---@type string
-        local text_perm = functional.pad_start(fileitem.perm, diritem.perm_width, " ") .. sep_perm ---@type string
+        local text_perm = fn.pad_start(fileitem.perm, diritem.perm_width, " ") .. sep_perm ---@type string
         local width_perm = string.len(text_perm) ---@type integer
         table.insert(highlights, {
           coll = width,
@@ -377,14 +377,14 @@ local function get_select()
         width = width + width_perm
 
         local sep_size = string.rep(" ", 2) ---@type string
-        local text_size = functional.pad_start(fileitem.size, diritem.size_width, " ") .. sep_size ---@type string
+        local text_size = fn.pad_start(fileitem.size, diritem.size_width, " ") .. sep_size ---@type string
         local width_size = string.len(text_size) ---@type integer
         table.insert(highlights, { coll = width, colr = width + width_size, hlname = "f_fe_size" })
         text = text .. text_size
         width = width + width_size
 
         local sep_date = string.rep(" ", 2) ---@type string
-        local text_date = functional.pad_end(fileitem.date, diritem.date_width, " ") .. sep_date ---@type string
+        local text_date = fn.pad_end(fileitem.date, diritem.date_width, " ") .. sep_date ---@type string
         local width_date = string.len(text_date) ---@type integer
         table.insert(highlights, { coll = width, colr = width + width_date, hlname = "f_fe_date" })
         text = text .. text_date

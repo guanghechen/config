@@ -1,5 +1,5 @@
 local env = require("eve.builtin.env")
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local setting = require("eve.constant.setting")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -276,7 +276,7 @@ function M.load(raw_data)
 
   local workspace_pieces = path.split(path.workspace()) ---@type string[]
   local cwd_pieces = path.split(path.cwd()) ---@type string[]
-  local filepath2bufnr = functional.filepath2bufnr() ---@type table<string, integer>
+  local filepath2bufnr = fn.filepath2bufnr() ---@type table<string, integer>
   for _, item in ipairs(data.list) do
     local bufnr = filepath2bufnr[item.filepath] ---@type integer|nil
     if bufnr ~= nil then

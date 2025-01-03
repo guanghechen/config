@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 
 ---@class eve.collection.ISubscriber : eve.collection.IDisposable
 ---@field public next                   fun(self: eve.collection.ISubscriber, value: eve.t.T, value_prev: eve.t.T| nil): nil
@@ -19,7 +19,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   self._disposed = false ---@type boolean
-  self._on_dispose = props.on_dispose or functional.noop ---@type fun(): nil
+  self._on_dispose = props.on_dispose or fn.noop ---@type fun(): nil
   self._on_next = props.on_next ---@type fun(value: any, value_prev: any|nil): nil
 
   return self

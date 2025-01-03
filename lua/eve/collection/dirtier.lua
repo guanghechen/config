@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local Observable = require("eve.collection.observable")
 
 ---@class eve.collection.IDirtier : eve.collection.IObservable
@@ -21,7 +21,7 @@ setmetatable(M, Observable)
 ---@return eve.collection.Dirtier
 function M.new(props)
   local dirty = props.dirty ---@type boolean
-  local equals = props.equals or functional.falsy
+  local equals = props.equals or fn.falsy
 
   local self = setmetatable(Observable.new({ initial_value = dirty, equals = equals }), M)
   ---@cast self                         eve.collection.Dirtier

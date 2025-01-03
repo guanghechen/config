@@ -1,5 +1,5 @@
 local cs = require("eve.builtin.color")
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 
 local Select = require("fml.ux.select")
 
@@ -51,7 +51,7 @@ local provider = {
       end
 
       for lnum, hlname in ipairs(hlnames) do
-        local line = "xxx   " .. functional.pad_end(hlname, max_hlname_width, " ") ---@type string
+        local line = "xxx   " .. fn.pad_end(hlname, max_hlname_width, " ") ---@type string
         local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.t.IHighlight
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info

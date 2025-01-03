@@ -1,5 +1,4 @@
-local functional = require("eve.builtin.functional")
-
+local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 
 ---@class fml.action.buf
@@ -16,7 +15,7 @@ function M.toggle_pin(context)
     local filepath = meta_buf.filepath ---@type string
 
     local pinned_list = state.bookmark.pinned:snapshot() ---@type string[]
-    local k = functional.find_index(pinned_list, filepath) ---@type integer|nil
+    local k = fn.find_index(pinned_list, filepath) ---@type integer|nil
     if k == nil then
       table.insert(pinned_list, filepath)
     else

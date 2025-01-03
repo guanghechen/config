@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local tmux = require("eve.builtin.tmux")
 local Dirtier = require("eve.collection.dirtier")
 local Observable = require("eve.collection.observable")
@@ -106,7 +106,7 @@ function M.load(raw_data)
 
       dirtier_statusline = Dirtier.new({ dirty = true }),
       dirtier_tabline = Dirtier.new({ dirty = true }),
-      dirty_winline_nr = Observable.from_value(0, functional.falsy),
+      dirty_winline_nr = Observable.from_value(0, fn.falsy),
 
       lsp_msg = Observable.from_value(""),
       tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),

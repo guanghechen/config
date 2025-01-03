@@ -1,11 +1,11 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 
 ---@param items                         any[]
 ---@param opts                          fml.dressing.select.IOptions
 ---@return fml.ux.select.IProvider
 ---@return integer
 local function normal_provider(items, opts)
-  local format_item = opts.format_item or functional.identity ---@type fun(item): string
+  local format_item = opts.format_item or fn.identity ---@type fun(item): string
   local width = 0 ---@type integer
   local select_items = {} ---@type fml.ux.select.IItem[]
   for index, item in ipairs(items) do

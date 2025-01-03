@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 
 ---@class eve.collection.IFrecency
 ---@field public access                 fun(self: eve.collection.IFrecency, key: string): nil
@@ -37,7 +37,7 @@ function M.new(props)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
   local items = props.items ---@type table<string, eve.collection.frecency.IItem>
-  local normalize = props.normalize or functional.identity ---@type fun(key: string): string
+  local normalize = props.normalize or fn.identity ---@type fun(key: string): string
 
   self.MAX_TIMESTAMPS = MAX_TIMESTAMPS
   self._items = items

@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local Observable = require("eve.collection.observable")
 
 ---@class eve.state.bookmark.data
@@ -64,7 +64,7 @@ function M.load(raw_data)
     return _state
   end
 
-  if not functional.equals_list(_state.pinned:snapshot(), data.pinned) then
+  if not fn.equals_list(_state.pinned:snapshot(), data.pinned) then
     _state.pinned:next(data.pinned)
   end
   return _state

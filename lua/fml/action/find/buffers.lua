@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local fts = require("eve.constant.filetype")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -29,7 +29,7 @@ local statusline_items = {
     state = state.find_buffer.scope,
     callback = function()
       local scope = state.find_buffer.scope:snapshot() ---@type eve.e.FindBufferScope
-      local idx = functional.find_index(scopes, scope) or 1 ---@type integer
+      local idx = fn.find_index(scopes, scope) or 1 ---@type integer
       local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
       local next_scope = scopes[idx_next] ---@type eve.e.FindBufferScope
       state.find_buffer.scope:next(next_scope)
@@ -179,7 +179,7 @@ select = Select.new({
     else
       local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
       for _, winnr2 in ipairs(winnrs) do
-        if not functional.is_win_floating(winnr2) then
+        if not fn.is_win_floating(winnr2) then
           vim.api.nvim_win_set_buf(winnr2, data.bufnr)
           break
         end

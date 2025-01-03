@@ -3,7 +3,7 @@ local M = {
   G = require("eve.builtin.G"),
   debug = require("eve.builtin.debug"),
   env = require("eve.builtin.env"),
-  fn = require("eve.builtin.functional"),
+  fn = require("eve.builtin.fn"),
 }
 
 ---@return eve.state.storage

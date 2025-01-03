@@ -1,11 +1,11 @@
 local G = require("eve.builtin.G")
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
-
 local state = require("eve.state")
+
 local SearchInput = require("fml.ux.search.input")
 local SearchMain = require("fml.ux.search.main")
 local SearchPreview = require("fml.ux.search.preview")
@@ -234,7 +234,7 @@ function M.new(props)
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
           if top ~= nil then
-            top = functional.starts_with(top, EDITING_PREFIX) and top:sub(#EDITING_PREFIX + 1) or top ---@type string
+            top = fn.starts_with(top, EDITING_PREFIX) and top:sub(#EDITING_PREFIX + 1) or top ---@type string
             input_history:update_top(top)
           end
         end
@@ -419,8 +419,8 @@ function M.new(props)
       { modes = { "i", "n", "v" }, key = "<Up>", callback = actions.on_main_up, desc = "search: focus prev item" },
       { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
       { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
-      { modes = { "n", "v" }, key = "o", callback = functional.noop },
-      { modes = { "n", "v" }, key = "O", callback = functional.noop },
+      { modes = { "n", "v" }, key = "o", callback = fn.noop },
+      { modes = { "n", "v" }, key = "O", callback = fn.noop },
       { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
       { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
       { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },

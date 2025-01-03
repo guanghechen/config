@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local fts = require("eve.constant.filetype")
 
 -- Active indent guide and indent text objects. When you're browsing
@@ -15,7 +15,7 @@ return {
   },
   init = function()
     vim.api.nvim_create_autocmd("FileType", {
-      group = functional.augroup("disable_miniindentscope"),
+      group = fn.augroup("disable_miniindentscope"),
       pattern = fts.get_no_ibl_filetypes(),
       callback = function()
         vim.b.miniindentscope_disable = true

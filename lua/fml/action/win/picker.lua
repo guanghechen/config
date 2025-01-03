@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local fts = require("eve.constant.filetype")
 
 local filters = {
@@ -16,7 +16,7 @@ local filters = {
       return false
     end
 
-    if functional.is_win_floating(winnr) then
+    if fn.is_win_floating(winnr) then
       return false
     end
 
@@ -31,7 +31,7 @@ local filters = {
       return false
     end
 
-    if functional.is_win_floating(winnr) then
+    if fn.is_win_floating(winnr) then
       return false
     end
 

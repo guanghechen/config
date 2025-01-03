@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local AdvanceHistory = require("eve.collection.history_advance")
 local fts = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
@@ -176,7 +176,7 @@ S = {
     local bufnr_set = {} ---@type table<integer, true>
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
-      if not functional.is_win_floating(winnr) then
+      if not fn.is_win_floating(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if not bufnr_set[bufnr] and checks.is_buf_valid(bufnr) then
           bufnr_set[bufnr] = true
@@ -468,7 +468,7 @@ function M.dump()
 
   local stack = {} ---@type integer[]
   for _, tabnr in ipairs(tab_history.stack) do
-    local tabid = functional.find_index(tabnrs, tabnr) ---@type integer|nil
+    local tabid = fn.find_index(tabnrs, tabnr) ---@type integer|nil
     if tabid ~= nil then
       stack[#stack + 1] = tabid
     end
@@ -507,7 +507,7 @@ function M.load(raw_data)
   tab_history:load({ present = #stack, stack = stack })
   S.tab_history = tab_history
 
-  local filepath2bufnr = functional.filepath2bufnr() ---@type table<string, integer>
+  local filepath2bufnr = fn.filepath2bufnr() ---@type table<string, integer>
   for _, data_tab in ipairs(data.list) do
     local tabnr = tabnrs[data_tab.tabid] ---@type integer|nil
     if tabnr ~= nil then

@@ -1,4 +1,4 @@
----@class eve.builtin.functional
+---@class eve.builtin.fn
 local M = {}
 
 ---@param ...                           any[]

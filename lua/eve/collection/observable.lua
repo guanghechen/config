@@ -1,6 +1,6 @@
 local __module_name__ = "eve.collection.observable" ---@type string
 
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
@@ -21,7 +21,7 @@ local Subscribers = require("eve.collection.subscribers")
 ---@field public normalize              ?eve.t.INormalize Normalize the value before compare or update
 
 ---@type eve.collection.IUnsubscribable
-local noop_unsubscribable = { unsubscribe = functional.noop }
+local noop_unsubscribable = { unsubscribe = fn.noop }
 
 ---@class eve.collection.Observable : eve.collection.IObservable
 ---@field private _value                eve.t.T
@@ -35,8 +35,8 @@ setmetatable(M, BatchDisposable)
 ---@param props                         eve.collection.observable.IProps
 ---@return eve.collection.Observable
 function M.new(props)
-  local equals = props.equals or functional.equals_shallow ---@type eve.t.IEquals
-  local normalize = props.normalize or functional.identity ---@type eve.t.INormalize
+  local equals = props.equals or fn.equals_shallow ---@type eve.t.IEquals
+  local normalize = props.normalize or fn.identity ---@type eve.t.INormalize
   local initial_value = props.initial_value ---@type eve.t.T
 
   local self = setmetatable(BatchDisposable.new(), M)

@@ -1,6 +1,6 @@
 local __module_name__ = "eve.collection.scheduler" ---@type string
 
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 
@@ -46,7 +46,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local name = props.name ---@type string
-  local silent = props.silent or functional.truthy ---@type fun(): boolean
+  local silent = props.silent or fn.truthy ---@type fun(): boolean
   local delay = props.delay or 32 ---@type integer
   local task = props.task ---@type eve.collection.scheduler.ITask
   local equals = props.equals ---@type (fun(a: unknown, b: unknown): boolean)|nil

@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 
 ---@class eve.module.lsp.ISymbolPos
 ---@field public line                   integer
@@ -54,18 +54,18 @@ function M.check_methods(client, bufnr)
 end
 
 ---@param method                        string
----@param fn                            fun(client: vim.lsp.Client, bufnr: integer): nil
-function M.on_supports_method(method, fn)
+---@param callback                      fun(client: vim.lsp.Client, bufnr: integer): nil
+function M.on_supports_method(method, callback)
   supports_method[method] = supports_method[method] or setmetatable({}, { __mode = "k" })
 
   return vim.api.nvim_create_autocmd("User", {
-    group = functional.augroup("trigger_lsp_supports_method"),
+    group = fn.augroup("trigger_lsp_supports_method"),
     pattern = "LspSupportsMethod",
     callback = function(args)
       local bufnr = args.data.buffer ---@type number
       local client = vim.lsp.get_client_by_id(args.data.client_id)
       if client and method == args.data.method then
-        return fn(client, bufnr)
+        return callback(client, bufnr)
       end
     end,
   })

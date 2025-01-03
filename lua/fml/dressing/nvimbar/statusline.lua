@@ -1,8 +1,8 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local Subscriber = require("eve.collection.subscriber")
+local state = require("eve.state")
 
 local Nvimbar = require("fml.ux.nvimbar")
-local state = require("eve.state")
 local c = require("fml.dressing.nvimbar.components")
 
 local dirtier = state.status.dirtier_statusline ---@type eve.collection.IDirtier
@@ -22,7 +22,7 @@ statusline = Nvimbar.new({
   get_max_width = function()
     return vim.o.columns
   end,
-  is_active = functional.falsy,
+  is_active = fn.falsy,
   trigger_rerender = function()
     local result = statusline:snapshot() or "" ---@type string
     vim.opt.statusline = result

@@ -1,6 +1,6 @@
 local __module_name__ = "fml.action.find" ---@type string
 
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
@@ -19,7 +19,7 @@ local scopes = { "W", "C", "D" } ---@type eve.e.FindScope[]
 ---@return eve.e.FindScope
 local function get_scope_carousel_next()
   local scope = state.find.scope:snapshot() ---@type eve.e.FindScope
-  local idx = functional.find_index(scopes, scope) or 1 ---@type integer
+  local idx = fn.find_index(scopes, scope) or 1 ---@type integer
   local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
   return scopes[idx_next]
 end
@@ -109,7 +109,7 @@ local actions = {
 
     ---@type fml.action.find.files.actions.IConfigData
     local data = {
-      exclude_patterns = functional.parse_comma_list(f_exclude_patterns),
+      exclude_patterns = fn.parse_comma_list(f_exclude_patterns),
     }
 
     local setting = Setting.new({

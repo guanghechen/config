@@ -1,4 +1,4 @@
-local functional = require("eve.builtin.functional")
+local fn = require("eve.builtin.fn")
 local BatchHandler = require("eve.collection.batch_handler")
 
 ---@class eve.collection.IUnsubscribable
@@ -19,7 +19,7 @@ local BatchHandler = require("eve.collection.batch_handler")
 ---@field unsubscribed                  boolean
 
 ---@type eve.collection.IUnsubscribable
-local noop_unsubscribable = { unsubscribe = functional.noop }
+local noop_unsubscribable = { unsubscribe = fn.noop }
 
 ---@class eve.collection.Subscribers : eve.collection.ISubscribers
 ---@field private ARRANGE_THRESHOLD     number
