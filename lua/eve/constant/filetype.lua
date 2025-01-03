@@ -200,6 +200,31 @@ local filetypes = {
   },
 }
 
+local extnames = {
+  no_printable = {
+    [".class"] = true,
+    [".dll"] = true,
+    [".jpeg"] = true,
+    [".jpg"] = true,
+    [".gz"] = true,
+    [".jar"] = true,
+    [".mkv"] = true,
+    [".mp3"] = true,
+    [".mp4"] = true,
+    [".pdf"] = true,
+    [".png"] = true,
+    [".so"] = true,
+    [".tar"] = true,
+    [".xz"] = true,
+    [".zip"] = true,
+  },
+  printable_without_extname = {
+    ["license"] = true,
+    ["readme"] = true,
+    ["sshd_config"] = true,
+  },
+}
+
 ---@return string[]
 function M.get_cmp_code_filetypes()
   return vim.tbl_keys(filetypes.cmp_code)
@@ -244,6 +269,22 @@ function M.is_plain_file(filetype)
   if filetype == nil or #filetype < 1 or filetypes.not_plain[filetype] then
     return false
   end
+  return true
+end
+
+---@param filename                      string
+---@return boolean
+function M.is_printable_file(filename)
+  filename = filename:lower() ---@type string
+  local extname = filename:match("%.[^.]+$") or ""
+  if extnames.no_printable[extname] then
+    return false
+  end
+
+  if extname == "" then
+    return extnames.printable_without_extname[filename] or false
+  end
+
   return true
 end
 

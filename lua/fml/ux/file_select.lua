@@ -1,8 +1,8 @@
 local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
+local fts = require("eve.constant.filetype")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
-local checks = require("eve.lib.checks")
 local state = require("eve.state")
 local Select = require("fml.ux.select")
 
@@ -269,7 +269,7 @@ end
 function M.fetch_preview_data(item)
   local filepath = item.data.filepath ---@type string
   local filename = item.data.filename ---@type string
-  local is_text_file = checks.is_printable_file(filename) ---@type boolean
+  local is_text_file = fts.is_printable_file(filename) ---@type boolean
   if is_text_file then
     local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
     local lines = fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]

@@ -2,31 +2,6 @@ local fs = require("eve.builtin.fs")
 local fts = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 
----@type table<string, true>
-local NON_TEXT_EXTNAME_SET = {
-  [".class"] = true,
-  [".dll"] = true,
-  [".jpeg"] = true,
-  [".jpg"] = true,
-  [".gz"] = true,
-  [".jar"] = true,
-  [".mkv"] = true,
-  [".mp3"] = true,
-  [".mp4"] = true,
-  [".pdf"] = true,
-  [".png"] = true,
-  [".so"] = true,
-  [".tar"] = true,
-  [".xz"] = true,
-  [".zip"] = true,
-}
-
----@type table<string, true>
-local TEXT_FILENAME_SET = {
-  ["license"] = true,
-  ["sshd_config"] = true,
-}
-
 ---@class eve.lib.checks
 local M = {}
 
@@ -96,22 +71,6 @@ function M.is_observable(value)
     and type(value.snapshot) == "function"
     and type(value.next) == "function"
     and type(value.subscribe) == "function"
-end
-
----@param filename                      string
----@return boolean
-function M.is_printable_file(filename)
-  filename = filename:lower() ---@type string
-  local extname = filename:match("%.[^.]+$") or ""
-  if NON_TEXT_EXTNAME_SET[extname] then
-    return false
-  end
-
-  if extname == "" then
-    return TEXT_FILENAME_SET[filename]
-  end
-
-  return true
 end
 
 ---@param filepath                      string|nil

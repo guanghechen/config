@@ -5,10 +5,10 @@ local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
+local fts = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
-local checks = require("eve.lib.checks")
 local state = require("eve.state")
 local Select = require("fml.ux.select")
 
@@ -216,7 +216,7 @@ local function get_select()
         end
 
         if fileitem.type == "file" then
-          local is_text_file = checks.is_printable_file(fileitem.name) ---@type boolean
+          local is_text_file = fts.is_printable_file(fileitem.name) ---@type boolean
           if is_text_file then
             local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
             local lines = fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
