@@ -272,6 +272,16 @@ function M.blend_color(fg_hlname, bg_hlname)
   return "Error"
 end
 
+---@return string
+function M.get_selected_text()
+  local saved_reg = vim.fn.getreg("v")
+  vim.cmd([[noautocmd sil norm! "vy]])
+
+  local selected_text = vim.fn.getreg("v")
+  vim.fn.setreg("v", saved_reg)
+  return selected_text or ""
+end
+
 ---@param hlname                        string
 ---@return string
 function M.make_bg_transparency(hlname)
