@@ -79,8 +79,6 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.line(context)
-  local dressing_float_win = require("eve.lib.nvim").dressing_float_win
-
   local _, winnr = vim.diagnostic.open_float({
     header = "diagnostic (line)",
     scope = "line",
@@ -88,6 +86,8 @@ function M.line(context)
     focusable = true,
     border = "rounded",
   })
+
+  local dressing_float_win = require("fml.dressing.floatwin")
   dressing_float_win(winnr, 100)
 end
 
