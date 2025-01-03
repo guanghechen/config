@@ -1,8 +1,6 @@
 local functional = require("eve.builtin.functional")
 local fts = require("eve.constant.filetype")
 
-local checks = require("eve.lib.checks")
-
 local filters = {
   ---@param winnr                       integer
   ---@return boolean
