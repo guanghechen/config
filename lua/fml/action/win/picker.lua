@@ -1,4 +1,6 @@
+local functional = require("eve.builtin.functional")
 local fts = require("eve.constant.filetype")
+
 local checks = require("eve.lib.checks")
 
 local filters = {
@@ -12,7 +14,11 @@ local filters = {
   ---@param winnr                       integer
   ---@return boolean
   swap = function(winnr)
-    if checks.is_win_floating(winnr) then
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+      return false
+    end
+
+    if functional.is_win_floating(winnr) then
       return false
     end
 
@@ -23,7 +29,11 @@ local filters = {
   ---@param winnr                       integer
   ---@return boolean
   project = function(winnr)
-    if checks.is_win_floating(winnr) then
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+      return false
+    end
+
+    if functional.is_win_floating(winnr) then
       return false
     end
 

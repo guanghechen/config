@@ -313,6 +313,13 @@ function M.get_selected_text()
   return selected_text or ""
 end
 
+---@param winnr                         integer
+---@return boolean
+function M.is_win_floating(winnr)
+  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+  return config.relative ~= nil and config.relative ~= ""
+end
+
 ---@param hlname                        string
 ---@return string
 function M.make_bg_transparency(hlname)

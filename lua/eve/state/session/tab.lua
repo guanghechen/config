@@ -176,7 +176,7 @@ S = {
     local bufnr_set = {} ---@type table<integer, true>
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
-      if not checks.is_win_floating(winnr) then
+      if not functional.is_win_floating(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if not bufnr_set[bufnr] and checks.is_buf_valid(bufnr) then
           bufnr_set[bufnr] = true

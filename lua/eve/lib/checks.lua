@@ -35,16 +35,6 @@ end
 
 ---@param winnr                         integer|nil
 ---@return boolean
-function M.is_win_floating(winnr)
-  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
-    return false
-  end
-  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  return config.relative ~= nil and config.relative ~= ""
-end
-
----@param winnr                         integer|nil
----@return boolean
 function M.is_win_valid(winnr)
   if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
     return false

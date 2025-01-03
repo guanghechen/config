@@ -1,7 +1,6 @@
 local functional = require("eve.builtin.functional")
 local fts = require("eve.constant.filetype")
 
-local checks = require("eve.lib.checks")
 local state = require("eve.state")
 local Line = require("fml.dressing.winsep.line")
 
@@ -95,7 +94,14 @@ local fixed_winsep = {
   ---@diagnostic disable-next-line: unused-local
   should_show = function(self, winnr)
     local enabled = state.flight.dressing_winsep_fixed:snapshot() ---@type boolean
-    return enabled and not checks.is_win_floating(winnr)
+    if not enabled then
+      return false
+    end
+
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+      return false
+    end
+    return not functional.is_win_floating(winnr)
   end,
 }
 
@@ -134,7 +140,11 @@ local float_winsep = {
   ---@diagnostic disable-next-line: unused-local
   should_show = function(self, winnr)
     local enabled = state.flight.dressing_winsep_float:snapshot() ---@type boolean
-    if not enabled or not checks.is_win_floating(winnr) then
+    if not enabled then
+      return false
+    end
+
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or not functional.is_win_floating(winnr) then
       return false
     end
 

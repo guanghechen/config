@@ -179,7 +179,7 @@ select = Select.new({
     else
       local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
       for _, winnr2 in ipairs(winnrs) do
-        if not checks.is_win_floating(winnr2) then
+        if not functional.is_win_floating(winnr2) then
           vim.api.nvim_win_set_buf(winnr2, data.bufnr)
           break
         end
