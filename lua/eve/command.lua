@@ -2,13 +2,7 @@ local __module_name__ = "eve.command" ---@type string
 
 local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
-
-local candidates_map = {
-  flights = vim.tbl_keys(require("eve.state.workspace.flight").dump()),
-  themes = setting.themes,
-  togglers = setting.togglers,
-}
-table.sort(candidates_map.flights)
+local state = require("eve.state")
 
 ---@alias eve.command.definitions.copy.Scope
 ---| "absolute"
@@ -86,7 +80,6 @@ function M.define(raw_definition, overwrite)
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
-    local state = require("eve.state")
     local tabtype = state.tab.resolve_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabType
 
     ---@type eve.command.IContext
@@ -223,7 +216,7 @@ local function defc(uuid, desc, nargs, candidates)
     uuid = uuid,
     desc = desc,
     nargs = nargs,
-    candidates = candidates,
+    candidates = vim.list_slice(candidates),
   }
   M.define(definition)
   return definition
@@ -427,10 +420,10 @@ M.definitions.term = {
 
 ---@class eve.command.definitions.toggle
 M.definitions.toggle = {
-  list = defc("Ftoggle", "toggle: select", "?", candidates_map.togglers),
-  flight = defc("Ftoggleflight", "toggle: flight", "?", candidates_map.flights),
+  list = defc("Ftoggle", "toggle: select", "?", setting.togglers),
+  flight = defc("Ftoggleflight", "toggle: flight", "?", setting.flights),
   relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),
-  theme = defc("Ftoggletheme", "toggle: theme", "?", candidates_map.themes),
+  theme = defc("Ftoggletheme", "toggle: theme", "?", setting.themes),
   theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),
   transparency = def("Ftoggletransparency", "toggle: transparency"),
 }

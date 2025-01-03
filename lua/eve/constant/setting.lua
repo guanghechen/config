@@ -3,6 +3,20 @@ local path = require("eve.builtin.path")
 ---@class eve.constant.setting
 local M = {}
 
+---@class eve.constant.setting.flights
+M.flights = {
+  "autoload",
+  "autosave",
+  "copilot",
+  "devmode",
+  "dressing_hipairs",
+  "dressing_winsep_fixed",
+  "dressing_winsep_float",
+  "lsp_inlay_hints",
+  "lsp_code_lens",
+  "spellcheck",
+}
+
 ---@class eve.constant.setting.themes
 M.themes = {
   "catppuccin-latte",
