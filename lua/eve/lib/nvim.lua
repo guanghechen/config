@@ -98,17 +98,6 @@ function M.load_nvim_session(filepath)
   end
 end
 
----@param hlname                        string
----@return string
-function M.make_bg_transparency(hlname)
-  local fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlname)), "fg#")
-  local new_hlname = "_t_" .. hlname
-  vim.schedule(function()
-    vim.api.nvim_set_hl(0, new_hlname, { fg = fg, bg = "none" })
-  end)
-  return new_hlname
-end
-
 ---@param filepath                      string
 ---@return nil
 function M.save_nvim_session(filepath)
