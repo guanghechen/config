@@ -88,7 +88,7 @@ local flag_map = {
     title = "theme variant",
     snapshot = function()
       local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
-      local scheme = require("eve.theme").get_scheme(theme) ---@type eve.theme.IScheme|nil
+      local scheme = require("eve.theme").get_scheme(theme) ---@type eve.t.theme.IScheme|nil
       return scheme and scheme.variant or "", "String"
     end,
     action = function(context)

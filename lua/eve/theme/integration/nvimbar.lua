@@ -1,7 +1,7 @@
 ---@param context                       eve.theme.IContext
 ---@return eve.theme.integration.nvimbar.hlgroups
 local function gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type eve.theme.IPalette
+  local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_bufc = t and "none" or c.bg0 ---@type string
   local bg_mode = t and "none" or c.bg2 ---@type string

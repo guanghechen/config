@@ -1,4 +1,4 @@
----@type eve.theme.IScheme
+---@type eve.t.theme.IScheme
 local M = {
   theme = "catppuccin-mocha",
   variant = "dark",

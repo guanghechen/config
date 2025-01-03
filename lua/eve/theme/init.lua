@@ -8,7 +8,7 @@ local Theme = require("eve.theme.theme")
 
 ---@class eve.theme.IContext
 ---@field public theme                  string
----@field public scheme                 eve.theme.IScheme
+---@field public scheme                 eve.t.theme.IScheme
 ---@field public transparency           boolean
 
 ---@class eve.theme.IApp
@@ -85,7 +85,7 @@ function M.apply_integration(params)
 end
 
 ---@param params                        eve.theme.ILoadThemeParams
----@return eve.theme.IScheme|nil
+---@return eve.t.theme.IScheme|nil
 function M.apply_theme(params)
   local theme = params.theme ---@type eve.e.Theme
   local transparency = params.transparency ---@type boolean
@@ -147,7 +147,7 @@ function M.apply_theme(params)
 end
 
 ---@param theme                         eve.e.Theme
----@return eve.theme.IScheme|nil
+---@return eve.t.theme.IScheme|nil
 function M.get_scheme(theme)
   if not vim.tbl_contains(M.themes, theme) then
     reporter.error({
@@ -159,7 +159,7 @@ function M.get_scheme(theme)
     return nil
   end
 
-  local ok, scheme = pcall(state.hmr, "eve.theme.scheme." .. theme)
+  local ok, scheme = pcall(state.hmr, "eve.constant.theme." .. theme)
   if not ok then
     reporter.error({
       from = __module_name__,
@@ -190,7 +190,7 @@ function M.reload_theme(force, reload_plugins)
   else
     dofile(theme_cache_path)
 
-    local scheme = M.get_scheme(theme) ---@type eve.theme.IScheme|nil
+    local scheme = M.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
     if scheme ~= nil then
       M.set_term_colors(scheme)
     end
@@ -204,10 +204,10 @@ function M.reload_theme(force, reload_plugins)
   end
 end
 
----@param scheme                        eve.theme.IScheme
+---@param scheme                        eve.t.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette ---@type eve.theme.IPalette
+  local c = scheme.palette ---@type eve.t.theme.IPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.red
   vim.g.terminal_color_2 = c.green
