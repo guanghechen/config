@@ -1,5 +1,6 @@
 local __module_name__ = "fml.action.find" ---@type string
 
+local functional = require("eve.builtin.functional")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
@@ -8,7 +9,6 @@ local Subscriber = require("eve.collection.subscriber")
 local icons = require("eve.constant.icon")
 
 local checks = require("eve.lib.checks")
-local functional = require("eve.lib.functional")
 local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")

@@ -1,8 +1,8 @@
+local functional = require("eve.builtin.functional")
 local AdvanceHistory = require("eve.collection.history_advance")
 local setting = require("eve.constant.setting")
 
 local checks = require("eve.lib.checks")
-local functional = require("eve.lib.functional")
 local calc_tabtype = require("eve.lib.nvim").calc_tabtype
 local gen_filepath2bufnr = require("eve.lib.nvim").gen_filepath2bufnr
 

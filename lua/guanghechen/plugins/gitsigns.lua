@@ -1,4 +1,5 @@
-local functional = require("eve.lib.functional")
+local functional = require("eve.builtin.functional")
+
 local bindkeys = require("eve.lib.nvim").bindkeys
 local Printer = require("fml.ux.printer")
 local state = require("eve.state")

@@ -1,8 +1,8 @@
+local functional = require("eve.builtin.functional")
 local path = require("eve.builtin.path")
 local fts = require("eve.constant.filetype")
 
 local checks = require("eve.lib.checks")
-local functional = require("eve.lib.functional")
 local calc_fileicon = require("eve.lib.nvim").calc_fileicon
 local state = require("eve.state")
 local Select = require("fml.ux.select")
