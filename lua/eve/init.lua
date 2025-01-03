@@ -57,20 +57,19 @@ end
 ---@return nil
 function M.setup_theme()
   local state = require("eve.state")
-  local reload_theme = require("eve.theme").reload_theme
 
-  reload_theme(false, false)
+  state.theme.reload_theme(false, false)
   vim.schedule(function()
     state.watch_changes({
       on_theme_changed = function()
-        reload_theme(false, true)
+        state.theme.reload_theme(false, true)
       end,
     })
   end)
 
   ---Trigger reload the cover the unexpected changes by the plugins
   vim.defer_fn(function()
-    reload_theme(false, false)
+    state.theme.reload_theme(false, false)
   end, 100)
 end
 

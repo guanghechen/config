@@ -27,6 +27,13 @@
 ---|"neutral"
 ---|"light"
 
+---@alias eve.e.ThemeIntegration
+---|"basic"
+---|"nvimbar"
+---|"widget"
+---|"treesitter"
+---|"plugin"
+
 ----------------------------------------------------------------------------------------------------
 
 ---@alias eve.e.BoxPosition

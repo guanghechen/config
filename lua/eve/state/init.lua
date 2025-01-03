@@ -82,7 +82,6 @@ local state_win = require("eve.state.session.win")
 ---@field public dispose                fun(): nil
 ---@field public observe                fun(observables: eve.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
----@field public hmr                    fun(module_name: string): unknown
 ---@field public open_filepath          fun(filepath: string, lnum?: integer, col?: integer): boolean
 ---@field public refresh                fun(): nil
 ---@field public watch_changes          fun(params: eve.state.state.IWatchChangeParams): nil
@@ -230,16 +229,6 @@ function M.observe(observables, callback, ignore_initial)
     })
     observable:subscribe(subscriber, ignore_initial)
   end
-end
-
----@param module_name                   string
----@return unknown
-function M.hmr(module_name)
-  local devmode = M.flight.devmode:snapshot() ---@type boolean
-  if devmode then
-    package.loaded[module_name] = nil
-  end
-  return require(module_name)
 end
 
 ---@param filepath                      string

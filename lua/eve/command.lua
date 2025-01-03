@@ -5,7 +5,7 @@ local setting = require("eve.constant.setting")
 
 local candidates_map = {
   flights = vim.tbl_keys(require("eve.state.workspace.flight").dump()),
-  themes = require("eve.theme").themes,
+  themes = setting.themes,
   toggle_list = {
     "flight",
     "relativenumber",

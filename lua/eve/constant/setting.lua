@@ -1,5 +1,23 @@
+local path = require("eve.builtin.path")
+
 ---@class eve.constant.setting
 local M = {}
+
+---@class eve.constant.setting.themes
+M.themes = {
+  "catppuccin-latte",
+  "catppuccin-mocha",
+  "gruvbox_dark",
+  "gruvbox_light",
+  "nord",
+  "one_half_dark",
+  "one_half_light",
+}
+
+---@class eve.constant.setting.paths
+M.paths = {
+  theme = path.locate_context_filepath("theme"),
+}
 
 ---! Session settings
 

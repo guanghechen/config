@@ -14,7 +14,6 @@
 ---@field public registers              fun(self: eve.collection.theme.ITheme, hlgroup_map: table<string, eve.t.theme.IHlgroup | nil>): eve.collection.theme.ITheme
 
 ---@class eve.collection.Theme : eve.collection.theme.ITheme
----@field public themes                 eve.e.Theme[]
 ---@field private hlgroup_map           table<string, eve.t.theme.IHlgroup>
 local M = {}
 M.__index = M
