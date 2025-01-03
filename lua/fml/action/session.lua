@@ -2,9 +2,8 @@ local __module_name__ = "fml.action.session" ---@type string
 
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
+local session = require("eve.module.session")
 
-local load_nvim_session = require("eve.lib.nvim").load_nvim_session
-local save_nvim_session = require("eve.lib.nvim").save_nvim_session
 local state = require("eve.state")
 
 ---@class fml.action.session
@@ -25,7 +24,7 @@ function M.restore(context)
     end
 
     if nvim_session_filepath then
-      load_nvim_session(nvim_session_filepath)
+      session.load_session(nvim_session_filepath)
       state.load({
         editor = storage.editor,
         session = storage.session,
@@ -49,7 +48,7 @@ function M.restore_autosaved(context)
     end
 
     if nvim_session_filepath then
-      load_nvim_session(nvim_session_filepath)
+      session.load_session(nvim_session_filepath)
       state.load({
         editor = storage.editor,
         session = storage.session,
@@ -70,7 +69,7 @@ function M.save(context)
       session = storage.session,
       workspace = storage.workspace,
     })
-    save_nvim_session(storage.nvim_session)
+    session.save_session(storage.nvim_session)
 
     reporter.info({
       from = __module_name__,

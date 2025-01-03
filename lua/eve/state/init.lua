@@ -7,10 +7,9 @@ local Disposable = require("eve.collection.disposable")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
 local setting = require("eve.constant.setting")
+local session = require("eve.module.session")
 
 local checks = require("eve.lib.checks")
-local save_nvim_session = require("eve.lib.nvim").save_nvim_session
-
 local state_bookmark = require("eve.state.workspace.bookmark")
 local state_buf = require("eve.state.session.buf")
 local state_find = require("eve.state.workspace.find")
@@ -436,7 +435,7 @@ function M.watch_changes(params)
       }
 
       if autosave and M._storage.nvim_session_autosaved then
-        save_nvim_session(M._storage.nvim_session_autosaved)
+        session.save_session(M._storage.nvim_session_autosaved)
       end
 
       M.save(storage)

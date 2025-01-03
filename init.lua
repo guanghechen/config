@@ -48,6 +48,7 @@ local path = require("eve.builtin.path")
 if path.is_git_repo() then
   local state = require("eve.state")
   if state.flight.autoload:snapshot() then
-    require("eve.lib.nvim").load_nvim_session(state.get_storage().nvim_session_autosaved)
+    local session = require("eve.module.session")
+    session.load_session(state.get_storage().nvim_session_autosaved)
   end
 end
