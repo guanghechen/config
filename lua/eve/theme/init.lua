@@ -2,9 +2,9 @@ local __module_name__ = "eve.theme" ---@type string
 
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
+local Theme = require("eve.collection.theme")
 
 local state = require("eve.state")
-local Theme = require("eve.theme.theme")
 
 ---@class eve.theme.IApp
 ---@field public get_filepaths          fun(context: eve.t.theme.IContext): string[]
