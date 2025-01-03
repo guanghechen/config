@@ -1,8 +1,5 @@
----@class eve.theme.colors.tailwind
-local M = {}
-
----@class eve.theme.colors.tailwind.colors
-M.colors = {
+---@class eve.constant.palette.tailwind
+local M = {
   slate = {
     [50] = "#F8FAFC",
     [100] = "#F1F5F9",

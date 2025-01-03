@@ -1,5 +1,6 @@
+local tailwind = require("eve.constant.palette.tailwind")
+
 local augroup = require("eve.lib.nvim").augroup
-local tailwind = require("eve.theme.colors.tailwind")
 
 ---@type table<string,true>
 local highlighted = {}
@@ -72,11 +73,11 @@ return {
             end
 
             shade = tonumber(shade) or 0
-            local bg = vim.tbl_get(tailwind.colors, color, shade)
+            local bg = vim.tbl_get(tailwind, color, shade)
             if bg then
               highlighted[hl] = true
               local fg_shade = shade == 500 and 950 or shade < 500 and 900 or 100
-              local fg = vim.tbl_get(tailwind.colors, color, fg_shade)
+              local fg = vim.tbl_get(tailwind, color, fg_shade)
               vim.api.nvim_set_hl(0, hl, { fg = fg, bg = bg })
               return hl
             end
