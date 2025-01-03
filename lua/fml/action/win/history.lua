@@ -13,13 +13,13 @@ local _history_select = nil ---@type fml.ux.FileSelect|nil
 ---@return fml.ux.FileSelect
 local function get_history_select()
   if _history_select == nil then
-    local ORIDINAL_WIDTH = vim.api.nvim_strwidth(tostring(setting.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
+    local ORDINAL_WIDTH = vim.api.nvim_strwidth(tostring(setting.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
     local frecency = state.frecency.files ---@type eve.collection.IFrecency
 
     ---@param ordinal                       integer
     ---@return string
     local function gen_uuid_from_ordinal(ordinal)
-      return functional.pad_start(tostring(ordinal), ORIDINAL_WIDTH, " ")
+      return functional.pad_start(tostring(ordinal), ORDINAL_WIDTH, " ")
     end
 
     ---@type fml.ux.file_select.IProvider
@@ -74,7 +74,7 @@ local function get_history_select()
       end,
       render_item = function(item, match)
         local text_prefix = item.uuid .. " " ---@type string
-        local width_prefix = ORIDINAL_WIDTH + 1 ---@type integer
+        local width_prefix = ORDINAL_WIDTH + 1 ---@type integer
         local width_icon = string.len(item.data.icon) ---@type integer
         local text = text_prefix .. item.data.icon .. item.data.filepath_relative ---@type string
 
