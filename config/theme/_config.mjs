@@ -57,7 +57,7 @@ export const apps = [
   },
   {
     name: "nvim",
-    themes: "lua/eve/theme/scheme/",
+    themes: "lua/eve/constant/theme/",
     extname: ".lua",
     local: null,
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
@@ -79,7 +79,7 @@ export const apps = [
   },
   {
     name: "nvim-nvchad",
-    themes: "lua/eve/theme/scheme/",
+    themes: "lua/eve/constant/theme/",
     extname: ".lua",
     local: null,
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
