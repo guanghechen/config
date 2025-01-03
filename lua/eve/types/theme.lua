@@ -39,3 +39,10 @@
 ---@field public theme                  eve.e.Theme
 ---@field public variant                eve.e.ThemeVariant
 ---@field public palette                eve.t.theme.IPalette
+
+---@class eve.t.theme.IContext
+---@field public theme                  string
+---@field public scheme                 eve.t.theme.IScheme
+---@field public transparency           boolean
+
+---@class eve.t.theme.IHlgroup : vim.api.keyset.highlight

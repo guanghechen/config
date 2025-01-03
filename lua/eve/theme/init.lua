@@ -6,15 +6,10 @@ local reporter = require("eve.builtin.reporter")
 local state = require("eve.state")
 local Theme = require("eve.theme.theme")
 
----@class eve.theme.IContext
----@field public theme                  string
----@field public scheme                 eve.t.theme.IScheme
----@field public transparency           boolean
-
 ---@class eve.theme.IApp
----@field public get_filepaths          fun(context: eve.theme.IContext): string[]
----@field public gen_theme              fun(context: eve.theme.IContext): string
----@field public after_written          ?fun(context: eve.theme.IContext): nil
+---@field public get_filepaths          fun(context: eve.t.theme.IContext): string[]
+---@field public gen_theme              fun(context: eve.t.theme.IContext): string
+---@field public after_written          ?fun(context: eve.t.theme.IContext): nil
 
 ---@alias eve.e.theme.HighlightIntegration
 ---|"basic"
@@ -70,13 +65,13 @@ function M.apply_integration(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    ---@type eve.theme.IContext
+    ---@type eve.t.theme.IContext
     local themeContext = {
       theme = scheme.theme,
       scheme = scheme,
       transparency = transparency,
     }
-    local gen_hlgroup_map = state.hmr("eve.theme.integration." .. integration)
+    local gen_hlgroup_map = state.hmr("eve.constant.hlgroup." .. integration)
     local hlgroup_map = gen_hlgroup_map(themeContext)
     local uxTheme = Theme.new()
     uxTheme:registers(hlgroup_map)
@@ -95,19 +90,19 @@ function M.apply_theme(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    local gen_nvimbar_hlgroup_map = state.hmr("eve.theme.integration.nvimbar")
+    local gen_nvimbar_hlgroup_map = state.hmr("eve.constant.hlgroup.nvimbar")
 
-    ---@type eve.theme.integration.nvimbar.hlgroups
+    ---@type eve.constant.hlgroup.nvimbar
     local nvimbar_hlgroup_map = gen_nvimbar_hlgroup_map({ scheme = scheme, transparency = transparency })
 
     local uxTheme = Theme.new()
     for _, integration in ipairs(M.integrations) do
-      local gen_hlgroup_map = state.hmr("eve.theme.integration." .. integration)
-      ---@return table<string, eve.theme.IHlgroup>
+      local gen_hlgroup_map = state.hmr("eve.constant.hlgroup." .. integration)
+      ---@return table<string, eve.t.theme.IHlgroup>
       local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
       if integration == "plugin" then
-        local additional = {} ---@type table<string, eve.theme.IHlgroup>
+        local additional = {} ---@type table<string, eve.t.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if hlname:sub(1, 9) == "MiniIcons" then
             additional["f_sl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bg.bg }

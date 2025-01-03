@@ -1,5 +1,3 @@
----@class eve.theme.IHlgroup : vim.api.keyset.highlight
-
 ---@class eve.theme.IApplyParams
 ---@field public scheme                 eve.t.theme.IScheme
 ---@field public nsnr                   integer
@@ -12,12 +10,12 @@
 ---@class eve.theme.ITheme
 ---@field public apply                  fun(self: eve.theme.ITheme, params: eve.theme.IApplyParams): nil
 ---@field public compile                fun(self: eve.theme.ITheme, params: eve.theme.ICompileParams): nil
----@field public register               fun(self: eve.theme.ITheme, hlname: string, hlgroup: eve.theme.IHlgroup): eve.theme.ITheme
----@field public registers              fun(self: eve.theme.ITheme, hlgroup_map: table<string, eve.theme.IHlgroup | nil>): eve.theme.ITheme
+---@field public register               fun(self: eve.theme.ITheme, hlname: string, hlgroup: eve.t.theme.IHlgroup): eve.theme.ITheme
+---@field public registers              fun(self: eve.theme.ITheme, hlgroup_map: table<string, eve.t.theme.IHlgroup | nil>): eve.theme.ITheme
 
 ---@class eve.theme.Theme : eve.theme.ITheme
 ---@field public themes                 eve.e.Theme[]
----@field private hlgroup_map          table<string, eve.theme.IHlgroup>
+---@field private hlgroup_map          table<string, eve.t.theme.IHlgroup>
 local M = {}
 M.__index = M
 
@@ -38,14 +36,14 @@ function M:apply(params)
 end
 
 ---@param hlname                        string
----@param hlgroup                       eve.theme.IHlgroup
+---@param hlgroup                       eve.t.theme.IHlgroup
 ---@return eve.theme.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlgroup_map                   table<string, eve.theme.IHlgroup|nil>
+---@param hlgroup_map                   table<string, eve.t.theme.IHlgroup|nil>
 ---@return eve.theme.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do
