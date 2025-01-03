@@ -2,7 +2,6 @@ local __module_name__ = "eve.command" ---@type string
 
 local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
-local state = require("eve.state")
 
 ---@alias eve.command.definitions.copy.Scope
 ---| "absolute"
@@ -80,6 +79,7 @@ function M.define(raw_definition, overwrite)
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
+    local state = require("eve.state")
     local tabtype = state.tab.resolve_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabType
 
     ---@type eve.command.IContext

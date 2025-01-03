@@ -2,9 +2,9 @@ local __module_name__ = "fml.action.term" ---@type string
 
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-
-local checks = require("eve.lib.checks")
+local editor = require("eve.module.editor")
 local state = require("eve.state")
+
 local toggle_term = require("fml.action.term.toggle").toggle
 
 ---! Function to check clipboard with retries
@@ -44,7 +44,7 @@ end
 ---@return nil
 local function edit_lazygit_file_in_buffer(cwd)
   local bufnr = state.tab.get_current_bufnr() ----@type integer
-  if not checks.is_buf_valid(bufnr) then
+  if not editor.is_buf_valid(bufnr) then
     reporter.error({
       from = __module_name__,
       subject = "edit_lazygit_file_in_buffer",

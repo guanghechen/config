@@ -7,9 +7,9 @@ local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 local icons = require("eve.constant.icon")
-
-local checks = require("eve.lib.checks")
+local editor = require("eve.module.editor")
 local state = require("eve.state")
+
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
 local Setting = require("fml.ux.setting")
@@ -65,7 +65,7 @@ state.find.scope:subscribe(
     on_next = function()
       local bufnr = state.tab.get_current_bufnr() ---@type integer
       ---@type string
-      local current_buf_dirpath = checks.is_buf_valid(bufnr) --
+      local current_buf_dirpath = editor.is_buf_valid(bufnr) --
           and path.dirname(vim.api.nvim_buf_get_name(bufnr))
         or path.cwd()
 

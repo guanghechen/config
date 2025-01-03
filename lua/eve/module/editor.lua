@@ -2,7 +2,7 @@ local fs = require("eve.builtin.fs")
 local ft = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 
----@class eve.lib.checks
+---@class eve.module.editor
 local M = {}
 
 ---@param bufnr                         integer|nil

@@ -1,8 +1,8 @@
 local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
-
-local checks = require("eve.lib.checks")
+local editor = require("eve.module.editor")
 local state = require("eve.state")
+
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
 
@@ -35,7 +35,7 @@ local function select_files(params)
       local winnr = state.tab.get_current_winnr() ---@type integer
       if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if checks.is_buf_valid(bufnr) then
+        if editor.is_buf_valid(bufnr) then
           local absolute_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
           present_filepath = path.relative(cwd, absolute_filepath, true) ---@type string
         end

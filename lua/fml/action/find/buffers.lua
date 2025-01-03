@@ -1,9 +1,9 @@
 local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
+local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
-local checks = require("eve.lib.checks")
 local state = require("eve.state")
 local Select = require("fml.ux.select")
 
@@ -52,7 +52,7 @@ local main_keymaps = {
         local item = select:get_item_selected()
         if item ~= nil then
           local bufnr = item.data.bufnr ---@type integer
-          if not checks.is_buf_valid(bufnr) then
+          if not editor.is_buf_valid(bufnr) then
             vim.api.nvim_buf_delete(bufnr, { force = true })
             select:mark_data_dirty()
             return

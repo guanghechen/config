@@ -2,8 +2,7 @@ local fn = require("eve.builtin.fn")
 local AdvanceHistory = require("eve.collection.history_advance")
 local ft = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
-
-local checks = require("eve.lib.checks")
+local editor = require("eve.module.editor")
 
 ---@alias eve.e.state.tab.meta.TabType
 ---| "normal"
@@ -137,7 +136,7 @@ S = {
   tab_history = AdvanceHistory.new({
     name = "tabs",
     capacity = setting.TAB_HISTORY_CAPACITY,
-    validate = checks.is_tab_valid,
+    validate = editor.is_tab_valid,
   }),
 
   get = function(tabnr)
@@ -166,7 +165,7 @@ S = {
       return meta
     end
 
-    if not checks.is_tab_valid(tabnr) then
+    if not editor.is_tab_valid(tabnr) then
       return nil
     end
 
@@ -178,7 +177,7 @@ S = {
     for _, winnr in ipairs(winnrs) do
       if not fn.is_win_floating(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if not bufnr_set[bufnr] and checks.is_buf_valid(bufnr) then
+        if not bufnr_set[bufnr] and editor.is_buf_valid(bufnr) then
           bufnr_set[bufnr] = true
           bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
         end
@@ -204,19 +203,19 @@ S = {
     end
 
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta ~= nil and checks.is_win_valid(meta.winnr_listed) then
+    if meta ~= nil and editor.is_win_valid(meta.winnr_listed) then
       return meta.winnr_listed
     end
 
     local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    if checks.is_win_valid(winnr_cur) then
+    if editor.is_win_valid(winnr_cur) then
       meta.winnr_listed = winnr_cur
       return winnr_cur
     end
 
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
-      if checks.is_win_valid(winnr) then
+      if editor.is_win_valid(winnr) then
         meta.winnr_listed = winnr
         return winnr
       end
@@ -247,7 +246,7 @@ S = {
     local N = #bufs ---@type integer
     for i = 1, N, 1 do
       local buf = bufs[i] ---@type eve.t.state.tab.buf.state
-      if checks.is_buf_valid(buf.bufnr) then
+      if editor.is_buf_valid(buf.bufnr) then
         bufs[k] = buf
         k = k + 1
       end
@@ -278,7 +277,7 @@ S = {
     end
   end,
   on_buf_enter = function(winnr, bufnr)
-    if not checks.is_win_valid(winnr) or not checks.is_buf_valid(bufnr) then
+    if not editor.is_win_valid(winnr) or not editor.is_buf_valid(bufnr) then
       return
     end
 
@@ -288,7 +287,7 @@ S = {
       return
     end
 
-    local winnr_listed = checks.is_win_valid(winnr) and winnr or S.resolve_winnr_listed(tabnr) ---@type integer
+    local winnr_listed = editor.is_win_valid(winnr) and winnr or S.resolve_winnr_listed(tabnr) ---@type integer
     meta.winnr_listed = winnr_listed
 
     local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
@@ -363,7 +362,7 @@ S = {
     local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
     local bufnrs_to_remove = {} ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
-      if checks.is_buf_valid(bufnr) then
+      if editor.is_buf_valid(bufnr) then
         local has_copy = false ---@type boolean
         for _, tabnr in ipairs(tabnrs) do
           local meta_tab = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
@@ -495,7 +494,7 @@ function M.load(raw_data)
     or AdvanceHistory.new({
       name = "tabs",
       capacity = setting.TAB_HISTORY_CAPACITY,
-      validate = checks.is_tab_valid,
+      validate = editor.is_tab_valid,
     })
 
   local stack = {} ---@type integer[]
@@ -525,9 +524,9 @@ function M.load(raw_data)
 
       local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
       for _, winnr in ipairs(winnrs) do
-        if checks.is_win_valid(winnr) then
+        if editor.is_win_valid(winnr) then
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          if not bufnr_set[bufnr] and checks.is_buf_valid(bufnr) then
+          if not bufnr_set[bufnr] and editor.is_buf_valid(bufnr) then
             local buf = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
             bufs[#bufs + 1] = buf
             bufnr_set[bufnr] = true

@@ -3,9 +3,9 @@ local __module_name__ = "eve.state.session.win"
 local reporter = require("eve.builtin.reporter")
 local AdvanceHistory = require("eve.collection.history_advance")
 local setting = require("eve.constant.setting")
+local editor = require("eve.module.editor")
 local lsp = require("eve.module.lsp")
 
-local checks = require("eve.lib.checks")
 local state_status = require("eve.state.session.status")
 
 ---@class eve.t.state.win.meta.data
@@ -91,12 +91,12 @@ S = {
       return meta
     end
 
-    if not checks.is_win_valid(winnr) then
+    if not editor.is_win_valid(winnr) then
       return nil
     end
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if not checks.is_buf_valid(bufnr) then
+    if not editor.is_buf_valid(bufnr) then
       return nil
     end
 
@@ -104,7 +104,7 @@ S = {
     local filepath_history = AdvanceHistory.new({
       name = "win#bufs",
       capacity = setting.WIN_BUF_HISTORY_CAPACITY,
-      validate = checks.is_valid_filepath,
+      validate = editor.is_valid_filepath,
     })
     filepath_history:push(filepath)
 
@@ -265,7 +265,7 @@ S = {
     )
   end,
   on_buf_enter = function(winnr, bufnr)
-    if not checks.is_win_valid(winnr) or not checks.is_buf_valid(bufnr) then
+    if not editor.is_win_valid(winnr) or not editor.is_buf_valid(bufnr) then
       return
     end
 

@@ -2,9 +2,8 @@ local env = require("eve.builtin.env")
 local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local setting = require("eve.constant.setting")
+local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
-
-local checks = require("eve.lib.checks")
 
 ---@class eve.t.state.buf.lsp.ISymbol
 ---@field public kind                   string
@@ -77,7 +76,7 @@ S = {
       return meta
     end
 
-    if not checks.is_buf_valid(bufnr) then
+    if not editor.is_buf_valid(bufnr) then
       return nil
     end
 

@@ -7,9 +7,9 @@ local Disposable = require("eve.collection.disposable")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
 local setting = require("eve.constant.setting")
+local editor = require("eve.module.editor")
 local session = require("eve.module.session")
 
-local checks = require("eve.lib.checks")
 local state_bookmark = require("eve.state.workspace.bookmark")
 local state_buf = require("eve.state.session.buf")
 local state_find = require("eve.state.workspace.find")
@@ -308,7 +308,7 @@ function M.watch_changes(params)
     vim.o.relativenumber = flag
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if checks.is_buf_valid(bufnr) then
+      if editor.is_buf_valid(bufnr) then
         vim.wo[winnr].relativenumber = flag
       end
     end

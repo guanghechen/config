@@ -2,10 +2,10 @@ local __module_name__ = "fml.action.lsp" ---@type string
 
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
+local editor = require("eve.module.editor")
 local lsp = require("eve.module.lsp")
-
-local checks = require("eve.lib.checks")
 local state = require("eve.state")
+
 local FileSelect = require("fml.ux.file_select")
 
 ---@param context                       eve.command.IContext
@@ -16,7 +16,7 @@ local FileSelect = require("fml.ux.file_select")
 local function fetch_data(context, method, additional_params, callback)
   local winnr = context.winnr ---@type integer
   local bufnr = context.bufnr ---@type integer
-  if not checks.is_buf_valid(bufnr) or not lsp.has_support_method(bufnr, method) then
+  if not editor.is_buf_valid(bufnr) or not lsp.has_support_method(bufnr, method) then
     reporter.error({
       from = __module_name__,
       subject = "fetch_data",

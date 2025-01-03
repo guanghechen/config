@@ -7,10 +7,10 @@ local reporter = require("eve.builtin.reporter")
 local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
+local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
-
-local checks = require("eve.lib.checks")
 local state = require("eve.state")
+
 local context = require("fml.action.search.files.context")
 
 ---@class fml.action.search.files.IFileItem
@@ -291,7 +291,7 @@ function M.fetch_data(input_text, force, callback)
   local specified_filepath ---@type string|nil
   if scope == "B" then
     local bufnr = state.tab.get_current_bufnr() ---@type integer
-    if checks.is_buf_valid(bufnr) then
+    if editor.is_buf_valid(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       specified_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
     end

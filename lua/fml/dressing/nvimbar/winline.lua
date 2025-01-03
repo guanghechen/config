@@ -1,10 +1,10 @@
 local env = require("eve.builtin.env")
 local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
-
-local checks = require("eve.lib.checks")
-local Nvimbar = require("fml.ux.nvimbar")
+local editor = require("eve.module.editor")
 local state = require("eve.state")
+
+local Nvimbar = require("fml.ux.nvimbar")
 local c = require("fml.dressing.nvimbar.components")
 
 local position = "f_wl" ---@type fml.ux.nvimbar.Position
@@ -97,7 +97,7 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 local function render(winnr)
-  if winnr == nil or winnr < 1 or not checks.is_win_valid(winnr) then
+  if winnr == nil or winnr < 1 or not editor.is_win_valid(winnr) then
     return
   end
 

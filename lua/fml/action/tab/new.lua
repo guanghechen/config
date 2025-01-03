@@ -1,6 +1,5 @@
 local setting = require("eve.constant.setting")
-
-local checks = require("eve.lib.checks")
+local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 ---@class fml.action.tab
@@ -33,7 +32,7 @@ function M.new_with_buf(context)
 
   local bufnr = context.bufnr ---@type integer
   local winnr = context.winnr ---@type integer
-  if checks.is_buf_valid(bufnr) then
+  if editor.is_buf_valid(bufnr) then
     bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end
