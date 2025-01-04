@@ -4,7 +4,6 @@ local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local editor = require("eve.module.editor")
 local lsp = require("eve.module.lsp")
-local state = require("eve.state")
 
 local FileSelect = require("fml.ux.file_select")
 
@@ -106,7 +105,7 @@ local function fetch_data(context, method, additional_params, callback)
 
     if #items == 1 then
       local item = items[1] ---@type fml.ux.file_select.IRawItem
-      state.open_filepath(item.filepath, item.lnum, item.col)
+      editor.open_filepath(winnr, item.filepath, item.lnum, item.col)
       callback(true, nil)
       return
     end

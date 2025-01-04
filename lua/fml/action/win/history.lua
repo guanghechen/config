@@ -4,6 +4,7 @@ local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
+local editor = require("eve.module.editor")
 
 local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
@@ -122,7 +123,7 @@ local function get_history_select()
           local filepath = path.join(cwd, item.data.filepath) ---@type string
           local winnr = state.tab.get_current_winnr() ---@type integer
           if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-            local ok = state.buf.open_filepath(winnr, filepath)
+            local ok = editor.open_filepath(winnr, filepath)
             return ok and "close" or "none"
           end
           return "none"
@@ -170,7 +171,7 @@ function M.history_backward(context)
 
   local last_filepath = meta.filepath_history:backward() ---@type string|nil
   if last_filepath ~= nil then
-    state.buf.open_filepath(winnr, last_filepath)
+    editor.open_filepath(winnr, last_filepath)
   end
 end
 
@@ -199,7 +200,7 @@ function M.history_forward(context)
 
   local next_filepath = meta.filepath_history:forward() ---@type string|nil
   if next_filepath ~= nil then
-    state.buf.open_filepath(winnr, next_filepath)
+    editor.open_filepath(winnr, next_filepath)
   end
 end
 

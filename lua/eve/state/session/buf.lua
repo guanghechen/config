@@ -36,7 +36,6 @@ local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 ---@field public refresh_all            fun(): nil
 ---
 ---@field public locate_by_filepath     fun(filepath: string|nil): integer|nil
----@field public open_filepath          fun(winnr: integer, filepath: string, lnum?: integer, col?: integer): boolean
 ---@field public pick_filepath          fun(cwd: string, existed_paths?: table<string, boolean>): string|nil
 local S = {}
 
@@ -163,33 +162,6 @@ S = {
       end
     end
     return nil
-  end,
-  open_filepath = function(winnr, filepath, lnum, col)
-    filepath = path.normalize(filepath)
-
-    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
-      return false
-    end
-
-    local bufnr = S.locate_by_filepath(filepath) ---@type integer|nil
-    if bufnr ~= nil then
-      vim.api.nvim_set_current_win(winnr)
-      vim.api.nvim_win_set_buf(winnr, bufnr)
-    else
-      vim.api.nvim_set_current_win(winnr)
-      vim.cmd("edit " .. vim.fn.fnameescape(filepath))
-    end
-
-    vim.schedule(function()
-      vim.cmd.stopinsert()
-
-      if lnum ~= nil and col ~= nil then
-        pcall(function()
-          vim.api.nvim_win_set_cursor(winnr, { lnum, col })
-        end)
-      end
-    end)
-    return true
   end,
   pick_filepath = function(cwd, existed_paths)
     if existed_paths == nil then

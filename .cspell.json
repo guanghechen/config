@@ -251,6 +251,7 @@
     "getreg",
     "github",
     "gitsigns",
+    "gitstatus",
     "gomod",
     "gotmpl",
     "grepformat",

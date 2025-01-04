@@ -89,20 +89,31 @@ M.filters = {
 }
 
 ---@param filter                        fun(winnr: integer): boolean
----@param winnr_cur                     integer|nil
+---@param winnr_source                  integer
+---@param split_as_needed               boolean
 ---@return integer|nil
-function M.pick_window(filter, winnr_cur)
+function M.pick_window(filter, winnr_source, split_as_needed)
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   local N = 0 ---@type integer
   for i = 1, #winnrs, 1 do
     local winnr = winnrs[i] ---@type integer
-    if winnr ~= winnr_cur and filter(winnr) then
+    if winnr ~= winnr_source and filter(winnr) then
       N = N + 1 ---@type integer
       winnrs[N] = winnr
     end
   end
 
   if N < 1 then
+    if split_as_needed then
+      for _, winnr in ipairs(winnrs) do
+        if not fn.is_win_floating(winnr) then
+          vim.api.nvim_set_current_win(winnr)
+          vim.cmd("vsplit")
+          return vim.api.nvim_get_current_win() ---@type integer
+        end
+      end
+    end
+
     reporter.warn({
       from = __module_name__,
       subject = "pick_window",

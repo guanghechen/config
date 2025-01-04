@@ -1,9 +1,11 @@
 local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
+local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
-
 local state = require("eve.state")
+local command = require("eve.command")
+
 local Select = require("fml.ux.select")
 
 ---@class fml.ux.IFileSelect
@@ -250,8 +252,13 @@ function M.new(props)
         title = title,
         on_close = on_close,
         on_confirm = on_confirm_from_props or function(item)
+          local context = command.context_snapshot() ---@type eve.command.IContext|nil
+          if context == nil then
+            return "hide"
+          end
+
           local filepath = item.data.filepath ---@type string
-          local ret = state.open_filepath(filepath, item.data.lnum, item.data.col) ---@type boolean
+          local ret = editor.open_filepath(context.winnr, filepath, item.data.lnum, item.data.col) ---@type boolean
           return ret and "hide" or "none"
         end,
         on_preview_rendered = on_preview_rendered,

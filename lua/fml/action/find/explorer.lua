@@ -7,6 +7,7 @@ local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
+local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 
@@ -444,7 +445,7 @@ local function get_select()
         if fileitem.type == "file" then
           local winnr = state.tab.get_current_winnr() ---@type integer
           if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-            state.buf.open_filepath(winnr, fileitem.path)
+            editor.open_filepath(winnr, fileitem.path)
             return "hide"
           end
           return "none"
@@ -464,10 +465,8 @@ local M = {}
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.find_explorer(context)
-  local tabnr = context.tabnr ---@type integer
-  local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta_tab ~= nil then
-    local winnr = meta_tab.winnr_listed ---@type integer
+  local winnr = context.winnr ---@type integer
+  if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     if #filepath > 0 then

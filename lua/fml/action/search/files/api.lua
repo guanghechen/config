@@ -613,7 +613,7 @@ function M.open_file(item, frecency)
     frecency:access(relative_filepath)
     local winnr = state.tab.get_current_winnr() ---@type integer
     if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-      local opened = state.buf.open_filepath(winnr, absolute_filepath, data.lnum, data.col) ---@type boolean
+      local opened = editor.open_filepath(winnr, absolute_filepath, data.lnum, data.col) ---@type boolean
       return opened and "hide" or "none"
     end
     return "none"

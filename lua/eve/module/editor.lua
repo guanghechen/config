@@ -1,4 +1,5 @@
 local fs = require("eve.builtin.fs")
+local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 local winpicker = require("eve.module.winpicker")
@@ -76,6 +77,38 @@ function M.is_valid_filepath(filepath)
 end
 
 ---@param winnr_source                  integer
+---@param filepath                      string
+---@param lnum                          ?integer
+---@param col                           ?integer
+---@return boolean
+function M.open_filepath(winnr_source, filepath, lnum, col)
+  filepath = path.normalize(filepath)
+
+  local winnr = M.is_win_valid(winnr_source) and winnr_source or nil ---@type integer|nil
+  if winnr == nil then
+    winnr = winpicker.pick_window(winpicker.filters.project, winnr_source, true) ---@type integer|nil
+  end
+
+  if winnr == nil then
+    return false
+  end
+
+  vim.api.nvim_set_current_win(winnr)
+  vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+
+  vim.schedule(function()
+    vim.cmd.stopinsert()
+
+    if lnum ~= nil and col ~= nil then
+      pcall(function()
+        vim.api.nvim_win_set_cursor(winnr, { lnum, col })
+      end)
+    end
+  end)
+  return true
+end
+
+---@param winnr_source                  integer
 ---@param filepaths                     string[]
 ---@return nil
 function M.open_filepaths(winnr_source, filepaths)
@@ -85,7 +118,7 @@ function M.open_filepaths(winnr_source, filepaths)
 
   local winnr = M.is_win_valid(winnr_source) and winnr_source or nil ---@type integer|nil
   if winnr == nil then
-    winnr = winpicker.pick_window(winpicker.filters.focus, winnr_source) ---@type integer|nil
+    winnr = winpicker.pick_window(winpicker.filters.project, winnr_source, true) ---@type integer|nil
   end
 
   if winnr == nil then
@@ -94,8 +127,12 @@ function M.open_filepaths(winnr_source, filepaths)
 
   vim.api.nvim_set_current_win(winnr)
   for _, filepath in ipairs(filepaths) do
-    vim.cmd("edit " .. filepath)
+    vim.cmd("edit " .. vim.fn.fnameescape(filepath))
   end
+
+  vim.schedule(function()
+    vim.cmd.stopinsert()
+  end)
 end
 
 return M
