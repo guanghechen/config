@@ -17,8 +17,7 @@ local Select = require("fml.ux.select")
 ---@field public icon                   string
 ---@field public icon_hl                string
 
----@type fml.ux.ISelect|nil
-local select
+local _select ---@type fml.ux.ISelect|nil
 
 local scopes = { "A", "P" } ---@type eve.e.FindBufferScope[]
 
@@ -36,8 +35,8 @@ local statusline_items = {
       local next_scope = scopes[idx_next] ---@type eve.e.FindBufferScope
       state.find_buffer.scope:next(next_scope)
 
-      if select ~= nil then
-        select:mark_data_dirty()
+      if _select ~= nil then
+        _select:mark_data_dirty()
       end
     end,
   },
@@ -50,13 +49,13 @@ local main_keymaps = {
     key = "<c-d>",
     desc = "buffer: close",
     callback = function()
-      if select ~= nil then
-        local item = select:get_item_selected()
+      if _select ~= nil then
+        local item = _select:get_item_selected()
         if item ~= nil then
           local bufnr = item.data.bufnr ---@type integer
           if not editor.is_buf_valid(bufnr) then
             vim.api.nvim_buf_delete(bufnr, { force = true })
-            select:mark_data_dirty()
+            _select:mark_data_dirty()
             return
           end
 
@@ -70,7 +69,7 @@ local main_keymaps = {
             for _, unreferenced_bufnr in ipairs(unrefereced_bufnrs) do
               vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
             end
-            select:mark_data_dirty()
+            _select:mark_data_dirty()
           end
         end
       end
@@ -153,7 +152,7 @@ local provider = {
 }
 
 ---@type fml.ux.ISelect
-select = Select.new({
+_select = Select.new({
   dimension = {
     height = 0.8,
     max_height = 1,
@@ -173,14 +172,15 @@ select = Select.new({
   statusline_items = statusline_items,
   provider = provider,
   title = "Find buffers",
-  on_confirm = function(item)
+  on_confirm = function(widget, item)
+    widget:hide()
+
     local data = item.data ---@type fml.action.find.buffers.IItemData
     local winnr_source = command.context_winnr() ---@type integer|nil
     local winnr = winpicker.pick_window(winpicker.filters.project, winnr_source, true) ---@type integer|nil
     if winnr ~= nil then
       vim.api.nvim_win_set_buf(winnr, data.bufnr)
     end
-    return "hide"
   end,
 })
 
@@ -191,7 +191,7 @@ local M = {}
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_buffers(context)
-  select:toggle()
+  _select:toggle()
 end
 
 return M

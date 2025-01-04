@@ -139,9 +139,9 @@ _select = Select.new({
   permanent = false,
   provider = provider,
   title = "Find Highlights",
-  on_confirm = function(item)
+  on_confirm = function(widget, item)
+    widget:hide()
     vim.fn.setreg("+", item.text)
-    return "hide"
   end,
 })
 

@@ -206,7 +206,8 @@ function M.list(context, arg)
         end
         return text, highlights
       end,
-      on_confirm = function(item)
+      on_confirm = function(widget, item)
+        widget:close()
         item.data.action(context)
       end,
     })
@@ -258,9 +259,9 @@ function M.toggle_flight(context, arg)
         end
         return text, highlights
       end,
-      on_confirm = function(item)
-        local flight = item.uuid ---@type string
-        toggle_flight(flight)
+      on_confirm = function(widget, item)
+        widget:close()
+        toggle_flight(item.uuid)
       end,
     })
   end
@@ -304,9 +305,9 @@ function M.toggle_theme(context, arg)
         end
         return items
       end,
-      on_confirm = function(item)
-        local theme = item.uuid ---@type string
-        apply_theme(theme)
+      on_confirm = function(widget, item)
+        widget:close()
+        apply_theme(item.uuid)
       end,
     })
   end

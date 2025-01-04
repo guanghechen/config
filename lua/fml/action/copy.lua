@@ -79,7 +79,8 @@ function M.copy_filepath(context, arg)
         end
         return items
       end,
-      on_confirm = function(item)
+      ---@diagnostic disable-next-line: unused-local
+      on_confirm = function(widget, item)
         local candidate = item.uuid ---@type string
         copy_current_filepath(candidate, filepath)
       end,

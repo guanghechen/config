@@ -431,25 +431,24 @@ local function get_select()
       preview_keymaps = preview_keymaps,
       provider = provider,
       title = gen_title(),
-      on_confirm = function(item)
+      on_confirm = function(widget, item)
         local fileitem = file_datamap[item.uuid] ---@type fml.action.find.explorer.IFileItem|nil
         if fileitem == nil then
-          return "none"
+          return
         end
 
         if fileitem.type == "directory" then
           local dirpath = fileitem.path ---@type string
           state_cwd:next(dirpath)
-          return "none"
+          return
         end
 
         if fileitem.type == "file" then
+          widget:hide()
+
           local winnr_source = command.context_winnr() ---@type integer|nil
           editor.open_filepath(winnr_source, fileitem.path)
-          return "hide"
         end
-
-        return "none"
       end,
     })
   end

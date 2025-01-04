@@ -84,11 +84,6 @@
 ---| "command"
 ---| "select"
 
----@alias eve.e.WidgetConfirmAction
----| "none"
----| "close"
----| "hide"
-
 ---@alias eve.e.WidgetStatus
 ---| "visible"
 ---| "hidden"

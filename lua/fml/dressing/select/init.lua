@@ -30,8 +30,10 @@ local function select(items, opts, on_choice)
   local provider, width = create_provider(items, opts)
   local confirmed = false ---@type boolean
 
+  local _selector = nil ---@type fml.ux.ISelect|nil
+
   ---@type fml.ux.ISelect
-  local selector = Select.new({
+  _selector = Select.new({
     dimension = {
       height = #items + 3,
       max_height = 0.8,
@@ -49,14 +51,14 @@ local function select(items, opts, on_choice)
         on_choice(nil, nil)
       end
     end,
-    on_confirm = function(item)
-      on_choice(item.data.original_item, tonumber(item.uuid))
+    on_confirm = function(widget, item)
       confirmed = true
-      return "close"
+      widget:close()
+      on_choice(item.data.original_item, tonumber(item.uuid))
     end,
   })
 
-  selector:focus()
+  _selector:focus()
 end
 
 vim.ui.select = select

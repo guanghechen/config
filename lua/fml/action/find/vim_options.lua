@@ -27,6 +27,8 @@ local function make_termcodes_visible(text)
   return next_text
 end
 
+local _select ---@type fml.ux.ISelect|nil
+
 ---@type fml.ux.select.IProvider
 local provider = {
   fetch_data = function()
@@ -85,7 +87,7 @@ local provider = {
 }
 
 ---@type fml.ux.ISelect
-local select = Select.new({
+_select = Select.new({
   dimension = {
     height = 0.8,
     max_height = 1,
@@ -97,11 +99,12 @@ local select = Select.new({
   extend_preset_keymaps = true,
   provider = provider,
   title = "Find Vim Options",
-  on_confirm = function(item)
+  on_confirm = function(widget, item)
+    widget:hide()
+
     local data = item.data ---@type fml.action.find.vim_options.IItemData
     local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
     vim.api.nvim_feedkeys(string.format("%s:set %s=%s", esc, data.name, data.value), "m", true)
-    return "hide"
   end,
 })
 
@@ -112,7 +115,7 @@ local M = {}
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_vim_options(context)
-  select:toggle()
+  _select:toggle()
 end
 
 return M

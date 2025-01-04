@@ -280,8 +280,9 @@ function M.get_search()
           M.reload()
         end
       end,
-      on_confirm = function(item)
-        return api.open_file(item, frecency)
+      ---@diagnostic disable-next-line: unused-local
+      on_confirm = function(widget, item)
+        api.open_file(item, frecency)
       end,
     })
   end
@@ -295,6 +296,13 @@ function M.get_title()
       and "Search in files (" .. table.concat(search_paths, ",") .. ")"
     or "Search in files"
   return title
+end
+
+---@return nil
+function M.hide()
+  if _search ~= nil then
+    _search:hide()
+  end
 end
 
 ---@param uuid                          string

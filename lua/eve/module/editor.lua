@@ -84,10 +84,9 @@ end
 function M.open_filepath(winnr_source, filepath, lnum, col)
   filepath = path.normalize(filepath)
 
-  local winnr = M.is_win_valid(winnr_source) and winnr_source or nil ---@type integer|nil
-  if winnr == nil then
-    winnr = winpicker.pick_window(winpicker.filters.project, winnr_source, true) ---@type integer|nil
-  end
+  ---@type integer|nil
+  local winnr = (winnr_source ~= nil and winpicker.filters.project(winnr_source)) and winnr_source
+    or winpicker.pick_window(winpicker.filters.project, winnr_source, true)
 
   if winnr == nil then
     return false
@@ -116,10 +115,9 @@ function M.open_filepaths(winnr_source, filepaths)
     return
   end
 
-  local winnr = M.is_win_valid(winnr_source) and winnr_source or nil ---@type integer|nil
-  if winnr == nil then
-    winnr = winpicker.pick_window(winpicker.filters.project, winnr_source, true) ---@type integer|nil
-  end
+  ---@type integer|nil
+  local winnr = (winnr_source ~= nil and winpicker.filters.project(winnr_source)) and winnr_source
+    or winpicker.pick_window(winpicker.filters.project, winnr_source, true)
 
   if winnr == nil then
     return

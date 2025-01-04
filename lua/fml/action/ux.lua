@@ -17,7 +17,15 @@ end
 ---@return nil
 function M.resume_last_widget(context)
   local state = require("eve.state")
-  if not state.widget.resume() then
+  if state.widget.resume() then
+    local widget = state.widget.get_current_widget() ---@type eve.t.ux.IWidget|nil
+    if widget == nil or widget:status() ~= "visible" then
+      local winnr = context.winnr ---@type integer
+      if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+        vim.api.nvim_tabpage_set_win(context.tabnr, winnr)
+      end
+    end
+  else
     command.execute(command.definitions.find.files.uuid, context)
   end
 end

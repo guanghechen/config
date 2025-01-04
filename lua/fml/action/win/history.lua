@@ -109,7 +109,7 @@ local function get_history_select()
       frecency = frecency,
       provider = provider,
       title = "Find Window History",
-      on_confirm = function(item)
+      on_confirm = function(widget, item)
         local item_index = tonumber(item.uuid) ---@type integer|nil
         if item_index ~= nil then
           local winnr_source = command.context_winnr() ---@type integer|nil
@@ -119,18 +119,14 @@ local function get_history_select()
           end
         end
 
-        if _history_select ~= nil then
-          local cwd = path.cwd() ---@type string
-          local filepath = path.join(cwd, item.data.filepath) ---@type string
+        local cwd = path.cwd() ---@type string
+        local filepath = path.join(cwd, item.data.filepath) ---@type string
 
-          local winnr_source = command.context_winnr() ---@type integer|nil
-          if winnr_source and vim.api.nvim_win_is_valid(winnr_source) then
-            local ok = editor.open_filepath(winnr_source, filepath)
-            return ok and "close" or "none"
-          end
-          return "none"
+        local winnr_source = command.context_winnr() ---@type integer|nil
+        if winnr_source and vim.api.nvim_win_is_valid(winnr_source) then
+          widget:close()
+          editor.open_filepath(winnr_source, filepath)
         end
-        return "none"
       end,
     })
   end

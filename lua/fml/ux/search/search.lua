@@ -67,7 +67,7 @@ local borders = {
 ---| fun(): nil
 
 ---@alias fml.ux.search.IOnConfirm
----| fun(item: fml.ux.search.IItem): eve.e.WidgetConfirmAction|nil
+---| fun(widget: fml.ux.search.ISearch, item: fml.ux.search.IItem): nil
 
 ---@alias fml.ux.search.IOnInvisible
 ---| fun(): nil
@@ -229,19 +229,16 @@ function M.new(props)
   local function on_confirm()
     local item = context:get_current() ---@type fml.ux.search.IItem|nil
     if item ~= nil then
-      local action = on_confirm_from_props(item) ---@type eve.e.WidgetConfirmAction|nil
-      if action == "close" or action == "hide" then
+      on_confirm_from_props(self, item)
+
+      local status = context.status:snapshot() ---@type eve.e.WidgetStatus
+      if status ~= "visible" then
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
           if top ~= nil then
             top = fn.starts_with(top, EDITING_PREFIX) and top:sub(#EDITING_PREFIX + 1) or top ---@type string
             input_history:update_top(top)
           end
-        end
-        if action == "close" then
-          self:close()
-        elseif action == "hide" then
-          self:hide()
         end
       end
     end

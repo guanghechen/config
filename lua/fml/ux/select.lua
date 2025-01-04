@@ -18,6 +18,7 @@ local Search = require("fml.ux.search.search")
 ---@field public get_winnr_main         fun(self: fml.ux.ISelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.ux.ISelect): integer|nil
 ---@field public mark_data_dirty        fun(self: fml.ux.ISelect): nil
+---@field public hide                   fun(self: fml.ux.ISelect): nil
 ---@field public open                   fun(self: fml.ux.ISelect): nil
 ---@field public toggle                 fun(self: fml.ux.ISelect): nil
 
@@ -37,7 +38,7 @@ local Search = require("fml.ux.search.search")
 ---| fun(item: fml.ux.select.IItem, match: fml.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
 
 ---@alias fml.ux.select.IOnConfirm
----| fun(item: fml.ux.select.IItem): eve.e.WidgetConfirmAction|nil
+---| fun(widget: fml.ux.ISelect, item: fml.ux.select.IItem): nil
 
 ---@class fml.ux.select.IData
 ---@field public items                  fml.ux.select.IItem[]
@@ -244,16 +245,18 @@ function M.new(props)
     end)
   end
 
+  ---@param widget                      fml.ux.search.ISearch
   ---@param item                        fml.ux.search.IItem
-  ---@return eve.e.WidgetConfirmAction|nil
-  local function on_confirm(item)
+  ---@return nil
+  ---@diagnostic disable-next-line: unused-local
+  local function on_confirm(widget, item)
     if frecency ~= nil then
       frecency:access(item.uuid)
     end
     ---@diagnostic disable-next-line: invisible
     local select_item = self._item_map[item.uuid] ---@type fml.ux.select.IItem
     if select_item ~= nil then
-      return on_confirm_from_props(select_item)
+      on_confirm_from_props(self, select_item)
     end
   end
 
@@ -564,6 +567,12 @@ end
 function M:get_winnr_preview()
   local search = self._get_search() ---@type fml.ux.search.ISearch
   return search:get_winnr_preview()
+end
+
+---@return nil
+function M:hide()
+  local search = self._get_search() ---@type fml.ux.search.ISearch
+  search:hide()
 end
 
 ---@return nil

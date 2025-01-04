@@ -202,14 +202,14 @@ function M.prompt(context)
       }
       return result
     end,
-    on_confirm = function(item)
+    on_confirm = function(widget, item)
+      widget:close()
+
       local data = item.data ---@type guanghechen.action.copilot_chat.prompt_actions.IItem
       vim.defer_fn(function()
         chat_widget:open()
         require("CopilotChat").ask(data.prompt, data)
       end, 100)
-
-      return "close"
     end,
   })
 end

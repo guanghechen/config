@@ -251,15 +251,13 @@ function M.new(props)
         statusline_items = statusline_items,
         title = title,
         on_close = on_close,
-        on_confirm = on_confirm_from_props or function(item)
+        on_confirm = on_confirm_from_props or function(widget, item)
           local context = command.context_snapshot() ---@type eve.command.IContext|nil
-          if context == nil then
-            return "hide"
+          if context ~= nil then
+            widget:close()
+            local filepath = item.data.filepath ---@type string
+            editor.open_filepath(context.winnr, filepath, item.data.lnum, item.data.col)
           end
-
-          local filepath = item.data.filepath ---@type string
-          local ret = editor.open_filepath(context.winnr, filepath, item.data.lnum, item.data.col) ---@type boolean
-          return ret and "hide" or "none"
         end,
         on_preview_rendered = on_preview_rendered,
       })

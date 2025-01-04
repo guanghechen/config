@@ -136,14 +136,12 @@ S = {
       return false
     end
 
-    vim.schedule(function()
-      local status = present:status() ---@type eve.e.WidgetStatus
-      if status == "visible" then
-        present:hide()
-      elseif status == "hidden" then
-        present:show()
-      end
-    end)
+    local status = present:status() ---@type eve.e.WidgetStatus
+    if status == "visible" then
+      present:hide()
+    elseif status == "hidden" then
+      present:show()
+    end
     return true
   end,
 }

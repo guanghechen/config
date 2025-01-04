@@ -603,7 +603,7 @@ end
 
 ---@param item                          fml.ux.search.IItem
 ---@param frecency                      eve.collection.IFrecency
----@return eve.e.WidgetConfirmAction|nil
+---@return nil
 function M.open_file(item, frecency)
   local cwd = context.search_cwd:snapshot() ---@type string
   local workspace = path.workspace() ---@type string
@@ -613,11 +613,11 @@ function M.open_file(item, frecency)
     local relative_filepath = path.relative(workspace, absolute_filepath, true) ---@type string
     frecency:access(relative_filepath)
 
+    context.hide()
+
     local winnr_source = command.context_winnr() ---@type integer|nil
-    local opened = editor.open_filepath(winnr_source, absolute_filepath, data.lnum, data.col) ---@type boolean
-    return opened and "hide" or "none"
+    editor.open_filepath(winnr_source, absolute_filepath, data.lnum, data.col) ---@type boolean
   end
-  return "none"
 end
 
 ---@param search_item                   fml.ux.search.IItem

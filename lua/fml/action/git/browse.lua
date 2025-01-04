@@ -265,9 +265,9 @@ function M.browse(context)
       end
       return items
     end,
-    on_confirm = function(item)
+    on_confirm = function(widget, item)
+      widget:close()
       open_remote(item.data)
-      return "close"
     end
   })
 end
