@@ -7,6 +7,7 @@ local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
+local command = require("eve.command")
 
 local Setting = require("fml.ux.setting")
 local Search = require("fml.ux.search.search")
@@ -64,9 +65,11 @@ local state_search_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
 state.search.scope:subscribe(
   Subscriber.new({
     on_next = function(scope, prev_scope)
-      local bufnr = state.tab.get_current_bufnr() ---@type integer
+      local bufnr = command.context_bufnr() ---@type integer|nil
+
       ---@type string
-      local current_buf_dirpath = editor.is_buf_valid(bufnr) --
+      local current_buf_dirpath = bufnr ~= nil
+          and editor.is_buf_valid(bufnr)
           and path.dirname(vim.api.nvim_buf_get_name(bufnr))
         or path.cwd()
 

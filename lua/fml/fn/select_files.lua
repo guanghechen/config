@@ -7,6 +7,7 @@ local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
 
 ---@class fml.fn.select_files.IParams
+---@field public context                eve.command.IContext
 ---@field public cwd                    string
 ---@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public flag_fuzzy             ?boolean
@@ -19,6 +20,7 @@ local Select = require("fml.ux.select")
 ---@param params                        fml.fn.select_files.IParams
 ---@return nil
 local function select_files(params)
+  local context = params.context ---@type eve.command.IContext
   local cwd = params.cwd ---@type string
   local dimension = params.dimension ---@type fml.ux.search.IRawDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
@@ -32,7 +34,7 @@ local function select_files(params)
     ---@return string|nil
     get_present = function()
       local present_filepath = nil ---@type string|nil
-      local winnr = state.tab.get_current_winnr() ---@type integer
+      local winnr = context.winnr ---@type integer
       if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if editor.is_buf_valid(bufnr) then

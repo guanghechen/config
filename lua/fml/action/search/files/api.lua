@@ -10,6 +10,7 @@ local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
+local command = require("eve.command")
 
 local context = require("fml.action.search.files.context")
 
@@ -290,8 +291,8 @@ function M.fetch_data(input_text, force, callback)
 
   local specified_filepath ---@type string|nil
   if scope == "B" then
-    local bufnr = state.tab.get_current_bufnr() ---@type integer
-    if editor.is_buf_valid(bufnr) then
+    local bufnr = command.context_bufnr() ---@type integer|nil
+    if bufnr ~= nil and editor.is_buf_valid(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       specified_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
     end
@@ -611,12 +612,10 @@ function M.open_file(item, frecency)
     local absolute_filepath = path.resolve(cwd, data.filepath) ---@type string
     local relative_filepath = path.relative(workspace, absolute_filepath, true) ---@type string
     frecency:access(relative_filepath)
-    local winnr = state.tab.get_current_winnr() ---@type integer
-    if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-      local opened = editor.open_filepath(winnr, absolute_filepath, data.lnum, data.col) ---@type boolean
-      return opened and "hide" or "none"
-    end
-    return "none"
+
+    local winnr_source = command.context_winnr() ---@type integer|nil
+    local opened = editor.open_filepath(winnr_source, absolute_filepath, data.lnum, data.col) ---@type boolean
+    return opened and "hide" or "none"
   end
   return "none"
 end

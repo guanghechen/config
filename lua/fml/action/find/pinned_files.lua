@@ -8,11 +8,11 @@ local M = {}
 
 ---@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
 function M.find_pinned_files(context)
   local cwd = path.cwd() ---@type string
 
   select_files({
+    context = context,
     cwd = cwd,
     title = "Find pinned files",
     flag_fuzzy = true,

@@ -9,12 +9,12 @@ local M = {}
 
 ---@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
 function M.find_git_not_committed(context)
   local cwd = path.cwd() ---@type string
   local workspace = path.workspace() ---@type string
 
   select_files({
+    context = context,
     cwd = cwd,
     title = "Find: git files (Not committed)",
     flag_fuzzy = true,

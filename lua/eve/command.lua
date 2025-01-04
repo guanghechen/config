@@ -188,6 +188,18 @@ function M.context_snapshot()
   return M.__context__
 end
 
+---@return integer|nil
+function M.context_winnr()
+  local winnr = M.__context__ and M.__context__.winnr or nil ---@type integer|nil
+  return winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) and winnr or nil
+end
+
+---@return integer|nil
+function M.context_bufnr()
+  local bufnr = M.__context__ and M.__context__.bufnr or nil ---@type integer|nil
+  return bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) and bufnr or nil
+end
+
 ---@param uuid                          string
 ---@param desc                          string
 ---@param nargs                         ?0|1|"?"

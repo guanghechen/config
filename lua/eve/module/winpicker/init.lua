@@ -89,7 +89,7 @@ M.filters = {
 }
 
 ---@param filter                        fun(winnr: integer): boolean
----@param winnr_source                  integer
+---@param winnr_source                  integer|nil
 ---@param split_as_needed               boolean
 ---@return integer|nil
 function M.pick_window(filter, winnr_source, split_as_needed)

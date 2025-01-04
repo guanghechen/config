@@ -76,7 +76,7 @@ function M.is_valid_filepath(filepath)
   return fs.is_file_or_dir(filepath) == "file"
 end
 
----@param winnr_source                  integer
+---@param winnr_source                  integer|nil
 ---@param filepath                      string
 ---@param lnum                          ?integer
 ---@param col                           ?integer

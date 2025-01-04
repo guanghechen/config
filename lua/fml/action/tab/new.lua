@@ -37,7 +37,7 @@ function M.new_with_buf(context)
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end
 
-  local meta = state.tab.Meta.new(tabnr, tabtype, winnr, bufs)
+  local meta = state.tab.Meta.new(tabnr, tabtype, bufs)
   state.tab.set(tabnr, meta)
   return tabnr
 end

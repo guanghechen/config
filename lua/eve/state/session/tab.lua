@@ -23,7 +23,6 @@ local editor = require("eve.module.editor")
 ---@class eve.state.tab.meta.state
 ---@field public tabnr                  integer
 ---@field public tabtype                eve.e.state.tab.meta.TabType
----@field public winnr_listed           integer
 ---@field public bufs                   eve.t.state.tab.buf.state[]
 ---@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.t.state.tab.buf.state|nil, integer|nil
 ---@field public toggle_pin             fun(self: eve.state.tab.meta.state, bufnr: integer): nil
@@ -45,15 +44,12 @@ Meta.__index = Meta
 ---@field public del                    fun(tabnr: integer|nil): nil
 ---@field public resolve                fun(tabnr: integer|nil): eve.state.tab.meta.state|nil
 ---@field public resolve_tabtype        fun(tabnr: integer|nil): eve.e.state.tab.meta.TabType
----@field public resolve_winnr_listed   fun(tabnr: integer|nil): integer
 ---@field public refresh                fun(tabnr: integer|nil): nil
 ---@field public refresh_all            fun(): nil
 ---
 ---@field public on_buf_enter           fun(winnr: integer, bufnr: integer): nil
 ---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
 ---
----@field public get_current_winnr      fun(): integer
----@field public get_current_bufnr      fun(): integer
 ---@field public get_visible_bufnrs     fun(tabnr: integer|nil): integer[]
 ---@field public get_unrefereced_bufnrs fun(bufnrs?: integer[]): integer[]
 local S = {}
@@ -67,14 +63,12 @@ local M = {}
 
 ---@param tabnr                        integer
 ---@param tabtype                      eve.e.state.tab.meta.TabType|nil
----@param winnr_listed                 integer|nil
 ---@param bufs                         eve.t.state.tab.buf.state[]|nil
 ---@return eve.state.tab.meta.state
-function Meta.new(tabnr, tabtype, winnr_listed, bufs)
+function Meta.new(tabnr, tabtype, bufs)
   local self = setmetatable({}, Meta)
   self.tabnr = tabnr ---@type integer
   self.tabtype = tabtype or setting.TT_NORMAL ---@type string
-  self.winnr_listed = winnr_listed or S.resolve_winnr_listed() ---@type integer
   self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
   return self
 end
@@ -182,7 +176,7 @@ S = {
     end
 
     ---@type eve.state.tab.meta.state
-    meta = Meta.new(tabnr, tabtype, 0, bufs)
+    meta = Meta.new(tabnr, tabtype, bufs)
     S.__meta_map__[tabnr] = meta
     return meta
   end,
@@ -193,31 +187,6 @@ S = {
 
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
     return meta and meta.tabtype or setting.TT_NORMAL
-  end,
-  resolve_winnr_listed = function(tabnr)
-    if tabnr == nil or tabnr < 1 then
-      return 0
-    end
-
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta ~= nil and editor.is_win_valid(meta.winnr_listed) then
-      return meta.winnr_listed
-    end
-
-    local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    if editor.is_win_valid(winnr_cur) then
-      meta.winnr_listed = winnr_cur
-      return winnr_cur
-    end
-
-    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-    for _, winnr in ipairs(winnrs) do
-      if editor.is_win_valid(winnr) then
-        meta.winnr_listed = winnr
-        return winnr
-      end
-    end
-    return 0
   end,
   refresh = function(tabnr)
     if tabnr == nil or tabnr < 1 then
@@ -252,8 +221,6 @@ S = {
       bufs[i] = nil
     end
 
-    S.resolve_winnr_listed(tabnr)
-
     local tabtype = editor.calc_tabtype(tabnr) ---@type string
     meta.tabtype = tabtype
   end,
@@ -284,9 +251,6 @@ S = {
       return
     end
 
-    local winnr_listed = editor.is_win_valid(winnr) and winnr or S.resolve_winnr_listed(tabnr) ---@type integer
-    meta.winnr_listed = winnr_listed
-
     local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
     if not meta:find_buf(bufnr) then
       bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
@@ -315,16 +279,6 @@ S = {
     for i = k, N, 1 do
       bufs[i] = nil
     end
-  end,
-  get_current_winnr = function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    return S.resolve_winnr_listed(tabnr) ---@type integer
-  end,
-  get_current_bufnr = function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    local winnr = meta and meta.winnr_listed or 0 ---@type integer
-    return winnr > 0 and vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) or 0
   end,
   get_visible_bufnrs = function(tabnr)
     if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
@@ -518,7 +472,7 @@ function M.load(raw_data)
       end
 
       ---@type eve.state.tab.meta.state
-      local meta = Meta.new(tabnr, data_tab.tabtype or setting.TT_NORMAL, 0, bufs)
+      local meta = Meta.new(tabnr, data_tab.tabtype or setting.TT_NORMAL, bufs)
       S.set(tabnr, meta)
     end
   end

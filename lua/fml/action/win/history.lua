@@ -5,8 +5,9 @@ local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
-
 local state = require("eve.state")
+local command = require("eve.command")
+
 local FileSelect = require("fml.ux.file_select")
 
 local _history_select = nil ---@type fml.ux.FileSelect|nil
@@ -30,15 +31,15 @@ local function get_history_select()
         local items = {} ---@type fml.ux.file_select.IRawItem[]
         local present_uuid = "0" ---@type string
         local width = 0 ---@type integer
-        local winnr = state.tab.get_current_winnr() ---@type integer
-        local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
+
+        local winnr_source = command.context_winnr() ---@type integer|nil
+        local meta = winnr_source and state.win.resolve(winnr_source) or nil ---@type eve.t.state.win.meta.state|nil
         if meta == nil then
           reporter.error({
             from = __module_name__,
             message = "Cannot find window.",
-            details = { winnr = winnr },
+            details = { winnr_source = winnr_source },
           })
-
           ---@type fml.ux.file_select.IData
           return { cwd = cwd, items = {} }
         else
@@ -111,8 +112,8 @@ local function get_history_select()
       on_confirm = function(item)
         local item_index = tonumber(item.uuid) ---@type integer|nil
         if item_index ~= nil then
-          local winnr = state.tab.get_current_winnr() ---@type integer
-          local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
+          local winnr_source = command.context_winnr() ---@type integer|nil
+          local meta = winnr_source and state.win.resolve(winnr_source) or nil ---@type eve.t.state.win.meta.state|nil
           if meta ~= nil then
             meta.filepath_history:go(item_index)
           end
@@ -121,9 +122,10 @@ local function get_history_select()
         if _history_select ~= nil then
           local cwd = path.cwd() ---@type string
           local filepath = path.join(cwd, item.data.filepath) ---@type string
-          local winnr = state.tab.get_current_winnr() ---@type integer
-          if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-            local ok = editor.open_filepath(winnr, filepath)
+
+          local winnr_source = command.context_winnr() ---@type integer|nil
+          if winnr_source and vim.api.nvim_win_is_valid(winnr_source) then
+            local ok = editor.open_filepath(winnr_source, filepath)
             return ok and "close" or "none"
           end
           return "none"

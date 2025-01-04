@@ -947,11 +947,6 @@ end
 
 ---@return nil
 function M:hide()
-  local winnr = state.tab.get_current_winnr() ---@type integer
-  if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-    vim.api.nvim_tabpage_set_win(0, winnr)
-  end
-
   local winnr_input = self._winnr_input ---@type integer|nil
   local winnr_main = self._winnr_main ---@type integer|nil
   local winnr_preview = self._winnr_preview ---@type integer|nil

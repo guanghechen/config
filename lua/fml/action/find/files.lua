@@ -9,6 +9,7 @@ local Subscriber = require("eve.collection.subscriber")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
+local command = require("eve.command")
 
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
@@ -63,9 +64,11 @@ end
 state.find.scope:subscribe(
   Subscriber.new({
     on_next = function()
-      local bufnr = state.tab.get_current_bufnr() ---@type integer
+      local bufnr = command.context_bufnr() ---@type integer|nil
+
       ---@type string
-      local current_buf_dirpath = editor.is_buf_valid(bufnr) --
+      local current_buf_dirpath = bufnr ~= nil
+          and editor.is_buf_valid(bufnr)
           and path.dirname(vim.api.nvim_buf_get_name(bufnr))
         or path.cwd()
 

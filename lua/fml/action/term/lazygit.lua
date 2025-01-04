@@ -3,7 +3,7 @@ local __module_name__ = "fml.action.term" ---@type string
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local editor = require("eve.module.editor")
-local state = require("eve.state")
+local command = require("eve.command")
 
 local toggle_term = require("fml.action.term.toggle").toggle
 
@@ -40,10 +40,11 @@ local function get_lazygit_config_filepath()
 end
 
 ---https://github.com/kdheepak/lazygit.nvim/issues/22#issuecomment-1815426074
+---@param context                       eve.command.IContext
 ---@param cwd                           string
 ---@return nil
-local function edit_lazygit_file_in_buffer(cwd)
-  local bufnr = state.tab.get_current_bufnr() ----@type integer
+local function edit_lazygit_file_in_buffer(context, cwd)
+  local bufnr = context.bufnr ----@type integer
   if not editor.is_buf_valid(bufnr) then
     reporter.error({
       from = __module_name__,
@@ -77,27 +78,16 @@ local function edit_lazygit_file_in_buffer(cwd)
     return
   end
 
-  local winnr = state.tab.get_current_winnr() ---@type integer
-  if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
-    reporter.error({
-      from = __module_name__,
-      subject = "edit_lazygit_file_in_buffer",
-      message = "Could not find the original window.",
-      details = { bufnr_cur = bufnr, channel_id = channel_id },
-    })
-    return
-  end
-
-  vim.api.nvim_set_current_win(winnr)
-  vim.cmd("e " .. relative_filepath)
+  local winnr_source = command.context_winnr() ---@type integer|nil
+  editor.open_filepath(winnr_source, relative_filepath)
 end
 
+---@param context                       eve.command.IContext
 ---@param name                          string
 ---@param cwd                           string
----@param context                       eve.command.IContext
 ---@param args                          ?string[]
 ---@return nil
-local function open_lazygit(name, cwd, context, args)
+local function open_lazygit(context, name, cwd, args)
   local config_path = get_lazygit_config_filepath() ---@type string|nil
   local terminal = toggle_term({
     name = name,
@@ -112,7 +102,7 @@ local function open_lazygit(name, cwd, context, args)
   local bufnr = terminal:get_bufnr() ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) and terminal:is_visible() then
     local function edit()
-      edit_lazygit_file_in_buffer(cwd)
+      edit_lazygit_file_in_buffer(context, cwd)
     end
 
     vim.keymap.set("t", "<esc>", "<esc>", { buffer = bufnr, noremap = true, silent = true })
@@ -128,14 +118,14 @@ local M = {}
 ---@return nil
 function M.lazygit_cwd(context)
   local cwd = path.cwd() ---@type string
-  open_lazygit("lazygit_cwd", cwd, context)
+  open_lazygit(context, "lazygit_cwd", cwd)
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.lazygit_workspace(context)
   local cwd = path.workspace() ---@type string
-  open_lazygit("lazygit_workspace", cwd, context)
+  open_lazygit(context, "lazygit_workspace", cwd)
 end
 
 ---@param context                       eve.command.IContext
@@ -144,7 +134,7 @@ function M.lazygit_file_history(context)
   local cwd = path.cwd() ---@type string
   local filepath = path.current_filepath() ---@type string
   local args = { "-f", vim.fn.shellescape(filepath) } ---@type string[]
-  open_lazygit("lazygit_file_history", cwd, context, args)
+  open_lazygit(context, "lazygit_file_history", cwd, args)
 end
 
 return M

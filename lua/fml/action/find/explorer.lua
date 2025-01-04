@@ -10,6 +10,7 @@ local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
+local command = require("eve.command")
 
 local Select = require("fml.ux.select")
 
@@ -443,12 +444,9 @@ local function get_select()
         end
 
         if fileitem.type == "file" then
-          local winnr = state.tab.get_current_winnr() ---@type integer
-          if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-            editor.open_filepath(winnr, fileitem.path)
-            return "hide"
-          end
-          return "none"
+          local winnr_source = command.context_winnr() ---@type integer|nil
+          editor.open_filepath(winnr_source, fileitem.path)
+          return "hide"
         end
 
         return "none"

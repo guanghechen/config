@@ -39,7 +39,7 @@ local function resolve_winline_scheduler(winnr)
         return { winnr = winnr }
       end,
       is_active = function(context)
-        local winnr_cur = state.tab.get_current_winnr() or 0 ---@type integer
+        local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
         return winnr_cur > 0 and winnr_cur == context.winnr
       end,
       pre_task = function(callback)

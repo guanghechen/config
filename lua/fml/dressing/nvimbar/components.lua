@@ -871,7 +871,7 @@ function M.lsp(position)
 
   ---@return string
   local function get_text()
-    local bufnr = state.tab.get_current_bufnr() ---@type integer
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
     if bufnr > 0 and not vim.api.nvim_buf_is_valid(bufnr) then
       return ""
     end
@@ -1321,17 +1321,17 @@ function M.widget(position)
       local text = "" ---@type string
       local hl_text = "" ---@type string
       for _, item in ipairs(items) do
-        local fn = item.callback_fn ---@type string
+        local callback = item.callback_fn ---@type string
         if item.type == "flag" then
           local flag = item.state:snapshot() ---@type boolean
           local text_flag = " " .. item.symbol .. " " ---@type string
           text = text .. text_flag
-          hl_text = hl_text .. btn(txt(text_flag, flag and hln_flag_enabled or hln_flag), fn)
+          hl_text = hl_text .. btn(txt(text_flag, flag and hln_flag_enabled or hln_flag), callback)
         elseif item.type == "enum" then
           local flag = item.state:snapshot() ---@type boolean
           local text_flag = " " .. flag .. " " ---@type string
           text = text .. text_flag
-          hl_text = hl_text .. btn(txt(text_flag, hln_scope), fn)
+          hl_text = hl_text .. btn(txt(text_flag, hln_scope), callback)
         end
       end
       return text, hl_text, true

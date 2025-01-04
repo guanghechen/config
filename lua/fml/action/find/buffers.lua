@@ -3,6 +3,8 @@ local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
+local winpicker = require("eve.module.winpicker")
+local command = require("eve.command")
 
 local state = require("eve.state")
 local Select = require("fml.ux.select")
@@ -173,17 +175,10 @@ select = Select.new({
   title = "Find buffers",
   on_confirm = function(item)
     local data = item.data ---@type fml.action.find.buffers.IItemData
-    local winnr = state.tab.get_current_winnr() ---@type integer | nil
-    if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+    local winnr_source = command.context_winnr() ---@type integer|nil
+    local winnr = winpicker.pick_window(winpicker.filters.project, winnr_source, true) ---@type integer|nil
+    if winnr ~= nil then
       vim.api.nvim_win_set_buf(winnr, data.bufnr)
-    else
-      local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
-      for _, winnr2 in ipairs(winnrs) do
-        if not fn.is_win_floating(winnr2) then
-          vim.api.nvim_win_set_buf(winnr2, data.bufnr)
-          break
-        end
-      end
     end
     return "hide"
   end,
