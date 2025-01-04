@@ -85,7 +85,13 @@ function M.open_filepath(winnr_source, filepath, lnum, col)
   filepath = path.normalize(filepath)
 
   ---@type integer|nil
-  local winnr = (winnr_source ~= nil and winpicker.filters.project(winnr_source)) and winnr_source
+  local winnr = (
+    winnr_source ~= nil
+    and winnr_source > 0
+    and vim.api.nvim_win_is_valid(winnr_source)
+    and winpicker.filters.project(winnr_source)
+  )
+      and winnr_source
     or winpicker.pick_window(winpicker.filters.project, winnr_source, true)
 
   if winnr == nil then
@@ -116,7 +122,13 @@ function M.open_filepaths(winnr_source, filepaths)
   end
 
   ---@type integer|nil
-  local winnr = (winnr_source ~= nil and winpicker.filters.project(winnr_source)) and winnr_source
+  local winnr = (
+    winnr_source ~= nil
+    and winnr_source > 0
+    and vim.api.nvim_win_is_valid(winnr_source)
+    and winpicker.filters.project(winnr_source)
+  )
+      and winnr_source
     or winpicker.pick_window(winpicker.filters.project, winnr_source, true)
 
   if winnr == nil then

@@ -276,8 +276,8 @@ end
 ---@return string
 function M.blend_color(fg_hlname, bg_hlname)
   if type(fg_hlname) == "string" and type(bg_hlname) == "string" then
-    local fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(fg_hlname)), "fg#")
-    local bg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(bg_hlname)), "bg#")
+    local fg = vim.api.nvim_get_hl(0, { name = fg_hlname }).fg
+    local bg = vim.api.nvim_get_hl(0, { name = bg_hlname }).bg
     local new_hlname = fg_hlname .. "__" .. bg_hlname
 
     ---! set_hl could stuff the CursorHold trigger, so it should be executed with defer.
