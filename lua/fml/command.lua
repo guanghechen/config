@@ -765,14 +765,26 @@ command
 --[win] split---------------------------------------------------------------------------------------
 command
   .implement({
-    uuid = command.definitions.win.split_horizontal.uuid,
+    uuid = command.definitions.win.split_above.uuid,
     action = function(context)
-      require("fml.action.win.split").split_horizontal(context)
+      require("fml.action.win.split").split_above(context)
     end,
   })
   .implement({
-    uuid = command.definitions.win.split_vertical.uuid,
+    uuid = command.definitions.win.split_right.uuid,
     action = function(context)
-      require("fml.action.win.split").split_vertical(context)
+      require("fml.action.win.split").split_right(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.win.split_below.uuid,
+    action = function(context)
+      require("fml.action.win.split").split_below(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.win.split_left.uuid,
+    action = function(context)
+      require("fml.action.win.split").split_left(context)
     end,
   })

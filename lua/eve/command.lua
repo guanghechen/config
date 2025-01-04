@@ -460,8 +460,10 @@ M.definitions.win = {
   resize_vertical_minus = def("Fwinresizeverticalminus", "win: resize vertical (minus)"),
   resize_vertical_plus = def("Fwinresizeverticalplus", "win: resize vertical (plus)"),
 
-  split_horizontal = def("Fwinsplithorizontal", "win: split horizontal"),
-  split_vertical = def("Fwinsplitvertical", "win: split vertical"),
+  split_above = def("Fwinsplitabove", "win: split above"),
+  split_right = def("Fwinsplitright", "win: split right"),
+  split_below = def("Fwinsplitbelow", "win: split below"),
+  split_left = def("Fwinsplitleft", "win: split left"),
 
   focus = def("Fwinfocus", "win: focus (with picker)"),
   project = def("Fwinproject", "win: project (with picker)"),
