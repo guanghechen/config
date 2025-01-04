@@ -16,234 +16,358 @@
   "useAcrylicInTabRow": true,
   "actions": [
     {
-      "id": "User.sendInput.001b_0001",
+      "id": "ghc.input.001b_0001",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0001"
       }
     },
     {
-      "id": "User.sendInput.001b_0002",
+      "id": "ghc.input.001b_0002",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0002"
       }
     },
     {
-      "id": "User.sendInput.001b_0003",
+      "id": "ghc.input.001b_0003",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0003"
       }
     },
     {
-      "id": "User.sendInput.001b_0004",
+      "id": "ghc.input.001b_0004",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0004"
       }
     },
     {
-      "id": "User.sendInput.001b_0005",
+      "id": "ghc.input.001b_0005",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0005"
       }
     },
     {
-      "id": "User.sendInput.001b_0006",
+      "id": "ghc.input.001b_0006",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0006"
       }
     },
     {
-      "id": "User.sendInput.001b_0007",
+      "id": "ghc.input.001b_0007",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0007"
       }
     },
     {
-      "id": "User.sendInput.001b_0008",
+      "id": "ghc.input.001b_0008",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0008"
       }
     },
     {
-      "id": "User.sendInput.001b_0009",
+      "id": "ghc.input.001b_0009",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0009"
       }
     },
     {
-      "id": "User.sendInput.001b_000a",
+      "id": "ghc.input.001b_000a",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u000a"
       }
     },
     {
-      "id": "User.sendInput.001b_000b",
+      "id": "ghc.input.001b_000b",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u000b"
       }
     },
     {
-      "id": "User.sendInput.001b_000c",
+      "id": "ghc.input.001b_000c",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u000c"
       }
     },
     {
-      "id": "User.sendInput.001b_000d",
+      "id": "ghc.input.001b_000d",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u000d"
       }
     },
     {
-      "id": "User.sendInput.001b_000e",
+      "id": "ghc.input.001b_000e",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u000e"
       }
     },
     {
-      "id": "User.sendInput.001b_000f",
+      "id": "ghc.input.001b_000f",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u000f"
       }
     },
     {
-      "id": "User.sendInput.001b_0010",
+      "id": "ghc.input.001b_0010",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0010"
       }
     },
     {
-      "id": "User.sendInput.001b_0011",
+      "id": "ghc.input.001b_0011",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0011"
       }
     },
     {
-      "id": "User.sendInput.001b_0012",
+      "id": "ghc.input.001b_0012",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0012"
       }
     },
     {
-      "id": "User.sendInput.001b_0013",
+      "id": "ghc.input.001b_0013",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0013"
       }
     },
     {
-      "id": "User.sendInput.001b_0014",
+      "id": "ghc.input.001b_0014",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0014"
       }
     },
     {
-      "id": "User.sendInput.001b_0015",
+      "id": "ghc.input.001b_0015",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0015"
       }
     },
     {
-      "id": "User.sendInput.001b_0016",
+      "id": "ghc.input.001b_0016",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0016"
       }
     },
     {
-      "id": "User.sendInput.001b_0017",
+      "id": "ghc.input.001b_0017",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0017"
       }
     },
     {
-      "id": "User.sendInput.001b_0018",
+      "id": "ghc.input.001b_0018",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0018"
       }
     },
     {
-      "id": "User.sendInput.001b_0019",
+      "id": "ghc.input.001b_0019",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u0019"
       }
     },
     {
-      "id": "User.sendInput.001b_001a",
+      "id": "ghc.input.001b_001a",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u001a"
       }
     },
     {
-      "id": "User.sendInput.001b_001b",
+      "id": "ghc.input.001b_001b",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u001b"
       }
     },
     {
-      "id": "User.sendInput.001b_001c",
+      "id": "ghc.input.001b_001c",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u001c"
       }
     },
     {
-      "id": "User.sendInput.001b_001d",
+      "id": "ghc.input.001b_001d",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u001d"
       }
     },
     {
-      "id": "User.sendInput.001b_001e",
+      "id": "ghc.input.001b_001e",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u001e"
       }
     },
     {
-      "id": "User.sendInput.001b_001f",
+      "id": "ghc.input.001b_001f",
       "command": {
         "action": "sendInput",
         "input": "\u001b\u001f"
       }
     },
     {
-      "id": "User.sendInput.0001_005b",
+      "id": "ghc.input.0001_005b",
       "command": {
         "action": "sendInput",
         "input": "\u0001\u005b"
       }
     },
     {
-      "id": "User.sendInput.shift_enter",
+      "id": "ghc.input.shift_enter",
       "command": {
         "action": "sendInput",
         "input": "\u001b[13;2u"
+      }
+    },
+    {
+      "id": "ghc.pane.close.current",
+      "command": "closePane"
+    },
+    {
+      "id": "ghc.pane.zoom.toggle",
+      "command": "togglePaneZoom"
+    },
+    {
+      "id": "ghc.window.focus.above",
+      "command": {
+        "action": "moveFocus",
+        "direction": "up"
+      }
+    },
+    {
+      "id": "ghc.window.focus.right",
+      "command": {
+        "action": "moveFocus",
+        "direction": "right"
+      }
+    },
+    {
+      "id": "ghc.window.focus.below",
+      "command": {
+        "action": "moveFocus",
+        "direction": "down"
+      }
+    },
+    {
+      "id": "ghc.window.focus.left",
+      "command": {
+        "action": "moveFocus",
+        "direction": "left"
+      }
+    },
+    {
+      "id": "ghc.window.resize.above",
+      "command": {
+        "action": "resizePane",
+        "direction": "up"
+      }
+    },
+    {
+      "id": "ghc.window.resize.right",
+      "command": {
+        "action": "resizePane",
+        "direction": "right"
+      }
+    },
+    {
+      "id": "ghc.window.resize.below",
+      "command": {
+        "action": "resizePane",
+        "direction": "down"
+      }
+    },
+    {
+      "id": "ghc.window.resize.left",
+      "command": {
+        "action": "resizePane",
+        "direction": "left"
+      }
+    },
+    {
+      "id": "ghc.window.split.above",
+      "command": {
+        "action": "splitPane",
+        "split": "up",
+        "splitMode": "duplicate"
+      }
+    },
+    {
+      "id": "ghc.window.split.right",
+      "command": {
+        "action": "splitPane",
+        "split": "right",
+        "splitMode": "duplicate"
+      }
+    },
+    {
+      "id": "ghc.window.split.below",
+      "command": {
+        "action": "splitPane",
+        "split": "down",
+        "splitMode": "duplicate"
+      }
+    },
+    {
+      "id": "ghc.window.split.left",
+      "command": {
+        "action": "splitPane",
+        "split": "left",
+        "splitMode": "duplicate"
+      }
+    },
+    {
+      "id": "ghc.window.swap.above",
+      "command": {
+        "action": "swapPane",
+        "direction": "up"
+      }
+    },
+    {
+      "id": "ghc.window.swap.right",
+      "command": {
+        "action": "swapPane",
+        "direction": "right"
+      }
+    },
+    {
+      "id": "ghc.window.swap.below",
+      "command": {
+        "action": "swapPane",
+        "direction": "down"
+      }
+    },
+    {
+      "id": "ghc.window.swap.left",
+      "command": {
+        "action": "swapPane",
+        "direction": "left"
       }
     }
   ],
@@ -368,7 +492,6 @@
       "id": null,
       "keys": "ctrl+shift+0"
     },
-
     {
       "id": null,
       "keys": "alt+left"
@@ -473,7 +596,6 @@
       "id": null,
       "keys": "shift+down"
     },
-
     {
       "id": null,
       "keys": "win+sc(41)"
@@ -486,7 +608,6 @@
       "id": null,
       "keys": "menu"
     },
-
     {
       "id": null,
       "keys": "alt+enter"
@@ -563,136 +684,213 @@
       "id": null,
       "keys": "ctrl+shift+tab"
     },
-
     {
-      "id": "User.sendInput.001b_0001",
+      "id": "ghc.input.001b_0001",
       "keys": "ctrl+shift+a"
     },
     {
-      "id": "User.sendInput.001b_0002",
+      "id": "ghc.input.001b_0002",
       "keys": "ctrl+shift+b"
     },
     {
-      "id": "User.sendInput.001b_0003",
+      "id": "ghc.input.001b_0003",
       "keys": "ctrl+shift+c"
     },
     {
-      "id": "User.sendInput.001b_0004",
+      "id": "ghc.input.001b_0004",
       "keys": "ctrl+shift+d"
     },
     {
-      "id": "User.sendInput.001b_0005",
+      "id": "ghc.input.001b_0005",
       "keys": "ctrl+shift+e"
     },
     {
-      "id": "User.sendInput.001b_0006",
+      "id": "ghc.input.001b_0006",
       "keys": "ctrl+shift+f"
     },
     {
-      "id": "User.sendInput.001b_0007",
+      "id": "ghc.input.001b_0007",
       "keys": "ctrl+shift+g"
     },
     {
-      "id": "User.sendInput.001b_0008",
+      "id": "ghc.input.001b_0008",
       "keys": "ctrl+shift+h"
     },
     {
-      "id": "User.sendInput.001b_0009",
+      "id": "ghc.input.001b_0009",
       "keys": "ctrl+shift+i"
     },
     {
-      "id": "User.sendInput.001b_000a",
+      "id": "ghc.input.001b_000a",
       "keys": "ctrl+shift+j"
     },
     {
-      "id": "User.sendInput.001b_000b",
+      "id": "ghc.input.001b_000b",
       "keys": "ctrl+shift+k"
     },
     {
-      "id": "User.sendInput.001b_000c",
+      "id": "ghc.input.001b_000c",
       "keys": "ctrl+shift+l"
     },
     {
-      "id": "User.sendInput.001b_000d",
+      "id": "ghc.input.001b_000d",
       "keys": "ctrl+shift+m"
     },
     {
-      "id": "User.sendInput.001b_000e",
+      "id": "ghc.input.001b_000e",
       "keys": "ctrl+shift+n"
     },
     {
-      "id": "User.sendInput.001b_000f",
+      "id": "ghc.input.001b_000f",
       "keys": "ctrl+shift+o"
     },
     {
-      "id": "User.sendInput.001b_0010",
+      "id": "ghc.input.001b_0010",
       "keys": "ctrl+shift+p"
     },
     {
-      "id": "User.sendInput.001b_0011",
+      "id": "ghc.input.001b_0011",
       "keys": "ctrl+shift+q"
     },
     {
-      "id": "User.sendInput.001b_0012",
+      "id": "ghc.input.001b_0012",
       "keys": "ctrl+shift+r"
     },
     {
-      "id": "User.sendInput.001b_0013",
+      "id": "ghc.input.001b_0013",
       "keys": "ctrl+shift+s"
     },
     {
-      "id": "User.sendInput.001b_0014",
+      "id": "ghc.input.001b_0014",
       "keys": "ctrl+shift+t"
     },
     {
-      "id": "User.sendInput.001b_0015",
+      "id": "ghc.input.001b_0015",
       "keys": "ctrl+shift+u"
     },
     {
-      "id": "User.sendInput.001b_0016",
+      "id": "ghc.input.001b_0016",
       "keys": "ctrl+shift+v"
     },
     {
-      "id": "User.sendInput.001b_0017",
+      "id": "ghc.input.001b_0017",
       "keys": "ctrl+shift+w"
     },
     {
-      "id": "User.sendInput.001b_0018",
+      "id": "ghc.input.001b_0018",
       "keys": "ctrl+shift+x"
     },
     {
-      "id": "User.sendInput.001b_0019",
+      "id": "ghc.input.001b_0019",
       "keys": "ctrl+shift+y"
     },
     {
-      "id": "User.sendInput.001b_001a",
+      "id": "ghc.input.001b_001a",
       "keys": "ctrl+shift+z"
     },
-
     {
-      "id": "User.sendInput.0001_005b",
+      "id": "ghc.input.0001_005b",
       "keys": "alt+["
     },
     {
-      "id": "User.sendInput.shift_enter",
+      "id": "ghc.input.shift_enter",
       "keys": "shift+enter"
     },
-
     {
       "id": "Terminal.PasteFromClipboard",
       "keys": "alt+v"
-    },
-    {
-      "id": "Terminal.CloseWindow",
-      "keys": "ctrl+alt+shift+w"
     },
     {
       "id": "Terminal.PasteFromClipboard",
       "keys": "shift+insert"
     },
     {
+      "id": "ghc.pane.close.current",
+      "keys": "ctrl+alt+w"
+    },
+    {
+      "id": "ghc.pane.zoom.toggle",
+      "keys": "ctrl+alt+z"
+    },
+    {
+      "id": "ghc.window.focus.above",
+      "keys": "ctrl+alt+k"
+    },
+    {
+      "id": "ghc.window.focus.right",
+      "keys": "ctrl+alt+l"
+    },
+    {
+      "id": "ghc.window.focus.below",
+      "keys": "ctrl+alt+j"
+    },
+    {
+      "id": "ghc.window.focus.left",
+      "keys": "ctrl+alt+h"
+    },
+    {
+      "id": "ghc.window.resize.above",
+      "keys": "ctrl+alt+up"
+    },
+    {
+      "id": "ghc.window.resize.right",
+      "keys": "ctrl+alt+right"
+    },
+    {
+      "id": "ghc.window.resize.below",
+      "keys": "ctrl+alt+down"
+    },
+    {
+      "id": "ghc.window.resize.left",
+      "keys": "ctrl+alt+left"
+    },
+    {
+      "id": "ghc.window.split.above",
+      "keys": "ctrl+alt+shift+k"
+    },
+    {
+      "id": "ghc.window.split.right",
+      "keys": "ctrl+alt+shift+l"
+    },
+    {
+      "id": "ghc.window.split.below",
+      "keys": "ctrl+alt+shift+j"
+    },
+    {
+      "id": "ghc.window.split.left",
+      "keys": "ctrl+alt+shift+h"
+    },
+    {
+      "id": "ghc.window.swap.above",
+      "keys": "ctrl+alt+shift+up"
+    },
+    {
+      "id": "ghc.window.swap.right",
+      "keys": "ctrl+alt+shift+right"
+    },
+    {
+      "id": "ghc.window.swap.below",
+      "keys": "ctrl+alt+shift+down"
+    },
+    {
+      "id": "ghc.window.swap.left",
+      "keys": "ctrl+alt+shift+left"
+    },
+    {
       "id": "Terminal.OpenNewWindow",
       "keys": "ctrl+alt+shift+n"
+    },
+    {
+      "id": "Terminal.CloseWindow",
+      "keys": "ctrl+alt+shift+w"
+    },
+    {
+      "id": "Terminal.IncreaseFontSize",
+      "keys": "ctrl+alt+shift+plus"
+    },
+    {
+      "id": "Terminal.DecreaseFontSize",
+      "keys": "ctrl+alt+shift+minus"
     },
     {
       "id": "Terminal.SwitchToTab0",
