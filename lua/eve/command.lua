@@ -1,5 +1,6 @@
 local __module_name__ = "eve.command" ---@type string
 
+local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
 
@@ -75,21 +76,28 @@ function M.define(raw_definition, overwrite)
   ---@param opts                        { name: string, args: string, fargs: string[] }
   ---@return nil
   local function handle(opts)
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local context ---@type eve.command.IContext
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
 
-    local state = require("eve.state")
-    local tabtype = state.tab.resolve_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabType
+    local last_context = M.__context__ ---@type eve.command.IContext|nil
+    if last_context ~= nil and fn.is_win_floating(winnr) then
+      context = last_context
+    else
+      local state = require("eve.state")
 
-    ---@type eve.command.IContext
-    local context = {
-      tabnr = tabnr,
-      winnr = winnr,
-      bufnr = bufnr,
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local tabtype = state.tab.resolve_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabType
 
-      tabtype = tabtype,
-    }
+      ---@type eve.command.IContext
+      context = {
+        tabnr = tabnr,
+        winnr = winnr,
+        bufnr = bufnr,
+        tabtype = tabtype,
+      }
+    end
+
     M.execute(definition.uuid, context, opts.args, false)
   end
 
