@@ -44,11 +44,12 @@ local _state = nil ---@type eve.state.flight.state | nil
 ---@return eve.state.flight.data
 function M.defaults()
   local is_home_config_dir = path.workspace() == env.HOME_NVIM_CONFIG ---@type boolean
+  local is_git_repo = path.is_git_repo() ---@type boolean
 
   ---@type eve.state.flight.data
   return {
     autoload = false,
-    autosave = true,
+    autosave = is_git_repo,
     copilot = is_home_config_dir,
     devmode = is_home_config_dir,
 
@@ -56,10 +57,10 @@ function M.defaults()
     dressing_winsep_fixed = true,
     dressing_winsep_float = false,
 
-    lsp_inlay_hints = true,
-    lsp_code_lens = true,
+    lsp_inlay_hints = is_git_repo,
+    lsp_code_lens = is_git_repo,
 
-    spellcheck = is_home_config_dir,
+    spellcheck = is_git_repo,
   }
 end
 
