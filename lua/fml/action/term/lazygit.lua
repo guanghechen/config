@@ -102,7 +102,7 @@ local function open_lazygit(name, cwd, context, args)
   local terminal = toggle_term({
     name = name,
     command = config_path
-        and "lazygit -ucf " .. vim.fn.fnameescape(config_path) .. " " .. table.concat(args or {}, " ")
+        and "lazygit -ucf " .. vim.fn.shellescape(config_path) .. " " .. table.concat(args or {}, " ")
       or "lazygit " .. table.concat(args or {}, " "),
     cwd = cwd,
     permanent = false,
@@ -143,7 +143,7 @@ end
 function M.lazygit_file_history(context)
   local cwd = path.cwd() ---@type string
   local filepath = path.current_filepath() ---@type string
-  local args = { "-f", vim.fn.fnameescape(filepath) } ---@type string[]
+  local args = { "-f", vim.fn.shellescape(filepath) } ---@type string[]
   open_lazygit("lazygit_file_history", cwd, context, args)
 end
 
