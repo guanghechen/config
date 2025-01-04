@@ -31,6 +31,9 @@ function M.refresh_all(context)
   end)
 
   if devmode then
+    require("plenary.reload").reload_module("eve.constant.palette")
+    require("plenary.reload").reload_module("eve.constant.theme")
+    require("plenary.reload").reload_module("eve.constant.hlgroup")
     vim.cmd(command.definitions.ux.reload_theme.uuid .. " force")
   end
 

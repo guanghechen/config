@@ -134,8 +134,8 @@ function M.bufs(position)
     local text_status = is_pinned and text_pinned or text_mod ---@type string
 
     local hln_indicator_or_sep = is_current and hln_buf_indicator or hln_buf_sep ---@type string
-    local hln_icon = (is_current and hln_bufc or hln_buf) .. "_" .. fileicon_hl ---@type string
-    -- local hl_icon = (is_current and hln_bufc .. "_" .. meta.fileicon_hl) or hln_buf_title ---@type string
+    -- local hln_icon = (is_current and hln_bufc or hln_buf) .. "_" .. fileicon_hl ---@type string
+    local hln_icon = (is_current and hln_bufc .. "_" .. fileicon_hl) or hln_buf ---@type string
     local hln_mod = is_current and hln_bufc_mod or hln_buf_mod ---@type string
     local hln_pinned = is_current and hln_bufc_pinned or hln_buf_pinned ---@type string
     local hln_status = is_pinned and hln_pinned or hln_mod ---@type string
