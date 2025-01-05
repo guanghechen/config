@@ -85,6 +85,8 @@ M.filters = {
 ---@param split_as_needed               boolean
 ---@return integer|nil
 function M.pick_window(filter, winnr_source, split_as_needed)
+  local winnr_original = vim.api.nvim_get_current_win() ---@type integer
+
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   local N = 0 ---@type integer
   for i = 1, #winnrs, 1 do
@@ -151,6 +153,11 @@ function M.pick_window(filter, winnr_source, split_as_needed)
     mask:hide()
   end
   vim.cmd.redraw()
+
+  --- Refocus the original window if no window selected.
+  if winnr_target == nil then
+    vim.api.nvim_set_current_win(winnr_original)
+  end
 
   return winnr_target
 end
