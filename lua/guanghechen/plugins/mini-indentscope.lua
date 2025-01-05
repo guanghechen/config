@@ -6,7 +6,7 @@ local ft = require("eve.constant.filetype")
 -- the highlighting.
 return {
   name = "mini.indentscope",
-  event = { "VeryLazy" },
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   opts = {
     symbol = "╎",
     options = {

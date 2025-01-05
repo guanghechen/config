@@ -26,7 +26,6 @@ local base_filter_kind = {
 
 return {
   name = "aerial.nvim",
-  event = { "BufReadPre", "BufWritePost", "VeryLazy" },
   opts = {
     attach_mode = "global",
     autojump = false,

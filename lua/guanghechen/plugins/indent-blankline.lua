@@ -3,7 +3,7 @@ local ft = require("eve.constant.filetype")
 -- indent guides for Neovim
 return {
   name = "indent-blankline.nvim",
-  event = { "BufReadPost" },
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   opts = {
     indent = {
       char = "│",

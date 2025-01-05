@@ -25,7 +25,7 @@ local keymaps = {
 -- This works with LSP, Treesitter, and regexp matching to find the other instances.
 return {
   name = "vim-illuminate",
-  event = { "VeryLazy" },
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   keys = {
     { "]]", desc = "Next Reference" },
     { "[[", desc = "Prev Reference" },

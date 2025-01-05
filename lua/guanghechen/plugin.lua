@@ -59,6 +59,7 @@ local raw_specs = {
   { name = "indent-blankline.nvim", main = "ibl", cond = conds.not_vscode },
   { name = "mason.nvim", main = "mason", cond = conds.not_vscode },
   { name = "mason-lspconfig.nvim", main = "mason-lspconfig", cond = conds.not_vscode },
+  { name = "mason-nvim-dap", main = "mason-nvim-dap", cond = conds.not_vscode },
   { name = "mini.hipatterns", main = "mini.hipatterns", cond = conds.not_vscode },
   { name = "mini.icons", main = "mini.icons", cond = conds.not_vscode },
   { name = "mini.indentscope", main = "mini.indentscope", cond = conds.not_vscode },
@@ -68,8 +69,12 @@ local raw_specs = {
   { name = "noice.nvim", main = "noice", cond = conds.not_vscode },
   { name = "nui.nvim", main = "nui", cond = conds.not_vscode },
   { name = "nvim-cmp", main = "cmp", cond = conds.not_vscode },
+  { name = "nvim-dap", main = "dap", cond = conds.not_vscode },
+  { name = "nvim-dap-ui", main = "dapui", cond = conds.not_vscode },
+  { name = "nvim-dap-virtual-text", main = "nvim-dap-virtual-text", cond = conds.not_vscode },
   { name = "nvim-lint", main = "lint", cond = conds.not_vscode },
   { name = "nvim-lspconfig", main = "lspconfig", cond = conds.not_vscode },
+  { name = "nvim-nio", main = "nio", cond = conds.not_vscode },
   { name = "nvim-notify", main = "notify", cond = conds.not_vscode },
   { name = "nvim-snippets", main = "snippets", cond = conds.not_vscode },
   { name = "nvim-treesitter", main = "nvim-treesitter", cond = conds.not_vscode },
@@ -117,6 +122,7 @@ local no_details_module_names = {
   "friendly-snippets",
   "mason-lspconfig.nvim",
   "nui.nvim",
+  "nvim-nio",
   "plenary.nvim",
 }
 

@@ -1,7 +1,7 @@
 -- better vim.ui input/select
 return {
   name = "dressing.nvim",
-  event = { "VeryLazy" },
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   init = function()
     ---@diagnostic disable-next-line: duplicate-set-field
     vim.ui.input = function(...)

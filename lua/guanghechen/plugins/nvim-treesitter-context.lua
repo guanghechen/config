@@ -2,7 +2,7 @@
 return {
   name = "nvim-treesitter-context",
   enabled = false,
-  event = { "VeryLazy" },
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   opts = {
     enable = true,
     line_numbers = true,

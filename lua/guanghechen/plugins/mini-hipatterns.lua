@@ -22,7 +22,7 @@ local tailwind_filetypes = {
 
 return {
   name = "mini.hipatterns",
-  event = { "BufReadPre", "BufWritePost", "VeryLazy" },
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   config = function()
     local hipatterns = require("mini.hipatterns")
     hipatterns.setup({

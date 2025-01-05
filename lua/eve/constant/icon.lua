@@ -92,7 +92,7 @@ M.dap = {
   StepInto = "󰆹",
   StepOut = "󰆸",
   StepOver = "󰆷",
-  Stopped = "",
+  Stopped = "󰁕",
   Terminate = "󰝤",
 }
 

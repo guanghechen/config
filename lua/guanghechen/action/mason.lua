@@ -23,6 +23,9 @@ function M.get_mason_ensure_installed()
     "vetur-vls", -- vuels
     "yaml-language-server", -- yamlls
 
+    -- dap --
+    "js-debug-adapter",
+
     -- lint --
     "cspell",
 

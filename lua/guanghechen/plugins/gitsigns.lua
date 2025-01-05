@@ -300,7 +300,7 @@ local keymaps = {
 -- hunks in a commit.
 return {
   name = "gitsigns.nvim",
-  event = { "BufReadPre", "BufWritePost", "VeryLazy" },
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   opts = {
     current_line_blame = true,
     current_line_blame_formatter = "    <author>, <author_time:%Y-%m-%d %H:%M:%S> - <summary>",

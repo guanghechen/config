@@ -2,6 +2,7 @@
 -- Change surround mappings
 return {
   name = "mini.surround",
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   keys = {
     { "gsa", mode = { "n", "v" }, desc = "surrounding: add" },
     { "gsd", desc = "surrounding: delete" },

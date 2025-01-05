@@ -1,6 +1,6 @@
 return {
   name = "mini.icons",
-  lazy = true,
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   opts = {
     file = {
       [".eslintignore"] = { glyph = "󰱺", hl = "MiniIconsPurple" },

@@ -5,7 +5,7 @@ local reporter = require("eve.builtin.reporter")
 -- auto pairs
 return {
   name = "mini.pairs",
-  event = "VeryLazy",
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   opts = {
     modes = { insert = true, command = true, terminal = false },
     skip_next = [=[[%w%%%'%[%"%.%`%$]]=], -- skip autopair when next character is one of these

@@ -31,7 +31,7 @@ local severity2numhl = {
 
 return {
   name = "nvim-lspconfig",
-  event = { "BufReadPre", "BufWritePost", "VeryLazy" },
+  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   config = function()
     vim.diagnostic.config({
       virtual_text = {
