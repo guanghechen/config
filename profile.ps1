@@ -9,6 +9,10 @@ Set-PSReadLineOption -Colors @{
   Default                 = "White"
 }
 
+. "$env:XDG_CONFIG_HOME\pwsh\functions\prompt.ps1"
+. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc.ps1"
+. "$env:XDG_CONFIG_HOME\pwsh\functions\yazi.ps1"
+
 ## Setup conda
 If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
   (& "$env:APP_HOME_MINIFORGE\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
@@ -23,7 +27,3 @@ fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
 
 ## Setup zoxide (need move to the last line. see https://github.com/ajeetdsouza/zoxide/issues/707#issuecomment-1959685345)
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
-
-. "$env:XDG_CONFIG_HOME\pwsh\functions\prompt.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\yazi.ps1"
