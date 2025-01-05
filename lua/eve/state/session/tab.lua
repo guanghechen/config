@@ -50,7 +50,6 @@ Meta.__index = Meta
 ---@field public on_buf_enter           fun(winnr: integer, bufnr: integer): nil
 ---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
 ---
----@field public get_visible_bufnrs     fun(tabnr: integer|nil): integer[]
 ---@field public get_unrefereced_bufnrs fun(bufnrs?: integer[]): integer[]
 local S = {}
 
@@ -279,19 +278,6 @@ S = {
     for i = k, N, 1 do
       bufs[i] = nil
     end
-  end,
-  get_visible_bufnrs = function(tabnr)
-    if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
-      return {}
-    end
-
-    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-    local bufnrs = {} ---@type table<integer, boolean>
-    for _, winnr in ipairs(winnrs) do
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      bufnrs[bufnr] = true
-    end
-    return bufnrs
   end,
   get_unrefereced_bufnrs = function(bufnrs)
     bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]

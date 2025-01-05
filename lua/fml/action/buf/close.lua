@@ -1,7 +1,7 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
 local reporter = require("eve.builtin.reporter")
-
+local editor = require("fml.module.editor")
 local state = require("eve.state")
 
 ---@param tabnr                         integer
@@ -60,7 +60,7 @@ function M.close_to_leftest(context)
 
   local bufnr_cur = context.bufnr ---@type integer
   local bufnrs_to_remove = {} ---@type integer[]
-  local bufnrs_visible = state.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
   local _, index = tab_meta:find_buf(bufnr_cur)
   if index ~= nil then
@@ -92,7 +92,7 @@ function M.close_to_rightest(context)
 
   local bufnr_cur = context.bufnr ---@type integer
   local bufnrs_to_remove = {} ---@type integer[]
-  local bufnrs_visible = state.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
   local _, index = tab_meta:find_buf(bufnr_cur)
   if index ~= nil then
@@ -123,7 +123,7 @@ function M.close_others(context)
   end
 
   local bufnrs_to_remove = {} ---@type integer[]
-  local bufnrs_visible = state.tab.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
   for _, buf in ipairs(tab_meta.bufs) do
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then
