@@ -119,30 +119,33 @@ function M.pick_window(filter, winnr_source, split_as_needed)
   end
 
   local masks = {} ---@type table<integer, eve.module.winpicker.Mask>
-  for i = 1, N, 1 do
-    local winnr = winnrs[i] ---@type integer
-    local char = config.chars[i] ---@type string
-    local mask = Mask.new(char:lower()) ---@type eve.module.winpicker.Mask
-    masks[winnr] = mask
-  end
-
-  for winnr, mask in pairs(masks) do
-    mask:show(winnr)
-  end
-
-  vim.cmd.redraw()
   local winnr_target = nil ---@type integer|nil
 
-  local char = get_user_input_char() ---@type string|nil
-  if char ~= nil then
-    char = char:lower() ---@type string
+  pcall(function()
+    for i = 1, N, 1 do
+      local winnr = winnrs[i] ---@type integer
+      local char = config.chars[i] ---@type string
+      local mask = Mask.new(char:lower()) ---@type eve.module.winpicker.Mask
+      masks[winnr] = mask
+    end
+
     for winnr, mask in pairs(masks) do
-      if char == mask.char then
-        winnr_target = winnr ---@type integer
-        break
+      mask:show(winnr)
+    end
+
+    vim.cmd.redraw()
+
+    local char = get_user_input_char() ---@type string|nil
+    if char ~= nil then
+      char = char:lower() ---@type string
+      for winnr, mask in pairs(masks) do
+        if char == mask.char then
+          winnr_target = winnr ---@type integer
+          break
+        end
       end
     end
-  end
+  end)
 
   for _, mask in pairs(masks) do
     mask:hide()
