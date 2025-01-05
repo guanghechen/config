@@ -196,13 +196,13 @@ function M.new(props)
     local preset_keymaps = {
       {
         modes = { "n", "v" },
-        key = "<leader>i",
+        key = "<leader>ti",
         callback = toggle_case_sensitive,
         desc = "select: toggle case sensitive",
       },
       {
         modes = { "n", "v" },
-        key = "<leader>r",
+        key = "<leader>tr",
         callback = toggle_flag_regex,
         desc = "select: toggle flag regex",
       },

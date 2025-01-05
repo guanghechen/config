@@ -260,46 +260,46 @@ local function get_select()
     ---@type eve.t.IKeymap[]
     local common_keymaps = {
       {
+        modes = { "i", "n", "v" },
+        key = "<C-q>",
+        callback = actions.send_to_qflist,
+        desc = "search: send to qflist",
+      },
+      {
         modes = { "n", "v" },
-        key = "<leader>W",
+        key = "<leader>tw",
         callback = actions.change_scope_workspace,
         desc = "find: change scope (workspace)",
       },
       {
         modes = { "n", "v" },
-        key = "<leader>C",
+        key = "<leader>tc",
         callback = actions.change_scope_cwd,
         desc = "find: change scope (cwd)",
       },
       {
         modes = { "n", "v" },
-        key = "<leader>D",
+        key = "<leader>td",
         callback = actions.change_scope_directory,
         desc = "find: change scope (directory)",
       },
       {
         modes = { "n", "v" },
-        key = "<leader>c",
+        key = "<leader>tc",
         callback = actions.edit_config,
         desc = "find: edit config",
       },
       {
         modes = { "n", "v" },
-        key = "<leader>i",
+        key = "<leader>ti",
         callback = actions.toggle_case_sensitive,
         desc = "find: toggle case sensitive",
       },
       {
         modes = { "n", "v" },
-        key = "<leader>r",
+        key = "<leader>tr",
         callback = actions.toggle_flag_regex,
         desc = "find: toggle flag regex",
-      },
-      {
-        modes = { "i", "n", "v" },
-        key = "<C-q>",
-        callback = actions.send_to_qflist,
-        desc = "search: send to qflist",
       },
     }
 

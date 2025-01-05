@@ -15,10 +15,10 @@ local function on_attach(client, bufnr)
     ---@cast uri                        string
     ---@cast range                      lsp.Range
 
-    local function move(newf)
+    local function move(new_filename)
       client.request("workspace/executeCommand", {
         command = lsp_command.command,
-        arguments = { action, uri, range, newf },
+        arguments = { action, uri, range, new_filename },
       })
     end
 
@@ -50,8 +50,8 @@ local function on_attach(client, bufnr)
             prompt = "Enter move destination:",
             default = vim.fn.fnamemodify(fname, ":h") .. "/",
             completion = "file",
-          }, function(newf)
-            return newf and move(newf)
+          }, function(new_filename)
+            return new_filename and move(new_filename)
           end)
         elseif f then
           move(f)
