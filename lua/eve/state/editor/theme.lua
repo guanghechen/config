@@ -242,8 +242,8 @@ function M.load(raw_data)
         vim.g.terminal_color_4 = c.blue
         vim.g.terminal_color_5 = c.purple
         vim.g.terminal_color_6 = c.aqua
-        vim.g.terminal_color_7 = c.fg4
-        vim.g.terminal_color_8 = c.grey
+        vim.g.terminal_color_7 = c.fg1
+        vim.g.terminal_color_8 = c.bg0
         vim.g.terminal_color_9 = c.brightRed
         vim.g.terminal_color_10 = c.brightGreen
         vim.g.terminal_color_11 = c.brightYellow
