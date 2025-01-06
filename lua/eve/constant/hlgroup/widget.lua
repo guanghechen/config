@@ -23,13 +23,13 @@ local function gen_hlgroup_map(context)
     f_buf_filepath = { fg = c.fg2 },
 
     ---hipairs
-    f_hipairs_1 = { fg = c.red, bg = c.bg4, bold = true },
-    f_hipairs_2 = { fg = c.green, bg = c.bg2, bold = true },
-    f_hipairs_3 = { fg = c.yellow, bg = c.bg2, bold = true },
-    f_hipairs_4 = { fg = c.blue, bg = c.bg2, bold = true },
-    f_hipairs_5 = { fg = c.purple, bg = c.bg2, bold = true },
-    f_hipairs_6 = { fg = c.aqua, bg = c.bg2, bold = true },
-    f_hipairs_7 = { fg = c.orange, bg = c.bg2, bold = true },
+    f_hipairs_1 = { fg = c.red, bold = true, italic = true },
+    f_hipairs_2 = { fg = c.green, bold = true, italic = true },
+    f_hipairs_3 = { fg = c.yellow, bold = true, italic = true },
+    f_hipairs_4 = { fg = c.blue, bold = true, italic = true },
+    f_hipairs_5 = { fg = c.purple, bold = true, italic = true },
+    f_hipairs_6 = { fg = c.aqua, bold = true, italic = true },
+    f_hipairs_7 = { fg = c.orange, bold = true, italic = true },
 
     ---diff
     f_diff_add_left = { bg = c.diffDel, fg = "none" },
