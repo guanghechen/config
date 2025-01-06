@@ -4,7 +4,11 @@ function _ghc_tmux_status_load_ {
   local status_mode=$(tmux show -gqv @GHC_SL_MODE)
 
   if [ -z "$status_mode" ]; then
-    status_mode="02"
+    if [[ "$(uname)" == "Darwin" ]]; then
+      status_mode="02"
+    else
+      status_mode="01"
+    fi
     tmux set -g @GHC_SL_MODE "$status_mode"
   fi
 
