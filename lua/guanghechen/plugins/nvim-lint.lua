@@ -7,6 +7,26 @@ local ft = require("eve.constant.filetype")
 
 local state = require("eve.state")
 
+local config = {
+  excluded = {
+    ".git/",
+    ".cache/",
+    ".next/",
+    ".yarn/",
+    "build/",
+    "debug/",
+    "data/",
+    "public/",
+    "node_modules/",
+    "target/",
+    "tmp/",
+    "*.pdf",
+    "*.mkv",
+    "*.mp4",
+    "*.zip",
+  },
+}
+
 -- stylua: ignore start
 local linters_by_ft = {
   -- web --
@@ -78,6 +98,12 @@ return {
         local filepath_relative = path.relative(workspace, filepath, true) ---@type string
         if path.is_absolute(filepath_relative) then
           return "done"
+        end
+
+        for _, pattern in ipairs(config.excluded) do
+          if vim.fn.match(filepath, pattern) ~= -1 then
+            return "done"
+          end
         end
 
         local dirpath = vim.fn.fnamemodify(filepath, ":h") ---@type string
