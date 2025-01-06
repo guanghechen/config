@@ -76,7 +76,7 @@ local common_keymaps = {
   },
   {
     modes = { "n", "v" },
-    key = "<leader>tc",
+    key = "<leader>ts",
     callback = context.edit_config,
     desc = "search: edit config",
   },

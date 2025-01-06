@@ -285,7 +285,7 @@ local function get_select()
       },
       {
         modes = { "n", "v" },
-        key = "<leader>tc",
+        key = "<leader>ts",
         callback = actions.edit_config,
         desc = "find: edit config",
       },

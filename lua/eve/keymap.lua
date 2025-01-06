@@ -140,9 +140,9 @@ kk({ "i", "n", "v" }, "<M-C>", K.copy.filepath)
 -----------------------------------------------------------------------------------------#[c]opy----
 
 --#[d]ebug------------------------------------------------------------------------------------------
-kk({ "n", "v" }, "<leader>iI", K.debug.inspect_tree)
 kk({ "n", "v" }, "<leader>ii", K.debug.inspect_pos)
 kk({ "n", "v" }, "<leader>is", K.debug.inspect_state)
+kk({ "n", "v" }, "<leader>it", K.debug.inspect_tree)
 kk({ "n", "v" }, "<leader>iw", K.debug.inspect_window)
 ------------------------------------------------------------------------------------------#[d]ebug--
 
