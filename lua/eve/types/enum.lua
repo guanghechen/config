@@ -5,7 +5,9 @@
 
 ---@alias eve.e.FindBufferScope
 ---| "A"
----| "P"
+---| "F"
+---| "L"
+---| "T"
 
 ---@alias eve.e.SearchScope
 ---|"W"

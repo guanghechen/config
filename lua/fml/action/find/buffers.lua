@@ -5,12 +5,13 @@ local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local winpicker = require("eve.module.winpicker")
 local command = require("eve.command")
-
 local state = require("eve.state")
+
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.buffers.IItemData
 ---@field public bufnr                  integer
+---@field public buftype                string
 ---@field public filetype               string
 ---@field public filepath               string
 ---@field public filename               string
@@ -19,7 +20,7 @@ local Select = require("fml.ux.select")
 
 local _select ---@type fml.ux.ISelect|nil
 
-local scopes = { "A", "P" } ---@type eve.e.FindBufferScope[]
+local scopes = { "A", "F", "L", "T" } ---@type eve.e.FindBufferScope[]
 
 ---@type eve.t.ux.widget.IRawStatuslineItem[]
 local statusline_items = {
@@ -82,10 +83,25 @@ local provider = {
   fetch_data = function()
     local cwd = path.cwd() ---@type string
     local scope = state.find_buffer.scope:snapshot() ---@type eve.e.FindBufferScope
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
 
     ---@param bufnr                     integer
+    ---@return boolean
     local function should_show(bufnr)
+      if scope == "A" then
+        return true
+      end
+
+      if scope == "F" then
+        return meta_tab and meta_tab:find_buf(bufnr) ~= nil or false
+      end
+
       local filetype = vim.bo[bufnr].filetype ---@type string
+      if scope == "T" then
+        return filetype == ft.TERM
+      end
+
       if
         filetype == ft.SEARCH_INPUT
         or filetype == ft.SEARCH_MAIN
@@ -100,7 +116,8 @@ local provider = {
     local items = {} ---@type fml.ux.select.IItem[]
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
-      if scope == "A" or should_show(bufnr) then
+      if should_show(bufnr) then
+        local buftype = vim.bo[bufnr].buftype ---@type string
         local filetype = vim.bo[bufnr].filetype ---@type string
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local relative_filepath = path.relative(cwd, filepath, true) ---@type string
@@ -110,6 +127,7 @@ local provider = {
         ---@type fml.action.find.buffers.IItemData
         local data = {
           bufnr = bufnr,
+          buftype = buftype,
           filetype = filetype,
           filepath = relative_filepath,
           filename = filename,
@@ -117,8 +135,14 @@ local provider = {
           icon_hl = icon_hl,
         }
 
-        local text =
-          string.format("%-5d  %-18s  %s %s", bufnr, filetype, #filepath > 0 and icon or " ", relative_filepath)
+        local text = string.format(
+          "%-5d %-10s %-10s %s %s",
+          bufnr,
+          buftype or vim.NIL,
+          filetype,
+          #filepath > 0 and icon or " ",
+          relative_filepath
+        )
         local item = { uuid = tostring(bufnr), text = text, data = data }
         items[#items + 1] = item
       end
@@ -137,9 +161,10 @@ local provider = {
     ---@type eve.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = 5, hlname = "f_buf_nr" },
-      { coll = 5, colr = 25, hlname = "f_buf_filetype" },
-      { coll = 27, colr = 29, hlname = data.icon_hl },
-      { coll = 29, colr = -1, hlname = "f_buf_filepath" },
+      { coll = 6, colr = 16, hlname = "f_buf_buftype" },
+      { coll = 17, colr = 27, hlname = "f_buf_filetype" },
+      { coll = 28, colr = 30, hlname = data.icon_hl },
+      { coll = 30, colr = -1, hlname = "f_buf_filepath" },
     }
 
     for _, piece in ipairs(match.matches) do
@@ -190,7 +215,23 @@ local M = {}
 ---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
-function M.find_buffers(context)
+function M.find_bufs(context)
+  _select:toggle()
+end
+
+---@param context                       eve.command.IContext
+---@return nil
+---@diagnostic disable-next-line: unused-local
+function M.find_bufs_file(context)
+  state.find_buffer.scope:next("F")
+  _select:toggle()
+end
+
+---@param context                       eve.command.IContext
+---@return nil
+---@diagnostic disable-next-line: unused-local
+function M.find_bufs_term(context)
+  state.find_buffer.scope:next("T")
   _select:toggle()
 end
 

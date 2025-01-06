@@ -119,12 +119,15 @@ kk({ "n", "v" }, "<leader>b7", K.buf.focus_7)
 kk({ "n", "v" }, "<leader>b8", K.buf.focus_8)
 kk({ "n", "v" }, "<leader>b9", K.buf.focus_9)
 kk({ "n", "v" }, "<leader>b0", K.buf.focus_10)
+kk({ "n", "v" }, "<leader>ba", K.find.bufs)
+kk({ "n", "v" }, "<leader>bb", K.find.bufs_file)
 kk({ "n", "v" }, "<leader>bd", K.buf.close)
 kk({ "n", "v" }, "<leader>bh", K.buf.close_to_leftest)
 kk({ "n", "v" }, "<leader>bl", K.buf.close_to_rightest)
 kk({ "n", "v" }, "<leader>bn", K.buf.new)
 kk({ "n", "v" }, "<leader>bo", K.buf.close_others)
 kk({ "n", "v" }, "<leader>bp", K.buf.pin)
+kk({ "n", "v" }, "<leader>bt", K.find.bufs_term)
 --------------------------------------------------------------------------------------------#[b]uf--
 
 --#[c]ode-------------------------------------------------------------------------------------------
@@ -158,7 +161,7 @@ kk({ "n", "v" }, "<leader>et", K.explorer.toggle)
 
 --#[f]ind-------------------------------------------------------------------------------------------
 kk({ "n", "v" }, "<leader><leader>", K.find.files)
-kk({ "n", "v" }, "<leader>fb", K.find.buffers)
+kk({ "n", "v" }, "<leader>fb", K.find.bufs)
 kk({ "n", "v" }, "<leader>fc", K.find.files_cwd)
 kk({ "n", "v" }, "<leader>fe", K.find.explorer)
 kk({ "n", "v" }, "<leader>fd", K.find.files_directory)

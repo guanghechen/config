@@ -246,9 +246,21 @@ command
 --[find] buffers------------------------------------------------------------------------------------
 command
   .implement({
-    uuid = command.definitions.find.buffers.uuid,
+    uuid = command.definitions.find.bufs.uuid,
     action = function(context)
-      require("fml.action.find.buffers").find_buffers(context)
+      require("fml.action.find.buffers").find_bufs(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.find.bufs_file.uuid,
+    action = function(context)
+      require("fml.action.find.buffers").find_bufs_file(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.find.bufs_term.uuid,
+    action = function(context)
+      require("fml.action.find.buffers").find_bufs_term(context)
     end,
   })
   .implement({
