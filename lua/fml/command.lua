@@ -28,9 +28,10 @@ command
   })
 
 --[buf] focus---------------------------------------------------------------------------------------
-for i = 1, 10, 1 do
+for i = 1, 49, 1 do
+  local bufid = i < 10 and ("0" .. tostring(i)) or tostring(i)
   command.implement({
-    uuid = command.definitions.buf["focus_" .. tostring(i)].uuid,
+    uuid = command.definitions.buf["focus_" .. bufid].uuid,
     action = function(context)
       require("fml.action.buf.focus").focus(context, i)
     end,
