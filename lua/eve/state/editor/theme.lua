@@ -233,24 +233,30 @@ function M.load(raw_data)
         end
       end,
 
+      --- Set the term color with the specific value (hex).
+      --- Since we also changed the terminal color outside, so no need to set it again,
+      --- so we can get the terminal color automatically changed by the terminal itself
+      --- since we used the color name instead of a specific value (hex).
+      ---@diagnostic disable-next-line: unused-local
       set_term_colors = function(scheme)
-        local c = scheme.palette ---@type eve.t.theme.IPalette
-        vim.g.terminal_color_0 = c.bg0
-        vim.g.terminal_color_1 = c.red
-        vim.g.terminal_color_2 = c.green
-        vim.g.terminal_color_3 = c.yellow
-        vim.g.terminal_color_4 = c.blue
-        vim.g.terminal_color_5 = c.purple
-        vim.g.terminal_color_6 = c.aqua
-        vim.g.terminal_color_7 = c.fg1
-        vim.g.terminal_color_8 = c.bg0
-        vim.g.terminal_color_9 = c.brightRed
-        vim.g.terminal_color_10 = c.brightGreen
-        vim.g.terminal_color_11 = c.brightYellow
-        vim.g.terminal_color_12 = c.brightBlue
-        vim.g.terminal_color_13 = c.brightPurple
-        vim.g.terminal_color_14 = c.brightAqua
-        vim.g.terminal_color_15 = c.fg1
+
+        -- local c = scheme.palette ---@type eve.t.theme.IPalette
+        -- vim.g.terminal_color_0 = c.bg0
+        -- vim.g.terminal_color_1 = c.red
+        -- vim.g.terminal_color_2 = c.green
+        -- vim.g.terminal_color_3 = c.yellow
+        -- vim.g.terminal_color_4 = c.blue
+        -- vim.g.terminal_color_5 = c.purple
+        -- vim.g.terminal_color_6 = c.aqua
+        -- vim.g.terminal_color_7 = c.fg1
+        -- vim.g.terminal_color_8 = c.bg0
+        -- vim.g.terminal_color_9 = c.brightRed
+        -- vim.g.terminal_color_10 = c.brightGreen
+        -- vim.g.terminal_color_11 = c.brightYellow
+        -- vim.g.terminal_color_12 = c.brightBlue
+        -- vim.g.terminal_color_13 = c.brightPurple
+        -- vim.g.terminal_color_14 = c.brightAqua
+        -- vim.g.terminal_color_15 = c.fg1
       end,
     }
     return _state
