@@ -37,7 +37,7 @@
 
   - No c compiler found! "cc", "gcc", "clang", "cl", "zig" are not executable.
 
-    - Install mysy2.
+    - Install msys2.
 
       ```powershell
       winget install -e --source winget --id MSYS2.MSYS2
