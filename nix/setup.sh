@@ -40,7 +40,8 @@ printf "\n\e[32m  [setup miniforge] done.\e[0m\n"
 
 ## Install font
 printf "\n\e[32m  [setup font] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/font.sh
+source ~/.config/guanghechen/nix/setup/font-maple.sh
+# source ~/.config/guanghechen/nix/setup/font-roboto.sh
 printf "\e[32m  [setup font] done.\e[0m\n"
 
 ## Install apps
