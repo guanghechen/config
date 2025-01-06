@@ -21,6 +21,14 @@ function M.get_default_storage()
   }
 end
 
+---@return nil
+function M.setup_patches()
+  --- vim.hl has been renamed to vim.highlight
+  if vim.hl == nil then
+    vim.hl = vim.highlight
+  end
+end
+
 ---! Auto cd the directory:
 ---! 1. the opened file is under a git repo, let's remember the the git repo path as A,
 ---!    and assume the git repo directory of the shell cwd is B.

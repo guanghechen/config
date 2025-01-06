@@ -1,5 +1,5 @@
 _G.eve = require("eve")
-
+eve.setup_patches()
 eve.setup_workspace()
 require("eve.option")
 require("eve.autocmd")
