@@ -38,8 +38,6 @@ export function render_template(template, scheme) {
   const data = {
     black: variant === "light" ? c.fg0 : c.bg0,
     white: variant === "light" ? c.bg4 : c.fg4,
-    brightBlack: variant === "light" ? c.fg1 : c.bg1,
-    brightWhite: variant === "light" ? c.bg1 : c.fg1,
     ...c,
     variant,
     theme: scheme.theme,
