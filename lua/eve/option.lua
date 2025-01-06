@@ -79,9 +79,9 @@ vim.opt.diffopt = table.concat({
   "closeoff",
   "context:0",
   "filler",
-  "indent-heuristic",
+  "indent-heuristic", -- better indentation diffs
   "internal",
-  "iwhite",
+  -- "iwhite", -- ignore whitespace changes
   "linematch:100",
   "vertical",
 }, ",")

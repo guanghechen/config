@@ -283,6 +283,7 @@
     "inputmethod",
     "islist",
     "isort",
+    "iwhite",
     "jsonls",
     "jumplist",
     "jumpoptions",
