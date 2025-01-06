@@ -45,14 +45,14 @@ function fish_prompt --description 'Write out the prompt'
   set_color brcyan
   echo -n $user_separator
 
-  set_color white
+  set_color brwhite
   printf "%s " (hostname)
 
   set -l pwd (string replace -r "^$HOME" "~" $pwd)
   set_color blue
   echo -n $pwd
 
-  set_color white
+  set_color brwhite
   printf '%s ' (fish_vcs_prompt)
 
   set -l status_color (set_color brred)
