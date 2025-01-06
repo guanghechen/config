@@ -24,6 +24,7 @@ local M = {}
 ---@return fml.ux.nvimbar.IRawComponent
 function M.bufs(position)
   local hln_buf = position .. "_buf" ---@type string
+  local hln_buf_order = position .. "_buf_order" ---@type string
   local hln_buf_indicator = position .. "_buf_indicator" ---@type string
   local hln_buf_mod = position .. "_buf_mod" ---@type string
   local hln_buf_omitter = position .. "_buf_omitter" ---@type string
@@ -33,6 +34,7 @@ function M.bufs(position)
   local hln_buf_text = position .. "_buf_text" ---@type string
 
   local hln_bufc = position .. "_bufc" ---@type string
+  local hln_bufc_order = position .. "_bufc_order" ---@type string
   local hln_bufc_mod = position .. "_bufc_mod" ---@type string
   local hln_bufc_pinned = position .. "_bufc_pinned" ---@type string
   local hln_bufc_text = position .. "_bufc_text" ---@type string
@@ -73,16 +75,19 @@ function M.bufs(position)
   end
 
   ---@param buf                           eve.t.state.tab.buf.state
-  ---@param is_current                    boolean
-  ---@param is_first                      boolean
+  ---@param index                         integer
+  ---@param current                       integer|nil
+  ---@param total                         integer
   ---@return string
   ---@return string
-  local function render_buf(buf, is_current, is_first)
+  local function render_buf(buf, index, current, total)
     local bufnr = buf.bufnr ---@type integer
     if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
       return "", ""
     end
 
+    local is_first = index == 1 ---@type boolean
+    local is_current = index == current ---@type boolean
     local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
 
@@ -127,6 +132,7 @@ function M.bufs(position)
 
     local filename, fileicon, fileicon_hl = resolve_buf_info(bufnr)
     local text_indicator_or_sep = is_current and "▎" or (is_first and " " or "▏") ---@type string
+    local text_order = total < 2 and "" or (icons.todigit(index) .. ".") ---@type string
     local text_icon = fileicon .. " " ---@type string
     local text_title = filename ---@type string
     local text_mod = is_mod and "  " or "  " ---@type string
@@ -134,6 +140,7 @@ function M.bufs(position)
     local text_status = is_pinned and text_pinned or text_mod ---@type string
 
     local hln_indicator_or_sep = is_current and hln_buf_indicator or hln_buf_sep ---@type string
+    local hln_order = is_current and hln_bufc_order or hln_buf_order ---@type string
     -- local hln_icon = (is_current and hln_bufc or hln_buf) .. "_" .. fileicon_hl ---@type string
     local hln_icon = (is_current and hln_bufc .. "_" .. fileicon_hl) or hln_buf ---@type string
     local hln_mod = is_current and hln_bufc_mod or hln_buf_mod ---@type string
@@ -141,13 +148,19 @@ function M.bufs(position)
     local hln_status = is_pinned and hln_pinned or hln_mod ---@type string
 
     local hl_text_indicator = txt(text_indicator_or_sep, hln_indicator_or_sep)
+    local hl_order = #text_order > 0 and txt(text_order, hln_order) or "" ---@type string
     local hl_text_icon = txt(text_icon, hln_icon)
     local hl_text_title = txt(text_title, hl_title)
     local hl_text_diagnostic = txt(text_diagnostic, hl_title) ---@type string
     local hl_text_status = txt(text_status, hln_status) ---@type string
 
-    local text = text_indicator_or_sep .. text_icon .. text_title .. text_diagnostic .. text_status ---@type string
-    local hl_text = hl_text_indicator .. hl_text_icon .. hl_text_title .. hl_text_diagnostic .. hl_text_status ---@type string
+    local text = text_indicator_or_sep .. text_order .. text_icon .. text_title .. text_diagnostic .. text_status ---@type string
+    local hl_text = hl_text_indicator
+      .. hl_order
+      .. hl_text_icon
+      .. hl_text_title
+      .. hl_text_diagnostic
+      .. hl_text_status ---@type string
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
@@ -171,25 +184,25 @@ function M.bufs(position)
           and vim.api.nvim_win_get_buf(winnr_cur)
         or 0
 
-      local bufc, bufid_cur = meta_tab:find_buf(bufnr_cur)
-      bufid_cur = bufid_cur or 1
+      local _, bufid_current = meta_tab:find_buf(bufnr_cur)
+      local bufid_middle = bufid_current or 1
 
-      local text, hl_text = render_buf(bufs[bufid_cur], bufc ~= nil, bufid_cur == 1)
+      local text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_current, N)
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
       if remain_width < 0 then
         return "", "", false
       end
 
-      local left_remain_count = bufid_cur - 1 ---@type integer
-      local right_remain_count = N - bufid_cur ---@type integer
-      local left_omitter_width = bufid_cur == 1 and 0 or 7 ---@type integer
-      local right_omitter_width = bufid_cur == N and 0 or 7 ---@type integer
+      local left_remain_count = bufid_middle - 1 ---@type integer
+      local right_remain_count = N - bufid_middle ---@type integer
+      local left_omitter_width = bufid_middle == 1 and 0 or 7 ---@type integer
+      local right_omitter_width = bufid_middle == N and 0 or 7 ---@type integer
       remain_width = remain_width - left_omitter_width - right_omitter_width ---@type integer
 
       ---! Render left bufs as many as possible.
       do
-        for i = bufid_cur - 1, 1, -1 do
-          local t, hl_t = render_buf(bufs[i], false, i == 1)
+        for i = bufid_middle - 1, 1, -1 do
+          local t, hl_t = render_buf(bufs[i], i, bufid_current, N)
           local w = vim.api.nvim_strwidth(t) ---@type integer
 
           if i == 1 and remain_width + left_omitter_width >= w then
@@ -213,8 +226,8 @@ function M.bufs(position)
 
       ---! Render right bufs as many as possible.
       do
-        for i = bufid_cur + 1, N, 1 do
-          local t, hl_t = render_buf(bufs[i], false, false)
+        for i = bufid_middle + 1, N, 1 do
+          local t, hl_t = render_buf(bufs[i], i, bufid_current, N)
           local w = vim.api.nvim_strwidth(t) ---@type integer
 
           if i == N and remain_width + right_omitter_width >= w then

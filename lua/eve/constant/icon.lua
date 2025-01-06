@@ -3,6 +3,32 @@ local env = require("eve.builtin.env")
 ---@class eve.constant.icon
 local M = {}
 
+---@class eve.constant.icon.digits
+local digits = {
+  "₀",
+  "₁",
+  "₂",
+  "₃",
+  "₄",
+  "₅",
+  "₆",
+  "₇",
+  "₈",
+  "₉",
+}
+
+---@param num                           integer
+---@return string
+function M.todigit(num)
+  local result = "" ---@type string
+  while num > 0 do
+    local digit = num % 10
+    num = math.floor((num - digit) / 10)
+    result = digits[digit + 1] .. result
+  end
+  return #result > 0 and result or digits[1]
+end
+
 ---@class eve.constant.icon.fillchars
 M.fillchars = {
   diff = " ",

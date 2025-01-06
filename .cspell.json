@@ -428,6 +428,7 @@
     "timeoutlen",
     "tlsv",
     "tmpl",
+    "todigit",
     "tohtml",
     "topdelete",
     "undercurl",
