@@ -25,20 +25,23 @@ function M.new_with_buf(context)
   vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  state.tab.tab_history:push(tabnr)
+  local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+  local bufnr = context.bufnr ---@type integer
 
   local tabtype = setting.TT_NORMAL ---@type string
   local bufs = {} ---@type eve.t.state.tab.buf.state[]
 
-  local bufnr = context.bufnr ---@type integer
-  local winnr = context.winnr ---@type integer
   if editor.is_buf_valid(bufnr) then
     bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
-    vim.api.nvim_win_set_buf(winnr, bufnr)
   end
 
   local meta = state.tab.Meta.new(tabnr, tabtype, bufs)
   state.tab.set(tabnr, meta)
+  state.tab.tab_history:push(tabnr)
+
+  if bufnr ~= nil and bufnr > 0 then
+    vim.api.nvim_win_set_buf(winnr, bufnr)
+  end
   return tabnr
 end
 

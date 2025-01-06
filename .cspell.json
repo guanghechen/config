@@ -29,6 +29,7 @@
     "Fdebuginspectpos",
     "Fdebuginspectstate",
     "Fdebuginspecttree",
+    "Fdebuginspectwindow",
     "Fdiagnosticgotonext",
     "Fdiagnosticgotonexterror",
     "Fdiagnosticgotonextwarn",

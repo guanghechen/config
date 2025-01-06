@@ -274,7 +274,7 @@ function M.copilot(position)
       reporter.info({
         from = __module_name__,
         subject = "copilot",
-        details = { status = copilot_status or "nil" },
+        details = { status = copilot_status or vim.NIL },
       })
     end
   end)

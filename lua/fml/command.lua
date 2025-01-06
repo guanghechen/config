@@ -150,12 +150,6 @@ command.implement({
 --[debug] ------------------------------------------------------------------------------------------
 command
   .implement({
-    uuid = command.definitions.debug.inspect.uuid,
-    action = function(context)
-      require("fml.action.debug").inspect(context)
-    end,
-  })
-  .implement({
     uuid = command.definitions.debug.inspect_pos.uuid,
     action = function(context)
       require("fml.action.debug").inspect_pos(context)
@@ -171,6 +165,12 @@ command
     uuid = command.definitions.debug.inspect_tree.uuid,
     action = function(context)
       require("fml.action.debug").inspect_tree(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.debug.inspect_window.uuid,
+    action = function(context)
+      require("fml.action.debug").inspect_window(context)
     end,
   })
 

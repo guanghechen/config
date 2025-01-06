@@ -302,10 +302,10 @@ M.definitions.copy = {
 
 ---@class eve.command.definitions.debug
 M.definitions.debug = {
-  inspect = def("Fdebuginspect", "debug: inspect"),
   inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
   inspect_state = def("Fdebuginspectstate", "debug: inspect state"),
   inspect_tree = def("Fdebuginspecttree", "debug: inspect tree"),
+  inspect_window = def("Fdebuginspectwindow", "debug: inspect window"),
 }
 
 ---@class eve.command.definitions.diagnostic
