@@ -35,17 +35,17 @@ function fish_prompt --description 'Write out the prompt'
   # PWD
   set -l pwd $PWD
   if not test -w $pwd
-    set_color $brred
+    set_color $red
     echo -n ' '
   end
 
-  set_color brred --bold
+  set_color red --bold
   echo -n (whoami)
 
-  set_color brcyan
+  set_color white
   echo -n $user_separator
 
-  set_color brwhite
+  set_color cyan
   printf "%s " (hostname)
 
   set -l pwd (string replace -r "^$HOME" "~" $pwd)
