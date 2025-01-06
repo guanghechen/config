@@ -3,9 +3,9 @@ local __module_name__ = "fml.action.toggle" ---@type string
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
-
-local command = require("eve.command")
 local state = require("eve.state")
+local command = require("eve.command")
+
 local select = require("fml.fn.select")
 
 ---@class fml.action.toggle.IItem

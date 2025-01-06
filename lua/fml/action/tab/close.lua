@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.tab" ---@type string
 
 local reporter = require("eve.builtin.reporter")
-
 local state = require("eve.state")
 
 ---@class fml.action.tab

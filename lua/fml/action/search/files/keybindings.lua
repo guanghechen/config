@@ -1,6 +1,6 @@
 local icons = require("eve.constant.icon")
-
 local state = require("eve.state")
+
 local context = require("fml.action.search.files.context")
 
 ---@type eve.t.ux.widget.IRawStatuslineItem[]

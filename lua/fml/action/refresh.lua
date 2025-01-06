@@ -1,9 +1,8 @@
 local __module_name__ = "fml.action.refresh" ---@type string
 
 local reporter = require("eve.builtin.reporter")
-
-local command = require("eve.command")
 local state = require("eve.state")
+local command = require("eve.command")
 
 ---@class fml.action.refresh
 local M = {}
