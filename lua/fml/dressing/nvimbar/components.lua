@@ -199,53 +199,67 @@ function M.bufs(position)
       local right_omitter_width = bufid_middle == N and 0 or 7 ---@type integer
       remain_width = remain_width - left_omitter_width - right_omitter_width ---@type integer
 
-      ---! Render left bufs as many as possible.
-      do
-        for i = bufid_middle - 1, 1, -1 do
-          local t, hl_t = render_buf(bufs[i], i, bufid_current, N)
-          local w = vim.api.nvim_strwidth(t) ---@type integer
+      ---@param bufid                   integer
+      ---@return boolean
+      local function render_left(bufid)
+        local t, hl_t = render_buf(bufs[bufid], bufid, bufid_current, N)
+        local w = vim.api.nvim_strwidth(t) ---@type integer
 
-          if i == 1 and remain_width + left_omitter_width >= w then
-            text = t .. text
-            hl_text = hl_t .. hl_text
-            left_remain_count = 0
-            remain_width = remain_width + left_omitter_width - w
-            break
-          end
-
-          if remain_width < w then
-            break
-          end
-
+        if bufid == 1 and remain_width + left_omitter_width >= w then
           text = t .. text
           hl_text = hl_t .. hl_text
-          remain_width = remain_width - w
-          left_remain_count = left_remain_count - 1
+          left_remain_count = 0
+          remain_width = remain_width + left_omitter_width - w
+          return true
         end
+
+        if remain_width < w then
+          return true
+        end
+
+        text = t .. text
+        hl_text = hl_t .. hl_text
+        remain_width = remain_width - w
+        left_remain_count = left_remain_count - 1
+        return false
       end
 
-      ---! Render right bufs as many as possible.
-      do
-        for i = bufid_middle + 1, N, 1 do
-          local t, hl_t = render_buf(bufs[i], i, bufid_current, N)
-          local w = vim.api.nvim_strwidth(t) ---@type integer
+      ---@param bufid                   integer
+      ---@return boolean
+      local function render_right(bufid)
+        local t, hl_t = render_buf(bufs[bufid], bufid, bufid_current, N)
+        local w = vim.api.nvim_strwidth(t) ---@type integer
 
-          if i == N and remain_width + right_omitter_width >= w then
-            text = text .. t
-            hl_text = hl_text .. hl_t
-            right_remain_count = 0
-            remain_width = remain_width + right_omitter_width - w
-            break
-          end
-
-          if remain_width < w then
-            break
-          end
-
+        if bufid == N and remain_width + right_omitter_width >= w then
           text = text .. t
           hl_text = hl_text .. hl_t
-          remain_width = remain_width - w
-          right_remain_count = right_remain_count - 1
+          right_remain_count = 0
+          remain_width = remain_width + right_omitter_width - w
+          return true
+        end
+
+        if remain_width < w then
+          return true
+        end
+
+        text = text .. t
+        hl_text = hl_text .. hl_t
+        remain_width = remain_width - w
+        right_remain_count = right_remain_count - 1
+        return false
+      end
+
+      local max_delta = math.max(left_remain_count, right_remain_count) ---@type integer
+      local left_done = false ---@type boolean
+      local right_done = false ---@type boolean
+      for delta = 1, max_delta, 1 do
+        if not left_done then
+          local bufid = bufid_middle - delta ---@type integer
+          left_done = bufid < 1 or render_left(bufid) ---@type boolean
+        end
+        if not right_done then
+          local bufid = bufid_middle + delta ---@type integer
+          right_done = bufid > N or render_right(bufid) ---@type boolean
         end
       end
 
