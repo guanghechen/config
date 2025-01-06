@@ -18,7 +18,7 @@ white   = "#7F849C"
 
 # Bright colors
 [colors.bright]
-black   = "#313244"
+black   = "#7F849C"
 red     = "#F38BA8"
 green   = "#A6E3A1"
 yellow  = "#F9E2AF"
@@ -26,3 +26,14 @@ blue    = "#89B4FA"
 magenta = "#CBA6F7"
 cyan    = "#94E2D5"
 white   = "#BAC2DE"
+
+# Dim colors
+[colors.dim]
+black   = "#1E1E2E"
+red     = "#F38BA8"
+green   = "#A6E3A1"
+yellow  = "#F9E2AF"
+blue    = "#89B4FA"
+magenta = "#CBA6F7"
+cyan    = "#94E2D5"
+white   = "#7F849C"
