@@ -21,7 +21,7 @@ if (conda env list | Select-String -Pattern "^lemon\s") {
 conda activate lemon
 
 # Install required packages
-pip install httpie ipython shell-gpt
+pip install httpie ipython shell-gpt you-get
 
 # Setup ipython configuration
 $ipythonConfigPath = "$env:USERPROFILE\.ipython\profile_default\ipython_config.py"
