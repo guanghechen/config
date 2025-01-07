@@ -1,4 +1,4 @@
-Write-Host "[setup config] preparing" -ForegroundColor Green
+Write-Host "[setup config] preparing" -ForegroundColor DarkGreen
 
 $config_root_dir = "$env:XDG_CONFIG_HOME"
 $config_repo_branch = @(
@@ -30,11 +30,11 @@ function CloneOrUpdateRepo {
 
   # Check if the directory exists
   if (Test-Path $repo_path_git_dir) {
-    Write-Host "[setup config] fetching $branch into $repo_path..." -ForegroundColor Blue
+    Write-Host "[setup config] fetching $branch into $repo_path..." -ForegroundColor DarkBlue
     Set-Location -Path $repo_path
     git pull origin $branch
   } elseif ($required) {
-    Write-Host "[setup config] cloning $branch into $repo_path..." -ForegroundColor Blue
+    Write-Host "[setup config] cloning $branch into $repo_path..." -ForegroundColor DarkBlue
     Set-Location -Path $config_root_dir
     git clone $repo_url --single-branch --branch=$branch $repo_path
   }
@@ -50,14 +50,29 @@ foreach ($branch in $config_repo_branch) {
 
 
 # Define the source and destination paths
-Write-Host "[setup config] copying pwsh profile.ps1..." -ForegroundColor Blue
+Write-Host "[setup config] copying pwsh profile.ps1..." -ForegroundColor DarkBlue
 $source = "$env:XDG_CONFIG_HOME\pwsh\profile.ps1"
 Copy-Item -Path $source -Destination $PROFILE -Force
 
 # Setup nvim
-Write-Host "[setup config] setup nvim..." -ForegroundColor Blue
+Write-Host "[setup config] setup nvim..." -ForegroundColor DarkBlue
 $nvim_repo_path = Join-Path $config_root_dir "nvim"
 . "$nvim_repo_path/rust/nvim_tools/build.ps1"
 nvim --headless -u "$nvim_repo_path/init-update.lua"
 
-Write-Host "[setup config] done." -ForegroundColor Green
+# Setup rust
+
+$cargo_config_path = Join-Path "$env:USERPROFILE" ".cargo\\config.toml"
+if (Test-Path $cargo_config_path) {
+  Write-Host "[setup config] cargo config already exists. (skipped)" -ForegroundColor DarkYellow
+} else {
+  Write-Host "[setup config] copying cargo.toml..." -ForegroundColor DarkBlue
+  $source = Join-Path $config_root_dir "guanghechen\\config\\cargo.toml"
+  $target = $cargo_config_path
+  Copy-Item -Path $source -Destination $target -Force
+}
+
+
+
+
+Write-Host "[setup config] done." -ForegroundColor DarkGreen
