@@ -76,36 +76,39 @@ chat_widget = {
     vim.schedule(function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-
-      local cfg_current = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-      local cfg_customized = chat_widget.internal_win_cfg() ---@type vim.api.keyset.win_config
-      local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
-      vim.api.nvim_win_set_config(winnr, cfg)
-
-      if vim.bo[bufnr].filetype == ft.COPILOT_CHAT then
-        chat_widget.internal_winnr = winnr
-        chat_widget.internal_status = "visible"
-
-        vim.wo[winnr].wrap = true
-        vim.wo[winnr].number = false
-        vim.wo[winnr].relativenumber = false
-        vim.wo[winnr].signcolumn = "yes"
-
-        if not vim.b[bufnr].fml_key_bound then
-          vim.b[bufnr].fml_key_bound = true
-          local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
-          fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
-        end
-
-        vim.schedule(function()
-          vim.cmd("stopinsert")
-          if chat_widget.internal_cursor then
-            pcall(function()
-              vim.api.nvim_win_set_cursor(winnr, chat_widget.internal_cursor)
-            end)
-          end
-        end)
+      if vim.bo[bufnr].filetype ~= ft.COPILOT_CHAT then
+        return
       end
+
+      if fn.is_win_floating(winnr) then
+        local cfg_current = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+        local cfg_customized = chat_widget.internal_win_cfg() ---@type vim.api.keyset.win_config
+        local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
+        vim.api.nvim_win_set_config(winnr, cfg)
+      end
+
+      chat_widget.internal_winnr = winnr
+      chat_widget.internal_status = "visible"
+
+      vim.wo[winnr].wrap = true
+      vim.wo[winnr].number = false
+      vim.wo[winnr].relativenumber = false
+      vim.wo[winnr].signcolumn = "yes"
+
+      if not vim.b[bufnr].fml_key_bound then
+        vim.b[bufnr].fml_key_bound = true
+        local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
+        fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+      end
+
+      vim.schedule(function()
+        vim.cmd("stopinsert")
+        if chat_widget.internal_cursor then
+          pcall(function()
+            vim.api.nvim_win_set_cursor(winnr, chat_widget.internal_cursor)
+          end)
+        end
+      end)
     end)
   end,
   internal_win_resize = function()
