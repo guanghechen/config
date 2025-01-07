@@ -24,6 +24,14 @@
       rustup default stable-x86_64-pc-windows-gnu
       ```
 
+* Install font
+  - Maple
+    - https://github.com/guanghechen/mirror/releases/download/font/MapleMonoNormalNL-NF-CN-unhinted.zip
+    - "Maple Mono Normal NL NF CN"
+  - RobotoMono
+    - https://github.com/guanghechen/mirror/releases/download/font/RobotoMono.zip
+    - "RobotoMono Nerd Font"
+
 * Install miniforge
 
   - Download exe from  https://github.com/conda-forge/miniforge?tab=readme-ov-file#download
