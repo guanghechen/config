@@ -15,6 +15,7 @@ M.flights = {
   "lsp_inlay_hints",
   "lsp_code_lens",
   "spellcheck",
+  "treesitter_context",
 }
 
 ---@class eve.constant.setting.themes

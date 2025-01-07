@@ -1,7 +1,6 @@
 ---! https://github.com/nvim-treesitter/nvim-treesitter-context
 return {
   name = "nvim-treesitter-context",
-  enabled = false,
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   opts = {
     enable = true,

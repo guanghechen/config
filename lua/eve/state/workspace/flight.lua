@@ -16,6 +16,7 @@ local Observable = require("eve.collection.observable")
 ---@field public lsp_code_lens          boolean
 ---
 ---@field public spellcheck             boolean
+---@field public treesitter_context     boolean
 
 ---@class eve.state.flight.state
 ---@field public autoload               eve.collection.IObservable
@@ -31,6 +32,7 @@ local Observable = require("eve.collection.observable")
 ---@field public lsp_code_lens          eve.collection.IObservable
 ---
 ---@field public spellcheck             eve.collection.IObservable
+---@field public treesitter_context     eve.collection.IObservable
 
 ---@class eve.state.flight
 ---@field public defaults               fun(): eve.state.flight.data
@@ -61,6 +63,7 @@ function M.defaults()
     lsp_code_lens = is_git_repo,
 
     spellcheck = is_git_repo,
+    treesitter_context = is_git_repo,
   }
 end
 
@@ -102,6 +105,9 @@ function M.normalize(data)
     if type(data.spellcheck) == "boolean" then
       resolved.spellcheck = data.spellcheck
     end
+    if type(data.treesitter_context) == "boolean" then
+      resolved.treesitter_context = data.treesitter_context
+    end
   end
 
   ---@type eve.state.flight.data
@@ -130,6 +136,7 @@ function M.dump()
     lsp_code_lens = _state.lsp_code_lens:snapshot(),
 
     spellcheck = _state.spellcheck:snapshot(),
+    treesitter_context = _state.treesitter_context:snapshot(),
   }
 end
 
@@ -154,6 +161,7 @@ function M.load(raw_data)
       lsp_code_lens = Observable.from_value(data.lsp_code_lens),
 
       spellcheck = Observable.from_value(data.spellcheck),
+      treesitter_context = Observable.from_value(data.treesitter_context),
     }
     return _state
   end
@@ -171,6 +179,7 @@ function M.load(raw_data)
   _state.lsp_code_lens:next(data.lsp_code_lens)
 
   _state.spellcheck:next(data.spellcheck)
+  _state.treesitter_context:next(data.treesitter_context)
   return _state
 end
 

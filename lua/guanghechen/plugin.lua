@@ -28,16 +28,19 @@ local state = require("eve.state")
 
 ---@class guanghechen.plugin.bootstrap.conds
 local conds = {
-  ---@return boolean
-  not_vscode = function()
-    return not vim.g.vscode
+  common = function()
+    return true
   end,
   ---@return boolean
   copilot = function()
     return not vim.g.vscode and state.flight.copilot:snapshot()
   end,
-  common = function()
-    return true
+  ---@return boolean
+  not_vscode = function()
+    return not vim.g.vscode
+  end,
+  treesitter_context = function()
+    return not vim.g.vscode and state.flight.treesitter_context:snapshot()
   end,
 }
 
@@ -78,7 +81,7 @@ local raw_specs = {
   { name = "nvim-notify", main = "notify", cond = conds.not_vscode },
   { name = "nvim-snippets", main = "snippets", cond = conds.not_vscode },
   { name = "nvim-treesitter", main = "nvim-treesitter", cond = conds.not_vscode },
-  { name = "nvim-treesitter-context", main = "treesitter-context", cond = conds.not_vscode },
+  { name = "nvim-treesitter-context", main = "treesitter-context", cond = conds.treesitter_context },
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects", cond = conds.not_vscode },
   { name = "plenary.nvim", main = "plenary", cond = conds.not_vscode },
   { name = "trouble.nvim", main = "trouble", cond = conds.not_vscode },

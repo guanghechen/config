@@ -251,20 +251,11 @@ function M.watch_changes(params)
     if params.on_theme_changed then
       params.on_theme_changed()
     end
-
-    M.status.ticker_editor:tick()
-    M.status.dirtier_statusline:mark_dirty()
-    M.status.dirtier_tabline:mark_dirty()
-    vim.cmd.redraw()
   end, true)
 
   M.observe({
     M.option.relativenumber,
   }, function()
-    M.status.ticker_editor:tick()
-    M.status.dirtier_statusline:mark_dirty()
-    M.status.dirtier_tabline:mark_dirty()
-
     local flag = M.option.relativenumber:snapshot() ---@type boolean
     local winnrs = vim.api.nvim_list_wins() ---@type integer[]
     vim.o.relativenumber = flag
@@ -274,8 +265,19 @@ function M.watch_changes(params)
         vim.wo[winnr].relativenumber = flag
       end
     end
+  end, true)
 
-    vim.cmd("redraw!")
+  M.observe({
+    M.flight.spellcheck,
+    M.flight.treesitter_context,
+    M.option.relativenumber,
+    M.theme.theme,
+    M.theme.transparency,
+  }, function()
+    M.status.ticker_editor:tick()
+    M.status.dirtier_statusline:mark_dirty()
+    M.status.dirtier_tabline:mark_dirty()
+    vim.cmd.redraw()
   end, true)
 
   M.observe({
@@ -308,7 +310,6 @@ function M.watch_changes(params)
     M.flight.dressing_winsep_float,
     M.flight.lsp_inlay_hints,
     M.flight.lsp_code_lens,
-    M.flight.spellcheck,
 
     ---
     M.search.flag_case_sensitive,
@@ -338,10 +339,9 @@ function M.watch_changes(params)
   M.observe({
     M.flight.lsp_inlay_hints,
     M.flight.lsp_code_lens,
-    M.flight.spellcheck,
   }, function()
     pcall(function()
-      vim.cmd("LspRestart")
+      vim.cmd.LspRestart()
     end)
   end, true)
 
