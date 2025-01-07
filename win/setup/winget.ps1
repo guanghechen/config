@@ -17,4 +17,13 @@ winget install -e --source winget --id JesseDuffield.lazygit
 # winget install -e --source winget --id sxyazi.yazi
 # winget install -e --source winget --id ajeetdsouza.zoxide
 
+
+cargo install --locked git-delta
+cargo install --locked fd-find
+cargo install --locked fnm
+cargo install --locked lsd
+cargo install --locked ripgrep
+cargo install --locked yazi-fm yazi-cli
+cargo install --locked zoxide
+
 Write-Host "[setup winget] done." -ForegroundColor Green
