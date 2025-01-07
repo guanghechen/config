@@ -4,10 +4,12 @@
   "words": [
     "gruvbox",
     "miniforge",
+    "msvc",
     "msys",
     "nvim",
     "pacman",
     "pwsh",
+    "rustup",
     "usermod",
     "winget"
   ]

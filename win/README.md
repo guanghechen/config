@@ -14,6 +14,15 @@
 * Install rust
 
   - Download exe from https://www.rust-lang.org/tools/install
+  - FAQ
+    * `error: linker `link.exe` not found`
+
+      ```pwsh
+      # https://stackoverflow.com/a/62817909
+      rustup uninstall toolchain stable-x86_64-pc-windows-msvc
+      rustup toolchain install stable-x86_64-pc-windows-gnu
+      rustup default stable-x86_64-pc-windows-gnu
+      ```
 
 * Install miniforge
 
@@ -31,7 +40,6 @@
 
   - Edit the profile by `nvim $PROFILE` or `notepad $PROFILE`
   - Copy the preset config from ./config/pwsh/profile.ps1
-
 
 * Setup neovim
 
