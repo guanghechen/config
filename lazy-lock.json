@@ -35,7 +35,7 @@
   "nvim-notify": { "branch": "nvim@nvim-notify", "commit": "bd9cd51f9ef2f6326fc2bc9931d0718c1794e247" },
   "nvim-snippets": { "branch": "nvim@nvim-snippets", "commit": "56b4052f71220144689caaa2e5b66222ba5661eb" },
   "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "958af94dd8d74071c72c9d6840b41d06ea436b2f" },
-  "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "0f3332788e0bd37716fbd25f39120dcfd557c90f" },
+  "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "18d28f00e1c9c4d719fbd77812b195d59e29db2b" },
   "nvim-treesitter-textobjects": { "branch": "nvim@nvim-treesitter-textobjects", "commit": "ad8f0a472148c3e0ae9851e26a722ee4e29b1595" },
   "plenary.nvim": { "branch": "nvim@plenary.nvim", "commit": "2d9b06177a975543726ce5c73fca176cedbffe9d" },
   "trouble.nvim": { "branch": "nvim@trouble.nvim", "commit": "46cf952fc115f4c2b98d4e208ed1e2dce08c9bf6" },
