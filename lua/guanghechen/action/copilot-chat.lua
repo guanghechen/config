@@ -8,7 +8,12 @@ local state = require("eve.state")
 local select = require("fml.fn.select")
 
 if not state.flight.copilot:snapshot() then
-  return
+  reporter.error({
+    from = __module_name__,
+    subject = "copilot-chat",
+    message = "Copilot is not enabled",
+  })
+  return {}
 end
 
 ---@class guanghechen.action.copilot_chat.prompt_actions.IItem
