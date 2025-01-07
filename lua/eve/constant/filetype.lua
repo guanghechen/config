@@ -88,6 +88,33 @@ local filetypes = {
   cmp_search = {
     [M.SEARCH_INPUT] = true,
   },
+  disable_autopairs = {
+    [M.AERIAL] = true,
+    [M.CHECKHEALTH] = true,
+    [M.COPILOT_CHAT] = true,
+    [M.DAP_FLOAT] = true,
+    [M.DAP_UI_HOVER] = true,
+    [M.DIFFVIEW_FILE_HISTORY] = true,
+    [M.DIFFVIEW_FILES] = true,
+    [M.GITCOMMIT] = true,
+    [M.HELP] = true,
+    [M.LAZY] = true,
+    [M.MAN] = true,
+    [M.MASON] = true,
+    [M.NEOTREE] = true,
+    [M.NEOTREE_POPUP] = true,
+    [M.NOICE] = true,
+    [M.NOTIFY] = true,
+    [M.LSPINFO] = true,
+    [M.PLENARY_TEST_POPUP] = true,
+    [M.QUICKFIX] = true,
+    [M.SEARCH_INPUT] = true,
+    [M.SEARCH_MAIN] = true,
+    [M.STARTUPTIME] = true,
+    [M.TERM] = true,
+    [M.TROUBLE] = true,
+    [M.WINSEP] = true,
+  },
   not_plain = {
     [M.AERIAL] = true,
     [M.CHECKHEALTH] = true,
@@ -243,6 +270,11 @@ end
 ---@return string[]
 function M.get_cmp_search_filetypes()
   return vim.tbl_keys(filetypes.cmp_search)
+end
+
+---@return string[]
+function M.get_disable_autopairs_filetypes()
+  return vim.tbl_keys(filetypes.disable_autopairs)
 end
 
 ---@return string[]

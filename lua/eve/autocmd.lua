@@ -72,6 +72,18 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+---! Disable autopairs
+vim.api.nvim_create_autocmd("FileType", {
+  group = fn.augroup("close_filetypes_with_q"),
+  pattern = ft.get_disable_autopairs_filetypes(),
+  callback = function(event)
+    local bufnr = event.buf ---@type integer|nil
+    if bufnr ~= nil then
+      vim.b[bufnr].minipairs_disable = true
+    end
+  end,
+})
+
 ---! Highlight on yank.
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = fn.augroup("highlight_on_yank"),
