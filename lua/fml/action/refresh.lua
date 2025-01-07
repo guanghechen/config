@@ -37,6 +37,7 @@ function M.refresh_all(context)
   end
 
   vim.cmd("LspRestart")
+  state.status.suppress_warning:next(true)
   state.status.dirtier_statusline:mark_dirty()
   state.status.dirtier_tabline:mark_dirty()
   vim.cmd.redraw()

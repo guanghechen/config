@@ -15,6 +15,7 @@ local Ticker = require("eve.collection.ticker")
 ---
 ---@field public lsp_msg                string
 ---@field public tmux_zen_mode          boolean
+---@field public suppress_warning       boolean
 
 ---@class eve.state.status.state
 ---@field public ticker_editor          eve.collection.ITicker
@@ -27,6 +28,7 @@ local Ticker = require("eve.collection.ticker")
 ---
 ---@field public lsp_msg                eve.collection.IObservable
 ---@field public tmux_zen_mode          eve.collection.IObservable
+---@field public suppress_warning       eve.collection.IObservable
 ---
 ---@field public reset                  fun(): nil
 
@@ -53,6 +55,7 @@ function M.defaults()
 
     lsp_msg = "",
     tmux_zen_mode = tmux.is_tmux_pane_zoomed(),
+    suppress_warning = false,
   }
 end
 
@@ -88,6 +91,7 @@ function M.dump()
 
     lsp_msg = _state.lsp_msg:snapshot(),
     tmux_zen_mode = _state.tmux_zen_mode:snapshot(),
+    suppress_warning = _state.suppress_warning:snapshot(),
   }
 end
 
@@ -110,12 +114,14 @@ function M.load(raw_data)
 
       lsp_msg = Observable.from_value(""),
       tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
+      suppress_warning = Observable.from_value(false),
 
       reset = function()
         ---@cast _state                 eve.state.status.state
 
         _state.lsp_msg:next("")
         _state.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
+        _state.suppress_warning:next(false)
         _state.dirtier_statusline:mark_dirty()
         _state.dirtier_tabline:mark_dirty()
         _state.dirty_winline_nr:next(0)

@@ -206,6 +206,10 @@ S = {
             end
           end
         end
+        if state_status.load({}).suppress_warning:snapshot() then
+          safe_callback(false)
+          return
+        end
 
         reporter.error({
           from = __module_name__,

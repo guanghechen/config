@@ -144,6 +144,10 @@ vim.api.nvim_create_autocmd("LspProgress", {
     local lsp_msg = data.kind == "end" and "" or str ---@type string
     state.status.lsp_msg:next(lsp_msg)
     state.status.dirtier_statusline:mark_dirty()
+
+    if data.kind == "end" then
+      state.status.suppress_warning:next(false)
+    end
   end,
 })
 
