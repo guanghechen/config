@@ -53,8 +53,9 @@ mk({ "n" }, "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add bel
 mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add above")
 
 ---! enhancement
-mk({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", "remove search highlights") -- Clear search with <esc>
-mk({ "t" }, "<C-n>", "<C-\\><C-n>", "terminal: enter normal mode") -- Exit terminal
+mk({ "n", "v" }, "<leader>:", "q:", "system: open command line window")
+mk({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", "system: remove search highlights") -- Clear search with <esc>
+mk({ "t" }, "<C-n>", "<C-\\><C-n>", "system: enter normal mode") -- Exit terminal
 
 ---! Add undo break-points
 mk({ "i" }, ",", ",<c-g>u")
