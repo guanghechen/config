@@ -3,6 +3,7 @@ local __module_name__ = "guanghechen.action.copilot-chat" ---@type string
 local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
 local ft = require("eve.constant.filetype")
+local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 local select = require("fml.fn.select")
@@ -79,9 +80,8 @@ chat_widget = {
   internal_win_open = function()
     require("CopilotChat").open()
     vim.schedule(function()
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype ~= ft.COPILOT_CHAT then
+      local winnr = editor.find_floating_winnr(ft.COPILOT_CHAT) ---@type integer|nil
+      if winnr == nil then
         return
       end
 
@@ -99,21 +99,21 @@ chat_widget = {
       vim.wo[winnr].number = false
       vim.wo[winnr].relativenumber = false
       vim.wo[winnr].signcolumn = "yes"
+      vim.wo[winnr].winfixbuf = true
 
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if not vim.b[bufnr].fml_key_bound then
         vim.b[bufnr].fml_key_bound = true
         local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
         fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
       end
 
-      vim.schedule(function()
-        vim.cmd("stopinsert")
-        if chat_widget.internal_cursor then
-          pcall(function()
-            vim.api.nvim_win_set_cursor(winnr, chat_widget.internal_cursor)
-          end)
-        end
-      end)
+      vim.cmd.stopinsert()
+      if chat_widget.internal_cursor then
+        pcall(function()
+          vim.api.nvim_win_set_cursor(winnr, chat_widget.internal_cursor)
+        end)
+      end
     end)
   end,
   internal_win_resize = function()
