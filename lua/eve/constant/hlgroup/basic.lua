@@ -93,7 +93,7 @@ local function gen_hlgroup_map(context)
     Delimiter = { fg = c.orange },
     EndOfBuffer = { fg = c.bg2 },
     NonText = { fg = c.bg2 },
-    Whitespace = { fg = c.bg2 },
+    Whitespace = { fg = c.bg4 },
 
     ---syntax
     Boolean = { fg = c.purple },

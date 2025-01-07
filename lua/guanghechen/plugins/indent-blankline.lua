@@ -7,8 +7,12 @@ return {
   opts = {
     indent = {
       char = "│",
-      tab_char = "│",
+      tab_char = "┃",
       highlight = "IblChar",
+    },
+    whitespace = {
+      highlight = { "Whitespace", "NonText" },
+      remove_blankline_trail = false,
     },
     scope = {
       enabled = false, --- Since we used the mini.indentscope plugin
@@ -20,9 +24,4 @@ return {
       filetypes = ft.get_no_ibl_filetypes(),
     },
   },
-  config = function(_, opts)
-    local hooks = require("ibl.hooks")
-    hooks.register(hooks.type.WHITESPACE, hooks.builtin.hide_first_space_indent_level)
-    require("ibl").setup(opts)
-  end,
 }
