@@ -1,3 +1,4 @@
+-- gruvbox_light
 local config = {
   colors = {
     background    = "#FBF1C7",
@@ -28,8 +29,8 @@ local config = {
       "#B16286",
       "#689D6A",
       "#3C3836",
-    }
-  }
+    },
+  },
 }
 
 return config

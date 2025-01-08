@@ -1,3 +1,4 @@
+-- gruvbox_dark
 local config = {
   colors = {
     background    = "#282828",
@@ -28,8 +29,8 @@ local config = {
       "#B16286",
       "#689D6A",
       "#EBDBB2",
-    }
-  }
+    },
+  },
 }
 
 return config

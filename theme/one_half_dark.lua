@@ -1,3 +1,4 @@
+-- one_half_dark
 local config = {
   colors = {
     background    = "#1E222A",
@@ -28,8 +29,8 @@ local config = {
       "#B294BB",
       "#4EC9B0",
       "#D7DAE0",
-    }
-  }
+    },
+  },
 }
 
 return config

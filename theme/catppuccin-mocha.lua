@@ -1,3 +1,4 @@
+-- catppuccin-mocha
 local config = {
   colors = {
     background    = "#1E1E2E",
@@ -28,8 +29,8 @@ local config = {
       "#CBA6F7",
       "#94E2D5",
       "#BAC2DE",
-    }
-  }
+    },
+  },
 }
 
 return config

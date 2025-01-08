@@ -1,3 +1,4 @@
+-- nord
 local config = {
   colors = {
     background    = "#2E3440",
@@ -28,8 +29,8 @@ local config = {
       "#B48EAD",
       "#8FBCBB",
       "#E5E9F0",
-    }
-  }
+    },
+  },
 }
 
 return config

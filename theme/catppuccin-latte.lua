@@ -1,3 +1,4 @@
+-- catppuccin-latte
 local config = {
   colors = {
     background    = "#EFF1F5",
@@ -28,8 +29,8 @@ local config = {
       "#8839EF",
       "#179299",
       "#5C5F77",
-    }
-  }
+    },
+  },
 }
 
 return config
