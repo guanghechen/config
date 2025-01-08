@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import fs from 'node:fs/promises'
 import path from "node:path";
 import { HOME_CONFIG } from "./_env.mjs";
@@ -160,8 +159,8 @@ return config
     extname: ".json",
     local: process.env.f_windows_terminal_settings,
     active: (app) => is_file(app.local),
-    render: (app, template, scheme) => {
-      const raw_content = readFileSync(app.local, "utf8");
+    render: async (app, template, scheme) => {
+      const raw_content = await fs.readFile(app.local, "utf8");
       const settings = JSON.parse(raw_content);
 
       const raw_color_scheme = render_template(template, scheme);

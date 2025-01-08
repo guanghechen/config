@@ -29,9 +29,9 @@ export function is_file(filepath) {
 /**
  * @param {string}                            template
  * @param {import('./_env.mjs').IThemeScheme} scheme
- * @return {string}
+ * @return {Promise<string>}
  */
-export function render_template(template, scheme) {
+export async function render_template(template, scheme) {
   const variant = scheme.variant;
   const c = scheme.palette;
 
@@ -144,7 +144,7 @@ export async function apply_theme_per_app(app, scheme) {
       return;
     }
     const template = await fs.readFile(template_filepath, "utf8");
-    const content = app.render(app, template, scheme);
+    const content = await app.render(app, template, scheme);
 
     const theme_filepath = path.resolve(HOME_CONFIG, app.name, app.local);
     mkdirSync(path.dirname(theme_filepath), { recursive: true });
@@ -181,7 +181,7 @@ export async function gen_themes_per_app(app) {
     const scheme = await load_theme_scheme(theme);
     if (!scheme) return;
 
-    const content = app.render(app, template, scheme);
+    const content = await app.render(app, template, scheme);
     const theme_filepath = path.resolve(THEME_HOME, `${theme}${app.extname}`);
     mkdirSync(path.dirname(theme_filepath), { recursive: true });
     await fs.writeFile(theme_filepath, content, "utf8");
