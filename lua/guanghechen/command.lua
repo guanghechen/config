@@ -55,28 +55,28 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
-    tabtype = setting.TT_DIFFVIEW,
+    tabtype = setting.tabtypes.DIFFVIEW,
     action = function(context)
       require("guanghechen.action.diffview").fs_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
-    tabtype = setting.TT_NORMAL,
+    tabtype = setting.tabtypes.NORMAL,
     action = function(context)
       require("guanghechen.action.neo-tree").fs_cwd(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_workspace.uuid,
-    tabtype = setting.TT_NORMAL,
+    tabtype = setting.tabtypes.NORMAL,
     action = function(context)
       require("guanghechen.action.neo-tree").fs_workspace(context)
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_reveal.uuid,
-    tabtype = setting.TT_NORMAL,
+    tabtype = setting.tabtypes.NORMAL,
     action = function(context)
       require("guanghechen.action.neo-tree").fs_reveal(context)
     end,

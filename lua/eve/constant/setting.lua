@@ -64,13 +64,16 @@ M.sessions = {
   }, ","),
 }
 
+---@class eve.constant.setting.tabtypes
+M.tabtypes = {
+  ALL = "all",
+  DIFFVIEW = "diffview",
+  NORMAL = "normal",
+}
+
 ---! Tab settings
 
 M.TAB_HISTORY_CAPACITY = 100
-
-M.TT_ALL = "all"
-M.TT_DIFFVIEW = "diffview"
-M.TT_NORMAL = "normal"
 
 ---! Window settings
 

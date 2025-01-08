@@ -18,11 +18,11 @@ function M.calc_tabtype(tabnr)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     if filetype == ft.DIFFVIEW_FILES or filetype == ft.DIFFVIEW_FILE_HISTORY then
-      return setting.TT_DIFFVIEW
+      return setting.tabtypes.DIFFVIEW
     end
   end
 
-  return setting.TT_NORMAL ---@type string
+  return setting.tabtypes.NORMAL ---@type string
 end
 
 ---@param filetype                      string

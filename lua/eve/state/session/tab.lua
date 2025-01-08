@@ -67,7 +67,7 @@ local M = {}
 function Meta.new(tabnr, tabtype, bufs)
   local self = setmetatable({}, Meta)
   self.tabnr = tabnr ---@type integer
-  self.tabtype = tabtype or setting.TT_NORMAL ---@type string
+  self.tabtype = tabtype or setting.tabtypes.NORMAL ---@type string
   self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
   return self
 end
@@ -181,11 +181,11 @@ S = {
   end,
   resolve_tabtype = function(tabnr)
     if tabnr == nil or tabnr < 1 then
-      return setting.TT_NORMAL
+      return setting.tabtypes.NORMAL
     end
 
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta.tabtype or setting.TT_NORMAL
+    return meta and meta.tabtype or setting.tabtypes.NORMAL
   end,
   refresh = function(tabnr)
     if tabnr == nil or tabnr < 1 then
@@ -458,7 +458,7 @@ function M.load(raw_data)
       end
 
       ---@type eve.state.tab.meta.state
-      local meta = Meta.new(tabnr, data_tab.tabtype or setting.TT_NORMAL, bufs)
+      local meta = Meta.new(tabnr, data_tab.tabtype or setting.tabtypes.NORMAL, bufs)
       S.set(tabnr, meta)
     end
   end

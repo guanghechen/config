@@ -130,7 +130,7 @@ end
 ---@return eve.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
-  local tabtype = implementation.tabtype or setting.TT_ALL ---@type string
+  local tabtype = implementation.tabtype or setting.tabtypes.ALL ---@type string
   local action = implementation.action ---@type fun(args?: string): nil
   local definition = definition_map[uuid] ---@type eve.command.IDefinition|nil
   if definition == nil then
@@ -143,7 +143,7 @@ function M.implement(implementation)
     return M
   end
 
-  local key = tabtype == setting.TT_ALL and uuid or (uuid .. ":" .. tabtype) ---@type string
+  local key = tabtype == setting.tabtypes.ALL and uuid or (uuid .. ":" .. tabtype) ---@type string
   if command_map[key] ~= nil then
     reporter.error({
       from = __module_name__,

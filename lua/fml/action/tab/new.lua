@@ -28,7 +28,7 @@ function M.new_with_buf(context)
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   local bufnr = context.bufnr ---@type integer
 
-  local tabtype = setting.TT_NORMAL ---@type string
+  local tabtype = setting.tabtypes.NORMAL ---@type string
   local bufs = {} ---@type eve.t.state.tab.buf.state[]
 
   if editor.is_buf_valid(bufnr) then
