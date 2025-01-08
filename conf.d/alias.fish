@@ -8,7 +8,6 @@ alias cd...='cd ../../'
 alias cd....='cd ../../../'
 alias cd.....='cd ../../../../'
 alias chown='chown --preserve-root'
-alias chmod='chmod --preserve-root'
 alias chgrp='chgrp --preserve-root'
 alias cp='cp -i'
 alias diff='colordiff'
@@ -57,6 +56,10 @@ alias ghc-ports='netstat -tulanp'
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
 
+### non-macos
+if test (uname) != "Darwin"
+  alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in MacOS.
+end
 
 ### wsl
 if test -e /proc/version
