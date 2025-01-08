@@ -14,11 +14,102 @@ local config = {
 		{ key = "0", mods = "CMD|CTRL|SHIFT", action = act.ResetFontSize },
 		{ key = "=", mods = "CMD|CTRL|SHIFT", action = act.IncreaseFontSize },
 		{ key = "-", mods = "CMD|CTRL|SHIFT", action = act.DecreaseFontSize },
+
+		---
+
+		{
+			key = "Enter",
+			mods = "CMD",
+			action = act.Multiple({
+				act.SendKey({ key = "Escape" }),
+				act.SendKey({ key = "Enter" }),
+			}),
+		},
+		{
+			key = "`",
+			mods = "CMD",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = "`" }),
+			}),
+		},
+		{
+			key = ",",
+			mods = "CMD",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = "," }),
+			}),
+		},
+		{
+			key = ".",
+			mods = "CMD",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = "." }),
+			}),
+		},
+		{
+			key = "[",
+			mods = "CMD",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = "[" }),
+			}),
+		},
+		{
+			key = "]",
+			mods = "CMD",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = "]" }),
+			}),
+		},
+		{
+			key = ":",
+			mods = "CMD|SHIFT",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = ":", mods = "SHIFT" }),
+			}),
+		},
+		{
+			key = "<",
+			mods = "CMD|SHIFT",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = "<", mods = "SHIFT" }),
+			}),
+		},
+		{
+			key = ">",
+			mods = "CMD|SHIFT",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = ">", mods = "SHIFT" }),
+			}),
+		},
+		{
+			key = "{",
+			mods = "CMD|SHIFT",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = "{", mods = "SHIFT" }),
+			}),
+		},
+		{
+			key = "}",
+			mods = "CMD|SHIFT",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = "}", mods = "SHIFT" }),
+			}),
+		},
 	},
 }
 
 ---@type string[]
-local fn_keys = {
+local fns = {
 	"F1",
 	"F2",
 	"F3",
@@ -42,7 +133,21 @@ local arrows = {
 }
 
 ---@type string[]
-local a_to_z = {
+local digits = {
+	"0",
+	"1",
+	"2",
+	"3",
+	"4",
+	"5",
+	"6",
+	"7",
+	"8",
+	"9",
+}
+
+---@type string[]
+local letters = {
 	"a",
 	"b",
 	"c",
@@ -71,7 +176,7 @@ local a_to_z = {
 	"z",
 }
 
-for _, key in ipairs(fn_keys) do
+for _, key in ipairs(fns) do
 	table.insert(config.keys, {
 		key = key,
 		mods = "CMD",
@@ -111,8 +216,7 @@ for _, key in ipairs(arrows) do
 	})
 end
 
-for i = 0, 9, 1 do
-	local key = tostring(i)
+for _, key in ipairs(digits) do
 	table.insert(config.keys, {
 		key = key,
 		mods = "CMD",
@@ -123,7 +227,7 @@ for i = 0, 9, 1 do
 	})
 	table.insert(config.keys, {
 		key = key,
-		mods = "CMD",
+		mods = "CMD|CTRL",
 		action = act.Multiple({
 			act.SendKey({ key = "a", mods = "CTRL" }),
 			act.SendKey({ key = key, mods = "CTRL" }),
@@ -131,7 +235,7 @@ for i = 0, 9, 1 do
 	})
 end
 
-for _, key in ipairs(a_to_z) do
+for _, key in ipairs(letters) do
 	if key ~= "v" then
 		table.insert(config.keys, {
 			key = key,
@@ -142,15 +246,6 @@ for _, key in ipairs(a_to_z) do
 			}),
 		})
 	end
-
-	table.insert(config.keys, {
-		key = key:upper(),
-		mods = "CTRL|SHIFT",
-		action = act.Multiple({
-			act.SendKey({ key = "Escape" }),
-			act.SendKey({ key = key, mods = "CTRL" }),
-		}),
-	})
 
 	table.insert(config.keys, {
 		key = key,
@@ -167,6 +262,15 @@ for _, key in ipairs(a_to_z) do
 		action = act.Multiple({
 			act.SendKey({ key = "a", mods = "CTRL" }),
 			act.SendKey({ key = key:upper() }),
+		}),
+	})
+
+	table.insert(config.keys, {
+		key = key:upper(),
+		mods = "CTRL|SHIFT",
+		action = act.Multiple({
+			act.SendKey({ key = "Escape" }),
+			act.SendKey({ key = key:upper(), mods = "CTRL" }),
 		}),
 	})
 end
