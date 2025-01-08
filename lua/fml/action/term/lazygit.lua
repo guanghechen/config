@@ -104,9 +104,6 @@ local function open_lazygit(context, name, cwd, args)
     local function edit()
       edit_lazygit_file_in_buffer(context, cwd)
     end
-
-    vim.keymap.set("t", "<esc>", "<esc>", { buffer = bufnr, noremap = true, silent = true })
-    vim.keymap.set("t", "<esc><esc>", "<esc><esc>", { buffer = bufnr, noremap = true, silent = true })
     vim.keymap.set("t", "<C-e>", edit, { buffer = bufnr, noremap = true, silent = true })
   end
 end
