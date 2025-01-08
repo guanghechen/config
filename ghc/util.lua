@@ -18,4 +18,10 @@ function M.os_name()
 	return "nix"
 end
 
+---@return table
+function M.load_theme()
+	local ok, theme = pcall(require, "local.theme")
+	return ok and theme or require("theme.gruvbox_dark")
+end
+
 return M

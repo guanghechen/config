@@ -23,4 +23,9 @@ local config = {
 	tab_max_width = 16,
 }
 
+local theme = util.load_theme() or {} ---@type table
+for key, val in pairs(theme) do
+	config[key] = val
+end
+
 return config
