@@ -8,6 +8,7 @@ local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
+local setting = require("eve.constant.setting")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 
@@ -170,7 +171,8 @@ function M.bufs(position)
     atomic = false,
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
-      local meta_tab = state.tab.resolve(context.tabnr) ---@type eve.state.tab.meta.state|nil
+      local tabnr = context.tabnr ---@type integer
+      local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
       if meta_tab == nil or #meta_tab.bufs < 1 then
         return "", "", false
       end
@@ -185,7 +187,8 @@ function M.bufs(position)
         or 0
 
       local _, bufid_current = meta_tab:find_buf(bufnr_cur)
-      local bufid_middle = bufid_current or 1
+      local bufid_middle = bufid_current or vim.t[tabnr][setting.vars.BUFID_MIDDLE] or 1 ---@type integer
+      vim.t[tabnr][setting.vars.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
 
       local text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_current, N)
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
@@ -221,7 +224,7 @@ function M.bufs(position)
         hl_text = hl_t .. hl_text
         remain_width = remain_width - w
         left_remain_count = left_remain_count - 1
-        return false
+        return bufid == 1
       end
 
       ---@param bufid                   integer
@@ -246,7 +249,7 @@ function M.bufs(position)
         hl_text = hl_text .. hl_t
         remain_width = remain_width - w
         right_remain_count = right_remain_count - 1
-        return false
+        return bufid == N
       end
 
       local max_delta = math.max(left_remain_count, right_remain_count) ---@type integer

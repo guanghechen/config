@@ -71,6 +71,12 @@ M.tabtypes = {
   NORMAL = "normal",
 }
 
+---@class eve.constant.setting.vars
+M.vars = {
+  BUFID_MIDDLE = "bufid_middle",
+  WINLINE_DISABLED = "fml_winline_disabled",
+}
+
 ---! Tab settings
 
 M.TAB_HISTORY_CAPACITY = 100
@@ -83,10 +89,6 @@ M.WIN_BUF_HISTORY_CAPACITY = 99
 ---! Buffer settings
 
 M.BUF_UNTITLED = "untitled"
-
----! Variable names
-
-M.V_WINLINE_DISABLED = "fml_winline_disabled"
 
 ---! Special symbols.
 
