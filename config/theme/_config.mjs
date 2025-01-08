@@ -7,7 +7,6 @@ import {
   render_template,
   touch,
   safe_exec,
-  hex2rgba,
 } from "./_util.mjs";
 
 /** @type {import("./_env.mjs").IAppConfig[]} */
@@ -138,24 +137,31 @@ export const apps = [
 config.background ={
   {
     source = {
+      Color = "${scheme.palette.bg0}",
+    },
+    height = "100%",
+    width = "100%",
+  },
+  {
+    source = {
       File = '${backgroundImagePath}',
     },
     attachment = "Fixed",
     height = "Contain",
-    width = "Cover",
-    hsb = { brightness = 1.0 },
-    opacity = 1.0,
-    position = "Center",
+    width = "Contain",
+    opacity = 0.9,
     repeat_x = "NoRepeat",
     repeat_y = "NoRepeat",
+		horizontal_align = "Center",
     vertical_align = "Middle",
   },
   {
     source = {
-      Color = "${hex2rgba(scheme.palette.bg0, 0.9)}",
+      Color = "${scheme.palette.bg0}",
     },
     height = "100%",
     width = "100%",
+    opacity = 0.9,
   },
 }
 
