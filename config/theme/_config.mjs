@@ -43,7 +43,7 @@ export const apps = [
 
       const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
-      content += '\n\n' + `background_image ${backgroundImagePath}\n`
+      content += '\n\n' + `background_image "${backgroundImagePath}"\n`
       await fs.writeFile(theme_filepath, content, 'utf8')
     },
   },
@@ -116,6 +116,42 @@ export const apps = [
         );
         await safe_exec("/bin/bash", [script_filepath]);
       }
+    },
+  },
+  {
+    name: "wezterm",
+    themes: "theme/",
+    extname: ".lua",
+    local: "local/theme.lua",
+    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    render: (_, template, scheme) => render_template(template, scheme),
+    after_apply: async (app, scheme) => {
+      const backgroundImagePath =
+        scheme.variant === "light"
+          ? path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
+          : path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
+
+      const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
+      let content = await fs.readFile(theme_filepath, 'utf8')
+
+      content = content.replace('return config', `
+config.background ={
+  {
+    source = {
+      File = '${backgroundImagePath}',
+    },
+    attachment = { Parallax = 0.1 },
+    hsb = { brightness = 0.1 },
+    repeat_x = "NoRepeat",
+    repeat_y = "NoRepeat",
+    size = "contain",
+    position = "center",
+  },
+}
+
+return config
+`.trim())
+      await fs.writeFile(theme_filepath, content, 'utf8')
     },
   },
   {
