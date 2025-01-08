@@ -43,16 +43,72 @@ local M = {}
 
 local _state = nil ---@type eve.state.flight.state | nil
 
+---@class eve.state.flight.reposcope_map
+local reposcope_map = {
+  [".config"] = {
+    "alacritty",
+    "btop",
+    "fd",
+    "fish",
+    "fzf",
+    "guanghechen",
+    "helix",
+    "kitty",
+    "lazygit",
+    "lsd",
+    "nvim",
+    "nvim-nvchad",
+    "pwsh",
+    "ripgrep",
+    "tmux",
+    "wezterm",
+    "yazi",
+    "zellij",
+  },
+  ["guanghechen"] = {
+    "algorithm.ts",
+    "asset",
+    "koa",
+    "mirror",
+    "node-scaffolds",
+    "react-kit",
+    "sora",
+    "static-resources",
+  },
+  ["yozora"] = {
+    "yozora",
+    "yozora-react",
+    "yozora-html",
+    "gatsby-scaffolds",
+  },
+}
+
 ---@return eve.state.flight.data
 function M.defaults()
-  local is_home_config_dir = path.workspace() == env.HOME_NVIM_CONFIG ---@type boolean
+  local workspace = path.workspace() ---@type string
+  local is_home_config_dir = workspace == env.HOME_NVIM_CONFIG ---@type boolean
   local is_git_repo = path.is_git_repo() ---@type boolean
+
+  local is_sourcecode = false ---@type boolean
+  local is_playground = false ---@type boolean
+  if is_git_repo then
+    local pieces = path.split(workspace) ---@type string[]
+    is_sourcecode = vim.list_contains(pieces, "sourcecode") or vim.list_contains(pieces, "sourcecodes") ---@type boolean
+    is_playground = vim.list_contains(pieces, "playground") ---@type boolean
+
+    if not is_sourcecode and #pieces > 2 then
+      local reposcope = pieces[#pieces - 1] ---@type string
+      local reponame = pieces[#pieces] ---@type string
+      local reponames = reposcope_map[reposcope] ---@type string[]|nil
+      is_sourcecode = reponames ~= nil and vim.list_contains(reponames, reponame) or reposcope == "lazy" ---@type boolean
+    end
+  end
 
   ---@type eve.state.flight.data
   return {
     autoload = false,
     autosave = is_git_repo,
-    copilot = is_home_config_dir,
+    copilot = is_home_config_dir or is_sourcecode or is_playground,
     devmode = is_home_config_dir,
 
     dressing_hipairs = true,
@@ -62,7 +118,7 @@ function M.defaults()
     lsp_inlay_hints = is_git_repo,
     lsp_code_lens = is_git_repo,
 
-    spellcheck = is_git_repo,
+    spellcheck = is_git_repo and not (is_sourcecode or is_playground),
     treesitter_context = is_git_repo,
   }
 end
