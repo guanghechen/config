@@ -146,14 +146,14 @@ config.background ={
     source = {
       File = '${backgroundImagePath}',
     },
-    attachment = "Fixed",
-    height = "Contain",
-    width = "Contain",
-    opacity = 0.9,
-    repeat_x = "NoRepeat",
-    repeat_y = "NoRepeat",
-		horizontal_align = "Center",
-    vertical_align = "Middle",
+		attachment = "Fixed",
+		height = "Contain",
+		width = "Contain",
+		opacity = 0.9,
+		repeat_x = "NoRepeat",
+		repeat_y = "NoRepeat",
+		horizontal_align = "Right",
+		vertical_align = "Middle",
   },
   {
     source = {
