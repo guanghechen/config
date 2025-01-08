@@ -43,7 +43,7 @@ export const apps = [
 
       const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
-      content += '\n\n' + `background_image "${backgroundImagePath}"\n`
+      content += '\n\n' + `background_image ${backgroundImagePath}\n`
       await fs.writeFile(theme_filepath, content, 'utf8')
     },
   },
@@ -141,7 +141,7 @@ config.background ={
       File = '${backgroundImagePath}',
     },
     attachment = "Fixed",
-    height = "Cover",
+    height = "Contain",
     width = "Cover",
     hsb = { brightness = 1.0 },
     opacity = 1.0,
