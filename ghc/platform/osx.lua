@@ -2,7 +2,19 @@ local wezterm = require("wezterm")
 local act = wezterm.action
 
 local config = {
-	keys = {},
+	keys = {
+		{ key = "Insert", mods = "CTRL", action = act.CopyTo("Clipboard") },
+		{ key = "Insert", mods = "SHIFT", action = act.PasteFrom("Clipboard") },
+		{ key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
+		{ key = "F", mods = "CMD|CTRL|SHIFT", action = act.ToggleFullScreen },
+		{ key = "N", mods = "CMD|CTRL|SHIFT", action = act.SpawnCommandInNewWindow({ args = { "wezterm" } }) },
+		{ key = "T", mods = "CMD|CTRL|SHIFT", action = act.SpawnTab("CurrentPaneDomain") },
+		{ key = "W", mods = "CMD|CTRL|SHIFT", action = act.CloseCurrentPane({ confirm = true }) },
+		{ key = "Z", mods = "CMD|CTRL|SHIFT", action = act.ToggleFullScreen },
+		{ key = "0", mods = "CMD|CTRL|SHIFT", action = act.ResetFontSize },
+		{ key = "=", mods = "CMD|CTRL|SHIFT", action = act.IncreaseFontSize },
+		{ key = "-", mods = "CMD|CTRL|SHIFT", action = act.DecreaseFontSize },
+	},
 }
 
 ---@type string[]
