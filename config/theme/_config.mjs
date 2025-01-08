@@ -7,6 +7,7 @@ import {
   render_template,
   touch,
   safe_exec,
+  hex2rgba,
 } from "./_util.mjs";
 
 /** @type {import("./_env.mjs").IAppConfig[]} */
@@ -139,12 +140,22 @@ config.background ={
     source = {
       File = '${backgroundImagePath}',
     },
-    attachment = { Parallax = 0.1 },
-    hsb = { brightness = 0.1 },
+    attachment = "Fixed",
+    height = "Cover",
+    width = "Cover",
+    hsb = { brightness = 1.0 },
+    opacity = 1.0,
+    position = "Center",
     repeat_x = "NoRepeat",
     repeat_y = "NoRepeat",
-    size = "contain",
-    position = "center",
+    vertical_align = "Middle",
+  },
+  {
+    source = {
+      Color = "${hex2rgba(scheme.palette.bg0, 0.9)}",
+    },
+    height = "100%",
+    width = "100%",
   },
 }
 
