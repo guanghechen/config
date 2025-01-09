@@ -487,7 +487,7 @@ function M:render_sync(force)
         from = __module_name__,
         subject = "render",
         message = "Encounter error while render the nvimbar component.",
-        details = { context = context, component = component },
+        details = { context = context, component = component, error = hltext },
       })
     end
   end
