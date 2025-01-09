@@ -12,8 +12,8 @@ local setting = require("eve.constant.setting")
 ---@field public tabnr                  integer
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
----
 ---@field public tabtype                eve.e.state.tab.meta.TabType
+---@field public selected_text          string
 
 ---@class eve.command.IDefinition
 ---@field public uuid                   string
@@ -88,6 +88,7 @@ function M.define(raw_definition, overwrite)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local tabtype = state.tab.resolve_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabType
+      local selected_text = fn.get_selected_text() ---@type string
 
       ---@type eve.command.IContext
       context = {
@@ -95,6 +96,7 @@ function M.define(raw_definition, overwrite)
         winnr = winnr,
         bufnr = bufnr,
         tabtype = tabtype,
+        selected_text = selected_text,
       }
     end
 

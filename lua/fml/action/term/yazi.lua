@@ -20,7 +20,7 @@ local function open_yazi(name, cwd, filepath, context)
     command = command,
     cwd = cwd,
     permanent = false,
-    bufnr_cur = context.bufnr,
+    selected_text = "",
     on_exit = function()
       pcall(function()
         if terminal == nil then

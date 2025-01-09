@@ -1,9 +1,7 @@
 local __module_name__ = "fml.action.term" ---@type string
 
-local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-local ft = require("eve.constant.filetype")
 
 local Terminal = require("fml.ux.terminal")
 
@@ -19,8 +17,7 @@ local terminal_map = {} ---@type table<string, fml.ux.ITerminal>
 ---@field public on_exit                ?fun(): nil
 
 ---@class fml.action.term.toggle.IParams : fml.action.term.IProps
----@field public bufnr_cur              integer
----@field public send_selection_to_run  ?boolean
+---@field public selected_text          string
 
 ---@class fml.action.term
 local M = {}
@@ -82,7 +79,6 @@ end
 ---@return fml.ux.ITerminal
 function M.toggle(params)
   local name = params.name ---@type string
-  local send_selection_to_run = not not params.send_selection_to_run ---@type boolean
 
   local terminal = terminal_map[name] ---@type fml.ux.ITerminal|nil
   if terminal == nil then
@@ -97,21 +93,14 @@ function M.toggle(params)
     terminal:toggle()
   end
 
-  if send_selection_to_run and terminal:is_visible() then
-    local bufnr_cur = params.bufnr_cur ---@type integer
-    local filetype = vim.bo[bufnr_cur].filetype ---@type string
-    if ft.is_plain_file(filetype) then
-      local selected_text = fn.get_selected_text() ---@type string
+  local selected_text = params.selected_text ---@type string
+  if selected_text and #selected_text > 0 and terminal:is_visible() then
+    local winnr = terminal:get_winnr() ---@type integer|nil
+    local bufnr = terminal:get_bufnr() ---@type integer|nil
+    if winnr ~= nil and bufnr ~= nil then
       if selected_text and #selected_text > 1 then
-        local winnr = terminal:get_winnr() ---@type integer|nil
-        local bufnr = terminal:get_bufnr() ---@type integer|nil
-        if winnr ~= nil and bufnr ~= nil then
-          if selected_text and #selected_text > 1 then
-            vim.api.nvim_set_current_win(winnr)
-            vim.api.nvim_win_set_buf(winnr, bufnr)
-            vim.api.nvim_feedkeys("i" .. selected_text, "n", true) -- Insert the text without newline
-          end
-        end
+        vim.api.nvim_set_current_win(winnr)
+        vim.api.nvim_feedkeys("i" .. selected_text, "n", true) -- Insert the text without newline
       end
     end
   end
@@ -121,47 +110,40 @@ end
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.toggle_cwd(context)
-  local bufnr = context.bufnr ---@type integer
   local cwd = path.cwd()
 
   M.toggle({
     name = "cwd",
     cwd = cwd,
     permanent = true,
-    bufnr_cur = bufnr,
-    send_selection_to_run = true,
+    selected_text = context.selected_text,
   })
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 function M.toggle_directory(context)
-  local bufnr = context.bufnr ---@type integer
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local filepath = vim.api.nvim_buf_get_name(context.bufnr) ---@type string
   local cwd = path.dirname(filepath) ---@type string
 
   M.toggle({
     name = "directory",
     cwd = cwd,
     permanent = true,
-    bufnr_cur = bufnr,
-    send_selection_to_run = true,
+    selected_text = context.selected_text,
   })
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
 function M.toggle_workspace(context)
-  local bufnr = context.bufnr ---@type integer
   local cwd = path.workspace()
 
   M.toggle({
     name = "workspace",
     cwd = cwd,
     permanent = true,
-    bufnr_cur = bufnr,
-    send_selection_to_run = true,
+    selected_text = context.selected_text,
   })
 end
 

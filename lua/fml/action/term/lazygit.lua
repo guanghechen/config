@@ -96,7 +96,7 @@ local function open_lazygit(context, name, cwd, args)
       or "lazygit " .. table.concat(args or {}, " "),
     cwd = cwd,
     permanent = false,
-    bufnr_cur = context.bufnr,
+    selected_text = "",
   })
 
   local bufnr = terminal:get_bufnr() ---@type integer|nil
