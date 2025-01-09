@@ -412,6 +412,10 @@ M.definitions.lsp = {
   goto_implementations = def("Flspgotoimplementations", "lsp: goto implementations"),
   goto_references = def("Flspgotoreferences", "lsp: goto references"),
   goto_type_definitions = def("Flspgototypedefinitions", "lsp: goto type definitions"),
+
+  rename = def("Flsprename", "lsp: rename"),
+  show_code_action = def("Flspshowcodeaction", "lsp: code action"),
+  show_code_action_source = def("Flspshowcodeactionsource", "lsp: source action"),
 }
 
 ---@class eve.command.definitions.refresh

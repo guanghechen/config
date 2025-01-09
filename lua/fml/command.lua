@@ -354,6 +354,27 @@ command
     end,
   })
 
+--[lsp] action--------------------------------------------------------------------------------------
+command
+  .implement({
+    uuid = command.definitions.lsp.rename.uuid,
+    action = function(context)
+      require("fml.action.lsp.action").rename(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.lsp.show_code_action.uuid,
+    action = function(context)
+      require("fml.action.lsp.action").show_code_action(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.lsp.show_code_action_source.uuid,
+    action = function(context)
+      require("fml.action.lsp.action").show_code_action_source(context)
+    end,
+  })
+
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.refresh.all.uuid,

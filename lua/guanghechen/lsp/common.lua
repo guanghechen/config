@@ -9,34 +9,6 @@ local lsp = require("eve.module.lsp")
 
 local command = require("eve.command")
 
-local actions = {
-  rename = function()
-    vim.lsp.buf.rename()
-    vim.schedule(function()
-      vim.cmd("stopinsert")
-    end)
-  end,
-
-  show_code_action = function()
-    vim.lsp.buf.code_action()
-    vim.schedule(function()
-      vim.cmd("stopinsert")
-    end)
-  end,
-
-  show_code_action_source = function()
-    vim.lsp.buf.code_action({
-      context = {
-        only = { "source" },
-        diagnostics = {},
-      },
-    })
-    vim.schedule(function()
-      vim.cmd("stopinsert")
-    end)
-  end,
-}
-
 ---@class guanghechen.lsp.common
 local M = {}
 
@@ -250,7 +222,9 @@ function M.on_attach(client, bufnr)
     {
       modes = { "n", "v" },
       key = "<M-cr>",
-      callback = actions.show_code_action,
+      callback = function()
+        vim.cmd(command.definitions.lsp.show_code_action.uuid)
+      end,
       desc = "lsp: code action",
       active = has_support_codeAction,
     },
@@ -275,14 +249,18 @@ function M.on_attach(client, bufnr)
     {
       modes = { "n" },
       key = "<leader>ca",
-      callback = actions.show_code_action_source,
+      callback = function()
+        vim.cmd(command.definitions.lsp.show_code_action_source.uuid)
+      end,
       desc = "lsp: source action",
       active = has_support_codeAction,
     },
     {
       modes = { "n" },
       key = "<leader>cr",
-      callback = actions.rename,
+      callback = function()
+        vim.cmd(command.definitions.lsp.rename.uuid)
+      end,
       desc = "lsp: rename",
       active = has_support_rename,
     },

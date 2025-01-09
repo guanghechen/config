@@ -1,3 +1,5 @@
+local command = require("eve.command")
+
 local Select = require("fml.ux.select")
 
 ---@class fml.dressing.select.IOptions
@@ -49,11 +51,21 @@ local function select(items, opts, on_choice)
         confirmed = true
         on_choice(nil, nil)
       end
+
+      local context = command.context_snapshot() ---@type eve.command.IContext|nil
+      if context ~= nil then
+        vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
+      end
     end,
     on_confirm = function(widget, item)
       confirmed = true
-      widget:close()
       on_choice(item.data.original_item, tonumber(item.uuid))
+
+      widget:close()
+      local context = command.context_snapshot() ---@type eve.command.IContext|nil
+      if context ~= nil then
+        vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
+      end
     end,
   })
 
