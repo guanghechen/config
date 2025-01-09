@@ -180,7 +180,7 @@ return config
       const raw_content = await fs.readFile(app.local, "utf8");
       const settings = JSON.parse(raw_content);
 
-      const raw_color_scheme = render_template(template, scheme);
+      const raw_color_scheme = await render_template(template, scheme);
       const color_scheme = JSON.parse(raw_color_scheme);
       if (Array.isArray(settings.schemes)) {
         if (settings.schemes.some((s) => s.name === color_scheme.name)) {
