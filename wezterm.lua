@@ -5,7 +5,7 @@ local os_name = util.os_name() ---@type "nix"|"osx"|"win"
 local platform_config = require("ghc.platform." .. os_name)
 
 local config = {
-	font_size = 15.0,
+	font_size = platform_config.font_size or 15.0,
 	font = wezterm.font_with_fallback({ "Maple Mono Normal NL NF CN" }),
 	disable_default_key_bindings = true,
 	initial_rows = 40,
