@@ -881,7 +881,7 @@
       "keys": "ctrl+alt+shift+n"
     },
     {
-      "id": "Terminal.CloseWindow",
+      "id": "Terminal.ClosePane",
       "keys": "ctrl+alt+shift+w"
     },
     {
