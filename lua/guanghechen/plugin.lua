@@ -85,6 +85,7 @@ local raw_specs = {
   { name = "nvim-treesitter-context", main = "treesitter-context", cond = conds.treesitter_context },
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects", cond = conds.not_vscode },
   { name = "plenary.nvim", main = "plenary", cond = conds.not_vscode },
+  { name = "render-markdown.nvim", main = "render-markdown", cond = conds.not_vscode },
   { name = "trouble.nvim", main = "trouble", cond = conds.not_vscode },
   { name = "vim-illuminate", main = "illuminate", cond = conds.not_vscode },
   { name = "which-key.nvim", main = "which-key", cond = conds.not_vscode },
