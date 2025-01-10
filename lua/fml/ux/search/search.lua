@@ -896,7 +896,6 @@ function M:focus()
   if status == "closed" then
     self.context.dirtier_data_cache:mark_dirty()
     self.context.dirtier_data:mark_dirty()
-    return
   end
 
   if not M:focused() then
@@ -994,7 +993,7 @@ function M:toggle()
   if self:focused() then
     self:hide()
   else
-    self:focus()
+    self:show()
   end
 end
 

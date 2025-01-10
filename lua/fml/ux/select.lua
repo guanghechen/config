@@ -349,10 +349,7 @@ end
 ---@param item2                         fml.ux.select.IMatchedItem
 ---@return boolean
 function M.cmp_by_score(item1, item2)
-  if item1.score == item2.score then
-    return item1.order < item2.order
-  end
-  return item1.score > item2.score
+  return item1.score == item2.score and item1.order < item2.order or item1.score > item2.score
 end
 
 ---@param item                          fml.ux.select.IItem
