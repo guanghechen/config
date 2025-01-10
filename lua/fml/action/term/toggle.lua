@@ -2,6 +2,7 @@ local __module_name__ = "fml.action.term" ---@type string
 
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
+local editor = require("eve.module.editor")
 
 local Terminal = require("fml.ux.terminal")
 
@@ -17,7 +18,7 @@ local terminal_map = {} ---@type table<string, fml.ux.ITerminal>
 ---@field public on_exit                ?fun(): nil
 
 ---@class fml.action.term.toggle.IParams : fml.action.term.IProps
----@field public selected_text          string
+---@field public selected_text          string|nil
 
 ---@class fml.action.term
 local M = {}
@@ -93,8 +94,8 @@ function M.toggle(params)
     terminal:toggle()
   end
 
-  local selected_text = params.selected_text ---@type string
-  if selected_text and #selected_text > 0 and terminal:is_visible() then
+  local selected_text = params.selected_text ---@type string|nil
+  if selected_text ~= nil and #selected_text > 0 and terminal:is_visible() then
     local winnr = terminal:get_winnr() ---@type integer|nil
     local bufnr = terminal:get_bufnr() ---@type integer|nil
     if winnr ~= nil and bufnr ~= nil then
@@ -116,7 +117,7 @@ function M.toggle_cwd(context)
     name = "cwd",
     cwd = cwd,
     permanent = true,
-    selected_text = context.selected_text,
+    selected_text = context.selected_text or editor.get_selected_text(),
   })
 end
 
@@ -130,7 +131,7 @@ function M.toggle_directory(context)
     name = "directory",
     cwd = cwd,
     permanent = true,
-    selected_text = context.selected_text,
+    selected_text = context.selected_text or editor.get_selected_text(),
   })
 end
 
@@ -143,7 +144,7 @@ function M.toggle_workspace(context)
     name = "workspace",
     cwd = cwd,
     permanent = true,
-    selected_text = context.selected_text,
+    selected_text = context.selected_text or editor.get_selected_text(),
   })
 end
 

@@ -38,6 +38,22 @@ function M.find_floating_winnr(filetype)
   return nil
 end
 
+---@return string
+function M.get_selected_text()
+  -- Get the start and end positions
+  local start_pos = vim.fn.getpos("'<")
+  local end_pos = vim.fn.getpos("'>")
+
+  local start_row = start_pos[2] - 1
+  local start_col = start_pos[3] - 1
+  local end_row = end_pos[2] - 1
+  local end_col = end_pos[3] - 1
+
+  -- Get the selected text
+  local lines = vim.api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
+  return table.concat(lines, "\n")
+end
+
 ---@param tabnr                         integer
 ---@return string[]
 function M.get_visible_bufnrs(tabnr)

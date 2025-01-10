@@ -1,9 +1,10 @@
+local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 ---@param context                       eve.command.IContext
 ---@return nil
 local function focus(context)
-  local selected_text = context.selected_text ---@type string
+  local selected_text = context.selected_text or editor.get_selected_text() ---@type string
   if selected_text and #selected_text > 1 then
     local next_search_pattern = selected_text ---@type string
     state.search.flag_regex:next(false)
