@@ -55,7 +55,6 @@ local config = {
 ---@type eve.t.ux.IWidget
 local chat = state.widget.wrap({
   name = "copilot-chat",
-  statusline_items = nil,
   close = function()
     local winnr = config.winnr ---@type integer|nil
     config.status = "closed"
