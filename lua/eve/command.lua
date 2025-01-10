@@ -248,6 +248,10 @@ M.definitions = {}
 
 ---@class eve.command.definitions.ai
 M.definitions.ai = {
+  avante_ask = def("Faiavanteask", "ai: avante ask"),
+  avante_edit = def("Faiavanteedit", "ai: avante edit"),
+  avante_refresh = def("Faiavanterefresh", "ai: avante refresh"),
+
   copilot_chat_prompt = def("Faicopilotchatprompt", "ai: copilot chat prompt"),
   copilot_chat_quick = def("Faicopilotchatquick", "ai: copilot chat quick"),
   copilot_chat_reset = def("Faicopilotchatreset", "ai: copilot chat reset"),

@@ -5,7 +5,7 @@ local ft = require("eve.constant.filetype")
 local keymaps = {
   {
     modes = { "n" },
-    key = "[[",
+    key = "[r",
     callback = function()
       require("illuminate").goto_prev_reference(false)
     end,
@@ -13,7 +13,7 @@ local keymaps = {
   },
   {
     modes = { "n" },
-    key = "]]",
+    key = "]r",
     callback = function()
       require("illuminate").goto_next_reference(false)
     end,
@@ -27,8 +27,8 @@ return {
   name = "vim-illuminate",
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   keys = {
-    { "]]", desc = "Next Reference" },
-    { "[[", desc = "Prev Reference" },
+    { "]r", desc = "Next Reference" },
+    { "[r", desc = "Prev Reference" },
   },
   opts = {
     delay = 200,

@@ -87,13 +87,18 @@ kk({ "n" }, "<M-c>", K.copy.char_under_cursor)
 --- quick access widgets (diagnostic, explorer, terminal) -----
 kk({ "n", "t", "v" }, "<leader>`", K.ux.resume_last_widget)
 kk({ "n", "v" }, "<leader>;", K.ai.copilot_chat_toggle)
+kk({ "n", "v" }, "<leader>'", K.ai.avante_ask)
 kk({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
 kk({ "n", "v" }, "<leader>2", K.term.yazi_reveal)
 kk({ "n", "v" }, "<leader>3", K.explorer.git_cwd)
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[a]i---------------------------------------------------------------------------------------------
-kk({ "n", "v" }, "<leader>aa", K.ai.copilot_chat_toggle)
+kk({ "n", "v" }, "<leader>aa", K.ai.avante_ask)
+kk({ "n", "v" }, "<leader>ae", K.ai.avante_edit)
+kk({ "n", "v" }, "<leader>ar", K.ai.avante_refresh)
+
+kk({ "n", "v" }, "<leader>ac", K.ai.copilot_chat_toggle)
 kk({ "n", "v" }, "<leader>ap", K.ai.copilot_chat_prompt)
 kk({ "n", "v" }, "<leader>aq", K.ai.copilot_chat_quick)
 kk({ "n", "v" }, "<leader>as", K.ai.copilot_chat_stop)

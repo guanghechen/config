@@ -27,5 +27,13 @@ return {
   opts = {
     provider = "copilot",
     auto_suggestions_provider = "copilot",
+
+    ---
+
+    mappings = {
+      ask = "<leader>aa",
+      edit = "<leader>ae",
+      refresh = "<leader>ar",
+    },
   },
 }

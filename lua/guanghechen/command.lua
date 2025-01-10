@@ -5,6 +5,24 @@ local command = require("eve.command")
 --[ai] copilot -------------------------------------------------------------------------------------
 command
   .implement({
+    uuid = command.definitions.ai.avante_ask.uuid,
+    action = function()
+      require("avante.api").ask()
+    end,
+  })
+  .implement({
+    uuid = command.definitions.ai.avante_edit.uuid,
+    action = function()
+      require("avante.api").edit()
+    end,
+  })
+  .implement({
+    uuid = command.definitions.ai.avante_refresh.uuid,
+    action = function()
+      require("avante.api").refresh()
+    end,
+  })
+  .implement({
     uuid = command.definitions.ai.copilot_chat_prompt.uuid,
     action = function(context)
       require("guanghechen.action.copilot-chat").prompt(context)
