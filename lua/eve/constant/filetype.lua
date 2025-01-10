@@ -2,6 +2,8 @@
 local M = {}
 
 M.AERIAL = "aerial"
+M.AVANTE = "Avante"
+M.AVANTE_INPUT = "AvanteInput"
 M.BIGFILE = "bigfile"
 M.COPILOT_CHAT = "copilot-chat"
 M.CMP_MENU = "cmp_menu"
@@ -35,7 +37,7 @@ M.WINSEP = "winsep"
 local filetypes = {
   -- stylua: ignore 
   cmp_code = {
-    [M.COPILOT_CHAT] = true,
+    [M.COPILOT_CHAT]     = true,
     ["assembly"]         = true,
     ["bash"]             = true,
     ["clojure"]          = true,
@@ -90,6 +92,8 @@ local filetypes = {
   },
   disable_autopairs = {
     [M.AERIAL] = true,
+    [M.AVANTE] = true,
+    [M.AVANTE_INPUT] = true,
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
@@ -117,6 +121,8 @@ local filetypes = {
   },
   not_plain = {
     [M.AERIAL] = true,
+    [M.AVANTE] = true,
+    [M.AVANTE_INPUT] = true,
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
@@ -145,6 +151,8 @@ local filetypes = {
   },
   no_ibl = {
     [M.AERIAL] = true,
+    [M.AVANTE] = true,
+    [M.AVANTE_INPUT] = true,
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
@@ -187,6 +195,8 @@ local filetypes = {
   },
   no_window_picker_projectable = {
     [M.AERIAL] = true,
+    [M.AVANTE] = true,
+    [M.AVANTE_INPUT] = true,
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
