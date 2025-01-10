@@ -31,12 +31,12 @@ local function vim_navigate(direction)
     return
   end
 
-  local ok = pcall(vim_navigate_window, direction)
+  local ok, error = pcall(vim_navigate_window, direction)
   if not ok then
     reporter.error({
       from = __module_name__,
       message = "E11: Invalid in command-line window; <CR> executes, CTRL-C quits",
-      details = { direction = direction },
+      details = { direction = direction, error = error },
     })
   end
 end
