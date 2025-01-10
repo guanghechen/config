@@ -141,7 +141,7 @@ local M = {}
 ---@diagnostic disable-next-line: unused-local
 function M.history(context)
   local select = get_history_select() ---@type fml.ux.FileSelect
-  select:focus()
+  select:show()
 end
 
 ---@param context                       eve.command.IContext

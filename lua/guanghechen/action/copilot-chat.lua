@@ -21,31 +21,16 @@ end
 ---@field public prompt                 ?string
 ---@field public callback               ?fun(): nil
 
----@class guanghechen.action.copilot_chat.widget : eve.t.ux.IWidget
----@field public internal_winnr         integer|nil
----@field public internal_cursor        integer[]|nil
----@field public internal_status        eve.e.WidgetStatus
----@field public internal_win_find      fun(): integer|nil
----@field public internal_win_cfg       fun(): vim.api.keyset.win_config
----@field public internal_win_close     fun(): nil
----@field public internal_win_open      fun(): nil
----@field public internal_win_resize    fun(): nil
-local chat_widget
-
-chat_widget = {
-  internal_winnr = nil,
-  internal_cursor = nil,
-  internal_status = "closed",
-  internal_win_find = function()
-    local winnrs = vim.api.nvim_list_wins() ---@type integer[]
-    for _, winnr in ipairs(winnrs) do
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype == ft.COPILOT_CHAT then
-        return winnr
-      end
-    end
-  end,
-  internal_win_cfg = function()
+---@class guanghechen.action.copilot_chat.widget
+---@field public winnr                  integer|nil
+---@field public cursor                 integer[]|nil
+---@field public status                 eve.e.WidgetStatus
+---@field public win_cfg                fun(): vim.api.keyset.win_config
+local config = {
+  winnr = nil,
+  cursor = nil,
+  status = "closed",
+  win_cfg = function()
     local width = math.min(124, math.floor(vim.o.columns * 0.8)) ---@type integer
     local height = math.min(48, math.floor(vim.o.lines * 0.8)) ---@type integer
     local row = math.floor((vim.o.lines - height) / 2) ---@type integer
@@ -65,95 +50,95 @@ chat_widget = {
     }
     return wincfg
   end,
-  internal_win_close = function()
-    local winnr = chat_widget.internal_winnr ---@type integer|nil
-    chat_widget.internal_winnr = nil
+}
+
+---@type eve.t.ux.IWidget
+local chat = state.widget.wrap({
+  name = "copilot-chat",
+  statusline_items = nil,
+  close = function()
+    local winnr = config.winnr ---@type integer|nil
+    config.status = "closed"
+    config.winnr = nil
 
     ---save the window cursor.
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-      chat_widget.internal_cursor = cursor
+      config.cursor = cursor
     end
 
     require("CopilotChat").close()
   end,
-  internal_win_open = function()
-    require("CopilotChat").open()
-    vim.schedule(function()
-      local winnr = editor.find_floating_winnr(ft.COPILOT_CHAT) ---@type integer|nil
-      if winnr == nil then
-        return
-      end
+  focus = function(widget)
+    if not widget:focused() then
+      require("CopilotChat").open()
+      vim.schedule(function()
+        local winnr = editor.find_floating_winnr(ft.COPILOT_CHAT) ---@type integer|nil
+        if winnr == nil then
+          return
+        end
 
-      if fn.is_win_floating(winnr) then
-        local cfg_current = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-        local cfg_customized = chat_widget.internal_win_cfg() ---@type vim.api.keyset.win_config
-        local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
-        vim.api.nvim_win_set_config(winnr, cfg)
-      end
+        if fn.is_win_floating(winnr) then
+          local cfg_current = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+          local cfg_customized = config.win_cfg() ---@type vim.api.keyset.win_config
+          local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
+          vim.api.nvim_win_set_config(winnr, cfg)
+        end
 
-      chat_widget.internal_winnr = winnr
-      chat_widget.internal_status = "visible"
+        config.winnr = winnr
+        config.status = "visible"
 
-      vim.wo[winnr].wrap = true
-      vim.wo[winnr].number = false
-      vim.wo[winnr].relativenumber = false
-      vim.wo[winnr].signcolumn = "yes"
-      vim.wo[winnr].winfixbuf = true
+        vim.wo[winnr].wrap = true
+        vim.wo[winnr].number = false
+        vim.wo[winnr].relativenumber = false
+        vim.wo[winnr].signcolumn = "yes"
+        vim.wo[winnr].winfixbuf = true
+        vim.api.nvim_tabpage_set_win(0, winnr)
 
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if not vim.b[bufnr].fml_key_bound then
-        vim.b[bufnr].fml_key_bound = true
-        local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
-        fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
-      end
+        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+        if not vim.b[bufnr].fml_key_bound then
+          vim.b[bufnr].fml_key_bound = true
+          local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
+          fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+        end
 
-      vim.cmd.stopinsert()
-      if chat_widget.internal_cursor then
-        pcall(function()
-          vim.api.nvim_win_set_cursor(winnr, chat_widget.internal_cursor)
-        end)
-      end
-    end)
+        vim.cmd.stopinsert()
+        if config.cursor then
+          pcall(function()
+            vim.api.nvim_win_set_cursor(winnr, config.cursor)
+          end)
+        end
+      end)
+    end
   end,
-  internal_win_resize = function()
-    local winnr = chat_widget.internal_winnr ---@type integer|nil
+  focused = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    return winnr == config.winnr
+  end,
+  hide = function()
+    local winnr = config.winnr ---@type integer|nil
+    config.status = "hidden"
+    config.winnr = nil
+
+    ---save the window cursor.
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-      local wincfg = chat_widget.internal_win_cfg() ---@type vim.api.keyset.win_config
+      local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+      config.cursor = cursor
+    end
+
+    require("CopilotChat").close()
+  end,
+  resize = function()
+    local winnr = config.winnr ---@type integer|nil
+    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+      local wincfg = config.win_cfg() ---@type vim.api.keyset.win_config
       vim.api.nvim_win_set_config(winnr, wincfg)
     end
   end,
-
-  ----
-
-  name = "copilot-chat",
-  statusline_items = nil,
   status = function()
-    return chat_widget.internal_status
+    return config.status
   end,
-  close = function()
-    chat_widget.internal_status = "closed"
-    chat_widget.internal_win_close()
-  end,
-  hide = function()
-    chat_widget.internal_status = "hidden"
-    chat_widget.internal_win_close()
-  end,
-  resize = function()
-    chat_widget.internal_win_resize()
-  end,
-  open = function()
-    if chat_widget.internal_status == "closed" then
-      chat_widget.internal_status = "hidden"
-    end
-    state.widget.open(chat_widget)
-  end,
-  show = function()
-    if chat_widget.internal_status ~= "visible" then
-      chat_widget.internal_win_open()
-    end
-  end,
-}
+})
 
 ---@class guanghechen.action.copilot_chat
 local M = {}
@@ -215,7 +200,7 @@ function M.prompt(context)
 
       local data = item.data ---@type guanghechen.action.copilot_chat.prompt_actions.IItem
       vim.defer_fn(function()
-        chat_widget:open()
+        chat:focus()
         require("CopilotChat").ask(data.prompt, data)
       end, 100)
     end,
@@ -228,7 +213,7 @@ end
 function M.quick(context)
   local input = vim.fn.input("Quick Chat: ") ---@type string
   if input ~= "" then
-    chat_widget:open()
+    chat:focus()
     require("CopilotChat").ask(input, {
       context = { "buffer", "files" },
       selection = require("CopilotChat.select").buffer,
@@ -254,10 +239,10 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.toggle(context)
-  if chat_widget.internal_status == "visible" then
-    chat_widget:hide()
+  if chat.status == "visible" then
+    chat:hide()
   else
-    chat_widget:open()
+    chat:focus()
   end
 end
 

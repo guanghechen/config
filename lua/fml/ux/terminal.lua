@@ -25,12 +25,10 @@ local function format_command(cmd)
 end
 
 ---@class fml.ux.ITerminal : eve.t.ux.IWidget
----@field public close                  fun(self: fml.ux.ITerminal): nil
----@field public focus                  fun(self: fml.ux.ITerminal): nil
 ---@field public get_winnr              fun(self: fml.ux.ITerminal): integer|nil
 ---@field public get_bufnr              fun(self: fml.ux.ITerminal): integer|nil
 ---@field public is_visible             fun(self: fml.ux.ITerminal): boolean
----@field public open                   fun(self: fml.ux.ITerminal): nil
+---@field public show                   fun(self: fml.ux.ITerminal): nil
 ---@field public toggle                 fun(self: fml.ux.ITerminal): nil
 ---@field public update                 fun(self: fml.ux.ITerminal, props: fml.ux.terminal.IProps): nil
 
@@ -86,7 +84,7 @@ function M.new(props)
   self._command_env = command_env
   self._keymaps = keymaps
   self._permanent = permanent
-  self._status = "closed"
+  self._status = "hidden"
   self._term_alive = false
   self._winnr = nil
   self._on_exit = props.on_exit or fn.noop
@@ -176,23 +174,50 @@ end
 
 ---@return nil
 function M:focus()
-  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-  local winnr = self:get_winnr() ---@type integer|nil
   local status = self._status ---@type eve.e.WidgetStatus
-  local visible = status == "visible" ---@type boolean
-
-  if not visible or winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    self:open()
+  if status == "closed" then
     return
   end
 
-  if winnr_cur ~= winnr then
+  if not M:focused() then
+    self._status = "visible" ---@type eve.e.WidgetStatus
+
+    local winnr, bufnr = self:create_win_as_needed()
+    vim.api.nvim_tabpage_set_win(0, winnr)
+    if not self._term_alive then
+      self._term_alive = true
+      vim.fn.termopen(self._command, {
+        cwd = self._command_cwd,
+        env = self._command_env,
+        on_exit = self._on_exit,
+      })
+      vim.api.nvim_create_autocmd("TermClose", {
+        once = true,
+        buffer = bufnr,
+        callback = function()
+          self._bufnr = nil
+          self._term_alive = false
+          vim.schedule(function()
+            if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+              vim.api.nvim_buf_delete(bufnr, { force = true })
+            end
+          end)
+          self:close()
+        end,
+      })
+    end
+
     vim.schedule(function()
-      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_tabpage_set_win(0, winnr)
-      end
+      vim.cmd("startinsert")
     end)
   end
+end
+
+---@return nil
+function M:focused()
+  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+  local winnr = self:get_winnr() ---@type integer|nil
+  return winnr == winnr_cur
 end
 
 ---@return integer|nil
@@ -216,16 +241,6 @@ function M:hide()
   end
 end
 
----@return boolean
-function M:is_visible()
-  return self._status == "visible"
-end
-
----@return nil
-function M:open()
-  state.widget.open(self)
-end
-
 ---@return nil
 function M:resize()
   local visible = self._status == "visible" ---@type boolean
@@ -236,41 +251,7 @@ end
 
 ---@return nil
 function M:show()
-  local visible = self._status == "visible" ---@type boolean
-  if visible then
-    return
-  end
-
-  self._status = "visible" ---@type eve.e.WidgetStatus
-
-  local winnr, bufnr = self:create_win_as_needed()
-  vim.api.nvim_tabpage_set_win(0, winnr)
-  if not self._term_alive then
-    self._term_alive = true
-    vim.fn.termopen(self._command, {
-      cwd = self._command_cwd,
-      env = self._command_env,
-      on_exit = self._on_exit,
-    })
-    vim.api.nvim_create_autocmd("TermClose", {
-      once = true,
-      buffer = bufnr,
-      callback = function()
-        self._bufnr = nil
-        self._term_alive = false
-        vim.schedule(function()
-          if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-            vim.api.nvim_buf_delete(bufnr, { force = true })
-          end
-        end)
-        self:close()
-      end,
-    })
-  end
-
-  vim.schedule(function()
-    vim.cmd("startinsert")
-  end)
+  state.widget.open(self)
 end
 
 ---@return eve.e.WidgetStatus
@@ -284,7 +265,8 @@ function M:toggle()
   if visible then
     self:hide()
   else
-    self:open()
+    self._status = "hidden"
+    self:show()
   end
 end
 

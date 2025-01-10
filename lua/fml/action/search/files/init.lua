@@ -13,7 +13,7 @@ local function focus(context)
 
   local search_context = require("fml.action.search.files.context")
   local search = search_context.get_search() ---@type fml.ux.search.ISearch
-  search:focus()
+  search:show()
 end
 
 ---@class fml.action.search

@@ -1,11 +1,22 @@
+---@class eve.t.ux.IRawWidget
+---@field public name                   string|nil
+---@field public statusline_items       eve.t.ux.widget.IStatuslineItem[]|nil
+---@field public close                  fun(widget: eve.t.ux.IWidget): nil
+---@field public focus                  fun(widget: eve.t.ux.IWidget): nil
+---@field public focused                fun(widget: eve.t.ux.IWidget): boolean
+---@field public hide                   fun(widget: eve.t.ux.IWidget): nil
+---@field public resize                 fun(widget: eve.t.ux.IWidget): nil
+---@field public status                 fun(widget: eve.t.ux.IWidget): eve.e.WidgetStatus
+
 ---@class eve.t.ux.IWidget
 ---@field public name                   string|nil
 ---@field public statusline_items       eve.t.ux.widget.IStatuslineItem[]|nil
----@field public status                 fun(self: eve.t.ux.IWidget): eve.e.WidgetStatus
 ---@field public close                  fun(self: eve.t.ux.IWidget): nil
+---@field public focused                fun(self: eve.t.ux.IWidget): boolean
+---@field public focus                  fun(self: eve.t.ux.IWidget): nil
 ---@field public hide                   fun(self: eve.t.ux.IWidget): nil
----@field public show                   fun(self: eve.t.ux.IWidget): nil
 ---@field public resize                 fun(self: eve.t.ux.IWidget): nil
+---@field public status                 fun(self: eve.t.ux.IWidget): eve.e.WidgetStatus
 
 ---@class eve.t.ux.widget.IStatuslineItem
 ---@field public type                   eve.e.WidgetStatuslineItemType

@@ -216,7 +216,7 @@ local M = {}
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_bufs(context)
-  _select:toggle()
+  _select:focus()
 end
 
 ---@param context                       eve.command.IContext
@@ -224,7 +224,7 @@ end
 ---@diagnostic disable-next-line: unused-local
 function M.find_bufs_file(context)
   state.find_buffer.scope:next("F")
-  _select:toggle()
+  _select:focus()
 end
 
 ---@param context                       eve.command.IContext
@@ -232,7 +232,7 @@ end
 ---@diagnostic disable-next-line: unused-local
 function M.find_bufs_term(context)
   state.find_buffer.scope:next("T")
-  _select:toggle()
+  _select:focus()
 end
 
 return M

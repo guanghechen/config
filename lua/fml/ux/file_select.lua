@@ -8,19 +8,17 @@ local command = require("eve.command")
 
 local Select = require("fml.ux.select")
 
----@class fml.ux.IFileSelect
+---@class fml.ux.IFileSelect : eve.t.ux.IWidget
 ---@field public change_dimension       fun(self: fml.ux.IFileSelect, dimension: fml.ux.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.ux.IFileSelect, title: string): nil
 ---@field public change_preview_title   fun(self: fml.ux.IFileSelect, title: string): nil
----@field public close                  fun(self: fml.ux.IFileSelect): nil
----@field public focus                  fun(self: fml.ux.IFileSelect): nil
 ---@field public get_item               fun(self: fml.ux.IFileSelect, uuid: string): fml.ux.select.IItem|nil
 ---@field public get_matched_items      fun(self: fml.ux.IFileSelect): fml.ux.select.IMatchedItem[]
 ---@field public get_winnr_input        fun(self: fml.ux.IFileSelect): integer|nil
 ---@field public get_winnr_main         fun(self: fml.ux.IFileSelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.ux.IFileSelect): integer|nil
 ---@field public mark_data_dirty        fun(self: fml.ux.IFileSelect): nil
----@field public open                   fun(self: fml.ux.IFileSelect): nil
+---@field public show                   fun(self: fml.ux.IFileSelect): nil
 ---@field public toggle                 fun(self: fml.ux.IFileSelect): nil
 
 ---@alias fml.ux.file_select.IFetchData
@@ -368,6 +366,12 @@ function M:focus()
   select:focus()
 end
 
+---@return boolean
+function M:focused()
+  local select = self._get_select() ---@type fml.ux.ISelect
+  return select:focused()
+end
+
 ---@param uuid                          string
 ---@return                              fml.ux.select.IItem|nil
 function M:get_item(uuid)
@@ -423,9 +427,9 @@ function M.make_items_by_filepaths(cwd, filepaths)
 end
 
 ---@return nil
-function M:open()
+function M:show()
   local select = self._get_select() ---@type fml.ux.ISelect
-  select:open()
+  select:show()
 end
 
 ---@return nil

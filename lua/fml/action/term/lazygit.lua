@@ -99,7 +99,7 @@ local function open_lazygit(context, name, cwd, args)
   })
 
   local bufnr = terminal:get_bufnr() ---@type integer|nil
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) and terminal:is_visible() then
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) and terminal:status() == "visible" then
     local function edit()
       edit_lazygit_file_in_buffer(context, cwd)
     end

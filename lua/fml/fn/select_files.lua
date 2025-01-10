@@ -91,7 +91,7 @@ local function select_files(params)
     permanent = false,
     provider = provider,
     title = title,
-  }):focus()
+  }):show()
 end
 
 return select_files

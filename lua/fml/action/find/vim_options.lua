@@ -115,7 +115,7 @@ local M = {}
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_vim_options(context)
-  _select:toggle()
+  _select:focus()
 end
 
 return M

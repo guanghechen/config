@@ -474,7 +474,7 @@ function M.find_explorer(context)
   end
 
   local select = get_select() ---@type fml.ux.ISelect
-  select:open()
+  select:focus()
 end
 
 return M

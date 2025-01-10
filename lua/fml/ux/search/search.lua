@@ -54,13 +54,12 @@ local borders = {
 ---@field public change_dimension       fun(self: fml.ux.search.ISearch, dimension: fml.ux.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.ux.search.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: fml.ux.search.ISearch, title: string): nil
----@field public focus                  fun(self: fml.ux.search.ISearch): nil
 ---@field public get_item_selected      fun(self: fml.ux.search.ISearch): fml.ux.search.IItem|nil, integer, string|nil
 ---@field public get_winnr_input        fun(self: fml.ux.search.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: fml.ux.search.ISearch): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.ux.search.ISearch): integer|nil
----@field public open                   fun(self: fml.ux.search.ISearch): nil
 ---@field public reset_input            fun(self: fml.ux.search.ISearch, text: string): nil
+---@field public show                   fun(self: fml.ux.search.ISearch): nil
 ---@field public toggle                 fun(self: fml.ux.search.ISearch): nil
 
 ---@alias fml.ux.search.IOnClose
@@ -893,31 +892,30 @@ end
 
 ---@return nil
 function M:focus()
-  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-  local winnr_input = self:get_winnr_input() ---@type integer|nil
-  local winnr_main = self:get_winnr_main() ---@type integer|nil
   local status = self.context.status:snapshot() ---@type eve.e.WidgetStatus
-  local visible = status == "visible" ---@type boolean
-
-  if
-    not visible
-    or winnr_input == nil
-    or winnr_main == nil
-    or not vim.api.nvim_win_is_valid(winnr_input)
-    or not vim.api.nvim_win_is_valid(winnr_main)
-  then
-    self:open()
+  if status == "closed" then
+    self.context.dirtier_data_cache:mark_dirty()
+    self.context.dirtier_data:mark_dirty()
     return
   end
 
-  local winnr_preview = self:get_winnr_preview() ---@type integer|nil
-  if winnr_cur ~= winnr_input and winnr_cur ~= winnr_preview then
-    vim.schedule(function()
-      if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-        vim.api.nvim_tabpage_set_win(0, winnr_input)
-      end
-    end)
+  if not M:focused() then
+    self._input:create_buf_as_needed()
+    self._main:render()
+    if self._preview ~= nil then
+      self._preview:render()
+    end
+    self._input:reset_input()
+    self.context.status:next("visible")
   end
+end
+
+---@return boolean
+function M:focused()
+  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+  return winnr_cur == self:get_winnr_input()
+    or winnr_cur == self:get_winnr_main()
+    or winnr_cur == self:get_winnr_preview()
 end
 
 ---@return fml.ux.search.IItem|nil
@@ -971,11 +969,6 @@ function M:hide()
 end
 
 ---@return nil
-function M:open()
-  state.widget.open(self)
-end
-
----@return nil
 function M:reset_input(text)
   self._input:reset_input(text)
 end
@@ -987,21 +980,7 @@ end
 
 ---@return nil
 function M:show()
-  local status = self.context.status:snapshot() ---@type eve.e.WidgetStatus
-  if status == "closed" then
-    self.context.dirtier_data_cache:mark_dirty()
-    self.context.dirtier_data:mark_dirty()
-  end
-
-  if status ~= "visible" then
-    self._input:create_buf_as_needed()
-    self._main:render()
-    if self._preview ~= nil then
-      self._preview:render()
-    end
-    self._input:reset_input()
-    self.context.status:next("visible")
-  end
+  state.widget.open(self)
 end
 
 ---@return eve.e.WidgetStatus
@@ -1017,7 +996,7 @@ function M:toggle()
   if visible then
     self:hide()
   else
-    self:open()
+    self:show()
   end
 end
 

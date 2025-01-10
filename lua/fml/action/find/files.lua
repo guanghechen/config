@@ -379,7 +379,7 @@ local M = {}
 ---@diagnostic disable-next-line: unused-local
 function M.find_files(context)
   local select = get_select() ---@type fml.ux.IFileSelect
-  select:focus()
+  select:show()
 end
 
 ---@param context                       eve.command.IContext
@@ -388,7 +388,7 @@ end
 function M.find_files_cwd(context)
   state.find.scope:next("C")
   local select = get_select() ---@type fml.ux.IFileSelect
-  select:focus()
+  select:show()
 end
 
 ---@param context                       eve.command.IContext
@@ -397,7 +397,7 @@ end
 function M.find_files_directory(context)
   state.find.scope:next("D")
   local select = get_select() ---@type fml.ux.IFileSelect
-  select:focus()
+  select:show()
 end
 
 ---@param context                       eve.command.IContext
@@ -406,7 +406,7 @@ end
 function M.find_files_workspace(context)
   state.find.scope:next("W")
   local select = get_select() ---@type fml.ux.IFileSelect
-  select:focus()
+  select:show()
 end
 
 return M

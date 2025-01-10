@@ -5,12 +5,10 @@ local icons = require("eve.constant.icon")
 local state = require("eve.state")
 local Search = require("fml.ux.search.search")
 
----@class fml.ux.ISelect
+---@class fml.ux.ISelect : eve.t.ux.IWidget
 ---@field public change_dimension       fun(self: fml.ux.ISelect, dimension: fml.ux.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.ux.ISelect, title: string): nil
 ---@field public change_preview_title   fun(self: fml.ux.ISelect, title: string): nil
----@field public close                  fun(self: fml.ux.ISelect): nil
----@field public focus                  fun(self: fml.ux.ISelect): nil
 ---@field public get_item               fun(self: fml.ux.ISelect, uuid: string): fml.ux.select.IItem|nil
 ---@field public get_item_selected      fun(self: fml.ux.ISelect): fml.ux.select.IItem|nil, integer, string|nil
 ---@field public get_matched_items      fun(self: fml.ux.ISelect): fml.ux.select.IMatchedItem[]
@@ -18,8 +16,7 @@ local Search = require("fml.ux.search.search")
 ---@field public get_winnr_main         fun(self: fml.ux.ISelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.ux.ISelect): integer|nil
 ---@field public mark_data_dirty        fun(self: fml.ux.ISelect): nil
----@field public hide                   fun(self: fml.ux.ISelect): nil
----@field public open                   fun(self: fml.ux.ISelect): nil
+---@field public show                   fun(self: fml.ux.ISelect): nil
 ---@field public toggle                 fun(self: fml.ux.ISelect): nil
 
 ---@alias fml.ux.select.IFetchData
@@ -524,6 +521,12 @@ function M:find_matched_items(input, old_matches)
   return matches
 end
 
+---@return boolean
+function M:focused()
+  local search = self._get_search() ---@type fml.ux.search.ISearch
+  return search:focused()
+end
+
 ---@return nil
 function M:focus()
   local search = self._get_search() ---@type fml.ux.search.ISearch
@@ -589,9 +592,9 @@ function M:mark_search_state_dirty()
 end
 
 ---@return nil
-function M:open()
+function M:show()
   local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:open()
+  search:show()
 end
 
 ---@return nil

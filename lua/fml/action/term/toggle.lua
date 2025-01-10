@@ -72,7 +72,7 @@ function M.new(props)
   })
   terminal_map[name] = terminal
 
-  terminal:open()
+  terminal:show()
   return terminal
 end
 
@@ -95,7 +95,7 @@ function M.toggle(params)
   end
 
   local selected_text = params.selected_text ---@type string|nil
-  if selected_text ~= nil and #selected_text > 0 and terminal:is_visible() then
+  if selected_text ~= nil and #selected_text > 0 and terminal:status() == "visible" then
     local winnr = terminal:get_winnr() ---@type integer|nil
     local bufnr = terminal:get_bufnr() ---@type integer|nil
     if winnr ~= nil and bufnr ~= nil then

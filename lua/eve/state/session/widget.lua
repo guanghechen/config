@@ -17,6 +17,7 @@ local History = require("eve.collection.history")
 ---@field public open                   fun(widget: eve.t.ux.IWidget): nil
 ---@field public resize                 fun(): nil
 ---@field public resume                 fun(): boolean
+---@field public wrap                   fun(raw_widget: eve.t.ux.IRawWidget): eve.t.ux.IWidget
 local S = {}
 
 ---@class eve.state.widget
@@ -44,9 +45,9 @@ S = {
     local is_bottom = false ---@type boolean
     while not is_bottom do
       widget, is_bottom = S.history:backward()
-      if widget ~= nil and not S.equals(widget, present) and widget:status() == "hidden" then
+      if widget ~= nil and not S.equals(widget, present) and widget:status() ~= "closed" and not widget:focused() then
         present:hide()
-        widget:show()
+        widget:focus()
         break
       end
     end
@@ -61,9 +62,9 @@ S = {
     local is_top = false ---@type boolean
     while not is_top do
       widget, is_top = S.history:forward() ---@type eve.t.ux.IWidget|nil, boolean
-      if widget ~= nil and not S.equals(widget, present) and widget:status() == "hidden" then
+      if widget ~= nil and not S.equals(widget, present) and widget:status() ~= "closed" and not widget:focused() then
         present:hide()
-        widget:show()
+        widget:focus()
         break
       end
     end
@@ -106,7 +107,7 @@ S = {
     local present = S.get_current_widget() ---@type eve.t.ux.IWidget|nil
     if present == nil then
       S.history:push(widget)
-      widget:show()
+      widget:focus()
       return
     end
 
@@ -119,8 +120,7 @@ S = {
 
       present:hide()
     end
-
-    widget:show()
+    widget:focus()
   end,
   resize = function()
     for widget in S.history:iterator() do
@@ -136,13 +136,63 @@ S = {
       return false
     end
 
-    local status = present:status() ---@type eve.e.WidgetStatus
-    if status == "visible" then
+    if present:focused() then
       present:hide()
-    elseif status == "hidden" then
-      present:show()
+    else
+      present:focus()
     end
     return true
+  end,
+  wrap = function(raw_widget)
+    local widget ---@type eve.t.ux.IWidget
+
+    local close = raw_widget.close
+    local focus = raw_widget.focus
+    local focused = raw_widget.focused
+    local hide = raw_widget.hide
+    local resize = raw_widget.resize
+    local status = raw_widget.status
+
+    ---@type eve.t.ux.IWidget
+    widget = {
+      name = raw_widget.name,
+      statusline_items = raw_widget.statusline_items,
+      close = function()
+        close(widget)
+      end,
+      focus = function()
+        local present = S.get_current_widget() ---@type eve.t.ux.IWidget|nil
+        if present == nil then
+          S.history:push(widget)
+          focus(widget)
+          return
+        end
+
+        if not S.equals(present, widget) then
+          if S.history:size() == S.history:capacity() then
+            local bottom_widget = S.history:bottom() ---@type eve.t.ux.IWidget
+            bottom_widget:close()
+          end
+          S.history:push(widget)
+
+          present:hide()
+        end
+        focus(widget)
+      end,
+      focused = function()
+        return focused(widget)
+      end,
+      hide = function()
+        hide(widget)
+      end,
+      resize = function()
+        resize(widget)
+      end,
+      status = function()
+        return status(widget)
+      end,
+    }
+    return widget
   end,
 }
 

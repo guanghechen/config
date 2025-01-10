@@ -65,7 +65,7 @@ local function select(params)
     provider = provider,
     title = title,
     on_confirm = on_confirm,
-  }):focus()
+  }):show()
 end
 
 return select
