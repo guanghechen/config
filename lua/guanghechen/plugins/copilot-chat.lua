@@ -5,7 +5,6 @@ local username = env.USERNAME ---@type string
 
 return {
   name = "copilot-chat.nvim",
-  cmd = "CopilotChat",
   opts = {
     allow_insecure = false,
     auto_insert_mode = true,
