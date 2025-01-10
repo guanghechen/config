@@ -7,7 +7,7 @@ return {
   name = "mini.pairs",
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   opts = {
-    modes = { insert = true, command = true, terminal = false },
+    modes = { insert = true, command = false, terminal = false },
     skip_next = [=[[%w%%%'%[%"%.%`%$]]=], -- skip autopair when next character is one of these
     skip_ts = { "string" }, -- skip autopair when the cursor is inside these treesitter nodes
     skip_unbalanced = true,
