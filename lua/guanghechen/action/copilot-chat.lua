@@ -239,7 +239,7 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.toggle(context)
-  if chat.status == "visible" then
+  if chat:focused() then
     chat:hide()
   else
     chat:focus()

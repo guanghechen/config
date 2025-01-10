@@ -991,12 +991,10 @@ end
 
 ---@return nil
 function M:toggle()
-  local status = self.context.status:snapshot() ---@type eve.e.WidgetStatus
-  local visible = status == "visible" ---@type boolean
-  if visible then
+  if self:focused() then
     self:hide()
   else
-    self:show()
+    self:focus()
   end
 end
 
