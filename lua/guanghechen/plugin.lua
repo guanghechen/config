@@ -59,6 +59,7 @@ local raw_specs = {
   { name = "flash.nvim", main = "flash", cond = conds.not_vscode },
   { name = "friendly-snippets", cond = conds.not_vscode },
   { name = "gitsigns.nvim", main = "gitsigns", cond = conds.not_vscode },
+  { name = "img-clip.nvim", main = "img-clip", cond = conds.not_vscode },
   { name = "indent-blankline.nvim", main = "ibl", cond = conds.not_vscode },
   { name = "mason.nvim", main = "mason", cond = conds.not_vscode },
   { name = "mason-lspconfig.nvim", main = "mason-lspconfig", cond = conds.not_vscode },
