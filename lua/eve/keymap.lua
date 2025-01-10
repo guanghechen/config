@@ -86,6 +86,7 @@ kk({ "n" }, "<M-c>", K.copy.char_under_cursor)
 
 --- quick access widgets (diagnostic, explorer, terminal) -----
 kk({ "n", "t", "v" }, "<leader>`", K.ux.resume_last_widget)
+kk({ "n", "v" }, "<leader>;", K.ai.copilot_chat_toggle)
 kk({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
 kk({ "n", "v" }, "<leader>2", K.term.yazi_reveal)
 kk({ "n", "v" }, "<leader>3", K.explorer.git_cwd)
