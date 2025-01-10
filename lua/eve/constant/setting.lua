@@ -3,6 +3,10 @@ local path = require("eve.builtin.path")
 ---@class eve.constant.setting
 local M = {}
 
+M.feedkeys = {
+  UNDO = vim.api.nvim_replace_termcodes("<c-G>u", true, true, true),
+}
+
 ---@class eve.constant.setting.flights
 M.flights = {
   "autoload",

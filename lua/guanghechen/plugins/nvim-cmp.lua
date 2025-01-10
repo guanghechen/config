@@ -4,6 +4,7 @@ local __module_name__ = "guanghechen.plugins.nvim-cmp" ---@type string
 local reporter = require("eve.builtin.reporter")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
+local setting = require("eve.constant.setting")
 
 local cmp_sources_map = {
   basic = {
@@ -23,6 +24,32 @@ local cmp_sources_map = {
   search = {
     { name = "path", group_index = 1, priority = 100 },
   },
+}
+
+local actions = {
+  -- This is a better implementation of `cmp.confirm`:
+  --  * check if the completion menu is visible without waiting for running sources
+  --  * create an undo point before confirming
+  -- This function is both faster and more reliable.
+  ---@param opts? {select: boolean, behavior: unknown}
+  confirm = function(opts)
+    local cmp = require("cmp")
+    opts = vim.tbl_extend("force", {
+      select = true,
+      behavior = cmp.ConfirmBehavior.Insert,
+    }, opts or {})
+    return function(fallback)
+      if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
+        if vim.api.nvim_get_mode().mode == "i" then
+          vim.api.nvim_feedkeys(setting.feedkeys.UNDO, "n", false)
+        end
+        if cmp.confirm(opts) then
+          return
+        end
+      end
+      return fallback()
+    end
+  end,
 }
 
 ---@class Placeholder
@@ -159,11 +186,11 @@ return {
         ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
         ["<C-Space>"] = cmp.mapping.complete(),
         ["<C-e>"] = cmp.mapping.abort(),
-        ["<CR>"] = cmp.mapping.confirm({
+        ["<CR>"] = actions.confirm({
           behavior = cmp.ConfirmBehavior.Insert,
           select = true,
         }),
-        ["<S-CR>"] = cmp.mapping.confirm({
+        ["<S-CR>"] = actions.confirm({
           behavior = cmp.ConfirmBehavior.Replace,
           select = true,
         }),

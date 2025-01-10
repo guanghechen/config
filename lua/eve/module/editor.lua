@@ -40,18 +40,12 @@ end
 
 ---@return string
 function M.get_selected_text()
-  -- Get the start and end positions
-  local start_pos = vim.fn.getpos("'<")
-  local end_pos = vim.fn.getpos("'>")
+  local saved_reg = vim.fn.getreg("v")
+  vim.cmd([[noautocmd sil norm! "vy]])
 
-  local start_row = start_pos[2] - 1
-  local start_col = start_pos[3] - 1
-  local end_row = end_pos[2] - 1
-  local end_col = end_pos[3] - 1
-
-  -- Get the selected text
-  local lines = vim.api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
-  return table.concat(lines, "\n")
+  local selected_text = vim.fn.getreg("v")
+  vim.fn.setreg("v", saved_reg)
+  return selected_text or ""
 end
 
 ---@param tabnr                         integer
