@@ -6,20 +6,20 @@ local command = require("eve.command")
 command
   .implement({
     uuid = command.definitions.ai.avante_ask.uuid,
-    action = function()
-      require("avante.api").ask()
+    action = function(context)
+      require("guanghechen.action.avante").ask(context)
     end,
   })
   .implement({
     uuid = command.definitions.ai.avante_edit.uuid,
-    action = function()
-      require("avante.api").edit()
+    action = function(context)
+      require("guanghechen.action.avante").edit(context)
     end,
   })
   .implement({
     uuid = command.definitions.ai.avante_refresh.uuid,
-    action = function()
-      require("avante.api").refresh()
+    action = function(context)
+      require("guanghechen.action.avante").refresh(context)
     end,
   })
   .implement({

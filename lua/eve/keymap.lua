@@ -101,8 +101,8 @@ kk({ "n", "v" }, "<leader>ar", K.ai.avante_refresh)
 kk({ "n", "v" }, "<leader>ac", K.ai.copilot_chat_toggle)
 kk({ "n", "v" }, "<leader>ap", K.ai.copilot_chat_prompt)
 kk({ "n", "v" }, "<leader>aq", K.ai.copilot_chat_quick)
-kk({ "n", "v" }, "<leader>as", K.ai.copilot_chat_stop)
-kk({ "n", "v" }, "<leader>ax", K.ai.copilot_chat_reset)
+kk({ "n", "v" }, "<leader>aS", K.ai.copilot_chat_stop)
+kk({ "n", "v" }, "<leader>aX", K.ai.copilot_chat_reset)
 ---------------------------------------------------------------------------------------------#[a]i--
 
 --#[b]uf--------------------------------------------------------------------------------------------

@@ -34,6 +34,21 @@ return {
       ask = "<leader>aa",
       edit = "<leader>ae",
       refresh = "<leader>ar",
+
+      suggestion = {
+        accept = "<c-enter>",
+        next = "<c-j>",
+        prev = "<c-k>",
+        dismiss = "<esc>",
+      },
+    },
+    windows = {
+      ask = {
+        floating = false,
+        start_insert = false,
+        border = "rounded",
+        focus_on_apply = "theirs",
+      },
     },
   },
 }
