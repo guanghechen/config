@@ -37,7 +37,6 @@ M.WINSEP = "winsep"
 local filetypes = {
   -- stylua: ignore 
   cmp_code = {
-    [M.COPILOT_CHAT]     = true,
     ["assembly"]         = true,
     ["bash"]             = true,
     ["clojure"]          = true,
@@ -86,6 +85,8 @@ local filetypes = {
     ["vue"]              = true,
     ["xml"]              = true,
     ["yaml"]             = true,
+    [M.AVANTE_INPUT]     = true,
+    [M.COPILOT_CHAT]     = true,
   },
   cmp_search = {
     [M.SEARCH_INPUT] = true,
@@ -118,6 +119,14 @@ local filetypes = {
     [M.TERM] = true,
     [M.TROUBLE] = true,
     [M.WINSEP] = true,
+  },
+  hipattern = {
+    [M.AVANTE] = true,
+    [M.AVANTE_INPUT] = true,
+  },
+  markdown = {
+    -- "markdown" = true,
+    -- [M.AVANTE] = true,
   },
   not_plain = {
     [M.AERIAL] = true,
@@ -285,6 +294,16 @@ end
 ---@return string[]
 function M.get_disable_autopairs_filetypes()
   return vim.tbl_keys(filetypes.disable_autopairs)
+end
+
+---@return string[]
+function M.get_hipattern_filetypes()
+  return vim.tbl_keys(filetypes.hipattern)
+end
+
+---@return string[]
+function M.get_markdown_filetypes()
+  return vim.tbl_keys(filetypes.markdown)
 end
 
 ---@return string[]

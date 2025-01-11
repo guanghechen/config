@@ -1,4 +1,5 @@
 local fn = require("eve.builtin.fn")
+local ft = require("eve.constant.filetype")
 local tailwind = require("eve.constant.palette.tailwind")
 
 ---@type table<string,true>
@@ -23,17 +24,18 @@ local tailwind_filetypes = {
 return {
   name = "mini.hipatterns",
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
+  ft = ft.get_hipattern_filetypes(),
   config = function()
     local hipatterns = require("mini.hipatterns")
     hipatterns.setup({
       highlighters = {
+        hex_color = hipatterns.gen_highlighter.hex_color({ priority = 2000 }),
         -- Highlight standalone 'FIXME', 'HACK', 'TODO', 'NOTE'
         fixme = { pattern = "%f[%w]()FIXME()%f[%W]", group = "MiniHipatternsFixme" },
         hack = { pattern = "%f[%w]()HACK()%f[%W]", group = "MiniHipatternsHack" },
         todo = { pattern = "%f[%w]()TODO()%f[%W]", group = "MiniHipatternsTodo" },
         note = { pattern = "%f[%w]()NOTE()%f[%W]", group = "MiniHipatternsNote" },
         shorthand = {
-          extmark_opts = { priority = 2000 },
           pattern = "()#%x%x%x()%f[^%x%w]",
           group = function(_, _, data)
             ---@type string
@@ -42,6 +44,7 @@ return {
             local hex_color = "#" .. r .. r .. g .. g .. b .. b
             return hipatterns.compute_hex_color_group(hex_color, "bg")
           end,
+          extmark_opts = { priority = 2000 },
         },
         tailwind = {
           extmark_opts = { priority = 2000 },
@@ -74,7 +77,6 @@ return {
             end
           end,
         },
-        hex_color = hipatterns.gen_highlighter.hex_color({ priority = 2000 }),
       },
     })
 
@@ -83,6 +85,14 @@ return {
       group = fn.augroup("mini-hipatterns_reset_colorscheme"),
       callback = function()
         highlighted = {}
+      end,
+    })
+
+    vim.api.nvim_create_autocmd("FileType", {
+      group = fn.augroup("mini-hipatterns_auto_enable"),
+      pattern = { ft.AVANTE, ft.AVANTE_INPUT },
+      callback = function(arg)
+        require("mini.hipatterns").enable(arg.buf)
       end,
     })
   end,

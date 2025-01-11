@@ -1,11 +1,9 @@
 local ft = require("eve.constant.filetype")
 
-local filetypes = { ft.AVANTE } --@type string[]
-
 return {
   "render-markdown.nvim",
-  ft = vim.list_slice(filetypes),
+  ft = ft.get_markdown_filetypes(),
   opts = {
-    file_types = vim.list_slice(filetypes),
+    file_types = ft.get_markdown_filetypes(),
   },
 }
