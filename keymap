@@ -1,0 +1,26 @@
+keybind = cmd+a=text:\x1\x61
+keybind = cmd+b=text:\x1\x62
+keybind = cmd+c=text:\x1\x63
+keybind = cmd+d=text:\x1\x64
+keybind = cmd+e=text:\x1\x65
+keybind = cmd+f=text:\x1\x66
+keybind = cmd+g=text:\x1\x67
+keybind = cmd+h=text:\x1\x68
+keybind = cmd+i=text:\x1\x69
+keybind = cmd+j=text:\x1\x6a
+keybind = cmd+k=text:\x1\x6b
+keybind = cmd+l=text:\x1\x6c
+keybind = cmd+m=text:\x1\x6d
+keybind = cmd+n=text:\x1\x6e
+keybind = cmd+o=text:\x1\x6f
+keybind = cmd+p=text:\x1\x70
+keybind = cmd+q=text:\x1\x71
+keybind = cmd+r=text:\x1\x72
+keybind = cmd+s=text:\x1\x73
+keybind = cmd+t=text:\x1\x74
+keybind = cmd+u=text:\x1\x75
+# keybind = cmd+v=text:\x1\x76
+keybind = cmd+w=text:\x1\x77
+keybind = cmd+x=text:\x1\x78
+keybind = cmd+y=text:\x1\x79
+keybind = cmd+z=text:\x1\x7a
