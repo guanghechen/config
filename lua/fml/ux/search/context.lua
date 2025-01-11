@@ -260,7 +260,7 @@ function M:mark_item_deleted(uuid)
   end
 
   if self._item_uuid_cur == uuid then
-    lnum = math.max(1, math.min(lnum - 1, #items)) ---@type integer
+    lnum = math.max(1, math.min(lnum, #items)) ---@type integer
     self._item_lnum_cur = lnum
     self._item_uuid_cur = items[lnum] and items[lnum].uuid or nil
   end
