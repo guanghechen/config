@@ -58,8 +58,10 @@ local function get_select()
             if item ~= nil then
               local bufnr = item.data.bufnr ---@type integer
               if not editor.is_buf_valid(bufnr) then
-                vim.api.nvim_buf_delete(bufnr, { force = true })
-                _select:mark_data_dirty()
+                if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+                  vim.api.nvim_buf_delete(bufnr, { force = true })
+                end
+                _select:mark_item_deleted(item.uuid)
                 return
               end
 
@@ -73,6 +75,7 @@ local function get_select()
                 for _, unreferenced_bufnr in ipairs(unrefereced_bufnrs) do
                   vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
                 end
+                _select:mark_item_deleted(item.uuid)
                 _select:mark_data_dirty()
               end
             end

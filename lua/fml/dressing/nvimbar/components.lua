@@ -142,18 +142,18 @@ function M.bufs(position)
     return filename, fileicon, fileicon_hl
   end
 
-  ---@param buf                           eve.t.state.tab.buf.state
+  ---@param buf                           eve.t.state.tab.buf.state|nil
   ---@param index                         integer
   ---@param current                       integer|nil
   ---@param total                         integer
   ---@return string
   ---@return string
   local function render_buf(buf, index, current, total)
-    local bufnr = buf.bufnr ---@type integer
-    if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    if buf == nil or buf.bufnr < 1 or not vim.api.nvim_buf_is_valid(buf.bufnr) then
       return "", ""
     end
 
+    local bufnr = buf.bufnr ---@type integer
     local is_first = index == 1 ---@type boolean
     local is_current = index == current ---@type boolean
     local is_pinned = buf.pinned ---@type boolean

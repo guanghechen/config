@@ -18,6 +18,7 @@ local Select = require("fml.ux.select")
 ---@field public get_winnr_main         fun(self: fml.ux.IFileSelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.ux.IFileSelect): integer|nil
 ---@field public mark_data_dirty        fun(self: fml.ux.IFileSelect): nil
+---@field public mark_item_deleted      fun(self: fml.ux.IFileSelect, uuid: string): nil
 ---@field public show                   fun(self: fml.ux.IFileSelect): nil
 ---@field public toggle                 fun(self: fml.ux.IFileSelect): nil
 
@@ -407,6 +408,13 @@ end
 function M:mark_data_dirty()
   local select = self._get_select() ---@type fml.ux.ISelect
   select:mark_data_dirty()
+end
+
+---@param uuid                          string
+---@return nil
+function M:mark_item_deleted(uuid)
+  local select = self._get_select() ---@type fml.ux.ISelect
+  select:mark_item_deleted(uuid)
 end
 
 ---@param cwd                           string

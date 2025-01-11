@@ -16,6 +16,7 @@ local Search = require("fml.ux.search.search")
 ---@field public get_winnr_main         fun(self: fml.ux.ISelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.ux.ISelect): integer|nil
 ---@field public mark_data_dirty        fun(self: fml.ux.ISelect): nil
+---@field public mark_item_deleted      fun(self: fml.ux.ISelect, uuid: string): nil
 ---@field public show                   fun(self: fml.ux.ISelect): nil
 ---@field public toggle                 fun(self: fml.ux.ISelect): nil
 
@@ -577,9 +578,16 @@ end
 
 ---@return nil
 function M:mark_data_dirty()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
   self._live_data_dirty:next(true)
+  local search = self._get_search() ---@type fml.ux.search.ISearch
   search.context.dirtier_data:mark_dirty()
+end
+
+---@param uuid                          string
+---@return nil
+function M:mark_item_deleted(uuid)
+  local search = self._get_search() ---@type fml.ux.search.ISearch
+  search:mark_item_deleted(uuid)
 end
 
 ---@return nil

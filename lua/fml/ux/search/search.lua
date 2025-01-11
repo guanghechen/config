@@ -58,6 +58,7 @@ local borders = {
 ---@field public get_winnr_input        fun(self: fml.ux.search.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: fml.ux.search.ISearch): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.ux.search.ISearch): integer|nil
+---@field public mark_item_deleted      fun(self: fml.ux.search.ISearch, uuid: string): nil
 ---@field public reset_input            fun(self: fml.ux.search.ISearch, text: string): nil
 ---@field public show                   fun(self: fml.ux.search.ISearch): nil
 ---@field public toggle                 fun(self: fml.ux.search.ISearch): nil
@@ -965,6 +966,12 @@ function M:hide()
   if self._on_invisible ~= nil then
     self._on_invisible()
   end
+end
+
+---@param uuid                          string
+---@return nil
+function M:mark_item_deleted(uuid)
+  self.context:mark_item_deleted(uuid)
 end
 
 ---@return nil

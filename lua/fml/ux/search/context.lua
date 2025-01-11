@@ -29,6 +29,7 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public get_current_lnum       fun(self: fml.ux.search.IContext): integer
 ---@field public get_current_uuid       fun(self: fml.ux.search.IContext): string|nil
 ---@field public has_item_deleted       fun(self: fml.ux.search.IContext, uuid: string): boolean
+---@field public set_current            fun(self: fml.ux.search.IContext, lnum: integer): integer
 ---@field public locate                 fun(self: fml.ux.search.IContext, lnum: integer): integer
 ---@field public mark_item_deleted      fun(self: fml.ux.search.IContext, uuid: string): nil
 ---@field public mark_all_items_deleted fun(self: fml.ux.search.IContext): nil
@@ -193,6 +194,21 @@ end
 ---@return string|nil
 function M:get_current_uuid()
   return self._item_uuid_cur
+end
+
+---@param lnum                          integer
+---@param uuid                          string|nil
+---@return nil
+function M:set_current(lnum, uuid)
+  local items = self.items ---@type fml.ux.search.IItem[]
+  local next_lnum = math.max(1, math.min(#items, lnum)) ---@type integer
+  local next_uuid = items[next_lnum] and items[next_lnum].uuid or nil ---@type string|nil
+  local has_changed = self._item_lnum_cur ~= next_lnum or self._item_uuid_cur ~= next_uuid ---@type boolean
+  if has_changed then
+    self.dirtier_preview:mark_dirty()
+  end
+  self._item_lnum_cur = next_lnum
+  self._item_uuid_cur = uuid or next_uuid
 end
 
 ---@param uuid                          string
