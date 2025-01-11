@@ -28,6 +28,26 @@ export const apps = [
     },
   },
   {
+    name: "ghostty",
+    themes: "theme/",
+    extname: "",
+    local: "local/theme",
+    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    render: (_, template, scheme) => render_template(template, scheme),
+    after_apply: async (app, scheme) => {
+      const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
+      let content = await fs.readFile(theme_filepath, 'utf8')
+
+      // const backgroundImagePath =
+      //   scheme.variant === "light"
+      //     ? path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
+      //     : path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
+      //
+      // content += '\n\n' + `background_image = ${backgroundImagePath}\n`
+      await fs.writeFile(theme_filepath, content, 'utf8')
+    },
+  },
+  {
     name: "kitty",
     themes: "theme/",
     extname: ".conf",
@@ -35,14 +55,15 @@ export const apps = [
     active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
+      const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
+      let content = await fs.readFile(theme_filepath, 'utf8')
+
       const backgroundImagePath =
         scheme.variant === "light"
           ? path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
           : path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
-
-      const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
-      let content = await fs.readFile(theme_filepath, 'utf8')
       content += '\n\n' + `background_image ${backgroundImagePath}\n`
+
       await fs.writeFile(theme_filepath, content, 'utf8')
     },
   },
