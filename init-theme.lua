@@ -10,7 +10,7 @@ eve.setup_state(storage)
 local setting = require("eve.constant.setting")
 local theme = vim.env.GHC_THEME or "gruvbox_dark" ---@type eve.e.Theme
 
-if not vim.tbl_contains(setting.themes, theme) then
+if not vim.list_contains(setting.themes, theme) then
   print("Unknown theme: " .. theme)
 else
   local state = require("eve.state")

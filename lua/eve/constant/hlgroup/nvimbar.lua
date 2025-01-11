@@ -15,6 +15,11 @@ local function gen_hlgroup_map(context)
   ---@type table<string, eve.t.theme.IHlgroup>
   local hlgroup_map = {
     bg = { fg = "bg_bar", bg = "bg_bar" },
+    ai_text = { fg = c.fg2, bg = "bg_bar" },
+    ai_status_InProgress = { fg = c.aqua, bg = "bg_bar" },
+    ai_status_Inactive = { fg = c.red, bg = "bg_bar" },
+    ai_status_Normal = { fg = c.fg1, bg = "bg_bar" },
+    ai_status_Warning = { fg = c.yellow, bg = "bg_bar" },
     buf = { fg = c.bg4, bg = "bg_bar" },
     buf_indicator = { fg = c.purple, bg = bg_bufc, bold = true },
     buf_mod = { fg = c.fg4, bg = "bg_bar" },

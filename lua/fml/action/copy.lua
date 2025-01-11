@@ -57,7 +57,7 @@ function M.copy_filepath(context, arg)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local scopes = command.definitions.copy.filepath.candidates
   local scope = type(arg) == "string" and arg:lower() or "" ---@type string
-  if vim.tbl_contains(scopes, scope) then
+  if vim.list_contains(scopes, scope) then
     copy_current_filepath(scope, filepath)
   else
     select({

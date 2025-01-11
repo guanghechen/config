@@ -23,6 +23,73 @@ local M = {}
 
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
+function M.ai(position)
+  ---@param provider                    eve.e.AiProvider
+  ---@return string
+  local function get_status(provider)
+    if provider == "copilot" then
+      if package.loaded["copilot"] then
+        return require("copilot.api").status.data.status or ""
+      end
+    end
+    return ""
+  end
+
+  ---@type string
+  local fn_show_message = G.register_anonymous_fn(function()
+    local enabled = state.flight.ai:snapshot() ---@type boolean
+    local provider = state.flight.ai_provider:snapshot() ---@type string
+    local status = "NIL" ---@type unknown
+
+    if provider == "copilot" then
+      if package.loaded["copilot"] then
+        status = require("copilot.api").status.data or "NIL"
+      end
+    end
+
+    reporter.info({
+      from = __module_name__,
+      subject = "ai",
+      details = { enabled = enabled, provider = provider, status = status },
+    })
+
+    vim.cmd(command.definitions.toggle.ai_provider.uuid)
+  end)
+
+  ---@type fml.ux.nvimbar.IRawComponent
+  local component = {
+    name = "ai",
+    atomic = true,
+    condition = function()
+      return state.flight.ai:snapshot()
+    end,
+    render = function()
+      local enabled = state.flight.ai:snapshot() ---@type boolean
+      local provider = state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+
+      if not enabled then
+        local text = "󱙻 " .. provider .. " " ---@type string
+        local hl_text = btn(text, fn_show_message)
+        return text, hl_text, true
+      end
+
+      local status = get_status(provider)
+      local text = "󱚟 " .. provider .. " " ---@type string
+      local hln_text = position .. "_ai_text" ---@type string
+      if #status > 0 then
+        text = text .. "(" .. status .. ") " ---@type string
+        hln_text = position .. "_ai_status_" .. status ---@type string
+      end
+
+      local hl_text = btn(txt(text, hln_text), fn_show_message)
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      fml.ux.nvimbar.Position
+---@return fml.ux.nvimbar.IRawComponent
 function M.bufs(position)
   local hln_buf = position .. "_buf" ---@type string
   local hln_buf_order = position .. "_buf_order" ---@type string

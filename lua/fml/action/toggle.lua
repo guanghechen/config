@@ -13,6 +13,7 @@ local select = require("fml.fn.select")
 ---@field public snapshot               fun(context: eve.command.IContext): string, string
 ---@field public action                 fun(context: eve.command.IContext): nil
 
+local ai_providers = command.definitions.toggle.ai_provider.candidates ---@type string[]
 local flights = command.definitions.toggle.flight.candidates ---@type string[]
 local themes = command.definitions.toggle.theme.candidates ---@type string[]
 
@@ -41,6 +42,16 @@ end
 
 ---@type table<string, fml.action.toggle.IItem>
 local flag_map = {
+  ai_provider = {
+    title = "ai_provider",
+    snapshot = function()
+      local provider = state.flight.ai_provider:snapshot() ---@type string
+      return provider, "String"
+    end,
+    action = function(context)
+      command.execute(command.definitions.toggle.ai_provider.uuid, context)
+    end,
+  },
   flight = {
     title = "flight",
     snapshot = function()
@@ -146,7 +157,7 @@ table.sort(flags)
 ---@param theme                         string
 ---@return nil
 local function apply_theme(theme)
-  if not vim.tbl_contains(themes, theme) then
+  if not vim.list_contains(themes, theme) then
     reporter.error({
       from = __module_name__,
       subject = "apply_theme",
@@ -237,9 +248,54 @@ end
 ---@param arg                           string|nil
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
+function M.toggle_ai_provider(context, arg)
+  local ai_provider = type(arg) == "string" and arg:lower() or "" ---@type string
+  if vim.list_contains(ai_providers, ai_provider) then
+    state.flight.ai_provider:next(ai_provider)
+  else
+    select({
+      title = "Toggle ai provider",
+      flag_fuzzy = true,
+      flag_regex = false,
+      input = Observable.from_value(ai_provider),
+      dimension = {
+        row = 5,
+        width = 50,
+      },
+      get_present = function()
+        local ai_provider = state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+        return ai_provider
+      end,
+      fetch_items = function()
+        local items = {} ---@type fml.ux.select.IItem[]
+        for _, flight in ipairs(ai_providers) do
+          items[#items + 1] = { uuid = flight, text = flight }
+        end
+        return items
+      end,
+      render_item = function(item, match)
+        local text = item.uuid ---@type string
+        local highlights = { { coll = 0, colr = -1, hlname = "String" } } ---@type eve.t.IHighlightInline[]
+        for _, piece in ipairs(match.matches) do
+          highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
+        end
+        return text, highlights
+      end,
+      on_confirm = function(widget, item)
+        widget:close()
+        state.flight.ai_provider:next(item.uuid)
+      end,
+    })
+  end
+end
+
+---@param context                       eve.command.IContext
+---@param arg                           string|nil
+---@return nil
+---@diagnostic disable-next-line: unused-local
 function M.toggle_flight(context, arg)
   local flight_name = type(arg) == "string" and arg:lower() or "" ---@type string
-  if vim.tbl_contains(flights, flight_name) then
+  if vim.list_contains(flights, flight_name) then
     toggle_flight(flight_name)
   else
     select({
@@ -301,7 +357,7 @@ end
 ---@diagnostic disable-next-line: unused-local
 function M.toggle_theme(context, arg)
   local theme_name = type(arg) == "string" and arg:lower() or "" ---@type string
-  if vim.tbl_contains(themes, theme_name) then
+  if vim.list_contains(themes, theme_name) then
     apply_theme(theme_name)
   else
     select({

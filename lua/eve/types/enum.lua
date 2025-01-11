@@ -94,3 +94,9 @@
 ---@alias eve.e.WidgetStatuslineItemType
 ---| "flag"
 ---| "enum"
+
+----------------------------------------------------------------------------------------------------
+
+---@alias eve.e.AiProvider
+---| "copilot"
+---| "deepseek"

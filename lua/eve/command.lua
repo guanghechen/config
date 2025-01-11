@@ -497,6 +497,7 @@ M.definitions.term = {
 ---@class eve.command.definitions.toggle
 M.definitions.toggle = {
   list = defc("Ftoggle", "toggle: select", "?", setting.togglers),
+  ai_provider = defc("Ftoggleaiprovider", "toggle: ai provider", "?", setting.ai_providers),
   flight = defc("Ftoggleflight", "toggle: flight", "?", setting.flights),
   markdown = def("Ftogglemarkdown", "toggle: markdown"),
   relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),

@@ -129,7 +129,7 @@ local function auto_brackets(entry)
   local cmp = require("cmp")
   local Kind = cmp.lsp.CompletionItemKind
   local item = entry:get_completion_item()
-  if vim.tbl_contains({ Kind.Function, Kind.Method }, item.kind) then
+  if item.kind == Kind.Function or item.kind == Kind.Method then
     local cursor = vim.api.nvim_win_get_cursor(0)
     local prev_char = vim.api.nvim_buf_get_text(0, cursor[1] - 1, cursor[2], cursor[1] - 1, cursor[2] + 1, {})[1]
     if prev_char ~= "(" and prev_char ~= ")" then
@@ -274,7 +274,7 @@ return {
 
     local cmp = require("cmp") ---@type any
     cmp.event:on("confirm_done", function(event)
-      if vim.tbl_contains(opts.auto_brackets or {}, vim.bo.filetype) then
+      if opts.auto_brackets ~= nil and vim.list_contains(opts.auto_brackets, vim.bo.filetype) then
         auto_brackets(event.entry)
       end
     end)

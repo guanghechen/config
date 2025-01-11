@@ -32,8 +32,8 @@ local conds = {
     return true
   end,
   ---@return boolean
-  copilot = function()
-    return not vim.g.vscode and state.flight.copilot:snapshot()
+  ai = function()
+    return not vim.g.vscode and state.flight.ai:snapshot()
   end,
   ---@return boolean
   not_vscode = function()
@@ -46,15 +46,15 @@ local conds = {
 
 ---@type guanghechen.plugin.IRawSpec[]
 local raw_specs = {
-  { name = "aerial.nvim", main = "aerial", cond = conds.copilot },
-  { name = "avante.nvim", main = "avante", cond = conds.not_vscode },
+  { name = "aerial.nvim", main = "aerial", cond = conds.not_vscode },
+  { name = "avante.nvim", main = "avante", cond = conds.ai },
   { name = "cmp-buffer", main = "cmp_buffer", cond = conds.not_vscode },
   { name = "cmp-nvim-lsp", main = "cmp_nvim_lsp", cond = conds.not_vscode },
   { name = "cmp-path", main = "cmp_path", cond = conds.not_vscode },
   { name = "conform.nvim", main = "conform", cond = conds.not_vscode },
-  { name = "copilot.lua", main = "copilot", cond = conds.copilot },
-  { name = "copilot-chat.nvim", main = "CopilotChat", cond = conds.copilot },
-  { name = "copilot-cmp", main = "copilot_cmp", cond = conds.copilot },
+  { name = "copilot.lua", main = "copilot", cond = conds.ai },
+  { name = "copilot-chat.nvim", main = "CopilotChat", cond = conds.ai },
+  { name = "copilot-cmp", main = "copilot_cmp", cond = conds.ai },
   { name = "diffview.nvim", main = "diffview", cond = conds.not_vscode },
   { name = "dressing.nvim", main = "dressing", cond = conds.not_vscode },
   { name = "flash.nvim", main = "flash", cond = conds.not_vscode },
@@ -150,7 +150,7 @@ for index = 1, #specs, 1 do
     spec_details.url = spec_basic.url
     spec_details.branch = spec_basic.branch
     spec_details.main = spec_basic.main
-  elseif not vim.tbl_contains(no_details_module_names, spec_basic.name) then
+  elseif not vim.list_contains(no_details_module_names, spec_basic.name) then
     reporter.error({
       from = __module_name__,
       subject = "resolve plugin details",

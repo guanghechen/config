@@ -301,9 +301,10 @@ function M.watch_changes(params)
     M.find_buffer.scope,
 
     ---
+    M.flight.ai,
+    M.flight.ai_provider,
     M.flight.autoload,
     M.flight.autosave,
-    M.flight.copilot,
     M.flight.devmode,
     M.flight.dressing_hipairs,
     M.flight.dressing_winsep_fixed,

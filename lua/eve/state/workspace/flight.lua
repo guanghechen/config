@@ -1,11 +1,13 @@
 local env = require("eve.builtin.env")
 local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
+local setting = require("eve.constant.setting")
 
 ---@class eve.state.flight.data
+---@field public ai                     boolean
+---@field public ai_provider            eve.e.AiProvider
 ---@field public autoload               boolean
 ---@field public autosave               boolean
----@field public copilot                boolean
 ---@field public devmode                boolean
 ---
 ---@field public dressing_hipairs       boolean
@@ -19,9 +21,10 @@ local Observable = require("eve.collection.observable")
 ---@field public treesitter_context     boolean
 
 ---@class eve.state.flight.state
+---@field public ai                     eve.collection.IObservable
+---@field public ai_provider            eve.collection.IObservable
 ---@field public autoload               eve.collection.IObservable
 ---@field public autosave               eve.collection.IObservable
----@field public copilot                eve.collection.IObservable
 ---@field public devmode                eve.collection.IObservable
 ---
 ---@field public dressing_hipairs       eve.collection.IObservable
@@ -106,9 +109,10 @@ function M.defaults()
 
   ---@type eve.state.flight.data
   return {
+    ai = is_home_config_dir or is_sourcecode or is_playground,
+    ai_provider = "copilot",
     autoload = false,
     autosave = is_git_repo,
-    copilot = is_home_config_dir or is_sourcecode or is_playground,
     devmode = is_home_config_dir,
 
     dressing_hipairs = true,
@@ -128,14 +132,17 @@ end
 function M.normalize(data)
   local resolved = M.defaults() ---@type eve.state.flight.data
   if type(data) == "table" then
+    if type(data.ai) == "boolean" then
+      resolved.ai = data.ai
+    end
+    if type(data.ai_provider) == "string" and vim.list_contains(setting.ai_providers, data.ai_provider) then
+      resolved.ai_provider = data.ai_provider
+    end
     if type(data.autoload) == "boolean" then
       resolved.autoload = data.autoload
     end
     if type(data.autosave) == "boolean" then
       resolved.autosave = data.autosave
-    end
-    if type(data.copilot) == "boolean" then
-      resolved.copilot = data.copilot
     end
     if type(data.devmode) == "boolean" then
       resolved.devmode = data.devmode
@@ -181,7 +188,7 @@ function M.dump()
   return {
     autoload = _state.autoload:snapshot(),
     autosave = _state.autosave:snapshot(),
-    copilot = _state.copilot:snapshot(),
+    ai = _state.ai:snapshot(),
     devmode = _state.devmode:snapshot(),
 
     dressing_hipairs = _state.dressing_hipairs:snapshot(),
@@ -193,6 +200,8 @@ function M.dump()
 
     spellcheck = _state.spellcheck:snapshot(),
     treesitter_context = _state.treesitter_context:snapshot(),
+
+    ai_provider = _state.ai_provider:snapshot(),
   }
 end
 
@@ -204,9 +213,10 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.flight.state
     _state = {
+      ai = Observable.from_value(data.ai),
+      ai_provider = Observable.from_value(data.ai_provider),
       autoload = Observable.from_value(data.autoload),
       autosave = Observable.from_value(data.autosave),
-      copilot = Observable.from_value(data.copilot),
       devmode = Observable.from_value(data.devmode),
 
       dressing_hipairs = Observable.from_value(data.dressing_hipairs),
@@ -222,9 +232,10 @@ function M.load(raw_data)
     return _state
   end
 
+  _state.ai:next(data.ai)
+  _state.ai_provider:next(data.ai_provider)
   _state.autoload:next(data.autoload)
   _state.autosave:next(data.autosave)
-  _state.copilot:next(data.copilot)
   _state.devmode:next(data.devmode)
 
   _state.dressing_hipairs:next(data.dressing_hipairs)

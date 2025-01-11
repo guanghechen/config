@@ -94,7 +94,7 @@ return {
           local bufnr = ctx.buf ---@type integer
           local filetype = vim.bo[bufnr].filetype
           local formatters = formatters_by_ft[filetype] or {} ---@type string[]
-          if not vim.tbl_contains(formatters, "prettier") then
+          if not vim.list_contains(formatters, "prettier") then
             return false
           end
 

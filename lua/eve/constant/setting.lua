@@ -7,11 +7,18 @@ M.feedkeys = {
   UNDO = vim.api.nvim_replace_termcodes("<c-G>u", true, true, true),
 }
 
+---@class eve.constant.setting.ai_providers
+M.ai_providers = {
+  "copilot",
+  "deepseek",
+}
+
 ---@class eve.constant.setting.flights
 M.flights = {
+  "ai",
+  "ai_provider",
   "autoload",
   "autosave",
-  "copilot",
   "devmode",
   "dressing_hipairs",
   "dressing_winsep_fixed",
@@ -35,6 +42,7 @@ M.themes = {
 
 ---@class eve.constant.setting.togglers
 M.togglers = {
+  "ai_provider",
   "flight",
   "hipatterns_local",
   "markdown",

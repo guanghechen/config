@@ -8,7 +8,7 @@ local state = require("eve.state")
 
 local select = require("fml.fn.select")
 
-if not state.flight.copilot:snapshot() then
+if not state.flight.ai:snapshot() then
   reporter.error({
     from = __module_name__,
     subject = "copilot-chat",

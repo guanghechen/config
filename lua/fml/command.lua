@@ -613,6 +613,12 @@ command
     end,
   })
   .implement({
+    uuid = command.definitions.toggle.ai_provider.uuid,
+    action = function(context, arg)
+      require("fml.action.toggle").toggle_ai_provider(context, arg)
+    end,
+  })
+  .implement({
     uuid = command.definitions.toggle.flight.uuid,
     action = function(context, arg)
       require("fml.action.toggle").toggle_flight(context, arg)
