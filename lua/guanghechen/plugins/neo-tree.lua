@@ -320,7 +320,7 @@ return {
       pick_window = function()
         local winnr_source = vim.api.nvim_get_current_win() ---@type integer
         local winpicker = require("eve.module.winpicker")
-        return winpicker.pick_window(winpicker.filters.focus, winnr_source, false)
+        return winpicker.pick_window(winpicker.filters.project, winnr_source, false)
       end,
     }
 
