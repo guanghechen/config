@@ -36,6 +36,7 @@ M.themes = {
 ---@class eve.constant.setting.togglers
 M.togglers = {
   "flight",
+  "hipatterns_local",
   "relativenumber",
   "relativenumber_local",
   "theme",

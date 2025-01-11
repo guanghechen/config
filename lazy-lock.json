@@ -19,7 +19,7 @@
   "mason-lspconfig.nvim": { "branch": "nvim@mason-lspconfig.nvim", "commit": "97d9f1d3ad205dece6bcafd1d71cf1507608f3c7" },
   "mason-nvim-dap": { "branch": "nvim@mason-nvim-dap", "commit": "8b9363d83b5d779813cdd2819b8308651cec2a09" },
   "mason.nvim": { "branch": "nvim@mason.nvim", "commit": "e2f7f9044ec30067bc11800a9e266664b88cda22" },
-  "mini.hipatterns": { "branch": "nvim@mini.hipatterns", "commit": "f34975103a38b3f608219a1324cdfc58ea660b8b" },
+  "mini.hipatterns": { "branch": "nvim@mini.hipatterns", "commit": "4a16f76785e5402f24379d7c77ab911c7d0e9ca6" },
   "mini.icons": { "branch": "nvim@mini.icons", "commit": "1c79feb7478ca773fa3dac5cadf43ced9180e861" },
   "mini.indentscope": { "branch": "nvim@mini.indentscope", "commit": "da9af64649e114aa79480c238fd23f6524bc0903" },
   "mini.pairs": { "branch": "nvim@mini.pairs", "commit": "7e834c5937d95364cc1740e20d673afe2d034cdb" },
