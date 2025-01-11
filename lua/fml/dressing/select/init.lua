@@ -1,5 +1,4 @@
 local Observable = require("eve.collection.observable")
-local command = require("eve.command")
 
 local Select = require("fml.ux.select")
 
@@ -38,6 +37,7 @@ local function select(items, opts, on_choice)
   local confirmed = false ---@type boolean
 
   local _selector = nil ---@type fml.ux.ISelect|nil
+  local winnr = vim.api.nvim_get_current_win()
 
   ---@type fml.ux.ISelect
   _selector = Select.new({
@@ -58,9 +58,8 @@ local function select(items, opts, on_choice)
         on_choice(nil, nil)
       end
 
-      local context = command.context_snapshot() ---@type eve.command.IContext|nil
-      if context ~= nil then
-        vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
+      if vim.api.nvim_win_is_valid(winnr) then
+        vim.api.nvim_tabpage_set_win(0, winnr)
       end
     end,
     on_confirm = function(widget, item)
@@ -68,9 +67,8 @@ local function select(items, opts, on_choice)
       on_choice(item.data.original_item, tonumber(item.uuid))
 
       widget:close()
-      local context = command.context_snapshot() ---@type eve.command.IContext|nil
-      if context ~= nil then
-        vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
+      if vim.api.nvim_win_is_valid(winnr) then
+        vim.api.nvim_tabpage_set_win(0, winnr)
       end
     end,
   })
