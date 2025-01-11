@@ -1,3 +1,4 @@
+local Observable = require("eve.collection.observable")
 local command = require("eve.command")
 
 local Select = require("fml.ux.select")
@@ -21,6 +22,10 @@ local providers = {
   fallback = fallback_provider,
 }
 
+local input_by_title = {
+  ["(Avante) Add a file"] = Observable.from_value(""),
+}
+
 ---@param items                         any[]
 ---@param opts                          fml.dressing.select.IOptions
 ---@param on_choice                     fun(item: any|nil, idx: integer|nil): nil
@@ -42,6 +47,7 @@ local function select(items, opts, on_choice)
       max_width = 0.8,
       width = math.max(60, width + 10),
     },
+    input = input_by_title[title],
     preview_enabled = false,
     extend_preset_keymaps = true,
     title = title,
