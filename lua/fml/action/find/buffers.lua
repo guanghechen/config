@@ -96,13 +96,13 @@ local function get_select()
             return true
           end
 
-          if scope == "F" then
-            return meta_tab and meta_tab:find_buf(bufnr) ~= nil or false
-          end
-
           local filetype = vim.bo[bufnr].filetype ---@type string
           if scope == "T" then
             return filetype == ft.TERM
+          end
+
+          if scope == "F" then
+            return meta_tab and meta_tab:find_buf(bufnr) ~= nil or false
           end
 
           if

@@ -31,7 +31,7 @@ function M.defaults()
     flag_fuzzy = true,
     flag_regex = false,
     keyword = "",
-    scope = "T",
+    scope = "A",
   }
 end
 
