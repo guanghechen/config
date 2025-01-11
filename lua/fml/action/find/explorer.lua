@@ -163,7 +163,7 @@ state_cwd:subscribe(
 local function get_select()
   if _select == nil then
     local frecency = state.frecency.files ---@type eve.collection.IFrecency
-    local input_history = state.input_history.find_file ---@type eve.collection.IHistory
+    local input_history = state.select.find_file.input_history ---@type eve.collection.IHistory
 
     local main_width = 0.4 ---@type number
     ---@type fml.ux.search.IRawDimension

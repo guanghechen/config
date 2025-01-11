@@ -26,7 +26,7 @@ local EDITING_PREFIX = setting.EDITING_INPUT_PREFIX ---@type string
 local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@type integer
 
 ---@class fml.ux.search.input.IProps
----@field public state                  fml.ux.search.IContext
+---@field public context                fml.ux.search.IContext
 ---@field public keymaps                eve.t.IKeymap[]
 
 ---@param props                         fml.ux.search.input.IProps
@@ -34,9 +34,9 @@ local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@ty
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local search_state = props.state ---@type fml.ux.search.IContext
-  local input_history = search_state.input_history ---@type eve.collection.IHistory|nil
-  local autocmd_group = fn.augroup(search_state.uuid .. ":search_input") ---@type integer
+  local context = props.context ---@type fml.ux.search.IContext
+  local input_history = context.input_history ---@type eve.collection.IHistory|nil
+  local autocmd_group = fn.augroup(context.uuid .. ":search_input") ---@type integer
 
   local actions = {
     apply_prev_input = function()
@@ -86,18 +86,18 @@ function M.new(props)
     end,
   })
 
-  self.context = search_state
+  self.context = context
   self._autocmd_group = autocmd_group
   self._bufnr = nil
   self._extmark_nr = nil
   self._input_scheduler = input_scheduler
   self._keymaps = keymaps
 
-  search_state.dirtier_preview:subscribe(
+  context.dirtier_preview:subscribe(
     Subscriber.new({
       on_next = function()
-        local is_preview_dirty = search_state.dirtier_preview:is_dirty() ---@type boolean
-        local status = search_state.status:snapshot() ---@type eve.e.WidgetStatus
+        local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
+        local status = context.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_preview_dirty then
           self:set_virtual_text()
@@ -107,11 +107,11 @@ function M.new(props)
     true
   )
 
-  search_state.input:subscribe(
+  context.input:subscribe(
     Subscriber.new({
       on_next = function()
         if input_history ~= nil then
-          local input_cur = search_state.input:snapshot() ---@type string
+          local input_cur = context.input:snapshot() ---@type string
           local input_present = input_history:present() ---@type string|nil, integer
           if input_present ~= input_cur then
             local input_top = input_history:top() ---@type string|nil

@@ -1,4 +1,4 @@
----@alias eve.e.FindScope
+---@alias eve.e.FindFileScope
 ---|"W"
 ---|"C"
 ---|"D"
@@ -9,7 +9,7 @@
 ---| "L"
 ---| "T"
 
----@alias eve.e.SearchScope
+---@alias eve.e.SearchFileScope
 ---|"W"
 ---|"C"
 ---|"D"

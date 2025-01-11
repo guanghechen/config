@@ -12,29 +12,28 @@ local command = require("eve.command")
 local Setting = require("fml.ux.setting")
 local Search = require("fml.ux.search.search")
 
-local scopes = { "W", "C", "D", "B" } ---@type eve.e.SearchScope[]
-
----@return eve.e.SearchScope
+---@return eve.e.SearchFileScope
 local function get_scope_carousel_next()
-  local scope = state.search.scope:snapshot() ---@type eve.e.SearchScope
+  local scopes = state.select.search_file_scopes ---@type eve.e.SearchFileScope[]
+  local scope = state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
   local idx = fn.find_index(scopes, scope) or 1 ---@type integer
   local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
   return scopes[idx_next]
 end
 
----@param scope                         eve.e.SearchScope
+---@param scope                         eve.e.SearchFileScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = state.search.scope:snapshot() ---@type eve.e.SearchScope
+  local scope_current = state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
   if scope_current ~= scope then
-    state.search.scope:next(scope)
+    state.select.search_file_scope:next(scope)
   end
 end
 
 ---@param dirpath                       string
 ---@return string
 local function get_scope_cwd(dirpath)
-  local scope = state.search.scope:snapshot() ---@type eve.e.SearchScope
+  local scope = state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
 
   if scope == "W" then
     return path.workspace()
@@ -62,7 +61,7 @@ local function get_scope_cwd(dirpath)
 end
 
 local state_search_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
-state.search.scope:subscribe(
+state.select.search_file_scope:subscribe(
   Subscriber.new({
     on_next = function(scope, prev_scope)
       local bufnr = command.context_bufnr() ---@type integer|nil
@@ -139,13 +138,13 @@ function M.edit_config()
   ---@field public includes             string[]
   ---@field public excludes             string[]
 
-  local s_keyword = state.search.keyword:snapshot() ---@type string
-  local s_replacement = state.search.replacement:snapshot() ---@type string
-  local s_search_paths = state.search.search_paths:snapshot() ---@type string[]
-  local s_max_filesize = state.search.max_filesize:snapshot() ---@type string
-  local s_max_matches = state.search.max_matches:snapshot() ---@type integer
-  local s_includes = state.search.includes:snapshot() ---@type string[]
-  local s_excludes = state.search.excludes:snapshot() ---@type string[]
+  local s_keyword = state.select.search_file.input:snapshot() ---@type string
+  local s_replacement = state.search_file.replacement:snapshot() ---@type string
+  local s_search_paths = state.search_file.search_paths:snapshot() ---@type string[]
+  local s_max_filesize = state.search_file.max_filesize:snapshot() ---@type string
+  local s_max_matches = state.search_file.max_matches:snapshot() ---@type integer
+  local s_includes = state.select.search_file.includes:snapshot() ---@type string[]
+  local s_excludes = state.select.search_file.excludes:snapshot() ---@type string[]
 
   ---@type fml.action.search.files.IConfigData
   local data = {
@@ -198,7 +197,7 @@ function M.edit_config()
     end,
     on_confirm = function(raw_data)
       vim.schedule(function()
-        local last_search_pattern = state.search.keyword:snapshot() ---@type string
+        local last_search_pattern = state.select.search_file.input:snapshot() ---@type string
 
         local raw = vim.tbl_extend("force", data, raw_data)
         ---@cast raw                    fml.action.search.files.IConfigData
@@ -211,13 +210,13 @@ function M.edit_config()
         local includes = raw.includes ---@type string[]
         local excludes = raw.excludes ---@type string[]
 
-        state.search.keyword:next(keyword)
-        state.search.replacement:next(replacement)
-        state.search.max_filesize:next(max_filesize)
-        state.search.max_matches:next(max_matches)
-        state.search.search_paths:next(search_paths)
-        state.search.includes:next(includes)
-        state.search.excludes:next(excludes)
+        state.select.search_file.input:next(keyword)
+        state.select.search_file.includes:next(includes)
+        state.select.search_file.excludes:next(excludes)
+        state.search_file.replacement:next(replacement)
+        state.search_file.max_filesize:next(max_filesize)
+        state.search_file.max_matches:next(max_matches)
+        state.search_file.search_paths:next(search_paths)
 
         if keyword ~= last_search_pattern then
           M.reset_input(keyword)
@@ -242,7 +241,6 @@ function M.get_search()
     local keybindings = require("fml.action.search.files.keybindings")
 
     local frecency = state.frecency.files ---@type eve.collection.IFrecency
-    local input_history = state.input_history.search_in_file ---@type eve.collection.IHistory
     local title = M.get_title() ---@type string
 
     _search = Search.new({
@@ -257,8 +255,8 @@ function M.get_search()
       fetch_data = api.fetch_data,
       delay_fetch = 512,
       fetch_preview_data = api.fetch_preview_data,
-      input = state.search.keyword,
-      input_history = input_history,
+      input = state.select.search_file.input,
+      input_history = state.select.search_file.input_history,
       input_keymaps = keybindings.input_keymaps,
       main_keymaps = keybindings.main_keymaps,
       patch_preview_data = api.patch_preview_data,
@@ -268,14 +266,14 @@ function M.get_search()
       statusline_items = keybindings.statusline_items,
       title = title,
       on_invisible = function()
-        local scope = state.search.scope:snapshot() ---@type eve.e.SearchScope
+        local scope = state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
         if scope == "B" then
           M.reload()
         end
       end,
       on_close = function()
         vim.cmd.checktime()
-        local scope = state.search.scope:snapshot() ---@type eve.e.SearchScope
+        local scope = state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
         if scope == "B" then
           M.reload()
         end
@@ -291,7 +289,7 @@ end
 
 ---@return string
 function M.get_title()
-  local search_paths = state.search.search_paths:snapshot() ---@type string[]
+  local search_paths = state.search_file.search_paths:snapshot() ---@type string[]
   local title = (search_paths ~= nil and #search_paths > 0) --
       and "Search in files (" .. table.concat(search_paths, ",") .. ")"
     or "Search in files"
@@ -372,31 +370,31 @@ end
 
 ---@return nil
 function M.toggle_case_sensitive()
-  local flag = state.search.flag_case_sensitive:snapshot() ---@type boolean
-  state.search.flag_case_sensitive:next(not flag)
+  local flag = state.select.search_file.flag_case_sensitive:snapshot() ---@type boolean
+  state.select.search_file.flag_case_sensitive:next(not flag)
 end
 
 ---@return nil
 function M.toggle_gitignore()
-  local flag = state.search.flag_gitignore:snapshot() ---@type boolean
-  state.search.flag_gitignore:next(not flag)
+  local flag = state.select.search_file.flag_gitignore:snapshot() ---@type boolean
+  state.select.search_file.flag_gitignore:next(not flag)
 end
 
 ---@return nil
 function M.toggle_mode()
-  local flag = state.search.flag_replace:snapshot() ---@type boolean
-  state.search.flag_replace:next(not flag)
+  local flag = state.search_file.flag_replace:snapshot() ---@type boolean
+  state.search_file.flag_replace:next(not flag)
 end
 
 ---@return nil
 function M.toggle_regex()
-  local flag = state.search.flag_regex:snapshot() ---@type boolean
-  state.search.flag_regex:next(not flag)
+  local flag = state.select.search_file.flag_regex:snapshot() ---@type boolean
+  state.select.search_file.flag_regex:next(not flag)
 end
 
 ---@return nil
 function M.toggle_scope()
-  local next_scope = get_scope_carousel_next() ---@type eve.e.SearchScope
+  local next_scope = get_scope_carousel_next() ---@type eve.e.SearchFileScope
   change_scope(next_scope)
 end
 

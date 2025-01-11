@@ -23,7 +23,7 @@ local _select ---@type fml.ux.ISelect|nil
 ---@return fml.ux.ISelect
 local function get_select()
   if _select == nil then
-    local scopes = { "A", "F", "L", "T" } ---@type eve.e.FindBufferScope[]
+    local scopes = vim.list_slice(state.select.find_buffer_scopes) ---@type eve.e.FindBufferScope[]
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
     local statusline_items = {
@@ -31,13 +31,13 @@ local function get_select()
         type = "enum",
         desc = "find(buffer): toggle scope",
         symbol = "",
-        state = state.find_buffer.scope,
+        state = state.select.find_buffer_scope,
         callback = function()
-          local scope = state.find_buffer.scope:snapshot() ---@type eve.e.FindBufferScope
+          local scope = state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
           local idx = fn.find_index(scopes, scope) or 1 ---@type integer
           local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
           local next_scope = scopes[idx_next] ---@type eve.e.FindBufferScope
-          state.find_buffer.scope:next(next_scope)
+          state.select.find_buffer_scope:next(next_scope)
 
           if _select ~= nil then
             _select:mark_data_dirty()
@@ -88,7 +88,7 @@ local function get_select()
     local provider = {
       fetch_data = function()
         local cwd = path.cwd() ---@type string
-        local scope = state.find_buffer.scope:snapshot() ---@type eve.e.FindBufferScope
+        local scope = state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
         local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
         local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
 
@@ -191,11 +191,11 @@ local function get_select()
         width = 120,
       },
       dirty_on_invisible = true,
-      flag_case_sensitive = state.find_buffer.flag_case_sensitive,
-      flag_fuzzy = state.find_buffer.flag_fuzzy,
-      flag_regex = state.find_buffer.flag_regex,
-      input = state.find_buffer.keyword,
-      input_history = state.input_history.find_buffer,
+      flag_case_sensitive = state.select.find_buffer.flag_case_sensitive,
+      flag_fuzzy = state.select.find_buffer.flag_fuzzy,
+      flag_regex = state.select.find_buffer.flag_regex,
+      input = state.select.find_buffer.input,
+      input_history = state.select.find_buffer.input_history,
       input_keymaps = main_keymaps,
       main_keymaps = main_keymaps,
       preview_enabled = false,
@@ -233,7 +233,7 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_bufs_file(context)
-  state.find_buffer.scope:next("F")
+  state.select.find_buffer_scope:next("F")
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end
@@ -242,7 +242,7 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.find_bufs_term(context)
-  state.find_buffer.scope:next("T")
+  state.select.find_buffer_scope:next("T")
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end

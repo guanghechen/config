@@ -458,7 +458,7 @@ function M.new(props)
 
   ---@type fml.ux.search.IInput
   local input = SearchInput.new({
-    state = context,
+    context = context,
     keymaps = input_keymaps,
   })
 

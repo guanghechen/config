@@ -1,4 +1,5 @@
 local Observable = require("eve.collection.observable")
+local state = require("eve.state")
 
 local Select = require("fml.ux.select")
 
@@ -21,8 +22,9 @@ local providers = {
   fallback = fallback_provider,
 }
 
-local input_by_title = {
-  ["(Avante) Add a file"] = Observable.from_value(""),
+---@type table<string, eve.state.select.item.state>
+local states_by_title = {
+  ["(Avante) Add a file"] = state.select.select_avante,
 }
 
 ---@param items                         any[]
@@ -38,6 +40,7 @@ local function select(items, opts, on_choice)
 
   local _selector = nil ---@type fml.ux.ISelect|nil
   local winnr = vim.api.nvim_get_current_win()
+  local context = states_by_title[title] ---@type eve.state.select.item.state|nil
 
   ---@type fml.ux.ISelect
   _selector = Select.new({
@@ -47,7 +50,10 @@ local function select(items, opts, on_choice)
       max_width = 0.8,
       width = math.max(60, width + 10),
     },
-    input = input_by_title[title],
+    case_sensitive = context and context.flag_case_sensitive or nil,
+    flag_fuzzy = context and context.flag_fuzzy or nil,
+    input = context and context.input or nil,
+    input_history = context and context.input_history or nil,
     preview_enabled = false,
     extend_preset_keymaps = true,
     title = title,

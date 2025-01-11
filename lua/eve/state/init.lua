@@ -11,14 +11,12 @@ local session = require("eve.module.session")
 
 local state_bookmark = require("eve.state.workspace.bookmark")
 local state_buf = require("eve.state.session.buf")
-local state_find = require("eve.state.workspace.find")
-local state_find_buffer = require("eve.state.workspace.find_buffer")
 local state_flight = require("eve.state.workspace.flight")
 local state_frecency = require("eve.state.workspace.frecency")
-local state_input_history = require("eve.state.workspace.input_history")
 local state_option = require("eve.state.workspace.option")
 local state_qflist = require("eve.state.session.qflist")
-local state_search = require("eve.state.workspace.search")
+local state_search_file = require("lua.eve.state.workspace.search_file")
+local state_select = require("eve.state.workspace.select")
 local state_status = require("eve.state.session.status")
 local state_tab = require("eve.state.session.tab")
 local state_theme = require("eve.state.editor.theme")
@@ -44,13 +42,11 @@ local state_win = require("eve.state.session.win")
 ---@field public status                 eve.state.status.data
 ---
 ---@field public bookmark               eve.state.bookmark.data
----@field public find                   eve.state.find.data
----@field public find_buffer            eve.state.find_buffer.data
 ---@field public flight                 eve.state.flight.data
 ---@field public frecency               eve.state.frecency.data
----@field public input_history          eve.state.input_history.data
 ---@field public option                 eve.state.option.data
----@field public search                 eve.state.search.data
+---@field public search_file            eve.state.search_file.data
+---@field public select                 eve.state.select.data
 
 ---@class eve.state.state
 ---@field public theme                  eve.state.theme.state
@@ -63,13 +59,11 @@ local state_win = require("eve.state.session.win")
 ---@field public widget                 eve.state.widget.state
 ---
 ---@field public bookmark               eve.state.bookmark.state
----@field public find                   eve.state.find.state
----@field public find_buffer            eve.state.find_buffer.state
 ---@field public flight                 eve.state.flight.state
 ---@field public frecency               eve.state.frecency.state
----@field public input_history          eve.state.input_history.state
 ---@field public option                 eve.state.option.state
----@field public search                 eve.state.search.state
+---@field public search_file            eve.state.search_file.state
+---@field public select                 eve.state.select.state
 ---
 ---@field public dump                   fun(): eve.state.data
 ---@field public load                   fun(storage: eve.state.storage): nil
@@ -106,13 +100,11 @@ function M.dump()
     widget = state_widget.dump(),
 
     bookmark = state_bookmark.dump(),
-    find = state_find.dump(),
-    find_buffer = state_find_buffer.dump(),
     flight = state_flight.dump(),
     frecency = state_frecency.dump(),
-    input_history = state_input_history.dump(),
     option = state_option.dump(),
-    search = state_search.dump(),
+    search_file = state_search_file.dump(),
+    select = state_select.dump(),
   }
   return data
 end
@@ -133,13 +125,11 @@ function M.load(storage)
     and fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
   ) or {}
   M.bookmark = state_bookmark.load(data_workspace.bookmark)
-  M.find = state_find.load(data_workspace.find)
-  M.find_buffer = state_find_buffer.load(data_workspace.find_buffer)
   M.flight = state_flight.load(data_workspace.flight)
   M.frecency = state_frecency.load(data_workspace.frecency)
-  M.input_history = state_input_history.load(data_workspace.input_history)
   M.option = state_option.load(data_workspace.option)
-  M.search = state_search.load(data_workspace.search)
+  M.search_file = state_search_file.load(data_workspace.search_select)
+  M.select = state_select.load(data_workspace.select)
 
   local data_session = (
     storage.session
@@ -180,13 +170,11 @@ function M.save(storage)
   if storage.workspace then
     local data = {
       bookmark = state_bookmark.dump(),
-      find = state_find.dump(),
-      find_buffer = state_find_buffer.dump(),
       flight = state_flight.dump(),
       frecency = state_frecency.dump(),
-      input_history = state_input_history.dump(),
       option = state_option.dump(),
-      search = state_search.dump(),
+      search = state_search_file.dump(),
+      select = state_select.dump(),
     }
     fs.write_json(storage.workspace, data, true)
   end
@@ -280,27 +268,11 @@ function M.watch_changes(params)
     vim.cmd.redraw()
   end, true)
 
-  M.observe({
+  ---@type eve.collection.IObservable[]
+  local select_states = {
     M.bookmark.pinned,
-
-    ---
-    M.find.flag_case_sensitive,
-    M.find.flag_gitignore,
-    M.find.flag_fuzzy,
-    M.find.flag_regex,
-    M.find.includes,
-    M.find.excludes,
-    M.find.keyword,
-    M.find.scope,
-
-    ---
-    M.find_buffer.flag_case_sensitive,
-    M.find_buffer.flag_fuzzy,
-    M.find_buffer.flag_regex,
-    M.find_buffer.keyword,
-    M.find_buffer.scope,
-
-    ---
+    M.select.find_buffer_scope,
+    M.select.find_file_scope,
     M.flight.ai,
     M.flight.ai_provider,
     M.flight.autoload,
@@ -311,21 +283,17 @@ function M.watch_changes(params)
     M.flight.dressing_winsep_float,
     M.flight.lsp_inlay_hints,
     M.flight.lsp_code_lens,
-
-    ---
-    M.search.flag_case_sensitive,
-    M.search.flag_gitignore,
-    M.search.flag_regex,
-    M.search.flag_replace,
-    M.search.max_filesize,
-    M.search.max_matches,
-    M.search.includes,
-    M.search.excludes,
-    M.search.keyword,
-    M.search.replacement,
-    M.search.scope,
-    M.search.search_paths,
-  }, function()
+  }
+  for _, key in ipairs(state_select.keys) do
+    local select_item = M.select[key] ---@type eve.state.select.item.state
+    table.insert(select_states, select_item.flag_case_sensitive)
+    table.insert(select_states, select_item.flag_gitignore)
+    table.insert(select_states, select_item.flag_fuzzy)
+    table.insert(select_states, select_item.flag_regex)
+    table.insert(select_states, select_item.includes)
+    table.insert(select_states, select_item.excludes)
+  end
+  M.observe(select_states, function()
     M.status.ticker_workspace:tick()
     M.status.dirtier_statusline:mark_dirty()
   end, true)
