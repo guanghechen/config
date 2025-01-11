@@ -1,4 +1,4 @@
 config-file = local/theme
-font-size = 28
+font-size = 15
 font-family = "Maple Mono Normal NL NF CN"
 font-feature = -cv01 -ss02 -ss04 -ss05 -zero
