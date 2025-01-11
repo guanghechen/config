@@ -54,6 +54,7 @@ local reposcope_map = {
     "fd",
     "fish",
     "fzf",
+    "ghostty",
     "guanghechen",
     "helix",
     "kitty",
