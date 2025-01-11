@@ -498,6 +498,7 @@ M.definitions.term = {
 M.definitions.toggle = {
   list = defc("Ftoggle", "toggle: select", "?", setting.togglers),
   flight = defc("Ftoggleflight", "toggle: flight", "?", setting.flights),
+  markdown = def("Ftogglemarkdown", "toggle: markdown"),
   relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),
   theme = defc("Ftoggletheme", "toggle: theme", "?", setting.themes),
   theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),

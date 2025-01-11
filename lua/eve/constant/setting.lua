@@ -37,6 +37,7 @@ M.themes = {
 M.togglers = {
   "flight",
   "hipatterns_local",
+  "markdown",
   "relativenumber",
   "relativenumber_local",
   "theme",

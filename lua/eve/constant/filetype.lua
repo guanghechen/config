@@ -125,8 +125,8 @@ local filetypes = {
     [M.AVANTE_INPUT] = true,
   },
   markdown = {
-    -- "markdown" = true,
-    -- [M.AVANTE] = true,
+    ["markdown"] = true,
+    [M.AVANTE] = true,
   },
   not_plain = {
     [M.AERIAL] = true,

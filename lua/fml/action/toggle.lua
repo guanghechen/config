@@ -60,6 +60,15 @@ local flag_map = {
       require("mini.hipatterns").toggle(context.bufnr)
     end,
   },
+  markdown = {
+    title = "markdown",
+    snapshot = function()
+      return "unknown", "Boolean"
+    end,
+    action = function()
+      vim.cmd("RenderMarkdown toggle")
+    end,
+  },
   relativenumber = {
     title = "relativenumber",
     snapshot = function()

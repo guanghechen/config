@@ -145,6 +145,14 @@ command
     end,
   })
 
+--[toggle]------------------------------------------------------------------------------------------
+command.implement({
+  uuid = command.definitions.toggle.markdown.uuid,
+  action = function()
+    vim.cmd("RenderMarkdown toggle")
+  end,
+})
+
 --[ux] notifications -------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.ux.dismiss_notifications.uuid,
