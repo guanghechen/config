@@ -4,8 +4,8 @@
 live_config_reload = true
 import = [
   "~/.config/alacritty/basic.toml",
-  # "~/.config/alacritty/font-maple.toml",
-  "~/.config/alacritty/font-roboto.toml",
+  "~/.config/alacritty/font-maple.toml",
+  # "~/.config/alacritty/font-roboto.toml",
   "~/.config/alacritty/keymap.toml",
   "~/.config/alacritty/theme/one-half-dark.toml",
 
