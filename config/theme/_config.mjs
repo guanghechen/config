@@ -157,29 +157,23 @@ export const apps = [
       content = content.replace('return config', `
 config.background ={
   {
-    source = {
-      Color = "${scheme.palette.bg0}",
-    },
+    source = { Color = "${scheme.palette.bg0}" },
     height = "100%",
     width = "100%",
   },
   {
-    source = {
-      File = '${backgroundImagePath}',
-    },
+    source = { File = '${backgroundImagePath}' },
 		attachment = "Fixed",
 		height = "Contain",
-		width = "Contain",
+		width = "100%",
 		opacity = 0.9,
-		repeat_x = "NoRepeat",
+		repeat_x = "Mirror",
 		repeat_y = "NoRepeat",
 		horizontal_align = "Right",
 		vertical_align = "Middle",
   },
   {
-    source = {
-      Color = "${scheme.palette.bg0}",
-    },
+    source = { Color = "${scheme.palette.bg0}" },
     height = "100%",
     width = "100%",
     opacity = 0.9,
