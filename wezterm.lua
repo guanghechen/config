@@ -45,6 +45,7 @@ local config = {
 	initial_rows = 40,
 	initial_cols = 120,
 	keys = platform_config.keys,
+	native_macos_fullscreen_mode = true,
 	send_composed_key_when_left_alt_is_pressed = false,
 	send_composed_key_when_right_alt_is_pressed = true,
 	window_decorations = "RESIZE",
