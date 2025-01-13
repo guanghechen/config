@@ -22,10 +22,12 @@ local setting = require("eve.constant.setting")
 ---@class eve.state.theme.data
 ---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
+---@field public username               boolean
 
 ---@class eve.state.theme.state
 ---@field public theme                  eve.collection.IObservable
 ---@field public transparency           eve.collection.IObservable
+---@field public username               eve.collection.IObservable
 ---
 ---@field public apply_integration      fun(params: eve.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: eve.theme.ILoadThemeParams): nil
@@ -57,6 +59,7 @@ function M.defaults()
   return {
     theme = "gruvbox_dark",
     transparency = false,
+    username = true,
   }
 end
 
@@ -70,6 +73,9 @@ function M.normalize(data)
     end
     if type(data.transparency) == "boolean" then
       resolved.transparency = data.transparency
+    end
+    if type(data.username) == "boolean" then
+      resolved.username = data.username
     end
   end
 
@@ -88,6 +94,7 @@ function M.dump()
   return {
     theme = _state.theme:snapshot(),
     transparency = _state.transparency:snapshot(),
+    username = _state.username:snapshot(),
   }
 end
 
@@ -102,6 +109,7 @@ function M.load(raw_data)
     _state = {
       theme = Observable.from_value(data.theme),
       transparency = Observable.from_value(data.transparency),
+      username = Observable.from_value(data.username),
 
       apply_integration = function(params)
         local theme = params.theme ---@type eve.e.Theme
@@ -264,6 +272,7 @@ function M.load(raw_data)
 
   _state.theme:next(data.theme)
   _state.transparency:next(data.transparency)
+  _state.username:next(data.username)
   return _state
 end
 

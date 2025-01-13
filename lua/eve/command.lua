@@ -504,6 +504,7 @@ M.definitions.toggle = {
   theme = defc("Ftoggletheme", "toggle: theme", "?", setting.themes),
   theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),
   transparency = def("Ftoggletransparency", "toggle: transparency"),
+  username = def("Ftoggleusername", "toggle: username"),
 }
 
 ---@class eve.command.definitions.ux

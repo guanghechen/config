@@ -261,6 +261,7 @@ function M.watch_changes(params)
     M.option.relativenumber,
     M.theme.theme,
     M.theme.transparency,
+    M.theme.username,
   }, function()
     M.status.ticker_editor:tick()
     M.status.dirtier_statusline:mark_dirty()
@@ -327,7 +328,11 @@ function M.watch_changes(params)
           theme = state_theme.dump(),
         }
 
-        if data.theme.theme ~= snapshot.theme.theme or data.theme.transparency ~= snapshot.theme.transparency then
+        if
+          data.theme.theme ~= snapshot.theme.theme
+          or data.theme.transparency ~= snapshot.theme.transparency
+          or data.theme.username ~= snapshot.theme.username
+        then
           M.save({ editor = M._storage.editor })
         end
       end

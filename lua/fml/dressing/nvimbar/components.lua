@@ -1392,6 +1392,9 @@ function M.username(position)
   local component = {
     name = "username",
     atomic = true,
+    condition = function()
+      return state.theme.username:snapshot()
+    end,
     will_change = function(context, prev_context)
       return prev_context == nil or context.mode ~= prev_context.mode
     end,

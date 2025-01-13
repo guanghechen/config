@@ -51,6 +51,7 @@ M.togglers = {
   "theme",
   "theme_variant",
   "transparency",
+  "username",
   "wrap_local",
 }
 

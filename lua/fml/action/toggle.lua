@@ -136,6 +136,17 @@ local flag_map = {
       command.execute(command.definitions.toggle.transparency.uuid, context)
     end,
   },
+  username = {
+    title = "username",
+    snapshot = function()
+      local observable = state.theme.username ---@type eve.collection.IObservable
+      local flag = observable:snapshot()
+      return flag and "true" or "false", "Boolean"
+    end,
+    action = function(context)
+      command.execute(command.definitions.toggle.username.uuid, context)
+    end,
+  },
   wrap_local = {
     title = "wrap (local)",
     snapshot = function(context)
@@ -412,6 +423,15 @@ end
 ---@return nil
 function M.toggle_transparency(context)
   local observable = state.theme.transparency ---@type eve.collection.IObservable
+  local flag = observable:snapshot() ---@type boolean
+  observable:next(not flag)
+  command.execute(command.definitions.ux.reload_theme.uuid, context, "force")
+end
+
+---@param context                       eve.command.IContext
+---@return nil
+function M.toggle_username(context)
+  local observable = state.theme.username ---@type eve.collection.IObservable
   local flag = observable:snapshot() ---@type boolean
   observable:next(not flag)
   command.execute(command.definitions.ux.reload_theme.uuid, context, "force")

@@ -309,6 +309,7 @@ kk({ "n", "v" }, "<leader>tR", K.toggle.relativenumber)
 kk({ "n", "v" }, "<leader>tS", K.toggle.theme)
 kk({ "n", "v" }, "<leader>tT", K.toggle.transparency)
 kk({ "n", "v" }, "<leader>tt", K.toggle.list)
+kk({ "n", "v" }, "<leader>tU", K.toggle.username)
 -----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[u]x---------------------------------------------------------------------------------------------

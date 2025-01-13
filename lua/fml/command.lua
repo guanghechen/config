@@ -648,6 +648,12 @@ command
       require("fml.action.toggle").toggle_transparency(context)
     end,
   })
+  .implement({
+    uuid = command.definitions.toggle.username.uuid,
+    action = function(context)
+      require("fml.action.toggle").toggle_username(context)
+    end,
+  })
 
 --[ux] widgets -------------------------------------------------------------------------------------
 command
