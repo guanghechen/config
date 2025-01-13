@@ -5,16 +5,16 @@ local M = {
   -- stylua: ignore start
   palette = {
     bg0 =             "#1E1E2E",
-    bg1 =             "#313244",
-    bg2 =             "#45475A",
-    bg3 =             "#585B70",
-    bg4 =             "#6C7086",
+    bg1 =             "#11111B",
+    bg2 =             "#313244",
+    bg3 =             "#45475A",
+    bg4 =             "#585B70",
 
-    fg0 =             "#CDD6F4",
-    fg1 =             "#BAC2DE",
-    fg2 =             "#A6ADC8",
-    fg3 =             "#9399B2",
-    fg4 =             "#7F849C",
+    fg0 =             "#B4BEFE",
+    fg1 =             "#CDD6F4",
+    fg2 =             "#BAC2DE",
+    fg3 =             "#A6ADC8",
+    fg4 =             "#9399B2",
 
     red =             "#F38BA8",
     green =           "#A6E3A1",
@@ -35,10 +35,10 @@ local M = {
     grey =            "#7F849C",
     pink =            "#F5C2E7",
 
-    diffDel =         "#51384A",
-    diffDelInline =   "#3E2F40",
-    diffAdd =         "#3F4D49",
-    diffAddInline =   "#333C3F",
+    diffDel =         "#f5e0dc",
+    diffDelInline =   "#eba0ac",
+    diffAdd =         "#94e2d5",
+    diffAddInline =   "#74c7ec",
   },
   -- stylua: ignore end
 }
