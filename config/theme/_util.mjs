@@ -62,8 +62,6 @@ export async function render_template(template, scheme) {
   const c = scheme.palette;
 
   const data = {
-    black: variant === "light" ? c.fg0 : c.bg0,
-    white: variant === "light" ? c.bg4 : c.fg4,
     ...c,
     variant,
     theme: scheme.theme,
