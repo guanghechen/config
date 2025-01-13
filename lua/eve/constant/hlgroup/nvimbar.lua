@@ -6,8 +6,8 @@ local function gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_bufc = t and "none" or c.bg0 ---@type string
-  local bg_git = t and c.bg0 or c.bg2 ---@type string
-  local bg_username = cs.mix(c.bg0, c.pink, 90) ---@type string
+  local bg_pos = t and c.bg0 or c.bg2 ---@type string
+  local bg_username = cs.mix(c.bg0, c.red, 90) ---@type string
 
   local mc = {
     command = c.green,
@@ -93,8 +93,7 @@ local function gen_hlgroup_map(context)
     flag_enabled = { fg = c.bg1, bg = c.blue },
     flag_scope = { fg = c.bg1, bg = c.orange },
     focused_indicator = { fg = c.bg0, bg = c.pink },
-    git_text = { fg = c.fg1, bg = bg_git },
-    git_sep = { fg = bg_git, bg = "bg_bar" },
+    git_text = { fg = c.fg1, bg = "bg_bar" },
     indicator = { fg = c.orange, bg = "bg_bar" },
     lsp_icon = { fg = c.brightPurple, bg = "bg_bar" },
     lsp_icon_Array = { fg = c.blue, bg = "bg_bar" },
@@ -136,24 +135,15 @@ local function gen_hlgroup_map(context)
     lsp_icon_Variable = { fg = c.brightPurple, bg = "bg_bar" },
     lsp_sep = { fg = c.fg3, bg = "bg_bar" },
     lsp_text = { fg = c.fg3, bg = "bg_bar" },
-    mode_sep_command = { fg = mc.command, bg = "bg_bar", bold = true },
-    mode_sep_confirm = { fg = mc.confirm, bg = "bg_bar", bold = true },
-    mode_sep_insert = { fg = mc.insert, bg = "bg_bar", bold = true },
-    mode_sep_normal = { fg = mc.normal, bg = "bg_bar", bold = true },
-    mode_sep_nterminal = { fg = mc.nterminal, bg = "bg_bar", bold = true },
-    mode_sep_replace = { fg = mc.replace, bg = "bg_bar", bold = true },
-    mode_sep_select = { fg = mc.select, bg = "bg_bar", bold = true },
-    mode_sep_terminal = { fg = mc.terminal, bg = "bg_bar", bold = true },
-    mode_sep_visual = { fg = mc.visual, bg = "bg_bar", bold = true },
-    mode_sep_git_command = { fg = mc.command, bg = bg_git, bold = true },
-    mode_sep_git_confirm = { fg = mc.confirm, bg = bg_git, bold = true },
-    mode_sep_git_insert = { fg = mc.insert, bg = bg_git, bold = true },
-    mode_sep_git_normal = { fg = mc.normal, bg = bg_git, bold = true },
-    mode_sep_git_nterminal = { fg = mc.nterminal, bg = bg_git, bold = true },
-    mode_sep_git_replace = { fg = mc.replace, bg = bg_git, bold = true },
-    mode_sep_git_select = { fg = mc.select, bg = bg_git, bold = true },
-    mode_sep_git_terminal = { fg = mc.terminal, bg = bg_git, bold = true },
-    mode_sep_git_visual = { fg = mc.visual, bg = bg_git, bold = true },
+    mode_sep_command = { fg = mc.command, bg = bg_pos, bold = true },
+    mode_sep_confirm = { fg = mc.confirm, bg = bg_pos, bold = true },
+    mode_sep_insert = { fg = mc.insert, bg = bg_pos, bold = true },
+    mode_sep_normal = { fg = mc.normal, bg = bg_pos, bold = true },
+    mode_sep_nterminal = { fg = mc.nterminal, bg = bg_pos, bold = true },
+    mode_sep_replace = { fg = mc.replace, bg = bg_pos, bold = true },
+    mode_sep_select = { fg = mc.select, bg = bg_pos, bold = true },
+    mode_sep_terminal = { fg = mc.terminal, bg = bg_pos, bold = true },
+    mode_sep_visual = { fg = mc.visual, bg = bg_pos, bold = true },
     mode_text_command = { fg = c.bg1, bg = mc.command, bold = true },
     mode_text_confirm = { fg = c.bg1, bg = mc.confirm, bold = true },
     mode_text_insert = { fg = c.bg1, bg = mc.insert, bold = true },
@@ -165,9 +155,9 @@ local function gen_hlgroup_map(context)
     mode_text_visual = { fg = c.bg1, bg = mc.visual, bold = true },
     noice_command = { fg = c.fg2, bg = "bg_bar" },
     noice_mode = { fg = c.yellow, bg = "bg_bar" },
-    pos = { fg = c.fg2, bg = "bg_bar" },
-    pos_bot = { fg = c.fg2, bg = "bg_bar", bold = true },
-    pos_top = { fg = c.fg2, bg = "bg_bar", bold = true },
+    pos_sep = { fg = bg_pos, bg = "bg_bar" },
+    pos_text_anchor = { fg = c.fg2, bg = "bg_bar" },
+    pos_text_percentage = { fg = c.fg2, bg = bg_pos, bold = true },
     readonly = { fg = c.orange, bg = "bg_bar" },
     sidebar_blank = { fg = c.fg1, bg = "bg_bar" },
     sidebar_indicator = { fg = c.orange, bg = "bg_bar" },

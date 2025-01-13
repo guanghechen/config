@@ -946,7 +946,6 @@ end
 ---@return fml.ux.nvimbar.IRawComponent
 function M.git(position)
   local hln_text = position .. "_git_text" ---@type string
-  local hln_sep = position .. "_git_sep" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -959,9 +958,6 @@ function M.git(position)
     render = function(context)
       local text = " " .. icons.git.Branch .. " " .. context.git_branch ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-
-      text = text .. icons.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
@@ -1109,7 +1105,6 @@ end
 function M.mode(position)
   local hln_text_prefix = position .. "_mode_text_" ---@type string
   local hln_sep_prefix = position .. "_mode_sep_" ---@type string
-  local hln_sep_git_prefix = position .. "_mode_sep_git_" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -1117,11 +1112,11 @@ function M.mode(position)
     atomic = true,
     tight = true,
     will_change = function(context, prev_context)
-      return prev_context == nil or context.mode ~= prev_context.mode or context.git_branch ~= prev_context.git_branch
+      return prev_context == nil or context.mode ~= prev_context.mode
     end,
     render = function(context)
       local hln_text = hln_text_prefix .. context.mode ---@type string
-      local hln_sep = (context.git_branch ~= nil and hln_sep_git_prefix or hln_sep_prefix) .. context.mode ---@type string
+      local hln_sep = hln_sep_prefix .. context.mode ---@type string
 
       local text = "  " .. context.mode_name ---@type string
       local hl_text = txt(text, hln_text) ---@type string
@@ -1248,14 +1243,15 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.pos(position)
-  local hln_pos = position .. "_pos" ---@type string
-  local hln_pos_top = position .. "_pos_top" ---@type string
-  local hln_pos_bot = position .. "_pos_bot" ---@type string
-  local hln_text = position .. "_text" ---@type string
+  local hln_sep = position .. "_pos_sep" ---@type string
+  local hln_text_anchor = position .. "_pos_text_anchor" ---@type string
+  local hln_text_percentage = position .. "_pos_text_percentage" ---@type string
+
+  local text_sep = icons.symbols.sep_right ---@type string
+  local hl_text_sep = txt(icons.symbols.sep_right, hln_sep) ---@type string
 
   ---@return integer
   ---@return integer
-  ---@return string
   ---@return string
   local function calc_row_percentage()
     local total_lines = vim.fn.line("$")
@@ -1264,27 +1260,27 @@ function M.pos(position)
     local col = cursor[2] + 1 ---@type integer
 
     if row == 1 then
-      return row, col, "top", hln_pos_top
+      return row, col, "top"
     elseif row == total_lines then
-      return row, col, "bot", hln_pos_bot
+      return row, col, "bot"
     else
       local text = fn.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
-      return row, col, text, hln_pos
+      return row, col, text
     end
   end
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "pos",
-    tight = true,
     atomic = true,
+    tight = true,
     render = function()
-      local row, col, percentage, hl_pos = calc_row_percentage() ---@type integer, integer, string
-      local text_anchor = "" .. tostring(row) .. "·" .. tostring(col) .. " " ---@type string
-      local text_pos = " " .. percentage .. " " ---@type string
+      local row, col, percentage = calc_row_percentage() ---@type integer, integer, string
+      local text_percentage = " " .. percentage ---@type string
+      local text_anchor = " " .. tostring(row) .. "·" .. tostring(col) ---@type string
 
-      local text = text_pos .. text_anchor ---@type string
-      local hl_text = txt(text_pos, hl_pos) .. txt(text_anchor, hln_text) ---@type string
+      local text = text_percentage .. text_sep .. text_anchor ---@type string
+      local hl_text = txt(text_percentage, hln_text_percentage) .. hl_text_sep .. txt(text_anchor, hln_text_anchor) ---@type string
       return text, hl_text, true
     end,
   }

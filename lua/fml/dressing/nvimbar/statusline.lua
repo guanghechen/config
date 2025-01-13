@@ -33,8 +33,8 @@ statusline = Nvimbar.new({
 statusline
   :place("left", c.username(position), 100)
   :place("left", c.mode(position), 100)
-  :place("left", c.git(position), 100)
   :place("left", c.pos(position), 100)
+  :place("left", c.git(position), 100)
   :place("left", c.readonly(position), 95)
   :place("left", c.filepath(position))
   :place("left", c.filesize(position))
