@@ -2,11 +2,11 @@
 local config = {
   colors = {
     background    = "#1E1E2E",
-    foreground    = "#BAC2DE",
-    cursor_bg     = "#9399B2",
-    cursor_fg     = "#585B70",
-    cursor_border = "#585B70",
-    selection_fg  = "#BAC2DE",
+    foreground    = "#CDD6F4",
+    cursor_bg     = "#A6ADC8",
+    cursor_fg     = "#45475A",
+    cursor_border = "#45475A",
+    selection_fg  = "#CDD6F4",
     selection_bg  = "#FAB387",
 
     ansi = {
@@ -17,7 +17,7 @@ local config = {
       "#89B4FA",
       "#CBA6F7",
       "#94E2D5",
-      "#7F849C",
+      "#9399B2",
     },
 
     brights = {
@@ -28,7 +28,7 @@ local config = {
       "#89B4FA",
       "#CBA6F7",
       "#94E2D5",
-      "#BAC2DE",
+      "#CDD6F4",
     },
   },
 }
