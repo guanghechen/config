@@ -25,6 +25,7 @@ local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 ---@field public filetype               string
 ---@field public mode                   eve.e.VimModeName
 ---@field public mode_name              string
+---@field public git_branch             string|nil
 
 ---@class fml.ux.nvimbar.IRawComponent
 ---@field public atomic                 boolean
@@ -158,6 +159,9 @@ local function build_context(preset_context)
   local filetype = vim.bo.filetype ---@type string
   local fileicon = calc_fileicon(filename) ---@type string
 
+  local git = vim.b[bufnr].gitsigns_status_dict
+  local git_branch = git and git.head or nil ---@type string|nil
+
   ---@type fml.ux.nvimbar.IContext
   local context = {
     tabnr = tabnr,
@@ -170,6 +174,7 @@ local function build_context(preset_context)
     filetype = filetype,
     mode = m[1],
     mode_name = m[2],
+    git_branch = git_branch,
   }
   return context
 end

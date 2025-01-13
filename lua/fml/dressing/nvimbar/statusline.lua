@@ -32,8 +32,9 @@ statusline = Nvimbar.new({
 
 statusline
   :place("left", c.username(position), 100)
-  :place("left", c.mode(position), 95)
-  :place("left", c.git(position), 95)
+  :place("left", c.mode(position), 100)
+  :place("left", c.git(position), 100)
+  :place("left", c.pos(position), 100)
   :place("left", c.readonly(position), 95)
   :place("left", c.filepath(position))
   :place("left", c.filesize(position))
@@ -42,7 +43,7 @@ statusline
   :place("center", c.debug_render_count(position), 100)
   :place("center", c.widget(position), 100)
   --
-  :place("right", c.pos(position), 100)
+  :place("right", c.cwd(position), 100)
   :place("right", c.fileformat(position), 95)
   :place("right", c.filetype(position), 95)
   :place("right", c.lsp_message(position), 90)
@@ -59,3 +60,5 @@ dirtier:subscribe(Subscriber.new({
     end
   end,
 }))
+
+return statusline

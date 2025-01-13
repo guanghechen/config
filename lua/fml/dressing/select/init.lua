@@ -42,6 +42,8 @@ local function select(items, opts, on_choice)
   local winnr = vim.api.nvim_get_current_win()
   local context = states_by_title[title] ---@type eve.state.select.item.state|nil
 
+  title = (#title > 1 and title:sub(1, 1) ~= " ") and " " .. title .. " " or title ---@type string
+
   ---@type fml.ux.ISelect
   _selector = Select.new({
     dimension = {

@@ -415,20 +415,28 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.cwd(position)
-  local hln_cwd = position .. "_cwd" ---@type string
+  local hln_text_prefix = position .. "_cwd_text_" ---@type string
+  local hln_sep_prefix = position .. "_cwd_sep_" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "cwd",
     atomic = true,
+    tight = true,
+    ---@diagnostic disable-next-line: unused-local
     will_change = function(context, prev_context)
-      return prev_context == nil or context.cwd ~= prev_context.cwd
+      return prev_context == nil or context.mode ~= prev_context.mode or context.cwd ~= prev_context.cwd
     end,
     render = function(context)
-      local cwd_name = path.basename(context.cwd) ---@type string
+      local hln_text = hln_text_prefix .. context.mode ---@type string
+      local hln_sep = hln_sep_prefix .. context.mode ---@type string
 
-      local text = " " .. icons.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
-      local hl_text = txt(text, hln_cwd) ---@type string
+      local cwd_name = path.basename(context.cwd) ---@type string
+      local text = icons.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+
+      text = icons.symbols.sep_left .. text ---@type string
+      hl_text = txt(icons.symbols.sep_left, hln_sep) .. hl_text ---@type string
       return text, hl_text, true
     end,
   }
@@ -937,7 +945,8 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.git(position)
-  local hln_text = position .. "_text" ---@type string
+  local hln_text = position .. "_git_text" ---@type string
+  local hln_sep = position .. "_git_sep" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -945,16 +954,14 @@ function M.git(position)
     atomic = true,
     tight = true,
     condition = function(context)
-      local buffer_status_line = vim.b[context.bufnr]
-      return buffer_status_line and buffer_status_line.gitsigns_status_dict
+      return context.git_branch ~= nil
     end,
     render = function(context)
-      local buffer_status_line = vim.b[context.bufnr]
-      local git_status = buffer_status_line.gitsigns_status_dict
-      local branch_name = git_status.head ---@type string
-
-      local text = " " .. icons.git.Branch .. " " .. branch_name ---@type string
+      local text = " " .. icons.git.Branch .. " " .. context.git_branch ---@type string
       local hl_text = txt(text, hln_text) ---@type string
+
+      text = text .. icons.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
@@ -1100,7 +1107,9 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.mode(position)
-  local hln_text = position .. "_text" ---@type string
+  local hln_text_prefix = position .. "_mode_text_" ---@type string
+  local hln_sep_prefix = position .. "_mode_sep_" ---@type string
+  local hln_sep_git_prefix = position .. "_mode_sep_git_" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -1108,11 +1117,17 @@ function M.mode(position)
     atomic = true,
     tight = true,
     will_change = function(context, prev_context)
-      return prev_context == nil or context.mode ~= prev_context.mode
+      return prev_context == nil or context.mode ~= prev_context.mode or context.git_branch ~= prev_context.git_branch
     end,
     render = function(context)
-      local text = "  " .. context.mode_name .. " " ---@type string
-      local hl_text = txt(text, hln_text .. "_" .. context.mode) ---@type string
+      local hln_text = hln_text_prefix .. context.mode ---@type string
+      local hln_sep = (context.git_branch ~= nil and hln_sep_git_prefix or hln_sep_prefix) .. context.mode ---@type string
+
+      local text = "  " .. context.mode_name ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+
+      text = text .. icons.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
@@ -1261,14 +1276,15 @@ function M.pos(position)
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "pos",
+    tight = true,
     atomic = true,
     render = function()
       local row, col, percentage, hl_pos = calc_row_percentage() ---@type integer, integer, string
-      local text_anchor = "" .. fn.pad_start(tostring(row), 4, " ") .. "·" .. fn.pad_end(tostring(col), 3, " ") .. " " ---@type string
+      local text_anchor = "" .. tostring(row) .. "·" .. tostring(col) .. " " ---@type string
       local text_pos = " " .. percentage .. " " ---@type string
 
-      local text = text_anchor .. text_pos ---@type string
-      local hl_text = txt(text_anchor, hln_text) .. txt(text_pos, hl_pos) ---@type string
+      local text = text_pos .. text_anchor ---@type string
+      local hl_text = txt(text_pos, hl_pos) .. txt(text_anchor, hln_text) ---@type string
       return text, hl_text, true
     end,
   }
@@ -1369,20 +1385,24 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.username(position)
-  local hln_username = position .. "_username" ---@type string
+  local hln_text = position .. "_username_text" ---@type string
+  local hln_sep_prefix = position .. "_username_sep_" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "username",
     atomic = true,
-    ---@diagnostic disable-next-line: unused-local
     will_change = function(context, prev_context)
-      return prev_context == nil
+      return prev_context == nil or context.mode ~= prev_context.mode
     end,
-    render = function()
-      local icon = icons.os.current ---@type string
-      local text = " " .. icon .. " " .. env.USERNAME .. " " ---@type string
-      local hl_text = txt(text, hln_username) ---@type string
+    render = function(context)
+      local hln_sep = hln_sep_prefix .. context.mode ---@type string
+
+      local text = " " .. icons.os.current .. " " .. env.USERNAME ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+
+      text = text .. icons.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
