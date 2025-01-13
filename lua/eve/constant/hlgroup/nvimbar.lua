@@ -12,13 +12,13 @@ local function gen_hlgroup_map(context)
   local mc = {
     command = c.green,
     confirm = c.brightAqua,
-    insert = c.brightPurple,
+    insert = c.purple,
     normal = c.aqua,
     nterminal = c.yellow,
     replace = c.brightYellow,
-    select = c.blue,
+    select = c.orange,
     terminal = c.green,
-    visual = c.pink,
+    visual = c.orange,
   }
 
   local bgs = {
