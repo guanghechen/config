@@ -18,21 +18,21 @@ git:
 gui:
   authorColors:
     guanghechen: "#89B4FA"
-    "*": "#A6ADC8"
+    "*": "#BAC2DE"
   branchColors:
     main: "#89B4FA"
   theme:
     defaultFgColor:
-      - "#A6ADC8"
+      - "#BAC2DE"
     activeBorderColor:
       - "#FAB387"
       - bold
     inactiveBorderColor:
-      - "#7F849C"
+      - "#9399B2"
     optionsTextColor:
       -  "#FAB387"
     selectedLineBgColor:
-      - "#45475A"
+      - "#313244"
     cherryPickedCommitFgColor:
       - "#89B4FA"
     cherryPickedCommitBgColor:

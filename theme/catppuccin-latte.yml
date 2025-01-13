@@ -17,10 +17,10 @@ git:
   skipHookPrefix: WIP
 gui:
   authorColors:
-    guanghechen: "#89B4FA"
+    guanghechen: "#1E66F5"
     "*": "#6C6F85"
   branchColors:
-    main: "#89B4FA"
+    main: "#1E66F5"
   theme:
     defaultFgColor:
       - "#6C6F85"
@@ -32,9 +32,9 @@ gui:
     optionsTextColor:
       -  "#FE640B"
     selectedLineBgColor:
-      - "#BCC0CC"
+      - "#CCD0DA"
     cherryPickedCommitFgColor:
-      - "#89B4FA"
+      - "#1E66F5"
     cherryPickedCommitBgColor:
       - "#179299"
     markedBaseCommitFgColor:
@@ -42,7 +42,7 @@ gui:
     markedBaseCommitBgColor:
       - "#8839EF"
     searchingActiveBorderColor:
-      - "#89B4FA"
+      - "#1E66F5"
     unstagedChangesColor:
       - "#D20F39"
   border: "rounded"
