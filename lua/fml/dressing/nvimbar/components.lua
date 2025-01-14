@@ -423,7 +423,6 @@ function M.cwd(position)
     name = "cwd",
     atomic = true,
     tight = true,
-    ---@diagnostic disable-next-line: unused-local
     will_change = function(context, prev_context)
       return prev_context == nil or context.mode ~= prev_context.mode or context.cwd ~= prev_context.cwd
     end,
@@ -1136,6 +1135,9 @@ function M.neotree(position)
   local component = {
     name = "neotree",
     atomic = true,
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.cwd ~= prev_context.cwd
+    end,
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local width = math.min(remain_width, get_pane_width()) ---@type integer
@@ -1143,13 +1145,13 @@ function M.neotree(position)
         return "", "", true
       end
 
-      if width < 20 then
+      local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
+      if width < #cwd_name + 6 then
         local text = string.rep(" ", width) ---@type string
         local hl_text = txt(text, hln_sidebar_blank)
         return text, hl_text, true
       end
 
-      local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
       local title = icons.filetype.FolderRootOpened .. " " .. cwd_name ---@type string
       local title_width = vim.api.nvim_strwidth(title) ---@type integer
       local width_remain = width - title_width ---@type integer
