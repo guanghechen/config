@@ -9,9 +9,9 @@ local configs = {
       refresh = "<leader>ar",
 
       suggestion = {
-        accept = "<c-enter>",
-        next = "<c-j>",
-        prev = "<c-k>",
+        accept = "<C-enter>",
+        next = "<C-j>",
+        prev = "<C-k>",
         dismiss = "<esc>",
       },
     },

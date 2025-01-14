@@ -50,7 +50,7 @@ local function get_select()
     local main_keymaps = {
       {
         modes = { "i", "n", "v" },
-        key = "<c-d>",
+        key = "<C-d>",
         desc = "buffer: close",
         callback = function()
           if _select ~= nil then

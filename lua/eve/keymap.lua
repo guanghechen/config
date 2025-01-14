@@ -58,15 +58,15 @@ mk({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", "system: remove search highlights
 mk({ "t" }, "<C-n>", "<C-\\><C-n>", "system: enter normal mode") -- Exit terminal
 
 ---! Add undo break-points
-mk({ "i" }, ",", ",<c-g>u")
-mk({ "i" }, ".", ".<c-g>u")
-mk({ "i" }, ";", ";<c-g>u")
-mk({ "i" }, "<", "<<c-g>u")
-mk({ "i" }, "(", "(<c-g>u")
-mk({ "i" }, "[", "[<c-g>u")
-mk({ "i" }, "{", "{<c-g>u")
-mk({ "i" }, "<cr>", "<cr><c-g>u")
-mk({ "i" }, "<space>", "<space><c-g>u")
+mk({ "i" }, ",", ",<C-g>u")
+mk({ "i" }, ".", ".<C-g>u")
+mk({ "i" }, ";", ";<C-g>u")
+mk({ "i" }, "<", "<<C-g>u")
+mk({ "i" }, "(", "(<C-g>u")
+mk({ "i" }, "[", "[<C-g>u")
+mk({ "i" }, "{", "{<C-g>u")
+mk({ "i" }, "<cr>", "<cr><C-g>u")
+mk({ "i" }, "<space>", "<space><C-g>u")
 
 ----- better jump list -----
 mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back")

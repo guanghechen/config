@@ -4,7 +4,7 @@ local path = require("eve.builtin.path")
 local M = {}
 
 M.feedkeys = {
-  UNDO = vim.api.nvim_replace_termcodes("<c-G>u", true, true, true),
+  UNDO = vim.api.nvim_replace_termcodes("<C-G>u", true, true, true),
 }
 
 ---@class eve.constant.setting.ai_providers
