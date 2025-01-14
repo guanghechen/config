@@ -68,14 +68,6 @@ export const apps = [
     },
   },
   {
-    name: "lazygit",
-    themes: "theme/",
-    extname: ".yml",
-    local: "local/theme.yml",
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
-    render: (_, template, scheme) => render_template(template, scheme),
-  },
-  {
     name: "nvim",
     themes: "lua/eve/constant/theme/",
     extname: ".lua",
