@@ -98,6 +98,8 @@ vim.api.nvim_create_autocmd("WinClosed", {
 vim.api.nvim_create_autocmd("ModeChanged", {
   group = fn.augroup("on_mode_changed"),
   callback = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    state.status.dirty_winline_nr:next(winnr)
     state.status.dirtier_statusline:mark_dirty()
   end,
 })
