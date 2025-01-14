@@ -21,24 +21,6 @@ local function get_filepath_from_lazygit(cwd)
   end
 end
 
----@return string|nil
-local function get_lazygit_config_filepath()
-  local HOME_LAZYGIT = path.locate_app_config_home("lazygit") ---@type string
-
-  ---@type string[]
-  local candidate_config_filepaths = {
-    path.join(HOME_LAZYGIT, "local/theme.yml"),
-    path.join(HOME_LAZYGIT, "config.yml"),
-  }
-
-  for _, config_filepath in ipairs(candidate_config_filepaths) do
-    if vim.fn.filereadable(config_filepath) ~= 0 then
-      return config_filepath
-    end
-  end
-  return nil
-end
-
 ---https://github.com/kdheepak/lazygit.nvim/issues/22#issuecomment-1815426074
 ---@param context                       eve.command.IContext
 ---@param cwd                           string
@@ -88,12 +70,9 @@ end
 ---@param args                          ?string[]
 ---@return nil
 local function open_lazygit(context, name, cwd, args)
-  local config_path = get_lazygit_config_filepath() ---@type string|nil
   local terminal = toggle_term({
     name = name,
-    command = config_path
-        and "lazygit -ucf " .. vim.fn.shellescape(config_path) .. " " .. table.concat(args or {}, " ")
-      or "lazygit " .. table.concat(args or {}, " "),
+    command = "lazygit " .. table.concat(args or {}, " "),
     cwd = cwd,
     permanent = false,
   })
