@@ -33,4 +33,4 @@ brew install btop fastfetch httpie
 
 ### Install usual tools
 printf "\n\e[34m  [setup homebrew] installing usual tools...\n"
-brew install bat ffmpeg fzf hyperfine jq lsd scc tldr tree unzip you-get zoxide
+brew install bat ffmpeg fzf hyperfine jq lsd scc tldr tree tty-clock unzip you-get zoxide
