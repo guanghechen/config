@@ -14,6 +14,7 @@ local Ticker = require("eve.collection.ticker")
 ---@field public dirty_winline_nr       integer
 ---
 ---@field public lsp_msg                string
+---@field public maximized_winnrs       table<integer, boolean>
 ---@field public tmux_zen_mode          boolean
 ---@field public suppress_warning       boolean
 
@@ -27,6 +28,7 @@ local Ticker = require("eve.collection.ticker")
 ---@field public dirty_winline_nr       eve.collection.IObservable
 ---
 ---@field public lsp_msg                eve.collection.IObservable
+---@field public maximized_winnrs       table<integer, boolean>
 ---@field public tmux_zen_mode          eve.collection.IObservable
 ---@field public suppress_warning       eve.collection.IObservable
 ---
@@ -54,6 +56,7 @@ function M.defaults()
     dirty_winline_nr = 0,
 
     lsp_msg = "",
+    maximized_winnrs = {},
     tmux_zen_mode = tmux.is_tmux_pane_zoomed(),
     suppress_warning = false,
   }
@@ -90,6 +93,7 @@ function M.dump()
     dirty_winline_nr = _state.dirty_winline_nr:snapshot(),
 
     lsp_msg = _state.lsp_msg:snapshot(),
+    maximized_winnrs = vim.tbl_extend("force", {}, _state.lsp_msg:snapshot()),
     tmux_zen_mode = _state.tmux_zen_mode:snapshot(),
     suppress_warning = _state.suppress_warning:snapshot(),
   }
@@ -113,6 +117,7 @@ function M.load(raw_data)
       dirty_winline_nr = Observable.from_value(0, fn.falsy),
 
       lsp_msg = Observable.from_value(""),
+      maximized_winnrs = {},
       tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
       suppress_warning = Observable.from_value(false),
 
@@ -120,6 +125,7 @@ function M.load(raw_data)
         ---@cast _state                 eve.state.status.state
 
         _state.lsp_msg:next("")
+        _state.maximized_winnrs = {}
         _state.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
         _state.suppress_warning:next(false)
         _state.dirtier_statusline:mark_dirty()

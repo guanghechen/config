@@ -80,6 +80,15 @@ local flag_map = {
       vim.cmd("RenderMarkdown toggle")
     end,
   },
+  maximize = {
+    title = "maximize",
+    snapshot = function()
+      return "", "String"
+    end,
+    action = function(context)
+      command.execute(command.definitions.toggle.maximize.uuid, context)
+    end,
+  },
   relativenumber = {
     title = "relativenumber",
     snapshot = function()
@@ -274,8 +283,7 @@ function M.toggle_ai_provider(context, arg)
         width = 50,
       },
       get_present = function()
-        local ai_provider = state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
-        return ai_provider
+        return state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
       end,
       fetch_items = function()
         local items = {} ---@type fml.ux.select.IItem[]
@@ -350,6 +358,56 @@ function M.toggle_flight(context, arg)
         toggle_flight(item.uuid)
       end,
     })
+  end
+end
+
+---@param context                       eve.command.IContext
+---@return nil
+function M.toggle_maximize(context)
+  local winnr_cur = vim.api.nvim_tabpage_get_win(context.tabnr) ---@type integer
+  if state.status.maximized_winnrs[winnr_cur] then
+    state.status.maximized_winnrs[winnr_cur] = nil
+    vim.api.nvim_win_close(winnr_cur, true)
+    return
+  end
+
+  local winnrs = vim.api.nvim_tabpage_list_wins(context.tabnr) ---@type integer[]
+  local winnr_maximized = nil ---@type integer|nil
+  for _, winnr in ipairs(winnrs) do
+    if state.status.maximized_winnrs[winnr] then
+      winnr_maximized = winnr
+      break
+    end
+  end
+
+  if winnr_maximized ~= nil and vim.api.nvim_win_is_valid(winnr_maximized) then
+    vim.api.nvim_tabpage_set_win(context.tabnr, winnr_maximized)
+    return
+  end
+
+  local bufnr = context.bufnr ---@type integer
+  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+    local winnr = vim.api.nvim_open_win(bufnr, false, {
+      relative = "editor",
+      anchor = "NW",
+      width = vim.o.columns - 2,
+      height = vim.o.lines - 2,
+      row = 1,
+      col = 1,
+      focusable = true,
+      title = " MAXIMIZED ",
+      title_pos = "center",
+      border = "rounded",
+      style = "minimal",
+    })
+    vim.wo[winnr].number = true
+    vim.wo[winnr].relativenumber = true
+    vim.wo[winnr].signcolumn = "yes"
+    vim.wo[winnr].wrap = false
+
+    state.status.maximized_winnrs[winnr] = true
+    vim.api.nvim_win_set_buf(winnr, bufnr)
+    vim.api.nvim_tabpage_set_win(context.tabnr, winnr)
   end
 end
 

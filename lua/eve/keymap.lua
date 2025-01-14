@@ -310,6 +310,7 @@ kk({ "n", "v" }, "<leader>tS", K.toggle.theme)
 kk({ "n", "v" }, "<leader>tT", K.toggle.transparency)
 kk({ "n", "v" }, "<leader>tt", K.toggle.list)
 kk({ "n", "v" }, "<leader>tU", K.toggle.username)
+kk({ "n", "v" }, "<leader>z", K.toggle.maximize)
 -----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[u]x---------------------------------------------------------------------------------------------

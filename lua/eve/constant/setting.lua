@@ -46,6 +46,7 @@ M.togglers = {
   "flight",
   "hipatterns_local",
   "markdown",
+  "maximize",
   "relativenumber",
   "relativenumber_local",
   "theme",

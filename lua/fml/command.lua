@@ -625,6 +625,12 @@ command
     end,
   })
   .implement({
+    uuid = command.definitions.toggle.maximize.uuid,
+    action = function(context)
+      require("fml.action.toggle").toggle_maximize(context)
+    end,
+  })
+  .implement({
     uuid = command.definitions.toggle.relativenumber.uuid,
     action = function(context)
       require("fml.action.toggle").toggle_relativenumber(context)

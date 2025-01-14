@@ -89,7 +89,12 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
 
 vim.api.nvim_create_autocmd("WinClosed", {
   group = fn.augroup("on_win_closed"),
-  callback = function()
+  callback = function(args)
+    local winnr = type(args) == "table" and args.file or nil ---@type integer|nil
+    if type(winnr) == "number" then
+      state.status.maximized_winnrs[winnr] = nil
+    end
+
     state.status.dirtier_statusline:mark_dirty()
     state.status.dirtier_tabline:mark_dirty()
   end,
