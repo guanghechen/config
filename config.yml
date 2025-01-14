@@ -14,6 +14,35 @@ git:
   parseEmoji: true
   skipHookPrefix: WIP
 gui:
+  authorColors:
+    guanghechen: blue
+    "*": white
+  branchColors:
+    main: blue
+  theme:
+    defaultFgColor:
+      - default
+    activeBorderColor:
+      - magenta
+      - bold
+    inactiveBorderColor:
+      - white
+    optionsTextColor:
+      - yellow
+    selectedLineBgColor:
+      - blue
+    cherryPickedCommitFgColor:
+      - "blue"
+    cherryPickedCommitBgColor:
+      - cyan
+    markedBaseCommitFgColor:
+      - green
+    markedBaseCommitBgColor:
+      - magenta
+    searchingActiveBorderColor:
+      - blue
+    unstagedChangesColor:
+      - red
   border: "rounded"
   expandFocusedSidePanel: false
   mainPanelSplitMode: flexible
