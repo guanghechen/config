@@ -43,6 +43,12 @@ local function resolve_winline_scheduler(winnr)
         return winnr_cur > 0 and winnr_cur == context.winnr
       end,
       pre_task = function(callback)
+        -- Quick rerender the winline before the pre_task done to make the ui quick refresh.
+        if vim.api.nvim_win_is_valid(winnr) then
+          local result = winline:render_immediately()
+          vim.wo[winnr].winbar = result
+        end
+
         if vim.api.nvim_win_is_valid(winnr) then
           state.win.locate_symbols(winnr, function(err)
             if err == nil then
