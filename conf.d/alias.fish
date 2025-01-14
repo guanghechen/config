@@ -52,6 +52,7 @@ alias watch-fake-clipboard="nohup bash $HOME/.config/tmux/script/fake-clipboard.
 alias tmux-use-fake-clipboard="tmux set-environment ghc_use_fake_clipboard /opt/me/data/clipboard/fake.txt"
 
 ### misc
+alias ghc-clock='tty-clock -DSbcnrs -C5'
 alias ghc-ports='netstat -tulanp'
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
