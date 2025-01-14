@@ -1,0 +1,2 @@
+Set-Alias lg lazygit
+
