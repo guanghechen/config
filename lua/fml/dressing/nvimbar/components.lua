@@ -1135,9 +1135,6 @@ function M.neotree(position)
   local component = {
     name = "neotree",
     atomic = true,
-    will_change = function(context, prev_context)
-      return prev_context == nil or context.cwd ~= prev_context.cwd
-    end,
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local width = math.min(remain_width, get_pane_width()) ---@type integer
