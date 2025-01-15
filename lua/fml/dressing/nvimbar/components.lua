@@ -932,12 +932,11 @@ function M.git(position)
   local component = {
     name = "git",
     atomic = true,
-    tight = true,
     condition = function(context)
       return context.git_branch ~= nil
     end,
     render = function(context)
-      local text = " " .. icons.git.Branch .. " " .. context.git_branch ---@type string
+      local text = icons.git.Branch .. " " .. context.git_branch ---@type string
       local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,
