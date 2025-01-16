@@ -110,42 +110,50 @@ function M.dump()
 end
 
 ---@param storage                       eve.state.storage
+---@param initialize                    boolean
 ---@return nil
-function M.load(storage)
-  local data_editor = (
-    storage.editor
-    and vim.fn.filereadable(storage.editor) ~= 0
-    and fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
-  ) or {}
-  M.theme = state_theme.load(data_editor.theme)
+function M.load(storage, initialize)
+  if storage.editor or initialize then
+    local data_editor = (
+      storage.editor
+      and vim.fn.filereadable(storage.editor) ~= 0
+      and fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
+    ) or {}
+    M.theme = state_theme.load(data_editor.theme)
+  end
 
-  local data_workspace = (
-    storage.workspace
-    and vim.fn.filereadable(storage.workspace) ~= 0
-    and fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
-  ) or {}
-  M.bookmark = state_bookmark.load(data_workspace.bookmark)
-  M.flight = state_flight.load(data_workspace.flight)
-  M.frecency = state_frecency.load(data_workspace.frecency)
-  M.option = state_option.load(data_workspace.option)
-  M.search_file = state_search_file.load(data_workspace.search_select)
-  M.select = state_select.load(data_workspace.select)
+  if storage.workspace or initialize then
+    local data_workspace = (
+      storage.workspace
+      and vim.fn.filereadable(storage.workspace) ~= 0
+      and fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
+    ) or {}
+    M.bookmark = state_bookmark.load(data_workspace.bookmark)
+    M.flight = state_flight.load(data_workspace.flight)
+    M.frecency = state_frecency.load(data_workspace.frecency)
+    M.option = state_option.load(data_workspace.option)
+    M.search_file = state_search_file.load(data_workspace.search_select)
+    M.select = state_select.load(data_workspace.select)
+  end
 
-  local data_session = (
-    storage.session
-    and vim.fn.filereadable(storage.session) ~= 0
-    and fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
-  ) or {}
-  M.buf = state_buf.load(data_session.buf)
-  M.tab = state_tab.load(data_session.tab)
-  M.win = state_win.load(data_session.win)
-  M.qflist = state_qflist.load(data_session.qflist)
-  M.status = state_status.load(data_session.status)
-  M.widget = state_widget.load(data_session.widget)
-
+  if storage.session or initialize then
+    local data_session = (
+      storage.session
+      and vim.fn.filereadable(storage.session) ~= 0
+      and fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
+    ) or {}
+    M.buf = state_buf.load(data_session.buf)
+    M.tab = state_tab.load(data_session.tab)
+    M.win = state_win.load(data_session.win)
+    M.qflist = state_qflist.load(data_session.qflist)
+    M.status = state_status.load(data_session.status)
+    M.widget = state_widget.load(data_session.widget)
+  end
   M.buf.refresh_all()
   M.win.refresh_all()
   M.tab.refresh_all()
+
+  M._initialized = true
 end
 
 ---@param storage                       eve.state.storage
@@ -375,7 +383,7 @@ function M.watch_changes(params)
       on_event = function(p, event)
         if type(event) == "table" and event.change == true then
           vim.schedule(function()
-            M.load({ editor = M._storage.editor })
+            M.load({ editor = M._storage.editor }, false)
           end)
         end
       end,

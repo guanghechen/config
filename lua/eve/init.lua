@@ -59,7 +59,7 @@ function M.setup_state(storage)
 
   local state = require("eve.state")
   state.set_storage(storage)
-  state.load(storage)
+  state.load(storage, true)
 end
 
 ---@return nil

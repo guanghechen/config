@@ -173,23 +173,21 @@ function M.normalize(data)
       resolved.treesitter_context = data.treesitter_context
     end
   end
-
-  ---@type eve.state.flight.data
   return resolved
 end
 
 ---@return eve.state.flight.data
 function M.dump()
   if _state == nil then
-    ---@type eve.state.flight.data
     return M.defaults()
   end
 
   ---@type eve.state.flight.data
   return {
+    ai = _state.ai:snapshot(),
+    ai_provider = _state.ai_provider:snapshot(),
     autoload = _state.autoload:snapshot(),
     autosave = _state.autosave:snapshot(),
-    ai = _state.ai:snapshot(),
     devmode = _state.devmode:snapshot(),
 
     dressing_hipairs = _state.dressing_hipairs:snapshot(),
@@ -201,8 +199,6 @@ function M.dump()
 
     spellcheck = _state.spellcheck:snapshot(),
     treesitter_context = _state.treesitter_context:snapshot(),
-
-    ai_provider = _state.ai_provider:snapshot(),
   }
 end
 

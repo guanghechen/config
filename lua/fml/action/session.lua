@@ -28,7 +28,7 @@ function M.restore(context)
         editor = storage.editor,
         session = storage.session,
         workspace = storage.workspace,
-      })
+      }, true)
       state.refresh()
     end
   end
@@ -52,7 +52,7 @@ function M.restore_autosaved(context)
         editor = storage.editor,
         session = storage.session,
         workspace = storage.workspace,
-      })
+      }, true)
       state.refresh()
     end
   end
