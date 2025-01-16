@@ -1,5 +1,13 @@
 fish_vi_key_bindings
 
+## Local
+#
+# set -gx f_windows_terminal_settings
+# set -gx AZURE_OPENAI_ENDPOINT
+# set -gx AZURE_OPENAI_API_KEY
+#
+
+
 ## setup environments
 set -gx TZ                              'Asia/Shanghai'
 set -gx LC_CTYPE                        en_US.UTF-8
