@@ -133,6 +133,11 @@ local function render(winnr)
     return
   end
 
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  if buftype == "nofile" then
+    return
+  end
+
   local winline = resolve_winline_scheduler(winnr) ---@type fml.ux.INvimbar|nil
   if winline ~= nil then
     winline:render()
