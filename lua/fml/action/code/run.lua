@@ -30,16 +30,17 @@ function M.run(context)
   local key = extname:sub(2) ---@type string
 
   local runner = runners[key]
-  if runner ~= nil then
-    runner.run(filepath)
+  if runner == nil then
     reporter.warn({
       from = __module_name__,
       subject = "run",
       message = "Cannot find the runner by the given filepath.",
-      details = { filepath = filepath, extname = extname },
+      details = { filepath = filepath, extname = extname, key = key },
     })
     return
   end
+
+  runner.run(filepath)
 end
 
 return M
