@@ -41,7 +41,7 @@
 [merge]
   conflictstyle= diff3
 [push]
-  default = upstream
+  default = simple
 
 # delta config
 # https://github.com/dandavison/delta
