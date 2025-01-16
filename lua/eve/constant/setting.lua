@@ -11,6 +11,7 @@ M.feedkeys = {
 M.ai_providers = {
   "copilot",
   "deepseek",
+  "aoai",
 }
 
 ---@class eve.constant.setting.flights

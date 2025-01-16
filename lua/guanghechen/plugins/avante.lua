@@ -3,6 +3,7 @@ local state = require("eve.state")
 
 local configs = {
   basic = {
+    auto_suggestions_provider = "copilot",
     mappings = {
       ask = "<leader>aa",
       edit = "<leader>ae",
@@ -25,20 +26,27 @@ local configs = {
     },
   },
   providers = {
+    aoai = {
+      provider = "azure",
+      azure = {
+        endpoint = vim.env.AZURE_OPENAI_ENDPOINT,
+        deployment = "gpt-4o",
+        model = "gpt-4o",
+        api_version = "2024-08-01-preview",
+      },
+    },
     copilot = {
       provider = "copilot",
-      auto_suggestions_provider = "copilot",
     },
     deepseek = {
-      provider = "openai",
-      auto_suggestions_provider = "openai",
-      openai = {
-        endpoint = "https://api.deepseek.com/v1",
-        model = "deepseek-chat",
-        timeout = 30000,
-        temperature = 0,
-        max_tokens = 4096,
-        ["local"] = false,
+      provider = "deepseek",
+      vendors = {
+        deepseek = {
+          __inherited_from = "openai",
+          api_key_name = "DEEPSEEK_API_KEY",
+          endpoint = "https://api.deepseek.com",
+          model = "deepseek-coder",
+        },
       },
     },
   },
