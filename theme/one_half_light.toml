@@ -1,39 +1,39 @@
 # one_half_light
 
-# Default colors
+# Primary colors
 [colors.primary]
-background = "#FAFAFA"
-foreground = "#696D75"
+background  = "#FAFAFA"
+foreground  = "#696D75"
+
+# Cursor colors
+[colors.cursor]
+cursor      = "#F07178"
+text        = "#F0F0F0"
+
+# Selection colors
+[colors.selection]
+background  = "#FF6A00"
+text        = "#F0F0F0"
 
 # Normal colors
 [colors.normal]
-black   = "#FAFAFA"
-red     = "#D84A3D"
-green   = "#50A14F"
-yellow  = "#DEA95F"
-blue    = "#4078F2"
-magenta = "#A28DCD"
-cyan    = "#0B8EC6"
-white   = "#383A42"
+black       = "#FAFAFA"
+red         = "#D84A3D"
+green       = "#50A14F"
+yellow      = "#DEA95F"
+blue        = "#4078F2"
+magenta     = "#A28DCD"
+cyan        = "#0B8EC6"
+white       = "#383A42"
 
 # Bright colors
 [colors.bright]
-black   = "#B7B7B7"
-red     = "#E06C75"
-green   = "#7ECA9C"
-yellow  = "#D19A66"
-blue    = "#61AFEF"
-magenta = "#B294BB"
-cyan    = "#4EC9B0"
-white   = "#696D75"
+black       = "#B7B7B7"
+red         = "#E06C75"
+green       = "#7ECA9C"
+yellow      = "#D19A66"
+blue        = "#61AFEF"
+magenta     = "#B294BB"
+cyan        = "#4EC9B0"
+white       = "#696D75"
 
-# Dim colors
-[colors.dim]
-black   = "#FAFAFA"
-red     = "#D84A3D"
-green   = "#50A14F"
-yellow  = "#DEA95F"
-blue    = "#4078F2"
-magenta = "#A28DCD"
-cyan    = "#0B8EC6"
-white   = "#383A42"

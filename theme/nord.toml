@@ -1,39 +1,39 @@
 # nord
 
-# Default colors
+# Primary colors
 [colors.primary]
-background = "#2E3440"
-foreground = "#E5E9F0"
+background  = "#2E3440"
+foreground  = "#E5E9F0"
+
+# Cursor colors
+[colors.cursor]
+cursor      = "#FFA3A3"
+text        = "#3B4252"
+
+# Selection colors
+[colors.selection]
+background  = "#D08770"
+text        = "#3B4252"
 
 # Normal colors
 [colors.normal]
-black   = "#2E3440"
-red     = "#BF616A"
-green   = "#A3BE8C"
-yellow  = "#EBCB8B"
-blue    = "#5E81AC"
-magenta = "#B48EAD"
-cyan    = "#88C0D0"
-white   = "#B0BEC5"
+black       = "#2E3440"
+red         = "#BF616A"
+green       = "#A3BE8C"
+yellow      = "#EBCB8B"
+blue        = "#5E81AC"
+magenta     = "#B48EAD"
+cyan        = "#88C0D0"
+white       = "#B0BEC5"
 
 # Bright colors
 [colors.bright]
-black   = "#4C566A"
-red     = "#BF616A"
-green   = "#A3BE8C"
-yellow  = "#EBCB8B"
-blue    = "#81A1C1"
-magenta = "#B48EAD"
-cyan    = "#8FBCBB"
-white   = "#E5E9F0"
+black       = "#4C566A"
+red         = "#BF616A"
+green       = "#A3BE8C"
+yellow      = "#EBCB8B"
+blue        = "#81A1C1"
+magenta     = "#B48EAD"
+cyan        = "#8FBCBB"
+white       = "#E5E9F0"
 
-# Dim colors
-[colors.dim]
-black   = "#2E3440"
-red     = "#BF616A"
-green   = "#A3BE8C"
-yellow  = "#EBCB8B"
-blue    = "#5E81AC"
-magenta = "#B48EAD"
-cyan    = "#88C0D0"
-white   = "#B0BEC5"

@@ -1,39 +1,39 @@
 # gruvbox_light
 
-# Default colors
+# Primary colors
 [colors.primary]
-background = "#FBF1C7"
-foreground = "#3C3836"
+background  = "#FBF1C7"
+foreground  = "#3C3836"
+
+# Cursor colors
+[colors.cursor]
+cursor      = "#D3869B"
+text        = "#EBDBB2"
+
+# Selection colors
+[colors.selection]
+background  = "#AF3A03"
+text        = "#EBDBB2"
 
 # Normal colors
 [colors.normal]
-black   = "#FBF1C7"
-red     = "#9D0006"
-green   = "#79740E"
-yellow  = "#B57614"
-blue    = "#076678"
-magenta = "#8F3F71"
-cyan    = "#427B58"
-white   = "#7C6F64"
+black       = "#FBF1C7"
+red         = "#9D0006"
+green       = "#79740E"
+yellow      = "#B57614"
+blue        = "#076678"
+magenta     = "#8F3F71"
+cyan        = "#427B58"
+white       = "#7C6F64"
 
 # Bright colors
 [colors.bright]
-black   = "#928374"
-red     = "#CC241D"
-green   = "#98971A"
-yellow  = "#D79921"
-blue    = "#458588"
-magenta = "#B16286"
-cyan    = "#689D6A"
-white   = "#3C3836"
+black       = "#928374"
+red         = "#CC241D"
+green       = "#98971A"
+yellow      = "#D79921"
+blue        = "#458588"
+magenta     = "#B16286"
+cyan        = "#689D6A"
+white       = "#3C3836"
 
-# Dim colors
-[colors.dim]
-black   = "#FBF1C7"
-red     = "#9D0006"
-green   = "#79740E"
-yellow  = "#B57614"
-blue    = "#076678"
-magenta = "#8F3F71"
-cyan    = "#427B58"
-white   = "#7C6F64"

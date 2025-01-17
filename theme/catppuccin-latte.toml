@@ -1,39 +1,39 @@
 # catppuccin-latte
 
-# Default colors
+# Primary colors
 [colors.primary]
-background = "#EFF1F5"
-foreground = "#5C5F77"
+background  = "#EFF1F5"
+foreground  = "#5C5F77"
+
+# Cursor colors
+[colors.cursor]
+cursor      = "#EA76CB"
+text        = "#DCE0E8"
+
+# Selection colors
+[colors.selection]
+background  = "#FE640B"
+text        = "#DCE0E8"
 
 # Normal colors
 [colors.normal]
-black   = "#EFF1F5"
-red     = "#D20F39"
-green   = "#40A02B"
-yellow  = "#DF8E1D"
-blue    = "#1E66F5"
-magenta = "#8839EF"
-cyan    = "#179299"
-white   = "#8C8FA1"
+black       = "#EFF1F5"
+red         = "#D20F39"
+green       = "#40A02B"
+yellow      = "#DF8E1D"
+blue        = "#1E66F5"
+magenta     = "#8839EF"
+cyan        = "#179299"
+white       = "#8C8FA1"
 
 # Bright colors
 [colors.bright]
-black   = "#9CA0B0"
-red     = "#D20F39"
-green   = "#40A02B"
-yellow  = "#DF8E1D"
-blue    = "#1E66F5"
-magenta = "#8839EF"
-cyan    = "#179299"
-white   = "#5C5F77"
+black       = "#9CA0B0"
+red         = "#D20F39"
+green       = "#40A02B"
+yellow      = "#DF8E1D"
+blue        = "#1E66F5"
+magenta     = "#8839EF"
+cyan        = "#179299"
+white       = "#5C5F77"
 
-# Dim colors
-[colors.dim]
-black   = "#EFF1F5"
-red     = "#D20F39"
-green   = "#40A02B"
-yellow  = "#DF8E1D"
-blue    = "#1E66F5"
-magenta = "#8839EF"
-cyan    = "#179299"
-white   = "#8C8FA1"
