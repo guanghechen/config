@@ -1,14 +1,20 @@
 -- gruvbox_light
 local config = {
   colors = {
+    -- Primary colors
     background    = "#FBF1C7",
     foreground    = "#3C3836",
-    cursor_bg     = "#665C54",
-    cursor_fg     = "#BDAE93",
-    cursor_border = "#BDAE93",
-    selection_fg  = "#3C3836",
-    selection_bg  = "#D65D0E",
 
+    -- Cursor colors
+    cursor_bg     = "#D3869B",
+    cursor_fg     = "#EBDBB2",
+    cursor_border = "#EBDBB2",
+
+    -- Selection colors
+    selection_bg  = "#D79921",
+    selection_fg  = "#EBDBB2",
+
+    -- Normal colors
     ansi = {
       "#FBF1C7",
       "#9D0006",
@@ -20,6 +26,7 @@ local config = {
       "#7C6F64",
     },
 
+    -- Bright colors
     brights = {
       "#928374",
       "#CC241D",

@@ -1,14 +1,20 @@
 -- nord
 local config = {
   colors = {
+    -- Primary colors
     background    = "#2E3440",
     foreground    = "#E5E9F0",
-    cursor_bg     = "#C8CCD4",
-    cursor_fg     = "#4C566A",
-    cursor_border = "#4C566A",
-    selection_fg  = "#E5E9F0",
-    selection_bg  = "#D08770",
 
+    -- Cursor colors
+    cursor_bg     = "#FFA3A3",
+    cursor_fg     = "#3B4252",
+    cursor_border = "#3B4252",
+
+    -- Selection colors
+    selection_bg  = "#EBCB8B",
+    selection_fg  = "#3B4252",
+
+    -- Normal colors
     ansi = {
       "#2E3440",
       "#BF616A",
@@ -20,6 +26,7 @@ local config = {
       "#B0BEC5",
     },
 
+    -- Bright colors
     brights = {
       "#4C566A",
       "#BF616A",

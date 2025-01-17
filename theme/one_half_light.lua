@@ -1,14 +1,20 @@
 -- one_half_light
 local config = {
   colors = {
+    -- Primary colors
     background    = "#FAFAFA",
     foreground    = "#696D75",
-    cursor_bg     = "#4F525A",
-    cursor_fg     = "#DCDCDC",
-    cursor_border = "#DCDCDC",
-    selection_fg  = "#696D75",
-    selection_bg  = "#FE8655",
 
+    -- Cursor colors
+    cursor_bg     = "#F07178",
+    cursor_fg     = "#F0F0F0",
+    cursor_border = "#F0F0F0",
+
+    -- Selection colors
+    selection_bg  = "#D19A66",
+    selection_fg  = "#F0F0F0",
+
+    -- Normal colors
     ansi = {
       "#FAFAFA",
       "#D84A3D",
@@ -20,6 +26,7 @@ local config = {
       "#383A42",
     },
 
+    -- Bright colors
     brights = {
       "#B7B7B7",
       "#E06C75",

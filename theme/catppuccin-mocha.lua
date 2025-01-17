@@ -1,14 +1,20 @@
 -- catppuccin-mocha
 local config = {
   colors = {
+    -- Primary colors
     background    = "#1E1E2E",
     foreground    = "#CDD6F4",
-    cursor_bg     = "#A6ADC8",
-    cursor_fg     = "#45475A",
-    cursor_border = "#45475A",
-    selection_fg  = "#CDD6F4",
-    selection_bg  = "#FAB387",
 
+    -- Cursor colors
+    cursor_bg     = "#F5C2E7",
+    cursor_fg     = "#11111B",
+    cursor_border = "#11111B",
+
+    -- Selection colors
+    selection_bg  = "#F9E2AF",
+    selection_fg  = "#11111B",
+
+    -- Normal colors
     ansi = {
       "#1E1E2E",
       "#F38BA8",
@@ -20,6 +26,7 @@ local config = {
       "#9399B2",
     },
 
+    -- Bright colors
     brights = {
       "#7F849C",
       "#F38BA8",
