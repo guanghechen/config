@@ -1,14 +1,20 @@
 -- {{theme}}
 local config = {
   colors = {
+    -- Primary colors
     background    = "{{bg0}}",
     foreground    = "{{fg1}}",
-    cursor_bg     = "{{fg3}}",
-    cursor_fg     = "{{bg3}}",
-    cursor_border = "{{bg3}}",
-    selection_fg  = "{{fg1}}",
-    selection_bg  = "{{brightOrange}}",
 
+    -- Cursor colors
+    cursor_bg     = "{{pink}}",
+    cursor_fg     = "{{bg1}}",
+    cursor_border = "{{bg1}}",
+
+    -- Selection colors
+    selection_bg  = "{{brightYellow}}",
+    selection_fg  = "{{bg1}}",
+
+    -- Normal colors
     ansi = {
       "{{bg0}}",
       "{{red}}",
@@ -20,6 +26,7 @@ local config = {
       "{{fg4}}",
     },
 
+    -- Bright colors
     brights = {
       "{{grey}}",
       "{{brightRed}}",
