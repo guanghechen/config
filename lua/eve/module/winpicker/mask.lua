@@ -1,3 +1,4 @@
+local ft = require("eve.constant.filetype")
 local hints = require("eve.constant.hint")
 
 local winhighlight = table.concat({
@@ -40,6 +41,10 @@ function M:create_buf_as_needed()
   local bufnr_hint = self.bufnr_hint ---@type integer|nil
   if bufnr_hint == nil or not vim.api.nvim_buf_is_valid(bufnr_hint) then
     bufnr_hint = vim.api.nvim_create_buf(false, true) ---@type integer
+    vim.bo[bufnr_hint].buflisted = false
+    vim.bo[bufnr_hint].buftype = "nofile"
+    vim.bo[bufnr_hint].filetype = ft.WINPICKER_MASK
+    vim.bo[bufnr_hint].swapfile = false
     self.bufnr_hint = bufnr_hint
   end
 

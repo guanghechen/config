@@ -99,7 +99,7 @@ function M:create_buf_as_needed()
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nowrite"
+  vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = ft.WINSEP
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = true

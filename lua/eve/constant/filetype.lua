@@ -30,7 +30,9 @@ M.SEARCH_MAIN = "search-main"
 M.SEARCH_PREVIEW = "search-preview"
 M.STARTUPTIME = "startuptime"
 M.TERM = "term"
+M.TEMP_VIWER = "temp-viewer"
 M.TROUBLE = "Trouble"
+M.WINPICKER_MASK = "winpicker-mask"
 M.WINSEP = "winsep"
 
 ---@type table<string, table<string, true>>
@@ -116,9 +118,11 @@ local filetypes = {
     [M.SEARCH_INPUT] = true,
     [M.SEARCH_MAIN] = true,
     [M.STARTUPTIME] = true,
+    [M.TEMP_VIWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
     [M.WINSEP] = true,
+    [M.WINPICKER_MASK] = true,
   },
   hipattern = {
     [M.AVANTE] = true,
@@ -154,9 +158,11 @@ local filetypes = {
     [M.SEARCH_MAIN] = true,
     [M.SEARCH_PREVIEW] = true,
     [M.STARTUPTIME] = true,
+    [M.TEMP_VIWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
     [M.WINSEP] = true,
+    [M.WINPICKER_MASK] = true,
   },
   no_ibl = {
     [M.AERIAL] = true,
@@ -183,9 +189,11 @@ local filetypes = {
     [M.SEARCH_INPUT] = true,
     [M.SEARCH_MAIN] = true,
     [M.STARTUPTIME] = true,
+    [M.TEMP_VIWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
     [M.WINSEP] = true,
+    [M.WINPICKER_MASK] = true,
   },
   no_flash = {
     [M.CMP_MENU] = true,
@@ -195,6 +203,7 @@ local filetypes = {
     [M.LSPINFO] = true,
     [M.PLENARY_TEST_POPUP] = true,
     [M.WINSEP] = true,
+    [M.WINPICKER_MASK] = true,
   },
   no_window_picker_focusable = {
     [M.NOICE] = true,
@@ -228,9 +237,11 @@ local filetypes = {
     [M.SEARCH_MAIN] = true,
     [M.SEARCH_PREVIEW] = true,
     [M.STARTUPTIME] = true,
+    [M.TEMP_VIWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
     [M.WINSEP] = true,
+    [M.WINPICKER_MASK] = true,
   },
   quitable_with_q = {
     [M.AERIAL] = true,
@@ -251,8 +262,10 @@ local filetypes = {
     [M.PLENARY_TEST_POPUP] = true,
     [M.QUICKFIX] = true,
     [M.STARTUPTIME] = true,
+    [M.TEMP_VIWER] = true,
     [M.TROUBLE] = true,
     [M.WINSEP] = true,
+    [M.WINPICKER_MASK] = true,
   },
 }
 

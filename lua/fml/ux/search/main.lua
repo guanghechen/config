@@ -130,7 +130,7 @@ function M:create_buf_as_needed()
   self._bufnr = bufnr
 
   vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nowrite"
+  vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = ft.SEARCH_MAIN
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
