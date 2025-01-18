@@ -1,7 +1,7 @@
 {
   "theme": "catppuccin-latte",
   "variant": "light",
-  "opposite": "catppuccin-mocha",
+  "opposite": "catppuccin-frappe",
   "palette": {
     "bg0":            "#EFF1F5",
     "bg1":            "#DCE0E8",
