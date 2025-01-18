@@ -1,0 +1,39 @@
+# catppuccin-macchiato
+
+# Primary colors
+[colors.primary]
+background  = "#24273A"
+foreground  = "#B8C0E0"
+
+# Cursor colors
+[colors.cursor]
+cursor      = "#F5BDE6"
+text        = "#1E2030"
+
+# Selection colors
+[colors.selection]
+background  = "#F5A97F"
+text        = "#1E2030"
+
+# Normal colors
+[colors.normal]
+black       = "#24273A"
+red         = "#ED8796"
+green       = "#A6DA95"
+yellow      = "#EED49F"
+blue        = "#8AADF4"
+magenta     = "#C6A0F6"
+cyan        = "#8BD5CA"
+white       = "#8087A2"
+
+# Bright colors
+[colors.bright]
+black       = "#6E738D"
+red         = "#ED8796"
+green       = "#A6DA95"
+yellow      = "#EED49F"
+blue        = "#8AADF4"
+magenta     = "#C6A0F6"
+cyan        = "#8BD5CA"
+white       = "#B8C0E0"
+

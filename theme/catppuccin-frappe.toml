@@ -1,0 +1,39 @@
+# catppuccin-frappe
+
+# Primary colors
+[colors.primary]
+background  = "#303446"
+foreground  = "#B5BFE2"
+
+# Cursor colors
+[colors.cursor]
+cursor      = "#F4B8E4"
+text        = "#292C3C"
+
+# Selection colors
+[colors.selection]
+background  = "#EF9F76"
+text        = "#292C3C"
+
+# Normal colors
+[colors.normal]
+black       = "#303446"
+red         = "#E78284"
+green       = "#A6D189"
+yellow      = "#E5C890"
+blue        = "#8CAAEE"
+magenta     = "#CA9EE6"
+cyan        = "#81C8BE"
+white       = "#838BA7"
+
+# Bright colors
+[colors.bright]
+black       = "#737994"
+red         = "#E78284"
+green       = "#A6D189"
+yellow      = "#E5C890"
+blue        = "#8CAAEE"
+magenta     = "#CA9EE6"
+cyan        = "#81C8BE"
+white       = "#B5BFE2"
+
