@@ -30,9 +30,9 @@ gui:
     optionsTextColor:
       - yellow
     selectedLineBgColor:
-      - blue
+      - white
     cherryPickedCommitFgColor:
-      - "blue"
+      - blue
     cherryPickedCommitBgColor:
       - cyan
     markedBaseCommitFgColor:
