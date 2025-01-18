@@ -34,9 +34,9 @@
     "grey":           "#7F849C",
     "pink":           "#F5C2E7",
 
-    "diffDel":        "#f5e0dc",
-    "diffDelInline":  "#eba0ac",
-    "diffAdd":        "#94e2d5",
-    "diffAddInline":  "#74c7ec"
+    "diffDel":        "#362424",
+    "diffDelInline":  "#833535",
+    "diffAdd":        "#293232",
+    "diffAddInline":  "#476E6E"
   }
 }
