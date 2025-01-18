@@ -92,13 +92,14 @@ local function gen_hlgroup_map(context)
     ---! indent-blankline.nvim
     IblChar = { fg = c.bg1 },
     IblScopeChar = { fg = c.grey },
-    ["@ibl.scope.underline.1"] = { bg = c.bg2 },
-    ["@ibl.scope.underline.2"] = { bg = c.bg2 },
-    ["@ibl.scope.underline.3"] = { bg = c.bg2 },
-    ["@ibl.scope.underline.4"] = { bg = c.bg2 },
-    ["@ibl.scope.underline.5"] = { bg = c.bg2 },
-    ["@ibl.scope.underline.6"] = { bg = c.bg2 },
-    ["@ibl.scope.underline.7"] = { bg = c.bg2 },
+    ["@ibl.scope.underline.0"] = { link = "IblChar" },
+    ["@ibl.scope.underline.1"] = { fg = cs.mix(c.bg0, c.red, 32) },
+    ["@ibl.scope.underline.2"] = { fg = cs.mix(c.bg0, c.green, 32) },
+    ["@ibl.scope.underline.3"] = { fg = cs.mix(c.bg0, c.yellow, 32) },
+    ["@ibl.scope.underline.4"] = { fg = cs.mix(c.bg0, c.blue, 32) },
+    ["@ibl.scope.underline.5"] = { fg = cs.mix(c.bg0, c.purple, 32) },
+    ["@ibl.scope.underline.6"] = { fg = cs.mix(c.bg0, c.aqua, 32) },
+    ["@ibl.scope.underline.7"] = { fg = cs.mix(c.bg0, c.orange, 32) },
 
     ---! lazy.nvim
     LazyButton = { fg = c.fg2, bg = "none" },

@@ -1,4 +1,5 @@
 local ft = require("eve.constant.filetype")
+local state = require("eve.state")
 
 -- indent guides for Neovim
 return {
@@ -8,7 +9,16 @@ return {
     indent = {
       char = "│",
       tab_char = "┃",
-      highlight = "IblChar",
+      highlight = {
+        "@ibl.scope.underline.0",
+        "@ibl.scope.underline.1",
+        "@ibl.scope.underline.2",
+        "@ibl.scope.underline.3",
+        "@ibl.scope.underline.4",
+        "@ibl.scope.underline.5",
+        "@ibl.scope.underline.6",
+        "@ibl.scope.underline.7",
+      },
     },
     whitespace = {
       highlight = { "Whitespace", "NonText" },
@@ -24,4 +34,16 @@ return {
       filetypes = ft.get_no_ibl_filetypes(),
     },
   },
+  config = function(_, opts)
+    local hooks = require("ibl.hooks")
+    -- hooks.register(hooks.type.WHITESPACE, hooks.builtin.hide_first_space_indent_level)
+    hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
+      state.theme.apply_integration({
+        theme = state.theme.theme:snapshot(),
+        transparency = state.theme.transparency:snapshot(),
+        integration = "plugin",
+      })
+    end)
+    require("ibl").setup(opts)
+  end,
 }

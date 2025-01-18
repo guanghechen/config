@@ -35,10 +35,10 @@ local M = {
     grey =            "#9CA0B0",
     pink =            "#EA76CB",
 
-    diffDel =         "#F2CDCD",
-    diffDelInline =   "#E78284",
-    diffAdd =         "#A6D189",
-    diffAddInline =   "#81C8BE",
+    diffDel =         "#E8CDD6",
+    diffDelInline =   "#E5BAC5",
+    diffAdd =         "#BBD1BB",
+    diffAddInline =   "#94e2d5",
   },
   -- stylua: ignore end
 }
