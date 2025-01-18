@@ -37,8 +37,8 @@ local M = {
 
     diffDel =         "#E8CDD6",
     diffDelInline =   "#E5BAC5",
-    diffAdd =         "#BBD1BB",
-    diffAddInline =   "#94e2d5",
+    diffAdd =         "#D2E1D5",
+    diffAddInline =   "#C3D9C3",
   },
   -- stylua: ignore end
 }

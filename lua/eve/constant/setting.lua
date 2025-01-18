@@ -32,7 +32,9 @@ M.flights = {
 
 ---@class eve.constant.setting.themes
 M.themes = {
+  "catppuccin-frappe",
   "catppuccin-latte",
+  "catppuccin-macchiato",
   "catppuccin-mocha",
   "gruvbox_dark",
   "gruvbox_light",

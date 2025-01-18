@@ -1,0 +1,46 @@
+---@type eve.t.theme.IScheme
+local M = {
+  theme = "catppuccin-frappe",
+  variant = "dark",
+  -- stylua: ignore start
+  palette = {
+    bg0 =             "#303446",
+    bg1 =             "#292C3C",
+    bg2 =             "#232634",
+    bg3 =             "#1E2030",
+    bg4 =             "#181926",
+
+    fg0 =             "#C6D0F5",
+    fg1 =             "#B5BFE2",
+    fg2 =             "#A5ADCE",
+    fg3 =             "#949CBB",
+    fg4 =             "#838BA7",
+
+    red =             "#E78284",
+    green =           "#A6D189",
+    yellow =          "#E5C890",
+    blue =            "#8CAAEE",
+    purple =          "#CA9EE6",
+    aqua =            "#81C8BE",
+    orange =          "#EF9F76",
+
+    brightRed =       "#E78284",
+    brightGreen =     "#A6D189",
+    brightYellow =    "#E5C890",
+    brightBlue =      "#8CAAEE",
+    brightPurple =    "#CA9EE6",
+    brightAqua =      "#81C8BE",
+    brightOrange =    "#EF9F76",
+
+    grey =            "#737994",
+    pink =            "#F4B8E4",
+
+    diffDel =         "#4C3A3A",
+    diffDelInline =   "#3A2A2A",
+    diffAdd =         "#3A4C3A",
+    diffAddInline =   "#2A3A2A",
+  },
+  -- stylua: ignore end
+}
+
+return M

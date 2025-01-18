@@ -16,7 +16,9 @@
 ---|"B"
 
 ---@alias eve.e.Theme
+---|"catppuccin-frappe"
 ---|"catppuccin-latte"
+---|"catppuccin-macchiato"
 ---|"catppuccin-mocha"
 ---|"gruvbox_light"
 ---|"gruvbox_dark"
