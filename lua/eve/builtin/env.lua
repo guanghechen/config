@@ -4,10 +4,11 @@ local os_name = vim.uv.os_uname().sysname ---@type string|nil
 local M = {}
 
 ---! OS settings
-M.IS_NIX = os_name == "Linux" ---@type boolean
 M.IS_MAC = os_name == "Darwin" ---@type boolean
+M.IS_NIX = os_name == "Linux" ---@type boolean
 M.IS_WIN = os_name == "Windows_NT" ---@type boolean
 M.IS_WSL = vim.fn.has("wsl") == 1 ---@type boolean
+M.IS_TMUX = vim.env.TMUX ~= nil ---@type boolean
 M.PATH_SEP = M.IS_WIN and "\\" or "/" ---@type string
 M.USERNAME = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
 

@@ -1,5 +1,6 @@
 local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
+local shell = require("eve.builtin.shell")
 local ft = require("eve.constant.filetype")
 local state = require("eve.state")
 
@@ -11,18 +12,6 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "FloatBorder:f_us_terminal_border",
   "Normal:f_us_terminal_bg",
 }, ",")
-
----@param cmd                           string|nil
-local function format_command(cmd)
-  local command = {} ---@type string[]
-  local shell = vim.env.SHELL or vim.o.shell ---@type string
-  if cmd == nil or #cmd < 1 then
-    command = { shell }
-  else
-    command = { shell, "-c", cmd }
-  end
-  return command
-end
 
 ---@class fml.ux.ITerminal : eve.t.ux.IWidget
 ---@field public get_winnr              fun(self: fml.ux.ITerminal): integer|nil
@@ -46,7 +35,7 @@ end
 
 ---@class fml.ux.Terminal : fml.ux.ITerminal
 ---@field protected _bufnr              integer|nil
----@field protected _command            string[]
+---@field protected _command            string
 ---@field protected _command_cwd        string
 ---@field protected _command_env        table<string, string>|nil
 ---@field protected _keymaps            eve.t.IKeymap[]
@@ -72,7 +61,7 @@ function M.new(props)
   local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
-  local command = format_command(props.command) ---@type string[]
+  local command = shell.format_command(props.command) ---@type string
   local command_cwd = props.command_cwd or path.cwd() ---@type string
   local command_env = props.command_env ---@type table<string, string>|nil
   local permanent = not not props.permanent ---@type boolean
@@ -273,8 +262,8 @@ end
 ---@param props                         fml.ux.terminal.IProps
 ---@return nil
 function M:update(props)
-  local command = format_command(props.command) ---@type string[]
-  self._command = command ---@type string[]
+  local command = shell.format_command(props.command) ---@type string
+  self._command = command ---@type string
   self._command_cwd = props.command_cwd or self._command_cwd ---@type string
   self._command_env = props.command_env or self._command_env ---@type table<string, string>|nil
   self._on_exit = props.on_exit or self._on_exit
