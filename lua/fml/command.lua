@@ -111,6 +111,14 @@ command
     end,
   })
 
+--[clipboard] paste---------------------------------------------------------------------------------
+command.implement({
+  uuid = command.definitions.clipboard.paste.uuid,
+  action = function(context)
+    require("fml.action.clipboard").paste(context)
+  end,
+})
+
 --[code] run----------------------------------------------------------------------------------------
 command.implement({
   uuid = command.definitions.code.run.uuid,

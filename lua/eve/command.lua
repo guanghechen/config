@@ -329,6 +329,11 @@ M.definitions.buf = {
   save = def("Fbufsave", "buf: save"),
 }
 
+---@class eve.command.definitions.clipboard
+M.definitions.clipboard = {
+  paste = def("Fclipboardpaste", "clipboard: paste"),
+}
+
 ---@class eve.command.definitions.code
 M.definitions.code = {
   run = def("Fcoderun", "code: run"),

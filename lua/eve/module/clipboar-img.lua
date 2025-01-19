@@ -5,13 +5,13 @@ local reporter = require("eve.builtin.reporter")
 local shell = require("eve.builtin.shell")
 
 ---@class eve.module.clipboard.img
----@field public check_have_img         fun(): boolean
----@field public paste_img              fun(filepath: string): boolean
+---@field public has_image              fun(): boolean
+---@field public paste_image            fun(filepath: string): boolean
 local M = {}
 
 if env.IS_MAC then
   ---@return boolean
-  function M.check_have_img()
+  function M.has_image()
     local cmd = shell.format_command("pngpaste -") ---@type string
     local output = vim.fn.system(cmd) ---@type string|nil
     local exit_code = vim.v.shell_error
@@ -29,7 +29,7 @@ if env.IS_MAC then
 
   ---@param filepath                    string
   ---@return  boolean
-  function M.paste_img(filepath)
+  function M.paste_image(filepath)
     local cmd = shell.format_command(string.format('pngpaste - > "%s"', filepath))
     local output = vim.fn.system(cmd) ---@type string|nil
     local exit_code = vim.v.shell_error
@@ -46,7 +46,7 @@ if env.IS_MAC then
   end
 elseif env.IS_NIX then
   ---@return boolean
-  function M.check_have_img()
+  function M.has_image()
     local cmd = shell.format_command("xclip -selection clipboard -t TARGETS -o") ---@type string
     local output = vim.fn.system(cmd) ---@type string|nil
     return output ~= nil and output:find("image/png") ~= nil
@@ -54,7 +54,7 @@ elseif env.IS_NIX then
 
   ---@param filepath                    string
   ---@return  boolean
-  function M.paste_img(filepath)
+  function M.paste_image(filepath)
     local cmd = shell.format_command(string.format('xclip -selection clipboard -o -t image/png > "%s"', filepath))
     local output = vim.fn.system(cmd) ---@type string|nil
     local exit_code = vim.v.shell_error
@@ -77,7 +77,7 @@ elseif env.IS_WIN or env.IS_WSL then
   end
 
   ---@return boolean
-  function M.check_have_img()
+  function M.has_image()
     local cmd =
       format_command("Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::GetImage()")
     local output = vim.fn.system(cmd) ---@type string|nil
@@ -86,7 +86,7 @@ elseif env.IS_WIN or env.IS_WSL then
 
   ---@param filepath                    string
   ---@return  boolean
-  function M.paste_img(filepath)
+  function M.paste_image(filepath)
     local cmd = format_command(
       string.format(
         "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::GetImage().Save('%s')",
