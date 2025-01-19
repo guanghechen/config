@@ -13,7 +13,6 @@
   "flash.nvim": { "branch": "nvim@flash.nvim", "commit": "34c7be146a91fec3555c33fe89c7d643f6ef5cf1" },
   "friendly-snippets": { "branch": "nvim@friendly-snippets", "commit": "efff286dd74c22f731cdec26a70b46e5b203c619" },
   "gitsigns.nvim": { "branch": "nvim@gitsigns.nvim", "commit": "817bd848fffe82e697b4da656e3f2834cd0665c5" },
-  "img-clip.nvim": { "branch": "nvim@img-clip.nvim", "commit": "5ff183655ad98b5fc50c55c66540375bbd62438c" },
   "indent-blankline.nvim": { "branch": "nvim@indent-blankline.nvim", "commit": "7a698a1d7ed755af9f5a88733b23ca246ce2df28" },
   "lazy.nvim": { "branch": "nvim@ghc-lazy.nvim", "commit": "98ee6d0631c6820b5f5eefa902591260fa4da781" },
   "mason-lspconfig.nvim": { "branch": "nvim@mason-lspconfig.nvim", "commit": "e942edf5c85b6a2ab74059ea566cac5b3e1514a4" },

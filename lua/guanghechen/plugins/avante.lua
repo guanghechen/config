@@ -73,7 +73,6 @@ return {
     "nvim-cmp",
     "mini.icons",
     "copilot.lua",
-    "img-clip.nvim",
     "render-markdown.nvim",
   },
   config = function()
