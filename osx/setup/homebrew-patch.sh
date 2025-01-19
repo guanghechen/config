@@ -6,6 +6,9 @@ source $HOME/.config/guanghechen/nix/setup/path.sh
 brew tap microsoft/git
 brew install --cask git-credential-manager
 
+### Install pngpaste
+brew install pngpaste
+
 ### Install kitty
 brew install --cask kitty
 
