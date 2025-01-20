@@ -50,6 +50,7 @@ Meta.__index = Meta
 ---@field public on_buf_enter           fun(winnr: integer, bufnr: integer): nil
 ---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
 ---
+---@field public list_valid_bufs        fun(tabnr: integer): eve.t.state.tab.buf.state[]
 ---@field public get_unrefereced_bufnrs fun(bufnrs?: integer[]): integer[]
 local S = {}
 
@@ -278,6 +279,28 @@ S = {
     for i = k, N, 1 do
       bufs[i] = nil
     end
+  end,
+  list_valid_bufs = function(tabnr)
+    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+    if meta == nil or #meta.bufs < 1 then
+      return {}
+    end
+
+    local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
+    local k = 0 ---@type integer
+    local N = #bufs ---@type integer
+
+    for i = 1, N, 1 do
+      local buf = bufs[i] ---@type eve.t.state.tab.buf.state
+      if buf ~= nil and buf.bufnr > 0 and vim.api.nvim_buf_is_valid(buf.bufnr) then
+        k = k + 1
+        bufs[k] = buf
+      end
+    end
+    for i = k + 1, N, 1 do
+      bufs[i] = nil
+    end
+    return bufs
   end,
   get_unrefereced_bufnrs = function(bufnrs)
     bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]

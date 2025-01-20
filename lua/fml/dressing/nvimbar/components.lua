@@ -126,6 +126,17 @@ function M.bufs(position)
     vim.cmd(command.definitions.buf.focus_right.uuid)
   end) or ""
 
+  ---@param bufs                        eve.t.state.tab.buf.state[]
+  ---@param bufnr                       integer
+  ---@return integer|nil
+  local function resolve_bufid(bufs, bufnr)
+    for index, buf in ipairs(bufs) do
+      if buf.bufnr == bufnr then
+        return index
+      end
+    end
+  end
+
   ---@param bufnr                       integer
   ---@return string
   ---@return string
@@ -142,17 +153,13 @@ function M.bufs(position)
     return filename, fileicon, fileicon_hl
   end
 
-  ---@param buf                           eve.t.state.tab.buf.state|nil
+  ---@param buf                           eve.t.state.tab.buf.state
   ---@param index                         integer
   ---@param current                       integer|nil
   ---@param total                         integer
   ---@return string
   ---@return string
   local function render_buf(buf, index, current, total)
-    if buf == nil or buf.bufnr < 1 or not vim.api.nvim_buf_is_valid(buf.bufnr) then
-      return "", ""
-    end
-
     local bufnr = buf.bufnr ---@type integer
     local is_first = index == 1 ---@type boolean
     local is_current = index == current ---@type boolean
@@ -239,13 +246,10 @@ function M.bufs(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local tabnr = context.tabnr ---@type integer
-      local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-      if meta_tab == nil or #meta_tab.bufs < 1 then
+      local bufs = state.tab.list_valid_bufs(tabnr) ---@type eve.t.state.tab.buf.state[]
+      if #bufs < 1 then
         return "", "", false
       end
-
-      local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
-      local N = #bufs ---@type integer
 
       local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
       local bufnr_cur = winnr_cur > 0 ---@type integer
@@ -253,8 +257,9 @@ function M.bufs(position)
           and vim.api.nvim_win_get_buf(winnr_cur)
         or 0
 
-      local _, bufid_current = meta_tab:find_buf(bufnr_cur)
-      local bufid_middle = bufid_current or vim.t[tabnr][setting.vars.BUFID_MIDDLE] or 1 ---@type integer
+      local N = #bufs ---@type integer
+      local bufid_current = resolve_bufid(bufs, bufnr_cur) ---@type integer|nil
+      local bufid_middle = math.min(N, bufid_current or vim.t[tabnr][setting.vars.BUFID_MIDDLE] or 1) ---@type integer
       vim.t[tabnr][setting.vars.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
 
       local text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_current, N)
