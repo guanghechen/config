@@ -67,7 +67,6 @@ return {
     "AvanteToggle",
   },
   dependencies = {
-    "dressing.nvim",
     "plenary.nvim",
     "nui.nvim",
     "nvim-cmp",
@@ -76,6 +75,8 @@ return {
     "render-markdown.nvim",
   },
   config = function()
+    package.loaded["dressing.nvim"] = {}
+
     local last_ai_provider = nil ---@type eve.e.AiProvider|nil
 
     ---@return nil

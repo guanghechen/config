@@ -56,7 +56,6 @@ local raw_specs = {
   { name = "copilot-chat.nvim", main = "CopilotChat", cond = conds.ai },
   { name = "copilot-cmp", main = "copilot_cmp", cond = conds.ai },
   { name = "diffview.nvim", main = "diffview", cond = conds.not_vscode },
-  { name = "dressing.nvim", main = "dressing", cond = conds.not_vscode },
   { name = "flash.nvim", main = "flash", cond = conds.not_vscode },
   { name = "friendly-snippets", cond = conds.not_vscode },
   { name = "gitsigns.nvim", main = "gitsigns", cond = conds.not_vscode },
