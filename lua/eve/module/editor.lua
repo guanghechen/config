@@ -79,6 +79,33 @@ function M.get_visible_bufnrs(tabnr)
   return bufnrs
 end
 
+---@param winnr_source                  integer|nil
+---@return integer
+function M.get_projectable_winnr(winnr_source)
+  if
+    winnr_source ~= nil
+    and winnr_source > 0
+    and vim.api.nvim_win_is_valid(winnr_source)
+    and winpicker.filters.project(winnr_source)
+  then
+    return winnr_source
+  end
+
+  local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
+  for _, winnr in ipairs(winnrs) do
+    if winpicker.filters.project(winnr) then
+      return winnr
+    end
+  end
+
+  for _, winnr in ipairs(winnrs) do
+    if not fn.is_win_floating(winnr) then
+      return winnr
+    end
+  end
+  return -1
+end
+
 ---@param bufnr                         integer|nil
 ---@return boolean
 function M.is_buf_valid(bufnr)

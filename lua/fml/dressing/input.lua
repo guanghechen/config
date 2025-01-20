@@ -2,6 +2,11 @@ local fn = require("eve.builtin.fn")
 local ft = require("eve.constant.filetype")
 
 ---@class fml.dressing.input.IOptions
+---@field public relative               ?string
+---@field public row                    ?integer
+---@field public col                    ?integer
+---@field public width                  ?integer
+---
 ---@field public prompt                 ?string
 ---@field public default                ?string
 ---@field public completion             ?string
@@ -64,6 +69,7 @@ end
 function M.input(opts, on_confirm)
   local parent_win = vim.api.nvim_get_current_win() ---@type integer
   local parent_win_cfg = vim.api.nvim_win_get_config(parent_win)
+  local parent_cursor = vim.api.nvim_win_get_cursor(parent_win)
 
   opts = opts or {} ---@type fml.dressing.input.IOptions
   local prompt = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string
@@ -81,17 +87,17 @@ function M.input(opts, on_confirm)
 
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     zindex = parent_win_cfg.zindex and parent_win_cfg.zindex + 1 or nil,
-    relative = "cursor",
+    relative = opts.relative or "cursor",
     anchor = "NW",
     focusable = true,
-    row = -3,
-    col = 0,
+    row = opts.row or (parent_cursor[1] < 5 and 1 or -3),
+    col = opts.col or 0,
+    width = opts.width or 60,
+    height = 1,
     title = "  " .. prompt .. " ",
     title_pos = "center",
     border = "rounded",
     style = "minimal",
-    width = 60,
-    height = 1,
     noautocmd = true,
   })
   vim.wo[winnr].cursorline = false

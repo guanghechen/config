@@ -38,11 +38,13 @@ local config = {
   url_patterns = {
     ["github%.com"] = {
       branch = "/tree/{branch}",
-      file = "/blob/{branch}/{file}#L{line}",
+      file = "/blob/{branch}/{file}#L{line_start}-L{line_end}",
+      commit = "/commit/{commit}",
     },
     ["gitlab%.com"] = {
       branch = "/-/tree/{branch}",
-      file = "/-/blob/{branch}/{file}#L{line}",
+      file = "/-/blob/{branch}/{file}#L{line_start}-L{line_end}",
+      commit = "/-/commit/{commit}",
     },
   },
 }
