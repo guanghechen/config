@@ -325,7 +325,6 @@ function M.watch_changes(params)
 
   M.observe({
     M.status.lsp_msg,
-    M.status.recording_reg,
   }, function()
     M.status.dirtier_statusline:mark_dirty()
   end)

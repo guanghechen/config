@@ -159,8 +159,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
 
 vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
   callback = function()
-    local current = vim.fn.reg_recording() ---@type string
-    state.status.recording_reg:next(current)
+    state.status.dirtier_statusline:mark_dirty()
   end,
 })
 
