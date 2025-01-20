@@ -10,7 +10,7 @@ local on_init = require("guanghechen.lsp.common").on_init
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
   client.commands["_typescript.moveToFileRefactoring"] = function(lsp_command)
-    local action, uri, range = unpack(lsp_command.arguments)
+    local action, uri, range = table.unpack(lsp_command.arguments)
     ---@cast action                     string
     ---@cast uri                        string
     ---@cast range                      lsp.Range

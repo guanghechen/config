@@ -54,9 +54,6 @@ function M.save(context)
 
     vim.ui.input({
       relative = "editor",
-      row = 3,
-      col = math.floor((vim.o.columns - 60) / 2),
-      width = 60,
       prompt = "Save file as",
       default = initial_text,
     }, function(text)

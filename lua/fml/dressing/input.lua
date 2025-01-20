@@ -2,9 +2,7 @@ local fn = require("eve.builtin.fn")
 local ft = require("eve.constant.filetype")
 
 ---@class fml.dressing.input.IOptions
----@field public relative               ?string
----@field public row                    ?integer
----@field public col                    ?integer
+---@field public relative               ?"editor"|"cursor"
 ---@field public width                  ?integer
 ---
 ---@field public prompt                 ?string
@@ -67,9 +65,9 @@ end
 ---@param on_confirm                    fun(value: string|nil): nil
 ---@return integer
 function M.input(opts, on_confirm)
-  local parent_win = vim.api.nvim_get_current_win() ---@type integer
-  local parent_win_cfg = vim.api.nvim_win_get_config(parent_win)
-  local parent_cursor = vim.api.nvim_win_get_cursor(parent_win)
+  local parent_winnr = vim.api.nvim_get_current_win() ---@type integer
+  local parent_win_cfg = vim.api.nvim_win_get_config(parent_winnr)
+  local parent_row, parent_col = table.unpack(vim.api.nvim_win_get_cursor(parent_winnr))
 
   opts = opts or {} ---@type fml.dressing.input.IOptions
   local prompt = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string
@@ -85,14 +83,18 @@ function M.input(opts, on_confirm)
   vim.bo[bufnr].swapfile = false
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
 
+  local relative = opts.relative or "cursor"
+  local width = opts.width or 60 ---@type integer
+  local row = relative == "editor" and 3 or (parent_row < 5 and parent_row + 2 or parent_row - 2) ---@type integer
+  local col = relative == "editor" and math.floor((vim.o.columns - width) / 2) or parent_col ---@type integer
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     zindex = parent_win_cfg.zindex and parent_win_cfg.zindex + 1 or nil,
-    relative = opts.relative or "cursor",
+    relative = "editor",
     anchor = "NW",
     focusable = true,
-    row = opts.row or (parent_cursor[1] < 5 and 1 or -3),
-    col = opts.col or 0,
-    width = opts.width or 60,
+    row = row,
+    col = col,
+    width = width,
     height = 1,
     title = "  " .. prompt .. " ",
     title_pos = "center",
@@ -104,6 +106,7 @@ function M.input(opts, on_confirm)
   vim.wo[winnr].number = false
   vim.wo[winnr].relativenumber = false
   vim.wo[winnr].signcolumn = "no"
+  vim.wo[winnr].winfixbuf = true
   vim.api.nvim_win_set_cursor(winnr, { 1, #default + 1 })
 
   ---@type fml.dressing.input.IContext
@@ -126,8 +129,8 @@ function M.input(opts, on_confirm)
 
         vim.api.nvim_win_close(winnr, true)
         vim.schedule(function()
-          if vim.api.nvim_win_is_valid(parent_win) then
-            vim.api.nvim_set_current_win(parent_win)
+          if vim.api.nvim_win_is_valid(parent_winnr) then
+            vim.api.nvim_set_current_win(parent_winnr)
           end
           on_confirm()
         end)
@@ -144,8 +147,8 @@ function M.input(opts, on_confirm)
 
         vim.api.nvim_win_close(winnr, true)
         vim.schedule(function()
-          if vim.api.nvim_win_is_valid(parent_win) then
-            vim.api.nvim_set_current_win(parent_win)
+          if vim.api.nvim_win_is_valid(parent_winnr) then
+            vim.api.nvim_set_current_win(parent_winnr)
           end
           on_confirm(text)
         end)
