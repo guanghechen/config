@@ -32,6 +32,7 @@ M.STARTUPTIME = "startuptime"
 M.TERM = "term"
 M.TEMP_VIWER = "temp-viewer"
 M.TROUBLE = "Trouble"
+M.UX_INPUT = "ux-input"
 M.WINPICKER_MASK = "winpicker-mask"
 M.WINSEP = "winsep"
 
@@ -121,6 +122,7 @@ local filetypes = {
     [M.TEMP_VIWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
+    [M.UX_INPUT] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
   },
@@ -161,6 +163,7 @@ local filetypes = {
     [M.TEMP_VIWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
+    [M.UX_INPUT] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
   },
@@ -192,6 +195,7 @@ local filetypes = {
     [M.TEMP_VIWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
+    [M.UX_INPUT] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
   },
@@ -240,6 +244,7 @@ local filetypes = {
     [M.TEMP_VIWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
+    [M.UX_INPUT] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
   },

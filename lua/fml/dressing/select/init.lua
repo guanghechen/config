@@ -1,4 +1,3 @@
-local Observable = require("eve.collection.observable")
 local state = require("eve.state")
 
 local Select = require("fml.ux.select")
