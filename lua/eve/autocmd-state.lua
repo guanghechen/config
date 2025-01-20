@@ -150,11 +150,17 @@ vim.api.nvim_create_autocmd("LspProgress", {
     local str = progress .. (data.message or "") .. " " .. (data.title or "")
     local lsp_msg = data.kind == "end" and "" or str ---@type string
     state.status.lsp_msg:next(lsp_msg)
-    state.status.dirtier_statusline:mark_dirty()
 
     if data.kind == "end" then
       state.status.suppress_warning:next(false)
     end
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
+  callback = function()
+    local current = vim.fn.reg_recording() ---@type string
+    state.status.recording_reg:next(current)
   end,
 })
 

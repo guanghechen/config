@@ -15,8 +15,9 @@ local Ticker = require("eve.collection.ticker")
 ---
 ---@field public lsp_msg                string
 ---@field public maximized_winnrs       table<integer, boolean>
----@field public tmux_zen_mode          boolean
+---@field public recording_reg          string
 ---@field public suppress_warning       boolean
+---@field public tmux_zen_mode          boolean
 
 ---@class eve.state.status.state
 ---@field public ticker_editor          eve.collection.ITicker
@@ -29,8 +30,9 @@ local Ticker = require("eve.collection.ticker")
 ---
 ---@field public lsp_msg                eve.collection.IObservable
 ---@field public maximized_winnrs       table<integer, boolean>
----@field public tmux_zen_mode          eve.collection.IObservable
+---@field public recording_reg          eve.collection.IObservable
 ---@field public suppress_warning       eve.collection.IObservable
+---@field public tmux_zen_mode          eve.collection.IObservable
 ---
 ---@field public reset                  fun(): nil
 
@@ -57,8 +59,9 @@ function M.defaults()
 
     lsp_msg = "",
     maximized_winnrs = {},
-    tmux_zen_mode = tmux.is_tmux_pane_zoomed(),
+    recording_reg = "",
     suppress_warning = false,
+    tmux_zen_mode = tmux.is_tmux_pane_zoomed(),
   }
 end
 
@@ -94,8 +97,9 @@ function M.dump()
 
     lsp_msg = _state.lsp_msg:snapshot(),
     maximized_winnrs = vim.tbl_extend("force", {}, _state.lsp_msg:snapshot()),
-    tmux_zen_mode = _state.tmux_zen_mode:snapshot(),
+    recording_reg = _state.recording_reg:snapshot(),
     suppress_warning = _state.suppress_warning:snapshot(),
+    tmux_zen_mode = _state.tmux_zen_mode:snapshot(),
   }
 end
 
@@ -118,16 +122,18 @@ function M.load(raw_data)
 
       lsp_msg = Observable.from_value(""),
       maximized_winnrs = {},
-      tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
+      recording_reg = Observable.from_value("", fn.falsy),
       suppress_warning = Observable.from_value(false),
+      tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
 
       reset = function()
         ---@cast _state                 eve.state.status.state
 
         _state.lsp_msg:next("")
         _state.maximized_winnrs = {}
-        _state.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
+        _state.recording_reg:next(false)
         _state.suppress_warning:next(false)
+        _state.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
         _state.dirtier_statusline:mark_dirty()
         _state.dirtier_tabline:mark_dirty()
         _state.dirty_winline_nr:next(0)

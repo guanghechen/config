@@ -323,6 +323,13 @@ function M.watch_changes(params)
     end)
   end, true)
 
+  M.observe({
+    M.status.lsp_msg,
+    M.status.recording_reg,
+  }, function()
+    M.status.dirtier_statusline:mark_dirty()
+  end)
+
   local editor_states_save_scheduler = Scheduler.new({
     name = "eve.state#editor/save",
     delay = 200,
