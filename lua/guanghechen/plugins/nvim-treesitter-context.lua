@@ -1,3 +1,6 @@
+local Subscriber = require("eve.collection.subscriber")
+local state = require("eve.state")
+
 ---! https://github.com/nvim-treesitter/nvim-treesitter-context
 return {
   name = "nvim-treesitter-context",
@@ -13,4 +16,21 @@ return {
     trim_scope = "outer",
     zindex = 30,
   },
+  config = function(_, opts)
+    local tsc = require("treesitter-context")
+    tsc.setup(opts)
+
+    state.flight.treesitter_context:subscribe(
+      Subscriber.new({
+        on_next = function(flag)
+          if flag then
+            tsc.enable()
+          else
+            tsc.disable()
+          end
+        end,
+      }),
+      false
+    )
+  end,
 }
