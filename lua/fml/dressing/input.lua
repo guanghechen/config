@@ -40,8 +40,8 @@ end
 ---@return integer
 function M.input(opts, on_confirm)
   local parent_winnr = vim.api.nvim_get_current_win() ---@type integer
-  local parent_win_cfg = vim.api.nvim_win_get_config(parent_winnr)
-  local parent_row, parent_col = table.unpack(vim.api.nvim_win_get_cursor(parent_winnr))
+  local parent_win_cfg = vim.api.nvim_win_get_config(parent_winnr) ---@type vim.api.keyset.win_config
+  local parent_row = table.unpack(vim.api.nvim_win_get_cursor(parent_winnr))
 
   opts = opts or {} ---@type fml.dressing.input.IOptions
   local prompt = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string
@@ -59,11 +59,11 @@ function M.input(opts, on_confirm)
 
   local relative = opts.relative or "cursor"
   local width = opts.width or 60 ---@type integer
-  local row = relative == "editor" and 3 or (parent_row < 5 and parent_row + 2 or parent_row - 2) ---@type integer
-  local col = relative == "editor" and math.floor((vim.o.columns - width) / 2) or parent_col ---@type integer
+  local row = relative == "editor" and 3 or (parent_row < 5 and 2 or 2) ---@type integer
+  local col = relative == "editor" and math.floor((vim.o.columns - width) / 2) or 0 ---@type integer
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     zindex = parent_win_cfg.zindex and parent_win_cfg.zindex + 1 or nil,
-    relative = "editor",
+    relative = relative,
     anchor = "NW",
     focusable = true,
     row = row,

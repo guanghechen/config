@@ -1,4 +1,5 @@
 local state = require("eve.state")
+local Subscriber = require("eve.collection.subscriber")
 
 local Select = require("fml.ux.select")
 
@@ -26,11 +27,14 @@ local states_by_title = {
   ["(Avante) Add a file"] = state.select.select_avante,
 }
 
+---@class fml.dressing.select
+local M = {}
+
 ---@param items                         any[]
 ---@param opts                          fml.dressing.select.IOptions
 ---@param on_choice                     fun(item: any|nil, idx: integer|nil): nil
 ---@return nil
-local function select(items, opts, on_choice)
+function M.select(items, opts, on_choice)
   local title = (opts.prompt or opts.kind or "--"):gsub(":$", "") ---@type string
   local kind = opts.kind or "fallback" ---@type string
   local create_provider = providers[kind] or providers.fallback ---@type fml.dressing.select.IProvider
@@ -83,4 +87,18 @@ local function select(items, opts, on_choice)
   _selector:show()
 end
 
-vim.ui.select = select
+local original_select = vim.ui.select
+state.flight.dressing_select:subscribe(
+  Subscriber.new({
+    on_next = function(flag)
+      if flag then
+        vim.ui.select = M.select
+      else
+        vim.ui.select = original_select
+      end
+    end,
+  }),
+  false
+)
+
+return M
