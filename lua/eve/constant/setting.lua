@@ -22,6 +22,7 @@ M.flights = {
   "autosave",
   "devmode",
   "dressing_hipairs",
+  "dressing_input",
   "dressing_winsep_fixed",
   "dressing_winsep_float",
   "lsp_inlay_hints",

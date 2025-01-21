@@ -1,5 +1,7 @@
 local fn = require("eve.builtin.fn")
+local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
+local state = require("eve.state")
 
 ---@class fml.dressing.input.IOptions
 ---@field public relative               ?"editor"|"cursor"
@@ -14,37 +16,9 @@ local ft = require("eve.constant.filetype")
 ---@field public opts                   fml.dressing.input.IOptions
 
 local ctx = { opts = {} } ---@type fml.dressing.input.IContext
-local enabled = false ---@type boolean
-local original_input = vim.ui.input
 
 ---@class fml.dressing.input
 local M = {}
-
----@return nil
-function M.enable()
-  vim.ui.input = M.input
-  enabled = true
-end
-
----@return nil
-function M.disable()
-  vim.ui.input = original_input
-  enabled = false
-end
-
----@return nil
-function M.toggle()
-  if enabled then
-    M.disable()
-  else
-    M.enable()
-  end
-end
-
----@return boolean
-function M.is_enabled()
-  return enabled
-end
 
 ---@param findstart                     integer
 ---@param base                          string
@@ -171,5 +145,19 @@ function M.input(opts, on_confirm)
 
   return winnr
 end
+
+local original_input = vim.ui.input
+state.flight.dressing_input:subscribe(
+  Subscriber.new({
+    on_next = function(flag)
+      if flag then
+        vim.ui.input = M.input
+      else
+        vim.ui.input = original_input
+      end
+    end,
+  }),
+  false
+)
 
 return M

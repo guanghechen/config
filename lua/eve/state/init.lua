@@ -288,6 +288,7 @@ function M.watch_changes(params)
     M.flight.autosave,
     M.flight.devmode,
     M.flight.dressing_hipairs,
+    M.flight.dressing_input,
     M.flight.dressing_winsep_fixed,
     M.flight.dressing_winsep_float,
     M.flight.lsp_inlay_hints,

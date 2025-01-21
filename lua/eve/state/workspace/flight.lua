@@ -11,6 +11,7 @@ local setting = require("eve.constant.setting")
 ---@field public devmode                boolean
 ---
 ---@field public dressing_hipairs       boolean
+---@field public dressing_input         boolean
 ---@field public dressing_winsep_fixed  boolean
 ---@field public dressing_winsep_float  boolean
 ---
@@ -28,6 +29,7 @@ local setting = require("eve.constant.setting")
 ---@field public devmode                eve.collection.IObservable
 ---
 ---@field public dressing_hipairs       eve.collection.IObservable
+---@field public dressing_input         eve.collection.IObservable
 ---@field public dressing_winsep_fixed  eve.collection.IObservable
 ---@field public dressing_winsep_float  eve.collection.IObservable
 ---
@@ -117,6 +119,7 @@ function M.defaults()
     devmode = is_home_config_dir,
 
     dressing_hipairs = true,
+    dressing_input = true,
     dressing_winsep_fixed = true,
     dressing_winsep_float = false,
 
@@ -151,6 +154,9 @@ function M.normalize(data)
 
     if type(data.dressing_hipairs) == "boolean" then
       resolved.dressing_hipairs = data.dressing_hipairs
+    end
+    if type(data.dressing_input) == "boolean" then
+      resolved.dressing_input = data.dressing_input
     end
     if type(data.dressing_winsep_fixed) == "boolean" then
       resolved.dressing_winsep_fixed = data.dressing_winsep_fixed
@@ -191,6 +197,7 @@ function M.dump()
     devmode = _state.devmode:snapshot(),
 
     dressing_hipairs = _state.dressing_hipairs:snapshot(),
+    dressing_input = _state.dressing_input:snapshot(),
     dressing_winsep_fixed = _state.dressing_winsep_fixed:snapshot(),
     dressing_winsep_float = _state.dressing_winsep_float:snapshot(),
 
@@ -217,6 +224,7 @@ function M.load(raw_data)
       devmode = Observable.from_value(data.devmode),
 
       dressing_hipairs = Observable.from_value(data.dressing_hipairs),
+      dressing_input = Observable.from_value(data.dressing_input),
       dressing_winsep_fixed = Observable.from_value(data.dressing_winsep_fixed),
       dressing_winsep_float = Observable.from_value(data.dressing_winsep_float),
 
@@ -236,6 +244,7 @@ function M.load(raw_data)
   _state.devmode:next(data.devmode)
 
   _state.dressing_hipairs:next(data.dressing_hipairs)
+  _state.dressing_input:next(data.dressing_input)
   _state.dressing_winsep_fixed:next(data.dressing_winsep_fixed)
   _state.dressing_winsep_float:next(data.dressing_winsep_float)
 
