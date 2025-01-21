@@ -39,6 +39,12 @@ local conds = {
   not_vscode = function()
     return not vim.g.vscode
   end,
+  smear_cursor = function()
+    if vim.g.vscode or vim.g.neovide then
+      return false
+    end
+    return env.IS_WSL or env.IS_WIN
+  end,
   treesitter_context = function()
     return not vim.g.vscode and state.flight.treesitter_context:snapshot()
   end,
@@ -85,6 +91,7 @@ local raw_specs = {
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects", cond = conds.not_vscode },
   { name = "plenary.nvim", main = "plenary", cond = conds.not_vscode },
   { name = "render-markdown.nvim", main = "render-markdown", cond = conds.not_vscode },
+  { name = "smear-cursor.nvim", main = "smear_cursor", cond = conds.smear_cursor },
   { name = "trouble.nvim", main = "trouble", cond = conds.not_vscode },
   { name = "vim-illuminate", main = "illuminate", cond = conds.not_vscode },
   { name = "which-key.nvim", main = "which-key", cond = conds.not_vscode },

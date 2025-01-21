@@ -11,7 +11,7 @@ local function gen_hlgroup_map(context)
   ---@type table<string, eve.t.theme.IHlgroup>
   local hlgroup_map = {
     ---cursor
-    Cursor = { fg = c.bg1, bg = c.fg1 },
+    Cursor = { fg = c.bg1, bg = c.pink },
     CursorColumn = { bg = c.bg1 },
     CursorLine = { bg = c.bg1 },
     CursorLineNr = { fg = c.fg2, bg = c.bg1, bold = true },
