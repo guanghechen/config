@@ -44,7 +44,7 @@ function CloneOrUpdateRepo {
 foreach ($branch in $config_repo_branch) {
   CloneOrUpdateRepo -branch $branch $True
 }
-foreach ($branch in $config_repo_branch) {
+foreach ($branch in $optinal_config_repo_branch) {
   CloneOrUpdateRepo -branch $branch $False
 }
 
