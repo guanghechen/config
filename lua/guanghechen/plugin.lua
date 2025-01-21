@@ -40,10 +40,11 @@ local conds = {
     return not vim.g.vscode
   end,
   smear_cursor = function()
-    if vim.g.vscode or vim.g.neovide then
-      return false
-    end
-    return env.IS_WSL or env.IS_WIN
+    return false
+    -- if vim.g.vscode or vim.g.neovide then
+    --   return false
+    -- end
+    -- return env.IS_WSL or env.IS_WIN
   end,
   treesitter_context = function()
     return not vim.g.vscode and state.flight.treesitter_context:snapshot()
