@@ -13,10 +13,10 @@ return {
       },
     },
     routes = {
-      {
-        view = "notify",
-        filter = { event = "msg_showmode" },
-      },
+      -- {
+      --   view = "notify",
+      --   filter = { event = "msg_showmode" },
+      -- },
       {
         view = "mini",
         filter = {
@@ -52,8 +52,8 @@ return {
     { "<leader>snh", function() require("noice").cmd("history") end,                                desc = "Noice History" },
     { "<leader>sna", function() require("noice").cmd("all") end,                                    desc = "Noice All" },
     { "<leader>snd", function() require("noice").cmd("dismiss") end,                                desc = "Dismiss All" },
-    { "<C-f>",       function() if not require("noice.lsp").scroll(4) then return "<C-f>" end end,  silent = true,                           expr = true,              desc = "Scroll Forward",  mode = { "i", "n", "s" } },
-    { "<C-b>",       function() if not require("noice.lsp").scroll(-4) then return "<C-b>" end end, silent = true,                           expr = true,              desc = "Scroll Backward", mode = { "i", "n", "s" } },
+    { "<C-f>",       function() if not require("noice.lsp").scroll(4) then return "<C-f>" end end,  desc = "Scroll Forward",  silent = true, expr = true, mode = { "i", "n", "s" } },
+    { "<C-b>",       function() if not require("noice.lsp").scroll(-4) then return "<C-b>" end end, desc = "Scroll Backward", silent = true, expr = true, mode = { "i", "n", "s" } },
   },
   dependencies = {
     "nui.nvim",
