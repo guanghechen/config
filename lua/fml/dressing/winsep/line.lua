@@ -98,6 +98,7 @@ function M:create_buf_as_needed()
   end
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = ft.WINSEP
