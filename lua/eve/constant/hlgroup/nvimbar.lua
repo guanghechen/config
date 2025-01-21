@@ -36,7 +36,7 @@ local function gen_hlgroup_map(context)
     ai_status_Normal = { fg = c.fg1, bg = "bg_bar" },
     ai_status_Warning = { fg = c.yellow, bg = "bg_bar" },
     buf = { fg = c.bg4, bg = "bg_bar" },
-    buf_indicator = { fg = c.purple, bg = bg_bufc, bold = true },
+    buf_indicator = { fg = c.purple, bg = bg_bufc, bold = true, underline = true, sp = c.purple },
     buf_mod = { fg = c.fg4, bg = "bg_bar" },
     buf_omitter = { fg = c.blue, bg = "bg_bar" },
     buf_omitter_sep = { fg = c.bg4, bg = "bg_bar" },
@@ -44,15 +44,15 @@ local function gen_hlgroup_map(context)
     buf_order = { fg = c.fg4, bg = "bg_bar" },
     buf_sep = { fg = c.fg4, bg = "bg_bar" },
     buf_text = { fg = c.fg4, bg = "bg_bar" },
-    bufc = { fg = c.fg2, bg = bg_bufc },
-    bufc_mod = { fg = c.green, bg = bg_bufc },
-    bufc_pinned = { fg = c.fg0, bg = bg_bufc },
-    bufc_order = { fg = c.fg0, bg = bg_bufc },
-    bufc_text = { fg = c.fg2, bg = bg_bufc, bold = true, italic = true },
-    bufc_error = { fg = c.red, bg = bg_bufc, bold = true, italic = true },
-    bufc_warn = { fg = c.yellow, bg = bg_bufc, bold = true, italic = true },
-    bufc_hint = { fg = c.purple, bg = bg_bufc, bold = true, italic = true },
-    bufc_info = { fg = c.green, bg = bg_bufc, bold = true, italic = true },
+    bufc = { fg = c.fg2, bg = bg_bufc, underline = true, sp = c.purple },
+    bufc_mod = { fg = c.green, bg = bg_bufc, underline = true, sp = c.purple },
+    bufc_pinned = { fg = c.fg0, bg = bg_bufc, underline = true, sp = c.purple },
+    bufc_order = { fg = c.fg0, bg = bg_bufc, underline = true, sp = c.purple },
+    bufc_text = { fg = c.fg2, bg = bg_bufc, bold = true, italic = true, underline = true, sp = c.purple },
+    bufc_error = { fg = c.red, bg = bg_bufc, bold = true, italic = true, underline = true, sp = c.purple },
+    bufc_warn = { fg = c.yellow, bg = bg_bufc, bold = true, italic = true, underline = true, sp = c.purple },
+    bufc_hint = { fg = c.purple, bg = bg_bufc, bold = true, italic = true, underline = true, sp = c.purple },
+    bufc_info = { fg = c.green, bg = bg_bufc, bold = true, italic = true, underline = true, sp = c.purple },
     copilot_InProgress = { fg = c.aqua, bg = "bg_bar" },
     copilot_Inactive = { fg = c.red, bg = "bg_bar" },
     copilot_Normal = { fg = c.fg1, bg = "bg_bar" },
@@ -201,18 +201,18 @@ local function gen_hlgroup_map(context)
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type fml.ux.nvimbar.Position[]
 
   ---@class eve.constant.hlgroup.nvimbar : table<string, eve.theme.IHlgroup>
-  ---@field public f_sl_bg              { bg: string }
-  ---@field public f_tl_bg              { bg: string }
-  ---@field public f_wl_bg              { bg: string }
-  ---@field public f_sl_buf             { bg: string }
-  ---@field public f_tl_buf             { bg: string }
-  ---@field public f_wl_buf             { bg: string }
-  ---@field public f_sl_bufc         { bg: string }
-  ---@field public f_tl_bufc         { bg: string }
-  ---@field public f_wl_bufc         { bg: string }
-  ---@field public f_sl_filename        { bg: string }
-  ---@field public f_tl_filename        { bg: string }
-  ---@field public f_wl_filename        { bg: string }
+  ---@field public f_sl_bg              { bg: string, sp?: string }
+  ---@field public f_tl_bg              { bg: string, sp?: string }
+  ---@field public f_wl_bg              { bg: string, sp?: string }
+  ---@field public f_sl_buf             { bg: string, sp?: string }
+  ---@field public f_tl_buf             { bg: string, sp?: string }
+  ---@field public f_wl_buf             { bg: string, sp?: string }
+  ---@field public f_sl_bufc            { bg: string, sp?: string }
+  ---@field public f_tl_bufc            { bg: string, sp?: string }
+  ---@field public f_wl_bufc            { bg: string, sp?: string }
+  ---@field public f_sl_filename        { bg: string, sp?: string }
+  ---@field public f_tl_filename        { bg: string, sp?: string }
+  ---@field public f_wl_filename        { bg: string, sp?: string }
   local results = {}
   for _, position in ipairs(positions) do
     for hlname, hlgroup in pairs(hlgroup_map) do

@@ -169,9 +169,24 @@ function M.load(raw_data)
                   additional["f_tl_buf_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_tl_buf.bg }
                   additional["f_wl_buf_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_wl_buf.bg }
 
-                  additional["f_sl_bufc_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bufc.bg }
-                  additional["f_tl_bufc_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_tl_bufc.bg }
-                  additional["f_wl_bufc_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_wl_bufc.bg }
+                  additional["f_sl_bufc_" .. hlname] = {
+                    fg = hlgroup.fg,
+                    bg = nvimbar_hlgroup_map.f_sl_bufc.bg,
+                    underline = true,
+                    sp = nvimbar_hlgroup_map.f_sl_bufc.sp,
+                  }
+                  additional["f_tl_bufc_" .. hlname] = {
+                    fg = hlgroup.fg,
+                    bg = nvimbar_hlgroup_map.f_tl_bufc.bg,
+                    underline = true,
+                    sp = nvimbar_hlgroup_map.f_tl_bufc.sp,
+                  }
+                  additional["f_wl_bufc_" .. hlname] = {
+                    fg = hlgroup.fg,
+                    bg = nvimbar_hlgroup_map.f_wl_bufc.bg,
+                    underline = true,
+                    sp = nvimbar_hlgroup_map.f_wl_bufc.sp,
+                  }
 
                   additional["f_sl_filename_" .. hlname] =
                     { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_filename.bg }
