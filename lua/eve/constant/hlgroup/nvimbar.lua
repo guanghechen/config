@@ -200,7 +200,7 @@ local function gen_hlgroup_map(context)
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type fml.ux.nvimbar.Position[]
 
-  ---@class eve.constant.hlgroup.nvimbar : table<string, eve.theme.IHlgroup>
+  ---@class eve.constant.hlgroup.nvimbar : table<string, eve.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }
   ---@field public f_tl_bg              { bg: string, sp?: string }
   ---@field public f_wl_bg              { bg: string, sp?: string }
@@ -219,8 +219,13 @@ local function gen_hlgroup_map(context)
       results[position .. "_" .. hlname] = {
         fg = hlgroup.fg == "bg_bar" and bgs[position] or hlgroup.fg,
         bg = hlgroup.bg == "bg_bar" and bgs[position] or hlgroup.bg,
+        sp = hlgroup.sp,
         bold = hlgroup.bold,
         italic = hlgroup.italic,
+        link = hlgroup.link,
+        reverse = hlgroup.reverse,
+        strikethrough = hlgroup.strikethrough,
+        undercurl = hlgroup.undercurl,
         underline = hlgroup.underline,
       }
     end
