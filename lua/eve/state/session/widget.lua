@@ -98,6 +98,8 @@ S = {
       { modes = { "n", "v" }, key = "q", callback = S.close_present, desc = "widget: close present" },
       { modes = { "i", "n", "t", "v" }, key = "<C-a>i", callback = S.backward, desc = "widget: backward" },
       { modes = { "i", "n", "t", "v" }, key = "<C-a>o", callback = S.forward, desc = "widget: forward" },
+      { modes = { "i", "n", "t", "v" }, key = "<D-i>", callback = S.backward, desc = "widget: backward" },
+      { modes = { "i", "n", "t", "v" }, key = "<D-o>", callback = S.forward, desc = "widget: forward" },
       { modes = { "i", "n", "t", "v" }, key = "<M-i>", callback = S.backward, desc = "widget: backward" },
       { modes = { "i", "n", "t", "v" }, key = "<M-o>", callback = S.forward, desc = "widget: forward" },
     }

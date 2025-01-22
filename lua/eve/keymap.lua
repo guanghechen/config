@@ -2,31 +2,52 @@ local command = require("eve.command")
 local K = command.definitions ---@type eve.command.definitions
 
 ---@param modes                         string[]
----@param key                           string
+---@param keys                          string|string[]
 ---@param cmd                           string
 ---@param desc                          ?string
-local function mk(modes, key, cmd, desc)
-  vim.keymap.set(modes, key, cmd, {
+local function mk(modes, keys, cmd, desc)
+  ---@type vim.keymap.set.Opts
+  local opts = {
     noremap = true,
     silent = true,
     nowait = true,
     desc = desc,
-  })
+  }
+
+  if type(keys) == "string" then
+    vim.keymap.set(modes, keys, cmd, opts)
+  else
+    for _, key in ipairs(keys) do
+      vim.keymap.set(modes, key, cmd, opts)
+    end
+  end
 end
 
 ---@param modes                         string[]
----@param key                           string
+---@param keys                          string|string[]
 ---@param definition                    eve.command.IDefinition|eve.command.IDefinitionWithCandidates
 ---@return nil
-local function kk(modes, key, definition)
-  vim.keymap.set(modes, key, function()
+local function kk(modes, keys, definition)
+  ---@return nil
+  local function callback()
     vim.cmd(definition.uuid)
-  end, {
+  end
+
+  ---@type vim.keymap.set.Opts
+  local opts = {
     noremap = true,
     silent = true,
     nowait = true,
     desc = definition.desc,
-  })
+  }
+
+  if type(keys) == "string" then
+    vim.keymap.set(modes, keys, callback, opts)
+  else
+    for _, key in ipairs(keys) do
+      vim.keymap.set(modes, key, callback, opts)
+    end
+  end
 end
 
 --#enhance------------------------------------------------------------------------------------------
@@ -73,16 +94,11 @@ mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back")
 mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward")
 
 ----- better copy/paste list -----
-mk({ "i", "n", "v" }, "<C-a>a", "<esc>gg0vG$", "system: select all")
-mk({ "i", "n", "v" }, "<M-a>", "<esc>gg0vG$", "system: select all")
-mk({ "i", "n", "v" }, "<C-a>v", '<esc>"+p', "system: paste from clipboard")
-mk({ "i", "n", "v" }, "<M-v>", '<esc>"+p', "system: paste from clipboard")
-mk({ "v" }, "<C-a>c", '"+y', "system: copy to clipboard")
-mk({ "v" }, "<M-c>", '"+y', "system: copy to clipboard")
-mk({ "v" }, "<C-a>x", '"+x', "system: cut to clipboard")
-mk({ "v" }, "<M-x>", '"+x', "system: cut to clipboard")
-kk({ "n" }, "<C-a>c", K.copy.char_under_cursor)
-kk({ "n" }, "<M-c>", K.copy.char_under_cursor)
+mk({ "i", "n", "v" }, { "<C-a>a", "<D-a>", "<M-a>" }, "<esc>gg0vG$", "system: select all")
+mk({ "i", "n", "v" }, { "<C-a>v", "<D-v>", "<M-v>" }, '<esc>"+p', "system: paste from clipboard")
+mk({ "v" }, { "<C-a>c", "<D-c>", "<M-c>" }, '"+y', "system: copy to clipboard")
+mk({ "v" }, { "<C-a>x", "<D-x>", "<M-x>" }, '"+x', "system: cut to clipboard")
+kk({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)
 
 --- quick access widgets (diagnostic, explorer, terminal) -----
 kk({ "n", "t", "v" }, "<leader>`", K.ux.resume_last_widget)
@@ -106,8 +122,7 @@ kk({ "n", "v" }, "<leader>aX", K.ai.copilot_chat_reset)
 ---------------------------------------------------------------------------------------------#[a]i--
 
 --#[b]uf--------------------------------------------------------------------------------------------
-kk({ "i", "n", "v" }, "<C-a>s", K.buf.save)
-kk({ "i", "n", "v" }, "<M-s>", K.buf.save)
+kk({ "i", "n", "v" }, { "<C-a>s", "<D-s>", "<M-s>" }, K.buf.save)
 kk({ "n", "v" }, "<leader>[", K.buf.focus_left)
 kk({ "n", "v" }, "<leader>]", K.buf.focus_right)
 kk({ "n", "v" }, "<leader>{", K.buf.swap_left)
@@ -194,8 +209,7 @@ kk({ "n" }, "<leader>cs", K.code.swap_conditional_branches)
 -------------------------------------------------------------------------------------------#[c]ode--
 
 --#[c]opy-------------------------------------------------------------------------------------------
-kk({ "i", "n", "v" }, "<C-a>C", K.copy.filepath)
-kk({ "i", "n", "v" }, "<M-C>", K.copy.filepath)
+kk({ "i", "n", "v" }, { "<C-a>C", "<D-C>", "<M-C>" }, K.copy.filepath)
 -----------------------------------------------------------------------------------------#[c]opy----
 
 --#[d]ebug------------------------------------------------------------------------------------------
@@ -248,8 +262,7 @@ kk({ "i", "n", "v" }, "<leader>pp", K.clipboard.paste)
 ------------------------------------------------------------------------------------#[p] clipboard--
 
 --#[r]efresh----------------------------------------------------------------------------------------
-kk({ "i", "n", "v" }, "<C-a>r", K.refresh.all)
-kk({ "i", "n", "v" }, "<M-r>", K.refresh.all)
+kk({ "i", "n", "v" }, { "<C-a>r", "<D-r>", "<M-r>" }, K.refresh.all)
 ---------------------------------------------------------------------------------------#[r]efresh---
 
 --#[r]eplace----------------------------------------------------------------------------------------
@@ -261,8 +274,7 @@ kk({ "n", "v" }, "<leader>rw", K.replace.files_in_workspace)
 ---------------------------------------------------------------------------------------#[r]eplace---
 
 --#[s]earch-----------------------------------------------------------------------------------------
-kk({ "i", "n", "v" }, "<C-a>f", K.search.files_in_buffer)
-kk({ "i", "n", "v" }, "<M-f>", K.search.files_in_buffer)
+kk({ "i", "n", "v" }, { "<C-a>f", "<D-f>", "<M-f>" }, K.search.files_in_buffer)
 kk({ "n", "v" }, "<leader>ss", K.search.files)
 kk({ "n", "v" }, "<leader>sb", K.search.files_in_buffer)
 kk({ "n", "v" }, "<leader>sc", K.search.files_in_cwd)
@@ -296,17 +308,13 @@ kk({ "n", "v" }, "<leader>tn", K.tab.new_with_buf)
 --------------------------------------------------------------------------------------------#[t]ab--
 
 --#[t]erminal---------------------------------------------------------------------------------------
-kk({ "i", "n", "t", "v" }, "<C-a>g", K.term.lazygit_cwd)
-kk({ "i", "n", "t", "v" }, "<M-g>", K.term.lazygit_cwd)
-kk({ "i", "n", "t", "v" }, "<C-a>t", K.term.toggle_cwd)
-kk({ "i", "n", "t", "v" }, "<M-t>", K.term.toggle_cwd)
-kk({ "i", "n", "t", "v" }, "<C-a>y", K.term.yazi_cwd)
-kk({ "i", "n", "t", "v" }, "<M-y>", K.term.yazi_cwd)
+kk({ "i", "n", "t", "v" }, { "<C-a>g", "<D-g>", "<M-g>" }, K.term.lazygit_cwd)
+kk({ "i", "n", "t", "v" }, { "<C-a>t", "<D-t>", "<M-t>" }, K.term.toggle_cwd)
+kk({ "i", "n", "t", "v" }, { "<C-a>y", "<D-y>", "<M-y>" }, K.term.yazi_cwd)
 ---------------------------------------------------------------------------------------#[t]erminal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
-kk({ "i", "n", "v" }, "<C-a>T", K.toggle.theme_variant)
-kk({ "i", "n", "v" }, "<M-T>", K.toggle.theme_variant)
+kk({ "i", "n", "v" }, { "<C-a>T", "<D-T>", "<M-T>" }, K.toggle.theme_variant)
 kk({ "n", "v" }, "<leader>tF", K.toggle.flight)
 kk({ "n", "v" }, "<leader>tM", K.toggle.markdown)
 kk({ "n", "v" }, "<leader>tR", K.toggle.relativenumber)
@@ -322,26 +330,16 @@ kk({ "n", "v" }, "<leader>un", K.ux.dismiss_notifications)
 ---------------------------------------------------------------------------------------------#[u]x--
 
 --#[w]in--------------------------------------------------------------------------------------------
-kk({ "i", "n", "v" }, "<C-a><Left>", K.win.resize_vertical_minus)
-kk({ "i", "n", "v" }, "<C-a><Down>", K.win.resize_horizontal_minus)
-kk({ "i", "n", "v" }, "<C-a><Up>", K.win.resize_horizontal_plus)
-kk({ "i", "n", "v" }, "<C-a><Right>", K.win.resize_vertical_plus)
-kk({ "i", "n", "v" }, "<M-Left>", K.win.resize_vertical_minus)
-kk({ "i", "n", "v" }, "<M-Down>", K.win.resize_horizontal_minus)
-kk({ "i", "n", "v" }, "<M-Up>", K.win.resize_horizontal_plus)
-kk({ "i", "n", "v" }, "<M-Right>", K.win.resize_vertical_plus)
-kk({ "i", "n", "v" }, "<C-a>i", K.win.history_backward)
-kk({ "i", "n", "v" }, "<C-a>o", K.win.history_forward)
-kk({ "i", "n", "v" }, "<M-i>", K.win.history_backward)
-kk({ "i", "n", "v" }, "<M-o>", K.win.history_forward)
-kk({ "i", "n", "t", "v" }, "<C-a>h", K.win.focus_left)
-kk({ "i", "n", "t", "v" }, "<C-a>j", K.win.focus_bottom)
-kk({ "i", "n", "t", "v" }, "<C-a>k", K.win.focus_top)
-kk({ "i", "n", "t", "v" }, "<C-a>l", K.win.focus_right)
-kk({ "i", "n", "t", "v" }, "<M-h>", K.win.focus_left)
-kk({ "i", "n", "t", "v" }, "<M-j>", K.win.focus_bottom)
-kk({ "i", "n", "t", "v" }, "<M-k>", K.win.focus_top)
-kk({ "i", "n", "t", "v" }, "<M-l>", K.win.focus_right)
+kk({ "i", "n", "v" }, { "<C-a><Left>", "D-Left>", "M-Left>" }, K.win.resize_vertical_minus)
+kk({ "i", "n", "v" }, { "<C-a><Down>", "<D-Down>", "<M-Down>" }, K.win.resize_horizontal_minus)
+kk({ "i", "n", "v" }, { "<C-a><Up>", "<D-Up>", "<M-Up>" }, K.win.resize_horizontal_plus)
+kk({ "i", "n", "v" }, { "<C-a><Right>", "<D-Right>", "<M-Right>" }, K.win.resize_vertical_plus)
+kk({ "i", "n", "v" }, { "<C-a>i", "<D-i>", "<M-i>" }, K.win.history_backward)
+kk({ "i", "n", "v" }, { "<C-a>o", "<D-o>", "<M-o>" }, K.win.history_forward)
+kk({ "i", "n", "t", "v" }, { "<C-a>h", "<D-h>", "<M-h>" }, K.win.focus_left)
+kk({ "i", "n", "t", "v" }, { "<C-a>j", "<D-j>", "<M-j>" }, K.win.focus_bottom)
+kk({ "i", "n", "t", "v" }, { "<C-a>k", "<D-k>", "<M-k>" }, K.win.focus_top)
+kk({ "i", "n", "t", "v" }, { "<C-a>l", "<D-l>", "<M-l>" }, K.win.focus_right)
 kk({ "n", "v" }, "<leader>wd", K.win.close)
 kk({ "n", "v" }, "<leader>wh", K.win.history)
 kk({ "n", "v" }, "<leader>wl", K.win.split_right)

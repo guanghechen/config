@@ -105,6 +105,13 @@ local input_keymaps = {
   },
   {
     modes = { "n", "v" },
+    key = "<D-enter>",
+    callback = context.replace_file_all,
+    desc = "search: replace all files",
+    nowait = true,
+  },
+  {
+    modes = { "n", "v" },
     key = "<M-enter>",
     callback = context.replace_file_all,
     desc = "search: replace all files",
