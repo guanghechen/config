@@ -14,6 +14,7 @@ $config_repo_branch = @(
 $optinal_config_repo_branch = @(
   "alacritty",
   "kitty",
+  "neovide",
   "nvim-nvchad"
 )
 
