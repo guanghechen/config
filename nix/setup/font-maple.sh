@@ -13,12 +13,12 @@ else
 
   cd ~/download/fonts/Maple
 
-  printf "\n\e[34m  [setup font (Maple)] downloading MapleMonoNormalNL-NF-CN fonts...\e[0m\n"
-  wget https://github.com/guanghechen/mirror/releases/download/font/MapleMonoNormalNL-NF-CN-unhinted.zip
+  printf "\n\e[34m  [setup font (Maple)] downloading MapleMono-NF-CN fonts...\e[0m\n"
+  wget https://github.com/guanghechen/mirror/releases/download/font/MapleMono-NF-CN-unhinted.zip
 
-  printf "\n\e[34m  [setup font (Maple)] installing MapleMonoNormalNL fonts...\e[0m\n"
-  unzip MapleMonoNormalNL-NF-CN-unhinted.zip
-  rm -f MapleMonoNormalNL-NF-CN-unhinted.zip
+  printf "\n\e[34m  [setup font (Maple)] installing MapleMono fonts...\e[0m\n"
+  unzip MapleMono-NF-CN-unhinted.zip
+  rm -f MapleMono-NF-CN-unhinted.zip
   sudo cp -r ~/download/fonts/Maple "$FONT_DIR/"
   sudo fc-cache -f -v
 fi
