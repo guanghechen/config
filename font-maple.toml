@@ -2,19 +2,19 @@
 size = 15
 
 [font.bold]
-family = "Maple Mono Normal NL NF CN"
+family = "Maple Mono NF CN"
 style = "Bold"
 
 [font."bold_italic"]
-family = "Maple Mono Normal NL NF CN"
+family = "Maple Mono NF CN"
 style = "Bold Italic"
 
 [font.italic]
-family = "Maple Mono Normal NL NF CN"
+family = "Maple Mono NF CN"
 style = "Italic"
 
 [font.normal]
-family = "Maple Mono Normal NL NF CN"
+family = "Maple Mono NF CN"
 style = "Regular"
 
 # Offset is the extra space around each character.
