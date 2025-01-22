@@ -1,0 +1,22 @@
+[font]
+size = 16
+
+[font.features]
+"Maple Mono NF CN" =  ["+cv01", "+ss02", "+ss04", "+ss05", "+zero"]
+
+[font.bold]
+family = "Maple Mono NF CN"
+style = "Bold"
+
+[font.bold_italic]
+family = "Maple Mono NF CN"
+style = "Bold Italic"
+
+[font.italic]
+family = "Maple Mono NF CN"
+style = "Italic"
+
+[font.normal]
+family = "Maple Mono NF CN"
+style = "Normal"
+
