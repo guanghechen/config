@@ -7,7 +7,7 @@ local platform_config = require("ghc.platform." .. os_name)
 local config = {
 	font_size = platform_config.font_size or 15.0,
 	font = wezterm.font({
-		family = "Maple Mono Normal NL NF CN",
+		family = "Maple Mono NF CN",
 		weight = "Medium",
 	}),
 	font_rules = {
@@ -16,7 +16,7 @@ local config = {
 			intensity = "Normal",
 			italic = true,
 			font = wezterm.font({
-				family = "Maple Mono Normal NL NF CN",
+				family = "Maple Mono NF CN",
 				weight = "Medium",
 				style = "Italic",
 			}),
@@ -26,7 +26,7 @@ local config = {
 			intensity = "Bold",
 			italic = false,
 			font = wezterm.font({
-				family = "Maple Mono Normal NL NF CN",
+				family = "Maple Mono NF CN",
 				weight = "ExtraBold",
 			}),
 		},
@@ -35,7 +35,7 @@ local config = {
 			intensity = "Bold",
 			italic = true,
 			font = wezterm.font({
-				family = "Maple Mono Normal NL NF CN",
+				family = "Maple Mono NF CN",
 				weight = "ExtraBold",
 				style = "Italic",
 			}),
