@@ -58,6 +58,6 @@ do
     vim.g.terminal_color_14 = c.brightAqua
     vim.g.terminal_color_15 = c.fg1
 
-    vim.g.neovide_background_color = c.bg0 .. string.format("%x", math.floor(255 * (vim.g.transparency or 0.8)))
+    vim.g.neovide_theme = scheme.variant == "light" and "light" or "dark"
   end
 end
