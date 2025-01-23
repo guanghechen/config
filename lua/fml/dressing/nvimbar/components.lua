@@ -542,64 +542,6 @@ end
 
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
-function M.diffview(position)
-  local hln_sidebar_blank = position .. "_sidebar_blank" ---@type string
-  local hln_sidebar_split = position .. "_sidebar_split" ---@type string
-  local hln_sidebar_text = position .. "_sidebar_text" ---@type string
-
-  ---@return integer
-  local function get_pane_width()
-    local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
-    for _, winnr in ipairs(winnrs) do
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype == ft.DIFFVIEW_FILES then
-        if not fn.is_win_floating(winnr) then
-          return vim.api.nvim_win_get_width(winnr)
-        end
-      end
-    end
-    return 0
-  end
-
-  ---@type fml.ux.nvimbar.IRawComponent
-  local component = {
-    name = "diffview",
-    atomic = true,
-    ---@diagnostic disable-next-line: unused-local
-    render = function(context, remain_width)
-      local width = math.min(remain_width, get_pane_width()) ---@type integer
-      if width < 1 then
-        return "", "", true
-      end
-
-      if width < 20 then
-        local text = string.rep(" ", width) ---@type string
-        local hl_text = txt(text, hln_sidebar_blank)
-        return text, hl_text, true
-      end
-
-      local title = icons.git.Git .. " Git Diffview" ---@type string
-      local title_width = vim.api.nvim_strwidth(title) ---@type integer
-      local width_remain = width - title_width ---@type integer
-      local left_width = math.floor(width_remain / 2)
-      local right_width = width_remain - left_width - 1
-      local left_blank = string.rep(" ", left_width)
-      local right_blank = string.rep(" ", right_width)
-      local right_split = " " -- "│"
-
-      local text = left_blank .. title .. right_blank .. right_split ---@type string
-      local hl_text = txt(left_blank, hln_sidebar_blank)
-        .. txt(title, hln_sidebar_text)
-        .. txt(right_blank, hln_sidebar_blank)
-        .. txt(right_split, hln_sidebar_split)
-      return text, hl_text, true
-    end,
-  }
-  return component
-end
-
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
 function M.dirpath(position)
   local hln_text = position .. "_dirpath_text" ---@type string
 
@@ -1115,18 +1057,21 @@ function M.mode(position)
 end
 
 ---@param position                      fml.ux.nvimbar.Position
+---@param filetype                      string
+---@param get_title                     fun(context: fml.ux.nvimbar.IContext): string
 ---@return fml.ux.nvimbar.IRawComponent
-function M.neotree(position)
-  local hln_sidebar_blank = position .. "_sidebar_blank" ---@type string
-  local hln_sidebar_split = position .. "_sidebar_split" ---@type string
-  local hln_sidebar_text = position .. "_sidebar_text" ---@type string
+function M.sidebar(position, filetype, get_title)
+  local hln_blank = position .. "_sidebar_blank" ---@type string
+  local hln_split = position .. "_sidebar_split" ---@type string
+  local hln_sep_prefix = position .. "_sidebar_sep_" ---@type string
+  local hln_text_prefix = position .. "_sidebar_text_" ---@type string
 
   ---@return integer
   local function get_pane_width()
     local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if vim.bo[bufnr].filetype == ft.NEOTREE then
+      if vim.bo[bufnr].filetype == filetype then
         if not fn.is_win_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end
@@ -1137,24 +1082,34 @@ function M.neotree(position)
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
-    name = "neotree",
+    name = "sidebar_" .. filetype,
     atomic = true,
-    ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local width = math.min(remain_width, get_pane_width()) ---@type integer
       if width < 1 then
         return "", "", true
       end
 
-      local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
-      if width < #cwd_name + 6 then
+      local title = get_title(context) ---@type string
+      if width < #title + 4 then
         local text = string.rep(" ", width) ---@type string
-        local hl_text = txt(text, hln_sidebar_blank)
+        local hl_text = txt(text, hln_blank)
         return text, hl_text, true
       end
 
-      local title = icons.filetype.FolderRootOpened .. " " .. cwd_name ---@type string
-      local title_width = vim.api.nvim_strwidth(title) ---@type integer
+      local hln_text = hln_text_prefix .. context.mode ---@type string
+      local hln_sep = hln_sep_prefix .. context.mode ---@type string
+
+      local text_title = title ---@type string
+      local hl_text_title = txt(text_title, hln_text) ---@type string
+
+      text_title = icons.symbols.sep_left .. text_title ---@type string
+      hl_text_title = txt(icons.symbols.sep_left, hln_sep) .. hl_text_title ---@type string
+
+      text_title = text_title .. icons.symbols.sep_right ---@type string
+      hl_text_title = hl_text_title .. txt(icons.symbols.sep_right, hln_sep) ---@type string
+
+      local title_width = vim.api.nvim_strwidth(text_title) ---@type integer
       local width_remain = width - title_width ---@type integer
       local left_width = math.floor(width_remain / 2) ---@type integer
       local right_width = width_remain - left_width - 1 ---@type integer
@@ -1162,11 +1117,11 @@ function M.neotree(position)
       local right_blank = string.rep(" ", right_width) ---@type string
       local right_split = " " ---@type string -- "│"
 
-      local text = left_blank .. title .. right_blank .. right_split ---@type string
-      local hl_text = txt(left_blank, hln_sidebar_blank)
-        .. txt(title, hln_sidebar_text)
-        .. txt(right_blank, hln_sidebar_blank)
-        .. txt(right_split, hln_sidebar_split)
+      local text = left_blank .. text_title .. right_blank .. right_split ---@type string
+      local hl_text = txt(left_blank, hln_blank)
+        .. hl_text_title
+        .. txt(right_blank, hln_blank)
+        .. txt(right_split, hln_split)
       return text, hl_text, true
     end,
   }

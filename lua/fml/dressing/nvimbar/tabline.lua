@@ -1,5 +1,7 @@
 local fn = require("eve.builtin.fn")
 local Subscriber = require("eve.collection.subscriber")
+local ft = require("eve.constant.filetype")
+local icons = require("eve.constant.icon")
 local state = require("eve.state")
 
 local Nvimbar = require("fml.ux.nvimbar")
@@ -46,8 +48,23 @@ tabline = Nvimbar.new({
 })
 
 tabline
-  :place("left", c.neotree(position), 95)
-  :place("left", c.diffview(position), 95)
+  :place(
+    "left",
+    c.sidebar(position, ft.NEOTREE, function(context)
+      local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
+      local title = icons.filetype.FolderRootOpened .. " " .. cwd_name ---@type string
+      return title
+    end),
+    95
+  )
+  :place(
+    "left",
+    c.sidebar(position, ft.DIFFVIEW_FILES, function()
+      local title = icons.git.Git .. " Git Diffview" ---@type string
+      return title
+    end),
+    95
+  )
   :place("left", c.bufs(position), 95)
   --
   :place("center", c.debug_render_count(position), 100)
