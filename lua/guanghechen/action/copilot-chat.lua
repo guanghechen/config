@@ -5,6 +5,7 @@ local reporter = require("eve.builtin.reporter")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
+local command = require("eve.command")
 
 local select = require("fml.fn.select")
 
@@ -97,7 +98,7 @@ local chat = state.widget.wrap({
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if not vim.b[bufnr].fml_key_bound then
           vim.b[bufnr].fml_key_bound = true
-          local keymaps = state.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
+          local keymaps = state.widget.get_keymaps(widget, command.context_winnr) ---@type eve.t.IKeymap[]
           fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 

@@ -10,7 +10,7 @@ local terminal_map = {} ---@type table<string, fml.ux.ITerminal>
 
 ---@class fml.action.term.IProps
 ---@field public name                   string
----@field public command                ?string
+---@field public cmd                    ?string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 ---@field public permanent              ?boolean
@@ -26,7 +26,7 @@ local M = {}
 ---@return fml.ux.ITerminal
 function M.new(props)
   local name = props.name ---@type string
-  local command = props.command or vim.env.SHELL or vim.o.shell ---@type string
+  local cmd = props.cmd or vim.env.SHELL or vim.o.shell ---@type string
   local cwd = props.cwd or path.cwd() ---@type string
   local env = props.env ---@type table<string, string>|nil
   local permanent = props.permanent ---@type boolean|nil
@@ -37,16 +37,16 @@ function M.new(props)
       from = __module_name__,
       subject = "new",
       message = "The term with the given name already exists.",
-      details = { name = name, command = command, cwd = cwd, env = env },
+      details = { name = name, cmd = cmd, cwd = cwd, env = env },
     })
     return terminal
   end
 
   ---@type fml.ux.ITerminal
   terminal = Terminal.new({
-    command = command,
-    command_cwd = cwd,
-    command_env = env,
+    cmd = cmd,
+    cwd = cwd,
+    env = env,
     permanent = permanent,
   })
   terminal_map[name] = terminal
@@ -65,9 +65,9 @@ function M.toggle(params)
     terminal = M.new(params)
   else
     terminal:update({
-      command = params.command,
-      command_cwd = params.cwd,
-      command_env = params.env,
+      cmd = params.cmd,
+      cwd = params.cwd,
+      env = params.env,
       on_exit = params.on_exit,
     })
     terminal:toggle()

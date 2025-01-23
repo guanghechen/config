@@ -3,6 +3,7 @@ local path = require("eve.builtin.path")
 local shell = require("eve.builtin.shell")
 local ft = require("eve.constant.filetype")
 local state = require("eve.state")
+local command = require("eve.command")
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Cursor:f_us_terminal_current",
@@ -35,9 +36,9 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
 
 ---@class fml.ux.Terminal : fml.ux.ITerminal
 ---@field protected _bufnr              integer|nil
----@field protected _command            string
----@field protected _command_cwd        string
----@field protected _command_env        table<string, string>|nil
+---@field protected _cmd                string
+---@field protected _cmd_cwd            string
+---@field protected _cmd_env            table<string, string>|nil
 ---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _permanent          boolean
 ---@field protected _status             eve.e.WidgetStatus
@@ -48,9 +49,9 @@ local M = {}
 M.__index = M
 
 ---@class fml.ux.terminal.IProps
----@field public command                ?string
----@field public command_cwd            ?string
----@field public command_env            ?table<string, string>
+---@field public cmd                    ?string
+---@field public cwd                    ?string
+---@field public env                    ?table<string, string>
 ---@field public keymaps                ?eve.t.IKeymap[]
 ---@field public permanent              ?boolean
 ---@field public on_exit                ?fun(): nil
@@ -60,18 +61,18 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local keymaps = state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
+  local keymaps = state.widget.get_keymaps(self, command.context_winnr) ---@type eve.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
-  local command = shell.format_command(props.command) ---@type string
-  local command_cwd = props.command_cwd or path.cwd() ---@type string
-  local command_env = props.command_env ---@type table<string, string>|nil
+  local cmd = shell.format_command(props.cmd) ---@type string
+  local cmd_cwd = props.cwd or path.cwd() ---@type string
+  local cmd_env = props.env ---@type table<string, string>|nil
   local permanent = not not props.permanent ---@type boolean
 
   self._bufnr = nil
-  self._command = command
-  self._command_cwd = command_cwd
-  self._command_env = command_env
+  self._cmd = cmd
+  self._cmd_cwd = cmd_cwd
+  self._cmd_env = cmd_env
   self._keymaps = keymaps
   self._permanent = permanent
   self._status = "hidden"
@@ -176,9 +177,9 @@ function M:focus()
     vim.api.nvim_tabpage_set_win(0, winnr)
     if not self._term_alive then
       self._term_alive = true
-      vim.fn.termopen(self._command, {
-        cwd = self._command_cwd,
-        env = self._command_env,
+      vim.fn.termopen(self._cmd, {
+        cwd = self._cmd_cwd,
+        env = self._cmd_env,
         on_exit = self._on_exit,
       })
       vim.api.nvim_create_autocmd("TermClose", {
@@ -263,10 +264,10 @@ end
 ---@param props                         fml.ux.terminal.IProps
 ---@return nil
 function M:update(props)
-  local command = shell.format_command(props.command) ---@type string
-  self._command = command ---@type string
-  self._command_cwd = props.command_cwd or self._command_cwd ---@type string
-  self._command_env = props.command_env or self._command_env ---@type table<string, string>|nil
+  local cmd = shell.format_command(props.cmd) ---@type string
+  self._cmd = cmd ---@type string
+  self._cmd_cwd = props.cwd or self._cmd_cwd ---@type string
+  self._cmd_env = props.env or self._cmd_env ---@type table<string, string>|nil
   self._on_exit = props.on_exit or self._on_exit
 end
 

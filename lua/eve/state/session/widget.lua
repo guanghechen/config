@@ -12,11 +12,12 @@ local History = require("eve.collection.history")
 ---
 ---@field public close_present          fun(): nil
 ---@field public equals                 fun(w1: eve.t.ux.IWidget, w2: eve.t.ux.IWidget): boolean
----@field public get_current_widget     fun(): eve.t.ux.IWidget|nil
----@field public get_keymaps            fun(widget: eve.t.ux.IWidget): eve.t.IKeymap[]
+---@field public get_keymaps            fun(widget: eve.t.ux.IWidget, last_winnr: fun(): integer|nil): eve.t.IKeymap[]
+---@field public get_widget_current     fun(): eve.t.ux.IWidget|nil, integer|nil
+---@field public get_widget_visible     fun(): eve.t.ux.IWidget|nil, integer|nil
 ---@field public open                   fun(widget: eve.t.ux.IWidget): nil
 ---@field public resize                 fun(): nil
----@field public resume                 fun(): boolean
+---@field public resume                 fun(): eve.t.ux.IWidget|nil
 ---@field public wrap                   fun(raw_widget: eve.t.ux.IRawWidget): eve.t.ux.IWidget
 local S = {}
 
@@ -70,31 +71,25 @@ S = {
     end
   end,
   close_present = function()
-    local widget = S.get_current_widget() ---@type eve.t.ux.IWidget|nil
+    local widget = S.get_widget_current() ---@type eve.t.ux.IWidget|nil
     if widget ~= nil and widget:status() == "visible" then
       widget:close()
     end
   end,
-  get_current_widget = function()
-    local present = S.history:present() ---@type eve.t.ux.IWidget|nil
-    if present ~= nil and present:status() ~= "closed" then
-      return present
-    end
-
-    local widget = nil ---@type eve.t.ux.IWidget|nil
-    local is_bottom = false ---@type boolean
-    while not is_bottom do
-      widget, is_bottom = S.history:backward()
-      if widget ~= nil and widget:status() ~= "closed" then
-        return widget
-      end
-    end
-
-    return nil
-  end,
-  get_keymaps = function(widget)
+  get_keymaps = function(widget, last_winnr)
     local function on_close()
       widget:close()
+
+      local widget_visible, widget_visible_index = S.get_widget_visible() ---@type eve.t.ux.IWidget|nil, integer|nil
+      if widget_visible ~= nil and widget_visible_index ~= nil then
+        widget_visible:focus()
+        S.history:go(widget_visible_index)
+      else
+        local winnr = last_winnr()
+        if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+          vim.api.nvim_set_current_win(winnr)
+        end
+      end
     end
 
     ---@type eve.t.IKeymap[]
@@ -117,8 +112,38 @@ S = {
     }
     return keymaps
   end,
+  get_widget_current = function()
+    local present, present_index = S.history:present() ---@type eve.t.ux.IWidget|nil
+    if present ~= nil and present:status() ~= "closed" then
+      return present, present_index
+    end
+
+    for index = present_index - 1, 1, -1 do
+      local widget = S.history:at(index) ---@type eve.t.ux.IWidget|nil
+      if widget ~= nil and widget:status() ~= "closed" then
+        S.history:go(index)
+        return widget, index
+      end
+    end
+    S.history:go(1)
+  end,
+  get_widget_visible = function()
+    local present, present_index = S.history:present() ---@type eve.t.ux.IWidget|nil, integer
+    if present ~= nil and present:status() == "visible" then
+      return present, present_index
+    end
+
+    for index = S.history:size(), 1, -1 do
+      local widget = S.history:at(index) ---@type eve.t.ux.IWidget|nil
+      if widget ~= nil and widget:status() == "visible" then
+        S.history:go(index)
+        return widget, index
+      end
+    end
+    return nil, nil
+  end,
   open = function(widget)
-    local present = S.get_current_widget() ---@type eve.t.ux.IWidget|nil
+    local present = S.get_widget_current() ---@type eve.t.ux.IWidget|nil
     if present == nil then
       S.history:push(widget)
       widget:focus()
@@ -145,17 +170,15 @@ S = {
     end
   end,
   resume = function()
-    local present = S.get_current_widget() ---@type eve.t.ux.IWidget|nil
-    if present == nil or present:status() == "closed" then
-      return false
+    local present = S.get_widget_current() ---@type eve.t.ux.IWidget|nil
+    if present ~= nil then
+      if present:focused() then
+        present:hide()
+      else
+        present:focus()
+      end
     end
-
-    if present:focused() then
-      present:hide()
-    else
-      present:focus()
-    end
-    return true
+    return present
   end,
   wrap = function(raw_widget)
     local widget ---@type eve.t.ux.IWidget
@@ -175,7 +198,7 @@ S = {
         close(widget)
       end,
       focus = function()
-        local present = S.get_current_widget() ---@type eve.t.ux.IWidget|nil
+        local present = S.get_widget_current() ---@type eve.t.ux.IWidget|nil
         if present == nil then
           S.history:push(widget)
           focus(widget)

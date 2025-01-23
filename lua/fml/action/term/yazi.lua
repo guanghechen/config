@@ -12,12 +12,10 @@ local function open_yazi(name, cwd, filepath, context)
   local tempname = vim.fn.tempname() ---@type string
   local terminal ---@type fml.ux.ITerminal|nil
 
-  ---@type string
-  local command =
-    string.format('yazi %s --chooser-file="%s"', vim.fn.shellescape(filepath), vim.fn.shellescape(tempname))
+  local cmd = string.format('yazi %s --chooser-file="%s"', vim.fn.shellescape(filepath), vim.fn.shellescape(tempname)) ---@type string
   terminal = toggle_term({
     name = name,
-    command = command,
+    cmd = cmd,
     cwd = cwd,
     permanent = false,
     on_exit = function()

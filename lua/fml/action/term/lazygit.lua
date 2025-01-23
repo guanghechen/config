@@ -94,7 +94,7 @@ local function open_lazygit(context, name, cwd, args)
 
   local terminal = toggle_term({
     name = name,
-    command = cmd,
+    cmd = cmd,
     cwd = cwd,
     permanent = false,
   })

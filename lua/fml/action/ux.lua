@@ -23,8 +23,11 @@ function M.resume_last_widget(context)
   end
 
   if state.widget.resume() then
-    local widget = state.widget.get_current_widget() ---@type eve.t.ux.IWidget|nil
-    if widget == nil or widget:status() ~= "visible" then
+    local widget, widget_index = state.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
+    if widget ~= nil and widget_index ~= nil then
+      widget:focus()
+      state.widget.history:go(widget_index)
+    else
       if context.winnr > 0 and vim.api.nvim_win_is_valid(context.winnr) then
         vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
       end

@@ -5,6 +5,7 @@ local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
 local state = require("eve.state")
+local command = require("eve.command")
 
 local SearchInput = require("fml.ux.search.input")
 local SearchMain = require("fml.ux.search.main")
@@ -167,7 +168,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local common_keymaps = state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
+  local common_keymaps = state.widget.get_keymaps(self, command.context_winnr) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
 
   local raw_statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]

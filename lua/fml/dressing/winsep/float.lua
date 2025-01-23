@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local ft = require("eve.constant.filetype")
 local state = require("eve.state")
 local Line = require("fml.dressing.winsep.line")
@@ -42,7 +41,7 @@ local float_winsep = {
       return false
     end
 
-    local widget = state.widget.get_current_widget() ---@type eve.t.ux.IWidget|nil
+    local widget = state.widget.get_widget_current() ---@type eve.t.ux.IWidget|nil
     if widget == nil then
       return false
     end

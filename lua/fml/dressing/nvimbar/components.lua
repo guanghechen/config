@@ -1404,12 +1404,8 @@ function M.widget(position)
   local component = {
     name = "widget",
     atomic = true,
-    condition = function()
-      local widget = state.widget.get_current_widget() ---@type eve.t.ux.IWidget|nil
-      return widget ~= nil and widget:status() == "visible"
-    end,
     render = function()
-      local widget = state.widget.get_current_widget() ---@type eve.t.ux.IWidget|nil
+      local widget = state.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
       if widget == nil then
         return "", "", true
       end

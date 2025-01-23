@@ -7,6 +7,7 @@ local CircularStack = require("eve.collection.circular_stack")
 ---@class eve.collection.IHistory
 ---@field public name                   string
 ---@field public equals                 eve.t.IEquals
+---@field public at                     fun(self: eve.collection.IHistory, index: integer): eve.t.T|nil
 ---@field public backward               fun(self: eve.collection.IHistory, step?: integer): eve.t.T|nil, boolean
 ---@field public bottom                 fun(self: eve.collection.IHistory): eve.t.T|nil
 ---@field public capacity               fun(self: eve.collection.IHistory): integer
@@ -82,6 +83,12 @@ function M.deserialize(props)
   self._stack = CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
+end
+
+---@param index                         integer
+---@return eve.t.T|nil
+function M:at(index)
+  return self._stack:at(index)
 end
 
 ---@param step                          ?integer
