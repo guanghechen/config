@@ -35,7 +35,7 @@ local function vim_navigate(direction)
   if not ok then
     reporter.error({
       from = __module_name__,
-      message = "E11: Invalid in command-line window; <CR> executes, CTRL-C quits",
+      message = "E11: Invalid in command-line window; <cr> executes, ctrl-c quits",
       details = { direction = direction, error = error },
     })
   end

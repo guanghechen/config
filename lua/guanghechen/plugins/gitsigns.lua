@@ -354,7 +354,7 @@ return {
     },
     on_attach = function(bufnr)
       fn.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
-      vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", {
+      vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<cr>", {
         buffer = bufnr,
         noremap = true,
         silent = true,

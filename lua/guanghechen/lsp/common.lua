@@ -221,7 +221,8 @@ function M.on_attach(client, bufnr)
     },
     {
       modes = { "n", "v" },
-      key = "<M-cr>",
+      key = "<C-a><cr>",
+      aliases = { "<D-cr>", "<M-cr>" },
       callback = function()
         vim.cmd(command.definitions.lsp.show_code_action.uuid)
       end,
@@ -257,7 +258,7 @@ function M.on_attach(client, bufnr)
     },
     {
       modes = { "n" },
-      key = "<leader>cr",
+      key = "<leader><cr>",
       callback = function()
         vim.cmd(command.definitions.lsp.rename.uuid)
       end,

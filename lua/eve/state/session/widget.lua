@@ -13,7 +13,7 @@ local History = require("eve.collection.history")
 ---@field public close_present          fun(): nil
 ---@field public equals                 fun(w1: eve.t.ux.IWidget, w2: eve.t.ux.IWidget): boolean
 ---@field public get_current_widget     fun(): eve.t.ux.IWidget|nil
----@field public get_keymaps            fun(): eve.t.IKeymap[]
+---@field public get_keymaps            fun(widget: eve.t.ux.IWidget): eve.t.IKeymap[]
 ---@field public open                   fun(widget: eve.t.ux.IWidget): nil
 ---@field public resize                 fun(): nil
 ---@field public resume                 fun(): boolean
@@ -92,16 +92,28 @@ S = {
 
     return nil
   end,
-  get_keymaps = function()
+  get_keymaps = function(widget)
+    local function on_close()
+      widget:close()
+    end
+
     ---@type eve.t.IKeymap[]
     local keymaps = {
-      { modes = { "n", "v" }, key = "q", callback = S.close_present, desc = "widget: close present" },
-      { modes = { "i", "n", "t", "v" }, key = "<C-a>i", callback = S.backward, desc = "widget: backward" },
-      { modes = { "i", "n", "t", "v" }, key = "<C-a>o", callback = S.forward, desc = "widget: forward" },
-      { modes = { "i", "n", "t", "v" }, key = "<D-i>", callback = S.backward, desc = "widget: backward" },
-      { modes = { "i", "n", "t", "v" }, key = "<D-o>", callback = S.forward, desc = "widget: forward" },
-      { modes = { "i", "n", "t", "v" }, key = "<M-i>", callback = S.backward, desc = "widget: backward" },
-      { modes = { "i", "n", "t", "v" }, key = "<M-o>", callback = S.forward, desc = "widget: forward" },
+      { modes = { "n", "v" }, key = "q", callback = on_close, desc = "widget: close present" },
+      {
+        modes = { "i", "n", "t", "v" },
+        key = "<C-a>i",
+        aliases = { "<D-i>", "<M-i>" },
+        callback = S.backward,
+        desc = "widget: backward",
+      },
+      {
+        modes = { "i", "n", "t", "v" },
+        key = "<C-a>o",
+        aliases = { "<D-o>", "<M-o>" },
+        callback = S.forward,
+        desc = "widget: forward",
+      },
     }
     return keymaps
   end,

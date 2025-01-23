@@ -260,13 +260,21 @@ function M.bindkeys(keymaps, keymap_override)
       local noremap = keymap_override.noremap or keymap.noremap ---@type boolean|nil
       local silent = keymap_override.silent or keymap.silent ---@type boolean|nil
 
-      vim.keymap.set(keymap.modes, keymap.key, keymap.callback, {
+      ---@type vim.keymap.set.Opts
+      local opts = {
         buffer = bufnr,
         nowait = nowait,
         noremap = noremap,
         silent = silent,
         desc = keymap.desc,
-      })
+      }
+      vim.keymap.set(keymap.modes, keymap.key, keymap.callback, opts)
+
+      if keymap.aliases ~= nil then
+        for _, alias in ipairs(keymap.aliases) do
+          vim.keymap.set(keymap.modes, alias, keymap.callback, opts)
+        end
+      end
     end
   end
 end

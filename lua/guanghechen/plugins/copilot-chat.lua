@@ -53,10 +53,17 @@ The time consumed on each record should be the delta of it's clock field and the
   },
   keys = {
     {
+      "<cr>",
+      mode = "n",
+      ft = "copilot-chat",
+      desc = "Submit Prompt",
+      remap = false,
+    },
+    {
       "<C-a>s",
       "<D-s>",
       "<M-s>",
-      "<CR>",
+      mode = { "i", "n", "v" },
       ft = "copilot-chat",
       desc = "Submit Prompt",
       remap = false,

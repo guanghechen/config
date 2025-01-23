@@ -97,7 +97,7 @@ local chat = state.widget.wrap({
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if not vim.b[bufnr].fml_key_bound then
           vim.b[bufnr].fml_key_bound = true
-          local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
+          local keymaps = state.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
           fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 

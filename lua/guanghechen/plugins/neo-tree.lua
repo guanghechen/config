@@ -266,8 +266,9 @@ return {
       group_empty_dirs = true, -- when true, empty folders will be grouped together
       window = {
         mappings = {
-          ["<M-r>"] = refresh_filesystem,
           ["<C-a>r"] = refresh_filesystem,
+          ["<D-r"] = refresh_filesystem,
+          ["<M-r>"] = refresh_filesystem,
           ["<bs>"] = "navigate_up",
           ["."] = "set_root",
           ["H"] = "toggle_hidden",

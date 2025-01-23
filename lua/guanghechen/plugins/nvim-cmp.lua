@@ -186,11 +186,11 @@ return {
         ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
         ["<C-Space>"] = cmp.mapping.complete(),
         ["<C-e>"] = cmp.mapping.abort(),
-        ["<CR>"] = actions.confirm({
+        ["<cr>"] = actions.confirm({
           behavior = cmp.ConfirmBehavior.Insert,
           select = true,
         }),
-        ["<S-CR>"] = actions.confirm({
+        ["<S-cr>"] = actions.confirm({
           behavior = cmp.ConfirmBehavior.Replace,
           select = true,
         }),

@@ -98,28 +98,15 @@ local common_keymaps = {
 local input_keymaps = {
   {
     modes = { "n", "v" },
-    key = "<C-a>enter",
+    key = "<C-a><cr>",
+    aliases = { "<D-cr>", "<M-cr>" },
     callback = context.replace_file_all,
     desc = "search: replace all files",
     nowait = true,
   },
   {
     modes = { "n", "v" },
-    key = "<D-enter>",
-    callback = context.replace_file_all,
-    desc = "search: replace all files",
-    nowait = true,
-  },
-  {
-    modes = { "n", "v" },
-    key = "<M-enter>",
-    callback = context.replace_file_all,
-    desc = "search: replace all files",
-    nowait = true,
-  },
-  {
-    modes = { "n", "v" },
-    key = "<leader><enter>",
+    key = "<leader><cr>",
     callback = context.replace_file,
     desc = "search: replace file",
     nowait = true,

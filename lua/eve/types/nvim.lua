@@ -18,6 +18,7 @@
 ---@class eve.t.IKeymap : eve.t.IKeymapOverridable
 ---@field public modes                  eve.e.VimMode[]
 ---@field public key                    string
+---@field public aliases                string[]|nil
 ---@field public callback               fun(): nil
 ---@field public desc                   string|nil
 ---@field public active                 boolean|nil

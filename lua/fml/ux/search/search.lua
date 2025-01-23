@@ -167,7 +167,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local common_keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
+  local common_keymaps = state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
 
   local raw_statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
@@ -251,9 +251,6 @@ function M.new(props)
 
   ---@class fml.ux.search.search.actions
   local actions = {
-    close = function()
-      self:close()
-    end,
     focus_preview = function()
       local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
       local winnr_preview = self:get_winnr_preview() ---@type integer|nil
@@ -352,22 +349,38 @@ function M.new(props)
       desc = "search: confirm",
       nowait = true,
     },
-    { modes = { "i", "n", "v" }, key = "<C-a>r", callback = actions.force_refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<D-r>", callback = actions.force_refresh, desc = "search: refresh" },
-    { modes = { "i", "n", "v" }, key = "<M-r>", callback = actions.force_refresh, desc = "search: refresh" },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>r",
+      aliases = { "<D-r>", "<M-r>" },
+      callback = actions.force_refresh,
+      desc = "search: refresh",
+    },
   })
 
   ---@type eve.t.IKeymap[]
   local left_common_keymaps = {
-    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.on_main_down, desc = "search: focus next item" },
-    { modes = { "i", "n", "v" }, key = "<D-j>", callback = actions.on_main_down, desc = "search: focus next item" },
-    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.on_main_down, desc = "search: focus next item" },
-    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.on_main_up, desc = "search: focus prev item" },
-    { modes = { "i", "n", "v" }, key = "<D-k>", callback = actions.on_main_up, desc = "search: focus prev item" },
-    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.on_main_up, desc = "search: focus prev item" },
-    { modes = { "i", "n", "v" }, key = "<C-a>l", callback = actions.focus_preview, desc = "search: focus preview" },
-    { modes = { "i", "n", "v" }, key = "<D-l>", callback = actions.focus_preview, desc = "search: focus preview" },
-    { modes = { "i", "n", "v" }, key = "<M-l>", callback = actions.focus_preview, desc = "search: focus preview" },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      callback = actions.on_main_down,
+      desc = "search: focus next item",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      callback = actions.on_main_up,
+      desc = "search: focus prev item",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>l",
+      aliases = { "<D-l>", "<M-l>" },
+      callback = actions.focus_preview,
+      desc = "search: focus preview",
+    },
     {
       modes = { "i", "n", "v" },
       key = "<leader>dd",
@@ -401,17 +414,28 @@ function M.new(props)
 
   local preview_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
   vim.list_extend(preview_keymaps, {
-    { modes = { "i", "n", "v" }, key = "<C-a>h", callback = actions.focus_input, desc = "search: focus input" },
-    { modes = { "i", "n", "v" }, key = "<D-h>", callback = actions.focus_input, desc = "search: focus input" },
-    { modes = { "i", "n", "v" }, key = "<M-h>", callback = actions.focus_input, desc = "search: focus input" },
-    { modes = { "i", "n", "v" }, key = "<C-a>j", callback = actions.on_main_down, desc = "search: focus next item" },
-    { modes = { "i", "n", "v" }, key = "<D-j>", callback = actions.on_main_down, desc = "search: focus next item" },
-    { modes = { "i", "n", "v" }, key = "<M-j>", callback = actions.on_main_down, desc = "search: focus next item" },
-    { modes = { "i", "n", "v" }, key = "<C-a>k", callback = actions.on_main_up, desc = "search: focus prev item" },
-    { modes = { "i", "n", "v" }, key = "<D-k>", callback = actions.on_main_up, desc = "search: focus prev item" },
-    { modes = { "i", "n", "v" }, key = "<M-k>", callback = actions.on_main_up, desc = "search: focus prev item" },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>h",
+      aliases = { "<D-h>", "<M-h>" },
+      callback = actions.focus_input,
+      desc = "search: focus input",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      callback = actions.on_main_down,
+      desc = "search: focus next item",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      callback = actions.on_main_up,
+      desc = "search: focus prev item",
+    },
     { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
-    { modes = { "n", "v" }, key = "q", callback = actions.close, desc = "search: close" },
   })
   vim.list_extend(preview_keymaps, props.preview_keymaps or {})
 

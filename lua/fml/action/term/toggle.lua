@@ -13,7 +13,6 @@ local terminal_map = {} ---@type table<string, fml.ux.ITerminal>
 ---@field public command                ?string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
----@field public flag_quit_on_q         ?boolean
 ---@field public permanent              ?boolean
 ---@field public on_exit                ?fun(): nil
 
@@ -43,31 +42,11 @@ function M.new(props)
     return terminal
   end
 
-  local keymaps = {} ---@type eve.t.IKeymap[]
-
-  local flag_quit_on_q = not not props.flag_quit_on_q ---@type boolean
-  if flag_quit_on_q then
-    ---@type eve.t.IKeymap[]
-    local keymap = {
-      modes = { "n" },
-      key = "q",
-      desc = "terminal: quit",
-      callback = function()
-        if terminal ~= nil then
-          ---@cast terminal             fml.ux.ITerminal
-          terminal:close()
-        end
-      end,
-    }
-    table.insert(keymaps, keymap)
-  end
-
   ---@type fml.ux.ITerminal
   terminal = Terminal.new({
     command = command,
     command_cwd = cwd,
     command_env = env,
-    keymaps = keymaps,
     permanent = permanent,
   })
   terminal_map[name] = terminal

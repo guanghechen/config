@@ -10,7 +10,7 @@ local configs = {
       refresh = "<leader>ar",
 
       suggestion = {
-        accept = "<C-enter>",
+        accept = "<C-cr>",
         next = "<C-j>",
         prev = "<C-k>",
         dismiss = "<esc>",

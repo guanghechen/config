@@ -58,7 +58,9 @@ M.__index = M
 ---@param props                         fml.ux.terminal.IProps
 ---@return fml.ux.Terminal
 function M.new(props)
-  local keymaps = state.widget.get_keymaps() ---@type eve.t.IKeymap[]
+  local self = setmetatable({}, M)
+
+  local keymaps = state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
   local command = shell.format_command(props.command) ---@type string
@@ -66,7 +68,6 @@ function M.new(props)
   local command_env = props.command_env ---@type table<string, string>|nil
   local permanent = not not props.permanent ---@type boolean
 
-  local self = setmetatable({}, M)
   self._bufnr = nil
   self._command = command
   self._command_cwd = command_cwd
