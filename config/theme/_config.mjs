@@ -58,11 +58,11 @@ export const apps = [
       const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
 
-      // const backgroundImagePath =
-      //   scheme.variant === "light"
-      //     ? path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
-      //     : path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
-      // content += '\n\n' + `background_image ${backgroundImagePath}\n`
+      const backgroundImagePath =
+        scheme.variant === "light"
+          ? path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
+          : path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
+      content += '\n\n' + `background_image ${backgroundImagePath}\n`
       await fs.writeFile(theme_filepath, content, 'utf8')
     },
   },
