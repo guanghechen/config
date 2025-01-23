@@ -1,0 +1,67 @@
+# catppuccin-macchiato
+
+git:
+  autoFetch: false
+  commit:
+    signOff: false
+  log:
+    order: topo-order
+    showGraph: "always"
+    showWholeGraph: false
+  paging:
+    # cargo install git-delta
+    colorArg: always
+    useConfig: false
+    pager: delta --paging=never
+  parseEmoji: true
+  skipHookPrefix: WIP
+gui:
+  authorColors:
+    guanghechen: "#8AADF4"
+    "*": "#A5ADCB"
+  branchColors:
+    main: "#8AADF4"
+  theme:
+    defaultFgColor:
+      - "#A5ADCB"
+    activeBorderColor:
+      - "#C6A0F6"
+      - bold
+    inactiveBorderColor:
+      - "#8087A2"
+    optionsTextColor:
+      -  "#F5A97F"
+    selectedLineBgColor:
+      - "#363A4F"
+    cherryPickedCommitFgColor:
+      - "#8AADF4"
+    cherryPickedCommitBgColor:
+      - "#8BD5CA"
+    markedBaseCommitFgColor:
+      - "#A6DA95"
+    markedBaseCommitBgColor:
+      - "#C6A0F6"
+    searchingActiveBorderColor:
+      - "#8AADF4"
+    unstagedChangesColor:
+      - "#ED8796"
+  border: "rounded"
+  expandFocusedSidePanel: false
+  mainPanelSplitMode: flexible
+  mouseEvents: true
+  nerdFontsVersion: "3"
+  showBottomLine: true
+  showCommandLog: true
+  showFileTree: true
+  showIcons: true
+  showRandomTip: true
+  splitDiff: auto
+notARepository: skip
+os:
+  edit: "nvim"
+  editAtLine: "nvim --line={{line}} {{filename}}"
+  editAtLineAndWait: "nvim --block --line={{line}} {{filename}}"
+  editInTerminal: true
+  editPreset: "nvim-remote"
+  openDirInEditor: "nvim {{dir}}"
+promptToReturnFromSubprocess: true
