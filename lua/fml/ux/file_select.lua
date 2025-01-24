@@ -283,7 +283,7 @@ function M.fetch_preview_data(item)
       lines = lines,
       highlights = {},
       filetype = filetype,
-      title = item.data.filepath,
+      title = item.data.filepath_relative,
       lnum = item.data.lnum,
       col = item.data.col,
     }
@@ -306,7 +306,7 @@ function M.patch_preview_data(item, last_item, last_data)
     lines = last_data.lines,
     highlights = {},
     filetype = last_data.filetype,
-    title = item.data.filepath,
+    title = item.data.filepath_relative,
     lnum = item.data.lnum,
     col = item.data.col,
   }
