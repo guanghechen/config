@@ -18,6 +18,8 @@ vim.filetype.add({
       end,
     },
 
+    [".eslintignore"] = "eslintignore",
+
     ["*.fzfrc"] = "bash",
     ["*.ripgreprc"] = "bash",
     ["*.tmux.conf"] = "tmux",
