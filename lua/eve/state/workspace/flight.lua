@@ -19,6 +19,7 @@ local setting = require("eve.constant.setting")
 ---@field public lsp_inlay_hints        boolean
 ---@field public lsp_code_lens          boolean
 ---
+---@field public smear_cursor           boolean
 ---@field public spellcheck             boolean
 ---@field public treesitter_context     boolean
 
@@ -38,6 +39,7 @@ local setting = require("eve.constant.setting")
 ---@field public lsp_inlay_hints        eve.collection.IObservable
 ---@field public lsp_code_lens          eve.collection.IObservable
 ---
+---@field public smear_cursor           eve.collection.IObservable
 ---@field public spellcheck             eve.collection.IObservable
 ---@field public treesitter_context     eve.collection.IObservable
 
@@ -129,6 +131,7 @@ function M.defaults()
     lsp_inlay_hints = is_git_repo,
     lsp_code_lens = is_git_repo,
 
+    smear_cursor = env.IS_WSL or env.IS_WIN,
     spellcheck = is_git_repo and not (is_sourcecode or is_playground),
     treesitter_context = is_git_repo,
   }
@@ -178,6 +181,9 @@ function M.normalize(data)
       resolved.lsp_code_lens = data.lsp_code_lens
     end
 
+    if type(data.smear_cursor) == "boolean" then
+      resolved.smear_cursor = data.smear_cursor
+    end
     if type(data.spellcheck) == "boolean" then
       resolved.spellcheck = data.spellcheck
     end
@@ -211,6 +217,7 @@ function M.dump()
     lsp_inlay_hints = _state.lsp_inlay_hints:snapshot(),
     lsp_code_lens = _state.lsp_code_lens:snapshot(),
 
+    smear_cursor = _state.smear_cursor:snapshot(),
     spellcheck = _state.spellcheck:snapshot(),
     treesitter_context = _state.treesitter_context:snapshot(),
   }
@@ -239,6 +246,7 @@ function M.load(raw_data)
       lsp_inlay_hints = Observable.from_value(data.lsp_inlay_hints),
       lsp_code_lens = Observable.from_value(data.lsp_code_lens),
 
+      smear_cursor = Observable.from_value(data.smear_cursor),
       spellcheck = Observable.from_value(data.spellcheck),
       treesitter_context = Observable.from_value(data.treesitter_context),
     }
@@ -260,6 +268,7 @@ function M.load(raw_data)
   _state.lsp_inlay_hints:next(data.lsp_inlay_hints)
   _state.lsp_code_lens:next(data.lsp_code_lens)
 
+  _state.smear_cursor:next(data.smear_cursor)
   _state.spellcheck:next(data.spellcheck)
   _state.treesitter_context:next(data.treesitter_context)
   return _state

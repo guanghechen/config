@@ -28,6 +28,7 @@ M.flights = {
   "dressing_winsep_float",
   "lsp_inlay_hints",
   "lsp_code_lens",
+  "smear_cursor",
   "spellcheck",
   "treesitter_context",
 }

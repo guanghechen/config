@@ -264,6 +264,7 @@ function M.watch_changes(params)
   end, true)
 
   M.observe({
+    M.flight.smear_cursor,
     M.flight.spellcheck,
     M.flight.treesitter_context,
     M.option.relativenumber,
