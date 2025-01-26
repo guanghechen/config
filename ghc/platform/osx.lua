@@ -6,12 +6,11 @@ local config = {
 	keys = {
 		{ key = "Insert", mods = "CTRL", action = act.CopyTo("Clipboard") },
 		{ key = "Insert", mods = "SHIFT", action = act.PasteFrom("Clipboard") },
+		{ key = "F11", mods = "", action = act.ToggleFullScreen },
 		{ key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
-		{ key = "F", mods = "CMD|CTRL|SHIFT", action = act.ToggleFullScreen },
 		{ key = "N", mods = "CMD|CTRL|SHIFT", action = act.SpawnCommandInNewWindow({ args = { "wezterm" } }) },
 		{ key = "T", mods = "CMD|CTRL|SHIFT", action = act.SpawnTab("CurrentPaneDomain") },
 		{ key = "W", mods = "CMD|CTRL|SHIFT", action = act.CloseCurrentPane({ confirm = true }) },
-		{ key = "Z", mods = "CMD|CTRL|SHIFT", action = act.ToggleFullScreen },
 		{ key = ")", mods = "CMD|CTRL|SHIFT", action = act.ResetFontSize },
 		{ key = "+", mods = "CMD|CTRL|SHIFT", action = act.IncreaseFontSize },
 		{ key = "_", mods = "CMD|CTRL|SHIFT", action = act.DecreaseFontSize },
