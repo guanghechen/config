@@ -224,7 +224,10 @@ function M.on_attach(client, bufnr)
       key = "<C-a><cr>",
       aliases = { "<D-cr>", "<M-cr>" },
       callback = function()
-        vim.cmd(command.definitions.lsp.show_code_action.uuid)
+        vim.lsp.buf.code_action()
+        vim.schedule(function()
+          vim.cmd("stopinsert")
+        end)
       end,
       desc = "lsp: code action",
       active = has_support_codeAction,
@@ -251,7 +254,15 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "<leader>ca",
       callback = function()
-        vim.cmd(command.definitions.lsp.show_code_action_source.uuid)
+        vim.lsp.buf.code_action({
+          context = {
+            only = { "source" },
+            diagnostics = {},
+          },
+        })
+        vim.schedule(function()
+          vim.cmd("stopinsert")
+        end)
       end,
       desc = "lsp: source action",
       active = has_support_codeAction,
@@ -260,7 +271,10 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "<leader>cr",
       callback = function()
-        vim.cmd(command.definitions.lsp.rename.uuid)
+        vim.lsp.buf.rename()
+        vim.schedule(function()
+          vim.cmd("stopinsert")
+        end)
       end,
       desc = "lsp: rename",
       active = has_support_rename,
