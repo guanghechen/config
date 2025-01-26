@@ -269,7 +269,7 @@ bindings = [
   { key = "N",          mods = "Command|Control|Shift",     action = "CreateNewWindow"          },
   { key = "V",          mods = "Command|Control|Shift",     action = "ToggleViMode"             },
   { key = "W",          mods = "Command|Control|Shift",     action = "Quit"                     },
-  { key = "Z",          mods = "Command|Control|Shift",     action = "ToggleSimpleFullscreen"   },
+  { key = "F11",        mods = "",                          action = "ToggleSimpleFullscreen"   },
   { key = ")",          mods = "Command|Control|Shift",     action = "ResetFontSize"            },
   { key = "Plus",       mods = "Command|Control|Shift",     action = "IncreaseFontSize"         },
   { key = "_",          mods = "Command|Control|Shift",     action = "DecreaseFontSize"         },
