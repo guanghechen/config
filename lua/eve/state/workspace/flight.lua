@@ -131,7 +131,7 @@ function M.defaults()
     lsp_inlay_hints = is_git_repo,
     lsp_code_lens = is_git_repo,
 
-    smear_cursor = env.IS_WSL or env.IS_WIN,
+    smear_cursor = false, -- env.IS_WSL or env.IS_WIN,
     spellcheck = is_git_repo and not (is_sourcecode or is_playground),
     treesitter_context = is_git_repo,
   }
