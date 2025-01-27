@@ -8,6 +8,24 @@ local Observable = require("eve.collection.observable")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
 
+---@class fml.ux.search.IRawDimension
+---@field public height                 ?number
+---@field public max_width              ?number
+---@field public max_height             ?number
+---@field public row                    ?number
+---@field public col                    ?number
+---@field public width                  ?number
+---@field public width_preview          ?number
+
+---@class fml.ux.search.IDimension
+---@field public height                 ?number
+---@field public max_width              number
+---@field public max_height             number
+---@field public row                    ?number
+---@field public col                    ?number
+---@field public width                  ?number
+---@field public width_preview          ?number
+
 ---@class fml.ux.search.IContext
 ---@field public dirtier_dimension      eve.collection.IDirtier
 ---@field public dirtier_data           eve.collection.IDirtier
@@ -24,22 +42,27 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public bufnr_input            integer|nil
 ---@field public bufnr_main             integer|nil
 ---@field public bufnr_preview          integer|nil
----
 ---@field public winnr_input            integer|nil
 ---@field public winnr_main             integer|nil
 ---@field public winnr_preview          integer|nil
 ---
----@field public enable_multiline_input boolean
----@field public item_present_uuid      string|nil
----@field public items                  fml.ux.search.IItem[]
----@field public max_width              integer
----@field public title                  string
----@field public uuid                   string
+---@field public cfg_preview_title      string
+---@field public cfg_preview_wrap       boolean
 ---
 ---@field public focused_pane           "input"|"main"|"preview"
 ---@field public focused_pane_left      "input"|"main"
 ---@field public focused_pane_right     "preview"
 ---
+---@field public dimension               fml.ux.search.IDimension
+---@field public enable_multiline_input boolean
+---@field public item_present_uuid      string|nil
+---@field public items                  fml.ux.search.IItem[]
+---@field public max_width              integer
+---@field public permanent              boolean
+---@field public title                  string
+---@field public uuid                   string
+---
+---@field public change_dimension       fun(self: fml.ux.search.IContext, dimension: fml.ux.search.IRawDimension): nil
 ---@field public get_current            fun(self: fml.ux.search.IContext): fml.ux.search.IItem|nil, integer, string|nil
 ---@field public get_current_lnum       fun(self: fml.ux.search.IContext): integer
 ---@field public get_current_uuid       fun(self: fml.ux.search.IContext): string|nil
@@ -60,11 +83,15 @@ local M = {}
 M.__index = M
 
 ---@class fml.ux.search.state.IProps
+---@field public delay_fetch            integer
+---@field public dimension              fml.ux.search.IRawDimension|nil
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             fml.ux.search.IFetchData
----@field public delay_fetch            integer
 ---@field public input                  eve.collection.IObservable
 ---@field public input_history          eve.collection.IHistory|nil
+---@field public permanent              boolean|nil
+---@field public preview_title          string|nil
+---@field public preview_wrap           boolean|nil
 ---@field public title                  string
 
 ---@param props                         fml.ux.search.state.IProps
@@ -78,15 +105,32 @@ function M.new(props)
   local dirtier_main = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local dirtier_preview = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local state_has_matched = Observable.new({ value = false, equals = fn.falsy }) ---@type eve.collection.IObservable
+  local status = Observable.from_value("hidden")
+
+  local raw_dimension = props.dimension or {} ---@type fml.ux.search.IRawDimension
+  ---@type fml.ux.search.IDimension
+  local dimension = {
+    height = raw_dimension.height,
+    max_width = raw_dimension.max_width or 0.8,
+    max_height = raw_dimension.max_height or 0.8,
+    row = raw_dimension.row,
+    col = raw_dimension.col,
+    width = raw_dimension.width,
+    width_preview = raw_dimension.width_preview,
+  }
+
+  local delay_fetch = props.delay_fetch ---@type integer
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
   local fetch_data = props.fetch_data ---@type fml.ux.search.IFetchData
-  local delay_fetch = props.delay_fetch ---@type integer
   local input = props.input ---@type eve.collection.IObservable
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable
+  local permanent = not not props.permanent ---@type boolean
   local title = props.title ---@type string
+  local cfg_preview_title = props.preview_title or " preview " ---@type string
+  local cfg_preview_wrap = not not props.preview_wrap ---@type boolean
+
   local uuid = oxi.uuid() ---@type string
-  local status = Observable.from_value("hidden")
 
   ---@type eve.collection.IScheduler
   local fetch_scheduler = Scheduler.new({
@@ -171,11 +215,15 @@ function M.new(props)
   self.focused_pane_left = "input"
   self.focused_pane_right = "preview"
 
+  self.dimension = dimension
   self.enable_multiline_input = enable_multiline_input
   self.item_present_uuid = nil
   self.items = {} ---@type fml.ux.search.IItem[]
   self.max_width = 0 ---@type integer
+  self.permanent = permanent
   self.title = title
+  self.cfg_preview_title = cfg_preview_title
+  self.cfg_preview_wrap = cfg_preview_wrap
   self.uuid = uuid
   self._deleted_uuids = {} ---@type table<string, boolean>
   self._item_lnum_cur = 1 ---@type integer
@@ -196,6 +244,34 @@ function M:dispose()
   self.state_has_matched:dispose()
   self.input_line_count:dispose()
   self.status:dispose()
+end
+
+---@param raw_dimension                 fml.ux.search.IRawDimension
+---@return nil
+function M:change_dimension(raw_dimension)
+  local old_dimension = self.dimension
+
+  ---@type fml.ux.search.IDimension
+  local dimension = {
+    height = raw_dimension.height,
+    max_width = raw_dimension.max_width or 0.8,
+    max_height = raw_dimension.max_height or 0.8,
+    row = raw_dimension.row,
+    col = raw_dimension.col,
+    width = raw_dimension.width,
+    width_preview = raw_dimension.width_preview,
+  }
+  self.dimension = dimension
+
+  if
+    dimension.height ~= old_dimension.height
+    or dimension.max_width ~= old_dimension.max_width
+    or dimension.max_height ~= old_dimension.max_height
+    or dimension.width ~= old_dimension.width
+    or dimension.width_preview ~= old_dimension.width_preview
+  then
+    self.dirtier_dimension:mark_dirty()
+  end
 end
 
 ---@return fml.ux.search.IItem|nil

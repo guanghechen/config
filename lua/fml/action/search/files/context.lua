@@ -246,16 +246,7 @@ function M.get_search()
 
     ---@type fml.ux.search.IContext
     local context = SearchContext.new({
-      title = title,
-      input = state.select.search_file.input,
-      input_history = state.select.search_file.input_history,
-      fetch_data = api.fetch_data,
       delay_fetch = 512,
-      enable_multiline_input = true,
-    })
-
-    _search = Search.new({
-      context = context,
       dimension = {
         height = 0.8,
         max_height = 1,
@@ -263,11 +254,20 @@ function M.get_search()
         width = 0.4,
         width_preview = 0.45,
       },
+      enable_multiline_input = true,
+      fetch_data = api.fetch_data,
+      input = state.select.search_file.input,
+      input_history = state.select.search_file.input_history,
+      permanent = true,
+      title = title,
+    })
+
+    _search = Search.new({
+      context = context,
       fetch_preview_data = api.fetch_preview_data,
       input_keymaps = keybindings.input_keymaps,
       main_keymaps = keybindings.main_keymaps,
       patch_preview_data = api.patch_preview_data,
-      permanent = true,
       preview_keymaps = keybindings.preview_keymaps,
       delay_render = 64,
       statusline_items = keybindings.statusline_items,

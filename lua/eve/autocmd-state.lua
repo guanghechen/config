@@ -168,18 +168,21 @@ vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
 vim.api.nvim_create_autocmd("VimResized", {
   group = fn.augroup("on_vim_resized"),
   callback = function()
-    local current_tab = vim.fn.tabpagenr() ---@type integer
+    local tabnr_cur = vim.fn.tabpagenr() ---@type integer
     vim.cmd("tabdo wincmd =")
-    vim.cmd("tabnext " .. current_tab)
-    state.widget.resize()
+    vim.cmd("tabnext " .. tabnr_cur)
 
-    state.status.dirtier_statusline:mark_dirty()
-    state.status.dirtier_tabline:mark_dirty()
+    vim.schedule(function()
+      state.widget.resize()
 
-    if vim.env.TMUX then
-      local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
-      state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
-    end
+      state.status.dirtier_statusline:mark_dirty()
+      state.status.dirtier_tabline:mark_dirty()
+
+      if vim.env.TMUX then
+        local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
+        state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
+      end
+    end)
   end,
 })
 

@@ -165,7 +165,7 @@ function M.prompt(context)
       height = 20,
       width_preview = 80,
     },
-    preview_flag_wrap = true,
+    cfg_preview_wrap = true,
     fetch_items = function()
       local select_items = {} ---@type fml.ux.select.IItem[]
       for name, action in pairs(prompt_actions.actions) do

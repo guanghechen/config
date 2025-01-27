@@ -51,7 +51,6 @@ local borders = {
 
 ---@class fml.ux.search.ISearch : eve.t.ux.IWidget
 ---@field public context                fml.ux.search.IContext
----@field public change_dimension       fun(self: fml.ux.search.ISearch, dimension: fml.ux.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.ux.search.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: fml.ux.search.ISearch, title: string): nil
 ---@field public get_item_selected      fun(self: fml.ux.search.ISearch): fml.ux.search.IItem|nil, integer, string|nil
@@ -106,34 +105,13 @@ local borders = {
 ---@field public text                   string
 ---@field public highlights             eve.t.IHighlightInline[]
 
----@class fml.ux.search.IRawDimension
----@field public height                 ?number
----@field public max_width              ?number
----@field public max_height             ?number
----@field public row                    ?number
----@field public col                    ?number
----@field public width                  ?number
----@field public width_preview          ?number
-
----@class fml.ux.search.IDimension
----@field public height                 ?number
----@field public max_width              number
----@field public max_height             number
----@field public row                    ?number
----@field public col                    ?number
----@field public width                  ?number
----@field public width_preview          ?number
-
 ---@class fml.ux.search.IProps
 ---@field public context                fml.ux.search.IContext
----@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public delay_render           ?integer
 ---@field public fetch_preview_data     ?fml.ux.search.IFetchPreviewData
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public patch_preview_data     ?fml.ux.search.IPatchPreviewData
----@field public permanent              ?boolean
----@field public preview_flag_wrap      ?boolean
 ---@field public preview_keymaps        ?eve.t.IKeymap[]
 ---@field public statusline_items       eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public on_close               ?fml.ux.search.IOnClose
@@ -142,13 +120,9 @@ local borders = {
 ---@field public on_preview_rendered    ?fml.ux.search.IOnPreviewRendered
 
 ---@class fml.ux.search.Search : fml.ux.search.ISearch
----@field protected _dimension          fml.ux.search.IDimension
 ---@field protected _input              fml.ux.search.IInput
 ---@field protected _main               fml.ux.search.IMain
----@field protected _permanent          boolean
 ---@field protected _preview            fml.ux.search.IPreview|nil
----@field protected _preview_title      string
----@field protected _preview_flag_wrap  ?boolean
 ---@field protected _on_close           ?fml.ux.search.IOnClose
 ---@field protected _on_invisible       ?fml.ux.search.IOnInvisible
 local M = {}
@@ -162,6 +136,7 @@ function M.new(props)
   local context = props.context ---@type fml.ux.search.IContext
   local common_keymaps = state.widget.get_keymaps(self, command.context_winnr) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
+  local delay_render = math.max(0, props.delay_render or 48) ---@type integer
 
   local raw_statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
   for idx, item in ipairs(raw_statusline_items) do
@@ -184,22 +159,6 @@ function M.new(props)
     }
     table.insert(common_keymaps, keymap)
   end
-
-  local raw_dimension = props.dimension or {} ---@type fml.ux.search.IRawDimension
-  ---@type fml.ux.search.IDimension
-  local dimension = {
-    height = raw_dimension.height,
-    max_width = raw_dimension.max_width or 0.8,
-    max_height = raw_dimension.max_height or 0.8,
-    row = raw_dimension.row,
-    col = raw_dimension.col,
-    width = raw_dimension.width,
-    width_preview = raw_dimension.width_preview,
-  }
-
-  local delay_render = math.max(0, props.delay_render or 48) ---@type integer
-  local permanent = not not props.permanent ---@type boolean
-  local preview_flag_wrap = not not props.preview_flag_wrap ---@type boolean
 
   local on_confirm_from_props = props.on_confirm ---@type fml.ux.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.ux.search.IOnClose|nil
@@ -605,13 +564,9 @@ function M.new(props)
 
   self.context = context
   self.statusline_items = statusline_items
-  self._dimension = dimension
   self._input = input
   self._main = main
-  self._permanent = permanent
   self._preview = preview
-  self._preview_title = " preview "
-  self._preview_flag_wrap = preview_flag_wrap
   self._on_close = on_close_from_props
   self._on_invisible = on_invisible_from_props
 
@@ -732,9 +687,10 @@ end
 ---@return nil
 function M:create_wins_as_needed()
   local context = self.context ---@type fml.ux.search.IContext
+  local dimension = context.dimension ---@type fml.ux.search.IDimension
+
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
-  local dimension = self._dimension ---@type fml.ux.search.IDimension
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local screen_height = vim.o.lines ---@type integer
   local screen_width = vim.o.columns ---@type integer
@@ -842,7 +798,7 @@ function M:create_wins_as_needed()
       row = row,
       col = col + width + 1,
       focusable = true,
-      title = " " .. self._preview_title .. " ",
+      title = " " .. context.cfg_preview_title .. " ",
       title_pos = "center",
       border = borders.preview,
       style = "minimal",
@@ -882,7 +838,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_preview].winblend = winblend
     vim.wo[winnr_preview].winhighlight = highlights.preview
     vim.wo[winnr_preview].winfixbuf = true
-    vim.wo[winnr_preview].wrap = self._preview_flag_wrap
+    vim.wo[winnr_preview].wrap = context.cfg_preview_wrap
   end
 
   ---@type vim.api.keyset.win_config
@@ -922,34 +878,6 @@ function M:create_wins_as_needed()
   end
 end
 
----@param raw_dimension                 fml.ux.search.IRawDimension
----@return nil
-function M:change_dimension(raw_dimension)
-  local old_dimension = self._dimension
-
-  ---@type fml.ux.search.IDimension
-  local dimension = {
-    height = raw_dimension.height,
-    max_width = raw_dimension.max_width or 0.8,
-    max_height = raw_dimension.max_height or 0.8,
-    row = raw_dimension.row,
-    col = raw_dimension.col,
-    width = raw_dimension.width,
-    width_preview = raw_dimension.width_preview,
-  }
-  self._dimension = dimension
-
-  if
-    dimension.height ~= old_dimension.height
-    or dimension.max_width ~= old_dimension.max_width
-    or dimension.max_height ~= old_dimension.max_height
-    or dimension.width ~= old_dimension.width
-    or dimension.width_preview ~= old_dimension.width_preview
-  then
-    self.context.dirtier_dimension:mark_dirty()
-  end
-end
-
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
@@ -968,7 +896,7 @@ end
 ---@return nil
 function M:change_preview_title(title)
   local context = self.context ---@type fml.ux.search.IContext
-  self._preview_title = title
+  context.cfg_preview_title = title
   local winnr = context.winnr_preview ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     ---@type vim.api.keyset.win_config
@@ -980,9 +908,11 @@ end
 
 ---@return nil
 function M:close()
+  local context = self.context ---@type fml.ux.search.IContext
+
   self:hide()
 
-  if not self._permanent then
+  if not context.permanent then
     self.context.status:next("closed")
     self._input:destroy()
     self._main:destroy()

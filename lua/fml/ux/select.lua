@@ -90,7 +90,8 @@ M.__index = M
 ---@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public dirty_on_invisible     ?boolean
 ---@field public preview_enabled        boolean
----@field public preview_flag_wrap      ?boolean
+---@field public preview_title          ?string
+---@field public preview_wrap           ?boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public flag_fuzzy             ?eve.collection.IObservable
 ---@field public flag_regex             ?eve.collection.IObservable
@@ -121,7 +122,8 @@ function M.new(props)
   local dimension = props.dimension ---@type fml.ux.search.IRawDimension|nil
   local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
   local preview_enabled = props.preview_enabled ---@type boolean
-  local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
+  local preview_title = props.preview_title ---@type string|nil
+  local preview_wrap = props.preview_wrap ---@type boolean|nil
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
   local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.collection.IObservable
   local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.collection.IObservable
@@ -272,25 +274,26 @@ function M.new(props)
 
   ---@type fml.ux.search.IContext
   local context = SearchContext.new({
-    title = title,
+    delay_fetch = delay_fetch,
+    dimension = dimension,
+    enable_multiline_input = false,
+    fetch_data = fetch_data,
     input = input,
     input_history = input_history,
-    fetch_data = fetch_data,
-    delay_fetch = delay_fetch,
-    enable_multiline_input = false,
+    permanent = permanent,
+    preview_title = preview_title,
+    preview_wrap = preview_wrap,
+    title = title,
   })
 
   ---@type fml.ux.search.ISearch
   local search = Search.new({
     context = context,
     delay_render = delay_render,
-    dimension = dimension,
     fetch_preview_data = fetch_preview_data,
     input_keymaps = input_keymaps,
     main_keymaps = main_keymaps,
     patch_preview_data = patch_preview_data,
-    permanent = permanent,
-    preview_flag_wrap = preview_flag_wrap,
     preview_keymaps = preview_keymaps,
     statusline_items = statusline_items,
     on_confirm = on_confirm,
@@ -320,7 +323,7 @@ end
 ---@param dimension                     fml.ux.search.IRawDimension
 ---@return nil
 function M:change_dimension(dimension)
-  self._search:change_dimension(dimension)
+  self._search.context:change_dimension(dimension)
 end
 
 ---@param title                         string

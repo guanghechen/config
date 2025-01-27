@@ -78,7 +78,7 @@ M.__index = M
 ---@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public dirty_on_invisible     ?boolean
 ---@field public preview_enabled        boolean
----@field public preview_flag_wrap      ?boolean
+---@field public preview_wrap           ?boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public flag_fuzzy             ?eve.collection.IObservable
 ---@field public flag_regex             ?eve.collection.IObservable
@@ -107,7 +107,7 @@ function M.new(props)
   local delay_render = props.delay_render ---@type integer|nil
   local dirty_on_invisible = props.dirty_on_invisible ---@type boolean|nil
   local preview_enabled = props.preview_enabled ---@type boolean
-  local preview_flag_wrap = props.preview_flag_wrap ---@type boolean|nil
+  local preview_wrap = props.preview_wrap ---@type boolean|nil
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
   local flag_fuzzy = props.flag_fuzzy ---@type eve.collection.IObservable|nil
   local flag_regex = props.flag_regex ---@type eve.collection.IObservable|nil
@@ -235,7 +235,7 @@ function M.new(props)
         dimension = dimension,
         dirty_on_invisible = dirty_on_invisible,
         preview_enabled = preview_enabled,
-        preview_flag_wrap = preview_flag_wrap,
+        preview_wrap = preview_wrap,
         extend_preset_keymaps = extend_preset_keymaps,
         flag_fuzzy = flag_fuzzy,
         flag_regex = flag_regex,
