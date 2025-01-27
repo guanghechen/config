@@ -73,7 +73,7 @@ local chat = state.widget.wrap({
     if not widget:focused() then
       require("CopilotChat").open()
       vim.schedule(function()
-        local winnr = editor.find_floating_winnr(ft.COPILOT_CHAT) ---@type integer|nil
+        local winnr = editor.find_winnr_floating(ft.COPILOT_CHAT) ---@type integer|nil
         if winnr == nil then
           return
         end

@@ -2,6 +2,7 @@ local fn = require("eve.builtin.fn")
 local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
 local tmux = require("eve.builtin.tmux")
+local editor = require("eve.module.editor")
 
 local state = require("eve.state")
 
@@ -168,10 +169,18 @@ vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
 vim.api.nvim_create_autocmd("VimResized", {
   group = fn.augroup("on_vim_resized"),
   callback = function()
-    local tabnr_cur = vim.fn.tabpagenr() ---@type integer
+    ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
+    local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr_cur) ---@type integer
+    local winnr_fixed = editor.find_winnr_fixed() or winnr_cur ---@type integer
+
+    if winnr_cur ~= winnr_fixed then
+      vim.api.nvim_tabpage_set_win(tabnr_cur, winnr_fixed)
+    end
     vim.cmd("tabdo wincmd =")
     vim.cmd("tabnext " .. tabnr_cur)
 
+    vim.api.nvim_tabpage_set_win(tabnr_cur, winnr_cur)
     vim.schedule(function()
       state.widget.resize()
 
