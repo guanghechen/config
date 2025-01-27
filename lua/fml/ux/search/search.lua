@@ -1,5 +1,7 @@
 local G = require("eve.builtin.G")
+local env = require("eve.builtin.env")
 local fn = require("eve.builtin.fn")
+local tmux = require("eve.builtin.tmux")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
@@ -213,6 +215,18 @@ function M.new(props)
         end
       end
     end,
+    focus_left_tmux = function()
+      local is_zen_mode = state.status.tmux_zen_mode:snapshot() ---@type boolean
+      if not is_zen_mode then
+        tmux.change_pane("h")
+      end
+    end,
+    focus_right_tmux = function()
+      local is_zen_mode = state.status.tmux_zen_mode:snapshot() ---@type boolean
+      if not is_zen_mode then
+        tmux.change_pane("l")
+      end
+    end,
     focus_input = function()
       local pane = context.focused_pane_left ---@type string
       local winnr_pane = context.winnr_input ---@type integer|nil
@@ -348,7 +362,7 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
-      callback = actions.focus_right,
+      callback = env.IS_TMUX and actions.focus_left_tmux or fn.noop,
       desc = "search: focus left",
     },
     {
@@ -380,7 +394,7 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
-      callback = actions.focus_right,
+      callback = env.IS_TMUX and actions.focus_left_tmux or fn.noop,
       desc = "search: focus left",
     },
     {
@@ -450,7 +464,7 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
-      callback = actions.focus_left,
+      callback = env.IS_TMUX and actions.focus_right_tmux or fn.noop,
       desc = "search: focus right",
     },
     {
