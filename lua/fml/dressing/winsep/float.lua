@@ -1,5 +1,4 @@
 local ft = require("eve.constant.filetype")
-local state = require("eve.state")
 local Line = require("fml.dressing.winsep.line")
 
 ---@type fml.dressing.Winsep
@@ -24,8 +23,8 @@ local float_winsep = {
     self.left:move(row, col, height)
     self.left:show()
 
-    self.top:move(row, col, width)
-    self.top:show()
+    -- self.top:move(row, col, width)
+    -- self.top:show()
 
     self.right:move(row, col + width + 1, height)
     self.right:show()
@@ -37,17 +36,7 @@ local float_winsep = {
   should_show = function(self, winnr)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if filetype ~= ft.SEARCH_INPUT and filetype ~= ft.SEARCH_PREVIEW then
-      return false
-    end
-
-    local widget = state.widget.get_widget_current() ---@type eve.t.ux.IWidget|nil
-    if widget == nil then
-      return false
-    end
-
-    ---@cast widget                     fml.ux.search.ISearch
-    return widget.get_winnr_preview ~= nil and widget:get_winnr_preview() ~= nil
+    return ft.is_winsep_float(filetype)
   end,
 }
 

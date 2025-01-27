@@ -278,6 +278,11 @@ local filetypes = {
     [M.TROUBLE] = true,
     [M.WINPICKER_MASK] = true,
   },
+  winsep_float = {
+    [M.SEARCH_INPUT] = true,
+    [M.SEARCH_MAIN] = true,
+    [M.SEARCH_PREVIEW] = true,
+  },
 }
 
 local extnames = {
@@ -381,6 +386,12 @@ function M.is_printable_file(filename)
   end
 
   return true
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_winsep_float(filetype)
+  return filetype ~= nil and filetypes.winsep_float[filetype]
 end
 
 ---@param filetype                      string|nil

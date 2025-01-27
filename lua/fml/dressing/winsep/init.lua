@@ -14,20 +14,39 @@ local float_winsep = require("fml.dressing.winsep.float")
 ---@field public show                   fun(self: fml.dressing.Winsep, winnr: integer):nil
 ---@field public should_show            fun(self: fml.dressing.Winsep, winnr: integer):boolean
 
-local refresh = Scheduler.new({
-  name = "winsep_refresh",
+local refresh_fixed = Scheduler.new({
+  name = "winsep_refresh fixed",
   delay = 50,
   silent = function()
     local devmode = state.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   task = function(callback)
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    if state.flight.dressing_winsep_fixed:snapshot() and fixed_winsep:should_show(winnr) then
-      fixed_winsep:show(winnr)
+    if state.flight.dressing_winsep_fixed:snapshot() then
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      if fixed_winsep:should_show(winnr) then
+        fixed_winsep:show(winnr)
+      end
     end
-    if state.flight.dressing_winsep_float:snapshot() and float_winsep:should_show(winnr) then
-      float_winsep:show(winnr)
+    callback("fulfilled")
+  end,
+})
+
+local refresh_float = Scheduler.new({
+  name = "winsep_refresh float",
+  delay = 200,
+  silent = function()
+    local devmode = state.flight.devmode:snapshot() ---@type boolean
+    return not devmode
+  end,
+  task = function(callback)
+    if state.flight.dressing_winsep_float:snapshot() then
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      if float_winsep:should_show(winnr) then
+        float_winsep:show(winnr)
+      else
+        float_winsep:hide()
+      end
     end
     callback("fulfilled")
   end,
@@ -36,7 +55,8 @@ local refresh = Scheduler.new({
 vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
   group = fn.augroup("winsep_refresh"),
   callback = function()
-    refresh:schedule()
+    refresh_fixed:schedule()
+    refresh_float:schedule()
   end,
 })
 
