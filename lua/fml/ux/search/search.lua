@@ -10,7 +10,6 @@ local command = require("eve.command")
 local SearchInput = require("fml.ux.search.input")
 local SearchMain = require("fml.ux.search.main")
 local SearchPreview = require("fml.ux.search.preview")
-local SearchContext = require("fml.ux.search.context")
 
 local EDITING_PREFIX = setting.EDITING_INPUT_PREFIX ---@type string
 
@@ -126,14 +125,10 @@ local borders = {
 ---@field public width_preview          ?number
 
 ---@class fml.ux.search.IProps
+---@field public context                fml.ux.search.IContext
 ---@field public dimension              ?fml.ux.search.IRawDimension
----@field public enable_multiline_input ?boolean
----@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
----@field public fetch_data             fml.ux.search.IFetchData
 ---@field public fetch_preview_data     ?fml.ux.search.IFetchPreviewData
----@field public input                  eve.collection.IObservable
----@field public input_history          eve.collection.IHistory|nil
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public patch_preview_data     ?fml.ux.search.IPatchPreviewData
@@ -141,7 +136,6 @@ local borders = {
 ---@field public preview_flag_wrap      ?boolean
 ---@field public preview_keymaps        ?eve.t.IKeymap[]
 ---@field public statusline_items       eve.t.ux.widget.IRawStatuslineItem[]
----@field public title                  string
 ---@field public on_close               ?fml.ux.search.IOnClose
 ---@field public on_invisible           ?fml.ux.search.IOnInvisible
 ---@field public on_confirm             fml.ux.search.IOnConfirm
@@ -155,9 +149,6 @@ local borders = {
 ---@field protected _preview            fml.ux.search.IPreview|nil
 ---@field protected _preview_title      string
 ---@field protected _preview_flag_wrap  ?boolean
----@field protected _winnr_input        integer|nil
----@field protected _winnr_main         integer|nil
----@field protected _winnr_preview      integer|nil
 ---@field protected _on_close           ?fml.ux.search.IOnClose
 ---@field protected _on_invisible       ?fml.ux.search.IOnInvisible
 local M = {}
@@ -168,6 +159,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
+  local context = props.context ---@type fml.ux.search.IContext
   local common_keymaps = state.widget.get_keymaps(self, command.context_winnr) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
 
@@ -205,26 +197,13 @@ function M.new(props)
     width_preview = raw_dimension.width_preview,
   }
 
-  local delay_fetch = math.max(0, props.delay_fetch or 128) ---@type integer
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
-  local enable_multiline_input = not not props.enable_multiline_input ---@type boolean
-  local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local permanent = not not props.permanent ---@type boolean
   local preview_flag_wrap = not not props.preview_flag_wrap ---@type boolean
 
   local on_confirm_from_props = props.on_confirm ---@type fml.ux.search.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.ux.search.IOnClose|nil
   local on_invisible_from_props = props.on_invisible ---@type fml.ux.search.IOnInvisible|nil
-
-  ---@type fml.ux.search.IContext
-  local context = SearchContext.new({
-    title = props.title,
-    input = props.input,
-    input_history = input_history,
-    fetch_data = props.fetch_data,
-    delay_fetch = delay_fetch,
-    enable_multiline_input = enable_multiline_input,
-  })
 
   ---@return nil
   local function on_confirm()
@@ -234,6 +213,7 @@ function M.new(props)
 
       local status = context.status:snapshot() ---@type eve.e.WidgetStatus
       if status ~= "visible" then
+        local input_history = context.input_history ---@type eve.collection.IHistory|nil
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
           if top ~= nil then
@@ -252,18 +232,50 @@ function M.new(props)
 
   ---@class fml.ux.search.search.actions
   local actions = {
-    focus_preview = function()
-      local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
-      local winnr_preview = self:get_winnr_preview() ---@type integer|nil
-      if winnr_preview ~= nil and winnr ~= winnr_preview and vim.api.nvim_win_is_valid(winnr_preview) then
-        vim.api.nvim_tabpage_set_win(0, winnr_preview)
+    focus_left = function()
+      local pane = context.focused_pane_left ---@type string
+      local winnr_pane = context["winnr_" .. pane] ---@type integer|nil
+      if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
+        context.focused_pane = pane
+        local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+        if winnr ~= winnr_pane then
+          vim.api.nvim_tabpage_set_win(0, winnr_pane)
+        end
+      end
+    end,
+    focus_right = function()
+      local pane = context.focused_pane_right ---@type string
+      local winnr_pane = context["winnr_" .. pane] ---@type integer|nil
+      if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
+        context.focused_pane = pane
+        local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+        if winnr ~= winnr_pane then
+          vim.api.nvim_tabpage_set_win(0, winnr_pane)
+        end
       end
     end,
     focus_input = function()
-      local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
-      local winnr_input = self:get_winnr_input() ---@type integer|nil
-      if winnr_input ~= nil and winnr ~= winnr_input and vim.api.nvim_win_is_valid(winnr_input) then
-        vim.api.nvim_tabpage_set_win(0, winnr_input)
+      local pane = context.focused_pane_left ---@type string
+      local winnr_pane = context.winnr_input ---@type integer|nil
+      if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
+        context.focused_pane = pane
+        context.focused_pane_left = "input"
+        local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+        if winnr ~= winnr_pane then
+          vim.api.nvim_tabpage_set_win(0, winnr_pane)
+        end
+      end
+    end,
+    focus_main = function()
+      local pane = context.focused_pane_left ---@type string
+      local winnr_pane = context.winnr_main ---@type integer|nil
+      if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
+        context.focused_pane = pane
+        context.focused_pane_left = "main"
+        local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+        if winnr ~= winnr_pane then
+          vim.api.nvim_tabpage_set_win(0, winnr_pane)
+        end
       end
     end,
     force_refresh = function()
@@ -299,8 +311,7 @@ function M.new(props)
       end
     end,
     on_main_mouse_click = function()
-      ---@diagnostic disable-next-line: invisible
-      local winnr_main = self._winnr_main ---@type integer|nil
+      local winnr_main = context.winnr_main ---@type integer|nil
       if winnr_main ~= nil then
         local cursor = vim.fn.getmousepos()
         local winnr = cursor.winid ---@type integer
@@ -316,8 +327,7 @@ function M.new(props)
       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<LeftMouse>", true, false, true), "n", false)
     end,
     on_main_mouse_dbclick = function()
-      ---@diagnostic disable-next-line: invisible
-      local winnr_main = self._winnr_main ---@type integer|nil
+      local winnr_main = context.winnr_main ---@type integer|nil
       if winnr_main ~= nil then
         local cursor = vim.fn.getmousepos()
         local winnr = cursor.winid ---@type integer
@@ -360,27 +370,66 @@ function M.new(props)
   })
 
   ---@type eve.t.IKeymap[]
-  local left_common_keymaps = {
+  local default_input_keymaps = {
     {
       modes = { "i", "n", "v" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
-      callback = actions.on_main_down,
-      desc = "search: focus next item",
+      callback = actions.focus_main,
+      desc = "search: focus down",
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
-      callback = actions.on_main_up,
-      desc = "search: focus prev item",
+      callback = actions.focus_main,
+      desc = "search: focus up",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>h",
+      aliases = { "<D-h>", "<M-h>" },
+      callback = actions.focus_right,
+      desc = "search: focus left",
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
-      callback = actions.focus_preview,
-      desc = "search: focus preview",
+      callback = actions.focus_right,
+      desc = "search: focus right",
+    },
+  }
+
+  ---@type eve.t.IKeymap[]
+  local default_main_keymaps = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      callback = actions.focus_input,
+      desc = "search: focus down",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      callback = actions.focus_input,
+      desc = "search: focus up",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>h",
+      aliases = { "<D-h>", "<M-h>" },
+      callback = actions.focus_right,
+      desc = "search: focus left",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>l",
+      aliases = { "<D-l>", "<M-l>" },
+      callback = actions.focus_right,
+      desc = "search: focus right",
     },
     {
       modes = { "i", "n", "v" },
@@ -388,59 +437,85 @@ function M.new(props)
       callback = actions.on_delete_item,
       desc = "search: delete current item",
     },
-  }
-
-  local input_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
-  vim.list_extend(input_keymaps, left_common_keymaps)
-  vim.list_extend(input_keymaps, props.input_keymaps or {})
-
-  local main_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
-  vim.list_extend(main_keymaps, left_common_keymaps)
-  vim.list_extend(main_keymaps, {
-    { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
     {
       modes = { "i", "n", "v" },
       key = "<Down>",
+      aliases = { "<C-j>", "j" },
       callback = actions.on_main_down,
       desc = "search: focus next item",
     },
-    { modes = { "i", "n", "v" }, key = "<Up>", callback = actions.on_main_up, desc = "search: focus prev item" },
-    { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
-    { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
-    { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
-    { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
-    { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
-  })
-  vim.list_extend(main_keymaps, props.main_keymaps or {})
+    {
+      modes = { "i", "n", "v" },
+      key = "<Up>",
+      aliases = { "<C-k>", "k" },
+      callback = actions.on_main_up,
+      desc = "search: focus prev item",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<cr>",
+      aliases = { "o" },
+      callback = on_confirm,
+      desc = "search: confirm",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "G",
+      callback = actions.on_main_G,
+      desc = "search: goto last line",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "g",
+      callback = actions.on_main_g,
+      desc = "search: locate",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "gg",
+      callback = actions.on_main_gg,
+      desc = "search: goto first line",
+    },
+  }
 
-  local preview_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
-  vim.list_extend(preview_keymaps, {
+  ---@type eve.t.IKeymap[]
+  local default_preview_keymaps = {
     {
       modes = { "i", "n", "v" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
-      callback = actions.focus_input,
-      desc = "search: focus input",
+      callback = actions.focus_left,
+      desc = "search: focus left",
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
-      callback = actions.on_main_down,
-      desc = "search: focus next item",
+      callback = actions.focus_left,
+      desc = "search: focus right",
     },
     {
       modes = { "i", "n", "v" },
-      key = "<C-a>k",
-      aliases = { "<D-k>", "<M-k>" },
-      callback = actions.on_main_up,
-      desc = "search: focus prev item",
+      key = "<cr>",
+      aliases = { "o" },
+      callback = on_confirm,
+      desc = "search: confirm",
     },
-    { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
-  })
+  }
+
+  local input_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
+  vim.list_extend(input_keymaps, default_input_keymaps)
+  vim.list_extend(input_keymaps, props.input_keymaps or {})
+
+  local main_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
+  vim.list_extend(main_keymaps, default_main_keymaps)
+  vim.list_extend(main_keymaps, props.main_keymaps or {})
+
+  local preview_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
+  vim.list_extend(preview_keymaps, default_preview_keymaps)
   vim.list_extend(preview_keymaps, props.preview_keymaps or {})
 
-  if not enable_multiline_input then
+  if not context.enable_multiline_input then
     ---@type eve.t.IKeymap[]
     local additional_input_keymaps = {
       { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
@@ -516,7 +591,7 @@ function M.new(props)
         local new_title = opts.title ---@type string
         self:change_preview_title(new_title)
 
-        local winnr = self:get_winnr_preview() ---@type integer|nil
+        local winnr = context.winnr_preview ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
           local lnum = opts.lnum ---@type integer|nil
           local col = opts.col ---@type integer|nil
@@ -537,9 +612,6 @@ function M.new(props)
   self._preview = preview
   self._preview_title = " preview "
   self._preview_flag_wrap = preview_flag_wrap
-  self._winnr_input = nil
-  self._winnr_main = nil
-  self._winnr_preview = nil
   self._on_close = on_close_from_props
   self._on_invisible = on_invisible_from_props
 
@@ -578,12 +650,12 @@ function M.new(props)
   context.state_has_matched:subscribe(
     Subscriber.new({
       on_next = function(flag)
-        local winnr_main = self:get_winnr_main() ---@type integer|nil
+        local winnr_main = context.winnr_main ---@type integer|nil
         if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
           vim.wo[winnr_main].cursorline = flag
         end
 
-        local winnr_preview = self:get_winnr_preview() ---@type integer|nil
+        local winnr_preview = context.winnr_preview ---@type integer|nil
         if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
           vim.wo[winnr_preview].cursorline = flag
         end
@@ -631,7 +703,7 @@ function M.new(props)
     )
   end
 
-  if enable_multiline_input then
+  if context.enable_multiline_input then
     context.input_line_count:subscribe(
       Subscriber.new({
         on_next = function()
@@ -647,7 +719,8 @@ end
 
 ---@return nil
 function M:sync_main_cursor()
-  local winnr_main = self._winnr_main ---@type integer|nil
+  local context = self.context ---@type fml.ux.search.IContext
+  local winnr_main = context.winnr_main ---@type integer|nil
   if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
     local lnum = self._main:place_lnum_sign() ---@type integer|nil
     if lnum ~= nil then
@@ -658,7 +731,7 @@ end
 
 ---@return nil
 function M:create_wins_as_needed()
-  local search_state = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type fml.ux.search.IContext
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
   local dimension = self._dimension ---@type fml.ux.search.IDimension
@@ -673,18 +746,17 @@ function M:create_wins_as_needed()
   ---@type number
   local max_width = dimension.max_width <= 1 and math.floor(dimension.max_width * screen_width) or dimension.max_width
 
-  local input_height = search_state.enable_multiline_input
-      and math.max(1, math.min(3, search_state.input_line_count:snapshot()))
+  local input_height = context.enable_multiline_input and math.max(1, math.min(3, context.input_line_count:snapshot()))
     or 1
   local input_height_with_borders = input_height + 1 ---@type integer
 
-  local height = dimension.height or (#search_state.items + input_height_with_borders) ---@type number
+  local height = dimension.height or (#context.items + input_height_with_borders) ---@type number
   if height < 1 then
     height = math.floor(height * screen_height)
   end
   height = math.min(max_height, math.max(input_height_with_borders, height)) ---@type integer
 
-  local width = dimension.width or search_state.max_width + 10 ---@type number
+  local width = dimension.width or context.max_width + 10 ---@type number
   if width < 1 then
     width = math.floor(width * screen_width)
   end
@@ -702,7 +774,7 @@ function M:create_wins_as_needed()
   end
   prefer_col = math.min(screen_width, math.max(0, prefer_col)) ---@type integer
 
-  local match_count = #search_state.items ---@type integer
+  local match_count = #context.items ---@type integer
   local has_preview = self._preview ~= nil ---@type boolean
   local has_main = match_count > 0 or has_preview ---@type boolean
 
@@ -714,9 +786,9 @@ function M:create_wins_as_needed()
 
   local row = math.min(prefer_row, math.floor((screen_height - height) / 2) - 1) ---@type integer
   local col = math.min(prefer_col, math.floor((screen_width - width - width_preview - 2) / 2)) ---@type integer
-  local winnr_input = self._winnr_input ---@type integer|nil
-  local winnr_main = self._winnr_main ---@type integer|nil
-  local winnr_preview = self._winnr_preview ---@type integer|nil
+  local winnr_input = context.winnr_input ---@type integer|nil
+  local winnr_main = context.winnr_main ---@type integer|nil
+  local winnr_preview = context.winnr_preview ---@type integer|nil
 
   if has_main then
     ---@type vim.api.keyset.win_config
@@ -736,7 +808,7 @@ function M:create_wins_as_needed()
 
     if winnr_main == nil or not vim.api.nvim_win_is_valid(winnr_main) then
       winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
-      self._winnr_main = winnr_main
+      context.winnr_main = winnr_main
 
       vim.wo[winnr_main].number = false
       vim.wo[winnr_main].relativenumber = false
@@ -754,7 +826,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_main].winfixbuf = true
     self:sync_main_cursor()
   else
-    self._winnr_main = nil
+    context.winnr_main = nil
     if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
       vim.api.nvim_win_close(winnr_main, true)
     end
@@ -779,7 +851,7 @@ function M:create_wins_as_needed()
     local bufnr_preview = self._preview:create_buf_as_needed() ---@type integer
     if winnr_preview == nil or not vim.api.nvim_win_is_valid(winnr_preview) then
       winnr_preview = vim.api.nvim_open_win(bufnr_preview, true, wincfg_preview)
-      self._winnr_preview = winnr_preview
+      context.winnr_preview = winnr_preview
 
       ---@type integer|nil, integer|nil
       local preview_lnum, preview_col = self._preview:get_current_location()
@@ -789,7 +861,7 @@ function M:create_wins_as_needed()
 
       vim.wo[winnr_preview].number = true
       vim.wo[winnr_preview].relativenumber = false
-      vim.wo[winnr_preview].signcolumn = "yes:1"
+      vim.wo[winnr_preview].signcolumn = "yes"
       vim.wo[winnr_preview].list = true
       vim.wo[winnr_preview].listchars = string.format(
         "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
@@ -822,14 +894,14 @@ function M:create_wins_as_needed()
     row = row,
     col = col,
     focusable = true,
-    title = " " .. search_state.title .. " ",
+    title = " " .. context.title .. " ",
     title_pos = "center",
     border = has_main and (has_preview and borders.input_with_preview or borders.input) or borders.input_without_main,
     style = "minimal",
   }
   if winnr_input == nil or not vim.api.nvim_win_is_valid(winnr_input) then
     winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_input)
-    self._winnr_input = winnr_input
+    context.winnr_input = winnr_input
 
     vim.wo[winnr_input].number = false
     vim.wo[winnr_input].relativenumber = false
@@ -845,7 +917,7 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].winhighlight = highlights.input
   vim.wo[winnr_input].winfixbuf = true
 
-  if winnr_cur ~= winnr_input and winnr_cur ~= winnr_preview then
+  if winnr_cur ~= winnr_input and winnr_cur ~= winnr_preview and winnr_cur ~= winnr_main then
     vim.api.nvim_tabpage_set_win(0, winnr_input)
   end
 end
@@ -881,8 +953,9 @@ end
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  self.context.title = title
-  local winnr = self:get_winnr_input() ---@type integer|nil
+  local context = self.context ---@type fml.ux.search.IContext
+  context.title = title
+  local winnr = context.winnr_input ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     ---@type vim.api.keyset.win_config
     local win_conf_cur = vim.api.nvim_win_get_config(winnr)
@@ -894,8 +967,9 @@ end
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
+  local context = self.context ---@type fml.ux.search.IContext
   self._preview_title = title
-  local winnr = self:get_winnr_preview() ---@type integer|nil
+  local winnr = context.winnr_preview ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     ---@type vim.api.keyset.win_config
     local win_conf_cur = vim.api.nvim_win_get_config(winnr)
@@ -931,7 +1005,7 @@ function M:focus()
     self.context.dirtier_data:mark_dirty()
   end
 
-  if not M:focused() then
+  if not self:focused() then
     self._input:create_buf_as_needed()
     self._main:render()
     if self._preview ~= nil then
@@ -944,10 +1018,9 @@ end
 
 ---@return boolean
 function M:focused()
+  local context = self.context ---@type fml.ux.search.IContext
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-  return winnr_cur == self:get_winnr_input()
-    or winnr_cur == self:get_winnr_main()
-    or winnr_cur == self:get_winnr_preview()
+  return winnr_cur == context.winnr_input or winnr_cur == context.winnr_main or winnr_cur == context.winnr_preview
 end
 
 ---@return fml.ux.search.IItem|nil
@@ -959,29 +1032,30 @@ end
 
 ---@return integer|nil
 function M:get_winnr_main()
-  return self._winnr_main
+  return self.context.winnr_main
 end
 
 ---@return integer|nil
 function M:get_winnr_input()
-  return self._winnr_input
+  return self.context.winnr_input
 end
 
 ---@return integer|nil
 function M:get_winnr_preview()
-  return self._winnr_preview
+  return self.context.winnr_preview
 end
 
 ---@return nil
 function M:hide()
-  local winnr_input = self._winnr_input ---@type integer|nil
-  local winnr_main = self._winnr_main ---@type integer|nil
-  local winnr_preview = self._winnr_preview ---@type integer|nil
+  local context = self.context ---@type fml.ux.search.IContext
+  local winnr_input = context.winnr_input ---@type integer|nil
+  local winnr_main = context.winnr_main ---@type integer|nil
+  local winnr_preview = context.winnr_preview ---@type integer|nil
 
-  self._winnr_input = nil
-  self._winnr_main = nil
-  self._winnr_preview = nil
-  self.context.status:next("hidden")
+  context.winnr_input = nil
+  context.winnr_main = nil
+  context.winnr_preview = nil
+  context.status:next("hidden")
 
   if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
     vim.api.nvim_win_close(winnr_input, true)

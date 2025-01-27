@@ -14,17 +14,32 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public dirtier_data_cache     eve.collection.IDirtier
 ---@field public dirtier_main           eve.collection.IDirtier
 ---@field public dirtier_preview        eve.collection.IDirtier
----@field public state_has_matched      eve.collection.IObservable
----@field public enable_multiline_input boolean
+---
 ---@field public input                  eve.collection.IObservable
 ---@field public input_history          eve.collection.IHistory|nil
 ---@field public input_line_count       eve.collection.IObservable
+---@field public state_has_matched      eve.collection.IObservable
+---@field public status                 eve.collection.IObservable
+---
+---@field public bufnr_input            integer|nil
+---@field public bufnr_main             integer|nil
+---@field public bufnr_preview          integer|nil
+---
+---@field public winnr_input            integer|nil
+---@field public winnr_main             integer|nil
+---@field public winnr_preview          integer|nil
+---
+---@field public enable_multiline_input boolean
 ---@field public item_present_uuid      string|nil
 ---@field public items                  fml.ux.search.IItem[]
 ---@field public max_width              integer
----@field public status                 eve.collection.IObservable
 ---@field public title                  string
 ---@field public uuid                   string
+---
+---@field public focused_pane           "input"|"main"|"preview"
+---@field public focused_pane_left      "input"|"main"
+---@field public focused_pane_right     "preview"
+---
 ---@field public get_current            fun(self: fml.ux.search.IContext): fml.ux.search.IItem|nil, integer, string|nil
 ---@field public get_current_lnum       fun(self: fml.ux.search.IContext): integer
 ---@field public get_current_uuid       fun(self: fml.ux.search.IContext): string|nil
@@ -145,15 +160,21 @@ function M.new(props)
   self.dirtier_data_cache = dirtier_data_cache
   self.dirtier_main = dirtier_main
   self.dirtier_preview = dirtier_preview
-  self.state_has_matched = state_has_matched
-  self.enable_multiline_input = enable_multiline_input
+
   self.input = input
   self.input_history = input_history
   self.input_line_count = input_line_count
+  self.state_has_matched = state_has_matched
+  self.status = status
+
+  self.focused_pane = "input"
+  self.focused_pane_left = "input"
+  self.focused_pane_right = "preview"
+
+  self.enable_multiline_input = enable_multiline_input
   self.item_present_uuid = nil
   self.items = {} ---@type fml.ux.search.IItem[]
   self.max_width = 0 ---@type integer
-  self.status = status
   self.title = title
   self.uuid = uuid
   self._deleted_uuids = {} ---@type table<string, boolean>

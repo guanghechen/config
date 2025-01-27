@@ -11,6 +11,7 @@ local command = require("eve.command")
 
 local Setting = require("fml.ux.setting")
 local Search = require("fml.ux.search.search")
+local SearchContext = require("fml.ux.search.context")
 
 ---@return eve.e.SearchFileScope
 local function get_scope_carousel_next()
@@ -243,7 +244,18 @@ function M.get_search()
     local frecency = state.frecency.files ---@type eve.collection.IFrecency
     local title = M.get_title() ---@type string
 
+    ---@type fml.ux.search.IContext
+    local context = SearchContext.new({
+      title = title,
+      input = state.select.search_file.input,
+      input_history = state.select.search_file.input_history,
+      fetch_data = api.fetch_data,
+      delay_fetch = 512,
+      enable_multiline_input = true,
+    })
+
     _search = Search.new({
+      context = context,
       dimension = {
         height = 0.8,
         max_height = 1,
@@ -251,12 +263,7 @@ function M.get_search()
         width = 0.4,
         width_preview = 0.45,
       },
-      enable_multiline_input = true,
-      fetch_data = api.fetch_data,
-      delay_fetch = 512,
       fetch_preview_data = api.fetch_preview_data,
-      input = state.select.search_file.input,
-      input_history = state.select.search_file.input_history,
       input_keymaps = keybindings.input_keymaps,
       main_keymaps = keybindings.main_keymaps,
       patch_preview_data = api.patch_preview_data,
@@ -264,7 +271,6 @@ function M.get_search()
       preview_keymaps = keybindings.preview_keymaps,
       delay_render = 64,
       statusline_items = keybindings.statusline_items,
-      title = title,
       on_invisible = function()
         local scope = state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
         if scope == "B" then

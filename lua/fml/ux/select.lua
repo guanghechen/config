@@ -4,6 +4,7 @@ local icons = require("eve.constant.icon")
 
 local state = require("eve.state")
 local Search = require("fml.ux.search.search")
+local SearchContext = require("fml.ux.search.context")
 
 ---@class fml.ux.ISelect : eve.t.ux.IWidget
 ---@field public change_dimension       fun(self: fml.ux.ISelect, dimension: fml.ux.search.IRawDimension): nil
@@ -77,7 +78,7 @@ local Search = require("fml.ux.search.search")
 ---@field protected _live_data_dirty    eve.collection.IObservable
 ---@field protected _matches            fml.ux.select.IMatchedItem[]
 ---@field protected _provider           fml.ux.select.IProvider
----@field protected _get_search         fun(): fml.ux.search.ISearch
+---@field protected _search             fml.ux.search.ISearch
 local M = {}
 M.__index = M
 
@@ -269,36 +270,34 @@ function M.new(props)
     end
   end
 
-  local _search = nil ---@type fml.ux.search.ISearch|nil
+  ---@type fml.ux.search.IContext
+  local context = SearchContext.new({
+    title = title,
+    input = input,
+    input_history = input_history,
+    fetch_data = fetch_data,
+    delay_fetch = delay_fetch,
+    enable_multiline_input = false,
+  })
 
-  ---@return fml.ux.search.ISearch
-  local function get_search()
-    if _search == nil then
-      _search = Search.new({
-        delay_fetch = delay_fetch,
-        delay_render = delay_render,
-        dimension = dimension,
-        enable_multiline_input = false,
-        fetch_data = fetch_data,
-        fetch_preview_data = fetch_preview_data,
-        input = input,
-        input_history = input_history,
-        input_keymaps = input_keymaps,
-        main_keymaps = main_keymaps,
-        patch_preview_data = patch_preview_data,
-        permanent = permanent,
-        preview_flag_wrap = preview_flag_wrap,
-        preview_keymaps = preview_keymaps,
-        statusline_items = statusline_items,
-        title = title,
-        on_confirm = on_confirm,
-        on_close = on_close_from_props,
-        on_invisible = on_invisible,
-        on_preview_rendered = on_preview_rendered,
-      })
-    end
-    return _search
-  end
+  ---@type fml.ux.search.ISearch
+  local search = Search.new({
+    context = context,
+    delay_render = delay_render,
+    dimension = dimension,
+    fetch_preview_data = fetch_preview_data,
+    input_keymaps = input_keymaps,
+    main_keymaps = main_keymaps,
+    patch_preview_data = patch_preview_data,
+    permanent = permanent,
+    preview_flag_wrap = preview_flag_wrap,
+    preview_keymaps = preview_keymaps,
+    statusline_items = statusline_items,
+    on_confirm = on_confirm,
+    on_close = on_close_from_props,
+    on_invisible = on_invisible,
+    on_preview_rendered = on_preview_rendered,
+  })
 
   self._case_sensitive = case_sensitive
   self._cmp = cmp
@@ -314,36 +313,31 @@ function M.new(props)
   self._live_data_dirty = live_data_dirty
   self._matches = {}
   self._provider = provider
-  self._get_search = get_search
-
+  self._search = search
   return self
 end
 
 ---@param dimension                     fml.ux.search.IRawDimension
 ---@return nil
 function M:change_dimension(dimension)
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:change_dimension(dimension)
+  self._search:change_dimension(dimension)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:change_input_title(title)
+  self._search:change_input_title(title)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:change_preview_title(title)
+  self._search:change_preview_title(title)
 end
 
 ---@return nil
 function M:close()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:close()
+  self._search:close()
 end
 
 ---@param item1                         fml.ux.select.IMatchedItem
@@ -521,14 +515,12 @@ end
 
 ---@return boolean
 function M:focused()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  return search:focused()
+  return self._search:focused()
 end
 
 ---@return nil
 function M:focus()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:focus()
+  self._search:focus()
 end
 
 ---@param uuid                          string
@@ -541,8 +533,7 @@ end
 ---@return integer
 ---@return string|nil
 function M:get_item_selected()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  local _, lnum, uuid = search:get_item_selected() ---@type fml.ux.search.IItem|nil, integer, string|nil
+  local _, lnum, uuid = self._search:get_item_selected() ---@type fml.ux.search.IItem|nil, integer, string|nil
   local item = uuid ~= nil and self._item_map[uuid] or nil ---@type fml.ux.select.IItem|nil
   return item, lnum, uuid
 end
@@ -554,58 +545,49 @@ end
 
 ---@return integer|nil
 function M:get_winnr_main()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  return search:get_winnr_main()
+  return self._search.context.winnr_main
 end
 
 ---@return integer|nil
 function M:get_winnr_input()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  return search:get_winnr_input()
+  return self._search.context.winnr_input
 end
 
 ---@return integer|nil
 function M:get_winnr_preview()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  return search:get_winnr_preview()
+  return self._search.context.winnr_preview
 end
 
 ---@return nil
 function M:hide()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:hide()
+  self._search:hide()
 end
 
 ---@return nil
 function M:mark_data_dirty()
   self._live_data_dirty:next(true)
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search.context.dirtier_data:mark_dirty()
+  self._search.context.dirtier_data:mark_dirty()
 end
 
 ---@param uuid                          string
 ---@return nil
 function M:mark_item_deleted(uuid)
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:mark_item_deleted(uuid)
+  self._search:mark_item_deleted(uuid)
 end
 
 ---@return nil
 function M:mark_search_state_dirty()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search.context.dirtier_data:mark_dirty()
+  self._search.context.dirtier_data:mark_dirty()
 end
 
 ---@return nil
 function M:show()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:show()
+  self._search:show()
 end
 
 ---@return nil
 function M:toggle()
-  local search = self._get_search() ---@type fml.ux.search.ISearch
-  search:toggle()
+  self._search:toggle()
 end
 
 return M

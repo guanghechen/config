@@ -170,7 +170,7 @@ function M:focus()
     return
   end
 
-  if not M:focused() then
+  if not self:focused() then
     self._status = "visible" ---@type eve.e.WidgetStatus
 
     local winnr, bufnr = self:create_win_as_needed()
