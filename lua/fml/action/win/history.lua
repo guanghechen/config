@@ -107,25 +107,29 @@ local function get_history_select()
       preview_enabled = false,
       extend_preset_keymaps = true,
       frecency = frecency,
+      multiple = false,
       provider = provider,
       title = "Find Window History",
-      on_confirm = function(widget, item)
-        local item_index = tonumber(item.uuid) ---@type integer|nil
-        if item_index ~= nil then
-          local winnr_source = command.context_winnr() ---@type integer|nil
-          local meta = winnr_source and state.win.resolve(winnr_source) or nil ---@type eve.t.state.win.meta.state|nil
-          if meta ~= nil then
-            meta.filepath_history:go(item_index)
+      on_confirm = function(widget, items)
+        if #items == 1 then
+          local item = items[1] ---@type fml.ux.select.IItem
+          local item_index = tonumber(item.uuid) ---@type integer|nil
+          if item_index ~= nil then
+            local winnr_source = command.context_winnr() ---@type integer|nil
+            local meta = winnr_source and state.win.resolve(winnr_source) or nil ---@type eve.t.state.win.meta.state|nil
+            if meta ~= nil then
+              meta.filepath_history:go(item_index)
+            end
           end
-        end
 
-        local cwd = path.cwd() ---@type string
-        local filepath = path.join(cwd, item.data.filepath) ---@type string
+          local cwd = path.cwd() ---@type string
+          local filepath = path.join(cwd, item.data.filepath) ---@type string
 
-        local winnr_source = command.context_winnr() ---@type integer|nil
-        if winnr_source and vim.api.nvim_win_is_valid(winnr_source) then
-          widget:close()
-          editor.open_filepath(winnr_source, filepath)
+          local winnr_source = command.context_winnr() ---@type integer|nil
+          if winnr_source and vim.api.nvim_win_is_valid(winnr_source) then
+            widget:close()
+            editor.open_filepath(winnr_source, filepath)
+          end
         end
       end,
     })

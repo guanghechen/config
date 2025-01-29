@@ -8,6 +8,7 @@ local Select = require("fml.ux.select")
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
 ---@field public input                  ?eve.collection.IObservable
+---@field public multiple               ?boolean
 ---@field public preview_wrap           ?boolean
 ---@field public fetch_items            fun(): fml.ux.select.IItem[]
 ---@field public on_confirm             fml.ux.select.IOnConfirm
@@ -24,6 +25,7 @@ local function select(params)
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
   local input = params.input ---@type eve.collection.IObservable | nil
+  local multiple = params.multiple ---@type boolean|nil
   local preview_wrap = params.preview_wrap ---@type boolean|nil
   local fetch_items = params.fetch_items ---@type fun(): fml.ux.select.IItem[]
   local on_confirm = params.on_confirm ---@type fml.ux.select.IOnConfirm
@@ -59,6 +61,7 @@ local function select(params)
     flag_fuzzy = Observable.from_value(flag_fuzzy),
     flag_regex = Observable.from_value(flag_regex),
     input = input,
+    multiple = multiple,
     permanent = false,
     preview_enabled = preview_enabled,
     preview_wrap = preview_wrap,

@@ -58,6 +58,7 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public item_present_uuid      string|nil
 ---@field public items                  fml.ux.search.IItem[]
 ---@field public max_width              integer
+---@field public multiple               boolean
 ---@field public permanent              boolean
 ---@field public title                  string
 ---@field public uuid                   string
@@ -89,6 +90,7 @@ M.__index = M
 ---@field public fetch_data             fml.ux.search.IFetchData
 ---@field public input                  eve.collection.IObservable
 ---@field public input_history          eve.collection.IHistory|nil
+---@field public multiple               boolean|nil
 ---@field public permanent              boolean|nil
 ---@field public preview_title          string|nil
 ---@field public preview_wrap           boolean|nil
@@ -125,6 +127,7 @@ function M.new(props)
   local input = props.input ---@type eve.collection.IObservable
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable
+  local multiple = not not props.multiple ---@type boolean
   local permanent = not not props.permanent ---@type boolean
   local title = props.title ---@type string
   local cfg_preview_title = props.preview_title or " preview " ---@type string
@@ -220,6 +223,7 @@ function M.new(props)
   self.item_present_uuid = nil
   self.items = {} ---@type fml.ux.search.IItem[]
   self.max_width = 0 ---@type integer
+  self.multiple = multiple
   self.permanent = permanent
   self.title = title
   self.cfg_preview_title = cfg_preview_title

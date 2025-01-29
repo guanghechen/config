@@ -427,27 +427,37 @@ local function get_select()
       input_history = input_history,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
+      multiple = true,
       permanent = true,
       preview_keymaps = preview_keymaps,
       provider = provider,
       title = gen_title(),
-      on_confirm = function(widget, item)
-        local fileitem = file_datamap[item.uuid] ---@type fml.action.find.explorer.IFileItem|nil
-        if fileitem == nil then
-          return
+      on_confirm = function(widget, items)
+        local filepaths = {} ---@type string[]
+        for _, item in ipairs(items) do
+          local fileitem = file_datamap[item.uuid] ---@type fml.action.find.explorer.IFileItem|nil
+          if fileitem ~= nil and fileitem.type == "file" then
+            table.insert(filepaths, fileitem.path)
+          end
         end
 
-        if fileitem.type == "directory" then
-          local dirpath = fileitem.path ---@type string
-          state_cwd:next(dirpath)
-          return
-        end
-
-        if fileitem.type == "file" then
+        if #filepaths > 0 then
           widget:hide()
-
           local winnr_source = command.context_winnr() ---@type integer|nil
-          editor.open_filepath(winnr_source, fileitem.path)
+          for _, filepath in ipairs(filepaths) do
+            editor.open_filepath(winnr_source, filepath)
+          end
+          return
+        end
+
+        if #items == 1 then
+          local item = items[1] ---@type fml.ux.select.IItem
+          local fileitem = file_datamap[item.uuid] ---@type fml.action.find.explorer.IFileItem|nil
+          if fileitem ~= nil and fileitem.type == "directory" then
+            local dirpath = fileitem.path ---@type string
+            state_cwd:next(dirpath)
+            return
+          end
         end
       end,
     })

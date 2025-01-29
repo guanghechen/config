@@ -140,12 +140,16 @@ local function get_select()
       dirty_on_invisible = false,
       preview_enabled = true,
       extend_preset_keymaps = true,
+      multiple = false,
       permanent = false,
       provider = provider,
       title = "Find Highlights",
-      on_confirm = function(widget, item)
-        widget:hide()
-        vim.fn.setreg("+", item.text)
+      on_confirm = function(widget, items)
+        if #items == 1 then
+          widget:hide()
+          local item = items[1] ---@type fml.ux.select.IItem
+          vim.fn.setreg("+", item.text)
+        end
       end,
     })
   end

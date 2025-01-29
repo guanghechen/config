@@ -250,12 +250,15 @@ function M.new(props)
         statusline_items = statusline_items,
         title = title,
         on_close = on_close,
-        on_confirm = on_confirm_from_props or function(widget, item)
+        on_confirm = on_confirm_from_props or function(widget, items)
           local context = command.context_snapshot() ---@type eve.command.IContext|nil
           if context ~= nil then
             widget:close()
-            local filepath = item.data.filepath ---@type string
-            editor.open_filepath(context.winnr, filepath, item.data.lnum, item.data.col)
+
+            for _, item in ipairs(items) do
+              local filepath = item.data.filepath ---@type string
+              editor.open_filepath(context.winnr, filepath, item.data.lnum, item.data.col)
+            end
           end
         end,
         on_preview_rendered = on_preview_rendered,

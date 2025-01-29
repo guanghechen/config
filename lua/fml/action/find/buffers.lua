@@ -198,19 +198,24 @@ local function get_select()
       input_history = state.select.find_buffer.input_history,
       input_keymaps = main_keymaps,
       main_keymaps = main_keymaps,
+      multiple = true,
       preview_enabled = false,
       extend_preset_keymaps = true,
       statusline_items = statusline_items,
       provider = provider,
       title = "Find buffers",
-      on_confirm = function(widget, item)
+      on_confirm = function(widget, items)
         widget:hide()
 
-        local data = item.data ---@type fml.action.find.buffers.IItemData
-        local winnr_source = command.context_winnr() ---@type integer|nil
-        local winnr = winpicker.pick_window(winpicker.filters.project, winnr_source, true) ---@type integer|nil
-        if winnr ~= nil then
-          vim.api.nvim_win_set_buf(winnr, data.bufnr)
+        if #items > 0 then
+          local winnr_source = command.context_winnr() ---@type integer|nil
+          local winnr = winpicker.pick_window(winpicker.filters.project, winnr_source, true) ---@type integer|nil
+          if winnr ~= nil then
+            for _, item in ipairs(items) do
+              local data = item.data ---@type fml.action.find.buffers.IItemData
+              vim.api.nvim_win_set_buf(winnr, data.bufnr)
+            end
+          end
         end
       end,
     })

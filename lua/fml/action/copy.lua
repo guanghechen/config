@@ -69,6 +69,7 @@ function M.copy_filepath(context, arg)
         row = 5,
         width = 50,
       },
+      multiple = false,
       get_present = function()
         return "relative"
       end,
@@ -80,9 +81,12 @@ function M.copy_filepath(context, arg)
         return items
       end,
       ---@diagnostic disable-next-line: unused-local
-      on_confirm = function(widget, item)
-        local candidate = item.uuid ---@type string
-        copy_current_filepath(candidate, filepath)
+      on_confirm = function(widget, items)
+        if #items == 1 then
+          local item = items[1] ---@type fml.ux.select.IItem
+          local candidate = item.uuid ---@type string
+          copy_current_filepath(candidate, filepath)
+        end
       end,
     })
   end

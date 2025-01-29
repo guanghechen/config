@@ -258,6 +258,7 @@ function M.get_search()
       fetch_data = api.fetch_data,
       input = state.select.search_file.input,
       input_history = state.select.search_file.input_history,
+      multiple = true,
       permanent = true,
       title = title,
     })
@@ -285,8 +286,8 @@ function M.get_search()
         end
       end,
       ---@diagnostic disable-next-line: unused-local
-      on_confirm = function(widget, item)
-        api.open_file(item, frecency)
+      on_confirm = function(widget, items)
+        api.open_files(items, frecency)
       end,
     })
   end

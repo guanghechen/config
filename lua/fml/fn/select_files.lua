@@ -13,6 +13,7 @@ local Select = require("fml.ux.select")
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
 ---@field public input                  ?eve.collection.IObservable
+---@field public multiple               ?boolean
 ---@field public title                  string
 ---@field public fetch_filepaths        fun(): string[]
 ---@field public get_present            ?fun(): string|nil
@@ -26,6 +27,7 @@ local function select_files(params)
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
   local input = params.input ---@type eve.collection.IObservable | nil
+  local multiple = params.multiple ---@type boolean|nil
   local title = params.title ---@type string
   local fetch_filepaths = params.fetch_filepaths ---@type fun(): string[]
   local get_present = params.get_present ---@type (fun(): string|nil) | nil
@@ -88,6 +90,7 @@ local function select_files(params)
     flag_regex = Observable.from_value(flag_regex),
     frecency = state.frecency.files,
     input = input,
+    multiple = multiple,
     permanent = false,
     provider = provider,
     title = title,

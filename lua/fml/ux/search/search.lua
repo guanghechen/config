@@ -68,7 +68,7 @@ local borders = {
 ---| fun(): nil
 
 ---@alias fml.ux.search.IOnConfirm
----| fun(widget: fml.ux.search.ISearch, item: fml.ux.search.IItem): nil
+---| fun(widget: fml.ux.search.ISearch, items: fml.ux.search.IItem[]): nil
 
 ---@alias fml.ux.search.IOnInvisible
 ---| fun(): nil
@@ -170,7 +170,8 @@ function M.new(props)
   local function on_confirm()
     local item = context:get_current() ---@type fml.ux.search.IItem|nil
     if item ~= nil then
-      on_confirm_from_props(self, item)
+      local items = { item } ---@type fml.ux.search.IItem[]
+      on_confirm_from_props(self, items)
 
       local status = context.status:snapshot() ---@type eve.e.WidgetStatus
       if status ~= "visible" then

@@ -251,14 +251,15 @@ function M.browse(context)
   end
 
   select({
-    title = "Select remote to browse",
-    flag_fuzzy = true,
-    flag_regex = false,
-    input = Observable.from_value(""),
     dimension = {
       row = 5,
       width = 80,
     },
+    flag_fuzzy = true,
+    flag_regex = false,
+    input = Observable.from_value(""),
+    multiple = false,
+    title = "Select remote to browse",
     fetch_items = function()
       local items = {} ---@type fml.ux.select.IItem[]
       for _, remote in ipairs(remotes) do
@@ -267,9 +268,12 @@ function M.browse(context)
       end
       return items
     end,
-    on_confirm = function(widget, item)
-      widget:close()
-      open_remote(item.data)
+    on_confirm = function(widget, items)
+      if #items == 1 then
+        widget:close()
+        local item = items[1] ---@type fml.ux.select.IItem
+        open_remote(item.data)
+      end
     end
   })
 end

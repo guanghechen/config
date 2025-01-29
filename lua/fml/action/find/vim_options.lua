@@ -91,16 +91,19 @@ local function get_select()
         width = 0.8,
       },
       dirty_on_invisible = false,
+      multiple = false,
       preview_enabled = false,
       extend_preset_keymaps = true,
       provider = provider,
       title = "Find Vim Options",
-      on_confirm = function(widget, item)
-        widget:hide()
-
-        local data = item.data ---@type fml.action.find.vim_options.IItemData
-        local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
-        vim.api.nvim_feedkeys(string.format("%s:set %s=%s", esc, data.name, data.value), "m", true)
+      on_confirm = function(widget, items)
+        if #items == 1 then
+          widget:hide()
+          local item = items[1] ---@type fml.ux.select.IItem
+          local data = item.data ---@type fml.action.find.vim_options.IItemData
+          local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
+          vim.api.nvim_feedkeys(string.format("%s:set %s=%s", esc, data.name, data.value), "m", true)
+        end
       end,
     })
   end

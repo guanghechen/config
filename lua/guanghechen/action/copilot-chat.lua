@@ -159,13 +159,14 @@ function M.prompt(context)
   end
 
   select({
-    title = prompt_actions.prompt,
+    cfg_preview_wrap = true,
     dimension = {
       width = 40,
       height = 20,
       width_preview = 80,
     },
-    cfg_preview_wrap = true,
+    multiple = false,
+    title = prompt_actions.prompt,
     fetch_items = function()
       local select_items = {} ---@type fml.ux.select.IItem[]
       for name, action in pairs(prompt_actions.actions) do
@@ -195,14 +196,16 @@ function M.prompt(context)
       }
       return result
     end,
-    on_confirm = function(widget, item)
-      widget:close()
+    on_confirm = function(widget, items)
+      if #items == 1 then
+        widget:close()
 
-      local data = item.data ---@type guanghechen.action.copilot_chat.prompt_actions.IItem
-      vim.defer_fn(function()
-        chat:focus()
-        require("CopilotChat").ask(data.prompt, data)
-      end, 100)
+        local data = items[1].data ---@type guanghechen.action.copilot_chat.prompt_actions.IItem
+        vim.defer_fn(function()
+          chat:focus()
+          require("CopilotChat").ask(data.prompt, data)
+        end, 100)
+      end
     end,
   })
 end

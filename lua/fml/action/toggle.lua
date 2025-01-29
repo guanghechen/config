@@ -230,6 +230,7 @@ function M.list(context, arg)
         row = 5,
         width = 50,
       },
+      multiple = false,
       fetch_items = function()
         local items = {} ---@type fml.ux.select.IItem[]
         for _, flag in ipairs(flags) do
@@ -256,9 +257,12 @@ function M.list(context, arg)
         end
         return text, highlights
       end,
-      on_confirm = function(widget, item)
-        widget:close()
-        item.data.action(context)
+      on_confirm = function(widget, items)
+        if #items == 1 then
+          local item = items[1] ---@type fml.ux.select.IItem
+          widget:close()
+          item.data.action(context)
+        end
       end,
     })
   end
@@ -282,6 +286,7 @@ function M.toggle_ai_provider(context, arg)
         row = 5,
         width = 50,
       },
+      multiple = false,
       get_present = function()
         return state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
       end,
@@ -300,9 +305,12 @@ function M.toggle_ai_provider(context, arg)
         end
         return text, highlights
       end,
-      on_confirm = function(widget, item)
-        widget:close()
-        state.flight.ai_provider:next(item.uuid)
+      on_confirm = function(widget, items)
+        if #items == 1 then
+          local item = items[1] ---@type fml.ux.select.IItem
+          widget:close()
+          state.flight.ai_provider:next(item.uuid)
+        end
       end,
     })
   end
@@ -326,6 +334,7 @@ function M.toggle_flight(context, arg)
         row = 5,
         width = 50,
       },
+      multiple = false,
       fetch_items = function()
         local items = {} ---@type fml.ux.select.IItem[]
         for _, flight in ipairs(flights) do
@@ -353,9 +362,12 @@ function M.toggle_flight(context, arg)
         end
         return text, highlights
       end,
-      on_confirm = function(widget, item)
-        widget:close()
-        toggle_flight(item.uuid)
+      on_confirm = function(widget, items)
+        if #items == 1 then
+          local item = items[1] ---@type fml.ux.select.IItem
+          widget:close()
+          toggle_flight(item.uuid)
+        end
       end,
     })
   end
@@ -438,6 +450,7 @@ function M.toggle_theme(context, arg)
         row = 5,
         width = 50,
       },
+      multiple = false,
       get_present = function()
         local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
         return theme
@@ -449,9 +462,12 @@ function M.toggle_theme(context, arg)
         end
         return items
       end,
-      on_confirm = function(widget, item)
-        widget:close()
-        apply_theme(item.uuid)
+      on_confirm = function(widget, items)
+        if #items == 1 then
+          local item = items[1] ---@type fml.ux.select.IItem
+          widget:close()
+          apply_theme(item.uuid)
+        end
       end,
     })
   end

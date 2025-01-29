@@ -59,6 +59,7 @@ function M.select(items, opts, on_choice)
     flag_fuzzy = context and context.flag_fuzzy or nil,
     input = context and context.input or nil,
     input_history = context and context.input_history or nil,
+    multiple = false,
     preview_enabled = false,
     extend_preset_keymaps = true,
     title = title,
@@ -73,13 +74,16 @@ function M.select(items, opts, on_choice)
         vim.api.nvim_tabpage_set_win(0, winnr)
       end
     end,
-    on_confirm = function(widget, item)
-      confirmed = true
-      on_choice(item.data.original_item, tonumber(item.uuid))
+    on_confirm = function(widget, items_selected)
+      if #items_selected == 1 then
+        confirmed = true
+        local item = items_selected[1] ---@type fml.ux.select.IItem
+        on_choice(item.data.original_item, tonumber(item.uuid))
 
-      widget:close()
-      if vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_tabpage_set_win(0, winnr)
+        widget:close()
+        if vim.api.nvim_win_is_valid(winnr) then
+          vim.api.nvim_tabpage_set_win(0, winnr)
+        end
       end
     end,
   })

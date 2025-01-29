@@ -601,22 +601,30 @@ function M.get_filematch(filepath)
   return fileitem.filematch
 end
 
----@param item                          fml.ux.search.IItem
+---@param items                         fml.ux.search.IItem[]
 ---@param frecency                      eve.collection.IFrecency
 ---@return nil
-function M.open_file(item, frecency)
+function M.open_files(items, frecency)
   local cwd = context.search_cwd:snapshot() ---@type string
   local workspace = path.workspace() ---@type string
-  local data = _item_map and _item_map[item.uuid] ---@type fml.action.search.files.IItem|nil
-  if data ~= nil then
-    local absolute_filepath = path.resolve(cwd, data.filepath) ---@type string
-    local relative_filepath = path.relative(workspace, absolute_filepath, true) ---@type string
-    frecency:access(relative_filepath)
+  local file_items = {} ---@type fml.action.search.files.IItem[]
+  for _, item in ipairs(items) do
+    local file_item = _item_map and _item_map[item.uuid] ---@type fml.action.search.files.IItem|nil
+    if file_item ~= nil then
+      table.insert(file_items, file_item)
+    end
+  end
 
+  if #file_items > 0 then
     context.hide()
-
     local winnr_source = command.context_winnr() ---@type integer|nil
-    editor.open_filepath(winnr_source, absolute_filepath, data.lnum, data.col) ---@type boolean
+    for _, file_item in ipairs(file_items) do
+      local absolute_filepath = path.resolve(cwd, file_item.filepath) ---@type string
+      local relative_filepath = path.relative(workspace, absolute_filepath, true) ---@type string
+      frecency:access(relative_filepath)
+
+      editor.open_filepath(winnr_source, absolute_filepath, file_item.lnum, file_item.col) ---@type boolean
+    end
   end
 end
 

@@ -1,4 +1,7 @@
+local __module_name__ = "fml.ux.select" ---@type string
+
 local oxi = require("eve.builtin.oxi")
+local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 
@@ -37,7 +40,7 @@ local SearchContext = require("fml.ux.search.context")
 ---| fun(item: fml.ux.select.IItem, match: fml.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
 
 ---@alias fml.ux.select.IOnConfirm
----| fun(widget: fml.ux.ISelect, item: fml.ux.select.IItem): nil
+---| fun(widget: fml.ux.ISelect, items: fml.ux.select.IItem[]): nil
 
 ---@class fml.ux.select.IData
 ---@field public items                  fml.ux.select.IItem[]
@@ -100,6 +103,7 @@ M.__index = M
 ---@field public input_history          ?eve.collection.IHistory
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
+---@field public multiple               ?boolean
 ---@field public permanent              ?boolean
 ---@field public preview_keymaps        ?eve.t.IKeymap[]
 ---@field public provider               fml.ux.select.IProvider
@@ -115,29 +119,57 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type eve.collection.IObservable
-  local cmp = props.cmp ---@type fml.ux.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch or 128 ---@type integer
-  local delay_render = props.delay_render or 48 ---@type integer
   local dimension = props.dimension ---@type fml.ux.search.IRawDimension|nil
-  local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
-  local preview_enabled = props.preview_enabled ---@type boolean
+  local input = props.input or Observable.from_value("") ---@type eve.collection.IObservable
+  local input_history = props.input_history ---@type eve.collection.IHistory|nil
+  local multiple = props.multiple ---@type boolean|nil
+  local permanent = props.permanent ---@type boolean|nil
   local preview_title = props.preview_title ---@type string|nil
   local preview_wrap = props.preview_wrap ---@type boolean|nil
+  local title = props.title ---@type string
+
+  ---@param input_text                  string
+  ---@param force                       boolean
+  ---@param callback                    fml.ux.search.IFetchDataCallback
+  ---@return nil
+  local function fetch_data(input_text, force, callback)
+    vim.schedule(function()
+      local ok, data = pcall(self.fetch_data, self, input_text, force)
+      callback(ok, data)
+    end)
+  end
+
+  ---@type fml.ux.search.IContext
+  local context = SearchContext.new({
+    delay_fetch = delay_fetch,
+    dimension = dimension,
+    enable_multiline_input = false,
+    fetch_data = fetch_data,
+    input = input,
+    input_history = input_history,
+    multiple = multiple,
+    permanent = permanent,
+    preview_title = preview_title,
+    preview_wrap = preview_wrap,
+    title = title,
+  })
+
+  local case_sensitive = props.case_sensitive or Observable.from_value(false) ---@type eve.collection.IObservable
+  local cmp = props.cmp ---@type fml.ux.select.IMatchedItemCmp|nil
+  local delay_render = props.delay_render or 48 ---@type integer
+  local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
+  local preview_enabled = props.preview_enabled ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
   local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.collection.IObservable
   local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.collection.IObservable
   local frecency = props.frecency ---@type eve.collection.IFrecency|nil
-  local input = props.input or Observable.from_value("") ---@type eve.collection.IObservable
-  local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
   local live_data_dirty = Observable.from_value(true) ---@type eve.collection.IObservable
   local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
-  local permanent = props.permanent ---@type boolean|nil
   local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
   local provider = props.provider ---@type fml.ux.select.IProvider
   local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
-  local title = props.title ---@type string
   local on_confirm_from_props = props.on_confirm ---@type fml.ux.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type fml.ux.search.IOnClose|nil
   local on_invisible_from_props = props.on_invisible ---@type fml.ux.search.IOnInvisible|nil
@@ -235,30 +267,44 @@ function M.new(props)
     end
   end
 
-  ---@param input_text                  string
-  ---@param force                       boolean
-  ---@param callback                    fml.ux.search.IFetchDataCallback
-  ---@return nil
-  local function fetch_data(input_text, force, callback)
-    vim.schedule(function()
-      local ok, data = pcall(self.fetch_data, self, input_text, force)
-      callback(ok, data)
-    end)
-  end
-
   ---@param widget                      fml.ux.search.ISearch
-  ---@param item                        fml.ux.search.IItem
+  ---@param items                       fml.ux.search.IItem[]
   ---@return nil
   ---@diagnostic disable-next-line: unused-local
-  local function on_confirm(widget, item)
+  local function on_confirm(widget, items)
+    local select_items = {} ---@type fml.ux.select.IItem[]
+    for _, item in ipairs(items) do
+      ---@diagnostic disable-next-line: invisible
+      local select_item = self._item_map[item.uuid] ---@type fml.ux.select.IItem
+      table.insert(select_items, select_item)
+    end
+
+    if #select_items < 1 then
+      reporter.error({
+        from = __module_name__,
+        subject = "select: on_confirm",
+        message = "no items selected",
+        details = { title = title, items = items, count = #select_items },
+      })
+      return
+    end
+
+    if #select_items > 1 and not context.multiple then
+      reporter.error({
+        from = __module_name__,
+        subject = "select: on_confirm",
+        message = "More than one items selected, but `multiple` is not enabled",
+        details = { title = title, items = items, count = #select_items },
+      })
+      return
+    end
+
     if frecency ~= nil then
-      frecency:access(item.uuid)
+      for _, item in ipairs(items) do
+        frecency:access(item.uuid)
+      end
     end
-    ---@diagnostic disable-next-line: invisible
-    local select_item = self._item_map[item.uuid] ---@type fml.ux.select.IItem
-    if select_item ~= nil then
-      on_confirm_from_props(self, select_item)
-    end
+    on_confirm_from_props(self, select_items)
   end
 
   ---@return nil
@@ -271,20 +317,6 @@ function M.new(props)
       on_invisible_from_props()
     end
   end
-
-  ---@type fml.ux.search.IContext
-  local context = SearchContext.new({
-    delay_fetch = delay_fetch,
-    dimension = dimension,
-    enable_multiline_input = false,
-    fetch_data = fetch_data,
-    input = input,
-    input_history = input_history,
-    permanent = permanent,
-    preview_title = preview_title,
-    preview_wrap = preview_wrap,
-    title = title,
-  })
 
   ---@type fml.ux.search.ISearch
   local search = Search.new({
