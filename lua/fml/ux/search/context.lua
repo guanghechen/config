@@ -53,7 +53,7 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public focused_pane_left      "input"|"main"
 ---@field public focused_pane_right     "preview"
 ---
----@field public dimension               fml.ux.search.IDimension
+---@field public dimension              fml.ux.search.IDimension
 ---@field public enable_multiline_input boolean
 ---@field public item_present_uuid      string|nil
 ---@field public items                  fml.ux.search.IItem[]
@@ -64,7 +64,7 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public uuid                   string
 ---
 ---@field public change_dimension       fun(self: fml.ux.search.IContext, dimension: fml.ux.search.IRawDimension): nil
----@field public get_current            fun(self: fml.ux.search.IContext): fml.ux.search.IItem|nil, integer, string|nil
+---@field public get_current            fun(self: fml.ux.search.IContext): fml.ux.search.IItem|nil
 ---@field public get_current_lnum       fun(self: fml.ux.search.IContext): integer
 ---@field public get_current_uuid       fun(self: fml.ux.search.IContext): string|nil
 ---@field public has_item_deleted       fun(self: fml.ux.search.IContext, uuid: string): boolean
@@ -279,12 +279,9 @@ function M:change_dimension(raw_dimension)
 end
 
 ---@return fml.ux.search.IItem|nil
----@return integer
----@return string|nil
 function M:get_current()
   local lnum = self._item_lnum_cur ---@type integer
-  local uuid = self._item_uuid_cur ---@type string|nil
-  return self.items[lnum], lnum, uuid
+  return self.items[lnum]
 end
 
 ---@return integer

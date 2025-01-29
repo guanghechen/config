@@ -177,10 +177,13 @@ function M:place_lnum_sign()
 
     local current_lnum = 0 ---@type integer
     do
-      local _, lnum, uuid = self.context:get_current()
-      local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-      if uuid ~= nil and linecount > 0 and lnum > 0 and lnum <= linecount then
-        current_lnum = lnum
+      local uuid = self.context:get_current_uuid() ---@type string|nil
+      if uuid ~= nil then
+        local lnum = self.context:get_current_lnum() ---@type integer
+        local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+        if linecount > 0 and lnum > 0 and lnum <= linecount then
+          current_lnum = lnum
+        end
       end
     end
 
