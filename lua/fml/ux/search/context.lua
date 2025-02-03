@@ -67,6 +67,7 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public get_current            fun(self: fml.ux.search.IContext): fml.ux.search.IItem|nil
 ---@field public get_current_lnum       fun(self: fml.ux.search.IContext): integer
 ---@field public get_current_uuid       fun(self: fml.ux.search.IContext): string|nil
+---@field public get_selected_items     fun(self: fml.ux.search.IContext): fml.ux.search.IItem[]
 ---@field public has_item_deleted       fun(self: fml.ux.search.IContext, uuid: string): boolean
 ---@field public set_current            fun(self: fml.ux.search.IContext, lnum: integer): integer
 ---@field public locate                 fun(self: fml.ux.search.IContext, lnum: integer): integer
@@ -74,12 +75,15 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public mark_all_items_deleted fun(self: fml.ux.search.IContext): nil
 ---@field public moveup                 fun(self: fml.ux.search.IContext): integer
 ---@field public movedown               fun(self: fml.ux.search.IContext): integer
+---@field public reset_selected_items   fun(self: fml.ux.search.IContext): nil
 ---@field public show_state             fun(self: fml.ux.search.IContext): nil
+---@field public toggle_item_selected   fun(self: fml.ux.search.IContext, uuid: string): nil
 
 ---@class fml.ux.search.Context : fml.ux.search.IContext
 ---@field protected _deleted_uuids      table<string, boolean>
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
+---@field protected _selected_items     table<string, true>
 local M = {}
 M.__index = M
 
@@ -232,6 +236,7 @@ function M.new(props)
   self._deleted_uuids = {} ---@type table<string, boolean>
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
+  self._selected_items = {} ---@type table<string, true>
 
   input:subscribe(Subscriber.new({ on_next = on_input_change }), false)
   status:subscribe(Subscriber.new({ on_next = on_refresh }), false)
@@ -294,19 +299,17 @@ function M:get_current_uuid()
   return self._item_uuid_cur
 end
 
----@param lnum                          integer
----@param uuid                          string|nil
----@return nil
-function M:set_current(lnum, uuid)
+---@return fml.ux.search.IItem[]
+function M:get_selected_items()
+  local selected = {} ---@type fml.ux.search.IItem[]
   local items = self.items ---@type fml.ux.search.IItem[]
-  local next_lnum = math.max(1, math.min(#items, lnum)) ---@type integer
-  local next_uuid = items[next_lnum] and items[next_lnum].uuid or nil ---@type string|nil
-  local has_changed = self._item_lnum_cur ~= next_lnum or self._item_uuid_cur ~= next_uuid ---@type boolean
-  if has_changed then
-    self.dirtier_preview:mark_dirty()
+  for uuid in pairs(self._selected_items) do
+    local item = items[uuid] ---@type fml.ux.search.IItem|nil
+    if item ~= nil then
+      table.insert(selected, item)
+    end
   end
-  self._item_lnum_cur = next_lnum
-  self._item_uuid_cur = uuid or next_uuid
+  return selected
 end
 
 ---@param uuid                          string
@@ -423,6 +426,12 @@ function M:movedown()
 end
 
 ---@return nil
+function M:reset_selected_items()
+  self._selected_items = {}
+  -- TODO: update signcolumn
+end
+
+---@return nil
 function M:show_sate()
   reporter.error({
     from = __module_name__,
@@ -444,6 +453,26 @@ function M:show_sate()
       uuid = self.uuid,
     },
   })
+end
+
+---@param uuid                          string
+---@return nil
+function M:toggle_item_selected(uuid)
+  local selected_items = self._selected_items ---@type table<string, true>
+  local item = self.items[self._item_lnum_cur] ---@type fml.ux.search.IItem
+  if item == nil or selected_items[uuid] ~= nil then
+    return
+  end
+
+  if self.multiple then
+    if selected_items[uuid] then
+      selected_items[uuid] = nil
+    else
+      selected_items[uuid] = true
+    end
+
+    -- TODO: update signcolumn
+  end
 end
 
 return M
