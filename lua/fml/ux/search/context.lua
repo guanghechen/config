@@ -159,7 +159,7 @@ function M.new(props)
       fetch_data(input_cur, force, function(succeed, data)
         if succeed and data ~= nil then
           ---@diagnostic disable-next-line: invisible
-          local item_lnum_next = 1 ---@type integer
+          local item_lnum_next = self._item_lnum_cur or 1 ---@type integer
           local item_max_width = 0 ---@type integer
           local items = data.items ---@type fml.ux.search.IItem[]
           local uuid_cursor = data.uuid_cursor or data.uuid_present ---@type string|nil
