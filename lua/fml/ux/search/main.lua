@@ -10,7 +10,6 @@ local ft = require("eve.constant.filetype")
 ---@field public render                 fun(self: fml.ux.search.IMain): nil
 
 ---@class fml.ux.search.Main : fml.ux.search.IMain
----@field protected _bufnr              integer|nil
 ---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _render_scheduler   eve.collection.IScheduler
 local M = {}
@@ -95,7 +94,6 @@ function M.new(props)
   })
 
   self.context = context
-  self._bufnr = nil
   self._keymaps = keymaps
   self._render_scheduler = render_scheduler
 
@@ -119,13 +117,13 @@ end
 ---@return integer
 ---@return boolean
 function M:create_buf_as_needed()
-  local bufnr = self._bufnr ---@type integer|nil
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    return bufnr, false
+  local context = self.context ---@type fml.ux.search.IContext
+  if context.bufnr_main ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_main) then
+    return context.bufnr_main, false
   end
 
-  bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  self._bufnr = bufnr
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  context.bufnr_main = bufnr
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
@@ -143,11 +141,12 @@ end
 
 ---@return nil
 function M:destroy()
-  local bufnr = self._bufnr ---@type integer|nil
-  self._bufnr = nil
+  local context = self.context ---@type fml.ux.search.IContext
+  local bufnr = context.bufnr_main ---@type integer|nil
+  context.bufnr_main = nil
+
   self._render_scheduler:cancel()
   self.context.dirtier_main:mark_clean()
-
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end

@@ -88,7 +88,6 @@ local signs = require("eve.constant.sign")
 ---@class fml.ux.search.Context : fml.ux.search.IContext
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
----@field protected _uuids              string[]
 ---@field protected _uuids_deleted      table<string, true>
 ---@field protected _uuids_selected     table<string, true>
 local M = {}
@@ -161,40 +160,48 @@ function M.new(props)
           ---@diagnostic disable-next-line: invisible
           local item_lnum_next = self._item_lnum_cur or 1 ---@type integer
           local item_max_width = 0 ---@type integer
-          local items = data.items ---@type fml.ux.search.IItem[]
-          local uuid_cursor = data.uuid_cursor or data.uuid_present ---@type string|nil
-          local uuid_present = data.uuid_present ---@type string|nil
-
           ---@diagnostic disable-next-line: invisible
-          local item_uuid_cur = uuid_cursor or self._item_uuid_cur ---@type string|nil
+          local item_uuid_cursor = data.uuid_cursor or data.uuid_present or self._item_uuid_cur ---@type string|nil
+          local item_uuid_present = data.uuid_present ---@type string|nil
+          local items = data.items ---@type fml.ux.search.IItem[]
+
           for lnum, item in ipairs(items) do
             local width = vim.api.nvim_strwidth(item.text) ---@type integer
-            item_max_width = item_max_width < width and width or item_max_width
+            item_max_width = item_max_width < width and width or item_max_width ---@type integer
 
-            if item.uuid == item_uuid_cur then
+            if item.uuid == item_uuid_cursor then
               item_lnum_next = lnum
             end
           end
 
-          self.item_uuid_present = uuid_present
+          self.item_uuid_present = item_uuid_present
           self.items = items
           self.item_max_width = item_max_width
           self:locate(item_lnum_next)
-          callback("fulfilled")
-        else
-          callback("rejected", nil, data)
-        end
 
-        self.dirtier_data:mark_clean()
-        if succeed and data ~= nil then
+          local uuids_selected = {} ---@type table<string, true>
+          for _, item in ipairs(items) do
+            ---@diagnostic disable-next-line: invisible
+            if self._uuids_selected[item.uuid] then
+              uuids_selected[item.uuid] = true
+            end
+          end
+
           ---@diagnostic disable-next-line: invisible
           self._uuids_deleted = {} ---@type table<string, true>
           ---@diagnostic disable-next-line: invisible
-          self._uuids_selected = {} ---@type table<string, true>
+          self._uuids_selected = uuids_selected ---@type table<string, true>
+          self.state_has_matched:next(#data.items > 0)
+
+          self.dirtier_data:mark_clean()
           self.dirtier_main:mark_dirty()
           self.dirtier_preview:mark_dirty()
           self.dirtier_selected:mark_dirty()
-          self.state_has_matched:next(#data.items > 0)
+
+          callback("fulfilled")
+        else
+          self.dirtier_data:mark_clean()
+          callback("rejected", nil, data)
         end
       end)
     end,
@@ -249,7 +256,7 @@ function M.new(props)
   self.permanent = permanent
   self.uuid = uuid
 
-  self._item_lnum_cur = 1 ---@type integer
+  self._item_lnum_cur = 0 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
   self._uuids_deleted = {} ---@type table<string, true>
   self._uuids_selected = {} ---@type table<string, true>
@@ -333,23 +340,22 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:has_item_deleted(uuid)
-  return self._uuids_deleted[uuid] ~= nil
+  return self._uuids_deleted[uuid] == true
 end
 
 ---@param lnum                          integer
 ---@return integer
 function M:locate(lnum)
   local items = self.items ---@type fml.ux.search.IItem[]
-  local next_lnum = math.max(1, math.min(#items, lnum)) ---@type integer
-  local next_uuid = items[next_lnum] and items[next_lnum].uuid or nil ---@type string|nil
-  local has_changed = self._item_lnum_cur ~= next_lnum or self._item_uuid_cur ~= next_uuid ---@type boolean
-  if has_changed then
+  local item_lnum_next = math.max(1, math.min(#items, lnum)) ---@type integer
+  local item_uuid_next = items[item_lnum_next] and items[item_lnum_next].uuid or nil ---@type string|nil
+  if self._item_lnum_cur ~= item_lnum_next or self._item_uuid_cur ~= item_uuid_next then
     self.dirtier_preview:mark_dirty()
   end
 
-  self._item_lnum_cur = next_lnum
-  self._item_uuid_cur = next_uuid
-  return next_lnum
+  self._item_lnum_cur = item_lnum_next
+  self._item_uuid_cur = item_uuid_next
+  return item_lnum_next
 end
 
 ---@return nil
@@ -357,7 +363,7 @@ function M:mark_all_items_deleted()
   self.items = {}
   self._uuids_deleted = {}
   self._uuids_selected = {}
-  self._item_lnum_cur = 1
+  self._item_lnum_cur = 0
   self._item_uuid_cur = nil
   vim.schedule(function()
     self.dirtier_main:mark_dirty()
@@ -370,7 +376,7 @@ end
 ---@return integer
 function M:moveup()
   local items = self.items ---@type fml.ux.search.IItem[]
-  if #items < 1 then
+  if #items <= 1 then
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
@@ -382,7 +388,7 @@ end
 ---@return integer
 function M:movedown()
   local items = self.items ---@type fml.ux.search.IItem[]
-  if #items < 1 then
+  if #items <= 1 then
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
@@ -398,50 +404,50 @@ function M:place_lnum_sign()
     vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_CURRENT })
     vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_PRESENT })
 
-    local present_lnum = 0 ---@type integer
+    local item_lnum_present = 0 ---@type integer
     do
       local item_uuid_present = self.item_uuid_present ---@type string|nil
       if item_uuid_present ~= nil then
         for lnum, item in ipairs(self.items) do
           if item.uuid == item_uuid_present then
-            present_lnum = lnum
+            item_lnum_present = lnum
             break
           end
         end
       end
     end
 
-    local current_lnum = 0 ---@type integer
+    local item_lnum_current = 0 ---@type integer
     do
       local uuid = self._item_uuid_cur ---@type string|nil
       if uuid ~= nil then
         local lnum = self._item_lnum_cur ---@type integer
         local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
         if linecount > 0 and lnum > 0 and lnum <= linecount then
-          current_lnum = lnum
+          item_lnum_current = lnum
         end
       end
     end
 
-    if present_lnum > 0 then
+    if item_lnum_present > 0 then
       vim.fn.sign_place(
         signs.NR_SEARCH_MAIN_PRESENT,
         "",
-        present_lnum == current_lnum and signs.SEARCH_MAIN_PRESENT_CUR or signs.SEARCH_MAIN_PRESENT,
+        item_lnum_present == item_lnum_current and signs.SEARCH_MAIN_PRESENT_CUR or signs.SEARCH_MAIN_PRESENT,
         bufnr,
-        { lnum = present_lnum, priority = 10 }
+        { lnum = item_lnum_present, priority = 10 }
       )
     end
 
-    if current_lnum > 0 then
+    if item_lnum_current > 0 then
       vim.fn.sign_place(
         signs.NR_SEARCH_MAIN_CURRENT,
         "",
         signs.SEARCH_MAIN_CURRENT,
         bufnr,
-        { lnum = current_lnum, priority = 15 }
+        { lnum = item_lnum_current, priority = 15 }
       )
-      return current_lnum
+      return item_lnum_current
     end
   end
   return nil
@@ -458,13 +464,14 @@ end
 ---@return nil
 function M:reset_selected_items()
   self._uuids_selected = {}
-  -- TODO: update signcolumn
+  self.dirtier_selected:mark_dirty()
 end
 
 ---@param uuid                          string
 ---@return nil
 function M:set_item_deleted(uuid)
   local deleted_uuids = self._uuids_deleted ---@type table<string, true>
+  local uuids_selected = self._uuids_selected ---@type table<string, true>
   if deleted_uuids[uuid] then
     return
   end
@@ -483,11 +490,14 @@ function M:set_item_deleted(uuid)
   end
 
   deleted_uuids[uuid] = true
+  uuids_selected[uuid] = nil
+
   local parent_cur = items[lnum].parent ---@type string|nil
   if parent_cur ~= nil and lnum > 1 and items[lnum - 1].uuid == parent_cur then
     if lnum == #items or items[lnum + 1].parent ~= parent_cur then
       lnum = lnum - 1
       deleted_uuids[parent_cur] = true
+      uuids_selected[parent_cur] = nil
     end
   end
 
@@ -497,6 +507,7 @@ function M:set_item_deleted(uuid)
     local item = items[i] ---@type fml.ux.search.IItem
     if deleted_uuids[item.parent] then
       deleted_uuids[item.uuid] = true
+      uuids_selected[item.uuid] = nil
     else
       items[k] = items[i]
       k = k + 1
@@ -515,6 +526,7 @@ function M:set_item_deleted(uuid)
   vim.schedule(function()
     self.dirtier_main:mark_dirty()
     self.dirtier_preview:mark_dirty()
+    self.dirtier_selected:mark_dirty()
   end)
 end
 
@@ -522,13 +534,15 @@ end
 ---@param selected                      boolean
 ---@return nil
 function M:set_item_selected(uuid, selected)
-  if selected then
-    self._uuids_selected[uuid] = true
-  else
-    self._uuids_selected[uuid] = nil
+  local selected_prev = self._uuids_selected[uuid] == true ---@type boolean
+  if selected_prev ~= selected then
+    if selected then
+      self._uuids_selected[uuid] = true
+    else
+      self._uuids_selected[uuid] = nil
+    end
+    self.dirtier_selected:mark_dirty()
   end
-
-  -- TODO: update signcolumn
 end
 
 ---@return nil
@@ -599,8 +613,7 @@ function M:toggle_item_selected(uuid)
     else
       selected_items[uuid] = true
     end
-
-    -- TODO: update signcolumn
+    self.dirtier_selected:mark_dirty()
   end
 end
 

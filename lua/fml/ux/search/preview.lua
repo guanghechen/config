@@ -24,7 +24,6 @@ local ft = require("eve.constant.filetype")
 ---@field public col                    ?integer
 
 ---@class fml.ux.search.Preview : fml.ux.search.IPreview
----@field protected _bufnr              integer|nil
 ---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _render_scheduler   eve.collection.IScheduler
 local M = {}
@@ -149,7 +148,6 @@ function M.new(props)
   })
 
   self.context = context
-  self._bufnr = nil
   self._keymaps = keymaps
   self._render_scheduler = _render_scheduler
 
@@ -180,13 +178,13 @@ end
 
 ---@return integer
 function M:create_buf_as_needed()
-  local bufnr = self._bufnr ---@type integer|nil
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    return bufnr
+  local context = self.context ---@type fml.ux.search.IContext
+  if context.bufnr_preview ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_preview) then
+    return context.bufnr_preview
   end
 
-  bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  self._bufnr = bufnr
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  context.bufnr_preview = bufnr
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
@@ -204,10 +202,11 @@ end
 
 ---@return nil
 function M:destroy()
-  local bufnr = self._bufnr ---@type integer|nil
-  self._bufnr = nil
-  self._render_scheduler:cancel()
+  local context = self.context ---@type fml.ux.search.IContext
+  local bufnr = context.bufnr_preview ---@type integer|nil
+  context.bufnr_preview = nil
 
+  self._render_scheduler:cancel()
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end

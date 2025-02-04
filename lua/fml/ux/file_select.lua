@@ -87,6 +87,7 @@ M.__index = M
 ---@field public input_history          ?eve.collection.IHistory
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
+---@field public multiple               ?boolean
 ---@field public permanent              ?boolean
 ---@field public preview_keymaps        ?eve.t.IKeymap[]
 ---@field public provider               fml.ux.file_select.IProvider
@@ -116,6 +117,7 @@ function M.new(props)
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
   local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
+  local multiple = props.multiple ---@type boolean|nil
   local permanent = props.permanent ---@type boolean|nil
   local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
   local provider = props.provider ---@type fml.ux.file_select.IProvider
@@ -244,6 +246,7 @@ function M.new(props)
         input_history = input_history,
         input_keymaps = input_keymaps,
         main_keymaps = main_keymaps,
+        multiple = multiple,
         permanent = permanent,
         preview_keymaps = preview_keymaps,
         provider = file_select_provider,

@@ -15,7 +15,6 @@ local signs = require("eve.constant.sign")
 
 ---@class fml.ux.search.Input : fml.ux.search.IInput
 ---@field protected _autocmd_group      integer
----@field protected _bufnr              integer|nil
 ---@field protected _extmark_nr         integer|nil
 ---@field protected _input_scheduler    eve.collection.IScheduler
 ---@field protected _keymaps            eve.t.IKeymap[]
@@ -73,8 +72,7 @@ function M.new(props)
     name = "fml.ux.search.input.on_change",
     delay = 32,
     task = function(callback)
-      ---@diagnostic disable-next-line: invisible
-      local bufnr = self._bufnr ---@type integer|nil
+      local bufnr = context.bufnr_input ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         if vim.api.nvim_buf_is_valid(bufnr) then
           local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
@@ -88,7 +86,6 @@ function M.new(props)
 
   self.context = context
   self._autocmd_group = autocmd_group
-  self._bufnr = nil
   self._extmark_nr = nil
   self._input_scheduler = input_scheduler
   self._keymaps = keymaps
@@ -133,12 +130,13 @@ end
 
 ---@return integer
 function M:create_buf_as_needed()
-  if self._bufnr ~= nil and vim.api.nvim_buf_is_valid(self._bufnr) then
-    return self._bufnr
+  local context = self.context ---@type fml.ux.search.IContext
+  if context.bufnr_input ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_input) then
+    return context.bufnr_input
   end
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  self._bufnr = bufnr
+  context.bufnr_input = bufnr
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
@@ -147,7 +145,6 @@ function M:create_buf_as_needed()
 
   fn.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-  local context = self.context ---@type fml.ux.search.IContext
   local input = context.input:snapshot() ---@type string
   local lines = oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, context.enable_multiline_input and lines or { lines[1] })
@@ -166,7 +163,7 @@ function M:create_buf_as_needed()
     buffer = bufnr,
     once = true,
     callback = function()
-      self._bufnr = nil
+      context.bufnr_input = nil
       vim.api.nvim_del_augroup_by_id(self._autocmd_group)
     end,
   })
@@ -175,10 +172,11 @@ end
 
 ---@return nil
 function M:destroy()
-  local bufnr = self._bufnr ---@type integer|nil
-  self._bufnr = nil
-  self._input_scheduler:cancel()
+  local context = self.context ---@type fml.ux.search.IContext
+  local bufnr = context.bufnr_input ---@type integer|nil
+  context.bufnr_input = nil
 
+  self._input_scheduler:cancel()
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
@@ -187,7 +185,7 @@ end
 ---@return nil
 function M:set_virtual_text()
   local context = self.context ---@type fml.ux.search.IContext
-  local bufnr = self._bufnr ---@type integer|nil
+  local bufnr = context.bufnr_input ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     local total = #context.items or 0 ---@type integer
     local lnum = context:get_current_lnum() or 1 ---@type integer
@@ -214,7 +212,7 @@ function M:reset_input(text)
   next_text = fn.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
   context.input:next(next_text)
 
-  local bufnr = self._bufnr ---@type integer|nil
+  local bufnr = context.bufnr_input ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     local lines = oxi.parse_lines(next_text) ---@type string[]
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, context.enable_multiline_input and lines or { lines[1] })

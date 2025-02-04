@@ -347,6 +347,7 @@ local function get_select()
       input_history = states.input_history,
       input_keymaps = input_keymaps,
       main_keymaps = main_keymaps,
+      multiple = true,
       permanent = true,
       preview_keymaps = preview_keymaps,
       provider = provider,

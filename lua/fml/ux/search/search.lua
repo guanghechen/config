@@ -385,6 +385,7 @@ function M.new(props)
       desc = "search: focus right",
     },
     {
+      active = context.multiple,
       modes = { "i", "n", "v" },
       key = "<Tab>",
       callback = actions.toggle_current_selected,
@@ -424,12 +425,6 @@ function M.new(props)
     },
     {
       modes = { "i", "n", "v" },
-      key = "<leader>dd",
-      callback = actions.on_delete_item,
-      desc = "search: delete current item",
-    },
-    {
-      modes = { "i", "n", "v" },
       key = "<Down>",
       aliases = { "<C-j>", "j" },
       callback = actions.on_main_down,
@@ -443,12 +438,14 @@ function M.new(props)
       desc = "search: focus prev item",
     },
     {
+      active = context.multiple,
       modes = { "i", "n" },
       key = "<Tab>",
       callback = actions.toggle_current_selected,
       desc = "search: toggle selected",
     },
     {
+      active = context.multiple,
       modes = { "v" },
       key = "<Tab>",
       callback = actions.toggle_visual_selected,
@@ -460,6 +457,12 @@ function M.new(props)
       aliases = { "o" },
       callback = on_confirm,
       desc = "search: confirm",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>dd",
+      callback = actions.on_delete_item,
+      desc = "search: delete current item",
     },
     {
       modes = { "i", "n", "v" },
