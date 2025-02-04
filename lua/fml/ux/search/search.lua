@@ -702,6 +702,18 @@ function M.new(props)
     )
   end
 
+  context.dirtier_selected:subscribe(
+    Subscriber.new({
+      on_next = function()
+        local is_selected_dirty = context.dirtier_selected:is_dirty() ---@type boolean
+        if is_selected_dirty then
+          context:place_selected_sign()
+        end
+      end,
+    }),
+    true
+  )
+
   if context.enable_multiline_input then
     context.input_line_count:subscribe(
       Subscriber.new({
@@ -721,7 +733,7 @@ function M:sync_main_cursor()
   local context = self.context ---@type fml.ux.search.IContext
   local winnr_main = context.winnr_main ---@type integer|nil
   if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-    local lnum = self._main:place_lnum_sign() ---@type integer|nil
+    local lnum = context:place_lnum_sign() ---@type integer|nil
     if lnum ~= nil then
       vim.api.nvim_win_set_cursor(winnr_main, { lnum, 0 })
     end

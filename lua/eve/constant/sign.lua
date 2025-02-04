@@ -6,6 +6,7 @@ local M = {}
 
 M.NR_SEARCH_MAIN_CURRENT = 2333
 M.NR_SEARCH_MAIN_PRESENT = 2334
+M.NR_SEARCH_MAIN_SELECTED = 2335
 
 M.DAP_BREAKPOINT = "DapBreakpoint"
 M.DAP_BREAKPOINT_CONDITION = "DapBreakpointCondition"
@@ -44,13 +45,14 @@ sd(M.DAP_STEP_OVER,               { text = icons.dap.Breakpoint,          texthl
 sd(M.DAP_STOPPED,                 { text = icons.dap.Breakpoint,          texthl = "f_dap_stopped",               linehl = "f_dap_stopped_line",              numhl = "f_dap_stopped_lnum",              })
 sd(M.DAP_TERMINATE,               { text = icons.dap.Breakpoint,          texthl = "f_dap_terminate",             linehl = "f_dap_terminate_line",            numhl = "f_dap_terminate_lnum",            })
 
-sd(M.SEARCH_INPUT_CURSOR,         { text = icons.ui.Telescope,            texthl = "f_us_input_prompt"              })
-sd(M.SEARCH_MAIN_CURRENT,         { text = icons.ui.ArrowPresent,         texthl = "f_us_main_current"              })
-sd(M.SEARCH_MAIN_PRESENT,         { text = icons.ui.ArrowPresent,         texthl = "f_us_main_present"              })
-sd(M.SEARCH_MAIN_PRESENT_CUR,     { text = icons.ui.ArrowPresent,         texthl = "f_us_main_present_cur"          })
+sd(M.SEARCH_INPUT_CURSOR,         { text = icons.ui.Telescope,            texthl = "fs_input_prompt"      })
+sd(M.SEARCH_MAIN_CURRENT,         { text = icons.ui.ArrowPresent,         texthl = "fs_main_current"      })
+sd(M.SEARCH_MAIN_PRESENT,         { text = icons.ui.ArrowPresent,         texthl = "fs_main_present"      })
+sd(M.SEARCH_MAIN_PRESENT_CUR,     { text = icons.ui.ArrowPresent,         texthl = "fs_main_present_cur"  })
+sd(M.SEARCH_MAIN_SELECTED,        { text = icons.ui.Selected,               texthl = "fs_main_selected"     })
 
-sd(M.SELECT_INPUT_CURSOR,         { text = icons.ui.Telescope,            texthl = "f_us_input_prompt"              })
-sd(M.SELECT_MAIN_CURRENT,         { text = icons.ui.ArrowClosed,          texthl = "f_us_main_current"              })
+sd(M.SELECT_INPUT_CURSOR,         { text = icons.ui.Telescope,            texthl = "fs_input_prompt"      })
+sd(M.SELECT_MAIN_CURRENT,         { text = icons.ui.ArrowClosed,          texthl = "fs_main_current"      })
 -- stylua: ignore end
 
 return M

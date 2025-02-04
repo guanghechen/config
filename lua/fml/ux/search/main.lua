@@ -2,13 +2,11 @@ local fn = require("eve.builtin.fn")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local ft = require("eve.constant.filetype")
-local signs = require("eve.constant.sign")
 
 ---@class fml.ux.search.IMain
 ---@field public context                fml.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.ux.search.IMain): integer
 ---@field public destroy                fun(self: fml.ux.search.IMain): nil
----@field public place_lnum_sign        fun(self: fml.ux.search.IMain): integer|nil
 ---@field public render                 fun(self: fml.ux.search.IMain): nil
 
 ---@class fml.ux.search.Main : fml.ux.search.IMain
@@ -75,7 +73,7 @@ function M.new(props)
       end
     end
 
-    self:place_lnum_sign()
+    context:place_lnum_sign()
   end
 
   local render_scheduler = Scheduler.new({
@@ -153,58 +151,6 @@ function M:destroy()
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
-end
-
----@return integer|nil
-function M:place_lnum_sign()
-  local bufnr = self._bufnr ---@type integer|nil
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_CURRENT })
-    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_PRESENT })
-
-    local present_lnum = 0 ---@type integer
-    do
-      local item_present_uuid = self.context.item_present_uuid ---@type string|nil
-      if item_present_uuid ~= nil then
-        for lnum, item in ipairs(self.context.items) do
-          if item.uuid == item_present_uuid then
-            present_lnum = lnum
-            break
-          end
-        end
-      end
-    end
-
-    local current_lnum = 0 ---@type integer
-    do
-      local uuid = self.context:get_current_uuid() ---@type string|nil
-      if uuid ~= nil then
-        local lnum = self.context:get_current_lnum() ---@type integer
-        local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-        if linecount > 0 and lnum > 0 and lnum <= linecount then
-          current_lnum = lnum
-        end
-      end
-    end
-
-    if present_lnum > 0 then
-      vim.fn.sign_place(
-        signs.NR_SEARCH_MAIN_PRESENT,
-        "",
-        present_lnum == current_lnum and signs.SEARCH_MAIN_PRESENT_CUR or signs.SEARCH_MAIN_PRESENT,
-        bufnr,
-        { lnum = present_lnum }
-      )
-    end
-
-    if current_lnum > 0 then
-      if current_lnum ~= present_lnum then
-        vim.fn.sign_place(signs.NR_SEARCH_MAIN_CURRENT, "", signs.SEARCH_MAIN_CURRENT, bufnr, { lnum = current_lnum })
-      end
-      return current_lnum
-    end
-  end
-  return nil
 end
 
 ---@return nil

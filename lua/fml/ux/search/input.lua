@@ -151,13 +151,13 @@ function M:create_buf_as_needed()
   local input = context.input:snapshot() ---@type string
   local lines = oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, context.enable_multiline_input and lines or { lines[1] })
-  vim.fn.sign_place(bufnr, "", signs.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1 })
+  vim.fn.sign_place(bufnr, "", signs.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     group = self._autocmd_group,
     buffer = bufnr,
     callback = function()
-      vim.fn.sign_place(bufnr, "", signs.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1 })
+      vim.fn.sign_place(bufnr, "", signs.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
       self._input_scheduler:schedule()
     end,
   })

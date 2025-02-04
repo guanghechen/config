@@ -7,6 +7,7 @@ local Dirtier = require("eve.collection.dirtier")
 local Observable = require("eve.collection.observable")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
+local signs = require("eve.constant.sign")
 
 ---@class fml.ux.search.IRawDimension
 ---@field public height                 ?number
@@ -32,6 +33,7 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public dirtier_data_cache     eve.collection.IDirtier
 ---@field public dirtier_main           eve.collection.IDirtier
 ---@field public dirtier_preview        eve.collection.IDirtier
+---@field public dirtier_selected       eve.collection.IDirtier
 ---
 ---@field public input                  eve.collection.IObservable
 ---@field public input_history          eve.collection.IHistory|nil
@@ -74,6 +76,8 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public mark_all_items_deleted fun(self: fml.ux.search.IContext): nil
 ---@field public moveup                 fun(self: fml.ux.search.IContext): integer
 ---@field public movedown               fun(self: fml.ux.search.IContext): integer
+---@field public place_lnum_sign        fun(self: fml.ux.search.IContext): integer|nil
+---@field public place_selected_sign    fun(self: fml.ux.search.IContext): nil
 ---@field public reset_selected_items   fun(self: fml.ux.search.IContext): nil
 ---@field public set_item_deleted       fun(self: fml.ux.search.IContext, uuid: string, deleted: boolean): nil
 ---@field public set_item_selected      fun(self: fml.ux.search.IContext, uuid: string, selected: boolean): nil
@@ -82,10 +86,10 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public toggle_items_selected  fun(self: fml.ux.search.IContext, uuids: string[]): nil
 
 ---@class fml.ux.search.Context : fml.ux.search.IContext
----@field protected _deleted_uuids      table<string, boolean>
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
----@field protected _selected_items     table<string, true>
+---@field protected _uuids_deleted      table<string, true>
+---@field protected _uuids_selected     table<string, true>
 local M = {}
 M.__index = M
 
@@ -112,6 +116,7 @@ function M.new(props)
   local dirtier_data_cache = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local dirtier_main = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local dirtier_preview = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
+  local dirtier_selected = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local state_has_matched = Observable.new({ value = false, equals = fn.falsy }) ---@type eve.collection.IObservable
   local status = Observable.from_value("hidden")
 
@@ -180,9 +185,12 @@ function M.new(props)
         self.dirtier_data:mark_clean()
         if succeed and data ~= nil then
           ---@diagnostic disable-next-line: invisible
-          self._deleted_uuids = {} ---@type table<string, boolean>
+          self._uuids_deleted = {} ---@type table<string, true>
+          ---@diagnostic disable-next-line: invisible
+          self._uuids_selected = {} ---@type table<string, true>
           self.dirtier_main:mark_dirty()
           self.dirtier_preview:mark_dirty()
+          self.dirtier_selected:mark_dirty()
           self.state_has_matched:next(#data.items > 0)
         end
       end)
@@ -213,6 +221,7 @@ function M.new(props)
   self.dirtier_data_cache = dirtier_data_cache
   self.dirtier_main = dirtier_main
   self.dirtier_preview = dirtier_preview
+  self.dirtier_selected = dirtier_selected
 
   self.input = input
   self.input_history = input_history
@@ -235,10 +244,10 @@ function M.new(props)
   self.cfg_preview_title = cfg_preview_title
   self.cfg_preview_wrap = cfg_preview_wrap
   self.uuid = uuid
-  self._deleted_uuids = {} ---@type table<string, boolean>
+  self._uuids_deleted = {} ---@type table<string, true>
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
-  self._selected_items = {} ---@type table<string, true>
+  self._uuids_selected = {} ---@type table<string, true>
 
   input:subscribe(Subscriber.new({ on_next = on_input_change }), false)
   status:subscribe(Subscriber.new({ on_next = on_refresh }), false)
@@ -252,6 +261,7 @@ function M:dispose()
   self.dirtier_data:dispose()
   self.dirtier_main:dispose()
   self.dirtier_preview:dispose()
+  self.dirtier_selected:dispose()
   self.state_has_matched:dispose()
   self.input_line_count:dispose()
   self.status:dispose()
@@ -306,7 +316,7 @@ end
 function M:get_selected_items()
   local selected = {} ---@type fml.ux.search.IItem[]
   local items = self.items ---@type fml.ux.search.IItem[]
-  for uuid in pairs(self._selected_items) do
+  for uuid in pairs(self._uuids_selected) do
     local item = items[uuid] ---@type fml.ux.search.IItem|nil
     if item ~= nil then
       table.insert(selected, item)
@@ -318,7 +328,7 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:has_item_deleted(uuid)
-  return self._deleted_uuids[uuid] ~= nil
+  return self._uuids_deleted[uuid] ~= nil
 end
 
 ---@param lnum                          integer
@@ -340,12 +350,14 @@ end
 ---@return nil
 function M:mark_all_items_deleted()
   self.items = {}
-  self._deleted_uuids = {}
+  self._uuids_deleted = {}
+  self._uuids_selected = {}
   self._item_lnum_cur = 1
   self._item_uuid_cur = nil
   vim.schedule(function()
     self.dirtier_main:mark_dirty()
     self.dirtier_preview:mark_dirty()
+    self.dirtier_selected:mark_dirty()
     self.state_has_matched:next(false)
   end)
 end
@@ -374,9 +386,73 @@ function M:movedown()
   end
 end
 
+---@return integer|nil
+function M:place_lnum_sign()
+  local bufnr = self.bufnr_main ---@type integer|nil
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_CURRENT })
+    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_PRESENT })
+
+    local present_lnum = 0 ---@type integer
+    do
+      local item_present_uuid = self.item_present_uuid ---@type string|nil
+      if item_present_uuid ~= nil then
+        for lnum, item in ipairs(self.items) do
+          if item.uuid == item_present_uuid then
+            present_lnum = lnum
+            break
+          end
+        end
+      end
+    end
+
+    local current_lnum = 0 ---@type integer
+    do
+      local uuid = self._item_uuid_cur ---@type string|nil
+      if uuid ~= nil then
+        local lnum = self._item_lnum_cur ---@type integer
+        local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+        if linecount > 0 and lnum > 0 and lnum <= linecount then
+          current_lnum = lnum
+        end
+      end
+    end
+
+    if present_lnum > 0 then
+      vim.fn.sign_place(
+        signs.NR_SEARCH_MAIN_PRESENT,
+        "",
+        present_lnum == current_lnum and signs.SEARCH_MAIN_PRESENT_CUR or signs.SEARCH_MAIN_PRESENT,
+        bufnr,
+        { lnum = present_lnum, priority = 10 }
+      )
+    end
+
+    if current_lnum > 0 then
+      vim.fn.sign_place(
+        signs.NR_SEARCH_MAIN_CURRENT,
+        "",
+        signs.SEARCH_MAIN_CURRENT,
+        bufnr,
+        { lnum = current_lnum, priority = 15 }
+      )
+      return current_lnum
+    end
+  end
+  return nil
+end
+
+---@return nil
+function M:place_selected_sign()
+  local bufnr = self.bufnr_main ---@type integer|nil
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_SELECTED })
+  end
+end
+
 ---@return nil
 function M:reset_selected_items()
-  self._selected_items = {}
+  self._uuids_selected = {}
   -- TODO: update signcolumn
 end
 
@@ -388,7 +464,7 @@ function M:set_item_deleted(uuid, deleted)
     return
   end
 
-  local deleted_uuids = self._deleted_uuids ---@type table<string, boolean>
+  local deleted_uuids = self._uuids_deleted ---@type table<string, true>
   if deleted_uuids[uuid] then
     return
   end
@@ -447,9 +523,9 @@ end
 ---@return nil
 function M:set_item_selected(uuid, selected)
   if selected then
-    self._selected_items[uuid] = true
+    self._uuids_selected[uuid] = true
   else
-    self._selected_items[uuid] = nil
+    self._uuids_selected[uuid] = nil
   end
 
   -- TODO: update signcolumn
@@ -482,7 +558,7 @@ end
 ---@param uuid                          string
 ---@return nil
 function M:toggle_item_selected(uuid)
-  local selected_items = self._selected_items ---@type table<string, true>
+  local selected_items = self._uuids_selected ---@type table<string, true>
   local item = self.items[self._item_lnum_cur] ---@type fml.ux.search.IItem
   if item == nil or selected_items[uuid] ~= nil then
     return

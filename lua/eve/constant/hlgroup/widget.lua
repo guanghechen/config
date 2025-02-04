@@ -89,6 +89,13 @@ local function gen_hlgroup_map(context)
     f_us_codeaction_content = { fg = c.fg1, bg = "none" },
     f_us_codeaction_client_name = { fg = c.fg4, bg = "none" },
 
+    ---signs
+    fs_input_prompt = { fg = c.red, bg = t and c.bg0 or "none" },
+    fs_main_current = { bg = c.bg3 },
+    fs_main_present = { fg = c.blue, bg = "none" },
+    fs_main_present_cur = { fg = c.blue, bg = c.bg3 },
+    fs_main_selected = { fg = c.purple, bg = c.bg3 },
+
     ---terminal
     f_us_terminal_bg = { bg = c.bg0 },
     f_us_terminal_border = { fg = c.purple, bg = c.bg0 },

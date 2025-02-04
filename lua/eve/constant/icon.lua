@@ -262,6 +262,7 @@ M.ui = {
   Search = "󰍉",
   Separator = "",
   DoubleSeparator = "󰄾",
+  Selected = "▎",
   SignIn = "",
   SignOut = "",
   Sort = "",
