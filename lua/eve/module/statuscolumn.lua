@@ -191,6 +191,9 @@ local function statuscolumn()
   local winnr = vim.g.statusline_winid ---@type integer
   local show_signs = vim.v.virtnum == 0 and vim.wo[winnr].signcolumn ~= "no" ---@type boolean
   local components = { "", LINE_NR, "" } ---@type string[]
+  if not show_signs and not (vim.wo[winnr].number or vim.wo[winnr].relativenumber) then
+    return ""
+  end
 
   if show_signs then
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -233,7 +236,7 @@ local M = {}
 function M.statuscolumn()
   local win = vim.g.statusline_winid
   local buf = vim.api.nvim_win_get_buf(win)
-  local key = ("%d:%d:%d:%d"):format(win, buf, vim.v.lnum, vim.v.virtnum and 1 or 0)
+  local key = ("%d:%d:%d:%d"):format(win, buf, vim.v.lnum, vim.v.virtnum ~= 0 and 1 or 0)
   if cache[key] then
     return cache[key]
   end
