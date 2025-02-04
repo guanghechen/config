@@ -64,7 +64,7 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public uuid                   string
 ---
 ---@field public change_dimension       fun(self: fml.ux.search.IContext, dimension: fml.ux.search.IRawDimension): nil
----@field public get_current            fun(self: fml.ux.search.IContext): fml.ux.search.IItem|nil
+---@field public get_current            fun(self: fml.ux.search.IContext): fml.ux.search.IItem|nil, integer
 ---@field public get_current_lnum       fun(self: fml.ux.search.IContext): integer
 ---@field public get_current_uuid       fun(self: fml.ux.search.IContext): string|nil
 ---@field public get_selected_items     fun(self: fml.ux.search.IContext): fml.ux.search.IItem[]
@@ -284,9 +284,10 @@ function M:change_dimension(raw_dimension)
 end
 
 ---@return fml.ux.search.IItem|nil
+---@return integer
 function M:get_current()
   local lnum = self._item_lnum_cur ---@type integer
-  return self.items[lnum]
+  return self.items[lnum], lnum
 end
 
 ---@return integer

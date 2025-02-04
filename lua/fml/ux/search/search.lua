@@ -970,7 +970,6 @@ end
 
 ---@return fml.ux.search.IItem|nil
 ---@return integer
----@return string|nil
 function M:get_item_selected()
   return self.context:get_current()
 end

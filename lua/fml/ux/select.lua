@@ -566,11 +566,10 @@ end
 
 ---@return fml.ux.select.IItem|nil
 ---@return integer
----@return string|nil
 function M:get_item_selected()
   local _, lnum, uuid = self._search:get_item_selected() ---@type fml.ux.search.IItem|nil, integer, string|nil
   local item = uuid ~= nil and self._item_map[uuid] or nil ---@type fml.ux.select.IItem|nil
-  return item, lnum, uuid
+  return item, lnum
 end
 
 ---@return                              fml.ux.select.IMatchedItem[]
