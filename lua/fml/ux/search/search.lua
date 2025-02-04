@@ -6,6 +6,7 @@ local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
+local editor = require("eve.module.editor")
 local state = require("eve.state")
 local command = require("eve.command")
 
@@ -256,6 +257,16 @@ function M.new(props)
       context.dirtier_data_cache:mark_dirty()
       context.dirtier_data:mark_dirty()
     end,
+    toggle_current_selected = function()
+      local uuid = context:get_current_uuid() ---@type string|nil
+      if uuid ~= nil then
+        context:toggle_item_selected(uuid)
+      end
+    end,
+    toggle_visual_selected = function()
+      local s_lnum, t_lnum = editor.get_visual_lnum_range() ---@type integer, integer
+      return s_lnum, t_lnum
+    end,
     on_main_G = function()
       local lnum = vim.v.count > 0 and vim.v.count or math.huge ---@type integer
       context:locate(lnum)
@@ -281,7 +292,7 @@ function M.new(props)
     on_delete_item = function()
       local uuid = context:get_current_uuid() ---@type string|nil
       if uuid ~= nil then
-        context:mark_item_deleted(uuid)
+        context:set_item_deleted(uuid, true)
       end
     end,
     on_main_mouse_click = function()
@@ -373,6 +384,12 @@ function M.new(props)
       callback = actions.focus_right,
       desc = "search: focus right",
     },
+    {
+      modes = { "i", "n", "v" },
+      key = "<Tab>",
+      callback = actions.toggle_current_selected,
+      desc = "search: toggle selected",
+    },
   }
 
   ---@type eve.t.IKeymap[]
@@ -424,6 +441,18 @@ function M.new(props)
       aliases = { "<C-k>", "k" },
       callback = actions.on_main_up,
       desc = "search: focus prev item",
+    },
+    {
+      modes = { "i", "n" },
+      key = "<Tab>",
+      callback = actions.toggle_current_selected,
+      desc = "search: toggle selected",
+    },
+    {
+      modes = { "v" },
+      key = "<Tab>",
+      callback = actions.toggle_visual_selected,
+      desc = "search: toggle selected",
     },
     {
       modes = { "i", "n", "v" },
@@ -1021,7 +1050,7 @@ end
 ---@param uuid                          string
 ---@return nil
 function M:mark_item_deleted(uuid)
-  self.context:mark_item_deleted(uuid)
+  self.context:set_item_deleted(uuid, true)
 end
 
 ---@return nil

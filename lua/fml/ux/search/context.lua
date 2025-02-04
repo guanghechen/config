@@ -71,13 +71,15 @@ local Subscriber = require("eve.collection.subscriber")
 ---@field public has_item_deleted       fun(self: fml.ux.search.IContext, uuid: string): boolean
 ---@field public set_current            fun(self: fml.ux.search.IContext, lnum: integer): integer
 ---@field public locate                 fun(self: fml.ux.search.IContext, lnum: integer): integer
----@field public mark_item_deleted      fun(self: fml.ux.search.IContext, uuid: string): nil
 ---@field public mark_all_items_deleted fun(self: fml.ux.search.IContext): nil
 ---@field public moveup                 fun(self: fml.ux.search.IContext): integer
 ---@field public movedown               fun(self: fml.ux.search.IContext): integer
 ---@field public reset_selected_items   fun(self: fml.ux.search.IContext): nil
+---@field public set_item_deleted       fun(self: fml.ux.search.IContext, uuid: string, deleted: boolean): nil
+---@field public set_item_selected      fun(self: fml.ux.search.IContext, uuid: string, selected: boolean): nil
 ---@field public show_state             fun(self: fml.ux.search.IContext): nil
 ---@field public toggle_item_selected   fun(self: fml.ux.search.IContext, uuid: string): nil
+---@field public toggle_items_selected  fun(self: fml.ux.search.IContext, uuids: string[]): nil
 
 ---@class fml.ux.search.Context : fml.ux.search.IContext
 ---@field protected _deleted_uuids      table<string, boolean>
@@ -335,13 +337,64 @@ function M:locate(lnum)
   return next_lnum
 end
 
----@param uuid                          string
 ---@return nil
-function M:mark_item_deleted(uuid)
+function M:mark_all_items_deleted()
+  self.items = {}
+  self._deleted_uuids = {}
+  self._item_lnum_cur = 1
+  self._item_uuid_cur = nil
+  vim.schedule(function()
+    self.dirtier_main:mark_dirty()
+    self.dirtier_preview:mark_dirty()
+    self.state_has_matched:next(false)
+  end)
+end
+
+---@return integer
+function M:moveup()
+  local items = self.items ---@type fml.ux.search.IItem[]
+  if #items < 1 then
+    return 0
+  else
+    local step = vim.v.count1 or 1 ---@type integer
+    local lnum = fn.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
+    return self:locate(lnum)
+  end
+end
+
+---@return integer
+function M:movedown()
+  local items = self.items ---@type fml.ux.search.IItem[]
+  if #items < 1 then
+    return 0
+  else
+    local step = vim.v.count1 or 1 ---@type integer
+    local lnum = fn.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
+    return self:locate(lnum)
+  end
+end
+
+---@return nil
+function M:reset_selected_items()
+  self._selected_items = {}
+  -- TODO: update signcolumn
+end
+
+---@param uuid                          string
+---@param deleted                       boolean
+---@return nil
+function M:set_item_deleted(uuid, deleted)
+  if not deleted then
+    return
+  end
+
   local deleted_uuids = self._deleted_uuids ---@type table<string, boolean>
+  if deleted_uuids[uuid] then
+    return
+  end
+
   local lnum = 0 ---@type integer
   local items = self.items ---@type fml.ux.search.IItem[]
-
   for i, item in ipairs(self.items) do
     if item.uuid == uuid then
       lnum = i
@@ -389,51 +442,21 @@ function M:mark_item_deleted(uuid)
   end)
 end
 
+---@param uuid                          string
+---@param selected                      boolean
 ---@return nil
-function M:mark_all_items_deleted()
-  self.items = {}
-  self._deleted_uuids = {}
-  self._item_lnum_cur = 1
-  self._item_uuid_cur = nil
-  vim.schedule(function()
-    self.dirtier_main:mark_dirty()
-    self.dirtier_preview:mark_dirty()
-    self.state_has_matched:next(false)
-  end)
-end
-
----@return integer
-function M:moveup()
-  local items = self.items ---@type fml.ux.search.IItem[]
-  if #items < 1 then
-    return 0
+function M:set_item_selected(uuid, selected)
+  if selected then
+    self._selected_items[uuid] = true
   else
-    local step = vim.v.count1 or 1 ---@type integer
-    local lnum = fn.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
-    return self:locate(lnum)
+    self._selected_items[uuid] = nil
   end
-end
 
----@return integer
-function M:movedown()
-  local items = self.items ---@type fml.ux.search.IItem[]
-  if #items < 1 then
-    return 0
-  else
-    local step = vim.v.count1 or 1 ---@type integer
-    local lnum = fn.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
-    return self:locate(lnum)
-  end
-end
-
----@return nil
-function M:reset_selected_items()
-  self._selected_items = {}
   -- TODO: update signcolumn
 end
 
 ---@return nil
-function M:show_sate()
+function M:show_state()
   reporter.error({
     from = __module_name__,
     subject = "show_state",

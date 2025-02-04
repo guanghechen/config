@@ -320,7 +320,7 @@ end
 ---@return nil
 function M.mark_item_deleted(uuid)
   if _search ~= nil then
-    _search.context:mark_item_deleted(uuid)
+    _search.context:set_item_deleted(uuid)
   end
 end
 
