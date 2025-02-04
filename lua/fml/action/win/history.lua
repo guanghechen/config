@@ -29,7 +29,7 @@ local function get_history_select()
       fetch_data = function()
         local cwd = path.cwd() ---@type string
         local items = {} ---@type fml.ux.file_select.IRawItem[]
-        local present_uuid = "0" ---@type string
+        local uuid_present = "0" ---@type string
         local width = 0 ---@type integer
 
         local winnr_source = command.context_winnr() ---@type integer|nil
@@ -45,7 +45,7 @@ local function get_history_select()
         else
           local _, present_ordinal = meta.filepath_history:present() ---@type string|nil, integer|nil
           if present_ordinal ~= nil then
-            present_uuid = gen_uuid_from_ordinal(present_ordinal)
+            uuid_present = gen_uuid_from_ordinal(present_ordinal)
           end
 
           for filepath, ordinal in meta.filepath_history:iterator_reverse() do
@@ -72,7 +72,7 @@ local function get_history_select()
         end
 
         ---@type fml.ux.file_select.IData
-        return { cwd = cwd, items = items, present_uuid = present_uuid }
+        return { cwd = cwd, items = items, uuid_present = uuid_present }
       end,
       render_item = function(item, match)
         local text_prefix = item.uuid .. " " ---@type string

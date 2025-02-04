@@ -47,7 +47,7 @@ local function select(params)
       local present = get_present ~= nil and get_present() or nil ---@type string|nil
 
       ---@type fml.ux.select.IData
-      local data = { items = last_items, present_uuid = present }
+      local data = { items = last_items, uuid_present = present }
       return data
     end,
     render_item = render_item,

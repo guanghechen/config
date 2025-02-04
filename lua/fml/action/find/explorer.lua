@@ -195,7 +195,7 @@ local function get_select()
         end
 
         ---@type fml.ux.select.IData
-        return { items = items, cursor_uuid = #items > 1 and items[2].uuid or nil }
+        return { items = items, uuid_cursor = #items > 1 and items[2].uuid or nil }
       end,
       fetch_preview_data = function(item)
         local fileitem = file_datamap[item.uuid] ---@type fml.action.find.explorer.IFileItem|nil

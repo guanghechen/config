@@ -36,7 +36,7 @@ local Select = require("fml.ux.select")
 
 ---@class fml.ux.file_select.IData
 ---@field public items                  fml.ux.file_select.IRawItem[]
----@field public present_uuid           ?string
+---@field public uuid_present           ?string
 
 ---@class fml.ux.file_select.IRawItem
 ---
@@ -174,7 +174,7 @@ function M.new(props)
     fetch_data = function(force)
       local raw_data = provider.fetch_data(force) ---@type fml.ux.file_select.IData
       local raw_items = raw_data.items ---@type fml.ux.file_select.IRawItem[]
-      local present_uuid = raw_data.present_uuid ---@type string|nil
+      local uuid_present = raw_data.uuid_present ---@type string|nil
 
       local items = {} ---@type fml.ux.file_select.IItem[]
       for _, raw_item in ipairs(raw_items) do
@@ -202,7 +202,7 @@ function M.new(props)
       end
 
       ---@type fml.ux.select.IData
-      return { items = items, present_uuid = present_uuid }
+      return { items = items, uuid_present = uuid_present }
     end,
     fetch_preview_data = preview_enabled and function(item)
       return self.fetch_preview_data(item)

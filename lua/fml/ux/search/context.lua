@@ -48,6 +48,7 @@ local signs = require("eve.constant.sign")
 ---@field public winnr_main             integer|nil
 ---@field public winnr_preview          integer|nil
 ---
+---@field public cfg_input_title        string
 ---@field public cfg_preview_title      string
 ---@field public cfg_preview_wrap       boolean
 ---
@@ -57,12 +58,11 @@ local signs = require("eve.constant.sign")
 ---
 ---@field public dimension              fml.ux.search.IDimension
 ---@field public enable_multiline_input boolean
----@field public item_present_uuid      string|nil
+---@field public item_max_width         integer
+---@field public item_uuid_present      string|nil
 ---@field public items                  fml.ux.search.IItem[]
----@field public max_width              integer
 ---@field public multiple               boolean
 ---@field public permanent              boolean
----@field public title                  string
 ---@field public uuid                   string
 ---
 ---@field public change_dimension       fun(self: fml.ux.search.IContext, dimension: fml.ux.search.IRawDimension): nil
@@ -79,7 +79,7 @@ local signs = require("eve.constant.sign")
 ---@field public place_lnum_sign        fun(self: fml.ux.search.IContext): integer|nil
 ---@field public place_selected_sign    fun(self: fml.ux.search.IContext): nil
 ---@field public reset_selected_items   fun(self: fml.ux.search.IContext): nil
----@field public set_item_deleted       fun(self: fml.ux.search.IContext, uuid: string, deleted: boolean): nil
+---@field public set_item_deleted       fun(self: fml.ux.search.IContext, uuid: string): nil
 ---@field public set_item_selected      fun(self: fml.ux.search.IContext, uuid: string, selected: boolean): nil
 ---@field public show_state             fun(self: fml.ux.search.IContext): nil
 ---@field public toggle_item_selected   fun(self: fml.ux.search.IContext, uuid: string): nil
@@ -88,6 +88,7 @@ local signs = require("eve.constant.sign")
 ---@class fml.ux.search.Context : fml.ux.search.IContext
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
+---@field protected _uuids              string[]
 ---@field protected _uuids_deleted      table<string, true>
 ---@field protected _uuids_selected     table<string, true>
 local M = {}
@@ -117,9 +118,18 @@ function M.new(props)
   local dirtier_main = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local dirtier_preview = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local dirtier_selected = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
+
+  local input = props.input ---@type eve.collection.IObservable
+  local input_history = props.input_history ---@type eve.collection.IHistory|nil
+  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable
   local state_has_matched = Observable.new({ value = false, equals = fn.falsy }) ---@type eve.collection.IObservable
   local status = Observable.from_value("hidden")
 
+  local cfg_input_title = props.title ---@type string
+  local cfg_preview_title = props.preview_title or " preview " ---@type string
+  local cfg_preview_wrap = not not props.preview_wrap ---@type boolean
+
+  local delay_fetch = props.delay_fetch ---@type integer
   local raw_dimension = props.dimension or {} ---@type fml.ux.search.IRawDimension
   ---@type fml.ux.search.IDimension
   local dimension = {
@@ -131,18 +141,10 @@ function M.new(props)
     width = raw_dimension.width,
     width_preview = raw_dimension.width_preview,
   }
-
-  local delay_fetch = props.delay_fetch ---@type integer
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
   local fetch_data = props.fetch_data ---@type fml.ux.search.IFetchData
-  local input = props.input ---@type eve.collection.IObservable
-  local input_history = props.input_history ---@type eve.collection.IHistory|nil
-  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable
   local multiple = not not props.multiple ---@type boolean
   local permanent = not not props.permanent ---@type boolean
-  local title = props.title ---@type string
-  local cfg_preview_title = props.preview_title or " preview " ---@type string
-  local cfg_preview_wrap = not not props.preview_wrap ---@type boolean
 
   local uuid = oxi.uuid() ---@type string
 
@@ -156,26 +158,27 @@ function M.new(props)
       dirtier_data_cache:mark_clean()
       fetch_data(input_cur, force, function(succeed, data)
         if succeed and data ~= nil then
-          local max_width = 0 ---@type integer
+          ---@diagnostic disable-next-line: invisible
           local item_lnum_next = 1 ---@type integer
+          local item_max_width = 0 ---@type integer
           local items = data.items ---@type fml.ux.search.IItem[]
-          local present_uuid = data.present_uuid ---@type string|nil
-          local cursor_uuid = data.cursor_uuid or data.present_uuid ---@type string|nil
+          local uuid_cursor = data.uuid_cursor or data.uuid_present ---@type string|nil
+          local uuid_present = data.uuid_present ---@type string|nil
 
           ---@diagnostic disable-next-line: invisible
-          local item_uuid_cur = cursor_uuid or self._item_uuid_cur ---@type string|nil
+          local item_uuid_cur = uuid_cursor or self._item_uuid_cur ---@type string|nil
           for lnum, item in ipairs(items) do
             local width = vim.api.nvim_strwidth(item.text) ---@type integer
-            max_width = max_width < width and width or max_width
+            item_max_width = item_max_width < width and width or item_max_width
 
             if item.uuid == item_uuid_cur then
               item_lnum_next = lnum
             end
           end
 
-          self.item_present_uuid = present_uuid
+          self.item_uuid_present = uuid_present
           self.items = items
-          self.max_width = max_width
+          self.item_max_width = item_max_width
           self:locate(item_lnum_next)
           callback("fulfilled")
         else
@@ -229,24 +232,26 @@ function M.new(props)
   self.state_has_matched = state_has_matched
   self.status = status
 
+  self.cfg_input_title = cfg_input_title
+  self.cfg_preview_title = cfg_preview_title
+  self.cfg_preview_wrap = cfg_preview_wrap
+
   self.focused_pane = "input"
   self.focused_pane_left = "input"
   self.focused_pane_right = "preview"
 
   self.dimension = dimension
   self.enable_multiline_input = enable_multiline_input
-  self.item_present_uuid = nil
-  self.items = {} ---@type fml.ux.search.IItem[]
-  self.max_width = 0 ---@type integer
+  self.item_max_width = 0
+  self.item_uuid_present = nil
+  self.items = {}
   self.multiple = multiple
   self.permanent = permanent
-  self.title = title
-  self.cfg_preview_title = cfg_preview_title
-  self.cfg_preview_wrap = cfg_preview_wrap
   self.uuid = uuid
-  self._uuids_deleted = {} ---@type table<string, true>
+
   self._item_lnum_cur = 1 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
+  self._uuids_deleted = {} ---@type table<string, true>
   self._uuids_selected = {} ---@type table<string, true>
 
   input:subscribe(Subscriber.new({ on_next = on_input_change }), false)
@@ -395,10 +400,10 @@ function M:place_lnum_sign()
 
     local present_lnum = 0 ---@type integer
     do
-      local item_present_uuid = self.item_present_uuid ---@type string|nil
-      if item_present_uuid ~= nil then
+      local item_uuid_present = self.item_uuid_present ---@type string|nil
+      if item_uuid_present ~= nil then
         for lnum, item in ipairs(self.items) do
-          if item.uuid == item_present_uuid then
+          if item.uuid == item_uuid_present then
             present_lnum = lnum
             break
           end
@@ -457,13 +462,8 @@ function M:reset_selected_items()
 end
 
 ---@param uuid                          string
----@param deleted                       boolean
 ---@return nil
-function M:set_item_deleted(uuid, deleted)
-  if not deleted then
-    return
-  end
-
+function M:set_item_deleted(uuid)
   local deleted_uuids = self._uuids_deleted ---@type table<string, true>
   if deleted_uuids[uuid] then
     return
@@ -537,19 +537,48 @@ function M:show_state()
     from = __module_name__,
     subject = "show_state",
     details = {
-      dirtier_dimension = self.dirtier_dimension:snapshot(),
-      dirtier_data = self.dirtier_data:snapshot(),
-      dirtier_main = self.dirtier_main:snapshot(),
-      dirtier_preview = self.dirtier_preview:snapshot(),
-      has_matched = self.state_has_matched:snapshot(),
+      cfg = {
+        bufnr_input = self.bufnr_input or vim.NIL,
+        bufnr_main = self.bufnr_main or vim.NIL,
+        bufnr_preview = self.bufnr_preview or vim.NIL,
+        winnr_input = self.winnr_input or vim.NIL,
+        winnr_main = self.winnr_main or vim.NIL,
+        winnr_preview = self.winnr_preview or vim.NIL,
+        preview_title = self.cfg_preview_title,
+        preview_wrap = self.cfg_preview_wrap,
+      },
+
+      dirtier = {
+        dimension = self.dirtier_dimension:snapshot(),
+        data = self.dirtier_data:snapshot(),
+        data_cache = self.dirtier_data_cache:snapshot(),
+        main = self.dirtier_main:snapshot(),
+        preview = self.dirtier_preview:snapshot(),
+        selected = self.dirtier_selected:snapshot(),
+      },
+
+      input = {
+        keyword = self.input:snapshot(),
+        history = self.input_history and self.input_history:collect() or vim.NIL,
+        line_count = self.input_line_count:snapshot(),
+      },
+
+      state = {
+        has_matched = self.state_has_matched:snapshot(),
+        status = self.status:snapshot(),
+      },
+
+      focused_pane = self.focused_pane,
+      focused_pane_left = self.focused_pane_left,
+      focused_pane_right = self.focused_pane_right,
+
+      dimension = self.dimension,
       enable_multiline_input = self.enable_multiline_input,
-      input = self.input:snapshot(),
-      input_history = self.input_history and self.input_history:collect() or vim.NIL,
-      input_line_count = self.input_line_count:snapshot(),
-      item_present_uuid = self.item_present_uuid or vim.NIL,
-      max_width = self.max_width,
-      status = self.status:snapshot(),
-      title = self.title,
+      item_uuid_present = self.item_uuid_present or vim.NIL,
+      max_width = self.item_max_width,
+      multiple = self.multiple,
+      permanent = self.permanent,
+      title = self.cfg_input_title,
       uuid = self.uuid,
     },
   })

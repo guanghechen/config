@@ -98,8 +98,8 @@ local borders = {
 
 ---@class fml.ux.search.IData
 ---@field public items                  fml.ux.search.IItem[]
----@field public present_uuid           ?string
----@field public cursor_uuid            ?string
+---@field public uuid_cursor            ?string
+---@field public uuid_present           ?string
 
 ---@class fml.ux.search.IItem
 ---@field public group                  string|nil
@@ -292,7 +292,7 @@ function M.new(props)
     on_delete_item = function()
       local uuid = context:get_current_uuid() ---@type string|nil
       if uuid ~= nil then
-        context:set_item_deleted(uuid, true)
+        context:set_item_deleted(uuid)
       end
     end,
     on_main_mouse_click = function()
@@ -768,7 +768,7 @@ function M:create_wins_as_needed()
   end
   height = math.min(max_height, math.max(input_height_with_borders, height)) ---@type integer
 
-  local width = dimension.width or context.max_width + 10 ---@type number
+  local width = dimension.width or context.item_max_width + 10 ---@type number
   if width < 1 then
     width = math.floor(width * screen_width)
   end
@@ -906,7 +906,7 @@ function M:create_wins_as_needed()
     row = row,
     col = col,
     focusable = true,
-    title = " " .. context.title .. " ",
+    title = " " .. context.cfg_input_title .. " ",
     title_pos = "center",
     border = has_main and (has_preview and borders.input_with_preview or borders.input) or borders.input_without_main,
     style = "minimal",
@@ -938,7 +938,7 @@ end
 ---@return nil
 function M:change_input_title(title)
   local context = self.context ---@type fml.ux.search.IContext
-  context.title = title
+  context.cfg_input_title = title
   local winnr = context.winnr_input ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     ---@type vim.api.keyset.win_config
@@ -1062,7 +1062,7 @@ end
 ---@param uuid                          string
 ---@return nil
 function M:mark_item_deleted(uuid)
-  self.context:set_item_deleted(uuid, true)
+  self.context:set_item_deleted(uuid)
 end
 
 ---@return nil

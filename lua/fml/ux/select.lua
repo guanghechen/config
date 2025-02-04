@@ -44,8 +44,8 @@ local SearchContext = require("fml.ux.search.context")
 
 ---@class fml.ux.select.IData
 ---@field public items                  fml.ux.select.IItem[]
----@field public cursor_uuid            ?string
----@field public present_uuid           ?string
+---@field public uuid_cursor            ?string
+---@field public uuid_present           ?string
 
 ---@class fml.ux.select.IItem
 ---@field public group                  string|nil
@@ -341,8 +341,8 @@ function M.new(props)
   self._frecency = frecency
   self._full_matches = {}
   self._item_map = {}
-  self._item_uuid_present = nil
   self._item_uuid_cursor = nil
+  self._item_uuid_present = nil
   self._last_input = nil ---@type string|nil
   self._last_case_sensitive = case_sensitive:snapshot()
   self._live_data_dirty = live_data_dirty
@@ -419,8 +419,8 @@ function M:fetch_data(input, force)
       table.sort(full_matches, self._cmp)
     end
 
-    self._item_uuid_present = data.present_uuid
-    self._item_uuid_cursor = data.cursor_uuid
+    self._item_uuid_cursor = data.uuid_cursor
+    self._item_uuid_present = data.uuid_present
     self._item_map = item_map
     self._full_matches = full_matches
     self._matches = full_matches
@@ -439,7 +439,7 @@ function M:fetch_data(input, force)
   end
 
   ---@type fml.ux.search.IData
-  return { items = items, present_uuid = self._item_uuid_present, cursor_uuid = self._item_uuid_cursor }
+  return { items = items, uuid_cursor = self._item_uuid_cursor, uuid_present = self._item_uuid_present }
 end
 
 ---@param input                         string

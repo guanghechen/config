@@ -75,7 +75,7 @@ local function select_files(params)
       local present = get_present ~= nil and get_present() or nil ---@type string|nil
 
       ---@type fml.ux.file_select.IData
-      local data = { items = last_data.items, present_uuid = present }
+      local data = { items = last_data.items, uuid_present = present }
       return data
     end,
   }
