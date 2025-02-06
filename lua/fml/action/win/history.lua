@@ -122,13 +122,10 @@ local function get_history_select()
             end
           end
 
-          local cwd = path.cwd() ---@type string
-          local filepath = path.join(cwd, item.data.filepath) ---@type string
-
           local winnr_source = command.context_winnr() ---@type integer|nil
           if winnr_source and vim.api.nvim_win_is_valid(winnr_source) then
             widget:close()
-            editor.open_filepath(winnr_source, filepath)
+            editor.open_filepath(winnr_source, item.data.filepath)
           end
         end
       end,
