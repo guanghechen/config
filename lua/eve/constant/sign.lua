@@ -8,6 +8,8 @@ M.NR_SEARCH_MAIN_CURRENT = 2333
 M.NR_SEARCH_MAIN_PRESENT = 2334
 M.NR_SEARCH_MAIN_SELECTED = 2335
 
+M.GROUP_SEARCH_MAIN_SELECTED = "GROUP_SEARCH_MAIN_SELECTED"
+
 M.DAP_BREAKPOINT = "DapBreakpoint"
 M.DAP_BREAKPOINT_CONDITION = "DapBreakpointCondition"
 M.DAP_BREAKPOINT_REJECTED = "DapBreakpointRejected"
@@ -26,9 +28,8 @@ M.SEARCH_INPUT_CURSOR = "SIGN_SEARCH_INPUT_CURSOR"
 M.SEARCH_MAIN_CURRENT = "SIGN_SEARCH_MAIN_CURRENT"
 M.SEARCH_MAIN_PRESENT = "SIGN_SEARCH_MAIN_PRESENT"
 M.SEARCH_MAIN_PRESENT_CUR = "SIGN_SEARCH_MAIN_PRESENT_CUR"
-
-M.SELECT_INPUT_CURSOR = "SIGN_SELECT_INPUT_CURSOR"
-M.SELECT_MAIN_CURRENT = "SIGN_SELECT_MAIN_CURRENT"
+M.SEARCH_MAIN_SELECTED = "SIGN_SEARCH_MAIN_SELECTED"
+M.SEARCH_MAIN_SELECTED_CUR = "SEARCH_MAIN_SELECTED_CUR"
 
 -- stylua: ignore start
 sd(M.DAP_BREAKPOINT,              { text = icons.dap.Breakpoint,          texthl = "f_dap_breakpoint",            linehl = "f_dap_breakpoint_line",           numhl = "f_dap_breakpoint_lnum",           })
@@ -46,13 +47,11 @@ sd(M.DAP_STOPPED,                 { text = icons.dap.Breakpoint,          texthl
 sd(M.DAP_TERMINATE,               { text = icons.dap.Breakpoint,          texthl = "f_dap_terminate",             linehl = "f_dap_terminate_line",            numhl = "f_dap_terminate_lnum",            })
 
 sd(M.SEARCH_INPUT_CURSOR,         { text = icons.ui.Telescope,            texthl = "fs_input_prompt"      })
-sd(M.SEARCH_MAIN_CURRENT,         { text = icons.ui.ArrowPresent,         texthl = "fs_main_current"      })
+sd(M.SEARCH_MAIN_CURRENT,         { text = ' ',                           texthl = "fs_main_current"      })
 sd(M.SEARCH_MAIN_PRESENT,         { text = icons.ui.ArrowPresent,         texthl = "fs_main_present"      })
 sd(M.SEARCH_MAIN_PRESENT_CUR,     { text = icons.ui.ArrowPresent,         texthl = "fs_main_present_cur"  })
-sd(M.SEARCH_MAIN_SELECTED,        { text = icons.ui.Selected,               texthl = "fs_main_selected"     })
-
-sd(M.SELECT_INPUT_CURSOR,         { text = icons.ui.Telescope,            texthl = "fs_input_prompt"      })
-sd(M.SELECT_MAIN_CURRENT,         { text = icons.ui.ArrowClosed,          texthl = "fs_main_current"      })
+sd(M.SEARCH_MAIN_SELECTED,        { text = icons.ui.Selected,             texthl = "fs_main_selected"     })
+sd(M.SEARCH_MAIN_SELECTED_CUR,    { text = icons.ui.Selected,             texthl = "fs_main_selected_cur" })
 -- stylua: ignore end
 
 return M

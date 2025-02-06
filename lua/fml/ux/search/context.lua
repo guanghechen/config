@@ -429,25 +429,20 @@ function M:place_lnum_sign()
       end
     end
 
-    if item_lnum_present > 0 then
-      vim.fn.sign_place(
-        signs.NR_SEARCH_MAIN_PRESENT,
-        "",
-        item_lnum_present == item_lnum_current and signs.SEARCH_MAIN_PRESENT_CUR or signs.SEARCH_MAIN_PRESENT,
-        bufnr,
-        { lnum = item_lnum_present, priority = 10 }
-      )
+    if item_lnum_current > 0 then
+      local uuid = self._item_uuid_cur ---@type string|nil
+      local sign = (uuid ~= nil and self._uuids_selected[uuid]) ---
+          and signs.SEARCH_MAIN_SELECTED_CUR
+        or signs.SEARCH_MAIN_CURRENT
+      vim.fn.sign_place(signs.NR_SEARCH_MAIN_CURRENT, "", sign, bufnr, { lnum = item_lnum_current, priority = 30 })
+      return item_lnum_current
     end
 
-    if item_lnum_current > 0 then
-      vim.fn.sign_place(
-        signs.NR_SEARCH_MAIN_CURRENT,
-        "",
-        signs.SEARCH_MAIN_CURRENT,
-        bufnr,
-        { lnum = item_lnum_current, priority = 15 }
-      )
-      return item_lnum_current
+    if item_lnum_present > 0 then
+      local sign = item_lnum_present == item_lnum_current ---
+          and signs.SEARCH_MAIN_PRESENT_CUR
+        or signs.SEARCH_MAIN_PRESENT
+      vim.fn.sign_place(signs.NR_SEARCH_MAIN_PRESENT, "", sign, bufnr, { lnum = item_lnum_present, priority = 40 })
     end
   end
   return nil
@@ -457,7 +452,21 @@ end
 function M:place_selected_sign()
   local bufnr = self.bufnr_main ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_SELECTED })
+    vim.fn.sign_unplace(signs.GROUP_SEARCH_MAIN_SELECTED, { buffer = bufnr })
+
+    local selected = self._uuids_selected ---@type table<string, true>
+    local items = self.items ---@type fml.ux.search.IItem[]
+    for lnum, item in ipairs(items) do
+      if selected[item.uuid] then
+        vim.fn.sign_place(
+          lnum,
+          signs.GROUP_SEARCH_MAIN_SELECTED,
+          signs.SEARCH_MAIN_SELECTED,
+          bufnr,
+          { lnum = lnum, priority = 10 }
+        )
+      end
+    end
   end
 end
 

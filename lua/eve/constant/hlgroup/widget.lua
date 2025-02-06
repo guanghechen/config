@@ -94,7 +94,8 @@ local function gen_hlgroup_map(context)
     fs_main_current = { bg = c.bg3 },
     fs_main_present = { fg = c.blue, bg = "none" },
     fs_main_present_cur = { fg = c.blue, bg = c.bg3 },
-    fs_main_selected = { fg = c.purple, bg = c.bg3 },
+    fs_main_selected = { fg = c.purple, bg = "none" },
+    fs_main_selected_cur = { fg = c.purple, bg = c.bg3 },
 
     ---terminal
     f_us_terminal_bg = { bg = c.bg0 },
