@@ -196,26 +196,10 @@ function M.new(props)
   ---@class fml.ux.search.search.actions
   local actions = {
     focus_left = function()
-      local pane = context.focused_pane_left ---@type string
-      local winnr_pane = context["winnr_" .. pane] ---@type integer|nil
-      if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
-        context.focused_pane = pane
-        local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
-        if winnr ~= winnr_pane then
-          vim.api.nvim_tabpage_set_win(0, winnr_pane)
-        end
-      end
+      context:focus_left()
     end,
     focus_right = function()
-      local pane = context.focused_pane_right ---@type string
-      local winnr_pane = context["winnr_" .. pane] ---@type integer|nil
-      if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
-        context.focused_pane = pane
-        local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
-        if winnr ~= winnr_pane then
-          vim.api.nvim_tabpage_set_win(0, winnr_pane)
-        end
-      end
+      context:focus_right()
     end,
     focus_left_tmux = function()
       local is_zen_mode = state.status.tmux_zen_mode:snapshot() ---@type boolean
@@ -230,42 +214,30 @@ function M.new(props)
       end
     end,
     focus_input = function()
-      local pane = context.focused_pane_left ---@type string
-      local winnr_pane = context.winnr_input ---@type integer|nil
-      if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
-        context.focused_pane = pane
-        context.focused_pane_left = "input"
-        local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
-        if winnr ~= winnr_pane then
-          vim.api.nvim_tabpage_set_win(0, winnr_pane)
-        end
-      end
+      context:focus_input()
     end,
     focus_main = function()
-      local pane = context.focused_pane_left ---@type string
-      local winnr_pane = context.winnr_main ---@type integer|nil
-      if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
-        context.focused_pane = pane
-        context.focused_pane_left = "main"
-        local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
-        if winnr ~= winnr_pane then
-          vim.api.nvim_tabpage_set_win(0, winnr_pane)
-        end
-      end
+      context:focus_main()
+    end,
+    focus_preview = function()
+      context:focus_preview()
     end,
     force_refresh = function()
       context.dirtier_data_cache:mark_dirty()
       context.dirtier_data:mark_dirty()
+      context.dirtier_selected:mark_dirty()
     end,
     toggle_current_selected = function()
-      local uuid = context:get_current_uuid() ---@type string|nil
-      if uuid ~= nil then
-        context:toggle_item_selected(uuid)
-      end
+      local lnum = context:get_current_lnum() ---@type integer
+      context:toggle_item_selected(lnum)
     end,
     toggle_visual_selected = function()
       local s_lnum, t_lnum = editor.get_visual_lnum_range() ---@type integer, integer
-      return s_lnum, t_lnum
+      local lnums = {} ---@type integer[]
+      for lnum = s_lnum, t_lnum, 1 do
+        table.insert(lnums, lnum)
+      end
+      context:toggle_items_selected(lnums)
     end,
     on_main_G = function()
       local lnum = vim.v.count > 0 and vim.v.count or math.huge ---@type integer
@@ -711,6 +683,7 @@ function M.new(props)
         local is_selected_dirty = context.dirtier_selected:is_dirty() ---@type boolean
         if is_selected_dirty then
           context:place_selected_sign()
+          context:place_lnum_sign()
         end
       end,
     }),

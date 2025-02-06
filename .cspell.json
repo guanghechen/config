@@ -312,6 +312,7 @@
     "linematch",
     "listchars",
     "lnum",
+    "lnums",
     "loclist",
     "loadstring",
     "lspinfo",

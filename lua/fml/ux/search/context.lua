@@ -65,6 +65,12 @@ local signs = require("eve.constant.sign")
 ---@field public permanent              boolean
 ---@field public uuid                   string
 ---
+---@field public focus_left             fun(self: fml.ux.search.IContext): nil
+---@field public focus_right            fun(self: fml.ux.search.IContext): nil
+---@field public focus_input            fun(self: fml.ux.search.IContext): nil
+---@field public focus_main             fun(self: fml.ux.search.IContext): nil
+---@field public focus_preview          fun(self: fml.ux.search.IContext): nil
+---
 ---@field public change_dimension       fun(self: fml.ux.search.IContext, dimension: fml.ux.search.IRawDimension): nil
 ---@field public get_current            fun(self: fml.ux.search.IContext): fml.ux.search.IItem|nil, integer
 ---@field public get_current_lnum       fun(self: fml.ux.search.IContext): integer
@@ -82,8 +88,8 @@ local signs = require("eve.constant.sign")
 ---@field public set_item_deleted       fun(self: fml.ux.search.IContext, uuid: string): nil
 ---@field public set_item_selected      fun(self: fml.ux.search.IContext, uuid: string, selected: boolean): nil
 ---@field public show_state             fun(self: fml.ux.search.IContext): nil
----@field public toggle_item_selected   fun(self: fml.ux.search.IContext, uuid: string): nil
----@field public toggle_items_selected  fun(self: fml.ux.search.IContext, uuids: string[]): nil
+---@field public toggle_item_selected   fun(self: fml.ux.search.IContext, lnum: integer): nil
+---@field public toggle_items_selected  fun(self: fml.ux.search.IContext, lnums: integer[]): nil
 
 ---@class fml.ux.search.Context : fml.ux.search.IContext
 ---@field protected _item_lnum_cur      integer
@@ -307,6 +313,71 @@ function M:change_dimension(raw_dimension)
   end
 end
 
+---@return nil
+function M:focus_left()
+  local pane = self.focused_pane_left ---@type string
+  local winnr_pane = self["winnr_" .. pane] ---@type integer|nil
+  if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
+    self.focused_pane = pane
+    local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+    if winnr ~= winnr_pane then
+      vim.api.nvim_tabpage_set_win(0, winnr_pane)
+    end
+  end
+end
+
+---@return nil
+function M:focus_right()
+  local pane = self.focused_pane_right ---@type string
+  local winnr_pane = self["winnr_" .. pane] ---@type integer|nil
+  if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
+    self.focused_pane = pane
+    local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+    if winnr ~= winnr_pane then
+      vim.api.nvim_tabpage_set_win(0, winnr_pane)
+    end
+  end
+end
+
+---@return nil
+function M:focus_input()
+  local winnr_pane = self.winnr_input ---@type integer|nil
+  if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
+    self.focused_pane = "input"
+    self.focused_pane_left = "input"
+    local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+    if winnr ~= winnr_pane then
+      vim.api.nvim_tabpage_set_win(0, winnr_pane)
+    end
+  end
+end
+
+---@return nil
+function M:focus_main()
+  local winnr_pane = self.winnr_main ---@type integer|nil
+  if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
+    self.focused_pane = "main"
+    self.focused_pane_left = "main"
+    local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+    if winnr ~= winnr_pane then
+      vim.api.nvim_tabpage_set_win(0, winnr_pane)
+    end
+  end
+end
+
+---@return nil
+function M:focus_preview()
+  local winnr_pane = self.winnr_preview ---@type integer|nil
+  if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
+    self.focused_pane = "preview"
+    self.focused_pane_right = "preview"
+    local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+    if winnr ~= winnr_pane then
+      vim.api.nvim_tabpage_set_win(0, winnr_pane)
+    end
+  end
+end
+
 ---@return fml.ux.search.IItem|nil
 ---@return integer
 function M:get_current()
@@ -327,10 +398,9 @@ end
 ---@return fml.ux.search.IItem[]
 function M:get_selected_items()
   local selected = {} ---@type fml.ux.search.IItem[]
-  local items = self.items ---@type fml.ux.search.IItem[]
-  for uuid in pairs(self._uuids_selected) do
-    local item = items[uuid] ---@type fml.ux.search.IItem|nil
-    if item ~= nil then
+  local uuids_selected = self._uuids_selected ---@type table<string, true>
+  for _, item in ipairs(self.items) do
+    if uuids_selected[item.uuid] then
       table.insert(selected, item)
     end
   end
@@ -429,6 +499,13 @@ function M:place_lnum_sign()
       end
     end
 
+    if item_lnum_present > 0 then
+      local sign = item_lnum_present == item_lnum_current ---
+          and signs.SEARCH_MAIN_PRESENT_CUR
+        or signs.SEARCH_MAIN_PRESENT
+      vim.fn.sign_place(signs.NR_SEARCH_MAIN_PRESENT, "", sign, bufnr, { lnum = item_lnum_present, priority = 40 })
+    end
+
     if item_lnum_current > 0 then
       local uuid = self._item_uuid_cur ---@type string|nil
       local sign = (uuid ~= nil and self._uuids_selected[uuid]) ---
@@ -436,13 +513,6 @@ function M:place_lnum_sign()
         or signs.SEARCH_MAIN_CURRENT
       vim.fn.sign_place(signs.NR_SEARCH_MAIN_CURRENT, "", sign, bufnr, { lnum = item_lnum_current, priority = 30 })
       return item_lnum_current
-    end
-
-    if item_lnum_present > 0 then
-      local sign = item_lnum_present == item_lnum_current ---
-          and signs.SEARCH_MAIN_PRESENT_CUR
-        or signs.SEARCH_MAIN_PRESENT
-      vim.fn.sign_place(signs.NR_SEARCH_MAIN_PRESENT, "", sign, bufnr, { lnum = item_lnum_present, priority = 40 })
     end
   end
   return nil
@@ -607,22 +677,53 @@ function M:show_state()
   })
 end
 
----@param uuid                          string
+---@param lnum                          integer
 ---@return nil
-function M:toggle_item_selected(uuid)
-  local selected_items = self._uuids_selected ---@type table<string, true>
-  local item = self.items[self._item_lnum_cur] ---@type fml.ux.search.IItem
-  if item == nil or selected_items[uuid] ~= nil then
-    return
-  end
-
+function M:toggle_item_selected(lnum)
   if self.multiple then
-    if selected_items[uuid] then
-      selected_items[uuid] = nil
-    else
-      selected_items[uuid] = true
+    local item = self.items[lnum] ---@type fml.ux.search.IItem
+    if item ~= nil and not self._uuids_deleted[item.uuid] then
+      local uuids_selected = self._uuids_selected ---@type table<string, true>
+      if uuids_selected[item.uuid] then
+        uuids_selected[item.uuid] = nil
+      else
+        uuids_selected[item.uuid] = true
+      end
+      self.dirtier_selected:mark_dirty()
     end
-    self.dirtier_selected:mark_dirty()
+  end
+end
+
+---@param lnums                         integer[]
+---@return nil
+function M:toggle_items_selected(lnums)
+  if self.multiple then
+    local uuids_deleted = self._uuids_deleted ---@type table<string, true>
+    local uuids_selected = self._uuids_selected ---@type table<string, true>
+
+    local dirty = false ---@type boolean
+    local selected = false ---@type boolean
+    for _, lnum in ipairs(lnums) do
+      local item = self.items[lnum] ---@type fml.ux.search.IItem|nil
+      if item ~= nil and not uuids_deleted[item.uuid] then
+        if uuids_selected[item.uuid] then
+          selected = true
+          break
+        end
+      end
+    end
+
+    local value = selected == false and true or nil ---@type boolean|nil
+    for _, lnum in ipairs(lnums) do
+      local item = self.items[lnum] ---@type fml.ux.search.IItem|nil
+      if item ~= nil and not uuids_deleted[item.uuid] then
+        dirty = true
+        uuids_selected[item.uuid] = value
+      end
+    end
+    if dirty then
+      self.dirtier_selected:mark_dirty()
+    end
   end
 end
 
