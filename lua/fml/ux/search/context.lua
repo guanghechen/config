@@ -232,6 +232,11 @@ function M.new(props)
     end
   end
 
+  ---@return nil
+  local function on_data_cache_dirty()
+    dirtier_selected:mark_dirty()
+  end
+
   self.dirtier_dimension = dirtier_dimension
   self.dirtier_data = dirtier_data
   self.dirtier_data_cache = dirtier_data_cache
@@ -270,6 +275,7 @@ function M.new(props)
   input:subscribe(Subscriber.new({ on_next = on_input_change }), false)
   status:subscribe(Subscriber.new({ on_next = on_refresh }), false)
   dirtier_data:subscribe(Subscriber.new({ on_next = on_refresh }), false)
+  dirtier_data_cache:subscribe(Subscriber.new({ on_next = on_data_cache_dirty }), false)
   return self
 end
 
