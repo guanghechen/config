@@ -220,6 +220,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto type definition",
     },
     {
+      disabled = not has_support_codeAction,
       modes = { "n", "v" },
       key = "<C-a><cr>",
       aliases = { "<D-cr>", "<M-cr>" },
@@ -230,27 +231,27 @@ function M.on_attach(client, bufnr)
         end)
       end,
       desc = "lsp: code action",
-      active = has_support_codeAction,
     },
     {
+      disabled = not has_support_codeLens,
       modes = { "n", "v" },
       key = "<leader>cc",
       callback = function()
         vim.lsp.codelens.run()
       end,
       desc = "lsp: codelens",
-      active = has_support_codeLens,
     },
     {
+      disabled = not has_support_codeLens,
       modes = { "n", "v" },
       key = "<leader>cC",
       callback = function()
         vim.lsp.codelens.refresh()
       end,
       desc = "lsp: refresh & display codelens",
-      active = has_support_codeLens,
     },
     {
+      disabled = not has_support_codeAction,
       modes = { "n" },
       key = "<leader>ca",
       callback = function()
@@ -265,9 +266,9 @@ function M.on_attach(client, bufnr)
         end)
       end,
       desc = "lsp: source action",
-      active = has_support_codeAction,
     },
     {
+      disabled = not has_support_rename,
       modes = { "n" },
       key = "<leader>cr",
       callback = function()
@@ -277,7 +278,6 @@ function M.on_attach(client, bufnr)
         end)
       end,
       desc = "lsp: rename",
-      active = has_support_rename,
     },
   }
   fn.bindkeys(keymaps, { bufnr = bufnr })

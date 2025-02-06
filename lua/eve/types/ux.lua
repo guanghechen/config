@@ -25,6 +25,7 @@
 ---@field public callback_fn            string
 
 ---@class eve.t.ux.widget.IRawStatuslineItem
+---@field public disabled               ?boolean
 ---@field public type                   eve.e.WidgetStatuslineItemType
 ---@field public desc                   string
 ---@field public state                  eve.collection.IObservable

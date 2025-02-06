@@ -16,12 +16,12 @@
 ---@field public silent                 ?boolean
 
 ---@class eve.t.IKeymap : eve.t.IKeymapOverridable
+---@field public disabled               boolean|nil
 ---@field public modes                  eve.e.VimMode[]
 ---@field public key                    string
 ---@field public aliases                string[]|nil
 ---@field public callback               fun(): nil
 ---@field public desc                   string|nil
----@field public active                 boolean|nil
 
 ---@class eve.t.IQuickFixItem
 ---@field public filename               string

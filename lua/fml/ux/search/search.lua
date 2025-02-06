@@ -357,7 +357,7 @@ function M.new(props)
       desc = "search: focus right",
     },
     {
-      active = context.multiple,
+      disabled = not context.multiple,
       modes = { "i", "n", "v" },
       key = "<Tab>",
       callback = actions.toggle_current_selected,
@@ -410,14 +410,14 @@ function M.new(props)
       desc = "search: focus prev item",
     },
     {
-      active = context.multiple,
+      disabled = not context.multiple,
       modes = { "i", "n" },
       key = "<Tab>",
       callback = actions.toggle_current_selected,
       desc = "search: toggle selected",
     },
     {
-      active = context.multiple,
+      disabled = not context.multiple,
       modes = { "v" },
       key = "<Tab>",
       callback = actions.toggle_visual_selected,

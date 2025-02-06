@@ -254,7 +254,7 @@ end
 ---@param keymap_override               eve.t.IKeymapOverridable
 function M.bindkeys(keymaps, keymap_override)
   for _, keymap in ipairs(keymaps) do
-    if keymap.active ~= false then
+    if not keymap.disabled then
       local bufnr = keymap_override.bufnr or keymap.bufnr ---@type integer|nil
       local nowait = keymap_override.nowait or keymap.nowait ---@type boolean|nil
       local noremap = keymap_override.noremap or keymap.noremap ---@type boolean|nil
