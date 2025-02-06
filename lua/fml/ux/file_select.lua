@@ -82,6 +82,7 @@ M.__index = M
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public flag_fuzzy             ?eve.collection.IObservable
 ---@field public flag_regex             ?eve.collection.IObservable
+---@field public flag_selected          ?eve.collection.IObservable
 ---@field public frecency               ?eve.collection.IFrecency
 ---@field public input                  ?eve.collection.IObservable
 ---@field public input_history          ?eve.collection.IHistory
@@ -112,6 +113,7 @@ function M.new(props)
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
   local flag_fuzzy = props.flag_fuzzy ---@type eve.collection.IObservable|nil
   local flag_regex = props.flag_regex ---@type eve.collection.IObservable|nil
+  local flag_selected = props.flag_selected ---@type eve.collection.IObservable|nil
   local frecency = props.frecency ---@type eve.collection.IFrecency|nil
   local input = props.input ---@type eve.collection.IObservable|nil
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
@@ -241,6 +243,7 @@ function M.new(props)
         extend_preset_keymaps = extend_preset_keymaps,
         flag_fuzzy = flag_fuzzy,
         flag_regex = flag_regex,
+        flag_selected = flag_selected,
         frecency = frecency,
         input = input,
         input_history = input_history,

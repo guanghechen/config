@@ -199,6 +199,11 @@ local function get_select()
         local next_scope = scopes[idx_next] ---@type eve.e.FindFileScope
         state.select.find_file_scope:next(next_scope)
       end,
+      ---@return nil
+      toggle_selected = function()
+        local flag = state.select.find_file.flag_selected:snapshot() ---@type boolean
+        state.select.find_file.flag_selected:next(not flag)
+      end,
     }
 
     local frecency = state.frecency.files ---@type eve.collection.IFrecency
@@ -211,6 +216,13 @@ local function get_select()
         symbol = "",
         state = state.select.find_file_scope,
         callback = actions.toggle_scope,
+      },
+      {
+        type = "flag",
+        desc = "select: toggle selected",
+        symbol = icons.symbols.flag_selected,
+        state = state.select.find_file.flag_selected,
+        callback = actions.toggle_selected,
       },
       {
         type = "flag",
@@ -342,6 +354,7 @@ local function get_select()
       extend_preset_keymaps = false,
       flag_fuzzy = states.flag_fuzzy,
       flag_regex = states.flag_regex,
+      flag_selected = states.flag_selected,
       frecency = frecency,
       input = states.input,
       input_history = states.input_history,

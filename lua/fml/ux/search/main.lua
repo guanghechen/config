@@ -63,10 +63,8 @@ function M.new(props)
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 
-      local items = context.items ---@type fml.ux.search.IItem[]
-      for lnum, item in ipairs(items) do
-        local highlights = item.highlights ---@type eve.t.IHighlightInline[]
-        for _, hl in ipairs(highlights) do
+      for lnum, item in ipairs(context.items) do
+        for _, hl in ipairs(item.highlights) do
           vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.coll, hl.colr)
         end
       end

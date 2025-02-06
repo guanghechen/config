@@ -738,7 +738,7 @@ function M:create_wins_as_needed()
     or 1
   local input_height_with_borders = input_height + 1 ---@type integer
 
-  local height = dimension.height or (#context.items + input_height_with_borders) ---@type number
+  local height = dimension.height or (#context.items_original + input_height_with_borders) ---@type number
   if height < 1 then
     height = math.floor(height * screen_height)
   end

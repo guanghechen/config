@@ -256,6 +256,7 @@ function M.get_search()
       },
       enable_multiline_input = true,
       fetch_data = api.fetch_data,
+      flag_selected = state.select.search_file.flag_selected,
       input = state.select.search_file.input,
       input_history = state.select.search_file.input_history,
       multiple = true,
@@ -403,6 +404,12 @@ end
 function M.toggle_scope()
   local next_scope = get_scope_carousel_next() ---@type eve.e.SearchFileScope
   change_scope(next_scope)
+end
+
+---@return nil
+function M.toggle_selected()
+  local flag = state.select.search_file.flag_selected:snapshot() ---@type boolean
+  state.select.search_file.flag_selected:next(not flag)
 end
 
 return M

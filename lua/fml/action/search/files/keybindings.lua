@@ -14,6 +14,13 @@ local statusline_items = {
   },
   {
     type = "flag",
+    desc = "select: toggle selected",
+    symbol = icons.symbols.flag_selected,
+    state = state.select.search_file.flag_selected,
+    callback = context.toggle_selected,
+  },
+  {
+    type = "flag",
     desc = "search: toggle gitignore",
     symbol = icons.symbols.flag_gitignore,
     state = state.select.search_file.flag_gitignore,

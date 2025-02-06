@@ -7,6 +7,7 @@ local Observable = require("eve.collection.observable")
 ---@field public flag_gitignore         boolean
 ---@field public flag_fuzzy             boolean
 ---@field public flag_regex             boolean
+---@field public flag_selected          boolean
 ---@field public includes               string[]
 ---@field public excludes               string[]
 ---@field public input                  string
@@ -17,6 +18,7 @@ local Observable = require("eve.collection.observable")
 ---@field public flag_gitignore         eve.collection.IObservable
 ---@field public flag_fuzzy             eve.collection.IObservable
 ---@field public flag_regex             eve.collection.IObservable
+---@field public flag_selected          eve.collection.IObservable
 ---@field public includes               eve.collection.IObservable
 ---@field public excludes               eve.collection.IObservable
 ---@field public input                  eve.collection.IObservable
@@ -37,6 +39,7 @@ function M.defaults()
     flag_gitignore = true,
     flag_fuzzy = false,
     flag_regex = false,
+    flag_selected = false,
     includes = {},
     excludes = {
       ".git/",
@@ -75,6 +78,9 @@ function M.normalize(data)
     if type(data.flag_regex) == "boolean" then
       resolved.flag_regex = data.flag_regex
     end
+    if type(data.flag_selected) == "boolean" then
+      resolved.flag_selected = data.flag_selected
+    end
     if type(data.includes) == "table" then
       resolved.includes = data.includes
     end
@@ -107,6 +113,7 @@ function M.dump(state)
     flag_gitignore = state.flag_gitignore:snapshot(),
     flag_fuzzy = state.flag_fuzzy:snapshot(),
     flag_regex = state.flag_regex:snapshot(),
+    flag_selected = state.flag_selected:snapshot(),
     includes = state.includes:snapshot(),
     excludes = state.excludes:snapshot(),
     input = state.input:snapshot(),
@@ -128,6 +135,7 @@ function M.load(state, name, raw_data)
       flag_gitignore = Observable.from_value(data.flag_gitignore),
       flag_fuzzy = Observable.from_value(data.flag_fuzzy),
       flag_regex = Observable.from_value(data.flag_regex),
+      flag_selected = Observable.from_value(data.flag_selected),
       includes = Observable.from_value(data.includes),
       excludes = Observable.from_value(data.excludes),
       input = Observable.from_value(data.input),
@@ -144,6 +152,7 @@ function M.load(state, name, raw_data)
   state.flag_gitignore:next(data.flag_gitignore)
   state.flag_fuzzy:next(data.flag_fuzzy)
   state.flag_regex:next(data.flag_regex)
+  state.flag_selected:next(data.flag_selected)
   if not fn.equals_list(state.includes:snapshot(), data.includes) then
     state.includes:next(data.includes)
   end

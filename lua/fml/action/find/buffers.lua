@@ -1,6 +1,7 @@
 local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
+local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local winpicker = require("eve.module.winpicker")
@@ -42,6 +43,16 @@ local function get_select()
           if _select ~= nil then
             _select:mark_data_dirty()
           end
+        end,
+      },
+      {
+        type = "flag",
+        desc = "find(buffer): toggle selected",
+        symbol = icons.symbols.flag_selected,
+        state = state.select.find_buffer.flag_selected,
+        callback = function()
+          local flag = state.select.find_buffer.flag_selected:snapshot() ---@type boolean
+          state.select.find_buffer.flag_selected:next(not flag)
         end,
       },
     }
@@ -194,6 +205,7 @@ local function get_select()
       flag_case_sensitive = state.select.find_buffer.flag_case_sensitive,
       flag_fuzzy = state.select.find_buffer.flag_fuzzy,
       flag_regex = state.select.find_buffer.flag_regex,
+      flag_selected = state.select.find_buffer.flag_selected,
       input = state.select.find_buffer.input,
       input_history = state.select.find_buffer.input_history,
       input_keymaps = main_keymaps,

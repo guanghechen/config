@@ -35,6 +35,7 @@ local signs = require("eve.constant.sign")
 ---@field public dirtier_preview        eve.collection.IDirtier
 ---@field public dirtier_selected       eve.collection.IDirtier
 ---
+---@field public flag_selected          eve.collection.IObservable
 ---@field public input                  eve.collection.IObservable
 ---@field public input_history          eve.collection.IHistory|nil
 ---@field public input_line_count       eve.collection.IObservable
@@ -61,6 +62,7 @@ local signs = require("eve.constant.sign")
 ---@field public item_max_width         integer
 ---@field public item_uuid_present      string|nil
 ---@field public items                  fml.ux.search.IItem[]
+---@field public items_original         fml.ux.search.IItem[]
 ---@field public multiple               boolean
 ---@field public permanent              boolean
 ---@field public uuid                   string
@@ -104,6 +106,7 @@ M.__index = M
 ---@field public dimension              fml.ux.search.IRawDimension|nil
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             fml.ux.search.IFetchData
+---@field public flag_selected          eve.collection.IObservable
 ---@field public input                  eve.collection.IObservable
 ---@field public input_history          eve.collection.IHistory|nil
 ---@field public multiple               boolean|nil
@@ -124,6 +127,7 @@ function M.new(props)
   local dirtier_preview = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local dirtier_selected = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
 
+  local flag_selected = props.flag_selected ---@type eve.collection.IObservable
   local input = props.input ---@type eve.collection.IObservable
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable
@@ -163,26 +167,32 @@ function M.new(props)
       dirtier_data_cache:mark_clean()
       fetch_data(input_cur, force, function(succeed, data)
         if succeed and data ~= nil then
-          ---@diagnostic disable-next-line: invisible
-          local item_lnum_next = self._item_lnum_cur or 1 ---@type integer
           local item_max_width = 0 ---@type integer
-          ---@diagnostic disable-next-line: invisible
-          local item_uuid_cursor = data.uuid_cursor or data.uuid_present or self._item_uuid_cur ---@type string|nil
           local item_uuid_present = data.uuid_present ---@type string|nil
-          local items = data.items ---@type fml.ux.search.IItem[]
+          local items_original = data.items ---@type fml.ux.search.IItem[]
+          local items = flag_selected:snapshot() and {} or items_original ---@type fml.ux.search.IItem[]
 
-          for lnum, item in ipairs(items) do
-            local width = vim.api.nvim_strwidth(item.text) ---@type integer
-            item_max_width = item_max_width < width and width or item_max_width ---@type integer
-
-            if item.uuid == item_uuid_cursor then
-              item_lnum_next = lnum
+          if flag_selected:snapshot() then
+            for _, item in ipairs(items_original) do
+              ---@diagnostic disable-next-line: invisible
+              if self._uuids_selected[item.uuid] then
+                table.insert(items, item)
+              end
             end
           end
 
+          for _, item in ipairs(items_original) do
+            local width = vim.api.nvim_strwidth(item.text) ---@type integer
+            item_max_width = item_max_width < width and width or item_max_width ---@type integer
+          end
+
+          ---@diagnostic disable-next-line: invisible
+          local item_uuid_cursor = data.uuid_cursor or data.uuid_present or self._item_uuid_cur ---@type string|nil
+          local item_lnum_next = self:resolve_current_lnum(item_uuid_cursor) or 1 ---@type integer
           self.item_uuid_present = item_uuid_present
-          self.items = items
           self.item_max_width = item_max_width
+          self.items = items
+          self.items_original = items_original
           self:locate(item_lnum_next)
 
           local uuids_selected = {} ---@type table<string, true>
@@ -197,7 +207,7 @@ function M.new(props)
           self._uuids_deleted = {} ---@type table<string, true>
           ---@diagnostic disable-next-line: invisible
           self._uuids_selected = uuids_selected ---@type table<string, true>
-          self.state_has_matched:next(#data.items > 0)
+          self.state_has_matched:next(#items > 0)
 
           self.dirtier_data:mark_clean()
           self.dirtier_main:mark_dirty()
@@ -212,6 +222,30 @@ function M.new(props)
       end)
     end,
   })
+
+  ---@return nil
+  local function on_flag_selected_change()
+    local items_original = self.items_original ---@type fml.ux.search.IItem[]
+    local items = flag_selected:snapshot() and {} or items_original ---@type fml.ux.search.IItem[]
+
+    if flag_selected:snapshot() then
+      for _, item in ipairs(items_original) do
+        ---@diagnostic disable-next-line: invisible
+        if self._uuids_selected[item.uuid] then
+          table.insert(items, item)
+        end
+      end
+    end
+
+    self.items = items
+    self.state_has_matched:next(#items > 0)
+    self.dirtier_main:mark_dirty()
+    self.dirtier_selected:mark_dirty()
+
+    ---@diagnostic disable-next-line: invisible
+    local item_lnum_next = self:resolve_current_lnum(self._item_uuid_cur) or 1 ---@type integer
+    self:locate(item_lnum_next)
+  end
 
   ---@return nil
   local function on_input_change()
@@ -244,6 +278,7 @@ function M.new(props)
   self.dirtier_preview = dirtier_preview
   self.dirtier_selected = dirtier_selected
 
+  self.flag_selected = flag_selected
   self.input = input
   self.input_history = input_history
   self.input_line_count = input_line_count
@@ -262,7 +297,8 @@ function M.new(props)
   self.enable_multiline_input = enable_multiline_input
   self.item_max_width = 0
   self.item_uuid_present = nil
-  self.items = {}
+  self.items = {} ---@type fml.ux.search.IItem[]
+  self.items_original = {} ---@type fml.ux.search.IItem[]
   self.multiple = multiple
   self.permanent = permanent
   self.uuid = uuid
@@ -272,6 +308,7 @@ function M.new(props)
   self._uuids_deleted = {} ---@type table<string, true>
   self._uuids_selected = {} ---@type table<string, true>
 
+  flag_selected:subscribe(Subscriber.new({ on_next = on_flag_selected_change }), false)
   input:subscribe(Subscriber.new({ on_next = on_input_change }), false)
   status:subscribe(Subscriber.new({ on_next = on_refresh }), false)
   dirtier_data:subscribe(Subscriber.new({ on_next = on_refresh }), false)
@@ -405,7 +442,7 @@ end
 function M:get_selected_items()
   local selected = {} ---@type fml.ux.search.IItem[]
   local uuids_selected = self._uuids_selected ---@type table<string, true>
-  for _, item in ipairs(self.items) do
+  for _, item in ipairs(self.items_original) do
     if uuids_selected[item.uuid] then
       table.insert(selected, item)
     end
@@ -550,6 +587,17 @@ end
 function M:reset_selected_items()
   self._uuids_selected = {}
   self.dirtier_selected:mark_dirty()
+end
+
+---@param uuid                          string|nil
+---@return integer|nil
+function M:resolve_current_lnum(uuid)
+  for lnum, item in ipairs(self.items) do
+    if item.uuid == uuid then
+      return lnum
+    end
+  end
+  return nil
 end
 
 ---@param uuid                          string

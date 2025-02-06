@@ -97,6 +97,7 @@ M.__index = M
 ---@field public preview_wrap           ?boolean
 ---@field public extend_preset_keymaps  ?boolean
 ---@field public flag_fuzzy             ?eve.collection.IObservable
+---@field public flag_selected          ?eve.collection.IObservable
 ---@field public flag_regex             ?eve.collection.IObservable
 ---@field public frecency               ?eve.collection.IFrecency
 ---@field public input                  ?eve.collection.IObservable
@@ -121,6 +122,9 @@ function M.new(props)
 
   local delay_fetch = props.delay_fetch or 128 ---@type integer
   local dimension = props.dimension ---@type fml.ux.search.IRawDimension|nil
+  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.collection.IObservable
+  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.collection.IObservable
+  local flag_selected = props.flag_selected or Observable.from_value(false) ---@type eve.collection.IObservable
   local input = props.input or Observable.from_value("") ---@type eve.collection.IObservable
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local multiple = props.multiple ---@type boolean|nil
@@ -146,6 +150,7 @@ function M.new(props)
     dimension = dimension,
     enable_multiline_input = false,
     fetch_data = fetch_data,
+    flag_selected = flag_selected,
     input = input,
     input_history = input_history,
     multiple = multiple,
@@ -161,8 +166,6 @@ function M.new(props)
   local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
   local preview_enabled = props.preview_enabled ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
-  local flag_fuzzy = props.flag_fuzzy or Observable.from_value(false) ---@type eve.collection.IObservable
-  local flag_regex = props.flag_regex or Observable.from_value(false) ---@type eve.collection.IObservable
   local frecency = props.frecency ---@type eve.collection.IFrecency|nil
   local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
   local live_data_dirty = Observable.from_value(true) ---@type eve.collection.IObservable
@@ -200,8 +203,24 @@ function M.new(props)
       state.status.dirtier_statusline:mark_dirty()
     end
 
+    ---@return nil
+    local function toggle_flag_selected()
+      local flag = flag_selected:snapshot() ---@type boolean
+      flag_selected:next(not flag)
+      self:mark_search_state_dirty()
+      state.status.dirtier_statusline:mark_dirty()
+    end
+
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
     statusline_items = vim.list_extend(statusline_items or {}, {
+      {
+        disabled = not multiple,
+        type = "flag",
+        desc = "select: toggle selected",
+        symbol = icons.symbols.flag_selected,
+        state = flag_selected,
+        callback = toggle_flag_selected,
+      },
       {
         type = "flag",
         desc = "select: toggle flag fuzzy",

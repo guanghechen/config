@@ -60,6 +60,7 @@ M.symbols = {
   flag_gitignore = "",
   flag_regex = "󰑑",
   flag_replace = "",
+  flag_selected = "󰔡",
   sep_left = "",
   sep_right = "",
 }
