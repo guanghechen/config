@@ -9,6 +9,10 @@ local configs = {
       edit = "<leader>ae",
       refresh = "<leader>ar",
 
+      sidebar = {
+        close = { "q" },
+      },
+
       suggestion = {
         accept = "<C-cr>",
         next = "<C-j>",
