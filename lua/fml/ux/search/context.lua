@@ -62,6 +62,7 @@ local signs = require("eve.constant.sign")
 ---@field public item_max_width         integer
 ---@field public item_uuid_present      string|nil
 ---@field public items                  fml.ux.search.IItem[]
+---@field public items_valid_map        table<string, fml.ux.search.IItem>
 ---@field public items_original         fml.ux.search.IItem[]
 ---@field public multiple               boolean
 ---@field public permanent              boolean
@@ -96,7 +97,6 @@ local signs = require("eve.constant.sign")
 ---@class fml.ux.search.Context : fml.ux.search.IContext
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
----@field protected _uuids_deleted      table<string, true>
 ---@field protected _uuids_selected     table<string, true>
 local M = {}
 M.__index = M
@@ -168,47 +168,50 @@ function M.new(props)
       fetch_data(input_cur, force, function(succeed, data)
         if succeed and data ~= nil then
           local item_max_width = 0 ---@type integer
+          ---@diagnostic disable-next-line: invisible
+          local item_uuid_cursor = data.uuid_cursor or data.uuid_present or self._item_uuid_cur ---@type string|nil
           local item_uuid_present = data.uuid_present ---@type string|nil
-          local items_original = data.items ---@type fml.ux.search.IItem[]
-          local items = flag_selected:snapshot() and {} or items_original ---@type fml.ux.search.IItem[]
+          local next_item_lnum = 1 ---@type integer
+          local next_items = data.items ---@type fml.ux.search.IItem[]
+          local next_items_original = data.items ---@type fml.ux.search.IItem[]
+          local next_items_valid_map = {} ---@type table<string, fml.ux.search.IItem>
+          local next_uuids_selected = {} ---@type table<string, true>
+
+          for _, item in ipairs(next_items_original) do
+            local width = vim.api.nvim_strwidth(item.text) ---@type integer
+            item_max_width = item_max_width < width and width or item_max_width ---@type integer
+            next_items_valid_map[item.uuid] = item
+          end
+
+          ---@diagnostic disable-next-line: invisible
+          for uuid_item in pairs(self._uuids_selected) do
+            if next_items_valid_map[uuid_item] then
+              next_uuids_selected[uuid_item] = true
+            end
+          end
 
           if flag_selected:snapshot() then
-            for _, item in ipairs(items_original) do
-              ---@diagnostic disable-next-line: invisible
-              if self._uuids_selected[item.uuid] then
-                table.insert(items, item)
+            next_items = {} ---@type fml.ux.search.IItem[]
+            for _, item in ipairs(next_items_original) do
+              if next_uuids_selected[item.uuid] then
+                table.insert(next_items, item)
+                if item.uuid == item_uuid_cursor then
+                  next_item_lnum = #next_items
+                end
               end
             end
           end
 
-          for _, item in ipairs(items_original) do
-            local width = vim.api.nvim_strwidth(item.text) ---@type integer
-            item_max_width = item_max_width < width and width or item_max_width ---@type integer
-          end
-
-          ---@diagnostic disable-next-line: invisible
-          local item_uuid_cursor = data.uuid_cursor or data.uuid_present or self._item_uuid_cur ---@type string|nil
-          local item_lnum_next = self:resolve_current_lnum(item_uuid_cursor) or 1 ---@type integer
           self.item_uuid_present = item_uuid_present
           self.item_max_width = item_max_width
-          self.items = items
-          self.items_original = items_original
-          self:locate(item_lnum_next)
-
-          local uuids_selected = {} ---@type table<string, true>
-          for _, item in ipairs(items) do
-            ---@diagnostic disable-next-line: invisible
-            if self._uuids_selected[item.uuid] then
-              uuids_selected[item.uuid] = true
-            end
-          end
-
+          self.items = next_items
+          self.items_original = next_items_original
+          self.items_valid_map = next_items_valid_map
           ---@diagnostic disable-next-line: invisible
-          self._uuids_deleted = {} ---@type table<string, true>
-          ---@diagnostic disable-next-line: invisible
-          self._uuids_selected = uuids_selected ---@type table<string, true>
-          self.state_has_matched:next(#items > 0)
+          self._uuids_selected = next_uuids_selected
+          self:locate(next_item_lnum)
 
+          self.state_has_matched:next(#next_items > 0)
           self.dirtier_data:mark_clean()
           self.dirtier_main:mark_dirty()
           self.dirtier_preview:mark_dirty()
@@ -299,13 +302,13 @@ function M.new(props)
   self.item_uuid_present = nil
   self.items = {} ---@type fml.ux.search.IItem[]
   self.items_original = {} ---@type fml.ux.search.IItem[]
+  self.items_valid_map = {} ---@type table<string, fml.ux.search.IItem>
   self.multiple = multiple
   self.permanent = permanent
   self.uuid = uuid
 
   self._item_lnum_cur = 0 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
-  self._uuids_deleted = {} ---@type table<string, true>
   self._uuids_selected = {} ---@type table<string, true>
 
   flag_selected:subscribe(Subscriber.new({ on_next = on_flag_selected_change }), false)
@@ -441,9 +444,10 @@ end
 ---@return fml.ux.search.IItem[]
 function M:get_selected_items()
   local selected = {} ---@type fml.ux.search.IItem[]
-  local uuids_selected = self._uuids_selected ---@type table<string, true>
-  for _, item in ipairs(self.items_original) do
-    if uuids_selected[item.uuid] then
+  local items_valid_map = self.items_valid_map ---@type table<string, fml.ux.search.IItem>
+  for uuid in pairs(self._uuids_selected) do
+    local item = items_valid_map[uuid] ---@type fml.ux.search.IItem|nil
+    if item then
       table.insert(selected, item)
     end
   end
@@ -453,7 +457,7 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:has_item_deleted(uuid)
-  return self._uuids_deleted[uuid] == true
+  return not self.items_valid_map[uuid]
 end
 
 ---@param lnum                          integer
@@ -473,11 +477,11 @@ end
 
 ---@return nil
 function M:mark_all_items_deleted()
-  self.items = {}
-  self._uuids_deleted = {}
-  self._uuids_selected = {}
-  self._item_lnum_cur = 0
-  self._item_uuid_cur = nil
+  self.items = {} ---@type fml.ux.search.IItem[]
+  self.items_valid_map = {} ---@type table<string, fml.ux.search.IItem>
+  self._uuids_selected = {} ---@type table<string, true>
+  self._item_lnum_cur = 0 ---@type integer
+  self._item_uuid_cur = nil ---@type string|nil
   vim.schedule(function()
     self.dirtier_main:mark_dirty()
     self.dirtier_preview:mark_dirty()
@@ -603,64 +607,53 @@ end
 ---@param uuid                          string
 ---@return nil
 function M:set_item_deleted(uuid)
-  local deleted_uuids = self._uuids_deleted ---@type table<string, true>
+  local items_valid_map = self.items_valid_map ---@type table<string, fml.ux.search.IItem>
+  if not items_valid_map[uuid] then
+    return
+  end
+
+  local lnum = fn.find_index(self.items, function(item)
+    return item.uuid == uuid
+  end)
+  if lnum == nil then
+    return
+  end
+
   local uuids_selected = self._uuids_selected ---@type table<string, true>
-  if deleted_uuids[uuid] then
-    return
-  end
-
-  local lnum = 0 ---@type integer
-  local items = self.items ---@type fml.ux.search.IItem[]
-  for i, item in ipairs(self.items) do
-    if item.uuid == uuid then
-      lnum = i
-      break
-    end
-  end
-
-  if lnum < 1 then
-    return
-  end
-
-  deleted_uuids[uuid] = true
+  items_valid_map[uuid] = nil
   uuids_selected[uuid] = nil
 
+  local items = self.items ---@type fml.ux.search.IItem[]
   local parent_cur = items[lnum].parent ---@type string|nil
   if parent_cur ~= nil and lnum > 1 and items[lnum - 1].uuid == parent_cur then
     if lnum == #items or items[lnum + 1].parent ~= parent_cur then
       lnum = lnum - 1
-      deleted_uuids[parent_cur] = true
+      items_valid_map[parent_cur] = nil
       uuids_selected[parent_cur] = nil
     end
   end
 
-  local k = lnum ---@type integer
   local N = #items ---@type integer
+  local k = lnum ---@type integer
   for i = lnum + 1, N, 1 do
     local item = items[i] ---@type fml.ux.search.IItem
-    if deleted_uuids[item.parent] then
-      deleted_uuids[item.uuid] = true
-      uuids_selected[item.uuid] = nil
-    else
+    if item.parent == nil or items_valid_map[item.parent] then
+      items_valid_map[item.uuid] = items[i] ---@type fml.ux.search.IItem
       items[k] = items[i]
       k = k + 1
+    else
+      items_valid_map[item.uuid] = nil
+      uuids_selected[item.uuid] = nil
     end
   end
   for i = k, N, 1 do
     items[i] = nil
   end
 
-  if self._item_uuid_cur == uuid then
-    lnum = math.max(1, math.min(lnum, #items)) ---@type integer
-    self._item_lnum_cur = lnum
-    self._item_uuid_cur = items[lnum] and items[lnum].uuid or nil
-  end
-
-  vim.schedule(function()
-    self.dirtier_main:mark_dirty()
-    self.dirtier_preview:mark_dirty()
-    self.dirtier_selected:mark_dirty()
-  end)
+  self:locate(lnum)
+  self.dirtier_main:mark_dirty()
+  self.dirtier_preview:mark_dirty()
+  self.dirtier_selected:mark_dirty()
 end
 
 ---@param uuid                          string
@@ -736,7 +729,7 @@ end
 function M:toggle_item_selected(lnum)
   if self.multiple then
     local item = self.items[lnum] ---@type fml.ux.search.IItem
-    if item ~= nil and not self._uuids_deleted[item.uuid] then
+    if item ~= nil then
       local uuids_selected = self._uuids_selected ---@type table<string, true>
       if uuids_selected[item.uuid] then
         uuids_selected[item.uuid] = nil
@@ -752,25 +745,22 @@ end
 ---@return nil
 function M:toggle_items_selected(lnums)
   if self.multiple then
-    local uuids_deleted = self._uuids_deleted ---@type table<string, true>
     local uuids_selected = self._uuids_selected ---@type table<string, true>
 
     local dirty = false ---@type boolean
     local selected = false ---@type boolean
     for _, lnum in ipairs(lnums) do
       local item = self.items[lnum] ---@type fml.ux.search.IItem|nil
-      if item ~= nil and not uuids_deleted[item.uuid] then
-        if uuids_selected[item.uuid] then
-          selected = true
-          break
-        end
+      if item ~= nil and uuids_selected[item.uuid] then
+        selected = true
+        break
       end
     end
 
     local value = selected == false and true or nil ---@type boolean|nil
     for _, lnum in ipairs(lnums) do
       local item = self.items[lnum] ---@type fml.ux.search.IItem|nil
-      if item ~= nil and not uuids_deleted[item.uuid] then
+      if item ~= nil then
         dirty = true
         uuids_selected[item.uuid] = value
       end

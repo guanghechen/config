@@ -169,10 +169,17 @@ function M.new(props)
 
   ---@return nil
   local function on_confirm()
-    local item = context:get_current() ---@type fml.ux.search.IItem|nil
-    if item ~= nil then
-      local items = { item } ---@type fml.ux.search.IItem[]
-      on_confirm_from_props(self, items)
+    local selected_items = context:get_selected_items() ---@type fml.ux.search.IItem[]
+    if #selected_items < 1 then
+      local item = context:get_current() ---@type fml.ux.search.IItem|nil
+      if item ~= nil then
+        selected_items = { item } ---@type fml.ux.search.IItem[]
+      end
+    end
+
+    if #selected_items > 0 then
+      context:reset_selected_items()
+      on_confirm_from_props(self, selected_items)
 
       local status = context.status:snapshot() ---@type eve.e.WidgetStatus
       if status ~= "visible" then
@@ -363,6 +370,12 @@ function M.new(props)
       callback = actions.toggle_current_selected,
       desc = "search: toggle selected",
     },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>dd",
+      callback = actions.on_delete_item,
+      desc = "search: delete current item",
+    },
   }
 
   ---@type eve.t.IKeymap[]
@@ -473,11 +486,24 @@ function M.new(props)
       desc = "search: focus right",
     },
     {
+      disabled = not context.multiple,
+      modes = { "i", "n", "v" },
+      key = "<Tab>",
+      callback = actions.toggle_current_selected,
+      desc = "search: toggle selected",
+    },
+    {
       modes = { "i", "n", "v" },
       key = "<cr>",
       aliases = { "o" },
       callback = on_confirm,
       desc = "search: confirm",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>dd",
+      callback = actions.on_delete_item,
+      desc = "search: delete current item",
     },
   }
 

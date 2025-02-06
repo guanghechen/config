@@ -124,12 +124,20 @@ end
 
 ---@generic T
 ---@param elements                      T[]
----@param element                       T
+---@param element                       T|fun(element: T, index: integer): boolean
 ---@return integer|nil
 function M.find_index(elements, element)
-  for i = 1, #elements, 1 do
-    if elements[i] == element then
-      return i
+  if type(element) == "function" then
+    for i = 1, #elements, 1 do
+      if element(elements[i], i) then
+        return i
+      end
+    end
+  else
+    for i = 1, #elements, 1 do
+      if elements[i] == element then
+        return i
+      end
     end
   end
 end
