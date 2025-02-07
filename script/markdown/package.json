@@ -2,6 +2,7 @@
   "name": "@guanghechen/neovim-markdown-preview",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "start": "vite --force"
   },
