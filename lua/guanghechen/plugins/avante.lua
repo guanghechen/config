@@ -11,7 +11,13 @@ local AI_PROVIDER_MAP = {
   deepseek = "deepseek",
 }
 
-local function setup_file_selector()
+---@class guanghechen.plugins.avante.file_selector.IParams
+---@field public title                  string
+---@field public filepaths              string[]
+---@field public handler                fun(filepaths: string[]|nil): nil
+
+---@return fun(params: guanghechen.plugins.avante.file_selector.IParams): nil
+local function get_file_selector()
   local context = state.select.select_avante
   local _on_choice = fn.noop ---@type fun(items: fml.ux.select.IItem[] | nil): nil
   local _filepaths = {} ---@type string[]
@@ -79,7 +85,7 @@ local function setup_file_selector()
         return text, highlights
       end,
     },
-    title = " (Avante) Add a file ",
+    title = "(Avante) Add a file",
     on_close = function()
       if not _confirmed then
         _confirmed = true
@@ -101,9 +107,13 @@ local function setup_file_selector()
     end,
   })
 
-  local FileSelector = require("avante.file_selector")
-  function FileSelector:native_ui(handler)
-    _filepaths = self:get_filepaths() ---@type string[]
+  ---@param params                      guanghechen.plugins.avante.file_selector.IParams
+  ---@return nil
+  local function file_selector(params)
+    local handler = params.handler ---@type fun(filepaths: string[]|nil): nil
+    _filepaths = params.filepaths ---@type string[]
+    _selector:change_input_title(params.title)
+
     _on_choice = function(items)
       if items == nil then
         handler(nil)
@@ -122,6 +132,7 @@ local function setup_file_selector()
     _selector:mark_data_dirty()
     _selector:show()
   end
+  return file_selector
 end
 
 return {
@@ -214,6 +225,15 @@ return {
       true
     )
 
-    setup_file_selector()
+    local file_selector = get_file_selector()
+    local FileSelector = require("avante.file_selector")
+    function FileSelector:native_ui(handler)
+      local filepaths = self:get_filepaths() ---@type string[]
+      file_selector({
+        title = "(Avante) Add a file",
+        filepaths = filepaths,
+        handler = handler,
+      })
+    end
   end,
 }
