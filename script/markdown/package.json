@@ -1,0 +1,24 @@
+{
+  "name": "neovim-markdown-preview",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "vite --force"
+  },
+  "dependencies": {
+    "@guanghechen/react-viewmodel": "0.2.14",
+    "@yozora/ast": "2.3.11",
+    "@yozora/parser": "2.3.11",
+    "clsx": "^2.1.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.17.17",
+    "@types/react": "19.0.8",
+    "@types/react-dom": "19.0.3",
+    "@vitejs/plugin-react": "4.3.4",
+    "dotenv": "16.4.7",
+    "vite": "6.1.0"
+  }
+}
