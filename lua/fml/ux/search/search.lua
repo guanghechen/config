@@ -749,7 +749,6 @@ function M:create_wins_as_needed()
 
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
-  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local screen_height = vim.o.lines ---@type integer
   local screen_width = vim.o.columns ---@type integer
   local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
@@ -931,9 +930,22 @@ function M:create_wins_as_needed()
   vim.wo[winnr_input].winhighlight = highlights.input
   vim.wo[winnr_input].winfixbuf = true
 
-  if winnr_cur ~= winnr_input and winnr_cur ~= winnr_preview and winnr_cur ~= winnr_main then
-    vim.api.nvim_tabpage_set_win(0, winnr_input)
-  end
+  vim.schedule(function()
+    local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+    if context.focused_pane == "input" then
+      if winnr_input ~= nil and winnr_cur ~= winnr_input then
+        vim.api.nvim_tabpage_set_win(0, winnr_input)
+      end
+    elseif context.focused_pane == "main" then
+      if winnr_main ~= nil and winnr_cur ~= winnr_main then
+        vim.api.nvim_tabpage_set_win(0, winnr_main)
+      end
+    elseif context.focused_pane == "preview" then
+      if winnr_preview ~= nil and winnr_cur ~= winnr_preview then
+        vim.api.nvim_tabpage_set_win(0, winnr_preview)
+      end
+    end
+  end)
 end
 
 ---@param title                         string

@@ -207,7 +207,7 @@ function M.new(props)
     local function toggle_flag_selected()
       local flag = flag_selected:snapshot() ---@type boolean
       flag_selected:next(not flag)
-      self:mark_search_state_dirty()
+      -- self:mark_search_state_dirty() -- toggle selected state should not mark the data dirty
       state.status.dirtier_statusline:mark_dirty()
     end
 

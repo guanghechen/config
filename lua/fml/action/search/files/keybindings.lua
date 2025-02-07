@@ -14,7 +14,7 @@ local statusline_items = {
   },
   {
     type = "flag",
-    desc = "select: toggle selected",
+    desc = "search: toggle selected",
     symbol = icons.symbols.flag_selected,
     state = state.select.search_file.flag_selected,
     callback = context.toggle_selected,

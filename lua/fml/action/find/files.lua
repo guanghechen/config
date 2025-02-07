@@ -219,7 +219,7 @@ local function get_select()
       },
       {
         type = "flag",
-        desc = "select: toggle selected",
+        desc = "find: toggle selected",
         symbol = icons.symbols.flag_selected,
         state = state.select.find_file.flag_selected,
         callback = actions.toggle_selected,
