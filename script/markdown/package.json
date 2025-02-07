@@ -1,12 +1,12 @@
 {
-  "name": "neovim-markdown-preview",
+  "name": "@guanghechen/neovim-markdown-preview",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "start": "vite --force"
   },
   "dependencies": {
-    "@guanghechen/react-viewmodel": "0.2.14",
+    "@guanghechen/react-viewmodel": "0.2.15",
     "@yozora/ast": "2.3.11",
     "@yozora/parser": "2.3.11",
     "clsx": "^2.1.1",
