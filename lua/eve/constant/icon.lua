@@ -90,6 +90,7 @@ M.filetype = {
   FolderWithHeart = "󱃪",
   Import = "",
   Symlink = "",
+  Unknown = "󰈚",
 }
 
 ---@class eve.constant.icon.os
