@@ -1,59 +1,11 @@
 local env = require("eve.builtin.env")
+local Subscriber = require("eve.collection.subscriber")
 local state = require("eve.state")
 
-local configs = {
-  basic = {
-    auto_suggestions_provider = "copilot",
-    mappings = {
-      ask = "<leader>aa",
-      edit = "<leader>ae",
-      refresh = "<leader>ar",
-
-      sidebar = {
-        close = { "q" },
-      },
-
-      suggestion = {
-        accept = "<C-cr>",
-        next = "<C-j>",
-        prev = "<C-k>",
-        dismiss = "<esc>",
-      },
-    },
-    windows = {
-      ask = {
-        floating = false,
-        start_insert = false,
-        border = "rounded",
-        focus_on_apply = "theirs",
-      },
-    },
-  },
-  providers = {
-    aoai = {
-      provider = "azure",
-      azure = {
-        endpoint = vim.env.AZURE_OPENAI_ENDPOINT,
-        deployment = "gpt-4o",
-        model = "gpt-4o",
-        api_version = "2024-08-01-preview",
-      },
-    },
-    copilot = {
-      provider = "copilot",
-    },
-    deepseek = {
-      provider = "deepseek",
-      vendors = {
-        deepseek = {
-          __inherited_from = "openai",
-          api_key_name = "DEEPSEEK_API_KEY",
-          endpoint = "https://api.deepseek.com",
-          model = "deepseek-coder",
-        },
-      },
-    },
-  },
+local AI_PROVIDER_MAP = {
+  aoai = "azure",
+  copilot = "copilot",
+  deepseek = "deepseek",
 }
 
 return {
@@ -78,22 +30,90 @@ return {
     "copilot.lua",
     "render-markdown.nvim",
   },
-  config = function()
+  opts = function()
+    local ai_provider = state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+    local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot" ---@type string
+    return {
+      azure = {
+        endpoint = vim.env.AZURE_OPENAI_ENDPOINT,
+        deployment = "gpt-4o",
+        model = "gpt-4o",
+        api_version = "2024-08-01-preview",
+      },
+      vendors = {
+        deepseek = {
+          __inherited_from = "openai",
+          api_key_name = "DEEPSEEK_API_KEY",
+          endpoint = "https://api.deepseek.com",
+          model = "deepseek-coder",
+        },
+      },
+
+      provider = provider_name,
+      auto_suggestions_provider = "copilot",
+
+      ------------------------------------------------------------------------------------------------
+
+      mappings = {
+        ask = "<leader>aa",
+        edit = "<leader>ae",
+        refresh = "<leader>ar",
+
+        sidebar = {
+          close = { "q" },
+        },
+        submit = {
+          normal = "<CR>",
+          -- insert = { "<C-s>", "<M-s>", "<C-a>s" },
+          insert = "<C-s>",
+        },
+        suggestion = {
+          accept = "<C-cr>",
+          next = "<C-j>",
+          prev = "<C-k>",
+          dismiss = "<esc>",
+        },
+      },
+      windows = {
+        ask = {
+          floating = false,
+          start_insert = false,
+          border = "rounded",
+          focus_on_apply = "theirs",
+        },
+      },
+    }
+  end,
+  config = function(_, opts)
     package.loaded["dressing.nvim"] = {}
 
-    local last_ai_provider = nil ---@type eve.e.AiProvider|nil
+    require("avante").setup(opts)
+    state.flight.ai_provider:subscribe(
+      Subscriber.new({
+        on_next = function(ai_provider)
+          local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot"
+          vim.cmd("AvanteSwitchProvider " .. provider_name)
+        end,
+      }),
+      true
+    )
 
-    ---@return nil
-    local function setup()
-      local ai_provider = state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
-      if ai_provider ~= last_ai_provider then
-        last_ai_provider = ai_provider
-        local opts =
-          vim.tbl_deep_extend("force", {}, configs.basic, configs.providers[ai_provider] or configs.providers.copilot)
-        require("avante").setup(opts)
-      end
-    end
-
-    setup()
+    -- local FileSelector = require("avante.file_selector")
+    -- function FileSelector:native_ui(handler)
+    --   local filepaths = self:get_filepaths()
+    --
+    --   vim.ui.select(filepaths, {
+    --     prompt = "(Avante) Add a file:",
+    --     format_item = function(item)
+    --       return item
+    --     end,
+    --   }, function(item)
+    --     if item then
+    --       handler({ item })
+    --     else
+    --       handler(nil)
+    --     end
+    --   end)
+    -- end
   end,
 }
