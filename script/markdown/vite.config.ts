@@ -27,11 +27,31 @@ export default defineConfig({
         server.middlewares.use((req, res, next) => {
           if (!req.url) return void next()
 
-          const { pathname } = new URL(req.url, 'http://localhost')
+          const { search, searchParams, pathname } = new URL(req.url, 'http://localhost')
           if (!pathname.startsWith('/api/')) return void next()
 
-          if (pathname.startsWith('/api/file/')) {
-            const filepath: string = decodeURIComponent(pathname.replace('/api/file/', ''))
+          if (pathname === '/api/file') {
+            let filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
+            if (searchParams.get('base')) {
+              const base: string = decodeURIComponent(searchParams.get('base')!)
+              if (fs.existsSync(base)) {
+                filepath = fs.statSync(base).isDirectory()
+                  ? path.resolve(base, filepath)
+                  : path.resolve(path.dirname(base), filepath)
+              }
+            }
+
+            if (!filepath) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              const data = {
+                error: 'Bad search parameters',
+                details: { pathname, filepath, search },
+              }
+              res.end(JSON.stringify(data))
+              return
+            }
+
             const extname: string = path.extname(filepath).toLowerCase()
             const contentType: string | undefined =
               SERVE_FILE_EXTNAME_TYPE_MAP[extname as keyof typeof SERVE_FILE_EXTNAME_TYPE_MAP]
