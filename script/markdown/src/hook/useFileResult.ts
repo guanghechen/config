@@ -16,7 +16,7 @@ export const useFileResult = (filepath: string): IFileResult => {
   })
 
   React.useEffect(() => {
-    const fetchFile = async () => {
+    const fetchFile = async (): Promise<void> => {
       setState({
         loading: true,
         text: undefined,
@@ -44,7 +44,7 @@ export const useFileResult = (filepath: string): IFileResult => {
           loading: false,
           text: undefined,
           url: undefined,
-          error: 'Failed to fetching file: ' + JSON.stringify({ filepath, error })
+          error: 'Failed to fetching file: ' + JSON.stringify({ filepath, error }),
         })
       }
     }
@@ -57,7 +57,6 @@ export const useFileResult = (filepath: string): IFileResult => {
         URL.revokeObjectURL(state.url)
       }
     }
-
   }, [state.url])
   return state
 }

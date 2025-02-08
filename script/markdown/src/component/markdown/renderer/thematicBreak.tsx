@@ -1,7 +1,7 @@
-import { css, cx } from '@emotion/css';
-import type { ThematicBreak } from '@yozora/ast';
-import React from 'react';
-import { astClasses } from '../context';
+import { css, cx } from '@emotion/css'
+import type { ThematicBreak } from '@yozora/ast'
+import React from 'react'
+import { astClasses } from '../context'
 
 /**
  * Render `thematicBreak`.
@@ -11,11 +11,11 @@ import { astClasses } from '../context';
  */
 export class ThematicBreakRenderer extends React.Component<ThematicBreak> {
   public override shouldComponentUpdate(): boolean {
-    return false;
+    return false
   }
 
   public override render(): React.ReactElement {
-    return <hr className={cls} />;
+    return <hr className={cls} />
   }
 }
 
@@ -32,4 +32,4 @@ const cls = cx(
     outline: 0,
     margin: '1.5em 0px',
   }),
-);
+)

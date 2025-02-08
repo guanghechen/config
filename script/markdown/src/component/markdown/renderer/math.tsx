@@ -1,7 +1,7 @@
-import type { Math } from '@yozora/ast';
-import { MathJaxNode } from '@yozora/react-mathjax';
-import React from 'react';
-import { astClasses } from '../context';
+import type { Math } from '@yozora/ast'
+import { MathJaxNode } from '@yozora/react-mathjax'
+import React from 'react'
+import { astClasses } from '../context'
 
 /**
  * Render yozora `math`.
@@ -11,17 +11,11 @@ import { astClasses } from '../context';
  */
 export class MathRenderer extends React.Component<Math> {
   public override shouldComponentUpdate(nextProps: Readonly<Math>): boolean {
-    const props = this.props;
-    return props.value !== nextProps.value;
+    const props = this.props
+    return props.value !== nextProps.value
   }
 
   public override render(): React.ReactElement {
-    return (
-      <MathJaxNode
-        className={astClasses.math}
-        inline={false}
-        formula={this.props.value}
-      />
-    );
+    return <MathJaxNode className={astClasses.math} inline={false} formula={this.props.value} />
   }
 }

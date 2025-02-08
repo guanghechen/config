@@ -1,6 +1,6 @@
 import { css } from '@emotion/css'
-import { useFileResult } from '@/hook/useFileResult'
 import React from 'react'
+import { useFileResult } from '@/hook/useFileResult'
 
 export const MarkdownView: React.FC = () => {
   const [filepath, setFilepath] = React.useState<string>('')
@@ -13,18 +13,29 @@ export const MarkdownView: React.FC = () => {
     }
   }, [])
 
-  return <div className={classes.container}>
-    <div className={classes.inputContainer}>
-      <input className={classes.input} ref={inputRef} type="text" />
-      <button className={classes.button} onClick={onSubmit}>Load</button>
+  return (
+    <div className={classes.container}>
+      <div className={classes.inputContainer}>
+        <input
+          className={classes.input}
+          ref={inputRef}
+          type="text"
+          onKeyDown={e => {
+            if (e.key === 'Enter') onSubmit()
+          }}
+        />
+        <button className={classes.button} onClick={onSubmit}>
+          Load
+        </button>
+      </div>
+      <div className={classes.preview}>
+        <span>loading: {String(loading)}</span>
+        <span>text: {String(text)}</span>
+        <span>url: {String(url)}</span>
+        <span>error: {String(error)}</span>
+      </div>
     </div>
-    <div className={classes.preview}>
-      <span>loading: {String(loading)}</span>
-      <span>text: {String(text)}</span>
-      <span>url: {String(url)}</span>
-      <span>error: {String(error)}</span>
-    </div>
-  </div>
+  )
 }
 
 const classes = {
@@ -70,6 +81,5 @@ const classes = {
   preview: css({
     display: 'flex',
     flexDirection: 'column',
-  })
+  }),
 }
-

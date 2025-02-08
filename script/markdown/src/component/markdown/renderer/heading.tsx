@@ -1,13 +1,13 @@
-import { css, cx } from '@emotion/css';
-import type { Heading } from '@yozora/ast';
-import React from 'react';
-import { astClasses } from '../context';
-import { NodesRenderer } from '../NodesRenderer';
+import { css, cx } from '@emotion/css'
+import type { Heading } from '@yozora/ast'
+import React from 'react'
+import { astClasses } from '../context'
+import { NodesRenderer } from '../NodesRenderer'
 
-type IHeading = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+type IHeading = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
 
 interface IProps extends Heading {
-  linkIcon?: React.ReactNode;
+  linkIcon?: React.ReactNode
 }
 
 /**
@@ -17,25 +17,23 @@ interface IProps extends Heading {
  * @see https://www.npmjs.com/package/@yozora/tokenizer-heading
  */
 export class HeadingRenderer extends React.Component<IProps> {
-  public override shouldComponentUpdate(
-    nextProps: Readonly<IProps>,
-  ): boolean {
-    const props = this.props;
+  public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
+    const props = this.props
     return (
       props.depth !== nextProps.depth ||
       props.identifier !== nextProps.identifier ||
       props.children !== nextProps.children ||
       props.linkIcon !== nextProps.linkIcon
-    );
+    )
   }
 
   public override render(): React.ReactElement {
-    const { depth, identifier, children, linkIcon = '¶' } = this.props;
+    const { depth, identifier, children, linkIcon = '¶' } = this.props
 
-    const id = identifier == null ? undefined : encodeURIComponent(identifier);
-    const h: IHeading = ('h' + depth) as IHeading;
-    const H: any = h;
-    const cls = cx(astClasses.heading, classes.heading, classes[h]);
+    const id = identifier == null ? undefined : encodeURIComponent(identifier)
+    const h: IHeading = ('h' + depth) as IHeading
+    const H: any = h
+    const cls = cx(astClasses.heading, classes.heading, classes[h])
 
     return (
       <H id={id} className={cls}>
@@ -48,7 +46,7 @@ export class HeadingRenderer extends React.Component<IProps> {
           </a>
         )}
       </H>
-    );
+    )
   }
 }
 
@@ -66,7 +64,7 @@ const anchorCls = css({
     verticalAlign: 'middle',
     fill: 'currentColor',
   },
-});
+})
 
 const classes = {
   heading: css({
@@ -133,4 +131,4 @@ const classes = {
     fontStyle: 'normal',
     fontWeight: 500,
   }),
-};
+}

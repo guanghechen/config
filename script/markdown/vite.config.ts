@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import react from '@vitejs/plugin-react'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -24,22 +25,23 @@ export default defineConfig({
       name: '@guanghechen/serve',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          if (!req.url) return next()
+          if (!req.url) return void next()
 
           const { pathname } = new URL(req.url, 'http://localhost')
-          if (!pathname.startsWith('/api/')) return next()
+          if (!pathname.startsWith('/api/')) return void next()
 
           if (pathname.startsWith('/api/file/')) {
             const filepath: string = decodeURIComponent(pathname.replace('/api/file/', ''))
             const extname: string = path.extname(filepath).toLowerCase()
-            const contentType: string | undefined = SERVE_FILE_EXTNAME_TYPE_MAP[extname as keyof typeof SERVE_FILE_EXTNAME_TYPE_MAP]
+            const contentType: string | undefined =
+              SERVE_FILE_EXTNAME_TYPE_MAP[extname as keyof typeof SERVE_FILE_EXTNAME_TYPE_MAP]
 
             if (!contentType) {
               res.statusCode = 404
               res.setHeader('Content-Type', 'application/json')
               const data = {
                 error: 'Not support for the given file format',
-                details: { pathname, filepath, extname, contentType }
+                details: { pathname, filepath, extname, contentType },
               }
               res.end(JSON.stringify(data))
               return
@@ -50,7 +52,7 @@ export default defineConfig({
               res.setHeader('Content-Type', 'application/json')
               const data = {
                 error: 'File not found',
-                details: { pathname, filepath, extname, contentType }
+                details: { pathname, filepath, extname, contentType },
               }
               res.end(JSON.stringify(data))
               return
@@ -61,12 +63,12 @@ export default defineConfig({
 
             const stream = fs.createReadStream(filepath)
             stream.pipe(res)
-            stream.on('error', (err) => {
+            stream.on('error', err => {
               res.statusCode = 500
               res.setHeader('Content-Type', 'application/json')
               const data = {
                 error: 'Failed to read file',
-                details: { pathname, filepath, extname, contentType, err }
+                details: { pathname, filepath, extname, contentType, err },
               }
               res.end(JSON.stringify(data))
             })
@@ -78,13 +80,13 @@ export default defineConfig({
             res.setHeader('Content-Type', 'application/json')
             const data = {
               error: 'Unknown pathname',
-              detail: { pathname }
+              detail: { pathname },
             }
             res.end(JSON.stringify(data))
           }
         })
-      }
-    }
+      },
+    },
   ],
   resolve: {
     alias: {

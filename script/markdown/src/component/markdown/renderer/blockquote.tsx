@@ -1,8 +1,8 @@
-import { css, cx } from '@emotion/css';
-import type { Blockquote } from '@yozora/ast';
-import React from 'react';
-import { astClasses } from '../context';
-import { NodesRenderer } from '../NodesRenderer';
+import { css, cx } from '@emotion/css'
+import type { Blockquote } from '@yozora/ast'
+import React from 'react'
+import { astClasses } from '../context'
+import { NodesRenderer } from '../NodesRenderer'
 
 /**
  * Render `blockquote`.
@@ -11,20 +11,18 @@ import { NodesRenderer } from '../NodesRenderer';
  * @see https://www.npmjs.com/package/@yozora/tokenizer-blockquote
  */
 export class BlockquoteRenderer extends React.Component<Blockquote> {
-  public override shouldComponentUpdate(
-    nextProps: Readonly<Blockquote>,
-  ): boolean {
-    const props = this.props;
-    return props.children !== nextProps.children;
+  public override shouldComponentUpdate(nextProps: Readonly<Blockquote>): boolean {
+    const props = this.props
+    return props.children !== nextProps.children
   }
 
   public override render(): React.ReactElement {
-    const childNodes = this.props.children;
+    const childNodes = this.props.children
     return (
       <blockquote className={cls}>
         <NodesRenderer nodes={childNodes} />
       </blockquote>
-    );
+    )
   }
 }
 
@@ -41,4 +39,4 @@ const cls = cx(
       marginBottom: 0,
     },
   }),
-);
+)

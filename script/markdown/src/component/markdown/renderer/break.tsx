@@ -1,7 +1,7 @@
-import { css, cx } from '@emotion/css';
-import type { Break } from '@yozora/ast';
-import React from 'react';
-import { astClasses } from '../context';
+import { css, cx } from '@emotion/css'
+import type { Break } from '@yozora/ast'
+import React from 'react'
+import { astClasses } from '../context'
 
 /**
  * Render `break`.
@@ -11,11 +11,11 @@ import { astClasses } from '../context';
  */
 export class BreakRenderer extends React.Component<Break> {
   public override shouldComponentUpdate(): boolean {
-    return false;
+    return false
   }
 
   public override render(): React.ReactElement {
-    return <br className={cls} />;
+    return <br className={cls} />
   }
 }
 
@@ -24,4 +24,4 @@ const cls = cx(
   css({
     boxSizing: 'border-box',
   }),
-);
+)

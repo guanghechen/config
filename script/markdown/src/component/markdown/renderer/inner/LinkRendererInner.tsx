@@ -1,30 +1,28 @@
-import { css, cx } from '@emotion/css';
-import type { Node } from '@yozora/ast';
-import React from 'react';
-import { NodesRenderer } from '../../NodesRenderer';
+import { css, cx } from '@emotion/css'
+import type { Node } from '@yozora/ast'
+import React from 'react'
+import { NodesRenderer } from '../../NodesRenderer'
 
 interface IProps {
-  readonly url: string;
-  readonly title: string | undefined;
-  readonly childNodes: Node[] | undefined;
-  readonly className: string;
+  readonly url: string
+  readonly title: string | undefined
+  readonly childNodes: Node[] | undefined
+  readonly className: string
 }
 
 export class LinkRendererInner extends React.Component<IProps> {
-  public override shouldComponentUpdate(
-    nextProps: Readonly<IProps>,
-  ): boolean {
-    const props = this.props;
+  public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
+    const props = this.props
     return (
       props.url !== nextProps.url ||
       props.title !== nextProps.title ||
       props.childNodes !== nextProps.childNodes ||
       props.className !== nextProps.className
-    );
+    )
   }
 
   public override render(): React.ReactElement {
-    const { url, title, childNodes, className } = this.props;
+    const { url, title, childNodes, className } = this.props
     return (
       <a
         className={cx(cls, className)}
@@ -35,7 +33,7 @@ export class LinkRendererInner extends React.Component<IProps> {
       >
         <NodesRenderer nodes={childNodes} />
       </a>
-    );
+    )
   }
 }
 
@@ -53,4 +51,4 @@ const cls = css({
   '&:visited': {
     color: 'var(--colorLinkVisited)',
   },
-});
+})

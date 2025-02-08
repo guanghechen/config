@@ -1,11 +1,5 @@
 {
   "version": "0.2",
   "language": "en",
-  "words": [
-    "consolas",
-    "guanghechen",
-    "mathjax",
-    "viewmodel",
-    "yozora"
-  ]
+  "words": ["consolas", "guanghechen", "mathjax", "viewmodel", "yozora"]
 }

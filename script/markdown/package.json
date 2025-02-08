@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "format": "npm run format:lintfix && npm run format:prettier",
+    "format:prettier": "prettier . --write",
+    "format:lintfix": "eslint . --fix",
     "start": "vite --force"
   },
   "dependencies": {

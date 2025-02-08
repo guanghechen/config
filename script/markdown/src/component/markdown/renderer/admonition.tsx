@@ -1,28 +1,26 @@
-import { css } from '@emotion/css';
-import { ParagraphType } from '@yozora/ast';
-import type { Admonition, Paragraph } from '@yozora/ast';
-import cn from 'clsx';
-import React from 'react';
-import { astClasses } from '../context';
-import { NodesRenderer } from '../NodesRenderer';
+import { css } from '@emotion/css'
+import { ParagraphType } from '@yozora/ast'
+import type { Admonition, Paragraph } from '@yozora/ast'
+import cn from 'clsx'
+import React from 'react'
+import { astClasses } from '../context'
+import { NodesRenderer } from '../NodesRenderer'
 
 /**
  * Render `Admonition`.
  */
 export class AdmonitionRenderer extends React.Component<Admonition> {
-  public override shouldComponentUpdate(
-    nextProps: Readonly<Admonition>,
-  ): boolean {
-    const props = this.props;
-    return props.children !== nextProps.children;
+  public override shouldComponentUpdate(nextProps: Readonly<Admonition>): boolean {
+    const props = this.props
+    return props.children !== nextProps.children
   }
 
   public override render(): React.ReactElement {
-    const { children: childNodes, keyword } = this.props;
+    const { children: childNodes, keyword } = this.props
 
     if (keyword === 'contextList') {
       if (childNodes.length === 1 && childNodes[0].type === ParagraphType) {
-        const paragraph = childNodes[0] as Paragraph;
+        const paragraph = childNodes[0] as Paragraph
         return (
           <div className={cn(astClasses.admonition, classes.contextList)}>
             <div key="content" className={classes.contextListContent}>
@@ -32,7 +30,7 @@ export class AdmonitionRenderer extends React.Component<Admonition> {
               <NodesRenderer nodes={paragraph.children.slice(0, 1)} />
             </div>
           </div>
-        );
+        )
       }
 
       return (
@@ -44,14 +42,14 @@ export class AdmonitionRenderer extends React.Component<Admonition> {
             <NodesRenderer nodes={childNodes.slice(0, 1)} />
           </div>
         </div>
-      );
+      )
     }
 
     return (
       <div className={cn(astClasses.admonition, classes.fallback)}>
         <NodesRenderer nodes={childNodes} />
       </div>
-    );
+    )
   }
 }
 
@@ -87,4 +85,4 @@ const classes = {
       marginBottom: 0,
     },
   }),
-};
+}

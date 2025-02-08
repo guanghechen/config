@@ -1,9 +1,9 @@
-import { css, cx } from '@emotion/css';
-import { isEqual } from '@guanghechen/equal';
-import type { Table } from '@yozora/ast';
-import React from 'react';
-import { astClasses } from '../context';
-import { NodesRenderer } from '../NodesRenderer';
+import { css, cx } from '@emotion/css'
+import { isEqual } from '@guanghechen/equal'
+import type { Table } from '@yozora/ast'
+import React from 'react'
+import { astClasses } from '../context'
+import { NodesRenderer } from '../NodesRenderer'
 
 /**
  * Render yozora `table`, `tableRow` and `tableCell`.
@@ -16,24 +16,19 @@ import { NodesRenderer } from '../NodesRenderer';
  * @see https://www.npmjs.com/package/@yozora/tokenizer-table-cell
  */
 export class TableRenderer extends React.Component<Table> {
-  public override shouldComponentUpdate(
-    nextProps: Readonly<Table>,
-  ): boolean {
-    const props = this.props;
+  public override shouldComponentUpdate(nextProps: Readonly<Table>): boolean {
+    const props = this.props
     return (
-      !isEqual(props.columns, nextProps.columns) ||
-      !isEqual(props.children, nextProps.children)
-    );
+      !isEqual(props.columns, nextProps.columns) || !isEqual(props.children, nextProps.children)
+    )
   }
 
   public override render(): React.ReactElement {
-    const { columns, children: rows } = this.props;
-    const aligns = columns.map((col) => col.align ?? undefined);
-    const [ths, ...tds] = rows.map((row) =>
-      row.children.map((cell, index) => (
-        <NodesRenderer key={index} nodes={cell.children} />
-      )),
-    );
+    const { columns, children: rows } = this.props
+    const aligns = columns.map(col => col.align ?? undefined)
+    const [ths, ...tds] = rows.map(row =>
+      row.children.map((cell, index) => <NodesRenderer key={index} nodes={cell.children} />),
+    )
     return (
       <table className={cls}>
         <thead>
@@ -57,53 +52,48 @@ export class TableRenderer extends React.Component<Table> {
           ))}
         </tbody>
       </table>
-    );
+    )
   }
 }
 
 interface IThProps {
-  align: 'left' | 'center' | 'right' | undefined;
-  children: React.ReactNode;
+  align: 'left' | 'center' | 'right' | undefined
+  children: React.ReactNode
 }
 
 class Th extends React.Component<IThProps> {
-  protected readonly ref: React.RefObject<HTMLTableCellElement | null>;
+  protected readonly ref: React.RefObject<HTMLTableCellElement | null>
 
   constructor(props: IThProps) {
-    super(props);
-    this.ref = { current: null };
+    super(props)
+    this.ref = { current: null }
   }
 
-  public override shouldComponentUpdate(
-    nextProps: Readonly<IThProps>,
-  ): boolean {
-    const props = this.props;
-    return (
-      props.align !== nextProps.align ||
-      props.children !== nextProps.children
-    );
+  public override shouldComponentUpdate(nextProps: Readonly<IThProps>): boolean {
+    const props = this.props
+    return props.align !== nextProps.align || props.children !== nextProps.children
   }
 
   public override render(): React.ReactElement {
-    const { align, children } = this.props;
+    const { align, children } = this.props
     return (
       <th ref={this.ref} align={align}>
         {children}
       </th>
-    );
+    )
   }
 
   public override componentDidMount(): void {
-    const th = this.ref.current;
+    const th = this.ref.current
     if (th && th.textContent) {
-      th.setAttribute('title', th.textContent);
+      th.setAttribute('title', th.textContent)
     }
   }
 
   public override componentDidUpdate(): void {
-    const th = this.ref.current;
+    const th = this.ref.current
     if (th && th.textContent) {
-      th.setAttribute('title', th.textContent);
+      th.setAttribute('title', th.textContent)
     }
   }
 }
@@ -156,4 +146,4 @@ const cls: string = cx(
       },
     },
   }),
-);
+)

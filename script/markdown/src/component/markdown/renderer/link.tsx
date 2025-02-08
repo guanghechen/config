@@ -1,7 +1,7 @@
-import type { Link } from '@yozora/ast';
-import React from 'react';
-import { astClasses } from '../context';
-import { LinkRendererInner } from './inner/LinkRendererInner';
+import type { Link } from '@yozora/ast'
+import React from 'react'
+import { astClasses } from '../context'
+import { LinkRendererInner } from './inner/LinkRendererInner'
 
 /**
  * Render `link`.
@@ -11,9 +11,9 @@ import { LinkRendererInner } from './inner/LinkRendererInner';
  * @see https://www.npmjs.com/package/@yozora/tokenizer-autolink
  * @see https://www.npmjs.com/package/@yozora/tokenizer-autolink-extension
  */
-export const LinkRenderer: React.FC<Link> = (props) => {
-  const { title, children: childNodes } = props;
-  const url = props.url;
+export const LinkRenderer: React.FC<Link> = props => {
+  const { title, children: childNodes } = props
+  const url = props.url
 
   return (
     <LinkRendererInner
@@ -22,5 +22,5 @@ export const LinkRenderer: React.FC<Link> = (props) => {
       childNodes={childNodes}
       className={astClasses.link}
     />
-  );
-};
+  )
+}

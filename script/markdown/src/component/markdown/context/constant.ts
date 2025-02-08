@@ -1,4 +1,4 @@
-import { css } from '@emotion/css';
+import { css } from '@emotion/css'
 
 export const astClasses = {
   root: css({
@@ -20,10 +20,8 @@ export const astClasses = {
     '--colorLinkActive': 'hsl(206deg, 53%, 52%)',
     '--colorLinkHover': 'hsl(206deg, 53%, 52%)',
     '--colorLinkVisited': 'hsl(206deg, 53%, 47%)',
-    '--fontFamilyCode':
-      "Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif",
-    '--fontFamilyHeading':
-      "Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif",
+    '--fontFamilyCode': "Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif",
+    '--fontFamilyHeading': "Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif",
   }),
   rootDarken: css({
     '&&': {
@@ -44,10 +42,8 @@ export const astClasses = {
       '--colorLinkActive': 'hsl(207deg, 53%, 50%)',
       '--colorLinkHover': 'hsl(207deg, 53%, 50%)',
       '--colorLinkVisited': 'hsl(207deg, 53%, 50%)',
-      '--fontFamilyCode':
-        "Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif",
-      '--fontFamilyHeading':
-        "Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif",
+      '--fontFamilyCode': "Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif",
+      '--fontFamilyHeading': "Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif",
     },
   }),
   admonition: 'eureka-admonition',
@@ -71,4 +67,4 @@ export const astClasses = {
   table: 'eureka-table',
   text: 'eureka-text',
   thematicBreak: 'eureka-thematicBreak',
-};
+}

@@ -1,7 +1,7 @@
-import { css, cx } from '@emotion/css';
-import copy from 'copy-to-clipboard';
-import React from 'react';
-import { CopyIcon as CopiedIcon, CopyIcon } from '@/component/icon/material';
+import { css, cx } from '@emotion/css'
+import copy from 'copy-to-clipboard'
+import React from 'react'
+import { CopyIcon as CopiedIcon, CopyIcon } from '@/component/icon/material'
 
 export enum CopyStatus {
   PENDING = 0,
@@ -11,41 +11,41 @@ export enum CopyStatus {
 }
 
 export interface ICopyButtonProps {
-  delay?: number;
-  className?: string;
-  calcContentForCopy: () => string;
+  delay?: number
+  className?: string
+  calcContentForCopy: () => string
 }
 
-export const CopyButton: React.FC<ICopyButtonProps> = (props) => {
-  const { className, delay = 1500, calcContentForCopy } = props;
-  const [status, setStatus] = React.useState<CopyStatus>(CopyStatus.PENDING);
-  const disabled: boolean = status !== CopyStatus.PENDING;
+export const CopyButton: React.FC<ICopyButtonProps> = props => {
+  const { className, delay = 1500, calcContentForCopy } = props
+  const [status, setStatus] = React.useState<CopyStatus>(CopyStatus.PENDING)
+  const disabled: boolean = status !== CopyStatus.PENDING
 
   const onCopy = (): void => {
     if (status === CopyStatus.PENDING) {
-      setStatus(CopyStatus.COPYING);
+      setStatus(CopyStatus.COPYING)
       try {
-        const contentForCopy: string = calcContentForCopy();
-        copy(contentForCopy);
-        setStatus(CopyStatus.COPIED);
+        const contentForCopy: string = calcContentForCopy()
+        copy(contentForCopy)
+        setStatus(CopyStatus.COPIED)
       } catch {
-        setStatus(CopyStatus.FAILED);
+        setStatus(CopyStatus.FAILED)
       }
     }
-  };
+  }
 
   React.useEffect((): (() => void) | undefined => {
     if (status === CopyStatus.COPIED || status === CopyStatus.FAILED) {
-      const timer = setTimeout(() => setStatus(CopyStatus.PENDING), delay);
+      const timer = setTimeout(() => setStatus(CopyStatus.PENDING), delay)
       return () => {
         if (timer) {
-          clearTimeout(timer);
+          clearTimeout(timer)
         }
-      };
+      }
     }
 
-    return undefined;
-  }, [status, delay]);
+    return undefined
+  }, [status, delay])
 
   return (
     <button
@@ -59,11 +59,11 @@ export const CopyButton: React.FC<ICopyButtonProps> = (props) => {
     >
       {status === CopyStatus.PENDING ? <CopyIcon /> : <CopiedIcon />}
     </button>
-  );
-};
+  )
+}
 
 const classes = {
   copyButton: css({
     cursor: 'pointer',
   }),
-};
+}

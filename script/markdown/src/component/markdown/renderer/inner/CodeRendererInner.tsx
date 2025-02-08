@@ -1,25 +1,25 @@
-import { css, cx } from '@emotion/css';
-import CodeHighlighter from '@yozora/react-code-highlighter';
-import React from 'react';
-import { astClasses } from '../../context';
-import { CopyButton } from './CopyButton';
+import { css, cx } from '@emotion/css'
+import CodeHighlighter from '@yozora/react-code-highlighter'
+import React from 'react'
+import { astClasses } from '../../context'
+import { CopyButton } from './CopyButton'
 
 interface IProps {
-  readonly darken: boolean;
-  readonly lang: string;
-  readonly value: string;
-  readonly preferCodeWrap: boolean;
-  readonly showCodeLineno: boolean;
-  readonly pendingText?: string;
-  readonly copyingText?: string;
-  readonly copiedText?: string;
-  readonly failedText?: string;
+  readonly darken: boolean
+  readonly lang: string
+  readonly value: string
+  readonly preferCodeWrap: boolean
+  readonly showCodeLineno: boolean
+  readonly pendingText?: string
+  readonly copyingText?: string
+  readonly copiedText?: string
+  readonly failedText?: string
 }
 
 export class CodeRendererInner extends React.PureComponent<IProps> {
   public override render(): React.ReactElement {
-    const { calcContentForCopy } = this;
-    const { darken, lang, value, preferCodeWrap, showCodeLineno } = this.props;
+    const { calcContentForCopy } = this
+    const { darken, lang, value, preferCodeWrap, showCodeLineno } = this.props
 
     return (
       <code className={codeCls} data-wrap={preferCodeWrap}>
@@ -34,12 +34,12 @@ export class CodeRendererInner extends React.PureComponent<IProps> {
           <CopyButton calcContentForCopy={calcContentForCopy} />
         </div>
       </code>
-    );
+    )
   }
 
   protected calcContentForCopy = (): string => {
-    return this.props.value;
-  };
+    return this.props.value
+  }
 }
 
 const copyButtonCls = css({
@@ -47,7 +47,7 @@ const copyButtonCls = css({
   right: '4px',
   top: '4px',
   display: 'none',
-});
+})
 
 const codeCls = cx(
   astClasses.code,
@@ -67,4 +67,4 @@ const codeCls = cx(
       wordBreak: 'keep-all',
     },
   }),
-);
+)
