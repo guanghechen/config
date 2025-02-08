@@ -4,11 +4,15 @@ import { calcDefinitionMap } from '@yozora/ast-util'
 import { parseMarkdown } from '../parser'
 import type { INodeRendererMap } from './types'
 
-export interface IReactMarkdownViewModelProps {
+export interface IMarkdownViewModelProps {
+  /**
+   * Markdown filepath.
+   */
+  readonly filepath: string
   /**
    * Markdown texts.
    */
-  readonly texts: string[]
+  readonly content: string
   /**
    * Preset Link / Image reference definitions.
    */
@@ -27,55 +31,53 @@ export interface IReactMarkdownViewModelProps {
   readonly themeScheme: string
 }
 
-export class ReactMarkdownViewModel extends ViewModel {
-  public readonly texts$: State<string[]>
+export class MarkdownViewModel extends ViewModel {
+  public readonly filepath$: State<string>
+  public readonly content$: State<string>
   public readonly rendererMap$: State<Readonly<INodeRendererMap>>
   public readonly showCodeLineno$: State<boolean>
   public readonly themeScheme$: State<string>
-  public readonly asts$: Computed<Root[]>
+  public readonly ast$: Computed<Root>
   public readonly definitionMap$: Computed<Readonly<Record<string, Definition>>>
 
-  constructor(props: IReactMarkdownViewModelProps) {
+  constructor(props: IMarkdownViewModelProps) {
     super()
 
-    const { texts, presetDefinitionMap, rendererMap, showCodeLineno, themeScheme } = props
+    const { filepath, content, presetDefinitionMap, rendererMap, showCodeLineno, themeScheme } =
+      props
 
-    const texts$: State<string[]> = new State<string[]>(texts)
-    const asts$: Computed<Root[]> = Computed.fromObservables([texts$], ([texts]): Root[] =>
-      texts.map(text =>
+    const filepath$: State<string> = new State<string>(filepath)
+    const content$: State<string> = new State<string>(content)
+    const ast$: Computed<Root> = Computed.fromObservables(
+      [content$],
+      ([text]): Root =>
         parseMarkdown(text, {
           shouldReservePosition: true,
         }),
-      ),
     )
     const definitionMap$ = Computed.fromObservables(
-      [asts$],
-      ([asts]): Readonly<Record<string, Definition>> => {
+      [ast$],
+      ([ast]): Readonly<Record<string, Definition>> => {
         const definitionMap: Record<string, Definition> = {
           ...presetDefinitionMap,
         }
-        for (const ast of asts) {
-          const map: Readonly<Record<string, Definition>> = calcDefinitionMap(ast).definitionMap
-          for (const [key, val] of Object.entries(map)) definitionMap[key] = val
-        }
+        const map: Readonly<Record<string, Definition>> = calcDefinitionMap(ast).definitionMap
+        for (const [key, val] of Object.entries(map)) definitionMap[key] = val
         return definitionMap
       },
     )
 
-    this.texts$ = texts$
-    this.asts$ = asts$
+    this.filepath$ = filepath$
+    this.content$ = content$
+    this.ast$ = ast$
     this.definitionMap$ = definitionMap$
     this.rendererMap$ = new State(rendererMap)
     this.showCodeLineno$ = new State<boolean>(showCodeLineno)
     this.themeScheme$ = new State<string>(themeScheme)
   }
 
-  public setContent = (texts: string[]): void => {
-    this.texts$.next(texts)
-  }
-
-  public getFullText = (): string => {
-    const texts: string[] = this.texts$.getSnapshot()
-    return texts.join('\n\n')
+  public setContent = (filepath: string, content: string): void => {
+    this.filepath$.next(filepath)
+    this.content$.next(content)
   }
 }

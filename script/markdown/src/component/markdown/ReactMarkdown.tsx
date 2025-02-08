@@ -3,16 +3,20 @@ import { useDeepCompareEffect, useDeepCompareMemo } from '@guanghechen/react-hoo
 import { useComputed } from '@guanghechen/react-viewmodel'
 import type { Definition, Root } from '@yozora/ast'
 import React from 'react'
-import { AstRenderer } from './AstRenderer'
 import type { INodeRendererContext, INodeRendererMap } from './context'
-import { NodeRendererContextType, ReactMarkdownViewModel, astClasses } from './context'
+import { MarkdownViewModel, NodeRendererContextType, astClasses } from './context'
+import { NodesRenderer } from './NodesRenderer'
 import { buildNodeRendererMap } from './renderer'
 
 export interface IMarkdownProps {
   /**
+   * The markdown file path.
+   */
+  readonly filepath: string
+  /**
    * Text content of markdown.
    */
-  readonly text: string | string[]
+  readonly content: string
   /**
    * Customized node renderer mpa.
    */
@@ -48,7 +52,8 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
     onClickAnchor,
     customizedRendererMap,
     showCodeLineno = true,
-    text,
+    filepath,
+    content,
     className,
     style,
     theme: themeScheme,
@@ -58,10 +63,10 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
     () => props.presetDefinitionMap ?? {},
     [props.presetDefinitionMap],
   )
-  const [viewmodel] = React.useState<ReactMarkdownViewModel>(() => {
-    const texts: string[] = Array.isArray(text) ? text : [text]
-    return new ReactMarkdownViewModel({
-      texts,
+  const [viewmodel] = React.useState<MarkdownViewModel>(() => {
+    return new MarkdownViewModel({
+      filepath,
+      content,
       rendererMap: buildNodeRendererMap(customizedRendererMap),
       presetDefinitionMap,
       showCodeLineno,
@@ -77,9 +82,8 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
   const cls: string = cx(rootCls, themeScheme === 'darken' && astClasses.rootDarken, className)
 
   useDeepCompareEffect(() => {
-    const texts: string[] = Array.isArray(text) ? text : [text]
-    viewmodel.setContent(texts)
-  }, [viewmodel, props.text])
+    viewmodel.setContent(filepath, content)
+  }, [viewmodel, filepath, content])
 
   React.useEffect(() => {
     viewmodel.showCodeLineno$.next(showCodeLineno)
@@ -89,13 +93,11 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
     viewmodel.themeScheme$.next(themeScheme)
   }, [viewmodel, themeScheme])
 
-  const asts: Root[] = useComputed(viewmodel.asts$)
+  const ast: Root = useComputed(viewmodel.ast$)
   return (
     <div className={cls} style={style}>
       <NodeRendererContextType.Provider value={context}>
-        {asts.map((ast, index) => (
-          <AstRenderer key={index} index={index} ast={ast} />
-        ))}
+        <NodesRenderer nodes={ast.children} />
       </NodeRendererContextType.Provider>
     </div>
   )

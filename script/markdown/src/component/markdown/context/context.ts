@@ -1,8 +1,8 @@
 import React from 'react'
-import type { ReactMarkdownViewModel } from './viewmodel'
+import type { MarkdownViewModel } from './viewmodel'
 
 export interface INodeRendererContext {
-  readonly viewmodel: ReactMarkdownViewModel
+  readonly viewmodel: MarkdownViewModel
 }
 
 export const NodeRendererContextType = React.createContext<INodeRendererContext>(

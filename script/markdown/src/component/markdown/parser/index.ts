@@ -1,4 +1,4 @@
-import type { Association, Paragraph, Root } from '@yozora/ast'
+import type { Association, Root } from '@yozora/ast'
 import { ParagraphType, RootType, TextType } from '@yozora/ast'
 import Parser from '@yozora/parser'
 
@@ -29,14 +29,6 @@ const parser = new Parser({
   },
 })
 
-export const countChar = (text: string, char: string): number => {
-  let count: number = 0
-  for (const c of text) {
-    if (char === c) count += 1
-  }
-  return count
-}
-
 export const parseMarkdown = (text: string, options?: IParseOptions): Root => {
   try {
     const ast: Root = parser.parse(text, options)
@@ -60,16 +52,4 @@ export const parseMarkdown = (text: string, options?: IParseOptions): Root => {
     }
     return ast as any as Root
   }
-}
-
-export const hasHighlightContent = (content: string): boolean => {
-  const data: Root = parser.parse(content)
-  if (data.children.length === 0) return false
-  for (const node of data.children) {
-    if (node.type !== ParagraphType) return true
-
-    const paragraph = node as Paragraph
-    if (paragraph.children.some(v => v.type !== TextType)) return true
-  }
-  return false
 }

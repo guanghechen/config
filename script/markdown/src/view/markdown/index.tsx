@@ -99,7 +99,7 @@ export const MarkdownView: React.FC = () => {
       <div className={classes.preview}>
         {!!text && (
           <div className={classes.previewInner}>
-            <ReactMarkdown text={text} theme={theme} />
+            <ReactMarkdown filepath={filepath} content={text} theme={theme} />
           </div>
         )}
       </div>
