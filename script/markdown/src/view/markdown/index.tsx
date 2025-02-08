@@ -21,6 +21,9 @@ export const MarkdownView: React.FC = () => {
   })
 
   const { loading, text, url, error } = useFileResult(filepath, tick)
+  React.useEffect(() => {
+    console.log({ loading, text, url, error })
+  }, [loading, text, url, error])
 
   const onSubmit = useEventCallback(() => {
     if (inputRef.current) {
@@ -80,29 +83,31 @@ export const MarkdownView: React.FC = () => {
   return (
     <div className={classes.container}>
       <div className={classes.fileSelect}>
-        <input
-          className={classes.fileSelectInput}
-          ref={inputRef}
-          type="text"
-          defaultValue={filepath}
-          onKeyDown={onInputKeyDown}
-        />
-        <button className={classes.fileSelectSubmitButton} onClick={onSubmit}>
-          Load
-        </button>
+        <div className={classes.fileSelectInner}>
+          <input
+            className={classes.fileSelectInput}
+            ref={inputRef}
+            type="text"
+            defaultValue={filepath}
+            onKeyDown={onInputKeyDown}
+          />
+          <button className={classes.fileSelectSubmitButton} onClick={onSubmit}>
+            Load
+          </button>
+        </div>
       </div>
-      <div className={classes.meta}>
-        <span>loading: {String(loading)}</span>
-        <span>url: {String(url)}</span>
-        <span>error: {String(error)}</span>
-      </div>
-      <div className={classes.preview}>
-        {!!text && (
+      {!!error && (
+        <div className={classes.error}>
+          <code>error: {String(error)}</code>
+        </div>
+      )}
+      {!!text && (
+        <div className={classes.preview}>
           <div className={classes.previewInner}>
             <ReactMarkdown filepath={filepath} content={text} theme={theme} />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -113,7 +118,6 @@ const classes = {
     flexDirection: 'column',
     width: '100vw',
     height: '100vh',
-    padding: '20px',
     boxSizing: 'border-box',
     fontFamily: "'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif",
     backgroundColor: '#fdfdfd',
@@ -124,7 +128,14 @@ const classes = {
     flex: '0 0 auto',
     display: 'flex',
     alignItems: 'center',
-    marginBottom: '20px',
+    justifyContent: 'center',
+    padding: '20px',
+    backgroundColor: '#dfdfdf',
+  }),
+  fileSelectInner: css({
+    display: 'flex',
+    alignItems: 'center',
+    width: '800px',
   }),
   fileSelectInput: css({
     flex: 1,
@@ -152,16 +163,18 @@ const classes = {
       backgroundColor: '#0056b3',
     },
   }),
-  meta: css({
-    flex: '0 0 auto',
-    display: 'flex',
-    flexDirection: 'column',
+  error: css({
+    padding: '6px 8px',
+    fontSize: '1rem',
+    color: '#EF4444',
+    background: '#EEEEEE',
   }),
   preview: css({
     flex: '1 1 auto',
     display: 'flex',
     justifyContent: 'center',
     overflow: 'auto',
+    margin: '20px 0',
   }),
   previewInner: css({
     width: '800px',

@@ -40,6 +40,7 @@ export default defineConfig({
                   : path.resolve(path.dirname(base), filepath)
               }
             }
+            filepath = path.normalize(filepath)
 
             if (!filepath) {
               res.statusCode = 400

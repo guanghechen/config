@@ -8,28 +8,30 @@ interface IProps {
   readonly title: string | undefined
   readonly childNodes: Node[] | undefined
   readonly className: string
+  readonly target: React.HTMLAttributeAnchorTarget | undefined
 }
 
 export class LinkRendererInner extends React.Component<IProps> {
   public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
     const props = this.props
     return (
-      props.url !== nextProps.url ||
+      props.target !== nextProps.target ||
       props.title !== nextProps.title ||
+      props.url !== nextProps.url ||
       props.childNodes !== nextProps.childNodes ||
       props.className !== nextProps.className
     )
   }
 
   public override render(): React.ReactElement {
-    const { url, title, childNodes, className } = this.props
+    const { target, title, url, childNodes, className } = this.props
     return (
       <a
         className={cx(cls, className)}
         href={url}
         title={title}
         rel="noopener, noreferrer"
-        target="_blank"
+        target={target}
       >
         <NodesRenderer nodes={childNodes} />
       </a>

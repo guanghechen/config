@@ -1,6 +1,7 @@
 import type { Link } from '@yozora/ast'
 import React from 'react'
-import { astClasses } from '../context'
+import { isLocalUrl, resolveLocalMarkdownLink } from '@/util/url'
+import { astClasses, useNodeRendererContext } from '../context'
 import { LinkRendererInner } from './inner/LinkRendererInner'
 
 /**
@@ -12,13 +13,19 @@ import { LinkRendererInner } from './inner/LinkRendererInner'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-autolink-extension
  */
 export const LinkRenderer: React.FC<Link> = props => {
-  const { title, children: childNodes } = props
-  const url = props.url
+  const { title, url, children: childNodes } = props
+  const { viewmodel } = useNodeRendererContext()
+
+  const src: string = isLocalUrl(url)
+    ? resolveLocalMarkdownLink(url, viewmodel.filepath$.getSnapshot())
+    : url
+  const target: React.HTMLAttributeAnchorTarget | undefined = src === url ? '_blank' : undefined
 
   return (
     <LinkRendererInner
-      url={url}
+      target={target}
       title={title}
+      url={src}
       childNodes={childNodes}
       className={astClasses.link}
     />
