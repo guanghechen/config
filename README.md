@@ -30,9 +30,8 @@
     brew install ripgrep
     ```
 
-* rust: **install use rustup instead of homebrew**
-  
-  https://doc.rust-lang.org/book/ch01-01-installation.html#installing-rustup-on-linux-or-macos
+* rust: https://doc.rust-lang.org/book/ch01-01-installation.html#installing-rustup-on-linux-or-macos
+   (*install use rustup instead of homebrew*)
 
   - macos
     ```fish
