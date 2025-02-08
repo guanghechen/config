@@ -1,7 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Code } from '@yozora/ast'
 import React from 'react'
-import type { IReactMarkdownThemeScheme } from '../context'
 import { useNodeRendererContext } from '../context'
 import { CodeRendererInner } from './inner/CodeRendererInner'
 
@@ -18,7 +17,7 @@ export const CodeRenderer: React.FC<Code> = props => {
 
   const { viewmodel } = useNodeRendererContext()
   const showCodeLineno: boolean = useStateValue(viewmodel.showCodeLineno$)
-  const themeScheme: IReactMarkdownThemeScheme = useStateValue(viewmodel.themeScheme$)
+  const themeScheme: string = useStateValue(viewmodel.themeScheme$)
   const darken: boolean = themeScheme === 'darken'
 
   return (

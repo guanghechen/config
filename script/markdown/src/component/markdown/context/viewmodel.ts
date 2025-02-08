@@ -4,8 +4,6 @@ import { calcDefinitionMap } from '@yozora/ast-util'
 import { parseMarkdown } from '../parser'
 import type { INodeRendererMap } from './types'
 
-export type IReactMarkdownThemeScheme = 'lighten' | 'darken' | string
-
 export interface IReactMarkdownViewModelProps {
   /**
    * Markdown texts.
@@ -26,14 +24,14 @@ export interface IReactMarkdownViewModelProps {
   /**
    * React markdown theme scheme.
    */
-  readonly themeScheme: IReactMarkdownThemeScheme
+  readonly themeScheme: string
 }
 
 export class ReactMarkdownViewModel extends ViewModel {
   public readonly texts$: State<string[]>
   public readonly rendererMap$: State<Readonly<INodeRendererMap>>
   public readonly showCodeLineno$: State<boolean>
-  public readonly themeScheme$: State<IReactMarkdownThemeScheme>
+  public readonly themeScheme$: State<string>
   public readonly asts$: Computed<Root[]>
   public readonly definitionMap$: Computed<Readonly<Record<string, Definition>>>
 
@@ -69,7 +67,7 @@ export class ReactMarkdownViewModel extends ViewModel {
     this.definitionMap$ = definitionMap$
     this.rendererMap$ = new State(rendererMap)
     this.showCodeLineno$ = new State<boolean>(showCodeLineno)
-    this.themeScheme$ = new State<IReactMarkdownThemeScheme>(themeScheme)
+    this.themeScheme$ = new State<string>(themeScheme)
   }
 
   public setContent = (texts: string[]): void => {

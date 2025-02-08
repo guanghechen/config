@@ -1,6 +1,5 @@
 export * from './ReactMarkdown'
 export * from './context'
-export * from './hook/useMarkdownTheme'
 export * from './parser'
 export * from './renderer'
 export * from './util'

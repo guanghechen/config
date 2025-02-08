@@ -7,7 +7,7 @@ export interface IFileResult {
   readonly error: string | undefined
 }
 
-export const useFileResult = (filepath: string): IFileResult => {
+export const useFileResult = (filepath: string, tick: number): IFileResult => {
   const [state, setState] = React.useState<IFileResult>({
     loading: true,
     text: undefined,
@@ -49,7 +49,7 @@ export const useFileResult = (filepath: string): IFileResult => {
       }
     }
     void fetchFile()
-  }, [filepath])
+  }, [filepath, tick])
 
   React.useEffect(() => {
     return () => {

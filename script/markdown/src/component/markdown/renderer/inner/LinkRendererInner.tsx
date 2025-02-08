@@ -41,6 +41,7 @@ const cls = css({
   padding: '0.2rem 0',
   color: 'var(--colorLink)',
   textDecoration: 'none',
+  fontStyle: 'italic',
   '&:active': {
     color: 'var(--colorLinkActive)',
   },

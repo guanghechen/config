@@ -4,9 +4,8 @@ import { useComputed } from '@guanghechen/react-viewmodel'
 import type { Definition, Root } from '@yozora/ast'
 import React from 'react'
 import { AstRenderer } from './AstRenderer'
-import type { INodeRendererContext, INodeRendererMap, IReactMarkdownThemeScheme } from './context'
+import type { INodeRendererContext, INodeRendererMap } from './context'
 import { NodeRendererContextType, ReactMarkdownViewModel, astClasses } from './context'
-import { useMarkdownTheme } from './hook/useMarkdownTheme'
 import { buildNodeRendererMap } from './renderer'
 
 export interface IMarkdownProps {
@@ -33,15 +32,18 @@ export interface IMarkdownProps {
   /**
    * Root css class of the component.
    */
-  className?: string
+  readonly className?: string
   /**
    * Root css style.
    */
-  style?: React.CSSProperties
+  readonly style?: React.CSSProperties
+  /**
+   * Markdown theme scheme.
+   */
+  readonly theme: string
 }
 
 export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
-  const themeScheme: IReactMarkdownThemeScheme = useMarkdownTheme()
   const {
     onClickAnchor,
     customizedRendererMap,
@@ -49,6 +51,7 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
     text,
     className,
     style,
+    theme: themeScheme,
   } = props
 
   const presetDefinitionMap: Record<string, Readonly<Definition>> = useDeepCompareMemo(
@@ -103,8 +106,7 @@ const rootCls = cx(
   css({
     wordBreak: 'break-all',
     userSelect: 'unset',
-    fontFamily:
-      'Ginto-Copilot-Upright-Variable, -apple-system, "system-ui", Roboto, "Helvetica Neue", sans-serif',
+    fontFamily: "'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif",
     [astClasses.listItem]: {
       [`> ${astClasses.list}`]: {
         marginLeft: '1.2em',
