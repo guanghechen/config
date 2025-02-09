@@ -195,10 +195,13 @@ function M.new(props)
             for _, item in ipairs(next_items_original) do
               if next_uuids_selected[item.uuid] then
                 table.insert(next_items, item)
-                if item.uuid == item_uuid_cursor then
-                  next_item_lnum = #next_items
-                end
               end
+            end
+          end
+
+          for lnum, item in ipairs(next_items) do
+            if item.uuid == item_uuid_cursor then
+              next_item_lnum = lnum
             end
           end
 
