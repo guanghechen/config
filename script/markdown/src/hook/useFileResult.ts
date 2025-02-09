@@ -5,6 +5,7 @@ import { fetchFile } from '@/util/fetch'
 export const useFileResult = (filepath: string, tick: number): IFetchFileResult => {
   const [state, setState] = React.useState<IFetchFileResult>({
     loading: true,
+    data: undefined,
     text: undefined,
     url: undefined,
     error: undefined,
@@ -12,9 +13,15 @@ export const useFileResult = (filepath: string, tick: number): IFetchFileResult 
 
   React.useEffect(() => {
     const handle = async (): Promise<void> => {
-      setState({ loading: true, text: undefined, url: undefined, error: undefined })
-      const { text, url, error } = await fetchFile(filepath, undefined)
-      setState({ loading: false, text, url, error })
+      setState({
+        loading: true,
+        data: undefined,
+        text: undefined,
+        url: undefined,
+        error: undefined,
+      })
+      const { data, text, url, error } = await fetchFile(filepath)
+      setState({ loading: false, data, text, url, error })
     }
     void handle()
   }, [filepath, tick])

@@ -1,7 +1,6 @@
 import type { Link } from '@yozora/ast'
 import React from 'react'
-import { isLocalUrl, resolveLocalMarkdownLink } from '@/util/url'
-import { astClasses, useNodeRendererContext } from '../context'
+import { astClasses } from '../context'
 import { LinkRendererInner } from './inner/LinkRendererInner'
 
 /**
@@ -14,18 +13,15 @@ import { LinkRendererInner } from './inner/LinkRendererInner'
  */
 export const LinkRenderer: React.FC<Link> = props => {
   const { title, url, children: childNodes } = props
-  const { viewmodel } = useNodeRendererContext()
-
-  const src: string = isLocalUrl(url)
-    ? resolveLocalMarkdownLink(url, viewmodel.filepath$.getSnapshot())
-    : url
-  const target: React.HTMLAttributeAnchorTarget | undefined = src === url ? '_blank' : undefined
+  const target: React.HTMLAttributeAnchorTarget | undefined = url.startsWith('/')
+    ? undefined
+    : '_blank'
 
   return (
     <LinkRendererInner
       target={target}
       title={title}
-      url={src}
+      url={url}
       childNodes={childNodes}
       className={astClasses.link}
     />

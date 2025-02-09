@@ -1,39 +1,42 @@
-export interface IFetchFileResult {
-  readonly loading?: boolean
-  readonly text: string | undefined
-  readonly url: string | undefined
-  readonly error: string | undefined
+import type { Root } from '@yozora/ast'
+
+export interface IMarkdownData {
+  readonly ast: Root
 }
 
-export async function fetchFile(
-  filepath: string,
-  base: string | undefined,
-): Promise<IFetchFileResult> {
-  if (!filepath) return { text: undefined, url: undefined, error: undefined }
+export interface IFetchFileResult {
+  readonly loading?: boolean
+  readonly data?: IMarkdownData | undefined
+  readonly text?: string | undefined
+  readonly url?: string | undefined
+  readonly error?: string | undefined
+}
+
+export async function fetchFile(filepath: string): Promise<IFetchFileResult> {
+  if (!filepath) return {}
 
   try {
     const query: Record<string, string> = { filepath }
-    if (base) query.base = base
-
     const params = new URLSearchParams(query) // Add your query parameters here
     const response = await fetch(`/api/file?${params}`)
     const contentType = response.headers.get('content-type')
 
-    if (contentType?.includes('text') || contentType?.includes('json')) {
+    if (contentType?.includes('application/json')) {
+      const data = await response.json()
+      return { error: data.error, data: data.data }
+    }
+
+    if (contentType?.includes('text')) {
       const text = await response.text()
-      return { text: text, url: undefined, error: undefined }
+      return { text }
     } else if (contentType?.includes('image') || contentType?.includes('video')) {
       const blob = await response.blob()
       const objectUrl = URL.createObjectURL(blob)
-      return { text: undefined, url: objectUrl, error: undefined }
+      return { url: objectUrl }
     }
-    return { text: undefined, url: undefined, error: `Unknown content type: ${contentType}` }
+    return { error: `Unknown content type: ${contentType}` }
   } catch (error) {
     console.error('Failed to fetching file:', { filepath, error })
-    return {
-      text: undefined,
-      url: undefined,
-      error: 'Failed to fetching file: ' + JSON.stringify({ filepath, error }),
-    }
+    return { error: 'Failed to fetching file: ' + JSON.stringify({ filepath, error }) }
   }
 }

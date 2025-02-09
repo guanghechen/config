@@ -1,4 +1,4 @@
 {
   "extends": ["./tsconfig.settings.json"],
-  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
+  "include": ["script/**/*.ts", "src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
 }

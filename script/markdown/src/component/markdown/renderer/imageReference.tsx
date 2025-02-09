@@ -1,7 +1,6 @@
 import { useComputed } from '@guanghechen/react-viewmodel'
 import type { Definition, ImageReference } from '@yozora/ast'
 import React from 'react'
-import { isLocalUrl, resolveLocalResourceSrc } from '@/util/url'
 import type { INodeRenderer } from '../context'
 import { astClasses, useNodeRendererContext } from '../context'
 import { ImageRendererInner } from './inner/ImageRendererInner'
@@ -22,14 +21,10 @@ export const ImageReferenceRenderer: INodeRenderer<ImageReference> = props => {
   const title: string | undefined = definition?.title
   const url: string = definition?.url ?? ''
 
-  const src: string = isLocalUrl(url)
-    ? resolveLocalResourceSrc(url, viewmodel.filepath$.getSnapshot())
-    : url
-
   return (
     <ImageRendererInner
       alt={alt}
-      src={src || ''}
+      src={url || ''}
       title={title}
       srcSet={srcSet}
       sizes={sizes}

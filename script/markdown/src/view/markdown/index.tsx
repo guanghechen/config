@@ -1,6 +1,7 @@
 import { css } from '@emotion/css'
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
+import type { Root } from '@yozora/ast'
 import React from 'react'
 import { ReactMarkdown } from '@/component/markdown'
 import type { SiteTheme } from '@/context/site'
@@ -20,10 +21,8 @@ export const MarkdownView: React.FC = () => {
     return decodeURIComponent(queryParams.get('filepath') || '')
   })
 
-  const { loading, text, url, error } = useFileResult(filepath, tick)
-  React.useEffect(() => {
-    console.log({ loading, text, url, error })
-  }, [loading, text, url, error])
+  const { data, error } = useFileResult(filepath, tick)
+  const ast: Root | undefined = data?.ast
 
   const onSubmit = useEventCallback(() => {
     if (inputRef.current) {
@@ -101,10 +100,10 @@ export const MarkdownView: React.FC = () => {
           <code>error: {String(error)}</code>
         </div>
       )}
-      {!!text && (
+      {!!ast && (
         <div className={classes.preview}>
           <div className={classes.previewInner}>
-            <ReactMarkdown filepath={filepath} content={text} theme={theme} />
+            <ReactMarkdown filepath={filepath} ast={ast} theme={theme} />
           </div>
         </div>
       )}

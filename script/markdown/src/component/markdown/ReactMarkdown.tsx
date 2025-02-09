@@ -4,7 +4,12 @@ import { useComputed } from '@guanghechen/react-viewmodel'
 import type { Definition, Root } from '@yozora/ast'
 import React from 'react'
 import type { INodeRendererContext, INodeRendererMap } from './context'
-import { MarkdownViewModel, NodeRendererContextType, astClasses } from './context'
+import {
+  MarkdownViewModel,
+  NodeRendererContextType,
+  astClasses,
+  useNodeRendererContext,
+} from './context'
 import { NodesRenderer } from './NodesRenderer'
 import { buildNodeRendererMap } from './renderer'
 
@@ -16,7 +21,7 @@ export interface IMarkdownProps {
   /**
    * Text content of markdown.
    */
-  readonly content: string
+  readonly ast: Root
   /**
    * Customized node renderer mpa.
    */
@@ -53,7 +58,7 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
     customizedRendererMap,
     showCodeLineno = true,
     filepath,
-    content,
+    ast: astFromProps,
     className,
     style,
     theme: themeScheme,
@@ -66,7 +71,7 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
   const [viewmodel] = React.useState<MarkdownViewModel>(() => {
     return new MarkdownViewModel({
       filepath,
-      content,
+      ast: astFromProps,
       rendererMap: buildNodeRendererMap(customizedRendererMap),
       presetDefinitionMap,
       showCodeLineno,
@@ -82,8 +87,8 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
   const cls: string = cx(rootCls, themeScheme === 'darken' && astClasses.rootDarken, className)
 
   useDeepCompareEffect(() => {
-    viewmodel.setContent(filepath, content)
-  }, [viewmodel, filepath, content])
+    viewmodel.setContent(filepath, astFromProps)
+  }, [viewmodel, filepath, astFromProps])
 
   React.useEffect(() => {
     viewmodel.showCodeLineno$.next(showCodeLineno)
@@ -93,14 +98,19 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
     viewmodel.themeScheme$.next(themeScheme)
   }, [viewmodel, themeScheme])
 
-  const ast: Root = useComputed(viewmodel.ast$)
   return (
     <div className={cls} style={style}>
       <NodeRendererContextType.Provider value={context}>
-        <NodesRenderer nodes={ast.children} />
+        <ReactMarkdownInner />
       </NodeRendererContextType.Provider>
     </div>
   )
+}
+
+const ReactMarkdownInner: React.FC = () => {
+  const { viewmodel } = useNodeRendererContext()
+  const ast: Root = useComputed(viewmodel.ast$)
+  return <NodesRenderer nodes={ast.children} />
 }
 
 const rootCls = cx(
