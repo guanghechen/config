@@ -167,6 +167,9 @@ return {
         model = "gpt-4o",
         api_version = "2024-08-01-preview",
       },
+      copilot = {
+        model = "claude-3.5-sonnet",
+      },
       vendors = {
         deepseek = {
           __inherited_from = "openai",

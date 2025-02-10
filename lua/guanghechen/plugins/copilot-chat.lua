@@ -10,6 +10,9 @@ return {
     auto_insert_mode = true,
     answer_header = " " .. icons.kind.Copilot .. " Copilot ",
     question_header = " " .. icons.os.current .. " " .. username .. " ",
+
+    model = "claude-3.5-sonnet",
+
     -- proxy = os.getenv("http_proxy"),
     window = {
       layout = "float",
