@@ -82,7 +82,7 @@ const middelware = async (
         const ast = await parseMarkdown(filepath)
         result = { data: { ast } }
       } catch (error) {
-        console.error('Failed to parse markdown:', { filepath, error })
+        state.reporter.error('Failed to parse markdown:', { filepath, error })
         result = { error: 'Failed to parse markdown', details: { filepath } }
       }
       res.end(JSON.stringify(result))
