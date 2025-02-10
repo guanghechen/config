@@ -82,8 +82,14 @@ export const MarkdownView: React.FC = () => {
   React.useEffect(() => {
     const meta = import.meta as any
     if (meta.hot) {
-      meta.hot.on('guanghechen', (msg: unknown): void => {
-        console.log('received from vite server', msg)
+      meta.hot.on('guanghechen', (msg: any): void => {
+        if (msg && typeof msg === 'object' && msg.type === 'file-changed') {
+          if (msg.filepath === filepath) {
+            setTick(tick => tick + 1)
+            return
+          }
+        }
+        console.log('[unhandled] received from vite server', msg)
       })
     }
   }, [])

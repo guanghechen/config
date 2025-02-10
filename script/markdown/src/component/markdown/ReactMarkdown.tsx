@@ -1,5 +1,5 @@
 import { css, cx } from '@emotion/css'
-import { useDeepCompareEffect, useDeepCompareMemo } from '@guanghechen/react-hooks'
+import { useDeepCompareMemo } from '@guanghechen/react-hooks'
 import { useComputed } from '@guanghechen/react-viewmodel'
 import type { Definition, Root } from '@yozora/ast'
 import React from 'react'
@@ -86,7 +86,7 @@ export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
 
   const cls: string = cx(rootCls, themeScheme === 'darken' && astClasses.rootDarken, className)
 
-  useDeepCompareEffect(() => {
+  React.useEffect(() => {
     viewmodel.setContent(filepath, astFromProps)
   }, [viewmodel, filepath, astFromProps])
 

@@ -3,7 +3,8 @@ import fs from 'node:fs'
 import type { ServerResponse } from 'node:http'
 import path from 'node:path'
 import type { Connect, Plugin } from 'vite'
-import { parseMarkdown } from '../util/parseMarkdown'
+import state from '../state'
+import parseMarkdown from '../util/parseMarkdown'
 
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.md': 'application/json',
@@ -69,6 +70,8 @@ const middelware = async (
       res.end(JSON.stringify(data))
       return
     }
+
+    state.watch(filepath)
 
     res.statusCode = 200
     res.setHeader('Content-Type', contentType)

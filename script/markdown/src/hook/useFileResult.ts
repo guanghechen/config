@@ -13,13 +13,10 @@ export const useFileResult = (filepath: string, tick: number): IFetchFileResult 
 
   React.useEffect(() => {
     const handle = async (): Promise<void> => {
-      setState({
+      setState(prevState => ({
+        ...prevState,
         loading: true,
-        data: undefined,
-        text: undefined,
-        url: undefined,
-        error: undefined,
-      })
+      }))
       const { data, text, url, error } = await fetchFile(filepath)
       setState({ loading: false, data, text, url, error })
     }

@@ -1,4 +1,4 @@
-import { isEqual } from '@guanghechen/equal'
+import equals from '@guanghechen/equal'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Node } from '@yozora/ast'
 import React from 'react'
@@ -9,38 +9,38 @@ export interface INodesRendererProps {
   /**
    * Ast nodes.
    */
-  nodes?: Node[]
+  readonly nodes: Node[]
 }
 
 export const NodesRenderer: React.FC<INodesRendererProps> = props => {
   const { nodes } = props
   const { viewmodel } = useNodeRendererContext()
   const rendererMap: Readonly<INodeRendererMap> = useStateValue(viewmodel.rendererMap$)
-  if (!Array.isArray(nodes) || nodes.length <= 0) return <React.Fragment />
-  return <NodesRendererInner nodes={nodes} rendererMap={rendererMap} />
+
+  return (
+    <React.Fragment>
+      {nodes.map((node, index) => {
+        const key = `${node.type}-${index}`
+        const Renderer: INodeRenderer = rendererMap[node.type] ?? rendererMap._fallback
+        return <NodeRenderer key={key} node={node} Renderer={Renderer} />
+      })}
+    </React.Fragment>
+  )
 }
 
 interface IProps {
-  nodes: Node[]
-  rendererMap: Readonly<INodeRendererMap>
+  readonly node: Node
+  readonly Renderer: INodeRenderer
 }
 
-class NodesRendererInner extends React.Component<IProps> {
+class NodeRenderer extends React.Component<IProps> {
   public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
     const props = this.props
-    return !isEqual(props.nodes, nextProps.nodes) || props.rendererMap !== nextProps.rendererMap
+    return props.Renderer !== nextProps.Renderer || !equals(props.node, nextProps.node)
   }
 
   public override render(): React.ReactElement {
-    const { nodes, rendererMap } = this.props
-    return (
-      <React.Fragment>
-        {nodes.map((node, index) => {
-          const key = `${node.type}-${index}`
-          const Renderer: INodeRenderer = rendererMap[node.type] ?? rendererMap._fallback
-          return <Renderer key={key} {...node} />
-        })}
-      </React.Fragment>
-    )
+    const { node, Renderer } = this.props
+    return React.createElement(Renderer, node)
   }
 }

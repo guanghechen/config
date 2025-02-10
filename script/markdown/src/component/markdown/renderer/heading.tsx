@@ -22,8 +22,8 @@ export class HeadingRenderer extends React.Component<IProps> {
     return (
       props.depth !== nextProps.depth ||
       props.identifier !== nextProps.identifier ||
-      props.children !== nextProps.children ||
-      props.linkIcon !== nextProps.linkIcon
+      props.linkIcon !== nextProps.linkIcon ||
+      props.children !== nextProps.children
     )
   }
 

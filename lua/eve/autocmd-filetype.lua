@@ -78,15 +78,15 @@ vim.api.nvim_create_autocmd("FileType", {
   group = fn.augroup("filetype_markdown"),
   pattern = "markdown",
   callback = function()
-    vim.opt_local.wrap = true
-    vim.opt_local.linebreak = true
-    vim.opt_local.textwidth = 0
-    vim.opt_local.wrapmargin = 0
+    vim.opt_local.backupcopy = "yes" -- disable atomic writing
     vim.opt_local.formatoptions:append("t")
-
+    vim.opt_local.linebreak = true
     vim.opt_local.shiftwidth = 2
     vim.opt_local.softtabstop = 2 -- set the tab width
     vim.opt_local.tabstop = 2 -- set the tab width
+    vim.opt_local.textwidth = 0
+    vim.opt_local.wrap = true
+    vim.opt_local.wrapmargin = 0
   end,
 })
 
@@ -95,11 +95,15 @@ vim.api.nvim_create_autocmd("FileType", {
   group = fn.augroup("filetype_text"),
   pattern = "text",
   callback = function()
-    vim.opt_local.wrap = true
-    vim.opt_local.linebreak = true
-    vim.opt_local.textwidth = 0
-    vim.opt_local.wrapmargin = 0
+    vim.opt_local.backupcopy = "yes" -- disable atomic writing
     vim.opt_local.formatoptions:append("t")
+    vim.opt_local.linebreak = true
+    vim.opt_local.shiftwidth = 2
+    vim.opt_local.softtabstop = 2 -- set the tab width
+    vim.opt_local.tabstop = 2 -- set the tab width
+    vim.opt_local.textwidth = 0
+    vim.opt_local.wrap = true
+    vim.opt_local.wrapmargin = 0
   end,
 })
 

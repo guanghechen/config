@@ -1,12 +1,21 @@
+import { Subscriber } from '@guanghechen/viewmodel'
 import type { Plugin } from 'vite'
+import state from '../state'
 
 const plugin = (): Plugin => {
   return {
     name: '@guanghechen/ws',
     configureServer(server) {
-      setTimeout(() => {
-        server.ws.send('guanghechen', { data: 'Hello from customized plugin!' })
-      }, 3000)
+      state.newChangedFilepath$.subscribe(
+        new Subscriber({
+          onNext(filepath) {
+            server.ws.send('guanghechen', {
+              type: 'file-changed',
+              filepath,
+            })
+          },
+        }),
+      )
     },
   }
 }

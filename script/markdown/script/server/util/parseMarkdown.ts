@@ -10,7 +10,7 @@ const parser = new Parser({
   },
 })
 
-export async function parseMarkdown(filepath: string): Promise<Root> {
+async function parseMarkdown(filepath: string): Promise<Root> {
   if (!existsSync(filepath)) throw new Error(`File not found: ${filepath}.`)
 
   const stat = statSync(filepath)
@@ -37,3 +37,5 @@ export async function parseMarkdown(filepath: string): Promise<Root> {
   })
   return ast
 }
+
+export default parseMarkdown

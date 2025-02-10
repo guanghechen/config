@@ -1,5 +1,5 @@
 import { css, cx } from '@emotion/css'
-import { isEqual } from '@guanghechen/equal'
+import equals from '@guanghechen/equal'
 import type { Table } from '@yozora/ast'
 import React from 'react'
 import { astClasses } from '../context'
@@ -18,9 +18,7 @@ import { NodesRenderer } from '../NodesRenderer'
 export class TableRenderer extends React.Component<Table> {
   public override shouldComponentUpdate(nextProps: Readonly<Table>): boolean {
     const props = this.props
-    return (
-      !isEqual(props.columns, nextProps.columns) || !isEqual(props.children, nextProps.children)
-    )
+    return !equals(props.columns, nextProps.columns) || !equals(props.children, nextProps.children)
   }
 
   public override render(): React.ReactElement {
