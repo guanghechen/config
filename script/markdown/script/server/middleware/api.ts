@@ -2,7 +2,7 @@
 import fs from 'node:fs'
 import type { ServerResponse } from 'node:http'
 import path from 'node:path'
-import type { Connect } from 'vite'
+import type { Connect, Plugin } from 'vite'
 import { parseMarkdown } from '../util/parseMarkdown'
 
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
@@ -13,11 +13,11 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.jpeg': 'image/jpeg',
 }
 
-export async function api(
+const middelware = async (
   req: Connect.IncomingMessage,
   res: ServerResponse,
   next: Connect.NextFunction,
-): Promise<void> {
+): Promise<void> => {
   if (!req.url) {
     next()
     return
@@ -110,3 +110,16 @@ export async function api(
     res.end(JSON.stringify(data))
   }
 }
+
+const plugin = (): Plugin => {
+  return {
+    name: '@guanghechen/api',
+    configureServer(server) {
+      server.middlewares.use((req, res, next): void => {
+        void middelware(req, res, next)
+      })
+    },
+  }
+}
+
+export default plugin
