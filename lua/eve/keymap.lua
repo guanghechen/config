@@ -330,7 +330,7 @@ kk({ "n", "v" }, "<leader>un", K.ux.dismiss_notifications)
 ---------------------------------------------------------------------------------------------#[u]x--
 
 --#[w]in--------------------------------------------------------------------------------------------
-kk({ "i", "n", "v" }, { "<C-a><Left>", "D-Left>", "M-Left>" }, K.win.resize_vertical_minus)
+kk({ "i", "n", "v" }, { "<C-a><Left>", "<D-Left>", "<M-Left>" }, K.win.resize_vertical_minus)
 kk({ "i", "n", "v" }, { "<C-a><Down>", "<D-Down>", "<M-Down>" }, K.win.resize_horizontal_minus)
 kk({ "i", "n", "v" }, { "<C-a><Up>", "<D-Up>", "<M-Up>" }, K.win.resize_horizontal_plus)
 kk({ "i", "n", "v" }, { "<C-a><Right>", "<D-Right>", "<M-Right>" }, K.win.resize_vertical_plus)
