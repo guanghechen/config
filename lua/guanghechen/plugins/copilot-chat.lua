@@ -11,7 +11,8 @@ return {
     answer_header = " " .. icons.kind.Copilot .. " Copilot ",
     question_header = " " .. icons.os.current .. " " .. username .. " ",
 
-    model = "claude-3.5-sonnet",
+    -- model = "claude-3.5-sonnet",
+    model = "o3-mini",
 
     -- proxy = os.getenv("http_proxy"),
     window = {
