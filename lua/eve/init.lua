@@ -44,7 +44,9 @@ function M.setup_workspace()
     local B = path.locate_git_repo(cwd)
 
     if A == nil then
-      vim.api.nvim_set_current_dir(p)
+      pcall(function()
+        vim.api.nvim_set_current_dir(p)
+      end)
     elseif A ~= B then
       vim.api.nvim_set_current_dir(A)
     end
