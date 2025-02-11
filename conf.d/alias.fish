@@ -57,8 +57,10 @@ alias ghc-ports='netstat -tulanp'
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
 
-### non-macos
-if test (uname) != "Darwin"
+### platform specific
+if test (uname) = "Darwin"
+  alias ghc-reset-git-credential='echo -e "host=github.com\nprotocol=https\n" | git credential-osxkeychain erase'
+else
   alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in MacOS.
 end
 
