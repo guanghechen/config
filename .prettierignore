@@ -1,0 +1,12 @@
+.DS_Store
+.eslintignore
+.prettierignore
+.prettierrc
+
+**/*.hbs
+
+.nx/
+.yarn/
+**/coverage/
+**/dist/
+**/node_modules/

@@ -1,0 +1,44 @@
+{
+  "name": "@guanghechen/neovim-markdown-preview",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "format": "npm run format:lintfix && npm run format:prettier",
+    "format:prettier": "prettier . --write",
+    "format:lintfix": "eslint . --fix",
+    "start": "cross-env LOG_LEVEL=verbose vite --force"
+  },
+  "dependencies": {
+    "@emotion/css": "11.13.5",
+    "@guanghechen/equal": "1.0.3",
+    "@guanghechen/react-hooks": "3.0.14",
+    "@guanghechen/react-viewmodel": "0.2.15",
+    "@guanghechen/viewmodel": "1.0.5",
+    "@yozora/ast": "2.3.11",
+    "@yozora/ast-util": "2.3.11",
+    "@yozora/parser": "2.3.11",
+    "@yozora/react-code-highlighter": "3.0.0-alpha.12",
+    "@yozora/react-mathjax": "3.0.0-alpha.12",
+    "chokidar": "4.0.3",
+    "clsx": "2.1.1",
+    "copy-to-clipboard": "3.3.3",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@guanghechen/chalk": "1.0.3",
+    "@guanghechen/eslint-config": "7.0.13",
+    "@guanghechen/reporter": "1.0.5",
+    "@types/node": "20.17.17",
+    "@types/react": "19.0.8",
+    "@types/react-dom": "19.0.3",
+    "@vitejs/plugin-react": "4.3.4",
+    "cross-env": "7.0.3",
+    "dotenv": "16.4.7",
+    "eslint": "9.20.0",
+    "prettier": "3.4.2",
+    "typescript": "5.7.3",
+    "vite": "6.1.0"
+  }
+}
