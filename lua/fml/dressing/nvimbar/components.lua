@@ -509,6 +509,42 @@ function M.diagnostics(position)
   local hln_diagnostics_hint = position .. "_diagnostics_hint" ---@type string
   local hln_diagnostics_info = position .. "_diagnostics_info" ---@type string
 
+  local fn_show_error = G.register_anonymous_fn(function(bufnr)
+    local errors = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
+    reporter.info({
+      from = __module_name__,
+      subject = "diagnostics -- error",
+      details = errors,
+    })
+  end)
+
+  local fn_show_warn = G.register_anonymous_fn(function(bufnr)
+    local warns = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
+    reporter.info({
+      from = __module_name__,
+      subject = "diagnostics -- warning",
+      details = warns,
+    })
+  end)
+
+  local fn_show_hint = G.register_anonymous_fn(function(bufnr)
+    local hints = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT })
+    reporter.info({
+      from = __module_name__,
+      subject = "diagnostics -- hint",
+      details = hints,
+    })
+  end)
+
+  local fn_show_info = G.register_anonymous_fn(function(bufnr)
+    local infos = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO })
+    reporter.info({
+      from = __module_name__,
+      subject = "diagnostics -- info",
+      details = infos,
+    })
+  end)
+
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "diagnostics",
@@ -517,23 +553,24 @@ function M.diagnostics(position)
       return not not rawget(vim, "lsp")
     end,
     render = function(context)
+      local text_hl = "" ---@type string
       local count_error = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.ERROR })
       local text_count_error = count_error > 0 and icons.diagnostic.Error .. " " .. count_error .. " " or ""
+      text_hl = text_hl .. btn(txt(text_count_error, hln_diagnostics_error), fn_show_error)
 
       local count_warn = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.WARN })
       local text_count_warn = count_warn > 0 and icons.diagnostic.Warning .. " " .. count_warn .. " " or ""
+      text_hl = text_hl .. btn(txt(text_count_warn, hln_diagnostics_warn), fn_show_warn)
 
       local count_hint = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.HINT })
       local text_count_hint = count_hint > 0 and icons.diagnostic.Hint .. " " .. count_hint .. " " or ""
+      text_hl = text_hl .. btn(txt(text_count_hint, hln_diagnostics_hint), fn_show_hint)
 
       local count_info = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.INFO })
       local text_count_info = count_info > 0 and icons.diagnostic.Information .. " " .. count_info .. " " or ""
+      text_hl = text_hl .. btn(txt(text_count_info, hln_diagnostics_info), fn_show_info)
 
       local text = text_count_error .. text_count_warn .. text_count_hint .. text_count_info
-      local text_hl = txt(text_count_error, hln_diagnostics_error)
-        .. txt(text_count_warn, hln_diagnostics_warn)
-        .. txt(text_count_hint, hln_diagnostics_hint)
-        .. txt(text_count_info, hln_diagnostics_info)
       return text, text_hl, true
     end,
   }
