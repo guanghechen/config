@@ -16,6 +16,14 @@ local runners = {
       vim.cmd("luafile " .. filepath)
     end,
   },
+  md = {
+    run = function(filepath)
+      vim.system(
+        { "curl", "-X", "POST", "http://localhost:9527/api/file-switch?filepath=" .. vim.fn.fnameescape(filepath) },
+        { detach = true }
+      )
+    end,
+  },
 }
 
 ---@class fml.action.code
