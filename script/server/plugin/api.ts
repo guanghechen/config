@@ -30,17 +30,29 @@ const middleware = async (
     return
   }
 
+  if (pathname === '/api/file-switch') {
+    let filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
+    filepath = filepath ? path.normalize(filepath) : ''
+    state.fileSwitch$.next(filepath)
+
+    const data = { succeed: true }
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify(data))
+    return
+  }
+
   if (pathname === '/api/file') {
     let filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
     filepath = filepath ? path.normalize(filepath) : ''
 
     if (!filepath) {
-      res.statusCode = 400
-      res.setHeader('Content-Type', 'application/json')
       const data = {
         error: 'Bad search parameters',
         details: { pathname, filepath, search },
       }
+      res.statusCode = 400
+      res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify(data))
       return
     }

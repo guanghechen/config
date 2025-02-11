@@ -18,6 +18,18 @@ const plugin = (): Plugin => {
           },
         }),
       )
+      state.fileSwitch$.subscribe(
+        new Subscriber({
+          onNext(filepath) {
+            if (filepath) {
+              server.ws.send('guanghechen', {
+                type: 'file-switch',
+                filepath,
+              })
+            }
+          },
+        }),
+      )
     },
   }
 }
