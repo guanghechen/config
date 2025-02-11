@@ -71,11 +71,13 @@ function fish_prompt --description 'Write out the prompt'
 
   if set -q CONDA_DEFAULT_ENV
     set_color green
-    printf '(%s) ' $CONDA_DEFAULT_ENV
+    printf '\n (%s) ' $CONDA_DEFAULT_ENV
+  else
+    printf "\n  "
   end
 
-  set_color brcyan
-  printf "\n  %s " $suffix
+  set_color brwhite
+  printf "%s " $suffix
 
   set_color normal
 end
