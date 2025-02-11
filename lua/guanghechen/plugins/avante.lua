@@ -184,9 +184,9 @@ return {
 
       ------------------------------------------------------------------------------------------------
 
-      file_selector = {
-        provider = get_file_selector(),
-      },
+      -- file_selector = {
+      -- provider = get_file_selector(),
+      -- },
 
       mappings = {
         ask = "<leader>aa",
@@ -231,5 +231,17 @@ return {
       }),
       true
     )
+
+    --- override the file_selector ---
+    local file_selector = get_file_selector()
+    local FileSelector = require("avante.file_selector")
+    function FileSelector:native_ui(handler)
+      local filepaths = self:get_filepaths() ---@type string[]
+      file_selector({
+        title = "(Avante) Add a file",
+        filepaths = filepaths,
+        handler = handler,
+      })
+    end
   end,
 }
