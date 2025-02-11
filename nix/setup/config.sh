@@ -14,6 +14,7 @@ clone_or_update_config_repo() {
     "ripgrep"
     "tmux"
     "yazi"
+    "yozora"
   )
   local OPTIONAL_CONFIG_BRANCHES=(
     "alacritty"

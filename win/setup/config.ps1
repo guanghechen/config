@@ -9,7 +9,8 @@ $config_repo_branch = @(
   "nvim",
   "pwsh",
   "ripgrep",
-  "yazi"
+  "yazi",
+  "yozora"
 )
 $optinal_config_repo_branch = @(
   "alacritty",
