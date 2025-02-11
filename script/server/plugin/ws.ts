@@ -6,13 +6,15 @@ const plugin = (): Plugin => {
   return {
     name: '@guanghechen/ws',
     configureServer(server) {
-      state.newChangedFilepath$.subscribe(
+      state.fileChanged$.subscribe(
         new Subscriber({
           onNext(filepath) {
-            server.ws.send('guanghechen', {
-              type: 'file-changed',
-              filepath,
-            })
+            if (filepath) {
+              server.ws.send('guanghechen', {
+                type: 'file-changed',
+                filepath,
+              })
+            }
           },
         }),
       )

@@ -14,7 +14,7 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.jpeg': 'image/jpeg',
 }
 
-const middelware = async (
+const middleware = async (
   req: Connect.IncomingMessage,
   res: ServerResponse,
   next: Connect.NextFunction,
@@ -119,7 +119,7 @@ const plugin = (): Plugin => {
     name: '@guanghechen/api',
     configureServer(server) {
       server.middlewares.use((req, res, next): void => {
-        void middelware(req, res, next)
+        void middleware(req, res, next)
       })
     },
   }

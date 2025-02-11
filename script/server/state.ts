@@ -18,27 +18,29 @@ const reporter = new Reporter(chalk, {
 })
 
 class ServerViewModel {
-  public readonly newChangedFilepath$: IState<string | null>
+  public readonly fileChanged$: IState<string | null>
+  public readonly fileSwitch$: IState<string | null>
   public readonly reporter: IReporter
   protected readonly _watchingFilepaths: Set<string>
   protected _watcher: FSWatcher | null
 
   constructor() {
-    this.newChangedFilepath$ = new State<string | null>(null, { equals: () => false })
+    this.fileChanged$ = new State<string | null>(null, { equals: () => false })
+    this.fileSwitch$ = new State<string | null>(null, { equals: () => false })
     this.reporter = reporter
     this._watchingFilepaths = new Set<string>()
     this._watcher = null
   }
 
   public watch = (...filepaths: string[]): void => {
-    const { newChangedFilepath$, _watchingFilepaths } = this
+    const { fileChanged$, _watchingFilepaths } = this
     const fps: string[] = filepaths
       .map(p => path.normalize(p))
       .filter(p => !this._watchingFilepaths.has(p))
     if (fps.length <= 0) return
 
     for (const fp of fps) {
-      reporter.verbose('--> wathcing {}.', fp)
+      reporter.verbose('--> watching {}.', fp)
       _watchingFilepaths.add(fp)
     }
 
@@ -53,7 +55,7 @@ class ServerViewModel {
 
       watcher.on('change', filepath => {
         reporter.debug('--> file changed {}.', filepath)
-        newChangedFilepath$.next(filepath)
+        fileChanged$.next(filepath)
       })
     }
   }
