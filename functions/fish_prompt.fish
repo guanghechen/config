@@ -67,10 +67,15 @@ function fish_prompt --description 'Write out the prompt'
   # current time
   set -l current_time (date "+%H:%M:%S")
   set_color white
-  printf '%s \n' $current_time
+  printf '%s ' $current_time
+
+  if set -q CONDA_DEFAULT_ENV
+    set_color green
+    printf '(%s) ' $CONDA_DEFAULT_ENV
+  end
 
   set_color brcyan
-  printf "  %s " $suffix
+  printf "\n  %s " $suffix
 
   set_color normal
 end
