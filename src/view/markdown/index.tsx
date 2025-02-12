@@ -22,6 +22,7 @@ export const MarkdownView: React.FC = () => {
     const queryParams = new URLSearchParams(window.location.search)
     return decodeURIComponent(queryParams.get('filepath') || '')
   })
+  const filepathRef = React.useRef<string>(filepath)
 
   const { data, error } = useFileResult(filepath, tick)
   const ast: Root | undefined = data?.ast
@@ -75,6 +76,7 @@ export const MarkdownView: React.FC = () => {
   })
 
   React.useEffect(() => {
+    filepathRef.current = filepath
     const queryParams = new URLSearchParams(window.location.search)
     queryParams.set('filepath', encodeURIComponent(filepath))
     const newUrl = `${window.location.pathname}?${queryParams.toString()}`
@@ -85,13 +87,15 @@ export const MarkdownView: React.FC = () => {
     const meta = import.meta as any
     if (meta.hot) {
       meta.hot.on(ServerCustomEventType.FILE_CHANGED, (data: IResponsePayloadFileChanged): void => {
-        if (data.filepath === filepath) {
+        if (data.filepath === filepathRef.current) {
           setTick(tick => tick + 1)
         }
       })
       meta.hot.on(ServerCustomEventType.FILE_SWITCHED, (data: IResponsePayloadFileSwitch): void => {
-        if (data.filepath !== filepath) {
+        if (data.filepath !== filepathRef.current) {
           setFilepath(data.filepath)
+        } else {
+          setTick(tick => tick + 1)
         }
       })
     }
