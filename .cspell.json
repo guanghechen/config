@@ -1,5 +1,15 @@
 {
   "version": "0.2",
   "language": "en",
-  "words": ["applescript", "consolas", "guanghechen", "mathjax", "osascript", "viewmodel", "yozora"]
+  "words": [
+    "applescript",
+    "consolas",
+    "guanghechen",
+    "mathjax",
+    "osascript",
+    "preorder",
+    "sourceline",
+    "viewmodel",
+    "yozora"
+  ]
 }

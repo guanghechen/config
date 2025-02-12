@@ -14,6 +14,7 @@
     "@guanghechen/equal": "1.0.3",
     "@guanghechen/react-hooks": "3.0.14",
     "@guanghechen/react-viewmodel": "0.2.15",
+    "@guanghechen/std": "1.0.4",
     "@guanghechen/viewmodel": "1.0.5",
     "@yozora/ast": "2.3.11",
     "@yozora/ast-util": "2.3.11",
