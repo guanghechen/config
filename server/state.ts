@@ -18,15 +18,17 @@ const reporter = new Reporter(chalk, {
 })
 
 class ServerViewModel {
+  public readonly reporter: IReporter
   public readonly fileChanged$: IState<string | null>
   public readonly fileSwitch$: IState<string | null>
-  public readonly reporter: IReporter
+  public readonly fileSwitchArgForce$: IState<boolean>
   protected readonly _watchingFilepaths: Set<string>
   protected _watcher: FSWatcher | null
 
   constructor() {
     this.fileChanged$ = new State<string | null>(null, { equals: () => false, delay: 20 })
     this.fileSwitch$ = new State<string | null>(null, { equals: () => false, delay: 20 })
+    this.fileSwitchArgForce$ = new State<boolean>(false)
     this.reporter = reporter
     this._watchingFilepaths = new Set<string>()
     this._watcher = null

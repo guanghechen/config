@@ -31,8 +31,11 @@ const middleware = async (
   }
 
   if (pathname === '/api/file-switch') {
+    const force: boolean =
+      decodeURIComponent(searchParams.get('force') ?? '').toLowerCase() === 'true'
     let filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
     filepath = filepath ? path.normalize(filepath) : ''
+    state.fileSwitchArgForce$.next(force)
     state.fileSwitch$.next(filepath)
 
     const data = { succeed: true }

@@ -29,28 +29,33 @@ const plugin = (): Plugin => {
         new Subscriber({
           onNext(filepath) {
             if (filepath) {
-              void (async () => {
-                try {
-                  const payload: IResponsePayloadFileSwitch = { filepath }
-                  server.ws.send({
-                    type: 'custom',
-                    event: ServerCustomEventType.FILE_SWITCHED,
-                    data: payload,
-                  })
+              const payload: IResponsePayloadFileSwitch = { filepath }
+              server.ws.send({
+                type: 'custom',
+                event: ServerCustomEventType.FILE_SWITCHED,
+                data: payload,
+              })
 
-                  const url: string = `http://${SERVER_HOST}:${SERVER_PORT}`
-                  await openBrowser(url, true)
+              const force: boolean = state.fileSwitchArgForce$.getSnapshot()
+              if (force) {
+                void forceOpen()
 
-                  await sleep(500)
-                  server.ws.send({
-                    type: 'custom',
-                    event: ServerCustomEventType.FILE_SWITCHED,
-                    data: payload,
-                  })
-                } catch (error) {
-                  state.reporter.error('Failed to notify the FILE_SWITCHED event. error:', error)
+                async function forceOpen(): Promise<void> {
+                  try {
+                    const url: string = `http://${SERVER_HOST}:${SERVER_PORT}`
+                    await openBrowser(url, true)
+
+                    await sleep(500)
+                    server.ws.send({
+                      type: 'custom',
+                      event: ServerCustomEventType.FILE_SWITCHED,
+                      data: payload,
+                    })
+                  } catch (error) {
+                    state.reporter.error('Failed to notify the FILE_SWITCHED event. error:', error)
+                  }
                 }
-              })()
+              }
             }
           },
         }),
