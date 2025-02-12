@@ -30,6 +30,8 @@ const middleware = async (
     return
   }
 
+  state.reporter.verbose('--> request:', req.url)
+
   if (pathname === '/api/file-switch') {
     const force: boolean =
       decodeURIComponent(searchParams.get('force') ?? '').toLowerCase() === 'true'

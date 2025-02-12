@@ -42,7 +42,7 @@ class ServerViewModel {
     if (fps.length <= 0) return
 
     for (const fp of fps) {
-      reporter.verbose('--> watching {}.', fp)
+      reporter.verbose('  watching: {}.', fp)
       _watchingFilepaths.add(fp)
     }
 
