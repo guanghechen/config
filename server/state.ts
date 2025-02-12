@@ -25,8 +25,8 @@ class ServerViewModel {
   protected _watcher: FSWatcher | null
 
   constructor() {
-    this.fileChanged$ = new State<string | null>(null, { equals: () => false })
-    this.fileSwitch$ = new State<string | null>(null, { equals: () => false })
+    this.fileChanged$ = new State<string | null>(null, { equals: () => false, delay: 20 })
+    this.fileSwitch$ = new State<string | null>(null, { equals: () => false, delay: 20 })
     this.reporter = reporter
     this._watchingFilepaths = new Set<string>()
     this._watcher = null

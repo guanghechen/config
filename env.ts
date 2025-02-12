@@ -12,6 +12,9 @@ dotenv.config({
   ],
 })
 
+export const SERVER_HOST: string = 'localhost'
+export const SERVER_PORT: number = 9527
 export const TARGET_DIR: string = path.resolve(ROOT_DIR, process.env.OUT_DIR || 'dist')
+
 export const isProduction: boolean = process.env.NODE_ENV === 'production'
 export const isDevelopment: boolean = process.env.NODE_ENV === 'development'

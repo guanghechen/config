@@ -1,7 +1,7 @@
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { defineConfig } from 'vite'
-import { ROOT_DIR, TARGET_DIR } from './env'
+import { ROOT_DIR, SERVER_HOST, SERVER_PORT, TARGET_DIR } from './env'
 import api from './server/plugin/api'
 import ws from './server/plugin/ws'
 
@@ -20,7 +20,7 @@ export default defineConfig({
   },
   server: {
     open: true,
-    port: 9527,
-    host: 'localhost',
+    port: SERVER_PORT,
+    host: SERVER_HOST,
   },
 })
