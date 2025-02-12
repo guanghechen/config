@@ -7,6 +7,7 @@ $config_repo_branch = @(
   "lazygit",
   "lsd",
   "nvim",
+  "pm2",
   "pwsh",
   "ripgrep",
   "yazi",

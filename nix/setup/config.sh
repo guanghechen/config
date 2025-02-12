@@ -11,6 +11,7 @@ clone_or_update_config_repo() {
     "lazygit"
     "lsd"
     "nvim"
+    "pm2"
     "ripgrep"
     "tmux"
     "yazi"
