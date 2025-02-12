@@ -219,6 +219,9 @@ return {
           model = "deepseek-coder",
         },
       },
+      web_search_engine = {
+        provider = "google",
+      },
 
       provider = provider_name,
       auto_suggestions_provider = "copilot",
