@@ -1,5 +1,7 @@
 local env = require("eve.builtin.env")
 local fn = require("eve.builtin.fn")
+local path = require("eve.builtin.path")
+local icons = require("eve.constant.icon")
 local Subscriber = require("eve.collection.subscriber")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
@@ -47,10 +49,21 @@ local function get_file_selector()
       fetch_data = function()
         local width = 0 ---@type integer
         local items = {} ---@type fml.ux.select.IItem[]
+        local cwd = path.cwd() ---@type string
         for index, filepath in ipairs(_filepaths) do
           local uuid = tostring(index) ---@type string
           local text = filepath ---@type string
-          local icon, icon_hl = calc_fileicon(filepath)
+          local icon = "" ---@type string
+          local icon_hl = nil ---@type string|nil
+
+          local absolute_filepath = path.join(cwd, filepath) ---@type string
+          if vim.uv.fs_stat(absolute_filepath) and vim.uv.fs_stat(absolute_filepath).type == "directory" then
+            icon = icons.filetype.Folder
+            icon_hl = "MiniIconsBlue"
+          else
+            icon, icon_hl = calc_fileicon(filepath)
+          end
+
           local data = { filepath = filepath, icon = icon, icon_hl = icon_hl }
           local select_item = { uuid = uuid, text = text, data = data } ---@type fml.ux.select.IItem
           width = width < #text and #text or width ---@type integer
@@ -68,7 +81,7 @@ local function get_file_selector()
         return { items = items }
       end,
       render_item = function(item, match)
-        local icon_width = string.len(item.data.icon) ---@type integer
+        local icon_width = string.len(item.data.icon .. " ") ---@type integer
         local text = item.data.icon .. " " .. item.data.filepath ---@type string
 
         if item.data.lnum ~= nil and item.data.col ~= nil then
@@ -107,10 +120,38 @@ local function get_file_selector()
     end,
   })
 
+  ------@param filepaths                   string[]
+  ------@return string[]
+  ---local function resolve_filepaths(filepaths)
+  ---  local workspace = path.workspace() ---@type string
+  ---  local cwd = path.cwd() ---@type string
+  ---  if workspace == cwd or #cwd < #workspace or cwd:sub(1, #workspace) ~= workspace then
+  ---    return filepaths
+  ---  end
+  ---
+  ---  local prefix = cwd:sub(#workspace + 1) ---@type string
+  ---  if #prefix > 0 and prefix:sub(1, 1) == "/" then
+  ---    prefix = prefix:sub(2) ---@type string
+  ---  end
+  ---
+  ---  local resolved_filepaths = {} ---@type string[]
+  ---  for _, filepath in ipairs(filepaths) do
+  ---    if #filepath > #prefix and filepath:sub(1, #prefix) == prefix then
+  ---      local resolved_filepath = filepath:sub(#prefix + 1) ---@type string
+  ---      if #resolved_filepath > 1 and resolved_filepath:sub(1, 1) == "/" then
+  ---        resolved_filepath = resolved_filepath:sub(2) ---@type string
+  ---      end
+  ---      table.insert(resolved_filepaths, resolved_filepath)
+  ---    end
+  ---  end
+  ---  return resolved_filepaths
+  ---end
+
   ---@param params                      guanghechen.plugins.avante.file_selector.IParams
   ---@return nil
   local function file_selector(params)
     local handler = params.handler ---@type fun(filepaths: string[]|nil): nil
+    -- _filepaths = resolve_filepaths(params.filepaths) ---@type string[]
     _filepaths = params.filepaths ---@type string[]
     _selector:change_input_title(params.title)
 
@@ -184,6 +225,10 @@ return {
 
       ------------------------------------------------------------------------------------------------
 
+      file_selector = {
+        provider = get_file_selector(),
+      },
+
       mappings = {
         ask = "<leader>aa",
         edit = "<leader>ae",
@@ -216,6 +261,11 @@ return {
   end,
   config = function(_, opts)
     package.loaded["dressing.nvim"] = {}
+
+    ---hack: use cwd as the project root
+    require("avante.utils").get_project_root = function()
+      return path.cwd()
+    end
 
     require("avante").setup(opts)
     state.flight.ai_provider:subscribe(
