@@ -10,9 +10,10 @@ const plugin = (): Plugin => {
         new Subscriber({
           onNext(filepath) {
             if (filepath) {
-              server.ws.send('guanghechen', {
-                type: 'file-changed',
-                filepath,
+              server.ws.send({
+                type: 'custom',
+                event: 'guanghechen/file-changed',
+                data: { filepath },
               })
             }
           },
@@ -22,9 +23,10 @@ const plugin = (): Plugin => {
         new Subscriber({
           onNext(filepath) {
             if (filepath) {
-              server.ws.send('guanghechen', {
-                type: 'file-switch',
-                filepath,
+              server.ws.send({
+                type: 'custom',
+                event: 'guanghechen/file-switch',
+                data: { filepath },
               })
             }
           },
