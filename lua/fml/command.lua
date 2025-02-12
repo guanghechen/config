@@ -120,12 +120,19 @@ command.implement({
 })
 
 --[code] run----------------------------------------------------------------------------------------
-command.implement({
-  uuid = command.definitions.code.run.uuid,
-  action = function(context)
-    require("fml.action.code.run").run(context)
-  end,
-})
+command
+  .implement({
+    uuid = command.definitions.code.run.uuid,
+    action = function(context)
+      require("fml.action.code.run").run(context, false)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.code.run_force.uuid,
+    action = function(context)
+      require("fml.action.code.run").run(context, true)
+    end,
+  })
 
 --[copy] filepath-----------------------------------------------------------------------------------
 command

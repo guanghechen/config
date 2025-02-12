@@ -205,6 +205,7 @@ kk({ "n", "v" }, "<leader>bt", K.find.bufs_term)
 mk({ "n" }, "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "code: add comment below")
 mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "code: add comment above")
 kk({ "i", "n", "v" }, "<F5>", K.code.run)
+kk({ "i", "n", "v" }, "<F17>", K.code.run_force) -- F5 mapped to F17
 kk({ "n" }, "<leader>cs", K.code.swap_conditional_branches)
 -------------------------------------------------------------------------------------------#[c]ode--
 

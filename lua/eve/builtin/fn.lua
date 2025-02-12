@@ -122,6 +122,15 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param text                          string
+function M.escape_url_component(text)
+  return (text:gsub("([^%w%.%-])", function(c)
+    return string.format("%%%02X", string.byte(c))
+  end))
+end
+
+----------------------------------------------------------------------------------------------------
+
 ---@generic T
 ---@param elements                      T[]
 ---@param element                       T|fun(element: T, index: integer): boolean

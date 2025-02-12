@@ -337,6 +337,7 @@ M.definitions.clipboard = {
 ---@class eve.command.definitions.code
 M.definitions.code = {
   run = def("Fcoderun", "code: run"),
+  run_force = def("Fcoderunforce", "code: run (force)"),
 
   swap_conditional_branches = def("Fcodeswapconditionalbranches", "code: swap conditional branches"),
 }
