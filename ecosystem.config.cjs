@@ -9,7 +9,7 @@ module.exports = {
       cwd: path.normalize(path.resolve(ROOT_CONFIG, 'yozora')),
       script: 'npm',
       args: 'run start',
-      watch: false,
+      watch: true,
       env: {
         NODE_ENV: 'development'
       }
