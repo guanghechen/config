@@ -3,7 +3,7 @@ import path from 'node:path'
 import url from 'node:url'
 
 const __dirname: string = path.dirname(url.fileURLToPath(import.meta.url))
-export const ROOT_DIR: string = path.dirname(__dirname)
+export const ROOT_DIR: string = __dirname
 
 dotenv.config({
   path: [

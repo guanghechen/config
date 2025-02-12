@@ -7,6 +7,8 @@ import { ReactMarkdown } from '@/component/markdown'
 import type { SiteTheme } from '@/context/site'
 import { useSiteContext } from '@/context/site'
 import { useFileResult } from '@/hook/useFileResult'
+import { ServerCustomEventType } from '@/shared/types'
+import type { IResponsePayloadFileChanged, IResponsePayloadFileSwitch } from '@/shared/types'
 
 export const MarkdownView: React.FC = () => {
   const siteViewModel = useSiteContext().viewmodel
@@ -82,14 +84,14 @@ export const MarkdownView: React.FC = () => {
   React.useEffect(() => {
     const meta = import.meta as any
     if (meta.hot) {
-      meta.hot.on('guanghechen/file-changed', (msg: any): void => {
-        if (msg.data.filepath === filepath) {
+      meta.hot.on(ServerCustomEventType.FILE_CHANGED, (data: IResponsePayloadFileChanged): void => {
+        if (data.filepath === filepath) {
           setTick(tick => tick + 1)
         }
       })
-      meta.hot.on('guanghechen/file-switch', (msg: any): void => {
-        if (msg.data.filepath !== filepath) {
-          setFilepath(msg.filepath)
+      meta.hot.on(ServerCustomEventType.FILE_SWITCHED, (data: IResponsePayloadFileSwitch): void => {
+        if (data.filepath !== filepath) {
+          setFilepath(data.filepath)
         }
       })
     }

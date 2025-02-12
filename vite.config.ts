@@ -1,9 +1,9 @@
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { defineConfig } from 'vite'
-import { ROOT_DIR, TARGET_DIR } from './script/env'
-import api from './script/server/plugin/api'
-import ws from './script/server/plugin/ws'
+import { ROOT_DIR, TARGET_DIR } from './env'
+import api from './server/plugin/api'
+import ws from './server/plugin/ws'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -14,6 +14,7 @@ export default defineConfig({
   plugins: [react(), api(), ws()],
   resolve: {
     alias: {
+      '@/shared': path.resolve(ROOT_DIR, 'shared'),
       '@': path.resolve(ROOT_DIR, 'src'),
     },
   },

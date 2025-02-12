@@ -19,8 +19,9 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
+      "@/shared/*": ["shared/*"],
       "@/*": ["src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src/", "shared/"]
 }

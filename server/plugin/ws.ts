@@ -1,5 +1,7 @@
 import { Subscriber } from '@guanghechen/viewmodel'
 import type { Plugin } from 'vite'
+import type { IResponsePayloadFileChanged, IResponsePayloadFileSwitch } from '../../shared/types'
+import { ServerCustomEventType } from '../../shared/types'
 import state from '../state'
 
 const plugin = (): Plugin => {
@@ -10,10 +12,11 @@ const plugin = (): Plugin => {
         new Subscriber({
           onNext(filepath) {
             if (filepath) {
+              const payload: IResponsePayloadFileChanged = { filepath }
               server.ws.send({
                 type: 'custom',
-                event: 'guanghechen/file-changed',
-                data: { filepath },
+                event: ServerCustomEventType.FILE_CHANGED,
+                data: payload,
               })
             }
           },
@@ -23,10 +26,11 @@ const plugin = (): Plugin => {
         new Subscriber({
           onNext(filepath) {
             if (filepath) {
+              const payload: IResponsePayloadFileSwitch = { filepath }
               server.ws.send({
                 type: 'custom',
-                event: 'guanghechen/file-switch',
-                data: { filepath },
+                event: ServerCustomEventType.FILE_SWITCHED,
+                data: payload,
               })
             }
           },
