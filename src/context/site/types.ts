@@ -5,8 +5,14 @@ export enum SiteTheme {
   DARKEN = 'darken',
 }
 
+export interface ISiteData {
+  readonly theme: SiteTheme
+}
+
 export interface ISiteViewModel {
   readonly theme$: IState<SiteTheme>
+  dump(): ISiteData
+  load(data: Partial<ISiteData> | undefined): void
 }
 
 export interface ISiteContext {
