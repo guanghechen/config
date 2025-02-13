@@ -5,6 +5,7 @@ import path from 'node:path'
 import type { Connect, Plugin } from 'vite'
 import state from '../state'
 import parseMarkdown from '../util/parseMarkdown'
+import { resolveRealFilepath } from '../util/path'
 
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.md': 'application/json',
@@ -49,7 +50,7 @@ const middleware = async (
 
   if (pathname === '/api/file') {
     let filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
-    filepath = filepath ? path.normalize(filepath) : ''
+    filepath = resolveRealFilepath(filepath ? path.normalize(filepath) : '')
 
     if (!filepath) {
       const data = {
