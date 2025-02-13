@@ -103,8 +103,8 @@ export const MarkdownView: React.FC = () => {
 
   return (
     <div className={classes.container}>
-      <div className={classes.fileSelect}>
-        <div className={classes.fileSelectInner}>
+      <div className={classes.header}>
+        <div className={classes.fileSelect}>
           <input
             className={classes.fileSelectInput}
             ref={inputRef}
@@ -117,18 +117,20 @@ export const MarkdownView: React.FC = () => {
           </button>
         </div>
       </div>
-      {!!error && (
-        <div className={classes.error}>
-          <code>error: {String(error)}</code>
-        </div>
-      )}
-      {!!ast && (
-        <div className={classes.preview}>
-          <div className={classes.previewInner}>
-            <ReactMarkdown filepath={filepath} ast={ast} theme={theme} />
+      <div className={classes.main}>
+        {!!error && (
+          <div className={classes.error}>
+            <code>error: {String(error)}</code>
           </div>
-        </div>
-      )}
+        )}
+        {!!ast && (
+          <div className={classes.preview}>
+            <div className={classes.previewInner}>
+              <ReactMarkdown filepath={filepath} ast={ast} theme={theme} />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -145,7 +147,7 @@ const classes = {
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     transition: 'background-color 0.3s ease',
   }),
-  fileSelect: css({
+  header: css({
     flex: '0 0 auto',
     display: 'flex',
     alignItems: 'center',
@@ -153,7 +155,13 @@ const classes = {
     padding: '20px',
     backgroundColor: '#dfdfdf',
   }),
-  fileSelectInner: css({
+  main: css({
+    flex: '1 1 100%',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'auto',
+  }),
+  fileSelect: css({
     display: 'flex',
     alignItems: 'center',
     width: '800px',
@@ -185,6 +193,7 @@ const classes = {
     },
   }),
   error: css({
+    flex: '0 0 auto',
     padding: '6px 8px',
     fontSize: '1rem',
     color: '#EF4444',
@@ -194,7 +203,6 @@ const classes = {
     flex: '1 1 auto',
     display: 'flex',
     justifyContent: 'center',
-    overflow: 'auto',
     margin: '20px 0',
   }),
   previewInner: css({
