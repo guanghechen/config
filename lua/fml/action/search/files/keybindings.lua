@@ -83,7 +83,7 @@ local common_keymaps = {
   },
   {
     modes = { "n", "v" },
-    key = "<leader>ts",
+    key = "<leader>0",
     callback = context.edit_config,
     desc = "search: edit config",
   },

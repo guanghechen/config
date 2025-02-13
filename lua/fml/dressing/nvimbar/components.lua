@@ -6,7 +6,6 @@ local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -1389,8 +1388,11 @@ end
 ---@return fml.ux.nvimbar.IRawComponent
 function M.widget(position)
   local hln_flag = position .. "_flag" ---@type string
+  local hln_flag_sep = position .. "_flag_sep" ---@type string
   local hln_flag_enabled = position .. "_flag_enabled" ---@type string
-  local hln_scope = position .. "_flag_scope" ---@type string
+  local hln_flag_enabled_sep = position .. "_flag_enabled_sep" ---@type string
+  local hln_flag_scope = position .. "_flag_scope" ---@type string
+  local hln_flag_scope_sep = position .. "_flag_scope_sep" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -1409,18 +1411,24 @@ function M.widget(position)
 
       local text = "" ---@type string
       local hl_text = "" ---@type string
-      for _, item in ipairs(items) do
+      for index, item in ipairs(items) do
         local callback = item.callback_fn ---@type string
+        local digit = icons.todigit(index) ---@type string
+        local text_sep = index > 1 and "▏" or " " ---@type string
         if item.type == "flag" then
           local flag = item.state:snapshot() ---@type boolean
-          local text_flag = " " .. item.symbol .. " " ---@type string
-          text = text .. text_flag
-          hl_text = hl_text .. btn(txt(text_flag, flag and hln_flag_enabled or hln_flag), callback)
+          local text_flag = digit .. item.symbol .. " " ---@type string
+          text = text .. text_sep .. text_flag ---@type string
+          hl_text = hl_text
+            .. txt(text_sep, flag and hln_flag_enabled_sep or hln_flag_sep)
+            .. btn(txt(text_flag, flag and hln_flag_enabled or hln_flag), callback)
         elseif item.type == "enum" then
           local flag = item.state:snapshot() ---@type boolean
-          local text_flag = " " .. flag .. " " ---@type string
-          text = text .. text_flag
-          hl_text = hl_text .. btn(txt(text_flag, hln_scope), callback)
+          local text_flag = digit .. flag .. " " ---@type string
+          text = text .. text_sep .. text_flag ---@type string
+          hl_text = hl_text
+            .. txt(text_sep, flag and hln_flag_scope_sep or hln_flag_sep)
+            .. btn(txt(text_flag, hln_flag_scope), callback)
         end
       end
       return text, hl_text, true
