@@ -1,0 +1,50 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#60A5FA"/>
+    </linearGradient>
+    <filter id="shadow" x="-2" y="-2" width="36" height="36" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Background with Yozora blue -->
+  <rect width="32" height="32" rx="8" fill="url(#bg)"/>
+
+  <!-- Preview Icon - Two overlapping sheets -->
+  <path d="
+    M 9 8
+    L 19 8
+    Q 21 8 21 10
+    L 21 18
+    Q 21 20 19 20
+    L 9 20
+    Q 7 20 7 18
+    L 7 10
+    Q 7 8 9 8
+    Z
+  " fill="white" filter="url(#shadow)" opacity="0.7"/>
+
+  <path d="
+    M 13 12
+    L 23 12
+    Q 25 12 25 14
+    L 25 22
+    Q 25 24 23 24
+    L 13 24
+    Q 11 24 11 22
+    L 11 14
+    Q 11 12 13 12
+    Z
+  " fill="white" filter="url(#shadow)"/>
+
+  <!-- Stylized Y from Yozora -->
+  <path d="
+    M 15 15
+    L 17 18
+    L 19 15
+    M 17 18
+    L 17 21
+  " stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
