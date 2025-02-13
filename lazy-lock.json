@@ -1,6 +1,6 @@
 {
   "aerial.nvim": { "branch": "nvim@aerial.nvim", "commit": "fc1e7a7a31ac835c499d3eec300632ee9f7d2c42" },
-  "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "ce55d7ac9ec80105410353527c2970b544598655" },
+  "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "25111c6df31e0e7562f388d4d7dedcb570e323e1" },
   "cmp-buffer": { "branch": "nvim@cmp-buffer", "commit": "3022dbc9166796b644a841a02de8dd1cc1d311fa" },
   "cmp-nvim-lsp": { "branch": "nvim@cmp-nvim-lsp", "commit": "99290b3ec1322070bcfb9e846450a46f6efa50f0" },
   "cmp-path": { "branch": "nvim@cmp-path", "commit": "91ff86cd9c29299a64f968ebb45846c485725f23" },
@@ -34,7 +34,7 @@
   "nvim-nio": { "branch": "nvim@nvim-nio", "commit": "21f5324bfac14e22ba26553caf69ec76ae8a7662" },
   "nvim-notify": { "branch": "nvim@nvim-notify", "commit": "22f29093eae7785773ee9d543f8750348b1a195c" },
   "nvim-snippets": { "branch": "nvim@nvim-snippets", "commit": "56b4052f71220144689caaa2e5b66222ba5661eb" },
-  "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "e411cf2c8adea87acda6c3d634a375addbfff88e" },
+  "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "6d957c22cb48a734b009a69d03c18d20042c4754" },
   "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "03f382ef224c27a8508cdab2d0b463dcb8ca12a6" },
   "nvim-treesitter-textobjects": { "branch": "nvim@nvim-treesitter-textobjects", "commit": "ad8f0a472148c3e0ae9851e26a722ee4e29b1595" },
   "plenary.nvim": { "branch": "nvim@plenary.nvim", "commit": "857c5ac632080dba10aae49dba902ce3abf91b35" },
