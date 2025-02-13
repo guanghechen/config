@@ -4,6 +4,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
 import React from 'react'
 import { ReactMarkdown } from '@/component/markdown'
+import { ThemeToggle } from '@/container/ThemeToggle'
 import type { SiteTheme } from '@/context/site'
 import { useSiteContext } from '@/context/site'
 import { useFileResult } from '@/hook/useFileResult'
@@ -116,6 +117,9 @@ export const MarkdownView: React.FC = () => {
             Load
           </button>
         </div>
+        <div className={classes.headerActions}>
+          <ThemeToggle />{' '}
+        </div>
       </div>
       <div className={classes.main}>
         {!!error && (
@@ -148,6 +152,7 @@ const classes = {
     transition: 'background-color 0.3s ease',
   }),
   header: css({
+    position: 'relative',
     flex: '0 0 auto',
     display: 'flex',
     alignItems: 'center',
@@ -191,6 +196,10 @@ const classes = {
     '&:hover': {
       backgroundColor: '#0056b3',
     },
+  }),
+  headerActions: css({
+    position: 'absolute',
+    right: '28px',
   }),
   error: css({
     flex: '0 0 auto',
