@@ -193,7 +193,6 @@ S = {
     ---@type eve.t.ux.IWidget
     widget = {
       name = raw_widget.name,
-      statusline_items = raw_widget.statusline_items,
       close = function()
         close(widget)
       end,

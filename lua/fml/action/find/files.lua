@@ -69,8 +69,9 @@ local function get_select()
     state.observe({
       state.select.find_file.excludes,
       state.select.find_file.flag_case_sensitive,
-      state.select.find_file.flag_gitignore,
+      state.select.find_file.flag_exclude,
       state.select.find_file.flag_fuzzy,
+      state.select.find_file.flag_gitignore,
       state.select.find_file.flag_regex,
       state_find_cwd,
     }, function()
@@ -207,21 +208,25 @@ local function get_select()
         local flag = state.select.find_file.flag_case_sensitive:snapshot() ---@type boolean
         state.select.find_file.flag_case_sensitive:next(not flag)
       end,
+      toggle_flag_exclude = function()
+        local flag = state.select.find_file.flag_exclude:snapshot() ---@type boolean
+        state.select.find_file.flag_exclude:next(not flag)
+      end,
       toggle_flag_fuzzy = function()
         local flag = state.select.find_file.flag_fuzzy:snapshot() ---@type boolean
         state.select.find_file.flag_fuzzy:next(not flag)
+      end,
+      ---@return nil
+      toggle_flag_gitignore = function()
+        local flag = state.select.find_file.flag_gitignore:snapshot() ---@type boolean
+        state.select.find_file.flag_gitignore:next(not flag)
       end,
       toggle_flag_regex = function()
         local flag = state.select.find_file.flag_regex:snapshot() ---@type boolean
         state.select.find_file.flag_regex:next(not flag)
       end,
       ---@return nil
-      toggle_gitignore = function()
-        local flag = state.select.find_file.flag_gitignore:snapshot() ---@type boolean
-        state.select.find_file.flag_gitignore:next(not flag)
-      end,
-      ---@return nil
-      toggle_scope = function()
+      toggle_flag_scope = function()
         local scope = state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
         local idx = fn.find_index(scopes, scope) or 1 ---@type integer
         local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
@@ -229,7 +234,7 @@ local function get_select()
         state.select.find_file_scope:next(next_scope)
       end,
       ---@return nil
-      toggle_selected = function()
+      toggle_flag_selected = function()
         local flag = state.select.find_file.flag_selected:snapshot() ---@type boolean
         state.select.find_file.flag_selected:next(not flag)
       end,
@@ -251,21 +256,28 @@ local function get_select()
         desc = "find: toggle scope",
         symbol = "",
         state = state.select.find_file_scope,
-        callback = actions.toggle_scope,
+        callback = actions.toggle_flag_scope,
       },
       {
         type = "flag",
         desc = "find: toggle selected",
         symbol = icons.symbols.flag_selected,
         state = state.select.find_file.flag_selected,
-        callback = actions.toggle_selected,
+        callback = actions.toggle_flag_selected,
+      },
+      {
+        type = "flag",
+        desc = "find: toggle exclude",
+        symbol = icons.symbols.flag_exclude,
+        state = state.select.find_file.flag_exclude,
+        callback = actions.toggle_flag_exclude,
       },
       {
         type = "flag",
         desc = "find: toggle gitignore",
         symbol = icons.symbols.flag_gitignore,
         state = state.select.find_file.flag_gitignore,
-        callback = actions.toggle_gitignore,
+        callback = actions.toggle_flag_gitignore,
       },
       {
         type = "flag",
@@ -318,7 +330,7 @@ local function get_select()
       },
       {
         modes = { "n", "v" },
-        key = "<leader>0",
+        key = "<leader>ts",
         callback = actions.edit_config,
         desc = "find: edit config",
       },
@@ -350,8 +362,9 @@ local function get_select()
       fetch_data = function()
         local cwd = state_find_cwd:snapshot() ---@type string
         local workspace = path.workspace() ---@type string
+        local flag_exclude = state.select.find_file.flag_exclude:snapshot() ---@type boolean
         local flag_gitignore = state.select.find_file.flag_gitignore:snapshot() ---@type boolean
-        local excludes = state.select.find_file.excludes:snapshot() ---@type string[]
+        local excludes = flag_exclude and state.select.find_file.excludes:snapshot() or {} ---@type string[]
 
         ---@type string[]
         local filepaths = oxi.find({

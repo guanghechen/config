@@ -1420,7 +1420,7 @@ function M.widget(position)
         local text_sep = index > 1 and "▏" or " " ---@type string
         if item.type == "enum" then
           local flag = item.state:snapshot() ---@type boolean
-          local text_flag = flag .. " " ---@type string
+          local text_flag = flag .. digit ---@type string
           text = text .. text_sep .. text_flag ---@type string
           hl_text = hl_text
             .. txt(text_sep, flag and hln_flag_scope_sep or hln_flag_sep)
@@ -1434,7 +1434,7 @@ function M.widget(position)
             .. btn(txt(text_flag, flag and hln_flag_enabled or hln_flag), callback)
         elseif item.type == "popup" then
           local flag = item.state:snapshot() ---@type boolean
-          local text_flag = item.symbol .. " " ---@type string
+          local text_flag = item.symbol .. digit ---@type string
           text = text .. text_sep .. text_flag ---@type string
           hl_text = hl_text
             .. txt(text_sep, flag and hln_flag_popup_sep or hln_flag_sep)

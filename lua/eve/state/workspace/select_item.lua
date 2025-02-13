@@ -4,8 +4,9 @@ local Observable = require("eve.collection.observable")
 
 ---@class eve.state.select.item.data
 ---@field public flag_case_sensitive    boolean
----@field public flag_gitignore         boolean
+---@field public flag_exclude           boolean
 ---@field public flag_fuzzy             boolean
+---@field public flag_gitignore         boolean
 ---@field public flag_regex             boolean
 ---@field public flag_selected          boolean
 ---@field public includes               string[]
@@ -15,8 +16,9 @@ local Observable = require("eve.collection.observable")
 
 ---@class eve.state.select.item.state
 ---@field public flag_case_sensitive    eve.collection.IObservable
----@field public flag_gitignore         eve.collection.IObservable
+---@field public flag_exclude           eve.collection.IObservable
 ---@field public flag_fuzzy             eve.collection.IObservable
+---@field public flag_gitignore         eve.collection.IObservable
 ---@field public flag_regex             eve.collection.IObservable
 ---@field public flag_selected          eve.collection.IObservable
 ---@field public includes               eve.collection.IObservable
@@ -36,8 +38,9 @@ function M.defaults()
   ---@type eve.state.select.item.data
   return {
     flag_case_sensitive = false,
-    flag_gitignore = true,
+    flag_exclude = true,
     flag_fuzzy = false,
+    flag_gitignore = true,
     flag_regex = false,
     flag_selected = false,
     includes = {},
@@ -69,11 +72,14 @@ function M.normalize(data)
     if type(data.flag_case_sensitive) == "boolean" then
       resolved.flag_case_sensitive = data.flag_case_sensitive
     end
-    if type(data.flag_gitignore) == "boolean" then
-      resolved.flag_gitignore = data.flag_gitignore
+    if type(data.flag_exclude) == "boolean" then
+      resolved.flag_exclude = data.flag_exclude
     end
     if type(data.flag_fuzzy) == "boolean" then
       resolved.flag_fuzzy = data.flag_fuzzy
+    end
+    if type(data.flag_gitignore) == "boolean" then
+      resolved.flag_gitignore = data.flag_gitignore
     end
     if type(data.flag_regex) == "boolean" then
       resolved.flag_regex = data.flag_regex
@@ -110,8 +116,9 @@ function M.dump(state)
   ---@type eve.state.select.item.data
   return {
     flag_case_sensitive = state.flag_case_sensitive:snapshot(),
-    flag_gitignore = state.flag_gitignore:snapshot(),
+    flag_exclude = state.flag_exclude:snapshot(),
     flag_fuzzy = state.flag_fuzzy:snapshot(),
+    flag_gitignore = state.flag_gitignore:snapshot(),
     flag_regex = state.flag_regex:snapshot(),
     flag_selected = state.flag_selected:snapshot(),
     includes = state.includes:snapshot(),
@@ -132,8 +139,9 @@ function M.load(state, name, raw_data)
     ---@type eve.state.select.item.state
     state = {
       flag_case_sensitive = Observable.from_value(data.flag_case_sensitive),
-      flag_gitignore = Observable.from_value(data.flag_gitignore),
+      flag_exclude = Observable.from_value(data.flag_exclude),
       flag_fuzzy = Observable.from_value(data.flag_fuzzy),
+      flag_gitignore = Observable.from_value(data.flag_gitignore),
       flag_regex = Observable.from_value(data.flag_regex),
       flag_selected = Observable.from_value(data.flag_selected),
       includes = Observable.from_value(data.includes),
@@ -149,8 +157,9 @@ function M.load(state, name, raw_data)
   end
 
   state.flag_case_sensitive:next(data.flag_case_sensitive)
-  state.flag_gitignore:next(data.flag_gitignore)
+  state.flag_exclude:next(data.flag_exclude)
   state.flag_fuzzy:next(data.flag_fuzzy)
+  state.flag_gitignore:next(data.flag_gitignore)
   state.flag_regex:next(data.flag_regex)
   state.flag_selected:next(data.flag_selected)
   if not fn.equals_list(state.includes:snapshot(), data.includes) then

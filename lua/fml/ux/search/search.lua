@@ -142,7 +142,8 @@ function M.new(props)
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
 
   local raw_statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
-  for idx, item in ipairs(raw_statusline_items) do
+  local index = #raw_statusline_items > 0 and raw_statusline_items[1].type == "popup" and 0 or 1 ---@type integer
+  for _, item in ipairs(raw_statusline_items) do
     local stl_state = item.state ---@type eve.collection.IObservable
     local symbol = item.symbol ---@type string
     local callback = item.callback ---@type fun(): nil
@@ -155,12 +156,13 @@ function M.new(props)
     ---@type eve.t.IKeymap
     local keymap = {
       modes = { "n", "v" },
-      key = "<leader>" .. idx,
+      key = "<leader>" .. index,
       callback = callback,
       desc = item.desc,
       nowait = true,
     }
     table.insert(common_keymaps, keymap)
+    index = index + 1
   end
 
   local on_confirm_from_props = props.on_confirm ---@type fml.ux.search.IOnConfirm
