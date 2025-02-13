@@ -79,6 +79,8 @@ export const MarkdownView: React.FC = () => {
   // Update filepath in URL
   React.useEffect(() => {
     filepathRef.current = filepath
+    if (inputRef.current) inputRef.current.value = filepath
+
     const queryParams = new URLSearchParams(window.location.search)
     queryParams.set('filepath', encodeURIComponent(filepath))
     const newUrl = `${window.location.pathname}?${queryParams.toString()}`
