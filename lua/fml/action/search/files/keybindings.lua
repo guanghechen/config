@@ -1,10 +1,18 @@
 local icons = require("eve.constant.icon")
+local instances = require("eve.constant.instance")
 local state = require("eve.state")
 
 local context = require("fml.action.search.files.context")
 
 ---@type eve.t.ux.widget.IRawStatuslineItem[]
 local statusline_items = {
+  {
+    type = "popup",
+    desc = "search: edit settings",
+    symbol = icons.symbols.setting,
+    state = instances.observable_truthy,
+    callback = context.edit_config,
+  },
   {
     type = "enum",
     desc = "search: toggle scope",
@@ -17,28 +25,35 @@ local statusline_items = {
     desc = "search: toggle selected",
     symbol = icons.symbols.flag_selected,
     state = state.select.search_file.flag_selected,
-    callback = context.toggle_selected,
+    callback = context.toggle_flag_selected,
+  },
+  {
+    type = "flag",
+    desc = "search: toggle exclude",
+    symbol = icons.symbols.flag_exclude,
+    state = state.select.search_file.flag_exclude,
+    callback = context.toggle_flag_exclude,
   },
   {
     type = "flag",
     desc = "search: toggle gitignore",
     symbol = icons.symbols.flag_gitignore,
     state = state.select.search_file.flag_gitignore,
-    callback = context.toggle_gitignore,
+    callback = context.toggle_flag_gitignore,
   },
   {
     type = "flag",
     desc = "search: toggle regex",
     symbol = icons.symbols.flag_regex,
     state = state.select.search_file.flag_regex,
-    callback = context.toggle_regex,
+    callback = context.toggle_flag_regex,
   },
   {
     type = "flag",
     desc = "search: toggle case sensitive",
     symbol = icons.symbols.flag_case_sensitive,
     state = state.select.search_file.flag_case_sensitive,
-    callback = context.toggle_case_sensitive,
+    callback = context.toggle_flag_case_sensitive,
   },
   {
     type = "flag",
@@ -90,13 +105,13 @@ local common_keymaps = {
   {
     modes = { "n", "v" },
     key = "<leader>ti",
-    callback = context.toggle_case_sensitive,
+    callback = context.toggle_flag_case_sensitive,
     desc = "search: toggle case sensitive",
   },
   {
     modes = { "n", "v" },
     key = "<leader>tr",
-    callback = context.toggle_regex,
+    callback = context.toggle_flag_regex,
     desc = "search: toggle regex",
   },
 }

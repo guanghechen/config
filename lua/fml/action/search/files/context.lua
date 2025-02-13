@@ -377,13 +377,13 @@ function M.send_to_qflist()
 end
 
 ---@return nil
-function M.toggle_case_sensitive()
+function M.toggle_flag_case_sensitive()
   local flag = state.select.search_file.flag_case_sensitive:snapshot() ---@type boolean
   state.select.search_file.flag_case_sensitive:next(not flag)
 end
 
 ---@return nil
-function M.toggle_gitignore()
+function M.toggle_flag_gitignore()
   local flag = state.select.search_file.flag_gitignore:snapshot() ---@type boolean
   state.select.search_file.flag_gitignore:next(not flag)
 end
@@ -395,7 +395,7 @@ function M.toggle_mode()
 end
 
 ---@return nil
-function M.toggle_regex()
+function M.toggle_flag_regex()
   local flag = state.select.search_file.flag_regex:snapshot() ---@type boolean
   state.select.search_file.flag_regex:next(not flag)
 end
@@ -407,9 +407,15 @@ function M.toggle_scope()
 end
 
 ---@return nil
-function M.toggle_selected()
+function M.toggle_flag_selected()
   local flag = state.select.search_file.flag_selected:snapshot() ---@type boolean
   state.select.search_file.flag_selected:next(not flag)
+end
+
+---@return nil
+function M.toggle_flag_exclude()
+  local flag = state.select.search_file.flag_exclude:snapshot() ---@type boolean
+  state.select.search_file.flag_exclude:next(not flag)
 end
 
 return M

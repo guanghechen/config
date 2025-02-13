@@ -52,6 +52,7 @@ state.search_file.search_paths:subscribe(
 
 state.observe({
   state.select.search_file.flag_case_sensitive,
+  state.select.search_file.flag_exclude,
   state.select.search_file.flag_gitignore,
   state.select.search_file.flag_regex,
   state.select.search_file.excludes,
@@ -316,6 +317,7 @@ function M.fetch_data(input_text, force, callback)
   end
 
   local flag_case_sensitive = state.select.search_file.flag_case_sensitive:snapshot() ---@type boolean
+  local flag_exclude = state.select.search_file.flag_exclude:snapshot() ---@type boolean
   local flag_gitignore = state.select.search_file.flag_gitignore:snapshot() ---@type boolean
   local flag_regex = state.select.search_file.flag_regex:snapshot() ---@type boolean
   local flag_replace = state.search_file.flag_replace:snapshot() ---@type boolean
@@ -324,7 +326,7 @@ function M.fetch_data(input_text, force, callback)
   local search_paths = state.search_file.search_paths:snapshot() ---@type string[]
   local replacement = state.search_file.replacement:snapshot() ---@type string
   local includes = state.select.search_file.includes:snapshot() ---@type string[]
-  local excludes = state.select.search_file.excludes:snapshot() ---@type string[]
+  local excludes = flag_exclude and state.select.search_file.excludes:snapshot() or {} ---@type string[]
 
   ---@type eve.builtin.oxi.search.IResult|nil
   local result = (
