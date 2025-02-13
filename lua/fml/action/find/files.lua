@@ -92,11 +92,19 @@ local function get_select()
       ---@return nil
       edit_config = function()
         ---@class fml.action.find.files.actions.IConfigData
-        ---@field public exclude_patterns       string[]
+        ---@field public keyword        string
+        ---@field public includes       string[]
+        ---@field public excludes       string[]
+
+        local s_keyword = state.select.find_file.input:snapshot() ---@type string
+        local s_includes = state.select.find_file.includes:snapshot() ---@type string[]
+        local s_excludes = state.select.find_file.excludes:snapshot() ---@type string[]
 
         ---@type fml.action.find.files.actions.IConfigData
         local data = {
-          exclude_patterns = fn.parse_comma_list(state.select.find_file.excludes:snapshot()),
+          keyword = s_keyword,
+          includes = s_includes,
+          excludes = s_excludes,
         }
 
         local setting = Setting.new({
@@ -109,19 +117,39 @@ local function get_select()
             end
             ---@cast raw_data               fml.action.find.files.actions.IConfigData
 
-            if raw_data.exclude_patterns == nil or not vim.islist(raw_data.exclude_patterns) then
-              return "Invalid data.exclude_patterns, expect an array."
+            if raw_data.keyword == nil or type(raw_data.keyword) ~= "string" then
+              return "Invalid data.keyword, expect an string."
+            end
+
+            if raw_data.includes == nil or not vim.islist(raw_data.includes) then
+              return "Invalid data.includes, expect an array."
+            end
+
+            if raw_data.excludes == nil or not vim.islist(raw_data.excludes) then
+              return "Invalid data.excludes, expect an array."
             end
           end,
           on_confirm = function(raw_data)
             vim.schedule(function()
+              local last_keyword = state.select.search_file.input:snapshot() ---@type string
+
               local raw = vim.tbl_extend("force", data, raw_data)
               ---@cast raw                  fml.action.find.files.actions.IConfigData
 
-              state.select.find_file.excludes:next(table.concat(raw.exclude_patterns, ","))
+              local keyword = raw.keyword ---@type string
+              local includes = raw.includes ---@type string[]
+              local excludes = raw.excludes ---@type string[]
+
+              state.select.find_file.input:next(keyword)
+              state.select.find_file.includes:next(includes)
+              state.select.find_file.excludes:next(excludes)
 
               if _select ~= nil then
-                _select:mark_data_dirty()
+                if keyword ~= last_keyword then
+                  _select:reset_input(keyword)
+                else
+                  _select:mark_data_dirty()
+                end
               end
             end)
             return true

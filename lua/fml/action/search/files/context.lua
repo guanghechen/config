@@ -169,11 +169,11 @@ function M.edit_config()
       ---@cast raw_data                 fml.action.search.files.IConfigData
 
       if raw_data.keyword == nil or type(raw_data.keyword) ~= "string" then
-        return "Invalid data.search_pattern, expect an string."
+        return "Invalid data.keyword, expect an string."
       end
 
       if raw_data.replacement == nil or type(raw_data.replacement) ~= "string" then
-        return "Invalid data.replace_pattern, expect an string."
+        return "Invalid data.replacement, expect an string."
       end
 
       if raw_data.search_paths == nil or not vim.islist(raw_data.search_paths) then
@@ -189,16 +189,16 @@ function M.edit_config()
       end
 
       if raw_data.includes == nil or not vim.islist(raw_data.includes) then
-        return "Invalid data.include_patterns, expect an array."
+        return "Invalid data.includes, expect an array."
       end
 
       if raw_data.excludes == nil or not vim.islist(raw_data.excludes) then
-        return "Invalid data.exclude_patterns, expect an array."
+        return "Invalid data.excludes, expect an array."
       end
     end,
     on_confirm = function(raw_data)
       vim.schedule(function()
-        local last_search_pattern = state.select.search_file.input:snapshot() ---@type string
+        local last_keyword = state.select.search_file.input:snapshot() ---@type string
 
         local raw = vim.tbl_extend("force", data, raw_data)
         ---@cast raw                    fml.action.search.files.IConfigData
@@ -219,7 +219,7 @@ function M.edit_config()
         state.search_file.max_matches:next(max_matches)
         state.search_file.search_paths:next(search_paths)
 
-        if keyword ~= last_search_pattern then
+        if keyword ~= last_keyword then
           M.reset_input(keyword)
         else
           M.reload()
