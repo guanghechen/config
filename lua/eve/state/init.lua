@@ -293,6 +293,7 @@ function M.watch_changes(params)
     M.flight.dressing_select,
     M.flight.dressing_winsep_fixed,
     M.flight.dressing_winsep_float,
+    M.flight.gitdiff_expand_all,
     M.flight.lsp_inlay_hints,
     M.flight.lsp_code_lens,
   }
@@ -300,6 +301,7 @@ function M.watch_changes(params)
     local select_item = M.select[key] ---@type eve.state.select.item.state
     table.insert(select_states, select_item.flag_case_sensitive)
     table.insert(select_states, select_item.flag_gitignore)
+    table.insert(select_states, select_item.flag_exclude)
     table.insert(select_states, select_item.flag_fuzzy)
     table.insert(select_states, select_item.flag_regex)
     table.insert(select_states, select_item.includes)

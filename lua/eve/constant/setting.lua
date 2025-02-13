@@ -26,6 +26,7 @@ M.flights = {
   "dressing_select",
   "dressing_winsep_fixed",
   "dressing_winsep_float",
+  "gitdiff_expand_all",
   "lsp_inlay_hints",
   "lsp_code_lens",
   "smear_cursor",

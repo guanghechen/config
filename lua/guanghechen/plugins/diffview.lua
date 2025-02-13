@@ -1,10 +1,10 @@
 local icons = require("eve.constant.icon")
+local state = require("eve.state")
 
 return {
   name = "diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },
   opts = function()
-    local state = require("eve.state")
     local actions = require("diffview.actions")
 
     return {
@@ -54,8 +54,12 @@ return {
       hooks = {
         ---@diagnostic disable-next-line: unused-local
         diff_buf_win_enter = function(bufnr, winid, ctx)
-          vim.opt_local.wrap = false
+          if state.flight.gitdiff_expand_all:snapshot() then
+            vim.opt_local.foldlevel = 99
+          end
+
           vim.opt_local.list = true
+          vim.opt_local.wrap = false
 
           -- Highlight 'DiffChange' as 'DiffDelete' on the left, and 'DiffAdd' on the right.
           if ctx.layout_name:match("^diff2") then
