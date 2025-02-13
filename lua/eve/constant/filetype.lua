@@ -304,6 +304,7 @@ local extnames = {
     [".zip"] = true,
   },
   printable_without_extname = {
+    ["config"] = true,
     ["license"] = true,
     ["readme"] = true,
     ["sshd_config"] = true,
