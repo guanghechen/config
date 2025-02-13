@@ -7,6 +7,7 @@ local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 local icons = require("eve.constant.icon")
+local instances = require("eve.constant.instance")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 local command = require("eve.command")
@@ -238,6 +239,13 @@ local function get_select()
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
     local statusline_items = {
+      {
+        type = "popup",
+        desc = "find: edit settings",
+        symbol = icons.symbols.setting,
+        state = instances.observable_truthy,
+        callback = actions.edit_config,
+      },
       {
         type = "enum",
         desc = "find: toggle scope",

@@ -19,11 +19,13 @@ local Subscribers = require("eve.collection.subscribers")
 ---@field public initial_value          eve.t.T           Initial value of the observable
 ---@field public equals                 ?eve.t.IEquals    Determine whether the two values are equal.
 ---@field public normalize              ?eve.t.INormalize Normalize the value before compare or update
+---@field public readonly               ?boolean
 
 ---@type eve.collection.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = fn.noop }
 
 ---@class eve.collection.Observable : eve.collection.IObservable
+---@field private _readonly             boolean
 ---@field private _value                eve.t.T
 ---@field private _value_last_notified  eve.t.T|nil
 ---@field private _subscribers          eve.collection.ISubscribers
@@ -37,6 +39,7 @@ setmetatable(M, BatchDisposable)
 function M.new(props)
   local equals = props.equals or fn.equals_shallow ---@type eve.t.IEquals
   local normalize = props.normalize or fn.identity ---@type eve.t.INormalize
+  local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type eve.t.T
 
   local self = setmetatable(BatchDisposable.new(), M)
@@ -44,10 +47,10 @@ function M.new(props)
 
   self.equals = equals
   self.normalize = normalize
+  self._readonly = readonly
   self._value = normalize(initial_value)
   self._value_last_notified = nil
   self._subscribers = Subscribers.new()
-
   return self
 end
 
@@ -75,12 +78,15 @@ function M:dispose()
   self._subscribers:dispose()
 end
 
----@param value eve.t.T
----@param options? eve.collection.observable.INextOptions
+---@param value                         eve.t.T
+---@param options                       ?eve.collection.observable.INextOptions
 ---@return boolean Indicate whether if the value changed.
 function M:next(value, options)
-  options = options or {} ---@type eve.collection.observable.INextOptions
+  if self._readonly then
+    return false
+  end
 
+  options = options or {} ---@type eve.collection.observable.INextOptions
   if self:is_disposed() then
     local strict = options.strict ~= false ---@type boolean
     if strict then

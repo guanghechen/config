@@ -3,8 +3,8 @@ local env = require("eve.builtin.env")
 ---@class eve.constant.icon
 local M = {}
 
----@class eve.constant.icon.digits
-local digits = {
+---@class eve.constant.icon.digits_subscript
+local digits_subscript = {
   "₀",
   "₁",
   "₂",
@@ -17,16 +17,42 @@ local digits = {
   "₉",
 }
 
+---@class eve.constant.icon.digits_supscript
+local digits_supscript = {
+  "⁰",
+  "¹",
+  "²",
+  "³",
+  "⁴",
+  "⁵",
+  "⁶",
+  "⁷",
+  "⁸",
+  "⁹",
+}
+
 ---@param num                           integer
 ---@return string
-function M.todigit(num)
+function M.todigit_subscript(num)
   local result = "" ---@type string
   while num > 0 do
     local digit = num % 10
     num = math.floor((num - digit) / 10)
-    result = digits[digit + 1] .. result
+    result = digits_subscript[digit + 1] .. result
   end
-  return #result > 0 and result or digits[1]
+  return #result > 0 and result or digits_subscript[1]
+end
+
+---@param num                           integer
+---@return string
+function M.todigit_supscript(num)
+  local result = "" ---@type string
+  while num > 0 do
+    local digit = num % 10
+    num = math.floor((num - digit) / 10)
+    result = digits_supscript[digit + 1] .. result
+  end
+  return #result > 0 and result or digits_supscript[1]
 end
 
 ---@class eve.constant.icon.fillchars
@@ -55,8 +81,9 @@ M.listchars = {
 
 ---@class eve.constant.icon.symbols
 M.symbols = {
-  flag_fuzzy = "󰫳",
+  setting = "",
   flag_case_sensitive = "",
+  flag_fuzzy = "",
   flag_gitignore = "",
   flag_regex = "󰑑",
   flag_replace = "",

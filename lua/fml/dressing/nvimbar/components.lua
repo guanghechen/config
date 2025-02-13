@@ -206,7 +206,7 @@ function M.bufs(position)
 
     local filename, fileicon, fileicon_hl = resolve_buf_info(bufnr)
     local text_indicator_or_sep = is_current and "▎" or (is_first and " " or "▏") ---@type string
-    local text_order = total < 2 and "" or (icons.todigit(index) .. ".") ---@type string
+    local text_order = total < 2 and "" or (icons.todigit_subscript(index) .. ".") ---@type string
     local text_icon = fileicon .. " " ---@type string
     local text_title = filename ---@type string
     local text_mod = is_mod and "  " or "  " ---@type string
@@ -1393,6 +1393,8 @@ function M.widget(position)
   local hln_flag_enabled_sep = position .. "_flag_enabled_sep" ---@type string
   local hln_flag_scope = position .. "_flag_scope" ---@type string
   local hln_flag_scope_sep = position .. "_flag_scope_sep" ---@type string
+  local hln_flag_popup = position .. "_flag_popup" ---@type string
+  local hln_flag_popup_sep = position .. "_flag_popup_sep" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -1411,25 +1413,34 @@ function M.widget(position)
 
       local text = "" ---@type string
       local hl_text = "" ---@type string
-      for index, item in ipairs(items) do
+      local index = #items > 0 and items[1].type == "popup" and 0 or 1 ---@type integer
+      for _, item in ipairs(items) do
         local callback = item.callback_fn ---@type string
-        local digit = icons.todigit(index) ---@type string
+        local digit = icons.todigit_supscript(index) ---@type string
         local text_sep = index > 1 and "▏" or " " ---@type string
-        if item.type == "flag" then
+        if item.type == "enum" then
           local flag = item.state:snapshot() ---@type boolean
-          local text_flag = digit .. item.symbol .. " " ---@type string
-          text = text .. text_sep .. text_flag ---@type string
-          hl_text = hl_text
-            .. txt(text_sep, flag and hln_flag_enabled_sep or hln_flag_sep)
-            .. btn(txt(text_flag, flag and hln_flag_enabled or hln_flag), callback)
-        elseif item.type == "enum" then
-          local flag = item.state:snapshot() ---@type boolean
-          local text_flag = digit .. flag .. " " ---@type string
+          local text_flag = flag .. " " ---@type string
           text = text .. text_sep .. text_flag ---@type string
           hl_text = hl_text
             .. txt(text_sep, flag and hln_flag_scope_sep or hln_flag_sep)
             .. btn(txt(text_flag, hln_flag_scope), callback)
+        elseif item.type == "flag" then
+          local flag = item.state:snapshot() ---@type boolean
+          local text_flag = item.symbol .. digit ---@type string
+          text = text .. text_sep .. text_flag ---@type string
+          hl_text = hl_text
+            .. txt(text_sep, flag and hln_flag_enabled_sep or hln_flag_sep)
+            .. btn(txt(text_flag, flag and hln_flag_enabled or hln_flag), callback)
+        elseif item.type == "popup" then
+          local flag = item.state:snapshot() ---@type boolean
+          local text_flag = item.symbol .. " " ---@type string
+          text = text .. text_sep .. text_flag ---@type string
+          hl_text = hl_text
+            .. txt(text_sep, flag and hln_flag_popup_sep or hln_flag_sep)
+            .. btn(txt(text_flag, hln_flag_popup), callback)
         end
+        index = index + 1
       end
       return text, hl_text, true
     end,
