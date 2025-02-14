@@ -1,10 +1,10 @@
 {
   "aerial.nvim": { "branch": "nvim@aerial.nvim", "commit": "fc1e7a7a31ac835c499d3eec300632ee9f7d2c42" },
-  "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "25111c6df31e0e7562f388d4d7dedcb570e323e1" },
+  "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "c60dc6c316414c2adf5bb61624719d76accab22f" },
   "cmp-buffer": { "branch": "nvim@cmp-buffer", "commit": "3022dbc9166796b644a841a02de8dd1cc1d311fa" },
   "cmp-nvim-lsp": { "branch": "nvim@cmp-nvim-lsp", "commit": "99290b3ec1322070bcfb9e846450a46f6efa50f0" },
   "cmp-path": { "branch": "nvim@cmp-path", "commit": "91ff86cd9c29299a64f968ebb45846c485725f23" },
-  "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "59088eb6fea54e5a27e719df160329a0ead86b5c" },
+  "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "8ed162b0637d4c4f69ebe3e8e49b35662a82e137" },
   "copilot-chat.nvim": { "branch": "nvim@copilot-chat.nvim", "commit": "804d9067d1eef0ee21dc39b5bbc86ab9f52287b7" },
   "copilot-cmp": { "branch": "nvim@copilot-cmp", "commit": "15fc12af3d0109fa76b60b5cffa1373697e261d1" },
   "copilot.lua": { "branch": "nvim@copilot.lua", "commit": "30321e33b03cb924fdcd6a806a0dc6fa0b0eafb9" },
