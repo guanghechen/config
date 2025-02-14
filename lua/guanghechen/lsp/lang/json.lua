@@ -19,8 +19,12 @@ return function()
         format = {
           enable = true,
         },
-        validate = { enable = true },
-        -- Schemas https://www.schemastore.org
+        validate = {
+          enable = true,
+        },
+        suggest = {
+          json5 = true,
+        },
         schemas = {
           {
             fileMatch = { "package.json" },
@@ -65,6 +69,17 @@ return function()
           {
             fileMatch = { "/.github/workflows/*" },
             url = "https://json.schemastore.org/github-workflow.json",
+          },
+          {
+            fileMatch = {
+              "*.jsonc",
+              "*.json5",
+              ".vscode/tasks.json",
+              ".vscode/settings.json",
+              ".vscode/launch.json",
+              ".vscode/extensions.json",
+            },
+            url = "https://json.schemastore.org/json5",
           },
         },
       },

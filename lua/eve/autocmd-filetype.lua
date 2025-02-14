@@ -73,6 +73,21 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+---json
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+  pattern = {
+    "*.json5",
+    "*.jsonc",
+    "**/.vscode/tasks.json",
+    "**/.vscode/settings.json",
+    "**/.vscode/launch.json",
+    "**/.vscode/extensions.json",
+  },
+  callback = function()
+    vim.bo.filetype = "jsonc"
+  end,
+})
+
 ---markdown
 vim.api.nvim_create_autocmd("FileType", {
   group = fn.augroup("filetype_markdown"),
