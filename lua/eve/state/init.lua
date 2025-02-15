@@ -289,6 +289,7 @@ function M.watch_changes(params)
     M.flight.autosave,
     M.flight.devmode,
     M.flight.dressing_hipairs,
+    M.flight.dressing_illumniate,
     M.flight.dressing_input,
     M.flight.dressing_select,
     M.flight.dressing_winsep_fixed,

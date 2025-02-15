@@ -347,11 +347,6 @@ function M.get_no_flash_filetypes()
 end
 
 ---@return string[]
-function M.get_no_illuminate_filetypes()
-  return vim.tbl_keys(filetypes.no_ibl)
-end
-
----@return string[]
 function M.get_quitable_with_q_filetypes()
   return vim.tbl_keys(filetypes.quitable_with_q)
 end

@@ -90,7 +90,6 @@ local raw_specs = {
   { name = "render-markdown.nvim", main = "render-markdown", cond = conds.not_vscode },
   { name = "smear-cursor.nvim", main = "smear_cursor", cond = conds.smear_cursor },
   { name = "trouble.nvim", main = "trouble", cond = conds.not_vscode },
-  { name = "vim-illuminate", main = "illuminate", cond = conds.not_vscode },
   { name = "which-key.nvim", main = "which-key", cond = conds.not_vscode },
 }
 

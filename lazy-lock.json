@@ -41,6 +41,5 @@
   "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "e05a9f22f31c088ece3fa5928daf546a015b66ee" },
   "smear-cursor.nvim": { "branch": "nvim@smear-cursor.nvim", "commit": "4b7334a09cd2434e73588cc0ea63e71177251249" },
   "trouble.nvim": { "branch": "nvim@trouble.nvim", "commit": "85bedb7eb7fa331a2ccbecb9202d8abba64d37b3" },
-  "vim-illuminate": { "branch": "nvim@vim-illuminate", "commit": "b5713e6ca3f627b46968386d6d3f24d374d3cb17" },
   "which-key.nvim": { "branch": "nvim@which-key.nvim", "commit": "0e76a87ac51772569aec678dc74baa8e2a86100c" }
 }

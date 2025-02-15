@@ -315,11 +315,6 @@ local function gen_hlgroup_map(context)
     TroubleTextWarning = { fg = c.fg1 },
     TroubleWarning = { fg = c.orange },
 
-    ---! vim-illuminate
-    IlluminatedWordRead = { link = "LspReferenceRead" },
-    IlluminatedWordText = { link = "LspReferenceText" },
-    IlluminatedWordWrite = { link = "LspReferenceWrite" },
-
     ---! which-key.nvim
     WhichKey = { fg = c.blue },
     WhichKeyDesc = { fg = c.fg3 },

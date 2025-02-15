@@ -47,7 +47,7 @@ return {
     ignore = {
       buftypes = "special",
       wintypes = "special",
-      filetypes = ft.get_no_illuminate_filetypes(),
+      filetypes = ft.get_no_ibl_filetypes(),
       diff_windows = true,
       unlisted_buffers = true,
     },

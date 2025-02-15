@@ -11,6 +11,7 @@ local setting = require("eve.constant.setting")
 ---@field public devmode                boolean
 ---
 ---@field public dressing_hipairs       boolean
+---@field public dressing_illumniate    boolean
 ---@field public dressing_input         boolean
 ---@field public dressing_select        boolean
 ---@field public dressing_winsep_fixed  boolean
@@ -33,6 +34,7 @@ local setting = require("eve.constant.setting")
 ---@field public devmode                eve.collection.IObservable
 ---
 ---@field public dressing_hipairs       eve.collection.IObservable
+---@field public dressing_illumniate    eve.collection.IObservable
 ---@field public dressing_input         eve.collection.IObservable
 ---@field public dressing_select        eve.collection.IObservable
 ---@field public dressing_winsep_fixed  eve.collection.IObservable
@@ -127,6 +129,7 @@ function M.defaults()
     devmode = is_home_config_dir,
 
     dressing_hipairs = true,
+    dressing_illumniate = true,
     dressing_input = true,
     dressing_select = true,
     dressing_winsep_fixed = true,
@@ -166,6 +169,9 @@ function M.normalize(data)
 
     if type(data.dressing_hipairs) == "boolean" then
       resolved.dressing_hipairs = data.dressing_hipairs
+    end
+    if type(data.dressing_illumniate) == "boolean" then
+      resolved.dressing_illumniate = data.dressing_illumniate
     end
     if type(data.dressing_input) == "boolean" then
       resolved.dressing_input = data.dressing_input
@@ -219,6 +225,7 @@ function M.dump()
     devmode = _state.devmode:snapshot(),
 
     dressing_hipairs = _state.dressing_hipairs:snapshot(),
+    dressing_illumniate = _state.dressing_illumniate:snapshot(),
     dressing_input = _state.dressing_input:snapshot(),
     dressing_select = _state.dressing_select:snapshot(),
     dressing_winsep_fixed = _state.dressing_winsep_fixed:snapshot(),
@@ -250,6 +257,7 @@ function M.load(raw_data)
       devmode = Observable.from_value(data.devmode),
 
       dressing_hipairs = Observable.from_value(data.dressing_hipairs),
+      dressing_illumniate = Observable.from_value(data.dressing_illumniate),
       dressing_input = Observable.from_value(data.dressing_input),
       dressing_select = Observable.from_value(data.dressing_select),
       dressing_winsep_fixed = Observable.from_value(data.dressing_winsep_fixed),
@@ -274,6 +282,7 @@ function M.load(raw_data)
   _state.devmode:next(data.devmode)
 
   _state.dressing_hipairs:next(data.dressing_hipairs)
+  _state.dressing_illumniate:next(data.dressing_illumniate)
   _state.dressing_input:next(data.dressing_input)
   _state.dressing_select:next(data.dressing_select)
   _state.dressing_winsep_fixed:next(data.dressing_winsep_fixed)

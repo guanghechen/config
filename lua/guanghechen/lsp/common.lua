@@ -144,6 +144,7 @@ function M.on_attach(client, bufnr)
   local has_support_codeLens = lsp.has_support_method(bufnr, "codeLens") ---@type boolean
   local has_support_codeAction = lsp.has_support_method(bufnr, "codeAction") ---@type boolean
   local has_support_rename = lsp.has_support_method(bufnr, "rename") ---@type boolean
+  local has_support_documentHighlight = lsp.has_support_method(bufnr, "documentHighlight") ---@type boolean
 
   if client then
     lsp.check_methods(client, bufnr)
@@ -278,6 +279,24 @@ function M.on_attach(client, bufnr)
         end)
       end,
       desc = "lsp: rename",
+    },
+    {
+      disabled = not has_support_documentHighlight,
+      modes = { "n", "v" },
+      key = "[[",
+      callback = function()
+        require("fml.dressing.illumniate").jump(-vim.v.count1, true)
+      end,
+      desc = "lsp: goto prev reference",
+    },
+    {
+      disabled = not has_support_documentHighlight,
+      modes = { "n", "v" },
+      key = "]]",
+      callback = function()
+        require("fml.dressing.illumniate").jump(vim.v.count1, true)
+      end,
+      desc = "lsp: goto next reference",
     },
   }
   fn.bindkeys(keymaps, { bufnr = bufnr })

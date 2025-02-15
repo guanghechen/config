@@ -22,6 +22,7 @@ M.flights = {
   "autosave",
   "devmode",
   "dressing_hipairs",
+  "dressing_illumniate",
   "dressing_input",
   "dressing_select",
   "dressing_winsep_fixed",
