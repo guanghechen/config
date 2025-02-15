@@ -8,18 +8,20 @@ vim.schedule(function()
 end)
 
 if env.IS_MAC then
-  local im = require("eve.builtin.im")
-  local previous_mode = nil ---@type eve.e.VimMode|nil
-  vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-    group = fn.augroup("auto_toggle_im"),
-    callback = function()
-      local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
-      if previous_mode == "i" and current_mode == "n" then
-        im.set_input_method("English")
-      end
-      previous_mode = current_mode
-    end,
-  })
+  vim.defer_fn(function()
+    local im = require("eve.builtin.im")
+    local previous_mode = nil ---@type eve.e.VimMode|nil
+    vim.api.nvim_create_autocmd({ "ModeChanged" }, {
+      group = fn.augroup("auto_toggle_im"),
+      callback = function()
+        local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
+        if previous_mode == "i" and current_mode == "n" then
+          im.set_input_method("English")
+        end
+        previous_mode = current_mode
+      end,
+    })
+  end, 500)
 end
 
 ---! Auto create dirs when saving a file, in case some intermediate directory does not exist
