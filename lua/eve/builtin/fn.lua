@@ -27,6 +27,21 @@ function M.noop(...) end
 
 ----------------------------------------------------------------------------------------------------
 
+---@generic T
+---@param fn                            T
+---@param duration                      ?integer
+---@return T
+function M.debounce(fn, duration)
+  local timer = vim.uv.new_timer()
+  return function()
+    if timer ~= nil then
+      timer:start(duration or 20, 0, vim.schedule_wrap(fn))
+    end
+  end
+end
+
+----------------------------------------------------------------------------------------------------
+
 ---@param left                          any
 ---@param right                         any
 ---@return boolean
