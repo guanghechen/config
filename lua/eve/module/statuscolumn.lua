@@ -1,4 +1,4 @@
----! see https://github.com/folke/snacks.nvim/blob/140204fde53531dd5dc5bd222975a9ff350747ad/lua/snacks/statuscolumn.lua#L1
+--- https://github.com/folke/snacks.nvim/blob/72ffb3d1a2812671bb3487e490a3b1dd380bc234/lua/snacks/statuscolumn.lua#L1
 
 local icons = require("eve.constant.icon")
 
@@ -226,11 +226,24 @@ local function statuscolumn()
       components[3] = is_file and "  " or ""
     end
   end
-  return table.concat(components, "")
+
+  local ret = table.concat(components, "")
+  return "%@v:lua.require'eve.module.statuscolumn'.click_fold@" .. ret .. "%T"
 end
 
 ---@class eve.module.statuscolumn
 local M = {}
+
+---@return nil
+function M.click_fold()
+  local pos = vim.fn.getmousepos()
+  vim.api.nvim_win_set_cursor(pos.winid, { pos.line, 1 })
+  vim.api.nvim_win_call(pos.winid, function()
+    if vim.fn.foldlevel(pos.line) > 0 then
+      vim.cmd("normal! za")
+    end
+  end)
+end
 
 ---@return string
 function M.statuscolumn()
