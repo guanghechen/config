@@ -1,4 +1,3 @@
-local Subscriber = require("eve.collection.subscriber")
 local state = require("eve.state")
 
 ---! https://github.com/nvim-treesitter/nvim-treesitter-context
@@ -20,17 +19,13 @@ return {
     local tsc = require("treesitter-context")
     tsc.setup(opts)
 
-    state.flight.treesitter_context:subscribe(
-      Subscriber.new({
-        on_next = function(flag)
-          if flag then
-            tsc.enable()
-          else
-            tsc.disable()
-          end
-        end,
-      }),
-      false
-    )
+    state.observe({ state.flight.treesitter_context }, function()
+      local flag = state.flight.treesitter_context:snapshot() ---@type boolean
+      if flag then
+        tsc.enable()
+      else
+        tsc.disable()
+      end
+    end, false)
   end,
 }

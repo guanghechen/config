@@ -271,14 +271,10 @@ return {
     end
 
     require("avante").setup(opts)
-    state.flight.ai_provider:subscribe(
-      Subscriber.new({
-        on_next = function(ai_provider)
-          local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot"
-          vim.cmd("AvanteSwitchProvider " .. provider_name)
-        end,
-      }),
-      true
-    )
+    state.observe({ state.flight.ai_provider }, function()
+      local ai_provider = state.flight.ai_provider:snapshot()
+      local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot"
+      vim.cmd("AvanteSwitchProvider " .. provider_name)
+    end, true)
   end,
 }

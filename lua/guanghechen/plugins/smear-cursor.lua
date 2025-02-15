@@ -1,6 +1,5 @@
 local ft = require("eve.constant.filetype")
 local state = require("eve.state")
-local Subscriber = require("eve.collection.subscriber")
 
 return {
   "smear-cursor.nvim",
@@ -16,25 +15,21 @@ return {
     local smear = require("smear_cursor")
     smear.setup(opts)
 
-    state.flight.smear_cursor:subscribe(
-      Subscriber.new({
-        on_next = function(flag)
-          smear.enabled = flag
+    state.observe({ state.flight.smear_cursor }, function()
+      local flag = state.flight.smear_cursor:snapshot() ---@type boolean
+      smear.enabled = flag
 
-          vim.defer_fn(function()
-            if not flag then
-              local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-              for _, bufnr in ipairs(bufnrs) do
-                local filetype = vim.bo[bufnr].filetype ---@type string
-                if filetype == ft.SMEAR_CURSOR then
-                  vim.api.nvim_buf_delete(bufnr, { force = true })
-                end
-              end
+      vim.defer_fn(function()
+        if not flag then
+          local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+          for _, bufnr in ipairs(bufnrs) do
+            local filetype = vim.bo[bufnr].filetype ---@type string
+            if filetype == ft.SMEAR_CURSOR then
+              vim.api.nvim_buf_delete(bufnr, { force = true })
             end
-          end, 200)
-        end,
-      }),
-      false
-    )
+          end
+        end
+      end, 200)
+    end, false)
   end,
 }

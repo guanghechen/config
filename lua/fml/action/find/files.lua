@@ -46,26 +46,22 @@ local function get_select()
 
     local state_find_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
 
-    state.select.find_file_scope:subscribe(
-      Subscriber.new({
-        on_next = function()
-          local bufnr = command.context_bufnr() ---@type integer|nil
+    state.observe({ state.select.find_file_scope }, function()
+      local bufnr = command.context_bufnr() ---@type integer|nil
 
-          ---@type string
-          local current_buf_dirpath = bufnr ~= nil
-              and editor.is_buf_valid(bufnr)
-              and path.dirname(vim.api.nvim_buf_get_name(bufnr))
-            or path.cwd()
+      ---@type string
+      local current_buf_dirpath = bufnr ~= nil
+          and editor.is_buf_valid(bufnr)
+          and path.dirname(vim.api.nvim_buf_get_name(bufnr))
+        or path.cwd()
 
-          local current_find_cwd = state_find_cwd:snapshot() ---@type string
-          local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
-          if current_find_cwd ~= next_find_cwd then
-            state_find_cwd:next(next_find_cwd)
-          end
-        end,
-      }),
-      true
-    )
+      local current_find_cwd = state_find_cwd:snapshot() ---@type string
+      local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
+      if current_find_cwd ~= next_find_cwd then
+        state_find_cwd:next(next_find_cwd)
+      end
+    end, true)
+
     state.observe({
       state.select.find_file.excludes,
       state.select.find_file.flag_case_sensitive,

@@ -92,17 +92,13 @@ function M.select(items, opts, on_choice)
 end
 
 local original_select = vim.ui.select
-state.flight.dressing_select:subscribe(
-  Subscriber.new({
-    on_next = function(flag)
-      if flag then
-        vim.ui.select = M.select
-      else
-        vim.ui.select = original_select
-      end
-    end,
-  }),
-  false
-)
+state.observe({ state.flight.dressing_select }, function()
+  local flag = state.flight.dressing_select:snapshot() ---@type boolean
+  if flag then
+    vim.ui.select = M.select
+  else
+    vim.ui.select = original_select
+  end
+end, false)
 
 return M

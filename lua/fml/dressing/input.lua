@@ -147,17 +147,13 @@ function M.input(opts, on_confirm)
 end
 
 local original_input = vim.ui.input
-state.flight.dressing_input:subscribe(
-  Subscriber.new({
-    on_next = function(flag)
-      if flag then
-        vim.ui.input = M.input
-      else
-        vim.ui.input = original_input
-      end
-    end,
-  }),
-  false
-)
+state.observe({ state.flight.dressing_input }, function()
+  local flag = state.flight.dressing_input:snapshot() ---@type boolean
+  if flag then
+    vim.ui.input = M.input
+  else
+    vim.ui.input = original_input
+  end
+end, false)
 
 return M

@@ -41,14 +41,9 @@ local _last_preview_data = nil ---@type fml.action.search.files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.builtin.oxi.search.IResult|nil
 
-state.search_file.search_paths:subscribe(
-  Subscriber.new({
-    on_next = function()
-      context.refresh_title()
-    end,
-  }),
-  true
-)
+state.observe({ state.search_file.search_paths }, function()
+  context.refresh_title()
+end, true)
 
 state.observe({
   state.select.search_file.flag_case_sensitive,
