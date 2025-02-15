@@ -1,11 +1,11 @@
 local __module_name__ = "guanghechen.lsp.common" ---@type string
 
 local env = require("eve.builtin.env")
-local fs = require("eve.builtin.fs")
 local fn = require("eve.builtin.fn")
+local fs = require("eve.builtin.fs")
+local lsp = require("eve.builtin.lsp")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-local lsp = require("eve.module.lsp")
 
 local command = require("eve.command")
 

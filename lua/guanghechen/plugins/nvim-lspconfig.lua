@@ -1,6 +1,5 @@
+local lsp = require("eve.builtin.lsp")
 local icons = require("eve.constant.icon")
-local lsp = require("eve.module.lsp")
-
 local state = require("eve.state")
 
 local severity = vim.diagnostic.severity

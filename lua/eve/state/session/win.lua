@@ -1,10 +1,10 @@
 local __module_name__ = "eve.state.session.win"
 
+local lsp = require("eve.builtin.lsp")
 local reporter = require("eve.builtin.reporter")
 local AdvanceHistory = require("eve.collection.history_advance")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
-local lsp = require("eve.module.lsp")
 
 local state_status = require("eve.state.session.status")
 
