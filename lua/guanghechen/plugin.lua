@@ -66,6 +66,7 @@ local raw_specs = {
   { name = "mason.nvim", main = "mason", cond = conds.not_vscode },
   { name = "mason-lspconfig.nvim", main = "mason-lspconfig", cond = conds.not_vscode },
   { name = "mason-nvim-dap", main = "mason-nvim-dap", cond = conds.not_vscode },
+  { name = "mini.ai", main = "mini.ai", cond = conds.common },
   { name = "mini.hipatterns", main = "mini.hipatterns", cond = conds.not_vscode },
   { name = "mini.icons", main = "mini.icons", cond = conds.not_vscode },
   { name = "mini.indentscope", main = "mini.indentscope", cond = conds.not_vscode },
