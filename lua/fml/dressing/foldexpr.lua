@@ -1,4 +1,4 @@
----@class eve.module.foldexpr
+---@class fml.dressing.foldexpr
 local M = {}
 
 ---@return string
