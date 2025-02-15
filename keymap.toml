@@ -11,8 +11,8 @@ keymap = [
   { on = "<S-PageDown>",      run = "arrow 50%",                                      desc = "move: cursor down half page" },
   { on = "<PageUp>",          run = "arrow -100%",                                    desc = "move: cursor up one page" },
   { on = "<PageDown>",        run = "arrow 100%",                                     desc = "move: cursor down one page" },
-  { on = ["g", "g"],          run = "arrow -99999999",                                desc = "move: cursor to the top" },
-  { on = "G",                 run = "arrow 99999999",                                 desc = "move: cursor to the bottom" },
+  { on = ["g", "g"],          run = "arrow top",                                      desc = "move: cursor to the top" },
+  { on = "G",                 run = "arrow bot",                                      desc = "move: cursor to the bottom" },
 
   { on = "<Left>",            run = "leave",                                          desc = "Go back to the parent directory" },
   { on = "<Right>",           run = "enter",                                          desc = "Enter the child directory" },
@@ -139,6 +139,6 @@ keymap = [
 
 [help]
 prepend_keymap = [
-  { on = ["g", "g"],          run = "arrow -99999999",                                desc = "move: cursor to the top" },
-  { on = "G",                 run = "arrow 99999999",                                 desc = "move: cursor to the bottom" },
+  { on = ["g", "g"],          run = "arrow top",                                      desc = "move: cursor to the top" },
+  { on = "G",                 run = "arrow bot",                                      desc = "move: cursor to the bottom" },
 ]
