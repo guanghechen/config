@@ -61,7 +61,6 @@ vim.opt.shiftround = true -- Round indent
 vim.opt.shiftwidth = 2
 vim.opt.showmode = false -- Dont show mode since we have a statusline
 vim.opt.sidescrolloff = 8 -- Columns of context
-vim.opt.signcolumn = "yes"
 vim.opt.smartindent = true -- Insert indents automatically
 vim.opt.smarttab = true
 vim.opt.smoothscroll = true

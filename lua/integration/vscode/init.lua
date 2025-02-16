@@ -1,0 +1,16 @@
+_G.eve = require("eve")
+eve.setup_patches()
+eve.setup_workspace()
+require("eve.option")
+require("eve.autocmd")
+require("eve.autocmd-filetype")
+
+eve.setup_state()
+require("eve.autocmd-state")
+require("eve.keymap")
+
+require("integration.vscode.autocmd")
+require("integration.vscode.option")
+require("integration.vscode.keymap")
+require("integration.vscode.plugin")
+pcall(require, "integration.local")
