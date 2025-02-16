@@ -350,6 +350,58 @@ function M.is_win_floating(winnr)
   return config.relative ~= nil and config.relative ~= ""
 end
 
+---@param modes                         string[]
+---@param keys                          string|string[]
+---@param cmd                           string|fun(): string|nil
+---@param desc                          ?string
+---@param expr                          ?boolean
+---@return nil
+function M.make_keys(modes, keys, cmd, desc, expr)
+  ---@type vim.keymap.set.Opts
+  local opts = {
+    noremap = true,
+    silent = true,
+    nowait = true,
+    desc = desc,
+    expr = expr,
+  }
+
+  if type(keys) == "string" then
+    vim.keymap.set(modes, keys, cmd, opts)
+  else
+    for _, key in ipairs(keys) do
+      vim.keymap.set(modes, key, cmd, opts)
+    end
+  end
+end
+
+---@param modes                         string[]
+---@param keys                          string|string[]
+---@param definition                    eve.command.IDefinition|eve.command.IDefinitionWithCandidates
+---@return nil
+function M.make_shortcut(modes, keys, definition)
+  ---@return nil
+  local function callback()
+    vim.cmd(definition.uuid)
+  end
+
+  ---@type vim.keymap.set.Opts
+  local opts = {
+    noremap = true,
+    silent = true,
+    nowait = true,
+    desc = definition.desc,
+  }
+
+  if type(keys) == "string" then
+    vim.keymap.set(modes, keys, callback, opts)
+  else
+    for _, key in ipairs(keys) do
+      vim.keymap.set(modes, key, callback, opts)
+    end
+  end
+end
+
 ---@param hlname                        string
 ---@return string
 function M.make_bg_transparency(hlname)

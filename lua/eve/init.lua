@@ -50,6 +50,11 @@ function M.setup_workspace()
       vim.api.nvim_set_current_dir(A)
     end
   end
+
+  ---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
+  vim.schedule(function()
+    vim.cmd("clearjumps")
+  end)
 end
 
 ---@param storage                       eve.state.storage|nil

@@ -2,11 +2,6 @@ local env = require("eve.builtin.env")
 local fn = require("eve.builtin.fn")
 local ft = require("eve.constant.filetype")
 
----! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
-vim.schedule(function()
-  vim.cmd("clearjumps")
-end)
-
 if env.IS_MAC then
   vim.defer_fn(function()
     local im = require("eve.builtin.im")
@@ -24,19 +19,19 @@ if env.IS_MAC then
   end, 500)
 end
 
----! Auto create dirs when saving a file, in case some intermediate directory does not exist
-vim.api.nvim_create_autocmd("BufWritePre", {
-  group = fn.augroup("auto_create_dirs"),
-  callback = function(event)
-    if event.match:match("^%w%w+:[\\/][\\/]") then
-      return
-    end
-    local file = vim.uv.fs_realpath(event.match) or event.match
-    vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
-  end,
-})
-
 if not vim.g.vscode then
+  ---! Auto create dirs when saving a file, in case some intermediate directory does not exist
+  vim.api.nvim_create_autocmd("BufWritePre", {
+    group = fn.augroup("auto_create_dirs"),
+    callback = function(event)
+      if event.match:match("^%w%w+:[\\/][\\/]") then
+        return
+      end
+      local file = vim.uv.fs_realpath(event.match) or event.match
+      vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
+    end,
+  })
+
   ---! Go to last loc when opening a buffer
   vim.api.nvim_create_autocmd("BufReadPost", {
     group = fn.augroup("goto_last_location"),

@@ -23,7 +23,7 @@ return {
   opts = {
     auto_install = true,
     highlight = {
-      enable = true,
+      enable = not vim.g.vscode,
       use_languagetree = true,
       additional_vim_regex_highlighting = false,
       ---@diagnostic disable-next-line: unused-local
