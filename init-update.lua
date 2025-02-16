@@ -7,7 +7,6 @@ local default_storage = eve.get_default_storage() ---@type eve.state.storage
 local storage = { editor = default_storage.editor, workspace = default_storage.workspace } ---@type eve.state.storage
 eve.setup_state(storage)
 
-require("ghc.option")
 require("ghc.plugin")
 
 -- vim.api.nvim_create_autocmd("User", {
