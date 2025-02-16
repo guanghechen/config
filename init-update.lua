@@ -7,13 +7,13 @@ local default_storage = eve.get_default_storage() ---@type eve.state.storage
 local storage = { editor = default_storage.editor, workspace = default_storage.workspace } ---@type eve.state.storage
 eve.setup_state(storage)
 
-require("guanghechen.option")
-require("guanghechen.plugin")
+require("ghc.option")
+require("ghc.plugin")
 
 -- vim.api.nvim_create_autocmd("User", {
 --   pattern = "LazyDone",
 --   callback = function()
---     require("guanghechen.action.mason").install_all(false, function()
+--     require("ghc.action.mason").install_all(false, function()
 --       vim.cmd("qa")
 --     end)
 --   end,

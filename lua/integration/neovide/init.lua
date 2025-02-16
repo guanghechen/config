@@ -25,13 +25,13 @@ require("fml.dressing.nvimbar.winline")
 require("fml.dressing.select")
 require("fml.dressing.winsep")
 
-require("guanghechen.option")
-require("guanghechen.command")
+require("ghc.option")
+require("ghc.command")
 require("integration.neovide.option")
 require("integration.neovide.autocmd")
 require("integration.neovide.keymap")
 
-require("guanghechen.plugin")
+require("ghc.plugin")
 require("integration.neovide.plugin")
 pcall(require, "integration.local")
 

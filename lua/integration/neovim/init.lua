@@ -25,9 +25,9 @@ require("fml.dressing.nvimbar.winline")
 require("fml.dressing.select")
 require("fml.dressing.winsep")
 
-require("guanghechen.option")
-require("guanghechen.command")
-require("guanghechen.plugin")
+require("ghc.option")
+require("ghc.command")
+require("ghc.plugin")
 pcall(require, "integration.local")
 
 ---! Reload session if not specify file and current directory is a git repository.

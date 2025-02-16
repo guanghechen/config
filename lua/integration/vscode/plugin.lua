@@ -1,1 +1,1 @@
-require("guanghechen.plugin")
+require("ghc.plugin")
