@@ -36,70 +36,72 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   end,
 })
 
----! Go to last loc when opening a buffer
-vim.api.nvim_create_autocmd("BufReadPost", {
-  group = fn.augroup("goto_last_location"),
-  callback = function(event)
-    local bufnr = event.buf ---@type integer
-    if vim.b[bufnr].eve_last_loc then
-      return
-    end
-    vim.b[bufnr].eve_last_loc = true
-
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    if ft.is_plain_file(filetype) then
-      local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
-      local count = vim.api.nvim_buf_line_count(bufnr)
-      if mark[1] > 0 and mark[1] <= count then
-        pcall(vim.api.nvim_win_set_cursor, 0, mark)
+if not vim.g.vscode then
+  ---! Go to last loc when opening a buffer
+  vim.api.nvim_create_autocmd("BufReadPost", {
+    group = fn.augroup("goto_last_location"),
+    callback = function(event)
+      local bufnr = event.buf ---@type integer
+      if vim.b[bufnr].eve_last_loc then
+        return
       end
-    end
-  end,
-})
+      vim.b[bufnr].eve_last_loc = true
 
----! Close some filetypes with q
-vim.api.nvim_create_autocmd("FileType", {
-  group = fn.augroup("close_filetypes_with_q"),
-  pattern = ft.get_quitable_with_q_filetypes(),
-  callback = function(event)
-    local bufnr = event.buf ---@type integer|nil
-    if bufnr ~= nil then
-      vim.bo[bufnr].buflisted = false
-      local function action()
-        vim.cmd.close()
-        pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+      local filetype = vim.bo[bufnr].filetype ---@type string
+      if ft.is_plain_file(filetype) then
+        local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
+        local count = vim.api.nvim_buf_line_count(bufnr)
+        if mark[1] > 0 and mark[1] <= count then
+          pcall(vim.api.nvim_win_set_cursor, 0, mark)
+        end
       end
-      vim.keymap.set("n", "q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
-    end
-  end,
-})
+    end,
+  })
 
----! Disable autopairs
-vim.api.nvim_create_autocmd("FileType", {
-  group = fn.augroup("close_filetypes_with_q"),
-  pattern = ft.get_disable_autopairs_filetypes(),
-  callback = function(event)
-    local bufnr = event.buf ---@type integer|nil
-    if bufnr ~= nil then
-      vim.b[bufnr].minipairs_disable = true
-    end
-  end,
-})
+  ---! Close some filetypes with q
+  vim.api.nvim_create_autocmd("FileType", {
+    group = fn.augroup("close_filetypes_with_q"),
+    pattern = ft.get_quitable_with_q_filetypes(),
+    callback = function(event)
+      local bufnr = event.buf ---@type integer|nil
+      if bufnr ~= nil then
+        vim.bo[bufnr].buflisted = false
+        local function action()
+          vim.cmd.close()
+          pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+        end
+        vim.keymap.set("n", "q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
+      end
+    end,
+  })
 
----! Highlight on yank.
-vim.api.nvim_create_autocmd("TextYankPost", {
-  group = fn.augroup("highlight_on_yank"),
-  callback = function()
-    vim.highlight.on_yank()
-  end,
-})
+  ---! Disable autopairs
+  vim.api.nvim_create_autocmd("FileType", {
+    group = fn.augroup("close_filetypes_with_q"),
+    pattern = ft.get_disable_autopairs_filetypes(),
+    callback = function(event)
+      local bufnr = event.buf ---@type integer|nil
+      if bufnr ~= nil then
+        vim.b[bufnr].minipairs_disable = true
+      end
+    end,
+  })
 
----! Check if we need to reload the file when it changed
-vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
-  group = fn.augroup("check_file_change"),
-  callback = function()
-    if vim.o.buftype ~= "nofile" then
-      vim.cmd.checktime()
-    end
-  end,
-})
+  ---! Highlight on yank.
+  vim.api.nvim_create_autocmd("TextYankPost", {
+    group = fn.augroup("highlight_on_yank"),
+    callback = function()
+      vim.highlight.on_yank()
+    end,
+  })
+
+  ---! Check if we need to reload the file when it changed
+  vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
+    group = fn.augroup("check_file_change"),
+    callback = function()
+      if vim.o.buftype ~= "nofile" then
+        vim.cmd.checktime()
+      end
+    end,
+  })
+end

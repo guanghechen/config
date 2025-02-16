@@ -24,7 +24,6 @@ end
 ---@return nil
 function M.setup_patches()
   vim.hl = vim.hl or vim.highlight --- vim.hl has been renamed to vim.highlight
-
   table.unpack = table.unpack or unpack --- table.unpack is introduced in Lua 5.2
 end
 
