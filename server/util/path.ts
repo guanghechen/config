@@ -7,10 +7,8 @@ const YOZORA_WORKSPACE_ENVS: Array<[string, string]> = Object.entries(process.en
   .map(([key, val]) => [key, resolveRealFilepath(val!)]) as Array<[string, string]>
 
 const platform: 'win' | 'wsl' | 'mac' | 'nix' | 'unknown' = (() => {
-  if (os.platform() === 'win32') {
-    if (os.release().toLowerCase().includes('microsoft')) return 'wsl'
-    return 'win'
-  }
+  if (os.release().toLowerCase().includes('microsoft')) return 'wsl'
+  if (os.platform() === 'win32') return 'win'
   if (os.platform() === 'darwin') return 'mac'
   if (os.platform() === 'linux') return 'nix'
   return 'unknown'
