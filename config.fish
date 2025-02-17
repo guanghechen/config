@@ -2,9 +2,13 @@ fish_vi_key_bindings
 
 ## Local
 #
+# set -gx f_vscode_settings
 # set -gx f_windows_terminal_settings
 # set -gx AZURE_OPENAI_ENDPOINT
 # set -gx AZURE_OPENAI_API_KEY
+#
+# set -gx YOZORA_WORKSPACE_BLOCK
+# set -gx YOZORA_WORKSPACE_NOTE
 #
 
 
