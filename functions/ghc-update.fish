@@ -1,5 +1,5 @@
 function ghc-update
-    set primary_configs btop fish fzf guanghechen helix lazygit lsd nvim ripgrep tmux yazi
+    set primary_configs btop fish fzf guanghechen helix lazygit lsd nvim pm2 ripgrep tmux yazi yozora
     set develop_configs alacritty kitty neovide nvim-nvchad
     set base_path "$HOME/.config"
 
