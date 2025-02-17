@@ -15,7 +15,7 @@ export const F_VSCODE_SETTINGS = fs.existsSync(__F_VSCODE_SETTINGS) ? __F_VSCODE
 export const platform = (() => {
   if (os.release().toLowerCase().includes('microsoft')) return 'wsl'
   if (os.platform() === 'win32') return 'win'
-  if (os.platform() === 'darwin') return 'mac'
+  if (os.platform() === 'darwin') return 'osx'
   if (os.platform() === 'linux') return 'nix'
   return 'unknown'
 })()

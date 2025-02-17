@@ -81,12 +81,12 @@
     "command": "workbench.action.decreaseViewSize"
   },
   {
-    "key": "alt+oem_comma",
+    "key": "alt+,",
     "command": "workbench.action.terminal.focusPrevious",
     "when": "terminalFocus"
   },
   {
-    "key": "alt+oem_period",
+    "key": "alt+.",
     "command": "workbench.action.terminal.focusNext",
     "when": "terminalFocus"
   },

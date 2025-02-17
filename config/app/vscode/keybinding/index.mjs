@@ -11,6 +11,7 @@ const ranks = {
   super: 10,
   win: 10,
   alt: 8,
+  option: 8,
   ctrl: 5,
   shift: 3,
   left: 2,
@@ -21,41 +22,44 @@ const ranks = {
   enter: 2,
   oem_comma: 2,
   oem_period: 2,
-  f1: 2,
-  f2: 2,
-  f3: 2,
-  f4: 2,
-  f5: 2,
-  f6: 2,
-  f7: 2,
-  f8: 2,
-  f9: 2,
-  f10: 2,
-  f11: 2,
-  f12: 2,
-  f13: 2,
-  f14: 2,
-  f15: 2,
-  f16: 2,
-  f17: 2,
-  f18: 2,
-  f19: 2,
-  f20: 2,
-  f21: 2,
-  f22: 2,
-  f23: 2,
-  f24: 2,
+  f1: 1.9,
+  f2: 1.9,
+  f3: 1.9,
+  f4: 1.9,
+  f5: 1.9,
+  f6: 1.9,
+  f7: 1.9,
+  f8: 1.9,
+  f9: 1.9,
+  f10: 1.8,
+  f11: 1.8,
+  f12: 1.8,
+  f13: 1.8,
+  f14: 1.8,
+  f15: 1.8,
+  f16: 1.8,
+  f17: 1.8,
+  f18: 1.8,
+  f19: 1.8,
+  f20: 1.7,
+  f21: 1.7,
+  f22: 1.7,
+  f23: 1.7,
+  f24: 1.7,
 }
 
 export function formatKey(key) {
   return key
-    .split('+')
-    .sort((x, y) => {
-      const r1 = ranks[x] ?? 1
-      const r2 = ranks[y] ?? 1
-      return r2 - r1
-    })
-    .join('+')
+    .split(/\s+/g)
+    .filter(x => !!x)
+    .map(text => text.split('+')
+      .sort((x, y) => {
+        const r1 = ranks[x] ?? 1
+        const r2 = ranks[y] ?? 1
+        return r2 - r1
+      })
+      .join('+')
+    ).join(' ')
 }
 
 export function sortKeybindings(keybindings) {
@@ -102,7 +106,12 @@ export function resolve() {
 
   const resolved_customize = sortKeybindings(raw_customize)
   const resolved_unbind = sortKeybindings(raw_unbind)
-  const resolved_items = [...resolved_customize, ...resolved_unbind]
+    .filter(bind => resolved_customize.every(custom =>
+      custom.key !== bind.key
+      || custom.when !== bind.when
+      || custom.command !== '-' + bind.command)
+    )
+  const resolved_items = [...resolved_unbind, ...resolved_customize]
 
   const content_customize = JSON.stringify(resolved_customize, null, 2) + '\n'
   const content_unbind = JSON.stringify(resolved_unbind, null, 2) + '\n'
