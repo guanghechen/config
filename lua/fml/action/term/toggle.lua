@@ -14,6 +14,7 @@ local terminal_map = {} ---@type table<string, fml.ux.ITerminal>
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 ---@field public permanent              ?boolean
+---@field public title                  ?string
 ---@field public on_exit                ?fun(): nil
 
 ---@class fml.action.term.toggle.IParams : fml.action.term.IProps
@@ -30,6 +31,7 @@ function M.new(props)
   local cwd = props.cwd or path.cwd() ---@type string
   local env = props.env ---@type table<string, string>|nil
   local permanent = props.permanent ---@type boolean|nil
+  local title = props.title ---@type string|nil
 
   local terminal = terminal_map[name] ---@type fml.ux.ITerminal|nil
   if terminal ~= nil then
@@ -48,6 +50,7 @@ function M.new(props)
     cwd = cwd,
     env = env,
     permanent = permanent,
+    title = title,
   })
   terminal_map[name] = terminal
 
@@ -68,6 +71,7 @@ function M.toggle(params)
       cmd = params.cmd,
       cwd = params.cwd,
       env = params.env,
+      title = params.title,
       on_exit = params.on_exit,
     })
     terminal:toggle()

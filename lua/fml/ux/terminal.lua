@@ -15,6 +15,7 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
 }, ",")
 
 ---@class fml.ux.ITerminal : eve.t.ux.IWidget
+---@field public title                  string|nil
 ---@field public get_winnr              fun(self: fml.ux.ITerminal): integer|nil
 ---@field public get_bufnr              fun(self: fml.ux.ITerminal): integer|nil
 ---@field public is_visible             fun(self: fml.ux.ITerminal): boolean
@@ -54,6 +55,7 @@ M.__index = M
 ---@field public env                    ?table<string, string>
 ---@field public keymaps                ?eve.t.IKeymap[]
 ---@field public permanent              ?boolean
+---@field public title                  string|nil
 ---@field public on_exit                ?fun(): nil
 
 ---@param props                         fml.ux.terminal.IProps
@@ -68,7 +70,9 @@ function M.new(props)
   local cmd_cwd = props.cwd or path.cwd() ---@type string
   local cmd_env = props.env ---@type table<string, string>|nil
   local permanent = not not props.permanent ---@type boolean
+  local title = props.title ---@type string|nil
 
+  self.title = title
   self._bufnr = nil
   self._cmd = cmd
   self._cmd_cwd = cmd_cwd
@@ -119,7 +123,8 @@ function M:create_win_as_needed()
     row = row,
     col = col,
     focusable = true,
-    title = "",
+    title = self.title and " " .. self.title .. " " or nil,
+    title_pos = self.title and "center" or nil,
     border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
     style = "minimal",
   }
@@ -265,6 +270,8 @@ end
 ---@return nil
 function M:update(props)
   local cmd = shell.format_command(props.cmd) ---@type string
+
+  self.title = props.title ---@type string|nil
   self._cmd = cmd ---@type string
   self._cmd_cwd = props.cwd or self._cmd_cwd ---@type string
   self._cmd_env = props.env or self._cmd_env ---@type table<string, string>|nil
