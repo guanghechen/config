@@ -7,7 +7,7 @@ if (F_WINDOWS_TERMINAL_SETTINGS) {
   const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
   const encoding = "utf8";
 
-  const customized_filepath = path.join(__dirname, "windows-terminal.json");
+  const customized_filepath = path.join(__dirname, "settings.json");
   const customized_content = fs.readFileSync(customized_filepath, encoding);
   const customized = JSON.parse(customized_content);
 
