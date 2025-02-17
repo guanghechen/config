@@ -59,3 +59,8 @@ printf "\n\e[32m  [setup nvim] done.\e[0m\n"
 printf "\n\e[32m  [setup theme] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/theme.sh
 printf "\n\e[32m  [setup theme] done.\e[0m\n"
+
+## Setup apps
+printf "\n\e[32m  [setup app] preparing...\e[0m\n"
+source ~/.config/guanghechen/nix/setup/app.sh
+printf "\n\e[32m  [setup app] done.\e[0m\n"
