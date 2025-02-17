@@ -6,6 +6,7 @@ import { F_VSCODE_SETTINGS, platform } from '../../../_shared/env.mjs'
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
 const ranks = {
+  cmd: 10,
   command: 10,
   super: 10,
   win: 10,
@@ -89,9 +90,12 @@ export function sortKeybindings(keybindings) {
 export function resolve() {
   const encoding = 'utf8'
   const middle = platform === 'wsl' ? 'win' : platform
-  const fp_customize = path.join(__dirname, middle, 'customize.json')
-  const fp_unbind = path.join(__dirname, middle, 'unbind.json')
-  const fp_keybindings = path.join(__dirname, middle, 'keybindings.json')
+  const CONFIG_DIR = path.join(__dirname, middle)
+  if (!fs.existsSync(CONFIG_DIR)) return
+
+  const fp_customize = path.join(CONFIG_DIR, 'customize.json')
+  const fp_unbind = path.join(CONFIG_DIR, 'unbind.json')
+  const fp_keybindings = path.join(CONFIG_DIR, 'keybindings.json')
 
   const raw_customize = JSON.parse(fs.readFileSync(fp_customize, encoding))
   const raw_unbind = JSON.parse(fs.readFileSync(fp_unbind, encoding))
