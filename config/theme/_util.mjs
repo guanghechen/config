@@ -1,56 +1,9 @@
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, statSync, utimesSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import {
-  HOME_CONFIG,
-  HOME_THEME_SCHEME,
-  HOME_THEME_APP,
-  cwd,
-  themes,
-} from "./_env.mjs";
-
-
-/**
- * @param {string} hex  the hex color
- * @return {string} the rgb color
- */
-export function hex2rgb(hex) {
-  const [_, r, g, b] = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex)
-  const rr = Number.parseInt(r, 16)
-  const gg = Number.parseInt(g, 16)
-  const bb = Number.parseInt(b, 16)
-  return `rgb(${rr}, ${gg}, ${bb})`;
-}
-
-/**
- * @param {string} hex    the hex color
- * @param {number} alpha  the alpha value
- * @return {string} the rgb color
- */
-export function hex2rgba(hex, alpha) {
-  const [_, r, g, b] = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex)
-  const rr = Number.parseInt(r, 16)
-  const gg = Number.parseInt(g, 16)
-  const bb = Number.parseInt(b, 16)
-  return `rgba(${rr}, ${gg}, ${bb}, ${alpha})`;
-}
-
-/**
- * @param {string|null|undefined} filepath
- * @return {boolean}
- */
-export function is_directory(filepath) {
-  return !!filepath && existsSync(filepath) && statSync(filepath).isDirectory();
-}
-
-/**
- * @param {string|null|undefined} filepath
- * @return {boolean}
- */
-export function is_file(filepath) {
-  return !!filepath && existsSync(filepath) && statSync(filepath).isFile();
-}
+import { XDG_CONFIG_HOME } from '../_shared/env.mjs';
+import { HOME_THEME_SCHEME, HOME_THEME_APP, cwd, themes } from "./_env.mjs";
 
 /**
  * @param {string}                            template
@@ -71,17 +24,6 @@ export async function render_template(template, scheme) {
     (_, key) => data[key] || `{{${key}}}`,
   );
   return content;
-}
-
-export async function touch(filepath) {
-  if (existsSync(filepath)) {
-    try {
-      const now = new Date();
-      utimesSync(filepath, now, now);
-    } catch (error) {
-      console.error("[touch] Error touching file:", { filepath, error });
-    }
-  }
 }
 
 export async function safe_exec(cmd, args, extendedEnv) {
@@ -170,7 +112,7 @@ export async function apply_theme_per_app(app, scheme) {
     const template = await fs.readFile(template_filepath, "utf8");
     const content = await app.render(app, template, scheme);
 
-    const theme_filepath = path.resolve(HOME_CONFIG, app.name, app.local);
+    const theme_filepath = path.resolve(XDG_CONFIG_HOME, app.name, app.local);
     mkdirSync(path.dirname(theme_filepath), { recursive: true });
     await fs.writeFile(theme_filepath, content, "utf8");
   }
@@ -192,7 +134,7 @@ export async function gen_themes_per_app(app) {
   }
   const template = await fs.readFile(template_filepath, "utf8");
 
-  const THEME_HOME = path.join(HOME_CONFIG, app.name, app.themes);
+  const THEME_HOME = path.join(XDG_CONFIG_HOME, app.name, app.themes);
   const tasks_gen_theme = themes.map((theme) => gen_theme(theme));
   await Promise.allSettled(tasks_gen_theme);
 

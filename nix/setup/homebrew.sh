@@ -20,7 +20,7 @@ brew install nvim fd git-delta lazygit ripgrep
 ### Install tmux
 brew install tmux
 # printf "\n\e[34m  [setup homebrew] installing tmux...\e[0m\n"
-# brew install $HOME/.config/guanghechen/config/homebrew/tmux.rb
+# brew install $HOME/.config/guanghechen/config/app/homebrew/tmux.rb
 # brew pin tmux
 
 ### Install yazi

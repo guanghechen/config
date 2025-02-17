@@ -1,13 +1,8 @@
 import fs from 'node:fs/promises'
 import path from "node:path";
-import { HOME_CONFIG } from "./_env.mjs";
-import {
-  is_directory,
-  is_file,
-  render_template,
-  touch,
-  safe_exec,
-} from "./_util.mjs";
+import { XDG_CONFIG_HOME } from '../_shared/env.mjs';
+import { is_directory, is_file, touch } from '../_shared/util.mjs';
+import { render_template, safe_exec } from "./_util.mjs";
 
 /** @type {import("./_env.mjs").IAppConfig[]} */
 export const apps = [
@@ -16,11 +11,11 @@ export const apps = [
     themes: "theme/",
     extname: ".toml",
     local: "local/theme.toml",
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app) => {
       const main_config_filepath = path.join(
-        HOME_CONFIG,
+        XDG_CONFIG_HOME,
         app.name,
         "alacritty.toml",
       );
@@ -32,16 +27,16 @@ export const apps = [
     themes: "theme/",
     extname: "",
     local: "local/theme",
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
-      const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
+      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
 
       // const backgroundImagePath =
       //   scheme.variant === "light"
-      //     ? path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
-      //     : path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
+      //     ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
+      //     : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
       //
       // content += '\n\n' + `background_image = ${backgroundImagePath}\n`
       await fs.writeFile(theme_filepath, content, 'utf8')
@@ -52,16 +47,16 @@ export const apps = [
     themes: "theme/",
     extname: ".conf",
     local: "local/theme.conf",
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
-      const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
+      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
 
       const backgroundImagePath =
         scheme.variant === "light"
-          ? path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
-          : path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
+          ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
+          : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
       content += '\n\n' + `background_image ${backgroundImagePath}\n`
       await fs.writeFile(theme_filepath, content, 'utf8')
     },
@@ -71,7 +66,7 @@ export const apps = [
     themes: "theme/",
     extname: ".yml",
     local: "local/theme.yml",
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
   },
   {
@@ -79,11 +74,11 @@ export const apps = [
     themes: "lua/eve/constant/theme/",
     extname: ".lua",
     local: null,
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(
-        HOME_CONFIG,
+        XDG_CONFIG_HOME,
         app.name,
         "init-theme.lua",
       );
@@ -101,11 +96,11 @@ export const apps = [
     themes: "lua/eve/constant/theme/",
     extname: ".lua",
     local: null,
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(
-        HOME_CONFIG,
+        XDG_CONFIG_HOME,
         app.name,
         "init-theme.lua",
       );
@@ -124,12 +119,12 @@ export const apps = [
     themes: "theme/",
     extname: ".tmux.conf",
     local: "local/theme.tmux.conf",
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app) => {
       if (process.env.TMUX) {
         const script_filepath = path.join(
-          HOME_CONFIG,
+          XDG_CONFIG_HOME,
           app.name,
           "script/theme-reload.sh",
         );
@@ -142,41 +137,41 @@ export const apps = [
     themes: "theme/",
     extname: ".lua",
     local: "local/theme.lua",
-    active: (app) => is_directory(path.join(HOME_CONFIG, app.name)),
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const backgroundImagePath =
         scheme.variant === "light"
-          ? path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
-          : path.resolve(HOME_CONFIG, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
+          ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
+          : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
 
-      const theme_filepath = path.join(HOME_CONFIG, app.name, app.local)
+      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
 
       content = content.replace('return config', `
 config.background ={
-  {
-    source = { Color = "${scheme.palette.bg0}" },
-    height = "100%",
-    width = "100%",
-  },
-  {
-    source = { File = '${backgroundImagePath}' },
-		attachment = "Fixed",
-		height = "Contain",
-		width = "100%",
-		opacity = 0.9,
-		repeat_x = "Mirror",
-		repeat_y = "NoRepeat",
-		horizontal_align = "Right",
-		vertical_align = "Middle",
-  },
-  {
-    source = { Color = "${scheme.palette.bg0}" },
-    height = "100%",
-    width = "100%",
-    opacity = 0.9,
-  },
+{
+source = { Color = "${scheme.palette.bg0}" },
+height = "100%",
+width = "100%",
+},
+{
+source = { File = '${backgroundImagePath}' },
+attachment = "Fixed",
+height = "Contain",
+width = "100%",
+opacity = 0.9,
+repeat_x = "Mirror",
+repeat_y = "NoRepeat",
+horizontal_align = "Right",
+vertical_align = "Middle",
+},
+{
+source = { Color = "${scheme.palette.bg0}" },
+height = "100%",
+width = "100%",
+opacity = 0.9,
+},
 }
 
 return config
