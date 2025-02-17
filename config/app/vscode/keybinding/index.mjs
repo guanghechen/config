@@ -17,6 +17,9 @@ const ranks = {
   right: 2,
   up: 2,
   home: 2,
+  enter: 2,
+  oem_comma: 2,
+  oem_period: 2,
   f1: 2,
   f2: 2,
   f3: 2,
@@ -68,10 +71,18 @@ export function sortKeybindings(keybindings) {
       for (let i = 0; i < L; ++i) {
         const kx = keys_x[i]
         const ky = keys_y[i]
+        const rx = ranks[kx] ?? 1
+        const ry = ranks[ky] ?? 1
+        if (rx !== ry) return ry - rx
         if (kx !== ky) return kx < ky ? -1 : 1
       }
 
-      return keys_x.length - keys_y.length
+      if (keys_x.length !== keys_y.length) return keys_x.length - keys_y.length
+
+      if (x.when === y.when) return 0
+      if (!x.when) return -1
+      if (!y.when) return 1
+      return 0
     })
 }
 
@@ -89,10 +100,14 @@ export function resolve() {
   const resolved_unbind = sortKeybindings(raw_unbind)
   const resolved_items = [...resolved_customize, ...resolved_unbind]
 
-  fs.writeFileSync(fp_customize, JSON.stringify(resolved_customize, null, 2), encoding)
-  fs.writeFileSync(fp_unbind, JSON.stringify(resolved_unbind, null, 2), encoding)
-  fs.writeFileSync(fp_keybindings, JSON.stringify(resolved_items, null, 2), encoding)
-  if (F_VSCODE_SETTINGS) fs.writeFileSync(F_VSCODE_SETTINGS, JSON.stringify(resolved_items, null, 2), encoding)
+  const content_customize = JSON.stringify(resolved_customize, null, 2) + '\n'
+  const content_unbind = JSON.stringify(resolved_unbind, null, 2) + '\n'
+  const content_all = JSON.stringify(resolved_items, null, 2) + '\n'
+
+  fs.writeFileSync(fp_customize, content_customize, encoding)
+  fs.writeFileSync(fp_unbind, content_unbind, encoding)
+  fs.writeFileSync(fp_keybindings, content_all, encoding)
+  if (F_VSCODE_SETTINGS) fs.writeFileSync(F_VSCODE_SETTINGS, content_all, encoding)
 }
 
 resolve()
