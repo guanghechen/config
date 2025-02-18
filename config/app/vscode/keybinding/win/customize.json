@@ -401,10 +401,6 @@
   },
   {
     "key": "alt+c",
-    "command": "execCopy"
-  },
-  {
-    "key": "alt+c",
     "command": "gitlens.views.branches.copy",
     "when": "focusedView == 'gitlens.views.branches'"
   },
@@ -664,7 +660,7 @@
   },
   {
     "key": "alt+v",
-    "command": "execPaste"
+    "command": "editor.action.clipboardPasteAction"
   },
   {
     "key": "alt+v",
@@ -718,10 +714,6 @@
   {
     "key": "alt+x",
     "command": "editor.action.clipboardCutAction"
-  },
-  {
-    "key": "alt+x",
-    "command": "execCut"
   },
   {
     "key": "alt+x",
