@@ -747,6 +747,11 @@
     "command": "workbench.action.toggleDevTools"
   },
   {
+    "key": "ctrl+shift+i",
+    "command": "workbench.panel.chatEditing",
+    "when": "workbench.panel.chat.view.edits.active"
+  },
+  {
     "key": "ctrl+p",
     "command": "editor.action.triggerSuggest",
     "when": "editorHasCompletionItemProvider && textInputFocus && !editorReadonly"
@@ -760,15 +765,5 @@
     "key": "ctrl+p",
     "command": "editor.action.triggerParameterHints",
     "when": "editorHasSignatureHelpProvider && editorTextFocus"
-  },
-  {
-    "key": "f2",
-    "command": "editor.action.rename",
-    "when": "editorHasRenameProvider && editorTextFocus && !editorReadonly"
-  },
-  {
-    "key": "f2",
-    "command": "renameFile",
-    "when": "filesExplorerFocus && foldersViewVisible && !explorerResourceIsRoot && !explorerResourceReadonly && !inputFocus"
   }
 ]

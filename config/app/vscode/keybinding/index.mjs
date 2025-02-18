@@ -104,13 +104,15 @@ export function resolve() {
   const raw_customize = JSON.parse(fs.readFileSync(fp_customize, encoding))
   const raw_unbind = JSON.parse(fs.readFileSync(fp_unbind, encoding))
 
-  const resolved_customize = sortKeybindings(raw_customize)
+  const resolved_customize = sortKeybindings(raw_customize).filter(x => !x.command.startsWith('-'))
+
+  const existed_keys = new Set(resolved_customize.map(x => [x.key, ('-' + x.command), x.when ?? 'undefined'].join('#.#')))
   const resolved_unbind = sortKeybindings(raw_unbind)
-    .filter(bind => resolved_customize.every(custom =>
-      custom.key !== bind.key
-      || custom.when !== bind.when
-      || custom.command !== '-' + bind.command)
-    )
+    .filter(x => {
+      if (!x.command.startsWith('-')) return false
+      const key = [x.key, x.command, x.when ?? 'undefined'].join('#.#')
+      return !existed_keys.has(key)
+    })
   const resolved_items = [...resolved_unbind, ...resolved_customize]
 
   const content_customize = JSON.stringify(resolved_customize, null, 2) + '\n'
