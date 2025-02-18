@@ -1,8 +1,8 @@
 local env = require("eve.builtin.env")
 local fn = require("eve.builtin.fn")
+local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local icons = require("eve.constant.icon")
-local Subscriber = require("eve.collection.subscriber")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 local Select = require("fml.ux.select")
@@ -25,9 +25,98 @@ local function get_file_selector()
   local _filepaths = {} ---@type string[]
   local _winnr = nil ---@type integer|nil
   local _confirmed = false ---@type boolean
+  local _select ---@type fml.ux.Select
 
-  local _selector ---@type fml.ux.Select
-  _selector = Select.new({
+  state.observe({
+    state.select.select_avante.excludes,
+    state.select.select_avante.flag_case_sensitive,
+    state.select.select_avante.flag_exclude,
+    state.select.select_avante.flag_fuzzy,
+    state.select.select_avante.flag_gitignore,
+    state.select.select_avante.flag_regex,
+  }, function()
+    if _select ~= nil then
+      _select:mark_data_dirty()
+    end
+  end, true)
+
+  ---@class ghc.plugins.avante.file_selector.actions
+  local actions = {
+    toggle_case_sensitive = function()
+      local flag = state.select.select_avante.flag_case_sensitive:snapshot() ---@type boolean
+      state.select.select_avante.flag_case_sensitive:next(not flag)
+    end,
+    toggle_flag_exclude = function()
+      local flag = state.select.select_avante.flag_exclude:snapshot() ---@type boolean
+      state.select.select_avante.flag_exclude:next(not flag)
+    end,
+    toggle_flag_fuzzy = function()
+      local flag = state.select.select_avante.flag_fuzzy:snapshot() ---@type boolean
+      state.select.select_avante.flag_fuzzy:next(not flag)
+    end,
+    ---@return nil
+    toggle_flag_gitignore = function()
+      local flag = state.select.select_avante.flag_gitignore:snapshot() ---@type boolean
+      state.select.select_avante.flag_gitignore:next(not flag)
+    end,
+    toggle_flag_regex = function()
+      local flag = state.select.select_avante.flag_regex:snapshot() ---@type boolean
+      state.select.select_avante.flag_regex:next(not flag)
+    end,
+    ---@return nil
+    toggle_flag_selected = function()
+      local flag = state.select.select_avante.flag_selected:snapshot() ---@type boolean
+      state.select.select_avante.flag_selected:next(not flag)
+    end,
+  }
+
+  ---@type eve.t.ux.widget.IRawStatuslineItem[]
+  local statusline_items = {
+    {
+      type = "flag",
+      desc = "find: toggle selected",
+      symbol = icons.symbols.flag_selected,
+      state = state.select.select_avante.flag_selected,
+      callback = actions.toggle_flag_selected,
+    },
+    {
+      type = "flag",
+      desc = "find: toggle exclude",
+      symbol = icons.symbols.flag_exclude,
+      state = state.select.select_avante.flag_exclude,
+      callback = actions.toggle_flag_exclude,
+    },
+    {
+      type = "flag",
+      desc = "find: toggle gitignore",
+      symbol = icons.symbols.flag_gitignore,
+      state = state.select.select_avante.flag_gitignore,
+      callback = actions.toggle_flag_gitignore,
+    },
+    {
+      type = "flag",
+      desc = "select: toggle flag fuzzy",
+      symbol = icons.symbols.flag_fuzzy,
+      state = state.select.select_avante.flag_fuzzy,
+      callback = actions.toggle_flag_fuzzy,
+    },
+    {
+      type = "flag",
+      desc = "find: toggle case sensitive",
+      symbol = icons.symbols.flag_case_sensitive,
+      state = state.select.select_avante.flag_case_sensitive,
+      callback = actions.toggle_case_sensitive,
+    },
+    {
+      type = "flag",
+      desc = "select: toggle flag regex",
+      symbol = icons.symbols.flag_regex,
+      state = state.select.select_avante.flag_regex,
+      callback = actions.toggle_flag_regex,
+    },
+  }
+
+  _select = Select.new({
     dimension = {
       height = 3,
       max_height = 0.8,
@@ -43,8 +132,10 @@ local function get_file_selector()
     input_history = context.input_history,
     multiple = true,
     preview_enabled = false,
-    extend_preset_keymaps = true,
+    extend_preset_keymaps = false,
     permanent = true,
+    statusline_items = statusline_items,
+    title = "(Avante) Add a file",
     provider = {
       fetch_data = function()
         local width = 0 ---@type integer
@@ -71,7 +162,7 @@ local function get_file_selector()
         end
 
         vim.schedule(function()
-          _selector:change_dimension({
+          _select:change_dimension({
             height = #items + 3,
             max_height = math.min(math.floor(vim.o.lines * 0.8), 40),
             max_width = 0.8,
@@ -98,7 +189,6 @@ local function get_file_selector()
         return text, highlights
       end,
     },
-    title = "(Avante) Add a file",
     on_close = function()
       if not _confirmed then
         _confirmed = true
@@ -153,7 +243,7 @@ local function get_file_selector()
     local handler = params.handler ---@type fun(filepaths: string[]|nil): nil
     -- _filepaths = resolve_filepaths(params.filepaths) ---@type string[]
     _filepaths = params.filepaths ---@type string[]
-    _selector:change_input_title(params.title)
+    _select:change_input_title(params.title)
 
     _on_choice = function(items)
       if items == nil then
@@ -170,8 +260,8 @@ local function get_file_selector()
     _confirmed = false
     _winnr = vim.api.nvim_get_current_win()
 
-    _selector:mark_data_dirty()
-    _selector:show()
+    _select:mark_data_dirty()
+    _select:show()
   end
   return file_selector
 end
@@ -230,6 +320,37 @@ return {
 
       file_selector = {
         provider = get_file_selector(),
+        provider_opts = {
+          get_filepaths = function(params)
+            local cwd = path.cwd() ---@type string
+            local selected_filepaths = params.selected_filepaths ---@type string[]
+
+            local workspace = path.workspace() ---@type string
+            local flag_exclude = state.select.select_avante.flag_exclude:snapshot() ---@type boolean
+            local flag_gitignore = state.select.select_avante.flag_gitignore:snapshot() ---@type boolean
+            local excludes = flag_exclude and state.select.select_avante.excludes:snapshot() or {} ---@type string[]
+
+            ---@type string[]
+            local filepaths = oxi.find({
+              workspace = workspace,
+              cwd = cwd,
+              flag_case_sensitive = false,
+              flag_gitignore = flag_gitignore,
+              flag_regex = false,
+              search_pattern = "",
+              search_paths = "",
+              exclude_patterns = table.concat(excludes, ","),
+            })
+            table.sort(filepaths)
+
+            return vim
+              .iter(filepaths)
+              :filter(function(filepath)
+                return not vim.tbl_contains(selected_filepaths, filepath)
+              end)
+              :totable()
+          end,
+        },
       },
 
       mappings = {
@@ -268,6 +389,14 @@ return {
     ---hack: use cwd as the project root
     require("avante.utils").get_project_root = function()
       return path.cwd()
+    end
+
+    require("avante.file_selector").get_filepaths = function(self)
+      local params = {
+        cwd = path.cwd(),
+        selected_filepaths = self.selected_filepaths,
+      }
+      return opts.file_selector.provider_opts.get_filepaths(params)
     end
 
     require("avante").setup(opts)
