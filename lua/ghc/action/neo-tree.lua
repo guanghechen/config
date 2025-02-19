@@ -51,7 +51,8 @@ local function create_widget(params)
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local filetype = vim.bo[bufnr].filetype ---@type string
-      return filetype == ft.NEOTREE and vim.b[bufnr].neo_tree_source == source
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      return filetype == ft.NEOTREE and vim.b[bufnr].neo_tree_source == source and filepath:match(source)
     end,
     hide = function()
       require("neo-tree.command").execute({
@@ -157,14 +158,24 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.git_cwd(context)
-  widgets.git_cwd:focus()
+  local widget = widgets.git_cwd ---@type eve.t.ux.IWidget
+  if widget:focused() then
+    widget:hide()
+  else
+    widget:focus()
+  end
 end
 
 ---@param context                       eve.command.IContext
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.git_workspace(context)
-  widgets.git_workspace:focus()
+  local widget = widgets.git_workspace ---@type eve.t.ux.IWidget
+  if widget:focused() then
+    widget:hide()
+  else
+    widget:focus()
+  end
 end
 
 ---@param context                       eve.command.IContext

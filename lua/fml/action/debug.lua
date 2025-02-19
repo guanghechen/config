@@ -35,10 +35,11 @@ end
 
 ---@param context                       eve.command.IContext
 ---@return nil
+---@diagnostic disable-next-line: unused-local
 function M.inspect_window(context)
-  local tabnr = context.tabnr ---@type integer
-  local winnr = context.winnr ---@type integer
-  local bufnr = context.bufnr ---@type integer
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
 
   local buftype = vim.bo[bufnr].buftype ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
