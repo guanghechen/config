@@ -192,7 +192,9 @@ require("lazy").setup({
   performance = {
     rtp = {
       -- disable some rtp plugins
-      disabled_plugins = {
+      disabled_plugins = vim.tbl_filter(function(v)
+        return type(v) == "string" and #v > 0
+      end, {
         "2html_plugin",
         "bugreport",
         "compiler",
@@ -208,6 +210,7 @@ require("lazy").setup({
         "netrwPlugin",
         "netrwSettings",
         "optwin",
+        env.IS_WIN and "osc52" or nil,
         "rplugin",
         "rrhelper",
         "spellfile_plugin",
@@ -221,7 +224,7 @@ require("lazy").setup({
         "vimballPlugin",
         "zip",
         "zipPlugin",
-      },
+      }),
     },
   },
   ui = {
