@@ -1068,6 +1068,11 @@ end
 function M.mode(position)
   local hln_text_prefix = position .. "_mode_text_" ---@type string
   local hln_sep_prefix = position .. "_mode_sep_" ---@type string
+  local invalid = false ---@type boolean
+
+  state.observe({ state.theme.username }, function()
+    invalid = true
+  end, true)
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -1075,13 +1080,16 @@ function M.mode(position)
     atomic = true,
     tight = true,
     will_change = function(context, prev_context)
-      return prev_context == nil or context.mode ~= prev_context.mode
+      return invalid or prev_context == nil or context.mode ~= prev_context.mode
     end,
     render = function(context)
+      invalid = false
+
       local hln_text = hln_text_prefix .. context.mode ---@type string
       local hln_sep = hln_sep_prefix .. context.mode ---@type string
 
-      local text = "  " .. context.mode_name ---@type string
+      local icon = state.theme.username:snapshot() and (" " .. icons.app.Vim .. " ") or (" " .. icons.os.current .. " ") ---@type string
+      local text = icon .. context.mode_name ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
       text = text .. icons.symbols.sep_right ---@type string
