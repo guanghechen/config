@@ -213,7 +213,7 @@ require("lazy").setup({
         "netrwPlugin",
         "netrwSettings",
         "optwin",
-        env.IS_WIN and "osc52" or nil,
+        (env.IS_WIN or env.IS_MAC) and "osc52" or nil,
         "rplugin",
         "rrhelper",
         "spellfile_plugin",
