@@ -34,6 +34,13 @@ local function is_enabled(bufnr, modes)
     return false
   end
 
+  bufnr = bufnr or vim.api.nvim_get_current_buf() ---@type integer
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  if buftype == "nofile" or #filetype < 0 then
+    return false
+  end
+
   if modes then
     local mode = vim.api.nvim_get_mode().mode:lower()
     mode = mode:gsub("\22", "v"):gsub("\19", "s")
@@ -44,7 +51,6 @@ local function is_enabled(bufnr, modes)
     end
   end
 
-  bufnr = bufnr or vim.api.nvim_get_current_buf() ---@type integer
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
   for _, client in ipairs(clients) do
     if client.supports_method("textDocument/documentHighlight", { bufnr = bufnr }) then

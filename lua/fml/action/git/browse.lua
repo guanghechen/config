@@ -25,6 +25,7 @@ local config = {
     { "^git@(.+):(.+)%.git$"              , "https://%1/%2" },
     { "^git@(.+):(.+)$"                   , "https://%1/%2" },
     { "^git@(.+)/(.+)$"                   , "https://%1/%2" },
+    { "^org%-%d+@(.+):(.+)%.git$"         , "https://%1/%2" },
     { "^ssh://git@(.*)$"                  , "https://%1" },
     { "^ssh://([^:/]+)(:%d+)/(.*)$"       , "https://%1/%3" },
     { "^ssh://([^/]+)/(.*)$"              , "https://%1/%2" },
@@ -39,13 +40,27 @@ local config = {
     ["github%.com"] = {
       branch = "/tree/{branch}",
       file = "/blob/{branch}/{file}#L{line_start}-L{line_end}",
+      permalink = "/blob/{commit}/{file}#L{line_start}-L{line_end}",
       commit = "/commit/{commit}",
     },
     ["gitlab%.com"] = {
       branch = "/-/tree/{branch}",
       file = "/-/blob/{branch}/{file}#L{line_start}-L{line_end}",
+      permalink = "/-/blob/{commit}/{file}#L{line_start}-L{line_end}",
       commit = "/-/commit/{commit}",
     },
+    ["bitbucket%.org"] = {
+      branch = "/src/{branch}",
+      file = "/src/{branch}/{file}#lines-{line_start}-L{line_end}",
+      permalink = "/src/{commit}/{file}#lines-{line_start}-L{line_end}",
+      commit = "/commits/{commit}",
+    },
+    ["git.sr.ht"] = {
+      branch = "/tree/{branch}",
+      file = "/tree/{branch}/item/{file}",
+      permalink = "/tree/{commit}/item/{file}#L{line_start}",
+      commit = "/commit/{commit}",
+    }
   },
 }
 
