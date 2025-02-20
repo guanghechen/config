@@ -1,5 +1,3 @@
-local cs = require("eve.builtin.color")
-
 ---@param context                       eve.t.theme.IContext
 ---@return eve.constant.hlgroup.nvimbar
 local function gen_hlgroup_map(context)
@@ -7,7 +5,7 @@ local function gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local bg_bufc = t and "none" or c.bg0 ---@type string
   local bg_pos = t and c.bg0 or c.bg2 ---@type string
-  local bg_username = cs.mix(c.bg0, c.red, 90) ---@type string
+  local bg_username = c.bg0 ---@type string
 
   local mc = {
     command = c.green,
@@ -189,7 +187,15 @@ local function gen_hlgroup_map(context)
     tab_item_cur = { fg = c.red, bg = bg_bufc },
     tab_toggle = { fg = c.bg1, bg = c.green },
     text = { fg = c.fg2, bg = "bg_bar" },
-    username_text = { fg = c.bg1, bg = bg_username, bold = true },
+    username_text_command = { fg = mc.command, bg = bg_username, bold = true },
+    username_text_confirm = { fg = mc.confirm, bg = bg_username, bold = true },
+    username_text_insert = { fg = mc.insert, bg = bg_username, bold = true },
+    username_text_normal = { fg = mc.normal, bg = bg_username, bold = true },
+    username_text_nterminal = { fg = mc.nterminal, bg = bg_username, bold = true },
+    username_text_replace = { fg = mc.replace, bg = bg_username, bold = true },
+    username_text_select = { fg = mc.select, bg = bg_username, bold = true },
+    username_text_terminal = { fg = mc.terminal, bg = bg_username, bold = true },
+    username_text_visual = { fg = mc.visual, bg = bg_username, bold = true },
     username_sep_command = { fg = bg_username, bg = mc.command, bold = true },
     username_sep_confirm = { fg = bg_username, bg = mc.confirm, bold = true },
     username_sep_insert = { fg = bg_username, bg = mc.insert, bold = true },
