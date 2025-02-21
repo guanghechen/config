@@ -13,7 +13,7 @@ return function()
     handlers = handlers,
     on_attach = on_attach,
     on_init = on_init,
-    cmd = { "html-languageserver", "--stdio" },
+    cmd = { "vscode-html-language-server", "--stdio" },
     filetypes = { "html" },
     init_options = {
       configurationSection = { "html", "css", "javascript" },
