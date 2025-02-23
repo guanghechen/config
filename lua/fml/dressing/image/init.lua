@@ -1,0 +1,109 @@
+--- https://github.com/folke/snacks.nvim/blob/b100c937177536cf2aa634ddd2aa5b8a1dd23ace/lua/snacks/image/init.lua
+local fn = require("eve.builtin.fn")
+local image_buf = require("fml.dressing.image.buf")
+local image_doc = require("fml.dressing.image.doc")
+local config = require("fml.dressing.image.config")
+
+---@class fml.dressing.image
+local M = {}
+
+---@alias fml.dressing.image.Size {width: number, height: number}
+---@alias fml.dressing.image.Pos {[1]: number, [2]: number}
+---@alias fml.dressing.image.Loc fml.dressing.image.Pos|fml.dressing.image.Size|{zindex?: number}
+
+---@class fml.dressing.image.Env
+---@field name string
+---@field env table<string, string|true>
+---@field supported? boolean default: false
+---@field placeholders? boolean default: false
+---@field setup? fun(): boolean?
+---@field transform? fun(data: string): string
+---@field detected? boolean
+---@field remote? boolean this is a remote client, so full transfer of the image data is required
+
+vim.api.nvim_set_hl(0, "SnacksImageSpecial", { default = true, link = "Special" })
+vim.api.nvim_set_hl(0, "SnacksImageLoading", { default = true, link = "NonText" })
+vim.api.nvim_set_hl(0, "SnacksImageMath", {
+  default = true,
+  fg = fn.pick_color({ "@markup.math.latex", "Special", "Normal" }, "fg"),
+})
+
+---@class fml.dressing.image.Opts
+---@field public pos                    ?fml.dressing.image.Pos (row, col) (1,0)-indexed. defaults to the top-left corner
+---@field public range                  ?Range4
+---@field public inline                 ?boolean render the image inline in the buffer
+---@field public width                  ?number
+---@field public min_width              ?number
+---@field public max_width              ?number
+---@field public height                 ?number
+---@field public min_height             ?number
+---@field public max_height             ?number
+---@field public on_update              ?fun(placement: fml.dressing.image.Placement)
+---@field public on_update_pre          ?fun(placement: fml.dressing.image.Placement)
+
+local did_setup = false
+
+--- Show the image at the cursor in a floating window
+function M.hover()
+  image_doc.hover()
+end
+
+---@return string[]
+function M.langs()
+  local queries = vim.api.nvim_get_runtime_file("queries/*/images.scm", true)
+  return vim.tbl_map(function(q)
+    return q:match("queries/(.-)/images%.scm")
+  end, queries)
+end
+
+---@param bufnr                         integer|nil
+---@return nil
+function M.setup(bufnr)
+  if did_setup then
+    return
+  end
+  did_setup = true
+  local group = vim.api.nvim_create_augroup("fml.dressing.image", { clear = true })
+
+  if config.state.extnames and #config.state.extnames > 0 then
+    vim.api.nvim_create_autocmd("BufReadCmd", {
+      pattern = "*" .. table.concat(config.state.extnames, ",*"),
+      group = group,
+      callback = function(e)
+        image_buf.attach(e.buf)
+      end,
+    })
+    -- prevent altering the original image file
+    vim.api.nvim_create_autocmd("BufWriteCmd", {
+      pattern = "*" .. table.concat(config.state.extnames, ",*"),
+      group = group,
+      callback = function(e)
+        -- vim.api.nvim_exec_autocmds("BufWritePre", { buffer = e.buf })
+        vim.bo[e.buf].modified = false
+        -- vim.api.nvim_exec_autocmds("BufWritePost", { buffer = e.buf })
+      end,
+    })
+  end
+  if config.state.doc.enabled then
+    local langs = M.langs()
+    vim.api.nvim_create_autocmd("FileType", {
+      group = group,
+      callback = function(e)
+        local ft = vim.bo[e.buf].filetype
+        local lang = vim.treesitter.language.get_lang(ft)
+        if vim.tbl_contains(langs, lang) then
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(e.buf) then
+              image_doc.attach(e.buf)
+            end
+          end)
+        end
+      end,
+    })
+  end
+  if bufnr ~= nil then
+    image_buf.attach(bufnr)
+  end
+end
+
+return M

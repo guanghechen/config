@@ -40,6 +40,14 @@ function M.debounce(fn, duration)
   end
 end
 
+local spinners = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" } ---@type string[]
+
+---@return string
+function M.spinner()
+  local index = math.floor(vim.uv.hrtime() / (1e6 * 80)) % #spinners + 1 ---@type integer
+  return spinners[index]
+end
+
 ----------------------------------------------------------------------------------------------------
 
 ---@param left                          any
@@ -120,13 +128,25 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param value                         any
+---@param value                         unknown
+---@return boolean
+function M.is_dict(value)
+  return type(value) == "table" and (vim.tbl_isempty(value) or not value[1])
+end
+
+---@param value                         unknown
+---@return boolean
+function M.is_dict_like(value)
+  return type(value) == "table" and (vim.tbl_isempty(value) or not vim.islist(value))
+end
+
+---@param value                         unknown
 ---@return boolean
 function M.is_disposable(value)
   return type(value) == "table" and type(value.isDisposable) == "function" and type(value.dispose) == "function"
 end
 
----@param value                         any
+---@param value                         unknown
 ---@return boolean
 function M.is_observable(value)
   return type(value) == "table"
@@ -164,6 +184,16 @@ function M.find_index(elements, element)
       end
     end
   end
+end
+
+---@param elements                      string[]
+---@return table<string, true>
+function M.to_string_set(elements)
+  local set = {} ---@type table<string, true>
+  for _, element in ipairs(elements) do
+    set[element] = true
+  end
+  return set
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -243,6 +273,40 @@ end
 ---@return boolean
 function M.starts_with(text, word)
   return #text >= #word and text:sub(1, #word) == word
+end
+
+---@param str                           string
+---@param data                          table<string, string>
+---@param opts                          ?{ prefix?: string, indent?: boolean, offset?: number[] }
+function M.tpl(str, data, opts)
+  opts = opts or {}
+  local ret = (
+    str:gsub(
+      "(" .. vim.pesc(opts.prefix or "") .. "%b{}" .. ")",
+      ---@param w                       string
+      ---@return string
+      function(w)
+        local inner = w:sub(2 + #(opts.prefix or ""), -2)
+        local key, default = inner:match("^(.-):(.*)$")
+        local ret = data[key or inner]
+        if ret == "" and default then
+          return default
+        end
+        return ret or w
+      end
+    )
+  )
+  if opts.indent then
+    local lines = vim.split(ret:gsub("\t", "  "), "\n", { plain = true })
+    local indent = 1000
+    for _, line in ipairs(lines) do
+      indent = math.min(indent, line:find("%S") or 1000)
+    end
+    for l, line in ipairs(lines) do
+      lines[l] = line:sub(indent)
+    end
+  end
+  return ret
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -411,6 +475,39 @@ function M.make_bg_transparency(hlname)
     vim.api.nvim_set_hl(0, new_hlname, { fg = fg, bg = "none" })
   end)
   return new_hlname
+end
+
+--- Merges the values similar to vim.tbl_deep_extend with the **force** behavior,
+--- but the values can be any type
+---@generic T
+---@param ... T
+---@return T
+function M.merge_config(...)
+  local ret = select(1, ...)
+  for i = 2, select("#", ...) do
+    local value = select(i, ...)
+    if M.is_dict_like(ret) and M.is_dict(value) then
+      for k, v in pairs(value) do
+        ret[k] = M.merge_config(ret[k], v)
+      end
+    elseif value ~= nil then
+      ret = value
+    end
+  end
+  return ret
+end
+
+---@param hlgroups                      string[]
+---@param field                         "fg"|"bg"|"sp"
+---@return string|nil
+function M.pick_color(hlgroups, field)
+  for _, hlgroup in ipairs(hlgroups) do
+    local hl = vim.api.nvim_get_hl(0, { name = hlgroup, link = false })
+    if hl[field] then
+      return string.format("#%06x", hl[field])
+    end
+  end
+  return nil
 end
 
 return M

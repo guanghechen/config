@@ -1,3 +1,15 @@
+---@class eve.builtin.debug.ICmdParams
+---@field public cmd                    string|string[]
+---@field public level                  ?integer|nil
+---@field public title                  ?string
+---@field public args                   ?string[]
+---@field public cwd                    ?string
+---@field public group                  ?boolean
+---@field public notify                 ?boolean
+---@field public footer                 ?string
+---@field public header                 ?string
+---@field public props                  ?table<string, string>
+
 ---@class eve.builtin.debug
 local M = {}
 
@@ -31,6 +43,80 @@ function M.log(...)
   end
 
   vim.notify(text, vim.log.levels.INFO, { title = "debug" })
+end
+
+---@param opts                          eve.builtin.debug.ICmdParams
+---@return string
+function M.cmd(opts)
+  local args = vim.deepcopy(opts.args or {})
+  local cmd = "" ---@type string
+  do
+    local _cmd = opts.cmd ---@type string|string[]
+    if type(_cmd) == "string" then
+      cmd = _cmd
+    elseif type(_cmd) == "table" then
+      vim.list_extend(args, _cmd, 2)
+      cmd = _cmd[1]
+    end
+    args = vim.tbl_map(tostring, args)
+  end
+
+  local lines = { cmd } ---@type string[]
+  for _, arg in ipairs(args or {}) do
+    arg = arg:find("[%$%s%?]") and vim.fn.shellescape(arg) or arg
+    if #arg + #lines[#lines] > 40 then
+      lines[#lines] = lines[#lines] .. " \\"
+      table.insert(lines, "  " .. arg)
+    else
+      lines[#lines] = lines[#lines] .. " " .. arg
+    end
+  end
+  local props = vim.deepcopy(opts.props or {})
+  props.cwd = props.cwd or vim.fn.fnamemodify(opts.cwd or vim.uv.cwd() or ".", ":~")
+  local prop_keys = vim.tbl_keys(props) ---@type string[]
+  table.sort(prop_keys)
+  local prop_lines = {} ---@type string[]
+  for _, key in ipairs(prop_keys) do
+    table.insert(prop_lines, ("- **%s**: %s"):format(key, props[key]))
+  end
+
+  lines = {
+    opts.header or "",
+    table.concat(prop_lines, "\n"),
+    "```sh",
+    table.concat(lines, " \n"),
+    "```",
+    opts.footer or "",
+  }
+  if opts.title and not opts.notify then
+    table.insert(lines, 1, ("# %s\n"):format(opts.title))
+  end
+
+  local msg = vim.trim(table.concat(lines, "\n")):gsub("\n\n+", "\n\n") ---@type string
+
+  if opts.notify ~= false then
+    vim.schedule(function()
+      local id = opts.group and ("eve.builtin.debug.cmd." .. cmd) or nil
+      local level = opts.level or vim.log.levels.INFO
+      local title = opts.title or id or "Cmd Debug"
+      vim.notify(msg, level, {
+        title = title,
+        on_open = function(winnr)
+          vim.wo[winnr].conceallevel = 2
+          vim.wo[winnr].concealcursor = "n"
+          local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+          if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+            local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
+            local has_ts_parser = pcall(vim.treesitter.language.add, lang)
+            if has_ts_parser then
+              vim.treesitter.start(bufnr, lang)
+            end
+          end
+        end,
+      })
+    end)
+  end
+  return msg
 end
 
 return M
