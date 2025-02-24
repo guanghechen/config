@@ -1,3 +1,8 @@
+### Thanks
+
+* Snacks: https://github.com/folke/snacks.nvim/blob/70e7e081ee558eb3756aba02491f1bc84fb72ab0
+
+
 ### Requirements
 
 * fd: https://github.com/sharkdp/fd?tab=readme-ov-file#installation

@@ -1,4 +1,4 @@
---- https://github.com/folke/snacks.nvim/blob/72ffb3d1a2812671bb3487e490a3b1dd380bc234/lua/snacks/words.lua#L1
+--- https://github.com/folke/snacks.nvim/blob/d62e7527a5e9608ab0033bc63a329baf8757ea6d/lua/snacks/words.lua#L1
 
 local __module_name__ = "fml.dressing.illumniate" ---@type string
 
