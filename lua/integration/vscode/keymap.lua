@@ -1,5 +1,5 @@
 local fn = require("eve.builtin.fn")
-local actions = require("lua.integration.vscode.action")
+local actions = require("integration.vscode.action")
 
 local mk = fn.make_keys
 
