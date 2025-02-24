@@ -166,7 +166,7 @@ end
 
 ---! bootstrap lazy and all plugins
 vim.list_extend(final_specs, require("ghc.plugins._extra"))
-local lazypath = path.normalize(env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
+local lazypath = vim.fs.normalize(env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
 if not path.is_exist(lazypath) then
   local repo = "https://github.com/guanghechen/mirror"
   vim.fn.system({

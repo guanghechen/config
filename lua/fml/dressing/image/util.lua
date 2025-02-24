@@ -1,4 +1,3 @@
-local path = require("eve.builtin.path")
 local terminal = require("fml.dressing.image.terminal")
 
 ---@class fml.dressing.image.util
@@ -10,7 +9,7 @@ local dims = {} ---@type table<string, fml.dressing.image.Size>
 ---@param filepath                      string
 ---@return fml.dressing.image.Size
 function M.dim(filepath)
-  filepath = path.normalize(filepath)
+  filepath = vim.fs.normalize(filepath)
   if dims[filepath] then
     return dims[filepath]
   end

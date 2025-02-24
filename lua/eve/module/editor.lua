@@ -1,6 +1,5 @@
 local fn = require("eve.builtin.fn")
 local fs = require("eve.builtin.fs")
-local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 local winpicker = require("eve.module.winpicker")
@@ -188,7 +187,7 @@ end
 ---@param col                           ?integer
 ---@return boolean
 function M.open_filepath(winnr_source, filepath, lnum, col)
-  filepath = path.normalize(filepath)
+  filepath = vim.fs.normalize(filepath)
 
   ---@type integer|nil
   local winnr = (

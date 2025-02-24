@@ -2,7 +2,6 @@ local __module_name__ = "fml.dressing.image.convertor" ---@type string
 
 local env = require("eve.builtin.env")
 local fn = require("eve.builtin.fn")
-local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Spawn = require("eve.collection.spawn")
 local config = require("fml.dressing.image.config")
@@ -439,7 +438,7 @@ function M.norm(src)
     src = vim.uri_to_fname(src)
   end
   if not M.is_uri(src) then
-    src = path.normalize(vim.fn.fnamemodify(src, ":p"))
+    src = vim.fs.normalize(vim.fn.fnamemodify(src, ":p"))
   end
   return src
 end

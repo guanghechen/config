@@ -1,5 +1,4 @@
 local fn = require("eve.builtin.fn")
-local path = require("eve.builtin.path")
 local state = require("eve.state")
 local config = require("fml.dressing.image.config")
 local Placement = require("fml.dressing.image.placement")
@@ -127,7 +126,7 @@ end
 ---@return string
 function M.resolve(bufnr, src)
   src = M.url_decode(src)
-  local file = path.normalize(vim.api.nvim_buf_get_name(bufnr))
+  local file = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
   if not src:find("^%w%w+://") then
     local cwd = uv.cwd() or "."
     local checks = { [src] = true }
@@ -146,7 +145,7 @@ function M.resolve(bufnr, src)
         break
       end
     end
-    src = path.normalize(src)
+    src = vim.fs.normalize(src)
   end
   return src
 end

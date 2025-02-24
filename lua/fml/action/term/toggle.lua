@@ -108,7 +108,7 @@ end
 ---@return nil
 function M.toggle_directory(context)
   local filepath = vim.api.nvim_buf_get_name(context.bufnr) ---@type string
-  local cwd = path.dirname(filepath) ---@type string
+  local cwd = vim.fs.dirname(filepath) ---@type string
 
   M.toggle({
     name = "directory",
