@@ -1,7 +1,9 @@
+local state = require("eve.state")
+
 local get_capabilities = require("ghc.lsp.common").get_capabilities
 local handlers = require("ghc.lsp.common").handlers
 local locate_lsp_root = require("ghc.lsp.common").locate_lsp_root
-local on_attach = require("ghc.lsp.common").on_attach
+local basic_on_attach = require("ghc.lsp.common").on_attach
 local on_init = require("ghc.lsp.common").on_init
 
 ---@type string[]
@@ -12,6 +14,18 @@ local CONFIG_FILENAMES = {
   ".eslintrc.js",
   ".eslintrc.mjs",
 }
+
+---@param client                        vim.lsp.Client
+---@param bufnr                         integer
+---@return nil
+local function on_attach(client, bufnr)
+  local autoformat = state.flight.autoformat:snapshot() ---@type boolean
+  if not autoformat then
+    return
+  end
+
+  basic_on_attach(client, bufnr)
+end
 
 return function()
   local capabilities = get_capabilities()

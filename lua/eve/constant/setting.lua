@@ -18,6 +18,7 @@ M.ai_providers = {
 M.flights = {
   "ai",
   "ai_provider",
+  "autoformat",
   "autoload",
   "autosave",
   "devmode",

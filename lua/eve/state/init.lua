@@ -286,6 +286,7 @@ function M.watch_changes(params)
     M.select.find_file_scope,
     M.flight.ai,
     M.flight.ai_provider,
+    M.flight.autoformat,
     M.flight.autoload,
     M.flight.autosave,
     M.flight.devmode,

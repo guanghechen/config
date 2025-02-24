@@ -8,6 +8,7 @@ local on_init = require("ghc.lsp.common").on_init
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
+---@return nil
 local function on_attach(client, bufnr)
   client.commands["_typescript.moveToFileRefactoring"] = function(lsp_command)
     local action, uri, range = table.unpack(lsp_command.arguments)
