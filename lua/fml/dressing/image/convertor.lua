@@ -51,22 +51,6 @@ local M = {}
 
 ---@type table<string, fml.dressing.image.cmd>
 local commands = {
-  -- url = {
-  --   cmd = {
-  --     {
-  --       cmd = "curl",
-  --       args = { "-L", "-o", "{file}", "{src}" },
-  --     },
-  --     {
-  --       cmd = "wget",
-  --       args = { "-O", "{file}", "{src}" },
-  --     },
-  --   },
-  --   file = function(convert, ctx)
-  --     local src = M.norm(ctx.src)
-  --     return M.is_uri(src) and convert:tmpfile("data") or src
-  --   end,
-  -- },
   cache = {
     file = function(convert, ctx)
       return convert:tmpfile(convert:ft(ctx.src))
@@ -417,12 +401,6 @@ function Convertor:run(cb)
     return done(step, "No command available")
   end
   next()
-end
-
----@param src                           string
----@return boolean
-function M.is_url(src)
-  return src:find("^https?://") == 1
 end
 
 ---@param src                           string
