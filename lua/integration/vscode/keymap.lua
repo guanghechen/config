@@ -1,4 +1,6 @@
 local fn = require("eve.builtin.fn")
+local actions = require("lua.integration.vscode.action")
+
 local mk = fn.make_keys
 
 ---@param modes                         string[]
@@ -8,6 +10,12 @@ local mk = fn.make_keys
 local function mvs(modes, keys, action)
   mk(modes, keys, "<cmd>lua require('vscode').action('" .. action .. "')<cr>")
 end
+
+--#enhance------------------------------------------------------------------------------------------
+----- better navigation-----
+mk({ "n" }, "[i", actions.goto_indent_scope_top, "goto: indent scope top")
+mk({ "n" }, "]i", actions.goto_indent_scope_bot, "goto: indent scope bottom")
+------------------------------------------------------------------------------------------#enhance--
 
 -- Keep undo/redo lists in sync with VsCode
 mk({ "n" }, "u", "<Cmd>call VSCodeNotify('undo')<CR>")
