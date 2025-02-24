@@ -2,7 +2,7 @@ local wezterm = require("wezterm")
 local act = wezterm.action
 
 local config = {
-	font_size = 11.0,
+	font_size = 12.0,
 	keys = {
 		{ key = "Insert", mods = "CTRL", action = act.CopyTo("Clipboard") },
 		{ key = "Insert", mods = "SHIFT", action = act.PasteFrom("Clipboard") },
