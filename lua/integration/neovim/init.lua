@@ -14,8 +14,8 @@ require("integration.neovim.keymap")
 
 eve.setup_theme()
 
-if eve.env.IS_MAC then
-  require("fml.dressing.image").setup()
+if eve.env.IS_MAC or eve.env.IS_NIX or eve.env.IS_WSL then
+  require("fml.dressing.image")
 end
 require("fml.command")
 require("fml.dressing.hipairs")

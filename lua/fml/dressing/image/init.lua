@@ -1,7 +1,6 @@
 --- https://github.com/folke/snacks.nvim/blob/b100c937177536cf2aa634ddd2aa5b8a1dd23ace/lua/snacks/image/init.lua
+
 local fn = require("eve.builtin.fn")
-local image_buf = require("fml.dressing.image.buf")
-local image_doc = require("fml.dressing.image.doc")
 local config = require("fml.dressing.image.config")
 
 ---@class fml.dressing.image
@@ -45,6 +44,7 @@ local did_setup = false
 
 --- Show the image at the cursor in a floating window
 function M.hover()
+  local image_doc = require("fml.dressing.image.doc")
   image_doc.hover()
 end
 
@@ -63,13 +63,14 @@ function M.setup(bufnr)
     return
   end
   did_setup = true
-  local group = vim.api.nvim_create_augroup("fml.dressing.image", { clear = true })
 
+  local group = fn.augroup("fml.dressing.image")
   if config.state.extnames and #config.state.extnames > 0 then
     vim.api.nvim_create_autocmd("BufReadCmd", {
       pattern = "*" .. table.concat(config.state.extnames, ",*"),
       group = group,
       callback = function(e)
+        local image_buf = require("fml.dressing.image.buf")
         image_buf.attach(e.buf)
       end,
     })
@@ -94,6 +95,7 @@ function M.setup(bufnr)
         if vim.tbl_contains(langs, lang) then
           vim.schedule(function()
             if vim.api.nvim_buf_is_valid(e.buf) then
+              local image_doc = require("fml.dressing.image.doc")
               image_doc.attach(e.buf)
             end
           end)
@@ -102,8 +104,13 @@ function M.setup(bufnr)
     })
   end
   if bufnr ~= nil then
+    local image_buf = require("fml.dressing.image.buf")
     image_buf.attach(bufnr)
   end
+end
+
+if config.is_support_terminal() then
+  M.setup()
 end
 
 return M
