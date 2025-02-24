@@ -39,12 +39,12 @@ source ~/.config/guanghechen/nix/setup/miniforge.sh
 printf "\n\e[32m  [setup miniforge] done.\e[0m\n"
 
 ## Install font
-if ! grep -qEi "(Microsoft|WSL)" /proc/version; then
-  printf "\n\e[32m  [setup font] preparing...\e[0m\n"
-  source ~/.config/guanghechen/nix/setup/font-maple.sh
-  # source ~/.config/guanghechen/nix/setup/font-roboto.sh
-  printf "\e[32m  [setup font] done.\e[0m\n"
-fi
+#if ! grep -qEi "(Microsoft|WSL)" /proc/version; then
+printf "\n\e[32m  [setup font] preparing...\e[0m\n"
+source ~/.config/guanghechen/nix/setup/font-maple.sh
+# source ~/.config/guanghechen/nix/setup/font-roboto.sh
+printf "\e[32m  [setup font] done.\e[0m\n"
+#fi
 
 ## Install apps
 if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
