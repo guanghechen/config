@@ -36,6 +36,7 @@ M.TROUBLE = "Trouble"
 M.UX_INPUT = "ux-input"
 M.WINPICKER_MASK = "winpicker-mask"
 M.WINSEP = "winsep"
+M.YOZORA_VIEWER = "yozora-viewer"
 
 ---@type table<string, table<string, true>>
 local filetypes = {
@@ -135,6 +136,7 @@ local filetypes = {
   markdown = {
     -- ["markdown"] = true,
     [M.AVANTE] = true,
+    [M.YOZORA_VIEWER] = true,
   },
   not_plain = {
     [M.AERIAL] = true,
@@ -169,6 +171,7 @@ local filetypes = {
     [M.UX_INPUT] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
+    [M.YOZORA_VIEWER] = true,
   },
   no_ibl = {
     [M.AERIAL] = true,
@@ -202,6 +205,7 @@ local filetypes = {
     [M.UX_INPUT] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
+    [M.YOZORA_VIEWER] = true,
   },
   no_flash = {
     [M.CMP_MENU] = true,
@@ -213,6 +217,7 @@ local filetypes = {
     [M.SMEAR_CURSOR] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
+    [M.YOZORA_VIEWER] = true,
   },
   no_window_picker_focusable = {
     [M.NOICE] = true,
@@ -254,6 +259,7 @@ local filetypes = {
     [M.UX_INPUT] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
+    [M.YOZORA_VIEWER] = true,
   },
   quitable_with_q = {
     [M.AERIAL] = true,
@@ -277,6 +283,7 @@ local filetypes = {
     [M.TEMP_VIWER] = true,
     [M.TROUBLE] = true,
     [M.WINPICKER_MASK] = true,
+    [M.YOZORA_VIEWER] = true,
   },
   winsep_float = {
     [M.SEARCH_INPUT] = true,

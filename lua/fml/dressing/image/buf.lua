@@ -1,3 +1,4 @@
+local ft = require("eve.constant.filetype")
 local config = require("fml.dressing.image.config")
 local Placement = require("fml.dressing.image.placement")
 
@@ -22,7 +23,7 @@ function M.attach(bufnr, opts)
       lines[#lines + 1] = "- terminal does not support the kitty graphics protocol."
     end
     vim.bo[bufnr].modifiable = true
-    vim.bo[bufnr].filetype = "markdown"
+    vim.bo[bufnr].filetype = ft.YOZORA_VIEWER
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(table.concat(lines, "\n"), "\n"))
     vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].modified = false
