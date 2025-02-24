@@ -134,7 +134,7 @@ local filetypes = {
     [M.AVANTE_INPUT] = true,
   },
   markdown = {
-    -- ["markdown"] = true,
+    ["markdown"] = true,
     [M.AVANTE] = true,
     [M.YOZORA_VIEWER] = true,
   },

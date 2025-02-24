@@ -71,13 +71,25 @@ local flag_map = {
       require("mini.hipatterns").toggle(context.bufnr)
     end,
   },
-  markdown = {
-    title = "markdown",
-    snapshot = function()
-      return "unknown", "Boolean"
+  markdown_local = {
+    title = "markdown (local)",
+    snapshot = function(context)
+      local ok, render_markdown_state = pcall(require, "render-markdown.state")
+      if not ok then
+        return "Unknown", "Boolean"
+      end
+
+      local flag = state.flight.render_markdown:snapshot() ---@type boolean
+      local enabled = flag and render_markdown_state.get(context.bufnr).enabled == true
+      return enabled and "true" or "false", "Boolean"
     end,
-    action = function()
-      vim.cmd("RenderMarkdown toggle")
+    action = function(context)
+      local ok, render_markdown = pcall(require, "render-markdown")
+      if ok then
+        state.flight.render_markdown:next(true)
+        vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
+        render_markdown.buf_toggle()
+      end
     end,
   },
   maximize = {

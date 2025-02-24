@@ -12,12 +12,12 @@ return {
     trailing_stiffness = 0.5,
   },
   config = function(_, opts)
-    local smear = require("smear_cursor")
-    smear.setup(opts)
+    local plugin = require("smear_cursor")
+    plugin.setup(opts)
 
     state.observe({ state.flight.smear_cursor }, function()
       local flag = state.flight.smear_cursor:snapshot() ---@type boolean
-      smear.enabled = flag
+      plugin.enabled = flag
 
       vim.defer_fn(function()
         if not flag then

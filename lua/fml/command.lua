@@ -619,6 +619,12 @@ command
     end,
   })
   .implement({
+    uuid = command.definitions.toggle.markdown.uuid,
+    action = function(context)
+      require("fml.action.toggle").list(context, "markdown_local")
+    end,
+  })
+  .implement({
     uuid = command.definitions.toggle.maximize.uuid,
     action = function(context)
       require("fml.action.toggle").toggle_maximize(context)
