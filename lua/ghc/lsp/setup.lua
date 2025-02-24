@@ -46,6 +46,10 @@ local setup = {
     local get_config = require("ghc.lsp.lang.tailwindcss")
     require("lspconfig").tailwindcss.setup(get_config())
   end,
+  yamlls = function()
+    local get_config = require("ghc.lsp.lang.yaml")
+    require("lspconfig").yamlls.setup(get_config())
+  end,
   vtsls = function()
     local get_config = require("ghc.lsp.lang.typescript")
     require("lspconfig").vtsls.setup(get_config())

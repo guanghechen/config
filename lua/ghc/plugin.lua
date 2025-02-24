@@ -36,6 +36,18 @@ local conds = {
     return not vim.g.vscode and state.flight.ai:snapshot()
   end,
   ---@return boolean
+  cmp = function()
+    return not vim.g.vscode
+  end,
+  ---@return boolean
+  dap = function()
+    return not vim.g.vscode
+  end,
+  ---@return boolean
+  lsp = function()
+    return not vim.g.vscode
+  end,
+  ---@return boolean
   not_vscode = function()
     return not vim.g.vscode
   end,
@@ -54,9 +66,9 @@ local conds = {
 local raw_specs = {
   { name = "aerial.nvim", main = "aerial", cond = conds.not_vscode },
   { name = "avante.nvim", main = "avante", cond = conds.ai },
-  { name = "cmp-buffer", main = "cmp_buffer", cond = conds.not_vscode },
-  { name = "cmp-nvim-lsp", main = "cmp_nvim_lsp", cond = conds.not_vscode },
-  { name = "cmp-path", main = "cmp_path", cond = conds.not_vscode },
+  { name = "cmp-buffer", main = "cmp_buffer", cond = conds.cmp },
+  { name = "cmp-nvim-lsp", main = "cmp_nvim_lsp", cond = conds.cmp },
+  { name = "cmp-path", main = "cmp_path", cond = conds.cmp },
   { name = "conform.nvim", main = "conform", cond = conds.not_vscode },
   { name = "copilot.lua", main = "copilot", cond = conds.ai },
   { name = "copilot-chat.nvim", main = "CopilotChat", cond = conds.ai },
@@ -66,9 +78,9 @@ local raw_specs = {
   { name = "friendly-snippets", cond = conds.not_vscode },
   { name = "gitsigns.nvim", main = "gitsigns", cond = conds.not_vscode },
   { name = "indent-blankline.nvim", main = "ibl", cond = conds.not_vscode },
-  { name = "mason.nvim", main = "mason", cond = conds.not_vscode },
-  { name = "mason-lspconfig.nvim", main = "mason-lspconfig", cond = conds.not_vscode },
-  { name = "mason-nvim-dap", main = "mason-nvim-dap", cond = conds.not_vscode },
+  { name = "mason.nvim", main = "mason", cond = conds.lsp },
+  { name = "mason-lspconfig.nvim", main = "mason-lspconfig", cond = conds.lsp },
+  { name = "mason-nvim-dap", main = "mason-nvim-dap", cond = conds.lsp },
   { name = "mini.ai", main = "mini.ai", cond = conds.common },
   { name = "mini.hipatterns", main = "mini.hipatterns", cond = conds.not_vscode },
   { name = "mini.icons", main = "mini.icons", cond = conds.not_vscode },
@@ -78,12 +90,12 @@ local raw_specs = {
   { name = "neo-tree.nvim", main = "neo-tree", cond = conds.not_vscode },
   { name = "noice.nvim", main = "noice", cond = conds.not_vscode },
   { name = "nui.nvim", main = "nui", cond = conds.not_vscode },
-  { name = "nvim-cmp", main = "cmp", cond = conds.not_vscode },
-  { name = "nvim-dap", main = "dap", cond = conds.not_vscode },
-  { name = "nvim-dap-ui", main = "dapui", cond = conds.not_vscode },
-  { name = "nvim-dap-virtual-text", main = "nvim-dap-virtual-text", cond = conds.not_vscode },
-  { name = "nvim-lint", main = "lint", cond = conds.not_vscode },
-  { name = "nvim-lspconfig", main = "lspconfig", cond = conds.not_vscode },
+  { name = "nvim-cmp", main = "cmp", cond = conds.cmp },
+  { name = "nvim-dap", main = "dap", cond = conds.dap },
+  { name = "nvim-dap-ui", main = "dapui", cond = conds.dap },
+  { name = "nvim-dap-virtual-text", main = "nvim-dap-virtual-text", cond = conds.dap },
+  { name = "nvim-lint", main = "lint", cond = conds.lsp },
+  { name = "nvim-lspconfig", main = "lspconfig", cond = conds.lsp },
   { name = "nvim-nio", main = "nio", cond = conds.not_vscode },
   { name = "nvim-notify", main = "notify", cond = conds.not_vscode },
   { name = "nvim-snippets", main = "snippets", cond = conds.not_vscode },
@@ -92,6 +104,7 @@ local raw_specs = {
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects", cond = conds.common },
   { name = "plenary.nvim", main = "plenary", cond = conds.common },
   { name = "render-markdown.nvim", main = "render-markdown", cond = conds.not_vscode },
+  { name = "schema-store.nvim", main = "schemastore", cond = conds.lsp },
   { name = "smear-cursor.nvim", main = "smear_cursor", cond = conds.smear_cursor },
   { name = "trouble.nvim", main = "trouble", cond = conds.not_vscode },
   { name = "which-key.nvim", main = "which-key", cond = conds.common },
@@ -135,6 +148,7 @@ local no_details_module_names = {
   "nui.nvim",
   "nvim-nio",
   "plenary.nvim",
+  "schema-store.nvim",
 }
 
 for index = 1, #specs, 1 do
