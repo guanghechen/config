@@ -223,9 +223,9 @@ function M.resolve_env()
         env.placeholders = terminal.placeholders
       end
       if type(terminal.remote) == "boolean" then
-        env.remote = terminal.remote
+        env.remote = env.remote or terminal.remote
       end
-      env.transform = terminal.transform
+      env.transform = terminal.transform or env.transform
       if terminal.setup then
         terminal.setup()
       end

@@ -1,12 +1,5 @@
+local fn = require("eve.builtin.fn")
 local config = require("fml.dressing.image.config")
-
-local size ---@type fml.dressing.image.terminal.Dim?
-vim.api.nvim_create_autocmd("VimResized", {
-  group = vim.api.nvim_create_augroup("fml.dressing.image.terminal", { clear = true }),
-  callback = function()
-    size = nil
-  end,
-})
 
 -- HACK: ghostty doesn't like it when sending images too fast,
 -- after Neovim startup, so we delay the first image
@@ -18,6 +11,14 @@ vim.defer_fn(function()
   queue = nil
 end, 100)
 
+local size ---@type fml.dressing.image.terminal.Dim?
+vim.api.nvim_create_autocmd("VimResized", {
+  group = fn.augroup("fml.dressing.image.terminal"),
+  callback = function()
+    size = nil
+  end,
+})
+
 ---@class fml.dressing.image.terminal
 local M = {}
 
@@ -25,6 +26,7 @@ function M.size()
   if size then
     return size
   end
+
   local ffi = require("ffi")
   ffi.cdef([[
     typedef struct {
@@ -56,21 +58,18 @@ function M.size()
   }
 
   pcall(function()
-    ---@type { row: number, col: number, xpixel: number, ypixel: number }
-    local sz = ffi.new("winsize")
-    if ffi.C.ioctl(1, TIOCGWINSZ, sz) ~= 0 or sz.col == 0 or sz.row == 0 then
-      return
+    local winsize = ffi.new("winsize") ---@type { row: number, col: number, xpixel: number, ypixel: number }
+    if ffi.C.ioctl(1, TIOCGWINSZ, winsize) == 0 and winsize.col ~= 0 and winsize.row ~= 0 then
+      size = {
+        width = winsize.xpixel,
+        height = winsize.ypixel,
+        columns = winsize.col,
+        rows = winsize.row,
+        cell_width = winsize.xpixel / winsize.col,
+        cell_height = winsize.ypixel / winsize.row,
+        scale = math.max(1, winsize.xpixel / winsize.col / 8), -- try to guess dpi scale
+      }
     end
-    size = {
-      width = sz.xpixel,
-      height = sz.ypixel,
-      columns = sz.col,
-      rows = sz.row,
-      cell_width = sz.xpixel / sz.col,
-      cell_height = sz.ypixel / sz.row,
-      -- try to guess dpi scale
-      scale = math.max(1, sz.xpixel / sz.col / 8),
-    }
   end)
 
   return size

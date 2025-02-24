@@ -51,22 +51,22 @@ local M = {}
 
 ---@type table<string, fml.dressing.image.cmd>
 local commands = {
-  url = {
-    cmd = {
-      {
-        cmd = "curl",
-        args = { "-L", "-o", "{file}", "{src}" },
-      },
-      {
-        cmd = "wget",
-        args = { "-O", "{file}", "{src}" },
-      },
-    },
-    file = function(convert, ctx)
-      local src = M.norm(ctx.src)
-      return M.is_uri(src) and convert:tmpfile("data") or src
-    end,
-  },
+  -- url = {
+  --   cmd = {
+  --     {
+  --       cmd = "curl",
+  --       args = { "-L", "-o", "{file}", "{src}" },
+  --     },
+  --     {
+  --       cmd = "wget",
+  --       args = { "-O", "{file}", "{src}" },
+  --     },
+  --   },
+  --   file = function(convert, ctx)
+  --     local src = M.norm(ctx.src)
+  --     return M.is_uri(src) and convert:tmpfile("data") or src
+  --   end,
+  -- },
   cache = {
     file = function(convert, ctx)
       return convert:tmpfile(convert:ft(ctx.src))

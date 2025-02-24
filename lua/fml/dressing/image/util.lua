@@ -29,7 +29,8 @@ function M.dim(filepath)
   return dims[filepath]
 end
 
----@param size fml.dressing.image.Size
+---@param size                          fml.dressing.image.Size
+---@return fml.dressing.image.Size
 function M.pixels_to_cells(size)
   local terminal_size = terminal.size()
   return M.norm({
@@ -38,19 +39,18 @@ function M.pixels_to_cells(size)
   })
 end
 
----@param size fml.dressing.image.Size
+---@param size                          fml.dressing.image.Size
 ---@return fml.dressing.image.Size
 function M.norm(size)
-  return {
-    width = math.max(1, math.ceil(size.width)),
-    height = math.max(1, math.ceil(size.height)),
-  }
+  local width = math.max(1, math.ceil(size.width)) ---@type integer
+  local height = math.max(1, math.ceil(size.height)) ---@type integer
+  return { width = width, height = height }
 end
 
----@param file string
----@param cells fml.dressing.image.Size size in rows x columns
----@param opts? { full?: boolean, info?: fml.dressing.image.Info }
-function M.fit(file, cells, opts)
+---@param filepath                      string
+---@param cells                         fml.dressing.image.Size  size in rows x columns
+---@param opts                          ?{ full?: boolean, info?: fml.dressing.image.Info }
+function M.fit(filepath, cells, opts)
   opts = opts or {}
   local img_pixels ---@type fml.dressing.image.Size
   if opts.info then
@@ -59,7 +59,7 @@ function M.fit(file, cells, opts)
     img_pixels.height = opts.info.size.height / opts.info.dpi.height * 96 * terminal_size.scale
     img_pixels.width = opts.info.size.width / opts.info.dpi.width * 96 * terminal_size.scale
   else
-    img_pixels = M.dim(file)
+    img_pixels = M.dim(filepath)
   end
   local img_cells = M.pixels_to_cells(img_pixels)
 

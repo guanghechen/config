@@ -29,14 +29,13 @@ function M.noop(...) end
 
 ---@generic T
 ---@param fn                            T
----@param duration                      ?integer
+---@param delay                         ?integer
 ---@return T
-function M.debounce(fn, duration)
-  local timer = vim.uv.new_timer()
+function M.debounce(fn, delay)
+  local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
+  local duration = delay or 20 ---@type integer
   return function()
-    if timer ~= nil then
-      timer:start(duration or 20, 0, vim.schedule_wrap(fn))
-    end
+    timer:start(duration, 0, vim.schedule_wrap(fn))
   end
 end
 

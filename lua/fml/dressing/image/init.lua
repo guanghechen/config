@@ -65,33 +65,30 @@ function M.setup(bufnr)
   did_setup = true
 
   local group = fn.augroup("fml.dressing.image")
-  if config.state.extnames and #config.state.extnames > 0 then
-    vim.api.nvim_create_autocmd("BufReadCmd", {
-      pattern = "*" .. table.concat(config.state.extnames, ",*"),
-      group = group,
-      callback = function(e)
-        local image_buf = require("fml.dressing.image.buf")
-        image_buf.attach(e.buf)
-      end,
-    })
-    -- prevent altering the original image file
-    vim.api.nvim_create_autocmd("BufWriteCmd", {
-      pattern = "*" .. table.concat(config.state.extnames, ",*"),
-      group = group,
-      callback = function(e)
-        -- vim.api.nvim_exec_autocmds("BufWritePre", { buffer = e.buf })
-        vim.bo[e.buf].modified = false
-        -- vim.api.nvim_exec_autocmds("BufWritePost", { buffer = e.buf })
-      end,
-    })
-  end
+  vim.api.nvim_create_autocmd("BufReadCmd", {
+    pattern = "*" .. table.concat(config.state.extnames, ",*"),
+    group = group,
+    callback = function(e)
+      local image_buf = require("fml.dressing.image.buf")
+      image_buf.attach(e.buf)
+    end,
+  })
+  -- prevent altering the original image file
+  vim.api.nvim_create_autocmd("BufWriteCmd", {
+    pattern = "*" .. table.concat(config.state.extnames, ",*"),
+    group = group,
+    callback = function(e)
+      vim.bo[e.buf].modified = false
+    end,
+  })
+
   if config.state.doc.enabled then
     local langs = M.langs()
     vim.api.nvim_create_autocmd("FileType", {
       group = group,
       callback = function(e)
-        local ft = vim.bo[e.buf].filetype
-        local lang = vim.treesitter.language.get_lang(ft)
+        local filetype = vim.bo[e.buf].filetype
+        local lang = vim.treesitter.language.get_lang(filetype)
         if vim.tbl_contains(langs, lang) then
           vim.schedule(function()
             if vim.api.nvim_buf_is_valid(e.buf) then
@@ -103,6 +100,7 @@ function M.setup(bufnr)
       end,
     })
   end
+
   if bufnr ~= nil then
     local image_buf = require("fml.dressing.image.buf")
     image_buf.attach(bufnr)

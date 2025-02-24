@@ -1,39 +1,41 @@
+local bit = require("bit")
+local fn = require("eve.builtin.fn")
 local config = require("fml.dressing.image.config")
 local convertor = require("fml.dressing.image.convertor")
 local terminal = require("fml.dressing.image.terminal")
 
 ---@class fml.dressing.image.Image
----@field src string
----@field file string
----@field id number image id. unique per nvim instance and file
----@field sent? boolean image data is sent
----@field placements table<number, fml.dressing.image.Placement> image placements
----@field augroup number
----@field info? fml.dressing.image.Info
----@field _convert? fml.dressing.image.Convertor
+---@field public src                    string
+---@field public filepath               string
+---@field public id                     integer image id. unique per nvim instance and file
+---@field public sent                   ?boolean image data is sent
+---@field public placements             table<number, fml.dressing.image.Placement> image placements
+---@field public augroup                integer
+---@field public info                   ?fml.dressing.image.Info
+---@field _convert                      ?fml.dressing.image.Convertor
 local M = {}
 M.__index = M
 
-local NVIM_ID_BITS = 10
-local CHUNK_SIZE = 4096
-local _id = 30
-local _pid = 0
-local nvim_id = 0
-local uv = vim.uv or vim.loop
+local NVIM_ID_BITS = 10 ---@type integer
+local CHUNK_SIZE = 4096 ---@type integer
+local _id = 30 ---@type integer
+local _pid = 0 ---@type integer
+local nvim_id = 0 ---@type integer
 local images = {} ---@type table<string, fml.dressing.image.Image>
 
 ---@param src                           string
 ---@return fml.dressing.image.Image
 function M.new(src)
   local self = setmetatable({}, M)
+
   self.src = src
-  self.file = self:convert()
-  if images[self.file] then
-    return images[self.file]
+  self.filepath = self:convert()
+  if images[self.filepath] then
+    return images[self.filepath]
   end
-  images[self.file] = self
+  images[self.filepath] = self
+
   _id = _id + 1
-  local bit = require("bit")
   -- generate a unique id for this nvim instance (10 bits)
   if nvim_id == 0 then
     local pid = vim.fn.getpid()
@@ -42,7 +44,7 @@ function M.new(src)
   -- interleave the nvim id and the image id
   self.id = bit.bor(bit.lshift(nvim_id, 24 - NVIM_ID_BITS), _id)
   self.placements = {}
-  self.augroup = vim.api.nvim_create_augroup("fml.dressing.image." .. self.id, { clear = true })
+  self.augroup = fn.augroup("fml.dressing.image." .. self.id)
 
   self:run()
   if self:ready() then
@@ -75,7 +77,7 @@ function M:failed()
   if self._convert and self._convert:error() then
     return true
   end
-  return self.file and vim.fn.filereadable(self.file) == 0
+  return self.filepath and vim.fn.filereadable(self.filepath) == 0
 end
 
 ---@return boolean
@@ -83,7 +85,7 @@ function M:ready()
   if self._convert and not self._convert:done() then
     return false
   end
-  return self.file and vim.fn.filereadable(self.file) == 1
+  return self.filepath and vim.fn.filereadable(self.filepath) == 1
 end
 
 ---@return nil
@@ -125,11 +127,11 @@ function M:send()
       t = "f",
       i = self.id,
       f = 100,
-      data = vim.base64.encode(self.file),
+      data = vim.base64.encode(self.filepath),
     })
   else
     -- remote image
-    local fd = assert(io.open(self.file, "rb"), "Failed to open file: " .. self.file)
+    local fd = assert(io.open(self.filepath, "rb"), "Failed to open file: " .. self.filepath)
     local data = fd:read("*a")
     fd:close()
     data = vim.base64.encode(data) -- encode the data
@@ -153,7 +155,7 @@ function M:send()
           data = chunk,
         })
       end
-      uv.sleep(1)
+      vim.uv.sleep(1)
     end
   end
   self:on_send()
@@ -176,9 +178,10 @@ end
 ---@param pid                           ?integer
 ---@return nil
 function M:del(pid)
-  for id, p in ipairs(pid and { pid } or vim.tbl_keys(self.placements)) do
+  local pids = pid and { pid } or vim.tbl_keys(self.placements) ---@type integer[]
+  for index, p in ipairs(pids) do
     if self.placements[p] then
-      terminal.request({ a = "d", d = "i", i = self.id, p = id })
+      terminal.request({ a = "d", d = "i", i = self.id, p = index })
       self.placements[p] = nil
     end
   end

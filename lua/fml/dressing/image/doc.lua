@@ -10,25 +10,25 @@ local M = {}
 ---@alias fml.dressing.image.transform fun(match: fml.dressing.image.match, ctx: fml.dressing.image.ctx)
 
 ---@class fml.dressing.image.Hover
----@field public img                    fml.dressing.image.Placement
+---@field public placement              fml.dressing.image.Placement
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
 
 ---@class fml.dressing.image.ctx
----@field buf number
----@field lang string
----@field meta vim.treesitter.query.TSMetadata
----@field pos? TSMatch
----@field src? TSMatch
----@field content? TSMatch
+---@field public bufnr                  integer
+---@field public lang                   string
+---@field public meta                   vim.treesitter.query.TSMetadata
+---@field public pos                    ?TSMatch
+---@field public src                    ?TSMatch
+---@field public content                ?TSMatch
 
 ---@class fml.dressing.image.match
----@field id string
----@field pos fml.dressing.image.Pos
----@field src? string
----@field content? string
----@field ext? string
----@field range? Range4
+---@field public id                     string
+---@field public pos                    fml.dressing.image.Pos
+---@field public src                    ?string
+---@field public content                ?string
+---@field public ext                    ?string
+---@field public range                  ?Range4
 
 local META_EXT = "image.ext"
 local META_SRC = "image.src"
@@ -39,7 +39,7 @@ local META_LANG = "image.lang"
 M.transforms = {
   norg = function(img, ctx)
     local row, col = ctx.src.node:start()
-    local line = vim.api.nvim_buf_get_lines(ctx.buf, row, row + 1, false)[1]
+    local line = vim.api.nvim_buf_get_lines(ctx.bufnr, row, row + 1, false)[1]
     img.src = line:sub(col + 1)
   end,
   typst = function(img, ctx)
@@ -48,7 +48,7 @@ M.transforms = {
     end
     img.content = fn.tpl(config.state.math.typst.tpl, {
       color = fn.pick_color({ "SnacksImageMath" }, "fg") or "#000000",
-      header = M.get_header(ctx.buf),
+      header = M.get_header(ctx.bufnr),
       content = img.content,
     }, { indent = true, prefix = "$" })
   end,
@@ -66,7 +66,7 @@ M.transforms = {
     end
     local packages = { "xcolor" }
     vim.list_extend(packages, config.state.math.latex.packages)
-    for _, line in ipairs(vim.api.nvim_buf_get_lines(ctx.buf, 0, -1, false)) do
+    for _, line in ipairs(vim.api.nvim_buf_get_lines(ctx.bufnr, 0, -1, false)) do
       if line:find("\\usepackage") then
         for _, p in ipairs(vim.split(line:match("{(.-)}") or "", ",%s*")) do
           if not vim.tbl_contains(packages, p) then
@@ -79,7 +79,7 @@ M.transforms = {
     img.content = fn.tpl(config.state.math.latex.tpl, {
       font_size = config.state.math.latex.font_size or "large",
       packages = table.concat(packages, ", "),
-      header = M.get_header(ctx.buf),
+      header = M.get_header(ctx.bufnr),
       color = fg:upper():sub(2),
       content = content,
     }, { indent = true, prefix = "$" })
@@ -172,7 +172,7 @@ function M.find(buf, from, to)
       if not meta[META_IGNORE] then
         ---@type fml.dressing.image.ctx
         local ctx = {
-          buf = buf,
+          bufnr = buf,
           lang = tostring(meta[META_LANG] or meta["injection.language"] or tree:lang()),
           meta = meta,
         }
@@ -197,8 +197,8 @@ function M._img(ctx)
   ctx.pos = ctx.pos or ctx.src or ctx.content
   assert(ctx.pos, "no image node")
 
-  local range = vim.treesitter.get_range(ctx.pos.node, ctx.buf, ctx.pos.meta)
-  local lines = vim.api.nvim_buf_get_lines(ctx.buf, range[1], range[4] + 1, false)
+  local range = vim.treesitter.get_range(ctx.pos.node, ctx.bufnr, ctx.pos.meta)
+  local lines = vim.api.nvim_buf_get_lines(ctx.bufnr, range[1], range[4] + 1, false)
   while #lines > 0 and vim.trim(lines[#lines]) == "" do
     table.remove(lines)
   end
@@ -213,12 +213,12 @@ function M._img(ctx)
       math.min(range[2], range[5]),
     },
   }
-  img.pos[1] = math.min(img.pos[1], vim.api.nvim_buf_line_count(ctx.buf))
+  img.pos[1] = math.min(img.pos[1], vim.api.nvim_buf_line_count(ctx.bufnr))
   if ctx.src then
-    img.src = vim.treesitter.get_node_text(ctx.src.node, ctx.buf, { metadata = ctx.src.meta })
+    img.src = vim.treesitter.get_node_text(ctx.src.node, ctx.bufnr, { metadata = ctx.src.meta })
   end
   if ctx.content then
-    img.content = vim.treesitter.get_node_text(ctx.content.node, ctx.buf, { metadata = ctx.content.meta })
+    img.content = vim.treesitter.get_node_text(ctx.content.node, ctx.bufnr, { metadata = ctx.content.meta })
   end
   assert(img.src or img.content, "no image src or content")
 
@@ -227,7 +227,7 @@ function M._img(ctx)
     transform(img, ctx)
   end
   if img.src then
-    img.src = M.resolve(ctx.buf, img.src)
+    img.src = M.resolve(ctx.bufnr, img.src)
   end
   if not config.state.math.enabled and img.ext and img.ext:find("math") then
     return
@@ -287,10 +287,10 @@ function M.hover()
     return M.hover_close()
   end
 
-  if hover and hover.img.img.src ~= src then
+  if hover and hover.placement.image.src ~= src then
     M.hover_close()
   elseif hover then
-    hover.img:update()
+    hover.placement:update()
     return
   end
 
@@ -352,7 +352,7 @@ function M.hover()
     on_update_pre = function()
       if hover and not updated then
         updated = true
-        local loc = hover.img:state().loc
+        local loc = hover.placement:state().loc
         if hover.winnr > 0 and vim.api.nvim_win_is_valid(hover.winnr) then
           vim.api.nvim_win_set_height(hover.winnr, loc.height)
           vim.api.nvim_win_set_width(hover.winnr, loc.width)
@@ -365,7 +365,7 @@ function M.hover()
   hover = {
     winnr = winnr,
     bufnr = bufnr,
-    img = Placement.new(bufnr, src, o),
+    placement = Placement.new(bufnr, src, o),
   }
 
   vim.api.nvim_create_autocmd({ "BufWritePost", "CursorMoved", "ModeChanged", "BufLeave" }, {
@@ -388,7 +388,7 @@ function M.hover_close()
     if hover.winnr > 0 and vim.api.nvim_win_is_valid(hover.winnr) then
       vim.api.nvim_win_close(hover.winnr, true)
     end
-    hover.img:close()
+    hover.placement:close()
     hover = nil
   end
 end
@@ -401,7 +401,7 @@ function M.inline(bufnr)
     local found = {} ---@type table<string, boolean>
     for _, i in ipairs(M.find(bufnr)) do
       local img = imgs[i.id] ---@type fml.dressing.image.Placement?
-      if img and img.img.src ~= i.src then
+      if img and img.image.src ~= i.src then
         img:close()
         img = nil
       end
