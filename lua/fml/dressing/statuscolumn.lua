@@ -1,11 +1,6 @@
---- https://github.com/folke/snacks.nvim/blob/72ffb3d1a2812671bb3487e490a3b1dd380bc234/lua/snacks/statuscolumn.lua#L1
+--- https://github.com/folke/snacks.nvim/blob/dd15e3a05a2111231c53726f18e39a147162c20f/lua/snacks/statuscolumn.lua#L1
 
 local icons = require("eve.constant.icon")
-
--- Numbers in Neovim are weird: They show when either number or relativenumber is true
-local LINE_NR = "%=%{%(&number || &relativenumber) && v:virtnum == 0 ? ("
-  .. (vim.fn.has("nvim-0.11") == 1 and '"%l"' or 'v:relnum == 0 ? (&number ? "%l" : "%r") : (&relativenumber ? "%r" : "%l")')
-  .. ') : ""%} '
 
 ---@class fml.dressing.statuscolumn.config
 local config = {
@@ -189,10 +184,24 @@ local function statuscolumn()
   setup()
 
   local winnr = vim.g.statusline_winid ---@type integer
+  local nu = vim.wo[winnr].number ---@type boolean
+  local rnu = vim.wo[winnr].relativenumber ---@type boolean
   local show_signs = vim.v.virtnum == 0 and vim.wo[winnr].signcolumn ~= "no" ---@type boolean
-  local components = { "", LINE_NR, "" } ---@type string[]
-  if not show_signs and not (vim.wo[winnr].number or vim.wo[winnr].relativenumber) then
+  if not (show_signs or nu or rnu) then
     return ""
+  end
+
+  local components = { "", "", "" } ---@type string[]
+  if (nu or rnu) and vim.v.virtnum == 0 then
+    local num ---@type number
+    if rnu and nu and vim.v.relnum == 0 then
+      num = vim.v.lnum
+    elseif rnu then
+      num = vim.v.relnum
+    else
+      num = vim.v.lnum
+    end
+    components[2] = "%=" .. num .. " "
   end
 
   if show_signs then
@@ -249,7 +258,7 @@ end
 function M.statuscolumn()
   local win = vim.g.statusline_winid
   local buf = vim.api.nvim_win_get_buf(win)
-  local key = ("%d:%d:%d:%d"):format(win, buf, vim.v.lnum, vim.v.virtnum ~= 0 and 1 or 0)
+  local key = ("%d:%d:%d:%d:%d"):format(win, buf, vim.v.lnum, vim.v.virtnum ~= 0 and 1 or 0, vim.v.relnum)
   if cache[key] then
     return cache[key]
   end
