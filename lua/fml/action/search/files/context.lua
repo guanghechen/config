@@ -70,7 +70,7 @@ state.select.search_file_scope:subscribe(
       ---@type string
       local current_buf_dirpath = bufnr ~= nil
           and editor.is_buf_valid(bufnr)
-          and vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
+          and path.dirname(vim.api.nvim_buf_get_name(bufnr))
         or path.cwd()
 
       local current_search_cwd = state_search_cwd:snapshot() ---@type string

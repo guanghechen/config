@@ -51,7 +51,7 @@ local function get_select()
       ---@type string
       local current_buf_dirpath = bufnr ~= nil
           and editor.is_buf_valid(bufnr)
-          and vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
+          and path.dirname(vim.api.nvim_buf_get_name(bufnr))
         or path.cwd()
 
       local current_find_cwd = state_find_cwd:snapshot() ---@type string

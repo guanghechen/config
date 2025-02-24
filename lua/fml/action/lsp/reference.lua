@@ -62,7 +62,7 @@ local function fetch_data(context, method, additional_params, callback)
             ---@diagnostic disable-next-line: undefined-field
             local range = location.targetRange or location.range
             if uri ~= nil and range ~= nil then
-              local filepath = vim.fs.normalize(uri:gsub("^file://", "")) ---@type string
+              local filepath = path.normalize(uri:gsub("^file://", "")) ---@type string
               local filepath_relative = path.relative(cwd, filepath, true) ---@type string
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
