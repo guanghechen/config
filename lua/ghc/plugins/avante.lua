@@ -299,7 +299,7 @@ return {
         api_version = "2024-08-01-preview",
       },
       copilot = {
-        model = "claude-3.5-sonnet",
+        model = "claude-3.7-sonnet",
       },
       vendors = {
         deepseek = {
