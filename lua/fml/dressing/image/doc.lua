@@ -25,6 +25,7 @@ local M = {}
 ---@class fml.dressing.image.match
 ---@field public id                     string
 ---@field public pos                    fml.dressing.image.Pos
+---@field public ref                    ?string
 ---@field public src                    ?string
 ---@field public content                ?string
 ---@field public ext                    ?string
@@ -150,11 +151,57 @@ function M.resolve(bufnr, src)
   return src
 end
 
----@param buf number
----@param from? number
----@param to? number
-function M.find(buf, from, to)
-  local ok, parser = pcall(vim.treesitter.get_parser, buf)
+---@param bufnr                         integer
+---@return table<string,{label:string,dest:string}>
+function M.get_link_definitions(bufnr)
+  local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
+  if not ok or not parser then
+    return {}
+  end
+  parser:parse()
+  local refs = {}
+  parser:for_each_tree(function(tstree, tree)
+    if not tstree then
+      return
+    end
+    local query = vim.treesitter.query.get(tree:lang(), "link_definition")
+    if not query then
+      return
+    end
+    for _, match in query:iter_matches(tstree:root(), bufnr) do
+      -- Look for linkDefinition matches
+      for id in pairs(match) do
+        local name = query.captures[id]
+        if name == "linkDefinition" then
+          local label_node = nil
+          local dest_node = nil
+          -- Find the label and destination nodes
+          for inner_id, inner_nodes in pairs(match) do
+            local inner_name = query.captures[inner_id]
+            if inner_name == "linkDefinition.label" then
+              label_node = inner_nodes
+            elseif inner_name == "linkDefinition.dest" then
+              dest_node = inner_nodes
+            end
+          end
+          if label_node and dest_node then
+            local label = vim.treesitter.get_node_text(label_node, bufnr):gsub("^%[(.-)%]$", "%1") ---@type string
+            local dest = vim.treesitter.get_node_text(dest_node, bufnr) ---@type string
+            refs[label] = { label = label, dest = dest }
+          end
+        end
+      end
+    end
+  end)
+  return refs
+end
+
+---@param bufnr                         integer
+---@param from                          ?integer
+---@param to                            ?integer
+function M.find(bufnr, from, to)
+  local linkDefinitions = M.get_link_definitions(bufnr)
+  local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
   if not ok or not parser then
     return {}
   end
@@ -168,14 +215,15 @@ function M.find(buf, from, to)
     if not query then
       return
     end
-    for _, match, meta in query:iter_matches(tstree:root(), buf, from and from - 1 or nil, to and to - 1 or nil) do
+    for _, match, meta in query:iter_matches(tstree:root(), bufnr, from and from - 1 or nil, to and to - 1 or nil) do
       if not meta[META_IGNORE] then
         ---@type fml.dressing.image.ctx
         local ctx = {
-          bufnr = buf,
+          bufnr = bufnr,
           lang = tostring(meta[META_LANG] or meta["injection.language"] or tree:lang()),
           meta = meta,
         }
+
         for id, nodes in pairs(match) do
           nodes = type(nodes) == "userdata" and { nodes } or nodes
           local name = query.captures[id]
