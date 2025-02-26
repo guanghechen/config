@@ -1,6 +1,6 @@
 ### cargo
 if test -f "$HOME/.cargo/bin/cargo"
-  fish_add_path "$HOME/.cargo/bin"
+  fish_add_path "$HOME/.cargo/bin/"
 end
 
 ### fnm
@@ -10,7 +10,7 @@ end
 
 ### miniforge3
 if test -f "$HOME/.app/miniforge3/bin/conda"
-  fish_add_path "$HOME/.app/miniforge3/bin"
+  fish_add_path "$HOME/.app/miniforge3/bin/conda"
   set -gx CONDA_CHANGEPS1 false
   set -gx CONDA_PROMPT_MODIFIER ""
   eval "$HOME/.app/miniforge3/bin/conda" "shell.fish" "hook" $argv | source

@@ -24,8 +24,6 @@ set -gx MYVIMRC                         "$HOME/.config/nvim/init.lua"
 set -gx no_proxy                        "localhost,127.0.0.1,::1"
 
 ## setup paths
-fish_add_path "$HOME/bin"
-fish_add_path "/usr/local/bin"
 if test -f /opt/homebrew/bin/brew
   set -gx HOMEBREW_PREFIX             "/opt/homebrew"
   set -gx HOMEBREW_CELLAR             "/opt/homebrew/Cellar"
@@ -41,7 +39,9 @@ else if test -f /home/linuxbrew/.linuxbrew/bin/brew
   set -gx VIM                         "/home/linuxbrew/.linuxbrew/share/nvim"
   set -gx VIMRUNTIME                  "/home/linuxbrew/.linuxbrew/share/nvim/runtime"
 end
-fish_add_path "$HOMEBREW_PREFIX/bin"
+fish_add_path "/usr/local/bin/"
+fish_add_path "$HOMEBREW_PREFIX/bin/"
+fish_add_path "$HOME/.local/bin/"
 
 ## setup vpn
 if test -e /proc/version
