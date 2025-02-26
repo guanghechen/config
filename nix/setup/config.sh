@@ -5,6 +5,7 @@ clone_or_update_config_repo() {
   local CONFIG_REPO="https://github.com/guanghechen/config.git"
   local CONFIG_BRANCHES=(
     "btop"
+    "conda"
     "fish"
     "fzf"
     "helix"
