@@ -32,8 +32,16 @@ function M.pyright()
     on_attach = basic_on_attach,
     on_init = on_init,
     settings = {
-      pyright = {
+      python = {
         enabled = true,
+        analysis = {
+          typeCheckingMode = "basic",
+          autoImportCompletions = true,
+          diagnosticMode = "openFilesOnly",
+          autoSearchPaths = true,
+          useLibraryCodeForTypes = true,
+          indexing = true,
+        },
       },
     },
   }
