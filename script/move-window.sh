@@ -6,13 +6,12 @@ function _ghc_tmux_move_window_ {
   fi
 
   local target_session_name=$1
-
   if [ "$(tmux list-windows | wc -l)" -eq 1 ]; then
-    tmux move-window -t "${target_session_name}"
+    tmux move-window -t "${target_session_name}:"
     tmux detach-client 2>/dev/null
     tmux attach -t "${target_session_name}"
   else
-    tmux move-window -t "${target_session_name}"
+    tmux move-window -t "${target_session_name}:"
     tmux switch-client -t "${target_session_name}"
   fi
 }
