@@ -62,6 +62,7 @@ alias ghc-clock='tty-clock -DSbcnrs -C5'
 alias ghc-ports='netstat -tulanp'
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
+alias today='cal -C3'
 
 ### platform specific
 if test (uname) = Darwin
