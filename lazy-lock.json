@@ -1,6 +1,6 @@
 {
   "aerial.nvim": { "branch": "nvim@aerial.nvim", "commit": "3284a2cb858ba009c79da87d5e010ccee3c99c4d" },
-  "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "9c9fadd256d6138d771e17b9ca68905908e16c17" },
+  "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "ebadba7420a5f9b85829273b8c9cd2be56d9b074" },
   "cmp-buffer": { "branch": "nvim@cmp-buffer", "commit": "3022dbc9166796b644a841a02de8dd1cc1d311fa" },
   "cmp-nvim-lsp": { "branch": "nvim@cmp-nvim-lsp", "commit": "99290b3ec1322070bcfb9e846450a46f6efa50f0" },
   "cmp-path": { "branch": "nvim@cmp-path", "commit": "91ff86cd9c29299a64f968ebb45846c485725f23" },
