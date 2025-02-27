@@ -30,7 +30,8 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.inspect_tree(context)
-  vim.cmd.InspectTree()
+  vim.treesitter.inspect_tree()
+  vim.api.nvim_input("I")
 end
 
 ---@param context                       eve.command.IContext
