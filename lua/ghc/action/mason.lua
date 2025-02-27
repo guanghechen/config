@@ -15,6 +15,7 @@ function M.get_mason_ensure_installed()
     "json-lsp", -- jsonls
     "lua-language-server", -- lua_ls
     "pyright", -- pyright
+    -- "basedpyright",
     "rust-analyzer", -- rust_analyzer
     -- "sqls", -- sqls
     "tailwindcss-language-server", --  tailwindcss
@@ -51,6 +52,8 @@ function M.get_mason_lspconfig_ensure_installed()
     "jsonls", -- json
     "lua_ls", -- lua
     "pyright", -- python -- by microsoft
+    -- "basedpyright", -- basedpyright
+    "ruff",
     "rust_analyzer", -- rust -- by rust official
     -- "sqls", -- sql
     "tailwindcss",

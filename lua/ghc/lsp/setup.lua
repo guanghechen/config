@@ -18,10 +18,6 @@ local setup = {
     local get_config = require("ghc.lsp.lang.cpp")
     require("lspconfig").clangd.setup(get_config())
   end,
-  eslint = function()
-    local get_config = require("ghc.lsp.lang.eslint")
-    require("lspconfig").eslint.setup(get_config())
-  end,
   html = function()
     local get_config = require("ghc.lsp.lang.html")
     require("lspconfig").html.setup(get_config())
@@ -34,6 +30,12 @@ local setup = {
     local get_config = require("ghc.lsp.lang.lua")
     require("lspconfig").lua_ls.setup(get_config())
   end,
+
+  --python------------------------------------------------------------------------------------------
+  -- basedpyright = function()
+  --   local get_config = require("ghc.lsp.lang.python").basedpyright
+  --   require("lspconfig").basedpyright.setup(get_config())
+  -- end,
   pyright = function()
     local get_config = require("ghc.lsp.lang.python").pyright
     require("lspconfig").pyright.setup(get_config())
@@ -42,6 +44,8 @@ local setup = {
     local get_config = require("ghc.lsp.lang.python").ruff
     require("lspconfig").ruff.setup(get_config())
   end,
+  ------------------------------------------------------------------------------------------python--
+
   rust_analyzer = function()
     local get_config = require("ghc.lsp.lang.rust")
     require("lspconfig").rust_analyzer.setup(get_config())
@@ -50,13 +54,21 @@ local setup = {
     local get_config = require("ghc.lsp.lang.tailwindcss")
     require("lspconfig").tailwindcss.setup(get_config())
   end,
-  yamlls = function()
-    local get_config = require("ghc.lsp.lang.yaml")
-    require("lspconfig").yamlls.setup(get_config())
+
+  --typescript--------------------------------------------------------------------------------------
+  eslint = function()
+    local get_config = require("ghc.lsp.lang.eslint")
+    require("lspconfig").eslint.setup(get_config())
   end,
   vtsls = function()
     local get_config = require("ghc.lsp.lang.typescript")
     require("lspconfig").vtsls.setup(get_config())
+  end,
+  --------------------------------------------------------------------------------------typescript--
+
+  yamlls = function()
+    local get_config = require("ghc.lsp.lang.yaml")
+    require("lspconfig").yamlls.setup(get_config())
   end,
 }
 
