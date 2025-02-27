@@ -35,8 +35,12 @@ local setup = {
     require("lspconfig").lua_ls.setup(get_config())
   end,
   pyright = function()
-    local get_config = require("ghc.lsp.lang.python")
+    local get_config = require("ghc.lsp.lang.python").pyright
     require("lspconfig").pyright.setup(get_config())
+  end,
+  ruff = function()
+    local get_config = require("ghc.lsp.lang.python").ruff
+    require("lspconfig").ruff.setup(get_config())
   end,
   rust_analyzer = function()
     local get_config = require("ghc.lsp.lang.rust")

@@ -28,8 +28,10 @@ function M.get_mason_ensure_installed()
 
     -- lint --
     "cspell",
+    "ruff",
 
     -- formatter --
+    "black",
     "prettier",
     "shfmt",
     "stylua",

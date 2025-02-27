@@ -65,6 +65,8 @@ return {
       "make",
       "markdown",
       "markdown_inline",
+      "ninja",
+      "rst",
       "python",
       "query",
       "regex",
