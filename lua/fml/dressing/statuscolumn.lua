@@ -1,4 +1,4 @@
---- https://github.com/folke/snacks.nvim/blob/dd15e3a05a2111231c53726f18e39a147162c20f/lua/snacks/statuscolumn.lua#L1
+--- https://github.com/folke/snacks.nvim/blob/1239fb84bc426d4fcd1c8dc9dde8503c17501842/lua/snacks/statuscolumn.lua#L1
 
 local icons = require("eve.constant.icon")
 
@@ -144,7 +144,7 @@ local function line_signs(winnr, bufnr, lnum)
         priority = 0,
       }
       table.insert(signs, sign)
-    elseif config.folds.open and tostring(vim.treesitter.foldexpr(vim.v.lnum)):sub(1, 1) == ">" then
+    elseif config.folds.open and vim.fn.foldlevel(lnum) > vim.fn.foldlevel(lnum - 1) then
       ---@type fml.dressing.statuscolumn.ISign
       local sign = {
         type = "fold",
