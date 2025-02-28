@@ -210,33 +210,6 @@ local function get_file_selector()
     end,
   })
 
-  ------@param filepaths                   string[]
-  ------@return string[]
-  ---local function resolve_filepaths(filepaths)
-  ---  local workspace = path.workspace() ---@type string
-  ---  local cwd = path.cwd() ---@type string
-  ---  if workspace == cwd or #cwd < #workspace or cwd:sub(1, #workspace) ~= workspace then
-  ---    return filepaths
-  ---  end
-  ---
-  ---  local prefix = cwd:sub(#workspace + 1) ---@type string
-  ---  if #prefix > 0 and prefix:sub(1, 1) == "/" then
-  ---    prefix = prefix:sub(2) ---@type string
-  ---  end
-  ---
-  ---  local resolved_filepaths = {} ---@type string[]
-  ---  for _, filepath in ipairs(filepaths) do
-  ---    if #filepath > #prefix and filepath:sub(1, #prefix) == prefix then
-  ---      local resolved_filepath = filepath:sub(#prefix + 1) ---@type string
-  ---      if #resolved_filepath > 1 and resolved_filepath:sub(1, 1) == "/" then
-  ---        resolved_filepath = resolved_filepath:sub(2) ---@type string
-  ---      end
-  ---      table.insert(resolved_filepaths, resolved_filepath)
-  ---    end
-  ---  end
-  ---  return resolved_filepaths
-  ---end
-
   ---@param params                      ghc.plugins.avante.file_selector.IParams
   ---@return nil
   local function file_selector(params)

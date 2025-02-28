@@ -52,6 +52,20 @@ local function gen_hlgroup_map(context)
     AerialTypeParameterIcon = { link = "f_sl_lsp_icon_TypeParameter" },
     AerialVariableIcon = { link = "f_sl_lsp_icon_Variable" },
 
+    ---! avante.nvim
+    AvanteConflictCurrent = { bg = c.diffDel, bold = true },
+    AvanteConflictCurrentLabel = { bg = cs.mix(c.bg0, c.diffDel, 40) },
+    AvanteConflictIncoming = { bg = c.diffAdd, bold = true },
+    AvanteConflictIncomingLabel = { bg = cs.mix(c.bg0, c.diffAdd, 40) },
+    AvanteReversedSubtitle = { fg = c.yellow },
+    AvanteReversedThirdTitle = { fg = c.blue },
+    AvanteReversedTitle = { fg = c.aqua },
+    AvanteSubtitle = { fg = c.bg0, bg = c.yellow, bold = true },
+    AvanteThirdTitle = { fg = c.bg0, bg = c.blue, bold = true },
+    AvanteTitle = { fg = c.bg0, bg = c.aqua, bold = true },
+    AvanteToBeDeleted = { bg = c.diffDelInline, strikethrough = true },
+    AvanteToBeDeletedWOStrikethrough = { bg = c.diffDel },
+
     ---! diffview.nvim
     DiffviewFilePanelDeletions = { fg = c.red, bold = true },
     DiffviewFilePanelInsertions = { fg = c.green, bold = true },
