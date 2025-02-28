@@ -1485,7 +1485,7 @@ function M.win_indicator(position)
       local hln_text = hln_text_prefix .. context.mode ---@type string
       local hln_sep = hln_sep_prefix .. context.mode ---@type string
 
-      local text = context.fileicon .. " " .. context.filetype ---@type string
+      local text = context.fileicon .. " " .. context.filename ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
       text = icons.symbols.sep_left .. text ---@type string
