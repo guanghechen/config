@@ -157,12 +157,14 @@ return {
         ["B"] = "none",
         ["C"] = "none",
         ["D"] = "none",
-        ["q"] = "none",
         ["R"] = "none",
         ["S"] = "none",
         ["Z"] = "none",
         ["s"] = "none",
         ["t"] = "none",
+
+        -- Close the window
+        ["q"] = "close_window",
 
         -- Open file
         ["L"] = "vsplit_with_window_picker",
