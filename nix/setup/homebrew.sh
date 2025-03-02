@@ -29,8 +29,8 @@ brew install yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship jst
 
 ### Install hardware utilities (cpu/memo/disk/network)
 printf "\n\e[34m  [setup homebrew] installing hardware utilities (cpu/memo/disk/network)...\e[0m\n"
-brew install btop fastfetch httpie
+brew install btop fastfetch
 
 ### Install usual tools
 printf "\n\e[34m  [setup homebrew] installing usual tools...\n"
-brew install bat ffmpeg fzf hyperfine jq lsd scc tldr tree tty-clock unzip you-get zoxide
+brew install bat duf ffmpeg fzf hyperfine jq lsd scc tldr tree tty-clock unzip zoxide

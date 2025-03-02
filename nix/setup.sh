@@ -3,13 +3,7 @@
 source $HOME/.config/guanghechen/nix/setup/path.sh
 
 ## Update system
-sudo apt update
-sudo apt dist-upgrade -y
-sudo apt remove -y tmux
-sudo apt install -y colordiff curl file fontconfig gcc git locales make net-tools vim wget
-sudo apt install -y build-essential libvips-dev unixodbc
-sudo apt autoremove
-sudo apt autoclean
+source $HOME/.config/guanghechen/nix/setup/prepare.sh
 
 ## Fix locale issues
 sudo locale-gen en_US.UTF-8

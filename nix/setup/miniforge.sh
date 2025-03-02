@@ -35,10 +35,9 @@ if conda env list | grep -q "^lemon\s"; then
 else
   printf "\n\e[34m  [setup miniforge] creating 'lemon' env with conda...\e[0m\n"
   conda create --yes --name lemon python=3.12
+  conda activate lemon
+  pip install httpie ipython you-get
 fi
-
-conda activate lemon
-pip install ipython shell-gpt
 
 ### Setup ipython
 ipython_config_path="$HOME/.ipython/profile_default/ipython_config.py"
