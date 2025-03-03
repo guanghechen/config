@@ -41,7 +41,14 @@ local config = {
     float = true, -- render the image in a floating window only used if `opts.inline` is disabled
     max_width = 80,
     max_height = 40,
-    conceal = false, -- Set to `true`, to conceal the image text when rendering inline. (experimental)
+    ---@param lang                      string tree-sitter language
+    ---@param type                      fml.dressing.image.Type image type
+    ---@return nil
+    ---@diagnostic disable-next-line: unused-local
+    conceal = function(lang, type)
+      -- only conceal math expressions
+      return type == "math"
+    end,
   },
   extnames = {
     ".png",
@@ -60,6 +67,11 @@ local config = {
     ".webm",
     ".pdf",
   },
+  icons = {
+    math = "󰪚 ",
+    chart = "󰄧 ",
+    image = " ",
+  },
   img_dirs = { "img", "images", "assets", "static", "public", "media", "attachments" },
   math = {
     enabled = true, -- enable math expression rendering
@@ -69,7 +81,7 @@ local config = {
       -- but you can add more packages here. Useful for markdown documents.
       packages = { "amsmath", "amssymb", "amsfonts", "amscd", "mathtools" },
       tpl = [[
-        \documentclass[preview,border=2pt,varwidth,12pt]{standalone}
+        \documentclass[preview,border=0pt,varwidth,12pt]{standalone}
         \usepackage{${packages}}
         \begin{document}
         ${header}

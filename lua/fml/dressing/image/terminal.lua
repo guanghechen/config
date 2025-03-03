@@ -4,12 +4,15 @@ local config = require("fml.dressing.image.config")
 -- HACK: ghostty doesn't like it when sending images too fast,
 -- after Neovim startup, so we delay the first image
 local queue = {} ---@type string[]?
-vim.defer_fn(function()
-  if queue and #queue > 0 then
-    io.stdout:write(table.concat(queue, ""))
-  end
-  queue = nil
-end, 100)
+vim.defer_fn(
+  vim.schedule_wrap(function()
+    for _, data in ipairs(queue or {}) do
+      io.stdout:write(data)
+    end
+    queue = nil
+  end),
+  100
+)
 
 local size ---@type fml.dressing.image.terminal.Dim?
 vim.api.nvim_create_autocmd("VimResized", {

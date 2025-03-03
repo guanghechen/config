@@ -17,6 +17,7 @@ local M = {}
 
 ---@class fml.dressing.image.convertor.IOptions
 ---@field public src                    string
+---@field public on_done                ?fun(convert: fml.dressing.image.Convertor)
 
 ---@class fml.dressing.image.meta
 ---@field src string
@@ -41,7 +42,7 @@ local M = {}
 ---@field public proc                   ?eve.collection.spawn.Proc
 
 ---@class fml.dressing.image.cmd
----@field public cmd                    (fun(step: fml.dressing.image.step): (fml.dressing.image.Proc|fml.dressing.image.Proc[]|nil)) | fml.dressing.image.Proc | fml.dressing.image.Proc[]
+---@field public cmd                    (fun(step: fml.dressing.image.step): (fml.dressing.image.Proc|fml.dressing.image.Proc[])) | fml.dressing.image.Proc | fml.dressing.image.Proc[]
 ---@field public ft                     ?string
 ---@field public file                   ?fun(convertor: fml.dressing.image.Convertor, meta: fml.dressing.image.meta): string
 ---@field public depends                ?string[]
@@ -51,14 +52,6 @@ local M = {}
 
 ---@type table<string, fml.dressing.image.cmd>
 local commands = {
-  cache = {
-    file = function(convert, ctx)
-      return convert:tmpfile(convert:ft(ctx.src))
-    end,
-    cmd = function(step)
-      vim.uv.fs_copyfile(step.meta.src, step.file)
-    end,
-  },
   typ = {
     ft = "pdf",
     cmd = {
@@ -87,14 +80,14 @@ local commands = {
       },
     },
     on_done = function(step)
-      local pdf = assert(step.meta.pdf, "No pdf file")
-      if type(pdf) == "string" and vim.uv.fs_stat(pdf) then
+      local pdf = assert(step.meta.pdf, "No pdf file") --[[@as string]]
+      if vim.uv.fs_stat(pdf) then
         vim.uv.fs_rename(pdf, step.file)
       end
     end,
     on_error = function(step)
-      local pdf = assert(step.meta.pdf, "No pdf file")
-      if step.meta.pdf and type(pdf) == "string" and vim.fn.getfsize(pdf) > 0 then
+      local pdf = assert(step.meta.pdf, "No pdf file") --[[@as string]]
+      if step.meta.pdf and vim.fn.getfsize(pdf) > 0 then
         return true
       end
     end,
@@ -180,17 +173,54 @@ local commands = {
 }
 
 local have = {} ---@type table<string, boolean>
+local proc_queue = {} ---@type fml.dressing.image.Proc[]
+local proc_running = 0 ---@type number
+local MAX_PROCS = 3
+
+---@param proc                          ?eve.collection.spawn.Proc
+---@return nil
+local function schedule(proc)
+  if proc then
+    table.insert(proc_queue, proc)
+  else
+    proc_running = proc_running - 1
+  end
+  if proc_running < MAX_PROCS and #proc_queue > 0 then
+    proc_running = proc_running + 1
+    proc = table.remove(proc_queue, 1)
+    proc:run()
+  end
+end
+
+---@param step                          fml.dressing.image.step
+---@return nil
+local function get_cmd(step)
+  local cmd = step.cmd.cmd
+  cmd = type(cmd) == "function" and cmd(step) or cmd
+  local cmds = cmd.cmd and { cmd } or cmd
+  ---@cast cmds fml.dressing.image.Proc[]
+
+  for _, c in ipairs(cmds) do
+    if have[c.cmd] == nil then
+      have[c.cmd] = vim.fn.executable(c.cmd) == 1
+    end
+    if have[c.cmd] then
+      return c
+    end
+  end
+end
 
 ---@class fml.dressing.image.Convertor
----@field opts fml.dressing.image.convertor.IOptions
----@field src string
----@field file string
----@field prefix string
----@field meta fml.dressing.image.meta
----@field steps fml.dressing.image.step[]
----@field _done? boolean
----@field _err? string
----@field tpl_data table<string, string>
+---@field opts                          fml.dressing.image.convertor.IOptions
+---@field src                           string
+---@field filepath                      string
+---@field prefix                        string
+---@field meta                          fml.dressing.image.meta
+---@field steps                         fml.dressing.image.step[]
+---@field _done                         ?boolean
+---@field _err                          ?string
+---@field _step                         integer
+---@field tpl_data                      table<string, string>
 local Convertor = {}
 Convertor.__index = Convertor
 
@@ -201,6 +231,7 @@ function Convertor.new(opts)
   opts.src = M.norm(opts.src)
   self.opts = opts
   self.src = opts.src
+  self._step = 0
   local base = vim.fn.fnamemodify(opts.src, ":t:r")
   if M.is_uri(self.opts.src) then
     base = self.opts.src:gsub("%?.*", ""):match("^%w%w+://(.*)$") or base
@@ -217,12 +248,9 @@ function Convertor.new(opts)
   return self
 end
 
+---@return fml.dressing.image.step|nil
 function Convertor:current()
-  for _, step in ipairs(self.steps) do
-    if not step.done then
-      return step
-    end
-  end
+  return self.steps[self._step]
 end
 
 function Convertor:ready()
@@ -284,125 +312,135 @@ function Convertor:resolve()
     end
   end
   self:_resolve("identify")
-  self.file = self.meta.src
+  self.filepath = self.meta.src
 end
 
----@param cb                            fun(convert: fml.dressing.image.Convertor): nil
+---@param err                           ?string
 ---@return nil
-function Convertor:run(cb)
-  if #self.steps == 0 then
-    self._done = true
-    return cb(self)
+function Convertor:on_step(err)
+  local step = assert(self:current(), "No current step")
+  step.done = true
+  step.err = err
+  if self.aborted then
+    return self:on_done()
+  end
+  if step and err and step.cmd.on_error and step.cmd.on_error(step) then
+    -- keep going
+  elseif err then
+    self._err = err
+    return self:on_done()
+  end
+  if step and step.cmd.on_done then
+    step.cmd.on_done(step)
   end
 
-  local s = 0
-  local next ---@type fun()
+  if self._step < #self.steps then
+    self:step()
+  else
+    self:on_done()
+  end
+end
 
-  ---@param step? fml.dressing.image.step
-  ---@param err? string
-  local function done(step, err)
-    if step then
-      step.done = true
-      step.err = err
+-- Called when all steps are done or when an error occurs
+function Convertor:on_done()
+  local step = self:current()
+  self._done = true
+  if self._err then
+    local title = step and ("Conversion failed at step `%s`"):format(step.name) or "Conversion failed"
+    if step and step.proc then
+      step.proc:debug({ title = title })
+    else
+      reporter.error({
+        from = __module_name__,
+        subject = title,
+        message = self._err,
+      })
     end
-    if step and err and step.cmd.on_error and step.cmd.on_error(step) then
-      -- keep going
-    elseif err then
-      if config.state.convert.notify then
-        local title = step and ("Conversion failed at step `%s`"):format(step.name) or "Conversion failed"
-        if step and step.proc then
-          step.proc:debug({ title = title })
-        else
-          reporter.error({
-            from = __module_name__,
-            subject = title,
-            message = err,
-          })
-        end
-      end
-      self._err = err
-      self._done = true
-      return cb(self)
+  end
+  if self.opts.on_done then
+    self.opts.on_done(self)
+  end
+end
+
+function Convertor:abort()
+  if self.aborted then
+    return
+  end
+  if self:done() then
+    return
+  end
+  self.aborted = true
+  self._err = "Aborted"
+  for _, step in ipairs(self.steps) do
+    if step.proc then
+      step.proc:kill()
     end
-    if step and step.cmd.on_done then
-      step.cmd.on_done(step)
+  end
+end
+
+function Convertor:step()
+  self._step = self._step + 1
+  assert(self._step <= #self.steps, "No more steps")
+
+  local step = self.steps[self._step]
+  step.done = step.done or (vim.uv.fs_stat(step.file) ~= nil)
+  if step.done then
+    return self:on_step()
+  end
+
+  local cmd = get_cmd(step)
+  if not cmd then
+    return self:on_step("No command available")
+  end
+
+  local args = type(cmd.args) == "function" and cmd.args() or cmd.args
+  ---@cast args (number|string)[]
+  args = vim.deepcopy(args)
+
+  local data = vim.tbl_extend("keep", {
+    file = step.file,
+    basename = vim.fs.basename(step.file),
+    name = vim.fn.fnamemodify(step.file, ":t:r"),
+    dirname = vim.fs.dirname(step.meta.src),
+    src = step.meta.src,
+  }, self.tpl_data)
+
+  for a, arg in ipairs(args) do
+    if type(arg) == "string" then
+      args[a] = fn.tpl(arg, data)
     end
-    if s == #self.steps then
-      self._done = true
-      return cb(self)
-    end
-    next()
+  end
+
+  step.proc = Spawn.new({
+    run = false,
+    debug = config.state.debug.convert,
+    cwd = cmd.cwd and fn.tpl(cmd.cwd, data) or nil,
+    cmd = cmd.cmd,
+    args = args,
+    on_exit = function(proc, err)
+      schedule()
+      local out = vim.trim(proc:out() .. "\n" .. proc:err())
+      vim.schedule(function()
+        self:on_step(err and out or nil)
+      end)
+    end,
+  })
+  schedule(step.proc)
+end
+
+function Convertor:run()
+  if #self.steps == 0 then
+    return self:on_done()
   end
 
   if not M.is_uri(self.src) and vim.fn.filereadable(self.src) == 0 then
     local f = M.is_uri(self.src) and self.src or vim.fn.fnamemodify(self.src, ":p:~")
-    done(nil, ("File not found\n- `%s`"):format(f))
-    return
+    self._err = ("File not found\n- `%s`"):format(f)
+    return self:on_done()
   end
 
-  next = function()
-    s = s + 1
-    assert(s <= #self.steps, "No more steps")
-    local step = self.steps[s]
-    step.done = step.done or (vim.uv.fs_stat(step.file) ~= nil)
-    if step.done then
-      return done(step)
-    end
-
-    local cmd = step.cmd.cmd
-    if type(cmd) == "function" then
-      local ok, c = pcall(cmd, step)
-      if ok and c then
-        cmd = c
-      else
-        local err = not ok and (c or "error") or nil
-        ---@cast err string|nil
-        return done(step, err)
-      end
-    end
-
-    local cmds = cmd.cmd and { cmd } or cmd
-    ---@cast cmds fml.dressing.image.Proc[]
-    for _, c in ipairs(cmds) do
-      if have[c.cmd] == nil then
-        have[c.cmd] = vim.fn.executable(c.cmd) == 1
-      end
-      if have[c.cmd] then
-        local args = type(c.args) == "function" and c.args() or c.args
-        ---@cast args (number|string)[]
-        args = vim.deepcopy(args)
-        local data = vim.tbl_extend("keep", {
-          file = step.file,
-          basename = vim.fs.basename(step.file),
-          name = vim.fn.fnamemodify(step.file, ":t:r"),
-          dirname = vim.fs.dirname(step.meta.src),
-          src = step.meta.src,
-        }, self.tpl_data)
-        for a, arg in ipairs(args) do
-          if type(arg) == "string" then
-            args[a] = fn.tpl(arg, data)
-          end
-        end
-        step.proc = Spawn.new({
-          debug = config.state.debug.convert,
-          cwd = c.cwd and fn.tpl(c.cwd, data) or nil,
-          cmd = c.cmd,
-          args = args,
-          on_exit = function(proc, err)
-            local out = vim.trim(proc:out() .. "\n" .. proc:err())
-            vim.schedule(function()
-              done(step, err and out or nil)
-            end)
-          end,
-        })
-        return
-      end
-    end
-    return done(step, "No command available")
-  end
-  next()
+  self:step()
 end
-
 ---@param src                           string
 ---@return boolean
 function M.is_uri(src)

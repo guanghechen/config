@@ -5,6 +5,8 @@ local Image = require("fml.dressing.image.image")
 local terminal = require("fml.dressing.image.terminal")
 local util = require("fml.dressing.image.util")
 
+---@alias fml.dressing.image.Extmark vim.api.keyset.set_extmark|{row:number, col:number}
+
 ---@class fml.dressing.image.Placement
 ---@field image                         fml.dressing.image.Image
 ---@field id                            number image placement id
@@ -12,16 +14,23 @@ local util = require("fml.dressing.image.util")
 ---@field bufnr                         integer
 ---@field opts                          fml.dressing.image.Opts
 ---@field augroup                       integer
+---@field hidden                        ?boolean
 ---@field closed                        ?boolean
+---@field type                          ?fml.dressing.image.Type
 ---@field extmark_id                    ?number
+---@field eids                          integer[]
 ---@field _loc                          ?fml.dressing.image.Loc
 ---@field _state                        ?fml.dressing.image.State
+---@field _extmarks                     ?fml.dressing.image.Extmark[]
 local M = {}
 M.__index = M
 
 -- stylua: ignore
 local DIACRITICS = vim.split("0305,030D,030E,0310,0312,033D,033E,033F,0346,034A,034B,034C,0350,0351,0352,0357,035B,0363,0364,0365,0366,0367,0368,0369,036A,036B,036C,036D,036E,036F,0483,0484,0485,0486,0487,0592,0593,0594,0595,0597,0598,0599,059C,059D,059E,059F,05A0,05A1,05A8,05A9,05AB,05AC,05AF,05C4,0610,0611,0612,0613,0614,0615,0616,0617,0657,0658,0659,065A,065B,065D,065E,06D6,06D7,06D8,06D9,06DA,06DB,06DC,06DF,06E0,06E1,06E2,06E4,06E7,06E8,06EB,06EC,0730,0732,0733,0735,0736,073A,073D,073F,0740,0741,0743,0745,0747,0749,074A,07EB,07EC,07ED,07EE,07EF,07F0,07F1,07F3,0816,0817,0818,0819,081B,081C,081D,081E,081F,0820,0821,0822,0823,0825,0826,0827,0829,082A,082B,082C,082D,0951,0953,0954,0F82,0F83,0F86,0F87,135D,135E,135F,17DD,193A,1A17,1A75,1A76,1A77,1A78,1A79,1A7A,1A7B,1A7C,1B6B,1B6D,1B6E,1B6F,1B70,1B71,1B72,1B73,1CD0,1CD1,1CD2,1CDA,1CDB,1CE0,1DC0,1DC1,1DC3,1DC4,1DC5,1DC6,1DC7,1DC8,1DC9,1DCB,1DCC,1DD1,1DD2,1DD3,1DD4,1DD5,1DD6,1DD7,1DD8,1DD9,1DDA,1DDB,1DDC,1DDD,1DDE,1DDF,1DE0,1DE1,1DE2,1DE3,1DE4,1DE5,1DE6,1DFE,20D0,20D1,20D4,20D5,20D6,20D7,20DB,20DC,20E1,20E7,20E9,20F0,2CEF,2CF0,2CF1,2DE0,2DE1,2DE2,2DE3,2DE4,2DE5,2DE6,2DE7,2DE8,2DE9,2DEA,2DEB,2DEC,2DED,2DEE,2DEF,2DF0,2DF1,2DF2,2DF3,2DF4,2DF5,2DF6,2DF7,2DF8,2DF9,2DFA,2DFB,2DFC,2DFD,2DFE,2DFF,A66F,A67C,A67D,A6F0,A6F1,A8E0,A8E1,A8E2,A8E3,A8E4,A8E5,A8E6,A8E7,A8E8,A8E9,A8EA,A8EB,A8EC,A8ED,A8EE,A8EF,A8F0,A8F1,AAB0,AAB2,AAB3,AAB7,AAB8,AABE,AABF,AAC1,FE20,FE21,FE22,FE23,FE24,FE25,FE26,10A0F,10A38,1D185,1D186,1D187,1D188,1D189,1D1AA,1D1AB,1D1AC,1D1AD,1D242,1D243,1D244", ",")
 local PLACEHOLDER = vim.fn.nr2char(0x10EEEE)
+local placements = {} ---@type table<number, table<number, fml.dressing.image.Placement>>
+local ns = vim.api.nvim_create_namespace("fml.dressing.image")
+M.ns = ns
 
 ---@type table<number, string>
 local positions = {}
@@ -31,6 +40,19 @@ setmetatable(positions, {
     return positions[k]
   end,
 })
+
+---@param bufnr                         ?integer
+---@param id                            ?integer
+---@return nil
+function M.clean(bufnr, id)
+  for _, b in ipairs(bufnr and { bufnr } or vim.tbl_keys(placements)) do
+    for _, p in ipairs(id and { placements[b][id] } or vim.tbl_values(placements[b] or {})) do
+      if p then
+        p:close()
+      end
+    end
+  end
+end
 
 ---@param bufnr                         integer
 ---@param opts                          ?fml.dressing.image.Opts
@@ -43,45 +65,32 @@ function M.new(bufnr, src, opts)
   self.image = Image.new(src)
   self.image:place(self)
   self.opts = opts or {}
+  self.opts.pos = self.opts.pos or { 1, 0 }
   self.bufnr = bufnr
-  self.ns = vim.api.nvim_create_namespace("fml.dressing.image." .. self.id) ---@type integer
   self.augroup = fn.augroup("fml.dressing.image." .. self.id) ---@type integer
+  self.eids = {}
 
-  vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter", "BufWinLeave", "BufEnter" }, {
-    group = self.augroup,
-    buffer = self.bufnr,
-    callback = function()
-      vim.schedule(function()
-        self:update()
-      end)
-    end,
-  })
-  vim.api.nvim_create_autocmd({ "WinClosed", "WinNew", "WinEnter", "WinResized" }, {
-    group = self.augroup,
-    callback = function()
-      vim.schedule(function()
-        self:update()
-      end)
-    end,
-  })
-
-  vim.api.nvim_create_autocmd({ "BufWipeout", "BufDelete" }, {
-    group = self.augroup,
-    buffer = self.bufnr,
-    once = true,
-    callback = function()
-      vim.schedule(function()
-        self:close()
-      end)
-    end,
-  })
-  vim.api.nvim_create_autocmd({ "ExitPre" }, {
-    group = self.augroup,
-    once = true,
-    callback = function()
-      self:close()
-    end,
-  })
+  if self.opts.auto_resize then
+    vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter", "BufWinLeave", "BufEnter" }, {
+      group = self.augroup,
+      buffer = self.bufnr,
+      callback = function()
+        vim.schedule(function()
+          self:update()
+        end)
+      end,
+    })
+    vim.api.nvim_create_autocmd({ "WinClosed", "WinNew", "WinEnter", "WinResized" }, {
+      group = self.augroup,
+      callback = function()
+        vim.schedule(function()
+          self:update()
+        end)
+      end,
+    })
+  end
+  placements[self.bufnr] = placements[self.bufnr] or {}
+  placements[self.bufnr][self.id] = self
 
   if self:ready() then
     vim.schedule(function()
@@ -89,6 +98,13 @@ function M.new(bufnr, src, opts)
     end)
   elseif self.image:failed() then
     self:error()
+  elseif self.opts.inline then
+    self:_render({
+      {
+        row = self.opts.pos[1] - 1,
+        col = self.opts.pos[2],
+      },
+    })
   else
     self:progress()
   end
@@ -151,8 +167,8 @@ function M:progress()
         end
         return
       end
-      vim.api.nvim_buf_clear_namespace(self.bufnr, self.ns, 0, -1)
-      vim.api.nvim_buf_set_extmark(self.bufnr, self.ns, 0, 0, {
+      vim.api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
+      vim.api.nvim_buf_set_extmark(self.bufnr, ns, 0, 0, {
         virt_text = {
           { fn.spinner(), "SnacksImageSpinner" },
           { " " },
@@ -171,13 +187,25 @@ function M:wins()
   end, vim.api.nvim_tabpage_list_wins(0))
 end
 
+---@return nil
 function M:close()
   if self.closed then
     return
   end
+  placements[self.bufnr][self.id] = nil
   self.closed = true
-  self:hide()
+  self:del()
   pcall(vim.api.nvim_del_augroup_by_id, self.augroup)
+end
+
+---@return nil
+function M:del()
+  self.image:del(self.id)
+  if vim.api.nvim_buf_is_valid(self.bufnr) then
+    for _, eid in ipairs(self.eids) do
+      vim.api.nvim_buf_del_extmark(self.bufnr, ns, eid)
+    end
+  end
 end
 
 --- Renders the unicode placeholder grid in the buffer
@@ -187,10 +215,11 @@ function M:render_grid(loc)
   vim.api.nvim_set_hl(0, hlgroup, {
     fg = self.image.id,
     sp = self.id,
-    bg = config.state.debug.placement and "#FF007C" or nil,
+    bg = config.state.debug.placement and "#FF007C" or "none",
+    nocombine = true,
   })
 
-  local lines = {} ---@type string[]
+  local img = {} ---@type string[]
   local height = math.min(#DIACRITICS, loc.height)
   local width = math.min(#DIACRITICS, loc.width)
   for r = 1, height do
@@ -201,56 +230,164 @@ function M:render_grid(loc)
       line[#line + 1] = positions[r]
       line[#line + 1] = positions[c]
     end
-    lines[#lines + 1] = table.concat(line)
+    img[#img + 1] = table.concat(line)
   end
 
-  if self.opts.inline then
-    local padding = string.rep(" ", loc[2])
-    vim.api.nvim_buf_clear_namespace(self.bufnr, self.ns, 0, -1)
-    local start_row, start_col = loc[1] - 1, loc[2]
-    local end_row, end_col ---@type number?, number?
-    local conceal = config.state.doc.conceal and " " or nil ---@type string|nil
-    if self.opts.range and conceal then
-      start_row, start_col = self.opts.range[1] - 1, self.opts.range[2]
-      end_row, end_col = self.opts.range[3] - 1, self.opts.range[4]
+  local range = self.opts.range or { loc[1], loc[2], loc[1], loc[2] }
+  local lines = vim.api.nvim_buf_get_lines(self.bufnr, range[1] - 1, range[3], false)
+  local text_width = 0
+  for _, line in ipairs(lines) do
+    text_width = math.max(text_width, vim.api.nvim_strwidth(line))
+  end
+  local offset = range[2]
+  local has_after = lines[#lines]:sub(range[4] + 1):find("%S") ~= nil
+  local has_before = lines[1]:sub(1, range[2]):find("%S") ~= nil
+  local conceal = self.opts.conceal and "" or nil
+  local extmarks = {} ---@type fml.dressing.image.Extmark[]
+
+  -- we can overlay the image if the text is multiline,
+  -- or the text has nothing after the image
+  -- and the text is not wrapped or the text fits the window width
+  local can_overlay = (#lines > 1 or not has_after)
+  for _, win in ipairs(can_overlay and self:wins() or {}) do
+    if vim.wo[win].wrap then
+      local info = vim.fn.getwininfo(win)[1]
+      if info.width - info.textoff < text_width then
+        can_overlay = false
+        break
+      end
     end
-    self.extmark_id = vim.api.nvim_buf_set_extmark(self.bufnr, self.ns, start_row, start_col, {
-      end_row = end_row,
-      end_col = end_col,
+  end
+  -- can_overlay = false
+
+  if height == 1 and #lines == 1 then
+    -- render inline
+    self:_render({
+      {
+        row = range[1] - 1,
+        col = range[2],
+        end_row = range[3] - 1,
+        end_col = range[4],
+        conceal = conceal,
+        invalidate = vim.fn.has("nvim-0.10") == 1 and true or nil,
+        virt_text_pos = "inline",
+        virt_text = { { img[1], hlgroup } },
+        virt_text_hide = true,
+      },
+    })
+  elseif can_overlay then
+    if conceal then
+      -- conceal and overlay on the first line
+      extmarks[#extmarks + 1] = {
+        row = range[1] - 1,
+        col = range[2],
+        end_row = range[3] - 1,
+        end_col = range[4],
+        conceal = conceal,
+        virt_text_pos = "overlay",
+        virt_text = { { table.remove(img, 1), hlgroup } },
+        virt_text_hide = false,
+        virt_text_win_col = offset,
+      }
+      -- overlay over the other lines
+      for i = 1, math.min(#img, #lines - 1) do
+        extmarks[#extmarks + 1] = {
+          row = range[1] - 1 + i,
+          col = 0,
+          virt_text_pos = "overlay",
+          virt_text = { { table.remove(img, 1), hlgroup } },
+          virt_text_hide = false,
+          virt_text_win_col = offset,
+        }
+      end
+    end
+    if #img > 0 then
+      -- add additional virtual lines if there are more lines to render
+      local padding = string.rep(" ", offset)
+      extmarks[#extmarks + 1] = {
+        row = range[3] - 1,
+        col = 0,
+        ---@param l string
+        virt_lines = vim.tbl_map(function(l)
+          return { { padding }, { l, hlgroup } }
+        end, img),
+        virt_text_hide = false,
+      }
+    end
+    self:_render(extmarks)
+  else
+    local is_inline = has_before or has_after
+    local icon = config.state.icons[self.opts.type or "image"] or config.state.icons.image
+    -- render below in virtual lines
+    extmarks[#extmarks + 1] = {
+      row = range[1] - 1,
+      col = range[2],
+      end_row = range[3] - 1,
+      end_col = range[4],
       conceal = conceal,
-      id = self.extmark_id,
+      virt_text = is_inline and { { icon, "SnacksImageAnchor" } } or nil,
+      virt_text_pos = "inline",
+      virt_text_hide = false,
       ---@param l string
       virt_lines = vim.tbl_map(function(l)
-        return { { padding }, { l, hlgroup } }
-      end, lines),
-      strict = false,
-      invalidate = true,
-    })
-  else
-    vim.bo[self.bufnr].modifiable = true
-    vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, lines)
-    vim.bo[self.bufnr].modifiable = false
-    vim.bo[self.bufnr].modified = false
-    for r = 1, #lines do
-      vim.api.nvim_buf_set_extmark(self.bufnr, self.ns, r - 1, 0, {
-        end_col = #lines[r],
-        hl_group = hlgroup,
-      })
-    end
+        return { { l, hlgroup } }
+      end, img),
+    }
+    self:_render(extmarks)
   end
 end
 
-function M:hide()
-  if vim.api.nvim_buf_is_valid(self.bufnr) then
-    vim.api.nvim_buf_clear_namespace(self.bufnr, self.ns, 0, -1)
+---@param extmarks                      fml.dressing.image.Extmark[]
+---@return nil
+function M:_render(extmarks)
+  for _, e in ipairs(extmarks) do
+    e.undo_restore = false
+    e.strict = false
+    if self.hidden then
+      e.virt_text = nil
+      e.conceal = nil
+      if e.virt_lines then
+        ---@diagnostic disable-next-line: unused-local
+        e.virt_lines = vim.tbl_map(function(l)
+          return { { "" } }
+        end, e.virt_lines)
+      end
+    end
   end
-  self.image:del(self.id)
+  local eids = {} ---@type number[]
+  for _, extmark in ipairs(extmarks) do
+    local row, col = extmark.row, extmark.col
+    extmark.row, extmark.col, extmark.id = nil, nil, table.remove(self.eids, 1)
+    table.insert(eids, vim.api.nvim_buf_set_extmark(self.bufnr, ns, row, col, extmark))
+  end
+  for _, eid in ipairs(self.eids) do
+    vim.api.nvim_buf_del_extmark(self.bufnr, ns, eid)
+  end
+  self.eids = eids
+end
+
+---@return nil
+function M:hide()
+  if self.hidden or not self:ready() then
+    return
+  end
+  self.hidden = true
+  self:update()
+end
+
+---@return nil
+function M:show()
+  if not self.hidden or not self:ready() then
+    return
+  end
+  self.hidden = false
+  self:update()
 end
 
 ---@param state fml.dressing.image.State
 function M:render_fallback(state)
   if not self.opts.inline then
-    vim.api.nvim_buf_clear_namespace(self.bufnr, self.ns, 0, -1)
+    vim.api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
   end
   for _, winnr in ipairs(state.winnrs) do
     local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
@@ -302,10 +439,29 @@ function M:state()
   local size = util.fit(self.image.filepath, { width = width, height = height }, { info = self.image.info })
 
   local pos = self.opts.pos or { 1, 0 }
+
+  local function is_inline()
+    local range = self.opts.range or { pos[1], pos[2], pos[1], pos[2] }
+    if range[1] == range[3] then
+      local line = vim.api.nvim_buf_get_lines(self.bufnr, range[1] - 1, range[1], false)[1] or ""
+      local has_before = line:sub(1, range[2]):find("%S") ~= nil
+      local has_after = line:sub(range[4] + 1):find("%S") ~= nil
+      return has_before or has_after
+    end
+  end
+
+  -- scale down to fit inline
+  if size.height <= 2 and is_inline() then
+    size.width = math.ceil(size.width / size.height) + 2
+    size.height = 1
+  end
+
   ---@class fml.dressing.image.State
+  ---@field public hidden               boolean
   ---@field public loc                  fml.dressing.image.Loc
   ---@field public winnrs               integer[]
   return {
+    hidden = self.hidden or false,
     loc = {
       pos[1],
       pos[2],
@@ -316,8 +472,20 @@ function M:state()
   }
 end
 
+function M:valid()
+  return self.bufnr
+    and vim.api.nvim_buf_is_valid(self.bufnr)
+    and self:ready()
+    and self.opts.pos[1] <= vim.api.nvim_buf_line_count(self.bufnr)
+end
+
 function M:update()
   if not self:ready() then
+    return
+  end
+
+  if not self:valid() then
+    self:del()
     return
   end
 

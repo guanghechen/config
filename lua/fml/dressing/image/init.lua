@@ -6,9 +6,10 @@ local config = require("fml.dressing.image.config")
 ---@class fml.dressing.image
 local M = {}
 
----@alias fml.dressing.image.Size {width: number, height: number}
----@alias fml.dressing.image.Pos {[1]: number, [2]: number}
 ---@alias fml.dressing.image.Loc fml.dressing.image.Pos|fml.dressing.image.Size|{zindex?: number}
+---@alias fml.dressing.image.Pos {[1]: number, [2]: number}
+---@alias fml.dressing.image.Size {width: number, height: number}
+---@alias fml.dressing.image.Type "image"|"math"|"chart"
 
 ---@class fml.dressing.image.Env
 ---@field name string
@@ -20,6 +21,7 @@ local M = {}
 ---@field detected? boolean
 ---@field remote? boolean this is a remote client, so full transfer of the image data is required
 
+vim.api.nvim_set_hl(0, "SnacksImageAnchor", { default = true, link = "Special" })
 vim.api.nvim_set_hl(0, "SnacksImageSpecial", { default = true, link = "Special" })
 vim.api.nvim_set_hl(0, "SnacksImageLoading", { default = true, link = "NonText" })
 vim.api.nvim_set_hl(0, "SnacksImageMath", {
@@ -29,14 +31,17 @@ vim.api.nvim_set_hl(0, "SnacksImageMath", {
 
 ---@class fml.dressing.image.Opts
 ---@field public pos                    ?fml.dressing.image.Pos (row, col) (1,0)-indexed. defaults to the top-left corner
----@field public range                  ?Range4
+---@field public auto_resize            ?boolean
+---@field public conceal                ?boolean
 ---@field public inline                 ?boolean render the image inline in the buffer
+---@field public range                  ?Range4
 ---@field public width                  ?number
 ---@field public min_width              ?number
 ---@field public max_width              ?number
 ---@field public height                 ?number
 ---@field public min_height             ?number
 ---@field public max_height             ?number
+---@field public type                   ?fml.dressing.image.Type
 ---@field public on_update              ?fun(placement: fml.dressing.image.Placement)
 ---@field public on_update_pre          ?fun(placement: fml.dressing.image.Placement)
 
@@ -64,7 +69,24 @@ function M.setup(bufnr)
   end
   did_setup = true
 
+  local Placement = require("fml.dressing.image.placement")
+
   local group = fn.augroup("fml.dressing.image")
+  vim.api.nvim_create_autocmd({ "BufWipeout", "BufDelete" }, {
+    group = group,
+    callback = function(e)
+      vim.schedule(function()
+        Placement.clean(e.buf)
+      end)
+    end,
+  })
+  vim.api.nvim_create_autocmd({ "ExitPre" }, {
+    group = group,
+    once = true,
+    callback = function()
+      Placement.clean()
+    end,
+  })
   vim.api.nvim_create_autocmd("BufReadCmd", {
     pattern = "*" .. table.concat(config.state.extnames, ",*"),
     group = group,

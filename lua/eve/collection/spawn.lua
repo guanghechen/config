@@ -1,4 +1,4 @@
---- https://github.com/folke/snacks.nvim/blob/1adfd29af3d1b4db2ba46f7a292410a2f9105fd6/lua/snacks/util/spawn.lua
+--- https://github.com/folke/snacks.nvim/blob/6917597f6d22d79fcd0bf9b0eb7845f7ffdc80a0/lua/snacks/util/spawn.lua
 
 local debugger = require("eve.builtin.debug")
 local fn = require("eve.builtin.fn")
@@ -52,8 +52,9 @@ end
 function Proc:kill(signal)
   close(self.stdout)
   close(self.stderr)
-  if self:running() then
+  if not self.handle then
     self.aborted = true
+  elseif self:running() then
     self.handle:kill(signal or "sigterm")
   end
 end
@@ -87,6 +88,9 @@ end
 ---@return nil
 function Proc:run()
   assert(not self.handle, "already running")
+  if self.aborted then
+    return self:on_exit()
+  end
   self.stdout = assert(vim.uv.new_pipe())
   self.stderr = assert(vim.uv.new_pipe())
   self.data = { [self.stdout] = {}, [self.stderr] = {} }
@@ -173,7 +177,7 @@ function Proc:on_exit()
     close(self.stdout)
     close(self.stderr)
     if self.opts.on_exit then
-      self.opts.on_exit(self, self.code ~= 0 or self.signal ~= 0)
+      self.opts.on_exit(self, self.code ~= 0 or self.signal ~= 0 or self.aborted or false)
     end
   end)
 end

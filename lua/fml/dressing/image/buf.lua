@@ -8,7 +8,8 @@ local M = {}
 ---@param bufnr                         integer
 ---@param opts                          ?fml.dressing.image.Opts|{src?: string}
 function M.attach(bufnr, opts)
-  local filename = opts and opts.src or vim.api.nvim_buf_get_name(bufnr) ---@type string
+  opts = opts or {}
+  local filename = opts.src or vim.api.nvim_buf_get_name(bufnr) ---@type string
   local is_support_terminal = config.is_support_terminal() ---@type boolean
   local is_support_file = config.is_support_file(filename) ---@type boolean
 
@@ -32,6 +33,9 @@ function M.attach(bufnr, opts)
     vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].modified = false
     vim.bo[bufnr].swapfile = false
+
+    opts.conceal = true
+    opts.auto_resize = true
     return Placement.new(bufnr, filename, opts)
   end
 end

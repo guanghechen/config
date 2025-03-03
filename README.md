@@ -1,6 +1,6 @@
 ### Thanks
 
-* Snacks: https://github.com/folke/snacks.nvim/blob/70e7e081ee558eb3756aba02491f1bc84fb72ab0
+* Snacks: https://github.com/folke/snacks.nvim/blob/bc0630e43be5699bb94dadc302c0d21615421d93
 
 
 ### Requirements

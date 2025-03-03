@@ -2,10 +2,12 @@ local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 local config = require("fml.dressing.image.config")
 local Placement = require("fml.dressing.image.placement")
+local ImageInline = require("fml.dressing.image.inline")
 
 ---@class fml.dressing.image.doc
 local M = {}
 
+---@alias fml.dressing.image.find       fun(matches: fml.dressing.image.match[])
 ---@alias fml.dressing.image.transform  fun(match: fml.dressing.image.match, ctx: fml.dressing.image.ctx)
 ---@alias LinkDefinition                {label:string, dest:string}
 ---@alias TSMatch                       {node:TSNode, meta:vim.treesitter.query.TSMetadata}
@@ -27,7 +29,9 @@ local M = {}
 
 ---@class fml.dressing.image.match
 ---@field public id                     string
+---@field public lang                   string
 ---@field public pos                    fml.dressing.image.Pos
+---@field public type                   fml.dressing.image.Type
 ---@field public ref                    ?string
 ---@field public src                    ?string
 ---@field public content                ?string
@@ -37,6 +41,7 @@ local M = {}
 local META_EXT = "image.ext"
 local META_REF = "image.ref"
 local META_SRC = "image.src"
+local META_TYPE = "image.type"
 local META_IGNORE = "image.ignore"
 local META_LANG = "image.lang"
 
@@ -58,11 +63,10 @@ M.transforms = {
     }, { indent = true, prefix = "$" })
   end,
   latex = function(img, ctx)
-    if not img.content then
+    if not (img.content and img.ext == "math.tex") then
       return
     end
     local fg = fn.pick_color({ "SnacksImageMath" }, "fg") or "#000000"
-    img.ext = "math.tex"
     local content = vim.trim(img.content or "")
     content = content:gsub("^%$+`?", ""):gsub("`?%$+$", "")
     content = content:gsub("^\\[%[%(]", ""):gsub("\\[%]%)]$", "")
@@ -71,16 +75,16 @@ M.transforms = {
     end
     local packages = { "xcolor" }
     vim.list_extend(packages, config.state.math.latex.packages)
-    for _, line in ipairs(vim.api.nvim_buf_get_lines(ctx.bufnr, 0, -1, false)) do
-      if line:find("\\usepackage") then
-        for _, p in ipairs(vim.split(line:match("{(.-)}") or "", ",%s*")) do
-          if not vim.tbl_contains(packages, p) then
-            packages[#packages + 1] = p
-          end
-        end
-      end
-    end
+    vim.list_extend(packages, M.get_packages(ctx.bufnr))
     table.sort(packages)
+    local seen = {} ---@type table<string, boolean>
+    packages = vim.tbl_filter(function(p)
+      if seen[p] then
+        return false
+      end
+      seen[p] = true
+      return true
+    end, packages)
     img.content = fn.tpl(config.state.math.latex.tpl, {
       font_size = config.state.math.latex.font_size or "large",
       packages = table.concat(packages, ", "),
@@ -94,21 +98,61 @@ M.transforms = {
 local hover ---@type fml.dressing.image.Hover?
 local uv = vim.uv or vim.loop
 local dir_cache = {} ---@type table<string, boolean>
+local buf_cache = {} ---@type table<number, {tick: number, [string]: any }>
 
----@param buf number
-function M.get_header(buf)
-  local header = {} ---@type string[]
-  local in_header = false
-  for _, line in ipairs(vim.api.nvim_buf_get_lines(buf, 0, -1, false)) do
-    if line:find("snacks:%s*header%s*start") then
-      in_header = true
-    elseif line:find("snacks:%s*header%s*end") then
-      in_header = false
-    elseif in_header then
-      header[#header + 1] = line
-    end
+---@generic T
+---@param bufnr                         integer
+---@param key                           string
+---@param f                             fun(): T
+---@return T
+function M._cache(bufnr, key, f)
+  if buf_cache[bufnr] and buf_cache[bufnr].tick ~= vim.api.nvim_buf_get_changedtick(bufnr) then
+    buf_cache[bufnr] = nil
   end
-  return table.concat(header, "\n")
+  buf_cache[bufnr] = buf_cache[bufnr] or { tick = vim.api.nvim_buf_get_changedtick(bufnr) }
+  if buf_cache[bufnr][key] == nil then
+    buf_cache[bufnr][key] = f()
+  end
+  return buf_cache[bufnr][key]
+end
+
+---@param bufnr                         integer
+---@return string[]
+function M.get_packages(bufnr)
+  if vim.bo[bufnr].filetype ~= "tex" then
+    return {}
+  end
+  return M._cache(bufnr, "packages", function()
+    local ret = {} ---@type string[]
+    for _, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+      if line:find("\\usepackage", 1, true) then
+        for _, p in ipairs(vim.split(line:match("{(.-)}") or "", ",%s*")) do
+          if not vim.tbl_contains(ret, p) then
+            ret[#ret + 1] = p
+          end
+        end
+      end
+    end
+    return ret
+  end)
+end
+
+---@param bufnr                         integer
+function M.get_header(bufnr)
+  return M._cache(bufnr, "header", function()
+    local header = {} ---@type string[]
+    local in_header = false
+    for _, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+      if line:find("snacks:%s*header%s*start") then
+        in_header = true
+      elseif line:find("snacks:%s*header%s*end") then
+        in_header = false
+      elseif in_header then
+        header[#header + 1] = line
+      end
+    end
+    return table.concat(header, "\n")
+  end)
 end
 
 ---@param str string
@@ -200,14 +244,37 @@ function M.get_link_definitions(bufnr)
 end
 
 ---@param bufnr                         integer
----@param from                          ?integer
----@param to                            ?integer
-function M.find(bufnr, from, to)
+---@param callback                      fml.dressing.image.find
+function M.find_visible(bufnr, callback)
+  local ret = {} ---@type table<string, fml.dressing.image.match>
+  local winnrs = vim.fn.win_findbuf(bufnr) ---@type integer[]
+  local count = #winnrs ---@type integer
+  for _, win in ipairs(winnrs) do
+    local info = vim.fn.getwininfo(win)[1]
+    M.find(bufnr, function(mathes)
+      for _, i in ipairs(mathes) do
+        ret[i.id] = i
+      end
+      count = count - 1
+      if count == 0 and callback then
+        callback(vim.tbl_values(ret))
+      end
+    end, { from = math.max(info.topline - 1, 1), to = info.botline })
+  end
+end
+
+---@param bufnr                         integer
+---@param callback                      fml.dressing.image.find
+---@param opts                          ?{ from?: integer, to?: integer }
+function M.find(bufnr, callback, opts)
   local definitions = M.get_link_definitions(bufnr) ---@type table<string, LinkDefinition>
   local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
   if not ok or not parser then
-    return {}
+    return callback({})
   end
+
+  opts = opts or {}
+  local from, to = opts.from, opts.to
   parser:parse(from and to and { from, to } or true)
 
   local ret = {} ---@type fml.dressing.image.match[]
@@ -256,32 +323,33 @@ function M.find(bufnr, from, to)
       end
     end
   end)
-  return ret
+  callback(ret)
 end
 
 ---@param ctx                           fml.dressing.image.ctx
 ---@param matches                       fml.dressing.image.match
----@return fml.dressing.image.match
+---@return fml.dressing.image.match|nil
 function M._img(ctx, matches)
   ctx.pos = ctx.pos or ctx.src or ctx.content or ctx.ref
   assert(ctx.pos, "no image node")
 
-  local range = vim.treesitter.get_range(ctx.pos.node, ctx.bufnr, ctx.pos.meta)
-  local lines = vim.api.nvim_buf_get_lines(ctx.bufnr, range[1], range[4] + 1, false)
-  while #lines > 0 and vim.trim(lines[#lines]) == "" do
-    table.remove(lines)
+  local range6 = vim.treesitter.get_range(ctx.pos.node, ctx.bufnr, ctx.pos.meta)
+  local range = { range6[1], range6[2], range6[4], range6[5] } ---@type Range4
+  if range[3] > 0 and range[4] == 0 then
+    range[3] = range[3] - 1
+    local line = vim.api.nvim_buf_get_lines(ctx.bufnr, range[3], range[3] + 1, false)[1]
+    range[4] = #line
   end
 
   ---@type fml.dressing.image.match
   local img = {
     ext = ctx.meta[META_EXT],
     src = ctx.definition and ctx.definition.dest or ctx.meta[META_SRC],
+    lang = ctx.lang,
     id = ctx.pos.node:id(),
-    range = { range[1] + 1, range[2], range[4] + 1, range[5] },
-    pos = {
-      range[1] + #lines,
-      math.min(range[2], range[5]),
-    },
+    range = { range[1] + 1, range[2], range[3] + 1, range[4] },
+    pos = { range[1] + 1, range[2] },
+    type = "image",
   }
 
   --- The `![A](./A.png)` could be resolved twice if the `A` is a valid definition label,
@@ -291,11 +359,18 @@ function M._img(ctx, matches)
     local r2 = img.range ---@type Range4
     if r1[1] == r2[1] and r1[2] >= r2[2] and r1[3] == r2[3] and r1[4] <= r2[4] then
       matches[#matches] = nil
-      img.pos[2] = img.pos[2] + 2 --- Make an indent for the image viewer.
     end
   end
 
-  img.pos[1] = math.min(img.pos[1], vim.api.nvim_buf_line_count(ctx.bufnr))
+  if ctx.meta[META_TYPE] then
+    img.type = ctx.meta[META_TYPE]
+  elseif img.ext then
+    img.type = img.ext:match("^(%w+)%.") or img.type
+  end
+  if not config.state.math.enabled and img.type == "math" then
+    return
+  end
+
   if ctx.src then
     img.src = vim.treesitter.get_node_text(ctx.src.node, ctx.bufnr, { metadata = ctx.src.meta })
   end
@@ -311,9 +386,6 @@ function M._img(ctx, matches)
   if img.src then
     img.src = M.resolve(ctx.bufnr, img.src)
   end
-  if not config.state.math.enabled and img.ext and img.ext:find("math") then
-    return
-  end
   if img.content and not img.src then
     local root = config.state.cache
     vim.fn.mkdir(root, "p")
@@ -328,21 +400,24 @@ function M._img(ctx, matches)
 end
 
 --- Get the image at the cursor (if any)
----@return string? image_src, fml.dressing.image.Pos? image_pos
-function M.at_cursor()
+---@param callback                      fun(image_src?: string, image_pos?: fml.dressing.image.Pos): nil
+---@return nil
+function M.at_cursor(callback)
   local cursor = vim.api.nvim_win_get_cursor(0)
-  local imgs = M.find(vim.api.nvim_get_current_buf(), cursor[1], cursor[1] + 1)
-  for _, img in ipairs(imgs) do
-    local range = img.range
-    if range then
-      if
-        (range[1] == range[3] and cursor[2] >= range[2] and cursor[2] <= range[4])
-        or (range[1] ~= range[3] and cursor[1] >= range[1] and cursor[1] <= range[3])
-      then
-        return img.src, img.pos
+  M.find(vim.api.nvim_get_current_buf(), function(imgs)
+    for _, img in ipairs(imgs) do
+      local range = img.range
+      if range then
+        if
+          (range[1] == range[3] and cursor[2] >= range[2] and cursor[2] <= range[4])
+          or (range[1] ~= range[3] and cursor[1] >= range[1] and cursor[1] <= range[3])
+        then
+          return callback(img.src, img.pos)
+        end
       end
     end
-  end
+    callback()
+  end, { from = cursor[1], to = cursor[1] + 1 })
 end
 
 ---@return nil
@@ -364,104 +439,105 @@ function M.hover()
     M.hover_close()
   end
 
-  local src = M.at_cursor()
-  if not src then
-    return M.hover_close()
-  end
+  M.at_cursor(function(src)
+    if not src then
+      return M.hover_close()
+    end
 
-  if hover and hover.placement.image.src ~= src then
-    M.hover_close()
-  elseif hover then
-    hover.placement:update()
-    return
-  end
+    if hover and hover.placement.image.src ~= src then
+      M.hover_close()
+    elseif hover then
+      hover.placement:update()
+      return
+    end
 
-  local bufnr = 0 ---@type integer
-  local winnr = 0 ---@type integer
+    local bufnr = 0 ---@type integer
+    local winnr = 0 ---@type integer
 
-  if hover and hover.bufnr > 0 and vim.api.nvim_buf_is_valid(hover.bufnr) then
-    bufnr = hover.bufnr
-  else
-    bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    hover.bufnr = bufnr
-  end
+    if hover and hover.bufnr > 0 and vim.api.nvim_buf_is_valid(hover.bufnr) then
+      bufnr = hover.bufnr
+    else
+      bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+      hover.bufnr = bufnr
+    end
 
-  ---@type vim.api.keyset.win_config
-  local wincfg = {
-    relative = "cursor",
-    height = 40,
-    width = 80,
-    row = 1,
-    col = 1,
-    enter = false,
-    focusable = false,
-    backdrop = false,
-    show = false,
-    title = "Image Previewer",
-    title_pos = "center",
-    border = "rounded",
-    style = "minimal",
-  }
-  if hover and hover.winnr > 0 and vim.api.nvim_win_is_valid(hover.winnr) then
-    winnr = hover.winnr ---@type integer
-    vim.api.nvim_win_set_config(hover.winnr, wincfg)
+    ---@type vim.api.keyset.win_config
+    local wincfg = {
+      relative = "cursor",
+      height = 40,
+      width = 80,
+      row = 1,
+      col = 1,
+      enter = false,
+      focusable = false,
+      backdrop = false,
+      show = false,
+      title = "Image Previewer",
+      title_pos = "center",
+      border = "rounded",
+      style = "minimal",
+    }
+    if hover and hover.winnr > 0 and vim.api.nvim_win_is_valid(hover.winnr) then
+      winnr = hover.winnr ---@type integer
+      vim.api.nvim_win_set_config(hover.winnr, wincfg)
 
-    vim.wo[winnr].number = false
-    vim.wo[winnr].relativenumber = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].winblend = winblend
-    vim.wo[winnr].wrap = false
+      vim.wo[winnr].number = false
+      vim.wo[winnr].relativenumber = false
+      vim.wo[winnr].signcolumn = "no"
+      vim.wo[winnr].cursorline = false
+      vim.wo[winnr].winblend = winblend
+      vim.wo[winnr].wrap = false
 
-    vim.wo[winnr].winfixbuf = false
-    vim.api.nvim_win_set_buf(winnr, bufnr)
-    vim.wo[winnr].winfixbuf = true
-  else
-    winnr = vim.api.nvim_open_win(bufnr, true, wincfg) ---@type integer
-    hover.winnr = winnr
+      vim.wo[winnr].winfixbuf = false
+      vim.api.nvim_win_set_buf(winnr, bufnr)
+      vim.wo[winnr].winfixbuf = true
+    else
+      winnr = vim.api.nvim_open_win(bufnr, true, wincfg) ---@type integer
+      hover.winnr = winnr
 
-    vim.wo[winnr].number = false
-    vim.wo[winnr].relativenumber = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].winblend = winblend
-    vim.wo[winnr].wrap = false
-    vim.wo[winnr].winfixbuf = true
-  end
+      vim.wo[winnr].number = false
+      vim.wo[winnr].relativenumber = false
+      vim.wo[winnr].signcolumn = "no"
+      vim.wo[winnr].cursorline = false
+      vim.wo[winnr].winblend = winblend
+      vim.wo[winnr].wrap = false
+      vim.wo[winnr].winfixbuf = true
+    end
 
-  local updated = false
-  local o = fn.merge_config({}, config.state.doc, {
-    on_update_pre = function()
-      if hover and not updated then
-        updated = true
-        local loc = hover.placement:state().loc
-        if hover.winnr > 0 and vim.api.nvim_win_is_valid(hover.winnr) then
-          vim.api.nvim_win_set_height(hover.winnr, loc.height)
-          vim.api.nvim_win_set_width(hover.winnr, loc.width)
+    local updated = false
+    local o = fn.merge_config({}, config.state.doc, {
+      on_update_pre = function()
+        if hover and not updated then
+          updated = true
+          local loc = hover.placement:state().loc
+          if hover.winnr > 0 and vim.api.nvim_win_is_valid(hover.winnr) then
+            vim.api.nvim_win_set_height(hover.winnr, loc.height)
+            vim.api.nvim_win_set_width(hover.winnr, loc.width)
+          end
         end
-      end
-    end,
-    inline = false,
-  })
+      end,
+      inline = false,
+    })
 
-  hover = {
-    winnr = winnr,
-    bufnr = bufnr,
-    placement = Placement.new(bufnr, src, o),
-  }
+    hover = {
+      winnr = winnr,
+      bufnr = bufnr,
+      placement = Placement.new(bufnr, src, o),
+    }
 
-  vim.api.nvim_create_autocmd({ "BufWritePost", "CursorMoved", "ModeChanged", "BufLeave" }, {
-    group = vim.api.nvim_create_augroup("fml.dressing.image.hover", { clear = true }),
-    callback = function()
-      if not hover then
-        return true
-      end
-      M.hover()
-      if not hover then
-        return true
-      end
-    end,
-  })
+    vim.api.nvim_create_autocmd({ "BufWritePost", "CursorMoved", "ModeChanged", "BufLeave" }, {
+      group = fn.augroup("fml.dressing.image.hover"),
+      callback = function()
+        if not hover then
+          return true
+        end
+        M.hover()
+        if not hover then
+          return true
+        end
+      end,
+    })
+  end)
 end
 
 ---@return nil
@@ -472,40 +548,6 @@ function M.hover_close()
     end
     hover.placement:close()
     hover = nil
-  end
-end
-
----@param bufnr                         integer
----@return nil
-function M.inline(bufnr)
-  local imgs = {} ---@type table<string, fml.dressing.image.Placement>
-  return function()
-    local found = {} ---@type table<string, boolean>
-    for _, i in ipairs(M.find(bufnr)) do
-      local img = imgs[i.id] ---@type fml.dressing.image.Placement?
-      if img and img.image.src ~= i.src then
-        img:close()
-        img = nil
-      end
-
-      if not img then
-        img = Placement.new(
-          bufnr,
-          i.src,
-          fn.merge_config({}, config.state.doc, { pos = i.pos, range = i.range, inline = true })
-        )
-        imgs[i.id] = img
-      else
-        img:update()
-      end
-      found[i.id] = true
-    end
-    for nid, img in pairs(imgs) do
-      if not found[nid] then
-        img:close()
-        imgs[nid] = nil
-      end
-    end
   end
 end
 
@@ -523,23 +565,17 @@ function M.attach(bufnr)
     return
   end
 
-  local group = vim.api.nvim_create_augroup("fml.dressing.image.doc." .. bufnr, { clear = true })
-  local update = inline and M.inline(bufnr) or M.hover
-
   if inline then
-    vim.api.nvim_create_autocmd("BufWritePost", {
-      group = group,
-      buffer = bufnr,
-      callback = vim.schedule_wrap(update),
-    })
+    ImageInline.new(bufnr)
   else
+    local group = fn.augroup("fml.dressing.image.doc." .. bufnr)
     vim.api.nvim_create_autocmd({ "CursorMoved" }, {
       group = group,
       buffer = bufnr,
-      callback = vim.schedule_wrap(update),
+      callback = vim.schedule_wrap(M.hover),
     })
+    vim.schedule(M.hover)
   end
-  vim.schedule(update)
 end
 
 return M

@@ -1,5 +1,6 @@
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Scheduler = require("eve.collection.scheduler")
@@ -156,7 +157,7 @@ return {
     })
 
     vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
-      group = vim.api.nvim_create_augroup("nvim-lint", { clear = true }),
+      group = fn.augroup("nvim-lint"),
       callback = function()
         local spellcheck = state.flight.spellcheck:snapshot() ---@type boolean
         if spellcheck then
