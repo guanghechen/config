@@ -161,6 +161,7 @@ local function gen_hlgroup_map(context)
     pos_sep = { fg = bg_pos, bg = "bg_bar" },
     pos_text_anchor = { fg = c.fg2, bg = "bg_bar" },
     pos_text_percentage = { fg = c.fg2, bg = bg_pos, bold = true },
+    python_env = { fg = c.fg3, bg = "bg_bar" },
     readonly = { fg = c.orange, bg = "bg_bar" },
     sidebar_blank = { fg = c.fg1, bg = "bg_bar" },
     sidebar_split = { fg = c.bg4, bg = "bg_bar" },

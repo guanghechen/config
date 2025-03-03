@@ -15,6 +15,7 @@ local Ticker = require("eve.collection.ticker")
 ---
 ---@field public lsp_msg                string
 ---@field public maximized_winnrs       table<integer, boolean>
+---@field public python_env             string
 ---@field public suppress_warning       boolean
 ---@field public tmux_zen_mode          boolean
 
@@ -29,6 +30,7 @@ local Ticker = require("eve.collection.ticker")
 ---
 ---@field public lsp_msg                eve.collection.IObservable
 ---@field public maximized_winnrs       table<integer, boolean>
+---@field public python_env             eve.collection.IObservable
 ---@field public suppress_warning       eve.collection.IObservable
 ---@field public tmux_zen_mode          eve.collection.IObservable
 ---
@@ -45,6 +47,10 @@ local _state = nil ---@type eve.state.status.state | nil
 
 ---@return eve.state.status.data
 function M.defaults()
+  local python_env = vim.env.CONDA_DEFAULT_ENV
+    or vim.env.VIRTUAL_ENV and vim.fn.fnamemodify(vim.env.VIRTUAL_ENV, ":t")
+    or "system"
+
   ---@type eve.state.status.data
   return {
     tick_editor = 0,
@@ -57,6 +63,7 @@ function M.defaults()
 
     lsp_msg = "",
     maximized_winnrs = {},
+    python_env = python_env,
     suppress_warning = false,
     tmux_zen_mode = tmux.is_tmux_pane_zoomed(),
   }
@@ -94,6 +101,7 @@ function M.dump()
 
     lsp_msg = _state.lsp_msg:snapshot(),
     maximized_winnrs = vim.tbl_extend("force", {}, _state.lsp_msg:snapshot()),
+    python_env = _state.python_env:snapshot(),
     suppress_warning = _state.suppress_warning:snapshot(),
     tmux_zen_mode = _state.tmux_zen_mode:snapshot(),
   }
@@ -106,31 +114,36 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.status.data
 
   if _state == nil then
+    local defaults = M.defaults() ---@type eve.state.status.data
+
     ---@type eve.state.status.state
     _state = {
-      ticker_editor = Ticker.new({ start = 0 }),
-      ticker_workspace = Ticker.new({ start = 0 }),
-      ticker_session = Ticker.new({ start = 0 }),
+      ticker_editor = Ticker.new({ start = defaults.tick_editor }),
+      ticker_workspace = Ticker.new({ start = defaults.tick_workspace }),
+      ticker_session = Ticker.new({ start = defaults.tick_session }),
 
       dirtier_statusline = Dirtier.new({ dirty = true }),
       dirtier_tabline = Dirtier.new({ dirty = true }),
-      dirty_winline_nr = Observable.from_value(0, fn.falsy),
+      dirty_winline_nr = Observable.from_value(defaults.dirty_winline_nr, fn.falsy),
 
-      lsp_msg = Observable.from_value(""),
-      maximized_winnrs = {},
-      suppress_warning = Observable.from_value(false),
-      tmux_zen_mode = Observable.from_value(tmux.is_tmux_pane_zoomed()),
+      lsp_msg = Observable.from_value(defaults.lsp_msg),
+      maximized_winnrs = defaults.maximized_winnrs,
+      python_env = Observable.from_value(defaults.python_env),
+      suppress_warning = Observable.from_value(defaults.suppress_warning),
+      tmux_zen_mode = Observable.from_value(defaults.tmux_zen_mode),
 
       reset = function()
         ---@cast _state                 eve.state.status.state
 
-        _state.lsp_msg:next("")
-        _state.maximized_winnrs = {}
-        _state.suppress_warning:next(false)
-        _state.tmux_zen_mode:next(tmux.is_tmux_pane_zoomed())
+        defaults = M.defaults() ---@type eve.state.status.data
+        _state.lsp_msg:next(defaults.lsp_msg)
+        _state.maximized_winnrs = defaults.maximized_winnrs
+        _state.python_env:next(defaults.python_env)
+        _state.suppress_warning:next(defaults.suppress_warning)
+
         _state.dirtier_statusline:mark_dirty()
         _state.dirtier_tabline:mark_dirty()
-        _state.dirty_winline_nr:next(0)
+        _state.dirty_winline_nr:next(defaults.dirty_winline_nr)
       end,
     }
     return _state

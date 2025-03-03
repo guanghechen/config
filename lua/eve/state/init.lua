@@ -333,6 +333,7 @@ function M.watch_changes(params)
 
   M.observe({
     M.status.lsp_msg,
+    M.status.python_env,
   }, function()
     M.status.dirtier_statusline:mark_dirty()
   end)

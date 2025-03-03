@@ -123,6 +123,11 @@ M.filetype = {
   Unknown = "󰈚",
 }
 
+---@class eve.constant.icon.lang
+M.lang = {
+  python = " ",
+}
+
 ---@class eve.constant.icon.os
 M.os = {
   dos = "",

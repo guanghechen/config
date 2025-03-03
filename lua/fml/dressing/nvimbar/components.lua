@@ -955,7 +955,7 @@ function M.lsp(position)
     if not has_client then
       return ""
     end
-    return "  " .. client_names
+    return " " .. client_names
   end
 
   ---@type fml.ux.nvimbar.IRawComponent
@@ -1088,6 +1088,35 @@ function M.mode(position)
 
       text = text .. icons.symbols.sep_right ---@type string
       hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      fml.ux.nvimbar.Position
+---@return fml.ux.nvimbar.IRawComponent
+function M.python_env(position)
+  local hln_text = position .. "_text" ---@type string
+  local python_env = "" ---@type string
+
+  ---@type fml.ux.nvimbar.IRawComponent
+  local component = {
+    name = "python_env",
+    atomic = true,
+    tight = true,
+    condition = function(context)
+      return context.filetype == "python"
+    end,
+    will_change = function()
+      local pe = state.status.python_env:snapshot() ---@type string
+      local flag = pe ~= python_env ---@type boolean
+      python_env = pe
+      return flag
+    end,
+    render = function()
+      local text = icons.lang.python .. python_env .. "  " ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,
   }
