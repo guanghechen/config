@@ -5,7 +5,7 @@
   "cmp-nvim-lsp": { "branch": "nvim@cmp-nvim-lsp", "commit": "99290b3ec1322070bcfb9e846450a46f6efa50f0" },
   "cmp-path": { "branch": "nvim@cmp-path", "commit": "91ff86cd9c29299a64f968ebb45846c485725f23" },
   "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "a6f5bdb78caa305496357d17e962bbc4c0b392e2" },
-  "copilot-chat.nvim": { "branch": "nvim@copilot-chat.nvim", "commit": "a0b1e415336fa2562ad8e14553f7888b7acb1010" },
+  "copilot-chat.nvim": { "branch": "nvim@copilot-chat.nvim", "commit": "fc1282ca7d260a340c6a5b5062f13ef575cfcd63" },
   "copilot-cmp": { "branch": "nvim@copilot-cmp", "commit": "15fc12af3d0109fa76b60b5cffa1373697e261d1" },
   "copilot.lua": { "branch": "nvim@copilot.lua", "commit": "30321e33b03cb924fdcd6a806a0dc6fa0b0eafb9" },
   "diffview.nvim": { "branch": "nvim@diffview.nvim", "commit": "4516612fe98ff56ae0415a259ff6361a89419b0a" },
