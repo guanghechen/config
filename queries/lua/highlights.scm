@@ -1,4 +1,4 @@
 ;; extends
 
 ((identifier) @namespace.builtin
-  (#any-of? @namespace.builtin "eve"))
+  (#any-of? @namespace.builtin "Snacks" "svim"))
