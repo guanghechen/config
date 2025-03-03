@@ -347,30 +347,26 @@
   {
     "key": "alt+[",
     "command": "workbench.action.previousEditorInGroup",
-    "when": "editorFocus || (!panelFocus && !sideBarFocus)",
+    "when": "editorFocus || (!panelFocus && !sideBarFocus && !terminalFocus)",
     "title": "editor: focus left"
   },
   {
     "key": "alt+[",
     "command": "workbench.action.previousPanelView",
-    "when": "panelFocus",
+    "when": "panelFocus && !terminalFocus",
     "title": "pane: focus left"
   },
   {
     "key": "alt+]",
     "command": "workbench.action.nextEditorInGroup",
-    "when": "editorFocus || (!panelFocus && !sideBarFocus)",
+    "when": "editorFocus || (!panelFocus && !sideBarFocus && !terminalFocus)",
     "title": "editor: focus right"
   },
   {
     "key": "alt+]",
     "command": "workbench.action.nextPanelView",
-    "when": "panelFocus",
+    "when": "panelFocus && !terminalFocus",
     "title": "pane: focus right"
-  },
-  {
-    "key": "alt+`",
-    "command": "workbench.action.togglePanel"
   },
   {
     "key": "alt+a",
@@ -628,6 +624,10 @@
     "key": "alt+p",
     "command": "workbench.action.quickOpenNavigateNextInFilePicker",
     "when": "inFilesPicker && inQuickOpen"
+  },
+  {
+    "key": "alt+q",
+    "command": "workbench.action.togglePanel"
   },
   {
     "key": "alt+r",
