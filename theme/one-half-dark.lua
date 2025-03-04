@@ -1,4 +1,4 @@
--- one_half_dark
+-- one-half-dark
 local config = {
   colors = {
     -- Primary colors

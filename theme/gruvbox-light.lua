@@ -1,4 +1,4 @@
--- gruvbox_light
+-- gruvbox-light
 local config = {
   colors = {
     -- Primary colors

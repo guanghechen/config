@@ -21,7 +21,7 @@ end
 ---@return table
 function M.load_theme()
 	local ok, theme = pcall(require, "local.theme")
-	return ok and theme or require("theme.gruvbox_dark")
+	return ok and theme or require("theme.catppuccin-mocha")
 end
 
 return M

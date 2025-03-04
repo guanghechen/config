@@ -1,4 +1,4 @@
--- one_half_light
+-- one-half-light
 local config = {
   colors = {
     -- Primary colors
