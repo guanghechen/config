@@ -1,6 +1,7 @@
 ### Thanks
 
 * Snacks: https://github.com/folke/snacks.nvim/blob/bc0630e43be5699bb94dadc302c0d21615421d93
+* venv-selector.nvim: https://github.com/linux-cultist/venv-selector.nvim
 
 
 ### Requirements

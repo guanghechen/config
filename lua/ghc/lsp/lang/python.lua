@@ -34,6 +34,7 @@ function M.pyright()
     settings = {
       python = {
         enabled = true,
+        pythonPath = vim.fn.systemlist("poetry env info --path")[1] .. "/bin/python",
         analysis = {
           typeCheckingMode = "standard",
           autoImportCompletions = true,

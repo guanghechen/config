@@ -2,7 +2,8 @@ local env = require("eve.builtin.env")
 local md5 = require("eve.builtin.md5")
 
 local SEP = env.PATH_SEP ---@type string
-local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG --[[@as string]]
+local HOME_NVIM_CACHE = env.HOME_NVIM_CACHE
+local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG
 local HOME_CONTEXT = env.HOME_CONTEXT ---@type string
 
 ---@class eve.builtin.path
@@ -292,6 +293,13 @@ end
 ---@return string
 function M.locate_app_config_home(app)
   local filepath = M.join(HOME_NVIM_CONFIG, "../" .. app)
+  return M.normalize(filepath)
+end
+
+---@param filename                      string
+---@return string
+function M.locate_cache_filepath(filename)
+  local filepath = M.join(HOME_NVIM_CACHE, "/guanghechen/" .. filename)
   return M.normalize(filepath)
 end
 

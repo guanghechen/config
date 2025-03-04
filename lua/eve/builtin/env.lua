@@ -9,11 +9,15 @@ M.IS_NIX = os_name == "Linux" ---@type boolean
 M.IS_WIN = os_name == "Windows_NT" ---@type boolean
 M.IS_WSL = vim.fn.has("wsl") == 1 ---@type boolean
 M.IS_TMUX = vim.env.TMUX ~= nil ---@type boolean
+
+M.PATH_ENV_SEP = M.IS_WIN and ";" or ":" ---@type string
 M.PATH_SEP = M.IS_WIN and "\\" or "/" ---@type string
 M.USERNAME = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
 
 ---! Path settings
 
+M.HOME_USER = vim.env.HOME --[[@as string]]
+M.HOME_NVIM_CACHE = vim.fn.stdpath("cache") --[[@as string]]
 M.HOME_NVIM_CONFIG = vim.fn.stdpath("config") --[[@as string]]
 M.HOME_NVIM_DATA = vim.fn.stdpath("data") --[[@as string]]
 M.HOME_NVIM_STATE = vim.fn.stdpath("state") --[[@as string]]
