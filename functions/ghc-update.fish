@@ -1,6 +1,6 @@
 function ghc-update
     set primary_configs btop conda fish fzf guanghechen helix lazygit lsd nvim pm2 ripgrep tmux yazi yozora
-    set develop_configs alacritty kitty neovide nvim-nvchad
+    set develop_configs alacritty kitty neovide nvim-nvchad wezterm
     set base_path "$HOME/.config"
 
     for config in $primary_configs
