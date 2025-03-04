@@ -20,11 +20,11 @@
 ---|"catppuccin-latte"
 ---|"catppuccin-macchiato"
 ---|"catppuccin-mocha"
----|"gruvbox_light"
----|"gruvbox_dark"
+---|"gruvbox-light"
+---|"gruvbox-dark"
 ---|"nord"
----|"one_half_light"
----|"one_half_dark"
+---|"one-half-light"
+---|"one-half-dark"
 
 ---@alias eve.e.ThemeVariant
 ---|"dark"

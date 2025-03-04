@@ -57,7 +57,7 @@ local integrations = {
 function M.defaults()
   ---@type eve.state.theme.data
   return {
-    theme = "gruvbox_dark",
+    theme = "gruvbox-dark",
     transparency = false,
     username = true,
   }

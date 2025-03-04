@@ -43,11 +43,11 @@ M.themes = {
   "catppuccin-latte",
   "catppuccin-macchiato",
   "catppuccin-mocha",
-  "gruvbox_dark",
-  "gruvbox_light",
+  "gruvbox-dark",
+  "gruvbox-light",
   "nord",
-  "one_half_dark",
-  "one_half_light",
+  "one-half-dark",
+  "one-half-light",
 }
 
 ---@class eve.constant.setting.togglers

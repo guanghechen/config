@@ -1,6 +1,6 @@
 ---@type eve.t.theme.IScheme
 local M = {
-  theme = "one_half_light",
+  theme = "one-half-light",
   variant = "light",
   -- stylua: ignore start
   palette = {

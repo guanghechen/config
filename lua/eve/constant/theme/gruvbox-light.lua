@@ -1,6 +1,6 @@
 ---@type eve.t.theme.IScheme
 local M = {
-  theme = "gruvbox_light",
+  theme = "gruvbox-light",
   variant = "light",
   -- stylua: ignore start
   palette = {
