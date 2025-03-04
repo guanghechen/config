@@ -11,17 +11,23 @@ export HOME_MINIFORGE="$HOME/.app/miniforge3"
 if [ -d "$HOME_MINIFORGE" ]; then
   printf "\n\e[33;5;214m  [setup miniforge] miniforge is already installed. (skipped)\e[0m\n"
 else
+  miniforge_setup_sh="Miniforge3-$(uname)-$(uname -m).sh"
+
   ## Mkdirs
   mkdir -p ~/.app/
   mkdir -p ~/download/app/
+  cd ~/download/app/
 
   ## Download and install the miniforge3
-  printf "\n\e[34m  [setup miniforge] downloading...\e[0m\n"
-  cd ~/download/app/
-  curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+  if [ -f "${miniforge_setup_sh}" ]; then
+    printf "\n\e[33;5;214m  [setup miniforge] $miniforge_setup_sh already exists. (skipped download)\e[0m\n"
+  else
+    printf "\n\e[34m  [setup miniforge] downloading...\e[0m\n"
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/${miniforge_setup_sh}"
+  fi
 
   printf "\n\e[34m  [setup miniforge] installing...\e[0m\n"
-  printf "\n\nyes\n$HOME_MINIFORGE\nyes\n" | bash Miniforge3-$(uname)-$(uname -m).sh # should install at ~/.app/miniforge3
+  printf "\n\nyes\n$HOME_MINIFORGE\nyes\n" | bash "${miniforge_setup_sh}" # should install at ~/.app/miniforge3
 fi
 export PATH=$HOME_MINIFORGE/bin:$PATH
 
