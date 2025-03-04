@@ -1,5 +1,17 @@
 fish_vi_key_bindings
 
+# Filter other users path (which could be inherit by `sudo su`)
+if test (uname) = "Darwin"
+  set -l current_user (whoami)
+  set -l new_path
+  for p in $PATH
+    if not string match -q "/Users/*" -- $p || string match -q "/Users/$current_user/*" -- $p
+      set new_path $new_path $p
+    end
+  end
+  set -gx PATH $new_path
+end
+
 ## Local
 #
 # set -gx f_vscode_settings
