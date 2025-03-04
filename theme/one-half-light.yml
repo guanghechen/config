@@ -1,4 +1,4 @@
-# one_half_dark
+# one-half-light
 
 git:
   autoFetch: false
@@ -18,21 +18,21 @@ git:
 gui:
   authorColors:
     guanghechen: "blue"
-    "*": "#C8CCD4"
+    "*": "#5C5F66"
   branchColors:
     main: "blue"
   theme:
     defaultFgColor:
-      - "#C8CCD4"
+      - "#5C5F66"
     activeBorderColor:
       - "magenta"
       - bold
     inactiveBorderColor:
-      - "#ABB2BF"
+      - "#383A42"
     optionsTextColor:
-      -  "#D75F00"
+      -  "#FF6A00"
     selectedLineBgColor:
-      - "#3E4451"
+      - "#E5E5E5"
     cherryPickedCommitFgColor:
       - "blue"
     cherryPickedCommitBgColor:
