@@ -35,7 +35,7 @@ function M.pyright()
       python = {
         enabled = true,
         analysis = {
-          typeCheckingMode = "basic",
+          typeCheckingMode = "standard",
           autoImportCompletions = true,
           diagnosticMode = "openFilesOnly",
           autoSearchPaths = true,
