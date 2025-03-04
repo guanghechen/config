@@ -23,6 +23,7 @@ clone_or_update_config_repo() {
     "kitty"
     "neovide"
     "nvim-nvchad"
+    "wezterm"
   )
 
   for branch in "${CONFIG_BRANCHES[@]}"; do

@@ -2,6 +2,7 @@ Write-Host "[setup config] preparing" -ForegroundColor DarkGreen
 
 $config_root_dir = "$env:XDG_CONFIG_HOME"
 $config_repo_branch = @(
+  "conda",
   "fzf",
   "helix",
   "lazygit",
@@ -17,7 +18,8 @@ $optinal_config_repo_branch = @(
   "alacritty",
   "kitty",
   "neovide",
-  "nvim-nvchad"
+  "nvim-nvchad",
+  "wezterm"
 )
 
 # Function to clone or update a repository

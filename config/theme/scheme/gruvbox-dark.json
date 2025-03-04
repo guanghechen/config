@@ -1,7 +1,7 @@
 {
-  "theme": "gruvbox_dark",
+  "theme": "gruvbox-dark",
   "variant": "dark",
-  "opposite": "gruvbox_light",
+  "opposite": "gruvbox-light",
   "palette": {
     "bg0":            "#282828",
     "bg1":            "#3C3836",
