@@ -284,8 +284,7 @@ local function get_select()
 
         if #items == 1 then
           local item = items[1]
-          ---@cast item fml.action.lsp.python_venv.IItem
-          util.activate_venv(item.data.path)
+          state.lsp.python_venv_path:next(item.data.path)
         end
       end,
     })
@@ -300,5 +299,12 @@ function M.select_python_venv()
   local select = get_select()
   select:show()
 end
+
+state.observe({ state.lsp.python_venv_path }, function()
+  local venv_path = state.lsp.python_venv_path:snapshot() ---@type string
+  if venv_path ~= nil and vim.fn.isdirectory(venv_path) ~= 0 then
+    util.activate_venv(venv_path)
+  end
+end, false)
 
 return M

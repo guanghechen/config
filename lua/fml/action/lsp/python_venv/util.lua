@@ -92,9 +92,6 @@ function M.activate_venv(venv_path)
   else
     vim.fn.setenv("VIRTUAL_ENV", venv_path)
   end
-
-  state.lsp.python_py_path:next(venv_python)
-  state.lsp.python_venv_path:next(venv_path)
 end
 
 ---@return nil
@@ -114,7 +111,6 @@ function M.deactivate_venv()
   -- TODO: Set pyright to use system python if it exists.
   -- Not sure how to do this in a cross platform compatible way.
 
-  state.lsp.python_py_path:next(nil)
   state.lsp.python_venv_path:next(nil)
 end
 

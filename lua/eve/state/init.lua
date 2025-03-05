@@ -303,7 +303,6 @@ function M.watch_changes(params)
     M.flight.gitdiff_expand_all,
     M.flight.lsp_inlay_hints,
     M.flight.lsp_code_lens,
-    M.lsp.python_py_path,
     M.lsp.python_venv_path,
     M.select.find_buffer_scope,
     M.select.find_file_scope,

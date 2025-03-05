@@ -1098,7 +1098,31 @@ end
 ---@return fml.ux.nvimbar.IRawComponent
 function M.python_env(position)
   local hln_text = position .. "_text" ---@type string
-  local python_venv_path = "" ---@type string|nil
+
+  local python_venv = "" ---@type string|nil
+  local python_version = "" ---@type string|nil
+  local dirty = false ---@type boolean
+
+  state.observe({ state.lsp.python_venv_path }, function()
+    dirty = true
+    local python_venv_path = state.lsp.python_venv_path:snapshot() ---@type string
+    python_venv = python_venv_path ~= nil and path.basename(python_venv_path) or nil ---@type string|nil
+    if python_venv_path ~= nil and vim.fn.isdirectory(python_venv_path) ~= 0 then
+      local python_filepath = path.join(python_venv_path, env.IS_WIN and "Scripts/python" or "bin/python") ---@type string
+      local cmd = vim.fn.shellescape(python_filepath) .. " --version"
+      local ok, output = pcall(vim.fn.system, cmd)
+      if ok then
+        python_version = output:match("(%d+%.%d+%.%d+)")
+      else
+        python_version = nil
+        reporter.error({
+          from = __module_name__,
+          message = "Failed to run python version command.",
+          details = { error = output, cmd = cmd, python_venv_path = python_venv_path },
+        })
+      end
+    end
+  end, false)
 
   local fn_select_python_venv = G.register_anonymous_fn(function()
     vim.cmd(command.definitions.lsp.select_python_venv.uuid)
@@ -1110,17 +1134,14 @@ function M.python_env(position)
     atomic = true,
     tight = true,
     condition = function(context)
-      return context.filetype == "python"
+      return python_venv ~= nil and python_version ~= nil
     end,
-    will_change = function()
-      local pe = state.lsp.python_venv_path:snapshot() ---@type string|nil
-      local flag = pe ~= python_venv_path ---@type boolean
-      python_venv_path = pe
-      return flag
+    will_change = function(_, prev_context)
+      return prev_context == nil or dirty
     end,
     render = function()
-      local python_venv = python_venv_path and path.basename(python_venv_path) or "unknown" ---@type string
-      local text = icons.lang.python .. python_venv .. "  " ---@type string
+      dirty = false
+      local text = python_version .. " (" .. python_venv .. ")  " ---@type string
       local hl_text = btn(txt(text, hln_text), fn_select_python_venv) ---@type string
       return text, hl_text, true
     end,
