@@ -15,7 +15,6 @@ local Ticker = require("eve.collection.ticker")
 ---
 ---@field public lsp_msg                string
 ---@field public maximized_winnrs       table<integer, boolean>
----@field public python_env             string
 ---@field public suppress_warning       boolean
 ---@field public tmux_zen_mode          boolean
 
@@ -30,7 +29,6 @@ local Ticker = require("eve.collection.ticker")
 ---
 ---@field public lsp_msg                eve.collection.IObservable
 ---@field public maximized_winnrs       table<integer, boolean>
----@field public python_env             eve.collection.IObservable
 ---@field public suppress_warning       eve.collection.IObservable
 ---@field public tmux_zen_mode          eve.collection.IObservable
 ---
@@ -47,10 +45,6 @@ local _state = nil ---@type eve.state.status.state | nil
 
 ---@return eve.state.status.data
 function M.defaults()
-  local python_env = vim.env.CONDA_DEFAULT_ENV
-    or vim.env.VIRTUAL_ENV and vim.fn.fnamemodify(vim.env.VIRTUAL_ENV, ":t")
-    or "system"
-
   ---@type eve.state.status.data
   return {
     tick_editor = 0,
@@ -63,7 +57,6 @@ function M.defaults()
 
     lsp_msg = "",
     maximized_winnrs = {},
-    python_env = python_env,
     suppress_warning = false,
     tmux_zen_mode = tmux.is_tmux_pane_zoomed(),
   }
@@ -101,7 +94,6 @@ function M.dump()
 
     lsp_msg = _state.lsp_msg:snapshot(),
     maximized_winnrs = vim.tbl_extend("force", {}, _state.lsp_msg:snapshot()),
-    python_env = _state.python_env:snapshot(),
     suppress_warning = _state.suppress_warning:snapshot(),
     tmux_zen_mode = _state.tmux_zen_mode:snapshot(),
   }
@@ -126,7 +118,6 @@ function M.load(raw_data)
 
       lsp_msg = Observable.from_value(data.lsp_msg),
       maximized_winnrs = data.maximized_winnrs,
-      python_env = Observable.from_value(data.python_env),
       suppress_warning = Observable.from_value(data.suppress_warning),
       tmux_zen_mode = Observable.from_value(data.tmux_zen_mode),
 
@@ -135,7 +126,6 @@ function M.load(raw_data)
 
         _state.lsp_msg:next(data.lsp_msg)
         _state.maximized_winnrs = data.maximized_winnrs
-        _state.python_env:next(data.python_env)
         _state.suppress_warning:next(data.suppress_warning)
 
         _state.dirtier_statusline:mark_dirty()

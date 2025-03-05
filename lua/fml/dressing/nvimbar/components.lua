@@ -1098,7 +1098,11 @@ end
 ---@return fml.ux.nvimbar.IRawComponent
 function M.python_env(position)
   local hln_text = position .. "_text" ---@type string
-  local python_env = "" ---@type string
+  local python_venv_path = "" ---@type string|nil
+
+  local fn_select_python_venv = G.register_anonymous_fn(function()
+    vim.cmd(command.definitions.lsp.select_python_venv.uuid)
+  end)
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -1109,14 +1113,15 @@ function M.python_env(position)
       return context.filetype == "python"
     end,
     will_change = function()
-      local pe = state.status.python_env:snapshot() ---@type string
-      local flag = pe ~= python_env ---@type boolean
-      python_env = pe
+      local pe = state.lsp.python_venv_path:snapshot() ---@type string|nil
+      local flag = pe ~= python_venv_path ---@type boolean
+      python_venv_path = pe
       return flag
     end,
     render = function()
-      local text = icons.lang.python .. python_env .. "  " ---@type string
-      local hl_text = txt(text, hln_text) ---@type string
+      local python_venv = python_venv_path and path.basename(python_venv_path) or "unknown" ---@type string
+      local text = icons.lang.python .. python_venv .. "  " ---@type string
+      local hl_text = btn(txt(text, hln_text), fn_select_python_venv) ---@type string
       return text, hl_text, true
     end,
   }

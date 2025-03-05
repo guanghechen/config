@@ -12,7 +12,7 @@ local util = require("fml.action.lsp.python_venv.util")
 ---@return string|nil
 local function format_search_path(folder)
   local resolved_path = vim.fn.expand(folder) ---@type string
-  if vim.fn.isdirectory(resolved_path) == 0 then
+  if #resolved_path < 1 or vim.fn.isdirectory(resolved_path) == 0 then
     return nil
   end
 
@@ -44,6 +44,10 @@ local function get_select()
         local uuid_set = {} ---@type table<string, true>
 
         do
+          local anaconda_base_path = format_search_path(config.settings.anaconda_base_path) ---@type string|nil
+          local anaconda_envs_path = format_search_path(config.settings.anaconda_envs_path) ---@type string|nil
+
+          ---@type string[]
           local cmd = {
             "fd",
             "--absolute-path",
@@ -51,14 +55,18 @@ local function get_select()
             "never",
             "-E",
             "/proc",
-            "-E",
-            config.settings.anaconda_base_path,
-            "-E",
-            config.settings.anaconda_envs_path,
-            "-HItd",
-            "^(venv|\\.venv)$",
-            root,
           }
+          if anaconda_base_path then
+            table.insert(cmd, "-E")
+            table.insert(cmd, anaconda_base_path)
+          end
+          if anaconda_envs_path then
+            table.insert(cmd, "-E")
+            table.insert(cmd, anaconda_envs_path)
+          end
+          table.insert(cmd, "-HItd")
+          table.insert(cmd, "^(venv|\\.venv)$")
+          table.insert(cmd, root)
           local output, err = vim.fn.system(cmd)
 
           if vim.v.shell_error ~= 0 then
@@ -207,18 +215,19 @@ local function get_select()
                 if #line > 0 then
                   local icon = "" ---@type string
                   local dirpath = fn.remove_last_slash(line) ---@type string
-
-                  ---@type fml.action.lsp.python_venv.IItem
-                  local item = {
-                    uuid = "venv-manager#" .. dirpath,
-                    text = icon .. " " .. dirpath,
-                    data = {
-                      icon = icon,
-                      path = dirpath,
-                      source = "venv-manager#",
-                    },
-                  }
-                  table.insert(items, item)
+                  if not uuid_set[dirpath] then
+                    uuid_set[dirpath] = true
+                    ---@type fml.action.lsp.python_venv.IItem
+                    local item = {
+                      uuid = dirpath,
+                      text = icon .. " " .. dirpath,
+                      data = {
+                        icon = icon,
+                        path = dirpath,
+                      },
+                    }
+                    table.insert(items, item)
+                  end
                 end
               end
             end
