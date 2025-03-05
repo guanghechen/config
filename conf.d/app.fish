@@ -15,16 +15,16 @@ if test -f "$HOME/.app/miniforge3/bin/conda"
   set -gx CONDA_PROMPT_MODIFIER ""
   eval "$HOME/.app/miniforge3/bin/conda" "shell.fish" "hook" $argv | source
 
-  if status is-interactive
-    if set -q CONDA_PREFIX
-      set conda_env (basename "$CONDA_PREFIX")
-      conda activate base
-      conda activate $conda_env
-    else
-      conda activate base
-      conda activate lemon
-    end
-  end
+  # if status is-interactive
+  #   if set -q CONDA_PREFIX
+  #     set conda_env (basename "$CONDA_PREFIX")
+  #     conda activate base
+  #     conda activate $conda_env
+  #   else
+  #     conda activate base
+  #     conda activate lemon
+  #   end
+  # end
 end
 
 ### tmux
