@@ -423,6 +423,8 @@ M.definitions.lsp = {
   goto_implementations = def("Flspgotoimplementations", "lsp: goto implementations"),
   goto_references = def("Flspgotoreferences", "lsp: goto references"),
   goto_type_definitions = def("Flspgototypedefinitions", "lsp: goto type definitions"),
+
+  select_python_venv = def("Flspselectpythonvenv", "lsp: select python venv"),
 }
 
 ---@class eve.command.definitions.refresh

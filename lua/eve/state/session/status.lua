@@ -114,36 +114,33 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.status.data
 
   if _state == nil then
-    local defaults = M.defaults() ---@type eve.state.status.data
-
     ---@type eve.state.status.state
     _state = {
-      ticker_editor = Ticker.new({ start = defaults.tick_editor }),
-      ticker_workspace = Ticker.new({ start = defaults.tick_workspace }),
-      ticker_session = Ticker.new({ start = defaults.tick_session }),
+      ticker_editor = Ticker.new({ start = data.tick_editor }),
+      ticker_workspace = Ticker.new({ start = data.tick_workspace }),
+      ticker_session = Ticker.new({ start = data.tick_session }),
 
       dirtier_statusline = Dirtier.new({ dirty = true }),
       dirtier_tabline = Dirtier.new({ dirty = true }),
-      dirty_winline_nr = Observable.from_value(defaults.dirty_winline_nr, fn.falsy),
+      dirty_winline_nr = Observable.from_value(data.dirty_winline_nr, fn.falsy),
 
-      lsp_msg = Observable.from_value(defaults.lsp_msg),
-      maximized_winnrs = defaults.maximized_winnrs,
-      python_env = Observable.from_value(defaults.python_env),
-      suppress_warning = Observable.from_value(defaults.suppress_warning),
-      tmux_zen_mode = Observable.from_value(defaults.tmux_zen_mode),
+      lsp_msg = Observable.from_value(data.lsp_msg),
+      maximized_winnrs = data.maximized_winnrs,
+      python_env = Observable.from_value(data.python_env),
+      suppress_warning = Observable.from_value(data.suppress_warning),
+      tmux_zen_mode = Observable.from_value(data.tmux_zen_mode),
 
       reset = function()
         ---@cast _state                 eve.state.status.state
 
-        defaults = M.defaults() ---@type eve.state.status.data
-        _state.lsp_msg:next(defaults.lsp_msg)
-        _state.maximized_winnrs = defaults.maximized_winnrs
-        _state.python_env:next(defaults.python_env)
-        _state.suppress_warning:next(defaults.suppress_warning)
+        _state.lsp_msg:next(data.lsp_msg)
+        _state.maximized_winnrs = data.maximized_winnrs
+        _state.python_env:next(data.python_env)
+        _state.suppress_warning:next(data.suppress_warning)
 
         _state.dirtier_statusline:mark_dirty()
         _state.dirtier_tabline:mark_dirty()
-        _state.dirty_winline_nr:next(defaults.dirty_winline_nr)
+        _state.dirty_winline_nr:next(data.dirty_winline_nr)
       end,
     }
     return _state

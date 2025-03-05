@@ -8,6 +8,7 @@ local select_item = require("eve.state.workspace.select_item")
 ---@field public find_git               eve.state.select.item.data
 ---@field public find_highlight         eve.state.select.item.data
 ---@field public find_pinned_file       eve.state.select.item.data
+---@field public find_python_venv       eve.state.select.item.data
 ---@field public find_vim_option        eve.state.select.item.data
 ---@field public search_file            eve.state.select.item.data
 ---@field public select_avante          eve.state.select.item.data
@@ -23,6 +24,7 @@ local select_item = require("eve.state.workspace.select_item")
 ---@field public find_git               eve.state.select.item.state
 ---@field public find_highlight         eve.state.select.item.state
 ---@field public find_pinned_file       eve.state.select.item.state
+---@field public find_python_venv       eve.state.select.item.state
 ---@field public find_vim_option        eve.state.select.item.state
 ---@field public search_file            eve.state.select.item.state
 ---@field public select_avante          eve.state.select.item.state
@@ -45,6 +47,7 @@ local keys = {
   "find_git",
   "find_highlight",
   "find_pinned_file",
+  "find_python_venv",
   "find_vim_option",
   "search_file",
   "select_avante",
@@ -80,6 +83,7 @@ function M.defaults()
     find_git = select_item.defaults(),
     find_highlight = select_item.defaults(),
     find_pinned_file = select_item.defaults(),
+    find_python_venv = select_item.defaults(),
     find_vim_option = select_item.defaults(),
     search_file = select_item.defaults(),
     select_avante = select_item.defaults(),
@@ -103,6 +107,7 @@ function M.normalize(data)
     find_git = select_item.normalize(data.find_git),
     find_highlight = select_item.normalize(data.find_highlight),
     find_pinned_file = select_item.normalize(data.find_pinned_file),
+    find_python_venv = select_item.normalize(data.find_python_venv),
     find_vim_option = select_item.normalize(data.find_vim_option),
     search_file = select_item.normalize(data.search_file),
     select_avante = select_item.normalize(data.select_avante),
@@ -138,6 +143,7 @@ function M.dump()
     find_git = select_item.dump(_state.find_git),
     find_highlight = select_item.dump(_state.find_highlight),
     find_pinned_file = select_item.dump(_state.find_pinned_file),
+    find_python_venv = select_item.dump(_state.find_python_venv),
     find_vim_option = select_item.dump(_state.find_vim_option),
     search_file = select_item.dump(_state.search_file),
     select_avante = select_item.dump(_state.select_avante),
@@ -162,6 +168,7 @@ function M.load(raw_data)
       find_git = select_item.load(nil, "find_git", data.find_git),
       find_highlight = select_item.load(nil, "find_highlight", data.find_highlight),
       find_pinned_file = select_item.load(nil, "find_pinned_file", data.find_pinned_file),
+      find_python_venv = select_item.load(nil, "find_python_venv", data.find_python_venv),
       find_vim_option = select_item.load(nil, "find_vim_option", data.find_vim_option),
       search_file = select_item.load(nil, "search_file", data.search_file),
       select_avante = select_item.load(nil, "select_avante", data.select_avante),
@@ -181,6 +188,7 @@ function M.load(raw_data)
     _state.find_git = select_item.load(_state.find_git, "find_git", data.find_git)
     _state.find_highlight = select_item.load(_state.find_highlight, "find_highlight", data.find_highlight)
     _state.find_pinned_file = select_item.load(_state.find_pinned_file, "find_pinned_file", data.find_pinned_file)
+    _state.find_python_venv = select_item.load(_state.find_python_venv, "find_python_venv", data.find_python_venv)
     _state.find_vim_option = select_item.load(_state.find_vim_option, "find_vim_option", data.find_vim_option)
     _state.search_file = select_item.load(_state.search_file, "search_file", data.search_file)
     _state.select_avante = select_item.load(_state.select_avante, "select_avante", data.select_avante)

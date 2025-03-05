@@ -368,6 +368,12 @@ command
       require("fml.action.lsp.reference").goto_type_definitions(context)
     end,
   })
+  .implement({
+    uuid = command.definitions.lsp.select_python_venv.uuid,
+    action = function(context)
+      require("fml.action.lsp.python_venv").select_python_venv(context)
+    end,
+  })
 
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({

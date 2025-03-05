@@ -13,6 +13,7 @@ local state_bookmark = require("eve.state.workspace.bookmark")
 local state_buf = require("eve.state.session.buf")
 local state_flight = require("eve.state.workspace.flight")
 local state_frecency = require("eve.state.workspace.frecency")
+local state_lsp = require("eve.state.workspace.lsp")
 local state_option = require("eve.state.workspace.option")
 local state_qflist = require("eve.state.session.qflist")
 local state_search_file = require("eve.state.workspace.search_file")
@@ -44,6 +45,7 @@ local state_win = require("eve.state.session.win")
 ---@field public bookmark               eve.state.bookmark.data
 ---@field public flight                 eve.state.flight.data
 ---@field public frecency               eve.state.frecency.data
+---@field public lsp                    eve.state.lsp.data
 ---@field public option                 eve.state.option.data
 ---@field public search_file            eve.state.search_file.data
 ---@field public select                 eve.state.select.data
@@ -61,6 +63,7 @@ local state_win = require("eve.state.session.win")
 ---@field public bookmark               eve.state.bookmark.state
 ---@field public flight                 eve.state.flight.state
 ---@field public frecency               eve.state.frecency.state
+---@field public lsp                    eve.state.lsp.state
 ---@field public option                 eve.state.option.state
 ---@field public search_file            eve.state.search_file.state
 ---@field public select                 eve.state.select.state
@@ -102,6 +105,7 @@ function M.dump()
     bookmark = state_bookmark.dump(),
     flight = state_flight.dump(),
     frecency = state_frecency.dump(),
+    lsp = state_lsp.dump(),
     option = state_option.dump(),
     search_file = state_search_file.dump(),
     select = state_select.dump(),
@@ -131,6 +135,7 @@ function M.load(storage, initialize)
     M.bookmark = state_bookmark.load(data_workspace.bookmark)
     M.flight = state_flight.load(data_workspace.flight)
     M.frecency = state_frecency.load(data_workspace.frecency)
+    M.lsp = state_lsp.load(data_workspace.lsp)
     M.option = state_option.load(data_workspace.option)
     M.search_file = state_search_file.load(data_workspace.search_select)
     M.select = state_select.load(data_workspace.select)
@@ -180,6 +185,7 @@ function M.save(storage)
       bookmark = state_bookmark.dump(),
       flight = state_flight.dump(),
       frecency = state_frecency.dump(),
+      lsp = state_lsp.dump(),
       option = state_option.dump(),
       search = state_search_file.dump(),
       select = state_select.dump(),
@@ -282,8 +288,6 @@ function M.watch_changes(params)
   ---@type eve.collection.IObservable[]
   local select_states = {
     M.bookmark.pinned,
-    M.select.find_buffer_scope,
-    M.select.find_file_scope,
     M.flight.ai,
     M.flight.ai_provider,
     M.flight.autoformat,
@@ -299,6 +303,10 @@ function M.watch_changes(params)
     M.flight.gitdiff_expand_all,
     M.flight.lsp_inlay_hints,
     M.flight.lsp_code_lens,
+    M.lsp.python_py_path,
+    M.lsp.python_venv_path,
+    M.select.find_buffer_scope,
+    M.select.find_file_scope,
   }
   for _, key in ipairs(state_select.keys) do
     local select_item = M.select[key] ---@type eve.state.select.item.state
