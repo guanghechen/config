@@ -8,63 +8,48 @@ local command = require("eve.command")
 
 local select = require("fml.fn.select")
 
+---@type table<string, eve.collection.IObservable>
+local flags = {
+  ---flight
+  flight_ai = state.flight.ai,
+  flight_autoformat = state.flight.autoformat,
+  flight_autoload = state.flight.autoload,
+  flight_autosave = state.flight.autosave,
+  flight_devmode = state.flight.devmode,
+  flight_dressing_hipairs = state.flight.dressing_hipairs,
+  flight_dressing_illumniate = state.flight.dressing_illumniate,
+  flight_dressing_input = state.flight.dressing_input,
+  flight_dressing_select = state.flight.dressing_select,
+  flight_dressing_winsep_fixed = state.flight.dressing_winsep_fixed,
+  flight_dressing_winsep_float = state.flight.dressing_winsep_float,
+  flight_gitdiff_expand_all = state.flight.gitdiff_expand_all,
+
+  ---lsp
+  lsp_code_lens = state.lsp.code_lens,
+  lsp_inlay_hints = state.lsp.inlay_hints,
+  lsp_spellcheck = state.flight.spellcheck,
+
+  ---ux
+  ux_relativenumber = state.option.relativenumber,
+  ux_username = state.theme.username,
+  ux_transparency = state.theme.transparency,
+
+  ---plugin
+  plugin_render_markdown = state.plugin.render_markdown,
+  plugin_smear_cursor = state.plugin.smear_cursor,
+  plugin_treesitter_context = state.plugin.treesitter_context,
+}
+
 ---@class fml.action.toggle.IItem
 ---@field public title                  string
 ---@field public snapshot               fun(context: eve.command.IContext): string, string
 ---@field public action                 fun(context: eve.command.IContext): nil
 
 local ai_providers = command.definitions.toggle.ai_provider.candidates ---@type string[]
-local flights = command.definitions.toggle.flight.candidates ---@type string[]
-local plugins = command.definitions.toggle.plugin.candidates ---@type string[]
 local themes = command.definitions.toggle.theme.candidates ---@type string[]
 
----@param flight                        string
----@return nil
-local function toggle_flight(flight)
-  local observable = state.flight[flight] ---@type eve.collection.IObservable|nil
-  if observable ~= nil then
-    local enabled = not observable:snapshot() ---@type boolean
-    observable:next(enabled)
-
-    reporter.info({
-      from = __module_name__,
-      subject = "toggle_flight",
-      message = flight .. " flight has been " .. (enabled and "enabled" or "disabled") .. ".",
-    })
-  else
-    reporter.error({
-      from = __module_name__,
-      subject = "toggle_flight",
-      message = "Unknown flight.",
-      details = { flight = flight },
-    })
-  end
-end
----@param plugin                        string
----@return nil
-local function toggle_plugin(plugin)
-  local observable = state.plugin[plugin] ---@type eve.collection.IObservable|nil
-  if observable ~= nil then
-    local enabled = not observable:snapshot() ---@type boolean
-    observable:next(enabled)
-
-    reporter.info({
-      from = __module_name__,
-      subject = "toggle_plugin",
-      message = plugin .. " plugin has been " .. (enabled and "enabled" or "disabled") .. ".",
-    })
-  else
-    reporter.error({
-      from = __module_name__,
-      subject = "toggle_plugin",
-      message = "Unknown plugin.",
-      details = { plugin = plugin },
-    })
-  end
-end
-
 ---@type table<string, fml.action.toggle.IItem>
-local flag_map = {
+local toggle_item_map = {
   ai_provider = {
     title = "ai_provider",
     snapshot = function()
@@ -73,15 +58,6 @@ local flag_map = {
     end,
     action = function(context)
       command.execute(command.definitions.toggle.ai_provider.uuid, context)
-    end,
-  },
-  flight = {
-    title = "flight",
-    snapshot = function()
-      return "", "String"
-    end,
-    action = function(context)
-      command.execute(command.definitions.toggle.flight.uuid, context)
     end,
   },
   hipatterns_local = {
@@ -124,26 +100,6 @@ local flag_map = {
       command.execute(command.definitions.toggle.maximize.uuid, context)
     end,
   },
-  plugin = {
-    title = "plugin",
-    snapshot = function()
-      return "", "String"
-    end,
-    action = function(context)
-      command.execute(command.definitions.toggle.plugin.uuid, context)
-    end,
-  },
-  relativenumber = {
-    title = "relativenumber",
-    snapshot = function()
-      local observable = state.option.relativenumber ---@type eve.collection.IObservable
-      local flag = observable:snapshot()
-      return flag and "true" or "false", "Boolean"
-    end,
-    action = function(context)
-      command.execute(command.definitions.toggle.relativenumber.uuid, context)
-    end,
-  },
   relativenumber_local = {
     title = "relativenumber (local)",
     snapshot = function(context)
@@ -174,30 +130,21 @@ local flag_map = {
       local scheme = state.theme.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
       return scheme and scheme.variant or "", "String"
     end,
-    action = function(context)
-      command.execute(command.definitions.toggle.theme_variant.uuid, context)
-    end,
-  },
-  transparency = {
-    title = "theme transparency",
-    snapshot = function()
-      local observable = state.theme.transparency ---@type eve.collection.IObservable
-      local flag = observable:snapshot()
-      return flag and "true" or "false", "Boolean"
-    end,
-    action = function(context)
-      command.execute(command.definitions.toggle.transparency.uuid, context)
-    end,
-  },
-  username = {
-    title = "username",
-    snapshot = function()
-      local observable = state.theme.username ---@type eve.collection.IObservable
-      local flag = observable:snapshot()
-      return flag and "true" or "false", "Boolean"
-    end,
-    action = function(context)
-      command.execute(command.definitions.toggle.username.uuid, context)
+    action = function()
+      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
+      local app_home = path.locate_app_config_home("guanghechen")
+      local script_path = path.join(app_home, "config/theme/toggle_theme.mjs")
+      local ok, error = pcall(function()
+        vim.fn.system({ "node", script_path, theme })
+      end)
+      if not ok then
+        reporter.error({
+          from = __module_name__,
+          subject = "toggle_theme_variant",
+          message = "Failed to toggle theme variant.",
+          details = { theme = theme, app_home = app_home, script_path = script_path, error = error },
+        })
+      end
     end,
   },
   wrap_local = {
@@ -215,8 +162,22 @@ local flag_map = {
   },
 }
 
-local flags = vim.tbl_keys(flag_map) ---@type string[]
-table.sort(flags)
+for name, observable in pairs(flags) do
+  toggle_item_map[name] = {
+    title = name,
+    snapshot = function()
+      local enabled = observable:snapshot() ---@type boolean
+      return enabled and "true" or "false", "Boolean"
+    end,
+    action = function()
+      local enabled = observable:snapshot() ---@type boolean
+      observable:next(not enabled)
+    end,
+  }
+end
+
+local toggle_item_names = vim.tbl_keys(toggle_item_map) ---@type string[]
+table.sort(toggle_item_names)
 
 ---@param theme                         string
 ---@return nil
@@ -250,7 +211,7 @@ command.define({
   uuid = command.definitions.toggle.list.uuid,
   desc = command.definitions.toggle.list.desc,
   nargs = "?",
-  candidates = flags,
+  candidates = toggle_item_names,
 }, true)
 
 ---@class fml.action.ux
@@ -261,8 +222,8 @@ local M = {}
 ---@return nil
 function M.list(context, arg)
   local flag_name = type(arg) == "string" and arg:lower() or "" ---@type string
-  if flag_map[flag_name] ~= nil then
-    local item = flag_map[flag_name] ---@type fml.action.toggle.IItem
+  if toggle_item_map[flag_name] ~= nil then
+    local item = toggle_item_map[flag_name] ---@type fml.action.toggle.IItem
     item.action(context)
   else
     select({
@@ -277,14 +238,14 @@ function M.list(context, arg)
       multiple = false,
       fetch_items = function()
         local items = {} ---@type fml.ux.select.IItem[]
-        for _, flag in ipairs(flags) do
-          local item = flag_map[flag] ---@type fml.action.toggle.IItem
+        for _, flag in ipairs(toggle_item_names) do
+          local item = toggle_item_map[flag] ---@type fml.action.toggle.IItem
           items[#items + 1] = { uuid = item.title, text = flag, data = item }
         end
         return items
       end,
       render_item = function(item, match)
-        local flag_item = flag_map[item.text] ---@type fml.action.toggle.IItem
+        local flag_item = toggle_item_map[item.text] ---@type fml.action.toggle.IItem
         local text_flag, hln_flag = flag_item.snapshot(context)
 
         local width_padding = 32 ---@type integer
@@ -361,63 +322,6 @@ function M.toggle_ai_provider(context, arg)
 end
 
 ---@param context                       eve.command.IContext
----@param arg                           string|nil
----@return nil
----@diagnostic disable-next-line: unused-local
-function M.toggle_flight(context, arg)
-  local flight_name = type(arg) == "string" and arg:lower() or "" ---@type string
-  if vim.list_contains(flights, flight_name) then
-    toggle_flight(flight_name)
-  else
-    select({
-      title = "Toggle flight",
-      flag_fuzzy = true,
-      flag_regex = false,
-      input = Observable.from_value(flight_name),
-      dimension = {
-        row = 5,
-        width = 50,
-      },
-      multiple = false,
-      fetch_items = function()
-        local items = {} ---@type fml.ux.select.IItem[]
-        for _, flight in ipairs(flights) do
-          items[#items + 1] = { uuid = flight, text = flight }
-        end
-        return items
-      end,
-      render_item = function(item, match)
-        local flight = item.uuid ---@type string
-        local observable = state.flight[flight] ---@type eve.collection.IObservable
-        local enabled = observable:snapshot() ---@type boolean
-        local text_enabled = enabled and "true" or "false" ---@type string
-
-        local width_padding = 32 ---@type integer
-        local padding = string.rep(" ", width_padding - vim.api.nvim_strwidth(flight)) ---@type string
-        local text = flight .. padding .. text_enabled ---@type string
-
-        ---@type eve.t.IHighlightInline[]
-        local highlights = {
-          { coll = width_padding, colr = width_padding + #text_enabled, hlname = "Boolean" },
-        }
-
-        for _, piece in ipairs(match.matches) do
-          highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-        end
-        return text, highlights
-      end,
-      on_confirm = function(widget, items)
-        if #items == 1 then
-          local item = items[1] ---@type fml.ux.select.IItem
-          widget:close()
-          toggle_flight(item.uuid)
-        end
-      end,
-    })
-  end
-end
-
----@param context                       eve.command.IContext
 ---@return nil
 function M.toggle_maximize(context)
   local winnr_cur = vim.api.nvim_tabpage_get_win(context.tabnr) ---@type integer
@@ -468,72 +372,6 @@ function M.toggle_maximize(context)
 end
 
 ---@param context                       eve.command.IContext
----@param arg                           string|nil
----@return nil
----@diagnostic disable-next-line: unused-local
-function M.toggle_plugin(context, arg)
-  local plugin_name = type(arg) == "string" and arg:lower() or "" ---@type string
-  if vim.list_contains(plugins, plugin_name) then
-    toggle_plugin(plugin_name)
-  else
-    select({
-      title = "Toggle plugin",
-      flag_fuzzy = true,
-      flag_regex = false,
-      input = Observable.from_value(plugin_name),
-      dimension = {
-        row = 5,
-        width = 50,
-      },
-      multiple = false,
-      fetch_items = function()
-        local items = {} ---@type fml.ux.select.IItem[]
-        for _, plugin in ipairs(plugins) do
-          items[#items + 1] = { uuid = plugin, text = plugin }
-        end
-        return items
-      end,
-      render_item = function(item, match)
-        local plugin = item.uuid ---@type string
-        local observable = state.plugin[plugin] ---@type eve.collection.IObservable
-        local enabled = observable:snapshot() ---@type boolean
-        local text_enabled = enabled and "true" or "false" ---@type string
-
-        local width_padding = 32 ---@type integer
-        local padding = string.rep(" ", width_padding - vim.api.nvim_strwidth(plugin)) ---@type string
-        local text = plugin .. padding .. text_enabled ---@type string
-
-        ---@type eve.t.IHighlightInline[]
-        local highlights = {
-          { coll = width_padding, colr = width_padding + #text_enabled, hlname = "Boolean" },
-        }
-
-        for _, piece in ipairs(match.matches) do
-          highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-        end
-        return text, highlights
-      end,
-      on_confirm = function(widget, items)
-        if #items == 1 then
-          local item = items[1] ---@type fml.ux.select.IItem
-          widget:close()
-          toggle_plugin(item.uuid)
-        end
-      end,
-    })
-  end
-end
-
----@param context                       eve.command.IContext
----@return nil
----@diagnostic disable-next-line: unused-local
-function M.toggle_relativenumber(context)
-  local observable = state.option.relativenumber ---@type eve.collection.IObservable
-  local flag = observable:snapshot() ---@type boolean
-  observable:next(not flag)
-end
-
----@param context                       eve.command.IContext
 ---@param arg                           unknown|nil
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
@@ -572,44 +410,6 @@ function M.toggle_theme(context, arg)
       end,
     })
   end
-end
-
----@param context                       eve.command.IContext
----@return nil
----@diagnostic disable-next-line: unused-local
-function M.toggle_theme_variant(context)
-  local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
-  local app_home = path.locate_app_config_home("guanghechen")
-  local script_path = path.join(app_home, "config/theme/toggle_theme.mjs")
-  local ok, error = pcall(function()
-    vim.fn.system({ "node", script_path, theme })
-  end)
-  if not ok then
-    reporter.error({
-      from = __module_name__,
-      subject = "toggle_theme_variant",
-      message = "Failed to toggle theme variant.",
-      details = { theme = theme, app_home = app_home, script_path = script_path, error = error },
-    })
-  end
-end
-
----@param context                       eve.command.IContext
----@return nil
-function M.toggle_transparency(context)
-  local observable = state.theme.transparency ---@type eve.collection.IObservable
-  local flag = observable:snapshot() ---@type boolean
-  observable:next(not flag)
-  command.execute(command.definitions.ux.reload_theme.uuid, context, "force")
-end
-
----@param context                       eve.command.IContext
----@return nil
-function M.toggle_username(context)
-  local observable = state.theme.username ---@type eve.collection.IObservable
-  local flag = observable:snapshot() ---@type boolean
-  observable:next(not flag)
-  command.execute(command.definitions.ux.reload_theme.uuid, context, "force")
 end
 
 return M

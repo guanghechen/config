@@ -619,12 +619,6 @@ command
     end,
   })
   .implement({
-    uuid = command.definitions.toggle.flight.uuid,
-    action = function(context, arg)
-      require("fml.action.toggle").toggle_flight(context, arg)
-    end,
-  })
-  .implement({
     uuid = command.definitions.toggle.markdown.uuid,
     action = function(context)
       require("fml.action.toggle").list(context, "markdown_local")
@@ -637,15 +631,9 @@ command
     end,
   })
   .implement({
-    uuid = command.definitions.toggle.plugin.uuid,
-    action = function(context, arg)
-      require("fml.action.toggle").toggle_plugin(context, arg)
-    end,
-  })
-  .implement({
     uuid = command.definitions.toggle.relativenumber.uuid,
     action = function(context)
-      require("fml.action.toggle").toggle_relativenumber(context)
+      require("fml.action.toggle").list(context, "ux_relativenumber")
     end,
   })
   .implement({
@@ -657,19 +645,19 @@ command
   .implement({
     uuid = command.definitions.toggle.theme_variant.uuid,
     action = function(context)
-      require("fml.action.toggle").toggle_theme_variant(context)
+      require("fml.action.toggle").list(context, "theme_variant")
     end,
   })
   .implement({
     uuid = command.definitions.toggle.transparency.uuid,
     action = function(context)
-      require("fml.action.toggle").toggle_transparency(context)
+      require("fml.action.toggle").list(context, "ux_transparency")
     end,
   })
   .implement({
     uuid = command.definitions.toggle.username.uuid,
     action = function(context)
-      require("fml.action.toggle").toggle_username(context)
+      require("fml.action.toggle").list(context, "ux_username")
     end,
   })
 

@@ -211,7 +211,6 @@ ms({ "i", "n", "t", "v" }, { "<C-a>y", "<D-y>", "<M-y>" }, K.term.yazi_cwd)
 
 --#[t]oggle-----------------------------------------------------------------------------------------
 ms({ "i", "n", "v" }, { "<C-a>T", "<D-T>", "<M-T>" }, K.toggle.theme_variant)
-ms({ "n", "v" }, "<leader>tF", K.toggle.flight)
 ms({ "n", "v" }, "<leader>tM", K.toggle.markdown)
 ms({ "n", "v" }, "<leader>tR", K.toggle.relativenumber)
 ms({ "n", "v" }, "<leader>tS", K.toggle.theme)
