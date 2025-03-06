@@ -19,10 +19,6 @@ local setting = require("eve.constant.setting")
 ---@field public dressing_winsep_float  boolean
 ---
 ---@field public gitdiff_expand_all     boolean
----
----@field public lsp_inlay_hints        boolean
----@field public lsp_code_lens          boolean
----
 ---@field public spellcheck             boolean
 
 ---@class eve.state.flight.state
@@ -41,10 +37,6 @@ local setting = require("eve.constant.setting")
 ---@field public dressing_winsep_float  eve.collection.IObservable
 ---
 ---@field public gitdiff_expand_all     eve.collection.IObservable
----
----@field public lsp_inlay_hints        eve.collection.IObservable
----@field public lsp_code_lens          eve.collection.IObservable
----
 ---@field public spellcheck             eve.collection.IObservable
 
 ---@class eve.state.flight
@@ -135,10 +127,6 @@ function M.defaults()
     dressing_winsep_float = false,
 
     gitdiff_expand_all = is_git_repo,
-
-    lsp_inlay_hints = is_git_repo,
-    lsp_code_lens = is_git_repo,
-
     spellcheck = is_git_repo and not (is_sourcecode or is_playground),
   }
 end
@@ -189,14 +177,6 @@ function M.normalize(data)
     if type(data.gitdiff_expand_all) == "boolean" then
       resolved.gitdiff_expand_all = data.gitdiff_expand_all
     end
-
-    if type(data.lsp_inlay_hints) == "boolean" then
-      resolved.lsp_inlay_hints = data.lsp_inlay_hints
-    end
-    if type(data.lsp_code_lens) == "boolean" then
-      resolved.lsp_code_lens = data.lsp_code_lens
-    end
-
     if type(data.spellcheck) == "boolean" then
       resolved.spellcheck = data.spellcheck
     end
@@ -227,10 +207,6 @@ function M.dump()
     dressing_winsep_float = _state.dressing_winsep_float:snapshot(),
 
     gitdiff_expand_all = _state.gitdiff_expand_all:snapshot(),
-
-    lsp_inlay_hints = _state.lsp_inlay_hints:snapshot(),
-    lsp_code_lens = _state.lsp_code_lens:snapshot(),
-
     spellcheck = _state.spellcheck:snapshot(),
   }
 end
@@ -258,10 +234,6 @@ function M.load(raw_data)
       dressing_winsep_float = Observable.from_value(data.dressing_winsep_float),
 
       gitdiff_expand_all = Observable.from_value(data.gitdiff_expand_all),
-
-      lsp_inlay_hints = Observable.from_value(data.lsp_inlay_hints),
-      lsp_code_lens = Observable.from_value(data.lsp_code_lens),
-
       spellcheck = Observable.from_value(data.spellcheck),
     }
     return _state
@@ -282,10 +254,6 @@ function M.load(raw_data)
   _state.dressing_winsep_float:next(data.dressing_winsep_float)
 
   _state.gitdiff_expand_all:next(data.gitdiff_expand_all)
-
-  _state.lsp_inlay_hints:next(data.lsp_inlay_hints)
-  _state.lsp_code_lens:next(data.lsp_code_lens)
-
   _state.spellcheck:next(data.spellcheck)
   return _state
 end

@@ -307,8 +307,8 @@ function M.watch_changes(params)
     M.flight.dressing_winsep_fixed,
     M.flight.dressing_winsep_float,
     M.flight.gitdiff_expand_all,
-    M.flight.lsp_inlay_hints,
-    M.flight.lsp_code_lens,
+    M.lsp.code_lens,
+    M.lsp.inlay_hints,
     M.lsp.python_venv_path,
     M.select.find_buffer_scope,
     M.select.find_file_scope,
@@ -336,8 +336,8 @@ function M.watch_changes(params)
   end, true)
 
   M.observe({
-    M.flight.lsp_inlay_hints,
-    M.flight.lsp_code_lens,
+    M.lsp.code_lens,
+    M.lsp.inlay_hints,
   }, function()
     pcall(function()
       vim.cmd.LspRestart()

@@ -70,8 +70,8 @@ return {
     ---@diagnostic disable-next-line: unused-local
     lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
-        local enable_lsp_inlay_hints = state.flight.lsp_inlay_hints:snapshot() ---@type boolean
-        vim.lsp.inlay_hint.enable(enable_lsp_inlay_hints, { bufnr = bufnr })
+        local enable_inlay_hints = state.lsp.inlay_hints:snapshot() ---@type boolean
+        vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
       end
     end)
 
@@ -79,8 +79,8 @@ return {
     if vim.lsp.codelens then
       ---@diagnostic disable-next-line: unused-local
       lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
-        local enable_lsp_code_lens = state.flight.lsp_code_lens:snapshot() ---@type boolean
-        if enable_lsp_code_lens and vim.bo[bufnr].buftype == "" then
+        local enable_code_lens = state.lsp.code_lens:snapshot() ---@type boolean
+        if enable_code_lens and vim.bo[bufnr].buftype == "" then
           vim.lsp.codelens.refresh()
           --- vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
           vim.api.nvim_create_autocmd({ "InsertLeave" }, {

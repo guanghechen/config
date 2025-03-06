@@ -29,9 +29,13 @@ M.flights = {
   "dressing_winsep_fixed",
   "dressing_winsep_float",
   "gitdiff_expand_all",
-  "lsp_inlay_hints",
-  "lsp_code_lens",
   "spellcheck",
+}
+
+---@class eve.constant.setting.lsp
+M.lsp = {
+  "code_lens",
+  "inlay_hints",
 }
 
 ---@class eve.constant.setting.plugins
