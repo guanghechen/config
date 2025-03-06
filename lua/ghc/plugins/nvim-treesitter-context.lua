@@ -19,8 +19,8 @@ return {
     local tsc = require("treesitter-context")
     tsc.setup(opts)
 
-    state.observe({ state.flight.treesitter_context }, function()
-      local flag = state.flight.treesitter_context:snapshot() ---@type boolean
+    state.observe({ state.plugin.treesitter_context }, function()
+      local flag = state.plugin.treesitter_context:snapshot() ---@type boolean
       if flag then
         tsc.enable()
       else

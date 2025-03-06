@@ -15,6 +15,7 @@ local select = require("fml.fn.select")
 
 local ai_providers = command.definitions.toggle.ai_provider.candidates ---@type string[]
 local flights = command.definitions.toggle.flight.candidates ---@type string[]
+local plugins = command.definitions.toggle.plugin.candidates ---@type string[]
 local themes = command.definitions.toggle.theme.candidates ---@type string[]
 
 ---@param flight                        string
@@ -36,6 +37,28 @@ local function toggle_flight(flight)
       subject = "toggle_flight",
       message = "Unknown flight.",
       details = { flight = flight },
+    })
+  end
+end
+---@param plugin                        string
+---@return nil
+local function toggle_plugin(plugin)
+  local observable = state.plugin[plugin] ---@type eve.collection.IObservable|nil
+  if observable ~= nil then
+    local enabled = not observable:snapshot() ---@type boolean
+    observable:next(enabled)
+
+    reporter.info({
+      from = __module_name__,
+      subject = "toggle_plugin",
+      message = plugin .. " plugin has been " .. (enabled and "enabled" or "disabled") .. ".",
+    })
+  else
+    reporter.error({
+      from = __module_name__,
+      subject = "toggle_plugin",
+      message = "Unknown plugin.",
+      details = { plugin = plugin },
     })
   end
 end
@@ -79,14 +102,14 @@ local flag_map = {
         return "Unknown", "Boolean"
       end
 
-      local flag = state.flight.render_markdown:snapshot() ---@type boolean
+      local flag = state.plugin.render_markdown:snapshot() ---@type boolean
       local enabled = flag and render_markdown_state.get(context.bufnr).enabled == true
       return enabled and "true" or "false", "Boolean"
     end,
     action = function(context)
       local ok, render_markdown = pcall(require, "render-markdown")
       if ok then
-        state.flight.render_markdown:next(true)
+        state.plugin.render_markdown:next(true)
         vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
         render_markdown.buf_toggle()
       end
@@ -99,6 +122,15 @@ local flag_map = {
     end,
     action = function(context)
       command.execute(command.definitions.toggle.maximize.uuid, context)
+    end,
+  },
+  plugin = {
+    title = "plugin",
+    snapshot = function()
+      return "", "String"
+    end,
+    action = function(context)
+      command.execute(command.definitions.toggle.plugin.uuid, context)
     end,
   },
   relativenumber = {
@@ -432,6 +464,63 @@ function M.toggle_maximize(context)
     state.status.maximized_winnrs[winnr] = true
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_tabpage_set_win(context.tabnr, winnr)
+  end
+end
+
+---@param context                       eve.command.IContext
+---@param arg                           string|nil
+---@return nil
+---@diagnostic disable-next-line: unused-local
+function M.toggle_plugin(context, arg)
+  local plugin_name = type(arg) == "string" and arg:lower() or "" ---@type string
+  if vim.list_contains(plugins, plugin_name) then
+    toggle_plugin(plugin_name)
+  else
+    select({
+      title = "Toggle plugin",
+      flag_fuzzy = true,
+      flag_regex = false,
+      input = Observable.from_value(plugin_name),
+      dimension = {
+        row = 5,
+        width = 50,
+      },
+      multiple = false,
+      fetch_items = function()
+        local items = {} ---@type fml.ux.select.IItem[]
+        for _, plugin in ipairs(plugins) do
+          items[#items + 1] = { uuid = plugin, text = plugin }
+        end
+        return items
+      end,
+      render_item = function(item, match)
+        local plugin = item.uuid ---@type string
+        local observable = state.plugin[plugin] ---@type eve.collection.IObservable
+        local enabled = observable:snapshot() ---@type boolean
+        local text_enabled = enabled and "true" or "false" ---@type string
+
+        local width_padding = 32 ---@type integer
+        local padding = string.rep(" ", width_padding - vim.api.nvim_strwidth(plugin)) ---@type string
+        local text = plugin .. padding .. text_enabled ---@type string
+
+        ---@type eve.t.IHighlightInline[]
+        local highlights = {
+          { coll = width_padding, colr = width_padding + #text_enabled, hlname = "Boolean" },
+        }
+
+        for _, piece in ipairs(match.matches) do
+          highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
+        end
+        return text, highlights
+      end,
+      on_confirm = function(widget, items)
+        if #items == 1 then
+          local item = items[1] ---@type fml.ux.select.IItem
+          widget:close()
+          toggle_plugin(item.uuid)
+        end
+      end,
+    })
   end
 end
 

@@ -15,6 +15,7 @@ local state_flight = require("eve.state.workspace.flight")
 local state_frecency = require("eve.state.workspace.frecency")
 local state_lsp = require("eve.state.workspace.lsp")
 local state_option = require("eve.state.workspace.option")
+local state_plugin = require("eve.state.workspace.plugin")
 local state_qflist = require("eve.state.session.qflist")
 local state_search_file = require("eve.state.workspace.search_file")
 local state_select = require("eve.state.workspace.select")
@@ -47,6 +48,7 @@ local state_win = require("eve.state.session.win")
 ---@field public frecency               eve.state.frecency.data
 ---@field public lsp                    eve.state.lsp.data
 ---@field public option                 eve.state.option.data
+---@field public plugin                 eve.state.plugin.data
 ---@field public search_file            eve.state.search_file.data
 ---@field public select                 eve.state.select.data
 
@@ -65,6 +67,7 @@ local state_win = require("eve.state.session.win")
 ---@field public frecency               eve.state.frecency.state
 ---@field public lsp                    eve.state.lsp.state
 ---@field public option                 eve.state.option.state
+---@field public plugin                 eve.state.plugin.state
 ---@field public search_file            eve.state.search_file.state
 ---@field public select                 eve.state.select.state
 ---
@@ -107,6 +110,7 @@ function M.dump()
     frecency = state_frecency.dump(),
     lsp = state_lsp.dump(),
     option = state_option.dump(),
+    plugin = state_plugin.dump(),
     search_file = state_search_file.dump(),
     select = state_select.dump(),
   }
@@ -137,6 +141,7 @@ function M.load(storage, initialize)
     M.frecency = state_frecency.load(data_workspace.frecency)
     M.lsp = state_lsp.load(data_workspace.lsp)
     M.option = state_option.load(data_workspace.option)
+    M.plugin = state_plugin.load(data_workspace.plugin)
     M.search_file = state_search_file.load(data_workspace.search_select)
     M.select = state_select.load(data_workspace.select)
   end
@@ -187,6 +192,7 @@ function M.save(storage)
       frecency = state_frecency.dump(),
       lsp = state_lsp.dump(),
       option = state_option.dump(),
+      plugin = state_plugin.dump(),
       search = state_search_file.dump(),
       select = state_select.dump(),
     }
@@ -270,10 +276,10 @@ function M.watch_changes(params)
   end, true)
 
   M.observe({
-    M.flight.render_markdown,
-    M.flight.smear_cursor,
     M.flight.spellcheck,
-    M.flight.treesitter_context,
+    M.plugin.render_markdown,
+    M.plugin.smear_cursor,
+    M.plugin.treesitter_context,
     M.option.relativenumber,
     M.theme.theme,
     M.theme.transparency,

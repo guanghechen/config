@@ -505,6 +505,7 @@ M.definitions.toggle = {
   flight = defc("Ftoggleflight", "toggle: flight", "?", setting.flights),
   markdown = def("Ftogglemarkdown", "toggle: markdown"),
   maximize = def("Ftogglemaximize", "toggle: maximize"),
+  plugin = defc("Ftoggleplugin", "toggle: plugin", "?", setting.plugins),
   relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),
   theme = defc("Ftoggletheme", "toggle: theme", "?", setting.themes),
   theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),

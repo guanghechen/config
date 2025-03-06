@@ -31,9 +31,13 @@ M.flights = {
   "gitdiff_expand_all",
   "lsp_inlay_hints",
   "lsp_code_lens",
+  "spellcheck",
+}
+
+---@class eve.constant.setting.plugins
+M.plugins = {
   "render_markdown",
   "smear_cursor",
-  "spellcheck",
   "treesitter_context",
 }
 

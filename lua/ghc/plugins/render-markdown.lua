@@ -24,8 +24,8 @@ return {
     local plugin = require("render-markdown")
     plugin.setup(opts)
 
-    state.observe({ state.flight.render_markdown }, function()
-      local flag = state.flight.render_markdown:snapshot() ---@type boolean
+    state.observe({ state.plugin.render_markdown }, function()
+      local flag = state.plugin.render_markdown:snapshot() ---@type boolean
       if flag then
         plugin.enable()
       else

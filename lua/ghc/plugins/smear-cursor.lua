@@ -15,8 +15,8 @@ return {
     local plugin = require("smear_cursor")
     plugin.setup(opts)
 
-    state.observe({ state.flight.smear_cursor }, function()
-      local flag = state.flight.smear_cursor:snapshot() ---@type boolean
+    state.observe({ state.plugin.smear_cursor }, function()
+      local flag = state.plugin.smear_cursor:snapshot() ---@type boolean
       plugin.enabled = flag
 
       vim.defer_fn(function()

@@ -637,6 +637,12 @@ command
     end,
   })
   .implement({
+    uuid = command.definitions.toggle.plugin.uuid,
+    action = function(context, arg)
+      require("fml.action.toggle").toggle_plugin(context, arg)
+    end,
+  })
+  .implement({
     uuid = command.definitions.toggle.relativenumber.uuid,
     action = function(context)
       require("fml.action.toggle").toggle_relativenumber(context)
