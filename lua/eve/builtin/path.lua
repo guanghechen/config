@@ -2,9 +2,49 @@ local env = require("eve.builtin.env")
 local md5 = require("eve.builtin.md5")
 
 local SEP = env.PATH_SEP ---@type string
-local HOME_NVIM_CACHE = env.HOME_NVIM_CACHE
 local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG
 local HOME_CONTEXT = env.HOME_CONTEXT ---@type string
+
+---@class eve.builtin.path.reposcope_map
+local reposcope_map = {
+  [".config"] = {
+    "alacritty",
+    "btop",
+    "fd",
+    "fish",
+    "fzf",
+    "ghostty",
+    "guanghechen",
+    "helix",
+    "kitty",
+    "lazygit",
+    "lsd",
+    "nvim",
+    "nvim-nvchad",
+    "pwsh",
+    "ripgrep",
+    "tmux",
+    "wezterm",
+    "yazi",
+    "zellij",
+  },
+  ["guanghechen"] = {
+    "algorithm.ts",
+    "asset",
+    "koa",
+    "mirror",
+    "node-scaffolds",
+    "react-kit",
+    "sora",
+    "static-resources",
+  },
+  ["yozora"] = {
+    "yozora",
+    "yozora-react",
+    "yozora-html",
+    "gatsby-scaffolds",
+  },
+}
 
 ---@class eve.builtin.path
 local M = {}
@@ -251,6 +291,39 @@ end
 function M.is_git_repo()
   local cwd = vim.uv.cwd() ---@type string|nil
   return M.locate_git_repo(cwd) ~= nil
+end
+
+---@return boolean
+function M.is_playground()
+  if not M.is_git_repo() then
+    return false
+  end
+
+  local workspace = M.workspace() ---@type string
+  local pieces = M.split(workspace) ---@type string[]
+  return vim.list_contains(pieces, "playground")
+end
+
+---@return boolean
+function M.is_sourcecode()
+  if not M.is_git_repo() then
+    return false
+  end
+
+  local workspace = M.workspace() ---@type string
+  local pieces = M.split(workspace) ---@type string[]
+  if vim.list_contains(pieces, "sourcecode") or vim.list_contains(pieces, "sourcecodes") then
+    return true
+  end
+
+  if #pieces <= 2 then
+    return false
+  end
+
+  local reposcope = pieces[#pieces - 1] ---@type string
+  local reponame = pieces[#pieces] ---@type string
+  local reponames = reposcope_map[reposcope] ---@type string[]|nil
+  return reponames ~= nil and vim.list_contains(reponames, reponame) or reposcope == "lazy" ---@type boolean
 end
 
 ---@return string

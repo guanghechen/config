@@ -276,7 +276,6 @@ function M.watch_changes(params)
   end, true)
 
   M.observe({
-    M.flight.spellcheck,
     M.plugin.render_markdown,
     M.plugin.smear_cursor,
     M.plugin.treesitter_context,
@@ -309,6 +308,7 @@ function M.watch_changes(params)
     M.flight.gitdiff_expand_all,
     M.lsp.code_lens,
     M.lsp.inlay_hints,
+    M.lsp.spellcheck,
     M.lsp.python_venv_path,
     M.select.find_buffer_scope,
     M.select.find_file_scope,

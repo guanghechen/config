@@ -19,7 +19,6 @@ local setting = require("eve.constant.setting")
 ---@field public dressing_winsep_float  boolean
 ---
 ---@field public gitdiff_expand_all     boolean
----@field public spellcheck             boolean
 
 ---@class eve.state.flight.state
 ---@field public ai                     eve.collection.IObservable
@@ -37,7 +36,6 @@ local setting = require("eve.constant.setting")
 ---@field public dressing_winsep_float  eve.collection.IObservable
 ---
 ---@field public gitdiff_expand_all     eve.collection.IObservable
----@field public spellcheck             eve.collection.IObservable
 
 ---@class eve.state.flight
 ---@field public defaults               fun(): eve.state.flight.data
@@ -48,67 +46,13 @@ local M = {}
 
 local _state = nil ---@type eve.state.flight.state | nil
 
----@class eve.state.flight.reposcope_map
-local reposcope_map = {
-  [".config"] = {
-    "alacritty",
-    "btop",
-    "fd",
-    "fish",
-    "fzf",
-    "ghostty",
-    "guanghechen",
-    "helix",
-    "kitty",
-    "lazygit",
-    "lsd",
-    "nvim",
-    "nvim-nvchad",
-    "pwsh",
-    "ripgrep",
-    "tmux",
-    "wezterm",
-    "yazi",
-    "zellij",
-  },
-  ["guanghechen"] = {
-    "algorithm.ts",
-    "asset",
-    "koa",
-    "mirror",
-    "node-scaffolds",
-    "react-kit",
-    "sora",
-    "static-resources",
-  },
-  ["yozora"] = {
-    "yozora",
-    "yozora-react",
-    "yozora-html",
-    "gatsby-scaffolds",
-  },
-}
-
 ---@return eve.state.flight.data
 function M.defaults()
   local workspace = path.workspace() ---@type string
   local is_home_config_dir = workspace == env.HOME_NVIM_CONFIG ---@type boolean
   local is_git_repo = path.is_git_repo() ---@type boolean
-
-  local is_sourcecode = false ---@type boolean
-  local is_playground = false ---@type boolean
-  if is_git_repo then
-    local pieces = path.split(workspace) ---@type string[]
-    is_sourcecode = vim.list_contains(pieces, "sourcecode") or vim.list_contains(pieces, "sourcecodes") ---@type boolean
-    is_playground = vim.list_contains(pieces, "playground") ---@type boolean
-
-    if not is_sourcecode and #pieces > 2 then
-      local reposcope = pieces[#pieces - 1] ---@type string
-      local reponame = pieces[#pieces] ---@type string
-      local reponames = reposcope_map[reposcope] ---@type string[]|nil
-      is_sourcecode = reponames ~= nil and vim.list_contains(reponames, reponame) or reposcope == "lazy" ---@type boolean
-    end
-  end
+  local is_sourcecode = path.is_sourcecode() ---@type boolean
+  local is_playground = path.is_playground() ---@type boolean
 
   ---@type eve.state.flight.data
   return {
@@ -127,7 +71,6 @@ function M.defaults()
     dressing_winsep_float = false,
 
     gitdiff_expand_all = is_git_repo,
-    spellcheck = is_git_repo and not (is_sourcecode or is_playground),
   }
 end
 
@@ -177,9 +120,6 @@ function M.normalize(data)
     if type(data.gitdiff_expand_all) == "boolean" then
       resolved.gitdiff_expand_all = data.gitdiff_expand_all
     end
-    if type(data.spellcheck) == "boolean" then
-      resolved.spellcheck = data.spellcheck
-    end
   end
   return resolved
 end
@@ -207,7 +147,6 @@ function M.dump()
     dressing_winsep_float = _state.dressing_winsep_float:snapshot(),
 
     gitdiff_expand_all = _state.gitdiff_expand_all:snapshot(),
-    spellcheck = _state.spellcheck:snapshot(),
   }
 end
 
@@ -234,7 +173,6 @@ function M.load(raw_data)
       dressing_winsep_float = Observable.from_value(data.dressing_winsep_float),
 
       gitdiff_expand_all = Observable.from_value(data.gitdiff_expand_all),
-      spellcheck = Observable.from_value(data.spellcheck),
     }
     return _state
   end
@@ -254,7 +192,6 @@ function M.load(raw_data)
   _state.dressing_winsep_float:next(data.dressing_winsep_float)
 
   _state.gitdiff_expand_all:next(data.gitdiff_expand_all)
-  _state.spellcheck:next(data.spellcheck)
   return _state
 end
 

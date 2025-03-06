@@ -14,37 +14,6 @@ M.ai_providers = {
   "aoai",
 }
 
----@class eve.constant.setting.flights
-M.flights = {
-  "ai",
-  "ai_provider",
-  "autoformat",
-  "autoload",
-  "autosave",
-  "devmode",
-  "dressing_hipairs",
-  "dressing_illumniate",
-  "dressing_input",
-  "dressing_select",
-  "dressing_winsep_fixed",
-  "dressing_winsep_float",
-  "gitdiff_expand_all",
-  "spellcheck",
-}
-
----@class eve.constant.setting.lsp
-M.lsp = {
-  "code_lens",
-  "inlay_hints",
-}
-
----@class eve.constant.setting.plugins
-M.plugins = {
-  "render_markdown",
-  "smear_cursor",
-  "treesitter_context",
-}
-
 ---@class eve.constant.setting.themes
 M.themes = {
   "catppuccin-frappe",

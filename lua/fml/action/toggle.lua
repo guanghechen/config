@@ -27,7 +27,7 @@ local flags = {
   ---lsp
   lsp_code_lens = state.lsp.code_lens,
   lsp_inlay_hints = state.lsp.inlay_hints,
-  lsp_spellcheck = state.flight.spellcheck,
+  lsp_spellcheck = state.lsp.spellcheck,
 
   ---ux
   ux_relativenumber = state.option.relativenumber,

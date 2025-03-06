@@ -159,7 +159,7 @@ return {
     vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
       group = fn.augroup("nvim-lint"),
       callback = function()
-        local spellcheck = state.flight.spellcheck:snapshot() ---@type boolean
+        local spellcheck = state.lsp.spellcheck:snapshot() ---@type boolean
         if spellcheck then
           lint_scheduler:schedule()
         end

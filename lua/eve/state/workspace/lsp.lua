@@ -4,14 +4,14 @@ local Observable = require("eve.collection.observable")
 ---@class eve.state.lsp.data
 ---@field public code_lens              boolean
 ---@field public inlay_hints            boolean
----
 ---@field public python_venv_path       string|nil
+---@field public spellcheck             boolean
 
 ---@class eve.state.lsp.state
 ---@field public code_lens              eve.collection.IObservable
 ---@field public inlay_hints            eve.collection.IObservable
----
 ---@field public python_venv_path       eve.collection.IObservable
+---@field public spellcheck             eve.collection.IObservable
 
 ---@class eve.state.lsp
 ---@field public defaults               fun(): eve.state.lsp.data
@@ -25,12 +25,15 @@ local _state = nil ---@type eve.state.lsp.state | nil
 ---@return eve.state.lsp.data
 function M.defaults()
   local is_git_repo = path.is_git_repo() ---@type boolean
+  local is_sourcecode = path.is_sourcecode() ---@type boolean
+  local is_playground = path.is_playground() ---@type boolean
 
   ---@type eve.state.lsp.data
   return {
     code_lens = is_git_repo,
     inlay_hints = is_git_repo,
     python_venv_path = nil,
+    spellcheck = is_git_repo and not (is_sourcecode or is_playground),
   }
 end
 
@@ -48,6 +51,9 @@ function M.normalize(data)
     if type(data.python_venv_path) == "string" then
       resolved.python_venv_path = data.python_venv_path
     end
+    if type(data.spellcheck) == "boolean" then
+      resolved.spellcheck = data.spellcheck
+    end
   end
   return resolved
 end
@@ -63,6 +69,7 @@ function M.dump()
     code_lens = _state.code_lens:snapshot(),
     inlay_hints = _state.inlay_hints:snapshot(),
     python_venv_path = _state.python_venv_path:snapshot(),
+    spellcheck = _state.spellcheck:snapshot(),
   }
 end
 
@@ -77,6 +84,7 @@ function M.load(raw_data)
       code_lens = Observable.from_value(data.code_lens),
       inlay_hints = Observable.from_value(data.inlay_hints),
       python_venv_path = Observable.from_value(data.python_venv_path),
+      spellcheck = Observable.from_value(data.spellcheck),
     }
     return _state
   end
@@ -84,6 +92,7 @@ function M.load(raw_data)
   _state.code_lens:next(data.code_lens)
   _state.inlay_hints:next(data.inlay_hints)
   _state.python_venv_path:next(data.python_venv_path)
+  _state.spellcheck:next(data.spellcheck)
   return _state
 end
 
