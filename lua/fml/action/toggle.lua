@@ -70,6 +70,19 @@ local toggle_item_map = {
       require("mini.hipatterns").toggle(context.bufnr)
     end,
   },
+  lsp_python_venv = {
+    title = "python venv",
+    snapshot = function()
+      local venv_path = state.lsp.python_venv_path:snapshot() ---@type string
+      if venv_path == nil then
+        return "nil", "Keyword"
+      end
+      return venv_path, "String"
+    end,
+    action = function(context)
+      command.execute(command.definitions.lsp.select_python_venv.uuid, context)
+    end,
+  },
   markdown_local = {
     title = "markdown (local)",
     snapshot = function(context)
@@ -232,8 +245,9 @@ function M.list(context, arg)
       flag_regex = false,
       input = Observable.from_value(flag_name),
       dimension = {
-        row = 5,
-        width = 50,
+        row = 3,
+        width = 64,
+        max_height = 40,
       },
       multiple = false,
       fetch_items = function()
