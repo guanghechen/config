@@ -1,6 +1,7 @@
 local __module_name__ = "fml.dressing.python_venv" ---@type string
 
 local env = require("eve.builtin.env")
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local clp = require("eve.constant.lang.python")
@@ -183,11 +184,26 @@ function M.deactivate_venv()
   state.lsp.python_venv_path:next(nil)
 end
 
-state.observe({ state.lsp.python_venv_path }, function()
-  local venv_path = state.lsp.python_venv_path:snapshot() ---@type string
-  if venv_path ~= nil and vim.fn.isdirectory(venv_path) ~= 0 then
-    M.activate_venv(venv_path)
+local initialized = false ---@type boolean
+
+---@return nil
+local function setup()
+  if not initialized then
+    initialized = true
+
+    state.observe({ state.lsp.python_venv_path }, function()
+      local venv_path = state.lsp.python_venv_path:snapshot() ---@type string
+      if venv_path ~= nil and vim.fn.isdirectory(venv_path) ~= 0 then
+        M.activate_venv(venv_path)
+      end
+    end, false)
   end
-end, false)
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = fn.augroup("filetype_python_venv"),
+  pattern = "python",
+  callback = setup,
+})
 
 return M
