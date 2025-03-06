@@ -22,6 +22,7 @@ require("fml.dressing.input")
 require("fml.dressing.nvimbar.statusline")
 require("fml.dressing.nvimbar.tabline")
 require("fml.dressing.nvimbar.winline")
+require("fml.dressing.python_venv")
 require("fml.dressing.select")
 require("fml.dressing.winsep")
 

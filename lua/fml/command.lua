@@ -371,7 +371,7 @@ command
   .implement({
     uuid = command.definitions.lsp.select_python_venv.uuid,
     action = function(context)
-      require("fml.action.lsp.python_venv").select_python_venv(context)
+      require("fml.action.lsp.python_venv").activate_venv(context)
     end,
   })
 

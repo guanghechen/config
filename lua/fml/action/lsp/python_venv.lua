@@ -3,10 +3,9 @@ local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
+local clp = require("eve.constant.lang.python")
 local state = require("eve.state")
 local Select = require("fml.ux.select")
-local config = require("fml.action.lsp.python_venv.config")
-local util = require("fml.action.lsp.python_venv.util")
 
 ---@param folder                        string
 ---@return string|nil
@@ -17,7 +16,7 @@ local function format_search_path(folder)
   end
 
   resolved_path = resolved_path:gsub(" ", "\\ ")
-  if folder == config.settings.hatch_path then
+  if folder == clp.paths.Hatch then
     return resolved_path .. "/*/*"
   else
     return resolved_path
@@ -44,8 +43,8 @@ local function get_select()
         local uuid_set = {} ---@type table<string, true>
 
         do
-          local anaconda_base_path = format_search_path(config.settings.anaconda_base_path) ---@type string|nil
-          local anaconda_envs_path = format_search_path(config.settings.anaconda_envs_path) ---@type string|nil
+          local anaconda_base_path = format_search_path(clp.paths.AnacondaBase) ---@type string|nil
+          local anaconda_envs_path = format_search_path(clp.paths.AnacondaEnvs) ---@type string|nil
 
           ---@type string[]
           local cmd = {
@@ -167,13 +166,13 @@ local function get_select()
         --- Search venv manager paths
         do
           local venv_manager_paths = {
-            config.settings.poetry_path,
-            config.settings.pdm_path,
-            config.settings.pipenv_path,
-            config.settings.pyenv_path,
-            config.settings.hatch_path,
-            config.settings.venvwrapper_path,
-            config.settings.anaconda_envs_path,
+            clp.paths.Poetry,
+            clp.paths.PDM,
+            clp.paths.Pipenv,
+            clp.paths.Pyenv,
+            clp.paths.Hatch,
+            clp.paths.VenvWrapper,
+            clp.paths.AnacondaEnvs,
           }
           local search_paths = {} ---@type string[]
           for _, folder in ipairs(venv_manager_paths) do
@@ -233,9 +232,9 @@ local function get_select()
             end
 
             -- If $CONDA_PREFIX is defined and exists, add the path as an existing venv
-            if vim.fn.isdirectory(config.settings.anaconda_base_path) ~= 0 then
+            if vim.fn.isdirectory(clp.paths.AnacondaBase) ~= 0 then
               local icon = "" ---@type string
-              local dirpath = fn.remove_last_slash(config.settings.anaconda_base_path .. "/") ---@type string
+              local dirpath = fn.remove_last_slash(clp.paths.AnacondaBase .. "/") ---@type string
               if not uuid_set[dirpath] then
                 uuid_set[dirpath] = true
 
@@ -296,17 +295,11 @@ end
 local M = {}
 
 ---@param context                       eve.command.IContext
+---@return nil
 ---@diagnostic disable-next-line: unused-local
-function M.select_python_venv(context)
+function M.activate_venv(context)
   local select = get_select()
   select:show()
 end
-
-state.observe({ state.lsp.python_venv_path }, function()
-  local venv_path = state.lsp.python_venv_path:snapshot() ---@type string
-  if venv_path ~= nil and vim.fn.isdirectory(venv_path) ~= 0 then
-    util.activate_venv(venv_path)
-  end
-end, false)
 
 return M
