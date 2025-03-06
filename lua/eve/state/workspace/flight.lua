@@ -50,13 +50,14 @@ local _state = nil ---@type eve.state.flight.state | nil
 function M.defaults()
   local workspace = path.workspace() ---@type string
   local is_home_config_dir = workspace == env.HOME_NVIM_CONFIG ---@type boolean
-  local is_git_repo = path.is_git_repo() ---@type boolean
-  local is_sourcecode = path.is_sourcecode() ---@type boolean
-  local is_playground = path.is_playground() ---@type boolean
+  local is_git_repo = path.is_repo_git() ---@type boolean
+  local is_thirdparty = path.is_repo_thirdparty() ---@type boolean
+  local is_playground = path.is_repo_playground() ---@type boolean
+  local is_personal_public = path.is_repo_personal_public() ---@type boolean
 
   ---@type eve.state.flight.data
   return {
-    ai = is_home_config_dir or is_sourcecode or is_playground,
+    ai = is_thirdparty or is_playground or is_personal_public,
     ai_provider = "copilot",
     autoformat = is_git_repo,
     autoload = false,

@@ -6,43 +6,45 @@ local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG
 local HOME_CONTEXT = env.HOME_CONTEXT ---@type string
 
 ---@class eve.builtin.path.reposcope_map
-local reposcope_map = {
-  [".config"] = {
-    "alacritty",
-    "btop",
-    "fd",
-    "fish",
-    "fzf",
-    "ghostty",
-    "guanghechen",
-    "helix",
-    "kitty",
-    "lazygit",
-    "lsd",
-    "nvim",
-    "nvim-nvchad",
-    "pwsh",
-    "ripgrep",
-    "tmux",
-    "wezterm",
-    "yazi",
-    "zellij",
-  },
-  ["guanghechen"] = {
-    "algorithm.ts",
-    "asset",
-    "koa",
-    "mirror",
-    "node-scaffolds",
-    "react-kit",
-    "sora",
-    "static-resources",
-  },
-  ["yozora"] = {
-    "yozora",
-    "yozora-react",
-    "yozora-html",
-    "gatsby-scaffolds",
+local repo_map = {
+  public = {
+    [".config"] = {
+      "alacritty",
+      "btop",
+      "fd",
+      "fish",
+      "fzf",
+      "ghostty",
+      "guanghechen",
+      "helix",
+      "kitty",
+      "lazygit",
+      "lsd",
+      "nvim",
+      "nvim-nvchad",
+      "pwsh",
+      "ripgrep",
+      "tmux",
+      "wezterm",
+      "yazi",
+      "zellij",
+    },
+    ["guanghechen"] = {
+      "algorithm.ts",
+      "asset",
+      "koa",
+      "mirror",
+      "node-scaffolds",
+      "react-kit",
+      "sora",
+      "static-resources",
+    },
+    ["yozora"] = {
+      "yozora",
+      "yozora-react",
+      "yozora-html",
+      "gatsby-scaffolds",
+    },
   },
 }
 
@@ -288,14 +290,32 @@ function M.split_prettier(root_pieces, from_pieces, to)
 end
 
 ---@return boolean
-function M.is_git_repo()
+function M.is_repo_git()
   local cwd = vim.uv.cwd() ---@type string|nil
   return M.locate_git_repo(cwd) ~= nil
 end
 
 ---@return boolean
-function M.is_playground()
-  if not M.is_git_repo() then
+function M.is_repo_personal_public()
+  if not M.is_repo_git() then
+    return false
+  end
+
+  local workspace = M.workspace() ---@type string
+  local pieces = M.split(workspace) ---@type string[]
+  if #pieces <= 2 then
+    return false
+  end
+
+  local reposcope = pieces[#pieces - 1] ---@type string
+  local reponame = pieces[#pieces] ---@type string
+  local reponames = repo_map.public[reposcope] ---@type string[]|nil
+  return reponames ~= nil and vim.list_contains(reponames, reponame) or reposcope == "lazy" ---@type boolean
+end
+
+---@return boolean
+function M.is_repo_playground()
+  if not M.is_repo_git() then
     return false
   end
 
@@ -305,25 +325,14 @@ function M.is_playground()
 end
 
 ---@return boolean
-function M.is_sourcecode()
-  if not M.is_git_repo() then
+function M.is_repo_thirdparty()
+  if not M.is_repo_git() then
     return false
   end
 
   local workspace = M.workspace() ---@type string
   local pieces = M.split(workspace) ---@type string[]
-  if vim.list_contains(pieces, "sourcecode") or vim.list_contains(pieces, "sourcecodes") then
-    return true
-  end
-
-  if #pieces <= 2 then
-    return false
-  end
-
-  local reposcope = pieces[#pieces - 1] ---@type string
-  local reponame = pieces[#pieces] ---@type string
-  local reponames = reposcope_map[reposcope] ---@type string[]|nil
-  return reponames ~= nil and vim.list_contains(reponames, reponame) or reposcope == "lazy" ---@type boolean
+  return vim.list_contains(pieces, "sourcecode") or vim.list_contains(pieces, "sourcecodes")
 end
 
 ---@return string

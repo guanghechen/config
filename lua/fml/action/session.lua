@@ -12,7 +12,7 @@ local M = {}
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.restore(context)
-  if path.is_git_repo() then
+  if path.is_repo_git() then
     local storage = state.get_storage() ---@type eve.state.storage
 
     local nvim_session_filepath = nil ---@type string|nil
@@ -38,7 +38,7 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.restore_autosaved(context)
-  if path.is_git_repo() then
+  if path.is_repo_git() then
     local storage = state.get_storage() ---@type eve.state.storage
 
     local nvim_session_filepath = nil ---@type string|nil
@@ -62,7 +62,7 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.save(context)
-  if path.is_git_repo() then
+  if path.is_repo_git() then
     local storage = state.get_storage() ---@type eve.state.storage
     state.save({
       session = storage.session,

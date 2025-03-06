@@ -9,7 +9,7 @@ local M = {
 ---@return eve.state.storage
 function M.get_default_storage()
   local path = require("eve.builtin.path")
-  local is_git_repo = path.is_git_repo() ---@type boolean
+  local is_git_repo = path.is_repo_git() ---@type boolean
 
   ---@type eve.state.storage
   return {

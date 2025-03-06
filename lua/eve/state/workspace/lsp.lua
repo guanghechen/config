@@ -24,16 +24,15 @@ local _state = nil ---@type eve.state.lsp.state | nil
 
 ---@return eve.state.lsp.data
 function M.defaults()
-  local is_git_repo = path.is_git_repo() ---@type boolean
-  local is_sourcecode = path.is_sourcecode() ---@type boolean
-  local is_playground = path.is_playground() ---@type boolean
+  local is_git_repo = path.is_repo_git() ---@type boolean
+  local is_repo_personal = path.is_repo_personal_public() ---@type boolean
 
   ---@type eve.state.lsp.data
   return {
     code_lens = is_git_repo,
     inlay_hints = is_git_repo,
     python_venv_path = nil,
-    spellcheck = is_git_repo and not (is_sourcecode or is_playground),
+    spellcheck = is_repo_personal,
   }
 end
 
