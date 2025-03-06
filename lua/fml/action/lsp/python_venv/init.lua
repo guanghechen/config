@@ -255,7 +255,7 @@ local function get_select()
         end
 
         ---@type fml.ux.select.IData
-        return { items = items }
+        return { items = items, uuid_present = state.lsp.python_venv_path:snapshot() }
       end,
     }
 
