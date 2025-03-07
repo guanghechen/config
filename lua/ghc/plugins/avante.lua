@@ -245,14 +245,14 @@ return {
     or "make BUILD_FROM_SOURCE=true",
   cmd = {
     "AvanteAsk",
-    "AvanteBuild",
     "AvanteChat",
     "AvanteClear",
     "AvanteEdit",
-    "AvanteFocus",
-    "AvanteRefresh",
-    "AvanteSwitchProvider",
-    "AvanteToggle",
+  },
+  keys = {
+    "<leader>aa",
+    "<leader>ae",
+    "<leader>ar",
   },
   dependencies = {
     "plenary.nvim",
@@ -291,6 +291,13 @@ return {
       auto_suggestions_provider = "copilot",
 
       ------------------------------------------------------------------------------------------------
+
+      behaviour = {
+        auto_focus_sidebar = false,
+        enable_token_counting = false,
+        minimize_diff = true,
+        use_cwd_as_project_root = true,
+      },
 
       file_selector = {
         provider = get_file_selector(),
@@ -331,14 +338,23 @@ return {
         ask = "<leader>aa",
         edit = "<leader>ae",
         refresh = "<leader>ar",
-
         sidebar = {
+          add_file = "@",
+          apply_all = "A",
+          apply_cursor = "a",
           close = { "q" },
+          edit_user_request = "e",
+          remove_file = "d",
+          retry_user_request = "r",
+          reverse_switch_windows = "<S-Tab>",
+          switch_windows = "<Tab>",
+        },
+        files = {
+          add_current = "<leader>ab", -- Add current buffer to selected files
         },
         submit = {
           normal = "<CR>",
-          -- insert = { "<C-s>", "<M-s>", "<C-a>s" },
-          insert = "<C-s>",
+          insert = "<C-a>s",
         },
         suggestion = {
           accept = "<C-cr>",
@@ -354,16 +370,15 @@ return {
           border = "rounded",
           focus_on_apply = "theirs",
         },
+        edit = {
+          border = "rounded",
+          start_insert = false, -- Start insert mode when opening the edit window
+        },
       },
     }
   end,
   config = function(_, opts)
     package.loaded["dressing.nvim"] = {}
-
-    ---hack: use cwd as the project root
-    require("avante.utils").get_project_root = function()
-      return path.cwd()
-    end
 
     require("avante").setup(opts)
     state.observe({ state.flight.ai_provider }, function()
