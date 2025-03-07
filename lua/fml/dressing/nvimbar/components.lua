@@ -419,8 +419,8 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.cwd(position)
-  local hln_text_prefix = position .. "_cwd_text_" ---@type string
-  local hln_sep_prefix = position .. "_cwd_sep_" ---@type string
+  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
+  local hln_sep_prefix = position .. "_m_sep_fill_" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -579,38 +579,39 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.dirpath(position)
-  local hln_text = position .. "_dirpath_text" ---@type string
+  local hln_blur_text = position .. "_dirpath_text" ---@type string
+  local hln_blur_sep = position .. "_dirpath_sep" ---@type string
+  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
 
-  -- local icon = icons.filetype.Folder .. " " ---@type string
-  -- local hln_icon = position .. "_dirpath_icon" ---@type string
-  -- local hl_icon = txt(icon, hln_icon) ---@type string
-
-  -- local sep = " " .. env.PATH_SEP .. " " ---@type string
-  local sep = icons.fillchars.foldclose .. " " ---@type string
-  local hln_sep = position .. "_dirpath_sep" ---@type string
-  local hl_text_sep = txt(sep, hln_sep) ---@type string
+  local icon = " " ---@type string
+  local sep = "/" ---@type string
+  local blur_sep = icons.fillchars.foldclose .. " " ---@type string
+  local hl_text_blur_sep = txt(blur_sep, hln_blur_sep) ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "dirpath",
     atomic = true,
-    condition = function(context)
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      return context.winnr == winnr_cur
-    end,
-    will_change = function(context, prev_context)
-      return prev_context == nil or context.filepath ~= prev_context.filepath
-    end,
     render = function(context)
-      local winnr = context.winnr ---@type integer
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
       if meta == nil then
         return "", "", true
       end
 
-      local text = "" ---@type string
-      local hl_text = "" ---@type string
+      local hln_text ---@type string
+      local hl_text_sep ---@type string
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      if context.winnr == winnr_cur then
+        hln_text = hln_text_prefix .. context.mode ---@type string
+        hl_text_sep = txt(sep, hln_text) ---@type string
+      else
+        hln_text = hln_blur_text ---@type string
+        hl_text_sep = hl_text_blur_sep ---@type string
+      end
+
+      local text = icon ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
       local N = #meta.relpath_pieces - 1 ---@type integer
       for i = 1, N, 1 do
         local piece = meta.relpath_pieces[i] ---@type string
@@ -747,42 +748,36 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.filename(position)
-  local hln_filename = position .. "_filename" ---@type string
-  local hln_filename_text = position .. "_filename_text" ---@type string
-  local filename_text_cur = position .. "_filename_text_cur" ---@type string
-  local last_winnr = -1 ---@type integer
+  local hln_blur_text = position .. "_filename_blur_text" ---@type string
+  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
+  local hln_sep_prefix = position .. "_m_sep_fill_" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "filename",
     atomic = true,
-    will_change = function(context, prev_context)
-      if prev_context == nil or context.filename ~= prev_context.filename then
-        return true
-      end
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      return winnr_cur ~= last_winnr
-    end,
     render = function(context)
       local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      local is_win_cur = context.winnr == winnr_cur ---@type boolean
-      last_winnr = winnr_cur ---@type integer
+      if context.winnr ~= winnr_cur then
+        local text_fileicon = context.fileicon .. " " ---@type string
+        local hl_text_fileicon = txt(text_fileicon, context.fileicon_hl) ---@type string
 
-      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
-      local meta_buf = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
-      if meta_buf == nil then
-        local text = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local hl_text = txt(text, hln_filename_text) ---@type string
-        return text, hl_text, true
+        local text_filename = context.filename .. " " ---@type string
+        local hl_text_filename = txt(text_filename, hln_blur_text) ---@type string
+
+        local text = text_fileicon .. text_filename ---@type string
+        local hln_text = hl_text_fileicon .. hl_text_filename ---@type string
+        return text, hln_text, true
       end
 
-      local text_icon = meta_buf.fileicon .. " " ---@type string
-      local text_filename = is_win_cur and meta_buf.filename or meta_buf.relpath ---@type string
-      local hl_text_icon = txt(text_icon, hln_filename .. "_" .. meta_buf.fileicon_hl) ---@type string
-      local hl_text_title = txt(text_filename, is_win_cur and filename_text_cur or hln_filename_text) ---@type string
+      local hln_text = hln_text_prefix .. context.mode ---@type string
+      local hln_sep = hln_sep_prefix .. context.mode ---@type string
 
-      local text = text_icon .. text_filename ---@type string
-      local hl_text = hl_text_icon .. hl_text_title ---@type string
+      local text = " " .. context.fileicon .. " " .. context.filename ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+
+      text = text .. icons.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
@@ -1066,7 +1061,7 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.mode(position)
-  local hln_text_prefix = position .. "_mode_text_" ---@type string
+  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
   local hln_sep_prefix = position .. "_mode_sep_" ---@type string
 
   local icon = " " .. icons.app.Vim .. " " ---@type string
@@ -1133,7 +1128,7 @@ function M.python_env(position)
     name = "python_env",
     atomic = true,
     tight = true,
-    condition = function(context)
+    condition = function()
       return python_venv ~= nil and python_version ~= nil
     end,
     will_change = function(_, prev_context)
@@ -1156,8 +1151,8 @@ end
 function M.sidebar(position, filetype, get_title)
   local hln_blank = position .. "_sidebar_blank" ---@type string
   local hln_split = position .. "_sidebar_split" ---@type string
-  local hln_sep_prefix = position .. "_sidebar_sep_" ---@type string
-  local hln_text_prefix = position .. "_sidebar_text_" ---@type string
+  local hln_sep_prefix = position .. "_m_sep_fill_" ---@type string
+  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
 
   ---@return integer
   local function get_pane_width()
@@ -1414,8 +1409,8 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.username(position)
-  local hln_text_prefix = position .. "_username_text_" ---@type string
-  local hln_sep_prefix = position .. "_username_sep_" ---@type string
+  local hln_text_prefix = position .. "_m_sep_fill_" ---@type string
+  local hln_sep_prefix = position .. "_m_text_fill_" ---@type string
 
   local text_with_icon = " " .. icons.os.current .. " " .. env.USERNAME ---@type string
   local text_icon_only = icons.os.current .. " " ---@type string
@@ -1522,8 +1517,8 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.win_indicator(position)
-  local hln_text_prefix = position .. "_win_indicator_text_" ---@type string
-  local hln_sep_prefix = position .. "_win_indicator_sep_" ---@type string
+  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
+  local hln_sep_prefix = position .. "_m_sep_" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {

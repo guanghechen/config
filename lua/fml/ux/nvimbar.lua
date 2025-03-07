@@ -22,6 +22,7 @@ local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 ---@field public filename               string
 ---@field public filepath               string
 ---@field public fileicon               string
+---@field public fileicon_hl            string
 ---@field public filetype               string
 ---@field public mode                   eve.e.VimModeName
 ---@field public mode_name              string
@@ -157,7 +158,7 @@ local function build_context(preset_context)
   local filepath = vim.fn.expand("%:p") ---@type string
   local filename = vim.fn.expand("%:t") ---@type string
   local filetype = vim.bo.filetype ---@type string
-  local fileicon = calc_fileicon(filename) ---@type string
+  local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
 
   local git = vim.b[bufnr].gitsigns_status_dict
   local git_branch = git and git.head or nil ---@type string|nil
@@ -171,6 +172,7 @@ local function build_context(preset_context)
     filename = filename,
     filepath = filepath,
     fileicon = fileicon,
+    fileicon_hl = fileicon_hl,
     filetype = filetype,
     mode = m[1],
     mode_name = m[2],
