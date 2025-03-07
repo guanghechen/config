@@ -241,7 +241,8 @@ end
 
 return {
   "avante.nvim",
-  build = env.IS_WIN and "pwsh -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" or "make",
+  build = env.IS_WIN and "pwsh -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource true"
+    or "make BUILD_FROM_SOURCE=true",
   cmd = {
     "AvanteAsk",
     "AvanteBuild",
@@ -362,14 +363,6 @@ return {
     ---hack: use cwd as the project root
     require("avante.utils").get_project_root = function()
       return path.cwd()
-    end
-
-    require("avante.file_selector").get_filepaths = function(self)
-      local params = {
-        cwd = path.cwd(),
-        selected_filepaths = self.selected_filepaths,
-      }
-      return opts.file_selector.provider_opts.get_filepaths(params)
     end
 
     require("avante").setup(opts)
