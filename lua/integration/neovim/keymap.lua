@@ -14,7 +14,7 @@ ms({ "n", "t", "v" }, "<leader>`", K.ux.resume_last_widget)
 ms({ "n", "v" }, "<leader>;", K.ai.copilot_chat_toggle)
 ms({ "n", "v" }, "<leader>'", K.ai.avante_ask)
 ms({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
-ms({ "n", "v" }, "<leader>2", K.term.yazi_reveal)
+ms({ "n", "v" }, "<leader>2", K.search.files_in_cwd)
 ms({ "n", "v" }, "<leader>3", K.explorer.git_cwd)
 ------------------------------------------------------------------------------------------#enhance--
 
@@ -23,7 +23,6 @@ ms({ "n", "v" }, "<leader>aa", K.ai.avante_ask)
 ms({ "n", "v" }, "<leader>ae", K.ai.avante_edit)
 ms({ "n", "v" }, "<leader>ar", K.ai.avante_refresh)
 
-ms({ "n", "v" }, "<leader>ac", K.ai.copilot_chat_toggle)
 ms({ "n", "v" }, "<leader>ap", K.ai.copilot_chat_prompt)
 ms({ "n", "v" }, "<leader>aq", K.ai.copilot_chat_quick)
 ms({ "n", "v" }, "<leader>aS", K.ai.copilot_chat_stop)
@@ -206,7 +205,7 @@ ms({ "n", "v" }, "<leader>tn", K.tab.new_with_buf)
 --#[t]erminal---------------------------------------------------------------------------------------
 ms({ "i", "n", "t", "v" }, { "<C-a>g", "<D-g>", "<M-g>" }, K.term.lazygit_cwd)
 ms({ "i", "n", "t", "v" }, { "<C-a>t", "<D-t>", "<M-t>" }, K.term.toggle_cwd)
-ms({ "i", "n", "t", "v" }, { "<C-a>y", "<D-y>", "<M-y>" }, K.term.yazi_cwd)
+ms({ "i", "n", "t", "v" }, { "<C-a>y", "<D-y>", "<M-y>" }, K.term.yazi_reveal)
 ---------------------------------------------------------------------------------------#[t]erminal--
 
 --#[t]oggle-----------------------------------------------------------------------------------------
