@@ -36,3 +36,7 @@ Set-Location -Path $config_repo_path
 
 Set-Location -Path $config_repo_path
 . .\win\setup\miniforge.ps1
+
+Set-Location -Path $config_repo_path
+. .\win\setup\theme.ps1
+
