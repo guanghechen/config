@@ -1,6 +1,6 @@
 {
   "aerial.nvim": { "branch": "nvim@aerial.nvim", "commit": "2204cf08791449a6a2fd2ef187a29112eeefd989" },
-  "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "a13e5dca1d631b5e0ccafad9e35bb342a888729c" },
+  "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "6d39e06f574416c50710dd05c1a62f3496af3f70" },
   "cmp-buffer": { "branch": "nvim@cmp-buffer", "commit": "3022dbc9166796b644a841a02de8dd1cc1d311fa" },
   "cmp-nvim-lsp": { "branch": "nvim@cmp-nvim-lsp", "commit": "99290b3ec1322070bcfb9e846450a46f6efa50f0" },
   "cmp-path": { "branch": "nvim@cmp-path", "commit": "91ff86cd9c29299a64f968ebb45846c485725f23" },
@@ -18,7 +18,7 @@
   "mason-nvim-dap": { "branch": "nvim@mason-nvim-dap", "commit": "09220b99d63d5363f219daa2785242ee5fddba7f" },
   "mason.nvim": { "branch": "nvim@mason.nvim", "commit": "fc98833b6da5de5a9c5b1446ac541577059555be" },
   "mini.ai": { "branch": "nvim@mini.ai", "commit": "6e01c0e5a15554852546fac9853960780ac52ed4" },
-  "mini.hipatterns": { "branch": "nvim@mini.hipatterns", "commit": "525a709547fe555742614de387e9018852eab113" },
+  "mini.hipatterns": { "branch": "nvim@mini.hipatterns", "commit": "fbf1e2195fdd65cf1bc970316c28098257728868" },
   "mini.icons": { "branch": "nvim@mini.icons", "commit": "ec61af6e606fc89ee3b1d8f2f20166a3ca917a36" },
   "mini.indentscope": { "branch": "nvim@mini.indentscope", "commit": "8ce41a77eed7f4121c83c67fda5e2e86af999e6d" },
   "mini.pairs": { "branch": "nvim@mini.pairs", "commit": "1a3e73649c0eaef2f6c48ce1e761c6f0a7c11918" },
