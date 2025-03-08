@@ -1,3 +1,5 @@
+local cs = require("eve.builtin.color")
+
 ---@param context                       eve.t.theme.IContext
 ---@return eve.constant.hlgroup.nvimbar
 local function gen_hlgroup_map(context)
@@ -83,9 +85,10 @@ local function gen_hlgroup_map(context)
     diagnostics_warn = { fg = c.yellow, bg = "bg_bar" },
     diagnostics_hint = { fg = c.purple, bg = "bg_bar" },
     diagnostics_info = { fg = c.green, bg = "bg_bar" },
-    dirpath_icon = { fg = c.blue, bg = "bg_bar" },
-    dirpath_sep = { fg = c.fg1, bg = "bg_bar" },
-    dirpath_text = { fg = c.blue, bg = "bg_bar" },
+    dirpath_blur_sep = { fg = c.fg3, bg = "bg_bar" },
+    dirpath_blur_text = { fg = cs.mix(c.fg3, c.blue, 80), bg = "bg_bar" },
+    dirpath_focus_sep = { fg = c.fg1, bg = "bg_bar", bold = true },
+    dirpath_focus_text = { fg = c.blue, bg = "bg_bar", bold = true },
     dirpath_prominent_icon = { fg = c.bg0, bg = c.pink, bold = true },
     dirpath_prominent_text = { fg = c.bg0, bg = c.pink, bold = true },
     filename = { fg = c.fg1, bg = "bg_bar" },

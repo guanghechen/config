@@ -579,12 +579,14 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.dirpath(position)
-  local hln_text = position .. "_dirpath_text" ---@type string
-  local hln_sep = position .. "_dirpath_sep" ---@type string
+  local hln_blur_sep = position .. "_dirpath_blur_sep" ---@type string
+  local hln_blur_text = position .. "_dirpath_blur_text" ---@type string
+  local hln_focus_sep = position .. "_dirpath_focus_sep" ---@type string
+  local hln_focus_text = position .. "_dirpath_focus_text" ---@type string
 
-  local icon = " " ---@type string
   local sep = icons.fillchars.foldclose .. " " ---@type string
-  local hl_text_sep = txt(sep, hln_sep) ---@type string
+  local hl_blur_sep = txt(sep, hln_blur_sep) ---@type string
+  local hl_focus_sep = txt(sep, hln_focus_sep) ---@type string
   local relpath_pieces = {} ---@type string[]
 
   ---@type string
@@ -597,9 +599,6 @@ function M.dirpath(position)
   local component = {
     name = "dirpath",
     atomic = true,
-    will_change = function(context, prev_context)
-      return prev_context == nil or context.filepath ~= prev_context.filepath
-    end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
@@ -607,9 +606,13 @@ function M.dirpath(position)
         return "", "", true
       end
 
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      local hln_text = winnr_cur == context.winnr and hln_focus_text or hln_blur_text ---@type string
+      local hl_text_sep = winnr_cur == context.winnr and hl_focus_sep or hl_blur_sep ---@type string
+
       relpath_pieces = meta.relpath_pieces
-      local text = icon ---@type string
-      local hl_text = txt(text, hln_text) ---@type string
+      local text = "" ---@type string
+      local hl_text = "" ---@type string
       local N = #meta.relpath_pieces - 1 ---@type integer
       for i = 1, N, 1 do
         local piece = meta.relpath_pieces[i] ---@type string
