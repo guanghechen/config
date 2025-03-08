@@ -1,10 +1,10 @@
-local __module_name__ = "fml.action.debug" ---@type string
+local __module_name__ = "fml.action.inspect" ---@type string
 
+local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-
 local state = require("eve.state")
 
----@class fml.action.debug
+---@class fml.action.inspect
 local M = {}
 
 ---@param context                       eve.command.IContext
@@ -18,11 +18,47 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.inspect_state(context)
-  local data = state.dump() ---@type eve.state.data
+  local cwd = path.cwd() ---@type string
+  local workspace = path.workspace() ---@type string
+  local full_state = state.dump() ---@type eve.state.data
+
   reporter.info({
     from = __module_name__,
     subject = "inspect_state",
-    details = { data = data },
+    details = {
+      path = {
+        cwd = cwd,
+        workspace = workspace,
+      },
+      state = {
+        theme = full_state.theme,
+        bookmarks = full_state.bookmark,
+        flight = full_state.flight,
+        lsp = full_state.lsp,
+        options = full_state.option,
+        plugins = full_state.plugin,
+      },
+    },
+  })
+end
+
+---@param context                       eve.command.IContext
+---@return nil
+---@diagnostic disable-next-line: unused-local
+function M.inspect_state_full(context)
+  local cwd = path.cwd() ---@type string
+  local workspace = path.workspace() ---@type string
+
+  reporter.info({
+    from = __module_name__,
+    subject = "inspect_state_full",
+    details = {
+      path = {
+        cwd = cwd,
+        workspace = workspace,
+      },
+      state = state.dump(),
+    },
   })
 end
 
@@ -52,7 +88,7 @@ function M.inspect_window(context)
 
   reporter.info({
     from = __module_name__,
-    subject = "inspect",
+    subject = "inspect_window",
     details = {
       _ = {
         bufnr = bufnr,

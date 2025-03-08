@@ -163,33 +163,6 @@ command.implement({
   end,
 })
 
---[debug] ------------------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = command.definitions.debug.inspect_pos.uuid,
-    action = function(context)
-      require("fml.action.debug").inspect_pos(context)
-    end,
-  })
-  .implement({
-    uuid = command.definitions.debug.inspect_state.uuid,
-    action = function(context)
-      require("fml.action.debug").inspect_state(context)
-    end,
-  })
-  .implement({
-    uuid = command.definitions.debug.inspect_tree.uuid,
-    action = function(context)
-      require("fml.action.debug").inspect_tree(context)
-    end,
-  })
-  .implement({
-    uuid = command.definitions.debug.inspect_window.uuid,
-    action = function(context)
-      require("fml.action.debug").inspect_window(context)
-    end,
-  })
-
 --[diagnostic] -------------------------------------------------------------------------------------
 command
   .implement({
@@ -341,6 +314,39 @@ command.implement({
     require("fml.action.git.browse").browse(context)
   end,
 })
+
+--[inspect] ------------------------------------------------------------------------------------------
+command
+  .implement({
+    uuid = command.definitions.inspect.inspect_pos.uuid,
+    action = function(context)
+      require("fml.action.inspect").inspect_pos(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.inspect.inspect_state.uuid,
+    action = function(context)
+      require("fml.action.inspect").inspect_state(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.inspect.inspect_state_full.uuid,
+    action = function(context)
+      require("fml.action.inspect").inspect_state_full(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.inspect.inspect_tree.uuid,
+    action = function(context)
+      require("fml.action.inspect").inspect_tree(context)
+    end,
+  })
+  .implement({
+    uuid = command.definitions.inspect.inspect_window.uuid,
+    action = function(context)
+      require("fml.action.inspect").inspect_window(context)
+    end,
+  })
 
 --[lsp] reference-----------------------------------------------------------------------------------
 command

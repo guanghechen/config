@@ -93,7 +93,7 @@ function M.dump()
     dirty_winline_nr = _state.dirty_winline_nr:snapshot(),
 
     lsp_msg = _state.lsp_msg:snapshot(),
-    maximized_winnrs = vim.tbl_extend("force", {}, _state.lsp_msg:snapshot()),
+    maximized_winnrs = vim.tbl_extend("force", {}, _state.maximized_winnrs),
     suppress_warning = _state.suppress_warning:snapshot(),
     tmux_zen_mode = _state.tmux_zen_mode:snapshot(),
   }

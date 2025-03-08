@@ -351,10 +351,11 @@ M.definitions.copy = {
   filepath_relative = def("Fcopyfilepathrelative", "copy: current filepath (relative)"),
 }
 
----@class eve.command.definitions.debug
-M.definitions.debug = {
+---@class eve.command.definitions.inspect
+M.definitions.inspect = {
   inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
   inspect_state = def("Fdebuginspectstate", "debug: inspect state"),
+  inspect_state_full = def("Fdebuginspectstatefull", "debug: inspect state (full)"),
   inspect_tree = def("Fdebuginspecttree", "debug: inspect tree"),
   inspect_window = def("Fdebuginspectwindow", "debug: inspect window"),
 }

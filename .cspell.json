@@ -33,6 +33,7 @@
     "Fdebuginspect",
     "Fdebuginspectpos",
     "Fdebuginspectstate",
+    "Fdebuginspectstatefull",
     "Fdebuginspecttree",
     "Fdebuginspectwindow",
     "Fdiagnosticgotonext",
