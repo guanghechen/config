@@ -254,12 +254,12 @@ function M.list(context, arg)
         local items = {} ---@type fml.ux.select.IItem[]
         for _, flag in ipairs(toggle_item_names) do
           local item = toggle_item_map[flag] ---@type fml.action.toggle.IItem
-          items[#items + 1] = { uuid = item.title, text = flag, data = item }
+          items[#items + 1] = { uuid = flag, text = item.title, data = item }
         end
         return items
       end,
       render_item = function(item, match)
-        local flag_item = toggle_item_map[item.text] ---@type fml.action.toggle.IItem
+        local flag_item = toggle_item_map[item.uuid] ---@type fml.action.toggle.IItem
         local text_flag, hln_flag = flag_item.snapshot(context)
 
         local width_padding = 32 ---@type integer
