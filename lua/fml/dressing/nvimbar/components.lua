@@ -1514,39 +1514,4 @@ function M.widget(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
-function M.win_indicator(position)
-  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
-  local hln_sep_prefix = position .. "_m_sep_" ---@type string
-
-  ---@type fml.ux.nvimbar.IRawComponent
-  local component = {
-    name = "win_indicator",
-    atomic = true,
-    will_change = function(context, prev_context)
-      return prev_context == nil or context.filetype ~= prev_context.filetype or context.mode ~= prev_context.mode
-    end,
-    condition = function(context)
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      return context.winnr == winnr_cur
-    end,
-    render = function(context)
-      local hln_text = hln_text_prefix .. context.mode ---@type string
-      local hln_sep = hln_sep_prefix .. context.mode ---@type string
-
-      local text = context.fileicon .. " " .. context.filename ---@type string
-      local hl_text = txt(text, hln_text) ---@type string
-
-      text = icons.symbols.sep_left .. text ---@type string
-      hl_text = txt(icons.symbols.sep_left, hln_sep) .. hl_text ---@type string
-
-      text = text .. icons.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
-      return text, hl_text, true
-    end,
-  }
-  return component
-end
-
 return M
