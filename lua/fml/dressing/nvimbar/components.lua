@@ -747,8 +747,7 @@ end
 ---@return fml.ux.nvimbar.IRawComponent
 function M.filename(position)
   local hln_blur_text = position .. "_filename_blur_text" ---@type string
-  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
-  local hln_sep_prefix = position .. "_m_sep_fill_" ---@type string
+  local hln_text_prefix = position .. "_m_sep_fill_" ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -757,25 +756,20 @@ function M.filename(position)
     render = function(context)
       local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
       if context.winnr ~= winnr_cur then
-        local text_fileicon = context.fileicon .. " " ---@type string
-        local hl_text_fileicon = txt(text_fileicon, context.fileicon_hl) ---@type string
-
-        local text_filename = context.filename ---@type string
-        local hl_text_filename = txt(text_filename, hln_blur_text) ---@type string
-
-        local text = text_fileicon .. text_filename ---@type string
-        local hln_text = hl_text_fileicon .. hl_text_filename ---@type string
-        return text, hln_text, true
+        local text = context.fileicon .. " " .. context.filename ---@type string
+        local hl_text = txt(text, hln_blur_text) ---@type string
+        return text, hl_text, true
       end
 
+      local text_fileicon = context.fileicon .. " " ---@type string
+      local hl_text_fileicon = txt(text_fileicon, context.fileicon_hl) ---@type string
+
       local hln_text = hln_text_prefix .. context.mode ---@type string
-      local hln_sep = hln_sep_prefix .. context.mode ---@type string
+      local text_filename = context.filename ---@type string
+      local hl_text_filename = txt(text_filename, hln_text)
 
-      local text = " " .. context.fileicon .. " " .. context.filename ---@type string
-      local hl_text = txt(text, hln_text) ---@type string
-
-      text = text .. icons.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
+      local text = text_fileicon .. text_filename ---@type string
+      local hl_text = hl_text_fileicon .. hl_text_filename ---@type string
       return text, hl_text, true
     end,
   }

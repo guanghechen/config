@@ -89,7 +89,7 @@ local function gen_hlgroup_map(context)
     dirpath_prominent_icon = { fg = c.bg0, bg = c.pink, bold = true },
     dirpath_prominent_text = { fg = c.bg0, bg = c.pink, bold = true },
     filename = { fg = c.fg1, bg = "bg_bar" },
-    filename_blur_text = { fg = c.fg3, bg = "bg_bar", bold = true },
+    filename_blur_text = { fg = c.fg3, bg = "bg_bar" },
     flag = { fg = c.fg1, bg = t and c.bg2 or c.bg3 },
     flag_sep = { fg = c.bg4, bg = t and c.bg2 or c.bg3 },
     flag_enabled = { fg = c.bg1, bg = c.blue },
