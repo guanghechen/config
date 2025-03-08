@@ -585,14 +585,20 @@ function M.dirpath(position)
   local icon = " " ---@type string
   local sep = icons.fillchars.foldclose .. " " ---@type string
   local hl_text_sep = txt(sep, hln_sep) ---@type string
+  local relpath_pieces = {} ---@type string[]
+
+  ---@type string
+  local fn_open_explorer = G.register_anonymous_fn(function(index)
+    local dirpath = table.concat(relpath_pieces, env.PATH_SEP, 1, index) ---@type string
+    vim.cmd(command.definitions.find.explorer.uuid .. " " .. vim.fn.fnameescape(dirpath))
+  end) or ""
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "dirpath",
     atomic = true,
-    condition = function(context)
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      return context.winnr ~= winnr_cur
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
@@ -601,12 +607,13 @@ function M.dirpath(position)
         return "", "", true
       end
 
+      relpath_pieces = meta.relpath_pieces
       local text = icon ---@type string
       local hl_text = txt(text, hln_text) ---@type string
       local N = #meta.relpath_pieces - 1 ---@type integer
       for i = 1, N, 1 do
         local piece = meta.relpath_pieces[i] ---@type string
-        local hl_text_piece = txt(piece, hln_text) ---@type string
+        local hl_text_piece = btn(txt(piece, hln_text), fn_open_explorer, i) ---@type string
 
         text = text .. piece .. sep
         hl_text = hl_text .. hl_text_piece .. hl_text_sep

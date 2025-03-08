@@ -470,16 +470,22 @@ end
 local M = {}
 
 ---@param context                       eve.command.IContext
+---@param specified_dirpath             string|nil
 ---@return nil
-function M.find_explorer(context)
-  local winnr = context.winnr ---@type integer
-  if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if #filepath > 0 then
-      local doctype = fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
-      local dirpath = doctype == "file" and path.dirname(filepath) or filepath ---@type string
-      state_cwd:next(dirpath)
+function M.find_explorer(context, specified_dirpath)
+  if specified_dirpath ~= nil and fs.is_file_or_dir(specified_dirpath) == "directory" then
+    local dirpath = path.normalize(specified_dirpath) ---@type string
+    state_cwd:next(dirpath)
+  else
+    local winnr = context.winnr ---@type integer
+    if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      if #filepath > 0 then
+        local doctype = fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
+        local dirpath = doctype == "file" and path.dirname(filepath) or filepath ---@type string
+        state_cwd:next(dirpath)
+      end
     end
   end
 

@@ -24,7 +24,7 @@ local function resolve_winline_scheduler(winnr)
       comp_sep = "",
       comp_sep_hlname = position .. "_bg",
       comp_sep_hlname_active = position .. "_bg",
-      render_delay = 256,
+      render_delay = 128,
       silent = function()
         local devmode = state.flight.devmode:snapshot() ---@type boolean
         return not devmode

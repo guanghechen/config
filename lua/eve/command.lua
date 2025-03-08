@@ -398,7 +398,7 @@ M.definitions.find = {
   bufs_file = def("Ffindbufsfile", "find: buffers (file)"),
   bufs_term = def("Ffindbufsterm", "find: buffers (term)"),
 
-  explorer = def("Ffindexplorer", "find: explorer"),
+  explorer = def("Ffindexplorer", "find: explorer", "?"),
   files = def("Ffindfiles", "find: files"),
   files_cwd = def("Ffindfilescwd", "find: files (cwd)"),
   files_directory = def("Ffindfilesdirectory", "find: files (directory)"),

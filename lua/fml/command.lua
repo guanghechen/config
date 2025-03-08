@@ -281,8 +281,8 @@ command
   })
   .implement({
     uuid = command.definitions.find.explorer.uuid,
-    action = function(context)
-      require("fml.action.find.explorer").find_explorer(context)
+    action = function(context, args)
+      require("fml.action.find.explorer").find_explorer(context, args)
     end,
   })
   .implement({
