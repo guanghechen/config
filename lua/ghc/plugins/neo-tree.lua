@@ -165,6 +165,9 @@ return {
 
         -- Close the window
         ["q"] = "close_window",
+        ["<C-a>q"] = "close_window",
+        ["<D-q>"] = "close_window",
+        ["<M-q>"] = "close_window",
 
         -- Open file
         ["L"] = "vsplit_with_window_picker",

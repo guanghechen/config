@@ -94,7 +94,6 @@ S = {
 
     ---@type eve.t.IKeymap[]
     local keymaps = {
-      { modes = { "n", "v" }, key = "q", callback = on_close, desc = "widget: close present" },
       {
         modes = { "i", "n", "t", "v" },
         key = "<C-a>i",
@@ -108,6 +107,19 @@ S = {
         aliases = { "<D-o>", "<M-o>" },
         callback = S.forward,
         desc = "widget: forward",
+      },
+      {
+        modes = { "i", "n", "v" },
+        key = "<C-a>q",
+        aliases = { "<D-q>", "<M-q>" },
+        callback = on_close,
+        desc = "widget: close present",
+      },
+      {
+        modes = { "n", "v" },
+        key = "q",
+        callback = on_close,
+        desc = "widget: close present",
       },
     }
     return keymaps

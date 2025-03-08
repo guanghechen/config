@@ -342,10 +342,10 @@ return {
           add_file = "@",
           apply_all = "A",
           apply_cursor = "a",
-          close = { "q" },
+          close = { "<C-a>q", "<D-q>", "<M-q>" },
           close_from_input = {
-            normal = "q",
-            insert = "<C-d>",
+            normal = "<C-a>q",
+            insert = "<C-a>q",
           },
           edit_user_request = "e",
           remove_file = "d",

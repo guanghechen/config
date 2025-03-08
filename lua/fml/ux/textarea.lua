@@ -145,6 +145,13 @@ function M.new(props)
 
   ---@type eve.t.IKeymap[]
   local keymaps = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>q",
+      aliases = { "<D-q>", "<M-q>" },
+      desc = "textarea: quit",
+      callback = on_close,
+    },
     { modes = { "n" }, key = "q", desc = "textarea: quit", callback = on_close },
     { modes = { "n" }, key = "<cr>", desc = "textarea: confirm", callback = on_confirm },
   }

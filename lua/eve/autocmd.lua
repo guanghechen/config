@@ -65,7 +65,10 @@ if not vim.g.vscode then
           vim.cmd.close()
           pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
         end
-        vim.keymap.set("n", "q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
+        vim.keymap.set({ "n", "v" }, "q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
+        vim.keymap.set({ "i", "n", "v" }, "<C-a>q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
+        vim.keymap.set({ "i", "n", "v" }, "<D-q>", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
+        vim.keymap.set({ "i", "n", "v" }, "<M-q>", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
       end
     end,
   })

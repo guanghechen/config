@@ -136,10 +136,17 @@ function M.input(opts, on_confirm)
 
   ---@type eve.t.IKeymap[]
   local keymaps = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>q",
+      aliases = { "<D-q>", "<M-q>" },
+      desc = "input: quit",
+      callback = action.cancel,
+    },
+    { modes = { "i", "n" }, key = "<cr>", desc = "input: confirm", callback = action.confirm },
     { modes = { "n" }, key = "q", desc = "input: quit", callback = action.cancel },
     { modes = { "n" }, key = "o", desc = "input: noop", callback = fn.noop },
     { modes = { "n" }, key = "O", desc = "input: noop", callback = fn.noop },
-    { modes = { "i", "n" }, key = "<cr>", desc = "input: confirm", callback = action.confirm },
   }
   fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 

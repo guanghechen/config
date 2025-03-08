@@ -187,12 +187,20 @@ local keymaps = {
       local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
       vim.bo[bufnr].buflisted = false
       vim.bo[bufnr].buftype = "nofile"
-      vim.bo[bufnr].filetype = ft.TEMP_VIWER
+      vim.bo[bufnr].filetype = ft.TEMP_VIEWER
       vim.bo[bufnr].swapfile = false
       printer:render(bufnr)
 
       ---@type eve.t.IKeymap[]
       local keymaps = {
+        {
+          modes = { "i", "n", "v" },
+          key = "<C-a>q",
+          aliases = { "<D-q>", "<M-q>" },
+          callback = function()
+            pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+          end,
+        },
         {
           modes = { "n" },
           key = "q",
