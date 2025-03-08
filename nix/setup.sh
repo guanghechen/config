@@ -63,6 +63,11 @@ printf "\n\e[32m  [setup nvim] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/nvim.sh
 printf "\n\e[32m  [setup nvim] done.\e[0m\n"
 
+## Setup tmux
+printf "\n\e[32m  [setup tmux] preparing...\e[0m\n"
+source ~/.config/guanghechen/nix/setup/tmux.sh
+printf "\n\e[32m  [setup tmux] done.\e[0m\n"
+
 ## Setup themes
 printf "\n\e[32m  [setup theme] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/theme.sh
