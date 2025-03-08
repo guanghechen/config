@@ -579,35 +579,26 @@ end
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
 function M.dirpath(position)
-  local hln_blur_text = position .. "_dirpath_text" ---@type string
-  local hln_blur_sep = position .. "_dirpath_sep" ---@type string
-  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
+  local hln_text = position .. "_dirpath_text" ---@type string
+  local hln_sep = position .. "_dirpath_sep" ---@type string
 
   local icon = " " ---@type string
-  local sep = "/" ---@type string
-  local blur_sep = icons.fillchars.foldclose .. " " ---@type string
-  local hl_text_blur_sep = txt(blur_sep, hln_blur_sep) ---@type string
+  local sep = icons.fillchars.foldclose .. " " ---@type string
+  local hl_text_sep = txt(sep, hln_sep) ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "dirpath",
     atomic = true,
+    condition = function(context)
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      return context.winnr ~= winnr_cur
+    end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
       if meta == nil then
         return "", "", true
-      end
-
-      local hln_text ---@type string
-      local hl_text_sep ---@type string
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      if context.winnr == winnr_cur then
-        hln_text = hln_text_prefix .. context.mode ---@type string
-        hl_text_sep = txt(sep, hln_text) ---@type string
-      else
-        hln_text = hln_blur_text ---@type string
-        hl_text_sep = hl_text_blur_sep ---@type string
       end
 
       local text = icon ---@type string
@@ -762,7 +753,7 @@ function M.filename(position)
         local text_fileicon = context.fileicon .. " " ---@type string
         local hl_text_fileicon = txt(text_fileicon, context.fileicon_hl) ---@type string
 
-        local text_filename = context.filename .. " " ---@type string
+        local text_filename = context.filename ---@type string
         local hl_text_filename = txt(text_filename, hln_blur_text) ---@type string
 
         local text = text_fileicon .. text_filename ---@type string
