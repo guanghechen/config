@@ -92,6 +92,7 @@ local raw_specs = {
   { name = "nui.nvim", main = "nui", cond = conds.not_vscode },
   { name = "nvim-cmp", main = "cmp", cond = conds.cmp },
   { name = "nvim-dap", main = "dap", cond = conds.dap },
+  { name = "nvim-dap-python", main = "dap-python", cond = conds.dap },
   { name = "nvim-dap-ui", main = "dapui", cond = conds.dap },
   { name = "nvim-dap-virtual-text", main = "nvim-dap-virtual-text", cond = conds.dap },
   { name = "nvim-lint", main = "lint", cond = conds.lsp },

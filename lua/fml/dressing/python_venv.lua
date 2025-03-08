@@ -2,7 +2,6 @@ local __module_name__ = "fml.dressing.python_venv" ---@type string
 
 local env = require("eve.builtin.env")
 local fn = require("eve.builtin.fn")
-local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local clp = require("eve.constant.lang.python")
 local state = require("eve.state")
@@ -38,12 +37,7 @@ end
 local function hook_pyright(venv_path, venv_python)
   local client = vim.lsp.get_clients({ name = "pyright" })[1]
   if client then
-    if client.settings then
-      client.settings = vim.tbl_deep_extend("force", client.settings, { python = { pythonPath = venv_python } })
-    else
-      client.config.settings =
-        vim.tbl_deep_extend("force", client.config.settings, { python = { pythonPath = venv_python } })
-    end
+    client.settings.python.pythonPath = venv_python
     client.notify("workspace/didChangeConfiguration", { settings = nil })
   end
 end
@@ -99,11 +93,10 @@ local M = {}
 ---@param venv_path                     string
 ---@return nil
 function M.activate_venv(venv_path)
-  local python_name = env.IS_WIN and "python.exe" or "python" ---@type string
-  local python_parent_path = env.IS_WIN and "Scripts" or "bin" ---@type string
-
-  local new_bin_path = path.join(venv_path, python_parent_path) ---@type string
-  local venv_python = path.join(new_bin_path, python_name) ---@type string
+  local venv_python, bin_path = state.lsp.get_python_bin_path() ---@type string|nil, string|nil
+  if venv_python == nil or bin_path == nil then
+    return
+  end
 
   -- Make sure our python exists on disk before activating it, in case paths are wrong
   if vim.fn.executable(venv_python) == 0 then
@@ -113,13 +106,6 @@ function M.activate_venv(venv_path)
       message = "The python path '" .. venv_python .. "' does not exist.",
     })
     return
-  end
-
-  local ok, dap_python = pcall(require, "dap-python")
-  if ok and dap_python then
-    dap_python.resolve_python = function()
-      return venv_python
-    end
   end
 
   reporter.info({
@@ -142,9 +128,9 @@ function M.activate_venv(venv_path)
   end
 
   -- Add new bin path to path
-  local new_system_path = new_bin_path .. env.PATH_ENV_SEP .. current_system_path
+  local new_system_path = bin_path .. env.PATH_ENV_SEP .. current_system_path
   vim.fn.setenv("PATH", new_system_path)
-  _current_bin_path = new_bin_path
+  _current_bin_path = bin_path
 
   -- Set VIRTUAL_ENV
   -- Set CONDA_PREFIX instead if we are on Windows and a conda environment is activated

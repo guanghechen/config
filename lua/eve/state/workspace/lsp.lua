@@ -1,3 +1,4 @@
+local env = require("eve.builtin.env")
 local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
 
@@ -12,6 +13,8 @@ local Observable = require("eve.collection.observable")
 ---@field public inlay_hints            eve.collection.IObservable
 ---@field public python_venv_path       eve.collection.IObservable
 ---@field public spellcheck             eve.collection.IObservable
+---
+---@field public get_python_bin_path    fun(): string|nil, string|nil
 
 ---@class eve.state.lsp
 ---@field public defaults               fun(): eve.state.lsp.data
@@ -78,12 +81,28 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.lsp.data
 
   if _state == nil then
+    local python_venv_path = Observable.from_value(data.python_venv_path)
+
     ---@type eve.state.lsp.state
     _state = {
       code_lens = Observable.from_value(data.code_lens),
       inlay_hints = Observable.from_value(data.inlay_hints),
-      python_venv_path = Observable.from_value(data.python_venv_path),
+      python_venv_path = python_venv_path,
       spellcheck = Observable.from_value(data.spellcheck),
+      ---@return string|nil
+      get_python_bin_path = function()
+        local venv_path = python_venv_path:snapshot() ---@type string|nil
+        if venv_path == nil then
+          return nil, nil
+        end
+
+        local python_name = env.IS_WIN and "python.exe" or "python" ---@type string
+        local python_parent_path = env.IS_WIN and "Scripts" or "bin" ---@type string
+
+        local bin_path = path.join(venv_path, python_parent_path) ---@type string
+        local python_path = path.join(bin_path, python_name) ---@type string
+        return python_path, bin_path
+      end,
     }
     return _state
   end
