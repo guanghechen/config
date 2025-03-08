@@ -343,6 +343,10 @@ return {
           apply_all = "A",
           apply_cursor = "a",
           close = { "q" },
+          close_from_input = {
+            normal = "q",
+            insert = "<C-d>",
+          },
           edit_user_request = "e",
           remove_file = "d",
           retry_user_request = "r",
