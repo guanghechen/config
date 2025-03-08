@@ -1,7 +1,5 @@
 local G = require("eve.builtin.G")
-local env = require("eve.builtin.env")
 local fn = require("eve.builtin.fn")
-local tmux = require("eve.builtin.tmux")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
@@ -136,6 +134,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
+  local enable_preview = type(props.fetch_preview_data) == "function" ---@type boolean
   local context = props.context ---@type fml.ux.search.IContext
   local common_keymaps = state.widget.get_keymaps(self, command.context_winnr) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
@@ -211,18 +210,6 @@ function M.new(props)
     end,
     focus_right = function()
       context:focus_right()
-    end,
-    focus_left_tmux = function()
-      local is_zen_mode = state.status.tmux_zen_mode:snapshot() ---@type boolean
-      if not is_zen_mode then
-        tmux.change_pane("h")
-      end
-    end,
-    focus_right_tmux = function()
-      local is_zen_mode = state.status.tmux_zen_mode:snapshot() ---@type boolean
-      if not is_zen_mode then
-        tmux.change_pane("l")
-      end
     end,
     focus_input = function()
       context:focus_input()
@@ -347,20 +334,7 @@ function M.new(props)
       desc = "search: focus down",
     },
     {
-      modes = { "i", "n", "v" },
-      key = "<C-a>k",
-      aliases = { "<D-k>", "<M-k>" },
-      callback = actions.focus_main,
-      desc = "search: focus up",
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-a>h",
-      aliases = { "<D-h>", "<M-h>" },
-      callback = env.IS_TMUX and actions.focus_left_tmux or fn.noop,
-      desc = "search: focus left",
-    },
-    {
+      disabled = not enable_preview,
       modes = { "i", "n", "v" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
@@ -386,26 +360,13 @@ function M.new(props)
   local default_main_keymaps = {
     {
       modes = { "i", "n", "v" },
-      key = "<C-a>j",
-      aliases = { "<D-j>", "<M-j>" },
-      callback = actions.focus_input,
-      desc = "search: focus down",
-    },
-    {
-      modes = { "i", "n", "v" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
       callback = actions.focus_input,
       desc = "search: focus up",
     },
     {
-      modes = { "i", "n", "v" },
-      key = "<C-a>h",
-      aliases = { "<D-h>", "<M-h>" },
-      callback = env.IS_TMUX and actions.focus_left_tmux or fn.noop,
-      desc = "search: focus left",
-    },
-    {
+      disabled = not enable_preview,
       modes = { "i", "n", "v" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
@@ -481,13 +442,6 @@ function M.new(props)
       aliases = { "<D-h>", "<M-h>" },
       callback = actions.focus_left,
       desc = "search: focus left",
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-a>j",
-      aliases = { "<D-j>", "<M-j>" },
-      callback = env.IS_TMUX and actions.focus_right_tmux or fn.noop,
-      desc = "search: focus right",
     },
     {
       disabled = not context.multiple,
@@ -587,7 +541,7 @@ function M.new(props)
 
   ---@type fml.ux.search.IPreview|nil
   local preview = nil
-  if props.fetch_preview_data then
+  if enable_preview and props.fetch_preview_data then
     preview = SearchPreview.new({
       context = context,
       keymaps = preview_keymaps,
