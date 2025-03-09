@@ -62,9 +62,8 @@ local toggle_item_map = {
   },
   hipatterns_local = {
     title = "hipatterns (local)",
-    snapshot = function(context)
-      local enabled = require("mini.hipatterns").is_buf_enabled(context.bufnr) ---@type boolean
-      return enabled and "true" or "false", "Boolean"
+    snapshot = function()
+      return "unknown", "Boolean"
     end,
     action = function(context)
       require("mini.hipatterns").toggle(context.bufnr)
