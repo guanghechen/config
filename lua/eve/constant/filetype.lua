@@ -4,13 +4,19 @@ local M = {}
 M.AERIAL = "aerial"
 M.AVANTE = "Avante"
 M.AVANTE_INPUT = "AvanteInput"
+M.AVANTE_SELECTED_FILES = "AvanteSelectedFiles"
 M.BIGFILE = "bigfile"
 M.COPILOT_CHAT = "copilot-chat"
 M.CMP_MENU = "cmp_menu"
 M.CHECKHEALTH = "checkhealth"
 M.DAP_FLOAT = "dap-float"
 M.DAP_REPL = "dap-repl"
+M.DAP_UI_BREAKPOINTS = "dapui_breakpoints"
+M.DAP_UI_CONSOLE = "dapui_console"
 M.DAP_UI_HOVER = "dapui_hover"
+M.DAP_UI_SCOPES = "dapui_scopes"
+M.DAP_UI_STACKS = "dapui_stacks"
+M.DAP_UI_WATCHES = "dapui_watches"
 M.DIFFVIEW_FILES = "DiffviewFiles"
 M.DIFFVIEW_FILE_HISTORY = "DiffviewFileHistory"
 M.FLASH_PROMPT = "flash_prompt"
@@ -100,12 +106,17 @@ local filetypes = {
   disable_autopairs = {
     [M.AERIAL] = true,
     [M.AVANTE] = true,
-    [M.AVANTE_INPUT] = true,
+    [M.AVANTE_SELECTED_FILES] = true,
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
     [M.DAP_REPL] = true,
+    [M.DAP_UI_BREAKPOINTS] = true,
+    [M.DAP_UI_CONSOLE] = true,
     [M.DAP_UI_HOVER] = true,
+    [M.DAP_UI_SCOPES] = true,
+    [M.DAP_UI_STACKS] = true,
+    [M.DAP_UI_WATCHES] = true,
     [M.DIFFVIEW_FILE_HISTORY] = true,
     [M.DIFFVIEW_FILES] = true,
     [M.GITCOMMIT] = true,
@@ -144,11 +155,17 @@ local filetypes = {
     [M.AERIAL] = true,
     [M.AVANTE] = true,
     [M.AVANTE_INPUT] = true,
+    [M.AVANTE_SELECTED_FILES] = true,
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
     [M.DAP_REPL] = true,
+    [M.DAP_UI_BREAKPOINTS] = true,
+    [M.DAP_UI_CONSOLE] = true,
     [M.DAP_UI_HOVER] = true,
+    [M.DAP_UI_SCOPES] = true,
+    [M.DAP_UI_STACKS] = true,
+    [M.DAP_UI_WATCHES] = true,
     [M.DIFFVIEW_FILE_HISTORY] = true,
     [M.DIFFVIEW_FILES] = true,
     [M.GITCOMMIT] = true,
@@ -176,15 +193,32 @@ local filetypes = {
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
   },
+  no_customized_winline = {
+    [M.AVANTE] = true,
+    [M.AVANTE_INPUT] = true,
+    [M.AVANTE_SELECTED_FILES] = true,
+    [M.DAP_REPL] = true,
+    [M.DAP_UI_BREAKPOINTS] = true,
+    [M.DAP_UI_CONSOLE] = true,
+    [M.DAP_UI_SCOPES] = true,
+    [M.DAP_UI_STACKS] = true,
+    [M.DAP_UI_WATCHES] = true,
+  },
   no_ibl = {
     [M.AERIAL] = true,
     [M.AVANTE] = true,
     [M.AVANTE_INPUT] = true,
+    [M.AVANTE_SELECTED_FILES] = true,
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
     [M.DAP_REPL] = true,
+    [M.DAP_UI_BREAKPOINTS] = true,
+    [M.DAP_UI_CONSOLE] = true,
     [M.DAP_UI_HOVER] = true,
+    [M.DAP_UI_SCOPES] = true,
+    [M.DAP_UI_STACKS] = true,
+    [M.DAP_UI_WATCHES] = true,
     [M.DIFFVIEW_FILE_HISTORY] = true,
     [M.DIFFVIEW_FILES] = true,
     [M.GITCOMMIT] = true,
@@ -234,11 +268,17 @@ local filetypes = {
     [M.AERIAL] = true,
     [M.AVANTE] = true,
     [M.AVANTE_INPUT] = true,
+    [M.AVANTE_SELECTED_FILES] = true,
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
     [M.DAP_REPL] = true,
+    [M.DAP_UI_BREAKPOINTS] = true,
+    [M.DAP_UI_CONSOLE] = true,
     [M.DAP_UI_HOVER] = true,
+    [M.DAP_UI_SCOPES] = true,
+    [M.DAP_UI_STACKS] = true,
+    [M.DAP_UI_WATCHES] = true,
     [M.DIFFVIEW_FILE_HISTORY] = true,
     [M.DIFFVIEW_FILES] = true,
     [M.GITCOMMIT] = true,
@@ -265,10 +305,6 @@ local filetypes = {
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
-  },
-  no_customized_winline = {
-    [M.AVANTE] = true,
-    [M.DAP_REPL] = true,
   },
   quitable_with_q = {
     [M.AERIAL] = true,
@@ -367,19 +403,19 @@ function M.get_quitable_with_q_filetypes()
   return vim.tbl_keys(filetypes.quitable_with_q)
 end
 
+function M.is_no_customized_winline_filetype(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.no_customized_winline[filetype]
+end
+
 ---@return boolean
 function M.is_no_ibl_filetype(filetype)
   if filetype == nil or #filetype < 1 then
     return true
   end
   return filetypes.no_ibl[filetype]
-end
-
-function M.is_no_customized_winline_filetype(filetype)
-  if filetype == nil or #filetype < 1 then
-    return false
-  end
-  return filetypes.no_customized_winline[filetype]
 end
 
 ---@param filetype                      string|nil
