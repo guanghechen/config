@@ -16,7 +16,7 @@ if (conda env list | Select-String -Pattern "^lemon\s") {
     Write-Host "[setup miniforge] creating 'lemon' env with conda..." -ForegroundColor DarkBlue
     conda create --yes --name lemon python=3.12
     conda activate lemon
-    pip install httpie ipython you-get
+    pip install debugpy httpie ipython you-get
 }
 
 # Setup ipython configuration
