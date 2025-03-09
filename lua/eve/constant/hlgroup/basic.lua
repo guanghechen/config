@@ -181,8 +181,8 @@ local function gen_hlgroup_map(context)
     Visual = { bg = cs.mix(bg_main, c.brightAqua, 40), blend = 50, reverse = false },
     VisualNOS = { link = "Visual" },
     WildMenu = { fg = c.blue, bg = c.bg2, bold = true },
-    WinBar = { fg = c.bg2, bg = c.bg2 },
-    WinBarNC = { fg = c.fg3, bg = c.bg3 },
+    WinBar = { fg = c.blue, bg = "none" },
+    WinBarNC = { fg = c.blue, bg = "none" },
     WinSeparator = { fg = c.bg4, bg = t and "none" or c.bg0 },
     WinSeparatorActive = { fg = c.brightOrange, bg = t and "none" or c.bg0 },
   }
