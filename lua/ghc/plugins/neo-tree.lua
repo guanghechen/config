@@ -25,7 +25,7 @@ local function refresh_filesystem(state)
   require("neo-tree.sources.manager").refresh(state.name)
 end
 
--- Sorts files and directories descendantly.
+-- Sorts files and directories alphabetically with directories first.
 local function sort_function(a, b)
   if a.type == b.type then
     return a.path < b.path
@@ -237,6 +237,22 @@ return {
     filesystem = {
       bind_to_cwd = false,
       use_libuv_file_watcher = true,
+      commands = {
+        avante_add_files = function(state)
+          local node = state.tree:get_node()
+          local filepath = node:get_id()
+          local relative_path = require("avante.utils").relative_path(filepath)
+          local sidebar = require("avante").get()
+          local open = sidebar:is_open()
+          -- ensure avante sidebar is open
+          if not open then
+            require("avante.api").ask()
+            sidebar = require("avante").get()
+          end
+          sidebar.file_selector:add_selected_file(relative_path)
+          sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
+        end,
+      },
       filtered_items = {
         visible = false, -- when true, they will just be displayed differently than normal items
         hide_dotfiles = false,
@@ -271,6 +287,7 @@ return {
       group_empty_dirs = true, -- when true, empty folders will be grouped together
       window = {
         mappings = {
+          ["oa"] = "avante_add_files",
           ["<C-a>r"] = refresh_filesystem,
           ["<D-r"] = refresh_filesystem,
           ["<M-r>"] = refresh_filesystem,
