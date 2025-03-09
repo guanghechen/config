@@ -149,6 +149,7 @@ M.dap = {
   Breakpoint = "",
   BreakpointCondition = "",
   BreakpointRejected = "",
+  Disconnect = "",
   LogPoint = ".>",
   Pause = "",
   Play = "",

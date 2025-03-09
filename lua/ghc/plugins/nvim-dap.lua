@@ -21,7 +21,9 @@ end
 return {
   "nvim-dap",
   dependencies = {
+    "nvim-nio",
     "nvim-dap-ui",
+    "nvim-dap-python",
     "nvim-dap-virtual-text",
   },
   -- stylua: ignore start

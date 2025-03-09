@@ -9,6 +9,7 @@ M.COPILOT_CHAT = "copilot-chat"
 M.CMP_MENU = "cmp_menu"
 M.CHECKHEALTH = "checkhealth"
 M.DAP_FLOAT = "dap-float"
+M.DAP_REPL = "dap-repl"
 M.DAP_UI_HOVER = "dapui_hover"
 M.DIFFVIEW_FILES = "DiffviewFiles"
 M.DIFFVIEW_FILE_HISTORY = "DiffviewFileHistory"
@@ -103,6 +104,7 @@ local filetypes = {
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
+    [M.DAP_REPL] = true,
     [M.DAP_UI_HOVER] = true,
     [M.DIFFVIEW_FILE_HISTORY] = true,
     [M.DIFFVIEW_FILES] = true,
@@ -145,6 +147,7 @@ local filetypes = {
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
+    [M.DAP_REPL] = true,
     [M.DAP_UI_HOVER] = true,
     [M.DIFFVIEW_FILE_HISTORY] = true,
     [M.DIFFVIEW_FILES] = true,
@@ -180,6 +183,7 @@ local filetypes = {
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
+    [M.DAP_REPL] = true,
     [M.DAP_UI_HOVER] = true,
     [M.DIFFVIEW_FILE_HISTORY] = true,
     [M.DIFFVIEW_FILES] = true,
@@ -233,6 +237,7 @@ local filetypes = {
     [M.CHECKHEALTH] = true,
     [M.COPILOT_CHAT] = true,
     [M.DAP_FLOAT] = true,
+    [M.DAP_REPL] = true,
     [M.DAP_UI_HOVER] = true,
     [M.DIFFVIEW_FILE_HISTORY] = true,
     [M.DIFFVIEW_FILES] = true,
@@ -260,6 +265,10 @@ local filetypes = {
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
+  },
+  no_customized_winline = {
+    [M.AVANTE] = true,
+    [M.DAP_REPL] = true,
   },
   quitable_with_q = {
     [M.AERIAL] = true,
@@ -364,6 +373,13 @@ function M.is_no_ibl_filetype(filetype)
     return true
   end
   return filetypes.no_ibl[filetype]
+end
+
+function M.is_no_customized_winline_filetype(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.no_customized_winline[filetype]
 end
 
 ---@param filetype                      string|nil

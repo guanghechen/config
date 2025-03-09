@@ -40,7 +40,7 @@ sd(M.DAP_PAUSE,                   { text = icons.dap.Pause,               texthl
 sd(M.DAP_PLAY,                    { text = icons.dap.Play,                texthl = "f_dap_play",                  linehl = "f_dap_play_line",                 numhl = "f_dap_play_lnum",                 })
 sd(M.DAP_RUN_LAST,                { text = icons.dap.RunLast,             texthl = "f_dap_run_last",              linehl = "f_dap_run_last_line",             numhl = "f_dap_run_last_lnum",             })
 sd(M.DAP_STEP_BACK,               { text = icons.dap.StepBack,            texthl = "f_dap_step_back",             linehl = "f_dap_step_back_line",            numhl = "f_dap_step_back_lnum",            })
-sd(M.DAP_STEP_INTO,               { text = icons.dap.StepInto ,           texthl = "f_dap_step_into",             linehl = "f_dap_step_into_line",            numhl = "f_dap_step_into_lnum",            })
+sd(M.DAP_STEP_INTO,               { text = icons.dap.StepInto,            texthl = "f_dap_step_into",             linehl = "f_dap_step_into_line",            numhl = "f_dap_step_into_lnum",            })
 sd(M.DAP_STEP_OUT,                { text = icons.dap.StepOut,             texthl = "f_dap_step_out",              linehl = "f_dap_step_out_line",             numhl = "f_dap_step_out_lnum",             })
 sd(M.DAP_STEP_OVER,               { text = icons.dap.StepOver,            texthl = "f_dap_step_over",             linehl = "f_dap_step_over_line",            numhl = "f_dap_step_over_lnum",            })
 sd(M.DAP_STOPPED,                 { text = icons.dap.Stopped,             texthl = "f_dap_stopped",               linehl = "f_dap_stopped_line",              numhl = "f_dap_stopped_lnum",              })

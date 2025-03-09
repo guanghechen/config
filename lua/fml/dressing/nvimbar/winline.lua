@@ -107,6 +107,11 @@ local function render(winnr)
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  if ft.is_no_customized_winline_filetype(filetype) then
+    return
+  end
+
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
   if filepath:sub(1, 11) == "diffview://" then
@@ -143,7 +148,6 @@ local function render(winnr)
     return
   end
 
-  local filetype = vim.bo[bufnr].filetype ---@type string
   if ft.is_plain_file(filetype) then
     vim.wo[winnr].winbar = Nvimbar.txt(filepath, "f_wl_text")
     return

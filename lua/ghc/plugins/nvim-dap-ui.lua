@@ -1,13 +1,37 @@
+local icons = require("eve.constant.icon")
+
 return {
   "nvim-dap-ui",
-  dependencies = { "nvim-nio" },
+  dependencies = {
+    "nvim-nio",
+  },
   -- stylua: ignore start
   keys = {
     { "<leader>du", function() require("dapui").toggle({ }) end, desc = "dap: ui" },
     { "<leader>de", function() require("dapui").eval() end, desc = "dap: eval", mode = {"n", "v"} },
   },
   -- stylua: ignore end
-  opts = {},
+  opts = {
+    icons = {
+      expanded = icons.ui.ArrowOpen,
+      collapsed = icons.ui.ArrowClosed,
+      current_frame = icons.ui.ArrowPresent,
+    },
+    controls = {
+      enabled = true,
+      icons = {
+        pause = icons.dap.Pause .. " ",
+        play = icons.dap.Play .. " ",
+        rust_last = icons.dap.RunLast .. " ",
+        step_back = icons.dap.StepBack .. " ",
+        step_into = icons.dap.StepInto .. " ",
+        step_out = icons.dap.StepOut .. " ",
+        step_over = icons.dap.StepOver .. " ",
+        terminate = icons.dap.Terminate .. " ",
+        disconnect = icons.dap.Disconnect .. " ",
+      },
+    },
+  },
   config = function(_, opts)
     local dap = require("dap")
     local dapui = require("dapui")
