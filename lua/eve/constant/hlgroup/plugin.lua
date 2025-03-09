@@ -231,12 +231,15 @@ local function gen_hlgroup_map(context)
     CmpItemKindVariable = { fg = c.purple, bg = item_kind_bg },
     CmpItemMenu = { fg = c.fg4, italic = true },
 
-    ---! nvim-dap-ui
+    ---! nvim-dap
     DapBreakpoint = { fg = c.red },
     DapBreakpointCondition = { fg = c.yellow },
+    DapBreakpointRejected = { fg = c.fg4 },
     DapLogPoint = { fg = c.aqua },
     DapStopped = { fg = c.orange },
     DapStoppedLine = { default = true, link = "Visual" },
+
+    ---! nvim-dap-ui
     DapUIBreakpointsCurrentLine = { fg = c.green, bold = true },
     DapUIBreakpointsDisabledLine = { fg = c.fg4 },
     DapUIBreakpointsInfo = { fg = c.green },
