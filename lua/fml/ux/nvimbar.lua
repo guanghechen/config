@@ -15,7 +15,6 @@ local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 ---@field public winnr                  ?integer
 
 ---@class fml.ux.nvimbar.IContext
----@field public tabnr                  integer
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
 ---@field public cwd                    string
@@ -151,13 +150,12 @@ end
 ---@return fml.ux.nvimbar.IContext
 local function build_context(preset_context)
   local m = modes_map[vim.api.nvim_get_mode().mode]
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr = preset_context.winnr or vim.api.nvim_get_current_win() ---@type integer
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local cwd = path.cwd() ---@type string
-  local filepath = vim.fn.expand("%:p") ---@type string
-  local filename = vim.fn.expand("%:t") ---@type string
-  local filetype = vim.bo.filetype ---@type string
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local filename = path.basename(filepath) ---@type string
+  local filetype = vim.bo[bufnr].filetype ---@type string
   local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
 
   local git = vim.b[bufnr].gitsigns_status_dict
@@ -165,7 +163,6 @@ local function build_context(preset_context)
 
   ---@type fml.ux.nvimbar.IContext
   local context = {
-    tabnr = tabnr,
     winnr = winnr,
     bufnr = bufnr,
     cwd = cwd,

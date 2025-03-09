@@ -244,7 +244,7 @@ function M.bufs(position)
     atomic = false,
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
-      local tabnr = context.tabnr ---@type integer
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local bufs = state.tab.list_valid_bufs(tabnr) ---@type eve.t.state.tab.buf.state[]
       if #bufs < 1 then
         return "", "", false
@@ -758,8 +758,10 @@ function M.filename(position)
     atomic = true,
     render = function(context)
       local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      local is_mod = vim.bo[context.bufnr].modified ---@type boolean
+      local text_mod = is_mod and " " or "" ---@type string
       if context.winnr ~= winnr_cur then
-        local text = context.fileicon .. " " .. context.filename ---@type string
+        local text = context.fileicon .. " " .. context.filename .. text_mod ---@type string
         local hl_text = txt(text, hln_blur_text) ---@type string
         return text, hl_text, true
       end
@@ -768,7 +770,7 @@ function M.filename(position)
       local hl_text_fileicon = txt(text_fileicon, context.fileicon_hl) ---@type string
 
       local hln_text = hln_text_prefix .. context.mode ---@type string
-      local text_filename = context.filename ---@type string
+      local text_filename = context.filename .. text_mod ---@type string
       local hl_text_filename = txt(text_filename, hln_text)
 
       local text = text_fileicon .. text_filename ---@type string
