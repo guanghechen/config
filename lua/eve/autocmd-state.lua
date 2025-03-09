@@ -9,7 +9,7 @@ local state = require("eve.state")
 state.refresh()
 
 vim.api.nvim_create_autocmd("VimLeavePre", {
-  group = fn.augroup("on_vim_leave_pre"),
+  group = fn.augroup("state_on_vim_leave_pre"),
   once = true,
   callback = function()
     state.dispose()
@@ -17,7 +17,7 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 })
 
 vim.api.nvim_create_autocmd("VimEnter", {
-  group = fn.augroup("on_vim_enter"),
+  group = fn.augroup("state_on_vim_enter"),
   callback = function()
     local cwd = path.cwd() ---@type string
     local existed_filepaths = {} ---@type table<string, boolean>
@@ -49,7 +49,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
 })
 
 vim.api.nvim_create_autocmd("TabEnter", {
-  group = fn.augroup("on_tab_enter"),
+  group = fn.augroup("state_on_tab_enter"),
   callback = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     state.tab.tab_history:push(tabnr)
@@ -59,7 +59,7 @@ vim.api.nvim_create_autocmd("TabEnter", {
 })
 
 vim.api.nvim_create_autocmd("TabClosed", {
-  group = fn.augroup("on_tab_closed"),
+  group = fn.augroup("state_on_tab_closed"),
   callback = function()
     local tabnr_last = state.tab.tab_history:present() ---@type integer|nil
     vim.schedule(function()
@@ -74,7 +74,7 @@ vim.api.nvim_create_autocmd("TabClosed", {
 })
 
 vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
-  group = fn.augroup("on_win_or_buf_enter"),
+  group = fn.augroup("state_on_win_or_buf_enter"),
   callback = function(arg)
     local bufnr = arg.buf ---@type integer
     local winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -89,7 +89,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
 })
 
 vim.api.nvim_create_autocmd("WinClosed", {
-  group = fn.augroup("on_win_closed"),
+  group = fn.augroup("state_on_win_closed"),
   callback = function(args)
     local winnr = type(args) == "table" and args.file or nil ---@type integer|nil
     if type(winnr) == "number" then
@@ -102,7 +102,7 @@ vim.api.nvim_create_autocmd("WinClosed", {
 })
 
 vim.api.nvim_create_autocmd("ModeChanged", {
-  group = fn.augroup("on_mode_changed"),
+  group = fn.augroup("state_on_mode_changed"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     state.status.dirty_winline_nr:next(winnr)
@@ -112,7 +112,7 @@ vim.api.nvim_create_autocmd("ModeChanged", {
 })
 
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
-  group = fn.augroup("on_diagnostic_changed"),
+  group = fn.augroup("state_on_diagnostic_changed"),
   callback = function()
     state.status.dirtier_statusline:mark_dirty()
     state.status.dirtier_tabline:mark_dirty()
@@ -120,7 +120,7 @@ vim.api.nvim_create_autocmd("DiagnosticChanged", {
 })
 
 vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "BufWritePost" }, {
-  group = fn.augroup("on_content_changed"),
+  group = fn.augroup("state_on_content_changed"),
   callback = function()
     state.status.dirtier_statusline:mark_dirty()
     state.status.dirtier_tabline:mark_dirty()
@@ -128,7 +128,7 @@ vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "BufWritePost" }, {
 })
 
 vim.api.nvim_create_autocmd("CursorHold", {
-  group = fn.augroup("on_cursor_hold"),
+  group = fn.augroup("state_on_cursor_hold"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     state.status.dirty_winline_nr:next(winnr)
@@ -138,7 +138,7 @@ vim.api.nvim_create_autocmd("CursorHold", {
 
 local lsp_progress_spinners = { "", "", "", "󰪞", "󰪟", "󰪠", "󰪢", "󰪣", "󰪤", "󰪥" }
 vim.api.nvim_create_autocmd("LspProgress", {
-  group = fn.augroup("on_lsp_progress"),
+  group = fn.augroup("state_on_lsp_progress"),
   callback = function(args)
     local data = args.data.params.value
     local progress = ""
@@ -167,7 +167,7 @@ vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
 
 ---! Auto resize splits when window got resized.
 vim.api.nvim_create_autocmd("VimResized", {
-  group = fn.augroup("on_vim_resized"),
+  group = fn.augroup("state_on_vim_resized"),
   callback = function()
     ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
     local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -196,7 +196,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 })
 
 vim.api.nvim_create_autocmd("WinResized", {
-  group = fn.augroup("on_win_resized"),
+  group = fn.augroup("state_on_win_resized"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     state.status.dirty_winline_nr:next(winnr)

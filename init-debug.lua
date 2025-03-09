@@ -3,8 +3,7 @@ eve.setup_patches()
 eve.setup_workspace()
 require("eve.option")
 require("eve.keymap")
-require("eve.autocmd")
-require("eve.autocmd-filetype")
+require("integration.neovim.autocmd")
 
 local default_storage = eve.get_default_storage() ---@type eve.state.storage
 local storage = { editor = default_storage.editor } ---@type eve.state.storage

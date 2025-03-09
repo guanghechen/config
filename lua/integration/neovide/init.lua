@@ -3,8 +3,7 @@ eve.setup_patches()
 eve.setup_workspace()
 require("eve.option")
 require("eve.keymap")
-require("eve.autocmd")
-require("eve.autocmd-filetype")
+require("integration.neovim.autocmd")
 
 eve.setup_state()
 require("eve.autocmd-state")
@@ -31,7 +30,6 @@ require("fml.dressing.winsep")
 
 require("ghc.command")
 require("ghc.plugin")
-require("integration.neovide.autocmd")
 pcall(require, "integration.local")
 
 ---! Reload session if not specify file and current directory is a git repository.
