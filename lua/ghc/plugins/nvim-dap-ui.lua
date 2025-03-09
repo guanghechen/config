@@ -14,11 +14,18 @@ return {
     dapui.setup(opts)
     dap.listeners.after.event_initialized["dapui_config"] = function()
       dapui.open({})
+      vim.cmd("DapVirtualTextEnable")
     end
     dap.listeners.before.event_terminated["dapui_config"] = function()
+      vim.cmd("DapVirtualTextDisable")
       dapui.close({})
     end
     dap.listeners.before.event_exited["dapui_config"] = function()
+      vim.cmd("DapVirtualTextDisable")
+      dapui.close({})
+    end
+    dap.listeners.before.disconnect["dapui_config"] = function()
+      vim.cmd("DapVirtualTextDisable")
       dapui.close({})
     end
   end,

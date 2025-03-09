@@ -21,7 +21,6 @@ end
 return {
   "nvim-dap",
   dependencies = {
-    "mason-nvim-dap",
     "nvim-dap-ui",
     "nvim-dap-virtual-text",
   },
@@ -47,15 +46,13 @@ return {
   },
   -- stylua: ignore end
   config = function()
-    vim.api.nvim_set_hl(0, "DapStoppedLine", { default = true, link = "Visual" })
-
-    local json = require("plenary.json")
-
     -- setup dap config by VsCode launch.json file
     local vscode = require("dap.ext.vscode")
     local js_filetypes = { "typescript", "javascript", "typescriptreact", "javascriptreact" }
     vscode.type_to_filetypes["node"] = js_filetypes
     vscode.type_to_filetypes["pwa-node"] = js_filetypes
+
+    local json = require("plenary.json")
     vscode.json_decode = function(str)
       return vim.json.decode(json.json_strip_comments(str))
     end

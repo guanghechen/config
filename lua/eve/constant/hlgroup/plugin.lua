@@ -236,6 +236,7 @@ local function gen_hlgroup_map(context)
     DapBreakpointCondition = { fg = c.yellow },
     DapLogPoint = { fg = c.aqua },
     DapStopped = { fg = c.orange },
+    DapStoppedLine = { default = true, link = "Visual" },
 
     ---! nvim-dap-ui
     DapUIBreakPointsCurrentLine = { fg = c.green, bold = true },
