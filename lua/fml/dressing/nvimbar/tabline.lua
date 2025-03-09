@@ -62,38 +62,30 @@ tabline
 --
 -- :place("right", c.cwd(position), 100)
 
--- ---@return boolean
--- local function should_show_tabline()
---   local devmode = state.flight.devmode:snapshot() ---@type boolean
---   if devmode then
---     return true
---   end
---
---   local tab_count = vim.fn.tabpagenr("$") ---@type integer
---   if tab_count > 1 then
---     return true
---   end
---
---   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
---   local meta = state.tab.resolve(tabnr)
---   return meta == nil or #meta.bufs > 1
--- end
---
--- dirtier:subscribe(Subscriber.new({
---   on_next = function()
---     if should_show_tabline() then
---       vim.o.showtabline = 2
---       tabline:render()
---     else
---       vim.o.showtabline = 0
---     end
---   end,
--- }))
+---@return boolean
+local function should_show_tabline()
+  local devmode = state.flight.devmode:snapshot() ---@type boolean
+  if devmode then
+    return true
+  end
+
+  local tab_count = vim.fn.tabpagenr("$") ---@type integer
+  if tab_count > 1 then
+    return true
+  end
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta = state.tab.resolve(tabnr)
+  return meta == nil or #meta.bufs > 1
+end
 
 dirtier:subscribe(Subscriber.new({
   on_next = function()
-    if dirtier:is_dirty() then
+    if should_show_tabline() then
+      vim.o.showtabline = 2
       tabline:render()
+    else
+      vim.o.showtabline = 0
     end
   end,
 }))
