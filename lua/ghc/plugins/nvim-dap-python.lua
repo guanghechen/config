@@ -12,7 +12,7 @@ return {
   },
   -- stylua: ignore end
   config = function()
-    local dap_python = pcall(require, "dap-python")
+    local dap_python = require("dap-python")
     local python_path = state.lsp.get_python_bin_path() ---@type string|nil
     dap_python.setup(python_path)
     dap_python.resolve_python = function()
