@@ -6,7 +6,7 @@ function _ghc_tmux_status_load_ {
   # Determine platform
   if [[ "$(uname)" == "Darwin" ]]; then
     platform="mac"
-  elif grep -q Microsoft /proc/version 2>/dev/null; then
+  elif grep -qEi "(Microsoft|WSL)" /proc/version; then
     platform="wsl"
   else
     platform="nix"
