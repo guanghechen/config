@@ -1,3 +1,4 @@
+local state = require("eve.state")
 local locate_mason_pkg_path = require("ghc.lsp.common").locate_mason_pkg_path
 
 ---@param config {type?:string, args?:string[]|fun():string[]?}
@@ -18,12 +19,156 @@ local function get_args(config)
   return config
 end
 
+---@return nil
+local function setup_node()
+  local js_filetypes = { "typescript", "javascript", "typescriptreact", "javascriptreact" }
+  local vscode = require("dap.ext.vscode")
+  vscode.type_to_filetypes["node"] = js_filetypes
+  vscode.type_to_filetypes["pwa-node"] = js_filetypes
+
+  local dap = require("dap")
+  if not dap.adapters["pwa-node"] then
+    require("dap").adapters["pwa-node"] = {
+      type = "server",
+      host = "localhost",
+      port = "${port}",
+      executable = {
+        command = "node",
+        -- 💀 Make sure to update this path to point to your installation
+        args = {
+          locate_mason_pkg_path("js-debug-adapter", "/js-debug/src/dapDebugServer.js"),
+          "${port}",
+        },
+      },
+    }
+  end
+  if not dap.adapters["node"] then
+    dap.adapters["node"] = function(cb, config)
+      if config.type == "node" then
+        config.type = "pwa-node"
+      end
+      local nativeAdapter = dap.adapters["pwa-node"]
+      if type(nativeAdapter) == "function" then
+        nativeAdapter(cb, config)
+      else
+        cb(nativeAdapter)
+      end
+    end
+  end
+
+  for _, language in ipairs(js_filetypes) do
+    if not dap.configurations[language] then
+      dap.configurations[language] = {
+        {
+          type = "pwa-node",
+          request = "launch",
+          name = "Launch file",
+          program = "${file}",
+          cwd = "${workspaceFolder}",
+        },
+        {
+          type = "pwa-node",
+          request = "attach",
+          name = "Attach",
+          processId = require("dap.utils").pick_process,
+          cwd = "${workspaceFolder}",
+        },
+      }
+    end
+  end
+end
+
+---@return nil
+local function setup_python()
+  local dap = require("dap")
+
+  local function resolve_python_path()
+    local python_path = state.lsp.get_python_bin_path() ---@type string|nil
+    return python_path
+  end
+
+  dap.adapters.debugpy = dap.adapters.python
+  dap.adapters.python = function(cb, config)
+    if config.request == "attach" then
+      local host = (config.connect or config).host or "127.0.0.1" ---@type string
+      local port = (config.connect or config).port ---@type integer|nil
+
+      local adapter = {
+        type = "server",
+        host = host,
+        port = assert(port, "`connect.port` is required for a python `attach` configuration"),
+        options = {
+          source_filetype = "python",
+        },
+      }
+      cb(adapter)
+    else
+      local adapter = {
+        type = "executable",
+        command = resolve_python_path(),
+        args = { "-m", "debugpy.adapter" },
+        options = {
+          source_filetype = "python",
+        },
+      }
+      cb(adapter)
+    end
+  end
+
+  dap.configurations.python = {
+    {
+      type = "python",
+      request = "attach",
+      name = "attach",
+      connect = function()
+        local host = vim.fn.input("host [127.0.0.1]: ")
+        host = host ~= "" and host or "127.0.0.1"
+        local port = tonumber(vim.fn.input("port [9527]: ")) or 5678
+        return { host = host, port = port }
+      end,
+    },
+    {
+      type = "python",
+      request = "launch",
+      name = "file",
+      program = "${file}",
+      console = "integratedTerminal",
+      pythonPath = resolve_python_path,
+    },
+    {
+      type = "python",
+      request = "launch",
+      name = "file:args",
+      program = "${file}",
+      console = "integratedTerminal",
+      args = function()
+        local text = vim.fn.input("args: ")
+        local utils = require("dap.utils")
+        if utils.splitstr then
+          return utils.splitstr(text)
+        end
+        return vim.split(text, " +")
+      end,
+      pythonPath = resolve_python_path,
+    },
+    {
+      type = "python",
+      request = "launch",
+      name = "file:doctest",
+      module = "doctest",
+      args = { "${file}" },
+      noDebug = true,
+      console = "integratedTerminal",
+      pythonPath = resolve_python_path,
+    },
+  }
+end
+
 return {
   "nvim-dap",
   dependencies = {
     "nvim-nio",
     "nvim-dap-ui",
-    "nvim-dap-python",
     "nvim-dap-virtual-text",
   },
   -- stylua: ignore start
@@ -50,64 +195,12 @@ return {
   config = function()
     -- setup dap config by VsCode launch.json file
     local vscode = require("dap.ext.vscode")
-    local js_filetypes = { "typescript", "javascript", "typescriptreact", "javascriptreact" }
-    vscode.type_to_filetypes["node"] = js_filetypes
-    vscode.type_to_filetypes["pwa-node"] = js_filetypes
-
     local json = require("plenary.json")
-    vscode.json_decode = function(str)
-      return vim.json.decode(json.json_strip_comments(str))
+    vscode.json_decode = function(text)
+      return vim.json.decode(json.json_strip_comments(text))
     end
 
-    local dap = require("dap")
-    if not dap.adapters["pwa-node"] then
-      require("dap").adapters["pwa-node"] = {
-        type = "server",
-        host = "localhost",
-        port = "${port}",
-        executable = {
-          command = "node",
-          -- 💀 Make sure to update this path to point to your installation
-          args = {
-            locate_mason_pkg_path("js-debug-adapter", "/js-debug/src/dapDebugServer.js"),
-            "${port}",
-          },
-        },
-      }
-    end
-    if not dap.adapters["node"] then
-      dap.adapters["node"] = function(cb, config)
-        if config.type == "node" then
-          config.type = "pwa-node"
-        end
-        local nativeAdapter = dap.adapters["pwa-node"]
-        if type(nativeAdapter) == "function" then
-          nativeAdapter(cb, config)
-        else
-          cb(nativeAdapter)
-        end
-      end
-    end
-
-    for _, language in ipairs(js_filetypes) do
-      if not dap.configurations[language] then
-        dap.configurations[language] = {
-          {
-            type = "pwa-node",
-            request = "launch",
-            name = "Launch file",
-            program = "${file}",
-            cwd = "${workspaceFolder}",
-          },
-          {
-            type = "pwa-node",
-            request = "attach",
-            name = "Attach",
-            processId = require("dap.utils").pick_process,
-            cwd = "${workspaceFolder}",
-          },
-        }
-      end
-    end
+    setup_node()
+    setup_python()
   end,
 }

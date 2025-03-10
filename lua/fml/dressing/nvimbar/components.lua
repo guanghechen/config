@@ -1126,15 +1126,22 @@ function M.python_env(position)
     name = "python_env",
     atomic = true,
     tight = true,
-    condition = function()
-      return python_venv ~= nil and python_version ~= nil
+    condition = function(context)
+      return context.filetype == "python" or (python_venv ~= nil and python_version ~= nil)
     end,
     will_change = function(_, prev_context)
       return prev_context == nil or dirty
     end,
     render = function()
       dirty = false
-      local text = python_version .. " (" .. python_venv .. ")  " ---@type string
+
+      local text ---@type string
+      if #python_version > 0 then
+        text = python_version .. " (" .. (python_venv or "unknown") .. ")  " ---@type string
+      else
+        text = "(" .. (python_venv or "unknown") .. ")  " ---@type string
+      end
+
       local hl_text = btn(txt(text, hln_text), fn_select_python_venv) ---@type string
       return text, hl_text, true
     end,

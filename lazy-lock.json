@@ -27,7 +27,6 @@
   "nui.nvim": { "branch": "nvim@nui.nvim", "commit": "8d3bce9764e627b62b07424e0df77f680d47ffdb" },
   "nvim-cmp": { "branch": "nvim@nvim-cmp", "commit": "c27370703e798666486e3064b64d59eaf4bdc6d5" },
   "nvim-dap": { "branch": "nvim@nvim-dap", "commit": "8228cb00ab0850e483f8d58cc39cc580c05738d6" },
-  "nvim-dap-python": { "branch": "nvim@nvim-dap-python", "commit": "e69a1f8486e063188fbcc028ffd8f76ee66b9248" },
   "nvim-dap-ui": { "branch": "nvim@nvim-dap-ui", "commit": "bc81f8d3440aede116f821114547a476b082b319" },
   "nvim-dap-virtual-text": { "branch": "nvim@nvim-dap-virtual-text", "commit": "df66808cd78b5a97576bbaeee95ed5ca385a9750" },
   "nvim-lint": { "branch": "nvim@nvim-lint", "commit": "6e9dd545a1af204c4022a8fcd99727ea41ffdcc8" },
