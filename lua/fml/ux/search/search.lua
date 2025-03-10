@@ -711,6 +711,10 @@ function M:create_wins_as_needed()
   local screen_width = vim.o.columns ---@type integer
   local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
+  local match_count = #context.items ---@type integer
+  local has_preview = vim.o.columns > 140 and self._preview ~= nil ---@type boolean
+  local has_main = match_count > 0 or has_preview ---@type boolean
+
   ---@type number
   local max_height = dimension.max_height <= 1 and math.floor(dimension.max_height * screen_height)
     or dimension.max_height
@@ -745,15 +749,16 @@ function M:create_wins_as_needed()
   end
   prefer_col = math.min(screen_width, math.max(0, prefer_col)) ---@type integer
 
-  local match_count = #context.items ---@type integer
-  local has_preview = self._preview ~= nil ---@type boolean
-  local has_main = match_count > 0 or has_preview ---@type boolean
-
   local width_preview = dimension.width_preview or width ---@type integer
   if width_preview < 1 then
     width_preview = math.floor(width_preview * screen_width)
   end
-  width_preview = has_preview and math.min(max_width - width - 2, math.max(10, width_preview)) or 0
+  width_preview = math.min(max_width - width - 2, math.max(10, width_preview))
+
+  if not has_preview then
+    width = width + width_preview
+    width_preview = 0
+  end
 
   local row = math.min(prefer_row, math.floor((screen_height - height) / 2) - 1) ---@type integer
   local col = math.min(prefer_col, math.floor((screen_width - width - width_preview - 2) / 2)) ---@type integer
@@ -803,7 +808,11 @@ function M:create_wins_as_needed()
     end
   end
 
-  if self._preview then
+  if not has_preview and winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
+    vim.api.nvim_win_close(winnr_preview, true)
+    winnr_preview = nil
+    context.winnr_preview = nil
+  elseif has_preview and self._preview then
     ---@type vim.api.keyset.win_config
     local wincfg_preview = {
       relative = "editor",
