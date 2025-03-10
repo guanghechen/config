@@ -166,9 +166,8 @@ end
 return {
   "nvim-dap",
   dependencies = {
-    "nvim-nio",
     "nvim-dap-ui",
-    "nvim-dap-virtual-text",
+    "nvim-nio",
   },
   -- stylua: ignore start
   keys = {

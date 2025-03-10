@@ -3,6 +3,7 @@ local icons = require("eve.constant.icon")
 return {
   "nvim-dap-ui",
   dependencies = {
+    "nvim-dap-virtual-text",
     "nvim-nio",
   },
   -- stylua: ignore start
