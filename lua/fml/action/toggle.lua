@@ -69,8 +69,40 @@ local toggle_item_map = {
       require("mini.hipatterns").toggle(context.bufnr)
     end,
   },
+  lsp_python_debug_host = {
+    title = "python debug host",
+    snapshot = function()
+      local host = state.lsp.python_debug_host:snapshot() ---@type string
+      if host == nil then
+        return "nil", "Keyword"
+      end
+      return host, "String"
+    end,
+    action = function()
+      local default_host = state.lsp.python_debug_host:snapshot() or "" ---@type string
+      local input_host = vim.fn.input("host [" .. default_host .. "]", default_host)
+      local host = #input_host > 0 and input_host or default_host ---@type string
+      state.lsp.python_debug_host:next(host)
+    end,
+  },
+  lsp_python_debug_port = {
+    title = "python debug port",
+    snapshot = function()
+      local port = state.lsp.python_debug_port:snapshot() ---@type integer
+      if port == nil then
+        return "nil", "Keyword"
+      end
+      return tostring(port), "Number"
+    end,
+    action = function()
+      local default_port = state.lsp.python_debug_port:snapshot() or 0 ---@type integer
+      local input_port = vim.fn.input("port [" .. tostring(default_port) .. "]", tostring(default_port))
+      local port = #input_port > 0 and tonumber(input_port) or default_port ---@type integer
+      state.lsp.python_debug_port:next(port)
+    end,
+  },
   lsp_python_venv = {
-    title = "python venv",
+    title = "python venv path",
     snapshot = function()
       local venv_path = state.lsp.python_venv_path:snapshot() ---@type string
       if venv_path == nil then
@@ -246,7 +278,7 @@ function M.list(context, arg)
       dimension = {
         row = 3,
         width = 64,
-        max_height = 40,
+        max_height = math.max(math.floor(vim.o.lines * 0.6), 24),
       },
       multiple = false,
       fetch_items = function()

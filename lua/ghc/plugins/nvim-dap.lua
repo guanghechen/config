@@ -121,9 +121,8 @@ local function setup_python()
       request = "attach",
       name = "attach",
       connect = function()
-        local host = vim.fn.input("host [127.0.0.1]: ")
-        host = host ~= "" and host or "127.0.0.1"
-        local port = tonumber(vim.fn.input("port [9527]: ")) or 5678
+        local host = state.lsp.python_debug_host:snapshot() ---@type string
+        local port = state.lsp.python_debug_port:snapshot() ---@type integer
         return { host = host, port = port }
       end,
     },

@@ -5,12 +5,16 @@ local Observable = require("eve.collection.observable")
 ---@class eve.state.lsp.data
 ---@field public code_lens              boolean
 ---@field public inlay_hints            boolean
+---@field public python_debug_host      string
+---@field public python_debug_port      integer
 ---@field public python_venv_path       string|nil
 ---@field public spellcheck             boolean
 
 ---@class eve.state.lsp.state
 ---@field public code_lens              eve.collection.IObservable
 ---@field public inlay_hints            eve.collection.IObservable
+---@field public python_debug_host      eve.collection.IObservable
+---@field public python_debug_port      eve.collection.IObservable
 ---@field public python_venv_path       eve.collection.IObservable
 ---@field public spellcheck             eve.collection.IObservable
 ---
@@ -34,6 +38,8 @@ function M.defaults()
   return {
     code_lens = is_git_repo,
     inlay_hints = is_git_repo,
+    python_debug_host = "127.0.0.1",
+    python_debug_port = 9527,
     python_venv_path = nil,
     spellcheck = is_repo_personal,
   }
@@ -49,6 +55,12 @@ function M.normalize(data)
     end
     if type(data.inlay_hints) == "boolean" then
       resolved.inlay_hints = data.inlay_hints
+    end
+    if type(data.python_debug_host) == "string" then
+      resolved.python_debug_host = data.python_debug_host
+    end
+    if type(data.python_debug_port) == "number" then
+      resolved.python_debug_port = data.python_debug_port
     end
     if type(data.python_venv_path) == "string" then
       resolved.python_venv_path = data.python_venv_path
@@ -70,6 +82,8 @@ function M.dump()
   return {
     code_lens = _state.code_lens:snapshot(),
     inlay_hints = _state.inlay_hints:snapshot(),
+    python_debug_host = _state.python_debug_host:snapshot(),
+    python_debug_port = _state.python_debug_port:snapshot(),
     python_venv_path = _state.python_venv_path:snapshot(),
     spellcheck = _state.spellcheck:snapshot(),
   }
@@ -87,8 +101,11 @@ function M.load(raw_data)
     _state = {
       code_lens = Observable.from_value(data.code_lens),
       inlay_hints = Observable.from_value(data.inlay_hints),
+      python_debug_host = Observable.from_value(data.python_debug_host),
+      python_debug_port = Observable.from_value(data.python_debug_port),
       python_venv_path = python_venv_path,
       spellcheck = Observable.from_value(data.spellcheck),
+
       ---@return string|nil
       get_python_bin_path = function()
         local venv_path = python_venv_path:snapshot() ---@type string|nil
@@ -109,6 +126,8 @@ function M.load(raw_data)
 
   _state.code_lens:next(data.code_lens)
   _state.inlay_hints:next(data.inlay_hints)
+  _state.python_debug_host:next(data.python_debug_host)
+  _state.python_debug_port:next(data.python_debug_port)
   _state.python_venv_path:next(data.python_venv_path)
   _state.spellcheck:next(data.spellcheck)
   return _state
