@@ -237,7 +237,7 @@ local function gen_hlgroup_map(context)
     DapBreakpointRejected = { fg = c.fg4 },
     DapLogPoint = { fg = c.aqua },
     DapStopped = { fg = c.orange },
-    DapStoppedLine = { default = true, bg = cs.mix(c.bg0, c.yellow, 80) },
+    DapStoppedLine = { default = true, bg = cs.mix(c.bg0, c.yellow, 40) },
 
     ---! nvim-dap-ui
     DapUIBreakpointsCurrentLine = { fg = c.green, bold = true },
@@ -281,6 +281,10 @@ local function gen_hlgroup_map(context)
     DapUIWatchesError = { fg = c.red },
     DapUIWatchesValue = { fg = c.green },
     DapUIWinSelect = { fg = c.aqua, bold = true },
+
+    ---! nvim-dap-virtual-text
+    NvimDapVirtualText = { fg = c.fg2, bg = cs.mix(c.bg0, c.orange, 30), italic = true },
+    NvimDapVirtualTextChanged = { fg = c.fg0, bg = cs.mix(c.bg0, c.orange, 30), italic = true },
 
     ---! nvim-notify
     NotifyERRORBorder = { fg = c.red, bg = t and c.bg0 or "none" },

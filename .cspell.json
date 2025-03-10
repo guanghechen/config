@@ -437,6 +437,7 @@
     "splitkeep",
     "splitstr",
     "sqls",
+    "stackframe",
     "startinsert",
     "startuptime",
     "statuscolumn",
