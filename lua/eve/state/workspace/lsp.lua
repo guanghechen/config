@@ -92,7 +92,7 @@ function M.load(raw_data)
       ---@return string|nil
       get_python_bin_path = function()
         local venv_path = python_venv_path:snapshot() ---@type string|nil
-        if venv_path == nil then
+        if venv_path == nil or vim.fn.isdirectory(venv_path) == 0 then
           return nil, nil
         end
 

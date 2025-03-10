@@ -1099,9 +1099,10 @@ function M.python_env(position)
     dirty = true
     local python_venv_path = state.lsp.python_venv_path:snapshot() ---@type string
     python_venv = python_venv_path ~= nil and path.basename(python_venv_path) or nil ---@type string|nil
-    if python_venv_path ~= nil and vim.fn.isdirectory(python_venv_path) ~= 0 then
-      local python_filepath = path.join(python_venv_path, env.IS_WIN and "Scripts/python" or "bin/python") ---@type string
-      local cmd = vim.fn.shellescape(python_filepath) .. " --version"
+
+    local python_path = state.lsp.get_python_bin_path() ---@type string|nil
+    if python_path ~= nil then
+      local cmd = vim.fn.shellescape(python_path) .. " --version"
       local ok, output = pcall(vim.fn.system, cmd)
       if ok then
         python_version = output:match("(%d+%.%d+%.%d+)")
@@ -1110,7 +1111,7 @@ function M.python_env(position)
         reporter.error({
           from = __module_name__,
           message = "Failed to run python version command.",
-          details = { error = output, cmd = cmd, python_venv_path = python_venv_path },
+          details = { error = output, cmd = cmd, python_path = python_path },
         })
       end
     end

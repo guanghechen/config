@@ -182,7 +182,7 @@ local function setup()
       if venv_path ~= nil and vim.fn.isdirectory(venv_path) ~= 0 then
         M.activate_venv(venv_path)
       end
-    end, false)
+    end, true)
   end
 end
 
