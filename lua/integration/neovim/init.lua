@@ -41,3 +41,7 @@ if path.is_repo_git() then
     session.load_session(state.get_storage().nvim_session_autosaved)
   end
 end
+
+vim.schedule(function()
+  eve.setup_breakpoints()
+end)

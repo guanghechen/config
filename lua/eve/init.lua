@@ -22,6 +22,38 @@ function M.get_default_storage()
 end
 
 ---@return nil
+function M.setup_breakpoints()
+  local state = require("eve.state")
+  local breakpoints = state.lsp.breakpoints:snapshot() ---@type eve.state.lsp.IBreakpointData
+  if #breakpoints < 1 then
+    return
+  end
+
+  local filepath_set = {} ---@type table<string, true>
+  for _, breakpoint in ipairs(breakpoints) do
+    filepath_set[breakpoint.filepath] = true
+  end
+  local filepaths = vim.tbl_keys(filepath_set) ---@type string[]
+
+  local editor = require("eve.module.editor")
+  editor.open_filepaths(0, filepaths)
+
+  vim.defer_fn(function()
+    local bps = require("dap.breakpoints")
+    for _, breakpoint in ipairs(breakpoints) do
+      local bufnr = state.buf.locate_by_filepath(breakpoint.filepath) ---@type integer|nil
+      if bufnr ~= nil then
+        bps.set({
+          condition = breakpoint.condition,
+          hit_condition = breakpoint.hit_condition,
+          log_message = breakpoint.log_message,
+        }, bufnr, breakpoint.lnum)
+      end
+    end
+  end, 100)
+end
+
+---@return nil
 function M.setup_patches()
   vim.hl = vim.hl or vim.highlight --- vim.hl has been renamed to vim.highlight
   table.unpack = table.unpack or unpack --- table.unpack is introduced in Lua 5.2

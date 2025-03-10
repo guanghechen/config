@@ -186,6 +186,10 @@ function M.save(storage)
   end
 
   if storage.workspace then
+    if package.loaded["dap"] then
+      M.lsp.refresh_breakpoints()
+    end
+
     local data = {
       bookmark = state_bookmark.dump(),
       flight = state_flight.dump(),
@@ -306,9 +310,12 @@ function M.watch_changes(params)
     M.flight.dressing_winsep_fixed,
     M.flight.dressing_winsep_float,
     M.flight.gitdiff_expand_all,
+    M.lsp.breakpoints,
     M.lsp.code_lens,
     M.lsp.inlay_hints,
     M.lsp.spellcheck,
+    M.lsp.python_debug_host,
+    M.lsp.python_debug_port,
     M.lsp.python_venv_path,
     M.select.find_buffer_scope,
     M.select.find_file_scope,
