@@ -48,6 +48,14 @@ tabline
     end),
     95
   )
+  :place(
+    "left",
+    c.sidebar(position, ft.DAP_UI_SCOPES, function()
+      local title = icons.ui.Bug .. " Debug" ---@type string
+      return title
+    end),
+    95
+  )
   :place("left", c.bufs(position), 95)
   --
   :place("center", c.debug_render_count(position), 100)
