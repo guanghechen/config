@@ -5,10 +5,7 @@ local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
-local editor = require("eve.module.editor")
 local state = require("eve.state")
-local command = require("eve.command")
-
 local Setting = require("fml.ux.setting")
 local Search = require("fml.ux.search.search")
 local SearchContext = require("fml.ux.search.context")
@@ -65,13 +62,11 @@ local state_search_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
 state.select.search_file_scope:subscribe(
   Subscriber.new({
     on_next = function(scope, prev_scope)
-      local bufnr = command.context_bufnr() ---@type integer|nil
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local bufnr = state.tab.get_bufnr_current(tabnr) ---@type integer|nil
 
       ---@type string
-      local current_buf_dirpath = bufnr ~= nil
-          and editor.is_buf_valid(bufnr)
-          and path.dirname(vim.api.nvim_buf_get_name(bufnr))
-        or path.cwd()
+      local current_buf_dirpath = bufnr ~= nil and path.dirname(vim.api.nvim_buf_get_name(bufnr)) or path.cwd()
 
       local current_search_cwd = state_search_cwd:snapshot() ---@type string
       local next_search_cwd = get_scope_cwd(current_buf_dirpath) ---@type string

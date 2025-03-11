@@ -96,7 +96,7 @@ S = {
     end
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if not editor.is_buf_valid(bufnr) then
+    if not editor.is_buf_sourcefile(bufnr) then
       return nil
     end
 
@@ -271,7 +271,11 @@ S = {
     )
   end,
   on_buf_enter = function(winnr, bufnr)
-    if not editor.is_win_valid(winnr) or not editor.is_buf_valid(bufnr) then
+    if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+      return
+    end
+
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return
     end
 

@@ -273,7 +273,7 @@ function M.watch_changes(params)
     vim.o.relativenumber = flag
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if editor.is_buf_valid(bufnr) then
+      if editor.is_buf_sourcefile(bufnr) then
         vim.wo[winnr].relativenumber = flag
       end
     end

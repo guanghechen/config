@@ -4,7 +4,6 @@ local fs = require("eve.builtin.fs")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
@@ -287,8 +286,9 @@ function M.fetch_data(input_text, force, callback)
 
   local specified_filepath ---@type string|nil
   if scope == "B" then
-    local bufnr = command.context_bufnr() ---@type integer|nil
-    if bufnr ~= nil and editor.is_buf_valid(bufnr) then
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local bufnr = state.tab.get_bufnr_current(tabnr) ---@type integer|nil
+    if bufnr ~= nil then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       specified_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
     end

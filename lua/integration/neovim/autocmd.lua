@@ -90,6 +90,7 @@ vim.filetype.add({
     },
 
     [".eslintignore"] = "eslintignore",
+    [".prettierignore"] = "eslintignore",
 
     ["*.fzfrc"] = "bash",
     ["*.ripgreprc"] = "bash",

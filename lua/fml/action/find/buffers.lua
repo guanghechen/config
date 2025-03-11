@@ -64,32 +64,40 @@ local function get_select()
         key = "<C-d>",
         desc = "buffer: close",
         callback = function()
-          if _select ~= nil then
-            local item = _select:get_item_selected()
-            if item ~= nil then
-              local bufnr = item.data.bufnr ---@type integer
-              if not editor.is_buf_valid(bufnr) then
-                if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-                  vim.api.nvim_buf_delete(bufnr, { force = true })
-                end
-                _select:mark_item_deleted(item.uuid)
-                return
-              end
+          if _select == nil then
+            return
+          end
 
-              local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-              for _, tabnr in ipairs(tabnrs) do
-                state.tab.on_bufs_close(tabnr, { bufnr })
-              end
+          local item = _select:get_item_selected()
+          if item == nil then
+            return
+          end
 
-              local unrefereced_bufnrs = state.tab.get_unrefereced_bufnrs() ---@type integer[]
-              if #unrefereced_bufnrs > 0 then
-                for _, unreferenced_bufnr in ipairs(unrefereced_bufnrs) do
-                  vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
-                end
-                _select:mark_item_deleted(item.uuid)
-                _select:mark_data_dirty()
-              end
+          local bufnr = item.data.bufnr ---@type integer
+          if not editor.is_buf_valid(bufnr) then
+            return
+          end
+
+          if not editor.is_buf_sourcefile(bufnr) then
+            if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+              vim.api.nvim_buf_delete(bufnr, { force = true })
             end
+            _select:mark_item_deleted(item.uuid)
+            return
+          end
+
+          local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+          for _, tabnr in ipairs(tabnrs) do
+            state.tab.on_bufs_close(tabnr, { bufnr })
+          end
+
+          local unrefereced_bufnrs = state.tab.get_unrefereced_bufnrs() ---@type integer[]
+          if #unrefereced_bufnrs > 0 then
+            for _, unreferenced_bufnr in ipairs(unrefereced_bufnrs) do
+              vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
+            end
+            _select:mark_item_deleted(item.uuid)
+            _select:mark_data_dirty()
           end
         end,
       },

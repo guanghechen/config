@@ -494,6 +494,7 @@
     "userprofile",
     "utime",
     "vararg",
+    "varnames",
     "venv",
     "venvs",
     "venvwrapper",

@@ -2,6 +2,7 @@ local fn = require("eve.builtin.fn")
 local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
+local varnames = require("eve.constant.var")
 local setting = require("eve.constant.setting")
 local winpicker = require("eve.module.winpicker")
 
@@ -133,18 +134,46 @@ end
 ---@param bufnr                         integer|nil
 ---@return boolean
 function M.is_buf_valid(bufnr)
-  if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
-    return false
+  return bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
+end
+
+---@param bufnr                         integer
+---@return boolean
+function M.is_buf_sourcefile(bufnr)
+  local is_sourcefile = vim.b[bufnr][varnames.FLAG_SOURCEFILE] ---@type boolean|nil
+  if is_sourcefile ~= nil then
+    return is_sourcefile
   end
 
   if not vim.bo[bufnr].buflisted then
+    vim.b[bufnr][varnames.FLAG_SOURCEFILE] = false
     return false
   end
 
   if not ft.is_plain_file(vim.bo[bufnr].filetype) then
+    vim.b[bufnr][varnames.FLAG_SOURCEFILE] = false
     return false
   end
 
+  vim.b[bufnr][varnames.FLAG_SOURCEFILE] = true
+  return true
+end
+
+---@param winnr                         integer
+---@return boolean
+function M.is_win_sourcefile(winnr)
+  local is_sourcefile = vim.w[winnr][varnames.FLAG_SOURCEFILE] ---@type boolean|nil
+  if is_sourcefile ~= nil then
+    return is_sourcefile
+  end
+
+  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+  if config.relative ~= nil and config.relative ~= "" then
+    vim.w[winnr][varnames.FLAG_SOURCEFILE] = false
+    return false
+  end
+
+  vim.w[winnr][varnames.FLAG_SOURCEFILE] = true
   return true
 end
 

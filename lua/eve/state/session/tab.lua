@@ -58,6 +58,7 @@ Meta.__index = Meta
 ---@field public on_buf_enter           fun(tabnr: integer, winnr: integer, bufnr: integer): nil
 ---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
 ---
+---@field public get_bufnr_current      fun(tabnr: integer): integer|nil
 ---@field public get_unrefereced_bufnrs fun(bufnrs?: integer[]): integer[]
 ---@field public list_valid_bufs        fun(tabnr: integer): eve.t.state.tab.buf.state[]
 local S = {}
@@ -256,7 +257,7 @@ S = {
     for _, winnr in ipairs(winnrs) do
       if not fn.is_win_floating(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if not bufnr_set[bufnr] and editor.is_buf_valid(bufnr) then
+        if not bufnr_set[bufnr] and editor.is_buf_sourcefile(bufnr) then
           bufnr_set[bufnr] = true
           bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
           if bufnr == bufnr_current then
@@ -328,7 +329,11 @@ S = {
     end
   end,
   on_buf_enter = function(tabnr, winnr, bufnr)
-    if not editor.is_win_valid(winnr) or not editor.is_buf_valid(bufnr) then
+    if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+      return
+    end
+
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return
     end
 
@@ -373,13 +378,17 @@ S = {
 
     meta:resolve_bufnr_current(bufnr_current)
   end,
+  get_bufnr_current = function(tabnr)
+    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+    return meta and meta:get_bufnr_current() or nil ---@type integer|nil
+  end,
   get_unrefereced_bufnrs = function(bufnrs)
     bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
 
     local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
     local bufnrs_to_remove = {} ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
-      if editor.is_buf_valid(bufnr) then
+      if editor.is_buf_sourcefile(bufnr) then
         local has_copy = false ---@type boolean
         for _, tabnr in ipairs(tabnrs) do
           local meta_tab = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
@@ -547,7 +556,7 @@ function M.load(raw_data)
       for _, winnr in ipairs(winnrs) do
         if editor.is_win_valid(winnr) then
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          if not bufnr_set[bufnr] and editor.is_buf_valid(bufnr) then
+          if not bufnr_set[bufnr] and editor.is_buf_sourcefile(bufnr) then
             local buf = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
             bufs[#bufs + 1] = buf
             bufnr_set[bufnr] = true

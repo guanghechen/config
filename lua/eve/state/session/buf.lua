@@ -66,17 +66,13 @@ S = {
     end
   end,
   resolve = function(bufnr)
-    if bufnr == nil or bufnr < 1 then
+    if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
       return nil
     end
 
     local meta = S.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
     if meta ~= nil then
       return meta
-    end
-
-    if not editor.is_buf_valid(bufnr) then
-      return nil
     end
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string

@@ -7,9 +7,7 @@ local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 local instances = require("eve.constant.instance")
-local editor = require("eve.module.editor")
 local state = require("eve.state")
-local command = require("eve.command")
 
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
@@ -46,13 +44,11 @@ local function get_select()
     local state_find_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
 
     state.observe({ state.select.find_file_scope }, function()
-      local bufnr = command.context_bufnr() ---@type integer|nil
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local bufnr = state.tab.get_bufnr_current(tabnr) ---@type integer|nil
 
       ---@type string
-      local current_buf_dirpath = bufnr ~= nil
-          and editor.is_buf_valid(bufnr)
-          and path.dirname(vim.api.nvim_buf_get_name(bufnr))
-        or path.cwd()
+      local current_buf_dirpath = bufnr ~= nil and path.dirname(vim.api.nvim_buf_get_name(bufnr)) or path.cwd()
 
       local current_find_cwd = state_find_cwd:snapshot() ---@type string
       local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string

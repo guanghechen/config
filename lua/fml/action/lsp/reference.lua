@@ -15,7 +15,15 @@ local FileSelect = require("fml.ux.file_select")
 local function fetch_data(context, method, additional_params, callback)
   local winnr = context.winnr ---@type integer
   local bufnr = context.bufnr ---@type integer
-  if not editor.is_buf_valid(bufnr) or not lsp.has_support_method(bufnr, method) then
+  if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    return
+  end
+
+  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    return
+  end
+
+  if not lsp.has_support_method(bufnr, method) then
     reporter.error({
       from = __module_name__,
       subject = "fetch_data",
