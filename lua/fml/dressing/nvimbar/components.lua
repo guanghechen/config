@@ -125,17 +125,6 @@ function M.bufs(position)
     vim.cmd(command.definitions.buf.focus_right.uuid)
   end) or ""
 
-  ---@param bufs                        eve.t.state.tab.buf.state[]
-  ---@param bufnr                       integer
-  ---@return integer|nil
-  local function resolve_bufid(bufs, bufnr)
-    for index, buf in ipairs(bufs) do
-      if buf.bufnr == bufnr then
-        return index
-      end
-    end
-  end
-
   ---@param bufnr                       integer
   ---@return string
   ---@return string
@@ -245,19 +234,18 @@ function M.bufs(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local bufs = state.tab.list_valid_bufs(tabnr) ---@type eve.t.state.tab.buf.state[]
+      local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+      if meta_tab == nil then
+        return "", "", false
+      end
+
+      local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
       if #bufs < 1 then
         return "", "", false
       end
 
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      local bufnr_cur = winnr_cur > 0 ---@type integer
-          and vim.api.nvim_win_is_valid(winnr_cur)
-          and vim.api.nvim_win_get_buf(winnr_cur)
-        or 0
-
       local N = #bufs ---@type integer
-      local bufid_current = resolve_bufid(bufs, bufnr_cur) ---@type integer|nil
+      local bufid_current = meta_tab.bufid_current:snapshot() ---@type integer|nil
       local bufid_middle = math.min(N, bufid_current or vim.t[tabnr][setting.vars.BUFID_MIDDLE] or 1) ---@type integer
       vim.t[tabnr][setting.vars.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
 

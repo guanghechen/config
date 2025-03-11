@@ -1,5 +1,6 @@
 local fn = require("eve.builtin.fn")
 local AdvanceHistory = require("eve.collection.history_advance")
+local Observable = require("eve.collection.observable")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 
@@ -19,12 +20,18 @@ local editor = require("eve.module.editor")
 ---@field public tabid                  integer
 ---@field public tabtype                eve.e.state.tab.meta.TabType
 ---@field public bufs                   eve.t.state.tab.buf.data[]
+---@field public bufid_current          integer
 
 ---@class eve.state.tab.meta.state
 ---@field public tabnr                  integer
 ---@field public tabtype                eve.e.state.tab.meta.TabType
 ---@field public bufs                   eve.t.state.tab.buf.state[]
+---@field public bufid_current          eve.collection.IObservable
 ---@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.t.state.tab.buf.state|nil, integer|nil
+---@field public find_bufid             fun(self: eve.state.tab.meta.state, bufnr: integer): integer|nil
+---@field public get_bufnr_current      fun(self: eve.state.tab.meta.state): integer|nil
+---@field public rearrange_bufs         fun(self: eve.state.tab.meta.state): nil
+---@field public resolve_bufnr_current  fun(self: eve.state.tab.meta.state, bufnr_current: integer|nil): integer|nil
 ---@field public toggle_pin             fun(self: eve.state.tab.meta.state, bufnr: integer): nil
 local Meta = {}
 Meta.__index = Meta
@@ -50,8 +57,8 @@ Meta.__index = Meta
 ---@field public on_buf_enter           fun(winnr: integer, bufnr: integer): nil
 ---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
 ---
----@field public list_valid_bufs        fun(tabnr: integer): eve.t.state.tab.buf.state[]
 ---@field public get_unrefereced_bufnrs fun(bufnrs?: integer[]): integer[]
+---@field public list_valid_bufs        fun(tabnr: integer): eve.t.state.tab.buf.state[]
 local S = {}
 
 ---@class eve.state.tab
@@ -64,15 +71,18 @@ local M = {}
 ---@param tabnr                        integer
 ---@param tabtype                      eve.e.state.tab.meta.TabType|nil
 ---@param bufs                         eve.t.state.tab.buf.state[]|nil
+---@param bufid_current                integer
 ---@return eve.state.tab.meta.state
-function Meta.new(tabnr, tabtype, bufs)
+function Meta.new(tabnr, tabtype, bufs, bufid_current)
   local self = setmetatable({}, Meta)
   self.tabnr = tabnr ---@type integer
   self.tabtype = tabtype or setting.tabtypes.NORMAL ---@type string
   self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
+  self.bufid_current = Observable.from_value(math.max(0, math.min(#bufs, bufid_current or 1)))
   return self
 end
 
+---@param bufnr                         integer
 ---@return eve.t.state.tab.buf.state|nil
 ---@return integer|nil
 function Meta:find_buf(bufnr)
@@ -82,6 +92,57 @@ function Meta:find_buf(bufnr)
     end
   end
   return nil, nil
+end
+
+---@param bufnr                         integer
+---@return integer|nil
+function Meta:find_bufid(bufnr)
+  for index, buf in ipairs(self.bufs) do
+    if buf.bufnr == bufnr then
+      return index
+    end
+  end
+  return nil
+end
+
+---@return integer|nil
+function Meta:get_bufnr_current()
+  local bufid = self.bufid_current:snapshot() ---@type integer
+  local buf = self.bufs[bufid] ---@type eve.t.state.tab.buf.state|nil
+  return buf and buf.bufnr or nil
+end
+
+---@return nil
+function Meta:rearrange_bufs()
+  local bufs = self.bufs ---@type eve.t.state.tab.buf.state[]
+  local k = 1 ---@type integer
+  local N = #bufs ---@type integer
+  for i = 1, N, 1 do
+    local buf = bufs[i] ---@type eve.t.state.tab.buf.state
+    if buf ~= nil and buf.bufnr > 0 and vim.api.nvim_buf_is_valid(buf.bufnr) then
+      bufs[k] = buf
+      k = k + 1
+    end
+  end
+  for i = k, N, 1 do
+    bufs[i] = nil
+  end
+end
+
+---@param bufnr_current                 integer|nil
+---@return integer|nil
+function Meta:resolve_bufnr_current(bufnr_current)
+  local bufid_next = bufnr_current ~= nil and self:find_bufid(bufnr_current) or nil ---@type integer|nil
+  if bufid_next == nil then
+    local winnr = vim.api.nvim_tabpage_get_win(self.tabnr) ---@type integer
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    bufid_next = self:find_bufid(bufnr) ---@type integer|nil
+  end
+  if bufid_next == nil or bufid_next < 1 then
+    bufid_next = math.min(1, #self.bufs) ---@type integer
+  end
+  self.bufid_current:next(bufid_next)
+  return bufid_next
 end
 
 ---@param bufnr                         integer
@@ -165,18 +226,29 @@ S = {
     local bufs = {} ---@type eve.t.state.tab.buf.data[]
     local bufnr_set = {} ---@type table<integer, true>
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+    local bufid_current = 0 ---@type integer
+
+    local winnr_current = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+    local bufnr_current = vim.api.nvim_win_get_buf(winnr_current) ---@type integer
     for _, winnr in ipairs(winnrs) do
       if not fn.is_win_floating(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if not bufnr_set[bufnr] and editor.is_buf_valid(bufnr) then
           bufnr_set[bufnr] = true
           bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+          if bufnr == bufnr_current then
+            bufid_current = #bufs
+          end
         end
       end
     end
 
+    if bufid_current < 1 and #bufs > 0 then
+      bufid_current = 1
+    end
+
     ---@type eve.state.tab.meta.state
-    meta = Meta.new(tabnr, tabtype, bufs)
+    meta = Meta.new(tabnr, tabtype, bufs, bufid_current)
     S.__meta_map__[tabnr] = meta
     return meta
   end,
@@ -199,8 +271,10 @@ S = {
       return
     end
 
-    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+    local bufnr_current = meta:get_bufnr_current() ---@type integer|nil
     local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
+
+    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if not meta:find_buf(bufnr) then
@@ -208,18 +282,8 @@ S = {
       end
     end
 
-    local k = 1 ---@type integer
-    local N = #bufs ---@type integer
-    for i = 1, N, 1 do
-      local buf = bufs[i] ---@type eve.t.state.tab.buf.state
-      if editor.is_buf_valid(buf.bufnr) then
-        bufs[k] = buf
-        k = k + 1
-      end
-    end
-    for i = k, N, 1 do
-      bufs[i] = nil
-    end
+    meta:rearrange_bufs()
+    meta:resolve_bufnr_current(bufnr_current)
 
     local tabtype = editor.calc_tabtype(tabnr) ---@type string
     meta.tabtype = tabtype
@@ -252,9 +316,12 @@ S = {
     end
 
     local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
-    if not meta:find_buf(bufnr) then
+    local bufid = meta:find_bufid(bufnr) ---@type integer|nil
+    if bufid == nil then
       bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+      bufid = #bufs
     end
+    meta.bufid_current:next(bufid)
   end,
   on_bufs_close = function(tabnr, bufnrs)
     if #bufnrs < 1 then
@@ -266,9 +333,11 @@ S = {
       return
     end
 
+    local bufnr_current = meta:get_bufnr_current() ---@type integer|nil
     local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
-    local k = 1 ---@type integer
     local N = #bufs ---@type integer
+
+    local k = 1 ---@type integer
     for i = 1, N, 1 do
       local buf = bufs[i] ---@type eve.t.state.tab.buf.state
       if not vim.list_contains(bufnrs, buf.bufnr) then
@@ -279,28 +348,8 @@ S = {
     for i = k, N, 1 do
       bufs[i] = nil
     end
-  end,
-  list_valid_bufs = function(tabnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta == nil or #meta.bufs < 1 then
-      return {}
-    end
 
-    local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
-    local k = 0 ---@type integer
-    local N = #bufs ---@type integer
-
-    for i = 1, N, 1 do
-      local buf = bufs[i] ---@type eve.t.state.tab.buf.state
-      if buf ~= nil and buf.bufnr > 0 and vim.api.nvim_buf_is_valid(buf.bufnr) then
-        k = k + 1
-        bufs[k] = buf
-      end
-    end
-    for i = k + 1, N, 1 do
-      bufs[i] = nil
-    end
-    return bufs
+    meta:resolve_bufnr_current(bufnr_current)
   end,
   get_unrefereced_bufnrs = function(bufnrs)
     bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
@@ -323,6 +372,15 @@ S = {
       end
     end
     return bufnrs_to_remove
+  end,
+  list_valid_bufs = function(tabnr)
+    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+    if meta == nil or #meta.bufs < 1 then
+      return {}
+    end
+
+    meta:rearrange_bufs()
+    return meta.bufs
   end,
 }
 
@@ -347,22 +405,27 @@ function M.normalize(data)
           and type(item.tabid) == "number"
           and type(item.tabtype) == "string"
           and type(item.bufs) == "table"
+          and type(item.bufid_current) == "number"
         then
           ---@type eve.t.state.tab.meta.data
           local meta_tab = {
             tabid = item.tabid,
             tabtype = item.tabtype,
             bufs = {},
+            bufid_current = item.bufid_current,
           }
-          table.insert(resolved.list, meta_tab)
+          local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.data[]
 
-          for _, buf in ipairs(item.bufs) do
+          for bufid, buf in ipairs(item.bufs) do
             if type(buf) == "table" and type(buf.filepath) == "string" and type(buf.pinned) == "boolean" then
-              ---@type eve.t.state.tab.buf.data
-              local meta_buf = { filepath = buf.filepath, pinned = buf.pinned }
-              table.insert(meta_tab.bufs, meta_buf)
+              local meta_buf = { filepath = buf.filepath, pinned = buf.pinned } ---@type eve.t.state.tab.buf.data
+              bufs[#bufs + 1] = meta_buf
+              if bufid == item.bufid_current then
+                meta_tab.bufid_current = #bufs
+              end
             end
           end
+          table.insert(resolved.list, meta_tab)
         end
       end
     end
@@ -394,6 +457,7 @@ function M.dump()
         tabid = tabid,
         tabtype = meta.tabtype,
         bufs = {},
+        bufid_current = meta.bufid_current:snapshot(),
       }
 
       list[#list + 1] = meta_tab
@@ -455,16 +519,20 @@ function M.load(raw_data)
   local filepath2bufnr = fn.filepath2bufnr() ---@type table<string, integer>
   for _, data_tab in ipairs(data.list) do
     local tabnr = tabnrs[data_tab.tabid] ---@type integer|nil
+    local bufid_current = 0 ---@type integer
     if tabnr ~= nil then
       local bufs = {} ---@type eve.t.state.tab.buf.state[]
       local bufnr_set = {} ---@type table<integer, boolean>
 
-      for _, data_buf in ipairs(data_tab.bufs) do
+      for bufid, data_buf in ipairs(data_tab.bufs) do
         local bufnr = filepath2bufnr[data_buf.filepath] ---@type integer|nil
         if bufnr ~= nil and not bufnr_set[bufnr] then
           local buf = { bufnr = bufnr, pinned = data_buf.pinned } ---@type eve.t.state.tab.buf.state
           bufs[#bufs + 1] = buf
           bufnr_set[bufnr] = true
+          if bufid == data_tab.bufid_current then
+            bufid_current = bufid
+          end
         end
       end
 
@@ -481,7 +549,7 @@ function M.load(raw_data)
       end
 
       ---@type eve.state.tab.meta.state
-      local meta = Meta.new(tabnr, data_tab.tabtype or setting.tabtypes.NORMAL, bufs)
+      local meta = Meta.new(tabnr, data_tab.tabtype or setting.tabtypes.NORMAL, bufs, bufid_current)
       S.set(tabnr, meta)
     end
   end
