@@ -3,8 +3,9 @@ local __module_name__ = "fml.action.toggle" ---@type string
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
-local state = require("eve.state")
+local editor = require("eve.module.editor")
 local command = require("eve.command")
+local state = require("eve.state")
 
 local select = require("fml.fn.select")
 
@@ -391,7 +392,7 @@ function M.toggle_maximize(context)
   end
 
   local bufnr = context.bufnr ---@type integer
-  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+  if editor.is_buf_valid(bufnr) then
     local winnr = vim.api.nvim_open_win(bufnr, false, {
       relative = "editor",
       anchor = "NW",

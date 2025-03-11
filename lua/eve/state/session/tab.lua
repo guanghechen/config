@@ -143,7 +143,7 @@ function Meta:rearrange_bufs()
   local N = #bufs ---@type integer
   for i = 1, N, 1 do
     local buf = bufs[i] ---@type eve.t.state.tab.buf.state
-    if buf ~= nil and buf.bufnr > 0 and vim.api.nvim_buf_is_valid(buf.bufnr) then
+    if buf ~= nil and editor.is_buf_valid(buf.bufnr) then
       bufs[k] = buf
       k = k + 1
     end
@@ -217,12 +217,12 @@ S = {
   }),
 
   get = function(tabnr)
-    if tabnr ~= nil and tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr) then
+    if tabnr ~= nil and editor.is_tab_valid(tabnr) then
       return S.__meta_map__[tabnr]
     end
   end,
   set = function(tabnr, meta)
-    if tabnr ~= nil and tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr) then
+    if tabnr ~= nil and editor.is_tab_valid(tabnr) then
       S.__meta_map__[tabnr] = meta
       return meta
     end
@@ -233,17 +233,13 @@ S = {
     end
   end,
   resolve = function(tabnr)
-    if tabnr == nil or tabnr < 1 then
+    if tabnr == nil or not editor.is_tab_valid(tabnr) then
       return nil
     end
 
     local meta = S.__meta_map__[tabnr] ---@type eve.state.tab.meta.state|nil
     if meta ~= nil then
       return meta
-    end
-
-    if not editor.is_tab_valid(tabnr) then
-      return nil
     end
 
     local tabtype = editor.calc_tabtype(tabnr) ---@type string
@@ -277,7 +273,7 @@ S = {
     return meta
   end,
   resolve_tabtype = function(tabnr)
-    if tabnr == nil or tabnr < 1 then
+    if tabnr == nil or not editor.is_tab_valid(tabnr) then
       return setting.tabtypes.NORMAL
     end
 
@@ -285,7 +281,7 @@ S = {
     return meta and meta.tabtype or setting.tabtypes.NORMAL
   end,
   refresh = function(tabnr)
-    if tabnr == nil or tabnr < 1 then
+    if tabnr == nil or not editor.is_tab_valid(tabnr) then
       return
     end
 
@@ -320,7 +316,7 @@ S = {
 
     local invalid_tabnrs = {} ---@type integer[]
     for tabnr in pairs(S.__meta_map__) do
-      if tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
+      if tabnr == nil or not editor.is_tab_valid(tabnr) then
         table.insert(invalid_tabnrs, tabnr)
       end
     end
@@ -329,11 +325,11 @@ S = {
     end
   end,
   on_buf_enter = function(tabnr, winnr, bufnr)
-    if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if not editor.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
       return
     end
 
-    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if not editor.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return
     end
 
@@ -554,7 +550,7 @@ function M.load(raw_data)
 
       local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
       for _, winnr in ipairs(winnrs) do
-        if editor.is_win_valid(winnr) then
+        if editor.is_win_sourcefile(winnr) then
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
           if not bufnr_set[bufnr] and editor.is_buf_sourcefile(bufnr) then
             local buf = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state

@@ -48,12 +48,12 @@ local M = {}
 S = {
   __meta_map__ = {}, ---@type table<integer, eve.t.state.win.meta.state>
   get = function(winnr)
-    if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+    if winnr ~= nil and editor.is_win_valid(winnr) then
       return S.__meta_map__[winnr]
     end
   end,
   set = function(winnr, meta)
-    if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+    if winnr ~= nil and editor.is_win_valid(winnr) then
       S.__meta_map__[winnr] = meta
       return meta
     end
@@ -82,17 +82,13 @@ S = {
     end
   end,
   resolve = function(winnr)
-    if winnr == nil or winnr < 1 then
+    if winnr == nil or not editor.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return nil
     end
 
     local meta = S.__meta_map__[winnr] ---@type eve.t.state.win.meta.state|nil
     if meta ~= nil then
       return meta
-    end
-
-    if not editor.is_win_valid(winnr) then
-      return nil
     end
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -148,7 +144,7 @@ S = {
     end
   end,
   locate_symbols = function(winnr, callback)
-    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+    if winnr == nil or not editor.is_win_valid(winnr) then
       callback(false)
       return
     end
@@ -190,7 +186,7 @@ S = {
     ---@param symbols                     any[]
     ---@return nil
     local function handler(err, symbols)
-      if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+      if not vim.api.nvim_win_is_valid(winnr) then
         safe_callback(false)
         return
       end
@@ -271,11 +267,11 @@ S = {
     )
   end,
   on_buf_enter = function(winnr, bufnr)
-    if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if not editor.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
       return
     end
 
-    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if not editor.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return
     end
 

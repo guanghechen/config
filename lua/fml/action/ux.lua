@@ -1,4 +1,5 @@
 local command = require("eve.command")
+local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 ---@class fml.action.ux
@@ -28,7 +29,7 @@ function M.resume_last_widget(context)
       widget:focus()
       state.widget.history:go(widget_index)
     else
-      if context.winnr > 0 and vim.api.nvim_win_is_valid(context.winnr) then
+      if editor.is_win_valid(context.winnr) then
         vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
       end
     end

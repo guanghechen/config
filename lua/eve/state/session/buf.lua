@@ -50,12 +50,12 @@ local M = {}
 S = {
   __meta_map__ = {}, ---@type table<integer, eve.t.state.buf.meta.state>
   get = function(bufnr)
-    if bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+    if bufnr ~= nil and editor.is_buf_valid(bufnr) then
       return S.__meta_map__[bufnr]
     end
   end,
   set = function(bufnr, meta)
-    if bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+    if bufnr ~= nil and editor.is_buf_valid(bufnr) then
       S.__meta_map__[bufnr] = meta
       return meta
     end
@@ -66,7 +66,7 @@ S = {
     end
   end,
   resolve = function(bufnr)
-    if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if bufnr == nil or not editor.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
       return nil
     end
 
@@ -98,7 +98,7 @@ S = {
     return meta
   end,
   refresh = function(bufnr)
-    if bufnr == nil or bufnr < 1 then
+    if bufnr == nil or not editor.is_buf_valid(bufnr) then
       return nil
     end
 
@@ -135,7 +135,7 @@ S = {
 
     local invalid_bufnrs = {} ---@type integer[]
     for bufnr in pairs(S.__meta_map__) do
-      if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
+      if not editor.is_buf_valid(bufnr) then
         invalid_bufnrs[#invalid_bufnrs + 1] = bufnr
       end
     end

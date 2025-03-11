@@ -37,7 +37,7 @@ local function select_files(params)
     get_present = function()
       local present_filepath = nil ---@type string|nil
       local winnr = context.winnr ---@type integer
-      if winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+      if editor.is_win_valid(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if editor.is_buf_sourcefile(bufnr) then
           local absolute_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string

@@ -8,7 +8,7 @@ local command = require("eve.command")
 ---@return boolean
 local function check_could_reveal(cwd)
   local bufnr = command.context_bufnr() ---@type integer|nil
-  if bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+  if bufnr ~= nil and editor.is_buf_valid(bufnr) then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     return path.is_under(cwd, filepath)
   end

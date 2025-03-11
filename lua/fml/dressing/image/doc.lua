@@ -1,4 +1,5 @@
 local fn = require("eve.builtin.fn")
+local editor = require("eve.module.editor")
 local state = require("eve.state")
 local config = require("fml.dressing.image.config")
 local Placement = require("fml.dressing.image.placement")
@@ -430,12 +431,7 @@ function M.hover()
     return
   end
 
-  if
-    hover
-    and hover.winnr > 0
-    and vim.api.nvim_win_is_valid(hover.winnr)
-    and (hover.bufnr ~= bufnr_cur or vim.fn.mode() ~= "n")
-  then
+  if hover and editor.is_win_valid(hover.winnr) and (hover.bufnr ~= bufnr_cur or vim.fn.mode() ~= "n") then
     M.hover_close()
   end
 
@@ -454,7 +450,7 @@ function M.hover()
     local bufnr = 0 ---@type integer
     local winnr = 0 ---@type integer
 
-    if hover and hover.bufnr > 0 and vim.api.nvim_buf_is_valid(hover.bufnr) then
+    if hover and editor.is_buf_valid(hover.bufnr) then
       bufnr = hover.bufnr
     else
       bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -477,7 +473,7 @@ function M.hover()
       border = "rounded",
       style = "minimal",
     }
-    if hover and hover.winnr > 0 and vim.api.nvim_win_is_valid(hover.winnr) then
+    if hover and editor.is_win_valid(hover.winnr) then
       winnr = hover.winnr ---@type integer
       vim.api.nvim_win_set_config(hover.winnr, wincfg)
 
@@ -510,7 +506,7 @@ function M.hover()
         if hover and not updated then
           updated = true
           local loc = hover.placement:state().loc
-          if hover.winnr > 0 and vim.api.nvim_win_is_valid(hover.winnr) then
+          if editor.is_win_valid(hover.winnr) then
             vim.api.nvim_win_set_height(hover.winnr, loc.height)
             vim.api.nvim_win_set_width(hover.winnr, loc.width)
           end
@@ -543,7 +539,7 @@ end
 ---@return nil
 function M.hover_close()
   if hover then
-    if hover.winnr > 0 and vim.api.nvim_win_is_valid(hover.winnr) then
+    if editor.is_win_valid(hover.winnr) then
       vim.api.nvim_win_close(hover.winnr, true)
     end
     hover.placement:close()

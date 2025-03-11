@@ -1,5 +1,6 @@
 local fn = require("eve.builtin.fn")
 local History = require("eve.collection.history")
+local editor = require("eve.module.editor")
 
 ---@class eve.state.widget.data
 ---@field public history                eve.collection.history.ISerializedData
@@ -86,7 +87,7 @@ S = {
         S.history:go(widget_visible_index)
       else
         local winnr = last_winnr()
-        if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+        if winnr ~= nil and editor.is_win_valid(winnr) then
           vim.api.nvim_set_current_win(winnr)
         end
       end

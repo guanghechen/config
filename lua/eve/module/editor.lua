@@ -131,10 +131,10 @@ function M.get_projectable_winnr(winnr_source)
   return -1
 end
 
----@param bufnr                         integer|nil
+---@param bufnr                         integer
 ---@return boolean
 function M.is_buf_valid(bufnr)
-  return bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
+  return bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
 end
 
 ---@param bufnr                         integer
@@ -159,6 +159,12 @@ function M.is_buf_sourcefile(bufnr)
   return true
 end
 
+---@param tabnr                         integer
+---@return boolean
+function M.is_tab_valid(tabnr)
+  return tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr)
+end
+
 ---@param winnr                         integer
 ---@return boolean
 function M.is_win_sourcefile(winnr)
@@ -177,29 +183,10 @@ function M.is_win_sourcefile(winnr)
   return true
 end
 
----@param tabnr                         integer|nil
----@return boolean
-function M.is_tab_valid(tabnr)
-  if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
-    return false
-  end
-
-  return true
-end
-
----@param winnr                         integer|nil
+---@param winnr                         integer
 ---@return boolean
 function M.is_win_valid(winnr)
-  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
-    return false
-  end
-
-  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  if config.relative ~= nil and config.relative ~= "" then
-    return false
-  end
-
-  return true
+  return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
 end
 
 ---@param filepath                      string|nil

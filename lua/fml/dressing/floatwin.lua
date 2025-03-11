@@ -1,8 +1,10 @@
+local editor = require("eve.module.editor")
+
 ---@param winnr                         integer|nil
 ---@param width                         integer|nil
 ---@return nil
 local function dressing_float_win(winnr, width)
-  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+  if winnr == nil or not editor.is_win_valid(winnr) then
     return
   end
 
