@@ -3,6 +3,7 @@ local __module_name__ = "fml.action.toggle" ---@type string
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
+local varnames = require("eve.constant.var")
 local editor = require("eve.module.editor")
 local command = require("eve.command")
 local state = require("eve.state")
@@ -397,9 +398,9 @@ function M.toggle_maximize(context)
       relative = "editor",
       anchor = "NW",
       width = vim.o.columns - 2,
-      height = vim.o.lines - 2,
+      height = vim.o.lines - 4,
       row = 1,
-      col = 1,
+      col = 0,
       focusable = true,
       title = " MAXIMIZED ",
       title_pos = "center",
@@ -411,6 +412,7 @@ function M.toggle_maximize(context)
     vim.wo[winnr].signcolumn = "yes"
     vim.wo[winnr].wrap = false
 
+    vim.w[winnr][varnames.FLAG_SOURCEFILE] = editor.is_win_sourcefile(winnr_cur)
     state.status.maximized_winnrs[winnr] = true
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_tabpage_set_win(context.tabnr, winnr)
