@@ -109,10 +109,11 @@ ms({ "i", "n", "v" }, { "<C-a>C", "<D-C>", "<M-C>" }, K.copy.filepath)
 -----------------------------------------------------------------------------------------#[c]opy----
 
 --#[i]nspect----------------------------------------------------------------------------------------
+ms({ "n", "v" }, "<leader>iI", K.inspect.inspect_tree)
 ms({ "n", "v" }, "<leader>ii", K.inspect.inspect_pos)
 ms({ "n", "v" }, "<leader>is", K.inspect.inspect_state)
 ms({ "n", "v" }, "<leader>iS", K.inspect.inspect_state_full)
-ms({ "n", "v" }, "<leader>it", K.inspect.inspect_tree)
+ms({ "n", "v" }, "<leader>it", K.inspect.inspect_tab)
 ms({ "n", "v" }, "<leader>iw", K.inspect.inspect_window)
 ----------------------------------------------------------------------------------------#[i]nspect--
 

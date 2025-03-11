@@ -336,6 +336,12 @@ command
     end,
   })
   .implement({
+    uuid = command.definitions.inspect.inspect_tab.uuid,
+    action = function(context)
+      require("fml.action.inspect").inspect_tab(context)
+    end,
+  })
+  .implement({
     uuid = command.definitions.inspect.inspect_tree.uuid,
     action = function(context)
       require("fml.action.inspect").inspect_tree(context)

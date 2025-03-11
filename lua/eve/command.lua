@@ -356,6 +356,7 @@ M.definitions.inspect = {
   inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
   inspect_state = def("Fdebuginspectstate", "debug: inspect state"),
   inspect_state_full = def("Fdebuginspectstatefull", "debug: inspect state (full)"),
+  inspect_tab = def("Fdebuginspecttab", "debug: inspect tab"),
   inspect_tree = def("Fdebuginspecttree", "debug: inspect tree"),
   inspect_window = def("Fdebuginspectwindow", "debug: inspect window"),
 }

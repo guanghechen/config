@@ -76,11 +76,12 @@ vim.api.nvim_create_autocmd("TabClosed", {
 vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
   group = fn.augroup("state_on_win_or_buf_enter"),
   callback = function(arg)
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = arg.buf ---@type integer
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
 
     state.win.on_buf_enter(winnr, bufnr)
-    state.tab.on_buf_enter(winnr, bufnr)
+    state.tab.on_buf_enter(tabnr, winnr, bufnr)
 
     state.status.dirty_winline_nr:next(winnr)
     state.status.dirtier_statusline:mark_dirty()

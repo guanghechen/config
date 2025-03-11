@@ -1,5 +1,6 @@
 local __module_name__ = "fml.action.inspect" ---@type string
 
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local state = require("eve.state")
@@ -58,6 +59,25 @@ function M.inspect_state_full(context)
         workspace = workspace,
       },
       state = state.dump(),
+    },
+  })
+end
+
+---@param context                       eve.command.IContext
+---@return nil
+function M.inspect_tab(context)
+  local tabnr = context.tabnr ---@type integer
+  local meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+
+  local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+  local tabid = fn.find_index(tabnrs, tabnr) or 1 ---@type integer
+
+  reporter.info({
+    from = __module_name__,
+    subject = "inspect_tab",
+    details = {
+      tabnr = tabnr,
+      tab = meta and meta:dump(tabid) or vim.NIL,
     },
   })
 end
