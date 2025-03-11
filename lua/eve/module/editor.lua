@@ -150,7 +150,15 @@ function M.is_buf_sourcefile(bufnr)
     return false
   end
 
-  if not ft.is_plain_file(vim.bo[bufnr].filetype) then
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  if #filetype < 1 then
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    local flag = vim.fn.filereadable(filepath) == 1
+    vim.b[bufnr][varnames.FLAG_SOURCEFILE] = flag
+    return flag
+  end
+
+  if not ft.is_plain_file(filetype) then
     vim.b[bufnr][varnames.FLAG_SOURCEFILE] = false
     return false
   end

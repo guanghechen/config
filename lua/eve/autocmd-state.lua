@@ -2,6 +2,7 @@ local fn = require("eve.builtin.fn")
 local fs = require("eve.builtin.fs")
 local path = require("eve.builtin.path")
 local tmux = require("eve.builtin.tmux")
+local varnames = require("eve.constant.var")
 local editor = require("eve.module.editor")
 
 local state = require("eve.state")
@@ -34,7 +35,11 @@ vim.api.nvim_create_autocmd("VimEnter", {
       if fs.is_file_or_dir(filepath) == "directory" then
         local new_filepath = state.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
         if new_filepath ~= nil then
-          pcall(function()
+          existed_filepaths[new_filepath] = true
+          vim.schedule(function()
+            local filetype = vim.bo[bufnr].filetype ---@type string
+            vim.b[bufnr][varnames.FLAG_SOURCEFILE] = true
+            vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
             vim.bo[bufnr].swapfile = false
             vim.api.nvim_buf_set_name(bufnr, new_filepath)
             state.buf.refresh(bufnr)
