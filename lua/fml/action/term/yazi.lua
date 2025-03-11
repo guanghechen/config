@@ -9,10 +9,11 @@ local toggle_term = require("fml.action.term.toggle").toggle
 ---@param context                       eve.command.IContext
 ---@return nil
 local function open_yazi(name, cwd, filepath, context)
-  local tempname = vim.fn.tempname() ---@type string
+  local tempname = path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
   local terminal ---@type fml.ux.ITerminal|nil
 
-  local cmd = string.format('yazi %s --chooser-file="%s"', vim.fn.shellescape(filepath), vim.fn.shellescape(tempname)) ---@type string
+  local dirpath = path.dirname(filepath) ---@type string
+  local cmd = string.format('yazi "%s" --chooser-file="%s"', dirpath, tempname) ---@type string
   terminal = toggle_term({
     name = name,
     cmd = cmd,
@@ -44,8 +45,6 @@ local function open_yazi(name, cwd, filepath, context)
           editor.open_filepaths(context.winnr, filepaths)
         end
       end)
-
-      vim.fn.delete(tempname)
     end,
   })
 end
