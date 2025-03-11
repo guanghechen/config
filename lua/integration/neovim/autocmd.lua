@@ -75,6 +75,8 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
 vim.filetype.add({
   extension = { rasi = "rasi", rofi = "rasi", wofi = "rasi" },
   filename = {
+    [".eslintignore"] = "ignore",
+    [".prettierignore"] = "ignore",
     ["vimrc"] = "vim",
   },
   pattern = {
@@ -88,9 +90,6 @@ vim.filetype.add({
           or nil
       end,
     },
-
-    [".eslintignore"] = "eslintignore",
-    [".prettierignore"] = "eslintignore",
 
     ["*.fzfrc"] = "bash",
     ["*.ripgreprc"] = "bash",
@@ -109,6 +108,7 @@ vim.filetype.add({
     [".*/kitty/.+%.conf"] = "bash",
     [".*/hypr/.+%.conf"] = "hyprlang",
     ["%.env%.[%w_.-]+"] = "sh",
+    ["untitled%-(%d+)"] = "text",
   },
 })
 
