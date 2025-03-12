@@ -5,7 +5,7 @@ local Observable = require("eve.collection.observable")
 ---@field public pinned                 string[]
 
 ---@class eve.state.bookmark.state
----@field public pinned                 eve.collection.IObservable<string[]>
+---@field public pinned                 eve.collection.IObservable -- string[]>
 
 ---@class eve.state.bookmark
 ---@field public defaults               fun(): eve.state.bookmark.data

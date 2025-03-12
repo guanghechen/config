@@ -70,7 +70,7 @@ local M = {}
 M.__index = M
 
 ---@class fml.ux.file_select.IProps
----@field public case_sensitive         ?eve.collection.IObservable<boolean>
+---@field public case_sensitive         ?eve.collection.IObservable -- boolean>
 ---@field public cmp                    ?fml.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
@@ -79,11 +79,11 @@ M.__index = M
 ---@field public preview_enabled        boolean
 ---@field public preview_wrap           ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?eve.collection.IObservable<boolean>
----@field public flag_regex             ?eve.collection.IObservable<boolean>
----@field public flag_selected          ?eve.collection.IObservable<boolean>
+---@field public flag_fuzzy             ?eve.collection.IObservable -- boolean>
+---@field public flag_regex             ?eve.collection.IObservable -- boolean>
+---@field public flag_selected          ?eve.collection.IObservable -- boolean>
 ---@field public frecency               ?eve.collection.IFrecency
----@field public input                  ?eve.collection.IObservable<string>
+---@field public input                  ?eve.collection.IObservable -- string>
 ---@field public input_history          ?eve.collection.IHistory
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
@@ -102,7 +102,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive ---@type eve.collection.IObservable<boolean>|nil
+  local case_sensitive = props.case_sensitive ---@type eve.collection.IObservable -- boolean>|nil
   local cmp = props.cmp ---@type fml.ux.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch ---@type integer|nil
   local delay_render = props.delay_render ---@type integer|nil
@@ -110,11 +110,11 @@ function M.new(props)
   local preview_enabled = props.preview_enabled ---@type boolean
   local preview_wrap = props.preview_wrap ---@type boolean|nil
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
-  local flag_fuzzy = props.flag_fuzzy ---@type eve.collection.IObservable<boolean>|nil
-  local flag_regex = props.flag_regex ---@type eve.collection.IObservable<boolean>|nil
-  local flag_selected = props.flag_selected ---@type eve.collection.IObservable<boolean>|nil
+  local flag_fuzzy = props.flag_fuzzy ---@type eve.collection.IObservable -- boolean>|nil
+  local flag_regex = props.flag_regex ---@type eve.collection.IObservable -- boolean>|nil
+  local flag_selected = props.flag_selected ---@type eve.collection.IObservable -- boolean>|nil
   local frecency = props.frecency ---@type eve.collection.IFrecency|nil
-  local input = props.input ---@type eve.collection.IObservable<string>|nil
+  local input = props.input ---@type eve.collection.IObservable -- string>|nil
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
   local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil

@@ -15,15 +15,15 @@ local Observable = require("eve.collection.observable")
 ---@field public input_history          eve.collection.history.ISerializedData
 
 ---@class eve.state.select.item.state
----@field public flag_case_sensitive    eve.collection.IObservable<boolean>
----@field public flag_exclude           eve.collection.IObservable<boolean>
----@field public flag_fuzzy             eve.collection.IObservable<boolean>
----@field public flag_gitignore         eve.collection.IObservable<boolean>
----@field public flag_regex             eve.collection.IObservable<boolean>
----@field public flag_selected          eve.collection.IObservable<boolean>
----@field public includes               eve.collection.IObservable<string[]>
----@field public excludes               eve.collection.IObservable<string[]>
----@field public input                  eve.collection.IObservable<string>
+---@field public flag_case_sensitive    eve.collection.IObservable -- boolean>
+---@field public flag_exclude           eve.collection.IObservable -- boolean>
+---@field public flag_fuzzy             eve.collection.IObservable -- boolean>
+---@field public flag_gitignore         eve.collection.IObservable -- boolean>
+---@field public flag_regex             eve.collection.IObservable -- boolean>
+---@field public flag_selected          eve.collection.IObservable -- boolean>
+---@field public includes               eve.collection.IObservable -- string[]>
+---@field public excludes               eve.collection.IObservable -- string[]>
+---@field public input                  eve.collection.IObservable -- string>
 ---@field public input_history          eve.collection.IHistory
 
 ---@class eve.state.select.item

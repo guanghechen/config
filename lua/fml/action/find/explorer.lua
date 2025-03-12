@@ -128,7 +128,7 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = Observable.from_value(path.normalize(initial_dirpath)) ---@type eve.collection.IObservable<string>
+local state_cwd = Observable.from_value(path.normalize(initial_dirpath)) ---@type eve.collection.IObservable -- string>
 local _select = nil ---@type fml.ux.ISelect|nil
 
 ---@return string

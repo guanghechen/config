@@ -26,9 +26,9 @@ local editor = require("eve.module.editor")
 ---@field public tabnr                  integer
 ---@field public tabtype                eve.e.state.tab.meta.TabType
 ---@field public bufs                   eve.t.state.tab.buf.state[]
----@field public bufid_sourcefile       eve.collection.IObservable<integer|nil>
----@field public winnr_command          eve.collection.IObservable<integer|nil>
----@field public winnr_fixed            eve.collection.IObservable<integer|nil>
+---@field public bufid_sourcefile       eve.collection.IObservable -- integer|nil>
+---@field public winnr_command          eve.collection.IObservable -- integer|nil>
+---@field public winnr_fixed            eve.collection.IObservable -- integer|nil>
 ---
 ---@field public dump                   fun(self: eve.state.tab.meta.state, tabid: integer): eve.t.state.tab.meta.data
 ---@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.t.state.tab.buf.state|nil, integer|nil

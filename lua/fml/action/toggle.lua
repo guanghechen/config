@@ -11,7 +11,7 @@ local state = require("eve.state")
 
 local select = require("fml.fn.select")
 
----@type table<string, eve.collection.IObservable<boolean>>
+---@type table<string, eve.collection.IObservable -- boolean>>
 local flags = {
   ---flight
   flight_ai = state.flight.ai,

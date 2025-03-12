@@ -25,12 +25,12 @@ local Ticker = require("eve.collection.ticker")
 ---
 ---@field public dirtier_statusline     eve.collection.IDirtier
 ---@field public dirtier_tabline        eve.collection.IDirtier
----@field public dirty_winline_nr       eve.collection.IObservable<integer>
+---@field public dirty_winline_nr       eve.collection.IObservable -- integer>
 ---
----@field public lsp_msg                eve.collection.IObservable<string>
+---@field public lsp_msg                eve.collection.IObservable -- string>
 ---@field public maximized_winnrs       table<integer, boolean>
----@field public suppress_warning       eve.collection.IObservable<boolean>
----@field public tmux_zen_mode          eve.collection.IObservable<boolean>
+---@field public suppress_warning       eve.collection.IObservable -- boolean>
+---@field public tmux_zen_mode          eve.collection.IObservable -- boolean>
 ---
 ---@field public reset                  fun(): nil
 

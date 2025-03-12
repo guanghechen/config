@@ -19,13 +19,13 @@ local Observable = require("eve.collection.observable")
 ---@field public spellcheck             boolean
 
 ---@class eve.state.lsp.state
----@field public breakpoints            eve.collection.IObservable<eve.state.lsp.IBreakpointData[]>
----@field public code_lens              eve.collection.IObservable<boolean>
----@field public inlay_hints            eve.collection.IObservable<boolean>
----@field public python_debug_host      eve.collection.IObservable<string>
----@field public python_debug_port      eve.collection.IObservable<integer>
----@field public python_venv_path       eve.collection.IObservable<string|nil>
----@field public spellcheck             eve.collection.IObservable<boolean>
+---@field public breakpoints            eve.collection.IObservable -- eve.state.lsp.IBreakpointData[]>
+---@field public code_lens              eve.collection.IObservable -- boolean>
+---@field public inlay_hints            eve.collection.IObservable -- boolean>
+---@field public python_debug_host      eve.collection.IObservable -- string>
+---@field public python_debug_port      eve.collection.IObservable -- integer>
+---@field public python_venv_path       eve.collection.IObservable -- string|nil>
+---@field public spellcheck             eve.collection.IObservable -- boolean>
 ---
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil
