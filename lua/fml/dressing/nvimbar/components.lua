@@ -246,11 +246,11 @@ function M.bufs(position)
       end
 
       local N = #bufs ---@type integer
-      local bufid_current = meta_tab.bufid_current:snapshot() ---@type integer|nil
-      local bufid_middle = math.min(N, bufid_current or vim.t[tabnr][setting.vars.BUFID_MIDDLE] or 1) ---@type integer
+      local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
+      local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][setting.vars.BUFID_MIDDLE] or 1) ---@type integer
       vim.t[tabnr][setting.vars.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
 
-      local text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_current, N)
+      local text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_sourcefile, N)
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
       if remain_width < 0 then
         return "", "", false
@@ -265,7 +265,7 @@ function M.bufs(position)
       ---@param bufid                   integer
       ---@return boolean
       local function render_left(bufid)
-        local t, hl_t = render_buf(bufs[bufid], bufid, bufid_current, N)
+        local t, hl_t = render_buf(bufs[bufid], bufid, bufid_sourcefile, N)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == 1 and remain_width + left_omitter_width >= w then
@@ -290,7 +290,7 @@ function M.bufs(position)
       ---@param bufid                   integer
       ---@return boolean
       local function render_right(bufid)
-        local t, hl_t = render_buf(bufs[bufid], bufid, bufid_current, N)
+        local t, hl_t = render_buf(bufs[bufid], bufid, bufid_sourcefile, N)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == N and remain_width + right_omitter_width >= w then

@@ -20,13 +20,14 @@ local editor = require("eve.module.editor")
 ---@field public tabid                  integer
 ---@field public tabtype                eve.e.state.tab.meta.TabType
 ---@field public bufs                   eve.t.state.tab.buf.data[]
----@field public bufid_current          integer
+---@field public bufid_sourcefile       integer
 
 ---@class eve.state.tab.meta.state
 ---@field public tabnr                  integer
 ---@field public tabtype                eve.e.state.tab.meta.TabType
 ---@field public bufs                   eve.t.state.tab.buf.state[]
----@field public bufid_current          eve.collection.IObservable
+---@field public bufid_sourcefile       eve.collection.IObservable
+---
 ---@field public dump                   fun(self: eve.state.tab.meta.state, tabid: integer): eve.t.state.tab.meta.data
 ---@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.t.state.tab.buf.state|nil, integer|nil
 ---@field public find_bufid             fun(self: eve.state.tab.meta.state, bufnr: integer): integer|nil
@@ -73,14 +74,14 @@ local M = {}
 ---@param tabnr                        integer
 ---@param tabtype                      eve.e.state.tab.meta.TabType|nil
 ---@param bufs                         eve.t.state.tab.buf.state[]|nil
----@param bufid_current                integer
+---@param bufid_sourcefile             integer
 ---@return eve.state.tab.meta.state
-function Meta.new(tabnr, tabtype, bufs, bufid_current)
+function Meta.new(tabnr, tabtype, bufs, bufid_sourcefile)
   local self = setmetatable({}, Meta)
   self.tabnr = tabnr ---@type integer
   self.tabtype = tabtype or setting.tabtypes.NORMAL ---@type string
   self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
-  self.bufid_current = Observable.from_value(math.max(0, math.min(#bufs, bufid_current or 1)))
+  self.bufid_sourcefile = Observable.from_value(math.max(0, math.min(#bufs, bufid_sourcefile or 1)))
   return self
 end
 
@@ -92,7 +93,7 @@ function Meta:dump(tabid)
     tabid = tabid,
     tabtype = self.tabtype,
     bufs = {},
-    bufid_current = self.bufid_current:snapshot(),
+    bufid_sourcefile = self.bufid_sourcefile:snapshot(),
   }
 
   for _, buf in ipairs(self.bufs) do
@@ -131,7 +132,7 @@ end
 
 ---@return integer|nil
 function Meta:get_bufnr_current()
-  local bufid = self.bufid_current:snapshot() ---@type integer
+  local bufid = self.bufid_sourcefile:snapshot() ---@type integer
   local buf = self.bufs[bufid] ---@type eve.t.state.tab.buf.state|nil
   return buf and buf.bufnr or nil
 end
@@ -165,7 +166,7 @@ function Meta:resolve_bufnr_current(bufnr_current)
   if bufid_next == nil or bufid_next < 1 then
     bufid_next = math.min(1, #self.bufs) ---@type integer
   end
-  self.bufid_current:next(bufid_next)
+  self.bufid_sourcefile:next(bufid_next)
   return bufid_next
 end
 
@@ -246,7 +247,7 @@ S = {
     local bufs = {} ---@type eve.t.state.tab.buf.data[]
     local bufnr_set = {} ---@type table<integer, true>
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-    local bufid_current = 0 ---@type integer
+    local bufid_sourcefile = 0 ---@type integer
 
     local winnr_current = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr_current = vim.api.nvim_win_get_buf(winnr_current) ---@type integer
@@ -257,18 +258,18 @@ S = {
           bufnr_set[bufnr] = true
           bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
           if bufnr == bufnr_current then
-            bufid_current = #bufs
+            bufid_sourcefile = #bufs
           end
         end
       end
     end
 
-    if bufid_current < 1 and #bufs > 0 then
-      bufid_current = 1
+    if bufid_sourcefile < 1 and #bufs > 0 then
+      bufid_sourcefile = 1
     end
 
     ---@type eve.state.tab.meta.state
-    meta = Meta.new(tabnr, tabtype, bufs, bufid_current)
+    meta = Meta.new(tabnr, tabtype, bufs, bufid_sourcefile)
     S.__meta_map__[tabnr] = meta
     return meta
   end,
@@ -344,7 +345,7 @@ S = {
       bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
       bufid = #bufs
     end
-    meta.bufid_current:next(bufid)
+    meta.bufid_sourcefile:next(bufid)
   end,
   on_bufs_close = function(tabnr, bufnrs)
     if #bufnrs < 1 then
@@ -432,14 +433,14 @@ function M.normalize(data)
           and type(item.tabid) == "number"
           and type(item.tabtype) == "string"
           and type(item.bufs) == "table"
-          and type(item.bufid_current) == "number"
+          and type(item.bufid_sourcefile) == "number"
         then
           ---@type eve.t.state.tab.meta.data
           local meta_tab = {
             tabid = item.tabid,
             tabtype = item.tabtype,
             bufs = {},
-            bufid_current = item.bufid_current,
+            bufid_sourcefile = item.bufid_sourcefile,
           }
           local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.data[]
 
@@ -447,8 +448,8 @@ function M.normalize(data)
             if type(buf) == "table" and type(buf.filepath) == "string" and type(buf.pinned) == "boolean" then
               local meta_buf = { filepath = buf.filepath, pinned = buf.pinned } ---@type eve.t.state.tab.buf.data
               bufs[#bufs + 1] = meta_buf
-              if bufid == item.bufid_current then
-                meta_tab.bufid_current = #bufs
+              if bufid == item.bufid_sourcefile then
+                meta_tab.bufid_sourcefile = #bufs
               end
             end
           end
@@ -531,7 +532,7 @@ function M.load(raw_data)
   local filepath2bufnr = fn.filepath2bufnr() ---@type table<string, integer>
   for _, data_tab in ipairs(data.list) do
     local tabnr = tabnrs[data_tab.tabid] ---@type integer|nil
-    local bufid_current = 0 ---@type integer
+    local bufid_sourcefile = 0 ---@type integer
     if tabnr ~= nil then
       local bufs = {} ---@type eve.t.state.tab.buf.state[]
       local bufnr_set = {} ---@type table<integer, boolean>
@@ -542,8 +543,8 @@ function M.load(raw_data)
           local buf = { bufnr = bufnr, pinned = data_buf.pinned } ---@type eve.t.state.tab.buf.state
           bufs[#bufs + 1] = buf
           bufnr_set[bufnr] = true
-          if bufid == data_tab.bufid_current then
-            bufid_current = bufid
+          if bufid == data_tab.bufid_sourcefile then
+            bufid_sourcefile = bufid
           end
         end
       end
@@ -561,7 +562,7 @@ function M.load(raw_data)
       end
 
       ---@type eve.state.tab.meta.state
-      local meta = Meta.new(tabnr, data_tab.tabtype or setting.tabtypes.NORMAL, bufs, bufid_current)
+      local meta = Meta.new(tabnr, data_tab.tabtype or setting.tabtypes.NORMAL, bufs, bufid_sourcefile)
       S.set(tabnr, meta)
     end
   end
