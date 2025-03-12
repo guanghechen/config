@@ -1,19 +1,15 @@
-local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
-local editor = require("eve.module.editor")
 local state = require("eve.state")
-
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
 
 ---@class fml.fn.select_files.IParams
----@field public context                eve.command.IContext
 ---@field public cwd                    string
 ---@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
----@field public input                  ?eve.collection.IObservable
+---@field public input                  ?eve.collection.IObservable<string>
 ---@field public multiple               ?boolean
 ---@field public title                  string
 ---@field public fetch_filepaths        fun(): string[]
@@ -22,12 +18,11 @@ local Select = require("fml.ux.select")
 ---@param params                        fml.fn.select_files.IParams
 ---@return nil
 local function select_files(params)
-  local context = params.context ---@type eve.command.IContext
   local cwd = params.cwd ---@type string
   local dimension = params.dimension ---@type fml.ux.search.IRawDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
-  local input = params.input ---@type eve.collection.IObservable | nil
+  local input = params.input ---@type eve.collection.IObservable<string> | nil
   local multiple = params.multiple ---@type boolean|nil
   local title = params.title ---@type string
   local fetch_filepaths = params.fetch_filepaths ---@type fun(): string[]
@@ -37,13 +32,11 @@ local function select_files(params)
     ---@return string|nil
     get_present = function()
       local present_filepath = nil ---@type string|nil
-      local winnr = context.winnr ---@type integer
-      if fn.is_win_valid(winnr) then
-        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if editor.is_buf_sourcefile(bufnr) then
-          local absolute_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-          present_filepath = path.relative(cwd, absolute_filepath, true) ---@type string
-        end
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+      if bufnr_sourcefile ~= nil then
+        local absolute_filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
+        present_filepath = path.relative(cwd, absolute_filepath, true) ---@type string
       end
       return present_filepath
     end

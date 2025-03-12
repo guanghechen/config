@@ -7,23 +7,22 @@ local state = require("eve.state")
 ---@class fml.action.buf
 local M = {}
 
----@param context                       eve.command.IContext
 ---@param bufnr                         integer the stable unique number of the buffer
 ---@return nil
-function M.open(context, bufnr)
-  local winnr = context.winnr ---@type integer
-  if fn.is_win_valid(winnr) then
-    vim.api.nvim_win_set_buf(winnr, bufnr)
+function M.open(bufnr)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_sourcefile ~= nil then
+    vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
   end
 end
 
----@param context                       eve.command.IContext
 ---@param bufid                         integer the index of buffer list
 ---@return nil
-function M.focus(context, bufid)
-  local tabnr = context.tabnr ---@type integer
-  local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if tab_meta == nil then
+function M.focus(bufid)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta_tab == nil then
     reporter.error({
       from = __module_name__,
       subject = "focus",
@@ -33,18 +32,17 @@ function M.focus(context, bufid)
     return
   end
 
-  local bufs = tab_meta.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
   local bufid_next = fn.navigate_circular(0, bufid, #bufs) ---@type integer
-  M.open(context, bufs[bufid_next].bufnr)
+  M.open(bufs[bufid_next].bufnr)
 end
 
----@param context                       eve.command.IContext
 ---@param step                          integer|nil
 ---@return nil
-function M.focus_left(context, step)
-  local tabnr = context.tabnr ---@type integer
-  local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if tab_meta == nil then
+function M.focus_left(step)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta_tab == nil then
     reporter.error({
       from = __module_name__,
       subject = "focus_left",
@@ -54,24 +52,24 @@ function M.focus_left(context, step)
     return
   end
 
-  local bufnr_cur = context.bufnr ---@type integer
-  local bufs = tab_meta.bufs ---@type eve.t.state.tab.buf.state[]
-  local _, bufid_cur = tab_meta:find_buf(bufnr_cur)
-
-  if bufid_cur ~= nil then
-    step = math.max(1, step or vim.v.count1 or 1)
-    local bufid_next = fn.navigate_circular(bufid_cur, -step, #bufs)
-    M.open(context, bufs[bufid_next].bufnr)
+  local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
+  if bufid_sourcefile == nil then
+    return
   end
+
+  step = math.max(1, step or vim.v.count1 or 1)
+
+  local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufid_next = fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
+  M.open(bufs[bufid_next].bufnr)
 end
 
----@param context                       eve.command.IContext
 ---@param step                          integer|nil
 ---@return nil
-function M.focus_right(context, step)
-  local tabnr = context.tabnr ---@type integer
-  local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if tab_meta == nil then
+function M.focus_right(step)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta_tab == nil then
     reporter.error({
       from = __module_name__,
       subject = "focus_right",
@@ -81,15 +79,15 @@ function M.focus_right(context, step)
     return
   end
 
-  local bufnr_cur = context.bufnr ---@type integer
-  local bufs = tab_meta.bufs ---@type eve.t.state.tab.buf.state[]
-  local _, bufid_cur = tab_meta:find_buf(bufnr_cur)
-
-  if bufid_cur ~= nil then
-    step = math.max(1, step or vim.v.count1 or 1)
-    local bufid_next = fn.navigate_circular(bufid_cur, step, #bufs)
-    M.open(context, bufs[bufid_next].bufnr)
+  local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
+  if bufid_sourcefile == nil then
+    return
   end
+
+  step = math.max(1, step or vim.v.count1 or 1)
+  local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufid_next = fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
+  M.open(bufs[bufid_next].bufnr)
 end
 
 return M

@@ -6,7 +6,6 @@ local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
-local command = require("eve.command")
 
 local FileSelect = require("fml.ux.file_select")
 
@@ -32,13 +31,15 @@ local function get_history_select()
         local uuid_present = "0" ---@type string
         local width = 0 ---@type integer
 
-        local winnr_source = command.context_winnr() ---@type integer|nil
-        local meta = winnr_source and state.win.resolve(winnr_source) or nil ---@type eve.t.state.win.meta.state|nil
+        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+        local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+
+        local meta = winnr_sourcefile and state.win.resolve(winnr_sourcefile) or nil ---@type eve.t.state.win.meta.state|nil
         if meta == nil then
           reporter.error({
             from = __module_name__,
             message = "Cannot find window.",
-            details = { winnr_source = winnr_source },
+            details = { winnr_source = winnr_sourcefile },
           })
           ---@type fml.ux.file_select.IData
           return { cwd = cwd, items = {} }
@@ -114,18 +115,19 @@ local function get_history_select()
         if #items == 1 then
           local item = items[1] ---@type fml.ux.select.IItem
           local item_index = tonumber(item.uuid) ---@type integer|nil
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+
           if item_index ~= nil then
-            local winnr_source = command.context_winnr() ---@type integer|nil
-            local meta = winnr_source and state.win.resolve(winnr_source) or nil ---@type eve.t.state.win.meta.state|nil
+            local meta = winnr_sourcefile and state.win.resolve(winnr_sourcefile) or nil ---@type eve.t.state.win.meta.state|nil
             if meta ~= nil then
               meta.filepath_history:go(item_index)
             end
           end
 
-          local winnr_source = command.context_winnr() ---@type integer|nil
-          if winnr_source and vim.api.nvim_win_is_valid(winnr_source) then
+          if winnr_sourcefile ~= nil then
             widget:close()
-            editor.open_filepath(winnr_source, item.data.filepath)
+            editor.open_filepath(winnr_sourcefile, item.data.filepath)
           end
         end
       end,
@@ -137,19 +139,16 @@ end
 ---@class fml.action.win
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.history(context)
+function M.history()
   local select = get_history_select() ---@type fml.ux.FileSelect
   select:show()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.history_backward(context)
-  local winnr = context.winnr ---@type integer
-  local bufnr = context.bufnr ---@type integer
+function M.history_backward()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == "quickfix" then
@@ -174,11 +173,10 @@ function M.history_backward(context)
   end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.history_forward(context)
-  local winnr = context.winnr ---@type integer
-  local bufnr = context.bufnr ---@type integer
+function M.history_forward()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == "quickfix" then

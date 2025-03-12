@@ -12,7 +12,7 @@ local History = require("eve.collection.history")
 ---
 ---@field public close_present          fun(): nil
 ---@field public equals                 fun(w1: eve.t.ux.IWidget, w2: eve.t.ux.IWidget): boolean
----@field public get_keymaps            fun(widget: eve.t.ux.IWidget, last_winnr: fun(): integer|nil): eve.t.IKeymap[]
+---@field public get_keymaps            fun(widget: eve.t.ux.IWidget): eve.t.IKeymap[]
 ---@field public get_widget_current     fun(): eve.t.ux.IWidget|nil, integer|nil
 ---@field public get_widget_visible     fun(): eve.t.ux.IWidget|nil, integer|nil
 ---@field public open                   fun(widget: eve.t.ux.IWidget): nil
@@ -76,7 +76,7 @@ S = {
       widget:close()
     end
   end,
-  get_keymaps = function(widget, last_winnr)
+  get_keymaps = function(widget)
     local function on_close()
       widget:close()
 
@@ -85,10 +85,9 @@ S = {
         widget_visible:focus()
         S.history:go(widget_visible_index)
       else
-        local winnr = last_winnr()
-        if winnr ~= nil and fn.is_win_valid(winnr) then
-          vim.api.nvim_set_current_win(winnr)
-        end
+        local state_tab = require("eve.state.session.tab").load({}) ---@type eve.state.tab.state
+        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+        state_tab.focus_win_fixed(tabnr)
       end
     end
 

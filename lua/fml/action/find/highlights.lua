@@ -1,6 +1,5 @@
 local cs = require("eve.builtin.color")
 local fn = require("eve.builtin.fn")
-
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.highlights.IItem : fml.ux.select.IItem
@@ -159,10 +158,8 @@ end
 ---@class fml.action.find
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.find_highlights(context)
+function M.find_highlights()
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end

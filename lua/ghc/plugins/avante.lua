@@ -293,7 +293,7 @@ return {
       ------------------------------------------------------------------------------------------------
 
       behaviour = {
-        auto_focus_sidebar = false,
+        auto_focus_sidebar = true,
         enable_token_counting = false,
         minimize_diff = true,
         use_cwd_as_project_root = true,

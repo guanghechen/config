@@ -7,10 +7,11 @@ local command = require("eve.command")
 ---@class fml.action.refresh
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.refresh_all(context)
-  local bufnr = context.bufnr ---@type integer
+function M.refresh_all()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+
   local devmode = state.flight.devmode:snapshot() ---@type boolean
 
   vim.cmd.checktime()
@@ -21,8 +22,8 @@ function M.refresh_all(context)
   end)
 
   pcall(function()
-    if vim.treesitter then
-      local parser = vim.treesitter.get_parser(bufnr)
+    if vim.treesitter and bufnr_sourcefile ~= nil then
+      local parser = vim.treesitter.get_parser(bufnr_sourcefile)
       if parser ~= nil then
         parser:invalidate()
       end

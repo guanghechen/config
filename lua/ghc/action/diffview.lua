@@ -1,39 +1,43 @@
 local ft = require("eve.constant.filetype")
+local state = require("eve.state")
 
 ---@class ghc.action.diffview
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.diffview(context)
+function M.diffview()
   local diffview = require("diffview") ---@type any
   diffview.open()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.history(context)
+function M.history()
   local diffview = require("diffview") ---@type any
   diffview.file_history()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.history_file(context)
-  local bufnr = context.bufnr ---@type integer
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+function M.history_file()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
 
+  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   local diffview = require("diffview") ---@type any
   diffview.file_history(nil, filepath)
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.fs_cwd(context)
-  local bufnr = context.bufnr ---@type integer
-  local filetype = vim.bo[bufnr].filetype ---@type string
+function M.fs_cwd()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
+
+  local filetype = vim.bo[bufnr_sourcefile].filetype ---@type string
   if filetype == ft.DIFFVIEW_FILES or filetype == ft.DIFFVIEW_FILE_HISTORY then
     vim.cmd("DiffviewToggleFiles")
   else

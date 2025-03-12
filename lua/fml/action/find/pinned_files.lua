@@ -1,18 +1,15 @@
 local path = require("eve.builtin.path")
-
 local state = require("eve.state")
 local select_files = require("fml.fn.select_files")
 
 ---@class fml.action.find
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.find_pinned_files(context)
+function M.find_pinned_files()
   local cwd = path.cwd() ---@type string
 
   select_files({
-    context = context,
     cwd = cwd,
     title = "Find pinned files",
     flag_fuzzy = true,

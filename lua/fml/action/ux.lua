@@ -1,25 +1,21 @@
-local fn = require("eve.builtin.fn")
 local command = require("eve.command")
 local state = require("eve.state")
 
 ---@class fml.action.ux
 local M = {}
 
----@param context                       eve.command.IContext
 ---@param arg                           unknown|nil
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.reload_theme(context, arg)
+function M.reload_theme(arg)
   local force = type(arg) == "string" and arg:lower() == "force" ---@type boolean
   state.theme.reload_theme(force, true)
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.resume_last_widget(context)
+function M.resume_last_widget()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   if state.status.maximized_winnrs[winnr_cur] then
-    command.execute(command.definitions.toggle.maximize.uuid, context)
+    command.execute(command.definitions.toggle.maximize.uuid)
     return
   end
 
@@ -29,12 +25,15 @@ function M.resume_last_widget(context)
       widget:focus()
       state.widget.history:go(widget_index)
     else
-      if fn.is_win_valid(context.winnr) then
-        vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_fixed = state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
+
+      if winnr_fixed ~= nil then
+        vim.api.nvim_tabpage_set_win(tabnr, winnr_fixed)
       end
     end
   else
-    command.execute(command.definitions.find.files.uuid, context)
+    command.execute(command.definitions.find.files.uuid)
   end
 end
 

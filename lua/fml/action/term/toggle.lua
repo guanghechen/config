@@ -3,7 +3,7 @@ local __module_name__ = "fml.action.term" ---@type string
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local editor = require("eve.module.editor")
-
+local state = require("eve.state")
 local Terminal = require("fml.ux.terminal")
 
 local terminal_map = {} ---@type table<string, fml.ux.ITerminal>
@@ -91,43 +91,46 @@ function M.toggle(params)
   return terminal
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.toggle_cwd(context)
+function M.toggle_cwd()
   local cwd = path.cwd()
 
   M.toggle({
     name = "cwd",
     cwd = cwd,
     permanent = true,
-    selected_text = context.selected_text or editor.get_selected_text(),
+    selected_text = editor.get_selected_text(),
   })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.toggle_directory(context)
-  local filepath = vim.api.nvim_buf_get_name(context.bufnr) ---@type string
+function M.toggle_directory()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   local cwd = path.dirname(filepath) ---@type string
 
   M.toggle({
     name = "directory",
     cwd = cwd,
     permanent = true,
-    selected_text = context.selected_text or editor.get_selected_text(),
+    selected_text = editor.get_selected_text(),
   })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.toggle_workspace(context)
+function M.toggle_workspace()
   local cwd = path.workspace()
 
   M.toggle({
     name = "workspace",
     cwd = cwd,
     permanent = true,
-    selected_text = context.selected_text or editor.get_selected_text(),
+    selected_text = editor.get_selected_text(),
   })
 end
 

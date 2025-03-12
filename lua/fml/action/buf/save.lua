@@ -9,10 +9,8 @@ local state = require("eve.state")
 ---@class fml.action.buf
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.save(context)
+function M.save()
   local cwd = path.cwd() ---@type string
   local workspace = path.workspace() ---@type string
 
@@ -46,11 +44,21 @@ function M.save(context)
     end
   end
 
-  local winnr = editor.get_projectable_winnr() ---@type integer
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or editor.pick_sourcefile_win() ---@type integer|nil
+  if winnr_sourcefile == nil then
+    reporter.error({
+      from = __module_name__,
+      subject = "save",
+      message = "Cannot find a valid sourcefile winnr",
+    })
+    return
+  end
+
   for _, bufnr in ipairs(new_file_bufnrs) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local initial_text = path.is_under(workspace, filepath) and path.relative(cwd, filepath, true) or filepath ---@type string
-    vim.api.nvim_win_set_buf(winnr, bufnr)
+    vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
 
     vim.ui.input({
       relative = "editor",

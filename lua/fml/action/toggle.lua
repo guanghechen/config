@@ -11,7 +11,7 @@ local state = require("eve.state")
 
 local select = require("fml.fn.select")
 
----@type table<string, eve.collection.IObservable>
+---@type table<string, eve.collection.IObservable<boolean>>
 local flags = {
   ---flight
   flight_ai = state.flight.ai,
@@ -45,8 +45,8 @@ local flags = {
 
 ---@class fml.action.toggle.IItem
 ---@field public title                  string
----@field public snapshot               fun(context: eve.command.IContext): string, string
----@field public action                 fun(context: eve.command.IContext): nil
+---@field public snapshot               fun(): string, string
+---@field public action                 fun(): nil
 
 local ai_providers = command.definitions.toggle.ai_provider.candidates ---@type string[]
 local themes = command.definitions.toggle.theme.candidates ---@type string[]
@@ -59,8 +59,8 @@ local toggle_item_map = {
       local provider = state.flight.ai_provider:snapshot() ---@type string
       return provider, "String"
     end,
-    action = function(context)
-      command.execute(command.definitions.toggle.ai_provider.uuid, context)
+    action = function()
+      command.execute(command.definitions.toggle.ai_provider.uuid)
     end,
   },
   hipatterns_local = {
@@ -68,8 +68,13 @@ local toggle_item_map = {
     snapshot = function()
       return "unknown", "Boolean"
     end,
-    action = function(context)
-      require("mini.hipatterns").toggle(context.bufnr)
+    action = function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_fixed = state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
+      if winnr_fixed ~= nil then
+        local bufnr = vim.api.nvim_win_get_buf(winnr_fixed) ---@type integer
+        require("mini.hipatterns").toggle(bufnr)
+      end
     end,
   },
   lsp_python_debug_host = {
@@ -113,27 +118,21 @@ local toggle_item_map = {
       end
       return venv_path, "String"
     end,
-    action = function(context)
-      command.execute(command.definitions.lsp.select_python_venv.uuid, context)
+    action = function()
+      command.execute(command.definitions.lsp.select_python_venv.uuid)
     end,
   },
   markdown_local = {
     title = "markdown (local)",
-    snapshot = function(context)
-      local ok, render_markdown_state = pcall(require, "render-markdown.state")
-      if not ok then
-        return "Unknown", "Boolean"
-      end
-
-      local flag = state.plugin.render_markdown:snapshot() ---@type boolean
-      local enabled = flag and render_markdown_state.get(context.bufnr).enabled == true
-      return enabled and "true" or "false", "Boolean"
+    snapshot = function()
+      return "unknown", "Boolean"
     end,
-    action = function(context)
+    action = function()
       local ok, render_markdown = pcall(require, "render-markdown")
       if ok then
         state.plugin.render_markdown:next(true)
-        vim.api.nvim_tabpage_set_win(context.tabnr, context.winnr)
+        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+        state.tab.focus_win_fixed(tabnr)
         render_markdown.buf_toggle()
       end
     end,
@@ -143,21 +142,31 @@ local toggle_item_map = {
     snapshot = function()
       return "", "String"
     end,
-    action = function(context)
-      command.execute(command.definitions.toggle.maximize.uuid, context)
+    action = function()
+      command.execute(command.definitions.toggle.maximize.uuid)
     end,
   },
   relativenumber_local = {
     title = "relativenumber (local)",
-    snapshot = function(context)
-      local winnr = context.winnr ---@type integer
-      local flag = vim.wo[winnr].relativenumber ---@type boolean
+    snapshot = function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_command = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+      if winnr_command == nil then
+        return "unknown", "Boolean"
+      end
+
+      local flag = vim.wo[winnr_command].relativenumber ---@type boolean
       return flag and "true" or "false", "Boolean"
     end,
-    action = function(context)
-      local winnr = context.winnr ---@type integer
-      local flag = vim.wo[winnr].relativenumber ---@type boolean
-      vim.wo[winnr].relativenumber = not flag
+    action = function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_command = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+      if winnr_command == nil then
+        return
+      end
+
+      local flag = vim.wo[winnr_command].relativenumber ---@type boolean
+      vim.wo[winnr_command].relativenumber = not flag
     end,
   },
   theme = {
@@ -166,8 +175,8 @@ local toggle_item_map = {
       local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
       return theme, "String"
     end,
-    action = function(context)
-      command.execute(command.definitions.toggle.theme.uuid, context)
+    action = function()
+      command.execute(command.definitions.toggle.theme.uuid)
     end,
   },
   theme_variant = {
@@ -196,15 +205,25 @@ local toggle_item_map = {
   },
   wrap_local = {
     title = "wrap (local)",
-    snapshot = function(context)
-      local winnr = context.winnr ---@type integer
-      local flag = vim.wo[winnr].wrap ---@type boolean
+    snapshot = function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_command = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+      if winnr_command == nil then
+        return "unknown", "Boolean"
+      end
+
+      local flag = vim.wo[winnr_command].wrap ---@type boolean
       return flag and "true" or "false", "Boolean"
     end,
-    action = function(context)
-      local winnr = context.winnr ---@type integer
-      local flag = vim.wo[winnr].wrap ---@type boolean
-      vim.wo[winnr].wrap = not flag
+    action = function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_command = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+      if winnr_command == nil then
+        return
+      end
+
+      local flag = vim.wo[winnr_command].wrap ---@type boolean
+      vim.wo[winnr_command].wrap = not flag
     end,
   },
 }
@@ -264,14 +283,13 @@ command.define({
 ---@class fml.action.ux
 local M = {}
 
----@param context                       eve.command.IContext
 ---@param arg                           string|nil
 ---@return nil
-function M.list(context, arg)
+function M.list(arg)
   local flag_name = type(arg) == "string" and arg:lower() or "" ---@type string
   if toggle_item_map[flag_name] ~= nil then
     local item = toggle_item_map[flag_name] ---@type fml.action.toggle.IItem
-    item.action(context)
+    item.action()
   else
     select({
       title = "Toggle Select",
@@ -294,7 +312,7 @@ function M.list(context, arg)
       end,
       render_item = function(item, match)
         local flag_item = toggle_item_map[item.uuid] ---@type fml.action.toggle.IItem
-        local text_flag, hln_flag = flag_item.snapshot(context)
+        local text_flag, hln_flag = flag_item.snapshot()
 
         local width_padding = 32 ---@type integer
         local padding = string.rep(" ", width_padding - vim.api.nvim_strwidth(item.text)) ---@type string
@@ -314,18 +332,16 @@ function M.list(context, arg)
         if #items == 1 then
           local item = items[1] ---@type fml.ux.select.IItem
           widget:close()
-          item.data.action(context)
+          item.data.action()
         end
       end,
     })
   end
 end
 
----@param context                       eve.command.IContext
 ---@param arg                           string|nil
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.toggle_ai_provider(context, arg)
+function M.toggle_ai_provider(arg)
   local ai_provider = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.list_contains(ai_providers, ai_provider) then
     state.flight.ai_provider:next(ai_provider)
@@ -369,17 +385,21 @@ function M.toggle_ai_provider(context, arg)
   end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.toggle_maximize(context)
-  local winnr_cur = vim.api.nvim_tabpage_get_win(context.tabnr) ---@type integer
-  if state.status.maximized_winnrs[winnr_cur] then
-    state.status.maximized_winnrs[winnr_cur] = nil
-    vim.api.nvim_win_close(winnr_cur, true)
+function M.toggle_maximize()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_fixed = state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
+  if winnr_fixed == nil then
     return
   end
 
-  local winnrs = vim.api.nvim_tabpage_list_wins(context.tabnr) ---@type integer[]
+  if state.status.maximized_winnrs[winnr_fixed] then
+    state.status.maximized_winnrs[winnr_fixed] = nil
+    vim.api.nvim_win_close(winnr_fixed, true)
+    return
+  end
+
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   local winnr_maximized = nil ---@type integer|nil
   for _, winnr in ipairs(winnrs) do
     if state.status.maximized_winnrs[winnr] then
@@ -389,11 +409,11 @@ function M.toggle_maximize(context)
   end
 
   if winnr_maximized ~= nil and vim.api.nvim_win_is_valid(winnr_maximized) then
-    vim.api.nvim_tabpage_set_win(context.tabnr, winnr_maximized)
+    vim.api.nvim_tabpage_set_win(tabnr, winnr_maximized)
     return
   end
 
-  local bufnr = context.bufnr ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr_fixed) ---@type integer
   if fn.is_buf_valid(bufnr) then
     local winnr = vim.api.nvim_open_win(bufnr, false, {
       relative = "editor",
@@ -413,18 +433,16 @@ function M.toggle_maximize(context)
     vim.wo[winnr].signcolumn = "yes"
     vim.wo[winnr].wrap = false
 
-    vim.w[winnr][varnames.FLAG_SOURCEFILE] = editor.is_win_sourcefile(winnr_cur)
+    vim.w[winnr][varnames.FLAG_SOURCEFILE] = editor.is_win_sourcefile(winnr_fixed)
     state.status.maximized_winnrs[winnr] = true
     vim.api.nvim_win_set_buf(winnr, bufnr)
-    vim.api.nvim_tabpage_set_win(context.tabnr, winnr)
+    vim.api.nvim_tabpage_set_win(tabnr, winnr)
   end
 end
 
----@param context                       eve.command.IContext
 ---@param arg                           unknown|nil
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.toggle_theme(context, arg)
+function M.toggle_theme(arg)
   local theme_name = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.list_contains(themes, theme_name) then
     apply_theme(theme_name)

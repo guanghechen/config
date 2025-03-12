@@ -21,21 +21,21 @@ local setting = require("eve.constant.setting")
 ---@field public gitdiff_expand_all     boolean
 
 ---@class eve.state.flight.state
----@field public ai                     eve.collection.IObservable
----@field public ai_provider            eve.collection.IObservable
----@field public autoformat             eve.collection.IObservable
----@field public autoload               eve.collection.IObservable
----@field public autosave               eve.collection.IObservable
----@field public devmode                eve.collection.IObservable
+---@field public ai                     eve.collection.IObservable<boolean>
+---@field public ai_provider            eve.collection.IObservable<eve.e.AiProvider>
+---@field public autoformat             eve.collection.IObservable<boolean>
+---@field public autoload               eve.collection.IObservable<boolean>
+---@field public autosave               eve.collection.IObservable<boolean>
+---@field public devmode                eve.collection.IObservable<boolean>
 ---
----@field public dressing_hipairs       eve.collection.IObservable
----@field public dressing_illumniate    eve.collection.IObservable
----@field public dressing_input         eve.collection.IObservable
----@field public dressing_select        eve.collection.IObservable
----@field public dressing_winsep_fixed  eve.collection.IObservable
----@field public dressing_winsep_float  eve.collection.IObservable
+---@field public dressing_hipairs       eve.collection.IObservable<boolean>
+---@field public dressing_illumniate    eve.collection.IObservable<boolean>
+---@field public dressing_input         eve.collection.IObservable<boolean>
+---@field public dressing_select        eve.collection.IObservable<boolean>
+---@field public dressing_winsep_fixed  eve.collection.IObservable<boolean>
+---@field public dressing_winsep_float  eve.collection.IObservable<boolean>
 ---
----@field public gitdiff_expand_all     eve.collection.IObservable
+---@field public gitdiff_expand_all     eve.collection.IObservable<boolean>
 
 ---@class eve.state.flight
 ---@field public defaults               fun(): eve.state.flight.data

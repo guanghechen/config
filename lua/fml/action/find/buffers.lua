@@ -4,8 +4,6 @@ local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
-local winpicker = require("eve.module.winpicker")
-local command = require("eve.command")
 local state = require("eve.state")
 
 local Select = require("fml.ux.select")
@@ -75,14 +73,12 @@ local function get_select()
 
           local bufnr = item.data.bufnr ---@type integer
           if not fn.is_buf_valid(bufnr) then
+            _select:mark_item_deleted(item.uuid)
             return
           end
 
           if not editor.is_buf_sourcefile(bufnr) then
-            if fn.is_buf_valid(bufnr) then
-              vim.api.nvim_buf_delete(bufnr, { force = true })
-            end
-            _select:mark_item_deleted(item.uuid)
+            vim.api.nvim_buf_delete(bufnr, { force = true })
             return
           end
 
@@ -228,12 +224,12 @@ local function get_select()
         widget:hide()
 
         if #items > 0 then
-          local winnr_source = command.context_winnr() ---@type integer|nil
-          local winnr = winpicker.pick_window(winpicker.filters.project, winnr_source, true) ---@type integer|nil
-          if winnr ~= nil then
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or editor.pick_sourcefile_win() ---@type integer|nil
+          if winnr_sourcefile ~= nil then
             for _, item in ipairs(items) do
               local data = item.data ---@type fml.action.find.buffers.IItemData
-              vim.api.nvim_win_set_buf(winnr, data.bufnr)
+              vim.api.nvim_win_set_buf(winnr_sourcefile, data.bufnr)
             end
           end
         end
@@ -246,27 +242,21 @@ end
 ---@class fml.action.find
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.find_bufs(context)
+function M.find_bufs()
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.find_bufs_file(context)
+function M.find_bufs_file()
   state.select.find_buffer_scope:next("F")
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.find_bufs_term(context)
+function M.find_bufs_term()
   state.select.find_buffer_scope:next("T")
   local select = get_select() ---@type fml.ux.ISelect
   select:show()

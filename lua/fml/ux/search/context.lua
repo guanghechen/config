@@ -35,12 +35,12 @@ local signs = require("eve.constant.sign")
 ---@field public dirtier_preview        eve.collection.IDirtier
 ---@field public dirtier_selected       eve.collection.IDirtier
 ---
----@field public flag_selected          eve.collection.IObservable
----@field public input                  eve.collection.IObservable
+---@field public flag_selected          eve.collection.IObservable<boolean>
+---@field public input                  eve.collection.IObservable<string>
 ---@field public input_history          eve.collection.IHistory|nil
----@field public input_line_count       eve.collection.IObservable
----@field public state_has_matched      eve.collection.IObservable
----@field public status                 eve.collection.IObservable
+---@field public input_line_count       eve.collection.IObservable<integer>
+---@field public state_has_matched      eve.collection.IObservable<boolean>
+---@field public status                 eve.collection.IObservable<eve.e.WidgetStatus>
 ---
 ---@field public bufnr_input            integer|nil
 ---@field public bufnr_main             integer|nil
@@ -106,8 +106,8 @@ M.__index = M
 ---@field public dimension              fml.ux.search.IRawDimension|nil
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             fml.ux.search.IFetchData
----@field public flag_selected          eve.collection.IObservable
----@field public input                  eve.collection.IObservable
+---@field public flag_selected          eve.collection.IObservable<boolean>
+---@field public input                  eve.collection.IObservable<string>
 ---@field public input_history          eve.collection.IHistory|nil
 ---@field public multiple               boolean|nil
 ---@field public permanent              boolean|nil
@@ -127,11 +127,11 @@ function M.new(props)
   local dirtier_preview = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
   local dirtier_selected = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
 
-  local flag_selected = props.flag_selected ---@type eve.collection.IObservable
-  local input = props.input ---@type eve.collection.IObservable
+  local flag_selected = props.flag_selected ---@type eve.collection.IObservable<boolean>
+  local input = props.input ---@type eve.collection.IObservable<string>
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
-  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable
-  local state_has_matched = Observable.new({ value = false, equals = fn.falsy }) ---@type eve.collection.IObservable
+  local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable<integer>
+  local state_has_matched = Observable.new({ value = false, equals = fn.falsy }) ---@type eve.collection.IObservable<boolean>
   local status = Observable.from_value("hidden")
 
   local cfg_input_title = props.title ---@type string

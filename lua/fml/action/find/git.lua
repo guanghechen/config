@@ -7,14 +7,12 @@ local select_files = require("fml.fn.select_files")
 ---@class fml.action.find
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.find_git_not_committed(context)
+function M.find_git_not_committed()
   local cwd = path.cwd() ---@type string
   local workspace = path.workspace() ---@type string
 
   select_files({
-    context = context,
     cwd = cwd,
     title = "Find: git files (Not committed)",
     flag_fuzzy = true,

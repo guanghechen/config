@@ -1,6 +1,4 @@
 local state = require("eve.state")
-local Subscriber = require("eve.collection.subscriber")
-
 local Select = require("fml.ux.select")
 
 ---@class fml.dressing.select.IOptions

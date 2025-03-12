@@ -3,6 +3,7 @@ local __module_name__ = "fml.action.code" ---@type string
 local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
+local state = require("eve.state")
 local Terminal = require("fml.ux.terminal")
 
 local code_runner_terminals = {} ---@type table<string, fml.ux.ITerminal>
@@ -68,12 +69,16 @@ local runners = {
 ---@class fml.action.code
 local M = {}
 
----@param context                       eve.command.IContext
 ---@param force                         boolean
 ---@return nil
-function M.run(context, force)
-  local bufnr = context.bufnr ---@type integer
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+function M.run(force)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   local extname = path.extname(filepath) ---@type string
   local key = extname:sub(2) ---@type string
 

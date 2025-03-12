@@ -294,10 +294,8 @@ end
 ---@class fml.action.lsp.python_venv
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.activate_venv(context)
+function M.activate_venv()
   local select = get_select()
   select:show()
 end

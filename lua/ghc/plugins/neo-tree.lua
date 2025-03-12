@@ -1,5 +1,6 @@
 local fn = require("eve.builtin.fn")
 local icons = require("eve.constant.icon")
+local editor = require("eve.module.editor")
 
 ---@return nil
 local function recursively_toggle_all(state)
@@ -342,8 +343,7 @@ return {
     package.loaded["window-picker"] = {
       pick_window = function()
         local winnr_source = vim.api.nvim_get_current_win() ---@type integer
-        local winpicker = require("eve.module.winpicker")
-        return winpicker.pick_window(winpicker.filters.project, winnr_source, false)
+        return editor.pick_projectable_win(winnr_source)
       end,
     }
 

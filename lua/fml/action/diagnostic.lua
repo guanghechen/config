@@ -1,84 +1,78 @@
 ---@class fml.action.diagnostic
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_next(context)
-  vim.diagnostic.goto_next({ win_id = context.winnr })
+function M.goto_next()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_next({ win_id = winnr })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_next_error(context)
-  vim.diagnostic.goto_next({ win_id = context.winnr, severity = vim.diagnostic.severity.ERROR })
+function M.goto_next_error()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_next({ win_id = winnr, severity = vim.diagnostic.severity.ERROR })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_next_warn(context)
-  vim.diagnostic.goto_next({ win_id = context.winnr, severity = vim.diagnostic.severity.WARN })
+function M.goto_next_warn()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_next({ win_id = winnr, severity = vim.diagnostic.severity.WARN })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_next_hint(context)
-  vim.diagnostic.goto_next({ win_id = context.winnr, severity = vim.diagnostic.severity.HINT })
+function M.goto_next_hint()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_next({ win_id = winnr, severity = vim.diagnostic.severity.HINT })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_next_info(context)
-  vim.diagnostic.goto_next({ win_id = context.winnr, severity = vim.diagnostic.severity.INFO })
+function M.goto_next_info()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_next({ win_id = winnr, severity = vim.diagnostic.severity.INFO })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.goto_next_quickfix(context)
+function M.goto_next_quickfix()
   vim.cmd.cnext()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_prev(context)
-  vim.diagnostic.goto_prev({ win_id = context.winnr })
+function M.goto_prev()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_prev({ win_id = winnr })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_prev_error(context)
-  vim.diagnostic.goto_prev({ win_id = context.winnr, severity = vim.diagnostic.severity.ERROR })
+function M.goto_prev_error()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_prev({ win_id = winnr, severity = vim.diagnostic.severity.ERROR })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_prev_warn(context)
-  vim.diagnostic.goto_prev({ win_id = context.winnr, severity = vim.diagnostic.severity.WARN })
+function M.goto_prev_warn()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_prev({ win_id = winnr, severity = vim.diagnostic.severity.WARN })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_prev_hint(context)
-  vim.diagnostic.goto_prev({ win_id = context.winnr, severity = vim.diagnostic.severity.HINT })
+function M.goto_prev_hint()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_prev({ win_id = winnr, severity = vim.diagnostic.severity.HINT })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_prev_info(context)
-  vim.diagnostic.goto_prev({ win_id = context.winnr, severity = vim.diagnostic.severity.INFO })
+function M.goto_prev_info()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.diagnostic.goto_prev({ win_id = winnr, severity = vim.diagnostic.severity.INFO })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.goto_prev_quickfix(context)
+function M.goto_prev_quickfix()
   vim.cmd.cprev()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.line(context)
+function M.line()
   local _, winnr = vim.diagnostic.open_float({
     header = "diagnostic (line)",
     scope = "line",

@@ -1,5 +1,6 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
+local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
@@ -23,16 +24,27 @@ end
 ---@class fml.action.buf
 local M = {}
 
----@param context                       eve.command.IContext
+---@param bufnr                         integer|nil
 ---@return nil
-function M.close(context)
-  local tabnr = context.tabnr ---@type integer
-  local winnr = context.winnr ---@type integer
-  local bufnr = context.bufnr ---@type integer
+function M.close(bufnr)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  if bufnr ~= nil then
+    if fn.is_buf_valid(bufnr) then
+      close(tabnr, { bufnr })
+    end
+    return
+  end
+
+  bufnr = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr == nil then
+    return
+  end
+
+  local winnr = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
   local win_meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
 
   ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.
-  if win_meta ~= nil then
+  if winnr ~= nil and win_meta ~= nil then
     local last_filepath = win_meta.filepath_history:backward() ---@type string|nil
     local bufnr_last = state.buf.locate_by_filepath(last_filepath) ---@type integer|nil
     if bufnr_last ~= nil and vim.api.nvim_buf_is_valid(bufnr_last) then
@@ -43,12 +55,11 @@ function M.close(context)
   close(tabnr, { bufnr })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.close_to_leftest(context)
-  local tabnr = context.tabnr ---@type integer
-  local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if tab_meta == nil then
+function M.close_to_leftest()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta_tab == nil then
     reporter.error({
       from = __module_name__,
       subject = "close_to_leftest",
@@ -58,29 +69,30 @@ function M.close_to_leftest(context)
     return
   end
 
-  local bufnr_cur = context.bufnr ---@type integer
-  local bufnrs_to_remove = {} ---@type integer[]
-  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
+  if bufid_sourcefile == nil then
+    return
+  end
 
-  local _, index = tab_meta:find_buf(bufnr_cur)
-  if index ~= nil then
-    for i = index - 1, 1, -1 do
-      local buf = tab_meta.bufs[i] ---@type eve.t.state.tab.buf.state
-      if not buf.pinned and not bufnrs_visible[buf.bufnr] then
-        table.insert(bufnrs_to_remove, buf.bufnr)
-      end
+  local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_to_remove = {} ---@type integer[]
+
+  for i = bufid_sourcefile - 1, 1, -1 do
+    local buf = bufs[i] ---@type eve.t.state.tab.buf.state
+    if not buf.pinned and not bufnrs_visible[buf.bufnr] then
+      table.insert(bufnrs_to_remove, buf.bufnr)
     end
   end
 
   close(tabnr, bufnrs_to_remove)
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.close_to_rightest(context)
-  local tabnr = context.tabnr ---@type integer
-  local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if tab_meta == nil then
+function M.close_to_rightest()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta_tab == nil then
     reporter.error({
       from = __module_name__,
       subject = "close_to_rightest",
@@ -90,29 +102,30 @@ function M.close_to_rightest(context)
     return
   end
 
-  local bufnr_cur = context.bufnr ---@type integer
-  local bufnrs_to_remove = {} ---@type integer[]
-  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
+  if bufid_sourcefile == nil then
+    return
+  end
 
-  local _, index = tab_meta:find_buf(bufnr_cur)
-  if index ~= nil then
-    for i = index + 1, #tab_meta.bufs, 1 do
-      local buf = tab_meta.bufs[i] ---@type eve.t.state.tab.buf.state
-      if not buf.pinned and not bufnrs_visible[buf.bufnr] then
-        table.insert(bufnrs_to_remove, buf.bufnr)
-      end
+  local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_to_remove = {} ---@type integer[]
+
+  for i = bufid_sourcefile + 1, #bufs, 1 do
+    local buf = bufs[i] ---@type eve.t.state.tab.buf.state
+    if not buf.pinned and not bufnrs_visible[buf.bufnr] then
+      table.insert(bufnrs_to_remove, buf.bufnr)
     end
   end
 
   close(tabnr, bufnrs_to_remove)
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.close_others(context)
-  local tabnr = context.tabnr ---@type integer
-  local tab_meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if tab_meta == nil then
+function M.close_others()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta_tab == nil then
     reporter.error({
       from = __module_name__,
       subject = "close_others",
@@ -125,7 +138,7 @@ function M.close_others(context)
   local bufnrs_to_remove = {} ---@type integer[]
   local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
-  for _, buf in ipairs(tab_meta.bufs) do
+  for _, buf in ipairs(meta_tab.bufs) do
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then
       table.insert(bufnrs_to_remove, buf.bufnr)
     end

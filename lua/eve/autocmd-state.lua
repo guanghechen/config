@@ -57,6 +57,9 @@ vim.api.nvim_create_autocmd("TabEnter", {
   group = fn.augroup("state_on_tab_enter"),
   callback = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+
+    state.tab.on_win_focus(tabnr, winnr)
     state.tab.tab_history:push(tabnr)
     state.status.dirtier_statusline:mark_dirty()
     state.status.dirtier_tabline:mark_dirty()
@@ -78,8 +81,19 @@ vim.api.nvim_create_autocmd("TabClosed", {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
-  group = fn.augroup("state_on_win_or_buf_enter"),
+vim.api.nvim_create_autocmd({ "BufDelete" }, {
+  group = fn.augroup("state_on_buf_delete"),
+  callback = function()
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    vim.schedule(function()
+      state.status.dirtier_tabline:mark_dirty()
+      state.tab.on_buf_delete(tabnr)
+    end)
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+  group = fn.augroup("state_on_buf_win_enter"),
   callback = function(arg)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -87,6 +101,23 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
 
     state.win.on_buf_enter(winnr, bufnr)
     state.tab.on_buf_enter(tabnr, winnr, bufnr)
+
+    state.status.dirty_winline_nr:next(winnr)
+    state.status.dirtier_statusline:mark_dirty()
+    state.status.dirtier_tabline:mark_dirty()
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "WinEnter" }, {
+  group = fn.augroup("state_on_win_enter"),
+  callback = function(arg)
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+    local bufnr = arg.buf ---@type integer
+
+    state.win.on_buf_enter(winnr, bufnr)
+    state.tab.on_buf_enter(tabnr, winnr, bufnr)
+    state.tab.on_win_focus(tabnr, winnr)
 
     state.status.dirty_winline_nr:next(winnr)
     state.status.dirtier_statusline:mark_dirty()

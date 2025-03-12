@@ -1,10 +1,9 @@
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 
----@param context                       eve.command.IContext
 ---@return nil
-local function focus(context)
-  local selected_text = context.selected_text or editor.get_selected_text() ---@type string
+local function focus()
+  local selected_text = editor.get_selected_text() ---@type string
   if selected_text and #selected_text > 1 then
     local next_search_pattern = selected_text ---@type string
     state.select.search_file.flag_regex:next(false)
@@ -19,82 +18,72 @@ end
 ---@class fml.action.search
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.search_files(context)
+function M.search_files()
   state.search_file.flag_replace:next(false)
-  focus(context)
+  focus()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.search_files_in_buffer(context)
+function M.search_files_in_buffer()
   state.search_file.flag_replace:next(false)
   state.select.search_file_scope:next("B")
-  focus(context)
+  focus()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.search_files_in_cwd(context)
+function M.search_files_in_cwd()
   state.search_file.flag_replace:next(false)
   state.select.search_file_scope:next("C")
-  focus(context)
+  focus()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.search_files_in_directory(context)
+function M.search_files_in_directory()
   state.search_file.flag_replace:next(false)
   state.select.search_file_scope:next("D")
-  focus(context)
+  focus()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.search_files_in_workspace(context)
+function M.search_files_in_workspace()
   state.search_file.flag_replace:next(false)
   state.select.search_file_scope:next("W")
-  focus(context)
+  focus()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.replace_files(context)
+function M.replace_files()
   state.search_file.flag_replace:next(true)
-  focus(context)
+  focus()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.replace_files_in_buffer(context)
+function M.replace_files_in_buffer()
   state.search_file.flag_replace:next(true)
   state.select.search_file_scope:next("B")
-  focus(context)
+  focus()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.replace_files_in_cwd(context)
+function M.replace_files_in_cwd()
   state.search_file.flag_replace:next(true)
   state.select.search_file_scope:next("C")
-  focus(context)
+  focus()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.replace_files_in_directory(context)
+function M.replace_files_in_directory()
   state.search_file.flag_replace:next(true)
   state.select.search_file_scope:next("D")
-  focus(context)
+  focus()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.replace_files_in_workspace(context)
+function M.replace_files_in_workspace()
   state.search_file.flag_replace:next(true)
   state.select.search_file_scope:next("W")
-  focus(context)
+  focus()
 end
 
 return M

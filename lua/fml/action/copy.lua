@@ -3,8 +3,8 @@ local __module_name__ = "fml.action.copy" ---@type string
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
-
 local command = require("eve.command")
+local state = require("eve.state")
 local select = require("fml.fn.select")
 
 ---@param candidate                     eve.command.definitions.copy.Scope
@@ -40,21 +40,23 @@ end
 ---@class fml.action.copy
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.copy_char_under_cursor(context)
+function M.copy_char_under_cursor()
   local col = vim.fn.col(".")
   local char = vim.fn.getline("."):sub(col, col)
   vim.fn.setreg("+", char)
 end
 
----@param context                       eve.command.IContext
 ---@param arg                           unknown|nil
 ---@return nil
-function M.copy_filepath(context, arg)
-  local bufnr = context.bufnr ---@type integer
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+function M.copy_filepath(arg)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   local scopes = command.definitions.copy.filepath.candidates
   local scope = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.list_contains(scopes, scope) then
@@ -92,19 +94,27 @@ function M.copy_filepath(context, arg)
   end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.copy_filepath_absolute(context)
-  local bufnr = context.bufnr ---@type integer
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+function M.copy_filepath_absolute()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   copy_current_filepath("absolute", filepath)
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.copy_filepath_relative(context)
-  local bufnr = context.bufnr ---@type integer
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+function M.copy_filepath_relative()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   copy_current_filepath("relative", filepath)
 end
 

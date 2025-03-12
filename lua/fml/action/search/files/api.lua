@@ -9,7 +9,6 @@ local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
-local command = require("eve.command")
 
 local context = require("fml.action.search.files.context")
 
@@ -614,13 +613,14 @@ function M.open_files(items, frecency)
 
   if #file_items > 0 then
     context.hide()
-    local winnr_source = command.context_winnr() ---@type integer|nil
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
     for _, file_item in ipairs(file_items) do
       local absolute_filepath = path.resolve(cwd, file_item.filepath) ---@type string
       local relative_filepath = path.relative(workspace, absolute_filepath, true) ---@type string
       frecency:access(relative_filepath)
 
-      editor.open_filepath(winnr_source, absolute_filepath, file_item.lnum, file_item.col) ---@type boolean
+      editor.open_filepath(winnr_sourcefile, absolute_filepath, file_item.lnum, file_item.col) ---@type boolean
     end
   end
 end

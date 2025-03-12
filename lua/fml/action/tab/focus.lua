@@ -14,11 +14,9 @@ end
 ---@class fml.action.tab
 local M = {}
 
----@param context                       eve.command.IContext
 ---@param tabid                         integer the index of tab list
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.focus(context, tabid)
+function M.focus(tabid)
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
   local tabid_next = fn.navigate_limit(0, tabid, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
@@ -26,11 +24,9 @@ function M.focus(context, tabid)
   go(tabnr_next)
 end
 
----@param context                       eve.command.IContext
 ---@param step                          integer|nil
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.focus_left(context, step)
+function M.focus_left(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
@@ -40,11 +36,9 @@ function M.focus_left(context, step)
   go(tabnr_next)
 end
 
----@param context                       eve.command.IContext
 ---@param step                          integer|nil
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.focus_right(context, step)
+function M.focus_right(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
   local tab_count = vim.fn.tabpagenr("$") ---@type integer

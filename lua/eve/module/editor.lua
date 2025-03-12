@@ -9,6 +9,70 @@ local winpicker = require("eve.module.winpicker")
 ---@class eve.module.editor
 local M = {}
 
+---@class eve.module.editor.winpicker_filters
+M.winpicker_filters = {
+  ---@param winnr                       integer
+  ---@return boolean
+  focusable = function(winnr)
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    return not ft.is_not_focusable_filetype(filetype)
+  end,
+  ---@param winnr                       integer
+  ---@return boolean
+  projectable = function(winnr)
+    if vim.wo[winnr].winfixbuf or fn.is_win_floating(winnr) then
+      return false
+    end
+
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    return not ft.is_not_projectable_filetype(filetype)
+  end,
+  sourcefile = function(winnr)
+    return not vim.wo[winnr].winfixbuf and M.is_win_sourcefile(winnr)
+  end,
+  ---@param winnr                       integer
+  ---@return boolean
+  swappable = function(winnr)
+    if vim.wo[winnr].winfixbuf or fn.is_win_floating(winnr) then
+      return false
+    end
+
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    return not ft.is_not_projectable_filetype(filetype)
+  end,
+}
+
+---@param winnr_source                  integer|nil
+---@return integer|nil
+function M.pick_focusable_win(winnr_source)
+  return winpicker.pick_window(M.winpicker_filters.focusable, winnr_source, false) ---@type integer|nil
+end
+
+---@param winnr_source                  integer|nil
+---@return integer|nil
+function M.pick_projectable_win(winnr_source)
+  return winpicker.pick_window(M.winpicker_filters.projectable, winnr_source, false) ---@type integer|nil
+end
+
+---@param winnr_source                  integer|nil
+---@return integer|nil
+function M.pick_sourcefile_win(winnr_source)
+  if winnr_source ~= nil and fn.is_win_valid(winnr_source) and M.winpicker_filters.sourcefile(winnr_source) then
+    return winnr_source
+  end
+
+  return winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true) ---@type integer|nil
+end
+
+---@param winnr_source                  integer|nil
+---@return integer|nil
+function M.pick_swappable_win(winnr_source)
+  return winpicker.pick_window(M.winpicker_filters.swappable, winnr_source, false) ---@type integer|nil
+end
+
 ---@param tabnr                         integer
 ---@return eve.e.state.tab.meta.TabType
 function M.calc_tabtype(tabnr)
@@ -104,33 +168,6 @@ function M.get_visible_bufnrs(tabnr)
   return bufnrs
 end
 
----@param winnr_source                  integer|nil
----@return integer
-function M.get_projectable_winnr(winnr_source)
-  if
-    winnr_source ~= nil
-    and winnr_source > 0
-    and vim.api.nvim_win_is_valid(winnr_source)
-    and winpicker.filters.project(winnr_source)
-  then
-    return winnr_source
-  end
-
-  local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
-  for _, winnr in ipairs(winnrs) do
-    if winpicker.filters.project(winnr) then
-      return winnr
-    end
-  end
-
-  for _, winnr in ipairs(winnrs) do
-    if not fn.is_win_floating(winnr) then
-      return winnr
-    end
-  end
-  return -1
-end
-
 ---@param bufnr                         integer
 ---@return boolean
 function M.is_buf_sourcefile(bufnr)
@@ -140,7 +177,11 @@ function M.is_buf_sourcefile(bufnr)
   end
 
   if not vim.bo[bufnr].buflisted then
-    vim.b[bufnr][varnames.FLAG_SOURCEFILE] = false
+    return false
+  end
+
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  if buftype == "nofile" then
     return false
   end
 
@@ -196,16 +237,7 @@ end
 function M.open_filepath(winnr_source, filepath, lnum, col)
   filepath = path.normalize(filepath)
 
-  ---@type integer|nil
-  local winnr = (
-    winnr_source ~= nil
-    and winnr_source > 0
-    and vim.api.nvim_win_is_valid(winnr_source)
-    and winpicker.filters.project(winnr_source)
-  )
-      and winnr_source
-    or winpicker.pick_window(winpicker.filters.project, winnr_source, true)
-
+  local winnr = M.pick_sourcefile_win(winnr_source) ---@type integer|nil
   if winnr == nil then
     return false
   end
@@ -225,7 +257,7 @@ function M.open_filepath(winnr_source, filepath, lnum, col)
   return true
 end
 
----@param winnr_source                  integer
+---@param winnr_source                  integer|nil
 ---@param filepaths                     string[]
 ---@return nil
 function M.open_filepaths(winnr_source, filepaths)
@@ -238,10 +270,10 @@ function M.open_filepaths(winnr_source, filepaths)
     winnr_source ~= nil
     and winnr_source > 0
     and vim.api.nvim_win_is_valid(winnr_source)
-    and winpicker.filters.project(winnr_source)
+    and M.winpicker_filters.sourcefile(winnr_source)
   )
       and winnr_source
-    or winpicker.pick_window(winpicker.filters.project, winnr_source, true)
+    or winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true)
 
   if winnr == nil then
     return

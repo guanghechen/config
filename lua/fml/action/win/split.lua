@@ -14,10 +14,8 @@ end
 ---@class fml.action.win
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.split_above(context)
+function M.split_above()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if not fn.is_win_floating(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
@@ -28,10 +26,8 @@ function M.split_above(context)
   end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.split_right(context)
+function M.split_right()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if not fn.is_win_floating(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
@@ -41,10 +37,8 @@ function M.split_right(context)
   end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.split_below(context)
+function M.split_below()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if not fn.is_win_floating(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
@@ -54,10 +48,8 @@ function M.split_below(context)
   end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.split_left(context)
+function M.split_left()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if not fn.is_win_floating(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)

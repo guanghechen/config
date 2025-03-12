@@ -2,7 +2,6 @@ local __module_name__ = "eve.module.winpicker" ---@type string
 
 local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
-local ft = require("eve.constant.filetype")
 local Mask = require("eve.module.winpicker.mask")
 
 ---@class eve.module.winpicker.config
@@ -46,39 +45,6 @@ end
 
 ---@class eve.module.winpicker
 local M = {}
-
----@class eve.module.winpicker.filters
-M.filters = {
-  ---@param winnr                       integer
-  ---@return boolean
-  focus = function(winnr)
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    return not ft.is_not_focusable_filetype(filetype)
-  end,
-  ---@param winnr                       integer
-  ---@return boolean
-  swap = function(winnr)
-    if vim.wo[winnr].winfixbuf or fn.is_win_floating(winnr) then
-      return false
-    end
-
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    return not ft.is_not_projectable_filetype(filetype)
-  end,
-  ---@param winnr                       integer
-  ---@return boolean
-  project = function(winnr)
-    if vim.wo[winnr].winfixbuf or fn.is_win_floating(winnr) then
-      return false
-    end
-
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    return not ft.is_not_projectable_filetype(filetype)
-  end,
-}
 
 ---@param filter                        fun(winnr: integer): boolean
 ---@param winnr_source                  integer|nil

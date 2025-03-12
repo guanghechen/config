@@ -1,5 +1,4 @@
 local fn = require("eve.builtin.fn")
-
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.vim_options.IItemData
@@ -113,10 +112,8 @@ end
 ---@class fml.action.find
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.find_vim_options(context)
+function M.find_vim_options()
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end

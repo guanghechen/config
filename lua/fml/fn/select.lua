@@ -1,5 +1,4 @@
 local Observable = require("eve.collection.observable")
-
 local Select = require("fml.ux.select")
 
 ---@class fml.fn.select.IParams
@@ -7,7 +6,7 @@ local Select = require("fml.ux.select")
 ---@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
----@field public input                  ?eve.collection.IObservable
+---@field public input                  ?eve.collection.IObservable<string>
 ---@field public multiple               ?boolean
 ---@field public preview_wrap           ?boolean
 ---@field public fetch_items            fun(): fml.ux.select.IItem[]
@@ -25,7 +24,7 @@ local function select(params)
   local dimension = params.dimension ---@type fml.ux.search.IRawDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
-  local input = params.input ---@type eve.collection.IObservable | nil
+  local input = params.input ---@type eve.collection.IObservable<string> | nil
   local multiple = params.multiple ---@type boolean|nil
   local preview_wrap = params.preview_wrap ---@type boolean|nil
   local fetch_items = params.fetch_items ---@type fun(): fml.ux.select.IItem[]

@@ -594,9 +594,9 @@ function M.dirpath(position)
         return "", "", true
       end
 
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      local hln_text = winnr_cur == context.winnr and hln_focus_text or hln_blur_text ---@type string
-      local hl_text_sep = winnr_cur == context.winnr and hl_focus_sep or hl_blur_sep ---@type string
+      local winnr_sourcefile = state.tab.get_winnr_sourcefile(context.tabnr) ---@type integer|nil
+      local hln_text = winnr_sourcefile == context.winnr and hln_focus_text or hln_blur_text ---@type string
+      local hl_text_sep = winnr_sourcefile == context.winnr and hl_focus_sep or hl_blur_sep ---@type string
 
       relpath_pieces = meta.relpath_pieces
       local text = "" ---@type string
@@ -633,8 +633,8 @@ function M.dirpath_prominent(position)
     name = "dirpath_prominent",
     atomic = false,
     condition = function(context)
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      return context.winnr == winnr_cur
+      local winnr_sourcefile = state.tab.get_winnr_sourcefile(context.tabnr) ---@type integer|nil
+      return context.winnr == winnr_sourcefile
     end,
     will_change = function(context, prev_context)
       return prev_context == nil or context.filepath ~= prev_context.filepath
@@ -745,10 +745,10 @@ function M.filename(position)
     name = "filename",
     atomic = true,
     render = function(context)
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      local winnr_sourcefile = state.tab.get_winnr_sourcefile(context.tabnr) ---@type integer|nil
       local is_mod = vim.bo[context.bufnr].modified ---@type boolean
       local text_mod = is_mod and " " or "" ---@type string
-      if context.winnr ~= winnr_cur then
+      if context.winnr ~= winnr_sourcefile then
         local text = context.fileicon .. " " .. context.filename .. text_mod ---@type string
         local hl_text = txt(text, hln_blur_text) ---@type string
         return text, hl_text, true

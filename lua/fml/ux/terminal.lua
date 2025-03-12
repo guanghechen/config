@@ -3,7 +3,6 @@ local path = require("eve.builtin.path")
 local shell = require("eve.builtin.shell")
 local ft = require("eve.constant.filetype")
 local state = require("eve.state")
-local command = require("eve.command")
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Cursor:f_us_terminal_current",
@@ -63,7 +62,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local keymaps = state.widget.get_keymaps(self, command.context_winnr) ---@type eve.t.IKeymap[]
+  local keymaps = state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
   local cmd = shell.format_command(props.cmd) ---@type string

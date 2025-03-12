@@ -7,9 +7,9 @@ local Observable = require("eve.collection.observable")
 ---@field public treesitter_context     boolean
 
 ---@class eve.state.plugin.state
----@field public render_markdown        eve.collection.IObservable
----@field public smear_cursor           eve.collection.IObservable
----@field public treesitter_context     eve.collection.IObservable
+---@field public render_markdown        eve.collection.IObservable<boolean>
+---@field public smear_cursor           eve.collection.IObservable<boolean>
+---@field public treesitter_context     eve.collection.IObservable<boolean>
 
 ---@class eve.state.plugin
 ---@field public defaults               fun(): eve.state.plugin.data

@@ -414,36 +414,28 @@ end
 ---@class fml.action.find
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.find_files(context)
+function M.find_files()
   local select = get_select() ---@type fml.ux.IFileSelect
   select:show()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.find_files_cwd(context)
+function M.find_files_cwd()
   state.select.find_file_scope:next("C")
   local select = get_select() ---@type fml.ux.IFileSelect
   select:show()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.find_files_directory(context)
+function M.find_files_directory()
   state.select.find_file_scope:next("D")
   local select = get_select() ---@type fml.ux.IFileSelect
   select:show()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.find_files_workspace(context)
+function M.find_files_workspace()
   state.select.find_file_scope:next("W")
   local select = get_select() ---@type fml.ux.IFileSelect
   select:show()

@@ -9,11 +9,11 @@ local Observable = require("eve.collection.observable")
 ---@field public search_paths           string[]
 
 ---@class eve.state.search_file.state
----@field public flag_replace           eve.collection.IObservable
----@field public max_filesize           eve.collection.IObservable
----@field public max_matches            eve.collection.IObservable
----@field public replacement            eve.collection.IObservable
----@field public search_paths           eve.collection.IObservable
+---@field public flag_replace           eve.collection.IObservable<boolean>
+---@field public max_filesize           eve.collection.IObservable<string>
+---@field public max_matches            eve.collection.IObservable<integer>
+---@field public replacement            eve.collection.IObservable<string>
+---@field public search_paths           eve.collection.IObservable<string[]>
 
 ---@class eve.state.search_file
 ---@field public defaults               fun(): eve.state.search_file.data

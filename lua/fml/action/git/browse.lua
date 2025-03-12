@@ -4,7 +4,7 @@ local env = require("eve.builtin.env")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
-
+local state = require("eve.state")
 local select = require("fml.fn.select")
 
 ---@alias fml.action.git.browse.TargetScope
@@ -217,12 +217,16 @@ end
 ---@class fml.action.git
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.browse(context)
-  local bufnr = context.bufnr ---@type integer
+function M.browse()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
+
   local workspace = path.workspace() ---@type string
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string|nil
+  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string|nil
   filepath = filepath ~= nil and path.is_under(workspace, filepath) and path.relative(workspace, filepath, true) or nil
 
   local remotes = {} ---@type fml.action.git.browse.IRemote[]

@@ -3,12 +3,11 @@ local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
-local command = require("eve.command")
 
 ---@param cwd                           string
 ---@return boolean
 local function check_could_reveal(cwd)
-  local bufnr = command.context_bufnr() ---@type integer|nil
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer|nil
   if bufnr ~= nil and fn.is_buf_valid(bufnr) then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     return path.is_under(cwd, filepath)
@@ -106,11 +105,9 @@ local widgets = {
 ---@class ghc.action.neo_tree
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.fs_cwd(context)
-  local bufnr = context.bufnr ---@type integer
+function M.fs_cwd()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local ft_current = vim.bo[bufnr].filetype ---@type string
   local toggle = ft_current == ft.NEOTREE ---@type boolean
 
@@ -124,11 +121,9 @@ function M.fs_cwd(context)
   })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.fs_workspace(context)
-  local bufnr = context.bufnr ---@type integer
+function M.fs_workspace()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local ft_current = vim.bo[bufnr].filetype ---@type string
   local toggle = ft_current == ft.NEOTREE ---@type boolean
 
@@ -142,10 +137,8 @@ function M.fs_workspace(context)
   })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.fs_reveal(context)
+function M.fs_reveal()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
@@ -155,10 +148,8 @@ function M.fs_reveal(context)
   })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.git_cwd(context)
+function M.git_cwd()
   local widget = widgets.git_cwd ---@type eve.t.ux.IWidget
   if widget:focused() then
     widget:hide()
@@ -167,10 +158,8 @@ function M.git_cwd(context)
   end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.git_workspace(context)
+function M.git_workspace()
   local widget = widgets.git_workspace ---@type eve.t.ux.IWidget
   if widget:focused() then
     widget:hide()
@@ -179,10 +168,8 @@ function M.git_workspace(context)
   end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.last(context)
+function M.last()
   require("neo-tree.command").execute({
     action = "focus",
     source = "last",
@@ -191,9 +178,8 @@ function M.last(context)
   })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.toggle(context)
+function M.toggle()
   if editor.find_winnr(ft.NEOTREE) ~= nil then
     require("neo-tree.command").execute({
       action = "close",
@@ -210,7 +196,7 @@ function M.toggle(context)
       source = "git_status",
     })
   else
-    M.last(context)
+    M.last()
   end
 end
 

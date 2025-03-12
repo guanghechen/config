@@ -1,19 +1,12 @@
 local __module_name__ = "eve.command" ---@type string
 
-local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
+local state = require("eve.state")
 
 ---@alias eve.command.definitions.copy.Scope
 ---| "absolute"
 ---| "relative"
-
----@class eve.command.IContext
----@field public tabnr                  integer
----@field public winnr                  integer
----@field public bufnr                  integer
----@field public tabtype                eve.e.state.tab.meta.TabType
----@field public selected_text          string|nil
 
 ---@class eve.command.IDefinition
 ---@field public uuid                   string
@@ -30,22 +23,20 @@ local setting = require("eve.constant.setting")
 ---@class eve.command.ICommand
 ---@field public uuid                   string
 ---@field public tabtype                eve.e.state.tab.meta.TabType
----@field public action                 fun(context: eve.command.IContext, args?: string): nil
+---@field public action                 fun(args?: string): nil
 
 ---@class eve.command.IImplementation
 ---@field public uuid                   string
 ---@field public tabtype                ?eve.e.state.tab.meta.TabType
----@field public action                 fun(context: eve.command.IContext, args?: string): nil
+---@field public action                 fun(args?: string): nil
 
 local definition_map = {} ---@type table<string, eve.command.IDefinition>
 local command_map = {} ---@type table<string, eve.command.ICommand>
 
 ---@class eve.command
----@field protected __context__         eve.command.IContext|nil
 ---@field protected __definition_map__  table<string, eve.command.IDefinition>
 ---@field protected __command_map__     table<string, eve.command.ICommand>
 local M = {
-  __context__ = nil,
   __definition_map__ = definition_map,
   __command_map__ = command_map,
 }
@@ -76,30 +67,7 @@ function M.define(raw_definition, overwrite)
   ---@param opts                        { name: string, args: string, fargs: string[] }
   ---@return nil
   local function handle(opts)
-    local context ---@type eve.command.IContext
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-
-    local last_context = M.__context__ ---@type eve.command.IContext|nil
-    if last_context ~= nil and fn.is_win_floating(winnr) then
-      context = last_context
-    else
-      local state = require("eve.state")
-
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local tabtype = state.tab.resolve_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabType
-
-      ---@type eve.command.IContext
-      context = {
-        tabnr = tabnr,
-        winnr = winnr,
-        bufnr = bufnr,
-        tabtype = tabtype,
-        selected_text = nil,
-      }
-    end
-
-    M.execute(definition.uuid, context, opts.args, false)
+    M.execute(definition.uuid, opts.args, false)
   end
 
   ---@param argLead                     string
@@ -166,14 +134,12 @@ function M.implement(implementation)
 end
 
 ---@param uuid                          string
----@param context                       eve.command.IContext
 ---@param args                          ?string
 ---@param silent                        ?boolean
 ---@return nil
-function M.execute(uuid, context, args, silent)
-  M.__context__ = context
-
-  local tabtype = context.tabtype ---@type eve.e.state.tab.meta.TabType
+function M.execute(uuid, args, silent)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tabtype = state.tab.get_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabType
   local key = uuid .. ":" .. tabtype ---@type string
   local command = command_map[key] or command_map[uuid] ---@type eve.command.ICommand|nil
 
@@ -189,24 +155,7 @@ function M.execute(uuid, context, args, silent)
     return
   end
 
-  command.action(context, args)
-end
-
----@return eve.command.IContext|nil
-function M.context_snapshot()
-  return M.__context__
-end
-
----@return integer|nil
-function M.context_winnr()
-  local winnr = M.__context__ and M.__context__.winnr or nil ---@type integer|nil
-  return winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) and winnr or nil
-end
-
----@return integer|nil
-function M.context_bufnr()
-  local bufnr = M.__context__ and M.__context__.bufnr or nil ---@type integer|nil
-  return bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) and bufnr or nil
+  command.action(args)
 end
 
 ---@param uuid                          string
@@ -353,6 +302,7 @@ M.definitions.copy = {
 
 ---@class eve.command.definitions.inspect
 M.definitions.inspect = {
+  inspect_buf = def("Fdebuginspectbuf", "debug: inspect buf"),
   inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
   inspect_state = def("Fdebuginspectstate", "debug: inspect state"),
   inspect_state_full = def("Fdebuginspectstatefull", "debug: inspect state (full)"),

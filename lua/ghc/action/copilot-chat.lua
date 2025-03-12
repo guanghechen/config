@@ -5,7 +5,6 @@ local reporter = require("eve.builtin.reporter")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
-local command = require("eve.command")
 
 local select = require("fml.fn.select")
 
@@ -98,7 +97,7 @@ local chat = state.widget.wrap({
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if not vim.b[bufnr].fml_key_bound then
           vim.b[bufnr].fml_key_bound = true
-          local keymaps = state.widget.get_keymaps(widget, command.context_winnr) ---@type eve.t.IKeymap[]
+          local keymaps = state.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
           fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 
@@ -143,10 +142,8 @@ local chat = state.widget.wrap({
 ---@class ghc.action.copilot_chat
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.prompt(context)
+function M.prompt()
   local actions = require("CopilotChat.actions")
   local prompt_actions = actions["prompt_actions"]()
   if not prompt_actions then
@@ -210,10 +207,8 @@ function M.prompt(context)
   })
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.quick(context)
+function M.quick()
   local input = vim.fn.input("Quick Chat: ") ---@type string
   if input ~= "" then
     chat:focus()
@@ -224,24 +219,18 @@ function M.quick(context)
   end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.reset(context)
+function M.reset()
   require("CopilotChat").reset()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.stop(context)
+function M.stop()
   require("CopilotChat").stop()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
----@diagnostic disable-next-line: unused-local
-function M.toggle(context)
+function M.toggle()
   if chat:focused() then
     chat:hide()
   else

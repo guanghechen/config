@@ -25,9 +25,9 @@ local setting = require("eve.constant.setting")
 ---@field public username               boolean
 
 ---@class eve.state.theme.state
----@field public theme                  eve.collection.IObservable
----@field public transparency           eve.collection.IObservable
----@field public username               eve.collection.IObservable
+---@field public theme                  eve.collection.IObservable<eve.e.Theme>
+---@field public transparency           eve.collection.IObservable<boolean>
+---@field public username               eve.collection.IObservable<boolean>
 ---
 ---@field public apply_integration      fun(params: eve.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: eve.theme.ILoadThemeParams): nil

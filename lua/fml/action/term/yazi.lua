@@ -1,14 +1,14 @@
 local path = require("eve.builtin.path")
 local editor = require("eve.module.editor")
+local state = require("eve.state")
 
 local toggle_term = require("fml.action.term.toggle").toggle
 
 ---@param name                          string
 ---@param cwd                           string
 ---@param filepath                      string
----@param context                       eve.command.IContext
 ---@return nil
-local function open_yazi(name, cwd, filepath, context)
+local function open_yazi(name, cwd, filepath)
   local tempname = path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
   local terminal ---@type fml.ux.ITerminal|nil
 
@@ -42,7 +42,7 @@ local function open_yazi(name, cwd, filepath, context)
         end
 
         if #filepaths > 0 then
-          editor.open_filepaths(context.winnr, filepaths)
+          editor.open_filepaths(nil, filepaths)
         end
       end)
     end,
@@ -52,26 +52,30 @@ end
 ---@class fml.action.term.yazi
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.yazi_cwd(context)
+function M.yazi_cwd()
   local cwd = path.cwd() ---@type string
-  open_yazi("yazi_cwd", cwd, cwd, context)
+  open_yazi("yazi_cwd", cwd, cwd)
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.yazi_reveal(context)
+function M.yazi_reveal()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+
   local cwd = path.cwd() ---@type string
-  local filepath = vim.api.nvim_buf_get_name(context.bufnr) ---@type string
-  open_yazi("yazi_cwd", cwd, filepath, context)
+  if bufnr_sourcefile == nil then
+    open_yazi("yazi_cwd", cwd, cwd)
+  else
+    local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
+    open_yazi("yazi_cwd", cwd, filepath)
+  end
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.yazi_workspace(context)
+function M.yazi_workspace()
   local workspace = path.workspace() ---@type string
-  open_yazi("yazi_workspace", workspace, workspace, context)
+  open_yazi("yazi_workspace", workspace, workspace)
 end
 
 return M

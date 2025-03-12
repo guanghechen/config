@@ -1,44 +1,40 @@
 local __module_name__ = "fml.action.lsp" ---@type string
 
-local fn = require("eve.builtin.fn")
 local lsp = require("eve.builtin.lsp")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local editor = require("eve.module.editor")
-
+local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 
----@param context                       eve.command.IContext
 ---@param method                        string
 ---@param additional_params             table<string, any>
 ---@param callback                      fun(ok: boolean, data: fml.ux.file_select.IData|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
-local function fetch_data(context, method, additional_params, callback)
-  local winnr = context.winnr ---@type integer
-  local bufnr = context.bufnr ---@type integer
-  if not fn.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+local function fetch_data(method, additional_params, callback)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_sourcefile == nil then
+    callback(false, nil)
     return
   end
 
-  if not fn.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
-    return
-  end
-
-  if not lsp.has_support_method(bufnr, method) then
+  local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
+  if not lsp.has_support_method(bufnr_sourcefile, method) then
     reporter.error({
       from = __module_name__,
       subject = "fetch_data",
       message = "Not support method.",
-      details = { bufnr = bufnr, method = method, context = additional_params },
+      details = { bufnr = bufnr_sourcefile, method = method, context = additional_params },
     })
     callback(false, nil)
     return
   end
 
   local cwd = path.cwd() ---@type string
-  local params = vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr), additional_params)
+  local params = vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr_sourcefile), additional_params)
 
-  vim.lsp.buf_request_all(bufnr, method, params, function(results_per_client)
+  vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
     local items = {}
     local errors = {} ---@type string[]
 
@@ -101,7 +97,7 @@ local function fetch_data(context, method, additional_params, callback)
         from = __module_name__,
         subject = "fetch_data",
         message = "Encountered errors.",
-        details = { bufnr = bufnr, method = method, params = params, errors = errors },
+        details = { bufnr = bufnr_sourcefile, method = method, params = params, errors = errors },
       })
       callback(false, nil)
       return
@@ -114,7 +110,7 @@ local function fetch_data(context, method, additional_params, callback)
 
     if #items == 1 then
       local item = items[1] ---@type fml.ux.file_select.IRawItem
-      editor.open_filepath(winnr, item.filepath, item.lnum, item.col)
+      editor.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
       callback(true, nil)
       return
     end
@@ -152,7 +148,7 @@ end
 ---@param title                         string
 ---@param method                        string
 ---@param additional_params             table<string, any>
----@return fun(context: eve.command.IContext): nil
+---@return fun(): nil
 local function create_jump_or_list(title, method, additional_params)
   local _last_data = { items = {}, cwd = path.cwd() } ---@type fml.ux.file_select.IData
 
@@ -171,9 +167,8 @@ local function create_jump_or_list(title, method, additional_params)
     },
   })
 
-  ---@param context                     eve.command.IContext
-  local function jump_or_list(context)
-    fetch_data(context, method, additional_params, function(ok, data)
+  local function jump_or_list()
+    fetch_data(method, additional_params, function(ok, data)
       if ok then
         if data ~= nil then
           _last_data = data
@@ -203,28 +198,24 @@ local jump_or_lists = {
 ---@class fml.action.lsp
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_definitions(context)
-  jump_or_lists.definitions(context)
+function M.goto_definitions()
+  jump_or_lists.definitions()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_implementations(context)
-  jump_or_lists.implementations(context)
+function M.goto_implementations()
+  jump_or_lists.implementations()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_references(context)
-  jump_or_lists.references(context)
+function M.goto_references()
+  jump_or_lists.references()
 end
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.goto_type_definitions(context)
-  jump_or_lists.type_definitions(context)
+function M.goto_type_definitions()
+  jump_or_lists.type_definitions()
 end
 
 return M

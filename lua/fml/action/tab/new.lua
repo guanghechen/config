@@ -6,10 +6,8 @@ local state = require("eve.state")
 ---@class fml.action.tab
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return integer
----@diagnostic disable-next-line: unused-local
-function M.new(context)
+function M.new()
   vim.cmd("$tabnew")
   vim.bo.buflisted = false
   vim.bo.bufhidden = "wipe"

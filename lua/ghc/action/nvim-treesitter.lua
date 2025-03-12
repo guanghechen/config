@@ -1,6 +1,7 @@
 local __module_name__ = "ghc.action.nvim-treesitter" ---@type string
 
 local reporter = require("eve.builtin.reporter")
+local state = require("eve.state")
 
 local function find_conditional_node(node)
   local node_type = node:type() ---@type string
@@ -15,13 +16,16 @@ end
 ---@class ghc.action.nvim_treesitter
 local M = {}
 
----@param context                       eve.command.IContext
 ---@return nil
-function M.swap_conditional_branches(context)
-  local bufnr = context.bufnr ---@type integer
+function M.swap_conditional_branches()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
 
   local ts_parsers = require("nvim-treesitter.parsers")
-  local lang = ts_parsers.get_buf_lang(bufnr) ---@return string
+  local lang = ts_parsers.get_buf_lang(bufnr_sourcefile) ---@return string
   if not ts_parsers.has_parser(lang) then
     reporter.error({
       from = __module_name__,
@@ -58,17 +62,17 @@ function M.swap_conditional_branches(context)
   local asr, asc, aer, aec = alternate:range() ---@type integer, integer, integer, integer
 
   ---@type string
-  local consequence_text = table.concat(vim.api.nvim_buf_get_text(bufnr, csr, csc, cer, cec, {}), "\n")
+  local consequence_text = table.concat(vim.api.nvim_buf_get_text(bufnr_sourcefile, csr, csc, cer, cec, {}), "\n")
 
   ---@type string
-  local alternate_text = table.concat(vim.api.nvim_buf_get_text(bufnr, asr, asc, aer, aec, {}), "\n")
+  local alternate_text = table.concat(vim.api.nvim_buf_get_text(bufnr_sourcefile, asr, asc, aer, aec, {}), "\n")
 
   ---@type string
-  local middle_text = table.concat(vim.api.nvim_buf_get_text(bufnr, cer, cec, asr, asc, {}), "\n")
+  local middle_text = table.concat(vim.api.nvim_buf_get_text(bufnr_sourcefile, cer, cec, asr, asc, {}), "\n")
 
   local text = alternate_text .. middle_text .. consequence_text ---@type string
   local lines = vim.split(text, "\n", { plain = true }) ---@type string[]
-  vim.api.nvim_buf_set_text(bufnr, csr, csc, aer, aec, lines)
+  vim.api.nvim_buf_set_text(bufnr_sourcefile, csr, csc, aer, aec, lines)
 end
 
 return M

@@ -1,7 +1,7 @@
 local fn = require("eve.builtin.fn")
 local Observable = require("eve.collection.observable")
 
----@class eve.collection.IDirtier : eve.collection.IObservable
+---@class eve.collection.IDirtier : eve.collection.IObservable<boolean>
 ---@field public is_clean               fun(self: eve.collection.IDirtier): boolean
 ---@field public is_dirty               fun(self: eve.collection.IDirtier): boolean
 ---@field public mark_clean             fun(self: eve.collection.IDirtier): nil

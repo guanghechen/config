@@ -6,7 +6,6 @@ local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
-local command = require("eve.command")
 
 local SearchInput = require("fml.ux.search.input")
 local SearchMain = require("fml.ux.search.main")
@@ -136,7 +135,7 @@ function M.new(props)
 
   local enable_preview = type(props.fetch_preview_data) == "function" ---@type boolean
   local context = props.context ---@type fml.ux.search.IContext
-  local common_keymaps = state.widget.get_keymaps(self, command.context_winnr) ---@type eve.t.IKeymap[]
+  local common_keymaps = state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
 

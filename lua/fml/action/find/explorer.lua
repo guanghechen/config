@@ -10,8 +10,6 @@ local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
-local command = require("eve.command")
-
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.explorer.IDirItem
@@ -130,7 +128,7 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = Observable.from_value(path.normalize(initial_dirpath)) ---@type eve.collection.IObservable
+local state_cwd = Observable.from_value(path.normalize(initial_dirpath)) ---@type eve.collection.IObservable<string>
 local _select = nil ---@type fml.ux.ISelect|nil
 
 ---@return string
@@ -443,9 +441,10 @@ local function get_select()
 
         if #filepaths > 0 then
           widget:hide()
-          local winnr_source = command.context_winnr() ---@type integer|nil
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
           for _, filepath in ipairs(filepaths) do
-            editor.open_filepath(winnr_source, filepath)
+            editor.open_filepath(winnr_sourcefile, filepath)
           end
           return
         end
@@ -469,17 +468,17 @@ end
 ---@class fml.action.find
 local M = {}
 
----@param context                       eve.command.IContext
 ---@param specified_dirpath             string|nil
 ---@return nil
-function M.find_explorer(context, specified_dirpath)
+function M.find_explorer(specified_dirpath)
   if specified_dirpath ~= nil and fs.is_file_or_dir(specified_dirpath) == "directory" then
     local dirpath = path.normalize(specified_dirpath) ---@type string
     state_cwd:next(dirpath)
   else
-    local winnr = context.winnr ---@type integer
-    if winnr ~= nil and fn.is_win_valid(winnr) then
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+    if winnr_sourcefile ~= nil then
+      local bufnr = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 then
         local doctype = fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
