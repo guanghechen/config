@@ -1,10 +1,10 @@
-local editor = require("eve.module.editor")
+local fn = require("eve.builtin.fn")
 
 ---@param winnr                         integer|nil
 ---@param width                         integer|nil
 ---@return nil
 local function dressing_float_win(winnr, width)
-  if winnr == nil or not editor.is_win_valid(winnr) then
+  if winnr == nil or not fn.is_win_valid(winnr) then
     return
   end
 

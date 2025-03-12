@@ -1,5 +1,6 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
@@ -393,7 +394,7 @@ function M.toggle_maximize(context)
   end
 
   local bufnr = context.bufnr ---@type integer
-  if editor.is_buf_valid(bufnr) then
+  if fn.is_buf_valid(bufnr) then
     local winnr = vim.api.nvim_open_win(bufnr, false, {
       relative = "editor",
       anchor = "NW",

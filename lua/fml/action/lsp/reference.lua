@@ -1,5 +1,6 @@
 local __module_name__ = "fml.action.lsp" ---@type string
 
+local fn = require("eve.builtin.fn")
 local lsp = require("eve.builtin.lsp")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
@@ -15,11 +16,11 @@ local FileSelect = require("fml.ux.file_select")
 local function fetch_data(context, method, additional_params, callback)
   local winnr = context.winnr ---@type integer
   local bufnr = context.bufnr ---@type integer
-  if not editor.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+  if not fn.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
     return
   end
 
-  if not editor.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+  if not fn.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
     return
   end
 

@@ -133,12 +133,6 @@ end
 
 ---@param bufnr                         integer
 ---@return boolean
-function M.is_buf_valid(bufnr)
-  return bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
-end
-
----@param bufnr                         integer
----@return boolean
 function M.is_buf_sourcefile(bufnr)
   local is_sourcefile = vim.b[bufnr][varnames.FLAG_SOURCEFILE] ---@type boolean|nil
   if is_sourcefile ~= nil then
@@ -167,12 +161,6 @@ function M.is_buf_sourcefile(bufnr)
   return true
 end
 
----@param tabnr                         integer
----@return boolean
-function M.is_tab_valid(tabnr)
-  return tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr)
-end
-
 ---@param winnr                         integer
 ---@return boolean
 function M.is_win_sourcefile(winnr)
@@ -189,12 +177,6 @@ function M.is_win_sourcefile(winnr)
 
   vim.w[winnr][varnames.FLAG_SOURCEFILE] = true
   return true
-end
-
----@param winnr                         integer
----@return boolean
-function M.is_win_valid(winnr)
-  return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
 end
 
 ---@param filepath                      string|nil

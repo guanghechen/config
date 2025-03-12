@@ -74,12 +74,12 @@ local function get_select()
           end
 
           local bufnr = item.data.bufnr ---@type integer
-          if not editor.is_buf_valid(bufnr) then
+          if not fn.is_buf_valid(bufnr) then
             return
           end
 
           if not editor.is_buf_sourcefile(bufnr) then
-            if editor.is_buf_valid(bufnr) then
+            if fn.is_buf_valid(bufnr) then
               vim.api.nvim_buf_delete(bufnr, { force = true })
             end
             _select:mark_item_deleted(item.uuid)

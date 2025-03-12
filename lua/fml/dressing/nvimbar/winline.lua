@@ -1,4 +1,5 @@
 local env = require("eve.builtin.env")
+local fn = require("eve.builtin.fn")
 local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
@@ -102,7 +103,7 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 local function render(winnr)
-  if winnr == nil or not editor.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+  if winnr == nil or not fn.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
     return
   end
 

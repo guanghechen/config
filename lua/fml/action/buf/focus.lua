@@ -2,7 +2,6 @@ local __module_name__ = "fml.action.buf" ---@type string
 
 local fn = require("eve.builtin.fn")
 local reporter = require("eve.builtin.reporter")
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 ---@class fml.action.buf
@@ -13,7 +12,7 @@ local M = {}
 ---@return nil
 function M.open(context, bufnr)
   local winnr = context.winnr ---@type integer
-  if editor.is_win_valid(winnr) then
+  if fn.is_win_valid(winnr) then
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end
 end

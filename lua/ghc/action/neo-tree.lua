@@ -1,3 +1,4 @@
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
@@ -8,7 +9,7 @@ local command = require("eve.command")
 ---@return boolean
 local function check_could_reveal(cwd)
   local bufnr = command.context_bufnr() ---@type integer|nil
-  if bufnr ~= nil and editor.is_buf_valid(bufnr) then
+  if bufnr ~= nil and fn.is_buf_valid(bufnr) then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     return path.is_under(cwd, filepath)
   end

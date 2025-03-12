@@ -144,7 +144,7 @@ function Meta:rearrange_bufs()
   local N = #bufs ---@type integer
   for i = 1, N, 1 do
     local buf = bufs[i] ---@type eve.t.state.tab.buf.state
-    if buf ~= nil and editor.is_buf_valid(buf.bufnr) then
+    if buf ~= nil and fn.is_buf_valid(buf.bufnr) then
       bufs[k] = buf
       k = k + 1
     end
@@ -214,16 +214,16 @@ S = {
   tab_history = AdvanceHistory.new({
     name = "tabs",
     capacity = setting.TAB_HISTORY_CAPACITY,
-    validate = editor.is_tab_valid,
+    validate = fn.is_tab_valid,
   }),
 
   get = function(tabnr)
-    if tabnr ~= nil and editor.is_tab_valid(tabnr) then
+    if tabnr ~= nil and fn.is_tab_valid(tabnr) then
       return S.__meta_map__[tabnr]
     end
   end,
   set = function(tabnr, meta)
-    if tabnr ~= nil and editor.is_tab_valid(tabnr) then
+    if tabnr ~= nil and fn.is_tab_valid(tabnr) then
       S.__meta_map__[tabnr] = meta
       return meta
     end
@@ -234,7 +234,7 @@ S = {
     end
   end,
   resolve = function(tabnr)
-    if tabnr == nil or not editor.is_tab_valid(tabnr) then
+    if tabnr == nil or not fn.is_tab_valid(tabnr) then
       return nil
     end
 
@@ -274,7 +274,7 @@ S = {
     return meta
   end,
   resolve_tabtype = function(tabnr)
-    if tabnr == nil or not editor.is_tab_valid(tabnr) then
+    if tabnr == nil or not fn.is_tab_valid(tabnr) then
       return setting.tabtypes.NORMAL
     end
 
@@ -282,7 +282,7 @@ S = {
     return meta and meta.tabtype or setting.tabtypes.NORMAL
   end,
   refresh = function(tabnr)
-    if tabnr == nil or not editor.is_tab_valid(tabnr) then
+    if tabnr == nil or not fn.is_tab_valid(tabnr) then
       return
     end
 
@@ -317,7 +317,7 @@ S = {
 
     local invalid_tabnrs = {} ---@type integer[]
     for tabnr in pairs(S.__meta_map__) do
-      if tabnr == nil or not editor.is_tab_valid(tabnr) then
+      if tabnr == nil or not fn.is_tab_valid(tabnr) then
         table.insert(invalid_tabnrs, tabnr)
       end
     end
@@ -326,11 +326,11 @@ S = {
     end
   end,
   on_buf_enter = function(tabnr, winnr, bufnr)
-    if not editor.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if not fn.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
       return
     end
 
-    if not editor.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if not fn.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return
     end
 
@@ -517,7 +517,7 @@ function M.load(raw_data)
     or AdvanceHistory.new({
       name = "tabs",
       capacity = setting.TAB_HISTORY_CAPACITY,
-      validate = editor.is_tab_valid,
+      validate = fn.is_tab_valid,
     })
 
   local stack = {} ---@type integer[]

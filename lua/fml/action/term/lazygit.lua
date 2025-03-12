@@ -1,5 +1,6 @@
 local __module_name__ = "fml.action.term" ---@type string
 
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local editor = require("eve.module.editor")
@@ -45,7 +46,7 @@ end
 ---@return nil
 local function edit_lazygit_file_in_buffer(context, cwd)
   local bufnr = context.bufnr ----@type integer
-  if not editor.is_buf_valid(bufnr) then
+  if not fn.is_buf_valid(bufnr) then
     reporter.error({
       from = __module_name__,
       subject = "edit_lazygit_file_in_buffer",

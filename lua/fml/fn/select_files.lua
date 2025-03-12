@@ -1,3 +1,4 @@
+local fn = require("eve.builtin.fn")
 local path = require("eve.builtin.path")
 local Observable = require("eve.collection.observable")
 local editor = require("eve.module.editor")
@@ -37,7 +38,7 @@ local function select_files(params)
     get_present = function()
       local present_filepath = nil ---@type string|nil
       local winnr = context.winnr ---@type integer
-      if editor.is_win_valid(winnr) then
+      if fn.is_win_valid(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if editor.is_buf_sourcefile(bufnr) then
           local absolute_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string

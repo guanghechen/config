@@ -478,7 +478,7 @@ function M.find_explorer(context, specified_dirpath)
     state_cwd:next(dirpath)
   else
     local winnr = context.winnr ---@type integer
-    if winnr ~= nil and editor.is_win_valid(winnr) then
+    if winnr ~= nil and fn.is_win_valid(winnr) then
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 then

@@ -8,7 +8,6 @@ local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
-local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 
@@ -916,7 +915,7 @@ function M.lsp(position)
   ---@return string
   local function get_text()
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    if not editor.is_buf_valid(bufnr) then
+    if not fn.is_buf_valid(bufnr) then
       return ""
     end
 
