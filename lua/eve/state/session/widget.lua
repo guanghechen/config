@@ -78,6 +78,9 @@ S = {
   end,
   get_keymaps = function(widget)
     local function on_close()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_fixed = require("eve.state").tab.get_winnr_fixed(tabnr) ---@type integer|nil
+
       widget:close()
 
       local widget_visible, widget_visible_index = S.get_widget_visible() ---@type eve.t.ux.IWidget|nil, integer|nil
@@ -85,9 +88,9 @@ S = {
         widget_visible:focus()
         S.history:go(widget_visible_index)
       else
-        local state_tab = require("eve.state.session.tab").load({}) ---@type eve.state.tab.state
-        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-        state_tab.focus_win_fixed(tabnr)
+        if winnr_fixed ~= nil and fn.is_win_valid(winnr_fixed) then
+          vim.api.nvim_tabpage_set_win(tabnr, winnr_fixed)
+        end
       end
     end
 
