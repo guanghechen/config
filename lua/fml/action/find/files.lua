@@ -45,7 +45,7 @@ local function get_select()
 
     state.observe({ state.select.find_file_scope }, function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local bufnr = state.tab.get_bufnr_current(tabnr) ---@type integer|nil
+      local bufnr = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
 
       ---@type string
       local current_buf_dirpath = bufnr ~= nil and path.dirname(vim.api.nvim_buf_get_name(bufnr)) or path.cwd()

@@ -31,9 +31,9 @@ local editor = require("eve.module.editor")
 ---@field public dump                   fun(self: eve.state.tab.meta.state, tabid: integer): eve.t.state.tab.meta.data
 ---@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.t.state.tab.buf.state|nil, integer|nil
 ---@field public find_bufid             fun(self: eve.state.tab.meta.state, bufnr: integer): integer|nil
----@field public get_bufnr_current      fun(self: eve.state.tab.meta.state): integer|nil
+---@field public get_bufnr_sourcefile   fun(self: eve.state.tab.meta.state): integer|nil
 ---@field public rearrange_bufs         fun(self: eve.state.tab.meta.state): nil
----@field public resolve_bufnr_current  fun(self: eve.state.tab.meta.state, bufnr_current: integer|nil): integer|nil
+---@field public resolve_bufnr_sourcefile fun(self: eve.state.tab.meta.state, bufnr_sourcefile: integer|nil): integer|nil
 ---@field public toggle_pin             fun(self: eve.state.tab.meta.state, bufnr: integer): nil
 local Meta = {}
 Meta.__index = Meta
@@ -59,8 +59,8 @@ Meta.__index = Meta
 ---@field public on_buf_enter           fun(tabnr: integer, winnr: integer, bufnr: integer): nil
 ---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
 ---
----@field public get_bufnr_current      fun(tabnr: integer): integer|nil
----@field public get_unrefereced_bufnrs fun(bufnrs?: integer[]): integer[]
+---@field public get_bufnr_sourcefile   fun(tabnr: integer): integer|nil
+---@field public get_unrefereced_bufnrs fun(bufnrs: integer[]|nil): integer[]
 ---@field public list_valid_bufs        fun(tabnr: integer): eve.t.state.tab.buf.state[]
 local S = {}
 
@@ -131,7 +131,7 @@ function Meta:find_bufid(bufnr)
 end
 
 ---@return integer|nil
-function Meta:get_bufnr_current()
+function Meta:get_bufnr_sourcefile()
   local bufid = self.bufid_sourcefile:snapshot() ---@type integer
   local buf = self.bufs[bufid] ---@type eve.t.state.tab.buf.state|nil
   return buf and buf.bufnr or nil
@@ -154,10 +154,10 @@ function Meta:rearrange_bufs()
   end
 end
 
----@param bufnr_current                 integer|nil
+---@param bufnr_sourcefile              integer|nil
 ---@return integer|nil
-function Meta:resolve_bufnr_current(bufnr_current)
-  local bufid_next = bufnr_current ~= nil and self:find_bufid(bufnr_current) or nil ---@type integer|nil
+function Meta:resolve_bufnr_sourcefile(bufnr_sourcefile)
+  local bufid_next = bufnr_sourcefile ~= nil and self:find_bufid(bufnr_sourcefile) or nil ---@type integer|nil
   if bufid_next == nil then
     local winnr = vim.api.nvim_tabpage_get_win(self.tabnr) ---@type integer
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -252,7 +252,7 @@ S = {
     local winnr_current = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr_current = vim.api.nvim_win_get_buf(winnr_current) ---@type integer
     for _, winnr in ipairs(winnrs) do
-      if not fn.is_win_floating(winnr) then
+      if not editor.is_win_sourcefile(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if not bufnr_set[bufnr] and editor.is_buf_sourcefile(bufnr) then
           bufnr_set[bufnr] = true
@@ -292,7 +292,7 @@ S = {
       return
     end
 
-    local bufnr_current = meta:get_bufnr_current() ---@type integer|nil
+    local bufnr_sourcefile = meta:get_bufnr_sourcefile() ---@type integer|nil
     local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
 
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
@@ -304,7 +304,7 @@ S = {
     end
 
     meta:rearrange_bufs()
-    meta:resolve_bufnr_current(bufnr_current)
+    meta:resolve_bufnr_sourcefile(bufnr_sourcefile)
 
     local tabtype = editor.calc_tabtype(tabnr) ---@type string
     meta.tabtype = tabtype
@@ -357,7 +357,7 @@ S = {
       return
     end
 
-    local bufnr_current = meta:get_bufnr_current() ---@type integer|nil
+    local bufnr_sourcefile = meta:get_bufnr_sourcefile() ---@type integer|nil
     local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
     local N = #bufs ---@type integer
 
@@ -373,11 +373,11 @@ S = {
       bufs[i] = nil
     end
 
-    meta:resolve_bufnr_current(bufnr_current)
+    meta:resolve_bufnr_sourcefile(bufnr_sourcefile)
   end,
-  get_bufnr_current = function(tabnr)
+  get_bufnr_sourcefile = function(tabnr)
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta:get_bufnr_current() or nil ---@type integer|nil
+    return meta and meta:get_bufnr_sourcefile() or nil ---@type integer|nil
   end,
   get_unrefereced_bufnrs = function(bufnrs)
     bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
