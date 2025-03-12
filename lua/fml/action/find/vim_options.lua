@@ -88,6 +88,7 @@ local function get_select()
         max_height = 1,
         max_width = 1,
         width = 0.8,
+        width_preview = 0,
       },
       dirty_on_invisible = false,
       multiple = false,

@@ -204,6 +204,7 @@ local function get_select()
         max_height = 1,
         max_width = 1,
         width = 120,
+        width_preview = 0,
       },
       dirty_on_invisible = true,
       flag_case_sensitive = state.select.find_buffer.flag_case_sensitive,
@@ -244,6 +245,7 @@ local M = {}
 
 ---@return nil
 function M.find_bufs()
+  state.select.find_buffer_scope:next("A")
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end
