@@ -3,27 +3,27 @@ local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 
 ---@return nil
-local function recursively_toggle_all(state)
-  local node = state.tree:get_node()
+local function recursively_toggle_all(neotree_state)
+  local node = neotree_state.tree:get_node()
   if not node then
     return
   end
 
   if node.type == "directory" then
     if node:is_expanded() then
-      state.commands.close_all_subnodes(state)
+      neotree_state.commands.close_all_subnodes(neotree_state)
     else
-      state.commands.expand_all_nodes(state, node)
+      neotree_state.commands.expand_all_nodes(neotree_state, node)
     end
     return
   end
 
-  state.commands.open(state)
+  neotree_state.commands.open(neotree_state)
 end
 
 ---@return nil
-local function refresh_filesystem(state)
-  require("neo-tree.sources.manager").refresh(state.name)
+local function refresh_filesystem(neotree_state)
+  require("neo-tree.sources.manager").refresh(neotree_state.name)
 end
 
 -- Sorts files and directories alphabetically with directories first.
@@ -348,7 +348,8 @@ return {
     }
 
     local function on_move(data)
-      require("ghc.lsp.common").on_rename(data.source, data.destination)
+      local renamer = require("eve.builtin.renamer")
+      renamer.on_rename(data.source, data.destination)
     end
 
     local events = require("neo-tree.events")
