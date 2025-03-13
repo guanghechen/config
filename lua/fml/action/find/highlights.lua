@@ -1,5 +1,4 @@
 local cs = require("eve.std.color")
-local fn = require("eve.builtin.fn")
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.highlights.IItem : fml.ux.select.IItem
@@ -54,7 +53,7 @@ local function get_select()
           end
 
           for lnum, hlname in ipairs(hlnames) do
-            local line = "xxx   " .. fn.pad_end(hlname, max_hlname_width, " ") ---@type string
+            local line = "xxx   " .. eve.std.string.pad_end(hlname, max_hlname_width, " ") ---@type string
             local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.t.IHighlight
 
             local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info

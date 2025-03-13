@@ -9,6 +9,7 @@ local __mods = {
   md5 = "eve.std.md5",
   path = "eve.std.path",
   reporter = "eve.std.reporter",
+  string = "eve.std.string",
   tmux = "eve.std.tmux",
 }
 
@@ -18,8 +19,12 @@ local __mods = {
 ---@field public color                  eve.std.color
 ---@field public debug                  eve.std.debug
 ---@field public env                    eve.std.env
+---@field public fs                     eve.std.fs
 ---@field public json                   eve.std.json
 ---@field public md5                    eve.std.md5
+---@field public path                   eve.std.path
+---@field public reporter               eve.std.reporter
+---@field public string                 eve.std.string
 ---@field public tmux                   eve.std.tmux
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
