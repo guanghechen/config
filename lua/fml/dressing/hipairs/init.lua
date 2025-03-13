@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 
 local ux = require("fml.dressing.hipairs.ux")

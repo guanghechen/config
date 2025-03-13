@@ -1,5 +1,4 @@
 local env = require("eve.std.env")
-local fn = require("eve.builtin.fn")
 local ft = require("eve.constant.filetype")
 
 if env.IS_MAC then

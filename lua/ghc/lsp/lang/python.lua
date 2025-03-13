@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 local get_capabilities = require("ghc.lsp.common").get_capabilities
 local handlers = require("ghc.lsp.common").handlers

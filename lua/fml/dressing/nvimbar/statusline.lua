@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local Subscriber = require("eve.collection.subscriber")
 local state = require("eve.state")
 

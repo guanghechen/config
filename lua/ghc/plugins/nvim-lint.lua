@@ -1,6 +1,5 @@
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
-local fn = require("eve.builtin.fn")
 local Scheduler = require("eve.collection.scheduler")
 local ft = require("eve.constant.filetype")
 

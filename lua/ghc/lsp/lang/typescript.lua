@@ -1,5 +1,3 @@
-local fn = require("eve.builtin.fn")
-
 local get_capabilities = require("ghc.lsp.common").get_capabilities
 local handlers = require("ghc.lsp.common").handlers
 local basic_on_attach = require("ghc.lsp.common").on_attach

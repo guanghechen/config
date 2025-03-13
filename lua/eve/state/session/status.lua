@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local tmux = require("eve.std.tmux")
 local Dirtier = require("eve.collection.dirtier")
 local Observable = require("eve.collection.observable")

@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local Observable = require("eve.collection.observable")
 
 ---@class eve.state.search_file.data

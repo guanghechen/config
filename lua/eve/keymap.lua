@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local mk = eve.std.nvim.make_keys
 
 ---! https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n

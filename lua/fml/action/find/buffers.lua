@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")

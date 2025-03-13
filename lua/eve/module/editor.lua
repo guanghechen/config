@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local fs = require("eve.std.fs")
 local ft = require("eve.constant.filetype")
 local varnames = require("eve.constant.var")

@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 
 ---@param winnr_source                  integer

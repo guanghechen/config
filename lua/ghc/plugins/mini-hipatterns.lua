@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local ft = require("eve.constant.filetype")
 local tailwind = require("eve.constant.palette.tailwind")
 

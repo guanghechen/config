@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local command = require("eve.command")
 
 local mk = eve.std.nvim.make_keys

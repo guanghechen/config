@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local config = require("fml.dressing.image.config")
 
 -- HACK: ghostty doesn't like it when sending images too fast,

@@ -1,5 +1,3 @@
-local fn = require("eve.builtin.fn")
-
 ---@param items                         any[]
 ---@param opts                          fml.dressing.select.IOptions
 ---@return fml.ux.select.IProvider

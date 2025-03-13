@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local state = require("eve.state")

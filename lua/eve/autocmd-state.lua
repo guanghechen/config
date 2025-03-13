@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local fs = require("eve.std.fs")
 local tmux = require("eve.std.tmux")
 local varnames = require("eve.constant.var")

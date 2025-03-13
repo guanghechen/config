@@ -1,5 +1,4 @@
 local G = require("eve.builtin.G")
-local fn = require("eve.builtin.fn")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")

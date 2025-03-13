@@ -1,5 +1,3 @@
-local fn = require("eve.builtin.fn")
-
 ---@class eve.module.lsp.ISymbolPos
 ---@field public line                   integer
 ---@field public character              integer

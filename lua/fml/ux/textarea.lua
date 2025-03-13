@@ -1,8 +1,6 @@
 local __module_name__ = "fml.ux.textarea" ---@type string
 
 local box = require("eve.std.box")
-local fn = require("eve.builtin.fn")
-
 local state = require("eve.state")
 
 ---@type string

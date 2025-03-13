@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")

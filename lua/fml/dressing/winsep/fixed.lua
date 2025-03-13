@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local Line = require("fml.dressing.winsep.line")
 
 ---@type fml.dressing.Winsep

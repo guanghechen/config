@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local Scheduler = require("eve.collection.scheduler")
 local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")

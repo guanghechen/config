@@ -1,7 +1,6 @@
 local __module_name__ = "fml.dressing.python_venv" ---@type string
 
 local env = require("eve.std.env")
-local fn = require("eve.builtin.fn")
 local clp = require("eve.constant.lang.python")
 local state = require("eve.state")
 

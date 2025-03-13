@@ -2,7 +2,6 @@
 
 local __module_name__ = "fml.dressing.illumniate" ---@type string
 
-local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 
 ---@class fml.dressing.illumniate.ILspWord

@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local History = require("eve.collection.history")
 local Observable = require("eve.collection.observable")
 

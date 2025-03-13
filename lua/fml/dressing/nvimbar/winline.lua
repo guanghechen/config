@@ -1,5 +1,4 @@
 local env = require("eve.std.env")
-local fn = require("eve.builtin.fn")
 local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")

@@ -1,5 +1,3 @@
-local fn = require("eve.builtin.fn")
-
 ---@param winnr                         integer|nil
 ---@param width                         integer|nil
 ---@return nil

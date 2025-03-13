@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local History = require("eve.collection.history")
 
 ---@class eve.state.qflist.data

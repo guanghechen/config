@@ -1,5 +1,3 @@
-local fn = require("eve.builtin.fn")
-
 return {
   name = "copilot-cmp",
   opts = {},

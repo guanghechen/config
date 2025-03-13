@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local ft = require("eve.constant.filetype")
 
 -- Active indent guide and indent text objects. When you're browsing

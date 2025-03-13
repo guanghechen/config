@@ -1,6 +1,5 @@
 local __module_name__ = "fml.ux.nvimbar" ---@type string
 
-local fn = require("eve.builtin.fn")
 local Scheduler = require("eve.collection.scheduler")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 

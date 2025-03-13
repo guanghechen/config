@@ -2,7 +2,6 @@ local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
 local G = require("eve.builtin.G")
 local env = require("eve.std.env")
-local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")

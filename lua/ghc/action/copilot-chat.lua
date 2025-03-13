@@ -1,6 +1,5 @@
 local __module_name__ = "ghc.action.copilot-chat" ---@type string
 
-local fn = require("eve.builtin.fn")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
