@@ -6,7 +6,7 @@ local function circular_queue()
   circular:enqueue("B")
   circular:enqueue("C")
 
-  eve.debug.log({
+  eve.std.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -16,7 +16,7 @@ local function circular_queue()
   })
 
   circular:enqueue("D")
-  eve.debug.log({
+  eve.std.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -26,7 +26,7 @@ local function circular_queue()
   })
 
   circular:dequeue_back()
-  eve.debug.log({
+  eve.std.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -37,7 +37,7 @@ local function circular_queue()
 
   circular:enqueue("E")
   circular:enqueue("F")
-  eve.debug.log({
+  eve.std.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -50,18 +50,18 @@ local function circular_queue()
   for element in circular:iterator() do
     table.insert(result0, element)
   end
-  eve.debug.log({ result0 = result0 })
+  eve.std.debug.log({ result0 = result0 })
 
   local result1 = {}
   for element in circular:iterator_reverse() do
     table.insert(result1, element)
   end
-  eve.debug.log({ result1 = result1 })
+  eve.std.debug.log({ result1 = result1 })
 
   while circular:size() > 1 do
     circular:dequeue_back()
   end
-  eve.debug.log({
+  eve.std.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -75,7 +75,7 @@ local function circular_queue()
   circular:rearrange(function()
     return true
   end)
-  eve.debug.log({
+  eve.std.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -89,7 +89,7 @@ local function circular_queue()
   circular:rearrange(function(element)
     return element ~= "I"
   end)
-  eve.debug.log({
+  eve.std.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -100,7 +100,7 @@ local function circular_queue()
 
   circular:enqueue("K")
   circular:enqueue("L")
-  eve.debug.log({
+  eve.std.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),
@@ -112,7 +112,7 @@ local function circular_queue()
   circular:rearrange(function(element)
     return element ~= "L"
   end)
-  eve.debug.log({
+  eve.std.debug.log({
     size = circular:size(),
     at1 = circular:at(1),
     at2 = circular:at(2),

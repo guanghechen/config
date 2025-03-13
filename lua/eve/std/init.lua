@@ -1,17 +1,17 @@
----@class eve.std.mods
+---@class eve.std.__mods
 local mods = {
-  box = true,
-  colors = true,
-  debug = true,
-  env = true,
-  json = true,
-  md5 = true,
-  tmux = true,
+  box = "eve.std.box",
+  color = "eve.std.color",
+  debug = "eve.std.debug",
+  env = "eve.std.env",
+  json = "eve.std.json",
+  md5 = "eve.std.md5",
+  tmux = "eve.std.tmux",
 }
 
 ---@class eve.std
 ---@field public box                    eve.std.box
----@field public colors                 eve.std.color
+---@field public color                  eve.std.color
 ---@field public debug                  eve.std.debug
 ---@field public env                    eve.std.env
 ---@field public json                   eve.std.json
@@ -19,11 +19,11 @@ local mods = {
 ---@field public tmux                   eve.std.tmux
 local M = setmetatable({}, {
   __index = function(t, k)
-    if mods[k] then
-      ---@diagnostic disable-next-line: no-unknown
-      t[k] = require("eve.std." .. k)
+    local m = mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
     end
-    return rawget(t, k)
+    return require(m)
   end,
 })
 

@@ -13,7 +13,7 @@ require("integration.neovide.keymap")
 
 eve.setup_theme()
 
-if eve.env.IS_MAC then
+if eve.std.env.IS_MAC then
   require("fml.dressing.image")
 end
 require("fml.command")

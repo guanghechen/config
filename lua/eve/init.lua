@@ -1,10 +1,23 @@
----@class eve
-local M = {
-  G = require("eve.builtin.G"),
-  debug = require("eve.std.debug"),
-  env = require("eve.std.env"),
-  fn = require("eve.builtin.fn"),
+---@class eve.__mods
+local mods = {
+  G = "eve.builtin.G",
+  debug = "eve.std.debug",
+  std = "eve.std",
 }
+
+---@class eve
+---@field public G                      eve.builtin.G
+---@field public debug                  eve.std.debug
+---@field public std                    eve.std
+local M = setmetatable({}, {
+  __index = function(t, k)
+    local m = mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
 
 ---@return eve.state.storage
 function M.get_default_storage()
