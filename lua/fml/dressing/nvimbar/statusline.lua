@@ -22,7 +22,7 @@ statusline = Nvimbar.new({
   get_max_width = function()
     return vim.o.columns
   end,
-  is_active = fn.falsy,
+  is_active = eve.std.fn.falsy,
   trigger_rerender = function()
     local result = statusline:snapshot() or "" ---@type string
     vim.opt.statusline = result

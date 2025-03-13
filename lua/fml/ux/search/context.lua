@@ -131,7 +131,7 @@ function M.new(props)
   local input = props.input ---@type eve.collection.IObservable -- string>
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local input_line_count = Observable.from_value(oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable -- integer>
-  local state_has_matched = Observable.new({ value = false, equals = fn.falsy }) ---@type eve.collection.IObservable -- boolean>
+  local state_has_matched = Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.collection.IObservable -- boolean>
   local status = Observable.from_value("hidden")
 
   local cfg_input_title = props.title ---@type string

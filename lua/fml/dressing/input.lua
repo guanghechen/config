@@ -144,8 +144,8 @@ function M.input(opts, on_confirm)
     },
     { modes = { "i", "n" }, key = "<cr>", desc = "input: confirm", callback = action.confirm },
     { modes = { "n" }, key = "q", desc = "input: quit", callback = action.cancel },
-    { modes = { "n" }, key = "o", desc = "input: noop", callback = fn.noop },
-    { modes = { "n" }, key = "O", desc = "input: noop", callback = fn.noop },
+    { modes = { "n" }, key = "o", desc = "input: noop", callback = eve.std.fn.noop },
+    { modes = { "n" }, key = "O", desc = "input: noop", callback = eve.std.fn.noop },
   }
   fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 

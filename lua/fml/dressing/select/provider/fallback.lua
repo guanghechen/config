@@ -5,7 +5,7 @@ local fn = require("eve.builtin.fn")
 ---@return fml.ux.select.IProvider
 ---@return integer
 local function normal_provider(items, opts)
-  local format_item = opts.format_item or fn.identity ---@type fun(item): string
+  local format_item = opts.format_item or eve.std.fn.identity ---@type fun(item): string
   local width = 0 ---@type integer
   local select_items = {} ---@type fml.ux.select.IItem[]
   for index, item in ipairs(items) do

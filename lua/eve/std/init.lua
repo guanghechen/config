@@ -5,6 +5,7 @@ local __mods = {
   color = "eve.std.color",
   debug = "eve.std.debug",
   env = "eve.std.env",
+  fn = "eve.std.fn",
   fs = "eve.std.fs",
   json = "eve.std.json",
   md5 = "eve.std.md5",
@@ -23,6 +24,7 @@ local __mods = {
 ---@field public color                  eve.std.color
 ---@field public debug                  eve.std.debug
 ---@field public env                    eve.std.env
+---@field public fn                     eve.std.fn
 ---@field public fs                     eve.std.fs
 ---@field public json                   eve.std.json
 ---@field public md5                    eve.std.md5

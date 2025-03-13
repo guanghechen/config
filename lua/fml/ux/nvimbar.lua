@@ -199,8 +199,8 @@ function M.new(props)
 
   local is_active = props.is_active ---@type fun(context: fml.ux.nvimbar.IContext): boolean
   local pre_task = props.pre_task ---@type fun(callback: fun(err: string|false|nil): nil): nil
-  local trigger_rerender = props.trigger_rerender or fn.noop ---@type fun(): nil
-  local validate = props.validate or fn.noop ---@type fun(): string|nil
+  local trigger_rerender = props.trigger_rerender or eve.std.fn.noop ---@type fun(): nil
+  local validate = props.validate or eve.std.fn.noop ---@type fun(): string|nil
 
   local self = setmetatable({}, M)
 
@@ -382,8 +382,8 @@ function M:place(position, raw_component, priority)
     priority = priority,
     tight = not not raw_component.tight,
     render = raw_component.render,
-    will_change = raw_component.will_change or fn.truthy,
-    condition = raw_component.condition or fn.truthy,
+    will_change = raw_component.will_change or eve.std.fn.truthy,
+    condition = raw_component.condition or eve.std.fn.truthy,
   }
   components[k + 1] = component
 

@@ -114,7 +114,7 @@ function M.load(raw_data)
 
       dirtier_statusline = Dirtier.new({ dirty = true }),
       dirtier_tabline = Dirtier.new({ dirty = true }),
-      dirty_winline_nr = Observable.from_value(data.dirty_winline_nr, fn.falsy),
+      dirty_winline_nr = Observable.from_value(data.dirty_winline_nr, eve.std.fn.falsy),
 
       lsp_msg = Observable.from_value(data.lsp_msg),
       maximized_winnrs = data.maximized_winnrs,

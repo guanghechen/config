@@ -22,7 +22,7 @@ local Subscribers = require("eve.collection.subscribers")
 ---@field public readonly               ?boolean
 
 ---@type eve.collection.IUnsubscribable
-local noop_unsubscribable = { unsubscribe = fn.noop }
+local noop_unsubscribable = { unsubscribe = eve.std.fn.noop }
 
 ---@class eve.collection.Observable : eve.collection.IObservable
 ---@field private _readonly             boolean
@@ -38,7 +38,7 @@ setmetatable(M, BatchDisposable)
 ---@return eve.collection.Observable
 function M.new(props)
   local equals = props.equals or fn.equals_shallow ---@type eve.t.IEquals
-  local normalize = props.normalize or fn.identity ---@type eve.t.INormalize
+  local normalize = props.normalize or eve.std.fn.identity ---@type eve.t.INormalize
   local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type eve.t.T
 
