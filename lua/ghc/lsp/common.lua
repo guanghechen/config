@@ -4,7 +4,7 @@ local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
 local fs = require("eve.builtin.fs")
 local lsp = require("eve.builtin.lsp")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local reporter = require("eve.builtin.reporter")
 
 local command = require("eve.command")

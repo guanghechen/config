@@ -1,12 +1,9 @@
-local env = require("eve.std.env")
-local md5 = require("eve.std.md5")
+local SEP = eve.std.env.PATH_SEP ---@type string
+local HOME_NVIM_CACHE = eve.std.env.HOME_NVIM_CACHE ---@type string
+local HOME_NVIM_CONFIG = eve.std.env.HOME_NVIM_CONFIG ---@type string
+local HOME_CONTEXT = eve.std.env.HOME_CONTEXT ---@type string
 
-local SEP = env.PATH_SEP ---@type string
-local HOME_NVIM_CACHE = env.HOME_NVIM_CACHE ---@type string
-local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG ---@type string
-local HOME_CONTEXT = env.HOME_CONTEXT ---@type string
-
----@class eve.builtin.path.reposcope_map
+---@class eve.std.path.reposcope_map
 local repo_map = {
   public = {
     [".config"] = {
@@ -49,7 +46,7 @@ local repo_map = {
   },
 }
 
----@class eve.builtin.path
+---@class eve.std.path
 local M = {}
 
 ---@param filepath                      string
@@ -79,7 +76,7 @@ end
 ---@param filepath                      string
 ---@return boolean
 function M.is_absolute(filepath)
-  if env.IS_WIN then
+  if eve.std.env.IS_WIN then
     return #filepath > 1 and filepath:sub(2, 2) == ":"
   end
   return string.sub(filepath, 1, 1) == SEP
@@ -255,7 +252,7 @@ function M.split(filepath)
     table.insert(pieces, 1, "")
   end
 
-  if env.IS_WIN and #filepath > 1 and filepath:sub(2, 2) == ":" then
+  if eve.std.env.IS_WIN and #filepath > 1 and filepath:sub(2, 2) == ":" then
     pieces[1] = pieces[1]:upper()
   end
   return pieces
@@ -384,7 +381,7 @@ end
 function M.locate_cache_filepath(filename)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = md5.sumhexa(workspace_path)
+  local hash = eve.std.md5.sumhexa(workspace_path)
   local dirpath = M.join(HOME_NVIM_CACHE, "guanghechen" .. SEP .. workspace_name .. "@" .. hash) ---@type string
   local filepath = M.join(dirpath, filename) ---@type string
   M.mkdir_if_nonexist(dirpath)
@@ -417,7 +414,7 @@ end
 function M.locate_workspace_filepath(filename)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = md5.sumhexa(workspace_path)
+  local hash = eve.std.md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   return M.locate_context_filepath("workspaces" .. SEP .. session_dir .. SEP .. filename)
 end

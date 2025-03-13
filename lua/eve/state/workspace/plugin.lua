@@ -1,4 +1,4 @@
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local Observable = require("eve.collection.observable")
 
 ---@class eve.state.plugin.data

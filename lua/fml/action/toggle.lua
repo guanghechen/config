@@ -1,7 +1,7 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
 local fn = require("eve.builtin.fn")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 local varnames = require("eve.constant.var")

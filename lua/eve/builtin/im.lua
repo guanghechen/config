@@ -1,7 +1,7 @@
 local __module_name__ = "eve.builtin.im" ---@type string
 
 local env = require("eve.std.env")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local reporter = require("eve.builtin.reporter")
 
 ---@alias eve.builtin.im.InputMethod

@@ -1,5 +1,5 @@
 local fn = require("eve.builtin.fn")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 
 ---@class fml.dressing.image.config.env
 ---@field public name                   string

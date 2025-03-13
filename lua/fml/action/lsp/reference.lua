@@ -1,7 +1,7 @@
 local __module_name__ = "fml.action.lsp" ---@type string
 
 local lsp = require("eve.builtin.lsp")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local reporter = require("eve.builtin.reporter")
 local editor = require("eve.module.editor")
 local state = require("eve.state")

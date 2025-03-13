@@ -1,6 +1,6 @@
 local fn = require("eve.builtin.fn")
 local fs = require("eve.builtin.fs")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local tmux = require("eve.std.tmux")
 local varnames = require("eve.constant.var")
 local editor = require("eve.module.editor")

@@ -1,4 +1,4 @@
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 

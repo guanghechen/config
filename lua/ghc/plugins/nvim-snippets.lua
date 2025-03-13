@@ -1,4 +1,4 @@
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 
 return {
   name = "nvim-snippets",

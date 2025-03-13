@@ -2,7 +2,7 @@ local __module_name__ = "fml.action.find" ---@type string
 
 local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local reporter = require("eve.builtin.reporter")
 local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")

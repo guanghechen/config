@@ -1,5 +1,5 @@
 local fs = require("eve.builtin.fs")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon

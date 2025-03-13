@@ -1,5 +1,5 @@
 local fn = require("eve.builtin.fn")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local shell = require("eve.builtin.shell")
 local ft = require("eve.constant.filetype")
 local state = require("eve.state")

@@ -1,4 +1,4 @@
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local clipboard_img = require("eve.module.clipboard-img")
 local state = require("eve.state")
 

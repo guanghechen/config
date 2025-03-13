@@ -1,7 +1,7 @@
 local __module_name__ = "fml.action.win" ---@type string
 
 local fn = require("eve.builtin.fn")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local reporter = require("eve.builtin.reporter")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")

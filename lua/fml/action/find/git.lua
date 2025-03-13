@@ -1,5 +1,5 @@
 local oxi = require("eve.builtin.oxi")
-local path = require("eve.builtin.path")
+local path = require("eve.std.path")
 local ft = require("eve.constant.filetype")
 
 local select_files = require("fml.fn.select_files")

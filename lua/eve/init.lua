@@ -21,7 +21,7 @@ local M = setmetatable({}, {
 
 ---@return eve.state.storage
 function M.get_default_storage()
-  local path = require("eve.builtin.path")
+  local path = require("eve.std.path")
   local is_git_repo = path.is_repo_git() ---@type boolean
 
   ---@type eve.state.storage
@@ -80,7 +80,7 @@ end
 ---! 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
 ---@return nil
 function M.setup_workspace()
-  local path = require("eve.builtin.path")
+  local path = require("eve.std.path")
   if vim.fn.expand("%") ~= "" then
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
