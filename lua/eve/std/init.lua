@@ -1,5 +1,6 @@
 ---@class eve.std.__mods
 local __mods = {
+  array = "eve.std.array",
   box = "eve.std.box",
   color = "eve.std.color",
   debug = "eve.std.debug",
@@ -15,6 +16,8 @@ local __mods = {
 
 ---@class eve.std
 ---@field public __mods                 eve.std.__mods
+---
+---@field public array                  eve.std.array
 ---@field public box                    eve.std.box
 ---@field public color                  eve.std.color
 ---@field public debug                  eve.std.debug

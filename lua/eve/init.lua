@@ -1,15 +1,17 @@
 ---@class eve.__mods
 local mods = {
-  G = "eve.builtin.G",
   debug = "eve.std.debug",
-  std = "eve.std",
 }
 
 ---@class eve
 ---@field public G                      eve.builtin.G
----@field public debug                  eve.std.debug
 ---@field public std                    eve.std
-local M = setmetatable({}, {
+---
+---@field public debug                  eve.std.debug
+local M = setmetatable({
+  G = require("eve.builtin.G"),
+  std = require("eve.std"),
+}, {
   __index = function(t, k)
     local m = mods[k] ---@type string|nil
     if m == nil then

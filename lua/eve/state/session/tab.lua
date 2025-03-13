@@ -588,7 +588,7 @@ function M.dump()
 
   local stack = {} ---@type integer[]
   for _, tabnr in ipairs(tab_history.stack) do
-    local tabid = fn.find_index(tabnrs, tabnr) ---@type integer|nil
+    local tabid = eve.std.array.find_index(tabnrs, tabnr) ---@type integer|nil
     if tabid ~= nil then
       stack[#stack + 1] = tabid
     end

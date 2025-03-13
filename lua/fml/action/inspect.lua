@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.inspect" ---@type string
 
-local fn = require("eve.builtin.fn")
 local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local varnames = require("eve.constant.var")
@@ -105,7 +104,7 @@ function M.inspect_tab()
   local meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
 
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-  local tabid = fn.find_index(tabnrs, tabnr) or 1 ---@type integer
+  local tabid = eve.std.array.find_index(tabnrs, tabnr) or 1 ---@type integer
 
   if meta == nil then
     reporter.info({

@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local path = require("eve.std.path")
 
 ---@class fml.dressing.image.config.env
@@ -165,7 +164,7 @@ local config = {
   },
 }
 
-local SUPPORTED_EXTNAME_SET = fn.to_string_set(config.extnames) ---@type table<string, boolean>
+local SUPPORTED_EXTNAME_SET = eve.std.array.to_string_set(config.extnames) ---@type table<string, boolean>
 
 ---@class fml.dressing.image.config
 ---@field public state                  fml.dressing.image.config.state

@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 
 ---@class fml.action.buf
@@ -21,7 +20,7 @@ function M.toggle_pin()
   local filepath = vim.api.nvim_buf_get_name(buf.bufnr) ---@type string
 
   local pinned_list = state.bookmark.pinned:snapshot() ---@type string[]
-  local k = fn.find_index(pinned_list, filepath) ---@type integer|nil
+  local k = eve.std.array.find_index(pinned_list, filepath) ---@type integer|nil
   if k == nil then
     table.insert(pinned_list, filepath)
   else
