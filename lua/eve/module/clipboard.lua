@@ -3,7 +3,7 @@ local __module_name__ = "eve.module.clipboard" ---@type string
 local env = require("eve.builtin.env")
 local path = require("eve.builtin.path")
 local reporter = require("eve.builtin.reporter")
-local tmux = require("eve.builtin.tmux")
+local tmux = require("eve.std.tmux")
 
 ---@class fml.lib.clipboard
 local M = {}
