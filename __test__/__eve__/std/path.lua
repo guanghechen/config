@@ -1,4 +1,4 @@
-local debug = require("eve.builtin.debug")
+local debug = require("eve.std.debug")
 local path = require("eve.builtin.path")
 
 debug.log({

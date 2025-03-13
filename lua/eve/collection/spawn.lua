@@ -1,6 +1,6 @@
 --- https://github.com/folke/snacks.nvim/blob/6917597f6d22d79fcd0bf9b0eb7845f7ffdc80a0/lua/snacks/util/spawn.lua
 
-local debugger = require("eve.builtin.debug")
+local debugger = require("eve.std.debug")
 local fn = require("eve.builtin.fn")
 
 ---@param handle                        uv.uv_handle_t|nil
@@ -59,9 +59,9 @@ function Proc:kill(signal)
   end
 end
 
----@param opts                          eve.builtin.debug.ICmdParams|{}|nil
+---@param opts                          eve.std.debug.ICmdParams|{}|nil
 function Proc:debug(opts)
-  ---@type eve.builtin.debug.ICmdParams
+  ---@type eve.std.debug.ICmdParams
   opts = fn.merge_config({}, opts or {}, {
     cmd = self.opts.cmd,
     args = self.opts.args,

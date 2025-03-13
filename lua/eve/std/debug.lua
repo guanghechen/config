@@ -1,4 +1,4 @@
----@class eve.builtin.debug.ICmdParams
+---@class eve.std.debug.ICmdParams
 ---@field public cmd                    string|string[]
 ---@field public level                  ?integer|nil
 ---@field public title                  ?string
@@ -10,7 +10,7 @@
 ---@field public header                 ?string
 ---@field public props                  ?table<string, string>
 
----@class eve.builtin.debug
+---@class eve.std.debug
 local M = {}
 
 ---@param value any|nil
@@ -45,7 +45,7 @@ function M.log(...)
   vim.notify(text, vim.log.levels.INFO, { title = "debug" })
 end
 
----@param opts                          eve.builtin.debug.ICmdParams
+---@param opts                          eve.std.debug.ICmdParams
 ---@return string
 function M.cmd(opts)
   local args = vim.deepcopy(opts.args or {})
@@ -96,7 +96,7 @@ function M.cmd(opts)
 
   if opts.notify ~= false then
     vim.schedule(function()
-      local id = opts.group and ("eve.builtin.debug.cmd." .. cmd) or nil
+      local id = opts.group and ("eve.std.debug.cmd." .. cmd) or nil
       local level = opts.level or vim.log.levels.INFO
       local title = opts.title or id or "Cmd Debug"
       vim.notify(msg, level, {
