@@ -1,4 +1,4 @@
-local json = require("eve.builtin.json")
+local json = require("eve.std.json")
 
 ---@class eve.builtin.reporter.Levels
 local Levels = {

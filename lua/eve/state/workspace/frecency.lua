@@ -1,4 +1,4 @@
-local md5 = require("eve.builtin.md5")
+local md5 = require("eve.std.md5")
 local Frecency = require("eve.collection.frecency")
 
 ---@class eve.state.frecency.data

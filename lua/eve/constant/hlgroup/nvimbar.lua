@@ -1,4 +1,4 @@
-local cs = require("eve.builtin.color")
+local cs = require("eve.std.color")
 
 ---@param context                       eve.t.theme.IContext
 ---@return eve.constant.hlgroup.nvimbar

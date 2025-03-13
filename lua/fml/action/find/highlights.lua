@@ -1,4 +1,4 @@
-local cs = require("eve.builtin.color")
+local cs = require("eve.std.color")
 local fn = require("eve.builtin.fn")
 local Select = require("fml.ux.select")
 

@@ -1,5 +1,5 @@
 local env = require("eve.builtin.env")
-local md5 = require("eve.builtin.md5")
+local md5 = require("eve.std.md5")
 
 local SEP = env.PATH_SEP ---@type string
 local HOME_NVIM_CACHE = env.HOME_NVIM_CACHE ---@type string
