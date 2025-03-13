@@ -1,4 +1,4 @@
-local fs = require("eve.builtin.fs")
+local fs = require("eve.std.fs")
 local path = require("eve.std.path")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")

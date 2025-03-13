@@ -4,6 +4,7 @@ local __mods = {
   color = "eve.std.color",
   debug = "eve.std.debug",
   env = "eve.std.env",
+  fs = "eve.std.fs",
   json = "eve.std.json",
   md5 = "eve.std.md5",
   path = "eve.std.path",

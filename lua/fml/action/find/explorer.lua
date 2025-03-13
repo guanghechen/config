@@ -1,6 +1,6 @@
 local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
-local fs = require("eve.builtin.fs")
+local fs = require("eve.std.fs")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.std.path")
 local Observable = require("eve.collection.observable")

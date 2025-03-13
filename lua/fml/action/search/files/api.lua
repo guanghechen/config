@@ -1,6 +1,6 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
-local fs = require("eve.builtin.fs")
+local fs = require("eve.std.fs")
 local oxi = require("eve.builtin.oxi")
 local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
