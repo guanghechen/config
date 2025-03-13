@@ -102,7 +102,7 @@ function M.inspect_tab()
   local meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
 
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-  local tabid = eve.std.array.find_index(tabnrs, tabnr) or 1 ---@type integer
+  local tabid = eve.std.table.find_index(tabnrs, tabnr) or 1 ---@type integer
 
   if meta == nil then
     eve.std.reporter.info({

@@ -11,7 +11,7 @@ local SearchContext = require("fml.ux.search.context")
 local function get_scope_carousel_next()
   local scopes = state.select.search_file_scopes ---@type eve.e.SearchFileScope[]
   local scope = state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
-  local idx = eve.std.array.find_index(scopes, scope) or 1 ---@type integer
+  local idx = eve.std.table.find_index(scopes, scope) or 1 ---@type integer
   local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
   return scopes[idx_next]
 end

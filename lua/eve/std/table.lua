@@ -1,4 +1,4 @@
----@class eve.std.array
+---@class eve.std.table
 local M = {}
 
 ---@generic T

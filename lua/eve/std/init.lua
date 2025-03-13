@@ -1,6 +1,5 @@
 ---@class eve.std.__mods
 local __mods = {
-  array = "eve.std.array",
   box = "eve.std.box",
   color = "eve.std.color",
   debug = "eve.std.debug",
@@ -17,13 +16,13 @@ local __mods = {
   reporter = "eve.std.reporter",
   shell = "eve.std.shell",
   string = "eve.std.string",
+  table = "eve.std.table",
   tmux = "eve.std.tmux",
 }
 
 ---@class eve.std
 ---@field public __mods                 eve.std.__mods
 ---
----@field public array                  eve.std.array
 ---@field public box                    eve.std.box
 ---@field public color                  eve.std.color
 ---@field public debug                  eve.std.debug
@@ -39,6 +38,7 @@ local __mods = {
 ---@field public reporter               eve.std.reporter
 ---@field public shell                  eve.std.shell
 ---@field public string                 eve.std.string
+---@field public table                  eve.std.table
 ---@field public tmux                   eve.std.tmux
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)

@@ -31,7 +31,7 @@ local function get_select()
         state = state.select.find_buffer_scope,
         callback = function()
           local scope = state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
-          local idx = eve.std.array.find_index(scopes, scope) or 1 ---@type integer
+          local idx = eve.std.table.find_index(scopes, scope) or 1 ---@type integer
           local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
           local next_scope = scopes[idx_next] ---@type eve.e.FindBufferScope
           state.select.find_buffer_scope:next(next_scope)

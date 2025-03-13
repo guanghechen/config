@@ -215,7 +215,7 @@ local function get_select()
       ---@return nil
       toggle_flag_scope = function()
         local scope = state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
-        local idx = eve.std.array.find_index(scopes, scope) or 1 ---@type integer
+        local idx = eve.std.table.find_index(scopes, scope) or 1 ---@type integer
         local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
         local next_scope = scopes[idx_next] ---@type eve.e.FindFileScope
         state.select.find_file_scope:next(next_scope)
