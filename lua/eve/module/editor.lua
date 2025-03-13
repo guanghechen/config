@@ -1,6 +1,5 @@
 local fn = require("eve.builtin.fn")
 local fs = require("eve.std.fs")
-local path = require("eve.std.path")
 local ft = require("eve.constant.filetype")
 local varnames = require("eve.constant.var")
 local setting = require("eve.constant.setting")
@@ -235,7 +234,7 @@ end
 ---@param col                           ?integer
 ---@return boolean
 function M.open_filepath(winnr_source, filepath, lnum, col)
-  filepath = path.normalize(filepath)
+  filepath = eve.std.path.normalize(filepath)
 
   local winnr = M.pick_sourcefile_win(winnr_source) ---@type integer|nil
   if winnr == nil then

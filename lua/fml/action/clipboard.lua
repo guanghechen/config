@@ -1,4 +1,3 @@
-local path = require("eve.std.path")
 local clipboard_img = require("eve.module.clipboard-img")
 local state = require("eve.state")
 
@@ -17,7 +16,7 @@ function M.paste()
   local dirpath = vim.fn.fnamemodify(filepath, ":h") ---@type string
 
   if clipboard_img.has_image() then
-    local placeholder = path.join(dirpath, os.date("%Y-%m-%d") .. ".png") ---@type string
+    local placeholder = eve.std.path.join(dirpath, os.date("%Y-%m-%d") .. ".png") ---@type string
     local image_path = vim.fn.input("New image path", placeholder) ---@type string
 
     clipboard_img.paste_image(image_path)

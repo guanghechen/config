@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 
 local fn = require("eve.builtin.fn")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local clp = require("eve.constant.lang.python")
 local state = require("eve.state")
@@ -39,7 +38,7 @@ local function get_select()
     local provider = {
       fetch_data = function()
         local items = {} ---@type fml.action.lsp.python_venv.IItem[]
-        local root = path.cwd() ---@type string
+        local root = eve.std.path.cwd() ---@type string
         local uuid_set = {} ---@type table<string, true>
 
         do

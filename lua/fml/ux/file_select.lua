@@ -1,5 +1,4 @@
 local fs = require("eve.std.fs")
-local path = require("eve.std.path")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -183,7 +182,7 @@ function M.new(props)
       for _, raw_item in ipairs(raw_items) do
         local filepath = raw_item.filepath ---@type string
         local filepath_relative = raw_item.filepath_relative ---@type string
-        local filename = path.basename(raw_item.filepath)
+        local filename = eve.std.path.basename(raw_item.filepath)
         local icon, icon_hl = calc_fileicon(filename)
 
         ---@type fml.ux.file_select.IItem
@@ -430,7 +429,7 @@ end
 function M.make_items_by_filepaths(cwd, filepaths)
   local items = {} ---@type fml.ux.file_select.IRawItem[]
   for _, filepath in ipairs(filepaths) do
-    local relative_filepath = path.relative(cwd, filepath, true) ---@type string
+    local relative_filepath = eve.std.path.relative(cwd, filepath, true) ---@type string
     ---@type fml.ux.file_select.IRawItem
     local item = {
       filepath = filepath,

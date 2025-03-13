@@ -1,7 +1,6 @@
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
 local fn = require("eve.builtin.fn")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local Scheduler = require("eve.collection.scheduler")
 local ft = require("eve.constant.filetype")
@@ -94,10 +93,10 @@ return {
           return "done"
         end
 
-        local workspace = path.workspace() ---@type string
+        local workspace = eve.std.path.workspace() ---@type string
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath_relative = path.relative(workspace, filepath, true) ---@type string
-        if path.is_absolute(filepath_relative) then
+        local filepath_relative = eve.std.path.relative(workspace, filepath, true) ---@type string
+        if eve.std.path.is_absolute(filepath_relative) then
           return "done"
         end
 

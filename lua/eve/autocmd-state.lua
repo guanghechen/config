@@ -1,6 +1,5 @@
 local fn = require("eve.builtin.fn")
 local fs = require("eve.std.fs")
-local path = require("eve.std.path")
 local tmux = require("eve.std.tmux")
 local varnames = require("eve.constant.var")
 local editor = require("eve.module.editor")
@@ -20,18 +19,18 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 vim.api.nvim_create_autocmd("VimEnter", {
   group = fn.augroup("state_on_vim_enter"),
   callback = function()
-    local cwd = path.cwd() ---@type string
+    local cwd = eve.std.path.cwd() ---@type string
     local existed_filepaths = {} ---@type table<string, boolean>
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
       local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local filepath = path.resolve(cwd, filename) ---@type string
+      local filepath = eve.std.path.resolve(cwd, filename) ---@type string
       existed_filepaths[filepath] = true
     end
 
     for _, bufnr in ipairs(bufnrs) do
       local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local filepath = path.resolve(cwd, filename) ---@type string
+      local filepath = eve.std.path.resolve(cwd, filename) ---@type string
       if fs.is_file_or_dir(filepath) == "directory" then
         local new_filepath = state.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
         if new_filepath ~= nil then

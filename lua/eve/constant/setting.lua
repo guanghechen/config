@@ -1,5 +1,3 @@
-local path = require("eve.std.path")
-
 ---@class eve.constant.setting
 local M = {}
 
@@ -46,7 +44,7 @@ M.togglers = {
 
 ---@class eve.constant.setting.paths
 M.paths = {
-  theme = path.locate_context_filepath("theme"),
+  theme = eve.std.path.locate_context_filepath("theme"),
 }
 
 ---@class eve.constant.setting.sessions

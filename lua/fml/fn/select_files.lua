@@ -1,4 +1,3 @@
-local path = require("eve.std.path")
 local Observable = require("eve.collection.observable")
 local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
@@ -36,7 +35,7 @@ local function select_files(params)
       local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
       if bufnr_sourcefile ~= nil then
         local absolute_filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-        present_filepath = path.relative(cwd, absolute_filepath, true) ---@type string
+        present_filepath = eve.std.path.relative(cwd, absolute_filepath, true) ---@type string
       end
       return present_filepath
     end

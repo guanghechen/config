@@ -1,7 +1,6 @@
 local __module_name__ = "ghc.plugin" ---@type string
 
 local env = require("eve.std.env")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 
 local state = require("eve.state")
@@ -179,8 +178,8 @@ end
 
 ---! bootstrap lazy and all plugins
 vim.list_extend(final_specs, require("ghc.plugins._extra"))
-local lazypath = path.normalize(env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
-if not path.is_exist(lazypath) then
+local lazypath = eve.std.path.normalize(env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
+if not eve.std.path.is_exist(lazypath) then
   local repo = "https://github.com/guanghechen/mirror"
   vim.fn.system({
     "git",

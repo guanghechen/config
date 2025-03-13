@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.code" ---@type string
 
 local fn = require("eve.builtin.fn")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local state = require("eve.state")
 local Terminal = require("fml.ux.terminal")
@@ -46,7 +45,7 @@ local runners = {
       local terminal = code_runner_terminals.mjs ---@type fml.ux.ITerminal|nil
       if terminal == nil then
         terminal = Terminal.new({
-          cwd = path.cwd(),
+          cwd = eve.std.path.cwd(),
           permanent = false,
           title = "code run (mjs)",
         })
@@ -79,7 +78,7 @@ function M.run(force)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-  local extname = path.extname(filepath) ---@type string
+  local extname = eve.std.path.extname(filepath) ---@type string
   local key = extname:sub(2) ---@type string
 
   local runner = runners[key]

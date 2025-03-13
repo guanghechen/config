@@ -1,4 +1,3 @@
-local path = require("eve.std.path")
 local Observable = require("eve.collection.observable")
 
 ---@class eve.state.plugin.data
@@ -22,7 +21,7 @@ local _state = nil ---@type eve.state.plugin.state | nil
 
 ---@return eve.state.plugin.data
 function M.defaults()
-  local is_git_repo = path.is_repo_git() ---@type boolean
+  local is_git_repo = eve.std.path.is_repo_git() ---@type boolean
 
   ---@type eve.state.plugin.data
   return {

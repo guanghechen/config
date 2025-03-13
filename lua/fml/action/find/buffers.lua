@@ -1,5 +1,4 @@
 local fn = require("eve.builtin.fn")
-local path = require("eve.std.path")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
@@ -102,7 +101,7 @@ local function get_select()
     ---@type fml.ux.select.IProvider
     local provider = {
       fetch_data = function()
-        local cwd = path.cwd() ---@type string
+        local cwd = eve.std.path.cwd() ---@type string
         local scope = state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
         local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
         local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
@@ -141,8 +140,8 @@ local function get_select()
             local buftype = vim.bo[bufnr].buftype ---@type string
             local filetype = vim.bo[bufnr].filetype ---@type string
             local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-            local relative_filepath = path.relative(cwd, filepath, true) ---@type string
-            local filename = path.basename(filepath)
+            local relative_filepath = eve.std.path.relative(cwd, filepath, true) ---@type string
+            local filename = eve.std.path.basename(filepath)
             local icon, icon_hl = calc_fileicon(filename)
 
             ---@type fml.action.find.buffers.IItemData

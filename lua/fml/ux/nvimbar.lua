@@ -1,7 +1,6 @@
 local __module_name__ = "fml.ux.nvimbar" ---@type string
 
 local fn = require("eve.builtin.fn")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local Scheduler = require("eve.collection.scheduler")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -154,9 +153,9 @@ local function build_context(preset_context)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr = preset_context.winnr or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local cwd = path.cwd() ---@type string
+  local cwd = eve.std.path.cwd() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local filename = path.basename(filepath) ---@type string
+  local filename = eve.std.path.basename(filepath) ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
   local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
 

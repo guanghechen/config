@@ -1,5 +1,3 @@
-local path = require("eve.std.path")
-
 ---@class fml.dressing.image.config.env
 ---@field public name                   string
 ---@field public placeholders           boolean
@@ -187,7 +185,7 @@ end
 ---@param filename                      string
 ---@return boolean
 function M.is_support_file(filename)
-  local extname = path.extname(filename) ---@type string
+  local extname = eve.std.path.extname(filename) ---@type string
   return SUPPORTED_EXTNAME_SET[extname] == true
 end
 

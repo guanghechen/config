@@ -1,7 +1,6 @@
 local __module_name__ = "eve.builtin.im" ---@type string
 
 local env = require("eve.std.env")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 
 ---@alias eve.builtin.im.InputMethod
@@ -14,8 +13,8 @@ local reporter = require("eve.std.reporter")
 local M = {}
 
 if env.IS_MAC then
-  local app_home = path.locate_app_config_home("guanghechen")
-  local script_path = path.join(app_home, "osx/script/im-select/im-select")
+  local app_home = eve.std.path.locate_app_config_home("guanghechen")
+  local script_path = eve.std.path.join(app_home, "osx/script/im-select/im-select")
 
   ---@return eve.builtin.im.InputMethod|nil
   function M.get_input_method()

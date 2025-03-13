@@ -4,7 +4,6 @@ local G = require("eve.builtin.G")
 local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
@@ -136,7 +135,7 @@ function M.bufs(position)
     end
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filename = path.basename(filepath) ---@type string
+    local filename = eve.std.path.basename(filepath) ---@type string
     local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
     return filename, fileicon, fileicon_hl
   end
@@ -422,7 +421,7 @@ function M.cwd(position)
       local hln_text = hln_text_prefix .. context.mode ---@type string
       local hln_sep = hln_sep_prefix .. context.mode ---@type string
 
-      local cwd_name = path.basename(context.cwd) ---@type string
+      local cwd_name = eve.std.path.basename(context.cwd) ---@type string
       local text = icons.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
@@ -647,7 +646,7 @@ function M.dirpath_prominent(position)
         return "", "", false
       end
 
-      local cwd_name = path.basename(context.cwd) ---@type string
+      local cwd_name = eve.std.path.basename(context.cwd) ---@type string
       local N = #meta.relpath_pieces - 1 ---@type integer
       if N < 1 then
         local text = cwd_name .. " " ---@type string
@@ -1086,7 +1085,7 @@ function M.python_env(position)
   state.observe({ state.lsp.python_venv_path }, function()
     dirty = true
     local python_venv_path = state.lsp.python_venv_path:snapshot() ---@type string
-    python_venv = python_venv_path ~= nil and path.basename(python_venv_path) or nil ---@type string|nil
+    python_venv = python_venv_path ~= nil and eve.std.path.basename(python_venv_path) or nil ---@type string|nil
 
     local python_path = state.lsp.get_python_bin_path() ---@type string|nil
     if python_path ~= nil then

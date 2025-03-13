@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.term" ---@type string
 
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
@@ -28,7 +27,7 @@ local M = {}
 function M.new(props)
   local name = props.name ---@type string
   local cmd = props.cmd or vim.env.SHELL or vim.o.shell ---@type string
-  local cwd = props.cwd or path.cwd() ---@type string
+  local cwd = props.cwd or eve.std.path.cwd() ---@type string
   local env = props.env ---@type table<string, string>|nil
   local permanent = props.permanent ---@type boolean|nil
   local title = props.title ---@type string|nil
@@ -93,7 +92,7 @@ end
 
 ---@return nil
 function M.toggle_cwd()
-  local cwd = path.cwd()
+  local cwd = eve.std.path.cwd()
 
   M.toggle({
     name = "cwd",
@@ -112,7 +111,7 @@ function M.toggle_directory()
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-  local cwd = path.dirname(filepath) ---@type string
+  local cwd = eve.std.path.dirname(filepath) ---@type string
 
   M.toggle({
     name = "directory",
@@ -124,7 +123,7 @@ end
 
 ---@return nil
 function M.toggle_workspace()
-  local cwd = path.workspace()
+  local cwd = eve.std.path.workspace()
 
   M.toggle({
     name = "workspace",

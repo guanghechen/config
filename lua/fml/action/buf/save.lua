@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
 local fs = require("eve.std.fs")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
@@ -11,8 +10,8 @@ local M = {}
 
 ---@return nil
 function M.save()
-  local cwd = path.cwd() ---@type string
-  local workspace = path.workspace() ---@type string
+  local cwd = eve.std.path.cwd() ---@type string
+  local workspace = eve.std.path.workspace() ---@type string
 
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   local new_file_bufnrs = {} ---@type integer[]
@@ -27,7 +26,7 @@ function M.save()
       modified_count = modified_count + 1
 
       local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local filepath = path.resolve(cwd, filename) ---@type string
+      local filepath = eve.std.path.resolve(cwd, filename) ---@type string
       if fs.is_file_or_dir(filepath) == nil then
         new_file_count = new_file_count + 1
         table.insert(new_file_bufnrs, bufnr)
@@ -57,7 +56,7 @@ function M.save()
 
   for _, bufnr in ipairs(new_file_bufnrs) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local initial_text = path.is_under(workspace, filepath) and path.relative(cwd, filepath, true) or filepath ---@type string
+    local initial_text = eve.std.path.is_under(workspace, filepath) and eve.std.path.relative(cwd, filepath, true) or filepath ---@type string
     vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
 
     vim.ui.input({
@@ -69,7 +68,7 @@ function M.save()
         return
       end
 
-      local next_filepath = path.resolve(cwd, text) ---@type string
+      local next_filepath = eve.std.path.resolve(cwd, text) ---@type string
       local filetype = fs.is_file_or_dir(next_filepath)
 
       ---@return nil

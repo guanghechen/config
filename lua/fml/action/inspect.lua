@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.inspect" ---@type string
 
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local varnames = require("eve.constant.var")
 local state = require("eve.state")
@@ -56,8 +55,8 @@ end
 
 ---@return nil
 function M.inspect_state()
-  local cwd = path.cwd() ---@type string
-  local workspace = path.workspace() ---@type string
+  local cwd = eve.std.path.cwd() ---@type string
+  local workspace = eve.std.path.workspace() ---@type string
   local full_state = state.dump() ---@type eve.state.data
 
   reporter.info({
@@ -82,8 +81,8 @@ end
 
 ---@return nil
 function M.inspect_state_full()
-  local cwd = path.cwd() ---@type string
-  local workspace = path.workspace() ---@type string
+  local cwd = eve.std.path.cwd() ---@type string
+  local workspace = eve.std.path.workspace() ---@type string
 
   reporter.info({
     from = __module_name__,

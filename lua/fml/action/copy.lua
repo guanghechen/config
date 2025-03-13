@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.copy" ---@type string
 
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local command = require("eve.command")
@@ -20,8 +19,8 @@ local function copy_current_filepath(candidate, filepath)
       message = "Copied current buffer filepath (absolute) to system clipboard!",
     })
   elseif candidate == "relative" then
-    local cwd = path.cwd() ---@type string
-    local content = path.relative(cwd, filepath, true) ---@type string
+    local cwd = eve.std.path.cwd() ---@type string
+    local content = eve.std.path.relative(cwd, filepath, true) ---@type string
 
     vim.fn.setreg("+", content)
     reporter.info({

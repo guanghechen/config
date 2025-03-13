@@ -1,7 +1,6 @@
 local env = require("eve.std.env")
 local fs = require("eve.std.fs")
 local oxi = require("eve.builtin.oxi")
-local path = require("eve.std.path")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
@@ -127,13 +126,13 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = Observable.from_value(path.normalize(initial_dirpath)) ---@type eve.collection.IObservable -- string>
+local state_cwd = Observable.from_value(eve.std.path.normalize(initial_dirpath)) ---@type eve.collection.IObservable -- string>
 local _select = nil ---@type fml.ux.ISelect|nil
 
 ---@return string
 local function gen_title()
   local dirpath = state_cwd:snapshot() ---@type string
-  local relative_dirpath = path.relative(path.cwd(), dirpath, false)
+  local relative_dirpath = eve.std.path.relative(eve.std.path.cwd(), dirpath, false)
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "File explorer" ---@type string
   end
@@ -175,8 +174,8 @@ local function get_select()
     ---@type fml.ux.select.IProvider
     local provider = {
       fetch_data = function(force)
-        local dirpath = path.normalize(state_cwd:snapshot()) ---@type string
-        local parent_dirpath = path.dirname(dirpath) ---@type string
+        local dirpath = eve.std.path.normalize(state_cwd:snapshot()) ---@type string
+        local parent_dirpath = eve.std.path.dirname(dirpath) ---@type string
         local diritem = fetch_diritem(dirpath, force) ---@type fml.action.find.explorer.IDirItem
         fetch_diritem(parent_dirpath, force)
 
@@ -219,7 +218,7 @@ local function get_select()
           if is_text_file then
             local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
             local lines = fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
-            local title = path.relative(path.cwd(), item.uuid, false) ---@type string
+            local title = eve.std.path.relative(eve.std.path.cwd(), item.uuid, false) ---@type string
 
             ---@type fml.ux.search.preview.IData
             return {
@@ -297,9 +296,9 @@ local function get_select()
             table.insert(lines, text)
           end
 
-          local title = path.relative(path.cwd(), item.uuid, false) ---@type string
+          local title = eve.std.path.relative(eve.std.path.cwd(), item.uuid, false) ---@type string
           if #title < 1 or title:sub(1, 1) == "." then
-            title = path.normalize(item.uuid)
+            title = eve.std.path.normalize(item.uuid)
           end
 
           ---@type fml.ux.search.preview.IData
@@ -399,7 +398,7 @@ local function get_select()
         modes = { "n", "v" },
         key = "<Backspace>",
         callback = function()
-          local next_cwd = path.dirname(state_cwd:snapshot())
+          local next_cwd = eve.std.path.dirname(state_cwd:snapshot())
           state_cwd:next(next_cwd)
         end,
         desc = "file explorer: goto the parent dir",
@@ -471,7 +470,7 @@ local M = {}
 ---@return nil
 function M.find_explorer(specified_dirpath)
   if specified_dirpath ~= nil and fs.is_file_or_dir(specified_dirpath) == "directory" then
-    local dirpath = path.normalize(specified_dirpath) ---@type string
+    local dirpath = eve.std.path.normalize(specified_dirpath) ---@type string
     state_cwd:next(dirpath)
   else
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -481,7 +480,7 @@ function M.find_explorer(specified_dirpath)
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 then
         local doctype = fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
-        local dirpath = doctype == "file" and path.dirname(filepath) or filepath ---@type string
+        local dirpath = doctype == "file" and eve.std.path.dirname(filepath) or filepath ---@type string
         state_cwd:next(dirpath)
       end
     end

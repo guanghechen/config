@@ -1,5 +1,4 @@
 local fn = require("eve.builtin.fn")
-local path = require("eve.std.path")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
@@ -10,7 +9,7 @@ local function check_could_reveal(cwd)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer|nil
   if bufnr ~= nil and fn.is_buf_valid(bufnr) then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    return path.is_under(cwd, filepath)
+    return eve.std.path.is_under(cwd, filepath)
   end
   return false
 end
@@ -80,25 +79,25 @@ local widgets = {
     name = "fs-cwd",
     source = "filesystem",
     position = "float",
-    cwd = path.cwd,
+    cwd = eve.std.path.cwd,
   }),
   fs_workspace = create_widget({
     name = "fs-workspace",
     source = "filesystem",
     position = "float",
-    cwd = path.workspace,
+    cwd = eve.std.path.workspace,
   }),
   git_cwd = create_widget({
     name = "git-cwd",
     source = "git_status",
     position = "float",
-    cwd = path.cwd,
+    cwd = eve.std.path.cwd,
   }),
   git_workspace = create_widget({
     name = "git-workspace",
     source = "git_status",
     position = "float",
-    cwd = path.workspace,
+    cwd = eve.std.path.workspace,
   }),
 }
 
@@ -114,7 +113,7 @@ function M.fs_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = path.cwd(),
+    dir = eve.std.path.cwd(),
     position = "left",
     reveal = false,
     toggle = toggle,
@@ -130,7 +129,7 @@ function M.fs_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = path.workspace(),
+    dir = eve.std.path.workspace(),
     position = "left",
     reveal = false,
     toggle = toggle,
@@ -143,7 +142,7 @@ function M.fs_reveal()
     action = "focus",
     source = "filesystem",
     position = "left",
-    reveal = check_could_reveal(path.workspace()),
+    reveal = check_could_reveal(eve.std.path.workspace()),
     toggle = false,
   })
 end

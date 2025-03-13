@@ -4,7 +4,6 @@ local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
 local fs = require("eve.std.fs")
 local lsp = require("eve.builtin.lsp")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 
 local command = require("eve.command")
@@ -78,7 +77,7 @@ end
 ---@return string|nil
 ---@return string|nil
 function M.locate_lsp_root(filepath, config_filenames)
-  local cwd = path.cwd() ---@type string
+  local cwd = eve.std.path.cwd() ---@type string
   do
     local config_filepath = M.find_filepath(cwd, config_filenames) ---@type string|nil
     if config_filepath ~= nil then
@@ -86,7 +85,7 @@ function M.locate_lsp_root(filepath, config_filenames)
     end
   end
 
-  local workspace = path.workspace() ---@type string
+  local workspace = eve.std.path.workspace() ---@type string
   if cwd ~= workspace then
     local config_filepath = M.find_filepath(workspace, config_filenames) ---@type string|nil
     if config_filepath ~= nil then
@@ -94,7 +93,7 @@ function M.locate_lsp_root(filepath, config_filenames)
     end
   end
 
-  local pieces = path.split(filepath) ---@type string[]
+  local pieces = eve.std.path.split(filepath) ---@type string[]
   local k = #pieces - 1 ---@type integer
   while k >= 1 do
     local dirpath = table.concat(pieces, env.PATH_SEP, 1, k) ---@type string

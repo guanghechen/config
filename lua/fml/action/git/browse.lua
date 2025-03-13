@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.git" ---@type string
 
 local env = require("eve.std.env")
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local state = require("eve.state")
@@ -225,9 +224,9 @@ function M.browse()
     return
   end
 
-  local workspace = path.workspace() ---@type string
+  local workspace = eve.std.path.workspace() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string|nil
-  filepath = filepath ~= nil and path.is_under(workspace, filepath) and path.relative(workspace, filepath, true) or nil
+  filepath = filepath ~= nil and eve.std.path.is_under(workspace, filepath) and eve.std.path.relative(workspace, filepath, true) or nil
 
   local remotes = {} ---@type fml.action.git.browse.IRemote[]
   local fields = {

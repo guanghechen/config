@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
@@ -33,11 +32,11 @@ local function get_scope_cwd(dirpath)
   local scope = state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
 
   if scope == "W" then
-    return path.workspace()
+    return eve.std.path.workspace()
   end
 
   if scope == "C" then
-    return path.cwd()
+    return eve.std.path.cwd()
   end
 
   if scope == "D" then
@@ -54,10 +53,10 @@ local function get_scope_cwd(dirpath)
     message = "Unknown scope.",
     details = { scope = scope, dirpath = dirpath },
   })
-  return path.cwd()
+  return eve.std.path.cwd()
 end
 
-local state_search_cwd = Observable.from_value(get_scope_cwd(path.cwd()))
+local state_search_cwd = Observable.from_value(get_scope_cwd(eve.std.path.cwd()))
 state.select.search_file_scope:subscribe(
   Subscriber.new({
     on_next = function(scope, prev_scope)
@@ -65,7 +64,7 @@ state.select.search_file_scope:subscribe(
       local bufnr = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
 
       ---@type string
-      local current_buf_dirpath = bufnr ~= nil and path.dirname(vim.api.nvim_buf_get_name(bufnr)) or path.cwd()
+      local current_buf_dirpath = bufnr ~= nil and eve.std.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.std.path.cwd()
 
       local current_search_cwd = state_search_cwd:snapshot() ---@type string
       local next_search_cwd = get_scope_cwd(current_buf_dirpath) ---@type string

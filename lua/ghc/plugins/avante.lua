@@ -1,7 +1,6 @@
 local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
-local path = require("eve.std.path")
 local icons = require("eve.constant.icon")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
@@ -140,14 +139,14 @@ local function get_file_selector()
       fetch_data = function()
         local width = 0 ---@type integer
         local items = {} ---@type fml.ux.select.IItem[]
-        local cwd = path.cwd() ---@type string
+        local cwd = eve.std.path.cwd() ---@type string
         for index, filepath in ipairs(_filepaths) do
           local uuid = tostring(index) ---@type string
           local text = filepath ---@type string
           local icon = "" ---@type string
           local icon_hl = nil ---@type string|nil
 
-          local absolute_filepath = path.join(cwd, filepath) ---@type string
+          local absolute_filepath = eve.std.path.join(cwd, filepath) ---@type string
           if vim.uv.fs_stat(absolute_filepath) and vim.uv.fs_stat(absolute_filepath).type == "directory" then
             icon = icons.filetype.Folder
             icon_hl = "MiniIconsBlue"
@@ -303,10 +302,10 @@ return {
         provider = get_file_selector(),
         provider_opts = {
           get_filepaths = function(params)
-            local cwd = path.cwd() ---@type string
+            local cwd = eve.std.path.cwd() ---@type string
             local selected_filepaths = params.selected_filepaths ---@type string[]
 
-            local workspace = path.workspace() ---@type string
+            local workspace = eve.std.path.workspace() ---@type string
             local flag_exclude = state.select.select_avante.flag_exclude:snapshot() ---@type boolean
             local flag_gitignore = state.select.select_avante.flag_gitignore:snapshot() ---@type boolean
             local excludes = flag_exclude and state.select.select_avante.excludes:snapshot() or {} ---@type string[]

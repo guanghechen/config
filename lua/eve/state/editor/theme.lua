@@ -1,6 +1,5 @@
 local __module_name__ = "eve.state.editor.theme" ---@type string
 
-local path = require("eve.std.path")
 local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local Theme = require("eve.collection.theme")
@@ -232,7 +231,7 @@ function M.load(raw_data)
         local theme = _state.theme:snapshot() ---@type eve.e.Theme
         local transparency = _state.transparency:snapshot() ---@type boolean
 
-        if force or not path.is_exist(setting.paths.theme) then
+        if force or not eve.std.path.is_exist(setting.paths.theme) then
           _state.apply_theme({
             theme = theme,
             transparency = transparency,
