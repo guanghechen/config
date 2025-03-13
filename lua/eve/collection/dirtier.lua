@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local Observable = require("eve.collection.observable")
 
 ---@class eve.collection.IDirtier : eve.collection.IObservable -- boolean>

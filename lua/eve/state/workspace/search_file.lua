@@ -100,7 +100,7 @@ function M.load(raw_data)
   _state.max_filesize:next(data.max_filesize)
   _state.max_matches:next(data.max_matches)
   _state.replacement:next(data.replacement)
-  if not fn.equals_list(_state.search_paths:snapshot(), data.search_paths) then
+  if not eve.std.fn.equals_list(_state.search_paths:snapshot(), data.search_paths) then
     _state.search_paths:next(data.search_paths)
   end
   return _state

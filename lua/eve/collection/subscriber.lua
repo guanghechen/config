@@ -1,5 +1,3 @@
-local fn = require("eve.builtin.fn")
-
 ---@class eve.collection.ISubscriber : eve.collection.IDisposable
 ---@field public next                   fun(self: eve.collection.ISubscriber, value: eve.t.T, value_prev: eve.t.T| nil): nil
 

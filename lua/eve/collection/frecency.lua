@@ -1,5 +1,3 @@
-local fn = require("eve.builtin.fn")
-
 ---@class eve.collection.IFrecency
 ---@field public access                 fun(self: eve.collection.IFrecency, key: string): nil
 ---@field public load                   fun(self: eve.collection.IFrecency, data: eve.collection.frecency.ISerializedData): nil

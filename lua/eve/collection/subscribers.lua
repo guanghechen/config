@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local BatchHandler = require("eve.collection.batch_handler")
 
 ---@class eve.collection.IUnsubscribable

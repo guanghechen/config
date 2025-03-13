@@ -33,9 +33,9 @@ S = {
   history = History.new({
     name = "widget",
     capacity = 20,
-    equals = fn.equals_shallow,
+    equals = eve.std.fn.equals_shallow,
   }),
-  equals = fn.equals_shallow,
+  equals = eve.std.fn.equals_shallow,
   backward = function()
     local present, present_index = S.history:present() ---@type eve.t.ux.IWidget|nil, integer|nil
     if present == nil or present_index <= 1 then

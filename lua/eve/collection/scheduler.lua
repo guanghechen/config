@@ -1,6 +1,5 @@
 local __module_name__ = "eve.collection.scheduler" ---@type string
 
-local fn = require("eve.builtin.fn")
 local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 

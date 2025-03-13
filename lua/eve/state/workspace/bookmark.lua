@@ -64,7 +64,7 @@ function M.load(raw_data)
     return _state
   end
 
-  if not fn.equals_list(_state.pinned:snapshot(), data.pinned) then
+  if not eve.std.fn.equals_list(_state.pinned:snapshot(), data.pinned) then
     _state.pinned:next(data.pinned)
   end
   return _state

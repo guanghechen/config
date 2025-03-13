@@ -1,6 +1,5 @@
 local __module_name__ = "eve.collection.history" ---@type string
 
-local fn = require("eve.builtin.fn")
 local reporter = require("eve.std.reporter")
 local CircularStack = require("eve.collection.circular_stack")
 
@@ -62,7 +61,7 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local capacity = props.capacity ---@type integer
-  local equals = props.equals or fn.equals_shallow ---@type eve.t.IEquals
+  local equals = props.equals or eve.std.fn.equals_shallow ---@type eve.t.IEquals
 
   local self = setmetatable({}, M)
   self.name = name
@@ -79,7 +78,7 @@ function M.deserialize(props)
 
   local self = setmetatable({}, M)
   self.name = props.name
-  self.equals = props.equals or fn.equals_shallow ---@type eve.t.IEquals
+  self.equals = props.equals or eve.std.fn.equals_shallow ---@type eve.t.IEquals
   self._stack = CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self

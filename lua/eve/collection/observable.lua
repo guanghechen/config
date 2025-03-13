@@ -1,6 +1,5 @@
 local __module_name__ = "eve.collection.observable" ---@type string
 
-local fn = require("eve.builtin.fn")
 local reporter = require("eve.std.reporter")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
@@ -37,7 +36,7 @@ setmetatable(M, BatchDisposable)
 ---@param props                         eve.collection.observable.IProps
 ---@return eve.collection.Observable
 function M.new(props)
-  local equals = props.equals or fn.equals_shallow ---@type eve.t.IEquals
+  local equals = props.equals or eve.std.fn.equals_shallow ---@type eve.t.IEquals
   local normalize = props.normalize or eve.std.fn.identity ---@type eve.t.INormalize
   local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type eve.t.T
