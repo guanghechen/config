@@ -216,13 +216,6 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param text                          string
----@param word                          string
----@return boolean
-function M.starts_with(text, word)
-  return #text >= #word and text:sub(1, #word) == word
-end
-
 ---@param str                           string
 ---@param data                          table<string, string>
 ---@param opts                          ?{ prefix?: string, indent?: boolean, offset?: number[] }

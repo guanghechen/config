@@ -33,4 +33,11 @@ function M.parse_comma_list(text)
   return result
 end
 
+---@param text                          string
+---@param word                          string
+---@return boolean
+function M.starts_with(text, word)
+  return #text >= #word and text:sub(1, #word) == word
+end
+
 return M

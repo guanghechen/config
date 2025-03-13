@@ -112,7 +112,7 @@ function M.new(props)
           local input_present = input_history:present() ---@type string|nil, integer
           if input_present ~= input_cur then
             local input_top = input_history:top() ---@type string|nil
-            if input_top ~= nil and fn.starts_with(input_top, EDITING_PREFIX) then
+            if input_top ~= nil and eve.std.string.starts_with(input_top, EDITING_PREFIX) then
               input_history:update_top(EDITING_PREFIX .. input_cur)
             else
               input_history:go(math.huge)
@@ -209,7 +209,7 @@ end
 function M:reset_input(text)
   local context = self.context ---@type fml.ux.search.IContext
   local next_text = text or context.input:snapshot() ---@type string
-  next_text = fn.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
+  next_text = eve.std.string.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
   context.input:next(next_text)
 
   local bufnr = context.bufnr_input ---@type integer|nil
