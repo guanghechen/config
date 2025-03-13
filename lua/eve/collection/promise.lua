@@ -1,6 +1,6 @@
 local __module_name__ = "eve.collection.promise" ---@type string
 
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 
 ---@class eve.collection.IPromise
 ---@field public resolve                fun(value: unknown): eve.collection.IPromise

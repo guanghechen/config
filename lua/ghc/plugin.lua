@@ -2,7 +2,7 @@ local __module_name__ = "ghc.plugin" ---@type string
 
 local env = require("eve.std.env")
 local path = require("eve.std.path")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 
 local state = require("eve.state")
 

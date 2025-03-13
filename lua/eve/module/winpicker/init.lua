@@ -1,7 +1,7 @@
 local __module_name__ = "eve.module.winpicker" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local Mask = require("eve.module.winpicker.mask")
 
 ---@class eve.module.winpicker.config

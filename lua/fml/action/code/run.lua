@@ -2,7 +2,7 @@ local __module_name__ = "fml.action.code" ---@type string
 
 local fn = require("eve.builtin.fn")
 local path = require("eve.std.path")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local state = require("eve.state")
 local Terminal = require("fml.ux.terminal")
 

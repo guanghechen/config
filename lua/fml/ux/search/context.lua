@@ -2,7 +2,7 @@ local __module_name__ = "fml.ux.search.context" ---@type string
 
 local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local Dirtier = require("eve.collection.dirtier")
 local Observable = require("eve.collection.observable")
 local Scheduler = require("eve.collection.scheduler")

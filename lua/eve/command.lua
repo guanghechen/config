@@ -1,6 +1,6 @@
 local __module_name__ = "eve.command" ---@type string
 
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local setting = require("eve.constant.setting")
 local state = require("eve.state")
 

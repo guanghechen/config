@@ -1,7 +1,7 @@
 local __module_name__ = "eve.collection.observable" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
 

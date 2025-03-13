@@ -1,6 +1,4 @@
-local json = require("eve.std.json")
-
----@class eve.builtin.reporter.Levels
+---@class eve.std.reporter.Levels
 local Levels = {
   DEBUG = vim.log.levels.DEBUG,
   INFO = vim.log.levels.INFO,
@@ -8,13 +6,13 @@ local Levels = {
   ERROR = vim.log.levels.ERROR,
 }
 
----@class eve.builtin.reporter.IOptions
+---@class eve.std.reporter.IOptions
 ---@field from string
 ---@field subject                       ?string
 ---@field message                       ?string
 ---@field details                       ?any
 
----@class eve.builtin.reporter
+---@class eve.std.reporter
 local M = {}
 
 ---@param level                         eve.e.ReportLevel|nil
@@ -31,7 +29,7 @@ local function resolve_level(level)
   return result
 end
 
----@param options                       eve.builtin.reporter.IOptions
+---@param options                       eve.std.reporter.IOptions
 ---@param level                         integer
 ---@return nil
 local function log(options, level)
@@ -43,7 +41,7 @@ local function log(options, level)
   end
 
   if options.details ~= nil then
-    local details = "```json\n" .. json.stringify_prettier(options.details) .. "\n```" ---@type string
+    local details = "```json\n" .. eve.std.json.stringify_prettier(options.details) .. "\n```" ---@type string
     if #text > 0 then
       text = text .. "\n\n" .. details
     else
@@ -70,29 +68,29 @@ local function log(options, level)
   end)
 end
 
----@param options                       eve.builtin.reporter.IOptions
+---@param options                       eve.std.reporter.IOptions
 ---@param level                         ?eve.e.ReportLevel
 function M.log(options, level)
   local level_value = resolve_level(level) ---@type integer
   log(options, level_value)
 end
 
----@param options                       eve.builtin.reporter.IOptions
+---@param options                       eve.std.reporter.IOptions
 function M.debug(options)
   log(options, Levels.DEBUG)
 end
 
----@param options                       eve.builtin.reporter.IOptions
+---@param options                       eve.std.reporter.IOptions
 function M.info(options)
   log(options, Levels.INFO)
 end
 
----@param options                       eve.builtin.reporter.IOptions
+---@param options                       eve.std.reporter.IOptions
 function M.warn(options)
   log(options, Levels.WARN)
 end
 
----@param options                       eve.builtin.reporter.IOptions
+---@param options                       eve.std.reporter.IOptions
 function M.error(options)
   log(options, Levels.ERROR)
 end

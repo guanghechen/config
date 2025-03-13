@@ -3,7 +3,7 @@ local __module_name__ = "eve.builtin.oxi" ---@type string
 local nvim_tools = require("nvim_tools")
 local json = require("eve.std.json")
 local path = require("eve.std.path")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 
 ---@class eve.builtin.oxi.ICmdResult
 ---@field public cmd                    string

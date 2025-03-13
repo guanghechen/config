@@ -1,6 +1,6 @@
 local __module_name__ = "ghc.plugin.mini-pairs" ---@type string
 
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 
 -- auto pairs
 return {

@@ -5,7 +5,7 @@ local fn = require("eve.builtin.fn")
 local fs = require("eve.builtin.fs")
 local lsp = require("eve.builtin.lsp")
 local path = require("eve.std.path")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 
 local command = require("eve.command")
 

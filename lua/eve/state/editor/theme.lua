@@ -1,7 +1,7 @@
 local __module_name__ = "eve.state.editor.theme" ---@type string
 
 local path = require("eve.std.path")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local Theme = require("eve.collection.theme")
 local setting = require("eve.constant.setting")

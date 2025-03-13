@@ -1,7 +1,7 @@
 local __module_name__ = "eve.state" ---@type string
 
 local fs = require("eve.builtin.fs")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Disposable = require("eve.collection.disposable")
 local Scheduler = require("eve.collection.scheduler")

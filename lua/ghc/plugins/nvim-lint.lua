@@ -2,7 +2,7 @@ local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
 local fn = require("eve.builtin.fn")
 local path = require("eve.std.path")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local Scheduler = require("eve.collection.scheduler")
 local ft = require("eve.constant.filetype")
 

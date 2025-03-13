@@ -3,7 +3,7 @@
 local __module_name__ = "fml.dressing.illumniate" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local state = require("eve.state")
 
 ---@class fml.dressing.illumniate.ILspWord

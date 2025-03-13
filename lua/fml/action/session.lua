@@ -1,7 +1,7 @@
 local __module_name__ = "fml.action.session" ---@type string
 
 local path = require("eve.std.path")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local session = require("eve.module.session")
 local state = require("eve.state")
 

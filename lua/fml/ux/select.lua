@@ -1,7 +1,7 @@
 local __module_name__ = "fml.ux.select" ---@type string
 
 local oxi = require("eve.builtin.oxi")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 

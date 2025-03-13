@@ -1,6 +1,6 @@
 local __module_name__ = "ghc.action.nvim-treesitter" ---@type string
 
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local state = require("eve.state")
 
 local function find_conditional_node(node)

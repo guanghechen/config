@@ -1,7 +1,7 @@
 local __module_name__ = "eve.builtin.shell" ---@type string
 
 local env = require("eve.std.env")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 
 ---@class eve.builtin.terminal
 ---@field public format_command         fun(command?: string): string

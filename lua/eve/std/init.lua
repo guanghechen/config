@@ -7,6 +7,7 @@ local __mods = {
   json = "eve.std.json",
   md5 = "eve.std.md5",
   path = "eve.std.path",
+  reporter = "eve.std.reporter",
   tmux = "eve.std.tmux",
 }
 

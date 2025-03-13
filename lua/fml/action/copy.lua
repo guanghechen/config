@@ -1,7 +1,7 @@
 local __module_name__ = "fml.action.copy" ---@type string
 
 local path = require("eve.std.path")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local command = require("eve.command")
 local state = require("eve.state")

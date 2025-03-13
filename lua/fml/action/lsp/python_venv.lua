@@ -2,7 +2,7 @@ local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 
 local fn = require("eve.builtin.fn")
 local path = require("eve.std.path")
-local reporter = require("eve.builtin.reporter")
+local reporter = require("eve.std.reporter")
 local clp = require("eve.constant.lang.python")
 local state = require("eve.state")
 local Select = require("fml.ux.select")
