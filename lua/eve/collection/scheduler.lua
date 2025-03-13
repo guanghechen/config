@@ -1,6 +1,5 @@
 local __module_name__ = "eve.collection.scheduler" ---@type string
 
-local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 
 ---@class eve.collection.IScheduler
@@ -145,7 +144,7 @@ function M:execute()
       else
         local silent = self._silent() ---@type boolean
         if not silent then
-          reporter.error({
+          eve.std.reporter.error({
             from = __module_name__,
             subject = "execute",
             message = "Task failed.",
@@ -210,7 +209,7 @@ function M:execute_immediately()
       else
         local silent = self._silent() ---@type boolean
         if not silent then
-          reporter.error({
+          eve.std.reporter.error({
             from = __module_name__,
             subject = "execute",
             message = "Task failed.",

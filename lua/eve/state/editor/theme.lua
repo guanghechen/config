@@ -1,6 +1,5 @@
 local __module_name__ = "eve.state.editor.theme" ---@type string
 
-local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local Theme = require("eve.collection.theme")
 local setting = require("eve.constant.setting")
@@ -216,7 +215,7 @@ function M.load(raw_data)
 
       get_scheme = function(theme)
         if not vim.list_contains(setting.themes, theme) then
-          reporter.error({
+          eve.std.reporter.error({
             from = __module_name__,
             subject = "get_scheme",
             message = "Unknown theme.",

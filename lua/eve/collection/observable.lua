@@ -1,6 +1,5 @@
 local __module_name__ = "eve.collection.observable" ---@type string
 
-local reporter = require("eve.std.reporter")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Subscribers = require("eve.collection.subscribers")
 
@@ -89,7 +88,7 @@ function M:next(value, options)
   if self:is_disposed() then
     local strict = options.strict ~= false ---@type boolean
     if strict then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "next",
         message = "Don't update a disposed observable.",

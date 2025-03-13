@@ -1,7 +1,6 @@
 local __module_name__ = "eve.state" ---@type string
 
 local fs = require("eve.std.fs")
-local reporter = require("eve.std.reporter")
 local BatchDisposable = require("eve.collection.batch_disposable")
 local Disposable = require("eve.collection.disposable")
 local Scheduler = require("eve.collection.scheduler")
@@ -422,7 +421,7 @@ function M.watch_changes(params)
         end
       end,
       on_error = function(p, err)
-        reporter.error({
+        eve.std.reporter.error({
           from = __module_name__,
           subject = "watch_changes",
           message = "Something got wrong while watching the editor states file changes!",

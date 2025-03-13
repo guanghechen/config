@@ -1,7 +1,6 @@
 local __module_name__ = "eve.module.winpicker" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local Mask = require("eve.module.winpicker.mask")
 
 ---@class eve.module.winpicker.config
@@ -74,7 +73,7 @@ function M.pick_window(filter, winnr_source, split_as_needed)
       end
     end
 
-    reporter.warn({
+    eve.std.reporter.warn({
       from = __module_name__,
       subject = "pick_window",
       message = "No windows left to pick after filtering",

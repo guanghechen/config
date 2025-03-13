@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local state = require("eve.state")
 
 ---@class fml.action.buf
@@ -23,7 +22,7 @@ function M.focus(bufid)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "focus",
       message = "Cannot resolve the meta for the current tab.",
@@ -43,7 +42,7 @@ function M.focus_left(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "focus_left",
       message = "Cannot resolve the meta for the current tab.",
@@ -70,7 +69,7 @@ function M.focus_right(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "focus_right",
       message = "Cannot resolve the meta for the current tab.",

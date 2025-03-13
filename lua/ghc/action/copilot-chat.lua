@@ -1,7 +1,6 @@
 local __module_name__ = "ghc.action.copilot-chat" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
@@ -9,7 +8,7 @@ local state = require("eve.state")
 local select = require("fml.fn.select")
 
 if not state.flight.ai:snapshot() then
-  reporter.error({
+  eve.std.reporter.error({
     from = __module_name__,
     subject = "copilot-chat",
     message = "Copilot is not enabled",
@@ -147,7 +146,7 @@ function M.prompt()
   local actions = require("CopilotChat.actions")
   local prompt_actions = actions["prompt_actions"]()
   if not prompt_actions then
-    reporter.warn({
+    eve.std.reporter.warn({
       from = __module_name__,
       subject = "pick",
       message = "No prompt found on the current line",

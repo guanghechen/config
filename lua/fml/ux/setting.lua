@@ -1,8 +1,6 @@
 local __module_name__ = "fml.ux.setting" ---@type string
 
 local json = require("eve.std.json")
-local reporter = require("eve.std.reporter")
-
 local Textarea = require("fml.ux.textarea")
 
 ---@class fml.ux.ISetting
@@ -84,7 +82,7 @@ function M.new(props)
     end)
 
     if not ok then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "on_confirm",
         message = "Failed to parse json string.",

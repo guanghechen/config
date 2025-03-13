@@ -1,6 +1,5 @@
 local __module_name__ = "eve.collection.batch_disposable" ---@type string
 
-local reporter = require("eve.std.reporter")
 local BatchHandler = require("eve.collection.batch_handler")
 
 ---@class eve.collection.IBatchDisposable : eve.collection.IDisposable
@@ -61,7 +60,7 @@ function M:dispose()
   self._disposables = {}
 
   if not ok then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "dispose",
       message = "Failed to dispose all registered disposables.",

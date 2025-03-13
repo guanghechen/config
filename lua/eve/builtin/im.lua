@@ -1,7 +1,6 @@
 local __module_name__ = "eve.builtin.im" ---@type string
 
 local env = require("eve.std.env")
-local reporter = require("eve.std.reporter")
 
 ---@alias eve.builtin.im.InputMethod
 ---|"English"
@@ -19,7 +18,7 @@ if env.IS_MAC then
   ---@return eve.builtin.im.InputMethod|nil
   function M.get_input_method()
     if not vim.fn.executable(script_path) then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "get_input_method",
         message = "Not a executable file.",
@@ -30,7 +29,7 @@ if env.IS_MAC then
 
     local handle = io.popen(vim.fn.fnameescape(script_path))
     if not handle then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "get_input_method",
         message = "Failed to run the executable file.",
@@ -53,7 +52,7 @@ if env.IS_MAC then
       return "Chinese"
     end
 
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
       message = "Unknown input method.",
@@ -65,7 +64,7 @@ if env.IS_MAC then
   ---@return nil
   function M.set_input_method(input_method)
     if not vim.fn.executable(script_path) then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "set_input_method",
         message = "Not a executable file.",
@@ -80,7 +79,7 @@ if env.IS_MAC then
     elseif input_method == "Chinese" then
       arg = "com.apple.inputmethod.SCIM.ITABC"
     else
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "get_input_method",
         message = "Unknown input method.",
@@ -91,7 +90,7 @@ if env.IS_MAC then
 
     local handle = io.popen(vim.fn.fnameescape(script_path) .. " " .. arg)
     if not handle then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "set_input_method",
         message = "Failed to run the executable file.",
@@ -104,7 +103,7 @@ if env.IS_MAC then
     handle:close()
 
     if output ~= nil and output ~= "" then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "set_input_method",
         message = "Unexpected output from the executable file.",

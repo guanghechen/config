@@ -1,7 +1,6 @@
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local Scheduler = require("eve.collection.scheduler")
 local ft = require("eve.constant.filetype")
 
@@ -134,7 +133,7 @@ return {
 
           local linter = lint.linters[name]
           if not linter then
-            reporter.warn({
+            eve.std.reporter.warn({
               from = __module_name__,
               message = "Linter not found: " .. name,
             })

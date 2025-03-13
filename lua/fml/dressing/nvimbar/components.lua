@@ -4,7 +4,6 @@ local G = require("eve.builtin.G")
 local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
 local oxi = require("eve.builtin.oxi")
-local reporter = require("eve.std.reporter")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -45,7 +44,7 @@ function M.ai(position)
       end
     end
 
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       subject = "ai",
       details = { enabled = enabled, provider = provider, status = status },
@@ -359,7 +358,7 @@ function M.copilot(position)
   local fn_show_message = G.register_anonymous_fn(function()
     if package.loaded["copilot"] then
       local copilot_status = require("copilot.api").status.data
-      reporter.info({
+      eve.std.reporter.info({
         from = __module_name__,
         subject = "copilot",
         details = { status = copilot_status or vim.NIL },
@@ -497,7 +496,7 @@ function M.diagnostics(position)
 
   local fn_show_error = G.register_anonymous_fn(function(bufnr)
     local errors = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       subject = "diagnostics -- error",
       details = errors,
@@ -506,7 +505,7 @@ function M.diagnostics(position)
 
   local fn_show_warn = G.register_anonymous_fn(function(bufnr)
     local warns = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       subject = "diagnostics -- warning",
       details = warns,
@@ -515,7 +514,7 @@ function M.diagnostics(position)
 
   local fn_show_hint = G.register_anonymous_fn(function(bufnr)
     local hints = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT })
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       subject = "diagnostics -- hint",
       details = hints,
@@ -524,7 +523,7 @@ function M.diagnostics(position)
 
   local fn_show_info = G.register_anonymous_fn(function(bufnr)
     local infos = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO })
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       subject = "diagnostics -- info",
       details = infos,
@@ -1095,7 +1094,7 @@ function M.python_env(position)
         python_version = output:match("(%d+%.%d+%.%d+)")
       else
         python_version = nil
-        reporter.error({
+        eve.std.reporter.error({
           from = __module_name__,
           message = "Failed to run python version command.",
           details = { error = output, cmd = cmd, python_path = python_path },

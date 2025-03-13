@@ -2,7 +2,6 @@ local __module_name__ = "fml.dressing.python_venv" ---@type string
 
 local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local clp = require("eve.constant.lang.python")
 local state = require("eve.state")
 
@@ -100,7 +99,7 @@ function M.activate_venv(venv_path)
 
   -- Make sure our python exists on disk before activating it, in case paths are wrong
   if vim.fn.executable(venv_python) == 0 then
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       subject = "set_venv_and_system_paths",
       message = "The python path '" .. venv_python .. "' does not exist.",
@@ -108,7 +107,7 @@ function M.activate_venv(venv_path)
     return
   end
 
-  reporter.info({
+  eve.std.reporter.info({
     from = __module_name__,
     subject = "set_venv_and_system_paths",
     message = "Activated '" .. venv_python .. "'",

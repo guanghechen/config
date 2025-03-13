@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
-local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 local state = require("eve.state")
@@ -47,7 +46,7 @@ local function get_scope_cwd(dirpath)
     return dirpath
   end
 
-  reporter.error({
+  eve.std.reporter.error({
     from = __module_name__,
     subject = "get_scope_cwd",
     message = "Unknown scope.",

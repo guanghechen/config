@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.find" ---@type string
 
 local oxi = require("eve.builtin.oxi")
-local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 local instances = require("eve.constant.instance")
@@ -30,7 +29,7 @@ local function get_select()
         return dirpath
       end
 
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "get_scope_cwd",
         message = "Unknown scope.",

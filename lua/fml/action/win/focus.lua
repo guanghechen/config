@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.win" ---@type string
 
-local reporter = require("eve.std.reporter")
 local tmux = require("eve.std.tmux")
 local state = require("eve.state")
 
@@ -33,7 +32,7 @@ local function vim_navigate(direction)
 
   local ok, error = pcall(vim_navigate_window, direction)
   if not ok then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       message = "E11: Invalid in command-line window; <cr> executes, ctrl-c quits",
       details = { direction = direction, error = error },

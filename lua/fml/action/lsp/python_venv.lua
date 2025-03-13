@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local clp = require("eve.constant.lang.python")
 local state = require("eve.state")
 local Select = require("fml.ux.select")
@@ -68,7 +67,7 @@ local function get_select()
           local output, err = vim.fn.system(cmd)
 
           if vim.v.shell_error ~= 0 then
-            reporter.error({
+            eve.std.reporter.error({
               from = __module_name__,
               subject = "find_venvs",
               message = "Failed to run fd command.",
@@ -127,7 +126,7 @@ local function get_select()
             local output, err = vim.fn.system(cmd)
 
             if vim.v.shell_error ~= 0 then
-              reporter.error({
+              eve.std.reporter.error({
                 from = __module_name__,
                 subject = "find_venvs",
                 message = "Failed to run fd command.",
@@ -198,7 +197,7 @@ local function get_select()
             local output, err = vim.fn.system(cmd)
 
             if vim.v.shell_error ~= 0 then
-              reporter.error({
+              eve.std.reporter.error({
                 from = __module_name__,
                 subject = "find_venvs",
                 message = "Failed to run fd command.",

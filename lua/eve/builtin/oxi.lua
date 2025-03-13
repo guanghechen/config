@@ -2,7 +2,6 @@ local __module_name__ = "eve.builtin.oxi" ---@type string
 
 local nvim_tools = require("nvim_tools")
 local json = require("eve.std.json")
-local reporter = require("eve.std.reporter")
 
 ---@class eve.builtin.oxi.ICmdResult
 ---@field public cmd                    string
@@ -34,7 +33,7 @@ end
 function M.resolve_cmd_result(subject, result_str)
   local result = json.parse(result_str)
   if result == nil or type(result.error) == "string" then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = subject,
       message = "Failed to run command.",
@@ -54,7 +53,7 @@ end
 function M.resolve_fun_result(subject, result_str)
   local result = json.parse(result_str)
   if result == nil or type(result.error) == "string" then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = subject,
       message = "Failed to run function",

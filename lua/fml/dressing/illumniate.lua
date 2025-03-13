@@ -3,7 +3,6 @@
 local __module_name__ = "fml.dressing.illumniate" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local state = require("eve.state")
 
 ---@class fml.dressing.illumniate.ILspWord
@@ -148,7 +147,7 @@ function M.jump(step, cycle)
     end
     vim.api.nvim_win_set_cursor(0, target.from)
     if config.notify_jump then
-      reporter.info({
+      eve.std.reporter.info({
         from = __module_name__,
         subject = "jump",
         message = ("Reference [%d/%d]"):format(current_index, #reference_words),
@@ -158,7 +157,7 @@ function M.jump(step, cycle)
       vim.cmd.normal({ "zv", bang = true })
     end
   elseif config.notify_end then
-    reporter.warn({
+    eve.std.reporter.warn({
       from = __module_name__,
       subject = "jump",
       message = "No more references",

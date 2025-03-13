@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.tab" ---@type string
 
-local reporter = require("eve.std.reporter")
 local state = require("eve.state")
 
 ---@class fml.action.tab
@@ -10,7 +9,7 @@ local M = {}
 function M.close()
   local N = vim.fn.tabpagenr("$") ---@type integer
   if N <= 1 then
-    reporter.warn({
+    eve.std.reporter.warn({
       from = __module_name__,
       subject = "close",
       message = "This is the last tab, cannot close it.",

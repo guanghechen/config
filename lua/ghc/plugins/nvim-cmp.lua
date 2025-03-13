@@ -1,7 +1,6 @@
 ---  https://github.com/LazyVim/LazyVim/blob/0f6ff53ce336082869314db11e9dfa487cf83292/lua/lazyvim/util/cmp.lua#L1
 local __module_name__ = "ghc.plugins.nvim-cmp" ---@type string
 
-local reporter = require("eve.std.reporter")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
@@ -116,7 +115,7 @@ local function snippet_expand(snippet)
 %s
 ```]]):format(msg, vim.bo.filetype, snippet)
 
-    local log = ok and reporter.warn or reporter.error
+    local log = ok and eve.std.reporter.warn or eve.std.reporter.error
     log({
       from = __module_name__,
       subject = "expand",

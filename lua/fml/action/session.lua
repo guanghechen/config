@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.session" ---@type string
 
-local reporter = require("eve.std.reporter")
 local session = require("eve.module.session")
 local state = require("eve.state")
 
@@ -63,7 +62,7 @@ function M.save()
     })
     session.save_session(storage.nvim_session)
 
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       message = "Session saved successfully!",
     })

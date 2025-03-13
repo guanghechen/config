@@ -1,7 +1,6 @@
 local __module_name__ = "eve.module.clipboard" ---@type string
 
 local env = require("eve.std.env")
-local reporter = require("eve.std.reporter")
 local tmux = require("eve.std.tmux")
 
 ---@class fml.lib.clipboard
@@ -15,7 +14,7 @@ if env.IS_MAC then
         return
       end
 
-      reporter.info({
+      eve.std.reporter.info({
         from = __module_name__,
         message = "Using fake clipboard:" .. fake_clipboard_filepath,
       })
@@ -26,7 +25,7 @@ if env.IS_MAC then
       local function read_from_fake_clipboard()
         local file = io.open(clipboard_file, "r")
         if file == nil then
-          reporter.error({
+          eve.std.reporter.error({
             from = __module_name__,
             subject = "macos_fake_clipborad",
             message = "Unable to open fake clipboard file for reading.",
@@ -47,7 +46,7 @@ if env.IS_MAC then
       local function write_to_fake_clipboard(data)
         local file = io.open(clipboard_file, "w")
         if file == nil then
-          reporter.error({
+          eve.std.reporter.error({
             from = __module_name__,
             subject = "macos_fake_clipborad",
             message = "Unable to open fake clipboard file for writing.",

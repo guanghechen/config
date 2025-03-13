@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.win" ---@type string
 
-local reporter = require("eve.std.reporter")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
@@ -34,7 +33,7 @@ local function get_history_select()
 
         local meta = winnr_sourcefile and state.win.resolve(winnr_sourcefile) or nil ---@type eve.t.state.win.meta.state|nil
         if meta == nil then
-          reporter.error({
+          eve.std.reporter.error({
             from = __module_name__,
             message = "Cannot find window.",
             details = { winnr_source = winnr_sourcefile },
@@ -156,7 +155,7 @@ function M.history_backward()
 
   local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
   if meta == nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "history_backward",
       message = "Cannot find window.",
@@ -184,7 +183,7 @@ function M.history_forward()
 
   local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
   if meta == nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "history_forward",
       message = "Cannot find window.",

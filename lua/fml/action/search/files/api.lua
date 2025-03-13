@@ -2,7 +2,6 @@ local __module_name__ = "fml.action.search.files" ---@type string
 
 local fs = require("eve.std.fs")
 local oxi = require("eve.builtin.oxi")
-local reporter = require("eve.std.reporter")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
@@ -294,7 +293,7 @@ function M.fetch_data(input_text, force, callback)
 
   local is_searching_current_buf = specified_filepath ~= nil ---@type boolean
   if fs.is_file_or_dir(cwd) ~= "directory" then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "fetch_data",
       message = "The cwd is not a valid directory path",
@@ -797,7 +796,7 @@ function M.replace_file(uuid)
     end
 
     if #locations ~= #remain_offsets then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "replace_file",
         message = "Bad locations, the size of locations should match the given remain_offsets.",

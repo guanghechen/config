@@ -1,7 +1,5 @@
 local __module_name__ = "eve.collection.promise" ---@type string
 
-local reporter = require("eve.std.reporter")
-
 ---@class eve.collection.IPromise
 ---@field public resolve                fun(value: unknown): eve.collection.IPromise
 ---@field public reject                 fun(reason: unknown): eve.collection.IPromise
@@ -53,7 +51,7 @@ function M.new(fn)
   ---@return nil
   local function resolve(value)
     if self._settled ~= nil then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "new#resolve",
         message = "Promise is already settled.",
@@ -76,7 +74,7 @@ function M.new(fn)
   ---@return nil
   local function reject(reason)
     if self._settled ~= nil then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "new#reject",
         message = "Promise is already settled.",
@@ -97,7 +95,7 @@ function M.new(fn)
     end
 
     if not has_catched then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "new#reject",
         message = "Uncatched promise rejection.",

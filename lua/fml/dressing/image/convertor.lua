@@ -2,7 +2,6 @@ local __module_name__ = "fml.dressing.image.convertor" ---@type string
 
 local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local Spawn = require("eve.collection.spawn")
 local config = require("fml.dressing.image.config")
 local terminal = require("fml.dressing.image.terminal")
@@ -350,7 +349,7 @@ function Convertor:on_done()
     if step and step.proc then
       step.proc:debug({ title = title })
     else
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = title,
         message = self._err,

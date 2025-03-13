@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.copy" ---@type string
 
-local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local command = require("eve.command")
 local state = require("eve.state")
@@ -14,7 +13,7 @@ local function copy_current_filepath(candidate, filepath)
     local content = filepath ---@type string
 
     vim.fn.setreg("+", content)
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (absolute) to system clipboard!",
     })
@@ -23,12 +22,12 @@ local function copy_current_filepath(candidate, filepath)
     local content = eve.std.path.relative(cwd, filepath, true) ---@type string
 
     vim.fn.setreg("+", content)
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
     })
   else
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       message = "Failed to copy current filepath, unknown candidate!",
       details = { candidate = candidate },

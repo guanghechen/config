@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.refresh" ---@type string
 
-local reporter = require("eve.std.reporter")
 local state = require("eve.state")
 local command = require("eve.command")
 
@@ -43,7 +42,7 @@ function M.refresh_all()
   state.status.dirtier_tabline:mark_dirty()
   vim.cmd.redraw()
 
-  reporter.info({
+  eve.std.reporter.info({
     from = __module_name__,
     message = "Refreshed all!",
   })

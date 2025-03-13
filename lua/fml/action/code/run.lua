@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.code" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local state = require("eve.state")
 local Terminal = require("fml.ux.terminal")
 
@@ -83,7 +82,7 @@ function M.run(force)
 
   local runner = runners[key]
   if runner == nil then
-    reporter.warn({
+    eve.std.reporter.warn({
       from = __module_name__,
       subject = "run",
       message = "Cannot find the runner by the given filepath.",

@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.lsp" ---@type string
 
 local lsp = require("eve.builtin.lsp")
-local reporter = require("eve.std.reporter")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
@@ -20,7 +19,7 @@ local function fetch_data(method, additional_params, callback)
 
   local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
   if not lsp.has_support_method(bufnr_sourcefile, method) then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "fetch_data",
       message = "Not support method.",
@@ -92,7 +91,7 @@ local function fetch_data(method, additional_params, callback)
     end
 
     if #errors > 0 then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "fetch_data",
         message = "Encountered errors.",

@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
 local fs = require("eve.std.fs")
-local reporter = require("eve.std.reporter")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 
@@ -46,7 +45,7 @@ function M.save()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or editor.pick_sourcefile_win() ---@type integer|nil
   if winnr_sourcefile == nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "save",
       message = "Cannot find a valid sourcefile winnr",
@@ -94,7 +93,7 @@ function M.save()
       end
 
       if filetype == "directory" then
-        reporter.error({
+        eve.std.reporter.error({
           from = __module_name__,
           subject = "save",
           message = "Cannot save a file into a directory.",

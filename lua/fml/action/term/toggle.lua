@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.term" ---@type string
 
-local reporter = require("eve.std.reporter")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 local Terminal = require("fml.ux.terminal")
@@ -34,7 +33,7 @@ function M.new(props)
 
   local terminal = terminal_map[name] ---@type fml.ux.ITerminal|nil
   if terminal ~= nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "new",
       message = "The term with the given name already exists.",

@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 
@@ -60,7 +59,7 @@ function M.close_to_leftest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "close_to_leftest",
       message = "Cannot resolve the meta for the current tab.",
@@ -93,7 +92,7 @@ function M.close_to_rightest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "close_to_rightest",
       message = "Cannot resolve the meta for the current tab.",
@@ -126,7 +125,7 @@ function M.close_others()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "close_others",
       message = "Cannot resolve the meta for the current tab.",

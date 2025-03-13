@@ -2,7 +2,6 @@ local __module_name__ = "eve.state.session.win"
 
 local fn = require("eve.builtin.fn")
 local lsp = require("eve.builtin.lsp")
-local reporter = require("eve.std.reporter")
 local AdvanceHistory = require("eve.collection.history_advance")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
@@ -210,7 +209,7 @@ S = {
           return
         end
 
-        reporter.error({
+        eve.std.reporter.error({
           from = __module_name__,
           subject = "locate_symbols",
           message = "Failed to request document symbols",

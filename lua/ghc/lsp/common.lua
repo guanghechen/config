@@ -4,8 +4,6 @@ local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
 local fs = require("eve.std.fs")
 local lsp = require("eve.builtin.lsp")
-local reporter = require("eve.std.reporter")
-
 local command = require("eve.command")
 
 ---@class ghc.lsp.common
@@ -120,7 +118,7 @@ function M.locate_mason_pkg_path(pkg, pkg_path, silent)
 
   if not vim.uv.fs_stat(filepath) and not require("lazy.core.config").headless() then
     if not silent then
-      reporter.warn({
+      eve.std.reporter.warn({
         from = __module_name__,
         subject = "locate_mason_pkg_path",
         message = string.format(

@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.inspect" ---@type string
 
-local reporter = require("eve.std.reporter")
 local varnames = require("eve.constant.var")
 local state = require("eve.state")
 
@@ -13,7 +12,7 @@ function M.inspect_buf()
   local meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
 
   if meta == nil then
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       subject = "inspect_buf",
       details = {
@@ -31,7 +30,7 @@ function M.inspect_buf()
     return
   end
 
-  reporter.info({
+  eve.std.reporter.info({
     from = __module_name__,
     subject = "inspect_buf",
     details = {
@@ -59,7 +58,7 @@ function M.inspect_state()
   local workspace = eve.std.path.workspace() ---@type string
   local full_state = state.dump() ---@type eve.state.data
 
-  reporter.info({
+  eve.std.reporter.info({
     from = __module_name__,
     subject = "inspect_state",
     details = {
@@ -84,7 +83,7 @@ function M.inspect_state_full()
   local cwd = eve.std.path.cwd() ---@type string
   local workspace = eve.std.path.workspace() ---@type string
 
-  reporter.info({
+  eve.std.reporter.info({
     from = __module_name__,
     subject = "inspect_state_full",
     details = {
@@ -106,7 +105,7 @@ function M.inspect_tab()
   local tabid = eve.std.array.find_index(tabnrs, tabnr) or 1 ---@type integer
 
   if meta == nil then
-    reporter.info({
+    eve.std.reporter.info({
       from = __module_name__,
       subject = "inspect_tab",
       details = {
@@ -119,7 +118,7 @@ function M.inspect_tab()
     return
   end
 
-  reporter.info({
+  eve.std.reporter.info({
     from = __module_name__,
     subject = "inspect_tab",
     details = {
@@ -154,7 +153,7 @@ function M.inspect_window()
   local meta_win = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
   local meta_buf = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
 
-  reporter.info({
+  eve.std.reporter.info({
     from = __module_name__,
     subject = "inspect_window",
     details = {

@@ -1,8 +1,6 @@
 local __module_name__ = "ghc.plugin" ---@type string
 
 local env = require("eve.std.env")
-local reporter = require("eve.std.reporter")
-
 local state = require("eve.state")
 
 ---@class ghc.plugin.IRawSpec
@@ -168,7 +166,7 @@ for index = 1, #specs, 1 do
     spec_details.branch = spec_basic.branch
     spec_details.main = spec_basic.main
   elseif not vim.list_contains(no_details_module_names, spec_basic.name) then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "resolve plugin details",
       message = "Failed to resolve the details of plugin: " .. spec_basic.name,

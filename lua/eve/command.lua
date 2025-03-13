@@ -1,6 +1,5 @@
 local __module_name__ = "eve.command" ---@type string
 
-local reporter = require("eve.std.reporter")
 local setting = require("eve.constant.setting")
 local state = require("eve.state")
 
@@ -46,7 +45,7 @@ local M = {
 ---@return eve.command
 function M.define(raw_definition, overwrite)
   if definition_map[raw_definition.uuid] ~= nil and not overwrite then
-    reporter.warn({
+    eve.std.reporter.warn({
       from = __module_name__,
       subject = "define",
       message = "The definition with the uuid has already existed.",
@@ -103,7 +102,7 @@ function M.implement(implementation)
   local action = implementation.action ---@type fun(args?: string): nil
   local definition = definition_map[uuid] ---@type eve.command.IDefinition|nil
   if definition == nil then
-    reporter.warn({
+    eve.std.reporter.warn({
       from = __module_name__,
       subject = "implement",
       message = "Cannot find the definition by the given uuid.",
@@ -114,7 +113,7 @@ function M.implement(implementation)
 
   local key = tabtype == setting.tabtypes.ALL and uuid or (uuid .. ":" .. tabtype) ---@type string
   if command_map[key] ~= nil then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "implement",
       message = "The command has already been implemented.",
@@ -145,7 +144,7 @@ function M.execute(uuid, args, silent)
 
   if command == nil then
     if not silent then
-      reporter.warn({
+      eve.std.reporter.warn({
         from = __module_name__,
         subject = "execute",
         message = "Cannot resolve the command by the given uuid",

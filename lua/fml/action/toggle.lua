@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
 local fn = require("eve.builtin.fn")
-local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local varnames = require("eve.constant.var")
 local editor = require("eve.module.editor")
@@ -193,7 +192,7 @@ local toggle_item_map = {
         vim.fn.system({ "node", script_path, theme })
       end)
       if not ok then
-        reporter.error({
+        eve.std.reporter.error({
           from = __module_name__,
           subject = "toggle_theme_variant",
           message = "Failed to toggle theme variant.",
@@ -248,7 +247,7 @@ table.sort(toggle_item_names)
 ---@return nil
 local function apply_theme(theme)
   if not vim.list_contains(themes, theme) then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "apply_theme",
       message = "Unknown theme.",
@@ -263,7 +262,7 @@ local function apply_theme(theme)
     vim.fn.system({ "node", script_path, theme })
   end)
   if not ok then
-    reporter.error({
+    eve.std.reporter.error({
       from = __module_name__,
       subject = "apply_theme",
       message = "Failed to toggle theme.",

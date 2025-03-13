@@ -1,6 +1,5 @@
 local __module_name__ = "eve.collection.history" ---@type string
 
-local reporter = require("eve.std.reporter")
 local CircularStack = require("eve.collection.circular_stack")
 
 ---@class eve.collection.IHistory
@@ -205,7 +204,7 @@ end
 function M:print()
   local present = self._present ---@type integer
   local stack = self._stack:collect() ---@type eve.t.T
-  reporter.info({
+  eve.std.reporter.info({
     from = __module_name__,
     subject = "print",
     details = { present = present, stack = stack },

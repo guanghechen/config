@@ -1,7 +1,6 @@
 local __module_name__ = "fml.ux.select" ---@type string
 
 local oxi = require("eve.builtin.oxi")
-local reporter = require("eve.std.reporter")
 local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 
@@ -299,7 +298,7 @@ function M.new(props)
     end
 
     if #select_items < 1 then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "select: on_confirm",
         message = "no items selected",
@@ -309,7 +308,7 @@ function M.new(props)
     end
 
     if #select_items > 1 and not context.multiple then
-      reporter.error({
+      eve.std.reporter.error({
         from = __module_name__,
         subject = "select: on_confirm",
         message = "More than one items selected, but `multiple` is not enabled",
