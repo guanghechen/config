@@ -1,8 +1,3 @@
-local tmux = require("eve.std.tmux")
-local Dirtier = require("eve.collection.dirtier")
-local Observable = require("eve.collection.observable")
-local Ticker = require("eve.collection.ticker")
-
 ---@class eve.state.status.data
 ---@field public tick_editor            integer
 ---@field public tick_session           integer
@@ -57,7 +52,7 @@ function M.defaults()
     lsp_msg = "",
     maximized_winnrs = {},
     suppress_warning = false,
-    tmux_zen_mode = tmux.is_tmux_pane_zoomed(),
+    tmux_zen_mode = eve.std.tmux.is_tmux_pane_zoomed(),
   }
 end
 
@@ -107,18 +102,18 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.status.state
     _state = {
-      ticker_editor = Ticker.new({ start = data.tick_editor }),
-      ticker_workspace = Ticker.new({ start = data.tick_workspace }),
-      ticker_session = Ticker.new({ start = data.tick_session }),
+      ticker_editor = eve.c.Ticker.new({ start = data.tick_editor }),
+      ticker_workspace = eve.c.Ticker.new({ start = data.tick_workspace }),
+      ticker_session = eve.c.Ticker.new({ start = data.tick_session }),
 
-      dirtier_statusline = Dirtier.new({ dirty = true }),
-      dirtier_tabline = Dirtier.new({ dirty = true }),
-      dirty_winline_nr = Observable.from_value(data.dirty_winline_nr, eve.std.fn.falsy),
+      dirtier_statusline = eve.c.Dirtier.new({ dirty = true }),
+      dirtier_tabline = eve.c.Dirtier.new({ dirty = true }),
+      dirty_winline_nr = eve.c.Observable.from_value(data.dirty_winline_nr, eve.std.fn.falsy),
 
-      lsp_msg = Observable.from_value(data.lsp_msg),
+      lsp_msg = eve.c.Observable.from_value(data.lsp_msg),
       maximized_winnrs = data.maximized_winnrs,
-      suppress_warning = Observable.from_value(data.suppress_warning),
-      tmux_zen_mode = Observable.from_value(data.tmux_zen_mode),
+      suppress_warning = eve.c.Observable.from_value(data.suppress_warning),
+      tmux_zen_mode = eve.c.Observable.from_value(data.tmux_zen_mode),
 
       reset = function()
         ---@cast _state                 eve.state.status.state

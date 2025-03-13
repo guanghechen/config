@@ -1,5 +1,4 @@
 local env = require("eve.std.env")
-local Observable = require("eve.collection.observable")
 local setting = require("eve.constant.setting")
 
 ---@class eve.state.flight.data
@@ -158,21 +157,21 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.flight.state
     _state = {
-      ai = Observable.from_value(data.ai),
-      ai_provider = Observable.from_value(data.ai_provider),
-      autoformat = Observable.from_value(data.autoformat),
-      autoload = Observable.from_value(data.autoload),
-      autosave = Observable.from_value(data.autosave),
-      devmode = Observable.from_value(data.devmode),
+      ai = eve.c.Observable.from_value(data.ai),
+      ai_provider = eve.c.Observable.from_value(data.ai_provider),
+      autoformat = eve.c.Observable.from_value(data.autoformat),
+      autoload = eve.c.Observable.from_value(data.autoload),
+      autosave = eve.c.Observable.from_value(data.autosave),
+      devmode = eve.c.Observable.from_value(data.devmode),
 
-      dressing_hipairs = Observable.from_value(data.dressing_hipairs),
-      dressing_illumniate = Observable.from_value(data.dressing_illumniate),
-      dressing_input = Observable.from_value(data.dressing_input),
-      dressing_select = Observable.from_value(data.dressing_select),
-      dressing_winsep_fixed = Observable.from_value(data.dressing_winsep_fixed),
-      dressing_winsep_float = Observable.from_value(data.dressing_winsep_float),
+      dressing_hipairs = eve.c.Observable.from_value(data.dressing_hipairs),
+      dressing_illumniate = eve.c.Observable.from_value(data.dressing_illumniate),
+      dressing_input = eve.c.Observable.from_value(data.dressing_input),
+      dressing_select = eve.c.Observable.from_value(data.dressing_select),
+      dressing_winsep_fixed = eve.c.Observable.from_value(data.dressing_winsep_fixed),
+      dressing_winsep_float = eve.c.Observable.from_value(data.dressing_winsep_float),
 
-      gitdiff_expand_all = Observable.from_value(data.gitdiff_expand_all),
+      gitdiff_expand_all = eve.c.Observable.from_value(data.gitdiff_expand_all),
     }
     return _state
   end

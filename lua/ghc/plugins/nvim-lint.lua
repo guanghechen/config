@@ -1,8 +1,6 @@
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
-local Scheduler = require("eve.collection.scheduler")
 local ft = require("eve.constant.filetype")
-
 local state = require("eve.state")
 
 local config = {
@@ -77,7 +75,7 @@ return {
     end
     lint.linters_by_ft = linters_by_ft
 
-    local lint_scheduler = Scheduler.new({
+    local lint_scheduler = eve.c.Scheduler.new({
       name = __module_name__,
       delay = 100,
       silent = function()

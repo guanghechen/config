@@ -1,5 +1,3 @@
-local Observable = require("eve.collection.observable")
-
 ---@class eve.state.bookmark.data
 ---@field public pinned                 string[]
 
@@ -58,7 +56,7 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.bookmark.state
     _state = {
-      pinned = Observable.from_value(data.pinned),
+      pinned = eve.c.Observable.from_value(data.pinned),
     }
     return _state
   end

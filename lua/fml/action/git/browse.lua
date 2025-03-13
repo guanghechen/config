@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.git" ---@type string
 
 local env = require("eve.std.env")
-local Observable = require("eve.collection.observable")
 local state = require("eve.state")
 local select = require("fml.fn.select")
 
@@ -274,7 +273,7 @@ function M.browse()
     },
     flag_fuzzy = true,
     flag_regex = false,
-    input = Observable.from_value(""),
+    input = eve.c.Observable.from_value(""),
     multiple = false,
     title = "Select remote to browse",
     fetch_items = function()

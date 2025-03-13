@@ -1,5 +1,3 @@
-local Observable = require("eve.collection.observable")
-
 ---@class eve.state.option.data
 ---@field public relativenumber         boolean
 
@@ -58,7 +56,7 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.option.state
     _state = {
-      relativenumber = Observable.from_value(data.relativenumber),
+      relativenumber = eve.c.Observable.from_value(data.relativenumber),
     }
     return _state
   end

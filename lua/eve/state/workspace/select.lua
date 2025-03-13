@@ -1,4 +1,3 @@
-local Observable = require("eve.collection.observable")
 local select_item = require("eve.state.workspace.select_item")
 
 ---@class eve.state.select.data
@@ -173,9 +172,9 @@ function M.load(raw_data)
       search_file = select_item.load(nil, "search_file", data.search_file),
       select_avante = select_item.load(nil, "select_avante", data.select_avante),
 
-      find_buffer_scope = Observable.from_value(data.find_file_scope),
-      find_file_scope = Observable.from_value(data.find_file_scope),
-      search_file_scope = Observable.from_value(data.search_file_scope),
+      find_buffer_scope = eve.c.Observable.from_value(data.find_file_scope),
+      find_file_scope = eve.c.Observable.from_value(data.find_file_scope),
+      search_file_scope = eve.c.Observable.from_value(data.search_file_scope),
 
       find_buffer_scopes = vim.list_slice(find_buffer_scopes),
       find_file_scopes = vim.list_slice(find_file_scopes),

@@ -1,5 +1,4 @@
 local env = require("eve.std.env")
-local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
@@ -155,7 +154,7 @@ local function render(winnr)
 end
 
 state.status.dirty_winline_nr:subscribe(
-  Subscriber.new({
+  eve.c.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)
       if winnr_prev ~= winnr then

@@ -1,5 +1,3 @@
-local Subscriber = require("eve.collection.subscriber")
-local Scheduler = require("eve.collection.scheduler")
 local ft = require("eve.constant.filetype")
 local setting = require("eve.constant.setting")
 local signs = require("eve.constant.sign")
@@ -66,7 +64,7 @@ function M.new(props)
     })
   end
 
-  local input_scheduler = Scheduler.new({
+  local input_scheduler = eve.c.Scheduler.new({
     name = "fml.ux.search.input.on_change",
     delay = 32,
     task = function(callback)
@@ -89,7 +87,7 @@ function M.new(props)
   self._keymaps = keymaps
 
   context.dirtier_preview:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
         local status = context.status:snapshot() ---@type eve.e.WidgetStatus
@@ -103,7 +101,7 @@ function M.new(props)
   )
 
   context.input:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         if input_history ~= nil then
           local input_cur = context.input:snapshot() ---@type string

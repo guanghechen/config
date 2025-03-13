@@ -1,6 +1,5 @@
 local __module_name__ = "fml.ux.nvimbar" ---@type string
 
-local Scheduler = require("eve.collection.scheduler")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
 ---@alias fml.ux.nvimbar.Position
@@ -202,7 +201,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local _render_scheduler ---@type eve.collection.IScheduler
-  _render_scheduler = Scheduler.new({
+  _render_scheduler = eve.c.Scheduler.new({
     name = "fml.ux.nvimbar#" .. name,
     delay = render_delay,
     silent = silent,

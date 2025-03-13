@@ -1,6 +1,4 @@
-local Scheduler = require("eve.collection.scheduler")
 local state = require("eve.state")
-
 local fixed_winsep = require("fml.dressing.winsep.fixed")
 local float_winsep = require("fml.dressing.winsep.float")
 
@@ -13,7 +11,7 @@ local float_winsep = require("fml.dressing.winsep.float")
 ---@field public show                   fun(self: fml.dressing.Winsep, winnr: integer):nil
 ---@field public should_show            fun(self: fml.dressing.Winsep, winnr: integer):boolean
 
-local refresh_fixed = Scheduler.new({
+local refresh_fixed = eve.c.Scheduler.new({
   name = "winsep_refresh fixed",
   delay = 50,
   silent = function()
@@ -31,7 +29,7 @@ local refresh_fixed = Scheduler.new({
   end,
 })
 
-local refresh_float = Scheduler.new({
+local refresh_float = eve.c.Scheduler.new({
   name = "winsep_refresh float",
   delay = 200,
   silent = function()

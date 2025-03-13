@@ -1,6 +1,5 @@
 local __module_name__ = "eve.state.session.win"
 
-local AdvanceHistory = require("eve.collection.history_advance")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local state_status = require("eve.state.session.status")
@@ -94,7 +93,7 @@ S = {
     end
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filepath_history = AdvanceHistory.new({
+    local filepath_history = eve.c.AdvanceHistory.new({
       name = "win#bufs",
       capacity = setting.WIN_BUF_HISTORY_CAPACITY,
       validate = editor.is_valid_filepath,

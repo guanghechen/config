@@ -1,7 +1,5 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
-local Observable = require("eve.collection.observable")
-local Subscriber = require("eve.collection.subscriber")
 local state = require("eve.state")
 local Setting = require("fml.ux.setting")
 local Search = require("fml.ux.search.search")
@@ -55,9 +53,9 @@ local function get_scope_cwd(dirpath)
   return eve.std.path.cwd()
 end
 
-local state_search_cwd = Observable.from_value(get_scope_cwd(eve.std.path.cwd()))
+local state_search_cwd = eve.c.Observable.from_value(get_scope_cwd(eve.std.path.cwd()))
 state.select.search_file_scope:subscribe(
-  Subscriber.new({
+  eve.c.Subscriber.new({
     on_next = function(scope, prev_scope)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local bufnr = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil

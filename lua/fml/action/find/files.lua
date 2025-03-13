@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.find" ---@type string
 
-local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 local instances = require("eve.constant.instance")
 local state = require("eve.state")
@@ -37,7 +36,7 @@ local function get_select()
       return eve.std.path.cwd()
     end
 
-    local state_find_cwd = Observable.from_value(get_scope_cwd(eve.std.path.cwd()))
+    local state_find_cwd = eve.c.Observable.from_value(get_scope_cwd(eve.std.path.cwd()))
 
     state.observe({ state.select.find_file_scope }, function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

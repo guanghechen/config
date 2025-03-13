@@ -1,6 +1,3 @@
-local env = require("eve.std.env")
-local Observable = require("eve.collection.observable")
-
 ---@class eve.state.lsp.IBreakpointData
 ---@field public filepath               string
 ---@field public lnum                   integer
@@ -140,17 +137,17 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.lsp.data
 
   if _state == nil then
-    local python_venv_path = Observable.from_value(data.python_venv_path)
+    local python_venv_path = eve.c.Observable.from_value(data.python_venv_path)
 
     ---@type eve.state.lsp.state
     _state = {
-      breakpoints = Observable.from_value(data.breakpoints),
-      code_lens = Observable.from_value(data.code_lens),
-      inlay_hints = Observable.from_value(data.inlay_hints),
-      python_debug_host = Observable.from_value(data.python_debug_host),
-      python_debug_port = Observable.from_value(data.python_debug_port),
+      breakpoints = eve.c.Observable.from_value(data.breakpoints),
+      code_lens = eve.c.Observable.from_value(data.code_lens),
+      inlay_hints = eve.c.Observable.from_value(data.inlay_hints),
+      python_debug_host = eve.c.Observable.from_value(data.python_debug_host),
+      python_debug_port = eve.c.Observable.from_value(data.python_debug_port),
       python_venv_path = python_venv_path,
-      spellcheck = Observable.from_value(data.spellcheck),
+      spellcheck = eve.c.Observable.from_value(data.spellcheck),
 
       ---@return string|nil
       get_python_bin_path = function()
@@ -159,8 +156,8 @@ function M.load(raw_data)
           return nil, nil
         end
 
-        local python_name = env.IS_WIN and "python.exe" or "python" ---@type string
-        local python_parent_path = env.IS_WIN and "Scripts" or "bin" ---@type string
+        local python_name = eve.std.env.IS_WIN and "python.exe" or "python" ---@type string
+        local python_parent_path = eve.std.env.IS_WIN and "Scripts" or "bin" ---@type string
 
         local bin_path = eve.std.path.join(venv_path, python_parent_path) ---@type string
         local python_path = eve.std.path.join(bin_path, python_name) ---@type string

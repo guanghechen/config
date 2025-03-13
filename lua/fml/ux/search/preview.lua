@@ -1,5 +1,3 @@
-local Scheduler = require("eve.collection.scheduler")
-local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
 
 ---@class fml.ux.search.IPreview
@@ -132,7 +130,7 @@ function M.new(props)
     _update_win_config({ title = title, lnum = lnum, col = col })
   end
 
-  local _render_scheduler = Scheduler.new({
+  local _render_scheduler = eve.c.Scheduler.new({
     name = "fml.ux.search.preview.render",
     delay = delay_render,
     task = function(callback)
@@ -160,7 +158,7 @@ function M.new(props)
   end
 
   context.dirtier_preview:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
         local status = context.status:snapshot() ---@type eve.e.WidgetStatus

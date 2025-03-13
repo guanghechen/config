@@ -1,10 +1,6 @@
 local __module_name__ = "eve.state" ---@type string
 
 local fs = require("eve.std.fs")
-local BatchDisposable = require("eve.collection.batch_disposable")
-local Disposable = require("eve.collection.disposable")
-local Scheduler = require("eve.collection.scheduler")
-local Subscriber = require("eve.collection.subscriber")
 local editor = require("eve.module.editor")
 local session = require("eve.module.session")
 
@@ -88,7 +84,7 @@ local state_win = require("eve.state.session.win")
 ---@field private _disposables          eve.collection.BatchDisposable
 local M = {
   _storage = {},
-  _disposables = BatchDisposable.new(),
+  _disposables = eve.c.BatchDisposable.new(),
 }
 
 ---@return eve.state.data
@@ -231,7 +227,7 @@ end
 ---@return nil
 function M.observe(observables, callback, ignore_initial)
   for _, observable in ipairs(observables) do
-    local subscriber = Subscriber.new({
+    local subscriber = eve.c.Subscriber.new({
       on_next = function()
         vim.schedule(callback)
       end,
@@ -356,7 +352,7 @@ function M.watch_changes(params)
     M.status.dirtier_statusline:mark_dirty()
   end)
 
-  local editor_states_save_scheduler = Scheduler.new({
+  local editor_states_save_scheduler = eve.c.Scheduler.new({
     name = "eve.state#editor/save",
     delay = 200,
     task = function(callback)
@@ -381,7 +377,7 @@ function M.watch_changes(params)
     end,
   })
   M.status.ticker_editor:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         editor_states_save_scheduler:schedule()
       end,
@@ -390,7 +386,7 @@ function M.watch_changes(params)
   )
 
   ---! Save when leave the editor.
-  M.add_disposable(Disposable.new({
+  M.add_disposable(eve.c.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -429,7 +425,7 @@ function M.watch_changes(params)
         })
       end,
     })
-    M.add_disposable(Disposable.new({ on_dispose = unwatch }))
+    M.add_disposable(eve.c.Disposable.new({ on_dispose = unwatch }))
   end
 end
 

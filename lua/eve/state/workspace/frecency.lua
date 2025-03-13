@@ -1,5 +1,4 @@
 local md5 = require("eve.std.md5")
-local Frecency = require("eve.collection.frecency")
 
 ---@class eve.state.frecency.data
 ---@field public files                  eve.collection.frecency.ISerializedData
@@ -67,7 +66,7 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.frecency.state
     _state = {
-      files = Frecency.deserialize({
+      files = eve.c.Frecency.deserialize({
         data = data.files,
         normalize = function(key)
           return md5.sumhexa(key)

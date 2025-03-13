@@ -1,7 +1,5 @@
 local env = require("eve.std.env")
 local fs = require("eve.std.fs")
-local Observable = require("eve.collection.observable")
-local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
@@ -125,7 +123,7 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = Observable.from_value(eve.std.path.normalize(initial_dirpath)) ---@type eve.collection.IObservable -- string>
+local state_cwd = eve.c.Observable.from_value(eve.std.path.normalize(initial_dirpath)) ---@type eve.collection.IObservable -- string>
 local _select = nil ---@type fml.ux.ISelect|nil
 
 ---@return string
@@ -141,7 +139,7 @@ local function gen_title()
 end
 
 state_cwd:subscribe(
-  Subscriber.new({
+  eve.c.Subscriber.new({
     on_next = function()
       if _select ~= nil then
         _select:mark_data_dirty()

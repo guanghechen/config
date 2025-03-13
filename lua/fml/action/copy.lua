@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.copy" ---@type string
 
-local Observable = require("eve.collection.observable")
 local command = require("eve.command")
 local state = require("eve.state")
 local select = require("fml.fn.select")
@@ -64,7 +63,7 @@ function M.copy_filepath(arg)
       title = "Copy current filepath",
       flag_fuzzy = true,
       flag_regex = false,
-      input = Observable.from_value(scope),
+      input = eve.c.Observable.from_value(scope),
       dimension = {
         row = 5,
         width = 50,

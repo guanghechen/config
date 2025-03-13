@@ -1,9 +1,5 @@
 local __module_name__ = "fml.ux.search.context" ---@type string
 
-local Dirtier = require("eve.collection.dirtier")
-local Observable = require("eve.collection.observable")
-local Scheduler = require("eve.collection.scheduler")
-local Subscriber = require("eve.collection.subscriber")
 local signs = require("eve.constant.sign")
 
 ---@class fml.ux.search.IRawDimension
@@ -117,19 +113,19 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local dirtier_dimension = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_data = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_data_cache = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_main = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_preview = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_selected = Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
+  local dirtier_dimension = eve.c.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
+  local dirtier_data = eve.c.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
+  local dirtier_data_cache = eve.c.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
+  local dirtier_main = eve.c.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
+  local dirtier_preview = eve.c.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
+  local dirtier_selected = eve.c.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
 
   local flag_selected = props.flag_selected ---@type eve.collection.IObservable -- boolean>
   local input = props.input ---@type eve.collection.IObservable -- string>
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
-  local input_line_count = Observable.from_value(eve.std.oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable -- integer>
-  local state_has_matched = Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.collection.IObservable -- boolean>
-  local status = Observable.from_value("hidden")
+  local input_line_count = eve.c.Observable.from_value(eve.std.oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable -- integer>
+  local state_has_matched = eve.c.Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.collection.IObservable -- boolean>
+  local status = eve.c.Observable.from_value("hidden")
 
   local cfg_input_title = props.title ---@type string
   local cfg_preview_title = props.preview_title or " preview " ---@type string
@@ -155,7 +151,7 @@ function M.new(props)
   local uuid = eve.std.oxi.uuid() ---@type string
 
   ---@type eve.collection.IScheduler
-  local fetch_scheduler = Scheduler.new({
+  local fetch_scheduler = eve.c.Scheduler.new({
     name = "fml.ux.search.state.fetch",
     delay = delay_fetch,
     task = function(callback)
@@ -311,11 +307,11 @@ function M.new(props)
   self._item_uuid_cur = nil ---@type string|nil
   self._uuids_selected = {} ---@type table<string, true>
 
-  flag_selected:subscribe(Subscriber.new({ on_next = on_flag_selected_change }), false)
-  input:subscribe(Subscriber.new({ on_next = on_input_change }), false)
-  status:subscribe(Subscriber.new({ on_next = on_refresh }), false)
-  dirtier_data:subscribe(Subscriber.new({ on_next = on_refresh }), false)
-  dirtier_data_cache:subscribe(Subscriber.new({ on_next = on_data_cache_dirty }), false)
+  flag_selected:subscribe(eve.c.Subscriber.new({ on_next = on_flag_selected_change }), false)
+  input:subscribe(eve.c.Subscriber.new({ on_next = on_input_change }), false)
+  status:subscribe(eve.c.Subscriber.new({ on_next = on_refresh }), false)
+  dirtier_data:subscribe(eve.c.Subscriber.new({ on_next = on_refresh }), false)
+  dirtier_data_cache:subscribe(eve.c.Subscriber.new({ on_next = on_data_cache_dirty }), false)
   return self
 end
 

@@ -1,6 +1,3 @@
-local History = require("eve.collection.history")
-local Observable = require("eve.collection.observable")
-
 ---@class eve.state.select.item.data
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_exclude           boolean
@@ -137,16 +134,16 @@ function M.load(state, name, raw_data)
   if state == nil then
     ---@type eve.state.select.item.state
     state = {
-      flag_case_sensitive = Observable.from_value(data.flag_case_sensitive),
-      flag_exclude = Observable.from_value(data.flag_exclude),
-      flag_fuzzy = Observable.from_value(data.flag_fuzzy),
-      flag_gitignore = Observable.from_value(data.flag_gitignore),
-      flag_regex = Observable.from_value(data.flag_regex),
-      flag_selected = Observable.from_value(data.flag_selected),
-      includes = Observable.from_value(data.includes),
-      excludes = Observable.from_value(data.excludes),
-      input = Observable.from_value(data.input),
-      input_history = History.deserialize({
+      flag_case_sensitive = eve.c.Observable.from_value(data.flag_case_sensitive),
+      flag_exclude = eve.c.Observable.from_value(data.flag_exclude),
+      flag_fuzzy = eve.c.Observable.from_value(data.flag_fuzzy),
+      flag_gitignore = eve.c.Observable.from_value(data.flag_gitignore),
+      flag_regex = eve.c.Observable.from_value(data.flag_regex),
+      flag_selected = eve.c.Observable.from_value(data.flag_selected),
+      includes = eve.c.Observable.from_value(data.includes),
+      excludes = eve.c.Observable.from_value(data.excludes),
+      input = eve.c.Observable.from_value(data.input),
+      input_history = eve.c.History.deserialize({
         name = name,
         capacity = 100,
         data = data.input_history,

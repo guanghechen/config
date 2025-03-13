@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
-local Observable = require("eve.collection.observable")
 local varnames = require("eve.constant.var")
 local editor = require("eve.module.editor")
 local command = require("eve.command")
@@ -292,7 +291,7 @@ function M.list(arg)
       title = "Toggle Select",
       flag_fuzzy = true,
       flag_regex = false,
-      input = Observable.from_value(flag_name),
+      input = eve.c.Observable.from_value(flag_name),
       dimension = {
         row = 3,
         width = 64,
@@ -347,7 +346,7 @@ function M.toggle_ai_provider(arg)
       title = "Toggle ai provider",
       flag_fuzzy = true,
       flag_regex = false,
-      input = Observable.from_value(ai_provider),
+      input = eve.c.Observable.from_value(ai_provider),
       dimension = {
         row = 5,
         width = 50,
@@ -448,7 +447,7 @@ function M.toggle_theme(arg)
       title = "Select theme",
       flag_fuzzy = true,
       flag_regex = false,
-      input = Observable.from_value(theme_name),
+      input = eve.c.Observable.from_value(theme_name),
       dimension = {
         row = 5,
         width = 50,

@@ -1,5 +1,3 @@
-local Subscriber = require("eve.collection.subscriber")
-local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
@@ -570,7 +568,7 @@ function M.new(props)
   self._on_close = on_close_from_props
   self._on_invisible = on_invisible_from_props
 
-  local draw_wins_scheduler = Scheduler.new({
+  local draw_wins_scheduler = eve.c.Scheduler.new({
     name = "fml.ux.search.search.draw",
     delay = 64,
     task = function(callback)
@@ -594,7 +592,7 @@ function M.new(props)
   end
 
   context.status:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         trigger_draw_wins()
       end,
@@ -603,7 +601,7 @@ function M.new(props)
   )
 
   context.state_has_matched:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function(flag)
         local winnr_main = context.winnr_main ---@type integer|nil
         if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
@@ -620,7 +618,7 @@ function M.new(props)
   )
 
   context.dirtier_dimension:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         local is_dimension_dirty = context.dirtier_dimension:is_dirty() ---@type boolean
         if is_dimension_dirty then
@@ -632,7 +630,7 @@ function M.new(props)
   )
 
   context.dirtier_main:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         local is_main_dirty = context.dirtier_main:is_dirty() ---@type boolean
         if is_main_dirty then
@@ -646,7 +644,7 @@ function M.new(props)
   ---! Trigger the preview dirty change when the preview not exist.
   if preview == nil then
     context.dirtier_preview:subscribe(
-      Subscriber.new({
+      eve.c.Subscriber.new({
         on_next = function()
           local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
           if is_preview_dirty then
@@ -659,7 +657,7 @@ function M.new(props)
   end
 
   context.dirtier_selected:subscribe(
-    Subscriber.new({
+    eve.c.Subscriber.new({
       on_next = function()
         local is_selected_dirty = context.dirtier_selected:is_dirty() ---@type boolean
         if is_selected_dirty then
@@ -673,7 +671,7 @@ function M.new(props)
 
   if context.enable_multiline_input then
     context.input_line_count:subscribe(
-      Subscriber.new({
+      eve.c.Subscriber.new({
         on_next = function()
           trigger_draw_wins()
         end,

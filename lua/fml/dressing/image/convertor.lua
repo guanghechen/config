@@ -1,7 +1,6 @@
 local __module_name__ = "fml.dressing.image.convertor" ---@type string
 
 local env = require("eve.std.env")
-local Spawn = require("eve.collection.spawn")
 local config = require("fml.dressing.image.config")
 local terminal = require("fml.dressing.image.terminal")
 local util = require("fml.dressing.image.util")
@@ -410,7 +409,7 @@ function Convertor:step()
     end
   end
 
-  step.proc = Spawn.new({
+  step.proc = eve.c.Spawn.new({
     run = false,
     debug = config.state.debug.convert,
     cwd = cmd.cwd and util.tpl(cmd.cwd, data) or nil,

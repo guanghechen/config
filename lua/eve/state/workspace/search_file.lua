@@ -1,5 +1,3 @@
-local Observable = require("eve.collection.observable")
-
 ---@class eve.state.search_file.data
 ---@field public flag_replace           boolean
 ---@field public max_filesize           string
@@ -86,11 +84,11 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.search_file.state
     _state = {
-      flag_replace = Observable.from_value(data.flag_replace),
-      max_filesize = Observable.from_value(data.max_filesize),
-      max_matches = Observable.from_value(data.max_matches),
-      replacement = Observable.from_value(data.replacement),
-      search_paths = Observable.from_value(data.search_paths),
+      flag_replace = eve.c.Observable.from_value(data.flag_replace),
+      max_filesize = eve.c.Observable.from_value(data.max_filesize),
+      max_matches = eve.c.Observable.from_value(data.max_matches),
+      replacement = eve.c.Observable.from_value(data.replacement),
+      search_paths = eve.c.Observable.from_value(data.search_paths),
     }
     return _state
   end

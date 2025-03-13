@@ -1,5 +1,3 @@
-local History = require("eve.collection.history")
-
 ---@class eve.state.qflist.data
 ---@field public history                eve.collection.history.ISerializedData
 
@@ -23,7 +21,7 @@ local M = {}
 
 ---@type eve.state.qflist.state
 S = {
-  history = History.new({
+  history = eve.c.History.new({
     name = "qflist",
     capacity = 100,
   }),
@@ -143,7 +141,7 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.qflist.data
 
   ---@type eve.collection.IHistory
-  local history = S.history or History.new({
+  local history = S.history or eve.c.History.new({
     name = "qflist",
     capacity = 100,
   })

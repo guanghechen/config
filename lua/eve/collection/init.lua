@@ -8,7 +8,7 @@ local __mods = {
   Disposable = "eve.collection.disposable",
   Frecency = "eve.collection.frecency",
   History = "eve.collection.history",
-  HistoryAdvance = "eve.collection.history_advance",
+  AdvanceHistory = "eve.collection.history_advance",
   Observable = "eve.collection.observable",
   Promise = "eve.collection.promise",
   Scheduler = "eve.collection.scheduler",
@@ -30,7 +30,7 @@ local __mods = {
 ---@field public Disposable             eve.collection.Disposable
 ---@field public Frecency               eve.collection.Frecency
 ---@field public History                eve.collection.History
----@field public HistoryAdvance         eve.collection.AdvanceHistory
+---@field public AdvanceHistory         eve.collection.AdvanceHistory
 ---@field public Observable             eve.collection.Observable
 ---@field public Promise                eve.collection.Promise
 ---@field public Scheduler              eve.collection.Scheduler

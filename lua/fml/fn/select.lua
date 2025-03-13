@@ -1,4 +1,3 @@
-local Observable = require("eve.collection.observable")
 local Select = require("fml.ux.select")
 
 ---@class fml.fn.select.IParams
@@ -60,8 +59,8 @@ local function select(params)
   Select.new({
     dimension = dimension,
     extend_preset_keymaps = true,
-    flag_fuzzy = Observable.from_value(flag_fuzzy),
-    flag_regex = Observable.from_value(flag_regex),
+    flag_fuzzy = eve.c.Observable.from_value(flag_fuzzy),
+    flag_regex = eve.c.Observable.from_value(flag_regex),
     input = input,
     multiple = multiple,
     permanent = false,

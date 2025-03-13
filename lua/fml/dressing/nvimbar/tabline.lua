@@ -1,4 +1,3 @@
-local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local state = require("eve.state")
@@ -86,7 +85,7 @@ local function should_show_tabline()
   return meta == nil or #meta.bufs > 1
 end
 
-dirtier:subscribe(Subscriber.new({
+dirtier:subscribe(eve.c.Subscriber.new({
   on_next = function()
     if should_show_tabline() then
       vim.o.showtabline = 2
