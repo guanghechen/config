@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local AdvanceHistory = require("eve.collection.history_advance")
 local Observable = require("eve.collection.observable")
 local setting = require("eve.constant.setting")

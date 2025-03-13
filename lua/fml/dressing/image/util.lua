@@ -89,4 +89,38 @@ function M.fit(filepath, cells, opts)
   return M.norm(ret)
 end
 
+---@param str                           string
+---@param data                          table<string, string>
+---@param opts                          ?{ prefix?: string, indent?: boolean, offset?: number[] }
+function M.tpl(str, data, opts)
+  opts = opts or {}
+  local ret = (
+    str:gsub(
+      "(" .. vim.pesc(opts.prefix or "") .. "%b{}" .. ")",
+      ---@param w                       string
+      ---@return string
+      function(w)
+        local inner = w:sub(2 + #(opts.prefix or ""), -2)
+        local key, default = inner:match("^(.-):(.*)$")
+        local ret = data[key or inner]
+        if ret == "" and default then
+          return default
+        end
+        return ret or w
+      end
+    )
+  )
+  if opts.indent then
+    local lines = vim.split(ret:gsub("\t", "  "), "\n", { plain = true })
+    local indent = 1000
+    for _, line in ipairs(lines) do
+      indent = math.min(indent, line:find("%S") or 1000)
+    end
+    for l, line in ipairs(lines) do
+      lines[l] = line:sub(indent)
+    end
+  end
+  return ret
+end
+
 return M

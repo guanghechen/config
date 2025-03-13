@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local config = require("fml.dressing.image.config")
 local Placement = require("fml.dressing.image.placement")
 
@@ -112,7 +111,7 @@ function M:update()
         img = Placement.new(
           self.buf,
           i.src,
-          fn.merge_config({}, config.state.doc, {
+          eve.std.table.merge_config({}, config.state.doc, {
             pos = i.pos,
             range = i.range,
             inline = true,

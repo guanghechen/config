@@ -1,7 +1,6 @@
 --- https://github.com/folke/snacks.nvim/blob/6917597f6d22d79fcd0bf9b0eb7845f7ffdc80a0/lua/snacks/util/spawn.lua
 
 local debugger = require("eve.std.debug")
-local fn = require("eve.builtin.fn")
 
 ---@param handle                        uv.uv_handle_t|nil
 ---@return nil
@@ -62,7 +61,7 @@ end
 ---@param opts                          eve.std.debug.ICmdParams|{}|nil
 function Proc:debug(opts)
   ---@type eve.std.debug.ICmdParams
-  opts = fn.merge_config({}, opts or {}, {
+  opts = eve.std.table.merge_config({}, opts or {}, {
     cmd = self.opts.cmd,
     args = self.opts.args,
     cwd = self.opts.cwd,
@@ -219,7 +218,7 @@ function M.multi(procs, opts)
     current = current + 1
     assert(current <= #procs, "current > #procs")
     local proc = procs[current]
-    proc.opts = fn.merge_config(vim.deepcopy(opts), proc.opts, {
+    proc.opts = eve.std.table.merge_config(vim.deepcopy(opts), proc.opts, {
       on_exit = function(_, err)
         if err or current == #procs then
           done()

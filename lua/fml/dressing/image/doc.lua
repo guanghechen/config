@@ -1,8 +1,8 @@
-local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 local config = require("fml.dressing.image.config")
 local Placement = require("fml.dressing.image.placement")
 local ImageInline = require("fml.dressing.image.inline")
+local util = require("fml.dressing.image.util")
 
 ---@class fml.dressing.image.doc
 local M = {}
@@ -56,7 +56,7 @@ M.transforms = {
     if not img.content then
       return
     end
-    img.content = fn.tpl(config.state.math.typst.tpl, {
+    img.content = util.tpl(config.state.math.typst.tpl, {
       color = eve.std.vim.pick_color({ "SnacksImageMath" }, "fg") or "#000000",
       header = M.get_header(ctx.bufnr),
       content = img.content,
@@ -85,7 +85,7 @@ M.transforms = {
       seen[p] = true
       return true
     end, packages)
-    img.content = fn.tpl(config.state.math.latex.tpl, {
+    img.content = util.tpl(config.state.math.latex.tpl, {
       font_size = config.state.math.latex.font_size or "large",
       packages = table.concat(packages, ", "),
       header = M.get_header(ctx.bufnr),
@@ -500,7 +500,7 @@ function M.hover()
     end
 
     local updated = false
-    local o = fn.merge_config({}, config.state.doc, {
+    local o = eve.std.table.merge_config({}, config.state.doc, {
       on_update_pre = function()
         if hover and not updated then
           updated = true

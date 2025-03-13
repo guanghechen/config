@@ -1,5 +1,4 @@
 local debugger = require("eve.std.debug")
-local fn = require("eve.builtin.fn")
 local config = require("fml.dressing.image.config")
 local Image = require("fml.dressing.image.image")
 local terminal = require("fml.dressing.image.terminal")

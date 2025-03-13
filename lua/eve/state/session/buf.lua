@@ -1,5 +1,4 @@
 local env = require("eve.std.env")
-local fn = require("eve.builtin.fn")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon

@@ -1,10 +1,10 @@
 local __module_name__ = "fml.dressing.image.convertor" ---@type string
 
 local env = require("eve.std.env")
-local fn = require("eve.builtin.fn")
 local Spawn = require("eve.collection.spawn")
 local config = require("fml.dressing.image.config")
 local terminal = require("fml.dressing.image.terminal")
+local util = require("fml.dressing.image.util")
 
 ---@class fml.dressing.image.convertor
 local M = {}
@@ -406,14 +406,14 @@ function Convertor:step()
 
   for a, arg in ipairs(args) do
     if type(arg) == "string" then
-      args[a] = fn.tpl(arg, data)
+      args[a] = util.tpl(arg, data)
     end
   end
 
   step.proc = Spawn.new({
     run = false,
     debug = config.state.debug.convert,
-    cwd = cmd.cwd and fn.tpl(cmd.cwd, data) or nil,
+    cwd = cmd.cwd and util.tpl(cmd.cwd, data) or nil,
     cmd = cmd.cmd,
     args = args,
     on_exit = function(proc, err)

@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
-local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 
 ---@class fml.action.buf

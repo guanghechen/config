@@ -21,6 +21,26 @@ function M.find_index(elements, element)
   end
 end
 
+--- Merges the values similar to vim.tbl_deep_extend with the **force** behavior,
+--- but the values can be any type
+---@generic T
+---@param ... T
+---@return T
+function M.merge_config(...)
+  local ret = select(1, ...)
+  for i = 2, select("#", ...) do
+    local value = select(i, ...)
+    if M.is_dict_like(ret) and M.is_dict(value) then
+      for k, v in pairs(value) do
+        ret[k] = M.merge_config(ret[k], v)
+      end
+    elseif value ~= nil then
+      ret = value
+    end
+  end
+  return ret
+end
+
 ---@param elements                      string[]
 ---@return table<string, true>
 function M.to_string_set(elements)

@@ -1,6 +1,5 @@
 --- https://github.com/folke/snacks.nvim/blob/70e7e081ee558eb3756aba02491f1bc84fb72ab0/lua/snacks/image/init.lua
 
-local fn = require("eve.builtin.fn")
 local config = require("fml.dressing.image.config")
 
 ---@class fml.dressing.image

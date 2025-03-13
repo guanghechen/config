@@ -1,4 +1,3 @@
-local fn = require("eve.builtin.fn")
 local state = require("eve.state")
 
 ---@param tabnr                         integer the stable unique number of the tabpage

@@ -1,5 +1,3 @@
-local fn = require("eve.builtin.fn")
-
 return {
   name = "mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },
