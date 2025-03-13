@@ -1,10 +1,10 @@
----@class eve.builtin.box.IDimension
+---@class eve.std.box.IDimension
 ---@field public row                    integer
 ---@field public col                    integer
 ---@field public width                  integer
 ---@field public height                 integer
 
----@class eve.builtin.box.IRestriction
+---@class eve.std.box.IRestriction
 ---@field public position               eve.e.BoxPosition
 ---@field public rows                   integer
 ---@field public cols                   integer
@@ -17,7 +17,7 @@
 ---@field public min_width              ?number
 ---@field public min_height             ?number
 
----@class eve.builtin.box
+---@class eve.std.box
 local M = {}
 
 ---@param size                          number
@@ -37,8 +37,8 @@ end
 
 ---@param width                         integer
 ---@param height                        integer
----@param restriction                   eve.builtin.box.IRestriction
----@return eve.builtin.box.IDimension
+---@param restriction                   eve.std.box.IRestriction
+---@return eve.std.box.IDimension
 function M.measure(width, height, restriction)
   local rows = restriction.rows ---@type integer
   local cols = restriction.cols ---@type integer
@@ -60,7 +60,7 @@ function M.measure(width, height, restriction)
     row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
     col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-    ---@type eve.builtin.box.IDimension
+    ---@type eve.std.box.IDimension
     return { row = row, col = col, width = width, height = height }
   end
 
@@ -72,7 +72,7 @@ function M.measure(width, height, restriction)
       row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
       col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-      ---@type eve.builtin.box.IDimension
+      ---@type eve.std.box.IDimension
       return { row = row, col = col, width = width, height = height }
     end
   end
@@ -82,7 +82,7 @@ function M.measure(width, height, restriction)
   row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
   col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-  ---@type eve.builtin.box.IDimension
+  ---@type eve.std.box.IDimension
   return { row = row, col = col, width = width, height = height }
 end
 

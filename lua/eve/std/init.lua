@@ -1,5 +1,6 @@
 ---@class eve.std.mods
 local mods = {
+  box = true,
   colors = true,
   debug = true,
   env = true,
@@ -9,6 +10,7 @@ local mods = {
 }
 
 ---@class eve.std
+---@field public box                    eve.std.box
 ---@field public colors                 eve.std.color
 ---@field public debug                  eve.std.debug
 ---@field public env                    eve.std.env
