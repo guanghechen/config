@@ -2,6 +2,14 @@
 local M = {}
 
 ---@param text                          string
+---@return string
+function M.escape_url_component(text)
+  return (text:gsub("([^%w%.%-])", function(c)
+    return string.format("%%%02X", string.byte(c))
+  end))
+end
+
+---@param text                          string
 ---@param width                         integer
 ---@param pad                           string
 ---@return string
@@ -31,6 +39,18 @@ function M.parse_comma_list(text)
     end
   end
   return result
+end
+
+---@param text                          string
+---@return string
+function M.remove_last_slash(text)
+  if #text > 1 then
+    local last_character = string.sub(text, -1, -1)
+    if last_character == "/" or last_character == "\\" then
+      return string.sub(text, 1, -2)
+    end
+  end
+  return text
 end
 
 ---@param text                          string

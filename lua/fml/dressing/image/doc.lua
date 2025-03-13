@@ -57,7 +57,7 @@ M.transforms = {
       return
     end
     img.content = fn.tpl(config.state.math.typst.tpl, {
-      color = fn.pick_color({ "SnacksImageMath" }, "fg") or "#000000",
+      color = eve.std.vim.pick_color({ "SnacksImageMath" }, "fg") or "#000000",
       header = M.get_header(ctx.bufnr),
       content = img.content,
     }, { indent = true, prefix = "$" })
@@ -66,7 +66,7 @@ M.transforms = {
     if not (img.content and img.ext == "math.tex") then
       return
     end
-    local fg = fn.pick_color({ "SnacksImageMath" }, "fg") or "#000000"
+    local fg = eve.std.vim.pick_color({ "SnacksImageMath" }, "fg") or "#000000"
     local content = vim.trim(img.content or "")
     content = content:gsub("^%$+`?", ""):gsub("`?%$+$", "")
     content = content:gsub("^\\[%[%(]", ""):gsub("\\[%]%)]$", "")

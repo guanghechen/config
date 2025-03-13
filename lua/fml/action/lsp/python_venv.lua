@@ -81,7 +81,7 @@ local function get_select()
             for _, line in ipairs(lines) do
               if #line > 0 then
                 local icon = "󰅬" ---@type string
-                local dirpath = fn.remove_last_slash(line) ---@type string
+                local dirpath = eve.std.string.remove_last_slash(line) ---@type string
                 if not uuid_set[dirpath] then
                   uuid_set[dirpath] = true
 
@@ -140,7 +140,7 @@ local function get_select()
               for _, line in ipairs(lines) do
                 if #line > 0 then
                   local icon = "" ---@type string
-                  local dirpath = fn.remove_last_slash(line) ---@type string
+                  local dirpath = eve.std.string.remove_last_slash(line) ---@type string
                   if not uuid_set[dirpath] then
                     uuid_set[dirpath] = true
 
@@ -211,7 +211,7 @@ local function get_select()
               for _, line in ipairs(lines) do
                 if #line > 0 then
                   local icon = "" ---@type string
-                  local dirpath = fn.remove_last_slash(line) ---@type string
+                  local dirpath = eve.std.string.remove_last_slash(line) ---@type string
                   if not uuid_set[dirpath] then
                     uuid_set[dirpath] = true
                     ---@type fml.action.lsp.python_venv.IItem
@@ -232,7 +232,7 @@ local function get_select()
             -- If $CONDA_PREFIX is defined and exists, add the path as an existing venv
             if vim.fn.isdirectory(clp.paths.AnacondaBase) ~= 0 then
               local icon = "" ---@type string
-              local dirpath = fn.remove_last_slash(clp.paths.AnacondaBase .. "/") ---@type string
+              local dirpath = eve.std.string.remove_last_slash(clp.paths.AnacondaBase .. "/") ---@type string
               if not uuid_set[dirpath] then
                 uuid_set[dirpath] = true
 

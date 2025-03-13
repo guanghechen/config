@@ -110,7 +110,7 @@ function M.new(bufnr, src, opts)
   end
 
   local update = self.update
-  self.update = fn.debounce(function()
+  self.update = eve.std.fn.debounce(function()
     update(self)
   end, 10)
   return self
@@ -170,7 +170,7 @@ function M:progress()
       vim.api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
       vim.api.nvim_buf_set_extmark(self.bufnr, ns, 0, 0, {
         virt_text = {
-          { fn.spinner(), "SnacksImageSpinner" },
+          { eve.std.fn.spinner(), "SnacksImageSpinner" },
           { " " },
           { self.image._convert:current().name .. " loading …", "SnacksImageLoading" },
         },

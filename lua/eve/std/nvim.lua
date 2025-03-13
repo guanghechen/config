@@ -54,6 +54,20 @@ function M.bindkeys(keymaps, keymap_override)
   end
 end
 
+---@return table<string, integer>
+function M.filepath2bufnr()
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  local filepath2bufnr = {} ---@type table<string, integer>
+
+  for _, bufnr in ipairs(bufnrs) do
+    local filepath = vim.api.nvim_buf_get_name(bufnr)
+    if filepath ~= nil and #filepath > 0 then
+      filepath2bufnr[filepath] = bufnr
+    end
+  end
+  return filepath2bufnr
+end
+
 ---@param bufnr                         integer
 ---@return boolean
 function M.is_buf_valid(bufnr)
@@ -77,6 +91,17 @@ end
 ---@return boolean
 function M.is_win_valid(winnr)
   return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
+end
+
+---@param hlname                        string
+---@return string
+function M.make_bg_transparency(hlname)
+  local fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlname)), "fg#")
+  local new_hlname = "_t_" .. hlname
+  vim.schedule(function()
+    vim.api.nvim_set_hl(0, new_hlname, { fg = fg, bg = "none" })
+  end)
+  return new_hlname
 end
 
 ---@param modes                         string[]
@@ -129,6 +154,19 @@ function M.make_shortcut(modes, keys, definition)
       vim.keymap.set(modes, key, callback, opts)
     end
   end
+end
+
+---@param hlgroups                      string[]
+---@param field                         "fg"|"bg"|"sp"
+---@return string|nil
+function M.pick_color(hlgroups, field)
+  for _, hlgroup in ipairs(hlgroups) do
+    local hl = vim.api.nvim_get_hl(0, { name = hlgroup, link = false })
+    if hl[field] then
+      return string.format("#%06x", hl[field])
+    end
+  end
+  return nil
 end
 
 return M

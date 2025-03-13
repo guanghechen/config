@@ -7,6 +7,7 @@ local __mods = {
   env = "eve.std.env",
   fn = "eve.std.fn",
   fs = "eve.std.fs",
+  is = "eve.std.is",
   json = "eve.std.json",
   lsp = "eve.std.lsp",
   md5 = "eve.std.md5",
@@ -29,6 +30,7 @@ local __mods = {
 ---@field public env                    eve.std.env
 ---@field public fn                     eve.std.fn
 ---@field public fs                     eve.std.fs
+---@field public is                     eve.std.is
 ---@field public json                   eve.std.json
 ---@field public md5                    eve.std.md5
 ---@field public nvim                   eve.std.nvim

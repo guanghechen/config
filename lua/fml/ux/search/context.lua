@@ -498,7 +498,7 @@ function M:moveup()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = fn.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
+    local lnum = eve.std.fn.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
     return self:locate(lnum)
   end
 end
@@ -510,7 +510,7 @@ function M:movedown()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = fn.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
+    local lnum = eve.std.fn.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
     return self:locate(lnum)
   end
 end

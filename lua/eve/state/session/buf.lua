@@ -242,7 +242,7 @@ function M.load(raw_data)
 
   local workspace_pieces = eve.std.path.split(eve.std.path.workspace()) ---@type string[]
   local cwd_pieces = eve.std.path.split(eve.std.path.cwd()) ---@type string[]
-  local filepath2bufnr = fn.filepath2bufnr() ---@type table<string, integer>
+  local filepath2bufnr = eve.std.vim.filepath2bufnr() ---@type table<string, integer>
   for _, item in ipairs(data.list) do
     local bufnr = filepath2bufnr[item.filepath] ---@type integer|nil
     if bufnr ~= nil then

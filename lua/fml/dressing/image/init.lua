@@ -26,7 +26,7 @@ vim.api.nvim_set_hl(0, "SnacksImageSpecial", { default = true, link = "Special" 
 vim.api.nvim_set_hl(0, "SnacksImageLoading", { default = true, link = "NonText" })
 vim.api.nvim_set_hl(0, "SnacksImageMath", {
   default = true,
-  fg = fn.pick_color({ "@markup.math.latex", "Special", "Normal" }, "fg"),
+  fg = eve.std.vim.pick_color({ "@markup.math.latex", "Special", "Normal" }, "fg"),
 })
 
 ---@class fml.dressing.image.Opts

@@ -103,4 +103,93 @@ function M.equals_list(left, right, deep)
   return true
 end
 
+----------------------------------------------------------------------------------------------------
+
+---@param current                       integer  current index
+---@param step                          integer  moving step
+---@param total                         integer  total index.
+---@return integer
+function M.navigate_circular(current, step, total)
+  local candidate = (current + step - 1) % total
+
+  while candidate < 0 do
+    candidate = candidate + total
+  end
+
+  while candidate >= total do
+    candidate = candidate - total
+  end
+
+  return candidate + 1
+end
+
+---@param current                       integer  current index
+---@param step                          integer  moving step
+---@param total                         integer  total index.
+---@return integer
+function M.navigate_limit(current, step, total)
+  local candidate = current + step
+
+  if candidate < 1 then
+    return 1
+  end
+
+  if candidate > total then
+    return total
+  end
+
+  return candidate
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@param timestamp                     integer
+---@return string
+function M.time_ago(timestamp)
+  local current_time = os.time()
+  local diff = current_time - timestamp
+
+  local seconds_in_minute = 60
+  local seconds_in_hour = 3600
+  local seconds_in_day = 86400
+  local seconds_in_month = 2592000 -- Approximation
+  local seconds_in_year = 31536000 -- Approximation
+
+  if diff < seconds_in_minute then
+    return string.format("%d seconds ago", diff)
+  elseif diff < seconds_in_hour then
+    return string.format("%d minutes ago", math.floor(diff / seconds_in_minute))
+  elseif diff < seconds_in_day then
+    return string.format("%d hours ago", math.floor(diff / seconds_in_hour))
+  elseif diff < seconds_in_month then
+    return string.format("%d days ago", math.floor(diff / seconds_in_day))
+  elseif diff < seconds_in_year then
+    return string.format("%d months ago", math.floor(diff / seconds_in_month))
+  else
+    return string.format("%d years ago", math.floor(diff / seconds_in_year))
+  end
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@generic T
+---@param fn                            T
+---@param delay                         ?integer
+---@return T
+function M.debounce(fn, delay)
+  local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
+  local duration = delay or 20 ---@type integer
+  return function()
+    timer:start(duration, 0, vim.schedule_wrap(fn))
+  end
+end
+
+local spinners = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" } ---@type string[]
+
+---@return string
+function M.spinner()
+  local index = math.floor(vim.uv.hrtime() / (1e6 * 80)) % #spinners + 1 ---@type integer
+  return spinners[index]
+end
+
 return M
