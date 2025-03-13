@@ -1,10 +1,8 @@
 local __module_name__ = "eve.state.session.win"
 
-local lsp = require("eve.builtin.lsp")
 local AdvanceHistory = require("eve.collection.history_advance")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
-
 local state_status = require("eve.state.session.status")
 
 ---@class eve.t.state.win.meta.data
@@ -151,7 +149,7 @@ S = {
     ---! Make the request to the LSP server
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if
-      vim.b[bufnr][setting.vars.WINLINE_DISABLED] or not lsp.has_support_method(bufnr, "textDocument/documentSymbol")
+      vim.b[bufnr][setting.vars.WINLINE_DISABLED] or not eve.std.lsp.has_support_method(bufnr, "textDocument/documentSymbol")
     then
       callback(false)
       return
@@ -225,7 +223,7 @@ S = {
       end
 
       local cursor_pos = { line = row - 1, character = col }
-      local symbol_path = lsp.find_symbol_path(cursor_pos, symbols)
+      local symbol_path = eve.std.lsp.find_symbol_path(cursor_pos, symbols)
 
       local pieces = meta.lsp_symbols ---@type eve.t.state.buf.lsp.ISymbol[]
       local N = #pieces ---@type integer

@@ -8,6 +8,7 @@ local __mods = {
   fn = "eve.std.fn",
   fs = "eve.std.fs",
   json = "eve.std.json",
+  lsp = "eve.std.lsp",
   md5 = "eve.std.md5",
   nvim = "eve.std.nvim",
   path = "eve.std.path",

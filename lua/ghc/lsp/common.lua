@@ -2,7 +2,6 @@ local __module_name__ = "ghc.lsp.common" ---@type string
 
 local env = require("eve.std.env")
 local fs = require("eve.std.fs")
-local lsp = require("eve.builtin.lsp")
 local command = require("eve.command")
 
 ---@class ghc.lsp.common
@@ -137,13 +136,13 @@ end
 ---@param bufnr                         integer
 ---@diagnostic disable-next-line: unused-local
 function M.on_attach(client, bufnr)
-  local has_support_codeLens = lsp.has_support_method(bufnr, "codeLens") ---@type boolean
-  local has_support_codeAction = lsp.has_support_method(bufnr, "codeAction") ---@type boolean
-  local has_support_rename = lsp.has_support_method(bufnr, "rename") ---@type boolean
-  local has_support_documentHighlight = lsp.has_support_method(bufnr, "documentHighlight") ---@type boolean
+  local has_support_codeLens = eve.std.lsp.has_support_method(bufnr, "codeLens") ---@type boolean
+  local has_support_codeAction = eve.std.lsp.has_support_method(bufnr, "codeAction") ---@type boolean
+  local has_support_rename = eve.std.lsp.has_support_method(bufnr, "rename") ---@type boolean
+  local has_support_documentHighlight = eve.std.lsp.has_support_method(bufnr, "documentHighlight") ---@type boolean
 
   if client then
-    lsp.check_methods(client, bufnr)
+    eve.std.lsp.check_methods(client, bufnr)
   end
 
   ---@type eve.t.IKeymap[]
