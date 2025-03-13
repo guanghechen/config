@@ -1,19 +1,32 @@
 ---@class eve.__mods
-local mods = {
+local __mods = {
   debug = "eve.std.debug",
 }
 
+local __gid = 0 ---@type integer
+local __gfn = {} ---@type table<string, fun(...): nil>
+
 ---@class eve
----@field public G                      eve.builtin.G
+---@field public G                      eve.G
 ---@field public std                    eve.std
 ---
 ---@field public debug                  eve.std.debug
 local M = setmetatable({
-  G = require("eve.builtin.G"),
+  ---@class eve.G
+  G = setmetatable({
+    ---@param fn                       fun(...): nil
+    ---@return string
+    register_anonymous_fn = function(fn)
+      __gid = __gid + 1
+      local fn_name = "_" .. __gid
+      __gfn[fn_name] = fn
+      return "eve.G." .. fn_name
+    end,
+  }, { __index = __gfn }),
   std = require("eve.std"),
 }, {
   __index = function(t, k)
-    local m = mods[k] ---@type string|nil
+    local m = __mods[k] ---@type string|nil
     if m == nil then
       return rawget(t, k)
     end

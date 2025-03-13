@@ -1,4 +1,3 @@
-local G = require("eve.builtin.G")
 local Subscriber = require("eve.collection.subscriber")
 local Scheduler = require("eve.collection.scheduler")
 local icons = require("eve.constant.icon")
@@ -145,7 +144,7 @@ function M.new(props)
       local stl_state = item.state ---@type eve.collection.IObservable
       local symbol = item.symbol ---@type string
       local callback = item.callback ---@type fun(): nil
-      local callback_fn = G.register_anonymous_fn(callback) or "" ---@type string
+      local callback_fn = eve.G.register_anonymous_fn(callback) or "" ---@type string
 
       ---@type eve.t.ux.widget.IStatuslineItem
       local statusline_item = { type = item.type, state = stl_state, symbol = symbol, callback_fn = callback_fn }

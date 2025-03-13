@@ -1,6 +1,5 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
-local G = require("eve.builtin.G")
 local env = require("eve.std.env")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
@@ -31,7 +30,7 @@ function M.ai(position)
   end
 
   ---@type string
-  local fn_show_message = G.register_anonymous_fn(function()
+  local fn_show_message = eve.G.register_anonymous_fn(function()
     local enabled = state.flight.ai:snapshot() ---@type boolean
     local provider = state.flight.ai_provider:snapshot() ---@type string
     local status = "NIL" ---@type unknown
@@ -107,17 +106,17 @@ function M.bufs(position)
   local hln_bufc_info = position .. "_bufc_info" ---@type string
 
   ---@type string
-  local fn_active_buf = G.register_anonymous_fn(function(bufnr)
+  local fn_active_buf = eve.G.register_anonymous_fn(function(bufnr)
     vim.cmd(command.definitions.buf.open.uuid .. " " .. tostring(bufnr))
   end) or ""
 
   ---@type string
-  local fn_focus_left_buf = G.register_anonymous_fn(function()
+  local fn_focus_left_buf = eve.G.register_anonymous_fn(function()
     vim.cmd(command.definitions.buf.focus_left.uuid)
   end) or ""
 
   ---@type string
-  local fn_focus_right_buf = G.register_anonymous_fn(function()
+  local fn_focus_right_buf = eve.G.register_anonymous_fn(function()
     vim.cmd(command.definitions.buf.focus_right.uuid)
   end) or ""
 
@@ -353,7 +352,7 @@ function M.copilot(position)
   local hln_copilot = position .. "_copilot" ---@type string
 
   ---@type string
-  local fn_show_message = G.register_anonymous_fn(function()
+  local fn_show_message = eve.G.register_anonymous_fn(function()
     if package.loaded["copilot"] then
       local copilot_status = require("copilot.api").status.data
       eve.std.reporter.info({
@@ -492,7 +491,7 @@ function M.diagnostics(position)
   local hln_diagnostics_hint = position .. "_diagnostics_hint" ---@type string
   local hln_diagnostics_info = position .. "_diagnostics_info" ---@type string
 
-  local fn_show_error = G.register_anonymous_fn(function(bufnr)
+  local fn_show_error = eve.G.register_anonymous_fn(function(bufnr)
     local errors = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
     eve.std.reporter.info({
       from = __module_name__,
@@ -501,7 +500,7 @@ function M.diagnostics(position)
     })
   end)
 
-  local fn_show_warn = G.register_anonymous_fn(function(bufnr)
+  local fn_show_warn = eve.G.register_anonymous_fn(function(bufnr)
     local warns = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
     eve.std.reporter.info({
       from = __module_name__,
@@ -510,7 +509,7 @@ function M.diagnostics(position)
     })
   end)
 
-  local fn_show_hint = G.register_anonymous_fn(function(bufnr)
+  local fn_show_hint = eve.G.register_anonymous_fn(function(bufnr)
     local hints = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT })
     eve.std.reporter.info({
       from = __module_name__,
@@ -519,7 +518,7 @@ function M.diagnostics(position)
     })
   end)
 
-  local fn_show_info = G.register_anonymous_fn(function(bufnr)
+  local fn_show_info = eve.G.register_anonymous_fn(function(bufnr)
     local infos = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO })
     eve.std.reporter.info({
       from = __module_name__,
@@ -574,7 +573,7 @@ function M.dirpath(position)
   local relpath_pieces = {} ---@type string[]
 
   ---@type string
-  local fn_open_explorer = G.register_anonymous_fn(function(index)
+  local fn_open_explorer = eve.G.register_anonymous_fn(function(index)
     local dirpath = table.concat(relpath_pieces, env.PATH_SEP, 1, index) ---@type string
     vim.cmd(command.definitions.find.explorer.uuid .. " " .. vim.fn.fnameescape(dirpath))
   end) or ""
@@ -979,7 +978,7 @@ function M.lsp_symbols(position)
   local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
   ---@type string
-  local fn_goto_lsp_pos = G.register_anonymous_fn(function(num)
+  local fn_goto_lsp_pos = eve.G.register_anonymous_fn(function(num)
     local args = Nvimbar.decode_btn_args(tostring(num)) ---@type integer[]
     if #args == 3 then
       local winnr = args[1] ---@type integer|nil
@@ -1101,7 +1100,7 @@ function M.python_env(position)
     end
   end, false)
 
-  local fn_select_python_venv = G.register_anonymous_fn(function()
+  local fn_select_python_venv = eve.G.register_anonymous_fn(function()
     vim.cmd(command.definitions.lsp.select_python_venv.uuid)
   end)
 
@@ -1338,12 +1337,12 @@ function M.tabs(position)
   local last_tab_count = 0 ---@type integer
 
   ---@type string
-  local fn_active_tab = G.register_anonymous_fn(function(tabid)
+  local fn_active_tab = eve.G.register_anonymous_fn(function(tabid)
     vim.cmd(command.definitions.tab.focus.uuid .. " " .. tostring(tabid))
   end) or ""
 
   ---@type string
-  local fn_toggle_tabs_folded = G.register_anonymous_fn(function()
+  local fn_toggle_tabs_folded = eve.G.register_anonymous_fn(function()
     folded = not folded
     dirty = true
     state.status.dirtier_tabline:mark_dirty()
