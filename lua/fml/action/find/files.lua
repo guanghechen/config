@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.find" ---@type string
 
-local oxi = require("eve.builtin.oxi")
 local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 local instances = require("eve.constant.instance")
@@ -355,7 +354,7 @@ local function get_select()
         local excludes = flag_exclude and state.select.find_file.excludes:snapshot() or {} ---@type string[]
 
         ---@type string[]
-        local filepaths = oxi.find({
+        local filepaths = eve.std.oxi.find({
           workspace = workspace,
           cwd = cwd,
           flag_case_sensitive = false,

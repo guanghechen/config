@@ -1,6 +1,5 @@
 local __module_name__ = "fml.ux.select" ---@type string
 
-local oxi = require("eve.builtin.oxi")
 local Observable = require("eve.collection.observable")
 local icons = require("eve.constant.icon")
 
@@ -544,8 +543,8 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  ---@type eve.builtin.oxi.string.ILineMatch[]|nil
-  local oxi_matches = oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
+  ---@type eve.std.oxi.string.ILineMatch[]|nil
+  local oxi_matches = eve.std.oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
   if oxi_matches == nil then
     return old_matches
   end

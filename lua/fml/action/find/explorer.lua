@@ -1,6 +1,5 @@
 local env = require("eve.std.env")
 local fs = require("eve.std.fs")
-local oxi = require("eve.builtin.oxi")
 local Observable = require("eve.collection.observable")
 local Subscriber = require("eve.collection.subscriber")
 local ft = require("eve.constant.filetype")
@@ -51,9 +50,9 @@ local function fetch_diritem(dirpath, force)
     local owner_width = 0 ---@type integer
     local group_width = 0 ---@type integer
 
-    local raw_data = oxi.readdir(dirpath) ---@type eve.builtin.oxi.IReaddirResult|nil
+    local raw_data = eve.std.oxi.readdir(dirpath) ---@type eve.std.oxi.IReaddirResult|nil
     if raw_data ~= nil then
-      local raw_itself = raw_data.itself ---@type eve.builtin.oxi.IFileItemWithStatus
+      local raw_itself = raw_data.itself ---@type eve.std.oxi.IFileItemWithStatus
 
       ---@type fml.action.find.explorer.IFileItem
       local itself = {

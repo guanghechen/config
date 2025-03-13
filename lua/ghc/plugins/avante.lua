@@ -1,6 +1,5 @@
 local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
-local oxi = require("eve.builtin.oxi")
 local icons = require("eve.constant.icon")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
@@ -311,7 +310,7 @@ return {
             local excludes = flag_exclude and state.select.select_avante.excludes:snapshot() or {} ---@type string[]
 
             ---@type string[]
-            local filepaths = oxi.find({
+            local filepaths = eve.std.oxi.find({
               workspace = workspace,
               cwd = cwd,
               flag_case_sensitive = false,

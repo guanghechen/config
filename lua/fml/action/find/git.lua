@@ -1,4 +1,3 @@
-local oxi = require("eve.builtin.oxi")
 local ft = require("eve.constant.filetype")
 
 local select_files = require("fml.fn.select_files")
@@ -18,7 +17,7 @@ function M.find_git_not_committed()
     flag_regex = false,
     fetch_filepaths = function()
       local result = vim.fn.system("git diff HEAD --name-only") ---@type string
-      local lines = oxi.parse_lines(result) ---@type string[]
+      local lines = eve.std.oxi.parse_lines(result) ---@type string[]
 
       local filepaths = {} ---@type string[]
       for _, line in ipairs(lines) do

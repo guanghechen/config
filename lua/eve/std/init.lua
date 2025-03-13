@@ -11,6 +11,7 @@ local __mods = {
   lsp = "eve.std.lsp",
   md5 = "eve.std.md5",
   nvim = "eve.std.nvim",
+  oxi = "eve.std.oxi",
   path = "eve.std.path",
   reporter = "eve.std.reporter",
   shell = "eve.std.shell",
@@ -31,6 +32,7 @@ local __mods = {
 ---@field public json                   eve.std.json
 ---@field public md5                    eve.std.md5
 ---@field public nvim                   eve.std.nvim
+---@field public oxi                    eve.std.oxi
 ---@field public path                   eve.std.path
 ---@field public reporter               eve.std.reporter
 ---@field public shell                  eve.std.shell

@@ -2,7 +2,6 @@ local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
 local G = require("eve.builtin.G")
 local env = require("eve.std.env")
-local oxi = require("eve.builtin.oxi")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -807,7 +806,7 @@ function M.filesize(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath or context.mode ~= prev_context.mode
     end,
     render = function(context)
-      local text = oxi.get_filesize(context.filepath) or "" ---@type string
+      local text = eve.std.oxi.get_filesize(context.filepath) or "" ---@type string
       local hl_text = txt(text, hln_text)
       return text, hl_text, true
     end,
