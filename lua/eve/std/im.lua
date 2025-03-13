@@ -1,21 +1,19 @@
-local __module_name__ = "eve.builtin.im" ---@type string
+local __module_name__ = "eve.std.im" ---@type string
 
-local env = require("eve.std.env")
-
----@alias eve.builtin.im.InputMethod
+---@alias eve.std.im.InputMethod
 ---|"English"
 ---|"Chinese"
 
----@class eve.builtin.im
----@field public get_input_method   fun(): eve.builtin.im.InputMethod|nil
----@field public set_input_method   fun(input_method: eve.builtin.im.InputMethod): nil
+---@class eve.std.im
+---@field public get_input_method   fun(): eve.std.im.InputMethod|nil
+---@field public set_input_method   fun(input_method: eve.std.im.InputMethod): nil
 local M = {}
 
-if env.IS_MAC then
+if eve.std.env.IS_MAC then
   local app_home = eve.std.path.locate_app_config_home("guanghechen")
   local script_path = eve.std.path.join(app_home, "osx/script/im-select/im-select")
 
-  ---@return eve.builtin.im.InputMethod|nil
+  ---@return eve.std.im.InputMethod|nil
   function M.get_input_method()
     if not vim.fn.executable(script_path) then
       eve.std.reporter.error({
@@ -60,7 +58,7 @@ if env.IS_MAC then
     })
   end
 
-  ---@param input_method                eve.builtin.im.InputMethod
+  ---@param input_method                eve.std.im.InputMethod
   ---@return nil
   function M.set_input_method(input_method)
     if not vim.fn.executable(script_path) then
