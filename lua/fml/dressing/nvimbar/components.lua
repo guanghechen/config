@@ -1153,7 +1153,7 @@ function M.sidebar(position, filetype, get_title)
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if vim.bo[bufnr].filetype == filetype then
-        if not fn.is_win_floating(winnr) then
+        if not eve.std.win.is_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end
       end

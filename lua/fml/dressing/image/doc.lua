@@ -430,7 +430,7 @@ function M.hover()
     return
   end
 
-  if hover and fn.is_win_valid(hover.winnr) and (hover.bufnr ~= bufnr_cur or vim.fn.mode() ~= "n") then
+  if hover and eve.std.win.is_valid(hover.winnr) and (hover.bufnr ~= bufnr_cur or vim.fn.mode() ~= "n") then
     M.hover_close()
   end
 
@@ -472,7 +472,7 @@ function M.hover()
       border = "rounded",
       style = "minimal",
     }
-    if hover and fn.is_win_valid(hover.winnr) then
+    if hover and eve.std.win.is_valid(hover.winnr) then
       winnr = hover.winnr ---@type integer
       vim.api.nvim_win_set_config(hover.winnr, wincfg)
 
@@ -505,7 +505,7 @@ function M.hover()
         if hover and not updated then
           updated = true
           local loc = hover.placement:state().loc
-          if fn.is_win_valid(hover.winnr) then
+          if eve.std.win.is_valid(hover.winnr) then
             vim.api.nvim_win_set_height(hover.winnr, loc.height)
             vim.api.nvim_win_set_width(hover.winnr, loc.width)
           end
@@ -538,7 +538,7 @@ end
 ---@return nil
 function M.hover_close()
   if hover then
-    if fn.is_win_valid(hover.winnr) then
+    if eve.std.win.is_valid(hover.winnr) then
       vim.api.nvim_win_close(hover.winnr, true)
     end
     hover.placement:close()

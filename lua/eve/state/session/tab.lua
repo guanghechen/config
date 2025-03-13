@@ -162,7 +162,7 @@ end
 ---@return integer|nil
 function Meta:get_winnr_command()
   local winnr_command = self.winnr_command:snapshot() ---@type integer
-  if fn.is_win_valid(winnr_command) then
+  if eve.std.win.is_valid(winnr_command) then
     return winnr_command
   else
     self.winnr_command:next(0)
@@ -173,7 +173,7 @@ end
 ---@return integer|nil
 function Meta:get_winnr_fixed()
   local winnr_fixed = self.winnr_fixed:snapshot() ---@type integer
-  if fn.is_win_valid(winnr_fixed) then
+  if eve.std.win.is_valid(winnr_fixed) then
     return winnr_fixed
   else
     self.winnr_fixed:next(0)
@@ -394,7 +394,7 @@ S = {
       return
     end
 
-    if not fn.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if not eve.std.win.is_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return
     end
 
@@ -445,7 +445,7 @@ S = {
       return
     end
 
-    local is_float = fn.is_win_floating(winnr) ---@type boolean
+    local is_float = eve.std.win.is_floating(winnr) ---@type boolean
     if not is_float then
       meta.winnr_fixed:next(winnr)
       meta.winnr_command:next(winnr)

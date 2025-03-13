@@ -80,7 +80,7 @@ local fixed_winsep = {
   end,
   ---@diagnostic disable-next-line: unused-local
   should_show = function(self, winnr)
-    return not fn.is_win_floating(winnr)
+    return not eve.std.win.is_floating(winnr)
   end,
 }
 

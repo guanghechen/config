@@ -12,6 +12,7 @@ local __mods = {
   reporter = "eve.std.reporter",
   string = "eve.std.string",
   tmux = "eve.std.tmux",
+  win = "eve.std.win",
 }
 
 ---@class eve.std
@@ -29,6 +30,7 @@ local __mods = {
 ---@field public reporter               eve.std.reporter
 ---@field public string                 eve.std.string
 ---@field public tmux                   eve.std.tmux
+---@field public win                    eve.std.win
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

@@ -360,19 +360,6 @@ function M.is_tab_valid(tabnr)
   return tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr)
 end
 
----@param winnr                         integer
----@return boolean
-function M.is_win_floating(winnr)
-  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  return config.relative ~= nil and config.relative ~= ""
-end
-
----@param winnr                         integer
----@return boolean
-function M.is_win_valid(winnr)
-  return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
-end
-
 ---@param modes                         string[]
 ---@param keys                          string|string[]
 ---@param cmd                           string|fun(): string|nil

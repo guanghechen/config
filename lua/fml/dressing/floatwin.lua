@@ -4,7 +4,7 @@ local fn = require("eve.builtin.fn")
 ---@param width                         integer|nil
 ---@return nil
 local function dressing_float_win(winnr, width)
-  if winnr == nil or not fn.is_win_valid(winnr) then
+  if winnr == nil or not eve.std.win.is_valid(winnr) then
     return
   end
 
