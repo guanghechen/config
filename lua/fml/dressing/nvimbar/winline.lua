@@ -103,7 +103,7 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 local function render(winnr)
-  if winnr == nil or not eve.std.win.is_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+  if winnr == nil or not eve.std.nvim.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
     return
   end
 

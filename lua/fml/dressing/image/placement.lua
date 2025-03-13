@@ -67,7 +67,7 @@ function M.new(bufnr, src, opts)
   self.opts = opts or {}
   self.opts.pos = self.opts.pos or { 1, 0 }
   self.bufnr = bufnr
-  self.augroup = fn.augroup("fml.dressing.image." .. self.id) ---@type integer
+  self.augroup = eve.std.nvim.augroup("fml.dressing.image." .. self.id) ---@type integer
   self.eids = {}
 
   if self.opts.auto_resize then

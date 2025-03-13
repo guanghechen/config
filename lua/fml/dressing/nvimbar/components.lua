@@ -913,7 +913,7 @@ function M.lsp(position)
   ---@return string
   local function get_text()
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    if not fn.is_buf_valid(bufnr) then
+    if not eve.std.nvim.is_buf_valid(bufnr) then
       return ""
     end
 
@@ -1151,7 +1151,7 @@ function M.sidebar(position, filetype, get_title)
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if vim.bo[bufnr].filetype == filetype then
-        if not eve.std.win.is_floating(winnr) then
+        if not eve.std.nvim.is_win_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end
       end

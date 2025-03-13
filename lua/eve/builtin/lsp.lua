@@ -10,17 +10,6 @@ local supports_method = {}
 ---@class eve.module.lsp
 local M = {}
 
----! Check if cursor is within range
----@param cursor                      eve.module.lsp.ISymbolPos
----@param range                       { start: eve.module.lsp.ISymbolPos, end: eve.module.lsp.ISymbolPos }
----@return boolean
-local function is_within_range(cursor, range)
-  local start = range.start ---@type eve.module.lsp.ISymbolPos
-  local finish = range["end"] ---@type eve.module.lsp.ISymbolPos
-  return (cursor.line > start.line or (cursor.line == start.line and cursor.character >= start.character))
-    and (cursor.line < finish.line or (cursor.line == finish.line and cursor.character <= finish.character))
-end
-
 ---@param client                        vim.lsp.Client
 ---@return nil
 function M.check_methods(client, bufnr)
@@ -53,38 +42,6 @@ function M.check_methods(client, bufnr)
   end
 end
 
----@param method                        string
----@param callback                      fun(client: vim.lsp.Client, bufnr: integer): nil
-function M.on_supports_method(method, callback)
-  supports_method[method] = supports_method[method] or setmetatable({}, { __mode = "k" })
-
-  return vim.api.nvim_create_autocmd("User", {
-    group = fn.augroup("trigger_lsp_supports_method"),
-    pattern = "LspSupportsMethod",
-    callback = function(args)
-      local bufnr = args.data.buffer ---@type number
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if client and method == args.data.method then
-        return callback(client, bufnr)
-      end
-    end,
-  })
-end
-
----@param bufnr                         integer
----@param method                        string
----@return boolean
-function M.has_support_method(bufnr, method)
-  method = method:find("/") and method or "textDocument/" .. method
-  local clients = vim.lsp.get_clients({ bufnr = bufnr })
-  for _, client in ipairs(clients) do
-    if client.supports_method(method) then
-      return true
-    end
-  end
-  return false
-end
-
 ---! Find the symbol path recursively
 ---@param cursor                      eve.module.lsp.ISymbolPos
 ---@param symbols                     any[]
@@ -112,6 +69,81 @@ function M.find_symbol_path(cursor, symbols)
     end
   end
   return nil
+end
+
+---@param bufnr                         integer
+---@param method                        string
+---@return boolean
+function M.has_support_method(bufnr, method)
+  method = method:find("/") and method or "textDocument/" .. method
+  local clients = vim.lsp.get_clients({ bufnr = bufnr })
+  for _, client in ipairs(clients) do
+    if client.supports_method(method) then
+      return true
+    end
+  end
+  return false
+end
+
+---! Check if cursor is within range
+---@param cursor                      eve.module.lsp.ISymbolPos
+---@param range                       { start: eve.module.lsp.ISymbolPos, end: eve.module.lsp.ISymbolPos }
+---@return boolean
+local function is_within_range(cursor, range)
+  local start = range.start ---@type eve.module.lsp.ISymbolPos
+  local finish = range["end"] ---@type eve.module.lsp.ISymbolPos
+  return (cursor.line > start.line or (cursor.line == start.line and cursor.character >= start.character))
+    and (cursor.line < finish.line or (cursor.line == finish.line and cursor.character <= finish.character))
+end
+
+---@param from                          string
+---@param to                            string
+---@param rename                        ?fun(): nil
+---@return nil
+---@see https://github.com/folke/snacks.nvim/blob/140204fde53531dd5dc5bd222975a9ff350747ad/lua/snacks/rename.lua#L51
+function M.on_rename(from, to, rename)
+  local changes = { files = { {
+    oldUri = vim.uri_from_fname(from),
+    newUri = vim.uri_from_fname(to),
+  } } }
+
+  local clients = vim.lsp.get_clients()
+  for _, client in ipairs(clients) do
+    if client.supports_method("workspace/willRenameFiles") then
+      local resp = client.request_sync("workspace/willRenameFiles", changes, 1000, 0)
+      if resp and resp.result ~= nil then
+        vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
+      end
+    end
+  end
+
+  if rename then
+    rename()
+  end
+
+  for _, client in ipairs(clients) do
+    if client.supports_method("workspace/didRenameFiles") then
+      client.notify("workspace/didRenameFiles", changes)
+    end
+  end
+end
+
+---@param method                        string
+---@param callback                      fun(client: vim.lsp.Client, bufnr: integer): nil
+function M.on_supports_method(method, callback)
+  supports_method[method] = supports_method[method] or setmetatable({}, { __mode = "k" })
+
+  return vim.api.nvim_create_autocmd("User", {
+    group = eve.std.nvim.augroup("trigger_lsp_supports_method"),
+    pattern = "LspSupportsMethod",
+    callback = function(args)
+      local bufnr = args.data.buffer ---@type number
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      if client and method == args.data.method then
+        return callback(client, bufnr)
+      end
+    end,
+  })
 end
 
 return M

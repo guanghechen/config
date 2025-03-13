@@ -73,7 +73,7 @@ function M.ruff()
         desc = "Organize Imports",
       },
     }
-    fn.bindkeys(keymaps, { bufnr = bufnr })
+    eve.std.nvim.bindkeys(keymaps, { bufnr = bufnr })
   end
 
   return {

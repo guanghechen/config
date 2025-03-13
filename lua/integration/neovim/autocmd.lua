@@ -7,7 +7,7 @@ if env.IS_MAC then
     local im = require("eve.builtin.im")
     local previous_mode = nil ---@type eve.e.VimMode|nil
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-      group = fn.augroup("auto_toggle_im"),
+      group = eve.std.nvim.augroup("auto_toggle_im"),
       callback = function()
         local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
         if previous_mode == "i" and current_mode == "n" then
@@ -21,7 +21,7 @@ end
 
 --- Auto create dirs when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd("BufWritePre", {
-  group = fn.augroup("auto_create_dirs"),
+  group = eve.std.nvim.augroup("auto_create_dirs"),
   callback = function(event)
     if event.match:match("^%w%w+:[\\/][\\/]") then
       return
@@ -33,7 +33,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
 --- Go to last loc when opening a buffer
 vim.api.nvim_create_autocmd("BufReadPost", {
-  group = fn.augroup("goto_last_location"),
+  group = eve.std.nvim.augroup("goto_last_location"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
     if vim.b[bufnr].eve_last_loc then
@@ -54,7 +54,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 
 --- Highlight on yank.
 vim.api.nvim_create_autocmd("TextYankPost", {
-  group = fn.augroup("highlight_on_yank"),
+  group = eve.std.nvim.augroup("highlight_on_yank"),
   callback = function()
     vim.highlight.on_yank()
   end,
@@ -62,7 +62,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 
 --- Check if we need to reload the file when it changed
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
-  group = fn.augroup("check_file_change"),
+  group = eve.std.nvim.augroup("check_file_change"),
   callback = function()
     if vim.o.buftype ~= "nofile" then
       vim.cmd.checktime()
@@ -114,7 +114,7 @@ vim.filetype.add({
 
 ---bigfile
 vim.api.nvim_create_autocmd("FileType", {
-  group = fn.augroup("filetype_bigfile"),
+  group = eve.std.nvim.augroup("filetype_bigfile"),
   pattern = "bigfile",
   callback = function(evt)
     local bufnr = evt.buf ---@type integer
@@ -129,7 +129,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---gitcommit
 vim.api.nvim_create_autocmd("FileType", {
-  group = fn.augroup("filetype_gitcommit"),
+  group = eve.std.nvim.augroup("filetype_gitcommit"),
   pattern = "gitcommit",
   callback = function()
     vim.opt_local.wrap = false
@@ -138,7 +138,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---html
 vim.api.nvim_create_autocmd("FileType", {
-  group = fn.augroup("filetype_html"),
+  group = eve.std.nvim.augroup("filetype_html"),
   pattern = "html",
   callback = function()
     vim.opt_local.wrap = false
@@ -147,7 +147,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---jsonc
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-  group = fn.augroup("filetype_jsonc"),
+  group = eve.std.nvim.augroup("filetype_jsonc"),
   pattern = {
     "*.json5",
     "*.jsonc",
@@ -163,7 +163,7 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 
 ---markdown
 vim.api.nvim_create_autocmd("FileType", {
-  group = fn.augroup("filetype_markdown"),
+  group = eve.std.nvim.augroup("filetype_markdown"),
   pattern = "markdown",
   callback = function()
     vim.opt_local.backupcopy = "yes" -- disable atomic writing
@@ -180,7 +180,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---text
 vim.api.nvim_create_autocmd("FileType", {
-  group = fn.augroup("filetype_text"),
+  group = eve.std.nvim.augroup("filetype_text"),
   pattern = "text",
   callback = function()
     vim.opt_local.backupcopy = "yes" -- disable atomic writing
@@ -197,7 +197,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 ---terminal
 vim.api.nvim_create_autocmd("TermOpen", {
-  group = fn.augroup("filetype_terminal"),
+  group = eve.std.nvim.augroup("filetype_terminal"),
   callback = function()
     vim.opt_local.number = false -- Disable line numbers
     vim.opt_local.relativenumber = false -- Disable relative numbers
@@ -210,7 +210,7 @@ vim.api.nvim_create_autocmd("TermOpen", {
 
 --- Close some filetypes with q
 vim.api.nvim_create_autocmd("FileType", {
-  group = fn.augroup("close_filetypes_with_q"),
+  group = eve.std.nvim.augroup("close_filetypes_with_q"),
   pattern = ft.get_quitable_with_q_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
@@ -230,7 +230,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 --- Disable autopairs
 vim.api.nvim_create_autocmd("FileType", {
-  group = fn.augroup("disable_autopairs"),
+  group = eve.std.nvim.augroup("disable_autopairs"),
   pattern = ft.get_disable_autopairs_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil

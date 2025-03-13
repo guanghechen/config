@@ -71,7 +71,7 @@ function M.setup(bufnr)
 
   local Placement = require("fml.dressing.image.placement")
 
-  local group = fn.augroup("fml.dressing.image")
+  local group = eve.std.nvim.augroup("fml.dressing.image")
   vim.api.nvim_create_autocmd({ "BufWipeout", "BufDelete" }, {
     group = group,
     callback = function(e)

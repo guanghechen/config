@@ -1,7 +1,7 @@
 local fn = require("eve.builtin.fn")
 local actions = require("integration.vscode.action")
 
-local mk = fn.make_keys
+local mk = eve.std.nvim.make_keys
 
 ---@param modes                         string[]
 ---@param keys                          string|string[]

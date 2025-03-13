@@ -9,12 +9,12 @@ local __mods = {
   fs = "eve.std.fs",
   json = "eve.std.json",
   md5 = "eve.std.md5",
+  nvim = "eve.std.nvim",
   path = "eve.std.path",
   reporter = "eve.std.reporter",
   shell = "eve.std.shell",
   string = "eve.std.string",
   tmux = "eve.std.tmux",
-  win = "eve.std.win",
 }
 
 ---@class eve.std
@@ -29,12 +29,12 @@ local __mods = {
 ---@field public fs                     eve.std.fs
 ---@field public json                   eve.std.json
 ---@field public md5                    eve.std.md5
+---@field public nvim                   eve.std.nvim
 ---@field public path                   eve.std.path
 ---@field public reporter               eve.std.reporter
 ---@field public shell                  eve.std.shell
 ---@field public string                 eve.std.string
 ---@field public tmux                   eve.std.tmux
----@field public win                    eve.std.win
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

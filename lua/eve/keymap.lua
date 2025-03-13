@@ -1,5 +1,5 @@
 local fn = require("eve.builtin.fn")
-local mk = fn.make_keys
+local mk = eve.std.nvim.make_keys
 
 ---! https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
 mk({ "n" }, "n", "'Nn'[v:searchforward].'zv'", "search: next result", true)

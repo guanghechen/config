@@ -99,7 +99,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = ft.TERM
   vim.bo[bufnr].swapfile = false
-  fn.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  eve.std.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
   return bufnr, true
 end
 

@@ -155,7 +155,7 @@ return {
     })
 
     vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
-      group = fn.augroup("nvim-lint"),
+      group = eve.std.nvim.augroup("nvim-lint"),
       callback = function()
         local spellcheck = state.lsp.spellcheck:snapshot() ---@type boolean
         if spellcheck then

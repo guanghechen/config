@@ -53,7 +53,7 @@ local refresh_float = Scheduler.new({
 })
 
 vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
-  group = fn.augroup("winsep_refresh"),
+  group = eve.std.nvim.augroup("winsep_refresh"),
   callback = function()
     refresh_fixed:schedule()
     refresh_float:schedule()

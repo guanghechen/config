@@ -9,7 +9,7 @@ local state = require("eve.state")
 ---@field public from { [1]: number, [2]: number }
 ---@field public to   { [1]: number, [2]: number }
 
-local illuminate_group = fn.augroup("fml.dressing.illumniate") ---@type integer
+local illuminate_group = eve.std.nvim.augroup("fml.dressing.illumniate") ---@type integer
 local ns = vim.api.nvim_create_namespace("vim_lsp_references") ---@type integer
 local ns2 = vim.api.nvim_create_namespace("nvim.lsp.references") ---@type integer
 local timer = vim.uv.new_timer() ---@type uv.uv_timer_t|nil

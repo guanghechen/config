@@ -30,7 +30,7 @@ function M.new_with_buf(context)
   local tabtype = setting.tabtypes.NORMAL ---@type string
   local bufs = {} ---@type eve.t.state.tab.buf.state[]
 
-  if bufnr ~= nil and fn.is_buf_valid(bufnr) and editor.is_buf_sourcefile(bufnr) then
+  if bufnr ~= nil and eve.std.nvim.is_buf_valid(bufnr) and editor.is_buf_sourcefile(bufnr) then
     bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
   end
 
@@ -38,7 +38,7 @@ function M.new_with_buf(context)
   state.tab.set(tabnr, meta)
   state.tab.tab_history:push(tabnr)
 
-  if bufnr ~= nil and fn.is_buf_valid(bufnr) then
+  if bufnr ~= nil and eve.std.nvim.is_buf_valid(bufnr) then
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end
   return tabnr

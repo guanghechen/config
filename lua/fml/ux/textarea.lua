@@ -215,7 +215,7 @@ function M:open(params)
     vim.bo[bufnr].buftype = "nofile"
     vim.bo[bufnr].filetype = self.filetype
     vim.bo[bufnr].swapfile = false
-    fn.bindkeys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
+    eve.std.nvim.bindkeys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
     vim.api.nvim_create_autocmd("BufDelete", {
       once = true,

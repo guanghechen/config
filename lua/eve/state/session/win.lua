@@ -48,12 +48,12 @@ local M = {}
 S = {
   __meta_map__ = {}, ---@type table<integer, eve.t.state.win.meta.state>
   get = function(winnr)
-    if winnr ~= nil and eve.std.win.is_valid(winnr) then
+    if winnr ~= nil and eve.std.nvim.is_win_valid(winnr) then
       return S.__meta_map__[winnr]
     end
   end,
   set = function(winnr, meta)
-    if winnr ~= nil and eve.std.win.is_valid(winnr) then
+    if winnr ~= nil and eve.std.nvim.is_win_valid(winnr) then
       S.__meta_map__[winnr] = meta
       return meta
     end
@@ -82,7 +82,7 @@ S = {
     end
   end,
   resolve = function(winnr)
-    if winnr == nil or not eve.std.win.is_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if winnr == nil or not eve.std.nvim.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return nil
     end
 
@@ -144,7 +144,7 @@ S = {
     end
   end,
   locate_symbols = function(winnr, callback)
-    if winnr == nil or not eve.std.win.is_valid(winnr) then
+    if winnr == nil or not eve.std.nvim.is_win_valid(winnr) then
       callback(false)
       return
     end
@@ -267,11 +267,11 @@ S = {
     )
   end,
   on_buf_enter = function(winnr, bufnr)
-    if not fn.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if not eve.std.nvim.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
       return
     end
 
-    if not eve.std.win.is_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if not eve.std.nvim.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return
     end
 

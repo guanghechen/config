@@ -209,7 +209,7 @@ local keymaps = {
           end,
         },
       }
-      fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+      eve.std.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
       local height = printer:count_lines() ---@type integer
       local opts = {
@@ -361,7 +361,7 @@ return {
       untracked = { text = "┆" },
     },
     on_attach = function(bufnr)
-      fn.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
+      eve.std.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
       vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<cr>", {
         buffer = bufnr,
         noremap = true,

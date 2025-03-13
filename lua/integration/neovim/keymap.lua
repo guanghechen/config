@@ -1,8 +1,8 @@
 local fn = require("eve.builtin.fn")
 local command = require("eve.command")
 
-local mk = fn.make_keys
-local ms = fn.make_shortcut
+local mk = eve.std.nvim.make_keys
+local ms = eve.std.nvim.make_shortcut
 local K = command.definitions ---@type eve.command.definitions
 
 --#enhance------------------------------------------------------------------------------------------

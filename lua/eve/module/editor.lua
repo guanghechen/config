@@ -20,7 +20,7 @@ M.winpicker_filters = {
   ---@param winnr                       integer
   ---@return boolean
   projectable = function(winnr)
-    if vim.wo[winnr].winfixbuf or eve.std.win.is_floating(winnr) then
+    if vim.wo[winnr].winfixbuf or eve.std.nvim.is_win_floating(winnr) then
       return false
     end
 
@@ -34,7 +34,7 @@ M.winpicker_filters = {
   ---@param winnr                       integer
   ---@return boolean
   swappable = function(winnr)
-    if vim.wo[winnr].winfixbuf or eve.std.win.is_floating(winnr) then
+    if vim.wo[winnr].winfixbuf or eve.std.nvim.is_win_floating(winnr) then
       return false
     end
 
@@ -59,7 +59,7 @@ end
 ---@param winnr_source                  integer|nil
 ---@return integer|nil
 function M.pick_sourcefile_win(winnr_source)
-  if winnr_source ~= nil and eve.std.win.is_valid(winnr_source) and M.winpicker_filters.sourcefile(winnr_source) then
+  if winnr_source ~= nil and eve.std.nvim.is_win_valid(winnr_source) and M.winpicker_filters.sourcefile(winnr_source) then
     return winnr_source
   end
 
@@ -108,7 +108,7 @@ function M.find_winnr_fixed(filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if filetype == nil or vim.bo[bufnr].filetype == filetype and not eve.std.win.is_floating(winnr) then
+    if filetype == nil or vim.bo[bufnr].filetype == filetype and not eve.std.nvim.is_win_floating(winnr) then
       return winnr
     end
   end
@@ -121,7 +121,7 @@ function M.find_winnr_floating(filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].filetype == filetype and eve.std.win.is_floating(winnr) then
+    if vim.bo[bufnr].filetype == filetype and eve.std.nvim.is_win_floating(winnr) then
       return winnr
     end
   end

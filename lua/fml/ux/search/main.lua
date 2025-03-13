@@ -129,7 +129,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
-  fn.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  eve.std.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.schedule(function()
     vim.cmd("stopinsert")

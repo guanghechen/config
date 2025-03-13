@@ -76,7 +76,7 @@ local chat = state.widget.wrap({
           return
         end
 
-        if eve.std.win.is_floating(winnr) then
+        if eve.std.nvim.is_win_floating(winnr) then
           local cfg_current = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
           local cfg_customized = config.win_cfg() ---@type vim.api.keyset.win_config
           local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
@@ -97,7 +97,7 @@ local chat = state.widget.wrap({
         if not vim.b[bufnr].fml_key_bound then
           vim.b[bufnr].fml_key_bound = true
           local keymaps = state.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
-          fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+          eve.std.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 
         vim.cmd.stopinsert()

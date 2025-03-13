@@ -65,7 +65,7 @@ function M.pick_window(filter, winnr_source, split_as_needed)
   if N < 1 then
     if split_as_needed then
       for _, winnr in ipairs(winnrs) do
-        if not eve.std.win.is_floating(winnr) then
+        if not eve.std.nvim.is_win_floating(winnr) then
           vim.api.nvim_set_current_win(winnr)
           vim.cmd("vsplit")
           return vim.api.nvim_get_current_win() ---@type integer
