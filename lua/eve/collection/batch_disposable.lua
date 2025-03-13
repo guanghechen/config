@@ -1,7 +1,5 @@
 local __module_name__ = "eve.collection.batch_disposable" ---@type string
 
-local BatchHandler = require("eve.collection.batch_handler")
-
 ---@class eve.collection.IBatchDisposable : eve.collection.IDisposable
 ---@field public dispose_all            fun(disposables: eve.collection.IDisposable[]): nil
 ---@field public add_disposable         fun(self: eve.collection.IBatchDisposable, disposable: eve.collection.IDisposable): nil
@@ -29,7 +27,7 @@ function M.dispose_all(disposables)
     return
   end
 
-  local handler = BatchHandler.new()
+  local handler = eve.c.BatchHandler.new()
   for _, disposable in ipairs(disposables) do
     handler:run(function()
       disposable:dispose()

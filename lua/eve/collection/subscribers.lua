@@ -1,5 +1,3 @@
-local BatchHandler = require("eve.collection.batch_handler")
-
 ---@class eve.collection.IUnsubscribable
 ---@field public unsubscribe            fun(self: eve.collection.IUnsubscribable):nil
 
@@ -66,7 +64,7 @@ function M:dispose()
 
   self._disposed = true
 
-  local handler = BatchHandler.new()
+  local handler = eve.c.BatchHandler.new()
   local items = self._items
 
   local i = 1
@@ -103,7 +101,7 @@ function M:notify(value, value_prev)
     return
   end
 
-  local handler = BatchHandler:new()
+  local handler = eve.c.BatchHandler:new()
   local items = self._items
 
   local i = 1

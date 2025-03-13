@@ -1,5 +1,3 @@
-local Observable = require("eve.collection.observable")
-
 ---@class eve.collection.IDirtier : eve.collection.IObservable -- boolean>
 ---@field public is_clean               fun(self: eve.collection.IDirtier): boolean
 ---@field public is_dirty               fun(self: eve.collection.IDirtier): boolean
@@ -14,7 +12,7 @@ local Observable = require("eve.collection.observable")
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, Observable)
+setmetatable(M, eve.c.Observable)
 
 ---@param props eve.collection.dirtier.IProps
 ---@return eve.collection.Dirtier
@@ -22,7 +20,7 @@ function M.new(props)
   local dirty = props.dirty ---@type boolean
   local equals = props.equals or eve.std.fn.falsy
 
-  local self = setmetatable(Observable.new({ initial_value = dirty, equals = equals }), M)
+  local self = setmetatable(eve.c.Observable.new({ initial_value = dirty, equals = equals }), M)
   ---@cast self                         eve.collection.Dirtier
 
   return self

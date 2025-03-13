@@ -1,7 +1,5 @@
 local __module_name__ = "eve.collection.history" ---@type string
 
-local CircularStack = require("eve.collection.circular_stack")
-
 ---@class eve.collection.IHistory
 ---@field public name                   string
 ---@field public equals                 eve.t.IEquals
@@ -66,7 +64,7 @@ function M.new(props)
   self.name = name
   self.equals = equals
   self._present = 0
-  self._stack = CircularStack.new({ capacity = capacity })
+  self._stack = eve.c.CircularStack.new({ capacity = capacity })
   return self
 end
 
@@ -78,7 +76,7 @@ function M.deserialize(props)
   local self = setmetatable({}, M)
   self.name = props.name
   self.equals = props.equals or eve.std.fn.equals_shallow ---@type eve.t.IEquals
-  self._stack = CircularStack.from_array(data.stack, props.capacity)
+  self._stack = eve.c.CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
 end
@@ -135,7 +133,7 @@ function M:fork(params)
   instance.name = params.name
   instance.equals = self.equals
   instance._present = self._present
-  instance._stack = CircularStack.from(self._stack)
+  instance._stack = eve.c.CircularStack.from(self._stack)
   return instance
 end
 

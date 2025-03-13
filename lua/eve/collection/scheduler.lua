@@ -1,7 +1,5 @@
 local __module_name__ = "eve.collection.scheduler" ---@type string
 
-local Observable = require("eve.collection.observable")
-
 ---@class eve.collection.IScheduler
 ---@field public name                   string
 ---@field public cancel                 fun(self: eve.collection.IScheduler): nil
@@ -56,7 +54,7 @@ function M.new(props)
   self._silent = silent
 
   self._task = task
-  self._value = Observable.from_value(nil, equals)
+  self._value = eve.c.Observable.from_value(nil, equals)
 
   self._tick_alive = 0
   self._tick_scheduled = 1

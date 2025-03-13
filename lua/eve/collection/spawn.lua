@@ -1,7 +1,5 @@
 --- https://github.com/folke/snacks.nvim/blob/6917597f6d22d79fcd0bf9b0eb7845f7ffdc80a0/lua/snacks/util/spawn.lua
 
-local debugger = require("eve.std.debug")
-
 ---@param handle                        uv.uv_handle_t|nil
 ---@return nil
 local function close(handle)
@@ -81,7 +79,7 @@ function Proc:debug(opts)
   if out ~= "" then
     opts.footer = "# Output\n```\n" .. out .. "\n```"
   end
-  return debugger.cmd(opts)
+  return eve.std.debug.cmd(opts)
 end
 
 ---@return nil
@@ -181,7 +179,7 @@ function Proc:on_exit()
   end)
 end
 
----@class eve.collection.spawn
+---@class eve.collection.Spawn
 local M = {}
 
 ---@class eve.collection.spawn.IOptions: uv.spawn.options,{}

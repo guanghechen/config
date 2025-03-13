@@ -1,5 +1,3 @@
-local Observable = require("eve.collection.observable")
-
 ---@class eve.collection.ITicker: eve.collection.IObservable
 ---@field public tick                   fun(self: eve.collection.ITicker): nil
 
@@ -10,13 +8,13 @@ local Observable = require("eve.collection.observable")
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, Observable)
+setmetatable(M, eve.c.Observable)
 
 ---@param props                         ?eve.collection.ticker.IProps
 ---@return eve.collection.Ticker
 function M.new(props)
   local start = props and props.start or 0 ---@type integer
-  local self = setmetatable(Observable.from_value(start), M)
+  local self = setmetatable(eve.c.Observable.from_value(start), M)
   ---@cast self                         eve.collection.Ticker
   return self
 end

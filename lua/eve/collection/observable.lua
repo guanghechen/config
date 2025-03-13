@@ -1,8 +1,5 @@
 local __module_name__ = "eve.collection.observable" ---@type string
 
-local BatchDisposable = require("eve.collection.batch_disposable")
-local Subscribers = require("eve.collection.subscribers")
-
 ---@class eve.collection.observable.INextOptions
 ---@field public strict                 ?boolean Whether to throw an error if the observable disposed.
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
@@ -30,7 +27,7 @@ local noop_unsubscribable = { unsubscribe = eve.std.fn.noop }
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, BatchDisposable)
+setmetatable(M, eve.c.BatchDisposable)
 
 ---@param props                         eve.collection.observable.IProps
 ---@return eve.collection.Observable
@@ -40,7 +37,7 @@ function M.new(props)
   local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type eve.t.T
 
-  local self = setmetatable(BatchDisposable.new(), M)
+  local self = setmetatable(eve.c.BatchDisposable.new(), M)
   ---@cast self                         eve.collection.Observable
 
   self.equals = equals
@@ -48,7 +45,7 @@ function M.new(props)
   self._readonly = readonly
   self._value = normalize(initial_value)
   self._value_last_notified = nil
-  self._subscribers = Subscribers.new()
+  self._subscribers = eve.c.Subscribers.new()
   return self
 end
 
@@ -70,7 +67,7 @@ function M:dispose()
     return
   end
 
-  BatchDisposable.dispose(self)
+  eve.c.BatchDisposable.dispose(self)
 
   -- Dispose subscribers
   self._subscribers:dispose()

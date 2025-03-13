@@ -1,5 +1,3 @@
-local History = require("eve.collection.history")
-
 ---@class eve.collection.IAdvanceHistory
 ---@field public name                   string
 ---@field public equals                 eve.t.IEquals
@@ -55,7 +53,7 @@ function M.new(props)
   local capacity = props.capacity ---@type integer
   local equals = props.equals ---@type eve.t.IEquals|nil
   local validate = props.validate or default_validate ---@type fun(element: eve.t.T): boolean
-  local history = History.new({
+  local history = eve.c.History.new({
     name = name,
     capacity = capacity,
     equals = equals,
@@ -75,7 +73,7 @@ function M.deserialize(props)
   local data = props.data ---@type eve.collection.history.ISerializedData
 
   ---@type eve.collection.IHistory
-  local history = History.deserialize({
+  local history = eve.c.History.deserialize({
     data = data,
     name = props.name,
     capacity = props.capacity,
