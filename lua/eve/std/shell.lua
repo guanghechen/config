@@ -1,7 +1,6 @@
-local __module_name__ = "eve.builtin.shell" ---@type string
+local __module_name__ = "eve.std.shell" ---@type string
 
 local env = require("eve.std.env")
-local reporter = require("eve.std.reporter")
 
 ---@class eve.builtin.terminal
 ---@field public format_command         fun(command?: string): string
@@ -30,7 +29,7 @@ elseif env.IS_WIN then
     end
   end
 else
-  reporter.error({
+  eve.std.reporter.error({
     from = __module_name__,
     subject = "format_command",
     message = "Bad env",

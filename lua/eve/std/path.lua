@@ -1,7 +1,9 @@
-local SEP = eve.std.env.PATH_SEP ---@type string
-local HOME_NVIM_CACHE = eve.std.env.HOME_NVIM_CACHE ---@type string
-local HOME_NVIM_CONFIG = eve.std.env.HOME_NVIM_CONFIG ---@type string
-local HOME_CONTEXT = eve.std.env.HOME_CONTEXT ---@type string
+local env = require("eve.std.env")
+
+local SEP = env.PATH_SEP ---@type string
+local HOME_NVIM_CACHE = env.HOME_NVIM_CACHE ---@type string
+local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG ---@type string
+local HOME_CONTEXT = env.HOME_CONTEXT ---@type string
 
 ---@class eve.std.path.reposcope_map
 local repo_map = {
@@ -76,7 +78,7 @@ end
 ---@param filepath                      string
 ---@return boolean
 function M.is_absolute(filepath)
-  if eve.std.env.IS_WIN then
+  if env.IS_WIN then
     return #filepath > 1 and filepath:sub(2, 2) == ":"
   end
   return string.sub(filepath, 1, 1) == SEP
@@ -252,7 +254,7 @@ function M.split(filepath)
     table.insert(pieces, 1, "")
   end
 
-  if eve.std.env.IS_WIN and #filepath > 1 and filepath:sub(2, 2) == ":" then
+  if env.IS_WIN and #filepath > 1 and filepath:sub(2, 2) == ":" then
     pieces[1] = pieces[1]:upper()
   end
   return pieces

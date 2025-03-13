@@ -2,7 +2,7 @@ local __module_name__ = "eve.module.clipboard" ---@type string
 
 local env = require("eve.std.env")
 local reporter = require("eve.std.reporter")
-local shell = require("eve.builtin.shell")
+local shell = require("eve.std.shell")
 
 ---@class eve.module.clipboard.img
 ---@field public has_image              fun(): boolean

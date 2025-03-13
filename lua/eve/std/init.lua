@@ -11,6 +11,7 @@ local __mods = {
   md5 = "eve.std.md5",
   path = "eve.std.path",
   reporter = "eve.std.reporter",
+  shell = "eve.std.shell",
   string = "eve.std.string",
   tmux = "eve.std.tmux",
   win = "eve.std.win",
@@ -30,6 +31,7 @@ local __mods = {
 ---@field public md5                    eve.std.md5
 ---@field public path                   eve.std.path
 ---@field public reporter               eve.std.reporter
+---@field public shell                  eve.std.shell
 ---@field public string                 eve.std.string
 ---@field public tmux                   eve.std.tmux
 ---@field public win                    eve.std.win
