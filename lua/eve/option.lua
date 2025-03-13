@@ -1,4 +1,4 @@
-local env = require("eve.builtin.env")
+local env = require("eve.std.env")
 local icons = require("eve.constant.icon")
 
 if env.IS_MAC or env.IS_NIX or env.IS_WSL then

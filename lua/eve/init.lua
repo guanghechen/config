@@ -2,7 +2,7 @@
 local M = {
   G = require("eve.builtin.G"),
   debug = require("eve.std.debug"),
-  env = require("eve.builtin.env"),
+  env = require("eve.std.env"),
   fn = require("eve.builtin.fn"),
 }
 

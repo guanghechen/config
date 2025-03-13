@@ -1,6 +1,6 @@
 local __module_name__ = "ghc.lsp.common" ---@type string
 
-local env = require("eve.builtin.env")
+local env = require("eve.std.env")
 local fn = require("eve.builtin.fn")
 local fs = require("eve.builtin.fs")
 local lsp = require("eve.builtin.lsp")

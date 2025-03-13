@@ -1,6 +1,6 @@
 local __module_name__ = "eve.module.clipboard" ---@type string
 
-local env = require("eve.builtin.env")
+local env = require("eve.std.env")
 local reporter = require("eve.builtin.reporter")
 local shell = require("eve.builtin.shell")
 
