@@ -626,7 +626,7 @@ function M.load(raw_data)
   tab_history:load({ present = #stack, stack = stack })
   S.tab_history = tab_history
 
-  local filepath2bufnr = eve.std.vim.filepath2bufnr() ---@type table<string, integer>
+  local filepath2bufnr = eve.std.nvim.filepath2bufnr() ---@type table<string, integer>
   for _, data_tab in ipairs(data.list) do
     local tabnr = tabnrs[data_tab.tabid] ---@type integer|nil
     local bufid_sourcefile = 0 ---@type integer

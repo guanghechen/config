@@ -169,7 +169,7 @@ local keymaps = {
       printer
         :lf()
         :line(
-          string.format("%s, %s (%s)", author_name, eve.std.vim.time_ago(author_timestamp or os.time()), author_date),
+          string.format("%s, %s (%s)", author_name, eve.std.nvim.time_ago(author_timestamp or os.time()), author_date),
           { { hlname = "Title", coll = 0, colr = -1 } }
         )
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })

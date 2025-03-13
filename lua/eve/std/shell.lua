@@ -2,7 +2,7 @@ local __module_name__ = "eve.std.shell" ---@type string
 
 local env = require("eve.std.env")
 
----@class eve.builtin.terminal
+---@class eve.std.shell
 ---@field public format_command         fun(command?: string): string
 local M = {}
 
