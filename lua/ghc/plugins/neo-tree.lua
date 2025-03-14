@@ -347,7 +347,7 @@ return {
     }
 
     local function on_move(data)
-      eve.std.lsp.on_rename(data.source, data.destination)
+      eve.lsp.on_rename(data.source, data.destination)
     end
 
     local events = require("neo-tree.events")

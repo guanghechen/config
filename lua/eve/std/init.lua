@@ -1,7 +1,6 @@
 ---@class eve.std.__mods
 local __mods = {
   im = "eve.std.im",
-  lsp = "eve.std.lsp",
   nvim = "eve.std.nvim",
   shell = "eve.std.shell",
   tmux = "eve.std.tmux",

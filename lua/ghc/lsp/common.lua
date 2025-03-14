@@ -134,13 +134,13 @@ end
 ---@param bufnr                         integer
 ---@diagnostic disable-next-line: unused-local
 function M.on_attach(client, bufnr)
-  local has_support_codeLens = eve.std.lsp.has_support_method(bufnr, "codeLens") ---@type boolean
-  local has_support_codeAction = eve.std.lsp.has_support_method(bufnr, "codeAction") ---@type boolean
-  local has_support_rename = eve.std.lsp.has_support_method(bufnr, "rename") ---@type boolean
-  local has_support_documentHighlight = eve.std.lsp.has_support_method(bufnr, "documentHighlight") ---@type boolean
+  local has_support_codeLens = eve.lsp.has_support_method(bufnr, "codeLens") ---@type boolean
+  local has_support_codeAction = eve.lsp.has_support_method(bufnr, "codeAction") ---@type boolean
+  local has_support_rename = eve.lsp.has_support_method(bufnr, "rename") ---@type boolean
+  local has_support_documentHighlight = eve.lsp.has_support_method(bufnr, "documentHighlight") ---@type boolean
 
   if client then
-    eve.std.lsp.check_methods(client, bufnr)
+    eve.lsp.check_methods(client, bufnr)
   end
 
   ---@type eve.t.IKeymap[]

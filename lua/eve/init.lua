@@ -8,6 +8,7 @@ local __mods = {
   fs = "eve.builtin.fs",
   is = "eve.builtin.is",
   json = "eve.builtin.json",
+  lsp = "eve.builtin.lsp",
   oxi = "eve.builtin.oxi",
   path = "eve.builtin.path",
   reporter = "eve.builtin.reporter",
@@ -25,6 +26,7 @@ local __mods = {
 ---@field public fs                     eve.builtin.fs
 ---@field public is                     eve.builtin.is
 ---@field public json                   eve.builtin.json
+---@field public lsp                    eve.builtin.lsp
 ---@field public oxi                    eve.builtin.oxi
 ---@field public path                   eve.builtin.path
 ---@field public reporter               eve.builtin.reporter

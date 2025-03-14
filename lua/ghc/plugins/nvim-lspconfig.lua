@@ -59,7 +59,7 @@ return {
       local client = vim.lsp.get_client_by_id(ctx.client_id)
       if client then
         for bufnr in pairs(client.attached_buffers) do
-          eve.std.lsp.check_methods(client, bufnr)
+          eve.lsp.check_methods(client, bufnr)
         end
       end
       return ret
@@ -67,7 +67,7 @@ return {
 
     -- inlay hints
     ---@diagnostic disable-next-line: unused-local
-    eve.std.lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
+    eve.lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
         local enable_inlay_hints = state.lsp.inlay_hints:snapshot() ---@type boolean
         vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
@@ -77,7 +77,7 @@ return {
     -- code lens
     if vim.lsp.codelens then
       ---@diagnostic disable-next-line: unused-local
-      eve.std.lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
+      eve.lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
         local enable_code_lens = state.lsp.code_lens:snapshot() ---@type boolean
         if enable_code_lens and vim.bo[bufnr].buftype == "" then
           vim.lsp.codelens.refresh()

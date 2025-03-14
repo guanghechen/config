@@ -17,7 +17,7 @@ local function fetch_data(method, additional_params, callback)
   end
 
   local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
-  if not eve.std.lsp.has_support_method(bufnr_sourcefile, method) then
+  if not eve.lsp.has_support_method(bufnr_sourcefile, method) then
     eve.reporter.error({
       from = __module_name__,
       subject = "fetch_data",
