@@ -18,7 +18,6 @@ else
     theme = theme,
     transparency = state.theme.transparency:snapshot(),
     persistent = true,
-    filepath = setting.paths.theme,
   })
 
   state.theme.theme:next(theme)

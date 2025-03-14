@@ -12,7 +12,6 @@ local setting = require("eve.constant.setting")
 ---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
 ---@field public persistent             boolean
----@field public filepath               ?string
 ---@field public nsnr                   ?integer
 
 ---@class eve.state.theme.data
@@ -48,6 +47,11 @@ local integrations = {
   "treesitter",
   "plugin",
 }
+
+---@return string
+local function get_theme_path()
+  return eve.std.path.locate_context_filepath("theme")
+end
 
 ---@return eve.state.theme.data
 function M.defaults()
@@ -133,7 +137,6 @@ function M.load(raw_data)
         local theme = params.theme ---@type eve.e.Theme
         local transparency = params.transparency ---@type boolean
         local persistent = params.persistent ---@type boolean
-        local filepath = params.filepath ---@type string|nil
         local nsnr = params.nsnr or 0 ---@type integer
 
         local scheme = _state.get_scheme(theme)
@@ -202,8 +205,9 @@ function M.load(raw_data)
           end
 
           uxTheme:apply({ nsnr = nsnr, scheme = scheme })
-          if persistent and filepath ~= nil then
-            uxTheme:compile({ nsnr = 0, scheme = scheme, filepath = filepath })
+          if persistent then
+            local theme_path = get_theme_path() ---@type string
+            uxTheme:compile({ nsnr = 0, scheme = scheme, filepath = theme_path })
           end
           _state.set_term_colors(scheme)
         end
@@ -228,15 +232,16 @@ function M.load(raw_data)
         local theme = _state.theme:snapshot() ---@type eve.e.Theme
         local transparency = _state.transparency:snapshot() ---@type boolean
 
-        if force or not eve.std.path.is_exist(setting.paths.theme) then
+        local theme_path = get_theme_path() ---@type string
+        if force or not eve.std.path.is_exist(theme_path) then
           _state.apply_theme({
             theme = theme,
             transparency = transparency,
             persistent = true,
-            filepath = setting.paths.theme,
+            filepath = theme_path,
           })
         else
-          dofile(setting.paths.theme)
+          dofile(theme_path)
 
           local scheme = _state.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
           if scheme ~= nil then

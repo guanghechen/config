@@ -42,11 +42,6 @@ M.togglers = {
   "wrap_local",
 }
 
----@class eve.constant.setting.paths
-M.paths = {
-  theme = eve.std.path.locate_context_filepath("theme"),
-}
-
 ---@class eve.constant.setting.sessions
 M.sessions = {
   persistent_options = table.concat({
