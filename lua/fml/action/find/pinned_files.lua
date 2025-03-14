@@ -6,7 +6,7 @@ local M = {}
 
 ---@return nil
 function M.find_pinned_files()
-  local cwd = eve.std.path.cwd() ---@type string
+  local cwd = eve.path.cwd() ---@type string
 
   select_files({
     cwd = cwd,
@@ -17,7 +17,7 @@ function M.find_pinned_files()
       local filepaths = {} ---@type string[]
       local pinned_filepaths = state.bookmark.pinned:snapshot() ---@type string[]
       for _, filepath in ipairs(pinned_filepaths) do
-        local relative_filepath = eve.std.path.relative(cwd, filepath, true) ---@type string
+        local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
         table.insert(filepaths, relative_filepath)
       end
       return filepaths

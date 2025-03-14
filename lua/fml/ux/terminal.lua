@@ -64,7 +64,7 @@ function M.new(props)
   vim.list_extend(keymaps, props.keymaps or {})
 
   local cmd = shell.format_command(props.cmd) ---@type string
-  local cmd_cwd = props.cwd or eve.std.path.cwd() ---@type string
+  local cmd_cwd = props.cwd or eve.path.cwd() ---@type string
   local cmd_env = props.env ---@type table<string, string>|nil
   local permanent = not not props.permanent ---@type boolean
   local title = props.title ---@type string|nil

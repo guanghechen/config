@@ -1,9 +1,11 @@
-local SEP = eve.env.PATH_SEP ---@type string
-local HOME_NVIM_CACHE = eve.env.HOME_NVIM_CACHE ---@type string
-local HOME_NVIM_CONFIG = eve.env.HOME_NVIM_CONFIG ---@type string
-local HOME_CONTEXT = eve.env.HOME_CONTEXT ---@type string
+local env = require("eve.env")
 
----@class eve.std.path.reposcope_map
+local SEP = env.PATH_SEP ---@type string
+local HOME_NVIM_CACHE = env.HOME_NVIM_CACHE ---@type string
+local HOME_NVIM_CONFIG = env.HOME_NVIM_CONFIG ---@type string
+local HOME_CONTEXT = env.HOME_CONTEXT ---@type string
+
+---@class eve.builtin.path.reposcope_map
 local repo_map = {
   public = {
     [".config"] = {
@@ -46,7 +48,7 @@ local repo_map = {
   },
 }
 
----@class eve.std.path
+---@class eve.builtin.path
 local M = {}
 
 ---@param filepath                      string
@@ -76,7 +78,7 @@ end
 ---@param filepath                      string
 ---@return boolean
 function M.is_absolute(filepath)
-  if eve.env.IS_WIN then
+  if env.IS_WIN then
     return #filepath > 1 and filepath:sub(2, 2) == ":"
   end
   return string.sub(filepath, 1, 1) == SEP
@@ -252,7 +254,7 @@ function M.split(filepath)
     table.insert(pieces, 1, "")
   end
 
-  if eve.env.IS_WIN and #filepath > 1 and filepath:sub(2, 2) == ":" then
+  if env.IS_WIN and #filepath > 1 and filepath:sub(2, 2) == ":" then
     pieces[1] = pieces[1]:upper()
   end
   return pieces

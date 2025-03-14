@@ -10,7 +10,7 @@ eve.setup_state()
 require("eve.state.autocmd")
 
 ---! Reload session if not specify file and current directory is a git repository.
-if eve.std.path.is_repo_git() then
+if eve.path.is_repo_git() then
   local state = require("eve.state")
   if state.flight.autoload:snapshot() then
     local session = require("eve.module.session")

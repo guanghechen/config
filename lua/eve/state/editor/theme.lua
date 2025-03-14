@@ -50,7 +50,7 @@ local integrations = {
 
 ---@return string
 local function get_theme_path()
-  return eve.std.path.locate_context_filepath("theme")
+  return eve.path.locate_context_filepath("theme")
 end
 
 ---@return eve.state.theme.data
@@ -233,7 +233,7 @@ function M.load(raw_data)
         local transparency = _state.transparency:snapshot() ---@type boolean
 
         local theme_path = get_theme_path() ---@type string
-        if force or not eve.std.path.is_exist(theme_path) then
+        if force or not eve.path.is_exist(theme_path) then
           _state.apply_theme({
             theme = theme,
             transparency = transparency,

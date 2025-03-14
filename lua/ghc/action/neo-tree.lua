@@ -8,7 +8,7 @@ local function check_could_reveal(cwd)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer|nil
   if bufnr ~= nil and eve.std.nvim.is_buf_valid(bufnr) then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    return eve.std.path.is_under(cwd, filepath)
+    return eve.path.is_under(cwd, filepath)
   end
   return false
 end
@@ -78,25 +78,25 @@ local widgets = {
     name = "fs-cwd",
     source = "filesystem",
     position = "float",
-    cwd = eve.std.path.cwd,
+    cwd = eve.path.cwd,
   }),
   fs_workspace = create_widget({
     name = "fs-workspace",
     source = "filesystem",
     position = "float",
-    cwd = eve.std.path.workspace,
+    cwd = eve.path.workspace,
   }),
   git_cwd = create_widget({
     name = "git-cwd",
     source = "git_status",
     position = "float",
-    cwd = eve.std.path.cwd,
+    cwd = eve.path.cwd,
   }),
   git_workspace = create_widget({
     name = "git-workspace",
     source = "git_status",
     position = "float",
-    cwd = eve.std.path.workspace,
+    cwd = eve.path.workspace,
   }),
 }
 
@@ -112,7 +112,7 @@ function M.fs_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = eve.std.path.cwd(),
+    dir = eve.path.cwd(),
     position = "left",
     reveal = false,
     toggle = toggle,
@@ -128,7 +128,7 @@ function M.fs_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = eve.std.path.workspace(),
+    dir = eve.path.workspace(),
     position = "left",
     reveal = false,
     toggle = toggle,
@@ -141,7 +141,7 @@ function M.fs_reveal()
     action = "focus",
     source = "filesystem",
     position = "left",
-    reveal = check_could_reveal(eve.std.path.workspace()),
+    reveal = check_could_reveal(eve.path.workspace()),
     toggle = false,
   })
 end

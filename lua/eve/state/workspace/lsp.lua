@@ -37,7 +37,7 @@ local function is_valid_breakpoint(workspace, breakpoint)
     and (breakpoint.hit_condition == nil or type(breakpoint.hit_condition) == "string")
     and (breakpoint.log_message == nil or type(breakpoint.log_message) == "string")
   then
-    breakpoint.filepath = eve.std.path.resolve(workspace, breakpoint.filepath) ---@type string
+    breakpoint.filepath = eve.path.resolve(workspace, breakpoint.filepath) ---@type string
     return vim.fn.filereadable(breakpoint.filepath) == 1
   end
   return false
@@ -54,8 +54,8 @@ local _state = nil ---@type eve.state.lsp.state | nil
 
 ---@return eve.state.lsp.data
 function M.defaults()
-  local is_git_repo = eve.std.path.is_repo_git() ---@type boolean
-  local is_repo_personal = eve.std.path.is_repo_personal_public() ---@type boolean
+  local is_git_repo = eve.path.is_repo_git() ---@type boolean
+  local is_repo_personal = eve.path.is_repo_personal_public() ---@type boolean
 
   ---@type eve.state.lsp.data
   return {
@@ -73,7 +73,7 @@ end
 ---@return eve.state.lsp.data
 function M.normalize(data)
   local resolved = M.defaults() ---@type eve.state.lsp.data
-  local workspace = eve.std.path.workspace() ---@type string
+  local workspace = eve.path.workspace() ---@type string
   if type(data) == "table" then
     if type(data.breakpoints) == "table" then
       resolved.breakpoints = {} ---@type eve.state.lsp.IBreakpointData[]
@@ -159,8 +159,8 @@ function M.load(raw_data)
         local python_name = eve.env.IS_WIN and "python.exe" or "python" ---@type string
         local python_parent_path = eve.env.IS_WIN and "Scripts" or "bin" ---@type string
 
-        local bin_path = eve.std.path.join(venv_path, python_parent_path) ---@type string
-        local python_path = eve.std.path.join(bin_path, python_name) ---@type string
+        local bin_path = eve.path.join(venv_path, python_parent_path) ---@type string
+        local python_path = eve.path.join(bin_path, python_name) ---@type string
         return python_path, bin_path
       end,
 
@@ -173,7 +173,7 @@ function M.load(raw_data)
 
         local raw_breakpoints_list = bps.get()
         local breakpoints = {} ---@type eve.state.lsp.IBreakpointData[]
-        local workspace = eve.std.path.workspace() ---@type string
+        local workspace = eve.path.workspace() ---@type string
         for bufnr, raw_breakpoints in pairs(raw_breakpoints_list) do
           local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
           for _, raw_breakpoint in ipairs(raw_breakpoints) do
@@ -186,7 +186,7 @@ function M.load(raw_data)
               log_message = raw_breakpoint.log_message,
             }
             if is_valid_breakpoint(workspace, breakpoint) then
-              breakpoint.filepath = eve.std.path.relative(workspace, breakpoint.filepath, false) ---@type string
+              breakpoint.filepath = eve.path.relative(workspace, breakpoint.filepath, false) ---@type string
               table.insert(breakpoints, breakpoint)
             end
           end

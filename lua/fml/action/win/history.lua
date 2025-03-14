@@ -23,7 +23,7 @@ local function get_history_select()
     ---@type fml.ux.file_select.IProvider
     local provider = {
       fetch_data = function()
-        local cwd = eve.std.path.cwd() ---@type string
+        local cwd = eve.path.cwd() ---@type string
         local items = {} ---@type fml.ux.file_select.IRawItem[]
         local uuid_present = "0" ---@type string
         local width = 0 ---@type integer
@@ -47,7 +47,7 @@ local function get_history_select()
           end
 
           for filepath, ordinal in meta.filepath_history:iterator_reverse() do
-            local relative_filepath = eve.std.path.relative(cwd, filepath, true) ---@type string
+            local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
             ---@type fml.ux.file_select.IRawItem
             local item = {

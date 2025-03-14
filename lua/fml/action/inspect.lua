@@ -54,8 +54,8 @@ end
 
 ---@return nil
 function M.inspect_state()
-  local cwd = eve.std.path.cwd() ---@type string
-  local workspace = eve.std.path.workspace() ---@type string
+  local cwd = eve.path.cwd() ---@type string
+  local workspace = eve.path.workspace() ---@type string
   local full_state = state.dump() ---@type eve.state.data
 
   eve.std.reporter.info({
@@ -80,8 +80,8 @@ end
 
 ---@return nil
 function M.inspect_state_full()
-  local cwd = eve.std.path.cwd() ---@type string
-  local workspace = eve.std.path.workspace() ---@type string
+  local cwd = eve.path.cwd() ---@type string
+  local workspace = eve.path.workspace() ---@type string
 
   eve.std.reporter.info({
     from = __module_name__,

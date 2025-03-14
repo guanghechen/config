@@ -17,8 +17,8 @@ local function copy_current_filepath(candidate, filepath)
       message = "Copied current buffer filepath (absolute) to system clipboard!",
     })
   elseif candidate == "relative" then
-    local cwd = eve.std.path.cwd() ---@type string
-    local content = eve.std.path.relative(cwd, filepath, true) ---@type string
+    local cwd = eve.path.cwd() ---@type string
+    local content = eve.path.relative(cwd, filepath, true) ---@type string
 
     vim.fn.setreg("+", content)
     eve.std.reporter.info({

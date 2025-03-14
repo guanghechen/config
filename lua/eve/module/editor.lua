@@ -233,7 +233,7 @@ end
 ---@param col                           ?integer
 ---@return boolean
 function M.open_filepath(winnr_source, filepath, lnum, col)
-  filepath = eve.std.path.normalize(filepath)
+  filepath = eve.path.normalize(filepath)
 
   local winnr = M.pick_sourcefile_win(winnr_source) ---@type integer|nil
   if winnr == nil then

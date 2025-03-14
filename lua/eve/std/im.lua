@@ -10,8 +10,8 @@ local __module_name__ = "eve.std.im" ---@type string
 local M = {}
 
 if eve.env.IS_MAC then
-  local app_home = eve.std.path.locate_app_config_home("guanghechen")
-  local script_path = eve.std.path.join(app_home, "osx/script/im-select/im-select")
+  local app_home = eve.path.locate_app_config_home("guanghechen")
+  local script_path = eve.path.join(app_home, "osx/script/im-select/im-select")
 
   ---@return eve.std.im.InputMethod|nil
   function M.get_input_method()

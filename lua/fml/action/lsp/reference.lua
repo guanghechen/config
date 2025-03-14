@@ -28,7 +28,7 @@ local function fetch_data(method, additional_params, callback)
     return
   end
 
-  local cwd = eve.std.path.cwd() ---@type string
+  local cwd = eve.path.cwd() ---@type string
   local params = vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr_sourcefile), additional_params)
 
   vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
@@ -64,8 +64,8 @@ local function fetch_data(method, additional_params, callback)
             ---@diagnostic disable-next-line: undefined-field
             local range = location.targetRange or location.range
             if uri ~= nil and range ~= nil then
-              local filepath = eve.std.path.normalize(uri:gsub("^file://", "")) ---@type string
-              local filepath_relative = eve.std.path.relative(cwd, filepath, true) ---@type string
+              local filepath = eve.path.normalize(uri:gsub("^file://", "")) ---@type string
+              local filepath_relative = eve.path.relative(cwd, filepath, true) ---@type string
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
 
@@ -147,7 +147,7 @@ end
 ---@param additional_params             table<string, any>
 ---@return fun(): nil
 local function create_jump_or_list(title, method, additional_params)
-  local _last_data = { items = {}, cwd = eve.std.path.cwd() } ---@type fml.ux.file_select.IData
+  local _last_data = { items = {}, cwd = eve.path.cwd() } ---@type fml.ux.file_select.IData
 
   local select = nil ---@type fml.ux.IFileSelect|nil
   select = FileSelect.new({

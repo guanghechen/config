@@ -73,13 +73,13 @@ S = {
     end
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filename = eve.std.path.basename(filepath) ---@type string
+    local filename = eve.path.basename(filepath) ---@type string
     filename = (not filename or filename == "") and setting.BUF_UNTITLED or filename
     local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
 
-    local workspace_pieces = eve.std.path.split(eve.std.path.workspace()) ---@type string[]
-    local cwd_pieces = eve.std.path.split(eve.std.path.cwd()) ---@type string[]
-    local relpath_pieces = eve.std.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
+    local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
+    local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
+    local relpath_pieces = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
     local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
 
     ---@type eve.t.state.buf.meta.state
@@ -107,13 +107,13 @@ S = {
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     if meta.filepath ~= filepath then
-      local filename = eve.std.path.basename(filepath) ---@type string
+      local filename = eve.path.basename(filepath) ---@type string
       filename = #filename > 0 and filename or setting.BUF_UNTITLED
       local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
 
-      local workspace_pieces = eve.std.path.split(eve.std.path.workspace()) ---@type string[]
-      local cwd_pieces = eve.std.path.split(eve.std.path.cwd()) ---@type string[]
-      local relpath_pieces = eve.std.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
+      local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
+      local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
+      local relpath_pieces = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
       local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
 
       meta.fileicon = fileicon
@@ -163,13 +163,13 @@ S = {
       local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
       for _, bufnr in ipairs(bufnrs) do
         local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath = eve.std.path.resolve(cwd, filename) ---@type string
+        local filepath = eve.path.resolve(cwd, filename) ---@type string
         existed_paths[filepath] = true
       end
     end
 
     for i = 1, 100 do
-      local filepath = eve.std.path.join(cwd, setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
+      local filepath = eve.path.join(cwd, setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
       if not existed_paths[filepath] and vim.uv.fs_stat(filepath) == nil then
         return filepath
       end
@@ -238,15 +238,15 @@ function M.load(raw_data)
 
   local data = M.normalize(raw_data) ---@type eve.state.buf.data
 
-  local workspace_pieces = eve.std.path.split(eve.std.path.workspace()) ---@type string[]
-  local cwd_pieces = eve.std.path.split(eve.std.path.cwd()) ---@type string[]
+  local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
+  local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
   local filepath2bufnr = eve.std.nvim.filepath2bufnr() ---@type table<string, integer>
   for _, item in ipairs(data.list) do
     local bufnr = filepath2bufnr[item.filepath] ---@type integer|nil
     if bufnr ~= nil then
-      local filename = eve.std.path.basename(item.filepath) ---@type string
+      local filename = eve.path.basename(item.filepath) ---@type string
       local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
-      local relpath_pieces = eve.std.path.split_prettier(workspace_pieces, cwd_pieces, item.filepath) ---@type string[]
+      local relpath_pieces = eve.path.split_prettier(workspace_pieces, cwd_pieces, item.filepath) ---@type string[]
       local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
 
       if #vim.bo[bufnr].filetype < 1 then

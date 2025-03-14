@@ -9,7 +9,7 @@ if eve.env.IS_MAC then
   if eve.env.IS_TMUX then
     function M.get_clipboard()
       local fake_clipboard_filepath = tmux.get_tmux_env_value("ghc_use_fake_clipboard")
-      if fake_clipboard_filepath == nil or not eve.std.path.is_exist(fake_clipboard_filepath) then
+      if fake_clipboard_filepath == nil or not eve.path.is_exist(fake_clipboard_filepath) then
         return
       end
 

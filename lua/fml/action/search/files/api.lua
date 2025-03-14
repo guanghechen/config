@@ -107,8 +107,8 @@ function M.calc_preview_data(uuid)
   end
 
   local cwd = context.search_cwd:snapshot() ---@type string
-  local filepath = eve.std.path.resolve(cwd, item.filepath) ---@type string
-  local filename = eve.std.path.basename(filepath) ---@type string
+  local filepath = eve.path.resolve(cwd, item.filepath) ---@type string
+  local filename = eve.path.basename(filepath) ---@type string
   if not ft.is_printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
@@ -365,7 +365,7 @@ function M.fetch_data(input_text, force, callback)
       }
       fileitem_map[filepath] = fileitem
 
-      local filename = eve.std.path.basename(filepath) ---@type string
+      local filename = eve.path.basename(filepath) ---@type string
       local icon, icon_hl = calc_fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
       local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type eve.t.IHighlightInline[]
@@ -562,13 +562,13 @@ end
 
 ---@return eve.t.IQuickFixItem[]
 function M.gen_quickfix_items()
-  local cwd = eve.std.path.cwd() ---@type string
+  local cwd = eve.path.cwd() ---@type string
   local search_cwd = context.search_cwd:snapshot() ---@type string
   local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
   for _, item in pairs(_item_map) do
     if item.offset >= 0 then
-      local absolute_filepath = eve.std.path.resolve(search_cwd, item.filepath) ---@type string
-      local relative_filepath = eve.std.path.relative(cwd, absolute_filepath, false) ---@type string
+      local absolute_filepath = eve.path.resolve(search_cwd, item.filepath) ---@type string
+      local relative_filepath = eve.path.relative(cwd, absolute_filepath, false) ---@type string
       table.insert(quickfix_items, {
         filename = relative_filepath,
         lnum = item.lnum,
@@ -599,7 +599,7 @@ end
 ---@return nil
 function M.open_files(items, frecency)
   local cwd = context.search_cwd:snapshot() ---@type string
-  local workspace = eve.std.path.workspace() ---@type string
+  local workspace = eve.path.workspace() ---@type string
   local file_items = {} ---@type fml.action.search.files.IItem[]
   for _, item in ipairs(items) do
     local file_item = _item_map and _item_map[item.uuid] ---@type fml.action.search.files.IItem|nil
@@ -613,8 +613,8 @@ function M.open_files(items, frecency)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
     for _, file_item in ipairs(file_items) do
-      local absolute_filepath = eve.std.path.resolve(cwd, file_item.filepath) ---@type string
-      local relative_filepath = eve.std.path.relative(workspace, absolute_filepath, true) ---@type string
+      local absolute_filepath = eve.path.resolve(cwd, file_item.filepath) ---@type string
+      local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string
       frecency:access(relative_filepath)
 
       editor.open_filepath(winnr_sourcefile, absolute_filepath, file_item.lnum, file_item.col) ---@type boolean
@@ -707,7 +707,7 @@ function M.refresh_file_item(filepath)
     local max_matches = state.search_file.max_matches:snapshot() ---@type integer
     local search_paths = state.search_file.search_paths:snapshot() ---@type string[]
     local keyword = state.select.search_file.input:snapshot() ---@type string
-    local specified_filepath = eve.std.path.resolve(cwd, filepath) ---@type string
+    local specified_filepath = eve.path.resolve(cwd, filepath) ---@type string
 
     ---@type eve.std.oxi.search.IResult|nil
     local partial_search_result = eve.std.oxi.search({

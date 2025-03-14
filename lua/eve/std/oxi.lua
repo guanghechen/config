@@ -377,7 +377,7 @@ end
 ---@return boolean
 function M.replace_file(params)
   local search_pattern = params.search_pattern ---@type string
-  local filepath = eve.std.path.resolve(params.cwd, params.filepath) ---@type string
+  local filepath = eve.path.resolve(params.cwd, params.filepath) ---@type string
   if params.flag_regex and not params.flag_case_sensitive then
     search_pattern = "(?i)" .. search_pattern:lower()
   end
@@ -394,7 +394,7 @@ end
 ---@return boolean
 function M.replace_file_by_matches(params)
   local search_pattern = params.search_pattern ---@type string
-  local filepath = eve.std.path.resolve(params.cwd, params.filepath) ---@type string
+  local filepath = eve.path.resolve(params.cwd, params.filepath) ---@type string
   local match_offsets = params.match_offsets ---@type integer[]
   if params.flag_regex and not params.flag_case_sensitive then
     search_pattern = "(?i)" .. search_pattern:lower()
@@ -420,7 +420,7 @@ end
 ---@return eve.t.IMatchLocation[]
 function M.replace_file_advance_by_matches(params)
   local search_pattern = params.search_pattern ---@type string
-  local filepath = eve.std.path.resolve(params.cwd, params.filepath) ---@type string
+  local filepath = eve.path.resolve(params.cwd, params.filepath) ---@type string
   local match_offsets = params.match_offsets ---@type integer[]
   local remain_offsets = params.remain_offsets ---@type integer[]
   if params.flag_regex and not params.flag_case_sensitive then
@@ -800,7 +800,7 @@ function M.search(params)
 
     local cwd = params.cwd ---@type string
     for filepath, item in pairs(data.items) do
-      filepath = eve.std.path.relative(cwd, filepath, true)
+      filepath = eve.path.relative(cwd, filepath, true)
       table.insert(orders, filepath)
       items[filepath] = item
 

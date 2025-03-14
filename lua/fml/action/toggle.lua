@@ -184,8 +184,8 @@ local toggle_item_map = {
     end,
     action = function()
       local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
-      local app_home = eve.std.path.locate_app_config_home("guanghechen")
-      local script_path = eve.std.path.join(app_home, "config/theme/toggle_theme.mjs")
+      local app_home = eve.path.locate_app_config_home("guanghechen")
+      local script_path = eve.path.join(app_home, "config/theme/toggle_theme.mjs")
       local ok, error = pcall(function()
         vim.fn.system({ "node", script_path, theme })
       end)
@@ -254,8 +254,8 @@ local function apply_theme(theme)
     return
   end
 
-  local app_home = eve.std.path.locate_app_config_home("guanghechen")
-  local script_path = eve.std.path.join(app_home, "config/theme/apply_theme.mjs")
+  local app_home = eve.path.locate_app_config_home("guanghechen")
+  local script_path = eve.path.join(app_home, "config/theme/apply_theme.mjs")
   local ok, error = pcall(function()
     vim.fn.system({ "node", script_path, theme })
   end)

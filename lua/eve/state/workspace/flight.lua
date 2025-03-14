@@ -45,12 +45,12 @@ local _state = nil ---@type eve.state.flight.state | nil
 
 ---@return eve.state.flight.data
 function M.defaults()
-  local workspace = eve.std.path.workspace() ---@type string
+  local workspace = eve.path.workspace() ---@type string
   local is_home_config_dir = workspace == eve.env.HOME_NVIM_CONFIG ---@type boolean
-  local is_git_repo = eve.std.path.is_repo_git() ---@type boolean
-  local is_thirdparty = eve.std.path.is_repo_thirdparty() ---@type boolean
-  local is_playground = eve.std.path.is_repo_playground() ---@type boolean
-  local is_personal_public = eve.std.path.is_repo_personal_public() ---@type boolean
+  local is_git_repo = eve.path.is_repo_git() ---@type boolean
+  local is_thirdparty = eve.path.is_repo_thirdparty() ---@type boolean
+  local is_playground = eve.path.is_repo_playground() ---@type boolean
+  local is_personal_public = eve.path.is_repo_personal_public() ---@type boolean
 
   ---@type eve.state.flight.data
   return {

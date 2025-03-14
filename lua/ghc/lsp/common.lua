@@ -72,7 +72,7 @@ end
 ---@return string|nil
 ---@return string|nil
 function M.locate_lsp_root(filepath, config_filenames)
-  local cwd = eve.std.path.cwd() ---@type string
+  local cwd = eve.path.cwd() ---@type string
   do
     local config_filepath = M.find_filepath(cwd, config_filenames) ---@type string|nil
     if config_filepath ~= nil then
@@ -80,7 +80,7 @@ function M.locate_lsp_root(filepath, config_filenames)
     end
   end
 
-  local workspace = eve.std.path.workspace() ---@type string
+  local workspace = eve.path.workspace() ---@type string
   if cwd ~= workspace then
     local config_filepath = M.find_filepath(workspace, config_filenames) ---@type string|nil
     if config_filepath ~= nil then
@@ -88,7 +88,7 @@ function M.locate_lsp_root(filepath, config_filenames)
     end
   end
 
-  local pieces = eve.std.path.split(filepath) ---@type string[]
+  local pieces = eve.path.split(filepath) ---@type string[]
   local k = #pieces - 1 ---@type integer
   while k >= 1 do
     local dirpath = table.concat(pieces, eve.env.PATH_SEP, 1, k) ---@type string

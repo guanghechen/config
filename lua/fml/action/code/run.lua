@@ -43,7 +43,7 @@ local runners = {
       local terminal = code_runner_terminals.mjs ---@type fml.ux.ITerminal|nil
       if terminal == nil then
         terminal = Terminal.new({
-          cwd = eve.std.path.cwd(),
+          cwd = eve.path.cwd(),
           permanent = false,
           title = "code run (mjs)",
         })
@@ -76,7 +76,7 @@ function M.run(force)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-  local extname = eve.std.path.extname(filepath) ---@type string
+  local extname = eve.path.extname(filepath) ---@type string
   local key = extname:sub(2) ---@type string
 
   local runner = runners[key]

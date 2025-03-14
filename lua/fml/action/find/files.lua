@@ -19,9 +19,9 @@ local function get_select()
     local function get_scope_cwd(dirpath)
       local scope = state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
       if scope == "W" then
-        return eve.std.path.workspace()
+        return eve.path.workspace()
       elseif scope == "C" then
-        return eve.std.path.cwd()
+        return eve.path.cwd()
       elseif scope == "D" then
         return dirpath
       end
@@ -32,17 +32,17 @@ local function get_select()
         message = "Unknown scope.",
         details = { scope = scope, dirpath = dirpath },
       })
-      return eve.std.path.cwd()
+      return eve.path.cwd()
     end
 
-    local state_find_cwd = eve.col.Observable.from_value(get_scope_cwd(eve.std.path.cwd()))
+    local state_find_cwd = eve.col.Observable.from_value(get_scope_cwd(eve.path.cwd()))
 
     state.observe({ state.select.find_file_scope }, function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local bufnr = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
 
       ---@type string
-      local current_buf_dirpath = bufnr ~= nil and eve.std.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.std.path.cwd()
+      local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd()
 
       local current_find_cwd = state_find_cwd:snapshot() ---@type string
       local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
@@ -162,7 +162,7 @@ local function get_select()
       end,
       send_to_qflist = function()
         if _select ~= nil then
-          local cwd = eve.std.path.cwd() ---@type string
+          local cwd = eve.path.cwd() ---@type string
           local select_cwd = state_find_cwd:snapshot() ---@type string
           local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
           local matched_items = _select:get_matched_items() ---@type fml.ux.select.IMatchedItem[]
@@ -171,8 +171,8 @@ local function get_select()
             ---@cast item                   fml.ux.file_select.IItem
 
             if item ~= nil then
-              local absolute_filepath = eve.std.path.join(select_cwd, item.data.filepath) ---@type string
-              local relative_filepath = eve.std.path.relative(cwd, absolute_filepath, false) ---@type string
+              local absolute_filepath = eve.path.join(select_cwd, item.data.filepath) ---@type string
+              local relative_filepath = eve.path.relative(cwd, absolute_filepath, false) ---@type string
               table.insert(quickfix_items, {
                 filename = relative_filepath,
                 lnum = item.data.lnum or 1,
@@ -346,7 +346,7 @@ local function get_select()
     local provider = {
       fetch_data = function()
         local cwd = state_find_cwd:snapshot() ---@type string
-        local workspace = eve.std.path.workspace() ---@type string
+        local workspace = eve.path.workspace() ---@type string
         local flag_exclude = state.select.find_file.flag_exclude:snapshot() ---@type boolean
         local flag_gitignore = state.select.find_file.flag_gitignore:snapshot() ---@type boolean
         local excludes = flag_exclude and state.select.find_file.excludes:snapshot() or {} ---@type string[]
@@ -366,7 +366,7 @@ local function get_select()
 
         local items = {} ---@type fml.ux.file_select.IRawItem[]
         for _, relative_filepath in ipairs(filepaths) do
-          local filepath = eve.std.path.resolve(cwd, relative_filepath) ---@type string
+          local filepath = eve.path.resolve(cwd, relative_filepath) ---@type string
           ---@type fml.ux.file_select.IRawItem
           local item = {
             filepath = filepath,

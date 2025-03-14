@@ -2,6 +2,7 @@
 local __mods = {
   debug = "eve.builtin.debug",
   env = "eve.builtin.env",
+  path = "eve.builtin.path",
 }
 
 local __gid = 0 ---@type integer
@@ -11,6 +12,7 @@ local __gfn = {} ---@type table<string, fun(...): nil>
 ---@field public __mods                 eve.__mods
 ---@field public debug                  eve.builtin.debug
 ---@field public env                    eve.builtin.env
+---@field public path                   eve.builtin.path
 ---
 ---@field public G                      eve.G
 ---@field public c                      eve.collection
@@ -46,7 +48,7 @@ local M = setmetatable({
 
 ---@return eve.state.storage
 function M.get_default_storage()
-  local path = require("eve.std.path")
+  local path = require("eve.path")
   local is_git_repo = path.is_repo_git() ---@type boolean
 
   ---@type eve.state.storage
@@ -105,7 +107,7 @@ end
 ---! 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
 ---@return nil
 function M.setup_workspace()
-  local path = require("eve.std.path")
+  local path = require("eve.path")
   if vim.fn.expand("%") ~= "" then
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
