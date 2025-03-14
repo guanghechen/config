@@ -137,17 +137,17 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.lsp.data
 
   if _state == nil then
-    local python_venv_path = eve.c.Observable.from_value(data.python_venv_path)
+    local python_venv_path = eve.col.Observable.from_value(data.python_venv_path)
 
     ---@type eve.state.lsp.state
     _state = {
-      breakpoints = eve.c.Observable.from_value(data.breakpoints),
-      code_lens = eve.c.Observable.from_value(data.code_lens),
-      inlay_hints = eve.c.Observable.from_value(data.inlay_hints),
-      python_debug_host = eve.c.Observable.from_value(data.python_debug_host),
-      python_debug_port = eve.c.Observable.from_value(data.python_debug_port),
+      breakpoints = eve.col.Observable.from_value(data.breakpoints),
+      code_lens = eve.col.Observable.from_value(data.code_lens),
+      inlay_hints = eve.col.Observable.from_value(data.inlay_hints),
+      python_debug_host = eve.col.Observable.from_value(data.python_debug_host),
+      python_debug_port = eve.col.Observable.from_value(data.python_debug_port),
       python_venv_path = python_venv_path,
-      spellcheck = eve.c.Observable.from_value(data.spellcheck),
+      spellcheck = eve.col.Observable.from_value(data.spellcheck),
 
       ---@return string|nil
       get_python_bin_path = function()

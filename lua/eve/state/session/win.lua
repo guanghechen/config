@@ -93,7 +93,7 @@ S = {
     end
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filepath_history = eve.c.AdvanceHistory.new({
+    local filepath_history = eve.col.AdvanceHistory.new({
       name = "win#bufs",
       capacity = setting.WIN_BUF_HISTORY_CAPACITY,
       validate = editor.is_valid_filepath,

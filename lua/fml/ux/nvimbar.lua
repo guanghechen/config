@@ -201,7 +201,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local _render_scheduler ---@type eve.collection.IScheduler
-  _render_scheduler = eve.c.Scheduler.new({
+  _render_scheduler = eve.col.Scheduler.new({
     name = "fml.ux.nvimbar#" .. name,
     delay = render_delay,
     silent = silent,

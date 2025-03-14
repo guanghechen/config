@@ -107,9 +107,9 @@ function M.load(raw_data)
 
     ---@type eve.state.theme.state
     _state = {
-      theme = eve.c.Observable.from_value(data.theme),
-      transparency = eve.c.Observable.from_value(data.transparency),
-      username = eve.c.Observable.from_value(data.username),
+      theme = eve.col.Observable.from_value(data.theme),
+      transparency = eve.col.Observable.from_value(data.transparency),
+      username = eve.col.Observable.from_value(data.username),
 
       apply_integration = function(params)
         local theme = params.theme ---@type eve.e.Theme
@@ -127,7 +127,7 @@ function M.load(raw_data)
           }
           local gen_hlgroup_map = require("eve.constant.hlgroup." .. integration)
           local hlgroup_map = gen_hlgroup_map(themeContext)
-          local uxTheme = eve.c.Theme.new()
+          local uxTheme = eve.col.Theme.new()
           uxTheme:registers(hlgroup_map)
           uxTheme:apply({ nsnr = nsnr, scheme = scheme })
         end
@@ -150,7 +150,7 @@ function M.load(raw_data)
             transparency = transparency,
           })
 
-          local uxTheme = eve.c.Theme.new()
+          local uxTheme = eve.col.Theme.new()
           for _, integration in ipairs(integrations) do
             local gen_hlgroup_map = require("eve.constant.hlgroup." .. integration)
             ---@return table<string, eve.t.theme.IHlgroup>

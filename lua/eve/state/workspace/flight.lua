@@ -157,21 +157,21 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.flight.state
     _state = {
-      ai = eve.c.Observable.from_value(data.ai),
-      ai_provider = eve.c.Observable.from_value(data.ai_provider),
-      autoformat = eve.c.Observable.from_value(data.autoformat),
-      autoload = eve.c.Observable.from_value(data.autoload),
-      autosave = eve.c.Observable.from_value(data.autosave),
-      devmode = eve.c.Observable.from_value(data.devmode),
+      ai = eve.col.Observable.from_value(data.ai),
+      ai_provider = eve.col.Observable.from_value(data.ai_provider),
+      autoformat = eve.col.Observable.from_value(data.autoformat),
+      autoload = eve.col.Observable.from_value(data.autoload),
+      autosave = eve.col.Observable.from_value(data.autosave),
+      devmode = eve.col.Observable.from_value(data.devmode),
 
-      dressing_hipairs = eve.c.Observable.from_value(data.dressing_hipairs),
-      dressing_illumniate = eve.c.Observable.from_value(data.dressing_illumniate),
-      dressing_input = eve.c.Observable.from_value(data.dressing_input),
-      dressing_select = eve.c.Observable.from_value(data.dressing_select),
-      dressing_winsep_fixed = eve.c.Observable.from_value(data.dressing_winsep_fixed),
-      dressing_winsep_float = eve.c.Observable.from_value(data.dressing_winsep_float),
+      dressing_hipairs = eve.col.Observable.from_value(data.dressing_hipairs),
+      dressing_illumniate = eve.col.Observable.from_value(data.dressing_illumniate),
+      dressing_input = eve.col.Observable.from_value(data.dressing_input),
+      dressing_select = eve.col.Observable.from_value(data.dressing_select),
+      dressing_winsep_fixed = eve.col.Observable.from_value(data.dressing_winsep_fixed),
+      dressing_winsep_float = eve.col.Observable.from_value(data.dressing_winsep_float),
 
-      gitdiff_expand_all = eve.c.Observable.from_value(data.gitdiff_expand_all),
+      gitdiff_expand_all = eve.col.Observable.from_value(data.gitdiff_expand_all),
     }
     return _state
   end

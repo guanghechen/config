@@ -21,7 +21,7 @@ local M = {}
 
 ---@type eve.state.qflist.state
 S = {
-  history = eve.c.History.new({
+  history = eve.col.History.new({
     name = "qflist",
     capacity = 100,
   }),
@@ -141,7 +141,7 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.qflist.data
 
   ---@type eve.collection.IHistory
-  local history = S.history or eve.c.History.new({
+  local history = S.history or eve.col.History.new({
     name = "qflist",
     capacity = 100,
   })

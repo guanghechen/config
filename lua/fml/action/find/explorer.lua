@@ -123,7 +123,7 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = eve.c.Observable.from_value(eve.std.path.normalize(initial_dirpath)) ---@type eve.collection.IObservable -- string>
+local state_cwd = eve.col.Observable.from_value(eve.std.path.normalize(initial_dirpath)) ---@type eve.collection.IObservable -- string>
 local _select = nil ---@type fml.ux.ISelect|nil
 
 ---@return string
@@ -139,7 +139,7 @@ local function gen_title()
 end
 
 state_cwd:subscribe(
-  eve.c.Subscriber.new({
+  eve.col.Subscriber.new({
     on_next = function()
       if _select ~= nil then
         _select:mark_data_dirty()

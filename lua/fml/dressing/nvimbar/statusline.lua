@@ -51,7 +51,7 @@ statusline
   :place("right", c.diagnostics(position), 95)
   :place("right", c.noice_mode(position), 95)
 
-dirtier:subscribe(eve.c.Subscriber.new({
+dirtier:subscribe(eve.col.Subscriber.new({
   on_next = function()
     if dirtier:is_dirty() then
       statusline:render()

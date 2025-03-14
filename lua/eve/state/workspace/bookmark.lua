@@ -56,7 +56,7 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.bookmark.state
     _state = {
-      pinned = eve.c.Observable.from_value(data.pinned),
+      pinned = eve.col.Observable.from_value(data.pinned),
     }
     return _state
   end

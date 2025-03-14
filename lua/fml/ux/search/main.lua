@@ -70,7 +70,7 @@ function M.new(props)
     context:place_lnum_sign()
   end
 
-  local render_scheduler = eve.c.Scheduler.new({
+  local render_scheduler = eve.col.Scheduler.new({
     name = "fml.ux.search.main.render",
     delay = delay_render,
     task = function(callback)
@@ -93,7 +93,7 @@ function M.new(props)
   self._render_scheduler = render_scheduler
 
   context.dirtier_main:subscribe(
-    eve.c.Subscriber.new({
+    eve.col.Subscriber.new({
       on_next = function()
         local is_main_dirty = context.dirtier_main:is_dirty() ---@type boolean
         local status = context.status:snapshot() ---@type eve.e.WidgetStatus

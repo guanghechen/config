@@ -118,10 +118,10 @@ function M.new(props)
 
   local delay_fetch = props.delay_fetch or 128 ---@type integer
   local dimension = props.dimension ---@type fml.ux.search.IRawDimension|nil
-  local flag_fuzzy = props.flag_fuzzy or eve.c.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
-  local flag_regex = props.flag_regex or eve.c.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
-  local flag_selected = props.flag_selected or eve.c.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
-  local input = props.input or eve.c.Observable.from_value("") ---@type eve.collection.IObservable -- string>
+  local flag_fuzzy = props.flag_fuzzy or eve.col.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
+  local flag_regex = props.flag_regex or eve.col.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
+  local flag_selected = props.flag_selected or eve.col.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
+  local input = props.input or eve.col.Observable.from_value("") ---@type eve.collection.IObservable -- string>
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local multiple = props.multiple ---@type boolean|nil
   local permanent = props.permanent ---@type boolean|nil
@@ -156,7 +156,7 @@ function M.new(props)
     title = title,
   })
 
-  local case_sensitive = props.case_sensitive or eve.c.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
+  local case_sensitive = props.case_sensitive or eve.col.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
   local cmp = props.cmp ---@type fml.ux.select.IMatchedItemCmp|nil
   local delay_render = props.delay_render or 48 ---@type integer
   local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
@@ -164,7 +164,7 @@ function M.new(props)
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
   local frecency = props.frecency ---@type eve.collection.IFrecency|nil
   local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
-  local live_data_dirty = eve.c.Observable.from_value(true) ---@type eve.collection.IObservable -- boolean>
+  local live_data_dirty = eve.col.Observable.from_value(true) ---@type eve.collection.IObservable -- boolean>
   local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
   local provider = props.provider ---@type fml.ux.select.IProvider

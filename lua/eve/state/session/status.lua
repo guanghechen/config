@@ -102,18 +102,18 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.status.state
     _state = {
-      ticker_editor = eve.c.Ticker.new({ start = data.tick_editor }),
-      ticker_workspace = eve.c.Ticker.new({ start = data.tick_workspace }),
-      ticker_session = eve.c.Ticker.new({ start = data.tick_session }),
+      ticker_editor = eve.col.Ticker.new({ start = data.tick_editor }),
+      ticker_workspace = eve.col.Ticker.new({ start = data.tick_workspace }),
+      ticker_session = eve.col.Ticker.new({ start = data.tick_session }),
 
-      dirtier_statusline = eve.c.Dirtier.new({ dirty = true }),
-      dirtier_tabline = eve.c.Dirtier.new({ dirty = true }),
-      dirty_winline_nr = eve.c.Observable.from_value(data.dirty_winline_nr, eve.std.fn.falsy),
+      dirtier_statusline = eve.col.Dirtier.new({ dirty = true }),
+      dirtier_tabline = eve.col.Dirtier.new({ dirty = true }),
+      dirty_winline_nr = eve.col.Observable.from_value(data.dirty_winline_nr, eve.std.fn.falsy),
 
-      lsp_msg = eve.c.Observable.from_value(data.lsp_msg),
+      lsp_msg = eve.col.Observable.from_value(data.lsp_msg),
       maximized_winnrs = data.maximized_winnrs,
-      suppress_warning = eve.c.Observable.from_value(data.suppress_warning),
-      tmux_zen_mode = eve.c.Observable.from_value(data.tmux_zen_mode),
+      suppress_warning = eve.col.Observable.from_value(data.suppress_warning),
+      tmux_zen_mode = eve.col.Observable.from_value(data.tmux_zen_mode),
 
       reset = function()
         ---@cast _state                 eve.state.status.state

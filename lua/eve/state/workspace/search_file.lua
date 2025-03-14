@@ -84,11 +84,11 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.search_file.state
     _state = {
-      flag_replace = eve.c.Observable.from_value(data.flag_replace),
-      max_filesize = eve.c.Observable.from_value(data.max_filesize),
-      max_matches = eve.c.Observable.from_value(data.max_matches),
-      replacement = eve.c.Observable.from_value(data.replacement),
-      search_paths = eve.c.Observable.from_value(data.search_paths),
+      flag_replace = eve.col.Observable.from_value(data.flag_replace),
+      max_filesize = eve.col.Observable.from_value(data.max_filesize),
+      max_matches = eve.col.Observable.from_value(data.max_matches),
+      replacement = eve.col.Observable.from_value(data.replacement),
+      search_paths = eve.col.Observable.from_value(data.search_paths),
     }
     return _state
   end

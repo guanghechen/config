@@ -56,7 +56,7 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.option.state
     _state = {
-      relativenumber = eve.c.Observable.from_value(data.relativenumber),
+      relativenumber = eve.col.Observable.from_value(data.relativenumber),
     }
     return _state
   end

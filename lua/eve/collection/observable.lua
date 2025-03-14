@@ -27,7 +27,7 @@ local noop_unsubscribable = { unsubscribe = eve.std.fn.noop }
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, eve.c.BatchDisposable)
+setmetatable(M, eve.col.BatchDisposable)
 
 ---@param props                         eve.collection.observable.IProps
 ---@return eve.collection.Observable
@@ -37,7 +37,7 @@ function M.new(props)
   local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type eve.t.T
 
-  local self = setmetatable(eve.c.BatchDisposable.new(), M)
+  local self = setmetatable(eve.col.BatchDisposable.new(), M)
   ---@cast self                         eve.collection.Observable
 
   self.equals = equals
@@ -45,7 +45,7 @@ function M.new(props)
   self._readonly = readonly
   self._value = normalize(initial_value)
   self._value_last_notified = nil
-  self._subscribers = eve.c.Subscribers.new()
+  self._subscribers = eve.col.Subscribers.new()
   return self
 end
 
@@ -67,7 +67,7 @@ function M:dispose()
     return
   end
 
-  eve.c.BatchDisposable.dispose(self)
+  eve.col.BatchDisposable.dispose(self)
 
   -- Dispose subscribers
   self._subscribers:dispose()

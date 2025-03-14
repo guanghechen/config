@@ -12,7 +12,7 @@
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, eve.c.Observable)
+setmetatable(M, eve.col.Observable)
 
 ---@param props eve.collection.dirtier.IProps
 ---@return eve.collection.Dirtier
@@ -20,7 +20,7 @@ function M.new(props)
   local dirty = props.dirty ---@type boolean
   local equals = props.equals or eve.std.fn.falsy
 
-  local self = setmetatable(eve.c.Observable.new({ initial_value = dirty, equals = equals }), M)
+  local self = setmetatable(eve.col.Observable.new({ initial_value = dirty, equals = equals }), M)
   ---@cast self                         eve.collection.Dirtier
 
   return self

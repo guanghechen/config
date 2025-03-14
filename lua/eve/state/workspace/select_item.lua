@@ -134,16 +134,16 @@ function M.load(state, name, raw_data)
   if state == nil then
     ---@type eve.state.select.item.state
     state = {
-      flag_case_sensitive = eve.c.Observable.from_value(data.flag_case_sensitive),
-      flag_exclude = eve.c.Observable.from_value(data.flag_exclude),
-      flag_fuzzy = eve.c.Observable.from_value(data.flag_fuzzy),
-      flag_gitignore = eve.c.Observable.from_value(data.flag_gitignore),
-      flag_regex = eve.c.Observable.from_value(data.flag_regex),
-      flag_selected = eve.c.Observable.from_value(data.flag_selected),
-      includes = eve.c.Observable.from_value(data.includes),
-      excludes = eve.c.Observable.from_value(data.excludes),
-      input = eve.c.Observable.from_value(data.input),
-      input_history = eve.c.History.deserialize({
+      flag_case_sensitive = eve.col.Observable.from_value(data.flag_case_sensitive),
+      flag_exclude = eve.col.Observable.from_value(data.flag_exclude),
+      flag_fuzzy = eve.col.Observable.from_value(data.flag_fuzzy),
+      flag_gitignore = eve.col.Observable.from_value(data.flag_gitignore),
+      flag_regex = eve.col.Observable.from_value(data.flag_regex),
+      flag_selected = eve.col.Observable.from_value(data.flag_selected),
+      includes = eve.col.Observable.from_value(data.includes),
+      excludes = eve.col.Observable.from_value(data.excludes),
+      input = eve.col.Observable.from_value(data.input),
+      input_history = eve.col.History.deserialize({
         name = name,
         capacity = 100,
         data = data.input_history,

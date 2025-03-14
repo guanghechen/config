@@ -130,7 +130,7 @@ function M.new(props)
     _update_win_config({ title = title, lnum = lnum, col = col })
   end
 
-  local _render_scheduler = eve.c.Scheduler.new({
+  local _render_scheduler = eve.col.Scheduler.new({
     name = "fml.ux.search.preview.render",
     delay = delay_render,
     task = function(callback)
@@ -158,7 +158,7 @@ function M.new(props)
   end
 
   context.dirtier_preview:subscribe(
-    eve.c.Subscriber.new({
+    eve.col.Subscriber.new({
       on_next = function()
         local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
         local status = context.status:snapshot() ---@type eve.e.WidgetStatus

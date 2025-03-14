@@ -84,7 +84,7 @@ local state_win = require("eve.state.session.win")
 ---@field private _disposables          eve.collection.BatchDisposable
 local M = {
   _storage = {},
-  _disposables = eve.c.BatchDisposable.new(),
+  _disposables = eve.col.BatchDisposable.new(),
 }
 
 ---@return eve.state.data
@@ -227,7 +227,7 @@ end
 ---@return nil
 function M.observe(observables, callback, ignore_initial)
   for _, observable in ipairs(observables) do
-    local subscriber = eve.c.Subscriber.new({
+    local subscriber = eve.col.Subscriber.new({
       on_next = function()
         vim.schedule(callback)
       end,
@@ -352,7 +352,7 @@ function M.watch_changes(params)
     M.status.dirtier_statusline:mark_dirty()
   end)
 
-  local editor_states_save_scheduler = eve.c.Scheduler.new({
+  local editor_states_save_scheduler = eve.col.Scheduler.new({
     name = "eve.state#editor/save",
     delay = 200,
     task = function(callback)
@@ -377,7 +377,7 @@ function M.watch_changes(params)
     end,
   })
   M.status.ticker_editor:subscribe(
-    eve.c.Subscriber.new({
+    eve.col.Subscriber.new({
       on_next = function()
         editor_states_save_scheduler:schedule()
       end,
@@ -386,7 +386,7 @@ function M.watch_changes(params)
   )
 
   ---! Save when leave the editor.
-  M.add_disposable(eve.c.Disposable.new({
+  M.add_disposable(eve.col.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -425,7 +425,7 @@ function M.watch_changes(params)
         })
       end,
     })
-    M.add_disposable(eve.c.Disposable.new({ on_dispose = unwatch }))
+    M.add_disposable(eve.col.Disposable.new({ on_dispose = unwatch }))
   end
 end
 

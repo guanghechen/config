@@ -409,7 +409,7 @@ function Convertor:step()
     end
   end
 
-  step.proc = eve.c.Spawn.new({
+  step.proc = eve.col.Spawn.new({
     run = false,
     debug = config.state.debug.convert,
     cwd = cmd.cwd and util.tpl(cmd.cwd, data) or nil,

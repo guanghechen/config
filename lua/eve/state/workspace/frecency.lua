@@ -66,7 +66,7 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.frecency.state
     _state = {
-      files = eve.c.Frecency.deserialize({
+      files = eve.col.Frecency.deserialize({
         data = data.files,
         normalize = function(key)
           return md5.sumhexa(key)

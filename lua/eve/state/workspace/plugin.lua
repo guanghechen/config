@@ -69,9 +69,9 @@ function M.load(raw_data)
   if _state == nil then
     ---@type eve.state.plugin.state
     _state = {
-      render_markdown = eve.c.Observable.from_value(data.render_markdown),
-      smear_cursor = eve.c.Observable.from_value(data.smear_cursor),
-      treesitter_context = eve.c.Observable.from_value(data.treesitter_context),
+      render_markdown = eve.col.Observable.from_value(data.render_markdown),
+      smear_cursor = eve.col.Observable.from_value(data.smear_cursor),
+      treesitter_context = eve.col.Observable.from_value(data.treesitter_context),
     }
     return _state
   end

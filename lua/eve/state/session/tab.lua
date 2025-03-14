@@ -90,9 +90,9 @@ function Meta.new(tabnr, tabtype, bufs, bufid_sourcefile)
   self.tabnr = tabnr ---@type integer
   self.tabtype = tabtype or setting.tabtypes.NORMAL ---@type string
   self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
-  self.bufid_sourcefile = eve.c.Observable.from_value(math.max(0, math.min(#bufs, bufid_sourcefile or 1)))
-  self.winnr_command = eve.c.Observable.from_value(0)
-  self.winnr_fixed = eve.c.Observable.from_value(0)
+  self.bufid_sourcefile = eve.col.Observable.from_value(math.max(0, math.min(#bufs, bufid_sourcefile or 1)))
+  self.winnr_command = eve.col.Observable.from_value(0)
+  self.winnr_fixed = eve.col.Observable.from_value(0)
   return self
 end
 
@@ -272,7 +272,7 @@ S = {
   Meta = Meta,
   __meta_map__ = {},
 
-  tab_history = eve.c.AdvanceHistory.new({
+  tab_history = eve.col.AdvanceHistory.new({
     name = "tabs",
     capacity = setting.TAB_HISTORY_CAPACITY,
     validate = eve.std.nvim.is_tab_valid,
@@ -609,7 +609,7 @@ function M.load(raw_data)
 
   ---@type eve.collection.IAdvanceHistory
   local tab_history = S.tab_history
-    or eve.c.AdvanceHistory.new({
+    or eve.col.AdvanceHistory.new({
       name = "tabs",
       capacity = setting.TAB_HISTORY_CAPACITY,
       validate = eve.std.nvim.is_tab_valid,

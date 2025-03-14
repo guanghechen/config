@@ -53,9 +53,9 @@ local function get_scope_cwd(dirpath)
   return eve.std.path.cwd()
 end
 
-local state_search_cwd = eve.c.Observable.from_value(get_scope_cwd(eve.std.path.cwd()))
+local state_search_cwd = eve.col.Observable.from_value(get_scope_cwd(eve.std.path.cwd()))
 state.select.search_file_scope:subscribe(
-  eve.c.Subscriber.new({
+  eve.col.Subscriber.new({
     on_next = function(scope, prev_scope)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local bufnr = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil

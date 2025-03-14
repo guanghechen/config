@@ -25,8 +25,7 @@ local M = setmetatable({
       return "eve.G." .. fn_name
     end,
   }, { __index = __gfn }),
-  c = require("eve.collection"),
-  collection = require("eve.collection"),
+  col = require("eve.collection"),
   lib = require("eve.lib"),
   std = require("eve.std"),
 }, {

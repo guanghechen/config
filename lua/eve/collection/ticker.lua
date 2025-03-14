@@ -8,13 +8,13 @@
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, eve.c.Observable)
+setmetatable(M, eve.col.Observable)
 
 ---@param props                         ?eve.collection.ticker.IProps
 ---@return eve.collection.Ticker
 function M.new(props)
   local start = props and props.start or 0 ---@type integer
-  local self = setmetatable(eve.c.Observable.from_value(start), M)
+  local self = setmetatable(eve.col.Observable.from_value(start), M)
   ---@cast self                         eve.collection.Ticker
   return self
 end

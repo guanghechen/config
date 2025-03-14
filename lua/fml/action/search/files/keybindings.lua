@@ -8,7 +8,7 @@ local statusline_items = {
     type = "popup",
     desc = "search: edit settings",
     symbol = icons.symbols.setting,
-    state = eve.c.Observable.from_value(true),
+    state = eve.col.Observable.from_value(true),
     callback = context.edit_config,
   },
   {

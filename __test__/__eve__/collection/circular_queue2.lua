@@ -1,4 +1,4 @@
-local circular = eve.c.CircularQueue.new({ capacity = 3 })
+local circular = eve.col.CircularQueue.new({ capacity = 3 })
 circular:enqueue("A")
 circular:enqueue("B")
 circular:enqueue("C")

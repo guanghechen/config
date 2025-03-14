@@ -59,8 +59,8 @@ local function select(params)
   Select.new({
     dimension = dimension,
     extend_preset_keymaps = true,
-    flag_fuzzy = eve.c.Observable.from_value(flag_fuzzy),
-    flag_regex = eve.c.Observable.from_value(flag_regex),
+    flag_fuzzy = eve.col.Observable.from_value(flag_fuzzy),
+    flag_regex = eve.col.Observable.from_value(flag_regex),
     input = input,
     multiple = multiple,
     permanent = false,

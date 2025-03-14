@@ -54,7 +54,7 @@ function M.new(props)
   self._silent = silent
 
   self._task = task
-  self._value = eve.c.Observable.from_value(nil, equals)
+  self._value = eve.col.Observable.from_value(nil, equals)
 
   self._tick_alive = 0
   self._tick_scheduled = 1
