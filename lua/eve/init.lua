@@ -1,13 +1,16 @@
 ---@class eve.__mods
 local __mods = {
   debug = "eve.std.debug",
-  env = "eve.std.env",
+  env = "eve.builtin.env",
 }
 
 local __gid = 0 ---@type integer
 local __gfn = {} ---@type table<string, fun(...): nil>
 
 ---@class eve
+---@field public __mods                 eve.__mods
+---@field public env                    eve.builtin.env
+---
 ---@field public G                      eve.G
 ---@field public c                      eve.collection
 ---@field public lib                    eve.lib

@@ -16,10 +16,10 @@ end
 ---@field public AnacondaEnvs           string
 
 ---@type "mac"|"nix"|"win"|"unknown"
-local osname = (eve.std.env.IS_MAC and "mac") --
-  or (eve.std.env.IS_NIX and "nix")
-  or (eve.std.env.IS_WSL and "nix")
-  or (eve.std.env.IS_WIN and "win")
+local osname = (eve.env.IS_MAC and "mac") --
+  or (eve.env.IS_NIX and "nix")
+  or (eve.env.IS_WSL and "nix")
+  or (eve.env.IS_WIN and "win")
   or "unknown"
 
 -- Use M.getenv here because env variables like $CONDA_PREFIX does not get resolved automatically (but $HOME and ~ does).

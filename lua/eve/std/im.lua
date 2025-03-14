@@ -9,7 +9,7 @@ local __module_name__ = "eve.std.im" ---@type string
 ---@field public set_input_method   fun(input_method: eve.std.im.InputMethod): nil
 local M = {}
 
-if eve.std.env.IS_MAC then
+if eve.env.IS_MAC then
   local app_home = eve.std.path.locate_app_config_home("guanghechen")
   local script_path = eve.std.path.join(app_home, "osx/script/im-select/im-select")
 

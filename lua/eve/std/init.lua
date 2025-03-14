@@ -2,7 +2,6 @@
 local __mods = {
   box = "eve.std.box",
   debug = "eve.std.debug",
-  env = "eve.std.env",
   fn = "eve.std.fn",
   fs = "eve.std.fs",
   im = "eve.std.im",
@@ -24,7 +23,6 @@ local __mods = {
 ---
 ---@field public box                    eve.std.box
 ---@field public debug                  eve.std.debug
----@field public env                    eve.std.env
 ---@field public fn                     eve.std.fn
 ---@field public fs                     eve.std.fs
 ---@field public is                     eve.std.is

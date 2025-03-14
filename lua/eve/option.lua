@@ -1,9 +1,8 @@
-local env = require("eve.std.env")
 local icons = require("eve.constant.icon")
 
-if env.IS_MAC or env.IS_NIX or env.IS_WSL then
+if eve.env.IS_MAC or eve.env.IS_NIX or eve.env.IS_WSL then
   vim.opt.shell = "/bin/bash"
-elseif env.IS_WIN then
+elseif eve.env.IS_WIN then
   vim.opt.shell = "pwsh"
 
   -- Setting shell command flags

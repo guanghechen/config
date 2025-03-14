@@ -1,4 +1,3 @@
-local env = require("eve.std.env")
 local fs = require("eve.std.fs")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
@@ -255,7 +254,7 @@ local function get_select()
             text = text .. text_size
             width = width + width_size
 
-            if not env.IS_WIN then
+            if not eve.env.IS_WIN then
               local sep_owner = string.rep(" ", 1) ---@type string
               local text_owner = eve.std.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
               local width_owner = string.len(text_owner) ---@type integer

@@ -1,12 +1,10 @@
 local __module_name__ = "eve.std.shell" ---@type string
 
-local env = require("eve.std.env")
-
 ---@class eve.std.shell
 ---@field public format_command         fun(command?: string): string
 local M = {}
 
-if env.IS_MAC or env.IS_NIX or env.IS_WSL then
+if eve.env.IS_MAC or eve.env.IS_NIX or eve.env.IS_WSL then
   ---@param cmd                         ?string|nil
   ---@return string
   function M.format_command(cmd)
@@ -17,7 +15,7 @@ if env.IS_MAC or env.IS_NIX or env.IS_WSL then
       return "sh -c " .. vim.fn.shellescape(cmd)
     end
   end
-elseif env.IS_WIN then
+elseif eve.env.IS_WIN then
   ---@param cmd                         ?string|nil
   ---@return string
   function M.format_command(cmd)
@@ -33,7 +31,7 @@ else
     from = __module_name__,
     subject = "format_command",
     message = "Bad env",
-    details = { env = env },
+    details = { env = eve.env },
   })
 end
 

@@ -156,8 +156,8 @@ function M.load(raw_data)
           return nil, nil
         end
 
-        local python_name = eve.std.env.IS_WIN and "python.exe" or "python" ---@type string
-        local python_parent_path = eve.std.env.IS_WIN and "Scripts" or "bin" ---@type string
+        local python_name = eve.env.IS_WIN and "python.exe" or "python" ---@type string
+        local python_parent_path = eve.env.IS_WIN and "Scripts" or "bin" ---@type string
 
         local bin_path = eve.std.path.join(venv_path, python_parent_path) ---@type string
         local python_path = eve.std.path.join(bin_path, python_name) ---@type string

@@ -1,6 +1,5 @@
 local __module_name__ = "ghc.lsp.common" ---@type string
 
-local env = require("eve.std.env")
 local fs = require("eve.std.fs")
 local command = require("eve.command")
 
@@ -61,7 +60,7 @@ end
 ---@return string|nil
 function M.find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
-    local filepath = dirpath .. env.PATH_SEP .. filename ---@type string
+    local filepath = dirpath .. eve.env.PATH_SEP .. filename ---@type string
     if fs.is_file_or_dir(filepath) == "file" then
       return filepath
     end
@@ -92,7 +91,7 @@ function M.locate_lsp_root(filepath, config_filenames)
   local pieces = eve.std.path.split(filepath) ---@type string[]
   local k = #pieces - 1 ---@type integer
   while k >= 1 do
-    local dirpath = table.concat(pieces, env.PATH_SEP, 1, k) ---@type string
+    local dirpath = table.concat(pieces, eve.env.PATH_SEP, 1, k) ---@type string
     if dirpath == cwd then
       break
     end
@@ -111,7 +110,7 @@ end
 ---@return string|nil
 function M.locate_mason_pkg_path(pkg, pkg_path, silent)
   pcall(require, "mason") -- make sure Mason is loaded. Will fail when generating docs
-  local root = vim.env.MASON or (env.HOME_NVIM_DATA .. env.PATH_SEP .. "mason")
+  local root = vim.env.MASON or (eve.env.HOME_NVIM_DATA .. eve.env.PATH_SEP .. "mason")
   local filepath = root .. "/packages/" .. pkg .. "/" .. pkg_path
 
   if not vim.uv.fs_stat(filepath) and not require("lazy.core.config").headless() then

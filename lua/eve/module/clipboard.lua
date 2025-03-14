@@ -1,13 +1,12 @@
 local __module_name__ = "eve.module.clipboard" ---@type string
 
-local env = require("eve.std.env")
 local tmux = require("eve.std.tmux")
 
 ---@class fml.lib.clipboard
 local M = {}
 
-if env.IS_MAC then
-  if env.IS_TMUX then
+if eve.env.IS_MAC then
+  if eve.env.IS_TMUX then
     function M.get_clipboard()
       local fake_clipboard_filepath = tmux.get_tmux_env_value("ghc_use_fake_clipboard")
       if fake_clipboard_filepath == nil or not eve.std.path.is_exist(fake_clipboard_filepath) then
@@ -86,7 +85,7 @@ if env.IS_MAC then
       return nil
     end
   end
-elseif env.IS_WSL then
+elseif eve.env.IS_WSL then
   function M.get_clipboard()
     return {
       name = "WslClipboard",

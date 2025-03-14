@@ -1,6 +1,5 @@
 local __module_name__ = "eve.module.clipboard" ---@type string
 
-local env = require("eve.std.env")
 local shell = require("eve.std.shell")
 
 ---@class eve.module.clipboard.img
@@ -8,7 +7,7 @@ local shell = require("eve.std.shell")
 ---@field public paste_image            fun(filepath: string): boolean
 local M = {}
 
-if env.IS_MAC then
+if eve.env.IS_MAC then
   ---@return boolean
   function M.has_image()
     local cmd = shell.format_command("pngpaste -") ---@type string
@@ -43,7 +42,7 @@ if env.IS_MAC then
     end
     return exit_code == 0
   end
-elseif env.IS_NIX then
+elseif eve.env.IS_NIX then
   ---@return boolean
   function M.has_image()
     local cmd = shell.format_command("xclip -selection clipboard -t TARGETS -o") ---@type string
@@ -68,7 +67,7 @@ elseif env.IS_NIX then
     end
     return exit_code == 0
   end
-elseif env.IS_WIN or env.IS_WSL then
+elseif eve.env.IS_WIN or eve.env.IS_WSL then
   ---@param cmd                         string
   ---@return string
   local function format_command(cmd)

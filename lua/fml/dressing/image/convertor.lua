@@ -1,6 +1,5 @@
 local __module_name__ = "fml.dressing.image.convertor" ---@type string
 
-local env = require("eve.std.env")
 local config = require("fml.dressing.image.config")
 local terminal = require("fml.dressing.image.terminal")
 local util = require("fml.dressing.image.util")
@@ -164,7 +163,7 @@ local commands = {
       vim.list_extend(args, { "-write", "{file}", "-identify", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{file}.info" })
       return {
         { cmd = "magick", args = args },
-        not env.IS_WIN and { cmd = "convert", args = args } or nil,
+        not eve.env.IS_WIN and { cmd = "convert", args = args } or nil,
       }
     end,
   },

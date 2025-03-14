@@ -1,4 +1,3 @@
-local env = require("eve.std.env")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -81,7 +80,7 @@ S = {
     local workspace_pieces = eve.std.path.split(eve.std.path.workspace()) ---@type string[]
     local cwd_pieces = eve.std.path.split(eve.std.path.cwd()) ---@type string[]
     local relpath_pieces = eve.std.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
-    local relpath = table.concat(relpath_pieces, env.PATH_SEP)
+    local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
 
     ---@type eve.t.state.buf.meta.state
     meta = {
@@ -115,7 +114,7 @@ S = {
       local workspace_pieces = eve.std.path.split(eve.std.path.workspace()) ---@type string[]
       local cwd_pieces = eve.std.path.split(eve.std.path.cwd()) ---@type string[]
       local relpath_pieces = eve.std.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
-      local relpath = table.concat(relpath_pieces, env.PATH_SEP)
+      local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
 
       meta.fileicon = fileicon
       meta.fileicon_hl = fileicon_hl
@@ -248,7 +247,7 @@ function M.load(raw_data)
       local filename = eve.std.path.basename(item.filepath) ---@type string
       local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
       local relpath_pieces = eve.std.path.split_prettier(workspace_pieces, cwd_pieces, item.filepath) ---@type string[]
-      local relpath = table.concat(relpath_pieces, env.PATH_SEP)
+      local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
 
       if #vim.bo[bufnr].filetype < 1 then
         vim.bo[bufnr].filetype = item.filetype

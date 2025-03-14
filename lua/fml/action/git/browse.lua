@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.git" ---@type string
 
-local env = require("eve.std.env")
 local state = require("eve.state")
 local select = require("fml.fn.select")
 
@@ -111,7 +110,7 @@ end
 
 ---@return string
 local function get_git_branch_or_commit()
-  local command = env.IS_WIN
+  local command = eve.env.IS_WIN
   and 'git rev-parse --abbrev-ref HEAD 2>$null'
   or 'git rev-parse --abbrev-ref HEAD 2>/dev/null'
 
@@ -135,7 +134,7 @@ local function get_git_branch_or_commit()
 
   -- If not on a branch, try to get the commit hash
   if branch == '' or branch == 'HEAD' then
-    command = env.IS_WIN
+    command = eve.env.IS_WIN
     and 'git rev-parse HEAD 2>$null'
     or 'git rev-parse HEAD 2>/dev/null'
 

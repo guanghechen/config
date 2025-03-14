@@ -1,7 +1,6 @@
-local env = require("eve.std.env")
 local icons = require("eve.constant.icon")
 
-local username = env.USERNAME ---@type string
+local username = eve.env.USERNAME ---@type string
 
 return {
   name = "copilot-chat.nvim",

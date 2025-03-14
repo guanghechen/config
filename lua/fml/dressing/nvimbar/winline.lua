@@ -1,4 +1,3 @@
-local env = require("eve.std.env")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
@@ -117,8 +116,8 @@ local function render(winnr)
     local should_show_winline = filepath:sub(1, 19) ~= "diffview:///panels/" ---@type boolean
     if should_show_winline then
       local text = filepath:sub(12) ---@type string
-      if text:sub(1, #env.HOME_NVIM_CONFIG) == env.HOME_NVIM_CONFIG then
-        text = "<NVIM_HOME>" .. text:sub(#env.HOME_NVIM_CONFIG + 1)
+      if text:sub(1, #eve.env.HOME_NVIM_CONFIG) == eve.env.HOME_NVIM_CONFIG then
+        text = "<NVIM_HOME>" .. text:sub(#eve.env.HOME_NVIM_CONFIG + 1)
       end
       local winbar = "diffview://" .. text
       vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")
@@ -128,8 +127,8 @@ local function render(winnr)
 
   if filepath:sub(1, 11) == "gitsigns://" then
     local text = filepath:sub(12) ---@type string
-    if text:sub(1, #env.HOME_NVIM_CONFIG) == env.HOME_NVIM_CONFIG then
-      text = "<NVIM_HOME>" .. text:sub(#env.HOME_NVIM_CONFIG + 1)
+    if text:sub(1, #eve.env.HOME_NVIM_CONFIG) == eve.env.HOME_NVIM_CONFIG then
+      text = "<NVIM_HOME>" .. text:sub(#eve.env.HOME_NVIM_CONFIG + 1)
     end
     local winbar = "gitsigns://" .. text
     vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")

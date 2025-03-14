@@ -1,6 +1,5 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
-local env = require("eve.std.env")
 local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -574,7 +573,7 @@ function M.dirpath(position)
 
   ---@type string
   local fn_open_explorer = eve.G.register_anonymous_fn(function(index)
-    local dirpath = table.concat(relpath_pieces, env.PATH_SEP, 1, index) ---@type string
+    local dirpath = table.concat(relpath_pieces, eve.env.PATH_SEP, 1, index) ---@type string
     vim.cmd(command.definitions.find.explorer.uuid .. " " .. vim.fn.fnameescape(dirpath))
   end) or ""
 
@@ -617,7 +616,7 @@ function M.dirpath_prominent(position)
   local hln_text = position .. "_dirpath_prominent_text" ---@type string
 
   local icon = " " .. icons.os.current .. " " ---@type string
-  local sep = env.PATH_SEP ---@type string
+  local sep = eve.env.PATH_SEP ---@type string
   local hl_icon = txt(icon, hln_icon) ---@type string
 
   local width_icon = vim.api.nvim_strwidth(icon) ---@type integer
@@ -1400,7 +1399,7 @@ function M.username(position)
   local hln_text_prefix = position .. "_m_sep_fill_" ---@type string
   local hln_sep_prefix = position .. "_m_text_fill_" ---@type string
 
-  local text_with_icon = " " .. icons.os.current .. " " .. env.USERNAME ---@type string
+  local text_with_icon = " " .. icons.os.current .. " " .. eve.env.USERNAME ---@type string
   local text_icon_only = icons.os.current .. " " ---@type string
 
   local invalid = false ---@type boolean

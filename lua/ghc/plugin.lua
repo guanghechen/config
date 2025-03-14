@@ -1,6 +1,5 @@
 local __module_name__ = "ghc.plugin" ---@type string
 
-local env = require("eve.std.env")
 local state = require("eve.state")
 
 ---@class ghc.plugin.IRawSpec
@@ -52,7 +51,7 @@ local conds = {
     return not vim.g.vscode
       and not vim.g.neovide
       and state.plugin.smear_cursor:snapshot()
-      and (env.IS_WSL or env.IS_WIN)
+      and (eve.env.IS_WSL or eve.env.IS_WIN)
   end,
   treesitter_context = function()
     return not vim.g.vscode and state.plugin.treesitter_context:snapshot()
@@ -176,7 +175,7 @@ end
 
 ---! bootstrap lazy and all plugins
 vim.list_extend(final_specs, require("ghc.plugins._extra"))
-local lazypath = eve.std.path.normalize(env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
+local lazypath = eve.std.path.normalize(eve.env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
 if not eve.std.path.is_exist(lazypath) then
   local repo = "https://github.com/guanghechen/mirror"
   vim.fn.system({
@@ -223,7 +222,7 @@ require("lazy").setup({
         "netrwPlugin",
         "netrwSettings",
         "optwin",
-        (env.IS_WIN or env.IS_MAC) and "osc52" or nil,
+        (eve.env.IS_WIN or eve.env.IS_MAC) and "osc52" or nil,
         "rplugin",
         "rrhelper",
         "spellfile_plugin",

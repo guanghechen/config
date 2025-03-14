@@ -1,4 +1,3 @@
-local env = require("eve.std.env")
 local icons = require("eve.constant.icon")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
@@ -238,7 +237,7 @@ end
 
 return {
   "avante.nvim",
-  build = env.IS_WIN and "pwsh -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource true"
+  build = eve.env.IS_WIN and "pwsh -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource true"
     or "make BUILD_FROM_SOURCE=true",
   cmd = {
     "AvanteAsk",

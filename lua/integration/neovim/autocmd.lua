@@ -1,7 +1,6 @@
-local env = require("eve.std.env")
 local ft = require("eve.constant.filetype")
 
-if env.IS_MAC then
+if eve.env.IS_MAC then
   vim.defer_fn(function()
     local previous_mode = nil ---@type eve.e.VimMode|nil
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
