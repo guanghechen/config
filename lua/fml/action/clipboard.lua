@@ -1,4 +1,3 @@
-local clipboard_img = require("eve.module.clipboard-img")
 local state = require("eve.state")
 
 ---@class fml.action.clipboard
@@ -15,11 +14,11 @@ function M.paste()
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   local dirpath = vim.fn.fnamemodify(filepath, ":h") ---@type string
 
-  if clipboard_img.has_image() then
+  if eve.clipboard.has_image() then
     local placeholder = eve.path.join(dirpath, os.date("%Y-%m-%d") .. ".png") ---@type string
     local image_path = vim.fn.input("New image path", placeholder) ---@type string
 
-    clipboard_img.paste_image(image_path)
+    eve.clipboard.paste_image(image_path)
 
     local filetype = vim.bo[bufnr_sourcefile].filetype ---@type string
     if filetype == "markdown" then
