@@ -2,7 +2,6 @@
 local __mods = {
   im = "eve.std.im",
   nvim = "eve.std.nvim",
-  tmux = "eve.std.tmux",
 }
 
 ---@class eve.std
@@ -10,7 +9,6 @@ local __mods = {
 ---
 ---@field public im                     eve.std.im
 ---@field public nvim                   eve.std.nvim
----@field public tmux                   eve.std.tmux
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

@@ -52,7 +52,7 @@ function M.defaults()
     lsp_msg = "",
     maximized_winnrs = {},
     suppress_warning = false,
-    tmux_zen_mode = eve.std.tmux.is_tmux_pane_zoomed(),
+    tmux_zen_mode = eve.tmux.is_tmux_pane_zoomed(),
   }
 end
 

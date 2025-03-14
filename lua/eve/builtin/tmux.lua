@@ -33,7 +33,7 @@ local function is_tmux_pane_rightest()
   return tonumber(tmux_command("display-message -p '#{pane_at_right}'")) == 1
 end
 
----@class eve.std.tmux
+---@class eve.builtin.tmux
 ---@field public is_tmux_pane_corner    fun(direction: "p"|"n"|"h"|"j"|"k"|"l"): boolean
 ---@field public is_tmux_pane_zoomed    fun(): boolean
 ---@field public should_tmux_control    fun(disable_nav_when_zoomed: boolean): boolean

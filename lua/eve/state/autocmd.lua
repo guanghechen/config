@@ -1,4 +1,3 @@
-local tmux = require("eve.std.tmux")
 local varnames = require("eve.constant.setting").vars
 local editor = require("eve.module.editor")
 
@@ -221,8 +220,8 @@ vim.api.nvim_create_autocmd("VimResized", {
       state.status.dirtier_statusline:mark_dirty()
       state.status.dirtier_tabline:mark_dirty()
 
-      if vim.env.TMUX then
-        local is_tmux_pane_zoomed = tmux.is_tmux_pane_zoomed() ---@type boolean
+      if eve.env.IS_TMUX then
+        local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
         state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
       end
     end)
