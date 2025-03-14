@@ -1,4 +1,4 @@
----@class eve.std.is
+---@class eve.builtin.is
 local M = {}
 
 ---@param value                         unknown
