@@ -5,7 +5,6 @@ local __mods = {
   fs = "eve.std.fs",
   im = "eve.std.im",
   is = "eve.std.is",
-  json = "eve.std.json",
   lsp = "eve.std.lsp",
   nvim = "eve.std.nvim",
   oxi = "eve.std.oxi",
@@ -24,7 +23,6 @@ local __mods = {
 ---@field public fs                     eve.std.fs
 ---@field public is                     eve.std.is
 ---@field public im                     eve.std.im
----@field public json                   eve.std.json
 ---@field public nvim                   eve.std.nvim
 ---@field public oxi                    eve.std.oxi
 ---@field public reporter               eve.std.reporter

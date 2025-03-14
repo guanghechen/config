@@ -41,7 +41,7 @@ local function log(options, level)
   end
 
   if options.details ~= nil then
-    local details = "```json\n" .. eve.std.json.stringify_prettier(options.details) .. "\n```" ---@type string
+    local details = "```json\n" .. eve.json.stringify_prettier(options.details) .. "\n```" ---@type string
     if #text > 0 then
       text = text .. "\n\n" .. details
     else

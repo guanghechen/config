@@ -241,7 +241,7 @@ end
 ---@param prettier                      boolean
 ---@return nil
 function M.write_json(filepath, data, prettier)
-  local ok_to_encode_json, json_text = pcall(prettier and eve.std.json.stringify_prettier or eve.std.json.stringify, data)
+  local ok_to_encode_json, json_text = pcall(prettier and eve.json.stringify_prettier or eve.json.stringify, data)
   if not ok_to_encode_json then
     eve.std.reporter.warn({
       from = __module_name__,

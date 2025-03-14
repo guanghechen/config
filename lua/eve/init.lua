@@ -2,6 +2,7 @@
 local __mods = {
   debug = "eve.builtin.debug",
   env = "eve.builtin.env",
+  json = "eve.builtin.json",
   path = "eve.builtin.path",
 }
 
@@ -12,6 +13,7 @@ local __gfn = {} ---@type table<string, fun(...): nil>
 ---@field public __mods                 eve.__mods
 ---@field public debug                  eve.builtin.debug
 ---@field public env                    eve.builtin.env
+---@field public json                   eve.builtin.json
 ---@field public path                   eve.builtin.path
 ---
 ---@field public G                      eve.G

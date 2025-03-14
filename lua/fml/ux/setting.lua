@@ -1,6 +1,6 @@
 local __module_name__ = "fml.ux.setting" ---@type string
 
-local json = require("eve.std.json")
+local json = require("eve.json")
 local Textarea = require("fml.ux.textarea")
 
 ---@class fml.ux.ISetting
