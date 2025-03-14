@@ -383,7 +383,7 @@ end
 function M.locate_cache_filepath(filename)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = eve.std.md5.sumhexa(workspace_path)
+  local hash = eve.lib.md5.sumhexa(workspace_path)
   local dirpath = M.join(HOME_NVIM_CACHE, "guanghechen" .. SEP .. workspace_name .. "@" .. hash) ---@type string
   local filepath = M.join(dirpath, filename) ---@type string
   M.mkdir_if_nonexist(dirpath)
@@ -416,7 +416,7 @@ end
 function M.locate_workspace_filepath(filename)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = eve.std.md5.sumhexa(workspace_path)
+  local hash = eve.lib.md5.sumhexa(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   return M.locate_context_filepath("workspaces" .. SEP .. session_dir .. SEP .. filename)
 end

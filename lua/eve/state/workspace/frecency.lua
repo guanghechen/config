@@ -1,4 +1,4 @@
-local md5 = require("eve.std.md5")
+local md5 = require("eve.lib.md5")
 
 ---@class eve.state.frecency.data
 ---@field public files                  eve.collection.frecency.ISerializedData

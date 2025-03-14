@@ -10,7 +10,6 @@ local __mods = {
   is = "eve.std.is",
   json = "eve.std.json",
   lsp = "eve.std.lsp",
-  md5 = "eve.std.md5",
   nvim = "eve.std.nvim",
   oxi = "eve.std.oxi",
   path = "eve.std.path",
@@ -33,7 +32,6 @@ local __mods = {
 ---@field public is                     eve.std.is
 ---@field public im                     eve.std.im
 ---@field public json                   eve.std.json
----@field public md5                    eve.std.md5
 ---@field public nvim                   eve.std.nvim
 ---@field public oxi                    eve.std.oxi
 ---@field public path                   eve.std.path

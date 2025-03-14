@@ -9,6 +9,7 @@ local __gfn = {} ---@type table<string, fun(...): nil>
 ---@class eve
 ---@field public G                      eve.G
 ---@field public c                      eve.collection
+---@field public lib                    eve.lib
 ---@field public std                    eve.std
 ---
 ---@field public debug                  eve.std.debug
@@ -26,6 +27,7 @@ local M = setmetatable({
   }, { __index = __gfn }),
   c = require("eve.collection"),
   collection = require("eve.collection"),
+  lib = require("eve.lib"),
   std = require("eve.std"),
 }, {
   __index = function(t, k)
