@@ -1,4 +1,3 @@
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 ---@class fml.action.tab
@@ -28,7 +27,7 @@ function M.new_with_buf(context)
   local tabtype = eve.setting.tabtypes.NORMAL ---@type string
   local bufs = {} ---@type eve.t.state.tab.buf.state[]
 
-  if bufnr ~= nil and eve.nvim.is_buf_valid(bufnr) and editor.is_buf_sourcefile(bufnr) then
+  if bufnr ~= nil and eve.nvim.is_buf_valid(bufnr) and eve.editor.is_buf_sourcefile(bufnr) then
     bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
   end
 

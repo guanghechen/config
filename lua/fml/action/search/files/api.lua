@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 local context = require("fml.action.search.files.context")
@@ -613,7 +612,7 @@ function M.open_files(items, frecency)
       local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string
       frecency:access(relative_filepath)
 
-      editor.open_filepath(winnr_sourcefile, absolute_filepath, file_item.lnum, file_item.col) ---@type boolean
+      eve.editor.open_filepath(winnr_sourcefile, absolute_filepath, file_item.lnum, file_item.col) ---@type boolean
     end
   end
 end

@@ -4,6 +4,7 @@ local __mods = {
   box = "eve.builtin.box",
   clipboard = "eve.builtin.clipboard",
   debug = "eve.builtin.debug",
+  editor = "eve.builtin.editor",
   env = "eve.builtin.env",
   filetype = "eve.builtin.filetype",
   fn = "eve.builtin.fn",
@@ -33,6 +34,7 @@ local __mods = {
 ---@field public box                    eve.builtin.box
 ---@field public clipboard              eve.builtin.clipboard
 ---@field public debug                  eve.builtin.debug
+---@field public editor                 eve.builtin.editor
 ---@field public env                    eve.builtin.env
 ---@field public filetype               eve.builtin.filetype
 ---@field public fn                     eve.builtin.fn
@@ -55,7 +57,6 @@ local __mods = {
 ---@field public tmux                   eve.builtin.tmux
 ---@field public winpicker              eve.builtin.winpicker
 ---
----@field public c                      eve.constant
 ---@field public col                    eve.collection
 ---@field public lib                    eve.lib
 local M = setmetatable({

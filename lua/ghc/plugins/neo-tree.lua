@@ -1,5 +1,3 @@
-local editor = require("eve.module.editor")
-
 ---@return nil
 local function recursively_toggle_all(neotree_state)
   local node = neotree_state.tree:get_node()
@@ -341,7 +339,7 @@ return {
     package.loaded["window-picker"] = {
       pick_window = function()
         local winnr_source = vim.api.nvim_get_current_win() ---@type integer
-        return editor.pick_projectable_win(winnr_source)
+        return eve.editor.pick_projectable_win(winnr_source)
       end,
     }
 

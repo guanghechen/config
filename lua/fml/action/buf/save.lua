@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 ---@class fml.action.buf
@@ -42,7 +41,7 @@ function M.save()
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or editor.pick_sourcefile_win() ---@type integer|nil
+  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or eve.editor.pick_sourcefile_win() ---@type integer|nil
   if winnr_sourcefile == nil then
     eve.reporter.error({
       from = __module_name__,

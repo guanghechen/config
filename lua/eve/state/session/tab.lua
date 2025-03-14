@@ -1,5 +1,3 @@
-local editor = require("eve.module.editor")
-
 ---@alias eve.e.state.tab.meta.TabType
 ---| "normal"
 ---| "diffview"
@@ -303,7 +301,7 @@ S = {
       return meta
     end
 
-    local tabtype = editor.calc_tabtype(tabnr) ---@type string
+    local tabtype = eve.editor.calc_tabtype(tabnr) ---@type string
     local bufs = {} ---@type eve.t.state.tab.buf.data[]
     local bufnr_set = {} ---@type table<integer, true>
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
@@ -312,9 +310,9 @@ S = {
     local winnr_current = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr_current = vim.api.nvim_win_get_buf(winnr_current) ---@type integer
     for _, winnr in ipairs(winnrs) do
-      if editor.is_win_sourcefile(winnr) then
+      if eve.editor.is_win_sourcefile(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if not bufnr_set[bufnr] and editor.is_buf_sourcefile(bufnr) then
+        if not bufnr_set[bufnr] and eve.editor.is_buf_sourcefile(bufnr) then
           bufnr_set[bufnr] = true
           bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
           if bufnr == bufnr_current then
@@ -349,9 +347,9 @@ S = {
 
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
-      if editor.is_win_sourcefile(winnr) then
+      if eve.editor.is_win_sourcefile(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if not meta:find_buf(bufnr) and editor.is_buf_sourcefile(bufnr) then
+        if not meta:find_buf(bufnr) and eve.editor.is_buf_sourcefile(bufnr) then
           bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
         end
       end
@@ -360,7 +358,7 @@ S = {
     meta:rearrange_bufs()
     meta:resolve_bufnr_sourcefile(bufnr_sourcefile)
 
-    local tabtype = editor.calc_tabtype(tabnr) ---@type string
+    local tabtype = eve.editor.calc_tabtype(tabnr) ---@type string
     meta.tabtype = tabtype
   end,
   refresh_all = function()
@@ -386,11 +384,11 @@ S = {
     end
   end,
   on_buf_enter = function(tabnr, winnr, bufnr)
-    if not eve.nvim.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if not eve.nvim.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
       return
     end
 
-    if not eve.nvim.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if not eve.nvim.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
       return
     end
 
@@ -479,7 +477,7 @@ S = {
     local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
     local bufnrs_to_remove = {} ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
-      if editor.is_buf_sourcefile(bufnr) then
+      if eve.editor.is_buf_sourcefile(bufnr) then
         local has_copy = false ---@type boolean
         for _, tabnr in ipairs(tabnrs) do
           local meta_tab = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
@@ -645,9 +643,9 @@ function M.load(raw_data)
 
       local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
       for _, winnr in ipairs(winnrs) do
-        if editor.is_win_sourcefile(winnr) then
+        if eve.editor.is_win_sourcefile(winnr) then
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          if not bufnr_set[bufnr] and editor.is_buf_sourcefile(bufnr) then
+          if not bufnr_set[bufnr] and eve.editor.is_buf_sourcefile(bufnr) then
             local buf = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
             bufs[#bufs + 1] = buf
             bufnr_set[bufnr] = true

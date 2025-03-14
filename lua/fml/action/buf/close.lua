@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 ---@param tabnr                         integer
@@ -73,7 +72,7 @@ function M.close_to_leftest()
   end
 
   local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
-  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = eve.editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   local bufnrs_to_remove = {} ---@type integer[]
 
   for i = bufid_sourcefile - 1, 1, -1 do
@@ -106,7 +105,7 @@ function M.close_to_rightest()
   end
 
   local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
-  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = eve.editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   local bufnrs_to_remove = {} ---@type integer[]
 
   for i = bufid_sourcefile + 1, #bufs, 1 do
@@ -134,7 +133,7 @@ function M.close_others()
   end
 
   local bufnrs_to_remove = {} ---@type integer[]
-  local bufnrs_visible = editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = eve.editor.get_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
   for _, buf in ipairs(meta_tab.bufs) do
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then

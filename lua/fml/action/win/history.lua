@@ -1,8 +1,6 @@
 local __module_name__ = "fml.action.win" ---@type string
 
-local editor = require("eve.module.editor")
 local state = require("eve.state")
-
 local FileSelect = require("fml.ux.file_select")
 
 local _history_select = nil ---@type fml.ux.FileSelect|nil
@@ -123,7 +121,7 @@ local function get_history_select()
 
           if winnr_sourcefile ~= nil then
             widget:close()
-            editor.open_filepath(winnr_sourcefile, item.data.filepath)
+            eve.editor.open_filepath(winnr_sourcefile, item.data.filepath)
           end
         end
       end,
@@ -165,7 +163,7 @@ function M.history_backward()
 
   local last_filepath = meta.filepath_history:backward() ---@type string|nil
   if last_filepath ~= nil then
-    editor.open_filepath(winnr, last_filepath)
+    eve.editor.open_filepath(winnr, last_filepath)
   end
 end
 
@@ -193,7 +191,7 @@ function M.history_forward()
 
   local next_filepath = meta.filepath_history:forward() ---@type string|nil
   if next_filepath ~= nil then
-    editor.open_filepath(winnr, next_filepath)
+    eve.editor.open_filepath(winnr, next_filepath)
   end
 end
 

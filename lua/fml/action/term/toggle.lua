@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.term" ---@type string
 
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 local Terminal = require("fml.ux.terminal")
 
@@ -97,7 +96,7 @@ function M.toggle_cwd()
     name = "cwd",
     cwd = cwd,
     permanent = true,
-    selected_text = editor.get_selected_text(),
+    selected_text = eve.editor.get_selected_text(),
   })
 end
 
@@ -116,7 +115,7 @@ function M.toggle_directory()
     name = "directory",
     cwd = cwd,
     permanent = true,
-    selected_text = editor.get_selected_text(),
+    selected_text = eve.editor.get_selected_text(),
   })
 end
 
@@ -128,7 +127,7 @@ function M.toggle_workspace()
     name = "workspace",
     cwd = cwd,
     permanent = true,
-    selected_text = editor.get_selected_text(),
+    selected_text = eve.editor.get_selected_text(),
   })
 end
 

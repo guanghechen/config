@@ -1,6 +1,5 @@
 local __module_name__ = "eve.state" ---@type string
 
-local editor = require("eve.module.editor")
 local state_bookmark = require("eve.state.workspace.bookmark")
 local state_buf = require("eve.state.session.buf")
 local state_flight = require("eve.state.workspace.flight")
@@ -265,7 +264,7 @@ function M.watch_changes(params)
     vim.o.relativenumber = flag
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if editor.is_buf_sourcefile(bufnr) then
+      if eve.editor.is_buf_sourcefile(bufnr) then
         vim.wo[winnr].relativenumber = flag
       end
     end
@@ -382,7 +381,7 @@ function M.watch_changes(params)
     true
   )
 
-  ---! Save when leave the editor.
+  ---! Save when leave the eve.editor.
   M.add_disposable(eve.col.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean

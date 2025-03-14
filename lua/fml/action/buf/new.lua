@@ -1,4 +1,3 @@
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 ---@class fml.action.buf
@@ -7,7 +6,7 @@ local M = {}
 ---@return nil
 function M.new()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or editor.pick_sourcefile_win() ---@type integer|nil
+  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or eve.editor.pick_sourcefile_win() ---@type integer|nil
 
   ---@type integer|nil
   if winnr_sourcefile == nil then

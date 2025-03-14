@@ -1,4 +1,3 @@
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 ---@param cwd                           string
@@ -177,7 +176,7 @@ end
 
 ---@return nil
 function M.toggle()
-  if editor.find_winnr(eve.filetype.NEOTREE) ~= nil then
+  if eve.editor.find_winnr(eve.filetype.NEOTREE) ~= nil then
     require("neo-tree.command").execute({
       action = "close",
       source = "filesystem",

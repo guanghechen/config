@@ -1,5 +1,3 @@
-local editor = require("eve.module.editor")
-
 ---@class eve.t.state.buf.lsp.ISymbol
 ---@field public kind                   string
 ---@field public name                   string
@@ -61,7 +59,7 @@ S = {
     end
   end,
   resolve = function(bufnr)
-    if bufnr == nil or not eve.nvim.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if bufnr == nil or not eve.nvim.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
       return nil
     end
 

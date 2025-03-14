@@ -1,4 +1,3 @@
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 local Select = require("fml.ux.select")
 
@@ -434,7 +433,7 @@ local function get_select()
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
           local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
           for _, filepath in ipairs(filepaths) do
-            editor.open_filepath(winnr_sourcefile, filepath)
+            eve.editor.open_filepath(winnr_sourcefile, filepath)
           end
           return
         end

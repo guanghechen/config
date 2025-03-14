@@ -1,4 +1,3 @@
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 local toggle_term = require("fml.action.term.toggle").toggle
@@ -41,7 +40,7 @@ local function open_yazi(name, cwd, filepath)
         end
 
         if #filepaths > 0 then
-          editor.open_filepaths(nil, filepaths)
+          eve.editor.open_filepaths(nil, filepaths)
         end
       end)
     end,

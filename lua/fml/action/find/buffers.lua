@@ -1,4 +1,3 @@
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 local Select = require("fml.ux.select")
@@ -72,7 +71,7 @@ local function get_select()
             return
           end
 
-          if not editor.is_buf_sourcefile(bufnr) then
+          if not eve.editor.is_buf_sourcefile(bufnr) then
             vim.api.nvim_buf_delete(bufnr, { force = true })
             return
           end
@@ -221,7 +220,7 @@ local function get_select()
 
         if #items > 0 then
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or editor.pick_sourcefile_win() ---@type integer|nil
+          local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or eve.editor.pick_sourcefile_win() ---@type integer|nil
           if winnr_sourcefile ~= nil then
             for _, item in ipairs(items) do
               local data = item.data ---@type fml.action.find.buffers.IItemData

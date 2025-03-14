@@ -1,6 +1,4 @@
-local editor = require("eve.module.editor")
 local state = require("eve.state")
-
 local SearchInput = require("fml.ux.search.input")
 local SearchMain = require("fml.ux.search.main")
 local SearchPreview = require("fml.ux.search.preview")
@@ -223,7 +221,7 @@ function M.new(props)
       context:toggle_item_selected(lnum)
     end,
     toggle_visual_selected = function()
-      local s_lnum, t_lnum = editor.get_visual_lnum_range() ---@type integer, integer
+      local s_lnum, t_lnum = eve.editor.get_visual_lnum_range() ---@type integer, integer
       local lnums = {} ---@type integer[]
       for lnum = s_lnum, t_lnum, 1 do
         table.insert(lnums, lnum)

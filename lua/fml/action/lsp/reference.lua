@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.lsp" ---@type string
 
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 
@@ -107,7 +106,7 @@ local function fetch_data(method, additional_params, callback)
 
     if #items == 1 then
       local item = items[1] ---@type fml.ux.file_select.IRawItem
-      editor.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
+      eve.editor.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
       callback(true, nil)
       return
     end

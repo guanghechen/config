@@ -1,6 +1,4 @@
-local editor = require("eve.module.editor")
 local state = require("eve.state")
-
 local Nvimbar = require("fml.ux.nvimbar")
 local c = require("fml.dressing.nvimbar.components")
 
@@ -99,7 +97,7 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 local function render(winnr)
-  if winnr == nil or not eve.nvim.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+  if winnr == nil or not eve.nvim.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
     return
   end
 

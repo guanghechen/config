@@ -1,6 +1,5 @@
 local __module_name__ = "eve.state.session.win"
 
-local editor = require("eve.module.editor")
 local state_status = require("eve.state.session.status")
 
 ---@class eve.t.state.win.meta.data
@@ -77,7 +76,7 @@ S = {
     end
   end,
   resolve = function(winnr)
-    if winnr == nil or not eve.nvim.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if winnr == nil or not eve.nvim.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
       return nil
     end
 
@@ -87,7 +86,7 @@ S = {
     end
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if not editor.is_buf_sourcefile(bufnr) then
+    if not eve.editor.is_buf_sourcefile(bufnr) then
       return nil
     end
 
@@ -95,7 +94,7 @@ S = {
     local filepath_history = eve.col.AdvanceHistory.new({
       name = "win#bufs",
       capacity = eve.setting.WIN_BUF_HISTORY_CAPACITY,
-      validate = editor.is_valid_filepath,
+      validate = eve.editor.is_valid_filepath,
     })
     filepath_history:push(filepath)
 
@@ -262,11 +261,11 @@ S = {
     )
   end,
   on_buf_enter = function(winnr, bufnr)
-    if not eve.nvim.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if not eve.nvim.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
       return
     end
 
-    if not eve.nvim.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if not eve.nvim.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
       return
     end
 

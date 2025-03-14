@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.term" ---@type string
 
-local editor = require("eve.module.editor")
 local state = require("eve.state")
 
 local toggle_term = require("fml.action.term.toggle").toggle
@@ -77,7 +76,7 @@ local function edit_lazygit_file_in_buffer(cwd)
     return
   end
 
-  editor.open_filepath(winnr_sourcefile, relative_filepath)
+  eve.editor.open_filepath(winnr_sourcefile, relative_filepath)
 end
 
 ---@param name                          string
