@@ -446,7 +446,7 @@ function M.debug_render_count(position)
     render = function()
       count = count + 1
 
-      local text = " " .. eve.std.string.pad_start(tostring(count % 100000), 5, "0") ---@type string
+      local text = " " .. eve.string.pad_start(tostring(count % 100000), 5, "0") ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
       text = icons.symbols.sep_left .. text ---@type string
@@ -1279,7 +1279,7 @@ function M.pos(position)
     elseif row == total_lines then
       return row, col, "bot"
     else
-      local text = eve.std.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
+      local text = eve.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
       return row, col, text
     end
   end

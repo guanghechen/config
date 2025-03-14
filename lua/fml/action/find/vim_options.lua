@@ -34,9 +34,9 @@ local function get_select()
             value = info.default
           end
 
-          local text_name = eve.std.string.pad_end(info.name, WIDTH_NAME, " ") ---type string
-          local text_type = eve.std.string.pad_end(info.type, WIDTH_TYPE, " ") ---type string
-          local text_scope = eve.std.string.pad_end(info.scope, WIDTH_SCOPE, " ") ---type string
+          local text_name = eve.string.pad_end(info.name, WIDTH_NAME, " ") ---type string
+          local text_type = eve.string.pad_end(info.type, WIDTH_TYPE, " ") ---type string
+          local text_scope = eve.string.pad_end(info.scope, WIDTH_SCOPE, " ") ---type string
           local text_value = tostring(value):gsub(string.char(9), "<TAB>"):gsub("", "<C-F>"):gsub(" ", "<Space>") ---@type string
           local text = text_name .. text_type .. text_scope .. text_value ---@type string
           local text_for_search = text_name .. string.rep(" ", WIDTH_TYPE + WIDTH_SCOPE) .. text_value ---@type string

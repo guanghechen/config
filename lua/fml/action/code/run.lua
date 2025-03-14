@@ -21,7 +21,7 @@ local runners = {
   md = {
     run = function(filepath, force)
       local url = "http://localhost:9527/api/file-switch?filepath="
-        .. eve.std.string.escape_url_component(filepath)
+        .. eve.string.escape_url_component(filepath)
         .. "&force="
         .. (force and "true" or "false")
       vim.system({ "curl", "-X", "POST", url }, { detach = true })

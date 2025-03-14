@@ -17,7 +17,7 @@ local function get_history_select()
     ---@param ordinal                       integer
     ---@return string
     local function gen_uuid_from_ordinal(ordinal)
-      return eve.std.string.pad_start(tostring(ordinal), ORDINAL_WIDTH, " ")
+      return eve.string.pad_start(tostring(ordinal), ORDINAL_WIDTH, " ")
     end
 
     ---@type fml.ux.file_select.IProvider

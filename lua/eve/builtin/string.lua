@@ -1,4 +1,4 @@
----@class eve.std.string
+---@class eve.builtin.string
 local M = {}
 
 ---@param text                          string

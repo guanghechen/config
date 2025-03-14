@@ -43,7 +43,7 @@ local function codeaction_provider(items)
   local width_client_name = 0 ---@type integer
   local item_data_list = {} ---@type fml.dressing.provider.codeaction.IItemData[]
   for index, item in ipairs(items) do
-    local order = eve.std.string.pad_start(tostring(index), width_order, " ") ---@type string
+    local order = eve.string.pad_start(tostring(index), width_order, " ") ---@type string
     local content = item.action.title ---@type string
     local client_id = item.ctx.client_id ---@type integer
     local client = vim.lsp.get_client_by_id(client_id) ---@type vim.lsp.Client|nil
@@ -82,11 +82,11 @@ local function codeaction_provider(items)
 
   local select_items = {} ---@type fml.dressing.provider.codeaction.IItem[]
   for index, item_data in ipairs(item_data_list) do
-    local uuid = eve.std.string.pad_start(tostring(item_data.index), width_order, " ") ---@type string
-    local order = eve.std.string.pad_start(tostring(index), width_order, " ") ---@type string
+    local uuid = eve.string.pad_start(tostring(item_data.index), width_order, " ") ---@type string
+    local order = eve.string.pad_start(tostring(index), width_order, " ") ---@type string
     item_data.index = index
 
-    local text_content = eve.std.string.pad_end(item_data.content, width_content, " ")
+    local text_content = eve.string.pad_end(item_data.content, width_content, " ")
     local text_client_name = item_data.client_name ---@type string
     local text = order .. ": " .. text_content .. "  " .. text_client_name ---@type string
 
@@ -106,7 +106,7 @@ local function codeaction_provider(items)
     end,
     render_item = function(item, match)
       local item_data = item.data ---@type fml.dressing.provider.codeaction.IItemData
-      local text_content = eve.std.string.pad_end(item_data.content, width_content, " ")
+      local text_content = eve.string.pad_end(item_data.content, width_content, " ")
       local text_client_name = item_data.client_name ---@type string
       local text = item.text ---@type string
 

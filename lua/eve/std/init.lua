@@ -7,7 +7,6 @@ local __mods = {
   lsp = "eve.std.lsp",
   nvim = "eve.std.nvim",
   shell = "eve.std.shell",
-  string = "eve.std.string",
   table = "eve.std.table",
   tmux = "eve.std.tmux",
 }
@@ -21,7 +20,6 @@ local __mods = {
 ---@field public im                     eve.std.im
 ---@field public nvim                   eve.std.nvim
 ---@field public shell                  eve.std.shell
----@field public string                 eve.std.string
 ---@field public table                  eve.std.table
 ---@field public tmux                   eve.std.tmux
 local M = setmetatable({ __mods = __mods }, {

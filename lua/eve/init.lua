@@ -8,6 +8,7 @@ local __mods = {
   oxi = "eve.builtin.oxi",
   path = "eve.builtin.path",
   reporter = "eve.builtin.reporter",
+  string = "eve.builtin.string",
 }
 
 ---@class eve
@@ -20,6 +21,7 @@ local __mods = {
 ---@field public oxi                    eve.builtin.oxi
 ---@field public path                   eve.builtin.path
 ---@field public reporter               eve.builtin.reporter
+---@field public string                 eve.builtin.string
 ---
 ---@field public c                      eve.constant
 ---@field public col                    eve.collection
