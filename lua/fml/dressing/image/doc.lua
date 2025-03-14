@@ -57,7 +57,7 @@ M.transforms = {
       return
     end
     img.content = util.tpl(config.state.math.typst.tpl, {
-      color = eve.std.nvim.pick_color({ "SnacksImageMath" }, "fg") or "#000000",
+      color = eve.nvim.pick_color({ "SnacksImageMath" }, "fg") or "#000000",
       header = M.get_header(ctx.bufnr),
       content = img.content,
     }, { indent = true, prefix = "$" })
@@ -66,7 +66,7 @@ M.transforms = {
     if not (img.content and img.ext == "math.tex") then
       return
     end
-    local fg = eve.std.nvim.pick_color({ "SnacksImageMath" }, "fg") or "#000000"
+    local fg = eve.nvim.pick_color({ "SnacksImageMath" }, "fg") or "#000000"
     local content = vim.trim(img.content or "")
     content = content:gsub("^%$+`?", ""):gsub("`?%$+$", "")
     content = content:gsub("^\\[%[%(]", ""):gsub("\\[%]%)]$", "")
@@ -430,7 +430,7 @@ function M.hover()
     return
   end
 
-  if hover and eve.std.nvim.is_win_valid(hover.winnr) and (hover.bufnr ~= bufnr_cur or vim.fn.mode() ~= "n") then
+  if hover and eve.nvim.is_win_valid(hover.winnr) and (hover.bufnr ~= bufnr_cur or vim.fn.mode() ~= "n") then
     M.hover_close()
   end
 
@@ -449,7 +449,7 @@ function M.hover()
     local bufnr = 0 ---@type integer
     local winnr = 0 ---@type integer
 
-    if hover and eve.std.nvim.is_buf_valid(hover.bufnr) then
+    if hover and eve.nvim.is_buf_valid(hover.bufnr) then
       bufnr = hover.bufnr
     else
       bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -472,7 +472,7 @@ function M.hover()
       border = "rounded",
       style = "minimal",
     }
-    if hover and eve.std.nvim.is_win_valid(hover.winnr) then
+    if hover and eve.nvim.is_win_valid(hover.winnr) then
       winnr = hover.winnr ---@type integer
       vim.api.nvim_win_set_config(hover.winnr, wincfg)
 
@@ -505,7 +505,7 @@ function M.hover()
         if hover and not updated then
           updated = true
           local loc = hover.placement:state().loc
-          if eve.std.nvim.is_win_valid(hover.winnr) then
+          if eve.nvim.is_win_valid(hover.winnr) then
             vim.api.nvim_win_set_height(hover.winnr, loc.height)
             vim.api.nvim_win_set_width(hover.winnr, loc.width)
           end
@@ -521,7 +521,7 @@ function M.hover()
     }
 
     vim.api.nvim_create_autocmd({ "BufWritePost", "CursorMoved", "ModeChanged", "BufLeave" }, {
-      group = eve.std.nvim.augroup("fml.dressing.image.hover"),
+      group = eve.nvim.augroup("fml.dressing.image.hover"),
       callback = function()
         if not hover then
           return true
@@ -538,7 +538,7 @@ end
 ---@return nil
 function M.hover_close()
   if hover then
-    if eve.std.nvim.is_win_valid(hover.winnr) then
+    if eve.nvim.is_win_valid(hover.winnr) then
       vim.api.nvim_win_close(hover.winnr, true)
     end
     hover.placement:close()
@@ -563,7 +563,7 @@ function M.attach(bufnr)
   if inline then
     ImageInline.new(bufnr)
   else
-    local group = eve.std.nvim.augroup("fml.dressing.image.doc." .. bufnr)
+    local group = eve.nvim.augroup("fml.dressing.image.doc." .. bufnr)
     vim.api.nvim_create_autocmd({ "CursorMoved" }, {
       group = group,
       buffer = bufnr,

@@ -1,4 +1,4 @@
----@class eve.std.nvim
+---@class eve.builtin.nvim
 local M = {}
 
 ---@param name                          string

@@ -152,7 +152,7 @@ local function on_attach(client, bufnr)
       desc = "lsp: fix all",
     },
   }
-  eve.std.nvim.bindkeys(keymaps, { bufnr = bufnr })
+  eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end
 
 local plugins = {

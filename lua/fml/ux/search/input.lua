@@ -31,7 +31,7 @@ function M.new(props)
 
   local context = props.context ---@type fml.ux.search.IContext
   local input_history = context.input_history ---@type eve.collection.IHistory|nil
-  local autocmd_group = eve.std.nvim.augroup(context.uuid .. ":search_input") ---@type integer
+  local autocmd_group = eve.nvim.augroup(context.uuid .. ":search_input") ---@type integer
 
   local actions = {
     apply_prev_input = function()
@@ -139,7 +139,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].filetype = ft.SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
 
-  eve.std.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local input = context.input:snapshot() ---@type string
   local lines = eve.oxi.parse_lines(input) ---@type string[]

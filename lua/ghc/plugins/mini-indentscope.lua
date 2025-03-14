@@ -14,7 +14,7 @@ return {
   },
   init = function()
     vim.api.nvim_create_autocmd("FileType", {
-      group = eve.std.nvim.augroup("disable_miniindentscope"),
+      group = eve.nvim.augroup("disable_miniindentscope"),
       pattern = ft.get_no_ibl_filetypes(),
       callback = function()
         vim.b.miniindentscope_disable = true

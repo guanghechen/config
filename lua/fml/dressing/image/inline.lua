@@ -13,7 +13,7 @@ function M.new(buf)
   self.buf = buf
   self.imgs = {}
   self.idx = {}
-  local group = eve.std.nvim.augroup("fml.dressing.image.inline." .. buf)
+  local group = eve.nvim.augroup("fml.dressing.image.inline." .. buf)
 
   local update = eve.fn.debounce(function()
     self:update()

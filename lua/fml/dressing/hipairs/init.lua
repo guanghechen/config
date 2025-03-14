@@ -24,7 +24,7 @@ vim.api.nvim_create_autocmd({
   "CursorMovedI",
 }, {
   desc = "[fml.dressing.hipairs] render pairs",
-  group = eve.std.nvim.augroup("hipairs_render"),
+  group = eve.nvim.augroup("hipairs_render"),
   callback = function()
     close_timer()
 
@@ -41,7 +41,7 @@ vim.api.nvim_create_autocmd({
 ---Clean `timer` on `VimLeavePre`
 vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
   desc = "[fml.dressing.hipairs] cleanup timer",
-  group = eve.std.nvim.augroup("hipairs_clear"),
+  group = eve.nvim.augroup("hipairs_clear"),
   callback = function()
     close_timer()
   end,

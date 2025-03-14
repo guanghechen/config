@@ -292,7 +292,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto next reference",
     },
   }
-  eve.std.nvim.bindkeys(keymaps, { bufnr = bufnr })
+  eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end
 
 function M.on_init(client, _)

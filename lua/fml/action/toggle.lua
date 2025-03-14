@@ -410,7 +410,7 @@ function M.toggle_maximize()
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr_fixed) ---@type integer
-  if eve.std.nvim.is_buf_valid(bufnr) then
+  if eve.nvim.is_buf_valid(bufnr) then
     local winnr = vim.api.nvim_open_win(bufnr, false, {
       relative = "editor",
       anchor = "NW",

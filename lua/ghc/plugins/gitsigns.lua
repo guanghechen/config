@@ -169,7 +169,7 @@ local keymaps = {
       printer
         :lf()
         :line(
-          string.format("%s, %s (%s)", author_name, eve.std.nvim.time_ago(author_timestamp or os.time()), author_date),
+          string.format("%s, %s (%s)", author_name, eve.nvim.time_ago(author_timestamp or os.time()), author_date),
           { { hlname = "Title", coll = 0, colr = -1 } }
         )
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
@@ -208,7 +208,7 @@ local keymaps = {
           end,
         },
       }
-      eve.std.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+      eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
       local height = printer:count_lines() ---@type integer
       local opts = {
@@ -360,7 +360,7 @@ return {
       untracked = { text = "┆" },
     },
     on_attach = function(bufnr)
-      eve.std.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
+      eve.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
       vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<cr>", {
         buffer = bufnr,
         noremap = true,

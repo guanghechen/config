@@ -1,7 +1,7 @@
 local command = require("eve.command")
 
-local mk = eve.std.nvim.make_keys
-local ms = eve.std.nvim.make_shortcut
+local mk = eve.nvim.make_keys
+local ms = eve.nvim.make_shortcut
 local K = command.definitions ---@type eve.command.definitions
 
 --#enhance------------------------------------------------------------------------------------------

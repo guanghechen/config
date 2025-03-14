@@ -15,7 +15,7 @@ vim.defer_fn(
 
 local size ---@type fml.dressing.image.terminal.Dim?
 vim.api.nvim_create_autocmd("VimResized", {
-  group = eve.std.nvim.augroup("fml.dressing.image.terminal"),
+  group = eve.nvim.augroup("fml.dressing.image.terminal"),
   callback = function()
     size = nil
   end,

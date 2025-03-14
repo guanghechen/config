@@ -47,12 +47,12 @@ local M = {}
 S = {
   __meta_map__ = {}, ---@type table<integer, eve.t.state.buf.meta.state>
   get = function(bufnr)
-    if bufnr ~= nil and eve.std.nvim.is_buf_valid(bufnr) then
+    if bufnr ~= nil and eve.nvim.is_buf_valid(bufnr) then
       return S.__meta_map__[bufnr]
     end
   end,
   set = function(bufnr, meta)
-    if bufnr ~= nil and eve.std.nvim.is_buf_valid(bufnr) then
+    if bufnr ~= nil and eve.nvim.is_buf_valid(bufnr) then
       S.__meta_map__[bufnr] = meta
       return meta
     end
@@ -63,7 +63,7 @@ S = {
     end
   end,
   resolve = function(bufnr)
-    if bufnr == nil or not eve.std.nvim.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if bufnr == nil or not eve.nvim.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
       return nil
     end
 
@@ -95,7 +95,7 @@ S = {
     return meta
   end,
   refresh = function(bufnr)
-    if bufnr == nil or not eve.std.nvim.is_buf_valid(bufnr) then
+    if bufnr == nil or not eve.nvim.is_buf_valid(bufnr) then
       return nil
     end
 
@@ -132,7 +132,7 @@ S = {
 
     local invalid_bufnrs = {} ---@type integer[]
     for bufnr in pairs(S.__meta_map__) do
-      if not eve.std.nvim.is_buf_valid(bufnr) then
+      if not eve.nvim.is_buf_valid(bufnr) then
         invalid_bufnrs[#invalid_bufnrs + 1] = bufnr
       end
     end
@@ -240,7 +240,7 @@ function M.load(raw_data)
 
   local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
   local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
-  local filepath2bufnr = eve.std.nvim.filepath2bufnr() ---@type table<string, integer>
+  local filepath2bufnr = eve.nvim.filepath2bufnr() ---@type table<string, integer>
   for _, item in ipairs(data.list) do
     local bufnr = filepath2bufnr[item.filepath] ---@type integer|nil
     if bufnr ~= nil then

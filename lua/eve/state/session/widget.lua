@@ -85,7 +85,7 @@ S = {
         widget_visible:focus()
         S.history:go(widget_visible_index)
       else
-        if winnr_fixed ~= nil and eve.std.nvim.is_win_valid(winnr_fixed) then
+        if winnr_fixed ~= nil and eve.nvim.is_win_valid(winnr_fixed) then
           vim.api.nvim_tabpage_set_win(tabnr, winnr_fixed)
         end
       end

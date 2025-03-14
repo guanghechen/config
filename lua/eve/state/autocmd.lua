@@ -6,7 +6,7 @@ local state = require("eve.state")
 state.refresh()
 
 vim.api.nvim_create_autocmd("VimLeavePre", {
-  group = eve.std.nvim.augroup("state_on_vim_leave_pre"),
+  group = eve.nvim.augroup("state_on_vim_leave_pre"),
   once = true,
   callback = function()
     state.dispose()
@@ -14,7 +14,7 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 })
 
 vim.api.nvim_create_autocmd("VimEnter", {
-  group = eve.std.nvim.augroup("state_on_vim_enter"),
+  group = eve.nvim.augroup("state_on_vim_enter"),
   callback = function()
     local cwd = eve.path.cwd() ---@type string
     local existed_filepaths = {} ---@type table<string, boolean>
@@ -50,7 +50,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
 })
 
 vim.api.nvim_create_autocmd("TabEnter", {
-  group = eve.std.nvim.augroup("state_on_tab_enter"),
+  group = eve.nvim.augroup("state_on_tab_enter"),
   callback = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -63,7 +63,7 @@ vim.api.nvim_create_autocmd("TabEnter", {
 })
 
 vim.api.nvim_create_autocmd("TabClosed", {
-  group = eve.std.nvim.augroup("state_on_tab_closed"),
+  group = eve.nvim.augroup("state_on_tab_closed"),
   callback = function()
     local tabnr_last = state.tab.tab_history:present() ---@type integer|nil
     vim.schedule(function()
@@ -78,7 +78,7 @@ vim.api.nvim_create_autocmd("TabClosed", {
 })
 
 vim.api.nvim_create_autocmd({ "BufDelete" }, {
-  group = eve.std.nvim.augroup("state_on_buf_delete"),
+  group = eve.nvim.augroup("state_on_buf_delete"),
   callback = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     vim.schedule(function()
@@ -89,7 +89,7 @@ vim.api.nvim_create_autocmd({ "BufDelete" }, {
 })
 
 vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-  group = eve.std.nvim.augroup("state_on_buf_win_enter"),
+  group = eve.nvim.augroup("state_on_buf_win_enter"),
   callback = function(arg)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -105,7 +105,7 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
 })
 
 vim.api.nvim_create_autocmd({ "WinEnter" }, {
-  group = eve.std.nvim.augroup("state_on_win_enter"),
+  group = eve.nvim.augroup("state_on_win_enter"),
   callback = function(arg)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -122,7 +122,7 @@ vim.api.nvim_create_autocmd({ "WinEnter" }, {
 })
 
 vim.api.nvim_create_autocmd("WinClosed", {
-  group = eve.std.nvim.augroup("state_on_win_closed"),
+  group = eve.nvim.augroup("state_on_win_closed"),
   callback = function(args)
     local winnr = type(args) == "table" and args.file or nil ---@type integer|nil
     if type(winnr) == "number" then
@@ -135,7 +135,7 @@ vim.api.nvim_create_autocmd("WinClosed", {
 })
 
 vim.api.nvim_create_autocmd("ModeChanged", {
-  group = eve.std.nvim.augroup("state_on_mode_changed"),
+  group = eve.nvim.augroup("state_on_mode_changed"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     state.status.dirty_winline_nr:next(winnr)
@@ -145,7 +145,7 @@ vim.api.nvim_create_autocmd("ModeChanged", {
 })
 
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
-  group = eve.std.nvim.augroup("state_on_diagnostic_changed"),
+  group = eve.nvim.augroup("state_on_diagnostic_changed"),
   callback = function()
     state.status.dirtier_statusline:mark_dirty()
     state.status.dirtier_tabline:mark_dirty()
@@ -153,7 +153,7 @@ vim.api.nvim_create_autocmd("DiagnosticChanged", {
 })
 
 vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "BufWritePost" }, {
-  group = eve.std.nvim.augroup("state_on_content_changed"),
+  group = eve.nvim.augroup("state_on_content_changed"),
   callback = function()
     state.status.dirtier_statusline:mark_dirty()
     state.status.dirtier_tabline:mark_dirty()
@@ -161,7 +161,7 @@ vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "BufWritePost" }, {
 })
 
 vim.api.nvim_create_autocmd("CursorHold", {
-  group = eve.std.nvim.augroup("state_on_cursor_hold"),
+  group = eve.nvim.augroup("state_on_cursor_hold"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     state.status.dirty_winline_nr:next(winnr)
@@ -171,7 +171,7 @@ vim.api.nvim_create_autocmd("CursorHold", {
 
 local lsp_progress_spinners = { "", "", "", "󰪞", "󰪟", "󰪠", "󰪢", "󰪣", "󰪤", "󰪥" }
 vim.api.nvim_create_autocmd("LspProgress", {
-  group = eve.std.nvim.augroup("state_on_lsp_progress"),
+  group = eve.nvim.augroup("state_on_lsp_progress"),
   callback = function(args)
     local data = args.data.params.value
     local progress = ""
@@ -200,7 +200,7 @@ vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
 
 ---! Auto resize splits when window got resized.
 vim.api.nvim_create_autocmd("VimResized", {
-  group = eve.std.nvim.augroup("state_on_vim_resized"),
+  group = eve.nvim.augroup("state_on_vim_resized"),
   callback = function()
     ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
     local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -229,7 +229,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 })
 
 vim.api.nvim_create_autocmd("WinResized", {
-  group = eve.std.nvim.augroup("state_on_win_resized"),
+  group = eve.nvim.augroup("state_on_win_resized"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     state.status.dirty_winline_nr:next(winnr)

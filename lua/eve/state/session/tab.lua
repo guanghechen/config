@@ -159,7 +159,7 @@ end
 ---@return integer|nil
 function Meta:get_winnr_command()
   local winnr_command = self.winnr_command:snapshot() ---@type integer
-  if eve.std.nvim.is_win_valid(winnr_command) then
+  if eve.nvim.is_win_valid(winnr_command) then
     return winnr_command
   else
     self.winnr_command:next(0)
@@ -170,7 +170,7 @@ end
 ---@return integer|nil
 function Meta:get_winnr_fixed()
   local winnr_fixed = self.winnr_fixed:snapshot() ---@type integer
-  if eve.std.nvim.is_win_valid(winnr_fixed) then
+  if eve.nvim.is_win_valid(winnr_fixed) then
     return winnr_fixed
   else
     self.winnr_fixed:next(0)
@@ -205,7 +205,7 @@ function Meta:rearrange_bufs()
   local k = 1 ---@type integer
   for i = 1, N, 1 do
     local buf = bufs[i] ---@type eve.t.state.tab.buf.state
-    if buf ~= nil and eve.std.nvim.is_buf_valid(buf.bufnr) then
+    if buf ~= nil and eve.nvim.is_buf_valid(buf.bufnr) then
       bufs[k] = buf
       k = k + 1
     end
@@ -275,16 +275,16 @@ S = {
   tab_history = eve.col.AdvanceHistory.new({
     name = "tabs",
     capacity = setting.TAB_HISTORY_CAPACITY,
-    validate = eve.std.nvim.is_tab_valid,
+    validate = eve.nvim.is_tab_valid,
   }),
 
   get = function(tabnr)
-    if tabnr ~= nil and eve.std.nvim.is_tab_valid(tabnr) then
+    if tabnr ~= nil and eve.nvim.is_tab_valid(tabnr) then
       return S.__meta_map__[tabnr]
     end
   end,
   set = function(tabnr, meta)
-    if tabnr ~= nil and eve.std.nvim.is_tab_valid(tabnr) then
+    if tabnr ~= nil and eve.nvim.is_tab_valid(tabnr) then
       S.__meta_map__[tabnr] = meta
       return meta
     end
@@ -295,7 +295,7 @@ S = {
     end
   end,
   resolve = function(tabnr)
-    if tabnr == nil or not eve.std.nvim.is_tab_valid(tabnr) then
+    if tabnr == nil or not eve.nvim.is_tab_valid(tabnr) then
       return nil
     end
 
@@ -335,7 +335,7 @@ S = {
     return meta
   end,
   refresh = function(tabnr)
-    if tabnr == nil or not eve.std.nvim.is_tab_valid(tabnr) then
+    if tabnr == nil or not eve.nvim.is_tab_valid(tabnr) then
       return
     end
 
@@ -372,7 +372,7 @@ S = {
 
     local invalid_tabnrs = {} ---@type integer[]
     for tabnr in pairs(S.__meta_map__) do
-      if tabnr == nil or not eve.std.nvim.is_tab_valid(tabnr) then
+      if tabnr == nil or not eve.nvim.is_tab_valid(tabnr) then
         table.insert(invalid_tabnrs, tabnr)
       end
     end
@@ -387,11 +387,11 @@ S = {
     end
   end,
   on_buf_enter = function(tabnr, winnr, bufnr)
-    if not eve.std.nvim.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
+    if not eve.nvim.is_buf_valid(bufnr) or not editor.is_buf_sourcefile(bufnr) then
       return
     end
 
-    if not eve.std.nvim.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
+    if not eve.nvim.is_win_valid(winnr) or not editor.is_win_sourcefile(winnr) then
       return
     end
 
@@ -442,7 +442,7 @@ S = {
       return
     end
 
-    local is_float = eve.std.nvim.is_win_floating(winnr) ---@type boolean
+    local is_float = eve.nvim.is_win_floating(winnr) ---@type boolean
     if not is_float then
       meta.winnr_fixed:next(winnr)
       meta.winnr_command:next(winnr)
@@ -612,7 +612,7 @@ function M.load(raw_data)
     or eve.col.AdvanceHistory.new({
       name = "tabs",
       capacity = setting.TAB_HISTORY_CAPACITY,
-      validate = eve.std.nvim.is_tab_valid,
+      validate = eve.nvim.is_tab_valid,
     })
 
   local stack = {} ---@type integer[]
@@ -624,7 +624,7 @@ function M.load(raw_data)
   tab_history:load({ present = #stack, stack = stack })
   S.tab_history = tab_history
 
-  local filepath2bufnr = eve.std.nvim.filepath2bufnr() ---@type table<string, integer>
+  local filepath2bufnr = eve.nvim.filepath2bufnr() ---@type table<string, integer>
   for _, data_tab in ipairs(data.list) do
     local tabnr = tabnrs[data_tab.tabid] ---@type integer|nil
     local bufid_sourcefile = 0 ---@type integer

@@ -137,7 +137,7 @@ return {
           local keymaps = {
             { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert },
           }
-          eve.std.nvim.bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
+          eve.nvim.bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
         end,
       },
     },
@@ -359,7 +359,7 @@ return {
     })
     require("neo-tree").setup(opts)
     vim.api.nvim_create_autocmd("TermClose", {
-      group = eve.std.nvim.augroup("neotree_refresh_gitstatus"),
+      group = eve.nvim.augroup("neotree_refresh_gitstatus"),
       pattern = "*lazygit",
       callback = function()
         if package.loaded["neo-tree.sources.git_status"] then

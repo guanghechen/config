@@ -70,7 +70,7 @@ local function get_select()
           end
 
           local bufnr = item.data.bufnr ---@type integer
-          if not eve.std.nvim.is_buf_valid(bufnr) then
+          if not eve.nvim.is_buf_valid(bufnr) then
             _select:mark_item_deleted(item.uuid)
             return
           end

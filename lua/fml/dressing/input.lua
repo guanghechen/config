@@ -146,7 +146,7 @@ function M.input(opts, on_confirm)
     { modes = { "n" }, key = "o", desc = "input: noop", callback = eve.fn.noop },
     { modes = { "n" }, key = "O", desc = "input: noop", callback = eve.fn.noop },
   }
-  eve.std.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   return winnr
 end

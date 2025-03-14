@@ -27,7 +27,7 @@ local M = {}
 function M.close(bufnr)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   if bufnr ~= nil then
-    if eve.std.nvim.is_buf_valid(bufnr) then
+    if eve.nvim.is_buf_valid(bufnr) then
       close(tabnr, { bufnr })
     end
     return

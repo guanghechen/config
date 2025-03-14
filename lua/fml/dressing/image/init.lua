@@ -25,7 +25,7 @@ vim.api.nvim_set_hl(0, "SnacksImageSpecial", { default = true, link = "Special" 
 vim.api.nvim_set_hl(0, "SnacksImageLoading", { default = true, link = "NonText" })
 vim.api.nvim_set_hl(0, "SnacksImageMath", {
   default = true,
-  fg = eve.std.nvim.pick_color({ "@markup.math.latex", "Special", "Normal" }, "fg"),
+  fg = eve.nvim.pick_color({ "@markup.math.latex", "Special", "Normal" }, "fg"),
 })
 
 ---@class fml.dressing.image.Opts
@@ -70,7 +70,7 @@ function M.setup(bufnr)
 
   local Placement = require("fml.dressing.image.placement")
 
-  local group = eve.std.nvim.augroup("fml.dressing.image")
+  local group = eve.nvim.augroup("fml.dressing.image")
   vim.api.nvim_create_autocmd({ "BufWipeout", "BufDelete" }, {
     group = group,
     callback = function(e)

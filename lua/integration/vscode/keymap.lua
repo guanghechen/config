@@ -1,6 +1,6 @@
 local actions = require("integration.vscode.action")
 
-local mk = eve.std.nvim.make_keys
+local mk = eve.nvim.make_keys
 
 ---@param modes                         string[]
 ---@param keys                          string|string[]

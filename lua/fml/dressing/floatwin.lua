@@ -2,7 +2,7 @@
 ---@param width                         integer|nil
 ---@return nil
 local function dressing_float_win(winnr, width)
-  if winnr == nil or not eve.std.nvim.is_win_valid(winnr) then
+  if winnr == nil or not eve.nvim.is_win_valid(winnr) then
     return
   end
 

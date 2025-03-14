@@ -10,6 +10,7 @@ local __mods = {
   is = "eve.builtin.is",
   json = "eve.builtin.json",
   lsp = "eve.builtin.lsp",
+  nvim = "eve.builtin.nvim",
   oxi = "eve.builtin.oxi",
   path = "eve.builtin.path",
   reporter = "eve.builtin.reporter",
@@ -31,6 +32,7 @@ local __mods = {
 ---@field public is                     eve.builtin.is
 ---@field public json                   eve.builtin.json
 ---@field public lsp                    eve.builtin.lsp
+---@field public nvim                   eve.builtin.nvim
 ---@field public oxi                    eve.builtin.oxi
 ---@field public path                   eve.builtin.path
 ---@field public reporter               eve.builtin.reporter
@@ -42,12 +44,10 @@ local __mods = {
 ---@field public c                      eve.constant
 ---@field public col                    eve.collection
 ---@field public lib                    eve.lib
----@field public std                    eve.std
 local M = setmetatable({
   c = require("eve.constant"),
   col = require("eve.collection"),
   lib = require("eve.lib"),
-  std = require("eve.std"),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
