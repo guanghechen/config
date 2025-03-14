@@ -120,32 +120,6 @@ function M.setup_workspace()
   end)
 end
 
-local settled_plugin_rtp = false ---@type boolean
-
----@return nil
-function M.setup_plugin_rtp()
-  if settled_plugin_rtp then
-    return
-  end
-  settled_plugin_rtp = true
-
-  local lazypath = eve.path.normalize(eve.env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
-  if not eve.path.is_exist(eve.path.join(lazypath, ".git")) then
-    local repo = "https://github.com/guanghechen/mirror"
-    vim.fn.system({
-      "git",
-      "clone",
-      "--filter=blob:none",
-      repo,
-      "--single-branch",
-      "--branch=nvim@ghc-lazy.nvim",
-      lazypath,
-    })
-  end
-  vim.opt.rtp:prepend(lazypath)
-  vim.env.LAZY_PATH = lazypath
-end
-
 ---@param storage                       eve.state.storage|nil
 ---@return nil
 function M.setup_state(storage)
