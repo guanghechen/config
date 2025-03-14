@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local state = require("eve.state")
 
 return {
@@ -24,7 +23,7 @@ return {
           local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
           for _, bufnr in ipairs(bufnrs) do
             local filetype = vim.bo[bufnr].filetype ---@type string
-            if filetype == ft.SMEAR_CURSOR then
+            if filetype == eve.c.filetype.SMEAR_CURSOR then
               vim.api.nvim_buf_delete(bufnr, { force = true })
             end
           end

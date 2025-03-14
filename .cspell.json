@@ -334,6 +334,7 @@
     "lazygit",
     "lazypath",
     "lazyredraw",
+    "libuv",
     "linecount",
     "linehl",
     "linematch",

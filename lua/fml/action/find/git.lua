@@ -1,5 +1,3 @@
-local ft = require("eve.constant.filetype")
-
 local select_files = require("fml.fn.select_files")
 
 ---@class fml.action.find
@@ -24,7 +22,7 @@ function M.find_git_not_committed()
         local absolute_filepath = eve.path.join(workspace, line) ---@type string
         local filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string
         local filename = eve.path.basename(filepath) ---@type string
-        local is_text_file = ft.is_printable_file(filename) ---@type boolean
+        local is_text_file = eve.c.filetype.is_printable_file(filename) ---@type boolean
         if is_text_file then
           table.insert(filepaths, filepath)
         end

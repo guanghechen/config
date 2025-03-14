@@ -1,6 +1,5 @@
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
-local ft = require("eve.constant.filetype")
 local state = require("eve.state")
 
 local config = {
@@ -85,7 +84,7 @@ return {
       task = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer
         local filetype = vim.bo[bufnr].filetype ---@type string
-        if ft.is_not_plain_file(filetype) then
+        if eve.c.filetype.is_not_plain_file(filetype) then
           return "done"
         end
 

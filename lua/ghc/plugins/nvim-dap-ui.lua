@@ -1,5 +1,3 @@
-local icons = require("eve.constant.icon")
-
 return {
   "nvim-dap-ui",
   dependencies = {
@@ -14,22 +12,22 @@ return {
   -- stylua: ignore end
   opts = {
     icons = {
-      expanded = icons.ui.ArrowOpen,
-      collapsed = icons.ui.ArrowClosed,
-      current_frame = icons.ui.ArrowPresent,
+      expanded = eve.c.icon.ui.ArrowOpen,
+      collapsed = eve.c.icon.ui.ArrowClosed,
+      current_frame = eve.c.icon.ui.ArrowPresent,
     },
     controls = {
       enabled = true,
       icons = {
-        pause = icons.dap.Pause,
-        play = icons.dap.Play,
-        rust_last = icons.dap.RunLast,
-        step_back = icons.dap.StepBack,
-        step_into = icons.dap.StepInto,
-        step_out = icons.dap.StepOut,
-        step_over = icons.dap.StepOver,
-        terminate = icons.dap.Terminate,
-        disconnect = icons.dap.Disconnect,
+        pause = eve.c.icon.dap.Pause,
+        play = eve.c.icon.dap.Play,
+        rust_last = eve.c.icon.dap.RunLast,
+        step_back = eve.c.icon.dap.StepBack,
+        step_into = eve.c.icon.dap.StepInto,
+        step_out = eve.c.icon.dap.StepOut,
+        step_over = eve.c.icon.dap.StepOver,
+        terminate = eve.c.icon.dap.Terminate,
+        disconnect = eve.c.icon.dap.Disconnect,
       },
     },
   },

@@ -1,10 +1,6 @@
 ---  https://github.com/LazyVim/LazyVim/blob/0f6ff53ce336082869314db11e9dfa487cf83292/lua/lazyvim/util/cmp.lua#L1
 local __module_name__ = "ghc.plugins.nvim-cmp" ---@type string
 
-local ft = require("eve.constant.filetype")
-local icons = require("eve.constant.icon")
-local setting = require("eve.constant.setting")
-
 local cmp_sources_map = {
   basic = {
     { name = "path", group_index = 1, priority = 100 },
@@ -40,7 +36,7 @@ local actions = {
     return function(fallback)
       if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
         if vim.api.nvim_get_mode().mode == "i" then
-          vim.api.nvim_feedkeys(setting.feedkeys.UNDO, "n", false)
+          vim.api.nvim_feedkeys(eve.c.setting.feedkeys.UNDO, "n", false)
         end
         if cmp.confirm(opts) then
           return
@@ -161,7 +157,7 @@ return {
         -- default fields order i.e completion word + item.kind + item.kind icons
         fields = { "abbr", "kind", "menu" },
         format = function(_, item)
-          local icon = icons.kind[item.kind] or icons.kind.Text ---@type string
+          local icon = eve.c.icon.kind[item.kind] or eve.c.icon.kind.Text ---@type string
 
           item.abbr = item.abbr .. " "
           item.menu_hl_group = "CmpItemKind" .. (item.kind or "")
@@ -285,10 +281,10 @@ return {
     cmp.setup.cmdline("/", {
       sources = vim.list_slice(cmp_sources_map.cmdline),
     })
-    cmp.setup.filetype(ft.get_cmp_code_filetypes(), {
+    cmp.setup.filetype(eve.c.filetype.get_cmp_code_filetypes(), {
       sources = vim.list_slice(cmp_sources_map.code),
     })
-    cmp.setup.filetype(ft.get_cmp_search_filetypes(), {
+    cmp.setup.filetype(eve.c.filetype.get_cmp_search_filetypes(), {
       sources = vim.list_slice(cmp_sources_map.search),
     })
   end,

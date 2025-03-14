@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -209,7 +208,7 @@ local function get_select()
         end
 
         if fileitem.type == "file" then
-          local is_text_file = ft.is_printable_file(fileitem.name) ---@type boolean
+          local is_text_file = eve.c.filetype.is_printable_file(fileitem.name) ---@type boolean
           if is_text_file then
             local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
             local lines = eve.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]

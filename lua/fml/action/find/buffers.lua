@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -114,7 +113,7 @@ local function get_select()
 
           local filetype = vim.bo[bufnr].filetype ---@type string
           if scope == "T" then
-            return filetype == ft.TERM
+            return filetype == eve.c.filetype.TERM
           end
 
           if scope == "F" then
@@ -122,10 +121,10 @@ local function get_select()
           end
 
           if
-            filetype == ft.SEARCH_INPUT
-            or filetype == ft.SEARCH_MAIN
-            or filetype == ft.SEARCH_PREVIEW
-            or filetype == ft.WINSEP
+            filetype == eve.c.filetype.SEARCH_INPUT
+            or filetype == eve.c.filetype.SEARCH_MAIN
+            or filetype == eve.c.filetype.SEARCH_PREVIEW
+            or filetype == eve.c.filetype.WINSEP
           then
             return false
           end

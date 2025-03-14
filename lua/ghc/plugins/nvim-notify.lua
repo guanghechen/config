@@ -1,5 +1,3 @@
-local icons = require("eve.constant.icon")
-
 local state = require("eve.state")
 
 -- Better `vim.notify()`
@@ -27,11 +25,11 @@ return {
       vim.api.nvim_win_set_config(winnr, { zindex = 100 })
     end,
     icons = {
-      ERROR = icons.diagnostic.Error,
-      WARN = icons.diagnostic.Warning,
-      INFO = icons.diagnostic.Information,
-      DEBUG = icons.ui.Bug,
-      TRACE = icons.ui.Pencil,
+      ERROR = eve.c.icon.diagnostic.Error,
+      WARN = eve.c.icon.diagnostic.Warning,
+      INFO = eve.c.icon.diagnostic.Information,
+      DEBUG = eve.c.icon.ui.Bug,
+      TRACE = eve.c.icon.ui.Pencil,
     },
   },
 }

@@ -1,5 +1,3 @@
-local ft = require("eve.constant.filetype")
-
 ---@class fml.ux.search.IPreview
 ---@field public context                fml.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.ux.search.IPreview): integer
@@ -185,7 +183,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = ft.SEARCH_PREVIEW
+  vim.bo[bufnr].filetype = eve.c.filetype.SEARCH_PREVIEW
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

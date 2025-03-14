@@ -1,6 +1,5 @@
 local __module_name__ = "ghc.action.copilot-chat" ---@type string
 
-local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 
@@ -70,7 +69,7 @@ local chat = state.widget.wrap({
     if not widget:focused() then
       require("CopilotChat").open()
       vim.schedule(function()
-        local winnr = editor.find_winnr_floating(ft.COPILOT_CHAT) ---@type integer|nil
+        local winnr = editor.find_winnr_floating(eve.c.filetype.COPILOT_CHAT) ---@type integer|nil
         if winnr == nil then
           return
         end

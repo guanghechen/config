@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local varnames = require("eve.constant.setting").vars
 local setting = require("eve.constant.setting")
 local winpicker = require("eve.module.winpicker")
@@ -13,7 +12,7 @@ M.winpicker_filters = {
   focusable = function(winnr)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    return not ft.is_not_focusable_filetype(filetype)
+    return not eve.c.filetype.is_not_focusable_filetype(filetype)
   end,
   ---@param winnr                       integer
   ---@return boolean
@@ -24,7 +23,7 @@ M.winpicker_filters = {
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    return not ft.is_not_projectable_filetype(filetype)
+    return not eve.c.filetype.is_not_projectable_filetype(filetype)
   end,
   sourcefile = function(winnr)
     return not vim.wo[winnr].winfixbuf and M.is_win_sourcefile(winnr)
@@ -38,7 +37,7 @@ M.winpicker_filters = {
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    return not ft.is_not_projectable_filetype(filetype)
+    return not eve.c.filetype.is_not_projectable_filetype(filetype)
   end,
 }
 
@@ -79,7 +78,7 @@ function M.calc_tabtype(tabnr)
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if filetype == ft.DIFFVIEW_FILES or filetype == ft.DIFFVIEW_FILE_HISTORY then
+    if filetype == eve.c.filetype.DIFFVIEW_FILES or filetype == eve.c.filetype.DIFFVIEW_FILE_HISTORY then
       return setting.tabtypes.DIFFVIEW
     end
   end
@@ -130,7 +129,7 @@ end
 function M.get_selected_text()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if filetype == ft.TERM then
+  if filetype == eve.c.filetype.TERM then
     return ""
   end
 
@@ -190,7 +189,7 @@ function M.is_buf_sourcefile(bufnr)
     return flag
   end
 
-  if not ft.is_plain_file(filetype) then
+  if not eve.c.filetype.is_plain_file(filetype) then
     vim.b[bufnr][varnames.FLAG_SOURCEFILE] = false
     return false
   end

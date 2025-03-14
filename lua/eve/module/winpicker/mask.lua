@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local hints = require("eve.constant.hint")
 
 local winhighlight = table.concat({
@@ -44,7 +43,7 @@ function M:create_buf_as_needed()
     vim.bo[bufnr_hint].bufhidden = "wipe"
     vim.bo[bufnr_hint].buflisted = false
     vim.bo[bufnr_hint].buftype = "nofile"
-    vim.bo[bufnr_hint].filetype = ft.WINPICKER_MASK
+    vim.bo[bufnr_hint].filetype = eve.c.filetype.WINPICKER_MASK
     vim.bo[bufnr_hint].swapfile = false
     self.bufnr_hint = bufnr_hint
   end

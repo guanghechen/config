@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 
@@ -106,7 +105,7 @@ local function render(winnr)
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if ft.is_no_customized_winline_filetype(filetype) then
+  if eve.c.filetype.is_no_customized_winline_filetype(filetype) then
     return
   end
 
@@ -146,7 +145,7 @@ local function render(winnr)
     return
   end
 
-  if ft.is_plain_file(filetype) then
+  if eve.c.filetype.is_plain_file(filetype) then
     vim.wo[winnr].winbar = Nvimbar.txt(filepath, "f_wl_text")
     return
   end

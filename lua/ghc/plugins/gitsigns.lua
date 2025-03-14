@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local state = require("eve.state")
 
 local Printer = require("fml.ux.printer")
@@ -186,7 +185,7 @@ local keymaps = {
       local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
       vim.bo[bufnr].buflisted = false
       vim.bo[bufnr].buftype = "nofile"
-      vim.bo[bufnr].filetype = ft.TEMP_VIEWER
+      vim.bo[bufnr].filetype = eve.c.filetype.TEMP_VIEWER
       vim.bo[bufnr].swapfile = false
       printer:render(bufnr)
 

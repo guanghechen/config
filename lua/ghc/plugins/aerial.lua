@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local kinds = require("eve.constant.icon").kind
 
 ---@type table<string, string>
@@ -47,7 +46,7 @@ return {
     ignore = {
       buftypes = "special",
       wintypes = "special",
-      filetypes = ft.get_no_ibl_filetypes(),
+      filetypes = eve.c.filetype.get_no_ibl_filetypes(),
       diff_windows = true,
       unlisted_buffers = true,
     },

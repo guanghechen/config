@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local state = require("eve.state")
 
 ---@class ghc.action.diffview
@@ -38,7 +37,7 @@ function M.fs_cwd()
   end
 
   local filetype = vim.bo[bufnr_sourcefile].filetype ---@type string
-  if filetype == ft.DIFFVIEW_FILES or filetype == ft.DIFFVIEW_FILE_HISTORY then
+  if filetype == eve.c.filetype.DIFFVIEW_FILES or filetype == eve.c.filetype.DIFFVIEW_FILE_HISTORY then
     vim.cmd("DiffviewToggleFiles")
   else
     vim.cmd("DiffviewFocusFiles")

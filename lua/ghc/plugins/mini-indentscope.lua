@@ -1,5 +1,3 @@
-local ft = require("eve.constant.filetype")
-
 -- Active indent guide and indent text objects. When you're browsing
 -- code, this highlights the current level of indentation, and animates
 -- the highlighting.
@@ -15,7 +13,7 @@ return {
   init = function()
     vim.api.nvim_create_autocmd("FileType", {
       group = eve.nvim.augroup("disable_miniindentscope"),
-      pattern = ft.get_no_ibl_filetypes(),
+      pattern = eve.c.filetype.get_no_ibl_filetypes(),
       callback = function()
         vim.b.miniindentscope_disable = true
       end,

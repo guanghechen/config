@@ -1,22 +1,21 @@
-local icons = require("eve.constant.icon")
 local state = require("eve.state")
 
 local severity = vim.diagnostic.severity
 
 ---@type table<vim.diagnostic.Severity, string>
 local severity2prefixicon = {
-  [severity.ERROR] = icons.diagnostic.Error_alt,
-  [severity.WARN] = icons.diagnostic.Warning_alt,
-  [severity.INFO] = icons.diagnostic.Information_alt,
-  [severity.HINT] = icons.diagnostic.Hint_alt,
+  [severity.ERROR] = eve.c.icon.diagnostic.Error_alt,
+  [severity.WARN] = eve.c.icon.diagnostic.Warning_alt,
+  [severity.INFO] = eve.c.icon.diagnostic.Information_alt,
+  [severity.HINT] = eve.c.icon.diagnostic.Hint_alt,
 }
 
 ---@type table<vim.diagnostic.Severity, string>
 local severity2texticon = {
-  [severity.ERROR] = icons.diagnostic.Error,
-  [severity.WARN] = icons.diagnostic.Warning,
-  [severity.INFO] = icons.diagnostic.Information,
-  [severity.HINT] = icons.diagnostic.Hint,
+  [severity.ERROR] = eve.c.icon.diagnostic.Error,
+  [severity.WARN] = eve.c.icon.diagnostic.Warning,
+  [severity.INFO] = eve.c.icon.diagnostic.Information,
+  [severity.HINT] = eve.c.icon.diagnostic.Hint,
 }
 
 ---@type table<vim.diagnostic.Severity, string>

@@ -1,7 +1,5 @@
-local icons = require("eve.constant.icon")
-
 local kinds = {}
-for key, val in pairs(icons.kind) do
+for key, val in pairs(eve.c.icon.kind) do
   kinds[key] = val .. " "
 end
 
@@ -16,14 +14,14 @@ return {
         top = "│ ",
         middle = "├╴",
         last = "└╴",
-        fold_open = icons.ui.ArrowOpen .. " ",
-        fold_closed = icons.ui.ArrowClosed .. " ",
+        fold_open = eve.c.icon.ui.ArrowOpen .. " ",
+        fold_closed = eve.c.icon.ui.ArrowClosed .. " ",
         ws = "  ",
       },
-      folder_closed = icons.filetype.Folder .. " ",
-      folder_open = icons.filetype.FolderOpen .. " ",
-      fold_open = icons.ui.ArrowOpen .. " ", -- icon used for open folds
-      fold_closed = icons.ui.ArrowClosed .. " ", -- icon used for closed folds
+      folder_closed = eve.c.icon.filetype.Folder .. " ",
+      folder_open = eve.c.icon.filetype.FolderOpen .. " ",
+      fold_open = eve.c.icon.ui.ArrowOpen .. " ", -- icon used for open folds
+      fold_closed = eve.c.icon.ui.ArrowClosed .. " ", -- icon used for closed folds
       kinds = kinds,
     },
   },

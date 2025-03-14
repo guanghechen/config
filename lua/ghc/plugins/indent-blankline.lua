@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local state = require("eve.state")
 
 -- indent guides for Neovim
@@ -31,7 +30,7 @@ return {
       highlight = "IblScopeChar",
     },
     exclude = {
-      filetypes = ft.get_no_ibl_filetypes(),
+      filetypes = eve.c.filetype.get_no_ibl_filetypes(),
     },
   },
   config = function(_, opts)

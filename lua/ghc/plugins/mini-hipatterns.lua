@@ -1,4 +1,3 @@
-local ft = require("eve.constant.filetype")
 local tailwind = require("eve.constant.lang.tailwind")
 
 ---@type table<string,true>
@@ -23,7 +22,7 @@ local tailwind_filetypes = {
 return {
   name = "mini.hipatterns",
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
-  ft = ft.get_hipattern_filetypes(),
+  ft = eve.c.filetype.get_hipattern_filetypes(),
   config = function()
     local hipatterns = require("mini.hipatterns")
     hipatterns.setup({
@@ -89,7 +88,7 @@ return {
 
     vim.api.nvim_create_autocmd("FileType", {
       group = eve.nvim.augroup("mini-hipatterns_auto_enable"),
-      pattern = { ft.AVANTE, ft.AVANTE_INPUT },
+      pattern = { eve.c.filetype.AVANTE, eve.c.filetype.AVANTE_INPUT },
       callback = function(arg)
         require("mini.hipatterns").enable(arg.buf)
       end,

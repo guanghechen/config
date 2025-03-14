@@ -1,5 +1,3 @@
-local ft = require("eve.constant.filetype")
-
 if eve.env.IS_MAC then
   vim.defer_fn(function()
     local previous_mode = nil ---@type eve.e.VimMode|nil
@@ -39,7 +37,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     vim.b[bufnr].eve_last_loc = true
 
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if ft.is_plain_file(filetype) then
+    if eve.c.filetype.is_plain_file(filetype) then
       local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
       local count = vim.api.nvim_buf_line_count(bufnr)
       if mark[1] > 0 and mark[1] <= count then
@@ -80,10 +78,10 @@ vim.filetype.add({
     [".*"] = {
       function(filepath, bufnr)
         return vim.bo[bufnr]
-            and vim.bo[bufnr].filetype ~= ft.BIGFILE
+            and vim.bo[bufnr].filetype ~= eve.c.filetype.BIGFILE
             and filepath
             and vim.fn.getfsize(filepath) > vim.g.bigfile_size
-            and ft.BIGFILE
+            and eve.c.filetype.BIGFILE
           or nil
       end,
     },
@@ -208,7 +206,7 @@ vim.api.nvim_create_autocmd("TermOpen", {
 --- Close some filetypes with q
 vim.api.nvim_create_autocmd("FileType", {
   group = eve.nvim.augroup("close_filetypes_with_q"),
-  pattern = ft.get_quitable_with_q_filetypes(),
+  pattern = eve.c.filetype.get_quitable_with_q_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
     if bufnr ~= nil then
@@ -228,7 +226,7 @@ vim.api.nvim_create_autocmd("FileType", {
 --- Disable autopairs
 vim.api.nvim_create_autocmd("FileType", {
   group = eve.nvim.augroup("disable_autopairs"),
-  pattern = ft.get_disable_autopairs_filetypes(),
+  pattern = eve.c.filetype.get_disable_autopairs_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
     if bufnr ~= nil then

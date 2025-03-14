@@ -1,5 +1,3 @@
-local ft = require("eve.constant.filetype")
-
 return {
   name = "which-key.nvim",
   event = { "VeryLazy" },
@@ -7,8 +5,8 @@ return {
   opts = {
     disable = {
       ft = {
-        ft.TERM,
-        ft.WINSEP,
+        eve.c.filetype.TERM,
+        eve.c.filetype.WINSEP,
       },
     },
     spec = {
