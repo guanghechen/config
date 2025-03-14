@@ -1,6 +1,5 @@
 local __module_name__ = "fml.ux.textarea" ---@type string
 
-local box = require("eve.std.box")
 local state = require("eve.state")
 
 ---@type string
@@ -187,7 +186,7 @@ end
 ---@param params                        fml.ux.textarea.IOpenParams
 ---@return nil
 function M:open(params)
-  ---@type eve.std.box.IRestriction
+  ---@type eve.builtin.box.IRestriction
   local restriction = {
     position = self.position,
     rows = vim.o.lines,
@@ -202,8 +201,8 @@ function M:open(params)
     min_height = params.min_height or self.min_height,
   }
   local width = params.width or self.width ---@type number
-  local height = box.flat(params.height or self.height, restriction.rows) ---@type integer
-  local rect = box.measure(width, height, restriction) ---@type eve.std.box.IDimension
+  local height = eve.box.flat(params.height or self.height, restriction.rows) ---@type integer
+  local rect = eve.box.measure(width, height, restriction) ---@type eve.builtin.box.IDimension
 
   if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then
     local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer

@@ -1,6 +1,7 @@
 ---@class eve.__mods
 local __mods = {
   G = "eve.builtin.G",
+  box = "eve.builtin.box",
   debug = "eve.builtin.debug",
   env = "eve.builtin.env",
   fn = "eve.builtin.fn",
@@ -17,6 +18,7 @@ local __mods = {
 ---@class eve
 ---@field public __mods                 eve.__mods
 ---@field public G                      eve.builtin.G
+---@field public box                    eve.builtin.box
 ---@field public debug                  eve.builtin.debug
 ---@field public env                    eve.builtin.env
 ---@field public fn                     eve.builtin.fn
