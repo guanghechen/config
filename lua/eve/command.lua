@@ -1,6 +1,5 @@
 local __module_name__ = "eve.command" ---@type string
 
-local setting = require("eve.constant.setting")
 local state = require("eve.state")
 
 ---@alias eve.command.definitions.copy.Scope
@@ -98,7 +97,7 @@ end
 ---@return eve.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
-  local tabtype = implementation.tabtype or setting.tabtypes.ALL ---@type string
+  local tabtype = implementation.tabtype or eve.setting.tabtypes.ALL ---@type string
   local action = implementation.action ---@type fun(args?: string): nil
   local definition = definition_map[uuid] ---@type eve.command.IDefinition|nil
   if definition == nil then
@@ -111,7 +110,7 @@ function M.implement(implementation)
     return M
   end
 
-  local key = tabtype == setting.tabtypes.ALL and uuid or (uuid .. ":" .. tabtype) ---@type string
+  local key = tabtype == eve.setting.tabtypes.ALL and uuid or (uuid .. ":" .. tabtype) ---@type string
   if command_map[key] ~= nil then
     eve.reporter.error({
       from = __module_name__,
@@ -451,12 +450,12 @@ M.definitions.term = {
 
 ---@class eve.command.definitions.toggle
 M.definitions.toggle = {
-  list = defc("Ftoggle", "toggle: select", "?", setting.togglers),
-  ai_provider = defc("Ftoggleaiprovider", "toggle: ai provider", "?", setting.ai_providers),
+  list = defc("Ftoggle", "toggle: select", "?", eve.setting.togglers),
+  ai_provider = defc("Ftoggleaiprovider", "toggle: ai provider", "?", eve.setting.ai_providers),
   markdown = def("Ftogglemarkdown", "toggle: markdown"),
   maximize = def("Ftogglemaximize", "toggle: maximize"),
   relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),
-  theme = defc("Ftoggletheme", "toggle: theme", "?", setting.themes),
+  theme = defc("Ftoggletheme", "toggle: theme", "?", eve.setting.themes),
   theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),
   transparency = def("Ftoggletransparency", "toggle: transparency"),
   username = def("Ftoggleusername", "toggle: username"),

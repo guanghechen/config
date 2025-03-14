@@ -1,8 +1,6 @@
 ---  https://github.com/LazyVim/LazyVim/blob/0f6ff53ce336082869314db11e9dfa487cf83292/lua/lazyvim/util/cmp.lua#L1
 local __module_name__ = "ghc.plugins.nvim-cmp" ---@type string
 
-local setting = require("eve.constant.setting") 
-
 local cmp_sources_map = {
   basic = {
     { name = "path", group_index = 1, priority = 100 },
@@ -38,7 +36,7 @@ local actions = {
     return function(fallback)
       if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
         if vim.api.nvim_get_mode().mode == "i" then
-          vim.api.nvim_feedkeys(setting.feedkeys.UNDO, "n", false)
+          vim.api.nvim_feedkeys(eve.setting.feedkeys.UNDO, "n", false)
         end
         if cmp.confirm(opts) then
           return

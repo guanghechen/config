@@ -1,5 +1,4 @@
-local varnames = require("eve.constant.setting").vars
-local setting = require("eve.constant.setting")
+local varnames = eve.setting.vars
 
 ---@class eve.module.editor
 local M = {}
@@ -78,11 +77,11 @@ function M.calc_tabtype(tabnr)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     if filetype == eve.filetype.DIFFVIEW_FILES or filetype == eve.filetype.DIFFVIEW_FILE_HISTORY then
-      return setting.tabtypes.DIFFVIEW
+      return eve.setting.tabtypes.DIFFVIEW
     end
   end
 
-  return setting.tabtypes.NORMAL ---@type string
+  return eve.setting.tabtypes.NORMAL ---@type string
 end
 
 ---@param filetype                      string
@@ -218,7 +217,7 @@ end
 ---@param filepath                      string|nil
 ---@return boolean
 function M.is_valid_filepath(filepath)
-  if filepath == nil or filepath == "" or filepath == setting.BUF_UNTITLED then
+  if filepath == nil or filepath == "" or filepath == eve.setting.BUF_UNTITLED then
     return false
   end
   return eve.fs.is_file_or_dir(filepath) == "file"

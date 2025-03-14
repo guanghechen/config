@@ -1,6 +1,5 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
-local setting = require("eve.constant.setting")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 
@@ -239,8 +238,8 @@ function M.bufs(position)
 
       local N = #bufs ---@type integer
       local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
-      local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][setting.vars.BUFID_MIDDLE] or 1) ---@type integer
-      vim.t[tabnr][setting.vars.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
+      local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][eve.setting.vars.BUFID_MIDDLE] or 1) ---@type integer
+      vim.t[tabnr][eve.setting.vars.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
 
       local text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_sourcefile, N)
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer

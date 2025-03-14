@@ -1,4 +1,3 @@
-local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 
@@ -26,7 +25,7 @@ function M.new_with_buf(context)
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   local bufnr = context.bufnr ---@type integer
 
-  local tabtype = setting.tabtypes.NORMAL ---@type string
+  local tabtype = eve.setting.tabtypes.NORMAL ---@type string
   local bufs = {} ---@type eve.t.state.tab.buf.state[]
 
   if bufnr ~= nil and eve.nvim.is_buf_valid(bufnr) and editor.is_buf_sourcefile(bufnr) then

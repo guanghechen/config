@@ -1,4 +1,3 @@
-local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
@@ -74,7 +73,7 @@ S = {
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local filename = eve.path.basename(filepath) ---@type string
-    filename = (not filename or filename == "") and setting.BUF_UNTITLED or filename
+    filename = (not filename or filename == "") and eve.setting.BUF_UNTITLED or filename
     local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
 
     local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
@@ -108,7 +107,7 @@ S = {
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     if meta.filepath ~= filepath then
       local filename = eve.path.basename(filepath) ---@type string
-      filename = #filename > 0 and filename or setting.BUF_UNTITLED
+      filename = #filename > 0 and filename or eve.setting.BUF_UNTITLED
       local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
 
       local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
@@ -169,7 +168,7 @@ S = {
     end
 
     for i = 1, 100 do
-      local filepath = eve.path.join(cwd, setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
+      local filepath = eve.path.join(cwd, eve.setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
       if not existed_paths[filepath] and vim.uv.fs_stat(filepath) == nil then
         return filepath
       end

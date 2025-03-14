@@ -1,5 +1,3 @@
-local setting = require("eve.constant.setting")
-
 ---@class fml.ux.search.IInput
 ---@field public context                fml.ux.search.IContext
 ---@field public create_buf_as_needed   fun(self: fml.ux.search.IInput): integer
@@ -15,7 +13,7 @@ local setting = require("eve.constant.setting")
 local M = {}
 M.__index = M
 
-local EDITING_PREFIX = setting.EDITING_INPUT_PREFIX ---@type string
+local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
 local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@type integer
 
 ---@class fml.ux.search.input.IProps

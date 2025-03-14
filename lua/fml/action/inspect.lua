@@ -1,7 +1,8 @@
 local __module_name__ = "fml.action.inspect" ---@type string
 
-local varnames = require("eve.constant.setting").vars
 local state = require("eve.state")
+
+local varnames = eve.setting.vars
 
 ---@class fml.action.inspect
 local M = {}

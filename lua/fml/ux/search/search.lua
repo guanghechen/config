@@ -1,4 +1,3 @@
-local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 
@@ -6,7 +5,7 @@ local SearchInput = require("fml.ux.search.input")
 local SearchMain = require("fml.ux.search.main")
 local SearchPreview = require("fml.ux.search.preview")
 
-local EDITING_PREFIX = setting.EDITING_INPUT_PREFIX ---@type string
+local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
 
 local highlights = {
   input = table.concat({

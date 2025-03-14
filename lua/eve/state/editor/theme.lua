@@ -1,7 +1,5 @@
 local __module_name__ = "eve.state.editor.theme" ---@type string
 
-local setting = require("eve.constant.setting")
-
 ---@class eve.theme.ILoadIntegrationParams
 ---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
@@ -68,7 +66,7 @@ end
 function M.normalize(data)
   local resolved = M.defaults() ---@type eve.state.theme.data
   if type(data) == "table" then
-    if type(data.theme) == "string" and vim.list_contains(setting.themes, data.theme) then
+    if type(data.theme) == "string" and vim.list_contains(eve.setting.themes, data.theme) then
       resolved.theme = data.theme
     end
     if type(data.transparency) == "boolean" then
@@ -216,7 +214,7 @@ function M.load(raw_data)
       end,
 
       get_scheme = function(theme)
-        if not vim.list_contains(setting.themes, theme) then
+        if not vim.list_contains(eve.setting.themes, theme) then
           eve.reporter.error({
             from = __module_name__,
             subject = "get_scheme",

@@ -1,4 +1,3 @@
-local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 
 ---@alias eve.e.state.tab.meta.TabType
@@ -88,7 +87,7 @@ local M = {}
 function Meta.new(tabnr, tabtype, bufs, bufid_sourcefile)
   local self = setmetatable({}, Meta)
   self.tabnr = tabnr ---@type integer
-  self.tabtype = tabtype or setting.tabtypes.NORMAL ---@type string
+  self.tabtype = tabtype or eve.setting.tabtypes.NORMAL ---@type string
   self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
   self.bufid_sourcefile = eve.col.Observable.from_value(math.max(0, math.min(#bufs, bufid_sourcefile or 1)))
   self.winnr_command = eve.col.Observable.from_value(0)
@@ -274,7 +273,7 @@ S = {
 
   tab_history = eve.col.AdvanceHistory.new({
     name = "tabs",
-    capacity = setting.TAB_HISTORY_CAPACITY,
+    capacity = eve.setting.TAB_HISTORY_CAPACITY,
     validate = eve.nvim.is_tab_valid,
   }),
 
@@ -460,7 +459,7 @@ S = {
   end,
   get_tabtype = function(tabnr)
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta.tabtype or setting.tabtypes.NORMAL
+    return meta and meta.tabtype or eve.setting.tabtypes.NORMAL
   end,
   get_winnr_command = function(tabnr)
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
@@ -611,7 +610,7 @@ function M.load(raw_data)
   local tab_history = S.tab_history
     or eve.col.AdvanceHistory.new({
       name = "tabs",
-      capacity = setting.TAB_HISTORY_CAPACITY,
+      capacity = eve.setting.TAB_HISTORY_CAPACITY,
       validate = eve.nvim.is_tab_valid,
     })
 
@@ -657,7 +656,7 @@ function M.load(raw_data)
       end
 
       ---@type eve.state.tab.meta.state
-      local meta = Meta.new(tabnr, data_tab.tabtype or setting.tabtypes.NORMAL, bufs, bufid_sourcefile)
+      local meta = Meta.new(tabnr, data_tab.tabtype or eve.setting.tabtypes.NORMAL, bufs, bufid_sourcefile)
       S.set(tabnr, meta)
     end
   end

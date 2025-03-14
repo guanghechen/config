@@ -1,5 +1,3 @@
-local setting = require("eve.constant.setting")
-
 local command = require("eve.command")
 
 --[ai] copilot -------------------------------------------------------------------------------------
@@ -73,28 +71,28 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
-    tabtype = setting.tabtypes.DIFFVIEW,
+    tabtype = eve.setting.tabtypes.DIFFVIEW,
     action = function()
       require("ghc.action.diffview").fs_cwd()
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
-    tabtype = setting.tabtypes.NORMAL,
+    tabtype = eve.setting.tabtypes.NORMAL,
     action = function()
       require("ghc.action.neo-tree").fs_cwd()
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_workspace.uuid,
-    tabtype = setting.tabtypes.NORMAL,
+    tabtype = eve.setting.tabtypes.NORMAL,
     action = function()
       require("ghc.action.neo-tree").fs_workspace()
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_reveal.uuid,
-    tabtype = setting.tabtypes.NORMAL,
+    tabtype = eve.setting.tabtypes.NORMAL,
     action = function()
       require("ghc.action.neo-tree").fs_reveal()
     end,

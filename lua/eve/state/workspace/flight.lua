@@ -1,5 +1,3 @@
-local setting = require("eve.constant.setting")
-
 ---@class eve.state.flight.data
 ---@field public ai                     boolean
 ---@field public ai_provider            eve.e.AiProvider
@@ -80,7 +78,7 @@ function M.normalize(data)
     if type(data.ai) == "boolean" then
       resolved.ai = data.ai
     end
-    if type(data.ai_provider) == "string" and vim.list_contains(setting.ai_providers, data.ai_provider) then
+    if type(data.ai_provider) == "string" and vim.list_contains(eve.setting.ai_providers, data.ai_provider) then
       resolved.ai_provider = data.ai_provider
     end
     if type(data.autoformat) == "boolean" then

@@ -1,7 +1,7 @@
-local varnames = require("eve.constant.setting").vars
 local editor = require("eve.module.editor")
-
 local state = require("eve.state")
+
+local varnames = eve.setting.vars
 
 state.refresh()
 

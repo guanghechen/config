@@ -1,18 +1,18 @@
----@class eve.constant.setting
+---@class eve.builtin.setting
 local M = {}
 
 M.feedkeys = {
   UNDO = vim.api.nvim_replace_termcodes("<C-G>u", true, true, true),
 }
 
----@class eve.constant.setting.ai_providers
+---@class eve.builtin.setting.ai_providers
 M.ai_providers = {
   "copilot",
   "deepseek",
   "aoai",
 }
 
----@class eve.constant.setting.themes
+---@class eve.builtin.setting.themes
 M.themes = {
   "catppuccin-frappe",
   "catppuccin-latte",
@@ -25,7 +25,7 @@ M.themes = {
   "one-half-light",
 }
 
----@class eve.constant.setting.togglers
+---@class eve.builtin.setting.togglers
 M.togglers = {
   "ai_provider",
   "flight",
@@ -42,7 +42,7 @@ M.togglers = {
   "wrap_local",
 }
 
----@class eve.constant.setting.sessions
+---@class eve.builtin.setting.sessions
 M.sessions = {
   persistent_options = table.concat({
     "blank",
@@ -61,14 +61,14 @@ M.sessions = {
   }, ","),
 }
 
----@class eve.constant.setting.tabtypes
+---@class eve.builtin.setting.tabtypes
 M.tabtypes = {
   ALL = "all",
   DIFFVIEW = "diffview",
   NORMAL = "normal",
 }
 
----@class eve.constant.setting.vars
+---@class eve.builtin.setting.vars
 M.vars = {
   BUFID_MIDDLE = "eve_bufid_middle",
   FLAG_SOURCEFILE = "eve_is_sourcefile",

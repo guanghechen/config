@@ -1,5 +1,3 @@
-local setting = require("eve.constant.setting")
-
 ---@class eve.module.session
 local M = {}
 
@@ -16,7 +14,7 @@ end
 function M.save_session(filepath)
   vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
   local tmp = vim.o.sessionoptions
-  vim.o.sessionoptions = setting.sessions.persistent_options
+  vim.o.sessionoptions = eve.setting.sessions.persistent_options
   vim.cmd("mks! " .. vim.fn.fnameescape(filepath))
   vim.o.sessionoptions = tmp
 end

@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.win" ---@type string
 
-local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 
@@ -11,7 +10,7 @@ local _history_select = nil ---@type fml.ux.FileSelect|nil
 ---@return fml.ux.FileSelect
 local function get_history_select()
   if _history_select == nil then
-    local ORDINAL_WIDTH = vim.api.nvim_strwidth(tostring(setting.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
+    local ORDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.setting.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
     local frecency = state.frecency.files ---@type eve.collection.IFrecency
 
     ---@param ordinal                       integer

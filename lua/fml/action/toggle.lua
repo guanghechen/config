@@ -1,10 +1,10 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
-local varnames = require("eve.constant.setting").vars
 local editor = require("eve.module.editor")
 local command = require("eve.command")
 local state = require("eve.state")
 
+local varnames = eve.setting.vars
 local select = require("fml.fn.select")
 
 ---@type table<string, eve.collection.IObservable -- boolean>>

@@ -7,10 +7,9 @@ local default_storage = eve.get_default_storage() ---@type eve.state.storage
 local storage = { editor = default_storage.editor } ---@type eve.state.storage
 eve.setup_state(storage)
 
-local setting = require("eve.constant.setting")
 local theme = vim.env.GHC_THEME or "gruvbox-dark" ---@type eve.e.Theme
 
-if not vim.list_contains(setting.themes, theme) then
+if not vim.list_contains(eve.setting.themes, theme) then
   print("Unknown theme: " .. theme)
 else
   local state = require("eve.state")

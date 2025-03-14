@@ -16,6 +16,7 @@ local __mods = {
   oxi = "eve.builtin.oxi",
   path = "eve.builtin.path",
   reporter = "eve.builtin.reporter",
+  setting = "eve.builtin.setting",
   shell = "eve.builtin.shell",
   sign = "eve.builtin.sign",
   string = "eve.builtin.string",
@@ -42,6 +43,7 @@ local __mods = {
 ---@field public oxi                    eve.builtin.oxi
 ---@field public path                   eve.builtin.path
 ---@field public reporter               eve.builtin.reporter
+---@field public setting                eve.builtin.setting
 ---@field public shell                  eve.builtin.shell
 ---@field public sign                   eve.builtin.sign
 ---@field public string                 eve.builtin.string
