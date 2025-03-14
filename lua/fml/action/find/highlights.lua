@@ -1,4 +1,3 @@
-local cs = require("eve.std.color")
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.highlights.IItem : fml.ux.select.IItem
@@ -58,11 +57,11 @@ local function get_select()
 
             local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info
             if hlgroup.fg ~= nil then
-              local color_name = cs.int2hex(hlgroup.fg) ---@type string
+              local color_name = eve.lib.color.int2hex(hlgroup.fg) ---@type string
               line = line .. " fg=" .. color_name
             end
             if hlgroup.bg ~= nil then
-              local color_name = cs.int2hex(hlgroup.bg) ---@type string
+              local color_name = eve.lib.color.int2hex(hlgroup.bg) ---@type string
               line = line .. " bg=" .. color_name
             end
             if hlgroup.link ~= nil then

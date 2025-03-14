@@ -1,11 +1,13 @@
 ---@class eve.lib.__mods
 local __mods = {
+  color = "eve.lib.color",
   md5 = "eve.lib.md5",
 }
 
 ---@class eve.lib
 ---@field public __mods                 eve.lib.__mods
----n
+---
+---@field public color                  eve.lib.color
 ---@field public md5                    eve.lib.md5
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
