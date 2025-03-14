@@ -10,16 +10,6 @@ eve.setup_state()
 require("eve.state.autocmd")
 
 require("fml.command")
-
----! Reload session if not specify file and current directory is a git repository.
-if eve.path.is_repo_git() then
-  local state = require("eve.state")
-  if state.flight.autoload:snapshot() then
-    local session = require("eve.module.session")
-    session.load_session(state.get_storage().nvim_session_autosaved)
-  end
-end
-
 require("integration.neovim.option")
 require("integration.neovim.keymap")
 pcall(require, "integration.local.option")
@@ -33,6 +23,15 @@ require("fml.dressing.nvimbar.winline")
 require("ghc.plugin")
 pcall(require, "integration.local.plugin")
 require("ghc.command")
+
+---! Reload session if not specify file and current directory is a git repository.
+if eve.path.is_repo_git() then
+  local state = require("eve.state")
+  if state.flight.autoload:snapshot() then
+    local session = require("eve.module.session")
+    session.load_session(state.get_storage().nvim_session_autosaved)
+  end
+end
 
 vim.schedule(function()
   require("fml.dressing.commentstring")
