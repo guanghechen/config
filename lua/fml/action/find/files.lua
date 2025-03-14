@@ -1,13 +1,12 @@
 local __module_name__ = "fml.action.find" ---@type string
 
 local icons = require("eve.constant.icon")
-local instances = require("eve.constant.instance")
 local state = require("eve.state")
-
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
 local Setting = require("fml.ux.setting")
 
+local observable_truthy = eve.c.Observable.from_value(true)
 local _select = nil ---@type fml.ux.IFileSelect|nil
 
 ---@return fml.ux.IFileSelect
@@ -234,7 +233,7 @@ local function get_select()
         type = "popup",
         desc = "find: edit settings",
         symbol = icons.symbols.setting,
-        state = instances.observable_truthy,
+        state = observable_truthy,
         callback = actions.edit_config,
       },
       {

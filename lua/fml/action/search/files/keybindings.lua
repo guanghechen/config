@@ -1,5 +1,4 @@
 local icons = require("eve.constant.icon")
-local instances = require("eve.constant.instance")
 local state = require("eve.state")
 local context = require("fml.action.search.files.context")
 
@@ -9,7 +8,7 @@ local statusline_items = {
     type = "popup",
     desc = "search: edit settings",
     symbol = icons.symbols.setting,
-    state = instances.observable_truthy,
+    state = eve.c.Observable.from_value(true),
     callback = context.edit_config,
   },
   {

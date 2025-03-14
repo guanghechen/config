@@ -1,5 +1,3 @@
-local env = require("eve.std.env")
-
 ---@class eve.constant.icon
 local M = {}
 
@@ -135,10 +133,10 @@ M.os = {
   nix = "",
   wsl = "",
   unknown = "",
-  current = (env.IS_NIX and "")
-    or (env.IS_MAC and "")
-    or (env.IS_WIN and "")
-    or (env.IS_WSL and "")
+  current = (eve.std.env.IS_NIX and "")
+    or (eve.std.env.IS_MAC and "")
+    or (eve.std.env.IS_WIN and "")
+    or (eve.std.env.IS_WSL and "")
     or "",
 }
 

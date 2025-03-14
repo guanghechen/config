@@ -1,8 +1,7 @@
-local cs = require("eve.std.color")
-
 ---@param context                       eve.t.theme.IContext
 ---@return table<string, eve.t.theme.IHlgroup>
 local function gen_hlgroup_map(context)
+  local cs = eve.std.color
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
 
