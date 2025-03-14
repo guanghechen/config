@@ -1,7 +1,5 @@
 local __module_name__ = "fml.ux.nvimbar" ---@type string
 
-local calc_fileicon = require("eve.module.fileicon").calc_fileicon
-
 ---@alias fml.ux.nvimbar.Position
 ---| 'f_sl'
 ---| 'f_tl'
@@ -154,7 +152,7 @@ local function build_context(preset_context)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local filename = eve.path.basename(filepath) ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
-  local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
+  local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
 
   local git = vim.b[bufnr].gitsigns_status_dict
   local git_branch = git and git.head or nil ---@type string|nil

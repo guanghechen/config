@@ -1,5 +1,4 @@
 local editor = require("eve.module.editor")
-local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 local Select = require("fml.ux.select")
 
@@ -72,7 +71,7 @@ local function fetch_diritem(dirpath, force)
           icon = eve.icon.kind.Folder
           icon_hl = "f_fe_name_dir"
         else
-          icon, icon_hl = calc_fileicon(raw_item.name)
+          icon, icon_hl = eve.fn.fileicon(raw_item.name)
         end
 
         ---@type fml.action.find.explorer.IFileItem

@@ -1,4 +1,3 @@
-local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 local Select = require("fml.ux.select")
 
@@ -147,7 +146,7 @@ local function get_file_selector()
             icon = eve.icon.filetype.Folder
             icon_hl = "MiniIconsBlue"
           else
-            icon, icon_hl = calc_fileicon(filepath)
+            icon, icon_hl = eve.fn.fileicon(filepath)
           end
 
           local data = { filepath = filepath, icon = icon, icon_hl = icon_hl }

@@ -1,5 +1,4 @@
 local editor = require("eve.module.editor")
-local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 
 ---@class eve.t.state.buf.lsp.ISymbol
 ---@field public kind                   string
@@ -74,7 +73,7 @@ S = {
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local filename = eve.path.basename(filepath) ---@type string
     filename = (not filename or filename == "") and eve.setting.BUF_UNTITLED or filename
-    local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
+    local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
 
     local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
     local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
@@ -108,7 +107,7 @@ S = {
     if meta.filepath ~= filepath then
       local filename = eve.path.basename(filepath) ---@type string
       filename = #filename > 0 and filename or eve.setting.BUF_UNTITLED
-      local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
+      local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
 
       local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
       local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
@@ -244,7 +243,7 @@ function M.load(raw_data)
     local bufnr = filepath2bufnr[item.filepath] ---@type integer|nil
     if bufnr ~= nil then
       local filename = eve.path.basename(item.filepath) ---@type string
-      local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
+      local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
       local relpath_pieces = eve.path.split_prettier(workspace_pieces, cwd_pieces, item.filepath) ---@type string[]
       local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
 

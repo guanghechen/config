@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
 local editor = require("eve.module.editor")
-local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 
 local context = require("fml.action.search.files.context")
@@ -363,7 +362,7 @@ function M.fetch_data(input_text, force, callback)
       fileitem_map[filepath] = fileitem
 
       local filename = eve.path.basename(filepath) ---@type string
-      local icon, icon_hl = calc_fileicon(filename)
+      local icon, icon_hl = eve.fn.fileicon(filename)
       local icon_width = string.len(icon) ---@type integer
       local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type eve.t.IHighlightInline[]
 

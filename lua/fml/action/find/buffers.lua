@@ -1,5 +1,4 @@
 local editor = require("eve.module.editor")
-local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 
 local Select = require("fml.ux.select")
@@ -139,7 +138,7 @@ local function get_select()
             local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
             local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
             local filename = eve.path.basename(filepath)
-            local icon, icon_hl = calc_fileicon(filename)
+            local icon, icon_hl = eve.fn.fileicon(filename)
 
             ---@type fml.action.find.buffers.IItemData
             local data = {

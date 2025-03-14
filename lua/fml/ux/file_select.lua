@@ -1,7 +1,5 @@
 local editor = require("eve.module.editor")
-local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
-
 local Select = require("fml.ux.select")
 
 ---@class fml.ux.IFileSelect : eve.t.ux.IWidget
@@ -181,7 +179,7 @@ function M.new(props)
         local filepath = raw_item.filepath ---@type string
         local filepath_relative = raw_item.filepath_relative ---@type string
         local filename = eve.path.basename(raw_item.filepath)
-        local icon, icon_hl = calc_fileicon(filename)
+        local icon, icon_hl = eve.fn.fileicon(filename)
 
         ---@type fml.ux.file_select.IItem
         local item = {

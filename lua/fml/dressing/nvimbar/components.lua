@@ -1,8 +1,6 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
-local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
-
 local Nvimbar = require("fml.ux.nvimbar")
 local command = require("eve.command")
 
@@ -129,7 +127,7 @@ function M.bufs(position)
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local filename = eve.path.basename(filepath) ---@type string
-    local fileicon, fileicon_hl = calc_fileicon(filename) ---@type string, string
+    local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
     return filename, fileicon, fileicon_hl
   end
 
