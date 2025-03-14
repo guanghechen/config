@@ -12,30 +12,19 @@ local __gfn = {} ---@type table<string, fun(...): nil>
 
 ---@class eve
 ---@field public __mods                 eve.__mods
+---@field public G                      eve.builtin.G
 ---@field public debug                  eve.builtin.debug
 ---@field public env                    eve.builtin.env
 ---@field public json                   eve.builtin.json
 ---@field public path                   eve.builtin.path
 ---@field public reporter               eve.builtin.reporter
 ---
----@field public G                      eve.G
----@field public c                      eve.collection
+---@field public c                      eve.constant
+---@field public col                    eve.collection
 ---@field public lib                    eve.lib
 ---@field public std                    eve.std
----
----@field public debug                  eve.debug
 local M = setmetatable({
-  ---@class eve.G
-  G = setmetatable({
-    ---@param fn                       fun(...): nil
-    ---@return string
-    register_anonymous_fn = function(fn)
-      __gid = __gid + 1
-      local fn_name = "_" .. __gid
-      __gfn[fn_name] = fn
-      return "eve.G." .. fn_name
-    end,
-  }, { __index = __gfn }),
+  G = require("eve.builtin.G"),
   c = require("eve.constant"),
   col = require("eve.collection"),
   lib = require("eve.lib"),
