@@ -70,8 +70,9 @@ M.tabtypes = {
 
 ---@class eve.constant.setting.vars
 M.vars = {
-  BUFID_MIDDLE = "bufid_middle",
-  WINLINE_DISABLED = "fml_winline_disabled",
+  BUFID_MIDDLE = "eve_bufid_middle",
+  FLAG_SOURCEFILE = "eve_is_sourcefile",
+  WINLINE_DISABLED = "eve_winline_disabled",
 }
 
 ---! Tab settings

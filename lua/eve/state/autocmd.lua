@@ -1,6 +1,6 @@
 local fs = require("eve.std.fs")
 local tmux = require("eve.std.tmux")
-local varnames = require("eve.constant.var")
+local varnames = require("eve.constant.setting").vars
 local editor = require("eve.module.editor")
 
 local state = require("eve.state")

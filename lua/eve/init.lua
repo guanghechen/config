@@ -1,6 +1,7 @@
 ---@class eve.__mods
 local __mods = {
   debug = "eve.std.debug",
+  env = "eve.std.env",
 }
 
 local __gid = 0 ---@type integer
@@ -25,6 +26,7 @@ local M = setmetatable({
       return "eve.G." .. fn_name
     end,
   }, { __index = __gfn }),
+  c = require("eve.constant"),
   col = require("eve.collection"),
   lib = require("eve.lib"),
   std = require("eve.std"),

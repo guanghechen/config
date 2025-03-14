@@ -1,6 +1,6 @@
 local fs = require("eve.std.fs")
 local ft = require("eve.constant.filetype")
-local varnames = require("eve.constant.var")
+local varnames = require("eve.constant.setting").vars
 local setting = require("eve.constant.setting")
 local winpicker = require("eve.module.winpicker")
 
