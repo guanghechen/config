@@ -1,7 +1,5 @@
 local __module_name__ = "fml.ux.search.context" ---@type string
 
-local signs = require("eve.constant.sign")
-
 ---@class fml.ux.search.IRawDimension
 ---@field public height                 ?number
 ---@field public max_width              ?number
@@ -514,8 +512,8 @@ end
 function M:place_lnum_sign()
   local bufnr = self.bufnr_main ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_CURRENT })
-    vim.fn.sign_unplace("", { buffer = bufnr, id = signs.NR_SEARCH_MAIN_PRESENT })
+    vim.fn.sign_unplace("", { buffer = bufnr, id = eve.sign.NR_SEARCH_MAIN_CURRENT })
+    vim.fn.sign_unplace("", { buffer = bufnr, id = eve.sign.NR_SEARCH_MAIN_PRESENT })
 
     local item_lnum_present = 0 ---@type integer
     do
@@ -544,17 +542,17 @@ function M:place_lnum_sign()
 
     if item_lnum_present > 0 then
       local sign = item_lnum_present == item_lnum_current ---
-          and signs.SEARCH_MAIN_PRESENT_CUR
-        or signs.SEARCH_MAIN_PRESENT
-      vim.fn.sign_place(signs.NR_SEARCH_MAIN_PRESENT, "", sign, bufnr, { lnum = item_lnum_present, priority = 40 })
+          and eve.sign.SEARCH_MAIN_PRESENT_CUR
+        or eve.sign.SEARCH_MAIN_PRESENT
+      vim.fn.sign_place(eve.sign.NR_SEARCH_MAIN_PRESENT, "", sign, bufnr, { lnum = item_lnum_present, priority = 40 })
     end
 
     if item_lnum_current > 0 then
       local uuid = self._item_uuid_cur ---@type string|nil
       local sign = (uuid ~= nil and self._uuids_selected[uuid]) ---
-          and signs.SEARCH_MAIN_SELECTED_CUR
-        or signs.SEARCH_MAIN_CURRENT
-      vim.fn.sign_place(signs.NR_SEARCH_MAIN_CURRENT, "", sign, bufnr, { lnum = item_lnum_current, priority = 30 })
+          and eve.sign.SEARCH_MAIN_SELECTED_CUR
+        or eve.sign.SEARCH_MAIN_CURRENT
+      vim.fn.sign_place(eve.sign.NR_SEARCH_MAIN_CURRENT, "", sign, bufnr, { lnum = item_lnum_current, priority = 30 })
       return item_lnum_current
     end
   end
@@ -565,7 +563,7 @@ end
 function M:place_selected_sign()
   local bufnr = self.bufnr_main ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.fn.sign_unplace(signs.GROUP_SEARCH_MAIN_SELECTED, { buffer = bufnr })
+    vim.fn.sign_unplace(eve.sign.GROUP_SEARCH_MAIN_SELECTED, { buffer = bufnr })
 
     local selected = self._uuids_selected ---@type table<string, true>
     local items = self.items ---@type fml.ux.search.IItem[]
@@ -573,8 +571,8 @@ function M:place_selected_sign()
       if selected[item.uuid] then
         vim.fn.sign_place(
           lnum,
-          signs.GROUP_SEARCH_MAIN_SELECTED,
-          signs.SEARCH_MAIN_SELECTED,
+          eve.sign.GROUP_SEARCH_MAIN_SELECTED,
+          eve.sign.SEARCH_MAIN_SELECTED,
           bufnr,
           { lnum = lnum, priority = 10 }
         )

@@ -1,6 +1,6 @@
 local sd = vim.fn.sign_define
 
----@class eve.constant.sign
+---@class eve.builtin.sign
 local M = {}
 
 M.NR_SEARCH_MAIN_CURRENT = 2333

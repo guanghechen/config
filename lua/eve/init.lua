@@ -17,6 +17,7 @@ local __mods = {
   path = "eve.builtin.path",
   reporter = "eve.builtin.reporter",
   shell = "eve.builtin.shell",
+  sign = "eve.builtin.sign",
   string = "eve.builtin.string",
   table = "eve.builtin.table",
   tmux = "eve.builtin.tmux",
@@ -41,6 +42,7 @@ local __mods = {
 ---@field public path                   eve.builtin.path
 ---@field public reporter               eve.builtin.reporter
 ---@field public shell                  eve.builtin.shell
+---@field public sign                   eve.builtin.sign
 ---@field public string                 eve.builtin.string
 ---@field public table                  eve.builtin.table
 ---@field public tmux                   eve.builtin.tmux
