@@ -1,8 +1,8 @@
-local __module_name__ = "eve.module.winpicker" ---@type string
+local __module_name__ = "eve.builtin.winpicker" ---@type string
 
-local Mask = require("eve.module.winpicker.mask")
+local Mask = require("eve.builtin.winpicker.mask")
 
----@class eve.module.winpicker.config
+---@class eve.builtin.winpicker.config
 local config = {
   chars = {
     "F",
@@ -41,7 +41,7 @@ local function get_user_input_char()
   return vim.fn.nr2char(c)
 end
 
----@class eve.module.winpicker
+---@class eve.builtin.winpicker
 local M = {}
 
 ---@param filter                        fun(winnr: integer): boolean
@@ -84,14 +84,14 @@ function M.pick_window(filter, winnr_source, split_as_needed)
     return winnrs[1]
   end
 
-  local masks = {} ---@type table<integer, eve.module.winpicker.Mask>
+  local masks = {} ---@type table<integer, eve.builtin.winpicker.Mask>
   local winnr_target = nil ---@type integer|nil
 
   pcall(function()
     for i = 1, N, 1 do
       local winnr = winnrs[i] ---@type integer
       local char = config.chars[i] ---@type string
-      local mask = Mask.new(char:lower()) ---@type eve.module.winpicker.Mask
+      local mask = Mask.new(char:lower()) ---@type eve.builtin.winpicker.Mask
       masks[winnr] = mask
     end
 

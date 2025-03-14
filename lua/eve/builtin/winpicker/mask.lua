@@ -1,11 +1,11 @@
-local hints = require("eve.constant.hint")
+local hints = require("eve.builtin.winpicker.hint")
 
 local winhighlight = table.concat({
   "FloatBorder:FloatBorder",
   "Normal:NormalFloat",
 }, ",")
 
----@class eve.module.winpicker.Mask
+---@class eve.builtin.winpicker.Mask
 ---@field public char                   string
 ---@field public hint                   string[]
 ---@field public bufnr_hint             integer|nil
@@ -14,10 +14,10 @@ local winhighlight = table.concat({
 local M = {}
 M.__index = M
 
-M.renderers = {} ---@type table<string, eve.module.winpicker.Mask>
+M.renderers = {} ---@type table<string, eve.builtin.winpicker.Mask>
 
 ---@param char                          string
----@return eve.module.winpicker.Mask
+---@return eve.builtin.winpicker.Mask
 function M.new(char)
   if M.renderers[char] ~= nil then
     return M.renderers[char]

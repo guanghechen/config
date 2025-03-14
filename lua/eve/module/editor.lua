@@ -1,6 +1,5 @@
 local varnames = require("eve.constant.setting").vars
 local setting = require("eve.constant.setting")
-local winpicker = require("eve.module.winpicker")
 
 ---@class eve.module.editor
 local M = {}
@@ -44,13 +43,13 @@ M.winpicker_filters = {
 ---@param winnr_source                  integer|nil
 ---@return integer|nil
 function M.pick_focusable_win(winnr_source)
-  return winpicker.pick_window(M.winpicker_filters.focusable, winnr_source, false) ---@type integer|nil
+  return eve.winpicker.pick_window(M.winpicker_filters.focusable, winnr_source, false) ---@type integer|nil
 end
 
 ---@param winnr_source                  integer|nil
 ---@return integer|nil
 function M.pick_projectable_win(winnr_source)
-  return winpicker.pick_window(M.winpicker_filters.projectable, winnr_source, false) ---@type integer|nil
+  return eve.winpicker.pick_window(M.winpicker_filters.projectable, winnr_source, false) ---@type integer|nil
 end
 
 ---@param winnr_source                  integer|nil
@@ -60,13 +59,13 @@ function M.pick_sourcefile_win(winnr_source)
     return winnr_source
   end
 
-  return winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true) ---@type integer|nil
+  return eve.winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true) ---@type integer|nil
 end
 
 ---@param winnr_source                  integer|nil
 ---@return integer|nil
 function M.pick_swappable_win(winnr_source)
-  return winpicker.pick_window(M.winpicker_filters.swappable, winnr_source, false) ---@type integer|nil
+  return eve.winpicker.pick_window(M.winpicker_filters.swappable, winnr_source, false) ---@type integer|nil
 end
 
 ---@param tabnr                         integer
@@ -269,7 +268,7 @@ function M.open_filepaths(winnr_source, filepaths)
     and M.winpicker_filters.sourcefile(winnr_source)
   )
       and winnr_source
-    or winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true)
+    or eve.winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true)
 
   if winnr == nil then
     return
