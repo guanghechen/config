@@ -8,19 +8,4 @@ local storage = { editor = default_storage.editor, workspace = default_storage.w
 eve.setup_state(storage)
 
 require("ghc.plugin")
-
--- vim.api.nvim_create_autocmd("User", {
---   pattern = "LazyDone",
---   callback = function()
---     require("ghc.action.mason").install_all(false, function()
---       vim.cmd("qa")
---     end)
---   end,
--- })
--- local ok = pcall(function()
---   require("lazy").update()
--- end)
--- if not ok then
---   vim.cmd("qa")
--- end
 vim.cmd("qa")
