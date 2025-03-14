@@ -2,6 +2,7 @@
 local __mods = {
   G = "eve.builtin.G",
   box = "eve.builtin.box",
+  clipboard = "eve.builtin.clipboard",
   debug = "eve.builtin.debug",
   env = "eve.builtin.env",
   filetype = "eve.builtin.filetype",
@@ -29,6 +30,7 @@ local __mods = {
 ---@field public __mods                 eve.__mods
 ---@field public G                      eve.builtin.G
 ---@field public box                    eve.builtin.box
+---@field public clipboard              eve.builtin.clipboard
 ---@field public debug                  eve.builtin.debug
 ---@field public env                    eve.builtin.env
 ---@field public filetype               eve.builtin.filetype

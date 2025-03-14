@@ -1,7 +1,6 @@
-local clipboard = require("eve.module.clipboard")
 local state = require("eve.state")
 
-vim.g.clipboard = clipboard.get_clipboard()
+vim.g.clipboard = eve.clipboard.get_clipboard()
 vim.o.relativenumber = state.option.relativenumber:snapshot()
 
 -- better format: https://github.com/stevearc/conform.nvim/issues/372#issuecomment-2066778074
