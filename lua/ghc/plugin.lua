@@ -175,21 +175,8 @@ end
 
 ---! bootstrap lazy and all plugins
 vim.list_extend(final_specs, require("ghc.plugins._extra"))
-local lazypath = eve.path.normalize(eve.env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
-if not eve.path.is_exist(lazypath) then
-  local repo = "https://github.com/guanghechen/mirror"
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    repo,
-    "--single-branch",
-    "--branch=nvim@ghc-lazy.nvim",
-    lazypath,
-  })
-end
-vim.opt.rtp:prepend(lazypath)
-vim.env.LAZY_PATH = lazypath
+
+eve.setup_plugin_rtp()
 require("lazy").setup({
   spec = final_specs,
   defaults = {

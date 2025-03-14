@@ -14,6 +14,8 @@ require("integration.vscode.keymap")
 pcall(require, "integration.local.option")
 pcall(require, "integration.local.keymap")
 
+eve.setup_plugin_rtp()
+
 vim.schedule(function()
   require("ghc.plugin")
   pcall(require, "integration.local.plugin")

@@ -30,6 +30,8 @@ require("fml.dressing.nvimbar.statusline")
 require("fml.dressing.nvimbar.tabline")
 require("fml.dressing.nvimbar.winline")
 
+eve.setup_plugin_rtp()
+
 vim.schedule(function()
   require("ghc.plugin")
   pcall(require, "integration.neovide.plugin")
@@ -52,4 +54,3 @@ vim.schedule(function()
     eve.setup_breakpoints()
   end)
 end)
-

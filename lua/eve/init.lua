@@ -1,5 +1,6 @@
 ---@class eve.__mods
 local __mods = {
+  G = "eve.builtin.G",
   debug = "eve.builtin.debug",
   env = "eve.builtin.env",
   json = "eve.builtin.json",
@@ -7,9 +8,6 @@ local __mods = {
   path = "eve.builtin.path",
   reporter = "eve.builtin.reporter",
 }
-
-local __gid = 0 ---@type integer
-local __gfn = {} ---@type table<string, fun(...): nil>
 
 ---@class eve
 ---@field public __mods                 eve.__mods
@@ -26,7 +24,6 @@ local __gfn = {} ---@type table<string, fun(...): nil>
 ---@field public lib                    eve.lib
 ---@field public std                    eve.std
 local M = setmetatable({
-  G = require("eve.builtin.G"),
   c = require("eve.constant"),
   col = require("eve.collection"),
   lib = require("eve.lib"),
@@ -121,6 +118,32 @@ function M.setup_workspace()
   vim.schedule(function()
     vim.cmd("clearjumps")
   end)
+end
+
+local settled_plugin_rtp = false ---@type boolean
+
+---@return nil
+function M.setup_plugin_rtp()
+  if settled_plugin_rtp then
+    return
+  end
+  settled_plugin_rtp = true
+
+  local lazypath = eve.path.normalize(eve.env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
+  if not eve.path.is_exist(eve.path.join(lazypath, ".git")) then
+    local repo = "https://github.com/guanghechen/mirror"
+    vim.fn.system({
+      "git",
+      "clone",
+      "--filter=blob:none",
+      repo,
+      "--single-branch",
+      "--branch=nvim@ghc-lazy.nvim",
+      lazypath,
+    })
+  end
+  vim.opt.rtp:prepend(lazypath)
+  vim.env.LAZY_PATH = lazypath
 end
 
 ---@param storage                       eve.state.storage|nil
