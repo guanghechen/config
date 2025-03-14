@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.session" ---@type string
 
-local session = require("eve.module.session")
 local state = require("eve.state")
 
 ---@class fml.action.session
@@ -19,7 +18,7 @@ function M.restore()
     end
 
     if nvim_session_filepath then
-      session.load_session(nvim_session_filepath)
+      eve.session.load_session(nvim_session_filepath)
       state.load({
         editor = storage.editor,
         session = storage.session,
@@ -41,7 +40,7 @@ function M.restore_autosaved()
     end
 
     if nvim_session_filepath then
-      session.load_session(nvim_session_filepath)
+      eve.session.load_session(nvim_session_filepath)
       state.load({
         editor = storage.editor,
         session = storage.session,
@@ -60,7 +59,7 @@ function M.save()
       session = storage.session,
       workspace = storage.workspace,
     })
-    session.save_session(storage.nvim_session)
+    eve.session.save_session(storage.nvim_session)
 
     eve.reporter.info({
       from = __module_name__,

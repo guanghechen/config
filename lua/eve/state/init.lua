@@ -1,8 +1,6 @@
 local __module_name__ = "eve.state" ---@type string
 
 local editor = require("eve.module.editor")
-local session = require("eve.module.session")
-
 local state_bookmark = require("eve.state.workspace.bookmark")
 local state_buf = require("eve.state.session.buf")
 local state_flight = require("eve.state.workspace.flight")
@@ -396,7 +394,7 @@ function M.watch_changes(params)
       }
 
       if autosave and M._storage.nvim_session_autosaved then
-        session.save_session(M._storage.nvim_session_autosaved)
+        eve.session.save_session(M._storage.nvim_session_autosaved)
       end
 
       M.save(storage)

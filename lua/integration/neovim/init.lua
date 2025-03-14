@@ -28,8 +28,7 @@ require("ghc.command")
 if eve.path.is_repo_git() then
   local state = require("eve.state")
   if state.flight.autoload:snapshot() then
-    local session = require("eve.module.session")
-    session.load_session(state.get_storage().nvim_session_autosaved)
+    eve.session.load_session(state.get_storage().nvim_session_autosaved)
   end
 end
 
