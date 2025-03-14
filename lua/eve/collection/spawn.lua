@@ -59,7 +59,7 @@ end
 ---@param opts                          eve.builtin.debug.ICmdParams|{}|nil
 function Proc:debug(opts)
   ---@type eve.builtin.debug.ICmdParams
-  opts = eve.std.table.merge_config({}, opts or {}, {
+  opts = eve.table.merge_config({}, opts or {}, {
     cmd = self.opts.cmd,
     args = self.opts.args,
     cwd = self.opts.cwd,
@@ -216,7 +216,7 @@ function M.multi(procs, opts)
     current = current + 1
     assert(current <= #procs, "current > #procs")
     local proc = procs[current]
-    proc.opts = eve.std.table.merge_config(vim.deepcopy(opts), proc.opts, {
+    proc.opts = eve.table.merge_config(vim.deepcopy(opts), proc.opts, {
       on_exit = function(_, err)
         if err or current == #procs then
           done()

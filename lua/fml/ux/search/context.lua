@@ -608,7 +608,7 @@ function M:set_item_deleted(uuid)
     return
   end
 
-  local lnum = eve.std.table.find_index(self.items, function(item)
+  local lnum = eve.table.find_index(self.items, function(item)
     return item.uuid == uuid
   end)
   if lnum == nil then

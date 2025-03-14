@@ -9,6 +9,7 @@ local __mods = {
   path = "eve.builtin.path",
   reporter = "eve.builtin.reporter",
   string = "eve.builtin.string",
+  table = "eve.builtin.table",
 }
 
 ---@class eve
@@ -22,6 +23,7 @@ local __mods = {
 ---@field public path                   eve.builtin.path
 ---@field public reporter               eve.builtin.reporter
 ---@field public string                 eve.builtin.string
+---@field public table                  eve.builtin.table
 ---
 ---@field public c                      eve.constant
 ---@field public col                    eve.collection

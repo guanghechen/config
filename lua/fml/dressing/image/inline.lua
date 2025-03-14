@@ -111,7 +111,7 @@ function M:update()
         img = Placement.new(
           self.buf,
           i.src,
-          eve.std.table.merge_config({}, config.state.doc, {
+          eve.table.merge_config({}, config.state.doc, {
             pos = i.pos,
             range = i.range,
             inline = true,
