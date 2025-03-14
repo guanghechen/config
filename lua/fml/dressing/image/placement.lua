@@ -1,4 +1,3 @@
-local debugger = require("eve.std.debug")
 local config = require("fml.dressing.image.config")
 local Image = require("fml.dressing.image.image")
 local terminal = require("fml.dressing.image.terminal")
@@ -127,7 +126,7 @@ function M:error()
         msg = msg .. "## " .. step.name .. "\n\n" .. step.err .. "\n\n"
         if step.proc then
           msg = msg
-            .. debugger.cmd({
+            .. eve.debugger.cmd({
               cmd = step.proc.opts.cmd,
               args = step.proc.opts.args,
               cwd = step.proc.opts.cwd,

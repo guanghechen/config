@@ -1,6 +1,6 @@
 ---@class eve.__mods
 local __mods = {
-  debug = "eve.std.debug",
+  debug = "eve.builtin.debug",
   env = "eve.builtin.env",
 }
 
@@ -9,6 +9,7 @@ local __gfn = {} ---@type table<string, fun(...): nil>
 
 ---@class eve
 ---@field public __mods                 eve.__mods
+---@field public debug                  eve.builtin.debug
 ---@field public env                    eve.builtin.env
 ---
 ---@field public G                      eve.G
@@ -16,7 +17,7 @@ local __gfn = {} ---@type table<string, fun(...): nil>
 ---@field public lib                    eve.lib
 ---@field public std                    eve.std
 ---
----@field public debug                  eve.std.debug
+---@field public debug                  eve.debug
 local M = setmetatable({
   ---@class eve.G
   G = setmetatable({

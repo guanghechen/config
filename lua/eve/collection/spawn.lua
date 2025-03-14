@@ -56,9 +56,9 @@ function Proc:kill(signal)
   end
 end
 
----@param opts                          eve.std.debug.ICmdParams|{}|nil
+---@param opts                          eve.builtin.debug.ICmdParams|{}|nil
 function Proc:debug(opts)
-  ---@type eve.std.debug.ICmdParams
+  ---@type eve.builtin.debug.ICmdParams
   opts = eve.std.table.merge_config({}, opts or {}, {
     cmd = self.opts.cmd,
     args = self.opts.args,
@@ -79,7 +79,7 @@ function Proc:debug(opts)
   if out ~= "" then
     opts.footer = "# Output\n```\n" .. out .. "\n```"
   end
-  return eve.std.debug.cmd(opts)
+  return eve.debug.cmd(opts)
 end
 
 ---@return nil
