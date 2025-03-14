@@ -8,7 +8,7 @@ if eve.env.IS_MAC then
       callback = function()
         local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
         if previous_mode == "i" and current_mode == "n" then
-          eve.std.im.set_input_method("English")
+          eve.im.set_input_method("English")
         end
         previous_mode = current_mode
       end,

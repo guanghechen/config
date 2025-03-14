@@ -6,6 +6,7 @@ local __mods = {
   env = "eve.builtin.env",
   fn = "eve.builtin.fn",
   fs = "eve.builtin.fs",
+  im = "eve.builtin.im",
   is = "eve.builtin.is",
   json = "eve.builtin.json",
   lsp = "eve.builtin.lsp",
@@ -26,6 +27,7 @@ local __mods = {
 ---@field public env                    eve.builtin.env
 ---@field public fn                     eve.builtin.fn
 ---@field public fs                     eve.builtin.fs
+---@field public im                     eve.builtin.im
 ---@field public is                     eve.builtin.is
 ---@field public json                   eve.builtin.json
 ---@field public lsp                    eve.builtin.lsp
