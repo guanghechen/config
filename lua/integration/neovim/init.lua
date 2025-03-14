@@ -9,6 +9,8 @@ pcall(require, "integration.local.autocmd")
 eve.setup_state()
 require("eve.state.autocmd")
 
+require("fml.command")
+
 ---! Reload session if not specify file and current directory is a git repository.
 if eve.path.is_repo_git() then
   local state = require("eve.state")
@@ -31,12 +33,7 @@ require("fml.dressing.nvimbar.winline")
 vim.schedule(function()
   require("ghc.plugin")
   pcall(require, "integration.local.plugin")
-  
-  vim.schedule(function()
-    require("fml.command")
-    require("ghc.command")
-    eve.setup_breakpoints()
-  end)
+  require("ghc.command")
 
   vim.schedule(function()
     require("fml.dressing.commentstring")
@@ -50,5 +47,6 @@ vim.schedule(function()
     require("fml.dressing.select")
     require("fml.dressing.winsep")
     pcall(require, "integration.local.dressing")
+    eve.setup_breakpoints()
   end)
 end)

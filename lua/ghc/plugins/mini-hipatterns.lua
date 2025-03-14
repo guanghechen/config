@@ -1,5 +1,5 @@
 local ft = require("eve.constant.filetype")
-local tailwind = require("eve.constant.tailwind")
+local tailwind = require("eve.constant.lang.tailwind")
 
 ---@type table<string,true>
 local highlighted = {}
