@@ -120,7 +120,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = eve.c.filetype.SEARCH_MAIN
+  vim.bo[bufnr].filetype = eve.filetype.SEARCH_MAIN
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

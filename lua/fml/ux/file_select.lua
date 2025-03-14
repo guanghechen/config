@@ -277,7 +277,7 @@ end
 function M.fetch_preview_data(item)
   local filepath = item.data.filepath ---@type string
   local filename = item.data.filename ---@type string
-  local is_text_file = eve.c.filetype.is_printable_file(filename) ---@type boolean
+  local is_text_file = eve.filetype.is_printable_file(filename) ---@type boolean
   if is_text_file then
     local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
     local lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]

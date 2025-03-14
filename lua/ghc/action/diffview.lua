@@ -37,7 +37,7 @@ function M.fs_cwd()
   end
 
   local filetype = vim.bo[bufnr_sourcefile].filetype ---@type string
-  if filetype == eve.c.filetype.DIFFVIEW_FILES or filetype == eve.c.filetype.DIFFVIEW_FILE_HISTORY then
+  if filetype == eve.filetype.DIFFVIEW_FILES or filetype == eve.filetype.DIFFVIEW_FILE_HISTORY then
     vim.cmd("DiffviewToggleFiles")
   else
     vim.cmd("DiffviewFocusFiles")

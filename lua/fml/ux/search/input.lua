@@ -135,7 +135,7 @@ function M:create_buf_as_needed()
 
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = eve.c.filetype.SEARCH_INPUT
+  vim.bo[bufnr].filetype = eve.filetype.SEARCH_INPUT
   vim.bo[bufnr].swapfile = false
 
   eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })

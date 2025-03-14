@@ -4,6 +4,7 @@ local __mods = {
   box = "eve.builtin.box",
   debug = "eve.builtin.debug",
   env = "eve.builtin.env",
+  filetype = "eve.builtin.filetype",
   fn = "eve.builtin.fn",
   fs = "eve.builtin.fs",
   im = "eve.builtin.im",
@@ -26,6 +27,7 @@ local __mods = {
 ---@field public box                    eve.builtin.box
 ---@field public debug                  eve.builtin.debug
 ---@field public env                    eve.builtin.env
+---@field public filetype               eve.builtin.filetype
 ---@field public fn                     eve.builtin.fn
 ---@field public fs                     eve.builtin.fs
 ---@field public im                     eve.builtin.im

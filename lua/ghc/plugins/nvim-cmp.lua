@@ -281,10 +281,10 @@ return {
     cmp.setup.cmdline("/", {
       sources = vim.list_slice(cmp_sources_map.cmdline),
     })
-    cmp.setup.filetype(eve.c.filetype.get_cmp_code_filetypes(), {
+    cmp.setup.filetype(eve.filetype.get_cmp_code_filetypes(), {
       sources = vim.list_slice(cmp_sources_map.code),
     })
-    cmp.setup.filetype(eve.c.filetype.get_cmp_search_filetypes(), {
+    cmp.setup.filetype(eve.filetype.get_cmp_search_filetypes(), {
       sources = vim.list_slice(cmp_sources_map.search),
     })
   end,

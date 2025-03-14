@@ -49,7 +49,7 @@ local function create_widget(params)
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local filetype = vim.bo[bufnr].filetype ---@type string
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      return filetype == eve.c.filetype.NEOTREE and vim.b[bufnr].neo_tree_source == source and filepath:match(source)
+      return filetype == eve.filetype.NEOTREE and vim.b[bufnr].neo_tree_source == source and filepath:match(source)
     end,
     hide = function()
       require("neo-tree.command").execute({
@@ -63,7 +63,7 @@ local function create_widget(params)
       for _, winnr in ipairs(winnrs) do
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         local filetype = vim.bo[bufnr].filetype ---@type string
-        if filetype == eve.c.filetype.NEOTREE and vim.b[bufnr].neo_tree_source == source then
+        if filetype == eve.filetype.NEOTREE and vim.b[bufnr].neo_tree_source == source then
           return "visible"
         end
       end
@@ -106,7 +106,7 @@ local M = {}
 function M.fs_cwd()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local ft_current = vim.bo[bufnr].filetype ---@type string
-  local toggle = ft_current == eve.c.filetype.NEOTREE ---@type boolean
+  local toggle = ft_current == eve.filetype.NEOTREE ---@type boolean
 
   require("neo-tree.command").execute({
     action = "focus",
@@ -122,7 +122,7 @@ end
 function M.fs_workspace()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local ft_current = vim.bo[bufnr].filetype ---@type string
-  local toggle = ft_current == eve.c.filetype.NEOTREE ---@type boolean
+  local toggle = ft_current == eve.filetype.NEOTREE ---@type boolean
 
   require("neo-tree.command").execute({
     action = "focus",
@@ -177,7 +177,7 @@ end
 
 ---@return nil
 function M.toggle()
-  if editor.find_winnr(eve.c.filetype.NEOTREE) ~= nil then
+  if editor.find_winnr(eve.filetype.NEOTREE) ~= nil then
     require("neo-tree.command").execute({
       action = "close",
       source = "filesystem",

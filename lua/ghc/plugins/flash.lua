@@ -40,7 +40,7 @@ return {
     },
     search = {
       mode = "exact",
-      exclude = eve.c.filetype.get_no_flash_filetypes(),
+      exclude = eve.filetype.get_no_flash_filetypes(),
     },
   },
 }

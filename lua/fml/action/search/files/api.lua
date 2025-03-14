@@ -107,7 +107,7 @@ function M.calc_preview_data(uuid)
   local cwd = context.search_cwd:snapshot() ---@type string
   local filepath = eve.path.resolve(cwd, item.filepath) ---@type string
   local filename = eve.path.basename(filepath) ---@type string
-  if not eve.c.filetype.is_printable_file(filename) then
+  if not eve.filetype.is_printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
     ---@type fml.action.search.files.IHighlight[]

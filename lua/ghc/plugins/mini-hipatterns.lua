@@ -22,7 +22,7 @@ local tailwind_filetypes = {
 return {
   name = "mini.hipatterns",
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
-  ft = eve.c.filetype.get_hipattern_filetypes(),
+  ft = eve.filetype.get_hipattern_filetypes(),
   config = function()
     local hipatterns = require("mini.hipatterns")
     hipatterns.setup({
@@ -88,7 +88,7 @@ return {
 
     vim.api.nvim_create_autocmd("FileType", {
       group = eve.nvim.augroup("mini-hipatterns_auto_enable"),
-      pattern = { eve.c.filetype.AVANTE, eve.c.filetype.AVANTE_INPUT },
+      pattern = { eve.filetype.AVANTE, eve.filetype.AVANTE_INPUT },
       callback = function(arg)
         require("mini.hipatterns").enable(arg.buf)
       end,

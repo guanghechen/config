@@ -50,7 +50,7 @@ function M.input(opts, on_confirm)
   vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].completefunc = "v:lua.require'fml.dressing.input'.complete"
   vim.bo[bufnr].omnifunc = "v:lua.require'fml.dressing.input'.complete"
-  vim.bo[bufnr].filetype = eve.c.filetype.UX_INPUT
+  vim.bo[bufnr].filetype = eve.filetype.UX_INPUT
   vim.bo[bufnr].swapfile = false
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
 

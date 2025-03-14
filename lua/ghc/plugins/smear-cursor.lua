@@ -23,7 +23,7 @@ return {
           local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
           for _, bufnr in ipairs(bufnrs) do
             local filetype = vim.bo[bufnr].filetype ---@type string
-            if filetype == eve.c.filetype.SMEAR_CURSOR then
+            if filetype == eve.filetype.SMEAR_CURSOR then
               vim.api.nvim_buf_delete(bufnr, { force = true })
             end
           end

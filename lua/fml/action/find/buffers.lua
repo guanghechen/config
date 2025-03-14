@@ -113,7 +113,7 @@ local function get_select()
 
           local filetype = vim.bo[bufnr].filetype ---@type string
           if scope == "T" then
-            return filetype == eve.c.filetype.TERM
+            return filetype == eve.filetype.TERM
           end
 
           if scope == "F" then
@@ -121,10 +121,10 @@ local function get_select()
           end
 
           if
-            filetype == eve.c.filetype.SEARCH_INPUT
-            or filetype == eve.c.filetype.SEARCH_MAIN
-            or filetype == eve.c.filetype.SEARCH_PREVIEW
-            or filetype == eve.c.filetype.WINSEP
+            filetype == eve.filetype.SEARCH_INPUT
+            or filetype == eve.filetype.SEARCH_MAIN
+            or filetype == eve.filetype.SEARCH_PREVIEW
+            or filetype == eve.filetype.WINSEP
           then
             return false
           end

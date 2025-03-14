@@ -1,6 +1,5 @@
 ---@class eve.constant.__mods
 local __mods = {
-  filetype = "eve.constant.filetype",
   hint = "eve.constant.hint",
   icon = "eve.constant.icon",
   setting = "eve.constant.setting",
@@ -10,7 +9,6 @@ local __mods = {
 ---@class eve.constant
 ---@field public __mods                 eve.constant.__mods
 ---
----@field public filetype               eve.constant.filetype
 ---@field public hint                   eve.constant.hint
 ---@field public icon                   eve.constant.icon
 ---@field public setting                eve.constant.setting

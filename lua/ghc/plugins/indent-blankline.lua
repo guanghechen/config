@@ -30,7 +30,7 @@ return {
       highlight = "IblScopeChar",
     },
     exclude = {
-      filetypes = eve.c.filetype.get_no_ibl_filetypes(),
+      filetypes = eve.filetype.get_no_ibl_filetypes(),
     },
   },
   config = function(_, opts)

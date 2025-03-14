@@ -5,8 +5,8 @@ return {
   opts = {
     disable = {
       ft = {
-        eve.c.filetype.TERM,
-        eve.c.filetype.WINSEP,
+        eve.filetype.TERM,
+        eve.filetype.WINSEP,
       },
     },
     spec = {

@@ -99,7 +99,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = eve.c.filetype.WINSEP
+  vim.bo[bufnr].filetype = eve.filetype.WINSEP
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = true
   vim.bo[bufnr].readonly = true

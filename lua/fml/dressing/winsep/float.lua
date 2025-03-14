@@ -35,7 +35,7 @@ local float_winsep = {
   should_show = function(self, winnr)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    return eve.c.filetype.is_winsep_float(filetype)
+    return eve.filetype.is_winsep_float(filetype)
   end,
 }
 

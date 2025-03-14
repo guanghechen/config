@@ -1,4 +1,4 @@
----@class eve.constant.filetype
+---@class eve.builtin.filetype
 local M = {}
 
 M.AERIAL = "aerial"
