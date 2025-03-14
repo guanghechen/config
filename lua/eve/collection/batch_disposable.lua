@@ -58,7 +58,7 @@ function M:dispose()
   self._disposables = {}
 
   if not ok then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "dispose",
       message = "Failed to dispose all registered disposables.",

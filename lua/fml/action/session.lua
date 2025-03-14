@@ -62,7 +62,7 @@ function M.save()
     })
     session.save_session(storage.nvim_session)
 
-    eve.std.reporter.info({
+    eve.reporter.info({
       from = __module_name__,
       message = "Session saved successfully!",
     })

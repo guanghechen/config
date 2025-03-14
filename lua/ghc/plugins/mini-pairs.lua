@@ -28,13 +28,13 @@ return {
       function()
         vim.g.minipairs_disable = not vim.g.minipairs_disable
         if vim.g.minipairs_disable then
-          eve.std.reporter.warn({
+          eve.reporter.warn({
             from = __module_name__,
             subject = "toggle auto pairs",
             message = "Disabled auto pairs",
           })
         else
-          eve.std.reporter.info({
+          eve.reporter.info({
             from = __module_name__,
             subject = "toggle auto pairs",
             message = "Enable auto pairs",

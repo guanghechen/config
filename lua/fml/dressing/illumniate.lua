@@ -146,7 +146,7 @@ function M.jump(step, cycle)
     end
     vim.api.nvim_win_set_cursor(0, target.from)
     if config.notify_jump then
-      eve.std.reporter.info({
+      eve.reporter.info({
         from = __module_name__,
         subject = "jump",
         message = ("Reference [%d/%d]"):format(current_index, #reference_words),
@@ -156,7 +156,7 @@ function M.jump(step, cycle)
       vim.cmd.normal({ "zv", bang = true })
     end
   elseif config.notify_end then
-    eve.std.reporter.warn({
+    eve.reporter.warn({
       from = __module_name__,
       subject = "jump",
       message = "No more references",

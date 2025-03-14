@@ -352,7 +352,7 @@ function M:place(position, raw_component, priority)
   local name = raw_component.name ---@type string
 
   if position ~= "left" and position ~= "center" and position ~= "right" then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "place",
       message = "Bad component position.",
@@ -486,7 +486,7 @@ function M:render_sync(force)
         end
       end
     else
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "render",
         message = "Encounter error while render the nvimbar component.",

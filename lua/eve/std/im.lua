@@ -16,7 +16,7 @@ if eve.env.IS_MAC then
   ---@return eve.std.im.InputMethod|nil
   function M.get_input_method()
     if not vim.fn.executable(script_path) then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "get_input_method",
         message = "Not a executable file.",
@@ -27,7 +27,7 @@ if eve.env.IS_MAC then
 
     local handle = io.popen(vim.fn.fnameescape(script_path))
     if not handle then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "get_input_method",
         message = "Failed to run the executable file.",
@@ -50,7 +50,7 @@ if eve.env.IS_MAC then
       return "Chinese"
     end
 
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
       message = "Unknown input method.",
@@ -62,7 +62,7 @@ if eve.env.IS_MAC then
   ---@return nil
   function M.set_input_method(input_method)
     if not vim.fn.executable(script_path) then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "set_input_method",
         message = "Not a executable file.",
@@ -77,7 +77,7 @@ if eve.env.IS_MAC then
     elseif input_method == "Chinese" then
       arg = "com.apple.inputmethod.SCIM.ITABC"
     else
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "get_input_method",
         message = "Unknown input method.",
@@ -88,7 +88,7 @@ if eve.env.IS_MAC then
 
     local handle = io.popen(vim.fn.fnameescape(script_path) .. " " .. arg)
     if not handle then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "set_input_method",
         message = "Failed to run the executable file.",
@@ -101,7 +101,7 @@ if eve.env.IS_MAC then
     handle:close()
 
     if output ~= nil and output ~= "" then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "set_input_method",
         message = "Unexpected output from the executable file.",

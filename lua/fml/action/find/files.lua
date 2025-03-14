@@ -26,7 +26,7 @@ local function get_select()
         return dirpath
       end
 
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "get_scope_cwd",
         message = "Unknown scope.",

@@ -7,7 +7,7 @@ local state = require("eve.state")
 local select = require("fml.fn.select")
 
 if not state.flight.ai:snapshot() then
-  eve.std.reporter.error({
+  eve.reporter.error({
     from = __module_name__,
     subject = "copilot-chat",
     message = "Copilot is not enabled",
@@ -145,7 +145,7 @@ function M.prompt()
   local actions = require("CopilotChat.actions")
   local prompt_actions = actions["prompt_actions"]()
   if not prompt_actions then
-    eve.std.reporter.warn({
+    eve.reporter.warn({
       from = __module_name__,
       subject = "pick",
       message = "No prompt found on the current line",

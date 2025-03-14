@@ -72,7 +72,7 @@ function M.pick_window(filter, winnr_source, split_as_needed)
       end
     end
 
-    eve.std.reporter.warn({
+    eve.reporter.warn({
       from = __module_name__,
       subject = "pick_window",
       message = "No windows left to pick after filtering",

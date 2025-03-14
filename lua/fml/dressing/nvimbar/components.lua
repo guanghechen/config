@@ -40,7 +40,7 @@ function M.ai(position)
       end
     end
 
-    eve.std.reporter.info({
+    eve.reporter.info({
       from = __module_name__,
       subject = "ai",
       details = { enabled = enabled, provider = provider, status = status },
@@ -354,7 +354,7 @@ function M.copilot(position)
   local fn_show_message = eve.G.register_anonymous_fn(function()
     if package.loaded["copilot"] then
       local copilot_status = require("copilot.api").status.data
-      eve.std.reporter.info({
+      eve.reporter.info({
         from = __module_name__,
         subject = "copilot",
         details = { status = copilot_status or vim.NIL },
@@ -492,7 +492,7 @@ function M.diagnostics(position)
 
   local fn_show_error = eve.G.register_anonymous_fn(function(bufnr)
     local errors = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
-    eve.std.reporter.info({
+    eve.reporter.info({
       from = __module_name__,
       subject = "diagnostics -- error",
       details = errors,
@@ -501,7 +501,7 @@ function M.diagnostics(position)
 
   local fn_show_warn = eve.G.register_anonymous_fn(function(bufnr)
     local warns = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
-    eve.std.reporter.info({
+    eve.reporter.info({
       from = __module_name__,
       subject = "diagnostics -- warning",
       details = warns,
@@ -510,7 +510,7 @@ function M.diagnostics(position)
 
   local fn_show_hint = eve.G.register_anonymous_fn(function(bufnr)
     local hints = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT })
-    eve.std.reporter.info({
+    eve.reporter.info({
       from = __module_name__,
       subject = "diagnostics -- hint",
       details = hints,
@@ -519,7 +519,7 @@ function M.diagnostics(position)
 
   local fn_show_info = eve.G.register_anonymous_fn(function(bufnr)
     local infos = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO })
-    eve.std.reporter.info({
+    eve.reporter.info({
       from = __module_name__,
       subject = "diagnostics -- info",
       details = infos,
@@ -1090,7 +1090,7 @@ function M.python_env(position)
         python_version = output:match("(%d+%.%d+%.%d+)")
       else
         python_version = nil
-        eve.std.reporter.error({
+        eve.reporter.error({
           from = __module_name__,
           message = "Failed to run python version command.",
           details = { error = output, cmd = cmd, python_path = python_path },

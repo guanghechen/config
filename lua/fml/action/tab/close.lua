@@ -9,7 +9,7 @@ local M = {}
 function M.close()
   local N = vim.fn.tabpagenr("$") ---@type integer
   if N <= 1 then
-    eve.std.reporter.warn({
+    eve.reporter.warn({
       from = __module_name__,
       subject = "close",
       message = "This is the last tab, cannot close it.",

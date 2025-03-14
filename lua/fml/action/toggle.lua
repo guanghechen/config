@@ -190,7 +190,7 @@ local toggle_item_map = {
         vim.fn.system({ "node", script_path, theme })
       end)
       if not ok then
-        eve.std.reporter.error({
+        eve.reporter.error({
           from = __module_name__,
           subject = "toggle_theme_variant",
           message = "Failed to toggle theme variant.",
@@ -245,7 +245,7 @@ table.sort(toggle_item_names)
 ---@return nil
 local function apply_theme(theme)
   if not vim.list_contains(themes, theme) then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "apply_theme",
       message = "Unknown theme.",
@@ -260,7 +260,7 @@ local function apply_theme(theme)
     vim.fn.system({ "node", script_path, theme })
   end)
   if not ok then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "apply_theme",
       message = "Failed to toggle theme.",

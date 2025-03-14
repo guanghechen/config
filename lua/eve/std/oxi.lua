@@ -32,7 +32,7 @@ end
 function M.resolve_cmd_result(subject, result_str)
   local result = eve.json.parse(result_str)
   if result == nil or type(result.error) == "string" then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = subject,
       message = "Failed to run command.",
@@ -52,7 +52,7 @@ end
 function M.resolve_fun_result(subject, result_str)
   local result = eve.json.parse(result_str)
   if result == nil or type(result.error) == "string" then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = subject,
       message = "Failed to run function",

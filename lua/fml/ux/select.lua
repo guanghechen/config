@@ -295,7 +295,7 @@ function M.new(props)
     end
 
     if #select_items < 1 then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "select: on_confirm",
         message = "no items selected",
@@ -305,7 +305,7 @@ function M.new(props)
     end
 
     if #select_items > 1 and not context.multiple then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "select: on_confirm",
         message = "More than one items selected, but `multiple` is not enabled",

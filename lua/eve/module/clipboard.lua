@@ -13,7 +13,7 @@ if eve.env.IS_MAC then
         return
       end
 
-      eve.std.reporter.info({
+      eve.reporter.info({
         from = __module_name__,
         message = "Using fake clipboard:" .. fake_clipboard_filepath,
       })
@@ -24,7 +24,7 @@ if eve.env.IS_MAC then
       local function read_from_fake_clipboard()
         local file = io.open(clipboard_file, "r")
         if file == nil then
-          eve.std.reporter.error({
+          eve.reporter.error({
             from = __module_name__,
             subject = "macos_fake_clipborad",
             message = "Unable to open fake clipboard file for reading.",
@@ -45,7 +45,7 @@ if eve.env.IS_MAC then
       local function write_to_fake_clipboard(data)
         local file = io.open(clipboard_file, "w")
         if file == nil then
-          eve.std.reporter.error({
+          eve.reporter.error({
             from = __module_name__,
             subject = "macos_fake_clipborad",
             message = "Unable to open fake clipboard file for writing.",

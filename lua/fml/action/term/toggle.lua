@@ -33,7 +33,7 @@ function M.new(props)
 
   local terminal = terminal_map[name] ---@type fml.ux.ITerminal|nil
   if terminal ~= nil then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "new",
       message = "The term with the given name already exists.",

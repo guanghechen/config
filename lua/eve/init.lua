@@ -4,6 +4,7 @@ local __mods = {
   env = "eve.builtin.env",
   json = "eve.builtin.json",
   path = "eve.builtin.path",
+  reporter = "eve.builtin.reporter",
 }
 
 local __gid = 0 ---@type integer
@@ -15,6 +16,7 @@ local __gfn = {} ---@type table<string, fun(...): nil>
 ---@field public env                    eve.builtin.env
 ---@field public json                   eve.builtin.json
 ---@field public path                   eve.builtin.path
+---@field public reporter               eve.builtin.reporter
 ---
 ---@field public G                      eve.G
 ---@field public c                      eve.collection

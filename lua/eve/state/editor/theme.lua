@@ -217,7 +217,7 @@ function M.load(raw_data)
 
       get_scheme = function(theme)
         if not vim.list_contains(setting.themes, theme) then
-          eve.std.reporter.error({
+          eve.reporter.error({
             from = __module_name__,
             subject = "get_scheme",
             message = "Unknown theme.",

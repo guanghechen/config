@@ -26,7 +26,7 @@ function M.swap_conditional_branches()
   local ts_parsers = require("nvim-treesitter.parsers")
   local lang = ts_parsers.get_buf_lang(bufnr_sourcefile) ---@return string
   if not ts_parsers.has_parser(lang) then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "swap conditional branches",
       message = "No treesitter parser for current language",

@@ -15,7 +15,7 @@ if eve.env.IS_MAC then
     local exit_code = vim.v.shell_error
 
     if exit_code ~= 0 and #output > 0 then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "check_have_img",
         message = "Failed to run command.",
@@ -33,7 +33,7 @@ if eve.env.IS_MAC then
     local exit_code = vim.v.shell_error
 
     if exit_code ~= 0 and #output > 0 then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "check_have_img",
         message = "Failed to run command.",
@@ -58,7 +58,7 @@ elseif eve.env.IS_NIX then
     local exit_code = vim.v.shell_error
 
     if exit_code ~= 0 and #output > 0 then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "check_have_img",
         message = "Failed to run command.",
@@ -95,7 +95,7 @@ elseif eve.env.IS_WIN or eve.env.IS_WSL then
     local exit_code = vim.v.shell_error
 
     if exit_code ~= 0 and #output > 0 then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "check_have_img",
         message = "Failed to run command.",

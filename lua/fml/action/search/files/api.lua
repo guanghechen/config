@@ -292,7 +292,7 @@ function M.fetch_data(input_text, force, callback)
 
   local is_searching_current_buf = specified_filepath ~= nil ---@type boolean
   if fs.is_file_or_dir(cwd) ~= "directory" then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "fetch_data",
       message = "The cwd is not a valid directory path",
@@ -795,7 +795,7 @@ function M.replace_file(uuid)
     end
 
     if #locations ~= #remain_offsets then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "replace_file",
         message = "Bad locations, the size of locations should match the given remain_offsets.",

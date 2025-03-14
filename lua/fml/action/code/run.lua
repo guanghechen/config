@@ -81,7 +81,7 @@ function M.run(force)
 
   local runner = runners[key]
   if runner == nil then
-    eve.std.reporter.warn({
+    eve.reporter.warn({
       from = __module_name__,
       subject = "run",
       message = "Cannot find the runner by the given filepath.",

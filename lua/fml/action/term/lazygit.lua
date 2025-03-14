@@ -45,7 +45,7 @@ local function edit_lazygit_file_in_buffer(cwd)
   local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
   local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "edit_lazygit_file_in_buffer",
       message = "No valid buf found.",
@@ -56,7 +56,7 @@ local function edit_lazygit_file_in_buffer(cwd)
 
   local channel_id = vim.fn.getbufvar(bufnr_sourcefile, "terminal_job_id")
   if not channel_id then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "edit_lazygit_file_in_buffer",
       message = "No terminal job ID found.",
@@ -69,7 +69,7 @@ local function edit_lazygit_file_in_buffer(cwd)
 
   local relative_filepath = get_filepath_from_lazygit(cwd)
   if not relative_filepath then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "edit_lazygit_file_in_buffer",
       message = "Clipboard is empty or invalid.",

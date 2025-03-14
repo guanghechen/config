@@ -205,7 +205,7 @@ S = {
           return
         end
 
-        eve.std.reporter.error({
+        eve.reporter.error({
           from = __module_name__,
           subject = "locate_symbols",
           message = "Failed to request document symbols",

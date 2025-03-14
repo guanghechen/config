@@ -66,7 +66,7 @@ local function get_select()
           local output, err = vim.fn.system(cmd)
 
           if vim.v.shell_error ~= 0 then
-            eve.std.reporter.error({
+            eve.reporter.error({
               from = __module_name__,
               subject = "find_venvs",
               message = "Failed to run fd command.",
@@ -125,7 +125,7 @@ local function get_select()
             local output, err = vim.fn.system(cmd)
 
             if vim.v.shell_error ~= 0 then
-              eve.std.reporter.error({
+              eve.reporter.error({
                 from = __module_name__,
                 subject = "find_venvs",
                 message = "Failed to run fd command.",
@@ -196,7 +196,7 @@ local function get_select()
             local output, err = vim.fn.system(cmd)
 
             if vim.v.shell_error ~= 0 then
-              eve.std.reporter.error({
+              eve.reporter.error({
                 from = __module_name__,
                 subject = "find_venvs",
                 message = "Failed to run fd command.",

@@ -32,7 +32,7 @@ local function vim_navigate(direction)
 
   local ok, error = pcall(vim_navigate_window, direction)
   if not ok then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       message = "E11: Invalid in command-line window; <cr> executes, ctrl-c quits",
       details = { direction = direction, error = error },

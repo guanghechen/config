@@ -142,7 +142,7 @@ function M:execute()
       else
         local silent = self._silent() ---@type boolean
         if not silent then
-          eve.std.reporter.error({
+          eve.reporter.error({
             from = __module_name__,
             subject = "execute",
             message = "Task failed.",
@@ -207,7 +207,7 @@ function M:execute_immediately()
       else
         local silent = self._silent() ---@type boolean
         if not silent then
-          eve.std.reporter.error({
+          eve.reporter.error({
             from = __module_name__,
             subject = "execute",
             message = "Task failed.",

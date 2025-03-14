@@ -417,7 +417,7 @@ function M.watch_changes(params)
         end
       end,
       on_error = function(p, err)
-        eve.std.reporter.error({
+        eve.reporter.error({
           from = __module_name__,
           subject = "watch_changes",
           message = "Something got wrong while watching the editor states file changes!",

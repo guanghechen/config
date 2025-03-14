@@ -115,7 +115,7 @@ function M.locate_mason_pkg_path(pkg, pkg_path, silent)
 
   if not vim.uv.fs_stat(filepath) and not require("lazy.core.config").headless() then
     if not silent then
-      eve.std.reporter.warn({
+      eve.reporter.warn({
         from = __module_name__,
         subject = "locate_mason_pkg_path",
         message = string.format(

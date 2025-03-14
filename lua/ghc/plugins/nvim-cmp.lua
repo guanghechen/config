@@ -115,7 +115,7 @@ local function snippet_expand(snippet)
 %s
 ```]]):format(msg, vim.bo.filetype, snippet)
 
-    local log = ok and eve.std.reporter.warn or eve.std.reporter.error
+    local log = ok and eve.reporter.warn or eve.reporter.error
     log({
       from = __module_name__,
       subject = "expand",

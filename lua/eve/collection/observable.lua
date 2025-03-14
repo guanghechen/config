@@ -85,7 +85,7 @@ function M:next(value, options)
   if self:is_disposed() then
     local strict = options.strict ~= false ---@type boolean
     if strict then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "next",
         message = "Don't update a disposed observable.",

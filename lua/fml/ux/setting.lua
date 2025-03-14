@@ -82,7 +82,7 @@ function M.new(props)
     end)
 
     if not ok then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "on_confirm",
         message = "Failed to parse json string.",

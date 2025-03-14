@@ -33,7 +33,7 @@ local function get_history_select()
 
         local meta = winnr_sourcefile and state.win.resolve(winnr_sourcefile) or nil ---@type eve.t.state.win.meta.state|nil
         if meta == nil then
-          eve.std.reporter.error({
+          eve.reporter.error({
             from = __module_name__,
             message = "Cannot find window.",
             details = { winnr_source = winnr_sourcefile },
@@ -155,7 +155,7 @@ function M.history_backward()
 
   local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
   if meta == nil then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "history_backward",
       message = "Cannot find window.",
@@ -183,7 +183,7 @@ function M.history_forward()
 
   local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
   if meta == nil then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "history_forward",
       message = "Cannot find window.",

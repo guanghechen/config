@@ -669,7 +669,7 @@ end
 
 ---@return nil
 function M:show_state()
-  eve.std.reporter.error({
+  eve.reporter.error({
     from = __module_name__,
     subject = "show_state",
     details = {

@@ -130,7 +130,7 @@ return {
 
           local linter = lint.linters[name]
           if not linter then
-            eve.std.reporter.warn({
+            eve.reporter.warn({
               from = __module_name__,
               message = "Linter not found: " .. name,
             })

@@ -66,7 +66,7 @@ local config = {
 local function system(cmd, err)
   local proc = vim.fn.system(cmd)
   if vim.v.shell_error ~= 0 then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = 'browse',
       message = err,
@@ -84,7 +84,7 @@ local function get_last_commit_hash(filename, lnum)
   local handle = io.popen(command)
 
   if not handle then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = 'browse',
       message = "Failed to run git command to get last commit hash of the filename with specified line number",
@@ -117,7 +117,7 @@ local function get_git_branch_or_commit()
   -- Run the git command to get the branch name
   local handle = io.popen(command)
   if not handle then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = 'browse',
       message = "Failed to run git command to get branch",
@@ -140,7 +140,7 @@ local function get_git_branch_or_commit()
 
     handle = io.popen(command)
     if not handle then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = 'browse',
         message = "Failed to run git command to get commit hash",
@@ -199,7 +199,7 @@ end
 ---@param remote                        fml.action.git.browse.IRemote
 local function open_remote(remote)
   if remote then
-    eve.std.reporter.info({
+    eve.reporter.info({
       from = __module_name__,
       subject = 'browse',
       message = "Opening " .. "[" .. remote.name.. "]" .. "(" ..remote.url .. ")",
@@ -251,7 +251,7 @@ function M.browse()
   end
 
   if #remotes == 0 then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = 'browse',
       message = "No git remotes found",

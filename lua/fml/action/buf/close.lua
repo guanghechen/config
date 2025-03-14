@@ -58,7 +58,7 @@ function M.close_to_leftest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "close_to_leftest",
       message = "Cannot resolve the meta for the current tab.",
@@ -91,7 +91,7 @@ function M.close_to_rightest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "close_to_rightest",
       message = "Cannot resolve the meta for the current tab.",
@@ -124,7 +124,7 @@ function M.close_others()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta_tab == nil then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "close_others",
       message = "Cannot resolve the meta for the current tab.",

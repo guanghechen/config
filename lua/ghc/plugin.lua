@@ -165,7 +165,7 @@ for index = 1, #specs, 1 do
     spec_details.branch = spec_basic.branch
     spec_details.main = spec_basic.main
   elseif not vim.list_contains(no_details_module_names, spec_basic.name) then
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       subject = "resolve plugin details",
       message = "Failed to resolve the details of plugin: " .. spec_basic.name,

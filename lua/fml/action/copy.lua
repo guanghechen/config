@@ -12,7 +12,7 @@ local function copy_current_filepath(candidate, filepath)
     local content = filepath ---@type string
 
     vim.fn.setreg("+", content)
-    eve.std.reporter.info({
+    eve.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (absolute) to system clipboard!",
     })
@@ -21,12 +21,12 @@ local function copy_current_filepath(candidate, filepath)
     local content = eve.path.relative(cwd, filepath, true) ---@type string
 
     vim.fn.setreg("+", content)
-    eve.std.reporter.info({
+    eve.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
     })
   else
-    eve.std.reporter.error({
+    eve.reporter.error({
       from = __module_name__,
       message = "Failed to copy current filepath, unknown candidate!",
       details = { candidate = candidate },

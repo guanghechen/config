@@ -202,7 +202,7 @@ end
 function M:print()
   local present = self._present ---@type integer
   local stack = self._stack:collect() ---@type eve.t.T
-  eve.std.reporter.info({
+  eve.reporter.info({
     from = __module_name__,
     subject = "print",
     details = { present = present, stack = stack },

@@ -51,7 +51,7 @@ function M.new(fn)
   ---@return nil
   local function resolve(value)
     if self._settled ~= nil then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "new#resolve",
         message = "Promise is already settled.",
@@ -74,7 +74,7 @@ function M.new(fn)
   ---@return nil
   local function reject(reason)
     if self._settled ~= nil then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "new#reject",
         message = "Promise is already settled.",
@@ -95,7 +95,7 @@ function M.new(fn)
     end
 
     if not has_catched then
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = "new#reject",
         message = "Uncatched promise rejection.",

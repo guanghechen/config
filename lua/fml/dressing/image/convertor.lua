@@ -347,7 +347,7 @@ function Convertor:on_done()
     if step and step.proc then
       step.proc:debug({ title = title })
     else
-      eve.std.reporter.error({
+      eve.reporter.error({
         from = __module_name__,
         subject = title,
         message = self._err,
