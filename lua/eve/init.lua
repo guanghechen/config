@@ -12,6 +12,7 @@ local __mods = {
   oxi = "eve.builtin.oxi",
   path = "eve.builtin.path",
   reporter = "eve.builtin.reporter",
+  shell = "eve.builtin.shell",
   string = "eve.builtin.string",
   table = "eve.builtin.table",
 }
@@ -30,6 +31,7 @@ local __mods = {
 ---@field public oxi                    eve.builtin.oxi
 ---@field public path                   eve.builtin.path
 ---@field public reporter               eve.builtin.reporter
+---@field public shell                  eve.builtin.shell
 ---@field public string                 eve.builtin.string
 ---@field public table                  eve.builtin.table
 ---

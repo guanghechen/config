@@ -1,6 +1,6 @@
-local __module_name__ = "eve.std.shell" ---@type string
+local __module_name__ = "eve.builtin.shell" ---@type string
 
----@class eve.std.shell
+---@class eve.builtin.shell
 ---@field public format_command         fun(command?: string): string
 local M = {}
 

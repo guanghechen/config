@@ -1,7 +1,5 @@
 local __module_name__ = "eve.module.clipboard" ---@type string
 
-local shell = require("eve.std.shell")
-
 ---@class eve.module.clipboard.img
 ---@field public has_image              fun(): boolean
 ---@field public paste_image            fun(filepath: string): boolean
@@ -10,7 +8,7 @@ local M = {}
 if eve.env.IS_MAC then
   ---@return boolean
   function M.has_image()
-    local cmd = shell.format_command("pngpaste -") ---@type string
+    local cmd = eve.shell.format_command("pngpaste -") ---@type string
     local output = vim.fn.system(cmd) ---@type string|nil
     local exit_code = vim.v.shell_error
 
@@ -28,7 +26,7 @@ if eve.env.IS_MAC then
   ---@param filepath                    string
   ---@return  boolean
   function M.paste_image(filepath)
-    local cmd = shell.format_command(string.format('pngpaste - > "%s"', filepath))
+    local cmd = eve.shell.format_command(string.format('pngpaste - > "%s"', filepath))
     local output = vim.fn.system(cmd) ---@type string|nil
     local exit_code = vim.v.shell_error
 
@@ -45,7 +43,7 @@ if eve.env.IS_MAC then
 elseif eve.env.IS_NIX then
   ---@return boolean
   function M.has_image()
-    local cmd = shell.format_command("xclip -selection clipboard -t TARGETS -o") ---@type string
+    local cmd = eve.shell.format_command("xclip -selection clipboard -t TARGETS -o") ---@type string
     local output = vim.fn.system(cmd) ---@type string|nil
     return output ~= nil and output:find("image/png") ~= nil
   end
@@ -53,7 +51,7 @@ elseif eve.env.IS_NIX then
   ---@param filepath                    string
   ---@return  boolean
   function M.paste_image(filepath)
-    local cmd = shell.format_command(string.format('xclip -selection clipboard -o -t image/png > "%s"', filepath))
+    local cmd = eve.shell.format_command(string.format('xclip -selection clipboard -o -t image/png > "%s"', filepath))
     local output = vim.fn.system(cmd) ---@type string|nil
     local exit_code = vim.v.shell_error
 

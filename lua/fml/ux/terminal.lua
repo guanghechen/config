@@ -1,4 +1,3 @@
-local shell = require("eve.std.shell")
 local ft = require("eve.constant.filetype")
 local state = require("eve.state")
 
@@ -63,7 +62,7 @@ function M.new(props)
   local keymaps = state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
-  local cmd = shell.format_command(props.cmd) ---@type string
+  local cmd = eve.shell.format_command(props.cmd) ---@type string
   local cmd_cwd = props.cwd or eve.path.cwd() ---@type string
   local cmd_env = props.env ---@type table<string, string>|nil
   local permanent = not not props.permanent ---@type boolean
@@ -266,7 +265,7 @@ end
 ---@param props                         fml.ux.terminal.IProps
 ---@return nil
 function M:update(props)
-  local cmd = shell.format_command(props.cmd) ---@type string
+  local cmd = eve.shell.format_command(props.cmd) ---@type string
 
   self.title = props.title ---@type string|nil
   self._cmd = cmd ---@type string
