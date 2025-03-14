@@ -53,7 +53,6 @@ local __mods = {
 ---@field public col                    eve.collection
 ---@field public lib                    eve.lib
 local M = setmetatable({
-  c = require("eve.constant"),
   col = require("eve.collection"),
   lib = require("eve.lib"),
 }, {
