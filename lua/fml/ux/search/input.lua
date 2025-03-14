@@ -142,7 +142,7 @@ function M:create_buf_as_needed()
   eve.std.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local input = context.input:snapshot() ---@type string
-  local lines = eve.std.oxi.parse_lines(input) ---@type string[]
+  local lines = eve.oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, context.enable_multiline_input and lines or { lines[1] })
   vim.fn.sign_place(bufnr, "", signs.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
 
@@ -210,7 +210,7 @@ function M:reset_input(text)
 
   local bufnr = context.bufnr_input ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local lines = eve.std.oxi.parse_lines(next_text) ---@type string[]
+    local lines = eve.oxi.parse_lines(next_text) ---@type string[]
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, context.enable_multiline_input and lines or { lines[1] })
   end
 end

@@ -541,8 +541,8 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  ---@type eve.std.oxi.string.ILineMatch[]|nil
-  local oxi_matches = eve.std.oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
+  ---@type eve.oxi.string.ILineMatch[]|nil
+  local oxi_matches = eve.oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
   if oxi_matches == nil then
     return old_matches
   end

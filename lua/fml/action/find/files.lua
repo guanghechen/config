@@ -352,7 +352,7 @@ local function get_select()
         local excludes = flag_exclude and state.select.find_file.excludes:snapshot() or {} ---@type string[]
 
         ---@type string[]
-        local filepaths = eve.std.oxi.find({
+        local filepaths = eve.oxi.find({
           workspace = workspace,
           cwd = cwd,
           flag_case_sensitive = false,

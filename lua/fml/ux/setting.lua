@@ -1,6 +1,5 @@
 local __module_name__ = "fml.ux.setting" ---@type string
 
-local json = require("eve.json")
 local Textarea = require("fml.ux.textarea")
 
 ---@class fml.ux.ISetting
@@ -61,7 +60,7 @@ function M.new(props)
   local function validate(lines)
     local text = table.concat(lines, "\n") ---@type string
     local ok, data = pcall(function()
-      return json.parse(text)
+      return eve.json.parse(text)
     end)
 
     if not ok then
@@ -78,7 +77,7 @@ function M.new(props)
   local function on_confirm(lines)
     local text = table.concat(lines, "\n") ---@type string
     local ok, data = pcall(function()
-      return json.parse(text)
+      return eve.json.parse(text)
     end)
 
     if not ok then
@@ -120,7 +119,7 @@ end
 ---@param params                        fml.ux.setting.IOpenParams
 ---@return nil
 function M:open(params)
-  local lines = json.stringify_prettier_lines(params.initial_value) ---@type string[]
+  local lines = eve.json.stringify_prettier_lines(params.initial_value) ---@type string[]
   ---@type fml.ux.textarea.IOpenParams
   local opts = {
     initial_lines = lines,

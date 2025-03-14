@@ -7,7 +7,6 @@ local __mods = {
   is = "eve.std.is",
   lsp = "eve.std.lsp",
   nvim = "eve.std.nvim",
-  oxi = "eve.std.oxi",
   shell = "eve.std.shell",
   string = "eve.std.string",
   table = "eve.std.table",
@@ -23,7 +22,6 @@ local __mods = {
 ---@field public is                     eve.std.is
 ---@field public im                     eve.std.im
 ---@field public nvim                   eve.std.nvim
----@field public oxi                    eve.std.oxi
 ---@field public shell                  eve.std.shell
 ---@field public string                 eve.std.string
 ---@field public table                  eve.std.table

@@ -308,7 +308,7 @@ return {
             local excludes = flag_exclude and state.select.select_avante.excludes:snapshot() or {} ---@type string[]
 
             ---@type string[]
-            local filepaths = eve.std.oxi.find({
+            local filepaths = eve.oxi.find({
               workspace = workspace,
               cwd = cwd,
               flag_case_sensitive = false,

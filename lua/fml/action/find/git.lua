@@ -17,7 +17,7 @@ function M.find_git_not_committed()
     flag_regex = false,
     fetch_filepaths = function()
       local result = vim.fn.system("git diff HEAD --name-only") ---@type string
-      local lines = eve.std.oxi.parse_lines(result) ---@type string[]
+      local lines = eve.oxi.parse_lines(result) ---@type string[]
 
       local filepaths = {} ---@type string[]
       for _, line in ipairs(lines) do

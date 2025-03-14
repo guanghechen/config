@@ -123,7 +123,7 @@ function M.new(props)
   local flag_selected = props.flag_selected ---@type eve.collection.IObservable -- boolean>
   local input = props.input ---@type eve.collection.IObservable -- string>
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
-  local input_line_count = eve.col.Observable.from_value(eve.std.oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable -- integer>
+  local input_line_count = eve.col.Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable -- integer>
   local state_has_matched = eve.col.Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.collection.IObservable -- boolean>
   local status = eve.col.Observable.from_value("hidden")
 
@@ -148,7 +148,7 @@ function M.new(props)
   local multiple = not not props.multiple ---@type boolean
   local permanent = not not props.permanent ---@type boolean
 
-  local uuid = eve.std.oxi.uuid() ---@type string
+  local uuid = eve.oxi.uuid() ---@type string
 
   ---@type eve.collection.IScheduler
   local fetch_scheduler = eve.col.Scheduler.new({
@@ -249,7 +249,7 @@ function M.new(props)
   ---@return nil
   local function on_input_change()
     if enable_multiline_input then
-      local line_count = eve.std.oxi.count_lines(input:snapshot())
+      local line_count = eve.oxi.count_lines(input:snapshot())
       input_line_count:next(line_count)
     end
     self.dirtier_data:mark_dirty()

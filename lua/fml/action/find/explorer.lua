@@ -47,9 +47,9 @@ local function fetch_diritem(dirpath, force)
     local owner_width = 0 ---@type integer
     local group_width = 0 ---@type integer
 
-    local raw_data = eve.std.oxi.readdir(dirpath) ---@type eve.std.oxi.IReaddirResult|nil
+    local raw_data = eve.oxi.readdir(dirpath) ---@type eve.oxi.IReaddirResult|nil
     if raw_data ~= nil then
-      local raw_itself = raw_data.itself ---@type eve.std.oxi.IFileItemWithStatus
+      local raw_itself = raw_data.itself ---@type eve.oxi.IFileItemWithStatus
 
       ---@type fml.action.find.explorer.IFileItem
       local itself = {

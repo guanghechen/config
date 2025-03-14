@@ -804,7 +804,7 @@ function M.filesize(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath or context.mode ~= prev_context.mode
     end,
     render = function(context)
-      local text = eve.std.oxi.get_filesize(context.filepath) or "" ---@type string
+      local text = eve.oxi.get_filesize(context.filepath) or "" ---@type string
       local hl_text = txt(text, hln_text)
       return text, hl_text, true
     end,
