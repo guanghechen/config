@@ -1,5 +1,8 @@
----@class eve.constant.palette.tailwind
-local M = {
+---@class eve.constant.lang.tailwind
+local M = {}
+
+---@class eve.constant.lang.tailwind.palette
+M.palette = {
   slate = {
     [50] = "#F8FAFC",
     [100] = "#F1F5F9",
