@@ -22,7 +22,7 @@ tabline = Nvimbar.new({
   get_max_width = function()
     return vim.o.columns
   end,
-  is_active = eve.std.fn.falsy,
+  is_active = eve.fn.falsy,
   trigger_rerender = function()
     vim.o.tabline = tabline:snapshot()
   end,

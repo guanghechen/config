@@ -18,7 +18,7 @@ setmetatable(M, eve.col.Observable)
 ---@return eve.collection.Dirtier
 function M.new(props)
   local dirty = props.dirty ---@type boolean
-  local equals = props.equals or eve.std.fn.falsy
+  local equals = props.equals or eve.fn.falsy
 
   local self = setmetatable(eve.col.Observable.new({ initial_value = dirty, equals = equals }), M)
   ---@cast self                         eve.collection.Dirtier

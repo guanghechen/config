@@ -108,7 +108,7 @@ function M.load(raw_data)
 
       dirtier_statusline = eve.col.Dirtier.new({ dirty = true }),
       dirtier_tabline = eve.col.Dirtier.new({ dirty = true }),
-      dirty_winline_nr = eve.col.Observable.from_value(data.dirty_winline_nr, eve.std.fn.falsy),
+      dirty_winline_nr = eve.col.Observable.from_value(data.dirty_winline_nr, eve.fn.falsy),
 
       lsp_msg = eve.col.Observable.from_value(data.lsp_msg),
       maximized_winnrs = data.maximized_winnrs,

@@ -21,10 +21,10 @@ return {
 
     -- custom cmd to install all mason binaries listed
     vim.api.nvim_create_user_command("MasonInstallAll", function()
-      action.install_all(false, eve.std.fn.noop)
+      action.install_all(false, eve.fn.noop)
     end, {})
     vim.api.nvim_create_user_command("MasonInstallAllForce", function()
-      action.install_all(true, eve.std.fn.noop)
+      action.install_all(true, eve.fn.noop)
     end, {})
 
     require("mason").setup(opts)

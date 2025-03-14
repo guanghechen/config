@@ -17,7 +17,7 @@ local AI_PROVIDER_MAP = {
 ---@return fun(params: ghc.plugins.avante.file_selector.IParams): nil
 local function get_file_selector()
   local context = state.select.select_avante
-  local _on_choice = eve.std.fn.noop ---@type fun(items: fml.ux.select.IItem[] | nil): nil
+  local _on_choice = eve.fn.noop ---@type fun(items: fml.ux.select.IItem[] | nil): nil
   local _filepaths = {} ---@type string[]
   local _winnr = nil ---@type integer|nil
   local _confirmed = false ---@type boolean

@@ -158,10 +158,10 @@ function M.load(state, name, raw_data)
   state.flag_gitignore:next(data.flag_gitignore)
   state.flag_regex:next(data.flag_regex)
   state.flag_selected:next(data.flag_selected)
-  if not eve.std.fn.equals_list(state.includes:snapshot(), data.includes) then
+  if not eve.fn.equals_list(state.includes:snapshot(), data.includes) then
     state.includes:next(data.includes)
   end
-  if not eve.std.fn.equals_list(state.excludes:snapshot(), data.excludes) then
+  if not eve.fn.equals_list(state.excludes:snapshot(), data.excludes) then
     state.excludes:next(data.excludes)
   end
   state.input:next(data.input)

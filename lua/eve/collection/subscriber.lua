@@ -17,7 +17,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   self._disposed = false ---@type boolean
-  self._on_dispose = props.on_dispose or eve.std.fn.noop ---@type fun(): nil
+  self._on_dispose = props.on_dispose or eve.fn.noop ---@type fun(): nil
   self._on_next = props.on_next ---@type fun(value: any, value_prev: any|nil): nil
 
   return self
