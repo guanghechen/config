@@ -1,4 +1,3 @@
-local fs = require("eve.std.fs")
 local ft = require("eve.constant.filetype")
 local varnames = require("eve.constant.setting").vars
 local setting = require("eve.constant.setting")
@@ -224,7 +223,7 @@ function M.is_valid_filepath(filepath)
   if filepath == nil or filepath == "" or filepath == setting.BUF_UNTITLED then
     return false
   end
-  return fs.is_file_or_dir(filepath) == "file"
+  return eve.fs.is_file_or_dir(filepath) == "file"
 end
 
 ---@param winnr_source                  integer|nil

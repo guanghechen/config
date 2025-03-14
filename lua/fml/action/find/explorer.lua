@@ -1,4 +1,3 @@
-local fs = require("eve.std.fs")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
@@ -213,7 +212,7 @@ local function get_select()
           local is_text_file = ft.is_printable_file(fileitem.name) ---@type boolean
           if is_text_file then
             local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
-            local lines = fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
+            local lines = eve.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
             local title = eve.path.relative(eve.path.cwd(), item.uuid, false) ---@type string
 
             ---@type fml.ux.search.preview.IData
@@ -465,7 +464,7 @@ local M = {}
 ---@param specified_dirpath             string|nil
 ---@return nil
 function M.find_explorer(specified_dirpath)
-  if specified_dirpath ~= nil and fs.is_file_or_dir(specified_dirpath) == "directory" then
+  if specified_dirpath ~= nil and eve.fs.is_file_or_dir(specified_dirpath) == "directory" then
     local dirpath = eve.path.normalize(specified_dirpath) ---@type string
     state_cwd:next(dirpath)
   else
@@ -475,7 +474,7 @@ function M.find_explorer(specified_dirpath)
       local bufnr = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 then
-        local doctype = fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
+        local doctype = eve.fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
         local dirpath = doctype == "file" and eve.path.dirname(filepath) or filepath ---@type string
         state_cwd:next(dirpath)
       end

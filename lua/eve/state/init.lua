@@ -1,6 +1,5 @@
 local __module_name__ = "eve.state" ---@type string
 
-local fs = require("eve.std.fs")
 local editor = require("eve.module.editor")
 local session = require("eve.module.session")
 
@@ -120,7 +119,7 @@ function M.load(storage, initialize)
     local data_editor = (
       storage.editor
       and vim.fn.filereadable(storage.editor) ~= 0
-      and fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
+      and eve.fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
     ) or {}
     M.theme = state_theme.load(data_editor.theme)
   end
@@ -129,7 +128,7 @@ function M.load(storage, initialize)
     local data_workspace = (
       storage.workspace
       and vim.fn.filereadable(storage.workspace) ~= 0
-      and fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
+      and eve.fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
     ) or {}
     M.bookmark = state_bookmark.load(data_workspace.bookmark)
     M.flight = state_flight.load(data_workspace.flight)
@@ -145,7 +144,7 @@ function M.load(storage, initialize)
     local data_session = (
       storage.session
       and vim.fn.filereadable(storage.session) ~= 0
-      and fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
+      and eve.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
     ) or {}
     M.buf = state_buf.load(data_session.buf)
     M.tab = state_tab.load(data_session.tab)
@@ -168,7 +167,7 @@ function M.save(storage)
     local data = {
       theme = state_theme.dump(),
     }
-    fs.write_json(storage.editor, data, true)
+    eve.fs.write_json(storage.editor, data, true)
   end
 
   if storage.session then
@@ -177,7 +176,7 @@ function M.save(storage)
       tab = state_tab.dump(),
       win = state_win.dump(),
     }
-    fs.write_json(storage.session, data, true)
+    eve.fs.write_json(storage.session, data, true)
   end
 
   if storage.workspace then
@@ -195,7 +194,7 @@ function M.save(storage)
       search = state_search_file.dump(),
       select = state_select.dump(),
     }
-    fs.write_json(storage.workspace, data, true)
+    eve.fs.write_json(storage.workspace, data, true)
   end
 end
 
@@ -357,7 +356,7 @@ function M.watch_changes(params)
     delay = 200,
     task = function(callback)
       if M._storage.editor then
-        local raw_data = fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true }) or {}
+        local raw_data = eve.fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true }) or {}
         local data = {
           theme = state_theme.normalize(raw_data.theme),
         }
@@ -406,7 +405,7 @@ function M.watch_changes(params)
 
   ---! watch the editor states file changes.
   if M._storage.editor and vim.fn.filereadable(M._storage.editor) then
-    local unwatch = fs.watch_file({
+    local unwatch = eve.fs.watch_file({
       filepath = M._storage.editor,
       ---@diagnostic disable-next-line: unused-local
       on_event = function(p, event)

@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
-local fs = require("eve.std.fs")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
 
@@ -26,7 +25,7 @@ function M.save()
 
       local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
       local filepath = eve.path.resolve(cwd, filename) ---@type string
-      if fs.is_file_or_dir(filepath) == nil then
+      if eve.fs.is_file_or_dir(filepath) == nil then
         new_file_count = new_file_count + 1
         table.insert(new_file_bufnrs, bufnr)
       end
@@ -68,7 +67,7 @@ function M.save()
       end
 
       local next_filepath = eve.path.resolve(cwd, text) ---@type string
-      local filetype = fs.is_file_or_dir(next_filepath)
+      local filetype = eve.fs.is_file_or_dir(next_filepath)
 
       ---@return nil
       local on_save = function()

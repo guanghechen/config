@@ -1,4 +1,3 @@
-local fs = require("eve.std.fs")
 local tmux = require("eve.std.tmux")
 local varnames = require("eve.constant.setting").vars
 local editor = require("eve.module.editor")
@@ -30,7 +29,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     for _, bufnr in ipairs(bufnrs) do
       local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
       local filepath = eve.path.resolve(cwd, filename) ---@type string
-      if fs.is_file_or_dir(filepath) == "directory" then
+      if eve.fs.is_file_or_dir(filepath) == "directory" then
         local new_filepath = state.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
         if new_filepath ~= nil then
           existed_filepaths[new_filepath] = true

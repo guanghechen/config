@@ -1,4 +1,3 @@
-local fs = require("eve.std.fs")
 local ft = require("eve.constant.filetype")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
@@ -282,7 +281,7 @@ function M.fetch_preview_data(item)
   local is_text_file = ft.is_printable_file(filename) ---@type boolean
   if is_text_file then
     local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-    local lines = fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    local lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
 
     ---@type fml.ux.search.preview.IData
     return {

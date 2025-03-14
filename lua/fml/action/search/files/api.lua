@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
-local fs = require("eve.std.fs")
 local ft = require("eve.constant.filetype")
 local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
@@ -196,7 +195,7 @@ function M.calc_preview_data(uuid)
       end
     end
   else
-    lines = fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
     highlights = {} ---@type fml.action.search.files.IHighlight[]
 
     local filematch = M.get_filematch(item.filepath) ---@type eve.oxi.search.IFileMatch|nil
@@ -291,7 +290,7 @@ function M.fetch_data(input_text, force, callback)
   end
 
   local is_searching_current_buf = specified_filepath ~= nil ---@type boolean
-  if fs.is_file_or_dir(cwd) ~= "directory" then
+  if eve.fs.is_file_or_dir(cwd) ~= "directory" then
     eve.reporter.error({
       from = __module_name__,
       subject = "fetch_data",

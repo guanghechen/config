@@ -1,7 +1,6 @@
 ---@class eve.std.__mods
 local __mods = {
   box = "eve.std.box",
-  fs = "eve.std.fs",
   im = "eve.std.im",
   lsp = "eve.std.lsp",
   nvim = "eve.std.nvim",
@@ -13,7 +12,6 @@ local __mods = {
 ---@field public __mods                 eve.std.__mods
 ---
 ---@field public box                    eve.std.box
----@field public fs                     eve.std.fs
 ---@field public im                     eve.std.im
 ---@field public nvim                   eve.std.nvim
 ---@field public shell                  eve.std.shell

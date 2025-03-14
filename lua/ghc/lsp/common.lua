@@ -1,6 +1,5 @@
 local __module_name__ = "ghc.lsp.common" ---@type string
 
-local fs = require("eve.std.fs")
 local command = require("eve.command")
 
 ---@class ghc.lsp.common
@@ -61,7 +60,7 @@ end
 function M.find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
     local filepath = dirpath .. eve.env.PATH_SEP .. filename ---@type string
-    if fs.is_file_or_dir(filepath) == "file" then
+    if eve.fs.is_file_or_dir(filepath) == "file" then
       return filepath
     end
   end

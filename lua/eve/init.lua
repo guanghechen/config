@@ -4,6 +4,7 @@ local __mods = {
   debug = "eve.builtin.debug",
   env = "eve.builtin.env",
   fn = "eve.builtin.fn",
+  fs = "eve.builtin.fs",
   is = "eve.builtin.is",
   json = "eve.builtin.json",
   oxi = "eve.builtin.oxi",
@@ -19,6 +20,7 @@ local __mods = {
 ---@field public debug                  eve.builtin.debug
 ---@field public env                    eve.builtin.env
 ---@field public fn                     eve.builtin.fn
+---@field public fs                     eve.builtin.fs
 ---@field public is                     eve.builtin.is
 ---@field public json                   eve.builtin.json
 ---@field public oxi                    eve.builtin.oxi
