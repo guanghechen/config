@@ -40,6 +40,7 @@ local M = setmetatable({
     return require(m)
   end,
 })
+_G.eve = M
 
 ---@return eve.state.storage
 function M.get_default_storage()
