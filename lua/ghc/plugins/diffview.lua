@@ -1,4 +1,3 @@
-local icons = require("eve.constant.icon")
 local state = require("eve.state")
 
 return {
@@ -86,13 +85,13 @@ return {
         end,
       },
       icons = { -- Only applies when use_icons is true.
-        folder_closed = icons.filetype.Folder,
-        folder_open = icons.filetype.FolderOpen,
+        folder_closed = eve.icon.filetype.Folder,
+        folder_open = eve.icon.filetype.FolderOpen,
       },
       signs = {
-        fold_closed = icons.ui.ArrowClosed,
-        fold_open = icons.ui.ArrowOpen,
-        done = icons.ui.Accepted,
+        fold_closed = eve.icon.ui.ArrowClosed,
+        fold_open = eve.icon.ui.ArrowOpen,
+        done = eve.icon.ui.Accepted,
       },
       keymaps = {
         disable_defaults = true, -- Disable the default keymaps

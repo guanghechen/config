@@ -1,4 +1,3 @@
-local icons = require("eve.constant.icon")
 local sd = vim.fn.sign_define
 
 ---@class eve.constant.sign
@@ -24,18 +23,18 @@ M.SEARCH_MAIN_SELECTED = "SIGN_SEARCH_MAIN_SELECTED"
 M.SEARCH_MAIN_SELECTED_CUR = "SEARCH_MAIN_SELECTED_CUR"
 
 -- stylua: ignore start
-sd(M.DAP_BREAKPOINT,              { text = icons.dap.Breakpoint,          texthl = "DapBreakpoint",          linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
-sd(M.DAP_BREAKPOINT_CONDITION,    { text = icons.dap.BreakpointCondition, texthl = "DapBreakpointCondition", linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
-sd(M.DAP_BREAKPOINT_REJECTED,     { text = icons.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",  linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
-sd(M.DAP_LOG_POINT,               { text = icons.dap.LogPoint,            texthl = "DapLogPoint",            linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
-sd(M.DAP_STOPPED,                 { text = icons.dap.Stopped,             texthl = "DapStopped",             linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
+sd(M.DAP_BREAKPOINT,              { text = eve.icon.dap.Breakpoint,          texthl = "DapBreakpoint",          linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
+sd(M.DAP_BREAKPOINT_CONDITION,    { text = eve.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition", linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
+sd(M.DAP_BREAKPOINT_REJECTED,     { text = eve.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",  linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
+sd(M.DAP_LOG_POINT,               { text = eve.icon.dap.LogPoint,            texthl = "DapLogPoint",            linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
+sd(M.DAP_STOPPED,                 { text = eve.icon.dap.Stopped,             texthl = "DapStopped",             linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 
-sd(M.SEARCH_INPUT_CURSOR,         { text = icons.ui.Telescope,            texthl = "fs_input_prompt"      })
+sd(M.SEARCH_INPUT_CURSOR,         { text = eve.icon.ui.Telescope,            texthl = "fs_input_prompt"      })
 sd(M.SEARCH_MAIN_CURRENT,         { text = ' ',                           texthl = "fs_main_current"      })
-sd(M.SEARCH_MAIN_PRESENT,         { text = icons.ui.ArrowPresent,         texthl = "fs_main_present"      })
-sd(M.SEARCH_MAIN_PRESENT_CUR,     { text = icons.ui.ArrowPresent,         texthl = "fs_main_present_cur"  })
-sd(M.SEARCH_MAIN_SELECTED,        { text = icons.ui.Selected,             texthl = "fs_main_selected"     })
-sd(M.SEARCH_MAIN_SELECTED_CUR,    { text = icons.ui.Selected,             texthl = "fs_main_selected_cur" })
+sd(M.SEARCH_MAIN_PRESENT,         { text = eve.icon.ui.ArrowPresent,         texthl = "fs_main_present"      })
+sd(M.SEARCH_MAIN_PRESENT_CUR,     { text = eve.icon.ui.ArrowPresent,         texthl = "fs_main_present_cur"  })
+sd(M.SEARCH_MAIN_SELECTED,        { text = eve.icon.ui.Selected,             texthl = "fs_main_selected"     })
+sd(M.SEARCH_MAIN_SELECTED_CUR,    { text = eve.icon.ui.Selected,             texthl = "fs_main_selected_cur" })
 -- stylua: ignore end
 
 return M

@@ -1,6 +1,5 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
-local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
@@ -156,19 +155,19 @@ function M.bufs(position)
     local text_diagnostic = "" ---@type string
     local slots = 0 ---@type integer
     if count_error > 0 then
-      text_diagnostic = text_diagnostic .. " " .. icons.diagnostic.Error .. " " .. count_error
+      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Error .. " " .. count_error
       slots = slots + 1
     end
     if count_warn > 0 then
-      text_diagnostic = text_diagnostic .. " " .. icons.diagnostic.Warning .. " " .. count_warn
+      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Warning .. " " .. count_warn
       slots = slots + 1
     end
     if count_hint > 0 and slots < 2 then
-      text_diagnostic = text_diagnostic .. " " .. icons.diagnostic.Hint .. " " .. count_hint
+      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Hint .. " " .. count_hint
       slots = slots + 1
     end
     if count_info > 0 and slots < 2 then
-      text_diagnostic = text_diagnostic .. " " .. icons.diagnostic.Information .. " " .. count_info
+      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Information .. " " .. count_info
       slots = slots + 1
     end
 
@@ -189,7 +188,7 @@ function M.bufs(position)
 
     local filename, fileicon, fileicon_hl = resolve_buf_info(bufnr)
     local text_indicator_or_sep = is_current and "▎" or (is_first and " " or "▏") ---@type string
-    local text_order = total < 2 and "" or (icons.todigit_subscript(index) .. ".") ---@type string
+    local text_order = total < 2 and "" or (eve.icon.todigit_subscript(index) .. ".") ---@type string
     local text_icon = fileicon .. " " ---@type string
     local text_title = filename ---@type string
     local text_mod = is_mod and "  " or "  " ---@type string
@@ -322,7 +321,7 @@ function M.bufs(position)
       ---! Render left omitter.
       if left_remain_count > 0 then
         local count = math.min(99, left_remain_count) ---@type integer
-        local omitter_text = " " .. icons.ui.Left .. "  " .. tostring(count) .. " " ---@type string
+        local omitter_text = " " .. eve.icon.ui.Left .. "  " .. tostring(count) .. " " ---@type string
         local omitter_text_hl = txt(omitter_text, hln_buf_omitter) ---@type string
         text = omitter_text .. text
         hl_text = btn(omitter_text_hl, fn_focus_left_buf) .. hl_text
@@ -331,9 +330,9 @@ function M.bufs(position)
       ---! Render right omitter.
       if right_remain_count > 0 then
         local count = math.min(99, right_remain_count) ---@type integer
-        local omitter_text = "▏" .. tostring(count) .. " " .. icons.ui.Right .. "  " ---@type string
+        local omitter_text = "▏" .. tostring(count) .. " " .. eve.icon.ui.Right .. "  " ---@type string
         local omitter_text_hl = txt("▏", hln_buf_omitter_sep)
-          .. txt(tostring(count) .. " " .. icons.ui.Right .. "  ", hln_buf_omitter) ---@type string
+          .. txt(tostring(count) .. " " .. eve.icon.ui.Right .. "  ", hln_buf_omitter) ---@type string
         text = text .. omitter_text
         hl_text = hl_text .. btn(omitter_text_hl, fn_focus_right_buf)
       end
@@ -363,10 +362,10 @@ function M.copilot(position)
   end)
 
   local status_icon_map = {
-    Inactive = icons.app.CopilotError,
-    InProgress = icons.app.Copilot,
-    Normal = icons.app.Copilot,
-    Warning = icons.app.CopilotWarn,
+    Inactive = eve.icon.app.CopilotError,
+    InProgress = eve.icon.app.Copilot,
+    Normal = eve.icon.app.Copilot,
+    Warning = eve.icon.app.CopilotWarn,
   }
 
   local last_status = nil ---@type string|nil
@@ -386,7 +385,7 @@ function M.copilot(position)
     end,
     render = function()
       local copilot_status = last_status or "Normal" ---@type string
-      local icon = status_icon_map[copilot_status] or icons.app.Copilot ---@type string
+      local icon = status_icon_map[copilot_status] or eve.icon.app.Copilot ---@type string
       local hln_icon = (copilot_status == nil or #copilot_status < 1) and hln_text
         or (hln_copilot .. "_" .. copilot_status) ---@type string
 
@@ -417,11 +416,11 @@ function M.cwd(position)
       local hln_sep = hln_sep_prefix .. context.mode ---@type string
 
       local cwd_name = eve.path.basename(context.cwd) ---@type string
-      local text = icons.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
+      local text = eve.icon.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = icons.symbols.sep_left .. text ---@type string
-      hl_text = txt(icons.symbols.sep_left, hln_sep) .. hl_text ---@type string
+      text = eve.icon.symbols.sep_left .. text ---@type string
+      hl_text = txt(eve.icon.symbols.sep_left, hln_sep) .. hl_text ---@type string
       return text, hl_text, true
     end,
   }
@@ -449,11 +448,11 @@ function M.debug_render_count(position)
       local text = " " .. eve.string.pad_start(tostring(count % 100000), 5, "0") ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = icons.symbols.sep_left .. text ---@type string
-      hl_text = txt(icons.symbols.sep_left, hln_sep) .. hl_text ---@type string
+      text = eve.icon.symbols.sep_left .. text ---@type string
+      hl_text = txt(eve.icon.symbols.sep_left, hln_sep) .. hl_text ---@type string
 
-      text = text .. icons.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
+      text = text .. eve.icon.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(eve.icon.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
@@ -536,19 +535,19 @@ function M.diagnostics(position)
     render = function(context)
       local text_hl = "" ---@type string
       local count_error = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.ERROR })
-      local text_count_error = count_error > 0 and icons.diagnostic.Error .. " " .. count_error .. " " or ""
+      local text_count_error = count_error > 0 and eve.icon.diagnostic.Error .. " " .. count_error .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_error, hln_diagnostics_error), fn_show_error)
 
       local count_warn = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.WARN })
-      local text_count_warn = count_warn > 0 and icons.diagnostic.Warning .. " " .. count_warn .. " " or ""
+      local text_count_warn = count_warn > 0 and eve.icon.diagnostic.Warning .. " " .. count_warn .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_warn, hln_diagnostics_warn), fn_show_warn)
 
       local count_hint = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.HINT })
-      local text_count_hint = count_hint > 0 and icons.diagnostic.Hint .. " " .. count_hint .. " " or ""
+      local text_count_hint = count_hint > 0 and eve.icon.diagnostic.Hint .. " " .. count_hint .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_hint, hln_diagnostics_hint), fn_show_hint)
 
       local count_info = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.INFO })
-      local text_count_info = count_info > 0 and icons.diagnostic.Information .. " " .. count_info .. " " or ""
+      local text_count_info = count_info > 0 and eve.icon.diagnostic.Information .. " " .. count_info .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_info, hln_diagnostics_info), fn_show_info)
 
       local text = text_count_error .. text_count_warn .. text_count_hint .. text_count_info
@@ -566,7 +565,7 @@ function M.dirpath(position)
   local hln_focus_sep = position .. "_dirpath_focus_sep" ---@type string
   local hln_focus_text = position .. "_dirpath_focus_text" ---@type string
 
-  local sep = icons.fillchars.foldclose .. " " ---@type string
+  local sep = eve.icon.fillchars.foldclose .. " " ---@type string
   local hl_blur_sep = txt(sep, hln_blur_sep) ---@type string
   local hl_focus_sep = txt(sep, hln_focus_sep) ---@type string
   local relpath_pieces = {} ---@type string[]
@@ -615,7 +614,7 @@ function M.dirpath_prominent(position)
   local hln_icon = position .. "_dirpath_prominent_icon" ---@type string
   local hln_text = position .. "_dirpath_prominent_text" ---@type string
 
-  local icon = " " .. icons.os.current .. " " ---@type string
+  local icon = " " .. eve.icon.os.current .. " " ---@type string
   local sep = eve.env.PATH_SEP ---@type string
   local hl_icon = txt(icon, hln_icon) ---@type string
 
@@ -717,7 +716,7 @@ function M.fileformat(position)
       ---@diagnostic disable-next-line: undefined-field
       local text_encoding = vim.opt.fileencoding:get()
       local text_fileformat = fileformat_text_map[vim.bo.fileformat] or "UNKNOWN"
-      local icon_tab = icons.ui.Tab .. " "
+      local icon_tab = eve.icon.ui.Tab .. " "
       local text_tab = vim.api.nvim_get_option_value("shiftwidth", { scope = "local" })
 
       local text = text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab
@@ -827,13 +826,13 @@ function M.filestatus(position)
     local text = "" ---@type string
     if gitsigns_head and gitsigns_status_dict and not gitsigns_git_status then
       if gitsigns_status_dict.added and gitsigns_status_dict.added > 0 then
-        text = text .. " " .. icons.git.Add .. " " .. gitsigns_status_dict.added ---@type string
+        text = text .. " " .. eve.icon.git.Add .. " " .. gitsigns_status_dict.added ---@type string
       end
       if gitsigns_status_dict.changed and gitsigns_status_dict.changed > 0 then
-        text = text .. " " .. icons.git.Mod_alt .. " " .. gitsigns_status_dict.changed ---@type string
+        text = text .. " " .. eve.icon.git.Mod_alt .. " " .. gitsigns_status_dict.changed ---@type string
       end
       if gitsigns_status_dict.removed and gitsigns_status_dict.removed > 0 then
-        text = text .. " " .. icons.git.Remove .. " " .. gitsigns_status_dict.removed ---@type string
+        text = text .. " " .. eve.icon.git.Remove .. " " .. gitsigns_status_dict.removed ---@type string
       end
     end
     return #text > 0 and text:sub(1) or ""
@@ -893,7 +892,7 @@ function M.git(position)
       return context.git_branch ~= nil
     end,
     render = function(context)
-      local text = icons.git.Branch .. " " .. context.git_branch ---@type string
+      local text = eve.icon.git.Branch .. " " .. context.git_branch ---@type string
       local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,
@@ -1015,7 +1014,7 @@ function M.lsp_symbols(position)
       local has_remain = false ---@type boolean
       for _, symbol in ipairs(symbols) do
         local title = symbol.name or "" ---@type string
-        local icon = (icons.kind[symbol.kind] or "") .. " " ---@type string
+        local icon = (eve.icon.kind[symbol.kind] or "") .. " " ---@type string
         local width = width_sep + vim.api.nvim_strwidth(icon .. title) ---@type integer
         if width > remain_width then
           has_remain = true
@@ -1043,7 +1042,7 @@ function M.mode(position)
   local hln_text_prefix = position .. "_m_text_fill_" ---@type string
   local hln_sep_prefix = position .. "_mode_sep_" ---@type string
 
-  local icon = " " .. icons.app.Vim .. " " ---@type string
+  local icon = " " .. eve.icon.app.Vim .. " " ---@type string
 
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
@@ -1060,8 +1059,8 @@ function M.mode(position)
       local text = icon .. context.mode_name ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = text .. icons.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
+      text = text .. eve.icon.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(eve.icon.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
@@ -1178,11 +1177,11 @@ function M.sidebar(position, filetype, get_title)
       local text_title = title ---@type string
       local hl_text_title = txt(text_title, hln_text) ---@type string
 
-      text_title = icons.symbols.sep_left .. text_title ---@type string
-      hl_text_title = txt(icons.symbols.sep_left, hln_sep) .. hl_text_title ---@type string
+      text_title = eve.icon.symbols.sep_left .. text_title ---@type string
+      hl_text_title = txt(eve.icon.symbols.sep_left, hln_sep) .. hl_text_title ---@type string
 
-      text_title = text_title .. icons.symbols.sep_right ---@type string
-      hl_text_title = hl_text_title .. txt(icons.symbols.sep_right, hln_sep) ---@type string
+      text_title = text_title .. eve.icon.symbols.sep_right ---@type string
+      hl_text_title = hl_text_title .. txt(eve.icon.symbols.sep_right, hln_sep) ---@type string
 
       local title_width = vim.api.nvim_strwidth(text_title) ---@type integer
       local width_remain = width - title_width ---@type integer
@@ -1262,8 +1261,8 @@ function M.pos(position)
   local hln_text_anchor = position .. "_pos_text_anchor" ---@type string
   local hln_text_percentage = position .. "_pos_text_percentage" ---@type string
 
-  local text_sep = icons.symbols.sep_right ---@type string
-  local hl_text_sep = txt(icons.symbols.sep_right, hln_sep) ---@type string
+  local text_sep = eve.icon.symbols.sep_right ---@type string
+  local hl_text_sep = txt(eve.icon.symbols.sep_right, hln_sep) ---@type string
 
   ---@return integer
   ---@return integer
@@ -1315,7 +1314,7 @@ function M.readonly(position)
       return vim.bo.readonly
     end,
     render = function()
-      local text = icons.ui.Lock .. " [RO]" ---@type string
+      local text = eve.icon.ui.Lock .. " [RO]" ---@type string
       local hl_text = txt(text, hln_readonly) ---@type string
       return text, hl_text, true
     end,
@@ -1399,8 +1398,8 @@ function M.username(position)
   local hln_text_prefix = position .. "_m_sep_fill_" ---@type string
   local hln_sep_prefix = position .. "_m_text_fill_" ---@type string
 
-  local text_with_icon = " " .. icons.os.current .. " " .. eve.env.USERNAME ---@type string
-  local text_icon_only = icons.os.current .. " " ---@type string
+  local text_with_icon = " " .. eve.icon.os.current .. " " .. eve.env.USERNAME ---@type string
+  local text_icon_only = eve.icon.os.current .. " " ---@type string
 
   local invalid = false ---@type boolean
   state.observe({ state.theme.username }, function()
@@ -1429,8 +1428,8 @@ function M.username(position)
       local text = text_with_icon ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = text .. icons.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(icons.symbols.sep_right, hln_sep) ---@type string
+      text = text .. eve.icon.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(eve.icon.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
@@ -1469,7 +1468,7 @@ function M.widget(position)
       local index = #items > 0 and items[1].type == "popup" and 0 or 1 ---@type integer
       for _, item in ipairs(items) do
         local callback = item.callback_fn ---@type string
-        local digit = icons.todigit_supscript(index) ---@type string
+        local digit = eve.icon.todigit_supscript(index) ---@type string
         local text_sep = index > 1 and "▏" or " " ---@type string
         if item.type == "enum" then
           local flag = item.state:snapshot() ---@type boolean

@@ -1,4 +1,3 @@
-local icons = require("eve.constant.icon")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
 local Select = require("fml.ux.select")
@@ -71,42 +70,42 @@ local function get_file_selector()
     {
       type = "flag",
       desc = "find: toggle selected",
-      symbol = icons.symbols.flag_selected,
+      symbol = eve.icon.symbols.flag_selected,
       state = state.select.select_avante.flag_selected,
       callback = actions.toggle_flag_selected,
     },
     {
       type = "flag",
       desc = "find: toggle exclude",
-      symbol = icons.symbols.flag_exclude,
+      symbol = eve.icon.symbols.flag_exclude,
       state = state.select.select_avante.flag_exclude,
       callback = actions.toggle_flag_exclude,
     },
     {
       type = "flag",
       desc = "find: toggle gitignore",
-      symbol = icons.symbols.flag_gitignore,
+      symbol = eve.icon.symbols.flag_gitignore,
       state = state.select.select_avante.flag_gitignore,
       callback = actions.toggle_flag_gitignore,
     },
     {
       type = "flag",
       desc = "select: toggle flag fuzzy",
-      symbol = icons.symbols.flag_fuzzy,
+      symbol = eve.icon.symbols.flag_fuzzy,
       state = state.select.select_avante.flag_fuzzy,
       callback = actions.toggle_flag_fuzzy,
     },
     {
       type = "flag",
       desc = "find: toggle case sensitive",
-      symbol = icons.symbols.flag_case_sensitive,
+      symbol = eve.icon.symbols.flag_case_sensitive,
       state = state.select.select_avante.flag_case_sensitive,
       callback = actions.toggle_case_sensitive,
     },
     {
       type = "flag",
       desc = "select: toggle flag regex",
-      symbol = icons.symbols.flag_regex,
+      symbol = eve.icon.symbols.flag_regex,
       state = state.select.select_avante.flag_regex,
       callback = actions.toggle_flag_regex,
     },
@@ -145,7 +144,7 @@ local function get_file_selector()
 
           local absolute_filepath = eve.path.join(cwd, filepath) ---@type string
           if vim.uv.fs_stat(absolute_filepath) and vim.uv.fs_stat(absolute_filepath).type == "directory" then
-            icon = icons.filetype.Folder
+            icon = eve.icon.filetype.Folder
             icon_hl = "MiniIconsBlue"
           else
             icon, icon_hl = calc_fileicon(filepath)

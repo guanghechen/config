@@ -1,4 +1,3 @@
-local icons = require("eve.constant.icon")
 local state = require("eve.state")
 
 local Nvimbar = require("fml.ux.nvimbar")
@@ -32,7 +31,7 @@ tabline
     "left",
     c.sidebar(position, eve.filetype.NEOTREE, function(context)
       local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
-      local title = icons.filetype.FolderRootOpened .. " " .. cwd_name ---@type string
+      local title = eve.icon.filetype.FolderRootOpened .. " " .. cwd_name ---@type string
       return title
     end),
     95
@@ -40,7 +39,7 @@ tabline
   :place(
     "left",
     c.sidebar(position, eve.filetype.DIFFVIEW_FILES, function()
-      local title = icons.git.Git .. " Git Diffview" ---@type string
+      local title = eve.icon.git.Git .. " Git Diffview" ---@type string
       return title
     end),
     95
@@ -48,7 +47,7 @@ tabline
   :place(
     "left",
     c.sidebar(position, eve.filetype.DAP_UI_SCOPES, function()
-      local title = icons.ui.Bug .. " Debug" ---@type string
+      local title = eve.icon.ui.Bug .. " Debug" ---@type string
       return title
     end),
     95

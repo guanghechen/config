@@ -157,7 +157,7 @@ return {
         -- default fields order i.e completion word + item.kind + item.kind icons
         fields = { "abbr", "kind", "menu" },
         format = function(_, item)
-          local icon = eve.c.icon.kind[item.kind] or eve.c.icon.kind.Text ---@type string
+          local icon = eve.icon.kind[item.kind] or eve.icon.kind.Text ---@type string
 
           item.abbr = item.abbr .. " "
           item.menu_hl_group = "CmpItemKind" .. (item.kind or "")

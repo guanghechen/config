@@ -1,4 +1,3 @@
-local icons = require("eve.constant.icon")
 local editor = require("eve.module.editor")
 local calc_fileicon = require("eve.module.fileicon").calc_fileicon
 local state = require("eve.state")
@@ -43,7 +42,7 @@ local function get_select()
       {
         type = "flag",
         desc = "find(buffer): toggle selected",
-        symbol = icons.symbols.flag_selected,
+        symbol = eve.icon.symbols.flag_selected,
         state = state.select.find_buffer.flag_selected,
         callback = function()
           local flag = state.select.find_buffer.flag_selected:snapshot() ---@type boolean

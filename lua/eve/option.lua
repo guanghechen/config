@@ -1,5 +1,3 @@
-local icons = require("eve.constant.icon")
-
 if eve.env.IS_MAC or eve.env.IS_NIX or eve.env.IS_WSL then
   vim.opt.shell = "/bin/bash"
 elseif eve.env.IS_WIN then
@@ -45,11 +43,11 @@ vim.opt.cursorline = true -- highlight the row of the cursor.
 vim.opt.cursorlineopt = "number,screenline"
 vim.opt.cursorcolumn = false -- true to highlight the column of the cursor.
 vim.opt.expandtab = true -- use spaces instead of tabs
-vim.opt.fillchars = icons.fillchars
+vim.opt.fillchars = eve.icon.fillchars
 vim.opt.guifont = { "RobotoMono Nerd Font" }
 vim.opt.linebreak = true -- Wrap lines at convenient points
 vim.opt.list = true -- Show some invisible characters (tabs...
-vim.opt.listchars:append(icons.listchars)
+vim.opt.listchars:append(eve.icon.listchars)
 vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim` experience issues.
 vim.opt.number = true -- Print line number
 vim.opt.pumblend = 10 -- Popup blend

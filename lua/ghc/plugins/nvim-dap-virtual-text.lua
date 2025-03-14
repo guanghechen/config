@@ -4,7 +4,7 @@ return {
     virt_text_pos = "eol",
     text_prefix = "",
     separator = ",",
-    error_prefix = " " .. eve.c.icon.diagnostic.Error_alt .. " ",
-    info_prefix = "  " .. eve.c.icon.diagnostic.Information_alt .. " ",
+    error_prefix = " " .. eve.icon.diagnostic.Error_alt .. " ",
+    info_prefix = "  " .. eve.icon.diagnostic.Information_alt .. " ",
   },
 }

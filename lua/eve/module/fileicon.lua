@@ -1,5 +1,4 @@
 local setting = require("eve.constant.setting")
-local icons = require("eve.constant.icon")
 
 ---@class eve.module.fileicon
 local M = {}
@@ -9,11 +8,11 @@ local M = {}
 ---@return string
 function M.calc_fileicon(filename)
   if #filename == 0 then
-    return icons.filetype.Unknown, "MiniIconsRed"
+    return eve.icon.filetype.Unknown, "MiniIconsRed"
   end
 
   if filename:sub(#filename, #filename) == "/" then
-    return icons.filetype.Folder, "MiniIconsBlue"
+    return eve.icon.filetype.Folder, "MiniIconsBlue"
   end
 
   local name = (not filename or filename == "") and setting.BUF_UNTITLED or filename
@@ -24,7 +23,7 @@ function M.calc_fileicon(filename)
       return icon, icon_hl
     end
   end
-  return icons.filetype.Unknown, "MiniIconsRed"
+  return eve.icon.filetype.Unknown, "MiniIconsRed"
 end
 
 return M

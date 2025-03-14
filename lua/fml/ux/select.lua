@@ -1,6 +1,5 @@
 local __module_name__ = "fml.ux.select" ---@type string
 
-local icons = require("eve.constant.icon")
 local state = require("eve.state")
 local Search = require("fml.ux.search.search")
 local SearchContext = require("fml.ux.search.context")
@@ -213,28 +212,28 @@ function M.new(props)
         disabled = not multiple,
         type = "flag",
         desc = "select: toggle selected",
-        symbol = icons.symbols.flag_selected,
+        symbol = eve.icon.symbols.flag_selected,
         state = flag_selected,
         callback = toggle_flag_selected,
       },
       {
         type = "flag",
         desc = "select: toggle flag fuzzy",
-        symbol = icons.symbols.flag_fuzzy,
+        symbol = eve.icon.symbols.flag_fuzzy,
         state = flag_fuzzy,
         callback = toggle_flag_fuzzy,
       },
       {
         type = "flag",
         desc = "select: toggle case sensitive",
-        symbol = icons.symbols.flag_case_sensitive,
+        symbol = eve.icon.symbols.flag_case_sensitive,
         state = case_sensitive,
         callback = toggle_case_sensitive,
       },
       {
         type = "flag",
         desc = "select: toggle flag regex",
-        symbol = icons.symbols.flag_regex,
+        symbol = eve.icon.symbols.flag_regex,
         state = flag_regex,
         callback = toggle_flag_regex,
       },

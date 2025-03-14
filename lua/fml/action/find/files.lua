@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.find" ---@type string
 
-local icons = require("eve.constant.icon")
 local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
@@ -232,7 +231,7 @@ local function get_select()
       {
         type = "popup",
         desc = "find: edit settings",
-        symbol = icons.symbols.setting,
+        symbol = eve.icon.symbols.setting,
         state = observable_truthy,
         callback = actions.edit_config,
       },
@@ -246,42 +245,42 @@ local function get_select()
       {
         type = "flag",
         desc = "find: toggle selected",
-        symbol = icons.symbols.flag_selected,
+        symbol = eve.icon.symbols.flag_selected,
         state = state.select.find_file.flag_selected,
         callback = actions.toggle_flag_selected,
       },
       {
         type = "flag",
         desc = "find: toggle exclude",
-        symbol = icons.symbols.flag_exclude,
+        symbol = eve.icon.symbols.flag_exclude,
         state = state.select.find_file.flag_exclude,
         callback = actions.toggle_flag_exclude,
       },
       {
         type = "flag",
         desc = "find: toggle gitignore",
-        symbol = icons.symbols.flag_gitignore,
+        symbol = eve.icon.symbols.flag_gitignore,
         state = state.select.find_file.flag_gitignore,
         callback = actions.toggle_flag_gitignore,
       },
       {
         type = "flag",
         desc = "select: toggle flag fuzzy",
-        symbol = icons.symbols.flag_fuzzy,
+        symbol = eve.icon.symbols.flag_fuzzy,
         state = state.select.find_file.flag_fuzzy,
         callback = actions.toggle_flag_fuzzy,
       },
       {
         type = "flag",
         desc = "find: toggle case sensitive",
-        symbol = icons.symbols.flag_case_sensitive,
+        symbol = eve.icon.symbols.flag_case_sensitive,
         state = state.select.find_file.flag_case_sensitive,
         callback = actions.toggle_case_sensitive,
       },
       {
         type = "flag",
         desc = "select: toggle flag regex",
-        symbol = icons.symbols.flag_regex,
+        symbol = eve.icon.symbols.flag_regex,
         state = state.select.find_file.flag_regex,
         callback = actions.toggle_flag_regex,
       },

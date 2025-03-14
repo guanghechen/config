@@ -1,4 +1,3 @@
-local icons = require("eve.constant.icon")
 local setting = require("eve.constant.setting")
 local editor = require("eve.module.editor")
 local state = require("eve.state")
@@ -840,11 +839,11 @@ function M:create_wins_as_needed()
       vim.wo[winnr_preview].list = true
       vim.wo[winnr_preview].listchars = string.format(
         "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
-        icons.listchars.eol,
-        icons.listchars.lead,
-        icons.listchars.nbsp,
-        icons.listchars.space,
-        icons.listchars.trail
+        eve.icon.listchars.eol,
+        eve.icon.listchars.lead,
+        eve.icon.listchars.nbsp,
+        eve.icon.listchars.space,
+        eve.icon.listchars.trail
       )
     else
       vim.wo[winnr_preview].winfixbuf = false

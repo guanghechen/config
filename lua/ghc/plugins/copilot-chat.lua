@@ -1,5 +1,3 @@
-local icons = require("eve.constant.icon")
-
 local username = eve.env.USERNAME ---@type string
 
 return {
@@ -7,8 +5,8 @@ return {
   opts = {
     allow_insecure = false,
     auto_insert_mode = true,
-    answer_header = " " .. icons.kind.Copilot .. " Copilot ",
-    question_header = " " .. icons.os.current .. " " .. username .. " ",
+    answer_header = " " .. eve.icon.kind.Copilot .. " Copilot ",
+    question_header = " " .. eve.icon.os.current .. " " .. username .. " ",
 
     -- model = "claude-3.7-sonnet",
     model = "o3-mini",

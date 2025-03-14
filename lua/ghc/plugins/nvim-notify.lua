@@ -25,11 +25,11 @@ return {
       vim.api.nvim_win_set_config(winnr, { zindex = 100 })
     end,
     icons = {
-      ERROR = eve.c.icon.diagnostic.Error,
-      WARN = eve.c.icon.diagnostic.Warning,
-      INFO = eve.c.icon.diagnostic.Information,
-      DEBUG = eve.c.icon.ui.Bug,
-      TRACE = eve.c.icon.ui.Pencil,
+      ERROR = eve.icon.diagnostic.Error,
+      WARN = eve.icon.diagnostic.Warning,
+      INFO = eve.icon.diagnostic.Information,
+      DEBUG = eve.icon.ui.Bug,
+      TRACE = eve.icon.ui.Pencil,
     },
   },
 }

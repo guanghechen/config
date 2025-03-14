@@ -1,7 +1,7 @@
----@class eve.constant.icon
+---@class eve.builtin.icon
 local M = {}
 
----@class eve.constant.icon.digits_subscript
+---@class eve.builtin.icon.digits_subscript
 local digits_subscript = {
   "₀",
   "₁",
@@ -15,7 +15,7 @@ local digits_subscript = {
   "₉",
 }
 
----@class eve.constant.icon.digits_supscript
+---@class eve.builtin.icon.digits_supscript
 local digits_supscript = {
   "⁰",
   "¹",
@@ -53,7 +53,7 @@ function M.todigit_supscript(num)
   return #result > 0 and result or digits_supscript[1]
 end
 
----@class eve.constant.icon.fillchars
+---@class eve.builtin.icon.fillchars
 M.fillchars = {
   diff = " ",
   eob = " ",
@@ -65,7 +65,7 @@ M.fillchars = {
   vert = "│",
 }
 
----@class eve.constant.icon.listchars
+---@class eve.builtin.icon.listchars
 M.listchars = {
   eol = "↲",
   extends = "»",
@@ -77,7 +77,7 @@ M.listchars = {
   trail = "•",
 }
 
----@class eve.constant.icon.symbols
+---@class eve.builtin.icon.symbols
 M.symbols = {
   setting = "",
   flag_case_sensitive = "",
@@ -95,7 +95,7 @@ M.symbols = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.constant.icon.app
+---@class eve.builtin.icon.app
 M.app = {
   Copilot = "",
   CopilotError = "",
@@ -104,7 +104,7 @@ M.app = {
   Vim = "",
 }
 
----@class eve.constant.icon.filetype
+---@class eve.builtin.icon.filetype
 M.filetype = {
   Default = "",
   File = "",
@@ -121,12 +121,12 @@ M.filetype = {
   Unknown = "󰈚",
 }
 
----@class eve.constant.icon.lang
+---@class eve.builtin.icon.lang
 M.lang = {
   python = " ",
 }
 
----@class eve.constant.icon.os
+---@class eve.builtin.icon.os
 M.os = {
   dos = "",
   mac = "",
@@ -142,7 +142,7 @@ M.os = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.constant.icon.dap
+---@class eve.builtin.icon.dap
 M.dap = {
   Breakpoint = "",
   BreakpointCondition = "",
@@ -160,7 +160,7 @@ M.dap = {
   Terminate = "󰝤",
 }
 
----@class eve.constant.icon.diagnostic
+---@class eve.builtin.icon.diagnostic
 M.diagnostic = {
   Error = "",
   Error_alt = "󰅚",
@@ -174,7 +174,7 @@ M.diagnostic = {
   Warning_alt = "󰀪",
 }
 
----@class eve.constant.icon.git
+---@class eve.builtin.icon.git
 M.git = {
   Add = "",
   Branch = "",
@@ -195,7 +195,7 @@ M.git = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.constant.icon.kind
+---@class eve.builtin.icon.kind
 M.kind = {
   Array = "󰅪",
   Boolean = "󰨙",
@@ -250,7 +250,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class eve.constant.icon.ui
+---@class eve.builtin.icon.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",

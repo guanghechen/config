@@ -54,10 +54,10 @@ return {
       },
       diagnostics = {
         symbols = {
-          hint = eve.c.icon.diagnostic.Hint .. " ",
-          info = eve.c.icon.diagnostic.Information .. " ",
-          warn = eve.c.icon.diagnostic.Warning .. " ",
-          error = eve.c.icon.diagnostic.Error .. " ",
+          hint = eve.icon.diagnostic.Hint .. " ",
+          info = eve.icon.diagnostic.Information .. " ",
+          warn = eve.icon.diagnostic.Warning .. " ",
+          error = eve.icon.diagnostic.Error .. " ",
         },
         highlights = {
           hint = "DiagnosticSignHint",
@@ -74,19 +74,19 @@ return {
         last_indent_marker = "└",
         highlight = "NeoTreeIndentMarker",
         with_expanders = true,
-        expander_collapsed = eve.c.icon.ui.ArrowClosed,
-        expander_expanded = eve.c.icon.ui.ArrowOpen,
+        expander_collapsed = eve.icon.ui.ArrowClosed,
+        expander_expanded = eve.icon.ui.ArrowOpen,
         expander_highlight = "NeoTreeExpander",
       },
       icon = {
-        folder_closed = eve.c.icon.filetype.Folder,
-        folder_open = eve.c.icon.filetype.FolderOpen,
-        folder_empty = eve.c.icon.filetype.FolderEmpty,
-        default = eve.c.icon.filetype.File,
+        folder_closed = eve.icon.filetype.Folder,
+        folder_open = eve.icon.filetype.FolderOpen,
+        folder_empty = eve.icon.filetype.FolderEmpty,
+        default = eve.icon.filetype.File,
         highlight = "NeoTreeFileIcon",
       },
       modified = {
-        symbol = eve.c.icon.ui.Modified,
+        symbol = eve.icon.ui.Modified,
         highlight = "NeoTreeModified",
       },
       name = {
@@ -99,14 +99,14 @@ return {
           -- Change type
           added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
           modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
-          deleted = eve.c.icon.git.Remove, -- this can only be used in the git_status source
-          renamed = eve.c.icon.git.Rename, -- this can only be used in the git_status source
+          deleted = eve.icon.git.Remove, -- this can only be used in the git_status source
+          renamed = eve.icon.git.Rename, -- this can only be used in the git_status source
           -- Status type
-          untracked = eve.c.icon.git.Untracked,
-          ignored = eve.c.icon.git.Ignore,
-          unstaged = eve.c.icon.git.Unstaged,
-          staged = eve.c.icon.git.Staged,
-          conflict = eve.c.icon.git.Conflict,
+          untracked = eve.icon.git.Untracked,
+          ignored = eve.icon.git.Ignore,
+          unstaged = eve.icon.git.Unstaged,
+          staged = eve.icon.git.Staged,
+          conflict = eve.icon.git.Conflict,
         },
       },
       file_size = {

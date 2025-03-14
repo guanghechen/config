@@ -1,7 +1,5 @@
 --- https://github.com/folke/snacks.nvim/blob/1239fb84bc426d4fcd1c8dc9dde8503c17501842/lua/snacks/statuscolumn.lua#L1
 
-local icons = require("eve.constant.icon")
-
 ---@class fml.dressing.statuscolumn.config
 local config = {
   left = { "mark", "sign" }, -- priority of signs on the left (high to low)
@@ -139,7 +137,7 @@ local function line_signs(winnr, bufnr, lnum)
       ---@type fml.dressing.statuscolumn.ISign
       local sign = {
         type = "fold",
-        text = icons.fillchars.foldclose,
+        text = eve.icon.fillchars.foldclose,
         texthl = "Folded",
         priority = 0,
       }
@@ -148,7 +146,7 @@ local function line_signs(winnr, bufnr, lnum)
       ---@type fml.dressing.statuscolumn.ISign
       local sign = {
         type = "fold",
-        text = icons.fillchars.foldopen,
+        text = eve.icon.fillchars.foldopen,
         priority = 0,
       }
       table.insert(signs, sign)
