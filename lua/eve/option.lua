@@ -44,7 +44,7 @@ vim.opt.cursorlineopt = "number,screenline"
 vim.opt.cursorcolumn = false -- true to highlight the column of the cursor.
 vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.fillchars = eve.icon.fillchars
-vim.opt.guifont = { "RobotoMono Nerd Font" }
+vim.opt.guifont = { "Maple Mono NF CN" }
 vim.opt.linebreak = true -- Wrap lines at convenient points
 vim.opt.list = true -- Show some invisible characters (tabs...
 vim.opt.listchars:append(eve.icon.listchars)
