@@ -23,15 +23,15 @@ function M.new_with_buf(context)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   local bufnr = context.bufnr ---@type integer
-
-  local tabtype = eve.var.TabTypes.NORMAL ---@type string
   local bufs = {} ---@type eve.t.state.tab.buf.state[]
 
   if bufnr ~= nil and eve.nvim.is_buf_valid(bufnr) and eve.editor.is_buf_sourcefile(bufnr) then
     bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
   end
 
-  local meta = state.tab.Meta.new(tabnr, tabtype, bufs, math.min(1, #bufs))
+  eve.editor.set_tabtype(tabnr, eve.var.TabTypes.NORMAL)
+
+  local meta = state.tab.Meta.new(tabnr, bufs, math.min(1, #bufs))
   state.tab.set(tabnr, meta)
   state.tab.tab_history:push(tabnr)
 

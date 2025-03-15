@@ -1,4 +1,4 @@
----@alias eve.e.state.tab.meta.TabTypes
+---@alias eve.builtin.var.TabTypeEnum
 ---| "normal"
 ---| "diffview"
 
@@ -12,13 +12,12 @@
 
 ---@class eve.t.state.tab.meta.data
 ---@field public tabid                  integer
----@field public tabtype                eve.e.state.tab.meta.TabTypes
+---@field public tabtype                eve.builtin.var.TabTypeEnum
 ---@field public bufs                   eve.t.state.tab.buf.data[]
 ---@field public bufid_sourcefile       integer
 
 ---@class eve.state.tab.meta.state
 ---@field public tabnr                  integer
----@field public tabtype                eve.e.state.tab.meta.TabTypes
 ---@field public bufs                   eve.t.state.tab.buf.state[]
 ---@field public bufid_sourcefile       eve.collection.IObservable -- integer|nil>
 ---@field public winnr_command          eve.collection.IObservable -- integer|nil>
@@ -62,7 +61,6 @@ Meta.__index = Meta
 ---
 ---@field public focus_win_fixed        fun(tabnr: integer): nil
 ---@field public get_bufnr_sourcefile   fun(tabnr: integer): integer|nil
----@field public get_tabtype            fun(tabnr: integer): eve.e.state.tab.meta.TabTypes
 ---@field public get_winnr_command      fun(tabnr: integer): integer|nil
 ---@field public get_winnr_fixed        fun(tabnr: integer): integer|nil
 ---@field public get_winnr_sourcefile   fun(tabnr: integer): integer|nil
@@ -78,14 +76,12 @@ local S = {}
 local M = {}
 
 ---@param tabnr                        integer
----@param tabtype                      eve.e.state.tab.meta.TabTypes|nil
 ---@param bufs                         eve.t.state.tab.buf.state[]|nil
 ---@param bufid_sourcefile             integer
 ---@return eve.state.tab.meta.state
-function Meta.new(tabnr, tabtype, bufs, bufid_sourcefile)
+function Meta.new(tabnr, bufs, bufid_sourcefile)
   local self = setmetatable({}, Meta)
   self.tabnr = tabnr ---@type integer
-  self.tabtype = tabtype or eve.var.TabTypes.NORMAL ---@type string
   self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
   self.bufid_sourcefile = eve.col.Observable.from_value(math.max(0, math.min(#bufs, bufid_sourcefile or 1)))
   self.winnr_command = eve.col.Observable.from_value(0)
@@ -99,7 +95,7 @@ function Meta:dump(tabid)
   ---@type eve.t.state.tab.meta.data
   local data = {
     tabid = tabid,
-    tabtype = self.tabtype,
+    tabtype = eve.editor.resolve_tabtype(self.tabnr, false),
     bufs = {},
     bufid_sourcefile = self.bufid_sourcefile:snapshot(),
   }
@@ -301,7 +297,6 @@ S = {
       return meta
     end
 
-    local tabtype = eve.editor.calc_tabtype(tabnr) ---@type string
     local bufs = {} ---@type eve.t.state.tab.buf.data[]
     local bufnr_set = {} ---@type table<integer, true>
     local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
@@ -327,7 +322,7 @@ S = {
     end
 
     ---@type eve.state.tab.meta.state
-    meta = Meta.new(tabnr, tabtype, bufs, bufid_sourcefile)
+    meta = Meta.new(tabnr, bufs, bufid_sourcefile)
     S.__meta_map__[tabnr] = meta
     return meta
   end,
@@ -358,8 +353,7 @@ S = {
     meta:rearrange_bufs()
     meta:resolve_bufnr_sourcefile(bufnr_sourcefile)
 
-    local tabtype = eve.editor.calc_tabtype(tabnr) ---@type string
-    meta.tabtype = tabtype
+    eve.editor.resolve_tabtype(tabnr, true)
   end,
   refresh_all = function()
     local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
@@ -454,10 +448,6 @@ S = {
   get_bufnr_sourcefile = function(tabnr)
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
     return meta and meta:get_bufnr_sourcefile() or nil ---@type integer|nil
-  end,
-  get_tabtype = function(tabnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta.tabtype or eve.var.TabTypes.NORMAL
   end,
   get_winnr_command = function(tabnr)
     local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
@@ -652,9 +642,11 @@ function M.load(raw_data)
           end
         end
       end
+      
+      eve.editor.set_tabtype(tabnr, data_tab.tabtype or eve.var.TabTypes.NORMAL)
 
       ---@type eve.state.tab.meta.state
-      local meta = Meta.new(tabnr, data_tab.tabtype or eve.var.TabTypes.NORMAL, bufs, bufid_sourcefile)
+      local meta = Meta.new(tabnr, bufs, bufid_sourcefile)
       S.set(tabnr, meta)
     end
   end

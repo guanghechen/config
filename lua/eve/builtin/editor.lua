@@ -65,23 +65,6 @@ function M.pick_swappable_win(winnr_source)
   return eve.winpicker.pick_window(M.winpicker_filters.swappable, winnr_source, false) ---@type integer|nil
 end
 
----@param tabnr                         integer
----@return eve.e.state.tab.meta.TabTypes
-function M.calc_tabtype(tabnr)
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-
-  ---! Check if the diffview tab
-  for _, winnr in ipairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    if filetype == eve.filetype.DIFFVIEW_FILES or filetype == eve.filetype.DIFFVIEW_FILE_HISTORY then
-      return eve.var.TabTypes.DIFFVIEW
-    end
-  end
-
-  return eve.var.TabTypes.NORMAL ---@type string
-end
-
 ---@param filetype                      string
 ---@return integer|nil
 function M.find_winnr(filetype)
@@ -279,6 +262,38 @@ function M.open_filepaths(winnr_source, filepaths)
   vim.schedule(function()
     vim.cmd.stopinsert()
   end)
+end
+
+---@param tabnr                         integer
+---@param force                         boolean
+---@return eve.builtin.var.TabTypeEnum
+function M.resolve_tabtype(tabnr, force)
+  local tabtype = vim.t[tabnr][eve.var.Names.TAB_TYPE] ---@type eve.builtin.var.TabTypeEnum|nil
+  if tabtype ~= nil and not force then
+    return tabtype
+  end
+
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+
+  ---! Check if the diffview tab
+  for _, winnr in ipairs(winnrs) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    if filetype == eve.filetype.DIFFVIEW_FILES or filetype == eve.filetype.DIFFVIEW_FILE_HISTORY then
+      tabtype = eve.var.TabTypes.DIFFVIEW ---@type eve.builtin.var.TabTypeEnum
+      break
+    end
+  end
+
+  tabtype = tabtype or eve.var.TabTypes.NORMAL ---@type eve.builtin.var.TabTypeEnum
+  vim.t[tabnr][eve.var.Names.TAB_TYPE] = tabtype
+  return tabtype
+end
+
+---@param tabnr                         integer
+---@param tabtype                       eve.builtin.var.TabTypeEnum
+function M.set_tabtype(tabnr, tabtype)
+  vim.t[tabnr][eve.var.Names.TAB_TYPE] = tabtype
 end
 
 return M
