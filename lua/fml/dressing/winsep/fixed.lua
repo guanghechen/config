@@ -18,11 +18,11 @@ M.winsep = {
     self.bottom:hide()
   end,
   show = function(self, winnr)
+    local width = vim.fn.winwidth(winnr) - 1 ---@type integer
+    local height = vim.fn.winheight(winnr) ---@type integer
     local win_pos = vim.api.nvim_win_get_position(winnr) ---@type integer[]
     local row = win_pos[1] ---@type integer
     local col = win_pos[2] ---@type integer
-    local width = vim.fn.winwidth(0) - 1 ---@type integer
-    local height = vim.fn.winheight(0) ---@type integer
 
     local fn_winnr = vim.fn.winnr() ---@type integer
     local h_exist = fn_winnr ~= vim.fn.winnr("h") ---@type boolean
@@ -86,7 +86,7 @@ M.winsep = {
 
 M.scheduler = eve.col.Scheduler.new({
   name = "winsep_refresh fixed",
-  delay = 100,
+  delay = 50,
   silent = function()
     local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
     return not devmode
@@ -94,10 +94,9 @@ M.scheduler = eve.col.Scheduler.new({
   task = function(callback)
     if eve.state.flight.dressing_winsep_fixed:snapshot() then
       local winnr = eve.state.editor.get_winnr_fixed() ---@type integer|nil
-      if winnr ~= nil then
-        vim.schedule(function()
-          M.winsep:show(winnr)
-        end)
+      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+      if winnr == winnr_cur then
+        M.winsep:show(winnr_cur)
       end
     end
     callback("fulfilled")

@@ -10,7 +10,7 @@ local float_winsep = require("fml.dressing.winsep.float")
 ---@field public show                   fun(self: fml.dressing.Winsep, winnr: integer):nil
 
 vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
-  group = eve.nvim.augroup("winsep_refresh"),
+  group = eve.nvim.augroup("winsep_refresh_on_resize"),
   callback = function()
     fixed_winsep.scheduler:schedule()
     float_winsep.scheduler:schedule()

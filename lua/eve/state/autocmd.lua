@@ -6,8 +6,8 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   end,
 })
 
-vim.api.nvim_create_autocmd("VimEnter", {
-  group = eve.nvim.augroup("state_on_vim_enter"),
+vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
+  group = eve.nvim.augroup("state_on_vim_enter_or_session_load_post"),
   callback = function()
     local cwd = eve.path.cwd() ---@type string
     local existed_filepaths = {} ---@type table<string, boolean>
