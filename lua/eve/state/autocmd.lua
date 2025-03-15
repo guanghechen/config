@@ -9,38 +9,37 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
   group = eve.nvim.augroup("state_on_vim_enter_or_session_load_post"),
   callback = function()
-    local cwd = eve.path.cwd() ---@type string
-    local existed_filepaths = {} ---@type table<string, boolean>
-    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-    for _, bufnr in ipairs(bufnrs) do
-      local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local filepath = eve.path.resolve(cwd, filename) ---@type string
-      existed_filepaths[filepath] = true
-    end
+    vim.schedule(function()
+      local cwd = eve.path.cwd() ---@type string
+      local existed_filepaths = {} ---@type table<string, boolean>
+      local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+      for _, bufnr in ipairs(bufnrs) do
+        local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        local filepath = eve.path.resolve(cwd, filename) ---@type string
+        existed_filepaths[filepath] = true
+      end
 
-    for _, bufnr in ipairs(bufnrs) do
-      local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local filepath = eve.path.resolve(cwd, filename) ---@type string
-      if eve.fs.is_file_or_dir(filepath) == "directory" then
-        local new_filepath = eve.state.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
-        if new_filepath ~= nil then
-          existed_filepaths[new_filepath] = true
-          vim.schedule(function()
-            local filetype = vim.bo[bufnr].filetype ---@type string
-            vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = true
-            vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
-            vim.bo[bufnr].swapfile = false
-            vim.api.nvim_buf_set_name(bufnr, new_filepath)
-            eve.state.buf.refresh(bufnr)
-          end)
+      for _, bufnr in ipairs(bufnrs) do
+        local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        local filepath = eve.path.resolve(cwd, filename) ---@type string
+        if eve.fs.is_file_or_dir(filepath) == "directory" then
+          local new_filepath = eve.state.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
+          if new_filepath ~= nil then
+            existed_filepaths[new_filepath] = true
+            vim.schedule(function()
+              local filetype = vim.bo[bufnr].filetype ---@type string
+              vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = true
+              vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
+              vim.bo[bufnr].swapfile = false
+              vim.api.nvim_buf_set_name(bufnr, new_filepath)
+              eve.state.buf.refresh(bufnr)
+            end)
+          end
         end
       end
-    end
 
-    eve.state.status.dirtier_statusline:mark_dirty()
-    eve.state.status.dirtier_tabline:mark_dirty()
-
-    vim.schedule(function()
+      eve.state.status.dirtier_statusline:mark_dirty()
+      eve.state.status.dirtier_tabline:mark_dirty()
       eve.state.refresh()
     end)
   end,
