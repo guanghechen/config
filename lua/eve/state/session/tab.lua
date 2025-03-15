@@ -21,7 +21,6 @@
 ---@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.state.tab.buf.state|nil, integer|nil
 ---@field public find_bufid             fun(self: eve.state.tab.meta.state, bufnr: integer): integer|nil
 ---@field public get_bufnr_sourcefile   fun(self: eve.state.tab.meta.state): integer|nil
----@field public get_winnr_sourcefile   fun(self: eve.state.tab.meta.state): integer|nil
 ---@field public rearrange_bufs         fun(self: eve.state.tab.meta.state): nil
 ---@field public resolve_bufnr_sourcefile fun(self: eve.state.tab.meta.state, bufnr_sourcefile: integer|nil): integer|nil
 ---@field public toggle_pin             fun(self: eve.state.tab.meta.state, bufnr: integer): nil
@@ -50,7 +49,6 @@ Meta.__index = Meta
 ---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
 ---
 ---@field public get_bufnr_sourcefile   fun(tabnr: integer): integer|nil
----@field public get_winnr_sourcefile   fun(tabnr: integer): integer|nil
 ---@field public get_unrefereced_bufnrs fun(bufnrs: integer[]|nil): integer[]
 ---@field public list_valid_bufs        fun(tabnr: integer): eve.state.tab.buf.state[]
 
@@ -123,26 +121,6 @@ function Meta:get_bufnr_sourcefile()
   local bufid = self.bufid_sourcefile:snapshot() ---@type integer
   local buf = self.bufs[bufid] ---@type eve.state.tab.buf.state|nil
   return buf and buf.bufnr or nil
-end
-
----@return integer|nil
-function Meta:get_winnr_sourcefile()
-  local bufnr_sourcefile = self:get_bufnr_sourcefile() ---@type integer|nil
-  if bufnr_sourcefile == nil then
-    return nil
-  end
-
-  local winnr_current = vim.api.nvim_tabpage_get_win(self.tabnr) ---@type integer
-  if vim.api.nvim_win_get_buf(winnr_current) == bufnr_sourcefile then
-    return winnr_current
-  end
-
-  local winnrs = vim.api.nvim_tabpage_list_wins(self.tabnr) ---@type integer[]
-  for _, winnr in ipairs(winnrs) do
-    if vim.api.nvim_win_get_buf(winnr) == bufnr_sourcefile then
-      return winnr
-    end
-  end
 end
 
 ---@return nil
@@ -574,13 +552,6 @@ end
 function M.get_bufnr_sourcefile(tabnr)
   local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   return meta and meta:get_bufnr_sourcefile() or nil ---@type integer|nil
-end
-
----@param tabnr                         integer
----@return integer|nil
-function M.get_winnr_sourcefile(tabnr)
-  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  return meta and meta:get_winnr_sourcefile() or nil ---@type integer|nil
 end
 
 ---@param bufnrs                        integer[]|nil

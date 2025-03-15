@@ -35,7 +35,7 @@ function M.close(bufnr)
     return
   end
 
-  local winnr = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
   local win_meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
 
   ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.

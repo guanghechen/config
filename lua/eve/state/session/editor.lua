@@ -1,15 +1,16 @@
 ---@class eve.state.editor.data
 ---@field public winnr_command          integer|nil
 ---@field public winnr_fixed            integer|nil
+---@field public winnr_sourcefile       integer|nil
 
 ---@class eve.state.editor.state
 ---@field public winnr_command          eve.collection.IObservable -- integer|nil>
 ---@field public winnr_fixed            eve.collection.IObservable -- integer|nil>
+---@field public winnr_sourcefile       eve.collection.IObservable -- integer|nil>
 ---
 ---@field public focus_win_fixed        fun(): nil
 ---@field public get_winnr_fixed        fun(): integer|nil
 ---@field public get_winnr_command      fun(): integer|nil
----@field public set_winnr_fixed        fun(winnr: integer|nil): nil
 ---@field public set_winnr_command      fun(winnr: integer|nil): nil
 ---
 ---@field public on_refresh             fun(): nil
@@ -28,6 +29,7 @@ function M.defaults()
   return {
     winnr_command = 0,
     winnr_fixed = 0,
+    winnr_sourcefile = 0,
   }
 end
 
@@ -44,6 +46,7 @@ function M.dump()
   return {
     winnr_command = M.winnr_command:snapshot(),
     winnr_fixed = M.winnr_fixed:snapshot(),
+    winnr_sourcefile = M.winnr_sourcefile:snapshot(),
   }
 end
 
@@ -54,6 +57,7 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.editor.data
   M.winnr_command:next(data.winnr_command)
   M.winnr_fixed:next(data.winnr_fixed)
+  M.winnr_sourcefile:next(data.winnr_sourcefile)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -61,6 +65,7 @@ end
 local _defaults = M.defaults() ---@type eve.state.editor.data
 M.winnr_command = eve.col.Observable.from_value(_defaults.winnr_command)
 M.winnr_fixed = eve.col.Observable.from_value(_defaults.winnr_fixed)
+M.winnr_sourcefile = eve.col.Observable.from_value(_defaults.winnr_sourcefile)
 
 ---@return nil
 function M.focus_win_fixed()
@@ -92,6 +97,17 @@ function M.get_winnr_fixed()
   end
 end
 
+---@return integer|nil
+function M.get_winnr_sourcefile()
+  local winnr_sourcefile = M.winnr_sourcefile:snapshot() ---@type integer
+  if winnr_sourcefile ~= 0 and eve.editor.is_win_valid(winnr_sourcefile) then
+    return winnr_sourcefile
+  else
+    M.winnr_sourcefile:next(0)
+    return nil
+  end
+end
+
 ---@param winnr                         integer|nil
 ---@return nil
 function M.set_winnr_command(winnr)
@@ -104,18 +120,6 @@ function M.set_winnr_command(winnr)
   end
 end
 
----@param winnr                         integer|nil
----@return nil
-function M.set_winnr_fixed(winnr)
-  if winnr == nil then
-    M.winnr_fixed:next(0)
-    return
-  end
-  if eve.editor.is_win_valid(winnr) then
-    M.winnr_fixed:next(winnr)
-  end
-end
-
 ---@return nil
 function M.on_refresh()
   local winnr_fixed = eve.editor.find_winnr_fixed() or 0 ---@type integer
@@ -125,8 +129,11 @@ end
 ---@param winnr                         integer
 ---@return nil
 function M.on_win_enter(winnr)
-  if not eve.editor.is_win_floating(winnr) then
+  if eve.editor.is_win_fixed(winnr) then
     M.winnr_fixed:next(winnr)
+  end
+  if eve.editor.is_win_sourcefile(winnr) then
+    M.winnr_sourcefile:next(winnr)
   end
 end
 

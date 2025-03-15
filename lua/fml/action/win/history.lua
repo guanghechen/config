@@ -24,9 +24,7 @@ local function get_history_select()
         local uuid_present = "0" ---@type string
         local width = 0 ---@type integer
 
-        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-        local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
-
+        local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
         local meta = winnr_sourcefile and eve.state.win.resolve(winnr_sourcefile) or nil ---@type eve.state.win.meta.state|nil
         if meta == nil then
           eve.reporter.error({
@@ -108,8 +106,7 @@ local function get_history_select()
         if #items == 1 then
           local item = items[1] ---@type fml.ux.select.IItem
           local item_index = tonumber(item.uuid) ---@type integer|nil
-          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+          local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
 
           if item_index ~= nil then
             local meta = winnr_sourcefile and eve.state.win.resolve(winnr_sourcefile) or nil ---@type eve.state.win.meta.state|nil

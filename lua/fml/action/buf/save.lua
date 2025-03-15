@@ -38,8 +38,7 @@ function M.save()
     end
   end
 
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) or eve.editor.pick_sourcefile_win() ---@type integer|nil
+  local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() or eve.editor.pick_sourcefile_win() ---@type integer|nil
   if winnr_sourcefile == nil then
     eve.reporter.error({
       from = __module_name__,

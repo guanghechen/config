@@ -191,6 +191,13 @@ end
 
 ---@param winnr                         integer
 ---@return boolean
+function M.is_win_fixed(winnr)
+  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+  return config == nil or config.relative == ""
+end
+
+---@param winnr                         integer
+---@return boolean
 function M.is_win_floating(winnr)
   local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   return config.relative ~= nil and config.relative ~= ""

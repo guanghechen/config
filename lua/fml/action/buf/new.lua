@@ -3,10 +3,7 @@ local M = {}
 
 ---@return nil
 function M.new()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) or eve.editor.pick_sourcefile_win() ---@type integer|nil
-
-  ---@type integer|nil
+  local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() or eve.editor.pick_sourcefile_win() ---@type integer|nil
   if winnr_sourcefile == nil then
     return
   end

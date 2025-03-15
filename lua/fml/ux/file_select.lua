@@ -249,8 +249,7 @@ function M.new(props)
         title = title,
         on_close = on_close,
         on_confirm = on_confirm_from_props or function(widget, items)
-          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+          local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
           widget:close()
 
           for _, item in ipairs(items) do

@@ -6,8 +6,7 @@ local M = {}
 ---@param bufnr                         integer the stable unique number of the buffer
 ---@return nil
 function M.open(bufnr)
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() or eve.editor.pick_sourcefile_win() ---@type integer|nil
   if winnr_sourcefile ~= nil then
     vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
   end

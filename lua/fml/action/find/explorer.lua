@@ -429,8 +429,7 @@ local function get_select()
 
         if #filepaths > 0 then
           widget:hide()
-          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+          local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
           for _, filepath in ipairs(filepaths) do
             eve.editor.open_filepath(winnr_sourcefile, filepath)
           end
@@ -463,8 +462,7 @@ function M.find_explorer(specified_dirpath)
     local dirpath = eve.path.normalize(specified_dirpath) ---@type string
     state_cwd:next(dirpath)
   else
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+    local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
     if winnr_sourcefile ~= nil then
       local bufnr = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
