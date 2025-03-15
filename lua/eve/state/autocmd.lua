@@ -1,5 +1,3 @@
-eve.state.refresh()
-
 vim.api.nvim_create_autocmd("VimLeavePre", {
   group = eve.nvim.augroup("state_on_vim_leave_pre"),
   once = true,

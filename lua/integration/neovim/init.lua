@@ -7,7 +7,6 @@ require("integration.neovim.autocmd")
 pcall(require, "integration.local.autocmd")
 
 eve.setup_state()
-require("eve.state.autocmd")
 
 require("fml.command")
 require("integration.neovim.option")

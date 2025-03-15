@@ -5,10 +5,7 @@ require("eve.option")
 require("eve.keymap")
 require("integration.neovim.autocmd")
 
-local default_storage = eve.get_default_storage() ---@type eve.state.storage
-local storage = { editor = default_storage.editor } ---@type eve.state.storage
-eve.setup_state(storage)
-require("eve.state.autocmd")
+eve.setup_state({ editor = eve.get_default_storage().editor })
 require("integration.neovim.keymap")
 
 eve.setup_theme()
