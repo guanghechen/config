@@ -146,7 +146,7 @@ S = {
     ---! Make the request to the LSP server
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if
-      vim.b[bufnr][eve.setting.vars.WINLINE_DISABLED] or not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol")
+      vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] or not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol")
     then
       callback(false)
       return
@@ -194,7 +194,7 @@ S = {
 
           if err.message == "trying to get AST for non-added document" then
             if vim.api.nvim_buf_is_valid(bufnr) then
-              vim.b[bufnr][eve.setting.vars.WINLINE_DISABLED] = true
+              vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] = true
             end
           end
         end

@@ -61,13 +61,6 @@ M.sessions = {
   }, ","),
 }
 
----@class eve.builtin.setting.vars
-M.vars = {
-  BUFID_MIDDLE = "eve_bufid_middle",
-  FLAG_SOURCEFILE = "eve_is_sourcefile",
-  WINLINE_DISABLED = "eve_winline_disabled",
-}
-
 ---! Tab settings
 
 M.TAB_HISTORY_CAPACITY = 100

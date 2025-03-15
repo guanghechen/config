@@ -71,28 +71,28 @@ command.implement({
 command
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
-    tabtype = eve.var.TabTypeEnum.DIFFVIEW,
+    tabtype = eve.var.TabTypes.DIFFVIEW,
     action = function()
       require("ghc.action.diffview").fs_cwd()
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_cwd.uuid,
-    tabtype = eve.var.TabTypeEnum.NORMAL,
+    tabtype = eve.var.TabTypes.NORMAL,
     action = function()
       require("ghc.action.neo-tree").fs_cwd()
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_workspace.uuid,
-    tabtype = eve.var.TabTypeEnum.NORMAL,
+    tabtype = eve.var.TabTypes.NORMAL,
     action = function()
       require("ghc.action.neo-tree").fs_workspace()
     end,
   })
   .implement({
     uuid = command.definitions.explorer.fs_reveal.uuid,
-    tabtype = eve.var.TabTypeEnum.NORMAL,
+    tabtype = eve.var.TabTypes.NORMAL,
     action = function()
       require("ghc.action.neo-tree").fs_reveal()
     end,

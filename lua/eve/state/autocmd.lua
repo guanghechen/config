@@ -1,7 +1,5 @@
 local state = require("eve.state")
 
-local varnames = eve.setting.vars
-
 state.refresh()
 
 vim.api.nvim_create_autocmd("VimLeavePre", {
@@ -33,7 +31,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
           existed_filepaths[new_filepath] = true
           vim.schedule(function()
             local filetype = vim.bo[bufnr].filetype ---@type string
-            vim.b[bufnr][varnames.FLAG_SOURCEFILE] = true
+            vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = true
             vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
             vim.bo[bufnr].swapfile = false
             vim.api.nvim_buf_set_name(bufnr, new_filepath)

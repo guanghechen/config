@@ -2,8 +2,6 @@ local __module_name__ = "fml.action.inspect" ---@type string
 
 local state = require("eve.state")
 
-local varnames = eve.setting.vars
-
 ---@class fml.action.inspect
 local M = {}
 
@@ -23,7 +21,7 @@ function M.inspect_buf()
           buftype = vim.bo[bufnr].buftype,
           filetype = vim.bo[bufnr].filetype,
           filepath = vim.api.nvim_buf_get_name(bufnr),
-          is_sourcefile = vim.b[bufnr][varnames.FLAG_SOURCEFILE],
+          is_sourcefile = vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE],
         },
         meta = vim.NIL,
       },
@@ -41,7 +39,7 @@ function M.inspect_buf()
         buftype = vim.bo[bufnr].buftype,
         filetype = vim.bo[bufnr].filetype,
         filepath = vim.api.nvim_buf_get_name(bufnr),
-        is_sourcefile = vim.b[bufnr][varnames.FLAG_SOURCEFILE],
+        is_sourcefile = vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE],
       },
       meta = meta,
     },

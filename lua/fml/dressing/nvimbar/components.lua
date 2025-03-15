@@ -236,8 +236,8 @@ function M.bufs(position)
 
       local N = #bufs ---@type integer
       local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
-      local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][eve.setting.vars.BUFID_MIDDLE] or 1) ---@type integer
-      vim.t[tabnr][eve.setting.vars.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
+      local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] or 1) ---@type integer
+      vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
 
       local text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_sourcefile, N)
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer

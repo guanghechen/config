@@ -1,5 +1,3 @@
-local varnames = eve.setting.vars
-
 ---@class eve.builtin.editor
 local M = {}
 
@@ -68,7 +66,7 @@ function M.pick_swappable_win(winnr_source)
 end
 
 ---@param tabnr                         integer
----@return eve.e.state.tab.meta.TabTypeEnum
+---@return eve.e.state.tab.meta.TabTypes
 function M.calc_tabtype(tabnr)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
 
@@ -77,11 +75,11 @@ function M.calc_tabtype(tabnr)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     if filetype == eve.filetype.DIFFVIEW_FILES or filetype == eve.filetype.DIFFVIEW_FILE_HISTORY then
-      return eve.var.TabTypeEnum.DIFFVIEW
+      return eve.var.TabTypes.DIFFVIEW
     end
   end
 
-  return eve.var.TabTypeEnum.NORMAL ---@type string
+  return eve.var.TabTypes.NORMAL ---@type string
 end
 
 ---@param filetype                      string
@@ -165,7 +163,7 @@ end
 ---@param bufnr                         integer
 ---@return boolean
 function M.is_buf_sourcefile(bufnr)
-  local is_sourcefile = vim.b[bufnr][varnames.FLAG_SOURCEFILE] ---@type boolean|nil
+  local is_sourcefile = vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] ---@type boolean|nil
   if is_sourcefile ~= nil then
     return is_sourcefile
   end
@@ -183,34 +181,34 @@ function M.is_buf_sourcefile(bufnr)
   if #filetype < 1 then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local flag = vim.fn.filereadable(filepath) == 1
-    vim.b[bufnr][varnames.FLAG_SOURCEFILE] = flag
+    vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = flag
     return flag
   end
 
   if not eve.filetype.is_plain_file(filetype) then
-    vim.b[bufnr][varnames.FLAG_SOURCEFILE] = false
+    vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = false
     return false
   end
 
-  vim.b[bufnr][varnames.FLAG_SOURCEFILE] = true
+  vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = true
   return true
 end
 
 ---@param winnr                         integer
 ---@return boolean
 function M.is_win_sourcefile(winnr)
-  local is_sourcefile = vim.w[winnr][varnames.FLAG_SOURCEFILE] ---@type boolean|nil
+  local is_sourcefile = vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] ---@type boolean|nil
   if is_sourcefile ~= nil then
     return is_sourcefile
   end
 
   local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   if config.relative ~= nil and config.relative ~= "" then
-    vim.w[winnr][varnames.FLAG_SOURCEFILE] = false
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
     return false
   end
 
-  vim.w[winnr][varnames.FLAG_SOURCEFILE] = true
+  vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
   return true
 end
 

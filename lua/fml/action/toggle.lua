@@ -2,8 +2,6 @@ local __module_name__ = "fml.action.toggle" ---@type string
 
 local command = require("eve.command")
 local state = require("eve.state")
-
-local varnames = eve.setting.vars
 local select = require("fml.fn.select")
 
 ---@type table<string, eve.collection.IObservable -- boolean>>
@@ -428,7 +426,7 @@ function M.toggle_maximize()
     vim.wo[winnr].signcolumn = "yes"
     vim.wo[winnr].wrap = false
 
-    vim.w[winnr][varnames.FLAG_SOURCEFILE] = eve.editor.is_win_sourcefile(winnr_fixed)
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = eve.editor.is_win_sourcefile(winnr_fixed)
     state.status.maximized_winnrs[winnr] = true
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_tabpage_set_win(tabnr, winnr)
