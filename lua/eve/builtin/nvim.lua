@@ -68,31 +68,6 @@ function M.filepath2bufnr()
   return filepath2bufnr
 end
 
----@param bufnr                         integer
----@return boolean
-function M.is_buf_valid(bufnr)
-  return bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
-end
-
----@param tabnr                         integer
----@return boolean
-function M.is_tab_valid(tabnr)
-  return tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr)
-end
-
----@param winnr                         integer
----@return boolean
-function M.is_win_floating(winnr)
-  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  return config.relative ~= nil and config.relative ~= ""
-end
-
----@param winnr                         integer
----@return boolean
-function M.is_win_valid(winnr)
-  return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
-end
-
 ---@param hlname                        string
 ---@return string
 function M.make_bg_transparency(hlname)

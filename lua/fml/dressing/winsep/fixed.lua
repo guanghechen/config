@@ -79,7 +79,7 @@ local fixed_winsep = {
   end,
   ---@diagnostic disable-next-line: unused-local
   should_show = function(self, winnr)
-    return not eve.nvim.is_win_floating(winnr)
+    return not eve.editor.is_win_floating(winnr)
   end,
 }
 

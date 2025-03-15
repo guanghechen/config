@@ -72,7 +72,7 @@ local chat = state.widget.wrap({
           return
         end
 
-        if eve.nvim.is_win_floating(winnr) then
+        if eve.editor.is_win_floating(winnr) then
           local cfg_current = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
           local cfg_customized = config.win_cfg() ---@type vim.api.keyset.win_config
           local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config

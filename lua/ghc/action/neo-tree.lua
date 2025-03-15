@@ -4,7 +4,7 @@ local state = require("eve.state")
 ---@return boolean
 local function check_could_reveal(cwd)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer|nil
-  if bufnr ~= nil and eve.nvim.is_buf_valid(bufnr) then
+  if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     return eve.path.is_under(cwd, filepath)
   end

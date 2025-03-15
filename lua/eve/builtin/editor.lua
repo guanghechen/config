@@ -13,7 +13,7 @@ M.winpicker_filters = {
   ---@param winnr                       integer
   ---@return boolean
   projectable = function(winnr)
-    if vim.wo[winnr].winfixbuf or eve.nvim.is_win_floating(winnr) then
+    if vim.wo[winnr].winfixbuf or M.is_win_floating(winnr) then
       return false
     end
 
@@ -27,7 +27,7 @@ M.winpicker_filters = {
   ---@param winnr                       integer
   ---@return boolean
   swappable = function(winnr)
-    if vim.wo[winnr].winfixbuf or eve.nvim.is_win_floating(winnr) then
+    if vim.wo[winnr].winfixbuf or M.is_win_floating(winnr) then
       return false
     end
 
@@ -52,7 +52,7 @@ end
 ---@param winnr_source                  integer|nil
 ---@return integer|nil
 function M.pick_sourcefile_win(winnr_source)
-  if winnr_source ~= nil and eve.nvim.is_win_valid(winnr_source) and M.winpicker_filters.sourcefile(winnr_source) then
+  if winnr_source ~= nil and M.is_win_valid(winnr_source) and M.winpicker_filters.sourcefile(winnr_source) then
     return winnr_source
   end
 
@@ -84,7 +84,7 @@ function M.find_winnr_fixed(filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if filetype == nil or vim.bo[bufnr].filetype == filetype and not eve.nvim.is_win_floating(winnr) then
+    if filetype == nil or vim.bo[bufnr].filetype == filetype and not M.is_win_floating(winnr) then
       return winnr
     end
   end
@@ -97,7 +97,7 @@ function M.find_winnr_floating(filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].filetype == filetype and eve.nvim.is_win_floating(winnr) then
+    if vim.bo[bufnr].filetype == filetype and M.is_win_floating(winnr) then
       return winnr
     end
   end
@@ -177,6 +177,25 @@ function M.is_buf_sourcefile(bufnr)
   return true
 end
 
+---@param bufnr                         integer
+---@return boolean
+function M.is_buf_valid(bufnr)
+  return bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
+end
+
+---@param tabnr                         integer
+---@return boolean
+function M.is_tab_valid(tabnr)
+  return tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr)
+end
+
+---@param winnr                         integer
+---@return boolean
+function M.is_win_floating(winnr)
+  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+  return config.relative ~= nil and config.relative ~= ""
+end
+
 ---@param winnr                         integer
 ---@return boolean
 function M.is_win_sourcefile(winnr)
@@ -193,6 +212,12 @@ function M.is_win_sourcefile(winnr)
 
   vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
   return true
+end
+
+---@param winnr                         integer
+---@return boolean
+function M.is_win_valid(winnr)
+  return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
 end
 
 ---@param filepath                      string|nil
